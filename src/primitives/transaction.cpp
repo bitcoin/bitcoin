@@ -88,9 +88,24 @@ uint256 GetOutputsHash(const CTransaction& txTo) {
 
 PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo)
 {
-    hashPrevouts = GetPrevoutHash(txTo);
-    hashSequence = GetSequenceHash(txTo);
-    hashOutputs = GetOutputsHash(txTo);
+    hashPrevouts = ::GetPrevoutHash(txTo);
+    hashSequence = ::GetSequenceHash(txTo);
+    hashOutputs = ::GetOutputsHash(txTo);
+}
+
+uint256 PrecomputedTransactionData::GetPrevoutHash(const CTransaction& txTo) const
+{
+    return hashPrevouts;
+}
+
+uint256 PrecomputedTransactionData::GetSequenceHash(const CTransaction& txTo) const
+{
+    return hashSequence;
+}
+
+uint256 PrecomputedTransactionData::GetOutputsHash(const CTransaction& txTo) const
+{
+    return hashOutputs;
 }
 
 uint256 CTransaction::ComputeHash() const

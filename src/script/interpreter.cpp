@@ -1152,16 +1152,16 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
         uint256 hashOutputs;
 
         if (!(nHashType & SIGHASH_ANYONECANPAY)) {
-            hashPrevouts = txTo.cache.hashPrevouts;
+            hashPrevouts = txTo.GetPrevoutHash();
         }
 
         if (!(nHashType & SIGHASH_ANYONECANPAY) && (nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
-            hashSequence = txTo.cache.hashSequence;
+            hashSequence = txTo.GetSequenceHash();
         }
 
 
         if ((nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
-            hashOutputs = txTo.cache.hashOutputs;
+            hashOutputs = txTo.GetOutputsHash();
         } else if ((nHashType & 0x1f) == SIGHASH_SINGLE && nIn < txTo.vout.size()) {
             CHashWriter ss(SER_GETHASH, 0);
             ss << txTo.vout[nIn];

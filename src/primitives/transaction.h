@@ -300,9 +300,14 @@ class CTransaction;
 /* Hashes used in segwit signatures (see BIP 143) */
 struct PrecomputedTransactionData
 {
+private:
     uint256 hashPrevouts, hashSequence, hashOutputs;
 
+public:
     PrecomputedTransactionData(const CTransaction& tx);
+    uint256 GetPrevoutHash(const CTransaction& tx) const;
+    uint256 GetSequenceHash(const CTransaction& tx) const;
+    uint256 GetOutputsHash(const CTransaction& tx) const;
 };
 
 /** The basic transaction that is broadcasted on the network and contained in
@@ -368,6 +373,9 @@ public:
 
     // Compute a hash that includes both transaction and witness data
     uint256 GetWitnessHash() const;
+    uint256 GetPrevoutHash() const { return cache.GetPrevoutHash(*this); }
+    uint256 GetSequenceHash() const { return cache.GetSequenceHash(*this); }
+    uint256 GetOutputsHash() const { return cache.GetOutputsHash(*this); }
 
     // Return sum of txouts.
     CAmount GetValueOut() const;
