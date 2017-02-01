@@ -34,13 +34,19 @@ ClientModel::ClientModel(OptionsModel *optionsModel, UnlimitedModel* ul, QObject
     optionsModel(optionsModel),
     peerTableModel(0),
     banTableModel(0),
-    pollTimer(0)
+    pollTimer1(0),
+    pollTimer2(0)
 {
     peerTableModel = new PeerTableModel(this);
     banTableModel = new BanTableModel(this);
-    pollTimer = new QTimer(this);
-    connect(pollTimer, SIGNAL(timeout()), this, SLOT(updateTimer()));
-    pollTimer->start(MODEL_UPDATE_DELAY);
+
+    pollTimer1 = new QTimer(this);
+    connect(pollTimer1, SIGNAL(timeout()), this, SLOT(updateTimer1()));
+    pollTimer1->start(MODEL_UPDATE_DELAY1);
+
+    pollTimer2 = new QTimer(this);
+    connect(pollTimer2, SIGNAL(timeout()), this, SLOT(updateTimer2()));
+    pollTimer2->start(MODEL_UPDATE_DELAY2);
 
     subscribeToCoreSignals();
 }
@@ -124,14 +130,24 @@ double ClientModel::getVerificationProgress(const CBlockIndex *tipIn) const
     return Checkpoints::GuessVerificationProgress(Params().Checkpoints(), tip);
 }
 
-void ClientModel::updateTimer()
+void ClientModel::updateTimer1()
 {
     // no locking required at this point
     // the following calls will aquire the required lock
     Q_EMIT mempoolSizeChanged(getMempoolSize(), getMempoolDynamicUsage());
     Q_EMIT orphanPoolSizeChanged(getOrphanPoolSize());
     Q_EMIT bytesChanged(getTotalBytesRecv(), getTotalBytesSent());
-    Q_EMIT transactionsPerSecondChanged(getTransactionsPerSecond()); // BU:
+    Q_EMIT transactionsPerSecondChanged(getTransactionsPerSecond());
+}
+
+void ClientModel::updateTimer2()
+{
+    // Use sweep in instead of dump so that we're not writing to disk every
+    // time the timer is triggered.  If/When the client shuts down the banned
+    // list will get updated.
+    CNode::SweepBanned();
+
+    uiInterface.BannedListChanged();
 }
 
 void ClientModel::updateNumConnections(int numConnections)
@@ -263,13 +279,13 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, const CB
 {
     // lock free async UI updates in case we have a new block tip
     // during initial sync, only update the UI if the last update
-    // was > 250ms (MODEL_UPDATE_DELAY) ago
+    // was > 250ms (MODEL_UPDATE_DELAY1) ago
     int64_t now = 0;
     if (initialSync)
         now = GetTimeMillis();
 
     // if we are in-sync, update the UI regardless of last update time
-    if (!initialSync || now - nLastBlockTipUpdateNotification > MODEL_UPDATE_DELAY) {
+    if (!initialSync || now - nLastBlockTipUpdateNotification > MODEL_UPDATE_DELAY1) {
         //pass a async signal to the UI thread
         QMetaObject::invokeMethod(clientmodel, "numBlocksChanged", Qt::QueuedConnection,
                                   Q_ARG(int, pIndex->nHeight),

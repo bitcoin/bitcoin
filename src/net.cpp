@@ -508,6 +508,7 @@ void CNode::ClearBanned()
     LOCK(cs_setBanned);
     setBanned.clear();
     setBannedIsDirty = true;
+    uiInterface.BannedListChanged();
 }
 
 bool CNode::IsBanned(CNetAddr ip)
@@ -563,6 +564,7 @@ void CNode::Ban(const CSubNet& subNet, const BanReason &banReason, int64_t banti
         setBanned[subNet] = banEntry;
 
     setBannedIsDirty = true;
+    uiInterface.BannedListChanged();
 }
 
 bool CNode::Unban(const CNetAddr &addr) {
@@ -575,6 +577,9 @@ bool CNode::Unban(const CSubNet &subNet) {
     if (setBanned.erase(subNet))
     {
         setBannedIsDirty = true;
+
+        SweepBanned();
+        uiInterface.BannedListChanged();
         return true;
     }
     return false;
@@ -583,6 +588,7 @@ bool CNode::Unban(const CSubNet &subNet) {
 void CNode::GetBanned(banmap_t &banMap)
 {
     LOCK(cs_setBanned);
+    SweepBanned();
     banMap = setBanned; //create a thread safe copy
 }
 
