@@ -2549,7 +2549,7 @@ UniValue listunspent(const JSONRPCRequest& request)
             "    \"address\" : \"address\",    (string) the chaincoin address\n"
             "    \"account\" : \"account\",    (string) DEPRECATED. The associated account, or \"\" for the default account\n"
             "    \"scriptPubKey\" : \"key\",   (string) the script key\n"
-            "    \"amount\" : x.xxx,         (numeric) the transaction amount in " + CURRENCY_UNIT + "\n"
+            "    \"amount\" : x.xxx,         (numeric) the transaction output amount in " + CURRENCY_UNIT + "\n"
             "    \"confirmations\" : n       (numeric) The number of confirmations\n"
             "    \"ps_rounds\" : n           (numeric) The number of PS round\n"
             "    \"spendable\" : xxx,        (bool) Whether we have the private keys to spend this output\n"
