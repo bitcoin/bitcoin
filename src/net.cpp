@@ -392,6 +392,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fConnectToMas
         if (IsLocal(addrConnect) && !fConnectToMasternode)
             return NULL;
 
+        LOCK(cs_vNodes);
         // Look for an existing connection
         CNode* pnode = FindNode((CService)addrConnect);
         if (pnode)
@@ -399,8 +400,8 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fConnectToMas
             // we have existing connection to this node but it was not a connection to masternode,
             // change flag and add reference so that we can correctly clear it later
             if(fConnectToMasternode && !pnode->fMasternode) {
-                pnode->fMasternode = true;
                 pnode->AddRef();
+                pnode->fMasternode = true;
             }
             return pnode;
         }
@@ -428,15 +429,13 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fConnectToMas
         // Add node
         CNode* pnode = new CNode(hSocket, addrConnect, pszDest ? pszDest : "", false, true);
 
-        {
-            LOCK(cs_vNodes);
-            vNodes.push_back(pnode);
-        }
+        LOCK(cs_vNodes);
+        vNodes.push_back(pnode);
 
         pnode->nTimeConnected = GetTime();
         if(fConnectToMasternode) {
-            pnode->fMasternode = true;
             pnode->AddRef();
+            pnode->fMasternode = true;
         }
 
         return pnode;
