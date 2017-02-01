@@ -16,6 +16,10 @@ ReceiveFreezeDialog::ReceiveFreezeDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    ui->freezeDateTime->setMinimumDateTime(QDateTime::currentDateTime());
+    ui->freezeDateTime->setDisplayFormat("yyyy/MM/dd hh:mm");
+    ui->freezeDateTime->setDateTime(QDateTime::currentDateTime());
+  
     on_resetButton_clicked();
 
     connect(this, SIGNAL(accepted()), parent, SLOT(on_freezeDialog_hide()));
@@ -42,7 +46,8 @@ void ReceiveFreezeDialog::on_freezeDateTime_editingFinished()
 void ReceiveFreezeDialog::on_freezeBlock_editingFinished()
 {
     if (ui->freezeBlock->value() > 0)
-        ui->freezeDateTime->setDateTime(QDateTime::fromMSecsSinceEpoch(0));
+      ui->freezeDateTime->clear();
+    //  ui->freezeDateTime->setDateTime(QDateTime::fromMSecsSinceEpoch(0));
 
     /* limit check */
     std::string freezeText = ui->freezeBlock->text().toStdString();

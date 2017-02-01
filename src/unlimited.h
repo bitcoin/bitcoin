@@ -212,9 +212,9 @@ extern uint64_t LargestBlockSeen(uint64_t nBlockSize = 0);
 // processing a new block.  (Protected by cs_xval)
 extern std::set<uint256> setPreVerifiedTxHash;
 
-// Orphans that are added to the thinblock must be verifed since they have never been
-// accepted into the memory pool.  (Protected by cs_xval)
-extern std::set<uint256> setUnVerifiedOrphanTxHash;
+// Returns the block height of the current active chain tip.
+extern int GetBlockchainHeight();
+
 
 extern CCriticalSection cs_xval;
 // Xpress Validation: end

@@ -15,6 +15,7 @@
 #include "receiverequestdialog.h"
 #include "receivefreezedialog.h"
 #include "recentrequeststablemodel.h"
+#include "unlimited.h"
 
 ReceiveFreezeDialog *freezeDialog;
 
@@ -151,21 +152,34 @@ void ReceiveCoinsDialog::on_freezeDialog_hide()
 
         QString freezeLabel;
         if (nFreezeLockTime.getint64() < LOCKTIME_THRESHOLD)
-            freezeLabel = (QString)("Block: ") +  QString::number(nFreezeLockTime.getint());
+          {
+            uint64_t height = GetBlockchainHeight();
+            uint64_t freezeHeight = nFreezeLockTime.getint();
+            uint64_t approxTimeMs = ((freezeHeight-height)*10*60*1000) + QDateTime::currentDateTime().toMSecsSinceEpoch();
+            
+            freezeLabel = (QString)("block: ") +  QString::number(freezeHeight) + (QString)(" (approximately: ") + QDateTime::fromMSecsSinceEpoch(approxTimeMs).date().toString() + ")";
+          }
         else
-            freezeLabel = QDateTime::fromMSecsSinceEpoch(nFreezeLockTime.getint64() * 1000).toString();
-        ui->freezeCheck->setText("Coin Freeze until " + freezeLabel);
+            freezeLabel = QDateTime::fromMSecsSinceEpoch(nFreezeLockTime.getint64() * 1000).toString("yyyy/MM/dd hh:mm");
+        ui->freezeCheck->setText("Coin freeze until " + freezeLabel);
     }
 }
 
 void ReceiveCoinsDialog::on_freezeCheck_clicked()
 {
-    if (!freezeDialog)
+  if (ui->freezeCheck->isChecked())  // If the user clicked on coin freeze, bring up the freeze dialog box
     {
-        freezeDialog = new ReceiveFreezeDialog(this);
-        freezeDialog->setModel(model->getOptionsModel());
+      if (!freezeDialog)
+        {
+          freezeDialog = new ReceiveFreezeDialog(this);
+          freezeDialog->setModel(model->getOptionsModel());
+        }
+      freezeDialog->show();
     }
-    freezeDialog->show();
+  else  // if the user unchecked, then hide the freeze dialog if its still showing
+    {
+      if (freezeDialog) freezeDialog->hide();
+    }
 
 }
 
@@ -196,14 +210,13 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
     } else {
         /* Generate new receiving address and add to the address table */
         address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", CScriptNum(0));
-        if (nFreezeLockTime > 0)
-        {
-        	/* Generate the freeze redeemScript and add to the address table.
-        	 * The address variable needs to show the freeze P2SH public key  */
-        	address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", nFreezeLockTime);
-
+        // only use coin freeze if the freeze value is valid and the check box is still set
+        if ((nFreezeLockTime > 0)&&(ui->freezeCheck)&&(ui->freezeCheck->isChecked()))
+          {
+           /* Generate the freeze redeemScript and add to the address table.
+            * The address variable needs to show the freeze P2SH public key  */
+            address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", nFreezeLockTime);
             sFreezeLockTime = model->getAddressTableModel()->labelForFreeze(address);
-
         }
     }
     SendCoinsRecipient info(address, label,
