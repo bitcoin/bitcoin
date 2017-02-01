@@ -170,7 +170,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
     nBlockSize += std::max(nCoinbaseSize,(unsigned int) coinbaseReserve.value);  // BU Miners take the block we give them, wipe away our coinbase and add their own.  So if their reserve choice is bigger then our coinbase then use that.
     
     uint64_t nBlockTx = 0;
-    unsigned int nBlockSigOps = 100;
+    unsigned int nBlockSigOps = 100;  // Reserve 100 sigops for miners to use in their coinbase transaction
     int lastFewTxs = 0;
     CAmount nFees = 0;
 
