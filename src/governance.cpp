@@ -879,7 +879,7 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
 
 void CGovernanceManager::CheckMasternodeOrphanVotes()
 {
-    LOCK(cs);
+    LOCK2(cs_main, cs);
     fRateChecksEnabled = false;
     for(object_m_it it = mapObjects.begin(); it != mapObjects.end(); ++it) {
         it->second.CheckOrphanVotes();
@@ -889,7 +889,7 @@ void CGovernanceManager::CheckMasternodeOrphanVotes()
 
 void CGovernanceManager::CheckMasternodeOrphanObjects()
 {
-    LOCK(cs);
+    LOCK2(cs_main, cs);
     int64_t nNow = GetAdjustedTime();
     fRateChecksEnabled = false;
     object_time_m_it it = mapMasternodeOrphanObjects.begin();
