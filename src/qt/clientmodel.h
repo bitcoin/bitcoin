@@ -88,7 +88,8 @@ private:
     PeerTableModel *peerTableModel;
     BanTableModel *banTableModel;
 
-    QTimer *pollTimer;
+    QTimer *pollTimer1;
+    QTimer *pollTimer2;
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
@@ -108,7 +109,8 @@ Q_SIGNALS:
     void showProgress(const QString &title, int nProgress);
 
 public Q_SLOTS:
-    void updateTimer();
+    void updateTimer1();
+    void updateTimer2();
     void updateNumConnections(int numConnections);
     void updateAlert(const QString &hash, int status);
     void updateBanlist();

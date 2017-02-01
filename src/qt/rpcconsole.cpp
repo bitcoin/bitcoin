@@ -834,7 +834,6 @@ void RPCConsole::disconnectSelectedNode()
     }
 
     // Find the node, disconnect it and clear the selected node
-    //if (CNode *bannedNode = FindNode(strNode.toStdString())) {
     if (bannedNode) {
         bannedNode->fDisconnect = true;
         //BU: Remember to release the reference we took on bannedNode to protect from use-after-free
@@ -863,7 +862,6 @@ void RPCConsole::banSelectedNode(int bantime)
     }
 
     // Find possible nodes, ban it and clear the selected node
-    //if (CNode *bannedNode = FindNode(strNode.toStdString())) {
     if (bannedNode) {
         std::string nStr = strNode.toStdString();
         std::string addr;
@@ -874,10 +872,8 @@ void RPCConsole::banSelectedNode(int bantime)
         bannedNode->fDisconnect = true;
         //BU: Remember to release the reference we took on bannedNode to protect from use-after-free
         bannedNode->Release();
-        DumpBanlist();
 
         clearSelectedNode();
-        clientModel->getBanTableModel()->refresh();
     }
 }
 
@@ -893,8 +889,6 @@ void RPCConsole::unbanSelectedNode()
     if (possibleSubnet.IsValid())
     {
         CNode::Unban(possibleSubnet);
-        DumpBanlist();
-        clientModel->getBanTableModel()->refresh();
     }
 }
 
