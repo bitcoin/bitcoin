@@ -118,7 +118,7 @@ def check_version(max_versions, version):
         lib = version
         ver = '0'
     ver = tuple([int(x) for x in ver.split(b'.')])
-    if not lib in max_versions:
+    if lib not in max_versions:
         return False
     return ver <= max_versions[lib]
 

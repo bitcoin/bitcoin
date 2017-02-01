@@ -315,7 +315,7 @@ class RESTTest (BitcoinTestFramework):
         json_string = http_get_call(url.hostname, url.port, '/rest/block/'+newblockhash[0]+self.FORMAT_SEPARATOR+'json')
         json_obj = json.loads(json_string)
         for tx in json_obj['tx']:
-            if not 'coinbase' in tx['vin'][0]: #exclude coinbase
+            if 'coinbase' not in tx['vin'][0]: #exclude coinbase
                 assert_equal(tx['txid'] in txs, True)
 
         #check the same but without tx details

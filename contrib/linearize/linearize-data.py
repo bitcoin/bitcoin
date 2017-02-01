@@ -224,7 +224,7 @@ class BlockDataCopier:
 			inExtent = BlockExtent(self.inFn, self.inF.tell(), inhdr, blk_hdr, inLen)
 
 			hash_str = calc_hash_str(blk_hdr)
-			if not hash_str in blkmap:
+			if hash_str not in blkmap:
 				print("Skipping unknown block " + hash_str)
 				self.inF.seek(inLen, os.SEEK_CUR)
 				continue
