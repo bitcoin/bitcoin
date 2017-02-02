@@ -57,7 +57,7 @@ unsigned int MurmurHash3(unsigned int nHashSeed, const std::vector<unsigned char
             k1 = ROTL32(k1, 15);
             k1 *= c2;
             h1 ^= k1;
-        };
+        }
     }
 
     //----------
