@@ -2358,9 +2358,6 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
             setCoinsRet.insert(make_pair(out.tx, out.i));
         }
 
-        if(fUseInstantSend && setCoinsRet.size() > CTxLockRequest::MAX_INPUTS)
-            return false;
-
         return (nValueRet >= nTargetValue);
     }
 
@@ -3014,10 +3011,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                         strFailReason = _("Insufficient funds.");
                     }
                     if (fUseInstantSend) {
-                        size_t nMaxInputs = CTxLockRequest::MAX_INPUTS;
-                        if(setCoins.size() > nMaxInputs) {
-                            strFailReason += " " + strprintf(_("InstantSend doesn't support transactions with more than %d inputs."), nMaxInputs);
-                        } else if (nValueIn > sporkManager.GetSporkValue(SPORK_5_INSTANTSEND_MAX_VALUE)*COIN) {
+                        if (nValueIn > sporkManager.GetSporkValue(SPORK_5_INSTANTSEND_MAX_VALUE)*COIN) {
                             strFailReason += " " + strprintf(_("InstantSend doesn't support sending values that high yet. Transactions are currently limited to %1 DASH."), sporkManager.GetSporkValue(SPORK_5_INSTANTSEND_MAX_VALUE));
                         } else {
                             // could be not true but most likely that's the reason

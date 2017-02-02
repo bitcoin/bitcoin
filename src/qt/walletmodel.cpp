@@ -313,10 +313,9 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
                              CClientUIInterface::MSG_ERROR);
                 return TransactionCreationFailed;
             }
-            if(newTx->vin.size() > CTxLockRequest::MAX_INPUTS) {
-                Q_EMIT message(tr("Send Coins"), tr("InstantSend doesn't support transactions with more than %1 inputs.").arg(CTxLockRequest::MAX_INPUTS),
-                             CClientUIInterface::MSG_ERROR);
-                return TransactionCreationFailed;
+            if(newTx->vin.size() > CTxLockRequest::WARN_MANY_INPUTS) {
+                Q_EMIT message(tr("Send Coins"), tr("Used way too many inputs (>%1) for this InstantSend transaction, fees could be huge.").arg(CTxLockRequest::WARN_MANY_INPUTS),
+                             CClientUIInterface::MSG_WARNING);
             }
         }
 

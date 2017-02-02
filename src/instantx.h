@@ -116,7 +116,7 @@ private:
     int64_t nTimeCreated;
 
 public:
-    static const int MAX_INPUTS             = 10;
+    static const int WARN_MANY_INPUTS       = 100;
 
     CTxLockRequest() :
         CTransaction(),
