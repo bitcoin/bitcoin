@@ -3009,6 +3009,38 @@ UniValue bumpfee(const JSONRPCRequest& request)
     uint256 hash;
     hash.SetHex(request.params[0].get_str());
 
+    // optional parameters
+    bool specifiedConfirmTarget = false;
+    int newConfirmTarget = nTxConfirmTarget;
+    CAmount totalFee = 0;
+    bool replaceable = true;
+    if (request.params.size() > 1) {
+        UniValue options = request.params[1];
+        RPCTypeCheckObj(options,
+            {
+                {"confTarget", UniValueType(UniValue::VNUM)},
+                {"totalFee", UniValueType(UniValue::VNUM)},
+                {"replaceable", UniValueType(UniValue::VBOOL)},
+            },
+            true, true);
+
+        if (options.exists("confTarget") && options.exists("totalFee")) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "confTarget and totalFee options should not both be set. Please provide either a confirmation target for fee estimation or an explicit total fee for the transaction.");
+        } else if (options.exists("confTarget")) {
+            specifiedConfirmTarget = true;
+            newConfirmTarget = options["confTarget"].get_int();
+            if (newConfirmTarget <= 0) { // upper-bound will be checked by estimatefee/smartfee
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid confTarget (cannot be <= 0)");
+            }
+        } else if (options.exists("totalFee")) {
+            totalFee = options["totalFee"].get_int64();
+        }
+
+        if (options.exists("replaceable")) {
+            replaceable = options["replaceable"].get_bool();
+        }
+    }
+
     // retrieve the original tx from the wallet
     LOCK2(cs_main, pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
@@ -3066,44 +3098,6 @@ UniValue bumpfee(const JSONRPCRequest& request)
     int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
     const int64_t maxNewTxSize = CalculateMaximumSignedTxSize(*wtx.tx, *pwallet);
 
-    // optional parameters
-    bool specifiedConfirmTarget = false;
-    int newConfirmTarget = nTxConfirmTarget;
-    CAmount totalFee = 0;
-    bool replaceable = true;
-    if (request.params.size() > 1) {
-        UniValue options = request.params[1];
-        RPCTypeCheckObj(options,
-            {
-                {"confTarget", UniValueType(UniValue::VNUM)},
-                {"totalFee", UniValueType(UniValue::VNUM)},
-                {"replaceable", UniValueType(UniValue::VBOOL)},
-            },
-            true, true);
-
-        if (options.exists("confTarget") && options.exists("totalFee")) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "confTarget and totalFee options should not both be set. Please provide either a confirmation target for fee estimation or an explicit total fee for the transaction.");
-        } else if (options.exists("confTarget")) {
-            specifiedConfirmTarget = true;
-            newConfirmTarget = options["confTarget"].get_int();
-            if (newConfirmTarget <= 0) { // upper-bound will be checked by estimatefee/smartfee
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid confTarget (cannot be <= 0)");
-            }
-        } else if (options.exists("totalFee")) {
-            totalFee = options["totalFee"].get_int64();
-            CAmount requiredFee = CWallet::GetRequiredFee(maxNewTxSize);
-            if (totalFee < requiredFee ) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER,
-                                   strprintf("Insufficient totalFee (cannot be less than required fee %s)",
-                                             FormatMoney(requiredFee)));
-            }
-        }
-
-        if (options.exists("replaceable")) {
-            replaceable = options["replaceable"].get_bool();
-        }
-    }
-
     // calculate the old fee and fee-rate
     CAmount nOldFee = wtx.GetDebit(ISMINE_SPENDABLE) - wtx.tx->GetValueOut();
     CFeeRate nOldFeeRate(nOldFee, txSize);
@@ -3114,6 +3108,11 @@ UniValue bumpfee(const JSONRPCRequest& request)
         CAmount minTotalFee = nOldFeeRate.GetFee(maxNewTxSize) + ::incrementalRelayFee.GetFee(maxNewTxSize);
         if (totalFee < minTotalFee) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid totalFee, must be at least %s (oldFee %s + relayFee %s)", FormatMoney(minTotalFee), nOldFeeRate.GetFee(maxNewTxSize), ::incrementalRelayFee.GetFee(maxNewTxSize)));
+        }
+        CAmount requiredFee = CWallet::GetRequiredFee(maxNewTxSize);
+        if (totalFee < requiredFee ) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Insufficient totalFee (cannot be less than required fee %s)",
+                                                                FormatMoney(requiredFee)));
         }
         nNewFee = totalFee;
         nNewFeeRate = CFeeRate(totalFee, maxNewTxSize);
