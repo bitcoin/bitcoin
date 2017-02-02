@@ -69,6 +69,7 @@ class BumpFeeTest(BitcoinTestFramework):
         test_rebumping(rbf_node, dest_address)
         test_rebumping_not_replaceable(rbf_node, dest_address)
         test_unconfirmed_not_spendable(rbf_node, rbf_node_address)
+        test_bumpfee_metadata(rbf_node, dest_address)
         test_locked_wallet_fails(rbf_node, dest_address)
         print("Success")
 
@@ -255,6 +256,14 @@ def test_unconfirmed_not_spendable(rbf_node, rbf_node_address):
     assert_equal(
         sum(1 for t in rbf_node.listunspent(minconf=0, include_unsafe=False)
             if t["txid"] == rbfid and t["address"] == rbf_node_address and t["spendable"]), 1)
+
+
+def test_bumpfee_metadata(rbf_node, dest_address):
+    rbfid = rbf_node.sendtoaddress(dest_address, 0.00090000, "comment value", "to value")
+    bumped_tx = rbf_node.bumpfee(rbfid)
+    bumped_wtx = rbf_node.gettransaction(bumped_tx["txid"])
+    assert_equal(bumped_wtx["comment"], "comment value")
+    assert_equal(bumped_wtx["to"], "to value")
 
 
 def test_locked_wallet_fails(rbf_node, dest_address):
