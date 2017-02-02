@@ -137,7 +137,7 @@ class BlockDataCopier:
 		if not self.fileOutput and ((self.outsz + blockSizeOnDisk) > self.maxOutSz):
 			self.outF.close()
 			if self.setFileTime:
-				os.utime(outFname, (int(time.time()), highTS))
+				os.utime(self.outFname, (int(time.time()), self.highTS))
 			self.outF = None
 			self.outFname = None
 			self.outFn = self.outFn + 1
@@ -145,12 +145,12 @@ class BlockDataCopier:
 
 		(blkDate, blkTS) = get_blk_dt(blk_hdr)
 		if self.timestampSplit and (blkDate > self.lastDate):
-			print("New month " + blkDate.strftime("%Y-%m") + " @ " + hash_str)
-			lastDate = blkDate
-			if outF:
-				outF.close()
-				if setFileTime:
-					os.utime(outFname, (int(time.time()), highTS))
+			print("New month " + blkDate.strftime("%Y-%m") + " @ " + self.hash_str)
+			self.lastDate = blkDate
+			if self.outF:
+				self.outF.close()
+				if self.setFileTime:
+					os.utime(self.outFname, (int(time.time()), self.highTS))
 				self.outF = None
 				self.outFname = None
 				self.outFn = self.outFn + 1
@@ -158,11 +158,11 @@ class BlockDataCopier:
 
 		if not self.outF:
 			if self.fileOutput:
-				outFname = self.settings['output_file']
+				self.outFname = self.settings['output_file']
 			else:
-				outFname = os.path.join(self.settings['output'], "blk%05d.dat" % self.outFn)
-			print("Output file " + outFname)
-			self.outF = open(outFname, "wb")
+				self.outFname = os.path.join(self.settings['output'], "blk%05d.dat" % self.outFn)
+			print("Output file " + self.outFname)
+			self.outF = open(self.outFname, "wb")
 
 		self.outF.write(inhdr)
 		self.outF.write(blk_hdr)
@@ -226,13 +226,16 @@ class BlockDataCopier:
 			blk_hdr = self.inF.read(80)
 			inExtent = BlockExtent(self.inFn, self.inF.tell(), inhdr, blk_hdr, inLen)
 
-			hash_str = calc_hash_str(blk_hdr)
-			if not hash_str in blkmap:
-				print("Skipping unknown block " + hash_str)
+			self.hash_str = calc_hash_str(blk_hdr)
+			if not self.hash_str in blkmap:
+				# Because blocks can be written to files out-of-order as of 0.10, the script
+				# may encounter blocks it doesn't know about. Treat as debug output.
+				if settings['debug_output'] == 'true':
+					print("Skipping unknown block " + self.hash_str)
 				self.inF.seek(inLen, os.SEEK_CUR)
 				continue
 
-			blkHeight = self.blkmap[hash_str]
+			blkHeight = self.blkmap[self.hash_str]
 			self.blkCountIn += 1
 
 			if self.blkCountOut == blkHeight:
@@ -298,12 +301,15 @@ if __name__ == '__main__':
 		settings['max_out_sz'] = 1000 * 1000 * 1000
 	if 'out_of_order_cache_sz' not in settings:
 		settings['out_of_order_cache_sz'] = 100 * 1000 * 1000
+	if 'debug_output' not in settings:
+		settings['debug_output'] = 'false'
 
 	settings['max_out_sz'] = int(settings['max_out_sz'])
 	settings['split_timestamp'] = int(settings['split_timestamp'])
 	settings['file_timestamp'] = int(settings['file_timestamp'])
 	settings['netmagic'] = unhexlify(settings['netmagic'].encode('utf-8'))
 	settings['out_of_order_cache_sz'] = int(settings['out_of_order_cache_sz'])
+	settings['debug_output'] = settings['debug_output'].lower()
 
 	if 'output_file' not in settings and 'output' not in settings:
 		print("Missing output file / directory")
