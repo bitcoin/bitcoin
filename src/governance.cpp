@@ -982,42 +982,93 @@ void CGovernanceManager::RequestGovernanceObjectVotes(CNode* pnode)
 
 void CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy)
 {
-    static std::map<uint256, int64_t> mapAskedRecently;
+    static std::map<uint256, std::map<CService, int64_t> > mapAskedRecently;
+
+    if(vNodesCopy.empty()) return;
+
     LOCK2(cs_main, cs);
+
+    int64_t nNow = GetTime();
+    int nTimeout = 60 * 60;
+    size_t nPeersPerHashMax = 3;
+
+    // This should help us to get some idea about an impact this can bring once deployed on mainnet.
+    // Testnet is ~40 times smaller in masternode count, but only ~1000 masternodes usually vote,
+    // so 1 obj on mainnet == ~10 objs or ~1000 votes on testnet. However we want to test a higher
+    // number of votes to make sure it's robust enough, so aim at 2000 votes per masternode per request.
+    // On mainnet we have 4K+ masternodes, so nMaxObjRequestsPerNode always evaluates to `1`.
+    size_t nProjectedVotes = 2000;
+    int nMaxObjRequestsPerNode = std::max(1, int(nProjectedVotes / mnodeman.size()));
+
     std::vector<CGovernanceObject*> vpGovObjsTmp;
     std::vector<CGovernanceObject*> vpGovObjsTriggersTmp;
-    int64_t nNow = GetTime();
+
     for(object_m_it it = mapObjects.begin(); it != mapObjects.end(); ++it) {
-        if(mapAskedRecently.count(it->first) && mapAskedRecently[it->first] > nNow) continue;
-        if(it->second.nObjectType == GOVERNANCE_OBJECT_TRIGGER)
+        if(mapAskedRecently.count(it->first)) {
+            std::map<CService, int64_t>::iterator it1 = mapAskedRecently[it->first].begin();
+            while(it1 != mapAskedRecently[it->first].end()) {
+                if(it1->second < nNow) {
+                    mapAskedRecently[it->first].erase(it1++);
+                } else {
+                    ++it1;
+                }
+            }
+            if(mapAskedRecently[it->first].size() >= nPeersPerHashMax) continue;
+        }
+        if(it->second.nObjectType == GOVERNANCE_OBJECT_TRIGGER) {
             vpGovObjsTriggersTmp.push_back(&(it->second));
-        else
+        } else {
             vpGovObjsTmp.push_back(&(it->second));
+        }
     }
-    BOOST_FOREACH(CNode* pnode, vNodesCopy) {
-        // only use reqular peers, don't try to ask from temporary nodes we connected to -
-        // they stay connected for a short period of time and it's possible that we won't get everything we should
-        if(pnode->fMasternode) continue;
-        // only use up to date peers
-        if(pnode->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) continue;
-        // stop early to prevent setAskFor overflow
-        if(pnode->setAskFor.size() > SETASKFOR_MAX_SZ/2) continue;
+
+    LogPrint("governance", "CGovernanceManager::RequestGovernanceObjectVotes -- start: vpGovObjsTriggersTmp %d vpGovObjsTmp %d mapAskedRecently %d\n",
+                vpGovObjsTriggersTmp.size(), vpGovObjsTmp.size(), mapAskedRecently.size());
+
+    InsecureRand insecureRand;
+    // shuffle pointers
+    std::random_shuffle(vpGovObjsTriggersTmp.begin(), vpGovObjsTriggersTmp.end(), insecureRand);
+    std::random_shuffle(vpGovObjsTmp.begin(), vpGovObjsTmp.end(), insecureRand);
+
+    for (int i = 0; i < nMaxObjRequestsPerNode; ++i) {
         uint256 nHashGovobj;
+
         // ask for triggers first
         if(vpGovObjsTriggersTmp.size()) {
-            int r = GetRandInt(vpGovObjsTriggersTmp.size());
-            nHashGovobj = vpGovObjsTriggersTmp[r]->GetHash();
-            vpGovObjsTriggersTmp.erase(vpGovObjsTriggersTmp.begin() + r);
+            nHashGovobj = vpGovObjsTriggersTmp.back()->GetHash();
         } else {
-            if(vpGovObjsTmp.empty()) return;
-            int r = GetRandInt(vpGovObjsTmp.size());
-            nHashGovobj = vpGovObjsTmp[r]->GetHash();
-            vpGovObjsTmp.erase(vpGovObjsTmp.begin() + r);
+            if(vpGovObjsTmp.empty()) break;
+            nHashGovobj = vpGovObjsTmp.back()->GetHash();
         }
-        LogPrintf("CGovernanceManager::RequestGovernanceObjectVotes -- Requesting votes for %s, peer=%d\n", nHashGovobj.ToString(), pnode->id);
-        RequestGovernanceObject(pnode, nHashGovobj, true);
-        mapAskedRecently[nHashGovobj] = nNow + mapObjects.size() * 60; // ask again after full cycle
+        bool fAsked = false;
+        BOOST_FOREACH(CNode* pnode, vNodesCopy) {
+            // only use reqular peers, don't try to ask from temporary nodes we connected to -
+            // they stay connected for a short period of time and it's possible that we won't get everything we should
+            if(pnode->fMasternode) continue;
+            // only use up to date peers
+            if(pnode->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) continue;
+            // stop early to prevent setAskFor overflow
+            size_t nProjectedSize = pnode->setAskFor.size() + nProjectedVotes;
+            if(nProjectedSize > SETASKFOR_MAX_SZ/2) continue;
+            // to early to ask the same node
+            if(mapAskedRecently[nHashGovobj].count(pnode->addr)) continue;
+
+            RequestGovernanceObject(pnode, nHashGovobj, true);
+            mapAskedRecently[nHashGovobj][pnode->addr] = nNow + nTimeout;
+            fAsked = true;
+            // stop loop if max number of peers per obj was asked
+            if(mapAskedRecently[nHashGovobj].size() >= nPeersPerHashMax) break;
+        }
+        // NOTE: this should match `if` above (the one before `while`)
+        if(vpGovObjsTriggersTmp.size()) {
+            vpGovObjsTriggersTmp.pop_back();
+        } else {
+            vpGovObjsTmp.pop_back();
+        }
+        if(!fAsked) i--;
     }
+    LogPrint("governance", "CGovernanceManager::RequestGovernanceObjectVotes -- end: vpGovObjsTriggersTmp %d vpGovObjsTmp %d mapAskedRecently %d\n",
+                vpGovObjsTriggersTmp.size(), vpGovObjsTmp.size(), mapAskedRecently.size());
 }
 
 bool CGovernanceManager::AcceptObjectMessage(const uint256& nHash)
