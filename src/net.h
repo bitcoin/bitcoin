@@ -723,25 +723,8 @@ public:
     {
         return nRecvVersion;
     }
-    void SetSendVersion(int nVersionIn)
-    {
-        // Send version may only be changed in the version message, and
-        // only one version message is allowed per session. We can therefore
-        // treat this value as const and even atomic as long as it's only used
-        // once the handshake is complete. Any attempt to set this twice is an
-        // error.
-        assert(nSendVersion == 0);
-        nSendVersion = nVersionIn;
-    }
-
-    int GetSendVersion() const
-    {
-        // The send version should always be explicitly set to
-        // INIT_PROTO_VERSION rather than using this value until the handshake
-        // is complete.
-        assert(nSendVersion != 0);
-        return nSendVersion;
-    }
+    void SetSendVersion(int nVersionIn);
+    int GetSendVersion() const;
 
     CNode* AddRef()
     {
