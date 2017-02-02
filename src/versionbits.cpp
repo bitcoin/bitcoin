@@ -26,6 +26,7 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
     int nThreshold = Threshold(params);
     int64_t nTimeStart = BeginTime(params);
     int64_t nTimeTimeout = EndTime(params);
+    bool fLockInOnTimeout = LockInOnTimeout(params);
 
     // A block's state is always the same as that of the first of its period, so it is computed based on a pindexPrev whose height equals a multiple of nPeriod - 1.
     if (pindexPrev != NULL) {
@@ -70,7 +71,7 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
             }
             case THRESHOLD_STARTED: {
                 if (pindexPrev->GetMedianTimePast() >= nTimeTimeout) {
-                    stateNext = THRESHOLD_FAILED;
+                    stateNext = (fLockInOnTimeout == false) ? THRESHOLD_FAILED : THRESHOLD_LOCKED_IN;
                     break;
                 }
                 // We need to count
@@ -176,6 +177,7 @@ private:
 protected:
     int64_t BeginTime(const Consensus::Params& params) const { return params.vDeployments[id].nStartTime; }
     int64_t EndTime(const Consensus::Params& params) const { return params.vDeployments[id].nTimeout; }
+    bool LockInOnTimeout(const Consensus::Params& params) const { return params.vDeployments[id].fLockInOnTimeout; }
     int Period(const Consensus::Params& params) const { return params.nMinerConfirmationWindow; }
     int Threshold(const Consensus::Params& params) const { return params.nRuleChangeActivationThreshold; }
 

@@ -31,6 +31,8 @@ struct BIP9Deployment {
     int64_t nStartTime;
     /** Timeout/expiry MedianTime for the deployment attempt. */
     int64_t nTimeout;
+    /** If true STARTED->FAILED will become STARTED->LOCKED_IN */
+    bool fLockInOnTimeout = false;
 };
 
 /**
