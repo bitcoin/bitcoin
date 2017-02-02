@@ -429,14 +429,14 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fConnectToMas
         // Add node
         CNode* pnode = new CNode(hSocket, addrConnect, pszDest ? pszDest : "", false, true);
 
-        LOCK(cs_vNodes);
-        vNodes.push_back(pnode);
-
         pnode->nTimeConnected = GetTime();
         if(fConnectToMasternode) {
             pnode->AddRef();
             pnode->fMasternode = true;
         }
+
+        LOCK(cs_vNodes);
+        vNodes.push_back(pnode);
 
         return pnode;
     } else if (!proxyConnectionFailed) {
