@@ -344,8 +344,7 @@ void CMasternodeSync::ProcessTick()
             } else if(nRequestedMasternodeAttempt < 6) {
                 int nMnCount = mnodeman.CountMasternodes();
                 pnode->PushMessage(NetMsgType::MASTERNODEPAYMENTSYNC, nMnCount); //sync payment votes
-                uint256 n = uint256();
-                pnode->PushMessage(NetMsgType::MNGOVERNANCESYNC, n); //sync masternode votes
+                SendGovernanceSyncRequest(pnode);
             } else {
                 nRequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
             }
@@ -497,7 +496,7 @@ void CMasternodeSync::ProcessTick()
                 if (pnode->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) continue;
                 nRequestedMasternodeAttempt++;
 
-                pnode->PushMessage(NetMsgType::MNGOVERNANCESYNC, uint256()); //sync masternode votes
+                SendGovernanceSyncRequest(pnode);
 
                 ReleaseNodes(vNodesCopy);
                 return; //this will cause each peer to get one request each six seconds for the various assets we need
@@ -506,6 +505,19 @@ void CMasternodeSync::ProcessTick()
     }
     // looped through all nodes, release them
     ReleaseNodes(vNodesCopy);
+}
+
+void CMasternodeSync::SendGovernanceSyncRequest(CNode* pnode)
+{
+    if(pnode->nVersion >= GOVERNANCE_FILTER_PROTO_VERSION) {
+        CBloomFilter filter;
+        filter.clear();
+
+        pnode->PushMessage(NetMsgType::MNGOVERNANCESYNC, uint256(), filter);
+    }
+    else {
+        pnode->PushMessage(NetMsgType::MNGOVERNANCESYNC, uint256());
+    }
 }
 
 void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindex)

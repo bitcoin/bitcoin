@@ -7,6 +7,7 @@
 
 //#define ENABLE_DASH_DEBUG
 
+#include "bloom.h"
 #include "cachemap.h"
 #include "cachemultimap.h"
 #include "chain.h"
@@ -271,7 +272,7 @@ public:
      */
     bool ConfirmInventoryRequest(const CInv& inv);
 
-    void Sync(CNode* node, uint256 nProp);
+    void Sync(CNode* node, const uint256& nProp, const CBloomFilter& filter);
 
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
@@ -379,7 +380,7 @@ public:
     void RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy);
 
 private:
-    void RequestGovernanceObject(CNode* pfrom, const uint256& nHash);
+    void RequestGovernanceObject(CNode* pfrom, const uint256& nHash, bool fUseFilter = false);
 
     void AddInvalidVote(const CGovernanceVote& vote)
     {
