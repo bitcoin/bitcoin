@@ -775,6 +775,7 @@ static CCriticalSection cs_most_recent_block;
 static std::shared_ptr<const CBlock> most_recent_block;
 static std::shared_ptr<const CBlockHeaderAndShortTxIDs> most_recent_compact_block;
 static uint256 most_recent_block_hash;
+static bool fWitnessesPresentInMostRecentCompactBlock;
 
 void PeerLogicValidation::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock) {
     std::shared_ptr<const CBlockHeaderAndShortTxIDs> pcmpctblock = std::make_shared<const CBlockHeaderAndShortTxIDs> (*pblock, true);
@@ -795,6 +796,7 @@ void PeerLogicValidation::NewPoWValidBlock(const CBlockIndex *pindex, const std:
         most_recent_block_hash = hashBlock;
         most_recent_block = pblock;
         most_recent_compact_block = pcmpctblock;
+        fWitnessesPresentInMostRecentCompactBlock = fWitnessEnabled;
     }
 
     connman->ForEachNode([this, &pcmpctblock, pindex, &msgMaker, fWitnessEnabled, &hashBlock](CNode* pnode) {
@@ -981,10 +983,12 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
                 std::shared_ptr<const CBlock> a_recent_block;
                 std::shared_ptr<const CBlockHeaderAndShortTxIDs> a_recent_compact_block;
+                bool fWitnessesPresentInARecentCompactBlock;
                 {
                     LOCK(cs_most_recent_block);
                     a_recent_block = most_recent_block;
                     a_recent_compact_block = most_recent_compact_block;
+                    fWitnessesPresentInARecentCompactBlock = fWitnessesPresentInMostRecentCompactBlock;
                 }
                 if (mi != mapBlockIndex.end())
                 {
@@ -1077,7 +1081,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         bool fPeerWantsWitness = State(pfrom->GetId())->fWantsCmpctWitness;
                         int nSendFlags = fPeerWantsWitness ? 0 : SERIALIZE_TRANSACTION_NO_WITNESS;
                         if (CanDirectFetch(consensusParams) && mi->second->nHeight >= chainActive.Height() - MAX_CMPCTBLOCK_DEPTH) {
-                            if (fPeerWantsWitness && a_recent_compact_block && a_recent_compact_block->header.GetHash() == mi->second->GetBlockHash()) {
+                            if ((fPeerWantsWitness || !fWitnessesPresentInARecentCompactBlock) && a_recent_compact_block && a_recent_compact_block->header.GetHash() == mi->second->GetBlockHash()) {
                                 connman.PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, *a_recent_compact_block));
                             } else {
                                 CBlockHeaderAndShortTxIDs cmpctblock(*pblock, fPeerWantsWitness);
@@ -2941,7 +2945,7 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
                     {
                         LOCK(cs_most_recent_block);
                         if (most_recent_block_hash == pBestIndex->GetBlockHash()) {
-                            if (state.fWantsCmpctWitness)
+                            if (state.fWantsCmpctWitness || !fWitnessesPresentInMostRecentCompactBlock)
                                 connman.PushMessage(pto, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, *most_recent_compact_block));
                             else {
                                 CBlockHeaderAndShortTxIDs cmpctblock(*most_recent_block, state.fWantsCmpctWitness);
