@@ -436,12 +436,14 @@ void CDarksendPool::InitDenominations()
         1DRK+1000 == (.1DRK+100)*10
         10DRK+10000 == (1DRK+1000)*10
     */
+    /* Disabled
     vecPrivateSendDenominations.push_back( (100      * COIN)+100000 );
+    */
     vecPrivateSendDenominations.push_back( (10       * COIN)+10000 );
     vecPrivateSendDenominations.push_back( (1        * COIN)+1000 );
     vecPrivateSendDenominations.push_back( (.1       * COIN)+100 );
-    /* Disabled till we need them
     vecPrivateSendDenominations.push_back( (.01      * COIN)+10 );
+    /* Disabled till we need them
     vecPrivateSendDenominations.push_back( (.001     * COIN)+1 );
     */
 }
