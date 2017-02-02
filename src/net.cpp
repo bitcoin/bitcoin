@@ -1943,11 +1943,11 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     if (fConnectToMasternode)
         pnode->fMasternode = true;
 
+    GetNodeSignals().InitializeNode(pnode, *this);
     {
         LOCK(cs_vNodes);
         vNodes.push_back(pnode);
     }
-    GetNodeSignals().InitializeNode(pnode, *this);
 
     return true;
 }
