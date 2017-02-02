@@ -11,9 +11,11 @@
 #include "core_io.h"
 #include "init.h"
 #include "httpserver.h"
+#include "keepass.h"
 #include "net.h"
 #include "policy/feerate.h"
 #include "policy/fees.h"
+#include "privatesend/privatesend-client.h"
 #if ENABLE_MINER
 #include "rpc/mining.h"
 #endif //ENABLE_MINER
@@ -22,10 +24,9 @@
 #include "util.h"
 #include "utilmoneystr.h"
 #include "validation.h"
-#include "wallet.h"
-#include "walletdb.h"
-#include "keepass.h"
-#include "privatesend/privatesend-client.h"
+#include "wallet/coincontrol.h"
+#include "wallet/wallet.h"
+#include "wallet/walletdb.h"
 
 #include "llmq/quorums_chainlocks.h"
 #include "llmq/quorums_instantsend.h"
@@ -2955,20 +2956,21 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
 
     RPCTypeCheck(request.params, {UniValue::VSTR});
 
-    CTxDestination changeAddress = CNoDestination();
+    CCoinControl coinControl;
+    coinControl.destChange = CNoDestination();
     int changePosition = -1;
-    bool includeWatching = false;
+    coinControl.fAllowWatchOnly = false;  // include watching
     bool lockUnspents = false;
     bool reserveChangeKey = true;
-    CFeeRate feeRate = CFeeRate(0);
-    bool overrideEstimatedFeerate = false;
+    coinControl.nFeeRate = CFeeRate(0);
+    coinControl.fOverrideFeeRate = false;
     UniValue subtractFeeFromOutputs;
     std::set<int> setSubtractFeeFromOutputs;
 
     if (!request.params[1].isNull()) {
       if (request.params[1].type() == UniValue::VBOOL) {
         // backward compatibility bool only fallback
-        includeWatching = request.params[1].get_bool();
+        coinControl.fAllowWatchOnly = request.params[1].get_bool();
       }
       else {
         RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VOBJ});
@@ -2995,14 +2997,14 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
             if (!address.IsValid())
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "changeAddress must be a valid dash address");
 
-            changeAddress = address.Get();
+            coinControl.destChange = address.Get();
         }
 
         if (options.exists("changePosition"))
             changePosition = options["changePosition"].get_int();
 
         if (options.exists("includeWatching"))
-            includeWatching = options["includeWatching"].get_bool();
+            coinControl.fAllowWatchOnly = options["includeWatching"].get_bool();
 
         if (options.exists("lockUnspents"))
             lockUnspents = options["lockUnspents"].get_bool();
@@ -3012,8 +3014,8 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
 
         if (options.exists("feeRate"))
         {
-            feeRate = CFeeRate(AmountFromValue(options["feeRate"]));
-            overrideEstimatedFeerate = true;
+            coinControl.nFeeRate = CFeeRate(AmountFromValue(options["feeRate"]));
+            coinControl.fOverrideFeeRate = true;
         }
 
         if (options.exists("subtractFeeFromOutputs"))
@@ -3054,7 +3056,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     CAmount nFeeOut;
     std::string strFailReason;
 
-    if (!pwallet->FundTransaction(tx, nFeeOut, overrideEstimatedFeerate, feeRate, changePosition, strFailReason, includeWatching, lockUnspents, setSubtractFeeFromOutputs, reserveChangeKey, changeAddress)) {
+    if (!pwallet->FundTransaction(tx, nFeeOut, changePosition, strFailReason, lockUnspents, setSubtractFeeFromOutputs, coinControl, reserveChangeKey)) {
         throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
     }
 
