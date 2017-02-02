@@ -187,8 +187,8 @@ UniValue gobject(const JSONRPCRequest& request)
 
         EnsureWalletIsUnlocked(pwallet);
 
-        CWalletTx wtx;
-        if(!pwallet->GetBudgetSystemCollateralTX(wtx, govobj.GetHash(), govobj.GetMinCollateralFee())) {
+        CTransactionRef tx;
+        if(!pwallet->GetBudgetSystemCollateralTX(tx, govobj.GetHash(), govobj.GetMinCollateralFee())) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.");
         }
 
@@ -196,7 +196,7 @@ UniValue gobject(const JSONRPCRequest& request)
         CReserveKey reservekey(pwallet);
         // -- send the tx to the network
         CValidationState state;
-        if (!pwallet->CommitTransaction(wtx, reservekey, g_connman.get(), state)) {
+        if (!pwallet->CommitTransaction(tx, {} /* mapValue */, {} /* orderForm */, {} /* fromAccount */, reservekey, g_connman.get(), state)) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "CommitTransaction failed! Reason given: " + state.GetRejectReason());
         }
 
@@ -206,7 +206,7 @@ UniValue gobject(const JSONRPCRequest& request)
              << ", txidFee = " << wtx.GetHash().GetHex()
              << std::endl; );
 
-        return wtx.GetHash().ToString();
+        return tx->GetHash().ToString();
     }
 #endif // ENABLE_WALLET
 
