@@ -274,9 +274,14 @@ void InitializeNode(CNode *pnode, CConnman& connman) {
         PushNodeVersion(pnode, connman, GetTime());
 }
 
-void FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTime) {
+void FinalizeNode(CNode *pnode, bool& fUpdateConnectionTime) {
+    if (ShutdownRequested())
+        return;
+
     fUpdateConnectionTime = false;
+    nBlocksToBeProcessed -= pnode->nBlocksToBeProcessed;
     LOCK(cs_main);
+    NodeId nodeid = pnode->id;
     CNodeState *state = State(nodeid);
 
     if (state->fSyncStarted)
@@ -2619,6 +2624,13 @@ bool ProcessMessages(CNode* pfrom, CConnman& connman, std::atomic<bool>& interru
         CNetMessage& msg(msgs.front());
 
         msg.SetVersion(pfrom->GetRecvVersion());
+
+        if (msg.complete() && msg.hdr.pchCommand == NetMsgType::BLOCK) {
+            pfrom->nBlocksToBeProcessed--;
+            nBlocksToBeProcessed--;
+        } else if (ShutdownRequested())
+            return fMoreWork;
+
         // Scan for message start
         if (memcmp(msg.hdr.pchMessageStart, chainparams.MessageStart(), CMessageHeader::MESSAGE_START_SIZE) != 0) {
             LogPrintf("PROCESSMESSAGE: INVALID MESSAGESTART %s peer=%d\n", SanitizeString(msg.hdr.GetCommand()), pfrom->id);

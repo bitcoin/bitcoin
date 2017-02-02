@@ -468,7 +468,7 @@ struct CNodeSignals
     boost::signals2::signal<bool (CNode*, CConnman&, std::atomic<bool>&), CombinerAll> ProcessMessages;
     boost::signals2::signal<bool (CNode*, CConnman&, std::atomic<bool>&), CombinerAll> SendMessages;
     boost::signals2::signal<void (CNode*, CConnman&)> InitializeNode;
-    boost::signals2::signal<void (NodeId, bool&)> FinalizeNode;
+    boost::signals2::signal<void (CNode*, bool&)> FinalizeNode;
 };
 
 
@@ -505,6 +505,7 @@ CAddress GetLocalAddress(const CNetAddr *paddrPeer, ServiceFlags nLocalServices)
 extern bool fDiscover;
 extern bool fListen;
 extern bool fRelayTxes;
+extern std::atomic<int> nBlocksToBeProcessed;
 
 extern limitedmap<uint256, int64_t> mapAlreadyAskedFor;
 
@@ -622,6 +623,7 @@ public:
 
     int64_t nLastSend;
     int64_t nLastRecv;
+    std::atomic<int> nBlocksToBeProcessed; // blocks received but not yet processed
     int64_t nTimeConnected;
     int64_t nTimeOffset;
     const CAddress addr;
