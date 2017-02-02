@@ -78,6 +78,16 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         outputs = {'mpLQjfK79b7CCV4VMJWEWAj5Mpx8Up5zxB': 0.1}
 
         rawTx = self.nodes[0].createrawtransaction(inputs, outputs)
+
+        # Make sure decoderawtransaction is at least marginally sane
+        decodedRawTx = self.nodes[0].decoderawtransaction(rawTx)
+        for i, inp in enumerate(inputs):
+            assert_equal(decodedRawTx["vin"][i]["txid"], inp["txid"])
+            assert_equal(decodedRawTx["vin"][i]["vout"], inp["vout"])
+
+        # Make sure decoderawtransaction throws if there is extra data
+        assert_raises(JSONRPCException, self.nodes[0].decoderawtransaction, rawTx + "00")
+
         rawTxSigned = self.nodes[0].signrawtransaction(rawTx, scripts, privKeys)
 
         # 3) The transaction has no complete set of signatures
