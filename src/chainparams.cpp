@@ -336,7 +336,7 @@ public:
 };
 
 /**
- * Regression test
+ * Custom params for testing.
  */
 class CCustomParams : public CChainParams {
 
