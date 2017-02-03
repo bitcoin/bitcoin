@@ -84,6 +84,8 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
+        // Anything but an empty script means replacing pow with block signing
+        consensus.blocksignScript = CScript();
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
@@ -188,6 +190,7 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
+        consensus.blocksignScript = CScript();
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
@@ -276,6 +279,7 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
+        consensus.blocksignScript = CScript();
         consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
         consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
@@ -333,6 +337,15 @@ public:
     }
 };
 
+static CScript StrHexToScript(std::string strScript)
+{
+    if (!strScript.empty()) {
+        const std::vector<unsigned char> scriptData = ParseHex(strScript);
+        return CScript(scriptData.begin(), scriptData.end());
+    }
+    return CScript(OP_TRUE);
+}
+
 /**
  * Custom params for testing.
  */
@@ -357,6 +370,12 @@ class CCustomParams : public CChainParams {
         consensus.nMinimumChainWork = uint256S(args.GetArg("-con_nminimumchainwork", "0x0"));
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S(args.GetArg("-con_defaultassumevalid", "0x00"));
+
+        const std::string blocksignscriptStr = args.GetArg("-con_blocksignscript", "");
+        if (blocksignscriptStr == "")
+            consensus.blocksignScript = CScript();
+        else
+            consensus.blocksignScript = StrHexToScript(blocksignscriptStr);
 
         nDefaultPort = args.GetArg("-ndefaultport", 18444);
         nPruneAfterHeight = args.GetArg("-npruneafterheight", 1000);
