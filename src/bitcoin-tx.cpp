@@ -13,6 +13,7 @@
 #include "core_io.h"
 #include "keystore.h"
 #include "policy/policy.h"
+#include "policy/rbf.h"
 #include "primitives/transaction.h"
 #include "script/script.h"
 #include "script/sign.h"
@@ -215,7 +216,7 @@ static void MutateTxRBFOptIn(CMutableTransaction& tx, const std::string& strInId
     int cnt = 0;
     for (CTxIn& txin : tx.vin) {
         if (strInIdx == "" || cnt == inIdx) {
-            txin.nSequence = std::numeric_limits<unsigned int>::max() - 2;
+            txin.nSequence = MAX_BIP125_RBF_SEQUENCE;
         }
         ++cnt;
     }
