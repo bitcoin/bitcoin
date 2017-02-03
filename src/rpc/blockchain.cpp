@@ -19,6 +19,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "hash.h"
+#include "rpc/help.h"
 
 #include <stdint.h>
 
@@ -153,8 +154,8 @@ UniValue getblockcount(const JSONRPCRequest& request)
             "getblockcount\n"
             "\nReturns the number of blocks in the longest blockchain.\n"
             "\nResult:\n"
-            "n    (numeric) The current block count\n"
-            "\nExamples:\n"
+            + Tabulated("n || (numeric) The current block count\n")
+            + "\nExamples:\n"
             + HelpExampleCli("getblockcount", "")
             + HelpExampleRpc("getblockcount", "")
         );
@@ -170,8 +171,8 @@ UniValue getbestblockhash(const JSONRPCRequest& request)
             "getbestblockhash\n"
             "\nReturns the hash of the best (tip) block in the longest blockchain.\n"
             "\nResult:\n"
-            "\"hex\"      (string) the block hash hex encoded\n"
-            "\nExamples:\n"
+            + Tabulated("\"hex\" || (string) the block hash hex encoded\n")
+            + "\nExamples:\n"
             + HelpExampleCli("getbestblockhash", "")
             + HelpExampleRpc("getbestblockhash", "")
         );
@@ -194,16 +195,18 @@ UniValue waitfornewblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 1)
         throw runtime_error(
-            "waitfornewblock (timeout)\n"
+            "waitfornewblock ( timeout )\n"
             "\nWaits for a specific new block and returns useful info about it.\n"
             "\nReturns the current block on timeout or exit.\n"
-            "\nArguments:\n"
-            "1. timeout (int, optional, default=0) Time in milliseconds to wait for a response. 0 indicates no timeout.\n"
-            "\nResult:\n"
-            "{                           (json object)\n"
-            "  \"hash\" : {       (string) The blockhash\n"
-            "  \"height\" : {     (int) Block height\n"
-            "}\n"
+            + Tabulated(
+                "\nArguments:\n"
+                "1. timeout                || (int, optional, default=0) Time in milliseconds to wait for a response. 0 indicates no timeout.\n"
+                "\nResult:\n"
+                "{                         || (json object)\n"
+                "  \"hash\" : \"hash\",    || (string) The blockhash\n"
+                "  \"height\" : \"height\" || (int) Block height\n"
+            )
+            + "}\n"
             "\nExamples:\n"
             + HelpExampleCli("waitfornewblock", "1000")
             + HelpExampleRpc("waitfornewblock", "1000")
@@ -232,18 +235,20 @@ UniValue waitforblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw runtime_error(
-            "waitforblock <blockhash> (timeout)\n"
+            "waitforblock <blockhash> ( timeout )\n"
             "\nWaits for a specific new block and returns useful info about it.\n"
             "\nReturns the current block on timeout or exit.\n"
-            "\nArguments:\n"
-            "1. \"blockhash\" (required, string) Block hash to wait for.\n"
-            "2. timeout       (int, optional, default=0) Time in milliseconds to wait for a response. 0 indicates no timeout.\n"
-            "\nResult:\n"
-            "{                           (json object)\n"
-            "  \"hash\" : {       (string) The blockhash\n"
-            "  \"height\" : {     (int) Block height\n"
-            "}\n"
-            "\nExamples:\n"
+            + Tabulated(
+                "\nArguments:\n"
+                "1. \"blockhash\"          || (required, string) Block hash to wait for.\n"
+                "2. timeout                || (int, optional, default=0) Time in milliseconds to wait for a response. 0 indicates no timeout.\n"
+                "\nResult:\n"
+                "{                         || (json object)\n"
+                "  \"hash\" : \"hash\",    || (string) The blockhash\n"
+                "  \"height\" : \"height\" || (int) Block height\n"
+                "}\n"
+            )
+            + "\nExamples:\n"
             + HelpExampleCli("waitforblock", "\"0000000000079f8ef3d2c688c244eb7a4570b24c9ed7b4a8c619eb02596f8862\", 1000")
             + HelpExampleRpc("waitforblock", "\"0000000000079f8ef3d2c688c244eb7a4570b24c9ed7b4a8c619eb02596f8862\", 1000")
         );
@@ -274,19 +279,21 @@ UniValue waitforblockheight(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw runtime_error(
-            "waitforblockheight <height> (timeout)\n"
+            "waitforblockheight <height> ( timeout )\n"
             "\nWaits for (at least) block height and returns the height and hash\n"
             "of the current tip.\n"
             "\nReturns the current block on timeout or exit.\n"
-            "\nArguments:\n"
-            "1. height  (required, int) Block height to wait for (int)\n"
-            "2. timeout (int, optional, default=0) Time in milliseconds to wait for a response. 0 indicates no timeout.\n"
-            "\nResult:\n"
-            "{                           (json object)\n"
-            "  \"hash\" : {       (string) The blockhash\n"
-            "  \"height\" : {     (int) Block height\n"
-            "}\n"
-            "\nExamples:\n"
+            + Tabulated(
+                "\nArguments:\n"
+                "1. height                 || (required, int) Block height to wait for (int)\n"
+                "2. timeout                || (int, optional, default=0) Time in milliseconds to wait for a response. 0 indicates no timeout.\n"
+                "\nResult:\n"
+                "{                         || (json object)\n"
+                "  \"hash\" : \"hash\",    || (string) The blockhash\n"
+                "  \"height\" : \"height\" || (int) Block height\n"
+                "}\n"
+            )
+            + "\nExamples:\n"
             + HelpExampleCli("waitforblockheight", "\"100\", 1000")
             + HelpExampleRpc("waitforblockheight", "\"100\", 1000")
         );
@@ -319,8 +326,8 @@ UniValue getdifficulty(const JSONRPCRequest& request)
             "getdifficulty\n"
             "\nReturns the proof-of-work difficulty as a multiple of the minimum difficulty.\n"
             "\nResult:\n"
-            "n.nnn       (numeric) the proof-of-work difficulty as a multiple of the minimum difficulty.\n"
-            "\nExamples:\n"
+            + Tabulated("n.nnn || (numeric) the proof-of-work difficulty as a multiple of the minimum difficulty.\n")
+            + "\nExamples:\n"
             + HelpExampleCli("getdifficulty", "")
             + HelpExampleRpc("getdifficulty", "")
         );
@@ -331,21 +338,21 @@ UniValue getdifficulty(const JSONRPCRequest& request)
 
 std::string EntryDescriptionString()
 {
-    return "    \"size\" : n,             (numeric) virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted.\n"
-           "    \"fee\" : n,              (numeric) transaction fee in " + CURRENCY_UNIT + "\n"
-           "    \"modifiedfee\" : n,      (numeric) transaction fee with fee deltas used for mining priority\n"
-           "    \"time\" : n,             (numeric) local time transaction entered pool in seconds since 1 Jan 1970 GMT\n"
-           "    \"height\" : n,           (numeric) block height when transaction entered pool\n"
-           "    \"startingpriority\" : n, (numeric) DEPRECATED. Priority when transaction entered pool\n"
-           "    \"currentpriority\" : n,  (numeric) DEPRECATED. Transaction priority now\n"
-           "    \"descendantcount\" : n,  (numeric) number of in-mempool descendant transactions (including this one)\n"
-           "    \"descendantsize\" : n,   (numeric) virtual transaction size of in-mempool descendants (including this one)\n"
-           "    \"descendantfees\" : n,   (numeric) modified fees (see above) of in-mempool descendants (including this one)\n"
-           "    \"ancestorcount\" : n,    (numeric) number of in-mempool ancestor transactions (including this one)\n"
-           "    \"ancestorsize\" : n,     (numeric) virtual transaction size of in-mempool ancestors (including this one)\n"
-           "    \"ancestorfees\" : n,     (numeric) modified fees (see above) of in-mempool ancestors (including this one)\n"
-           "    \"depends\" : [           (array) unconfirmed transactions used as inputs for this transaction\n"
-           "        \"transactionid\",    (string) parent transaction id\n"
+    return "    \"size\" : n,             || (numeric) virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted.\n"
+           "    \"fee\" : n,              || (numeric) transaction fee in " + CURRENCY_UNIT + "\n"
+           "    \"modifiedfee\" : n,      || (numeric) transaction fee with fee deltas used for mining priority\n"
+           "    \"time\" : n,             || (numeric) local time transaction entered pool in seconds since 1 Jan 1970 GMT\n"
+           "    \"height\" : n,           || (numeric) block height when transaction entered pool\n"
+           "    \"startingpriority\" : n, || (numeric) DEPRECATED. Priority when transaction entered pool\n"
+           "    \"currentpriority\" : n,  || (numeric) DEPRECATED. Transaction priority now\n"
+           "    \"descendantcount\" : n,  || (numeric) number of in-mempool descendant transactions (including this one)\n"
+           "    \"descendantsize\" : n,   || (numeric) virtual transaction size of in-mempool descendants (including this one)\n"
+           "    \"descendantfees\" : n,   || (numeric) modified fees (see above) of in-mempool descendants (including this one)\n"
+           "    \"ancestorcount\" : n,    || (numeric) number of in-mempool ancestor transactions (including this one)\n"
+           "    \"ancestorsize\" : n,     || (numeric) virtual transaction size of in-mempool ancestors (including this one)\n"
+           "    \"ancestorfees\" : n,     || (numeric) modified fees (see above) of in-mempool ancestors (including this one)\n"
+           "    \"depends\" : [           || (array) unconfirmed transactions used as inputs for this transaction\n"
+           "        \"transactionid\",    || (string) parent transaction id\n"
            "       ... ]\n";
 }
 
@@ -417,20 +424,22 @@ UniValue getrawmempool(const JSONRPCRequest& request)
         throw runtime_error(
             "getrawmempool ( verbose )\n"
             "\nReturns all transaction ids in memory pool as a json array of string transaction ids.\n"
-            "\nArguments:\n"
-            "1. verbose (boolean, optional, default=false) True for a json object, false for array of transaction ids\n"
-            "\nResult: (for verbose = false):\n"
-            "[                     (json array of string)\n"
-            "  \"transactionid\"     (string) The transaction id\n"
-            "  ,...\n"
-            "]\n"
-            "\nResult: (for verbose = true):\n"
-            "{                           (json object)\n"
-            "  \"transactionid\" : {       (json object)\n"
-            + EntryDescriptionString()
-            + "  }, ...\n"
-            "}\n"
-            "\nExamples:\n"
+            + Tabulated(
+                "\nArguments:\n"
+                "1. verbose || (boolean, optional, default=false) True for a json object, false for array of transaction ids\n"
+                "\nResult: (for verbose = false):\n"
+                "[                       || (json array of string)\n"
+                "  \"transactionid\"     || (string) The transaction id\n"
+                "  ,...\n"
+                "]\n"
+                "\nResult: (for verbose = true):\n"
+                "{                       || (json object)\n"
+                "  \"transactionid\" : { || (json object)\n"
+                + EntryDescriptionString()
+                + "  }, ...\n"
+                "}\n"
+            )
+            + "\nExamples:\n"
             + HelpExampleCli("getrawmempool", "true")
             + HelpExampleRpc("getrawmempool", "true")
         );
@@ -446,23 +455,25 @@ UniValue getmempoolancestors(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
         throw runtime_error(
-            "getmempoolancestors txid (verbose)\n"
+            "getmempoolancestors txid ( verbose )\n"
             "\nIf txid is in the mempool, returns all in-mempool ancestors.\n"
-            "\nArguments:\n"
-            "1. \"txid\"                 (string, required) The transaction id (must be in mempool)\n"
-            "2. verbose                  (boolean, optional, default=false) True for a json object, false for array of transaction ids\n"
-            "\nResult (for verbose=false):\n"
-            "[                       (json array of strings)\n"
-            "  \"transactionid\"           (string) The transaction id of an in-mempool ancestor transaction\n"
-            "  ,...\n"
-            "]\n"
-            "\nResult (for verbose=true):\n"
-            "{                           (json object)\n"
-            "  \"transactionid\" : {       (json object)\n"
-            + EntryDescriptionString()
-            + "  }, ...\n"
-            "}\n"
-            "\nExamples:\n"
+            + Tabulated(
+                "\nArguments:\n"
+                "1. \"txid\"             || (string, required) The transaction id (must be in mempool)\n"
+                "2. verbose              || (boolean, optional, default=false) True for a json object, false for array of transaction ids\n"
+                "\nResult (for verbose=false):\n"
+                "[                       || (json array of strings)\n"
+                "  \"transactionid\"     || (string) The transaction id of an in-mempool ancestor transaction\n"
+                "  ,...\n"
+                "]\n"
+                "\nResult (for verbose=true):\n"
+                "{                       || (json object)\n"
+                "  \"transactionid\" : { || (json object)\n"
+                + EntryDescriptionString()
+                + "  }, ...\n"
+                "}\n"
+            )
+            + "\nExamples:\n"
             + HelpExampleCli("getmempoolancestors", "\"mytxid\"")
             + HelpExampleRpc("getmempoolancestors", "\"mytxid\"")
             );
@@ -510,23 +521,25 @@ UniValue getmempooldescendants(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
         throw runtime_error(
-            "getmempooldescendants txid (verbose)\n"
+            "getmempooldescendants txid ( verbose )\n"
             "\nIf txid is in the mempool, returns all in-mempool descendants.\n"
-            "\nArguments:\n"
-            "1. \"txid\"                 (string, required) The transaction id (must be in mempool)\n"
-            "2. verbose                  (boolean, optional, default=false) True for a json object, false for array of transaction ids\n"
-            "\nResult (for verbose=false):\n"
-            "[                       (json array of strings)\n"
-            "  \"transactionid\"           (string) The transaction id of an in-mempool descendant transaction\n"
-            "  ,...\n"
-            "]\n"
-            "\nResult (for verbose=true):\n"
-            "{                           (json object)\n"
-            "  \"transactionid\" : {       (json object)\n"
-            + EntryDescriptionString()
-            + "  }, ...\n"
-            "}\n"
-            "\nExamples:\n"
+            + Tabulated(
+                "\nArguments:\n"
+                "1. \"txid\"             || (string, required) The transaction id (must be in mempool)\n"
+                "2. verbose              || (boolean, optional, default=false) True for a json object, false for array of transaction ids\n"
+                "\nResult (for verbose=false):\n"
+                "[                       || (json array of strings)\n"
+                "  \"transactionid\"     || (string) The transaction id of an in-mempool descendant transaction\n"
+                "  ,...\n"
+                "]\n"
+                "\nResult (for verbose=true):\n"
+                "{                       || (json object)\n"
+                "  \"transactionid\" : { || (json object)\n"
+                + EntryDescriptionString()
+                + "  }, ...\n"
+                "}\n"
+            )
+            + "\nExamples:\n"
             + HelpExampleCli("getmempooldescendants", "\"mytxid\"")
             + HelpExampleRpc("getmempooldescendants", "\"mytxid\"")
             );
@@ -576,13 +589,15 @@ UniValue getmempoolentry(const JSONRPCRequest& request)
         throw runtime_error(
             "getmempoolentry txid\n"
             "\nReturns mempool data for given transaction\n"
-            "\nArguments:\n"
-            "1. \"txid\"                   (string, required) The transaction id (must be in mempool)\n"
-            "\nResult:\n"
-            "{                           (json object)\n"
-            + EntryDescriptionString()
-            + "}\n"
-            "\nExamples:\n"
+            + Tabulated(
+                "\nArguments:\n"
+                "1. \"txid\" || (string, required) The transaction id (must be in mempool)\n"
+                "\nResult:\n"
+                "{           || (json object)\n"
+                + EntryDescriptionString()
+                + "}\n"
+            )
+            + "\nExamples:\n"
             + HelpExampleCli("getmempoolentry", "\"mytxid\"")
             + HelpExampleRpc("getmempoolentry", "\"mytxid\"")
         );
@@ -609,11 +624,13 @@ UniValue getblockhash(const JSONRPCRequest& request)
         throw runtime_error(
             "getblockhash height\n"
             "\nReturns hash of block in best-block-chain at height provided.\n"
-            "\nArguments:\n"
-            "1. height         (numeric, required) The height index\n"
-            "\nResult:\n"
-            "\"hash\"         (string) The block hash\n"
-            "\nExamples:\n"
+            + Tabulated(
+                "\nArguments:\n"
+                "1. height || (numeric, required) The height index\n"
+                "\nResult:\n"
+                "\"hash\"  || (string) The block hash\n"
+            )
+            + "\nExamples:\n"
             + HelpExampleCli("getblockhash", "1000")
             + HelpExampleRpc("getblockhash", "1000")
         );
@@ -635,29 +652,31 @@ UniValue getblockheader(const JSONRPCRequest& request)
             "getblockheader \"hash\" ( verbose )\n"
             "\nIf verbose is false, returns a string that is serialized, hex-encoded data for blockheader 'hash'.\n"
             "If verbose is true, returns an Object with information about blockheader <hash>.\n"
-            "\nArguments:\n"
-            "1. \"hash\"          (string, required) The block hash\n"
-            "2. verbose           (boolean, optional, default=true) true for a json object, false for the hex encoded data\n"
-            "\nResult (for verbose = true):\n"
-            "{\n"
-            "  \"hash\" : \"hash\",     (string) the block hash (same as provided)\n"
-            "  \"confirmations\" : n,   (numeric) The number of confirmations, or -1 if the block is not on the main chain\n"
-            "  \"height\" : n,          (numeric) The block height or index\n"
-            "  \"version\" : n,         (numeric) The block version\n"
-            "  \"versionHex\" : \"00000000\", (string) The block version formatted in hexadecimal\n"
-            "  \"merkleroot\" : \"xxxx\", (string) The merkle root\n"
-            "  \"time\" : ttt,          (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
-            "  \"mediantime\" : ttt,    (numeric) The median block time in seconds since epoch (Jan 1 1970 GMT)\n"
-            "  \"nonce\" : n,           (numeric) The nonce\n"
-            "  \"bits\" : \"1d00ffff\", (string) The bits\n"
-            "  \"difficulty\" : x.xxx,  (numeric) The difficulty\n"
-            "  \"chainwork\" : \"0000...1f3\"     (string) Expected number of hashes required to produce the current chain (in hex)\n"
-            "  \"previousblockhash\" : \"hash\",  (string) The hash of the previous block\n"
-            "  \"nextblockhash\" : \"hash\",      (string) The hash of the next block\n"
-            "}\n"
-            "\nResult (for verbose=false):\n"
-            "\"data\"             (string) A string that is serialized, hex-encoded data for block 'hash'.\n"
-            "\nExamples:\n"
+            + Tabulated(
+                "\nArguments:\n"
+                "1. \"hash\"                         || (string, required) The block hash\n"
+                "2. verbose                          || (boolean, optional, default=true) true for a json object, false for the hex encoded data\n"
+                "\nResult (for verbose = true):\n"
+                "{\n"
+                "  \"hash\" : \"hash\",              || (string) the block hash (same as provided)\n"
+                "  \"confirmations\" : n,            || (numeric) The number of confirmations, or -1 if the block is not on the main chain\n"
+                "  \"height\" : n,                   || (numeric) The block height or index\n"
+                "  \"version\" : n,                  || (numeric) The block version\n"
+                "  \"versionHex\" : \"00000000\",    || (string) The block version formatted in hexadecimal\n"
+                "  \"merkleroot\" : \"xxxx\",        || (string) The merkle root\n"
+                "  \"time\" : ttt,                   || (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
+                "  \"mediantime\" : ttt,             || (numeric) The median block time in seconds since epoch (Jan 1 1970 GMT)\n"
+                "  \"nonce\" : n,                    || (numeric) The nonce\n"
+                "  \"bits\" : \"1d00ffff\",          || (string) The bits\n"
+                "  \"difficulty\" : x.xxx,           || (numeric) The difficulty\n"
+                "  \"chainwork\" : \"0000...1f3\",   || (string) Expected number of hashes required to produce the current chain (in hex)\n"
+                "  \"previousblockhash\" : \"hash\", || (string) The hash of the previous block\n"
+                "  \"nextblockhash\" : \"hash\",     || (string) The hash of the next block\n"
+                "}\n"
+                "\nResult (for verbose=false):\n"
+                "\"data\"                            || (string) A string that is serialized, hex-encoded data for block 'hash'.\n"
+            )
+            + "\nExamples:\n"
             + HelpExampleCli("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
             + HelpExampleRpc("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
         );
@@ -694,36 +713,38 @@ UniValue getblock(const JSONRPCRequest& request)
             "getblock \"blockhash\" ( verbose )\n"
             "\nIf verbose is false, returns a string that is serialized, hex-encoded data for block 'hash'.\n"
             "If verbose is true, returns an Object with information about block <hash>.\n"
-            "\nArguments:\n"
-            "1. \"blockhash\"          (string, required) The block hash\n"
-            "2. verbose                (boolean, optional, default=true) true for a json object, false for the hex encoded data\n"
-            "\nResult (for verbose = true):\n"
-            "{\n"
-            "  \"hash\" : \"hash\",     (string) the block hash (same as provided)\n"
-            "  \"confirmations\" : n,   (numeric) The number of confirmations, or -1 if the block is not on the main chain\n"
-            "  \"size\" : n,            (numeric) The block size\n"
-            "  \"strippedsize\" : n,    (numeric) The block size excluding witness data\n"
-            "  \"weight\" : n           (numeric) The block weight as defined in BIP 141\n"
-            "  \"height\" : n,          (numeric) The block height or index\n"
-            "  \"version\" : n,         (numeric) The block version\n"
-            "  \"versionHex\" : \"00000000\", (string) The block version formatted in hexadecimal\n"
-            "  \"merkleroot\" : \"xxxx\", (string) The merkle root\n"
-            "  \"tx\" : [               (array of string) The transaction ids\n"
-            "     \"transactionid\"     (string) The transaction id\n"
-            "     ,...\n"
-            "  ],\n"
-            "  \"time\" : ttt,          (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
-            "  \"mediantime\" : ttt,    (numeric) The median block time in seconds since epoch (Jan 1 1970 GMT)\n"
-            "  \"nonce\" : n,           (numeric) The nonce\n"
-            "  \"bits\" : \"1d00ffff\", (string) The bits\n"
-            "  \"difficulty\" : x.xxx,  (numeric) The difficulty\n"
-            "  \"chainwork\" : \"xxxx\",  (string) Expected number of hashes required to produce the chain up to this block (in hex)\n"
-            "  \"previousblockhash\" : \"hash\",  (string) The hash of the previous block\n"
-            "  \"nextblockhash\" : \"hash\"       (string) The hash of the next block\n"
-            "}\n"
-            "\nResult (for verbose=false):\n"
-            "\"data\"             (string) A string that is serialized, hex-encoded data for block 'hash'.\n"
-            "\nExamples:\n"
+            + Tabulated(
+                "\nArguments:\n"
+                "1. \"blockhash\"                    || (string, required) The block hash\n"
+                "2. verbose                          || (boolean, optional, default=true) true for a json object, false for the hex encoded data\n"
+                "\nResult (for verbose = true):\n"
+                "{\n"
+                "  \"hash\" : \"hash\",              || (string) the block hash (same as provided)\n"
+                "  \"confirmations\" : n,            || (numeric) The number of confirmations, or -1 if the block is not on the main chain\n"
+                "  \"size\" : n,                     || (numeric) The block size\n"
+                "  \"strippedsize\" : n,             || (numeric) The block size excluding witness data\n"
+                "  \"weight\" : n,                   || (numeric) The block weight as defined in BIP 141\n"
+                "  \"height\" : n,                   || (numeric) The block height or index\n"
+                "  \"version\" : n,                  || (numeric) The block version\n"
+                "  \"versionHex\" : \"00000000\",    || (string) The block version formatted in hexadecimal\n"
+                "  \"merkleroot\" : \"xxxx\",        || (string) The merkle root\n"
+                "  \"tx\" : [                        || (array of string) The transaction ids\n"
+                "     \"transactionid\"              || (string) The transaction id\n"
+                "     ,...\n"
+                "  ],\n"
+                "  \"time\" : ttt,                   || (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
+                "  \"mediantime\" : ttt,             || (numeric) The median block time in seconds since epoch (Jan 1 1970 GMT)\n"
+                "  \"nonce\" : n,                    || (numeric) The nonce\n"
+                "  \"bits\" : \"1d00ffff\",          || (string) The bits\n"
+                "  \"difficulty\" : x.xxx,           || (numeric) The difficulty\n"
+                "  \"chainwork\" : \"xxxx\",         || (string) Expected number of hashes required to produce the chain up to this block (in hex)\n"
+                "  \"previousblockhash\" : \"hash\", || (string) The hash of the previous block\n"
+                "  \"nextblockhash\" : \"hash\"      || (string) The hash of the next block\n"
+                "}\n"
+                "\nResult (for verbose=false):\n"
+                "\"data\"                            || (string) A string that is serialized, hex-encoded data for block 'hash'.\n"
+            )
+            + "\nExamples:\n"
             + HelpExampleCli("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
             + HelpExampleRpc("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
         );
@@ -819,11 +840,13 @@ UniValue pruneblockchain(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
             "pruneblockchain\n"
-            "\nArguments:\n"
-            "1. \"height\"       (numeric, required) The block height to prune up to. May be set to a discrete height, or to a unix timestamp to prune based on block time.\n"
-            "\nResult:\n"
-            "n    (numeric) Height of the last block pruned.\n"
-            "\nExamples:\n"
+            + Tabulated(
+                "\nArguments:\n"
+                "1. \"height\" || (numeric, required) The block height to prune up to. May be set to a discrete height, or to a unix timestamp to prune based on block time.\n"
+                "\nResult:\n"
+                "n             || (numeric) Height of the last block pruned.\n"
+            )
+            + "\nExamples:\n"
             + HelpExampleCli("pruneblockchain", "1000")
             + HelpExampleRpc("pruneblockchain", "1000"));
 
@@ -868,17 +891,19 @@ UniValue gettxoutsetinfo(const JSONRPCRequest& request)
             "gettxoutsetinfo\n"
             "\nReturns statistics about the unspent transaction output set.\n"
             "Note this call may take some time.\n"
-            "\nResult:\n"
-            "{\n"
-            "  \"height\":n,     (numeric) The current block height (index)\n"
-            "  \"bestblock\": \"hex\",   (string) the best block hash hex\n"
-            "  \"transactions\": n,      (numeric) The number of transactions\n"
-            "  \"txouts\": n,            (numeric) The number of output transactions\n"
-            "  \"bytes_serialized\": n,  (numeric) The serialized size\n"
-            "  \"hash_serialized\": \"hash\",   (string) The serialized hash\n"
-            "  \"total_amount\": x.xxx          (numeric) The total amount\n"
-            "}\n"
-            "\nExamples:\n"
+            + Tabulated(
+                "\nResult:\n"
+                "{\n"
+                "  \"height\" : n,                 || (numeric) The current block height (index)\n"
+                "  \"bestblock\" : \"hex\",        || (string) the best block hash hex\n"
+                "  \"transactions\" : n,           || (numeric) The number of transactions\n"
+                "  \"txouts\" : n,                 || (numeric) The number of output transactions\n"
+                "  \"bytes_serialized\" : n,       || (numeric) The serialized size\n"
+                "  \"hash_serialized\" : \"hash\", || (string) The serialized hash\n"
+                "  \"total_amount\" : x.xxx        || (numeric) The total amount\n"
+                "}\n"
+            )
+            + "\nExamples:\n"
             + HelpExampleCli("gettxoutsetinfo", "")
             + HelpExampleRpc("gettxoutsetinfo", "")
         );
@@ -907,30 +932,31 @@ UniValue gettxout(const JSONRPCRequest& request)
         throw runtime_error(
             "gettxout \"txid\" n ( include_mempool )\n"
             "\nReturns details about an unspent transaction output.\n"
-            "\nArguments:\n"
-            "1. \"txid\"       (string, required) The transaction id\n"
-            "2. n              (numeric, required) vout number\n"
-            "3. include_mempool  (boolean, optional) Whether to include the mempool\n"
-            "\nResult:\n"
-            "{\n"
-            "  \"bestblock\" : \"hash\",    (string) the block hash\n"
-            "  \"confirmations\" : n,       (numeric) The number of confirmations\n"
-            "  \"value\" : x.xxx,           (numeric) The transaction value in " + CURRENCY_UNIT + "\n"
-            "  \"scriptPubKey\" : {         (json object)\n"
-            "     \"asm\" : \"code\",       (string) \n"
-            "     \"hex\" : \"hex\",        (string) \n"
-            "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
-            "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
-            "     \"addresses\" : [          (array of string) array of bitcoin addresses\n"
-            "        \"address\"     (string) bitcoin address\n"
-            "        ,...\n"
-            "     ]\n"
-            "  },\n"
-            "  \"version\" : n,            (numeric) The version\n"
-            "  \"coinbase\" : true|false   (boolean) Coinbase or not\n"
-            "}\n"
-
-            "\nExamples:\n"
+            + Tabulated(
+                "\nArguments:\n"
+                "1. \"txid\"                     || (string, required) The transaction id\n"
+                "2. n                            || (numeric, required) vout number\n"
+                "3. include_mempool              || (boolean, optional) Whether to include the mempool\n"
+                "\nResult:\n"
+                "{\n"
+                "  \"bestblock\" : \"hash\",     || (string) the block hash\n"
+                "  \"confirmations\" : n,        || (numeric) The number of confirmations\n"
+                "  \"value\" : x.xxx,            || (numeric) The transaction value in " + CURRENCY_UNIT + "\n"
+                "  \"scriptPubKey\" : {          || (json object)\n"
+                "     \"asm\" : \"code\",        || (string) \n"
+                "     \"hex\" : \"hex\",         || (string) \n"
+                "     \"reqSigs\" : n,           || (numeric) Number of required signatures\n"
+                "     \"type\" : \"pubkeyhash\", || (string) The type, eg pubkeyhash\n"
+                "     \"addresses\" : [          || (array of string) array of bitcoin addresses\n"
+                "        \"address\"             || (string) bitcoin address\n"
+                "        ,...\n"
+                "     ]\n"
+                "  },\n"
+                "  \"version\" : n,              || (numeric) The version\n"
+                "  \"coinbase\" : true|false     || (boolean) Coinbase or not\n"
+                "}\n"
+            )
+            + "\nExamples:\n"
             "\nGet unspent transactions\n"
             + HelpExampleCli("listunspent", "") +
             "\nView the details\n"
@@ -989,12 +1015,14 @@ UniValue verifychain(const JSONRPCRequest& request)
         throw runtime_error(
             "verifychain ( checklevel nblocks )\n"
             "\nVerifies blockchain database.\n"
-            "\nArguments:\n"
-            "1. checklevel   (numeric, optional, 0-4, default=" + strprintf("%d", nCheckLevel) + ") How thorough the block verification is.\n"
-            "2. nblocks      (numeric, optional, default=" + strprintf("%d", nCheckDepth) + ", 0=all) The number of blocks to check.\n"
-            "\nResult:\n"
-            "true|false       (boolean) Verified or not\n"
-            "\nExamples:\n"
+            + Tabulated(
+                "\nArguments:\n"
+                "1. checklevel || (numeric, optional, 0-4, default=" + strprintf("%d", nCheckLevel) + ") How thorough the block verification is.\n"
+                "2. nblocks    || (numeric, optional, default=" + strprintf("%d", nCheckDepth) + ", 0=all) The number of blocks to check.\n"
+                "\nResult:\n"
+                "true|false    || (boolean) Verified or not\n"
+            )
+            + "\nExamples:\n"
             + HelpExampleCli("verifychain", "")
             + HelpExampleRpc("verifychain", "")
         );
@@ -1076,37 +1104,39 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             "getblockchaininfo\n"
             "Returns an object containing various state info regarding blockchain processing.\n"
             "\nResult:\n"
-            "{\n"
-            "  \"chain\": \"xxxx\",        (string) current network name as defined in BIP70 (main, test, regtest)\n"
-            "  \"blocks\": xxxxxx,         (numeric) the current number of blocks processed in the server\n"
-            "  \"headers\": xxxxxx,        (numeric) the current number of headers we have validated\n"
-            "  \"bestblockhash\": \"...\", (string) the hash of the currently best block\n"
-            "  \"difficulty\": xxxxxx,     (numeric) the current difficulty\n"
-            "  \"mediantime\": xxxxxx,     (numeric) median time for the current best block\n"
-            "  \"verificationprogress\": xxxx, (numeric) estimate of verification progress [0..1]\n"
-            "  \"chainwork\": \"xxxx\"     (string) total amount of work in active chain, in hexadecimal\n"
-            "  \"pruned\": xx,             (boolean) if the blocks are subject to pruning\n"
-            "  \"pruneheight\": xxxxxx,    (numeric) lowest-height complete block stored\n"
-            "  \"softforks\": [            (array) status of softforks in progress\n"
-            "     {\n"
-            "        \"id\": \"xxxx\",        (string) name of softfork\n"
-            "        \"version\": xx,         (numeric) block version\n"
-            "        \"reject\": {            (object) progress toward rejecting pre-softfork blocks\n"
-            "           \"status\": xx,       (boolean) true if threshold reached\n"
-            "        },\n"
-            "     }, ...\n"
-            "  ],\n"
-            "  \"bip9_softforks\": {          (object) status of BIP9 softforks in progress\n"
-            "     \"xxxx\" : {                (string) name of the softfork\n"
-            "        \"status\": \"xxxx\",    (string) one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\"\n"
-            "        \"bit\": xx,             (numeric) the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)\n"
-            "        \"startTime\": xx,       (numeric) the minimum median time past of a block at which the bit gains its meaning\n"
-            "        \"timeout\": xx,         (numeric) the median time past of a block at which the deployment is considered failed if not yet locked in\n"
-            "        \"since\": xx            (numeric) height of the first block to which the status applies\n"
-            "     }\n"
-            "  }\n"
-            "}\n"
-            "\nExamples:\n"
+            + Tabulated(
+                "{\n"
+                "  \"chain\" : \"xxxx\",            || (string) current network name as defined in BIP70 (main, test, regtest)\n"
+                "  \"blocks\" : xxxxxx,             || (numeric) the current number of blocks processed in the server\n"
+                "  \"headers\" : xxxxxx,            || (numeric) the current number of headers we have validated\n"
+                "  \"bestblockhash\" : \"...\",     || (string) the hash of the currently best block\n"
+                "  \"difficulty\" : xxxxxx,         || (numeric) the current difficulty\n"
+                "  \"mediantime\" : xxxxxx,         || (numeric) median time for the current best block\n"
+                "  \"verificationprogress\" : xxxx, || (numeric) estimate of verification progress [0..1]\n"
+                "  \"chainwork\" : \"xxxx\",        || (string) total amount of work in active chain, in hexadecimal\n"
+                "  \"pruned\" : xx,                 || (boolean) if the blocks are subject to pruning\n"
+                "  \"pruneheight\" : xxxxxx,        || (numeric) lowest-height complete block stored\n"
+                "  \"softforks\" : [                || (array) status of softforks in progress\n"
+                "     {\n"
+                "        \"id\" : \"xxxx\",         || (string) name of softfork\n"
+                "        \"version\" : xx,          || (numeric) block version\n"
+                "        \"reject\" : {             || (object) progress toward rejecting pre-softfork blocks\n"
+                "           \"status\" : xx,        || (boolean) true if threshold reached\n"
+                "        },\n"
+                "     }, ...\n"
+                "  ],\n"
+                "  \"bip9_softforks\" : {           || (object) status of BIP9 softforks in progress\n"
+                "     \"xxxx\" : {                  || (string) name of the softfork\n"
+                "        \"status\" : \"xxxx\",     || (string) one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\"\n"
+                "        \"bit\" : xx,              || (numeric) the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)\n"
+                "        \"startTime\" : xx,        || (numeric) the minimum median time past of a block at which the bit gains its meaning\n"
+                "        \"timeout\" : xx,          || (numeric) the median time past of a block at which the deployment is considered failed if not yet locked in\n"
+                "        \"since\" : xx             || (numeric) height of the first block to which the status applies\n"
+                "     }\n"
+                "  }\n"
+                "}\n"
+            )
+            + "\nExamples:\n"
             + HelpExampleCli("getblockchaininfo", "")
             + HelpExampleRpc("getblockchaininfo", "")
         );
@@ -1170,27 +1200,29 @@ UniValue getchaintips(const JSONRPCRequest& request)
             "Return information about all known tips in the block tree,"
             " including the main chain as well as orphaned branches.\n"
             "\nResult:\n"
-            "[\n"
-            "  {\n"
-            "    \"height\": xxxx,         (numeric) height of the chain tip\n"
-            "    \"hash\": \"xxxx\",         (string) block hash of the tip\n"
-            "    \"branchlen\": 0          (numeric) zero for main chain\n"
-            "    \"status\": \"active\"      (string) \"active\" for the main chain\n"
-            "  },\n"
-            "  {\n"
-            "    \"height\": xxxx,\n"
-            "    \"hash\": \"xxxx\",\n"
-            "    \"branchlen\": 1          (numeric) length of branch connecting the tip to the main chain\n"
-            "    \"status\": \"xxxx\"        (string) status of the chain (active, valid-fork, valid-headers, headers-only, invalid)\n"
-            "  }\n"
-            "]\n"
-            "Possible values for status:\n"
-            "1.  \"invalid\"               This branch contains at least one invalid block\n"
-            "2.  \"headers-only\"          Not all blocks for this branch are available, but the headers are valid\n"
-            "3.  \"valid-headers\"         All blocks are available for this branch, but they were never fully validated\n"
-            "4.  \"valid-fork\"            This branch is not part of the active chain, but is fully validated\n"
-            "5.  \"active\"                This is the tip of the active main chain, which is certainly valid\n"
-            "\nExamples:\n"
+            + Tabulated(
+                "[\n"
+                "  {\n"
+                "    \"height\" : xxxx,      || (numeric) height of the chain tip\n"
+                "    \"hash\" : \"xxxx\",    || (string) block hash of the tip\n"
+                "    \"branchlen\" : 0,      || (numeric) zero for main chain\n"
+                "    \"status\" : \"active\" || (string) \"active\" for the main chain\n"
+                "  },\n"
+                "  {\n"
+                "    \"height\" : xxxx,\n"
+                "    \"hash\" : \"xxxx\",\n"
+                "    \"branchlen\" : 1,      || (numeric) length of branch connecting the tip to the main chain\n"
+                "    \"status\" : \"xxxx\"   || (string) status of the chain (active, valid-fork, valid-headers, headers-only, invalid)\n"
+                "  }\n"
+                "]\n"
+                "Possible values for status:\n"
+                "1.  \"invalid\"             || This branch contains at least one invalid block\n"
+                "2.  \"headers-only\"        || Not all blocks for this branch are available, but the headers are valid\n"
+                "3.  \"valid-headers\"       || All blocks are available for this branch, but they were never fully validated\n"
+                "4.  \"valid-fork\"          || This branch is not part of the active chain, but is fully validated\n"
+                "5.  \"active\"              || This is the tip of the active main chain, which is certainly valid\n"
+            )
+            + "\nExamples:\n"
             + HelpExampleCli("getchaintips", "")
             + HelpExampleRpc("getchaintips", "")
         );
@@ -1285,14 +1317,16 @@ UniValue getmempoolinfo(const JSONRPCRequest& request)
             "getmempoolinfo\n"
             "\nReturns details on the active state of the TX memory pool.\n"
             "\nResult:\n"
-            "{\n"
-            "  \"size\": xxxxx,               (numeric) Current tx count\n"
-            "  \"bytes\": xxxxx,              (numeric) Sum of all virtual transaction sizes as defined in BIP 141. Differs from actual serialized size because witness data is discounted\n"
-            "  \"usage\": xxxxx,              (numeric) Total memory usage for the mempool\n"
-            "  \"maxmempool\": xxxxx,         (numeric) Maximum memory usage for the mempool\n"
-            "  \"mempoolminfee\": xxxxx       (numeric) Minimum fee for tx to be accepted\n"
-            "}\n"
-            "\nExamples:\n"
+            + Tabulated(
+                "{\n"
+                "  \"size\" : xxxxx,         || (numeric) Current tx count\n"
+                "  \"bytes\" : xxxxx,        || (numeric) Sum of all virtual transaction sizes as defined in BIP 141. Differs from actual serialized size because witness data is discounted\n"
+                "  \"usage\" : xxxxx,        || (numeric) Total memory usage for the mempool\n"
+                "  \"maxmempool\" : xxxxx,   || (numeric) Maximum memory usage for the mempool\n"
+                "  \"mempoolminfee\" : xxxxx || (numeric) Minimum fee for tx to be accepted\n"
+                "}\n"
+            )
+            + "\nExamples:\n"
             + HelpExampleCli("getmempoolinfo", "")
             + HelpExampleRpc("getmempoolinfo", "")
         );
@@ -1309,8 +1343,8 @@ UniValue preciousblock(const JSONRPCRequest& request)
             "\nA later preciousblock call can override the effect of an earlier one.\n"
             "\nThe effects of preciousblock are not retained across restarts.\n"
             "\nArguments:\n"
-            "1. \"blockhash\"   (string, required) the hash of the block to mark as precious\n"
-            "\nResult:\n"
+            + Tabulated("1. \"blockhash\" || (string, required) the hash of the block to mark as precious\n")
+            + "\nResult:\n"
             "\nExamples:\n"
             + HelpExampleCli("preciousblock", "\"blockhash\"")
             + HelpExampleRpc("preciousblock", "\"blockhash\"")
@@ -1345,8 +1379,8 @@ UniValue invalidateblock(const JSONRPCRequest& request)
             "invalidateblock \"blockhash\"\n"
             "\nPermanently marks a block as invalid, as if it violated a consensus rule.\n"
             "\nArguments:\n"
-            "1. \"blockhash\"   (string, required) the hash of the block to mark as invalid\n"
-            "\nResult:\n"
+            + Tabulated("1. \"blockhash\" || (string, required) the hash of the block to mark as invalid\n")
+            + "\nResult:\n"
             "\nExamples:\n"
             + HelpExampleCli("invalidateblock", "\"blockhash\"")
             + HelpExampleRpc("invalidateblock", "\"blockhash\"")
@@ -1384,8 +1418,8 @@ UniValue reconsiderblock(const JSONRPCRequest& request)
             "\nRemoves invalidity status of a block and its descendants, reconsider them for activation.\n"
             "This can be used to undo the effects of invalidateblock.\n"
             "\nArguments:\n"
-            "1. \"blockhash\"   (string, required) the hash of the block to reconsider\n"
-            "\nResult:\n"
+            + Tabulated("1. \"blockhash\" || (string, required) the hash of the block to reconsider\n")
+            + "\nResult:\n"
             "\nExamples:\n"
             + HelpExampleCli("reconsiderblock", "\"blockhash\"")
             + HelpExampleRpc("reconsiderblock", "\"blockhash\"")
