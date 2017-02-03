@@ -316,7 +316,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             "      ,...\n"
             "    }\n"
             "3. locktime                  (numeric, optional, default=0) Raw locktime. Non-0 value also locktime-activates inputs\n"
-            "4. optintorbf                (boolean, optional, default=false) Allow this transaction to be replaced by a transaction with higher fees\n"
+            "4. optintorbf                (boolean, optional, default=false) Allow this transaction to be replaced by a transaction with higher fees. If provided, it is an error if explicit sequence numbers are incompatible.\n"
             "\nResult:\n"
             "\"transaction\"              (string) hex string of the transaction\n"
 
@@ -373,8 +373,6 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             int64_t seqNr64 = sequenceObj.get_int64();
             if (seqNr64 < 0 || seqNr64 > std::numeric_limits<uint32_t>::max()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, sequence number is out of range");
-            } else if (seqNr64 <= MAX_BIP125_RBF_SEQUENCE && request.params.size() > 3 && request.params[3].isFalse()) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter combination: Sequence number contradicts optintorbf option");
             } else {
                 nSequence = (uint32_t)seqNr64;
             }
@@ -409,6 +407,10 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             CTxOut out(nAmount, scriptPubKey);
             rawTx.vout.push_back(out);
         }
+    }
+
+    if (request.params.size() > 3 && rbfOptIn != SignalsOptInRBF(rawTx)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter combination: Sequence number(s) contradict optintorbf option");
     }
 
     return EncodeHexTx(rawTx);
