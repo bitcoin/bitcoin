@@ -9,6 +9,7 @@
 #include "omnicore/mdex.h"
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/parse_string.h"
 #include "omnicore/sp.h"
 
 #include "arith_uint256.h"
@@ -23,6 +24,27 @@
 
 namespace mastercore
 {
+bool ShouldConsensusHashBlock(int block) {
+    if (msc_debug_consensus_hash_every_block) {
+        return true;
+    }
+
+    if (!mapArgs.count("-omnishowblockconsensushash")) {
+        return false;
+    }
+
+    const std::vector<std::string>& vecBlocks = mapMultiArgs["-omnishowblockconsensushash"];
+    for (std::vector<std::string>::const_iterator it = vecBlocks.begin(); it != vecBlocks.end(); ++it) {
+        int64_t paramBlock = StrToInt64(*it, false);
+        if (paramBlock < 1) continue; // ignore non numeric values
+        if (paramBlock == block) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // Generates a consensus string for hashing based on a tally object
 std::string GenerateConsensusString(const CMPTally& tallyObj, const std::string& address, const uint32_t propertyId)
 {
