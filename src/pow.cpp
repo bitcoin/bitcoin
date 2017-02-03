@@ -89,3 +89,15 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
 
     return true;
 }
+
+bool MaybeGenerateProof(const Consensus::Params& params, CBlockHeader* pblock, uint64_t& nTries)
+{
+    static const int nInnerLoopCount = 0x10000;
+    uint256 blockHash = pblock->GetHash();
+    while (nTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(blockHash, pblock->nBits, params)) {
+        ++pblock->nNonce;
+        blockHash = pblock->GetHash();
+        --nTries;
+    }
+    return CheckProofOfWork(blockHash, pblock->nBits, params);
+}
