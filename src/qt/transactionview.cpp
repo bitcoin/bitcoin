@@ -11,6 +11,7 @@
 #include <guiutil.h>
 #include <optionsmodel.h>
 #include <platformstyle.h>
+#include <sendcoinsdialog.h>
 #include <transactiondescdialog.h>
 #include <transactionfilterproxy.h>
 #include <transactionrecord.h>
@@ -41,7 +42,7 @@ static const char* PERSISTENCE_DATE_FORMAT = "yyyy-MM-dd";
 
 TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent), model(0), transactionProxyModel(0),
-    transactionView(0), abandonAction(0), columnResizingFixer(0)
+    transactionView(0), abandonAction(0), bumpFeeAction(0), columnResizingFixer(0)
 {
     QSettings settings;
     // Build filter row
@@ -152,6 +153,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
 
     // Actions
     abandonAction = new QAction(tr("Abandon transaction"), this);
+    bumpFeeAction = new QAction(tr("Increase transaction fee"), this);
     QAction *copyAddressAction = new QAction(tr("Copy address"), this);
     QAction *copyLabelAction = new QAction(tr("Copy label"), this);
     QAction *copyAmountAction = new QAction(tr("Copy amount"), this);
@@ -170,6 +172,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     contextMenu->addAction(copyTxPlainText);
     contextMenu->addAction(showDetailsAction);
     contextMenu->addSeparator();
+    contextMenu->addAction(bumpFeeAction);
     contextMenu->addAction(abandonAction);
     contextMenu->addAction(editLabelAction);
 
@@ -188,6 +191,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     connect(view, SIGNAL(clicked(QModelIndex)), this, SLOT(computeSum()));
     connect(view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
+    connect(bumpFeeAction, SIGNAL(triggered()), this, SLOT(bumpFee()));
     connect(abandonAction, SIGNAL(triggered()), this, SLOT(abandonTx()));
     connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(copyAddress()));
     connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(copyLabel()));
@@ -411,6 +415,7 @@ void TransactionView::contextualMenu(const QPoint &point)
     uint256 hash;
     hash.SetHex(selection.at(0).data(TransactionTableModel::TxHashRole).toString().toStdString());
     abandonAction->setEnabled(model->transactionCanBeAbandoned(hash));
+    bumpFeeAction->setEnabled(model->transactionSignalsRBF(hash));
 
     if(index.isValid())
     {
@@ -434,6 +439,21 @@ void TransactionView::abandonTx()
 
     // Update the table
     model->getTransactionTableModel()->updateTransaction(hashQStr, CT_UPDATED, false);
+}
+
+void TransactionView::bumpFee()
+{
+    if(!transactionView || !transactionView->selectionModel())
+        return;
+    QModelIndexList selection = transactionView->selectionModel()->selectedRows(0);
+
+    // get the hash from the TxHashRole (QVariant / QString)
+    uint256 hash;
+    QString hashQStr = selection.at(0).data(TransactionTableModel::TxHashRole).toString();
+    hash.SetHex(hashQStr.toStdString());
+
+    // Bump tx fee over the walletModel
+    model->bumpFee(hash);
 }
 
 void TransactionView::copyAddress()
