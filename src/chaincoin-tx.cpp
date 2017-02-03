@@ -216,7 +216,9 @@ static void MutateTxRBFOptIn(CMutableTransaction& tx, const std::string& strInId
     int cnt = 0;
     for (CTxIn& txin : tx.vin) {
         if (strInIdx == "" || cnt == inIdx) {
-            txin.nSequence = MAX_BIP125_RBF_SEQUENCE;
+            if (txin.nSequence > MAX_BIP125_RBF_SEQUENCE) {
+                txin.nSequence = MAX_BIP125_RBF_SEQUENCE;
+            }
         }
         ++cnt;
     }
