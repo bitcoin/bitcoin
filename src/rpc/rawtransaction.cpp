@@ -14,6 +14,7 @@
 #include "merkleblock.h"
 #include "net.h"
 #include "policy/policy.h"
+#include "policy/rbf.h"
 #include "primitives/transaction.h"
 #include "rpc/server.h"
 #include "script/script.h"
@@ -359,7 +360,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
 
         uint32_t nSequence;
         if (rbfOptIn) {
-            nSequence = std::numeric_limits<uint32_t>::max() - 2;
+            nSequence = MAX_BIP125_RBF_SEQUENCE;
         } else if (rawTx.nLockTime) {
             nSequence = std::numeric_limits<uint32_t>::max() - 1;
         } else {
@@ -372,7 +373,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             int64_t seqNr64 = sequenceObj.get_int64();
             if (seqNr64 < 0 || seqNr64 > std::numeric_limits<uint32_t>::max()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, sequence number is out of range");
-            } else if (seqNr64 <= std::numeric_limits<uint32_t>::max() - 2 && request.params.size() > 3 && request.params[3].isFalse()) {
+            } else if (seqNr64 <= MAX_BIP125_RBF_SEQUENCE && request.params.size() > 3 && request.params[3].isFalse()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter combination: Sequence number contradicts optintorbf option");
             } else {
                 nSequence = (uint32_t)seqNr64;
