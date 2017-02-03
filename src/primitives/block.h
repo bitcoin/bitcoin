@@ -27,6 +27,7 @@ public:
     uint32_t nTime;
     uint32_t nBits;
     uint32_t nNonce;
+    CScript blockScript;
 
     CBlockHeader()
     {
@@ -53,6 +54,7 @@ public:
         nTime = 0;
         nBits = 0;
         nNonce = 0;
+        blockScript = CScript();
     }
 
     bool IsNull() const
@@ -113,6 +115,7 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+        block.blockScript    = blockScript;
         return block;
     }
 
