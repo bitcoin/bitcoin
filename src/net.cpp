@@ -1070,12 +1070,13 @@ void CConnman::ThreadSocketHandler()
                 {
                     bool fDelete = false;
                     {
-                        TRY_LOCK(pnode->cs_vSend, lockSend);
-                        if (lockSend)
+                        TRY_LOCK(pnode->cs_inventory, lockInv);
+                        if (lockInv)
                         {
-                                TRY_LOCK(pnode->cs_inventory, lockInv);
-                                if (lockInv)
-                                    fDelete = true;
+                            TRY_LOCK(pnode->cs_vSend, lockSend);
+                            if (lockSend) {
+                                fDelete = true;
+                            }
                         }
                     }
                     if (fDelete)
