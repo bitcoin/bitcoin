@@ -342,8 +342,14 @@ public:
 private:
     /** Memory only. */
     const uint256 hash;
+    const uint256 wtxid; // Hash with witness
 
     uint256 ComputeHash() const;
+
+    // Compute a hash that includes both transaction and witness data
+    // ComputeWitnessHash() depends on hash (txid) having already been
+    // initialized.
+    uint256 ComputeWitnessHash() const;
 
 public:
     /** Also memory only */
@@ -375,8 +381,10 @@ public:
         return hash;
     }
 
-    // Compute a hash that includes both transaction and witness data
-    uint256 GetWitnessHash() const;
+    const uint256& GetWitnessHash() const {
+        return wtxid;
+    }
+
     uint256 GetPrevoutHash() const { return cache.GetPrevoutHash(*this); }
     uint256 GetSequenceHash() const { return cache.GetSequenceHash(*this); }
     uint256 GetOutputsHash() const { return cache.GetOutputsHash(*this); }

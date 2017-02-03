@@ -127,15 +127,20 @@ uint256 CTransaction::ComputeHash() const
     return SerializeHash(*this, SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
 }
 
-uint256 CTransaction::GetWitnessHash() const
+// ComputeWitnessHash() depends on hash having already been initialized.
+uint256 CTransaction::ComputeWitnessHash() const
 {
-    return SerializeHash(*this, SER_GETHASH, 0);
+    // Optimization: if there is no witness, then wtxid == txid.
+    if (HasWitness()) {
+        return SerializeHash(*this, SER_GETHASH, 0);
+    }
+    return hash;
 }
 
 /* For backward compatibility, the hash is initialized to 0. TODO: remove the need for this default constructor entirely. */
 CTransaction::CTransaction() : nVersion(CTransaction::CURRENT_VERSION), vin(), vout(), nLockTime(0), hash(), cache(*this, true) {}
-CTransaction::CTransaction(const CMutableTransaction &tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), nLockTime(tx.nLockTime), hash(ComputeHash()), cache(*this, true) {}
-CTransaction::CTransaction(CMutableTransaction &&tx, bool createCache) : nVersion(tx.nVersion), vin(std::move(tx.vin)), vout(std::move(tx.vout)), nLockTime(tx.nLockTime), hash(ComputeHash()), cache(*this, createCache) {}
+CTransaction::CTransaction(const CMutableTransaction &tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), nLockTime(tx.nLockTime), hash(ComputeHash()), wtxid(ComputeWitnessHash()), cache(*this, true) {}
+CTransaction::CTransaction(CMutableTransaction &&tx, bool createCache) : nVersion(tx.nVersion), vin(std::move(tx.vin)), vout(std::move(tx.vout)), nLockTime(tx.nLockTime), hash(ComputeHash()), wtxid(ComputeWitnessHash()), cache(*this, createCache) {}
 
 CAmount CTransaction::GetValueOut() const
 {
