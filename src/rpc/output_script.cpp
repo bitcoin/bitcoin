@@ -97,8 +97,12 @@ static RPCHelpMan createmultisig()
                 {
                     {"key", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The hex-encoded public key"},
                 }},
-            {"address_type", RPCArg::Type::STR, RPCArg::Default{"legacy"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
-            {"sort", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to sort public keys according to BIP67."},
+            {"options|address_type", {RPCArg::Type::OBJ, RPCArg::Type::STR}, RPCArg::Optional::OMITTED, "",
+                {
+                    {"address_type", RPCArg::Type::STR, RPCArg::Default{"legacy"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                    {"sort", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to sort public keys according to BIP67."},
+                },
+                RPCArgOptions{.oneline_description="options"}},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -122,25 +126,46 @@ static RPCHelpMan createmultisig()
         {
             int required = request.params[0].getInt<int>();
 
-            bool sort = request.params.size() > 3 && request.params[3].get_bool();
+            bool sort = false;
+            OutputType output_type = OutputType::LEGACY;
+
+            if (request.params[2].isStr()) {
+                // backward compatibility
+                std::optional<OutputType> parsed = ParseOutputType(request.params[2].get_str());
+                if (!parsed) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[2].get_str()));
+                }
+                output_type = parsed.value();
+            } else if (!request.params[2].isNull()) {
+                const UniValue& options = request.params[2].get_obj();
+                RPCTypeCheckObj(options,
+                    {
+                        {"address_type", UniValueType(UniValue::VSTR)},
+                        {"sort", UniValueType(UniValue::VBOOL)},
+                    },
+                    true, true);
+
+                if (options.exists("address_type")) {
+                    std::optional<OutputType> parsed = ParseOutputType(options["address_type"].get_str());
+                    if (!parsed) {
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", options["address_type"].get_str()));
+                    }
+                    output_type = parsed.value();
+                }
+
+                if (options.exists("sort")) {
+                    sort = options["sort"].get_bool();
+                }
+            }
+            if (output_type == OutputType::BECH32M) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "createmultisig cannot create bech32m multisig addresses");
+            }
 
             // Get the public keys
             const UniValue& keys = request.params[1].get_array();
             std::vector<CPubKey> pubkeys;
             for (unsigned int i = 0; i < keys.size(); ++i) {
                 pubkeys.push_back(HexToPubKey(keys[i].get_str()));
-            }
-
-            // Get the output type
-            OutputType output_type = OutputType::LEGACY;
-            if (!request.params[2].isNull()) {
-                std::optional<OutputType> parsed = ParseOutputType(request.params[2].get_str());
-                if (!parsed) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[2].get_str()));
-                } else if (parsed.value() == OutputType::BECH32M) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "createmultisig cannot create bech32m multisig addresses");
-                }
-                output_type = parsed.value();
             }
 
             FlatSigningProvider keystore;

@@ -77,13 +77,23 @@ class WalletLabelsTest(BitcoinTestFramework):
             "n2yWMtx8jVbo8wv9BK2eN1LdbaakgKL3Mt",
         ]
 
-        sorted_default = node.addmultisigaddress(2, addresses, "sort-test", 'legacy')
-        sorted_false = node.addmultisigaddress(2, addresses, "sort-test", 'legacy', False)
-        sorted_true = node.addmultisigaddress(2, addresses, "sort-test", 'legacy', True)
+        sorted_default = node.addmultisigaddress(2, addresses, None, 'legacy')
+        sorted_false = node.addmultisigaddress(2, addresses, {"sort": False}, 'legacy')
+        sorted_true = node.addmultisigaddress(2, addresses, {"sort": True}, 'legacy')
 
         assert_equal(sorted_default, sorted_false)
         assert_equal("2N6dne8yzh13wsRJxCcMgCYNeN9fxKWNHt8", sorted_default['address'])
         assert_equal("2MsJ2YhGewgDPGEQk4vahGs4wRikJXpRRtU", sorted_true['address'])
+
+        sorted_default = node.addmultisigaddress(2, addresses, {'address_type': 'legacy'})
+        sorted_false = node.addmultisigaddress(2, addresses, {'address_type': 'legacy', "sort": False})
+        sorted_true = node.addmultisigaddress(2, addresses, {'address_type': 'legacy', "sort": True})
+
+        assert_equal(sorted_default, sorted_false)
+        assert_equal("2N6dne8yzh13wsRJxCcMgCYNeN9fxKWNHt8", sorted_default['address'])
+        assert_equal("2MsJ2YhGewgDPGEQk4vahGs4wRikJXpRRtU", sorted_true['address'])
+
+        assert_raises_rpc_error(-1, "address_type provided in both options and 4th parameter", node.addmultisigaddress, 2, addresses, {"address_type": 'legacy'}, 'bech32')
 
     def run_test(self):
         # Check that there's no UTXO on the node
