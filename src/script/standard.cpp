@@ -331,11 +331,10 @@ CScript GetScriptForRawPubKey(const CPubKey& pubKey)
 
 CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys, bool fSorted)
 {
-    int nEncoded = 0;
     std::vector<std::vector<unsigned char>> vEncoded;
-    vEncoded.resize(keys.size());
+    vEncoded.reserve(keys.size());
     for (const CPubKey& key : keys) {
-        vEncoded[nEncoded++] = ToByteVector(key);
+        vEncoded.emplace_back(ToByteVector(key));
     }
 
     if (fSorted) {
