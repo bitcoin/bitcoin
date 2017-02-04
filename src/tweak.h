@@ -17,6 +17,9 @@ typedef std::string CTweakKey;
 typedef std::map<CTweakKey, CTweakBase*> CTweakMap;
 extern CTweakMap tweaks;
 
+// Create a help string for all the ctweaks entries, as they would be used as command line options
+std::string TweakCmdLineHelp();
+
 class CTweakBase
 {
 public:
@@ -91,7 +94,9 @@ inline void fill(const UniValue& v, bool& output)
         output = v.get_bool();
 }
 
-
+// Checks if two given strings match. The first string may contain wildcard characters
+bool match(const char* first, const char* second);
+  
 /** A configuration parameter that is automatically hooked up to
  * bitcoin.conf, bitcoin-cli, and is available as a command line argument
  */

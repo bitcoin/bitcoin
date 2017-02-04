@@ -190,6 +190,7 @@ extern CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize;
 std::string ExcessiveBlockValidator(const unsigned int& value,unsigned int* item,bool validate);
 std::string OutboundConnectionValidator(const int& value,int* item,bool validate);
 std::string SubverValidator(const std::string& value,std::string* item,bool validate);
+std::string MiningBlockSizeValidator(const uint64_t& value,uint64_t* item,bool validate);
 
 extern CTweak<unsigned int> maxTxSize;
 extern CTweak<uint64_t> blockSigopsPerMb;
