@@ -1,4 +1,3 @@
-
 sudo: required
 dist: trusty
 os: linux
@@ -17,7 +16,6 @@ env:
     - CCACHE_COMPRESS=1
     - BASE_OUTDIR=$TRAVIS_BUILD_DIR/out
     - SDK_URL=https://bitcoincore.org/depends-sources/sdks
-    - PYTHON_DEBUG=1
     - WINEDEBUG=fixme-all
   matrix:
 # ARM
@@ -35,8 +33,6 @@ env:
 # Cross-Mac
     - HOST=x86_64-apple-darwin11 PACKAGES="cmake gcc-multilib g++-multilib libcap-dev libbz2-dev" CROWN_CONFIG="--enable-gui --enable-reduce-exports" OSX_SDK=10.7 GOAL="deploy"
 
-before_install:
-    - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
 install:
     - if [ -n "$PPA" ]; then travis_retry sudo add-apt-repository "$PPA" -y; fi
     - if [ -n "$DPKG_ADD_ARCH" ]; then sudo dpkg --add-architecture "$DPKG_ADD_ARCH" ; fi
