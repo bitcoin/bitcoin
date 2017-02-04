@@ -11,7 +11,6 @@ cache:
 env:
   global:
     - MAKEJOBS=-j3
-    - RUN_TESTS=false
     - CHECK_DOC=0
     - BOOST_TEST_RANDOM=1$TRAVIS_BUILD_ID
     - CCACHE_SIZE=100M
@@ -23,17 +22,17 @@ env:
     - WINEDEBUG=fixme-all
   matrix:
 # ARM
-    - HOST=arm-linux-gnueabihf PACKAGES="g++-arm-linux-gnueabihf" DEP_OPTS="NO_QT=1" CHECK_DOC=1 GOAL="install" CROWN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
+    - HOST=arm-linux-gnueabihf PACKAGES="g++-arm-linux-gnueabihf" DEP_OPTS="" CHECK_DOC=0 GOAL="install" CROWN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
 # Win32
-    - HOST=i686-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="python3 nsis g++-mingw-w64-i686 wine1.6 bc" RUN_TESTS=true GOAL="install" CROWN_CONFIG="--enable-reduce-exports"
+    - HOST=i686-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="" PACKAGES="python3 nsis g++-mingw-w64-i686 wine1.6 bc" GOAL="install" CROWN_CONFIG="--enable-reduce-exports"
 # 32-bit + dash
-    - HOST=i686-pc-linux-gnu PACKAGES="g++-multilib bc python3-zmq" DEP_OPTS="NO_QT=1" RUN_TESTS=true GOAL="install" CROWN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++" USE_SHELL="/bin/dash"
+    - HOST=i686-pc-linux-gnu PACKAGES="g++-multilib bc python3-zmq" DEP_OPTS="" GOAL="install" CROWN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++" USE_SHELL="/bin/dash"
 # Win64
-    - HOST=x86_64-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine1.6 bc" RUN_TESTS=true GOAL="install" CROWN_CONFIG="--enable-reduce-exports"
+    - HOST=x86_64-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="" PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine1.6 bc" GOAL="install" CROWN_CONFIG="--enable-reduce-exports"
 # bitcoind
-    - HOST=x86_64-unknown-linux-gnu PACKAGES="bc python3-zmq" DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1" RUN_TESTS=true GOAL="install" CROWN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports CPPFLAGS=-DDEBUG_LOCKORDER"
+    - HOST=x86_64-unknown-linux-gnu PACKAGES="bc python3-zmq" DEP_OPTS="NO_UPNP=1 DEBUG=1" GOAL="install" CROWN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports CPPFLAGS=-DDEBUG_LOCKORDER"
 # No wallet
-    - HOST=x86_64-unknown-linux-gnu PACKAGES="python3" DEP_OPTS="NO_WALLET=1" RUN_TESTS=true GOAL="install" CROWN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
+    - HOST=x86_64-unknown-linux-gnu PACKAGES="python3" DEP_OPTS="" GOAL="install" CROWN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
 # Cross-Mac
     - HOST=x86_64-apple-darwin11 PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev" CROWN_CONFIG="--enable-gui --enable-reduce-exports" OSX_SDK=10.11 GOAL="deploy"
 
@@ -65,8 +64,6 @@ script:
     - ./configure --cache-file=../config.cache $CROWN_CONFIG_ALL $CROWN_CONFIG || ( cat config.log && false)
     - make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
     - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib
-    - if [ "$RUN_TESTS" = "true" ]; then make $MAKEJOBS check VERBOSE=1; fi
-    - if [ "$RUN_TESTS" = "true" ]; then qa/pull-tester/rpc-tests.py --coverage; fi
 after_script:
     - echo $TRAVIS_COMMIT_RANGE
     - echo $TRAVIS_COMMIT_LOG
