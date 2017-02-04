@@ -289,7 +289,7 @@ RES_IMAGES = \
   qt/res/images/drkblue_walletFrame.png
 
 RES_CSS = \
-  qt/res/css/drkblue.css
+  qt/res/css/crown.css
 
 RES_MOVIES = $(wildcard qt/res/movies/spinner-*.png)
 
