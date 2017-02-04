@@ -36,6 +36,10 @@ public:
         READWRITE(vTxHashes);
         READWRITE(vMissingTx);
     }
+
+    CInv GetInv() { return CInv(MSG_BLOCK, header.GetHash()); }
+    bool process(CNode* pfrom, int nSizeThinBlock, std::string strCommand);
+
 };
 
 class CXThinBlock

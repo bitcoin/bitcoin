@@ -45,6 +45,98 @@ CThinBlock::CThinBlock(const CBlock& block, CBloomFilter& filter)
     }
 }
 
+bool CThinBlock::process(CNode* pfrom, int nSizeThinBlock, string strCommand)
+{
+
+        pfrom->nSizeThinBlock = nSizeThinBlock;
+        pfrom->thinBlock.SetNull();
+        pfrom->thinBlock.nVersion = header.nVersion;
+        pfrom->thinBlock.nBits = header.nBits;
+        pfrom->thinBlock.nNonce = header.nNonce;
+        pfrom->thinBlock.nTime = header.nTime;
+        pfrom->thinBlock.hashMerkleRoot = header.hashMerkleRoot;
+        pfrom->thinBlock.hashPrevBlock = header.hashPrevBlock;
+        pfrom->thinBlockHashes = vTxHashes;
+
+        // Create the mapMissingTx from all the supplied tx's in the xthinblock
+        std::map<uint256, CTransaction> mapMissingTx;
+        BOOST_FOREACH(CTransaction tx, vMissingTx) 
+            mapMissingTx[tx.GetHash()] = tx;
+
+        LOCK2(cs_main, cs_xval);
+        int missingCount = 0;
+        int unnecessaryCount = 0;
+        // Xpress Validation - only perform xval if the chaintip matches the last blockhash in the thinblock
+        bool fXVal = (header.hashPrevBlock == chainActive.Tip()->GetBlockHash()) ? true : false;
+
+        // Look for each transaction in our various pools and buffers.
+        BOOST_FOREACH(const uint256 &hash, vTxHashes) 
+        {
+            CTransaction tx;
+            if (!hash.IsNull())
+            {
+                bool inMemPool = mempool.lookup(hash, tx);
+                bool inMissingTx = mapMissingTx.count(hash) > 0;
+                bool inOrphanCache = mapOrphanTransactions.count(hash) > 0;
+
+                if ((inMemPool && inMissingTx) || (inOrphanCache && inMissingTx))
+                    unnecessaryCount++;
+
+                if (inOrphanCache) {
+                    tx = mapOrphanTransactions[hash].tx;
+                    setUnVerifiedOrphanTxHash.insert(hash);
+                }
+                else if (inMemPool && fXVal)
+                    setPreVerifiedTxHash.insert(hash);
+                else if (inMissingTx)
+                    tx = mapMissingTx[hash];
+            }
+            if (tx.IsNull())
+                missingCount++;
+            // This will push an empty/invalid transaction if we don't have it yet
+            pfrom->thinBlock.vtx.push_back(tx);
+        }
+        pfrom->thinBlockWaitingForTxns = missingCount;
+        LogPrint("thin", "Thinblock %s waiting for: %d, unnecessary: %d, txs: %d full: %d\n", pfrom->thinBlock.GetHash().ToString(), pfrom->thinBlockWaitingForTxns, unnecessaryCount, pfrom->thinBlock.vtx.size(), mapMissingTx.size());
+
+        if (pfrom->thinBlockWaitingForTxns == 0) {
+            // We have all the transactions now that are in this block: try to reassemble and process.
+            requester.Received(GetInv(), pfrom, nSizeThinBlock);
+            pfrom->thinBlockWaitingForTxns = -1;
+            pfrom->AddInventoryKnown(GetInv());
+            int blockSize = pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION);
+            LogPrint("thin", "Reassembled thin block for %s (%d bytes). Message was %d bytes, compression ratio %3.2f\n",
+                     pfrom->thinBlock.GetHash().ToString(),
+                     blockSize,
+                     nSizeThinBlock,
+                     ((float) blockSize) / ((float) nSizeThinBlock)
+                     );
+
+            // Update run-time statistics of thin block bandwidth savings
+            thindata.UpdateInBound(nSizeThinBlock, blockSize);
+            LogPrint("thin", "thin block stats: %s\n", thindata.ToString());
+
+            HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, GetInv());
+            LOCK(cs_orphancache);
+            BOOST_FOREACH(uint256 &hash, vTxHashes)
+                EraseOrphanTx(hash);
+        }
+        else if (pfrom->thinBlockWaitingForTxns > 0) {
+            // This marks the end of the transactions we've received. If we get this and we have NOT been able to
+            // finish reassembling the block, we need to re-request the full regular block:
+            vector<CInv> vGetData;
+            vGetData.push_back(CInv(MSG_BLOCK, header.GetHash())); 
+            pfrom->PushMessage("getdata", vGetData);
+            setPreVerifiedTxHash.clear(); // Xpress Validation - clear the set since we do not do XVal on regular blocks
+            LogPrint("thin", "Missing %d Thinblock transactions, re-requesting a regular block\n",  
+                       pfrom->thinBlockWaitingForTxns);
+            thindata.UpdateInBoundReRequestedTx(pfrom->thinBlockWaitingForTxns);
+        }
+
+        return true;
+}
+
+
 CXThinBlock::CXThinBlock(const CBlock& block, CBloomFilter* filter)
 {
     header = block.GetBlockHeader();
