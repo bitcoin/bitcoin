@@ -697,11 +697,16 @@ class RPCOverloadWrapper():
         if not import_res[0]['success']:
             raise JSONRPCException(import_res[0]['error'])
 
-    def addmultisigaddress(self, nrequired, keys, label=None, address_type=None, sort=False):
+    def addmultisigaddress(self, nrequired, keys, label=None, address_type=None):
         wallet_info = self.getwalletinfo()
         if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
-            return self.__getattr__('addmultisigaddress')(nrequired, keys, label, address_type, sort)
-        assert not sort
+            return self.__getattr__('addmultisigaddress')(nrequired, keys, label, address_type)
+        if isinstance(label, dict):
+            options = dict(label)  # copy, so we can pop and check for emptiness
+            assert address_type is None
+            address_type = options.pop('address_type', None)
+            label = options.pop('label', None)
+            assert not options
         cms = self.createmultisig(nrequired, keys, address_type)
         req = [{
             'desc': cms['descriptor'],
