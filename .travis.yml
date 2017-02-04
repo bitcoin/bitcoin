@@ -68,15 +68,15 @@ notifications:
   irc: chat.freenode.net#crowncoin
   slack:
     secure: "NzXVEUtxrjkHYvPYJmy5NAlHcNmFO5cqM1STdmXOscFHsCfQse0F3ffgZO8id0B2xWpuLDZEYKK4Z6Z021JI5lKmwXZpfHvDAkD5FawkNHbzkw8XdZvTOjgMW0t5jy6ePH8WoieR15xH+f3SxxibqBhrXRXrVgDcl4AqDhJ8qrnGu1Kfc4Cvsll4BLVhobCn0ZRp3o2ELuWjTUdrTaRIIF6+HBxCIl1SwC+BJQlg1C1ItOSy5Oaf+hc6o9tS8n3F2CmtdtCKVZPhC9/7Q8NBiJFJg8KRcmk9zd4qjw4GsnSXpC148c7NHQ8PMnvRIfsedM1FtAADx+yJf2uOnJaSjPaRQK3vys7Pdn+T15uShVv2Mm96pVNPwx1TDCXFhTJbp8dIOUzL/A4TqGE0zJ5St3bSFPrOH7ATb96wEIofU9vC/EFx7cQHIJPBeeXP7bdisgU8hFidYRV3b8IlI8eAzyVbo9GJS6KnZYRm3UlG0TYrO7coShHhnhmqL2DzDfd2dyPQIBWAq2IsPhXFec6WhAgvA3ATj2XSaxdaQynof+6MzlIpDqY2i4WG8NDZnj/g+irmBpuGRWNpMEgzwHVoY7A85Q1mUCq7aE2AOf6oWhop4W7B/C8Qk8G15onDEA+wuLR+GyQ+/jpYzaNNANpIV+j9N0C2wjkNdwXedxpeG3I="
-before_deploy: cd ${OUTDIR}/../ && tar -zcvf crowncoin-$HOST.tar.gz $TRAVIS_JOB_NUMBER-$HOST
+before_deploy: cd ${OUTDIR}/../ && tar -zcvf crown-$HOST.tar.gz $TRAVIS_JOB_NUMBER-$HOST
 deploy:
   skip_cleanup: true
   provider: releases
   api_key:
-    secure: "gpy3BEABWGaNNbeCXkepe5pP/X/uOFdJrApnBcwjAtNGF6GuhbEMRGCjFxVu3qVaLFNLj+qHlZ/fOl+dh8kD7R5gcU+0xPIjoORHOqOSX1z7PsH3t5NxZ0DDZCV5IK4wuuacc7wFsngcbI2gEvXDUqO1/sTC2hwDc1Lgqttq8X1Y8gFIDgiHoV7cgfidAu38ZzIgjkC3ErXhOZIYVi115dXRRfgyvGEtTEnpgeHaGjB5yuIML4VHJDprCjGiARyXPUjhnMJUInFHCTlEGiJgu6iP70uv8r06xdC1+kUnltvpQEI30xw+no00QRF0TcN6jAXB5UE++ZjYIPmDDM+bCl6lWH6RW/EO4/DRz8ULgO3EvFzRaw4U0rqM55fHB+vtezoI4REGAhRzZ72j/7ufVQRuCmeNKAsyVJzNA2giqP7wI1+TS7+MKqXHs2Mv6gRva49D/jqufrZ/UJS+SUP6yLosixyxNLqMgstw/Qvfat50xo1+jvTMjk/WVchNahMjK4XXz6PmRTCQ3c1tmB2BR/O9jW5QNt8pzOQ2BKTapqTJvUis4gZILwupIlay0GsFKhfoeIGf+sMxx34Cq7q1JwpqSR9HLXok4KWE6E4tIOKFR85wS+JSZlFavZ+SjO489CjXmCSsJ43PFwFo4oxFlZwA0Xvxrg84P2eYIK8F+J4="
+    secure: "jcw2OYoyW6eVZ3ZV97GNAs+j8aOQO0yy/qEUbEFo3jyPXrrMiYq4IEEAA/FhNv9KSOUyH2pTKQ6Gz8kbZo1Qj49x+9FjDnxDWIX9Jw80WFeB2+pO5lyFiE7KTG96VKsi4Z1dFveg2mmOWHYX1L1wQZMwZWzQCB4hvKbfdsGXwPYZR143OCzUVan7jvEcp5429GUL6zMHfuso+zOT6+CqEEqdTt6xNBMY8xsY/QhZNFD7vVZ4ygUW0/5RAPIzT7a/bBW7IWQ4Xt2hZ6DzBcFM85KsDmOzSaxB9cxSPOKYM9vK5mIe2vIbsl8xNke57wZOw2kHP3wRDXl1Y2+/k3cBzZMn0iQV7eOfM1CYQ8l68yLmTNOSdDLY0NERkrtZGczevGTjIDAFGgMEdE4tsLzarrtdR/gBxYLg7kb+eZWf8it5ECqiIP8Rho3HIKk84vCWPcaT0/ETT4qZd5P1iWDCXiX2yNF2lIavmfl5IzER1aHM4K6dJ09POZABQ1lYo6jGmEJY2U7qTWYXv2pwUd9PB5rZId0Xa2csDUHRU2Ry0Cy5qMbTeQPIVzqvfGXHs2PtMJROhFmk16Vr3nMka+EkBxyqMGdCaZ37s8e7Q6+kk2mdL2Hn/vRW95X8T3X2A5r5oo0VMAPjlsmqc8JdFbgwjX0DYuCxbq+BvaTX4HURY6I="
   file:
-    - ${OUTDIR}/..//crowncoin-$HOST.tar.gz
+    - ${OUTDIR}/..//crown-$HOST.tar.gz
   on:
-    repo: cerebrus29301/crowncoin
+    repo: Crowndev/crowncoin
     tags: true
     all_branches: true
