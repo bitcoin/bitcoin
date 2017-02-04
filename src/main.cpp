@@ -3169,7 +3169,7 @@ bool DisconnectBlocks(int blocks)
     const CChainParams& chainparams = Params();
 
     LogPrintf("DisconnectBlocks -- Got command to replay %d blocks\n", blocks);
-    for(int i = 0; i <= blocks; i++) {
+    for(int i = 0; i < blocks; i++) {
         if(!DisconnectTip(state, chainparams.GetConsensus()) || !state.IsValid()) {
             return false;
         }
