@@ -623,6 +623,7 @@ void CInstantSend::CheckAndRemove()
         if(GetTime() - itOrphanVote->second.GetTimeCreated() > ORPHAN_VOTE_SECONDS) {
             LogPrint("instantsend", "CInstantSend::CheckAndRemove -- Removing expired orphan vote: txid=%s  masternode=%s\n",
                     itOrphanVote->second.GetTxHash().ToString(), itOrphanVote->second.GetMasternodeOutpoint().ToStringShort());
+            mapTxLockVotes.erase(itOrphanVote->first);
             mapTxLockVotesOrphan.erase(itOrphanVote++);
         } else {
             ++itOrphanVote;
@@ -796,16 +797,38 @@ void CInstantSend::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
         LogPrint("instantsend", "CInstantSend::SyncTransaction -- txid=%s nHeightNew=%d lock candidate updated\n",
                 txHash.ToString(), nHeightNew);
         itLockCandidate->second.SetConfirmedHeight(nHeightNew);
+        // Loop through outpoint locks
+        std::map<COutPoint, COutPointLock>::iterator itOutpointLock = itLockCandidate->second.mapOutPointLocks.begin();
+        while(itOutpointLock != itLockCandidate->second.mapOutPointLocks.end()) {
+            // Check corresponding lock votes
+            std::vector<CTxLockVote> vVotes = itOutpointLock->second.GetVotes();
+            std::vector<CTxLockVote>::iterator itVote = vVotes.begin();
+            std::map<uint256, CTxLockVote>::iterator it;
+            while(itVote != vVotes.end()) {
+                uint256 nVoteHash = itVote->GetHash();
+                LogPrint("instantsend", "CInstantSend::SyncTransaction -- txid=%s nHeightNew=%d vote %s updated\n",
+                        txHash.ToString(), nHeightNew, nVoteHash.ToString());
+                it = mapTxLockVotes.find(nVoteHash);
+                if(it != mapTxLockVotes.end()) {
+                    it->second.SetConfirmedHeight(nHeightNew);
+                }
+                ++itVote;
+            }
+            ++itOutpointLock;
+        }
     }
 
-    // Check lock votes
-    std::map<uint256, CTxLockVote>::iterator itVote = mapTxLockVotes.find(txHash);
-    if(itVote != mapTxLockVotes.end()) {
-        LogPrint("instantsend", "CInstantSend::SyncTransaction -- txid=%s nHeightNew=%d vote %s updated\n",
-                txHash.ToString(), nHeightNew, itVote->second.GetHash().ToString());
-        itVote->second.SetConfirmedHeight(nHeightNew);
+    // check orphan votes
+    std::map<uint256, CTxLockVote>::iterator itOrphanVote = mapTxLockVotesOrphan.begin();
+    while(itOrphanVote != mapTxLockVotesOrphan.end()) {
+        if(itOrphanVote->second.GetTxHash() == txHash) {
+            LogPrint("instantsend", "CInstantSend::SyncTransaction -- txid=%s nHeightNew=%d vote %s updated\n",
+                    txHash.ToString(), nHeightNew, itOrphanVote->first.ToString());
+            mapTxLockVotes[itOrphanVote->first].SetConfirmedHeight(nHeightNew);
+        }
+        ++itOrphanVote;
     }
- }
+}
 
 //
 // CTxLockRequest
@@ -1037,7 +1060,18 @@ bool COutPointLock::AddVote(const CTxLockVote& vote)
     return true;
 }
 
-bool COutPointLock::HasMasternodeVoted(const COutPoint& outpointMasternodeIn)
+std::vector<CTxLockVote> COutPointLock::GetVotes() const
+{
+    std::vector<CTxLockVote> vRet;
+    std::map<COutPoint, CTxLockVote>::const_iterator itVote = mapMasternodeVotes.begin();
+    while(itVote != mapMasternodeVotes.end()) {
+        vRet.push_back(itVote->second);
+        ++itVote;
+    }
+    return vRet;
+}
+
+bool COutPointLock::HasMasternodeVoted(const COutPoint& outpointMasternodeIn) const
 {
     return mapMasternodeVotes.count(outpointMasternodeIn);
 }

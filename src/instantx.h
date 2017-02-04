@@ -208,7 +208,8 @@ public:
     COutPoint GetOutpoint() const { return outpoint; }
 
     bool AddVote(const CTxLockVote& vote);
-    bool HasMasternodeVoted(const COutPoint& outpointMasternodeIn);
+    std::vector<CTxLockVote> GetVotes() const;
+    bool HasMasternodeVoted(const COutPoint& outpointMasternodeIn) const;
     int CountVotes() const { return mapMasternodeVotes.size(); }
     bool IsReady() const { return CountVotes() >= SIGNATURES_REQUIRED; }
 
