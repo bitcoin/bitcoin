@@ -78,4 +78,5 @@ deploy:
     - ${OUTDIR}/..//crowncoin-$HOST.tar.gz
   on:
     repo: cerebrus29301/crowncoin
-    branch: master
+    tags: true
+    all_branches: true
