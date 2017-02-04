@@ -19,7 +19,7 @@ env:
     - WINEDEBUG=fixme-all
   matrix:
 # ARM
-    - HOST=arm-linux-gnueabihf PACKAGES="g++-arm-linux-gnueabihf" DEP_OPTS="USE_LINUX_STATIC_QT5=1" GOAL="install" CROWN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
+    - HOST=arm-linux-gnueabihf PACKAGES="g++-arm-linux-gnueabihf" DEP_OPTS="" GOAL="install" CROWN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
 # Win32
     - HOST=i686-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="" PACKAGES="nsis g++-mingw-w64-i686 gcc-mingw-w64-i686 binutils-mingw-w64-i686 wine1.6 bc" GOAL="install" CROWN_CONFIG="--enable-reduce-exports"
 # 32-bit + dash
