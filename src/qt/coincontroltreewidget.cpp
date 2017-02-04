@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Crowncoin developers
+// Copyright (c) 2011-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,7 +17,8 @@ void CoinControlTreeWidget::keyPressEvent(QKeyEvent *event)
     {
         event->ignore();
         int COLUMN_CHECKBOX = 0;
-        this->currentItem()->setCheckState(COLUMN_CHECKBOX, ((this->currentItem()->checkState(COLUMN_CHECKBOX) == Qt::Checked) ? Qt::Unchecked : Qt::Checked));
+        if(this->currentItem())
+            this->currentItem()->setCheckState(COLUMN_CHECKBOX, ((this->currentItem()->checkState(COLUMN_CHECKBOX) == Qt::Checked) ? Qt::Unchecked : Qt::Checked));
     }
     else if (event->key() == Qt::Key_Escape) // press esc -> close dialog
     {

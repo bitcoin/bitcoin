@@ -16,7 +16,7 @@ fi
 DESC=""
 SUFFIX=""
 LAST_COMMIT_DATE=""
-if [ -e "$(which git 2>/dev/null)" -a -d ".git" ]; then
+if [ -e "$(which git 2>/dev/null)" -a "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
     # clean 'dirty' status of touched files that haven't been modified
     git diff >/dev/null 2>/dev/null 
 

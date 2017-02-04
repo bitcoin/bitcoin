@@ -1,0 +1,21 @@
+--- old/qtbase/src/plugins/platforms/xcb/xcb-plugin.pro	2014-07-30 18:17:27.384458441 -0400
++++ new/qtbase/src/plugins/platforms/xcb/xcb-plugin.pro	2014-07-30 18:18:28.620459303 -0400
+@@ -101,10 +101,6 @@
+     }
+ }
+ 
+-DEFINES += $$QMAKE_DEFINES_XCB
+-LIBS += $$QMAKE_LIBS_XCB
+-QMAKE_CXXFLAGS += $$QMAKE_CFLAGS_XCB
+-
+ CONFIG += qpa/genericunixfontdatabase
+ 
+ contains(QT_CONFIG, dbus) {
+@@ -141,3 +137,7 @@
+         INCLUDEPATH += ../../../3rdparty/xkbcommon/xkbcommon/
+     }
+ }
++
++DEFINES += $$QMAKE_DEFINES_XCB
++LIBS += $$QMAKE_LIBS_XCB
++INCLUDEPATH += $$QMAKE_CFLAGS_XCB

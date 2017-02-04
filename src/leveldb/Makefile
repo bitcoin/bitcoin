@@ -6,9 +6,12 @@
 # Uncomment exactly one of the lines labelled (A), (B), and (C) below
 # to switch between compilation modes.
 
-OPT ?= -O2 -DNDEBUG       # (A) Production use (optimized mode)
-# OPT ?= -g2              # (B) Debug mode, w/ full line-level debugging symbols
-# OPT ?= -O2 -g2 -DNDEBUG # (C) Profiling mode: opt, but w/debugging symbols
+# (A) Production use (optimized mode)
+OPT ?= -O2 -DNDEBUG
+# (B) Debug mode, w/ full line-level debugging symbols
+# OPT ?= -g2
+# (C) Profiling mode: opt, but w/debugging symbols
+# OPT ?= -O2 -g2 -DNDEBUG
 #-----------------------------------------------
 
 # detect what platform we're building on
@@ -29,6 +32,11 @@ MEMENVOBJECTS = $(MEMENV_SOURCES:.cc=.o)
 TESTUTIL = ./util/testutil.o
 TESTHARNESS = ./util/testharness.o $(TESTUTIL)
 
+# Note: iOS should probably be using libtool, not ar.
+ifeq ($(PLATFORM), IOS)
+AR=xcrun ar
+endif
+
 TESTS = \
 	arena_test \
 	autocompact_test \
@@ -43,6 +51,7 @@ TESTS = \
 	env_test \
 	filename_test \
 	filter_block_test \
+	hash_test \
 	issue178_test \
 	issue200_test \
 	log_test \
@@ -72,7 +81,7 @@ SHARED = $(SHARED1)
 else
 # Update db.h if you change these.
 SHARED_MAJOR = 1
-SHARED_MINOR = 17
+SHARED_MINOR = 18
 SHARED1 = libleveldb.$(PLATFORM_SHARED_EXT)
 SHARED2 = $(SHARED1).$(SHARED_MAJOR)
 SHARED3 = $(SHARED1).$(SHARED_MAJOR).$(SHARED_MINOR)
@@ -152,6 +161,9 @@ filename_test: db/filename_test.o $(LIBOBJECTS) $(TESTHARNESS)
 filter_block_test: table/filter_block_test.o $(LIBOBJECTS) $(TESTHARNESS)
 	$(CXX) $(LDFLAGS) table/filter_block_test.o $(LIBOBJECTS) $(TESTHARNESS) -o $@ $(LIBS)
 
+hash_test: util/hash_test.o $(LIBOBJECTS) $(TESTHARNESS)
+	$(CXX) $(LDFLAGS) util/hash_test.o $(LIBOBJECTS) $(TESTHARNESS) -o $@ $(LIBS)
+
 issue178_test: issues/issue178_test.o $(LIBOBJECTS) $(TESTHARNESS)
 	$(CXX) $(LDFLAGS) issues/issue178_test.o $(LIBOBJECTS) $(TESTHARNESS) -o $@ $(LIBS)
 
@@ -194,17 +206,17 @@ IOSARCH=-arch armv6 -arch armv7 -arch armv7s -arch arm64
 
 .cc.o:
 	mkdir -p ios-x86/$(dir $@)
-	$(CXX) $(CXXFLAGS) -isysroot $(SIMULATORROOT)/SDKs/iPhoneSimulator$(IOSVERSION).sdk -arch i686 -arch x86_64 -c $< -o ios-x86/$@
+	xcrun -sdk iphonesimulator $(CXX) $(CXXFLAGS) -isysroot $(SIMULATORROOT)/SDKs/iPhoneSimulator$(IOSVERSION).sdk -arch i686 -arch x86_64 -c $< -o ios-x86/$@
 	mkdir -p ios-arm/$(dir $@)
 	xcrun -sdk iphoneos $(CXX) $(CXXFLAGS) -isysroot $(DEVICEROOT)/SDKs/iPhoneOS$(IOSVERSION).sdk $(IOSARCH) -c $< -o ios-arm/$@
-	lipo ios-x86/$@ ios-arm/$@ -create -output $@
+	xcrun lipo ios-x86/$@ ios-arm/$@ -create -output $@
 
 .c.o:
 	mkdir -p ios-x86/$(dir $@)
-	$(CC) $(CFLAGS) -isysroot $(SIMULATORROOT)/SDKs/iPhoneSimulator$(IOSVERSION).sdk -arch i686 -arch x86_64 -c $< -o ios-x86/$@
+	xcrun -sdk iphonesimulator $(CC) $(CFLAGS) -isysroot $(SIMULATORROOT)/SDKs/iPhoneSimulator$(IOSVERSION).sdk -arch i686 -arch x86_64 -c $< -o ios-x86/$@
 	mkdir -p ios-arm/$(dir $@)
 	xcrun -sdk iphoneos $(CC) $(CFLAGS) -isysroot $(DEVICEROOT)/SDKs/iPhoneOS$(IOSVERSION).sdk $(IOSARCH) -c $< -o ios-arm/$@
-	lipo ios-x86/$@ ios-arm/$@ -create -output $@
+	xcrun lipo ios-x86/$@ ios-arm/$@ -create -output $@
 
 else
 .cc.o:

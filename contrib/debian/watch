@@ -2,6 +2,6 @@
 version=3
 # use qa.debian.org redirector; see man uscan
 opts=uversionmangle=s/(\d)(alpha|beta|rc)/$1~$2/;s/\-src//,dversionmangle=s/~dfsg\d*// \
- http://sf.net/crowncoin/crowncoin-(\d.*)-linux\.tar\.gz debian
+ http://sf.net/bitcoin/bitcoin-(\d.*)-linux\.tar\.gz debian
 opts=uversionmangle=s/(\d)(alpha|beta|rc)/$1~$2/,dversionmangle=s/~dfsg\d*// \
- http://githubredir.debian.net/github/crowncoin/crowncoin v(.*).tar.gz
+ http://githubredir.debian.net/github/bitcoin/bitcoin v(.*).tar.gz
