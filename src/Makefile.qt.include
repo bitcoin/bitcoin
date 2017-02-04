@@ -297,7 +297,7 @@ RES_CSS_IMAGES = \
   qt/res/css/downArrow_small.png \
   qt/res/css/logo.png
 
-RES_MOVIES = $(wildcard qt/res/movies/spinner-*.png)
+RES_MOVIES = $(wildcard $(srcdir)/qt/res/movies/spinner-*.png)
 
 BITCOIN_RC = qt/res/crown-qt-res.rc
 
