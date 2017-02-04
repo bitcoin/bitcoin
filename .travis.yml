@@ -33,7 +33,7 @@ env:
 # No wallet
     - HOST=x86_64-unknown-linux-gnu PACKAGES="python3" DEP_OPTS="" GOAL="install" CROWN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
 # Cross-Mac
-    - HOST=x86_64-apple-darwin11 PACKAGES="cmake g++-multilib bc imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev" CROWN_CONFIG="--enable-gui --enable-reduce-exports" OSX_SDK=10.11 GOAL="deploy"
+    - HOST=x86_64-apple-darwin11 PACKAGES="cmake g++-multilib bc imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev" CROWN_CONFIG="--enable-gui --enable-reduce-exports" OSX_SDK=10.7 GOAL="deploy"
 
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
