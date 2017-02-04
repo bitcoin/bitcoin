@@ -57,6 +57,9 @@ script:
     - cd crown-$HOST
     - ./configure --cache-file=../config.cache $CROWN_CONFIG_ALL $CROWN_CONFIG || ( cat config.log && false)
     - make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
+    - ls -la ${OUTDIR}/..
+    - ls -la ${OUTDIR}/
+    - ls -la ${OUTDIR}/bin
     - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib
 after_script:
     - echo $TRAVIS_COMMIT_RANGE
