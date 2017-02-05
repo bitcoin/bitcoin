@@ -168,6 +168,8 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
 
 bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntries &setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string &errString, bool fSearchForParents /* = true */) const
 {
+    LOCK(cs);
+
     setEntries parentHashes;
     const CTransaction &tx = entry.GetTx();
 
