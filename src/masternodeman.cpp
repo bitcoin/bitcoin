@@ -1362,6 +1362,7 @@ std::string CMasternodeMan::ToString() const
             ", peers who asked us for Masternode list: " << (int)mAskedUsForMasternodeList.size() <<
             ", peers we asked for Masternode list: " << (int)mWeAskedForMasternodeList.size() <<
             ", entries in Masternode list we asked for: " << (int)mWeAskedForMasternodeListEntry.size() <<
+            ", masternode index size: " << indexMasternodes.GetSize() <<
             ", nDsqCount: " << (int)nDsqCount;
 
     return info.str();
