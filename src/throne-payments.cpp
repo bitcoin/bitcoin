@@ -274,7 +274,7 @@ bool CThronePayments::CanVote(COutPoint outThrone, int nBlockHeight)
         return false;
     }
 
-    //record this masternode voted
+    //record this throne voted
     mapThronesLastVote[outThrone] = nBlockHeight;
     return true;
 }

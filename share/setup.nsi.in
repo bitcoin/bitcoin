@@ -75,7 +75,6 @@ Section -Main SEC0000
     SetOverwrite on
     File @abs_top_srcdir@/release/crown-qt.exe
     File /oname=COPYING.txt @abs_top_srcdir@/COPYING
-    File /oname=readme.txt @abs_top_srcdir@/doc/README_windows.txt
     SetOutPath $INSTDIR\daemon
     File @abs_top_srcdir@/release/crownd.exe
     File @abs_top_srcdir@/release/crown-cli.exe
