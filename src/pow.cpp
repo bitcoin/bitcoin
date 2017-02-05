@@ -77,7 +77,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 }
 
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
-static bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)
+static bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params, CValidationState& state)
 {
     bool fNegative;
     bool fOverflow;
@@ -87,11 +87,11 @@ static bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::
 
     // Check range
     if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
-        return false;
+        return state.DoS(50, false, REJECT_INVALID, "high-hash-range", false, "proof of work failed");
 
     // Check proof of work matches claimed amount
     if (UintToArith256(hash) > bnTarget)
-        return false;
+        return state.DoS(50, false, REJECT_INVALID, "high-hash-target", false, "proof of work failed");
 
     return true;
 }
@@ -104,8 +104,8 @@ bool CheckProof(const CBlockHeader& block, const uint256& block_hash, CValidatio
         }
     } else {
         // Check proof of work matches claimed amount
-        if (!CheckProofOfWork(block_hash, block.nBits, consensusParams)) {
-            return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
+        if (!CheckProofOfWork(block_hash, block.nBits, consensusParams, state)) {
+            return false;
         }
     }
     return true;
@@ -117,7 +117,7 @@ bool MaybeGenerateProof(const Consensus::Params& params, CBlockHeader* pblock, c
     uint256 block_hash = pblock->GetHash();
     if (params.blocksignScript == CScript()) {
         static const int nInnerLoopCount = 0x10000;
-        while (nTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(block_hash, pblock->nBits, params)) {
+        while (nTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(block_hash, pblock->nBits, params, state)) {
             ++pblock->nNonce;
             --nTries;
             block_hash = pblock->GetHash();
