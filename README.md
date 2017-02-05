@@ -1,13 +1,13 @@
 Crown Core staging tree 0.12
 ===============================
 
-`master:` [![Build Status](https://travis-ci.org/crownpay/crown.svg?branch=master)](https://travis-ci.org/crownpay/crown) `v0.12.0.x:` [![Build Status](https://travis-ci.org/crownpay/crown.svg?branch=v0.12.0.x)](https://travis-ci.org/crownpay/crown/branches) `v0.12.1.x:` [![Build Status](https://travis-ci.org/crownpay/crown.svg?branch=v0.12.1.x)](https://travis-ci.org/crownpay/crown/branches)
+`master:` [![Build Status](https://travis-ci.org/Crowndev/crowncoin.svg?branch=master)](https://travis-ci.org/crownpay/crown) `v0.12.0.x:` [![Build Status](https://travis-ci.org/Crowndev/crowncoin.svg?branch=0.12.0.x)](https://travis-ci.org/Crowndev/crowncoin/branches) `v0.12.1.x:` [![Build Status](https://travis-ci.org/Crowndev/crowncoin.svg?branch=0.12.1.x)](https://travis-ci.org/Crowndev/crowncoin/branches)
 
 https://www.crown.tech
 
 Copyright (c) 2009-2015 Bitcoin Core Developers
 
-Copyright (c) 2014-2015 Crown Core Developers
+Copyright (c) 2014-2017 Crown Core Developers
 
 
 What is Crown?
@@ -20,7 +20,7 @@ are carried out collectively by the network. Crown Core is the name of open
 source software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Crown Core software, see https://www.crown.tech/downloads.
+the Crown Core software, see http://crown.tech/wallet.
 
 
 License
@@ -32,83 +32,29 @@ information or see http://opensource.org/licenses/MIT.
 Development Process
 -------------------
 
-The `master` branch is meant to be stable. Development is normally done in separate branches.
-[Tags](https://github.com/crownpay/crown/tags) are created to indicate new official,
-stable release versions of Crown Core.
+****************************************
+**Bug Reporting**
+****************************************
+Bugs can be reported via the github issues page: https://github.com/Crowndev/crowncoin/issues
+or emailing support@crown.tech
 
-The contribution workflow is described in [CONTRIBUTING.md](https://github.com/crownpay/crown/blob/v0.12.1.x/CONTRIBUTING.md).
+***************************************
+**Merging and Updating**
+***************************************
+1. A Pull request is submitted.
+2. It will then be reviewed and tested by the Crown development team.
+3. After initial code inspection and internal testing the update will be deployed to the testnet for public testing.
+4. A minimum of 15 days of testnet function per upgrade is required to fully validate and test the upgrade.
+5. Once tested and validated, the pull request will be merged to master code and included in the next update.
 
-
-Testing
--------
-
-Testing and code review is the bottleneck for development; we get more pull
-requests than we can review and test on short notice. Please be patient and help out by testing
-other people's pull requests, and remember this is a security-critical project where any mistake might cost people
-lots of money.
-
-### Automated Testing
-
-Developers are strongly encouraged to write unit tests for new code, and to
-submit new unit tests for old code. Unit tests can be compiled and run (assuming they weren't disabled in configure) with: `make check`
-
-Every pull request is built for both Windows and Linux on a dedicated server,
-and unit and sanity tests are automatically run. The binaries produced may be
-used for manual QA testing — a link to them will appear in a comment on the
-pull request posted by [CrownPullTester](https://github.com/crownpay/PullTester). See https://github.com/TheBlueMatt/test-scripts
-for the build/test scripts. ***TODO***
-
-### Manual Quality Assurance (QA) Testing
-
-Large changes should have a test plan, and should be tested by somebody other
-than the developer who wrote the code.
-See https://github.com/crownpay/QA/ for how to create a test plan. ***TODO***
-
-Translations
-------------
-
-Changes to translations as well as new translations can be submitted to
-[Bitcoin Core's Transifex page](https://www.transifex.com/projects/p/crown/).
-
-Translations are periodically pulled from Transifex and merged into the git repository. See the
-[translation process](doc/translation_process.md) for details on how this works.
-
-**Important**: We do not accept translation changes as GitHub pull requests because the next
-pull from Transifex would automatically overwrite them again.
-
-Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/crown-translators). ***TODO***
-
-Development tips and tricks
----------------------------
-
-**compiling for debugging**
-
-Run configure with the --enable-debug option, then make. Or run configure with
-CXXFLAGS="-g -ggdb -O0" or whatever debug flags you need.
-
-**debug.log**
-
-If the code is behaving strangely, take a look in the debug.log file in the data directory;
-error and debugging messages are written there.
-
-The -debug=... command-line option controls debugging; running with just -debug will turn
-on all categories (and give you a very large debug.log file).
-
-The Qt code routes qDebug() output to debug.log under category "qt": run with -debug=qt
-to see it.
-
-**testnet and regtest modes**
-
-Run with the -testnet option to run with "play crown" on the test network, if you
-are testing multi-machine code that needs to operate across the internet.
-
-If you are testing something that can run on one machine, run with the -regtest option.
-In regression test mode, blocks can be created on-demand; see qa/rpc-tests/ for tests
-that run in -regtest mode.
-
-**DEBUG_LOCKORDER**
-
-Crown Core is a multithreaded application, and deadlocks or other multithreading bugs
-can be very difficult to track down. Compiling with -DDEBUG_LOCKORDER (configure
-CXXFLAGS="-DDEBUG_LOCKORDER -g") inserts run-time checks to keep track of which locks
-are held, and adds warnings to the debug.log file if inconsistencies are detected.
+******************************************
+**Procedures for bounty development**
+*****************************************
+The Crown team will  post a request for development and the requirements to receive the bounty reward and the size of the reward. 
+1.Developers at large can then post their interest in seeking the bounty on github and being developing on the change.
+2. Once the at-large developer deems his code complete, they will submit a pull request via ionomy github with the label of the Bounty Feature.
+3. It will then be reviewed and tested by the internal development team at ionomy.com.
+4. After initial code inspection and internal testing the update will be deployed to the testnet.
+5. A minimum of 15 days of testnet function per upgrade is required to fully validate and test the upgrade.
+6. Once tested and validated, the pull request will be merged to master code and included in the next update.
+7. When the version update is deployed Bounty funds will be released to the developer of the completed feature.
