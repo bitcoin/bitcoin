@@ -1,6 +1,9 @@
+Release Notes for Bitcoin Unlimited v1.0.0
+==========================================
+
 Bitcoin Unlimited version 1.0.0 is now available from:
 
-  <https://bitcoinunlimited.info/downloads>
+  <https://bitcoinunlimited.info/download>
 
 Please report bugs using the issue tracker at github:
 
