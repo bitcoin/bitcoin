@@ -529,7 +529,9 @@ void RPCConsole::setNumConnections(int count)
 void RPCConsole::setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress)
 {
     ui->numberOfBlocks->setText(QString::number(count));
-    ui->lastBlockTime->setText(blockDate.toString());
+
+    QString time_format = "MMM  d yyyy, HH:mm:ss";
+    ui->lastBlockTime->setText(blockDate.toString(time_format));
 }
 
 void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)
