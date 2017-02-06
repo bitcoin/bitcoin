@@ -118,7 +118,7 @@ public:
     void Run()
     {
         ThreadCounter count(*this);
-        while (running) {
+        while (true) {
             std::unique_ptr<WorkItem> i;
             {
                 std::unique_lock<std::mutex> lock(cs);
