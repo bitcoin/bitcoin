@@ -115,7 +115,7 @@ def test_segwit_bumpfee_succeeds(rbf_node, dest_address):
         'vout': 0,
         "sequence": BIP125_SEQUENCE_NUMBER
     }], {dest_address: Decimal("0.0005"),
-         get_change_address(rbf_node): Decimal("0.0003")})
+         rbf_node.getrawchangeaddress(): Decimal("0.0003")})
     rbfsigned = rbf_node.signrawtransaction(rbfraw)
     rbfid = rbf_node.sendrawtransaction(rbfsigned["hex"])
     assert rbfid in rbf_node.getrawmempool()
@@ -167,13 +167,15 @@ def test_small_output_fails(rbf_node, dest_address):
     rbfid = spend_one_input(rbf_node,
                             Decimal("0.00100000"),
                             {dest_address: 0.00080000,
-                             get_change_address(rbf_node): Decimal("0.00010000")})
+                             rbf_node.getrawchangeaddress(): Decimal("0.00010000")})
     rbf_node.bumpfee(rbfid, {"totalFee": 20000})
 
     rbfid = spend_one_input(rbf_node,
                             Decimal("0.00100000"),
                             {dest_address: 0.00080000,
                              get_change_address(rbf_node): Decimal("0.00010000")})
+                             get_change_address(rbf_node): Decimal("0.00010000")})
+                             rbf_node.getrawchangeaddress(): Decimal("0.00010000")})
     assert_raises_jsonrpc(-4, "Change output is too small", rbf_node.bumpfee, rbfid, {"totalFee": 20001})
 
 
@@ -183,7 +185,7 @@ def test_dust_to_fee(rbf_node, dest_address):
     rbfid = spend_one_input(rbf_node,
                             Decimal("0.00100000"),
                             {dest_address: 0.00080000,
-                             get_change_address(rbf_node): Decimal("0.00010000")})
+                             rbf_node.getrawchangeaddress(): Decimal("0.00010000")})
     fulltx = rbf_node.getrawtransaction(rbfid, 1)
     bumped_tx = rbf_node.bumpfee(rbfid, {"totalFee": 19900})
     full_bumped_tx = rbf_node.getrawtransaction(bumped_tx["txid"], 1)
@@ -286,21 +288,6 @@ def spend_one_input(node, input_amount, outputs):
     signedtx = node.signrawtransaction(rawtx)
     txid = node.sendrawtransaction(signedtx["hex"])
     return txid
-
-
-def get_change_address(node):
-    """Get a wallet change address.
-
-    There is no wallet RPC to access unused change addresses, so this creates a
-    dummy transaction, calls fundrawtransaction to give add an input and change
-    output, then returns the change address."""
-    dest_address = node.getnewaddress()
-    dest_amount = Decimal("0.00012345")
-    rawtx = node.createrawtransaction([], {dest_address: dest_amount})
-    fundtx = node.fundrawtransaction(rawtx)
-    info = node.decoderawtransaction(fundtx["hex"])
-    return next(address for out in info["vout"]
-                if out["value"] != dest_amount for address in out["scriptPubKey"]["addresses"])
 
 
 def submit_block_with_tx(node, tx):
