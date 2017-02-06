@@ -590,7 +590,6 @@ public:
     const int64_t nTimeConnected;
     std::atomic<int64_t> nTimeOffset;
     const CAddress addr;
-    CService addrLocal;
     std::atomic<int> nVersion;
     // strSubVer is whatever byte array we read from the wire. However, this field is intended
     // to be printed out, displayed to humans in various forms and so on. So we sanitize it and
@@ -698,6 +697,9 @@ private:
 
     mutable CCriticalSection cs_addrName;
     std::string addrName;
+
+    CService addrLocal;
+    mutable CCriticalSection cs_addrLocal;
 public:
 
     NodeId GetId() const {
@@ -730,6 +732,10 @@ public:
     }
     void SetSendVersion(int nVersionIn);
     int GetSendVersion() const;
+
+    CService GetAddrLocal() const;
+    //! May not be called more than once
+    void SetAddrLocal(const CService& addrLocalIn);
 
     CNode* AddRef()
     {
