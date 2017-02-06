@@ -8,6 +8,8 @@
 
 #include "base58.h"
 #include "netbase.h"
+#include "net.h"
+#include "unlimited.h"
 
 #include "test/test_bitcoin.h"
 
@@ -307,6 +309,33 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     o1 = ar[0].get_obj();
     adr = find_value(o1, "address");
     BOOST_CHECK_EQUAL(adr.get_str(), "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/128");
+}
+
+BOOST_AUTO_TEST_CASE(findlikelynode)
+{
+  CAddress addr1(CService("169.254.1.2"));
+  CNode n1(INVALID_SOCKET, addr1, "", true);
+  CAddress addr2(CService("169.254.2.3"));
+  CNode n2(INVALID_SOCKET, addr2, "", true);
+  assert(vNodes.size() == 0);
+  vNodes.push_back(&n1);
+  vNodes.push_back(&n2);
+
+  // Test prefix matching
+  BOOST_CHECK(FindLikelyNode("169.254.1.2") == &n1);
+  BOOST_CHECK(FindLikelyNode("169.254.1.2:1234") == NULL);
+  BOOST_CHECK(FindLikelyNode("169.254.1") == &n1);
+
+  // Test wildcard matching
+  BOOST_CHECK(FindLikelyNode("169.254.1*") == &n1);
+  BOOST_CHECK(FindLikelyNode("169.254.2*") == &n2);
+  BOOST_CHECK(FindLikelyNode("169.254.2.3*") == &n2);
+  BOOST_CHECK(FindLikelyNode("169.254.2.?:?") == &n2);
+  BOOST_CHECK(FindLikelyNode("169.254.1.?:*") == &n1);
+
+  vNodes.clear();
+  
+    
 }
 
 BOOST_AUTO_TEST_SUITE_END()
