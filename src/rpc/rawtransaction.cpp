@@ -852,7 +852,9 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
 
         // ... and merge in other signatures:
         BOOST_FOREACH(const CMutableTransaction& txv, txVariants) {
-            txin.scriptSig = CombineSignatures(prevPubKey, txConst, i, txin.scriptSig, txv.vin[i].scriptSig);
+            if (txv.vin.size() > i) {
+                txin.scriptSig = CombineSignatures(prevPubKey, txConst, i, txin.scriptSig, txv.vin[i].scriptSig);
+            }
         }
         ScriptError serror = SCRIPT_ERR_OK;
         if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i), &serror)) {
