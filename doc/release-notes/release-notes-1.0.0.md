@@ -148,7 +148,7 @@ approaches keeps BU connection slots available for useful nodes and also for the
 bit-nodes crawlers that want to find the node counts.
 
 Further information:
-- [GitHub #PR 62](https://github.com/BitcoiniUnlimited/BitcoiniUnlimited/pull/62)
+- [GitHub #PR 62](https://github.com/BitcoinUnlimited/BitcoinUnlimited/pull/62)
 
 Request Manager extensions
 --------------------------
@@ -172,8 +172,8 @@ Initial Blockchain Download (IBD). It eliminates slowdowns and hung connections
 which occasionally happen when the request for blocks receives a slow response.
 
 Further information:
-- [GitHub PR #79](https://github.com/BitcoiniUnlimited/BitcoiniUnlimited/pull/79)
-- [GitHub PR #229](https://github.com/BitcoiniUnlimited/BitcoiniUnlimited/pull/229)
+- [GitHub PR #79](https://github.com/BitcoinUnlimited/BitcoinUnlimited/pull/79)
+- [GitHub PR #229](https://github.com/BitcoinUnlimited/BitcoinUnlimited/pull/229)
 
 Xthin block propagation optimizations
 -------------------------------------
@@ -186,11 +186,11 @@ and minimal latency in block propagation.
 
 
 Further information:
-- [GitHub PR #131](https://github.com/BitcoiniUnlimited/BitcoiniUnlimited/pull/131)
-- [GitHub PR #173](https://github.com/BitcoiniUnlimited/BitcoiniUnlimited/pull/173)
-- [GitHub PR #174](https://github.com/BitcoiniUnlimited/BitcoiniUnlimited/pull/174)
-- [GitHub PR #176](https://github.com/BitcoiniUnlimited/BitcoiniUnlimited/pull/176)
-- [GitHub PR #191](https://github.com/BitcoiniUnlimited/BitcoiniUnlimited/pull/191)
+- [GitHub PR #131](https://github.com/BitcoinUnlimited/BitcoinUnlimited/pull/131)
+- [GitHub PR #173](https://github.com/BitcoinUnlimited/BitcoinUnlimited/pull/173)
+- [GitHub PR #174](https://github.com/BitcoinUnlimited/BitcoinUnlimited/pull/174)
+- [GitHub PR #176](https://github.com/BitcoinUnlimited/BitcoinUnlimited/pull/176)
+- [GitHub PR #191](https://github.com/BitcoinUnlimited/BitcoinUnlimited/pull/191)
 
 Mempool Management
 ==================
@@ -216,8 +216,8 @@ after 72 hours. This not only improves node operation, but the synchronization
 of mempool data improves Xthin efficiency.
 
 Further information:
-- [GitHub PR #42](https://github.com/BitcoiniUnlimited/BitcoiniUnlimited/pull/42)
-- [GitHub PR #100](https://github.com/BitcoiniUnlimited/BitcoiniUnlimited/pull/100)
+- [GitHub PR #42](https://github.com/BitcoinUnlimited/BitcoinUnlimited/pull/42)
+- [GitHub PR #100](https://github.com/BitcoinUnlimited/BitcoinUnlimited/pull/100)
 
 Configuration
 =============
@@ -276,7 +276,7 @@ destruction order and eliminates this bug. This is especially helpful for
 running bitcoind test suite.
 
 Further information:
-- [GitHub PR #67](https://github.com/BitcoiniUnlimited/BitcoiniUnlimited/pull/67)
+- [GitHub PR #67](https://github.com/BitcoinUnlimited/BitcoinUnlimited/pull/67)
 
 Lock order checking in debug mode
 ---------------------------------
@@ -320,8 +320,8 @@ Yanofsky and Wladimir J. van der Laan for their contributions.
 1.0.0 Change log
 =================
 
-A list commits grouped by author follow. This overview separates commit applied
-directly to the BU code from the one imported from Core project. Merge commit
+A list of commits grouped by author follow. This overview separates commits applied
+directly to the BU code from the ones imported from Core project. Merge commits
 are not included in the list.
 
 
