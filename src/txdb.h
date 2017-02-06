@@ -1,29 +1,27 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Crowncoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef CROWNCOIN_TXDB_LEVELDB_H
-#define CROWNCOIN_TXDB_LEVELDB_H
+#ifndef BITCOIN_TXDB_H
+#define BITCOIN_TXDB_H
 
 #include "leveldbwrapper.h"
 #include "main.h"
-#include "names.h"
 
 #include <map>
 #include <string>
 #include <utility>
 #include <vector>
 
-class CBigNum;
 class CCoins;
 class uint256;
 
-// -dbcache default (MiB)
+//! -dbcache default (MiB)
 static const int64_t nDefaultDbCache = 100;
-// max. -dbcache in (MiB)
+//! max. -dbcache in (MiB)
 static const int64_t nMaxDbCache = sizeof(void*) > 4 ? 4096 : 1024;
-// min. -dbcache in (MiB)
+//! min. -dbcache in (MiB)
 static const int64_t nMinDbCache = 4;
 
 /** CCoinsView backed by the LevelDB coin database (chainstate/) */
@@ -34,16 +32,11 @@ protected:
 public:
     CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
-    bool GetCoins(const uint256 &txid, CCoins &coins);
-    bool SetCoins(const uint256 &txid, const CCoins &coins);
-    bool HaveCoins(const uint256 &txid);
-    uint256 GetBestBlock();
-    bool SetBestBlock(const uint256 &hashBlock);
-    bool GetName (const CName& name, CNameData& data) const;
-    bool SetName (const CName& name, const CNameData& data);
-    bool DeleteName (const CName& name);
-    bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock, const CNameCache& names);
-    bool GetStats(CCoinsStats &stats);
+    bool GetCoins(const uint256 &txid, CCoins &coins) const;
+    bool HaveCoins(const uint256 &txid) const;
+    uint256 GetBestBlock() const;
+    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
+    bool GetStats(CCoinsStats &stats) const;
 };
 
 /** Access to the block database (blocks/index/) */
@@ -56,7 +49,6 @@ private:
     void operator=(const CBlockTreeDB&);
 public:
     bool WriteBlockIndex(const CDiskBlockIndex& blockindex);
-    bool WriteBestInvalidWork(const CBigNum& bnBestInvalidWork);
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo &fileinfo);
     bool WriteBlockFileInfo(int nFile, const CBlockFileInfo &fileinfo);
     bool ReadLastBlockFile(int &nFile);
@@ -70,4 +62,4 @@ public:
     bool LoadBlockIndexGuts();
 };
 
-#endif // CROWNCOIN_TXDB_LEVELDB_H
+#endif // BITCOIN_TXDB_H

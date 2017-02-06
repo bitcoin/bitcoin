@@ -29,7 +29,7 @@ class BloomFilterPolicy : public FilterPolicy {
   }
 
   virtual const char* Name() const {
-    return "leveldb.BuiltinBloomFilter";
+    return "leveldb.BuiltinBloomFilter2";
   }
 
   virtual void CreateFilter(const Slice* keys, int n, std::string* dst) const {

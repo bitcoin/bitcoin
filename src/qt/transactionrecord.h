@@ -1,10 +1,11 @@
-// Copyright (c) 2011-2013 The Crowncoin developers
+// Copyright (c) 2011-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TRANSACTIONRECORD_H
-#define TRANSACTIONRECORD_H
+#ifndef BITCOIN_QT_TRANSACTIONRECORD_H
+#define BITCOIN_QT_TRANSACTIONRECORD_H
 
+#include "amount.h"
 #include "uint256.h"
 
 #include <QList>
@@ -59,6 +60,9 @@ public:
 
     /** Current number of blocks (to know whether cached status is still valid) */
     int cur_num_blocks;
+
+    //** Know when to update transaction for ix locks **/
+    int cur_num_ix_locks;
 };
 
 /** UI model for a transaction. A core transaction can be represented by multiple UI transactions if it has
@@ -75,7 +79,13 @@ public:
         SendToOther,
         RecvWithAddress,
         RecvFromOther,
-        SendToSelf
+        SendToSelf,
+        RecvWithDarksend,
+        DarksendDenominate,
+        DarksendCollateralPayment,
+        DarksendMakeCollaterals,
+        DarksendCreateDenominations,
+        Darksent
     };
 
     /** Number of confirmation recommended for accepting a transaction */
@@ -94,7 +104,7 @@ public:
 
     TransactionRecord(uint256 hash, qint64 time,
                 Type type, const std::string &address,
-                qint64 debit, qint64 credit):
+                const CAmount& debit, const CAmount& credit):
             hash(hash), time(time), type(type), address(address), debit(debit), credit(credit),
             idx(0)
     {
@@ -111,8 +121,8 @@ public:
     qint64 time;
     Type type;
     std::string address;
-    qint64 debit;
-    qint64 credit;
+    CAmount debit;
+    CAmount credit;
     /**@}*/
 
     /** Subtransaction index, for sort key */
@@ -120,6 +130,9 @@ public:
 
     /** Status: can change with block chain update */
     TransactionStatus status;
+
+    /** Whether the transaction was sent/received with a watch-only address */
+    bool involvesWatchAddress;
 
     /** Return the unique identifier for this transaction (part) */
     QString getTxID() const;
@@ -136,4 +149,4 @@ public:
     bool statusUpdateNeeded();
 };
 
-#endif // TRANSACTIONRECORD_H
+#endif // BITCOIN_QT_TRANSACTIONRECORD_H

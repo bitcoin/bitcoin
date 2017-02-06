@@ -1,6 +1,0 @@
-usr/local/bin/crowncoin-qt usr/bin
-share/pixmaps/crowncoin32.xpm usr/share/pixmaps
-share/pixmaps/crowncoin16.xpm usr/share/pixmaps
-share/pixmaps/crowncoin128.png usr/share/pixmaps
-debian/crowncoin-qt.desktop usr/share/applications
-debian/crowncoin-qt.protocol usr/share/kde4/services/

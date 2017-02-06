@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#ifndef STORAGE_LEVELDB_DB_FORMAT_H_
-#define STORAGE_LEVELDB_DB_FORMAT_H_
+#ifndef STORAGE_LEVELDB_DB_DBFORMAT_H_
+#define STORAGE_LEVELDB_DB_DBFORMAT_H_
 
 #include <stdio.h>
 #include "leveldb/comparator.h"
@@ -227,4 +227,4 @@ inline LookupKey::~LookupKey() {
 
 }  // namespace leveldb
 
-#endif  // STORAGE_LEVELDB_DB_FORMAT_H_
+#endif  // STORAGE_LEVELDB_DB_DBFORMAT_H_

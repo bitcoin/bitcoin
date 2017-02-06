@@ -7,8 +7,9 @@ from subprocess import Popen, PIPE
 import glob
 import operator
 import os
+import sys
 
-OUT_CPP="src/qt/crowncoinstrings.cpp"
+OUT_CPP="qt/crownstrings.cpp"
 EMPTY=['""']
 
 def parse_po(text):
@@ -30,7 +31,7 @@ def parse_po(text):
                 in_msgstr = False
             # message start
             in_msgid = True
-            
+
             msgid = [line[6:]]
         elif line.startswith('msgstr '):
             in_msgid = False
@@ -47,14 +48,14 @@ def parse_po(text):
 
     return messages
 
-files = glob.glob('src/*.cpp') + glob.glob('src/*.h') 
+files = sys.argv[1:]
 
 # xgettext -n --keyword=_ $FILES
 XGETTEXT=os.getenv('XGETTEXT', 'xgettext')
 child = Popen([XGETTEXT,'--output=-','-n','--keyword=_'] + files, stdout=PIPE)
 (out, err) = child.communicate()
 
-messages = parse_po(out) 
+messages = parse_po(out)
 
 f = open(OUT_CPP, 'w')
 f.write("""
@@ -68,10 +69,10 @@ f.write("""
 #define UNUSED
 #endif
 """)
-f.write('static const char UNUSED *crowncoin_strings[] = {\n')
+f.write('static const char UNUSED *crown_strings[] = {\n')
 messages.sort(key=operator.itemgetter(0))
 for (msgid, msgstr) in messages:
     if msgid != EMPTY:
-        f.write('QT_TRANSLATE_NOOP("crowncoin-core", %s),\n' % ('\n'.join(msgid)))
+        f.write('QT_TRANSLATE_NOOP("crown-core", %s),\n' % ('\n'.join(msgid)))
 f.write('};\n')
 f.close()

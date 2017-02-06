@@ -1,0 +1,12 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Crown
+Comment=Crown P2P Cryptocurrency
+Comment[fr]=Crown, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=Crown, eşten eşe kriptografik sanal para birimi
+Exec=crown-qt %u
+Terminal=false
+Type=Application
+Icon=crown128
+MimeType=x-scheme-handler/crown;
+Categories=Office;Finance;

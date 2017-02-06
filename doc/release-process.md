@@ -2,7 +2,7 @@ Release Process
 ====================
 
 * update translations (ping wumpus, Diapolo or tcatm on IRC)
-* see https://github.com/crowncoin/crowncoin/blob/master/doc/translation_process.md#syncing-with-transifex
+* see https://github.com/crownpay/crown/blob/master/doc/translation_process.md#syncing-with-transifex
 
 * * *
 
@@ -23,201 +23,144 @@ Release Process
 
 * * *
 
-##perform gitian builds
+###update gitian
 
- From a directory containing the crowncoin source, gitian-builder and gitian.sigs
-  
+ In order to take advantage of the new caching features in gitian, be sure to update to a recent version (e9741525c or higher is recommended)
+
+###perform gitian builds
+
+ From a directory containing the bitcoin source, gitian-builder and gitian.sigs
+
 	export SIGNER=(your gitian key, ie bluematt, sipa, etc)
 	export VERSION=(new version, e.g. 0.8.0)
-	pushd ./crowncoin
+	pushd ./crown
 	git checkout v${VERSION}
 	popd
 	pushd ./gitian-builder
-        mkdir -p inputs; cd inputs/
 
- Register and download the Apple SDK (see OSX Readme for details)
-	visit https://developer.apple.com/downloads/download.action?path=Developer_Tools/xcode_4.6.3/xcode4630916281a.dmg
+###fetch and build inputs: (first time, or when dependency versions change)
  
- Using a Mac, create a tarball for the 10.7 SDK
+	mkdir -p inputs
+
+ Register and download the Apple SDK: (see OSX Readme for details)
+ 
+ https://developer.apple.com/downloads/download.action?path=Developer_Tools/xcode_4.6.3/xcode4630916281a.dmg
+ 
+ Using a Mac, create a tarball for the 10.7 SDK and copy it to the inputs directory:
+ 
 	tar -C /Volumes/Xcode/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/ -czf MacOSX10.7.sdk.tar.gz MacOSX10.7.sdk
 
- Fetch and build inputs: (first time, or when dependency versions change)
+###Optional: Seed the Gitian sources cache
 
-	wget 'http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.tar.gz' -O miniupnpc-1.9.tar.gz
-	wget 'https://www.openssl.org/source/openssl-1.0.1h.tar.gz'
-	wget 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'
-	wget 'http://zlib.net/zlib-1.2.8.tar.gz'
-	wget 'ftp://ftp.simplesystems.org/pub/png/src/history/libpng16/libpng-1.6.8.tar.gz'
-	wget 'https://fukuchi.org/works/qrencode/qrencode-3.4.3.tar.bz2'
-	wget 'https://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2'
-	wget 'https://svn.boost.org/trac/boost/raw-attachment/ticket/7262/boost-mingw.patch' -O \ 
-	     boost-mingw-gas-cross-compile-2013-03-03.patch
-	wget 'https://download.qt-project.org/official_releases/qt/5.2/5.2.0/single/qt-everywhere-opensource-src-5.2.0.tar.gz'
-	wget 'https://download.qt-project.org/archive/qt/4.6/qt-everywhere-opensource-src-4.6.4.tar.gz'
-	wget 'https://protobuf.googlecode.com/files/protobuf-2.5.0.tar.bz2'
-	wget 'https://github.com/mingwandroid/toolchain4/archive/10cc648683617cca8bcbeae507888099b41b530c.tar.gz'
-	wget 'http://www.opensource.apple.com/tarballs/cctools/cctools-809.tar.gz'
-	wget 'http://www.opensource.apple.com/tarballs/dyld/dyld-195.5.tar.gz'
-	wget 'http://www.opensource.apple.com/tarballs/ld64/ld64-127.2.tar.gz'
-	wget 'http://cdrkit.org/releases/cdrkit-1.1.11.tar.gz'
-	wget 'https://github.com/theuni/libdmg-hfsplus/archive/libdmg-hfsplus-v0.1.tar.gz'
-	wget 'http://llvm.org/releases/3.2/clang+llvm-3.2-x86-linux-ubuntu-12.04.tar.gz' -O \
-	     clang-llvm-3.2-x86-linux-ubuntu-12.04.tar.gz
-        wget 'https://raw.githubusercontent.com/theuni/osx-cross-depends/master/patches/cdrtools/genisoimage.diff' -O \
-	     cdrkit-deterministic.patch
-	cd ..
-	./bin/gbuild ../crowncoin/contrib/gitian-descriptors/boost-linux.yml
-	mv build/out/boost-*.zip inputs/
-	./bin/gbuild ../crowncoin/contrib/gitian-descriptors/deps-linux.yml
-	mv build/out/crowncoin-deps-*.zip inputs/
-	./bin/gbuild ../crowncoin/contrib/gitian-descriptors/qt-linux.yml
-	mv build/out/qt-*.tar.gz inputs/
-	./bin/gbuild ../crowncoin/contrib/gitian-descriptors/boost-win.yml
-	mv build/out/boost-*.zip inputs/
-	./bin/gbuild ../crowncoin/contrib/gitian-descriptors/deps-win.yml
-	mv build/out/crowncoin-deps-*.zip inputs/
-	./bin/gbuild ../crowncoin/contrib/gitian-descriptors/qt-win.yml
-	mv build/out/qt-*.zip inputs/
-	./bin/gbuild ../crowncoin/contrib/gitian-descriptors/protobuf-win.yml
-	mv build/out/protobuf-*.zip inputs/
-	./bin/gbuild ../crowncoin/contrib/gitian-descriptors/gitian-osx-native.yml
-	mv build/out/osx-*.tar.gz inputs/
-	./bin/gbuild ../crowncoin/contrib/gitian-descriptors/gitian-osx-depends.yml
-	mv build/out/osx-*.tar.gz inputs/
-	./bin/gbuild ../crowncoin/contrib/gitian-descriptors/gitian-osx-qt.yml
-	mv build/out/osx-*.tar.gz inputs/
+  By default, gitian will fetch source files as needed. For offline builds, they can be fetched ahead of time:
 
- The expected SHA256 hashes of the intermediate inputs are:
+	make -C ../crown/depends download SOURCES_PATH=`pwd`/cache/common
 
-    46710f673467e367738d8806e45b4cb5931aaeea61f4b6b55a68eea56d5006c5  crowncoin-deps-linux32-gitian-r6.zip
-    f03be39fb26670243d3a659e64d18e19d03dec5c11e9912011107768390b5268  crowncoin-deps-linux64-gitian-r6.zip
-    f29b7d9577417333fb56e023c2977f5726a7c297f320b175a4108cf7cd4c2d29  boost-linux32-1.55.0-gitian-r1.zip
-    88232451c4104f7eb16e469ac6474fd1231bd485687253f7b2bdf46c0781d535  boost-linux64-1.55.0-gitian-r1.zip
-    74ec2d301cf1a9d03b194153f545102ba45dad02b390485212fe6717de486361  qt-linux32-4.6.4-gitian-r1.tar.gz
-    01d0477e299467f09280f15424781154e2b1ea4072c5edb16e044c234954fd9a  qt-linux64-4.6.4-gitian-r1.tar.gz
-    60dc2d3b61e9c7d5dbe2f90d5955772ad748a47918ff2d8b74e8db9b1b91c909  boost-win32-1.55.0-gitian-r6.zip
-    f65fcaf346bc7b73bc8db3a8614f4f6bee2f61fcbe495e9881133a7c2612a167  boost-win64-1.55.0-gitian-r6.zip
-    70de248cd0dd7e7476194129e818402e974ca9c5751cbf591644dc9f332d3b59  crowncoin-deps-win32-gitian-r13.zip
-    9eace4c76f639f4f3580a478eee4f50246e1bbb5ccdcf37a158261a5a3fa3e65  crowncoin-deps-win64-gitian-r13.zip
-    963e3e5e85879010a91143c90a711a5d1d5aba992e38672cdf7b54e42c56b2f1  qt-win32-5.2.0-gitian-r3.zip
-    751c579830d173ef3e6f194e83d18b92ebef6df03289db13ab77a52b6bc86ef0  qt-win64-5.2.0-gitian-r3.zip
-    e2e403e1a08869c7eed4d4293bce13d51ec6a63592918b90ae215a0eceb44cb4  protobuf-win32-2.5.0-gitian-r4.zip
-    a0999037e8b0ef9ade13efd88fee261ba401f5ca910068b7e0cd3262ba667db0  protobuf-win64-2.5.0-gitian-r4.zip
+  Only missing files will be fetched, so this is safe to re-run for each build.
 
- Build crowncoind and crowncoin-qt on Linux32, Linux64, and Win32:
-  
-	./bin/gbuild --commit crowncoin=v${VERSION} ../crowncoin/contrib/gitian-descriptors/gitian-linux.yml
-	./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../crowncoin/contrib/gitian-descriptors/gitian-linux.yml
-	pushd build/out
-	zip -r crowncoin-${VERSION}-linux-gitian.zip *
-	mv crowncoin-${VERSION}-linux-gitian.zip ../../../
+###Build Crown Core for Linux, Windows, and OS X:
+
+	./bin/gbuild --commit crown=v${VERSION} ../crown/contrib/gitian-descriptors/gitian-linux.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../crown/contrib/gitian-descriptors/gitian-linux.yml
+	mv build/out/crown-*.tar.gz build/out/src/crown-*.tar.gz ../
+	./bin/gbuild --commit crown=v${VERSION} ../crown/contrib/gitian-descriptors/gitian-win.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-win --destination ../gitian.sigs/ ../crown/contrib/gitian-descriptors/gitian-win.yml
+	mv build/out/crown-*.zip build/out/crown-*.exe ../
+	./bin/gbuild --commit bitcoin=v${VERSION} ../crown/contrib/gitian-descriptors/gitian-osx.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../crown/contrib/gitian-descriptors/gitian-osx.yml
+	mv build/out/crown-*-unsigned.tar.gz inputs/crown-osx-unsigned.tar.gz
+	mv build/out/crown-*.tar.gz build/out/crown-*.dmg ../
 	popd
-	./bin/gbuild --commit crowncoin=v${VERSION} ../crowncoin/contrib/gitian-descriptors/gitian-win.yml
-	./bin/gsign --signer $SIGNER --release ${VERSION}-win --destination ../gitian.sigs/ ../crowncoin/contrib/gitian-descriptors/gitian-win.yml
-	pushd build/out
-	zip -r crowncoin-${VERSION}-win-gitian.zip *
-	mv crowncoin-${VERSION}-win-gitian.zip ../../../
-	popd
-        ./bin/gbuild --commit crowncoin=v${VERSION} ../crowncoin/contrib/gitian-descriptors/gitian-osx-crowncoin.yml
-        ./bin/gsign --signer $SIGNER --release ${VERSION}-osx --destination ../gitian.sigs/ ../crowncoin/contrib/gitian-descriptors/gitian-osx-crowncoin.yml
-	pushd build/out
-	mv Crowncoin-Qt.dmg ../../../
-	popd
-	popd
-
   Build output expected:
 
-  1. linux 32-bit and 64-bit binaries + source (crowncoin-${VERSION}-linux-gitian.zip)
-  2. windows 32-bit and 64-bit binaries + installer + source (crowncoin-${VERSION}-win-gitian.zip)
-  3. OSX installer (Crowncoin-Qt.dmg)
-  4. Gitian signatures (in gitian.sigs/${VERSION}[-win|-osx]/(your gitian key)/
-
-repackage gitian builds for release as stand-alone zip/tar/installer exe
-
-**Linux .tar.gz:**
-
-	unzip crowncoin-${VERSION}-linux-gitian.zip -d crowncoin-${VERSION}-linux
-	tar czvf crowncoin-${VERSION}-linux.tar.gz crowncoin-${VERSION}-linux
-	rm -rf crowncoin-${VERSION}-linux
-
-**Windows .zip and setup.exe:**
-
-	unzip crowncoin-${VERSION}-win-gitian.zip -d crowncoin-${VERSION}-win
-	mv crowncoin-${VERSION}-win/crowncoin-*-setup.exe .
-	zip -r crowncoin-${VERSION}-win.zip crowncoin-${VERSION}-win
-	rm -rf crowncoin-${VERSION}-win
+  1. source tarball (crown-${VERSION}.tar.gz)
+  2. linux 32-bit and 64-bit binaries dist tarballs (crown-${VERSION}-linux[32|64].tar.gz)
+  3. windows 32-bit and 64-bit installers and dist zips (crown-${VERSION}-win[32|64]-setup.exe, crown-${VERSION}-win[32|64].zip)
+  4. OSX unsigned installer (crown-${VERSION}-osx-unsigned.dmg)
+  5. Gitian signatures (in gitian.sigs/${VERSION}-<linux|win|osx-unsigned>/(your gitian key)/
 
 ###Next steps:
-
-* Code-sign Windows -setup.exe (in a Windows virtual machine using signtool)
- Note: only Gavin has the code-signing keys currently.
-
-* upload builds to SourceForge
-
-* create SHA256SUMS for builds, and PGP-sign it
-
-* update crowncoin.org version
-  make sure all OS download links go to the right versions
-  
-* update download sizes on crowncoin.org/_templates/download.html
-
-* update forum version
-
-* update wiki download links
-
-* update wiki changelog: [https://en.crowncoin.it/wiki/Changelog](https://en.crowncoin.it/wiki/Changelog)
 
 Commit your signature to gitian.sigs:
 
 	pushd gitian.sigs
-	git add ${VERSION}/${SIGNER}
+	git add ${VERSION}-linux/${SIGNER}
 	git add ${VERSION}-win/${SIGNER}
+	git add ${VERSION}-osx-unsigned/${SIGNER}
+	git commit -a
+	git push  # Assuming you can push to the gitian.sigs tree
+	popd
+
+  Wait for OSX detached signature:
+	Once the OSX build has 3 matching signatures, Evan(?) ***TODO*** will sign it with the apple App-Store key.
+	He will then upload a detached signature to be combined with the unsigned app to create a signed binary.
+
+  Create the signed OSX binary:
+
+	pushd ./gitian-builder
+	# Fetch the signature as instructed by Evan
+	cp signature.tar.gz inputs/
+	./bin/gbuild -i ../crown/contrib/gitian-descriptors/gitian-osx-signer.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../crown/contrib/gitian-descriptors/gitian-osx-signer.yml
+	mv build/out/crown-osx-signed.dmg ../crown-${VERSION}-osx.dmg
+	popd
+
+Commit your signature for the signed OSX binary:
+
+	pushd gitian.sigs
+	git add ${VERSION}-osx-signed/${SIGNER}
 	git commit -a
 	git push  # Assuming you can push to the gitian.sigs tree
 	popd
 
 -------------------------------------------------------------------------
 
-### After 3 or more people have gitian-built, repackage gitian-signed zips:
+### After 3 or more people have gitian-built and their results match:
 
-From a directory containing crowncoin source, gitian.sigs and gitian zips
+- Perform code-signing.
 
-	export VERSION=(new version, e.g. 0.8.0)
-	mkdir crowncoin-${VERSION}-linux-gitian
-	pushd crowncoin-${VERSION}-linux-gitian
-	unzip ../crowncoin-${VERSION}-linux-gitian.zip
-	mkdir gitian
-	cp ../crowncoin/contrib/gitian-downloader/*.pgp ./gitian/
-	for signer in $(ls ../gitian.sigs/${VERSION}/); do
-	 cp ../gitian.sigs/${VERSION}/${signer}/crowncoin-build.assert ./gitian/${signer}-build.assert
-	 cp ../gitian.sigs/${VERSION}/${signer}/crowncoin-build.assert.sig ./gitian/${signer}-build.assert.sig
-	done
-	zip -r crowncoin-${VERSION}-linux-gitian.zip *
-	cp crowncoin-${VERSION}-linux-gitian.zip ../
-	popd
-	mkdir crowncoin-${VERSION}-win-gitian
-	pushd crowncoin-${VERSION}-win-gitian
-	unzip ../crowncoin-${VERSION}-win-gitian.zip
-	mkdir gitian
-	cp ../crowncoin/contrib/gitian-downloader/*.pgp ./gitian/
-	for signer in $(ls ../gitian.sigs/${VERSION}-win/); do
-	 cp ../gitian.sigs/${VERSION}-win/${signer}/crowncoin-build.assert ./gitian/${signer}-build.assert
-	 cp ../gitian.sigs/${VERSION}-win/${signer}/crowncoin-build.assert.sig ./gitian/${signer}-build.assert.sig
-	done
-	zip -r crowncoin-${VERSION}-win-gitian.zip *
-	cp crowncoin-${VERSION}-win-gitian.zip ../
-	popd
+    - Code-sign Windows -setup.exe (in a Windows virtual machine using signtool)
 
-- Upload gitian zips to SourceForge
+  Note: only Evan has the code-signing keys currently.
+
+- Create `SHA256SUMS.asc` for the builds, and GPG-sign it:
+```bash
+sha256sum * > SHA256SUMS
+gpg --digest-algo sha256 --clearsign SHA256SUMS # outputs SHA256SUMS.asc
+rm SHA256SUMS
+```
+(the digest algorithm is forced to sha256 to avoid confusion of the `Hash:` header that GPG adds with the SHA256 used for the files)
+
+- Upload zips and installers, as well as `SHA256SUMS.asc` from last step, to the bitcoin.org server
+  into `/var/www/bin/bitcoin-core-${VERSION}`
+
+- Update crown.tech version ***TODO***
+
+  - First, check to see if the crown.tech maintainers have prepared a
+    release: https://github.com/bitcoin/bitcoin.org/labels/Releases
+
+      - If they have, it will have previously failed their Travis CI
+        checks because the final release files weren't uploaded.
+        Trigger a Travis CI rebuild---if it passes, merge.
+
+  - If they have not prepared a release, follow the Bitcoin.org release
+    instructions: https://github.com/bitcoin/bitcoin.org#release-notes
+
+  - After the pull request is merged, the website will automatically show the newest version within 15 minutes, as well
+    as update the OS download links. Ping @saivann/@harding (saivann/harding on Freenode) in case anything goes wrong
 
 - Announce the release:
 
-  - Add the release to crowncoin.org: https://github.com/crowncoin/crowncoin.org/tree/master/_releases
+  - Release sticky on crowntalk: https://crowntalk.org/index.php?board=1.0 ***TODO***
 
-  - Release sticky on crowncointalk: https://crowncointalk.org/index.php?board=1.0
+  - Crown-development mailing list
 
-  - Crowncoin-development mailing list
+  - Update title of #crownpay on Freenode IRC
 
-  - Optionally reddit /r/Crowncoin, ...
+  - Optionally reddit /r/Crownpay, ... but this will usually sort out itself
 
-- Celebrate 
+- Notify Flare (?) ***TODO*** so that he can start building [https://launchpad.net/~crownpay/+archive/ubuntu/crown](the PPAs) ***TODO***
+
+- Add release notes for the new version to the directory `doc/release-notes` in git master
+
+- Celebrate

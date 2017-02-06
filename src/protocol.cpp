@@ -1,11 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Crowncoin developers
+// Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "protocol.h"
 
 #include "util.h"
+#include "utilstrencodings.h"
 
 #ifndef WIN32
 # include <arpa/inet.h>
@@ -20,27 +21,30 @@ static const char* ppszTypeName[] =
     "tx lock request",
     "tx lock vote",
     "spork",
-    "throne winner",
-    "unknown",
-    "unknown",
-    "unknown",
-    "unknown",
-    "unknown",
-    "unknown"
+    "mn winner",
+    "mn scan error",
+    "mn budget vote",
+    "mn budget proposal",
+    "mn budget finalized",
+    "mn budget finalized vote",
+    "mn quorum",
+    "mn announce",
+    "mn ping",
+    "dstx"
 };
 
-CMessageHeader::CMessageHeader()
+CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn)
 {
-    memcpy(pchMessageStart, Params().MessageStart(), MESSAGE_START_SIZE);
+    memcpy(pchMessageStart, pchMessageStartIn, MESSAGE_START_SIZE);
     memset(pchCommand, 0, sizeof(pchCommand));
-    pchCommand[1] = 1;
     nMessageSize = -1;
     nChecksum = 0;
 }
 
-CMessageHeader::CMessageHeader(const char* pszCommand, unsigned int nMessageSizeIn)
+CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn)
 {
-    memcpy(pchMessageStart, Params().MessageStart(), MESSAGE_START_SIZE);
+    memcpy(pchMessageStart, pchMessageStartIn, MESSAGE_START_SIZE);
+    memset(pchCommand, 0, sizeof(pchCommand));
     strncpy(pchCommand, pszCommand, COMMAND_SIZE);
     nMessageSize = nMessageSizeIn;
     nChecksum = 0;
@@ -48,16 +52,13 @@ CMessageHeader::CMessageHeader(const char* pszCommand, unsigned int nMessageSize
 
 std::string CMessageHeader::GetCommand() const
 {
-    if (pchCommand[COMMAND_SIZE-1] == 0)
-        return std::string(pchCommand, pchCommand + strlen(pchCommand));
-    else
-        return std::string(pchCommand, pchCommand + COMMAND_SIZE);
+    return std::string(pchCommand, pchCommand + strnlen_int(pchCommand, COMMAND_SIZE));
 }
 
-bool CMessageHeader::IsValid() const
+bool CMessageHeader::IsValid(const MessageStartChars& pchMessageStartIn) const
 {
     // Check start string
-    if (memcmp(pchMessageStart, Params().MessageStart(), MESSAGE_START_SIZE) != 0)
+    if (memcmp(pchMessageStart, pchMessageStartIn, MESSAGE_START_SIZE) != 0)
         return false;
 
     // Check the command string for errors
@@ -107,7 +108,7 @@ void CAddress::Init()
 CInv::CInv()
 {
     type = 0;
-    hash = 0;
+    hash.SetNull();
 }
 
 CInv::CInv(int typeIn, const uint256& hashIn)
@@ -128,7 +129,7 @@ CInv::CInv(const std::string& strType, const uint256& hashIn)
         }
     }
     if (i == ARRAYLEN(ppszTypeName))
-        throw std::out_of_range(strprintf("CInv::CInv(string, uint256) : unknown type '%s'", strType));
+        LogPrint("net", "CInv::CInv(string, uint256) : unknown type '%s'", strType);
     hash = hashIn;
 }
 
@@ -145,7 +146,8 @@ bool CInv::IsKnownType() const
 const char* CInv::GetCommand() const
 {
     if (!IsKnownType())
-        throw std::out_of_range(strprintf("CInv::GetCommand() : type=%d unknown type", type));
+        LogPrint("net", "CInv::GetCommand() : type=%d unknown type", type);
+
     return ppszTypeName[type];
 }
 
@@ -153,9 +155,3 @@ std::string CInv::ToString() const
 {
     return strprintf("%s %s", GetCommand(), hash.ToString());
 }
-
-void CInv::print() const
-{
-    LogPrintf("CInv(%s)\n", ToString());
-}
-

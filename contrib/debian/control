@@ -1,11 +1,12 @@
-Source: crowncoin
+Source: crown
 Section: utils
 Priority: optional
-Maintainer: Jonas Smedegaard <dr@jones.dk>
-Uploaders: Micah Anderson <micah@debian.org>
+Maintainer: Jonas Smedegaard <dr@jones.dk> ***TODO***
+Uploaders: Micah Anderson <micah@debian.org> ***TODO***
 Build-Depends: debhelper,
  devscripts,
  automake,
+ libtool,
  bash-completion,
  libboost-system-dev (>> 1.35) | libboost-system1.35-dev,
  libdb4.8++-dev,
@@ -21,37 +22,37 @@ Build-Depends: debhelper,
  libqrencode-dev,
  libprotobuf-dev, protobuf-compiler
 Standards-Version: 3.9.2
-Homepage: http://www.crowncoin.org/
-Vcs-Git: git://github.com/crowncoin/crowncoin.git
-Vcs-Browser: http://github.com/crowncoin/crowncoin
+Homepage: http://www.crown.tech/
+Vcs-Git: git://github.com/crownpay/crown.git
+Vcs-Browser: http://github.com/crownpay/crown
 
-Package: crowncoind
+Package: crownd
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - daemon
- Crowncoin is a free open source peer-to-peer electronic cash system that
+ Crown is a free open source peer-to-peer electronic cash system that
  is completely decentralized, without the need for a central server or
  trusted parties.  Users hold the crypto keys to their own money and
  transact directly with each other, with the help of a P2P network to
  check for double-spending.
  .
  Full transaction history is stored locally at each client.  This
- requires 20+ GB of space, slowly growing.
+ requires 1+ GB of space, slowly growing.
  .
- This package provides crowncoind, a combined daemon and CLI tool to
- interact with the daemon.
+ This package provides the daemon, crownd, and the CLI tool
+ crown-cli to interact with the daemon.
 
-Package: crowncoin-qt
+Package: crown-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI
- Crowncoin is a free open source peer-to-peer electronic cash system that
+ Crown is a free open source peer-to-peer electronic cash system that
  is completely decentralized, without the need for a central server or
  trusted parties.  Users hold the crypto keys to their own money and
  transact directly with each other, with the help of a P2P network to
  check for double-spending.
  .
  Full transaction history is stored locally at each client.  This
- requires 20+ GB of space, slowly growing.
+ requires 1+ GB of space, slowly growing.
  .
- This package provides Crowncoin-Qt, a GUI for Crowncoin based on Qt.
+ This package provides Crown-Qt, a GUI for Crown based on Qt.
