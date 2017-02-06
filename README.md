@@ -3,7 +3,7 @@ Crown Core staging tree 0.12
 
 `master:` [![Build Status](https://travis-ci.org/Crowndev/crowncoin.svg?branch=master)](https://travis-ci.org/crownpay/crown) `v0.12.0.x:` [![Build Status](https://travis-ci.org/Crowndev/crowncoin.svg?branch=0.12.0.x)](https://travis-ci.org/Crowndev/crowncoin/branches) `v0.12.1.x:` [![Build Status](https://travis-ci.org/Crowndev/crowncoin.svg?branch=0.12.1.x)](https://travis-ci.org/Crowndev/crowncoin/branches)
 
-https://www.crown.tech
+http://www.crown.tech
 
 Copyright (c) 2009-2015 Bitcoin Core Developers
 
