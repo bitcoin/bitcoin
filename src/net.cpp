@@ -389,7 +389,6 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
         CNode* pnode = new CNode(id, nLocalServices, GetBestHeight(), hSocket, addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, pszDest ? pszDest : "", false);
         pnode->nServicesExpected = ServiceFlags(addrConnect.nServices & nRelevantServices);
-        pnode->nTimeConnected = GetSystemTimeInSeconds();
         pnode->AddRef();
 
         return pnode;
@@ -612,10 +611,16 @@ void CNode::copyStats(CNodeStats &stats)
     X(fInbound);
     X(fAddnode);
     X(nStartingHeight);
-    X(nSendBytes);
-    X(mapSendBytesPerMsgCmd);
-    X(nRecvBytes);
-    X(mapRecvBytesPerMsgCmd);
+    {
+        LOCK(cs_vSend);
+        X(mapSendBytesPerMsgCmd);
+        X(nSendBytes);
+    }
+    {
+        LOCK(cs_vRecv);
+        X(mapRecvBytesPerMsgCmd);
+        X(nRecvBytes);
+    }
     X(fWhitelisted);
 
     // It is common for nodes with good ping times to suddenly become lagged,
@@ -643,6 +648,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
 {
     complete = false;
     int64_t nTimeMicros = GetTimeMicros();
+    LOCK(cs_vRecv);
     nLastRecv = nTimeMicros / 1000000;
     nRecvBytes += nBytes;
     while (nBytes > 0) {
