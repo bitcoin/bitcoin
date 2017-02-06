@@ -2725,7 +2725,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
             "                         be left unchanged from the original. If false, any input sequence numbers in the\n"
             "                         original transaction that were less than 0xfffffffe will be increased to 0xfffffffe\n"
             "                         so the new transaction will not be explicitly bip-125 replaceable (though it may\n"
-            "                         still be replacable in practice, for example if it has unconfirmed ancestors which\n"
+            "                         still be replaceable in practice, for example if it has unconfirmed ancestors which\n"
             "                         are replaceable).\n"
             "   }\n"
             "\nResult:\n"
