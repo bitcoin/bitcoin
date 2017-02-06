@@ -264,7 +264,7 @@ void PushNodeVersion(CNode *pnode, CConnman& connman, int64_t nTime)
 
 void InitializeNode(CNode *pnode, CConnman& connman) {
     CAddress addr = pnode->addr;
-    std::string addrName = pnode->addrName;
+    std::string addrName = pnode->GetAddrName();
     NodeId nodeid = pnode->GetId();
     {
         LOCK(cs_main);

@@ -307,9 +307,11 @@ CNode* CConnman::FindNode(const CSubNet& subNet)
 CNode* CConnman::FindNode(const std::string& addrName)
 {
     LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
-        if (pnode->addrName == addrName)
+    BOOST_FOREACH(CNode* pnode, vNodes) {
+        if (pnode->GetAddrName() == addrName) {
             return (pnode);
+        }
+    }
     return NULL;
 }
 
@@ -373,9 +375,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             CNode* pnode = FindNode((CService)addrConnect);
             if (pnode)
             {
-                if (pnode->addrName.empty()) {
-                    pnode->addrName = std::string(pszDest);
-                }
+                pnode->MaybeSetAddrName(std::string(pszDest));
                 CloseSocket(hSocket);
                 LogPrintf("Failed to open new connection, already connected\n");
                 return NULL;
@@ -593,6 +593,19 @@ void CConnman::AddWhitelistedRange(const CSubNet &subnet) {
     vWhitelistedRange.push_back(subnet);
 }
 
+
+std::string CNode::GetAddrName() const {
+    LOCK(cs_addrName);
+    return addrName;
+}
+
+void CNode::MaybeSetAddrName(const std::string& addrNameIn) {
+    LOCK(cs_addrName);
+    if (addrName.empty()) {
+        addrName = addrNameIn;
+    }
+}
+
 #undef X
 #define X(name) stats.name = name
 void CNode::copyStats(CNodeStats &stats)
@@ -608,7 +621,7 @@ void CNode::copyStats(CNodeStats &stats)
     X(nLastRecv);
     X(nTimeConnected);
     X(nTimeOffset);
-    X(addrName);
+    stats.addrName = GetAddrName();
     X(nVersion);
     {
         LOCK(cs_SubVer);
@@ -1798,8 +1811,9 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo()
             if (pnode->addr.IsValid()) {
                 mapConnected[pnode->addr] = pnode->fInbound;
             }
-            if (!pnode->addrName.empty()) {
-                mapConnectedByName[pnode->addrName] = std::make_pair(pnode->fInbound, static_cast<const CService&>(pnode->addr));
+            std::string addrName = pnode->GetAddrName();
+            if (!addrName.empty()) {
+                mapConnectedByName[std::move(addrName)] = std::make_pair(pnode->fInbound, static_cast<const CService&>(pnode->addr));
             }
         }
     }
