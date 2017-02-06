@@ -590,7 +590,6 @@ public:
     const int64_t nTimeConnected;
     std::atomic<int64_t> nTimeOffset;
     const CAddress addr;
-    std::string addrName;
     CService addrLocal;
     std::atomic<int> nVersion;
     // strSubVer is whatever byte array we read from the wire. However, this field is intended
@@ -696,6 +695,9 @@ private:
     const int nMyStartingHeight;
     int nSendVersion;
     std::list<CNetMessage> vRecvMsg;  // Used only by SocketHandler thread
+
+    mutable CCriticalSection cs_addrName;
+    std::string addrName;
 public:
 
     NodeId GetId() const {
@@ -798,6 +800,10 @@ public:
     {
         return nLocalServices;
     }
+
+    std::string GetAddrName() const;
+    //! Sets the addrName only if it was not previously set
+    void MaybeSetAddrName(const std::string& addrNameIn);
 };
 
 
