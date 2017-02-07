@@ -771,6 +771,7 @@ void PeerLogicValidation::SyncTransaction(const CTransaction& tx, const CBlockIn
     }
 }
 
+// All of the following cache a recent block, and are protected by cs_most_recent_block
 static CCriticalSection cs_most_recent_block;
 static std::shared_ptr<const CBlock> most_recent_block;
 static std::shared_ptr<const CBlockHeaderAndShortTxIDs> most_recent_compact_block;
