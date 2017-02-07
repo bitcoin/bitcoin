@@ -100,6 +100,8 @@ private:
     void FixTabOrder(QWidget *);
     void CreateOptionUI(QBoxLayout *, QWidget *, const QString& text);
 
+    QCheckBox *walletrbf;
+
     QValueComboBox *mempoolreplacement;
     QSpinBox *maxorphantx;
     QSpinBox *maxmempool;

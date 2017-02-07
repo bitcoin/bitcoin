@@ -613,6 +613,10 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return QVariant::fromValue(m_font_qrcodes);
     case PeersTabAlternatingRowColors:
         return m_peers_tab_alternating_row_colors;
+#ifdef ENABLE_WALLET
+    case walletrbf:
+        return gArgs.GetBoolArg("-walletrbf", wallet::DEFAULT_WALLET_RBF);
+#endif
     case CoinControlFeatures:
         return fCoinControlFeatures;
     case EnablePSBTControls:
@@ -892,6 +896,24 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         settings.setValue("PeersTabAlternatingRowColors", m_peers_tab_alternating_row_colors);
         Q_EMIT peersTabAlternatingRowColorsChanged(m_peers_tab_alternating_row_colors);
         break;
+#ifdef ENABLE_WALLET
+    case walletrbf:
+        if (changed()) {
+            const bool fNewValue = value.toBool();
+            const std::string newvalue_str = strprintf("%d", fNewValue);
+            gArgs.ModifyRWConfigFile("walletrbf", newvalue_str);
+            gArgs.ForceSetArg("-walletrbf", newvalue_str);
+            for (auto& wallet_interface : m_node.walletLoader().getWallets()) {
+                wallet::CWallet *wallet;
+                if (wallet_interface && (wallet = wallet_interface->wallet())) {
+                    wallet->m_signal_rbf = fNewValue;
+                } else {
+                    setRestartRequired(true);
+                }
+            }
+        }
+        break;
+#endif
     case CoinControlFeatures:
         fCoinControlFeatures = value.toBool();
         settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
