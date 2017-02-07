@@ -196,47 +196,51 @@ bool CXThinBlock::process(CNode* pfrom, int nSizeThinBlock, string strCommand)  
 	mapPartialTxHash[cheapHash] = (*mi).first;
     }
 
+    if (!collision)
+      {
+        // Look for each transaction in our various pools and buffers.
+        // With xThinBlocks the vTxHashes contains only the first 8 bytes of the tx hash.
+        BOOST_FOREACH(uint64_t &cheapHash, vTxHashes) 
+          {
+            // Replace the truncated hash with the full hash value if it exists
+            const uint256 hash = mapPartialTxHash[cheapHash];
+            CTransaction tx;
+            if (!hash.IsNull())
+              {
+                bool inMemPool = mempool.lookup(hash, tx);
+                bool inMissingTx = mapMissingTx.count(hash) > 0;
+                bool inOrphanCache = mapOrphanTransactions.count(hash) > 0;
+
+                if ((inMemPool && inMissingTx) || (inOrphanCache && inMissingTx))
+                  unnecessaryCount++;
+
+                if (inOrphanCache) {
+                  tx = mapOrphanTransactions[hash].tx;
+                  setUnVerifiedOrphanTxHash.insert(hash);
+                }
+                else if (inMemPool && fXVal)
+                  setPreVerifiedTxHash.insert(hash);
+                else if (inMissingTx)
+                  tx = mapMissingTx[hash];
+              }
+            if (tx.IsNull())
+              missingCount++;
+            // This will push an empty/invalid transaction if we don't have it yet
+            pfrom->thinBlock.vtx.push_back(tx);
+          }
+      }
+    }  // End locking mempool.cs and cs_xval
+
     // There is a remote possiblity of a Tx hash collision therefore if it occurs we re-request a normal
     // thinblock which has the full Tx hash data rather than just the truncated hash.
     if (collision) {
         vector<CInv> vGetData;
         vGetData.push_back(CInv(MSG_THINBLOCK, header.GetHash())); 
-        pfrom->PushMessage("getdata", vGetData);
+        pfrom->PushMessage("getdata", vGetData);  // This must be done outside of the mempool.cs lock or the deadlock detection with pfrom->cs_vSend will be triggered.
         LogPrintf("TX HASH COLLISION for xthinblock: re-requesting a thinblock\n");
         return true;
     }
-
-    // Look for each transaction in our various pools and buffers.
-    // With xThinBlocks the vTxHashes contains only the first 8 bytes of the tx hash.
-    BOOST_FOREACH(uint64_t &cheapHash, vTxHashes) 
-    {
-	// Replace the truncated hash with the full hash value if it exists
-	const uint256 hash = mapPartialTxHash[cheapHash];
-	CTransaction tx;
-	if (!hash.IsNull())
-        {
-	    bool inMemPool = mempool.lookup(hash, tx);
-	    bool inMissingTx = mapMissingTx.count(hash) > 0;
-	    bool inOrphanCache = mapOrphanTransactions.count(hash) > 0;
-
-	    if ((inMemPool && inMissingTx) || (inOrphanCache && inMissingTx))
-                unnecessaryCount++;
-
-	    if (inOrphanCache) {
-                tx = mapOrphanTransactions[hash].tx;
-                setUnVerifiedOrphanTxHash.insert(hash);
-	    }
-	    else if (inMemPool && fXVal)
-                setPreVerifiedTxHash.insert(hash);
-	    else if (inMissingTx)
-                tx = mapMissingTx[hash];
-        }
-	if (tx.IsNull())
-            missingCount++;
-	// This will push an empty/invalid transaction if we don't have it yet
-	pfrom->thinBlock.vtx.push_back(tx);
-    }
-    }
+    
 
     pfrom->thinBlockWaitingForTxns = missingCount;
     LogPrint("thin", "thinblock waiting for: %d, unnecessary: %d, txs: %d full: %d\n", pfrom->thinBlockWaitingForTxns, unnecessaryCount, pfrom->thinBlock.vtx.size(), mapMissingTx.size());
