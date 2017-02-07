@@ -68,18 +68,20 @@ void ThreadSendAlert()
     // main.cpp: 
     //  1000 for Misc warnings like out of disk space and clock is wrong
     //  2000 for longer invalid proof-of-work chain 
+    //  4000 or higher will put the RPC into safe mode
     //  Higher numbers mean higher priority
     alert.nPriority     = 5000;
     alert.strComment    = "";
-    alert.strStatusBar  = "URGENT: Upgrade required: see https://crown.tech/wallets";
+    alert.strStatusBar  = "URGENT: Upgrade required: see http://crown.tech/wallets";
 
     // Set specific client version/versions here. If setSubVer is empty, no filtering on subver is done:
     // alert.setSubVer.insert(std::string("/Satoshi:0.7.2/"));
 
     // Sign
-#include "alertkeys.h"
-
-    std::vector<unsigned char> vchTmp(ParseHex(pszPrivKey));
+    const CChainParams& chainparams = Params();
+    std::string networkID = chainparams.NetworkIDString();
+    bool fIsTestNet = networkID.compare("test") == 0;
+    std::vector<unsigned char> vchTmp(ParseHex(fIsTestNet ? pszTestNetPrivKey : pszPrivKey));
     CPrivKey vchPrivKey(vchTmp.begin(), vchTmp.end());
 
     CDataStream sMsg(SER_NETWORK, CLIENT_VERSION);
@@ -112,7 +114,7 @@ void ThreadSendAlert()
     alert.SetNull();
     printf("\nThreadSendAlert:\n");
     printf("hash=%s\n", alert2.GetHash().ToString().c_str());
-    //alert2.print();
+    printf("%s\n", alert2.ToString().c_str());
     printf("vchMsg=%s\n", HexStr(alert2.vchMsg).c_str());
     printf("vchSig=%s\n", HexStr(alert2.vchSig).c_str());
 
