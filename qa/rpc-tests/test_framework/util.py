@@ -550,13 +550,30 @@ def assert_raises_message(exc, message, fun, *args, **kwds):
     else:
         raise AssertionError("No exception raised")
 
-def assert_raises_jsonrpc(code, fun, *args, **kwds):
-    '''Check for specific JSONRPC exception code'''
+def assert_raises_jsonrpc(code, message, fun, *args, **kwds):
+    """Run an RPC and verify that a specific JSONRPC exception code and message is raised.
+
+    Calls function `fun` with arguments `args` and `kwds`. Catches a JSONRPCException
+    and verifies that the error code and message are as expected. Throws AssertionError if
+    no JSONRPCException was returned or if the error code/message are not as expected.
+
+    Args:
+        code (int), optional: the error code returned by the RPC call (defined
+            in src/rpc/protocol.h). Set to None if checking the error code is not required.
+        message (string), optional: [a substring of] the error string returned by the
+            RPC call. Set to None if checking the error string is not required
+        fun (function): the function to call. This should be the name of an RPC.
+        args*: positional arguments for the function.
+        kwds**: named arguments for the function.
+    """
     try:
         fun(*args, **kwds)
     except JSONRPCException as e:
-        if e.error["code"] != code:
+        # JSONRPCException was thrown as expected. Check the code and message values are correct.
+        if (code is not None) and (code != e.error["code"]):
             raise AssertionError("Unexpected JSONRPC error code %i" % e.error["code"])
+        if (message is not None) and (message not in e.error['message']):
+            raise AssertionError("Expected substring not found:"+e.error['message'])
     except Exception as e:
         raise AssertionError("Unexpected exception raised: "+type(e).__name__)
     else:
