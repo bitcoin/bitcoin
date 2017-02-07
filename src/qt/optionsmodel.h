@@ -63,6 +63,7 @@ public:
         Language,               // QString
         UseEmbeddedMonospacedFont, // bool
         PeersTabAlternatingRowColors, // bool
+        walletrbf,              // bool
         CoinControlFeatures,    // bool
         SubFeeFromAmount,       // bool
         ThreadsScriptVerif,     // int

@@ -134,6 +134,14 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     ui->maxuploadtarget->setMaximum(std::numeric_limits<int>::max());
     connect(ui->maxuploadtargetCheckbox, SIGNAL(toggled(bool)), ui->maxuploadtarget, SLOT(setEnabled(bool)));
 
+    prevwidget = ui->tabWidget;
+
+    walletrbf = new QCheckBox(ui->tabWallet);
+    walletrbf->setText(tr("Request Replace-By-Fee"));
+    walletrbf->setToolTip(tr("Indicates that the sender may wish to replace this transaction with a new one paying higher fees (prior to being confirmed). Can be overridden per send."));
+    ui->verticalLayout_Wallet->insertWidget(0, walletrbf);
+    FixTabOrder(walletrbf);
+
     prevwidget = ui->peerbloomfilters;
 
     /* Mempool tab */
@@ -430,6 +438,7 @@ void OptionsDialog::setMapper()
     }
 
     /* Wallet */
+    mapper->addMapping(walletrbf, OptionsModel::walletrbf);
     mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
     mapper->addMapping(ui->coinControlFeatures, OptionsModel::CoinControlFeatures);
     mapper->addMapping(ui->subFeeFromAmount, OptionsModel::SubFeeFromAmount);
