@@ -94,6 +94,7 @@ public:
         blockmaxsize,
         blockprioritysize,
         blockmaxweight,
+        blockreconstructionextratxn,
         OptionIDRowCount,
     };
 
