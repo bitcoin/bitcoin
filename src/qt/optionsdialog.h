@@ -102,6 +102,8 @@ private:
 
     QCheckBox *walletrbf;
 
+    QSpinBox *blockreconstructionextratxn;
+
     QValueComboBox *mempoolreplacement;
     QSpinBox *maxorphantx;
     QSpinBox *maxmempool;

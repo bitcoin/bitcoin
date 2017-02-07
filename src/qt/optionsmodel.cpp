@@ -677,6 +677,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return qlonglong(gArgs.GetIntArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE) / 1000);
     case blockmaxweight:
         return qlonglong(gArgs.GetIntArg("-blockmaxweight", DEFAULT_BLOCK_MAX_WEIGHT) / 1000);
+    case blockreconstructionextratxn:
+        return qlonglong(gArgs.GetIntArg("-blockreconstructionextratxn", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN));
     default:
         return QVariant();
     }
@@ -1180,6 +1182,13 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             }
             gArgs.ForceSetArg("-" + strKey, strNv);
             gArgs.ModifyRWConfigFile(strKey, strNv);
+        }
+        break;
+    case blockreconstructionextratxn:
+        if (changed()) {
+            std::string strNv = value.toString().toStdString();
+            gArgs.ForceSetArg("-blockreconstructionextratxn", strNv);
+            gArgs.ModifyRWConfigFile("blockreconstructionextratxn", strNv);
         }
         break;
     default:
