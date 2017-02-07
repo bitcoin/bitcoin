@@ -29,15 +29,13 @@ class NodeHandlingTest (BitcoinTestFramework):
         assert_equal(len(self.nodes[2].listbanned()), 0)
         self.nodes[2].setban("127.0.0.0/24", "add")
         assert_equal(len(self.nodes[2].listbanned()), 1)
-        try:
-            self.nodes[2].setban("127.0.0.1", "add") #throws exception because 127.0.0.1 is within range 127.0.0.0/24
-        except:
-            pass
+        # This will throw an exception because 127.0.0.1 is within range 127.0.0.0/24
+        assert_raises_jsonrpc(-23, "IP/Subnet already banned", self.nodes[2].setban, "127.0.0.1", "add")
+        # This will throw an exception because 127.0.0.1/42 is not a real subnet
+        assert_raises_jsonrpc(-30, "Error: Invalid IP/Subnet", self.nodes[2].setban, "127.0.0.1/42", "add")
         assert_equal(len(self.nodes[2].listbanned()), 1) #still only one banned ip because 127.0.0.1 is within the range of 127.0.0.0/24
-        try:
-            self.nodes[2].setban("127.0.0.1", "remove")
-        except:
-            pass
+        # This will throw an exception because 127.0.0.1 was not added above
+        assert_raises_jsonrpc(-30, "Error: Unban failed", self.nodes[2].setban, "127.0.0.1", "remove")
         assert_equal(len(self.nodes[2].listbanned()), 1)
         self.nodes[2].setban("127.0.0.0/24", "remove")
         assert_equal(len(self.nodes[2].listbanned()), 0)
