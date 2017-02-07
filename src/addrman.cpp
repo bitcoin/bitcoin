@@ -54,11 +54,8 @@ double CAddrInfo::GetChance(int64_t nNow) const
 {
     double fChance = 1.0;
 
-    int64_t nSinceLastSeen = nNow - nTime;
     int64_t nSinceLastTry = nNow - nLastTry;
 
-    if (nSinceLastSeen < 0)
-        nSinceLastSeen = 0;
     if (nSinceLastTry < 0)
         nSinceLastTry = 0;
 

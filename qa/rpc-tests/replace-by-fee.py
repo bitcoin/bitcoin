@@ -393,7 +393,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         utxo = make_utxo(self.nodes[0], initial_nValue)
         fee = int(0.0001*COIN)
         split_value = int((initial_nValue-fee)/(MAX_REPLACEMENT_LIMIT+1))
-        actual_fee = initial_nValue - split_value*(MAX_REPLACEMENT_LIMIT+1)
 
         outputs = []
         for i in range(MAX_REPLACEMENT_LIMIT+1):
