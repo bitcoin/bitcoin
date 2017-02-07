@@ -17,12 +17,12 @@ source files if these have a git commit from the current year.
 For example a file changed in 2015 (with 2015 being the current year):
 
 ```// Copyright (c) 2009-2013 The Bitcoin Unlimited developers```
-// Copyright (c) 2015-2016 The Bitcoin Unlimited developers
+// Copyright (c) 2015-2017 The Bitcoin Unlimited developers
 
 would be changed to:
 
 ```// Copyright (c) 2009-2015 The Bitcoin Unlimited developers```
-// Copyright (c) 2015-2016 The Bitcoin Unlimited developers
+// Copyright (c) 2015-2017 The Bitcoin Unlimited developers
 
 git-subtree-check.sh
 ====================
