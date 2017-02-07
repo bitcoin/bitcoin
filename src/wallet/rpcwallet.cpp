@@ -2600,7 +2600,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
             CBitcoinAddress address(options["changeAddress"].get_str());
 
             if (!address.IsValid())
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "changeAddress must be a valid bitcoin address");
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "changeAddress must be a valid bitcoin address");
 
             changeAddress = address.Get();
         }
@@ -2753,33 +2753,33 @@ UniValue bumpfee(const JSONRPCRequest& request)
     CWalletTx& wtx = pwalletMain->mapWallet[hash];
 
     if (pwalletMain->HasWalletSpend(hash)) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Transaction has descendants in the wallet");
+        throw JSONRPCError(RPC_WALLET_ERROR, "Transaction has descendants in the wallet");
     }
 
     {
         LOCK(mempool.cs);
         auto it = mempool.mapTx.find(hash);
         if (it != mempool.mapTx.end() && it->GetCountWithDescendants() > 1) {
-            throw JSONRPCError(RPC_MISC_ERROR, "Transaction has descendants in the mempool");
+            throw JSONRPCError(RPC_WALLET_ERROR, "Transaction has descendants in the mempool");
         }
     }
 
     if (wtx.GetDepthInMainChain() != 0) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction has been mined, or is conflicted with a mined transaction");
+        throw JSONRPCError(RPC_WALLET_ERROR, "Transaction has been mined, or is conflicted with a mined transaction");
     }
 
     if (!SignalsOptInRBF(wtx)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction is not BIP 125 replaceable");
+        throw JSONRPCError(RPC_WALLET_ERROR, "Transaction is not BIP 125 replaceable");
     }
 
     if (wtx.mapValue.count("replaced_by_txid")) {
-        throw JSONRPCError(RPC_INVALID_REQUEST, strprintf("Cannot bump transaction %s which was already bumped by transaction %s", hash.ToString(), wtx.mapValue.at("replaced_by_txid")));
+        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Cannot bump transaction %s which was already bumped by transaction %s", hash.ToString(), wtx.mapValue.at("replaced_by_txid")));
     }
 
     // check that original tx consists entirely of our inputs
     // if not, we can't bump the fee, because the wallet has no way of knowing the value of the other inputs (thus the fee)
     if (!pwalletMain->IsAllFromMe(wtx, ISMINE_SPENDABLE)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction contains inputs that don't belong to this wallet");
+        throw JSONRPCError(RPC_WALLET_ERROR, "Transaction contains inputs that don't belong to this wallet");
     }
 
     // figure out which output was change
@@ -2788,13 +2788,13 @@ UniValue bumpfee(const JSONRPCRequest& request)
     for (size_t i = 0; i < wtx.tx->vout.size(); ++i) {
         if (pwalletMain->IsChange(wtx.tx->vout[i])) {
             if (nOutput != -1) {
-                throw JSONRPCError(RPC_MISC_ERROR, "Transaction has multiple change outputs");
+                throw JSONRPCError(RPC_WALLET_ERROR, "Transaction has multiple change outputs");
             }
             nOutput = i;
         }
     }
     if (nOutput == -1) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Transaction does not have a change output");
+        throw JSONRPCError(RPC_WALLET_ERROR, "Transaction does not have a change output");
     }
 
     // Calculate the expected size of the new transaction.
@@ -2885,7 +2885,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
 
     // Check that in all cases the new fee doesn't violate maxTxFee
      if (nNewFee > maxTxFee) {
-         throw JSONRPCError(RPC_MISC_ERROR,
+         throw JSONRPCError(RPC_WALLET_ERROR,
                             strprintf("Specified or calculated fee %s is too high (cannot be higher than maxTxFee %s)",
                                       FormatMoney(nNewFee), FormatMoney(maxTxFee)));
      }
@@ -2897,7 +2897,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
     // moment earlier. In this case, we report an error to the user, who may use totalFee to make an adjustment.
     CFeeRate minMempoolFeeRate = mempool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
     if (nNewFeeRate.GetFeePerK() < minMempoolFeeRate.GetFeePerK()) {
-        throw JSONRPCError(RPC_MISC_ERROR, strprintf("New fee rate (%s) is less than the minimum fee rate (%s) to get into the mempool. totalFee value should to be at least %s or settxfee value should be at least %s to add transaction.", FormatMoney(nNewFeeRate.GetFeePerK()), FormatMoney(minMempoolFeeRate.GetFeePerK()), FormatMoney(minMempoolFeeRate.GetFee(maxNewTxSize)), FormatMoney(minMempoolFeeRate.GetFeePerK())));
+        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("New fee rate (%s) is less than the minimum fee rate (%s) to get into the mempool. totalFee value should to be at least %s or settxfee value should be at least %s to add transaction.", FormatMoney(nNewFeeRate.GetFeePerK()), FormatMoney(minMempoolFeeRate.GetFeePerK()), FormatMoney(minMempoolFeeRate.GetFee(maxNewTxSize)), FormatMoney(minMempoolFeeRate.GetFeePerK())));
     }
 
     // Now modify the output to increase the fee.
@@ -2907,7 +2907,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
     CMutableTransaction tx(*(wtx.tx));
     CTxOut* poutput = &(tx.vout[nOutput]);
     if (poutput->nValue < nDelta) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Change output is too small to bump the fee");
+        throw JSONRPCError(RPC_WALLET_ERROR, "Change output is too small to bump the fee");
     }
 
     // If the output would become dust, discard it (converting the dust to fee)
