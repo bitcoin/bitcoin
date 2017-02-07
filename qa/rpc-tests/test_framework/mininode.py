@@ -1540,6 +1540,7 @@ class NodeConnCB(object):
         if conn.ver_send > BIP0031_VERSION:
             conn.send_message(msg_pong(message.nonce))
     def on_reject(self, conn, message): pass
+    def on_open(self, conn): pass
     def on_close(self, conn): pass
     def on_mempool(self, conn): pass
     def on_pong(self, conn, message): pass
@@ -1657,6 +1658,7 @@ class NodeConn(asyncore.dispatcher):
         if self.state != "connected":
             self.show_debug_msg("MiniNode: Connected & Listening: \n")
             self.state = "connected"
+            self.cb.on_open(self)
 
     def handle_close(self):
         self.show_debug_msg("MiniNode: Closing Connection to %s:%d... "
