@@ -49,7 +49,7 @@ static std::map<std::string, unsigned int> mapFlagNames = boost::assign::map_lis
     (std::string("DISCOURAGE_UPGRADABLE_NOPS"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
     (std::string("CLEANSTACK"), (unsigned int)SCRIPT_VERIFY_CLEANSTACK)
     (std::string("MINIMALIF"), (unsigned int)SCRIPT_VERIFY_MINIMALIF)
-    (std::string("NULLFAIL"), (unsigned int)SCRIPT_VERIFY_NULLFAIL)
+    (std::string("SIG_NULLFAIL"), (unsigned int)SCRIPT_VERIFY_SIG_NULLFAIL)
     (std::string("CHECKLOCKTIMEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)
     (std::string("CHECKSEQUENCEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)
     (std::string("WITNESS"), (unsigned int)SCRIPT_VERIFY_WITNESS)
