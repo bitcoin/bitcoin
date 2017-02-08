@@ -63,7 +63,8 @@ namespace benchmark {
 
     class BenchRunner
     {
-        static std::map<std::string, BenchFunction> benchmarks;
+        typedef std::map<std::string, BenchFunction> BenchmarkMap;
+        static BenchmarkMap &benchmarks();
 
     public:
         BenchRunner(std::string name, BenchFunction func);
