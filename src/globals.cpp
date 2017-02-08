@@ -166,6 +166,8 @@ CTweakRef<unsigned int> ebTweak("net.excessiveBlock","Excessive block size in by
 CTweak<uint64_t> blockSigopsPerMb("net.excessiveSigopsPerMb","Excessive effort per block, denoted in cost (# inputs * txsize) per MB",BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS);
 CTweak<uint64_t> blockMiningSigopsPerMb("mining.excessiveSigopsPerMb","Excessive effort per block, denoted in cost (# inputs * txsize) per MB",BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS);
 CTweak<uint64_t> coinbaseReserve("mining.coinbaseReserve","How much space to reserve for the coinbase transaction, in bytes",DEFAULT_COINBASE_RESERVE_SIZE);
+CTweakRef<std::string> miningCommentTweak("mining.comment","Include text in a block's coinbase.",&minerComment);
+CTweakRef<uint64_t> miningBlockSize("mining.blockSize","Maximum block size in bytes.  The maximum block size returned from 'getblocktemplate' will be this value minus mining.coinbaseReserve.",&maxGeneratedBlock,&MiningBlockSizeValidator);
 
 CTweak<unsigned int> maxTxSize("net.excessiveTx","Largest transaction size in bytes", DEFAULT_LARGEST_TRANSACTION);
 CTweakRef<unsigned int> eadTweak("net.excessiveAcceptDepth","Excessive block chain acceptance depth in blocks", &excessiveAcceptDepth);
