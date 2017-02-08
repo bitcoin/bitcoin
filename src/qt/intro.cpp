@@ -126,8 +126,10 @@ Intro::Intro(QWidget *parent) :
     ui->storageLabel->setText(ui->storageLabel->text().arg(tr(PACKAGE_NAME)));
     uint64_t pruneTarget = std::max<int64_t>(0, GetArg("-prune", 0));
     requiredSpace = BLOCK_CHAIN_SIZE;
-    if (pruneTarget)
-        requiredSpace = CHAIN_STATE_SIZE + std::ceil(pruneTarget * 1024 * 1024.0 / GB_BYTES);
+    if (pruneTarget) {
+        requiredSpace = std::ceil(pruneTarget * 1024 * 1024.0 / GB_BYTES);
+    }
+    requiredSpace += CHAIN_STATE_SIZE;
     ui->sizeWarningLabel->setText(ui->sizeWarningLabel->text().arg(tr(PACKAGE_NAME)).arg(requiredSpace));
     startThread();
 }
