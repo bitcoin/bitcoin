@@ -1,6 +1,6 @@
 OpenBSD build guide
 ======================
-(updated for OpenBSD 5.9)
+(updated for OpenBSD 6.0)
 
 This guide describes how to build bitcoind and command-line utilities on OpenBSD.
 
@@ -124,7 +124,7 @@ To configure with wallet:
 ```bash
 ./configure --with-gui=no --with-boost=$BOOST_PREFIX \
     CC=egcc CXX=eg++ CPP=ecpp \
-    LDFLAGS="-L${BDB_PREFIX}/lib/" CPPFLAGS="-I${BDB_PREFIX}/include/"
+    BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include"
 ```
 
 To configure without wallet:
@@ -141,6 +141,8 @@ gmake check
 
 Clang (not currently working)
 ------------------------------
+
+WARNING: This is outdated, needs to be updated for OpenBSD 6.0 and re-tried.
 
 Using a newer g++ results in linking the new code to a new libstdc++.
 Libraries built with the old g++, will still import the old library.
