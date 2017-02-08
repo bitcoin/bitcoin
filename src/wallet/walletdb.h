@@ -194,6 +194,6 @@ private:
 
 };
 
-void ThreadFlushWalletDB();
+void MaybeFlushWalletDB();
 
 #endif // BITCOIN_WALLET_WALLETDB_H
