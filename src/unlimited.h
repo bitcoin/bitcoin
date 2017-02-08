@@ -69,8 +69,10 @@ extern CTweak<uint64_t> checkScriptDays;
 int32_t UnlimitedComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params,uint32_t nTime);
 
 // This API finds a near match to the specified IP address, for example you can
-// leave the port off and it will find the first match to that IP.  This is
-// useful for the RPC calls.
+// leave the port off and it will find the first match to the IP.
+// The function also allows * or ? wildcards.
+// This is useful for the RPC calls.
+// Returns the first node that matches.
 CNode* FindLikelyNode(const std::string& addrName);
 
 // process incoming unsolicited block
@@ -190,6 +192,7 @@ extern CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize;
 std::string ExcessiveBlockValidator(const unsigned int& value,unsigned int* item,bool validate);
 std::string OutboundConnectionValidator(const int& value,int* item,bool validate);
 std::string SubverValidator(const std::string& value,std::string* item,bool validate);
+std::string MiningBlockSizeValidator(const uint64_t& value,uint64_t* item,bool validate);
 
 extern CTweak<unsigned int> maxTxSize;
 extern CTweak<uint64_t> blockSigopsPerMb;
