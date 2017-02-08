@@ -154,6 +154,7 @@ testScripts = [
     'bumpfee.py',
     'rpcnamedargs.py',
     'listsinceblock.py',
+    'p2p-leaktests.py',
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')
