@@ -355,6 +355,9 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
 
                 std::map<CTxDestination, CAddressBookData>::iterator mi = wallet->mapAddressBook.find(dest);
 
+                std::string key = "au"; // "au" prefix = "address used" in destdata
+                wallet->AddDestData(mi->first, key, "1");
+
                 // Check if we have a new address or an updated label
                 if (mi == wallet->mapAddressBook.end())
                 {
@@ -589,6 +592,24 @@ bool WalletModel::isSpent(const COutPoint& outpoint) const
 {
     LOCK2(cs_main, wallet->cs_wallet);
     return wallet->IsSpent(outpoint.hash, outpoint.n);
+}
+
+bool WalletModel::isUsed(const std::string& address) const
+{
+    LOCK2(cs_main, wallet->cs_wallet);
+    for (const std::pair<CTxDestination, CAddressBookData>& item : wallet->mapAddressBook)
+    {
+        CBitcoinAddress addr(item.first);
+        if (addr.IsValid() && addr.ToString() == address)
+        {
+            for (const std::pair<std::string, std::string>& item2 : item.second.destdata)
+            {
+                if (item2.first.size() == 2 && item2.first.substr(0,2) == "au")
+                    return (item2.second == "1");
+            }
+        }
+    }
+    return false;
 }
 
 // AvailableCoins + LockedCoins grouped by wallet address (put change in one group with wallet address)

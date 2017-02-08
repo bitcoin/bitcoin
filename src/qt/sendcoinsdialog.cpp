@@ -263,6 +263,27 @@ void SendCoinsDialog::on_sendButton_clicked()
     QStringList formatted;
     Q_FOREACH(const SendCoinsRecipient &rcp, currentTransaction.getRecipients())
     {
+        // If user is attempting address reuse, show an informative warning
+        if (model->isUsed(rcp.address.toStdString()))
+        {
+            QString reuseWarningText = tr(
+                        "You have sent to the Bitcoin address %1 already!\n\n"
+                        "Sending to the same address twice is technically not supported and "
+                        "will reduce your own security as well as the privacy of all Bitcoin users."
+                    ).arg(rcp.address) + "\n";
+
+            QMessageBox reuseMessage("Warning: address reuse!",
+                                     reuseWarningText,
+                                     QMessageBox::Warning,
+                                     QMessageBox::Yes | QMessageBox::Escape,
+                                     QMessageBox::Cancel | QMessageBox::Default,
+                                     QMessageBox::NoButton,
+                                     this);
+
+            if (reuseMessage.exec() != QMessageBox::Yes)
+                return;
+        }
+
         // generate bold amount string
         QString amount = "<b>" + BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
         amount.append("</b>");
