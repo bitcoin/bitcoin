@@ -1084,6 +1084,9 @@ void ArgsManager::ModifyRWConfigFile(const std::map<std::string, std::string>& s
         }
         WriteSettingsFile();
     }
+    if (settings_to_change.count("prune")) {
+        m_rwconf_had_prune_option = true;
+    }
 }
 
 void ArgsManager::ModifyRWConfigFile(const std::string& setting_to_change, const std::string& new_value)

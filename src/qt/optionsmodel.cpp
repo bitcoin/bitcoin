@@ -346,6 +346,11 @@ void OptionsModel::Reset()
     // Set strDataDir
     settings.setValue("strDataDir", dataDir);
 
+    // Set prune option iff it was configured in rwconf
+    if (gArgs.RWConfigHasPruneOption()) {
+        SetPruneTargetMiB(gArgs.GetIntArg("-prune", 0));
+    }
+
     // Set that this was reset
     settings.setValue("fReset", true);
 
