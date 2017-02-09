@@ -27,7 +27,7 @@ public:
 		NewCertOffer
     };
 
-    explicit EditOfferDialog(Mode mode, const QString &offer="", const QString &cert="", const QString &cat="", QWidget *parent = 0);
+    explicit EditOfferDialog(Mode mode, const QString &offer="", const QString &cert="", const QString &alias="", const QString &cat="", QWidget *parent = 0);
     ~EditOfferDialog();
 
     void setModel(WalletModel*,OfferTableModel *model);
@@ -59,6 +59,7 @@ private:
 	WalletModel* walletModel;
     QString offer;
 	QString cert;
+	QString alias;
 	QString commission;
 	bool overrideSafeSearch;
 	QString expiredStr;

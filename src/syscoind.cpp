@@ -40,6 +40,8 @@
  * Use the buttons <code>Namespaces</code>, <code>Classes</code> or <code>Files</code> at the top of the page to start navigating the code.
  */
 
+static bool fDaemon;
+
 void WaitForShutdown(boost::thread_group* threadGroup)
 {
     bool fShutdown = ShutdownRequested();
@@ -91,7 +93,7 @@ bool AppInit(int argc, char* argv[])
         }
 
         fprintf(stdout, "%s", strUsage.c_str());
-        return false;
+        return true;
     }
 
     try
@@ -125,10 +127,11 @@ bool AppInit(int argc, char* argv[])
         if (fCommandLine)
         {
             fprintf(stderr, "Error: There is no RPC client functionality in syscoind anymore. Use the syscoin-cli utility instead.\n");
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 #ifndef WIN32
-        if (GetBoolArg("-daemon", false))
+        fDaemon = GetBoolArg("-daemon", false);
+        if (fDaemon)
         {
             fprintf(stdout, "Syscoin server starting\n");
 
@@ -184,5 +187,5 @@ int main(int argc, char* argv[])
     // Connect syscoind signal handlers
     noui_connect();
 
-    return (AppInit(argc, argv) ? 0 : 1);
+    return (AppInit(argc, argv) ? EXIT_SUCCESS : EXIT_FAILURE);
 }

@@ -64,8 +64,11 @@ bool State::KeepRunning()
           return true;
         }
         if (elapsed*16 < maxElapsed) {
-          countMask = ((countMask<<1)|1) & ((1LL<<60)-1);
-          countMaskInv = 1./(countMask+1);
+          uint64_t newCountMask = ((countMask<<1)|1) & ((1LL<<60)-1);
+          if ((count & newCountMask)==0) {
+              countMask = newCountMask;
+              countMaskInv = 1./(countMask+1);
+          }
         }
     }
     lastTime = now;

@@ -1,3 +1,7 @@
+dnl Copyright (c) 2013-2016 The Syscoin Core developers
+dnl Distributed under the MIT software license, see the accompanying
+dnl file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 dnl Helper for cases where a qt dependency is not met.
 dnl Output: If qt version is auto, set syscoin_enable_qt to false. Else, exit.
 AC_DEFUN([SYSCOIN_QT_FAIL],[

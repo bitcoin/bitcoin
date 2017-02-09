@@ -253,26 +253,29 @@ bool DecodeMessageScript(const CScript& script, int& op,
 	if (!script.GetOp(pc, opcode)) return false;
 	if (opcode < OP_1 || opcode > OP_16) return false;
     op = CScript::DecodeOP_N(opcode);
-    for (;;) {
-        vector<unsigned char> vch;
-        if (!script.GetOp(pc, opcode, vch))
-            return false;
+	bool found = false;
+	for (;;) {
+		vector<unsigned char> vch;
+		if (!script.GetOp(pc, opcode, vch))
+			return false;
+		if (opcode == OP_DROP || opcode == OP_2DROP)
+		{
+			found = true;
+			break;
+		}
+		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
+			return false;
+		vvch.push_back(vch);
+	}
 
-        if (opcode == OP_DROP || opcode == OP_2DROP || opcode == OP_NOP)
-            break;
-        if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
-            return false;
-        vvch.push_back(vch);
-    }
+	// move the pc to after any DROP or NOP
+	while (opcode == OP_DROP || opcode == OP_2DROP) {
+		if (!script.GetOp(pc, opcode))
+			break;
+	}
 
-    // move the pc to after any DROP or NOP
-    while (opcode == OP_DROP || opcode == OP_2DROP || opcode == OP_NOP) {
-        if (!script.GetOp(pc, opcode))
-            break;
-    }
-	
-    pc--;
-    return IsMessageOp(op);
+	pc--;
+	return found && IsMessageOp(op);
 }
 
 bool DecodeMessageScript(const CScript& script, int& op,
@@ -281,22 +284,23 @@ bool DecodeMessageScript(const CScript& script, int& op,
     return DecodeMessageScript(script, op, vvch, pc);
 }
 
-CScript RemoveMessageScriptPrefix(const CScript& scriptIn) {
+bool RemoveMessageScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
     int op;
     vector<vector<unsigned char> > vvch;
     CScript::const_iterator pc = scriptIn.begin();
 
     if (!DecodeMessageScript(scriptIn, op, vvch, pc))
-	{
-        throw runtime_error("RemoveMessageScriptPrefix() : could not decode message script");
-	}
-	
-    return CScript(pc, scriptIn.end());
+		return false;
+	scriptOut = CScript(pc, scriptIn.end());
+	return true;
 }
 
 bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
-	if (tx.IsCoinBase())
+	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
+	{
+		LogPrintf("*Trying to add message in coinbase transaction, skipping...");
 		return true;
+	}
 	if (fDebug)
 		LogPrintf("*** MESSAGE %d %d %s %s\n", nHeight,
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),

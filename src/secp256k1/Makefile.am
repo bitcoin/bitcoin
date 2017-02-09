@@ -12,9 +12,11 @@ noinst_HEADERS =
 noinst_HEADERS += src/scalar.h
 noinst_HEADERS += src/scalar_4x64.h
 noinst_HEADERS += src/scalar_8x32.h
+noinst_HEADERS += src/scalar_low.h
 noinst_HEADERS += src/scalar_impl.h
 noinst_HEADERS += src/scalar_4x64_impl.h
 noinst_HEADERS += src/scalar_8x32_impl.h
+noinst_HEADERS += src/scalar_low_impl.h
 noinst_HEADERS += src/group.h
 noinst_HEADERS += src/group_impl.h
 noinst_HEADERS += src/num_gmp.h
@@ -87,13 +89,23 @@ bench_internal_LDADD = $(SECP_LIBS) $(COMMON_LIB)
 bench_internal_CPPFLAGS = -DSECP256K1_BUILD $(SECP_INCLUDES)
 endif
 
+TESTS =
 if USE_TESTS
 noinst_PROGRAMS += tests
 tests_SOURCES = src/tests.c
 tests_CPPFLAGS = -DSECP256K1_BUILD -DVERIFY -I$(top_srcdir)/src -I$(top_srcdir)/include $(SECP_INCLUDES) $(SECP_TEST_INCLUDES)
 tests_LDADD = $(SECP_LIBS) $(SECP_TEST_LIBS) $(COMMON_LIB)
 tests_LDFLAGS = -static
-TESTS = tests
+TESTS += tests
+endif
+
+if USE_EXHAUSTIVE_TESTS
+noinst_PROGRAMS += exhaustive_tests
+exhaustive_tests_SOURCES = src/tests_exhaustive.c
+exhaustive_tests_CPPFLAGS = -DSECP256K1_BUILD -DVERIFY -I$(top_srcdir)/src $(SECP_INCLUDES)
+exhaustive_tests_LDADD = $(SECP_LIBS)
+exhaustive_tests_LDFLAGS = -static
+TESTS += exhaustive_tests
 endif
 
 JAVAROOT=src/java
@@ -152,10 +164,6 @@ EXTRA_DIST = autogen.sh src/gen_context.c src/basic-config.h $(JAVA_FILES)
 
 if ENABLE_MODULE_ECDH
 include src/modules/ecdh/Makefile.am.include
-endif
-
-if ENABLE_MODULE_SCHNORR
-include src/modules/schnorr/Makefile.am.include
 endif
 
 if ENABLE_MODULE_RECOVERY

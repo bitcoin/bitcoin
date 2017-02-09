@@ -1,20 +1,13 @@
 package=zeromq
-$(package)_version=4.1.5
-$(package)_download_path=https://github.com/zeromq/zeromq4-1/releases/download/v$($(package)_version)/
+$(package)_version=4.1.4
+$(package)_download_path=http://download.zeromq.org
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
-$(package)_sha256_hash=04aac57f081ffa3a2ee5ed04887be9e205df3a7ddade0027460b8042432bdbcf
-$(package)_patches=9114d3957725acd34aa8b8d011585812f3369411.patch 9e6745c12e0b100cd38acecc16ce7db02905e27c.patch
+$(package)_sha256_hash=e99f44fde25c2e4cb84ce440f87ca7d3fe3271c2b8cfbc67d55e4de25e6fe378
 
 define $(package)_set_vars
-  $(package)_config_opts=--without-documentation --disable-shared --without-libsodium --disable-curve
+  $(package)_config_opts=--without-documentation --disable-shared --without-libsodium
   $(package)_config_opts_linux=--with-pic
   $(package)_cxxflags=-std=c++11
-endef
-
-define $(package)_preprocess_cmds
-  patch -p1 < $($(package)_patch_dir)/9114d3957725acd34aa8b8d011585812f3369411.patch && \
-  patch -p1 < $($(package)_patch_dir)/9e6745c12e0b100cd38acecc16ce7db02905e27c.patch && \
-  ./autogen.sh
 endef
 
 define $(package)_config_cmds

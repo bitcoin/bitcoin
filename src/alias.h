@@ -379,7 +379,7 @@ std::string getCurrencyToSYSFromAlias(const std::vector<unsigned char> &vchAlias
 std::string aliasFromOp(int op);
 std::string GenerateSyscoinGuid();
 bool IsAliasOp(int op);
-CScript RemoveAliasScriptPrefix(const CScript& scriptIn);
+bool RemoveAliasScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
 int GetSyscoinDataOutput(const CTransaction& tx);
 bool IsSyscoinDataOutput(const CTxOut& out);
 bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData, std::vector<unsigned char> &vchHash, int& nOut);

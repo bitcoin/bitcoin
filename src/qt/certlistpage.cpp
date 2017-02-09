@@ -306,7 +306,7 @@ void CertListPage::on_searchCert_clicked(string GUID)
     catch(std::exception& e)
     {
         QMessageBox::critical(this, windowTitle(),
-            tr("General exception when searching certficiates"),
+            tr("General exception when searching certificates"),
             QMessageBox::Ok, QMessageBox::Ok);
         return;
     }

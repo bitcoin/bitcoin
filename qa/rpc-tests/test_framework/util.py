@@ -125,16 +125,12 @@ def sync_blocks(rpc_connections, wait=1, timeout=60):
     """
     Wait until everybody has the same tip
     """
-    maxheight = 0
     while timeout > 0:
-        tips = [ x.waitforblockheight(maxheight, int(wait * 1000)) for x in rpc_connections ]
-        heights = [ x["height"] for x in tips ]
+        tips = [ x.getbestblockhash() for x in rpc_connections ]
         if tips == [ tips[0] ]*len(tips):
             return True
-        if heights == [ heights[0] ]*len(heights): #heights are the same but hashes are not
-            raise AssertionError("Block sync failed")
+        time.sleep(wait)
         timeout -= wait
-        maxheight = max(heights)
     raise AssertionError("Block sync failed")
 
 def sync_mempools(rpc_connections, wait=1, timeout=60):
@@ -161,7 +157,7 @@ def initialize_datadir(dirname, n):
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
     rpc_u, rpc_p = rpc_auth_pair(n)
-    with open(os.path.join(datadir, "syscoin.conf"), 'w') as f:
+    with open(os.path.join(datadir, "syscoin.conf"), 'w', encoding='utf8') as f:
         f.write("regtest=1\n")
         f.write("rpcuser=" + rpc_u + "\n")
         f.write("rpcpassword=" + rpc_p + "\n")
@@ -205,7 +201,7 @@ def wait_for_syscoind_start(process, url, i):
                 raise # unkown JSON RPC exception
         time.sleep(0.25)
 
-def initialize_chain(test_dir, num_nodes, cachedir):
+def initialize_chain(test_dir, num_nodes):
     """
     Create a cache of a 200-block-long chain (with wallet) for MAX_NODES
     Afterward, create num_nodes copies from the cache
@@ -214,7 +210,7 @@ def initialize_chain(test_dir, num_nodes, cachedir):
     assert num_nodes <= MAX_NODES
     create_cache = False
     for i in range(MAX_NODES):
-        if not os.path.isdir(os.path.join(cachedir, 'node'+str(i))):
+        if not os.path.isdir(os.path.join('cache', 'node'+str(i))):
             create_cache = True
             break
 
@@ -222,12 +218,12 @@ def initialize_chain(test_dir, num_nodes, cachedir):
 
         #find and delete old cache directories if any exist
         for i in range(MAX_NODES):
-            if os.path.isdir(os.path.join(cachedir,"node"+str(i))):
-                shutil.rmtree(os.path.join(cachedir,"node"+str(i)))
+            if os.path.isdir(os.path.join("cache","node"+str(i))):
+                shutil.rmtree(os.path.join("cache","node"+str(i)))
 
         # Create cache directories, run syscoinds:
         for i in range(MAX_NODES):
-            datadir=initialize_datadir(cachedir, i)
+            datadir=initialize_datadir("cache", i)
             args = [ os.getenv("SYSCOIND", "syscoind"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
@@ -266,16 +262,15 @@ def initialize_chain(test_dir, num_nodes, cachedir):
 
         # Shut them down, and clean up cache directories:
         stop_nodes(rpcs)
-        wait_syscoinds()
         disable_mocktime()
         for i in range(MAX_NODES):
-            os.remove(log_filename(cachedir, i, "debug.log"))
-            os.remove(log_filename(cachedir, i, "db.log"))
-            os.remove(log_filename(cachedir, i, "peers.dat"))
-            os.remove(log_filename(cachedir, i, "fee_estimates.dat"))
+            os.remove(log_filename("cache", i, "debug.log"))
+            os.remove(log_filename("cache", i, "db.log"))
+            os.remove(log_filename("cache", i, "peers.dat"))
+            os.remove(log_filename("cache", i, "fee_estimates.dat"))
 
     for i in range(num_nodes):
-        from_dir = os.path.join(cachedir, "node"+str(i))
+        from_dir = os.path.join("cache", "node"+str(i))
         to_dir = os.path.join(test_dir,  "node"+str(i))
         shutil.copytree(from_dir, to_dir)
         initialize_datadir(test_dir, i) # Overwrite port/rpcport in syscoin.conf
@@ -332,7 +327,7 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
 
     return proxy
 
-def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, binary=None):
+def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
     """
     Start multiple syscoinds, return RPC connections to them
     """
@@ -341,7 +336,7 @@ def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, binary=None):
     rpcs = []
     try:
         for i in range(num_nodes):
-            rpcs.append(start_node(i, dirname, extra_args[i], rpchost, binary=binary[i]))
+            rpcs.append(start_node(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i]))
     except: # If one node failed to start, stop the others
         stop_nodes(rpcs)
         raise
@@ -365,6 +360,7 @@ def stop_nodes(nodes):
         except http.client.CannotSendRequest as e:
             print("WARN: Unable to stop node: " + repr(e))
     del nodes[:] # Emptying array closes connections as a side effect
+    wait_syscoinds()
 
 def set_node_times(nodes, t):
     for node in nodes:
@@ -512,10 +508,14 @@ def assert_greater_than(thing1, thing2):
         raise AssertionError("%s <= %s"%(str(thing1),str(thing2)))
 
 def assert_raises(exc, fun, *args, **kwds):
+    assert_raises_message(exc, None, fun, *args, **kwds)
+
+def assert_raises_message(exc, message, fun, *args, **kwds):
     try:
         fun(*args, **kwds)
-    except exc:
-        pass
+    except exc as e:
+        if message is not None and message not in e.error['message']:
+            raise AssertionError("Expected substring not found:"+e.error['message'])
     except Exception as e:
         raise AssertionError("Unexpected exception raised: "+type(e).__name__)
     else:

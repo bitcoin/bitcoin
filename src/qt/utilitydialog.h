@@ -43,7 +43,7 @@ class ShutdownWindow : public QWidget
 
 public:
     ShutdownWindow(QWidget *parent=0, Qt::WindowFlags f=0);
-    static void showShutdownWindow(SyscoinGUI *window);
+    static QWidget *showShutdownWindow(SyscoinGUI *window);
 
 protected:
     void closeEvent(QCloseEvent *event);

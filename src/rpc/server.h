@@ -19,6 +19,8 @@
 
 #include <univalue.h>
 
+static const unsigned int DEFAULT_RPC_SERIALIZE_VERSION = 1;
+
 class CRPCCommand;
 
 namespace RPCServer
@@ -194,6 +196,57 @@ bool StartRPC();
 void InterruptRPC();
 void StopRPC();
 std::string JSONRPCExecBatch(const UniValue& vReq);
-void RPCNotifyBlockChange(bool ibd, const CBlockIndex *);
 
+// Retrieves any serialization flags requested in command line argument
+int RPCSerializationFlags();
+// SYSCOIN service rpc functions
+extern UniValue aliasnew(const UniValue& params, bool fHelp);
+extern UniValue aliasupdate(const UniValue& params, bool fHelp);
+extern UniValue aliaslist(const UniValue& params, bool fHelp);
+extern UniValue aliasaffiliates(const UniValue& params, bool fHelp);
+extern UniValue aliasinfo(const UniValue& params, bool fHelp);
+extern UniValue aliashistory(const UniValue& params, bool fHelp);
+extern UniValue aliasfilter(const UniValue& params, bool fHelp);
+extern UniValue generatepublickey(const UniValue& params, bool fHelp);
+
+
+extern UniValue offernew(const UniValue& params, bool fHelp);
+extern UniValue offerupdate(const UniValue& params, bool fHelp);
+extern UniValue offeraccept(const UniValue& params, bool fHelp);
+extern UniValue offerlink(const UniValue& params, bool fHelp);
+extern UniValue offeraddwhitelist(const UniValue& params, bool fHelp);
+extern UniValue offerremovewhitelist(const UniValue& params, bool fHelp);
+extern UniValue offerclearwhitelist(const UniValue& params, bool fHelp);
+extern UniValue offerwhitelist(const UniValue& params, bool fHelp);
+extern UniValue offerinfo(const UniValue& params, bool fHelp);
+extern UniValue offerlist(const UniValue& params, bool fHelp);
+extern UniValue offeracceptlist(const UniValue& params, bool fHelp);
+extern UniValue offerhistory(const UniValue& params, bool fHelp);
+extern UniValue offerfilter(const UniValue& params, bool fHelp);
+
+
+extern UniValue certupdate(const UniValue& params, bool fHelp);
+extern UniValue certnew(const UniValue& params, bool fHelp);
+extern UniValue certtransfer(const UniValue& params, bool fHelp);
+extern UniValue certinfo(const UniValue& params, bool fHelp);
+extern UniValue certlist(const UniValue& params, bool fHelp);
+extern UniValue certhistory(const UniValue& params, bool fHelp);
+extern UniValue certfilter(const UniValue& params, bool fHelp);
+
+extern UniValue escrownew(const UniValue& params, bool fHelp);
+extern UniValue escrowrelease(const UniValue& params, bool fHelp);
+extern UniValue escrowcomplete(const UniValue& params, bool fHelp);
+extern UniValue escrowclaimrelease(const UniValue& params, bool fHelp);
+extern UniValue escrowrefund(const UniValue& params, bool fHelp);
+extern UniValue escrowclaimrefund(const UniValue& params, bool fHelp);
+extern UniValue escrowinfo(const UniValue& params, bool fHelp);
+extern UniValue escrowlist(const UniValue& params, bool fHelp);
+extern UniValue escrowhistory(const UniValue& params, bool fHelp);
+extern UniValue escrowfilter(const UniValue& params, bool fHelp);
+
+extern UniValue messagenew(const UniValue& params, bool fHelp);
+extern UniValue messageinfo(const UniValue& params, bool fHelp);
+extern UniValue messagelist(const UniValue& params, bool fHelp);
+extern UniValue messagesentlist(const UniValue& params, bool fHelp);
+extern UniValue messagehistory(const UniValue& params, bool fHelp);
 #endif // SYSCOIN_RPCSERVER_H

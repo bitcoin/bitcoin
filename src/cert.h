@@ -24,7 +24,7 @@ bool DecryptPrivateKey(const std::vector<unsigned char> &vchPubKey, const std::v
 bool DecryptMessage(const CAliasIndex& alias, const std::vector<unsigned char> &vchCipherText, std::string &strMessage, const std::string &strPrivKey="");
 void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 std::string certFromOp(int op);
-CScript RemoveCertScriptPrefix(const CScript& scriptIn);
+bool RemoveCertScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
 class CCert {
 public:
 	std::vector<unsigned char> vchCert;

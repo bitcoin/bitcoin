@@ -165,8 +165,6 @@ public:
     //! pointer to the index of some further predecessor of this block
     CBlockIndex* pskip;
 
-    // SYSCOIN pointer to the AuxPoW header, if this block has one
-    boost::shared_ptr<CAuxPow> pauxpow;
 
     //! height of the entry in the chain. The genesis block has height 0
     int nHeight;
@@ -196,8 +194,7 @@ public:
     unsigned int nStatus;
 
     //! block header
-	// SYSCOIN version
-    CBlockVersion  nVersion;
+    int nVersion;
     uint256 hashMerkleRoot;
     unsigned int nTime;
     unsigned int nBits;
@@ -211,8 +208,6 @@ public:
         phashBlock = NULL;
         pprev = NULL;
         pskip = NULL;
-		// SYSCOIN
-		pauxpow.reset();
         nHeight = 0;
         nFile = 0;
         nDataPos = 0;
@@ -222,8 +217,8 @@ public:
         nChainTx = 0;
         nStatus = 0;
         nSequenceId = 0;
-		// SYSCOIN
-        nVersion.SetNull();
+
+        nVersion = 0;
         hashMerkleRoot = uint256();
         nTime          = 0;
         nBits          = 0;
@@ -330,6 +325,11 @@ public:
     //! Efficiently find an ancestor of this block.
     CBlockIndex* GetAncestor(int height);
     const CBlockIndex* GetAncestor(int height) const;
+    // SYSCOIN
+    inline int GetBaseVersion() const
+    {
+        return CPureBlockHeader::GetBaseVersion(nVersion);
+    }
 };
 
 arith_uint256 GetBlockProof(const CBlockIndex& block);
@@ -374,14 +374,6 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
-		// SYSCOIN
-        if (this->nVersion.IsAuxpow()) {
-            if (ser_action.ForRead())
-                pauxpow.reset(new CAuxPow());
-            assert(pauxpow);
-            READWRITE(*pauxpow);
-        } else if (ser_action.ForRead())
-            pauxpow.reset();
     }
 
     uint256 GetBlockHash() const

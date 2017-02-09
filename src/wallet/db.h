@@ -228,17 +228,19 @@ protected:
         return pcursor;
     }
 
-    int ReadAtCursor(Dbc* pcursor, CDataStream& ssKey, CDataStream& ssValue, bool setRange = false)
+    int ReadAtCursor(Dbc* pcursor, CDataStream& ssKey, CDataStream& ssValue, unsigned int fFlags = DB_NEXT)
     {
         // Read at cursor
         Dbt datKey;
-        unsigned int fFlags = DB_NEXT;
-        if (setRange) {
+        if (fFlags == DB_SET || fFlags == DB_SET_RANGE || fFlags == DB_GET_BOTH || fFlags == DB_GET_BOTH_RANGE) {
             datKey.set_data(&ssKey[0]);
             datKey.set_size(ssKey.size());
-            fFlags = DB_SET_RANGE;
         }
         Dbt datValue;
+        if (fFlags == DB_GET_BOTH || fFlags == DB_GET_BOTH_RANGE) {
+            datValue.set_data(&ssValue[0]);
+            datValue.set_size(ssValue.size());
+        }
         datKey.set_flags(DB_DBT_MALLOC);
         datValue.set_flags(DB_DBT_MALLOC);
         int ret = pcursor->get(&datKey, &datValue, fFlags);

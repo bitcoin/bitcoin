@@ -16,7 +16,7 @@ software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
 the Syscoin Core software, see https://syscoin.org/en/download, or read the
-[original whitepaper](https://syscoincore.org/syscoin.pdf).
+[original whitepaper](https://syscoin.org/syscoin.pdf).
 
 License
 -------
