@@ -80,6 +80,7 @@ class CScript;
 class CScheduler;
 class CTxMemPool;
 class CBlockPolicyEstimator;
+class CChainParams;
 class CWalletTx;
 struct FeeCalculation;
 enum class FeeEstimateMode;
@@ -95,6 +96,7 @@ enum WalletFeature
     FEATURE_HD = 130000, // Hierarchical key derivation after BIP32 (HD Wallet)
 
     FEATURE_HD_SPLIT = 139900, // Wallet with HD chain split (change outputs will use m/0'/1'/k)
+    FEATURE_EXTERNAL_HD = 139901, // External Hierarchical key derivation after BIP32 (HD Wallet)
 
     FEATURE_LATEST = FEATURE_COMPRPUBKEY // HD is optional, use FEATURE_COMPRPUBKEY as latest version
 };
@@ -699,7 +701,7 @@ private:
     CHDChain hdChain;
 
     /* HD derive new child key (on internal or external chain) */
-    void DeriveNewChildKey(CWalletDB &walletdb, CKeyMetadata& metadata, CKey& secret, bool internal = false);
+    void DeriveNewChildKey(CWalletDB &walletdb, CKeyMetadata& metadata, CKey& secret, CPubKey& pubkey, bool internal = false);
 
     std::set<int64_t> setInternalKeyPool;
     std::set<int64_t> setExternalKeyPool;
@@ -903,6 +905,8 @@ public:
 
     //! Adds a watch-only address to the store, and saves it to disk.
     bool AddWatchOnly(const CScript& dest, int64_t nCreateTime);
+    bool AddWatchOnly(const CPubKey &pubkey, const CKeyMetadata& meta, int64_t nCreateTime);
+
     bool RemoveWatchOnly(const CScript &dest) override;
     //! Adds a watch-only address to the store, without saving it to disk (used by LoadWallet)
     bool LoadWatchOnly(const CScript &dest);
@@ -1131,15 +1135,18 @@ public:
 
     /* Returns true if HD is enabled */
     bool IsHDEnabled() const;
+    /* Returns true if HD is enabled and is watch only */
+    bool IsExternalHD() const;
 
     /* Generates a new HD master key (will not be activated) */
     CPubKey GenerateNewHDMasterKey();
-    
+
     /* Set the current HD master key (will reset the chain child index counters)
-       Sets the master key's version based on the current wallet version (so the
-       caller must ensure the current wallet version is correct before calling
-       this function). */
+    Sets the master key's version based on the current wallet version (so the
+    caller must ensure the current wallet version is correct before calling
+    this function). */
     bool SetHDMasterKey(const CPubKey& key);
+    bool SetExternalHD(const CExtPubKey& extPubKey);
 };
 
 /** A key allocated from the key pool. */

@@ -63,10 +63,14 @@ public:
     uint32_t nExternalChainCounter;
     uint32_t nInternalChainCounter;
     CKeyID masterKeyID; //!< master key hash160
+    CExtPubKey externalHD;
+    bool isExternalHD = false;
 
     static const int VERSION_HD_BASE        = 1;
     static const int VERSION_HD_CHAIN_SPLIT = 2;
-    static const int CURRENT_VERSION        = VERSION_HD_CHAIN_SPLIT;
+    static const int SUPPORT_EXTERNALHD_VERSION = 3;
+    static const int CURRENT_VERSION        = SUPPORT_EXTERNALHD_VERSION;
+
     int nVersion;
 
     CHDChain() { SetNull(); }
@@ -79,6 +83,11 @@ public:
         READWRITE(masterKeyID);
         if (this->nVersion >= VERSION_HD_CHAIN_SPLIT)
             READWRITE(nInternalChainCounter);
+        if (this->nVersion >= SUPPORT_EXTERNALHD_VERSION) {
+            READWRITE(isExternalHD);
+            if(isExternalHD)
+                READWRITE(externalHD);
+        }
     }
 
     void SetNull()
@@ -177,6 +186,7 @@ public:
     bool WriteTx(const CWalletTx& wtx);
     bool EraseTx(uint256 hash);
 
+    bool WriteKeyMeta(const CPubKey& vchPubKey, const CKeyMetadata& keyMeta);
     bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta);
     bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta);
     bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);
