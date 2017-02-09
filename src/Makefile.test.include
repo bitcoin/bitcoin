@@ -105,8 +105,7 @@ SYSCOIN_TESTS += \
   wallet/test/wallet_test_fixture.h \
   wallet/test/accounting_tests.cpp \
   wallet/test/wallet_tests.cpp \
-  wallet/test/crypto_tests.cpp \
-  wallet/test/rpc_wallet_tests.cpp
+  wallet/test/crypto_tests.cpp
 endif
 
 test_test_syscoin_SOURCES = $(SYSCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
