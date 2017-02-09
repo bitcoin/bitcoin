@@ -360,7 +360,14 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
     char pchRet2[4];
     if ((recvr = InterruptibleRecv(pchRet2, 4, SOCKS5_RECV_TIMEOUT, hSocket)) != IntrRecvError::OK) {
         CloseSocket(hSocket);
-        return error("Error while reading proxy response");
+        if (recvr == IntrRecvError::Timeout) {
+            /* If a timeout happens here, this effectively means we timed out while connecting
+             * to the remote node. This is very common for Tor, so do not print an
+             * error message. */
+            return false;
+        } else {
+            return error("Error while reading proxy response");
+        }
     }
     if (pchRet2[0] != 0x05) {
         CloseSocket(hSocket);
