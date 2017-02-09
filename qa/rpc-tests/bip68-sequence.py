@@ -51,14 +51,11 @@ class BIP68Test(BitcoinTestFramework):
         print("Running test BIP68 not consensus before versionbits activation")
         self.test_bip68_not_consensus()
 
-        print("Verifying nVersion=2 transactions aren't standard")
-        self.test_version2_relay(before_activation=True)
+        print("Verifying nVersion=2 transactions are standard")
+        self.test_version2_relay()
 
         print("Activating BIP68 (and 112/113)")
         self.activateCSV()
-
-        print("Verifying nVersion=2 transactions are now standard")
-        self.test_version2_relay(before_activation=False)
 
         print("Passed\n")
 
@@ -399,6 +396,17 @@ class BIP68Test(BitcoinTestFramework):
         self.nodes[0].submitblock(ToHex(block))
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
+    # Use self.nodes[1] to test that version 2 transactions are standard even before BIP68 activation.
+    def test_version2_relay(self):
+        inputs = [ ]
+        outputs = { self.nodes[1].getnewaddress() : 1.0 }
+        rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
+        rawtxfund = self.nodes[1].fundrawtransaction(rawtx)['hex']
+        tx = FromHex(CTransaction(), rawtxfund)
+        tx.nVersion = 2
+        tx_signed = self.nodes[1].signrawtransaction(ToHex(tx))["hex"]
+        tx_id = self.nodes[1].sendrawtransaction(tx_signed)
+
     def activateCSV(self):
         # activation should happen at block height 432 (3 periods)
         min_activation_height = 432
@@ -407,22 +415,6 @@ class BIP68Test(BitcoinTestFramework):
         self.nodes[0].generate(432-height)
         assert(get_bip9_status(self.nodes[0], 'csv')['status'] == 'active')
         sync_blocks(self.nodes)
-
-    # Use self.nodes[1] to test standardness relay policy
-    def test_version2_relay(self, before_activation):
-        inputs = [ ]
-        outputs = { self.nodes[1].getnewaddress() : 1.0 }
-        rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
-        rawtxfund = self.nodes[1].fundrawtransaction(rawtx)['hex']
-        tx = FromHex(CTransaction(), rawtxfund)
-        tx.nVersion = 2
-        tx_signed = self.nodes[1].signrawtransaction(ToHex(tx))["hex"]
-        try:
-            tx_id = self.nodes[1].sendrawtransaction(tx_signed)
-            assert(before_activation == False)
-        except:
-            assert(before_activation)
-
 
 if __name__ == '__main__':
     BIP68Test().main()
