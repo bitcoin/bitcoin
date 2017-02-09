@@ -84,7 +84,6 @@ SYSCOIN_CORE_H = \
   feedback.h \
   messagecrypter.h \
   auxpow.h \
-  addrdb.h \
   addrman.h \
   base58.h \
   bloom.h \
@@ -119,7 +118,6 @@ SYSCOIN_CORE_H = \
   merkleblock.h \
   miner.h \
   net.h \
-  netaddress.h \
   netbase.h \
   noui.h \
   policy/fees.h \
@@ -189,7 +187,6 @@ libsyscoin_server_a_SOURCES = \
   messagecrypter.cpp \
   auxpow.cpp \
   addrman.cpp \
-  addrdb.cpp \
   bloom.cpp \
   blockencodings.cpp \
   chain.cpp \
@@ -318,7 +315,6 @@ libsyscoin_common_a_SOURCES = \
   core_write.cpp \
   key.cpp \
   keystore.cpp \
-  netaddress.cpp \
   netbase.cpp \
   protocol.cpp \
   scheduler.cpp \

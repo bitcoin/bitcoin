@@ -16,7 +16,11 @@ struct RegtestingSetup : public TestingSetup {
 };
 
 BOOST_FIXTURE_TEST_SUITE(blockencodings_tests, RegtestingSetup)
-
+// SYSCOIN
+static void SetBlockVersion(CPureBlockHeader& header, int32_t baseVersion) {
+  const int32_t nChainId = Params().GetConsensus().nAuxpowChainId;
+  header.SetBaseVersion(baseVersion, nChainId);
+}
 static CBlock BuildBlockTestCase() {
     CBlock block;
     CMutableTransaction tx;
@@ -27,8 +31,8 @@ static CBlock BuildBlockTestCase() {
 
     block.vtx.resize(3);
     block.vtx[0] = tx;
-	// SYSCOIN
-    block.nVersion.SetBaseVersion(42);
+    // SYSCOIN
+    SetBlockVersion(block, 42);
     block.hashPrevBlock = GetRandHash();
     block.nBits = 0x207fffff;
 
@@ -65,7 +69,7 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
 
     // Do a simple ShortTxIDs RT
     {
-        CBlockHeaderAndShortTxIDs shortIDs(block);
+        CBlockHeaderAndShortTxIDs shortIDs(block, true);
 
         CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
         stream << shortIDs;
@@ -117,7 +121,7 @@ public:
         stream >> *this;
     }
     TestHeaderAndShortIDs(const CBlock& block) :
-        TestHeaderAndShortIDs(CBlockHeaderAndShortTxIDs(block)) {}
+        TestHeaderAndShortIDs(CBlockHeaderAndShortTxIDs(block, true)) {}
 
     uint64_t GetShortID(const uint256& txhash) const {
         CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
@@ -258,7 +262,7 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
     block.vtx.resize(1);
     block.vtx[0] = coinbase;
 	// SYSCOIN
-    block.nVersion.SetBaseVersion(42);
+    SetBlockVersion(block, 42);
     block.hashPrevBlock = GetRandHash();
     block.nBits = 0x207fffff;
 
@@ -269,7 +273,7 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
 
     // Test simple header round-trip with only coinbase
     {
-        CBlockHeaderAndShortTxIDs shortIDs(block);
+        CBlockHeaderAndShortTxIDs shortIDs(block, false);
 
         CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
         stream << shortIDs;
@@ -285,6 +289,7 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
         std::vector<CTransaction> vtx_missing;
         BOOST_CHECK(partialBlock.FillBlock(block2, vtx_missing) == READ_STATUS_OK);
         BOOST_CHECK_EQUAL(block.GetHash().ToString(), block2.GetHash().ToString());
+        bool mutated;
         BOOST_CHECK_EQUAL(block.hashMerkleRoot.ToString(), BlockMerkleRoot(block2, &mutated).ToString());
         BOOST_CHECK(!mutated);
     }

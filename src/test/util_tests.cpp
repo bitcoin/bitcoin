@@ -243,7 +243,11 @@ BOOST_AUTO_TEST_CASE(util_IsHex)
 
 BOOST_AUTO_TEST_CASE(util_seed_insecure_rand)
 {
+    int i;
+    int count=0;
+
     seed_insecure_rand(true);
+
     for (int mod=2;mod<11;mod++)
     {
         int mask = 1;
@@ -252,9 +256,10 @@ BOOST_AUTO_TEST_CASE(util_seed_insecure_rand)
         //mask is 2^ceil(log2(mod))-1
         while(mask<mod-1)mask=(mask<<1)+1;
 
-        int count = 0;
+        count = 0;
         //How often does it get a zero from the uniform range [0,mod)?
-        for (int i = 0; i < 10000; i++) {
+        for (i=0;i<10000;i++)
+        {
             uint32_t rval;
             do{
                 rval=insecure_rand()&mask;

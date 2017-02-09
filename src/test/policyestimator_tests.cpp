@@ -105,19 +105,26 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     // Highest feerate is 10*baseRate and gets in all blocks,
     // second highest feerate is 9*baseRate and gets in 9/10 blocks = 90%,
     // third highest feerate is 8*base rate, and gets in 8/10 blocks = 80%,
-    // so estimateFee(1) should return 10*baseRate.
+    // so estimateFee(1) would return 10*baseRate but is hardcoded to return failure
     // Second highest feerate has 100% chance of being included by 2 blocks,
     // so estimateFee(2) should return 9*baseRate etc...
     for (int i = 1; i < 10;i++) {
         origFeeEst.push_back(mpool.estimateFee(i).GetFeePerK());
         origPriEst.push_back(mpool.estimatePriority(i));
         if (i > 1) { // Fee estimates should be monotonically decreasing
-            BOOST_CHECK(origFeeEst[i-1] <= origFeeEst[i-2]);
+            if (i > 2) {
+                BOOST_CHECK(origFeeEst[i-1] <= origFeeEst[i-2]);
+            }
             BOOST_CHECK(origPriEst[i-1] <= origPriEst[i-2]);
         }
         int mult = 11-i;
-        BOOST_CHECK(origFeeEst[i-1] < mult*baseRate.GetFeePerK() + deltaFee);
-        BOOST_CHECK(origFeeEst[i-1] > mult*baseRate.GetFeePerK() - deltaFee);
+        if (i > 1) {
+            BOOST_CHECK(origFeeEst[i-1] < mult*baseRate.GetFeePerK() + deltaFee);
+            BOOST_CHECK(origFeeEst[i-1] > mult*baseRate.GetFeePerK() - deltaFee);
+        }
+        else {
+            BOOST_CHECK(origFeeEst[i-1] == CFeeRate(0).GetFeePerK());
+        }
         BOOST_CHECK(origPriEst[i-1] < pow(10,mult) * basepri + deltaPri);
         BOOST_CHECK(origPriEst[i-1] > pow(10,mult) * basepri - deltaPri);
     }
@@ -127,9 +134,12 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     while (blocknum < 250)
         mpool.removeForBlock(block, ++blocknum, dummyConflicted);
 
+    BOOST_CHECK(mpool.estimateFee(1) == CFeeRate(0));
     for (int i = 1; i < 10;i++) {
-        BOOST_CHECK(mpool.estimateFee(i).GetFeePerK() < origFeeEst[i-1] + deltaFee);
-        BOOST_CHECK(mpool.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee);
+        if (i > 1) {
+            BOOST_CHECK(mpool.estimateFee(i).GetFeePerK() < origFeeEst[i-1] + deltaFee);
+            BOOST_CHECK(mpool.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee);
+        }
         BOOST_CHECK(mpool.estimatePriority(i) < origPriEst[i-1] + deltaPri);
         BOOST_CHECK(mpool.estimatePriority(i) > origPriEst[i-1] - deltaPri);
     }
@@ -169,8 +179,10 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     }
     mpool.removeForBlock(block, 265, dummyConflicted);
     block.clear();
+    BOOST_CHECK(mpool.estimateFee(1) == CFeeRate(0));
     for (int i = 1; i < 10;i++) {
-        BOOST_CHECK(mpool.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee);
+        if (i > 1)
+            BOOST_CHECK(mpool.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee);
         BOOST_CHECK(mpool.estimatePriority(i) > origPriEst[i-1] - deltaPri);
     }
 
@@ -190,8 +202,10 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
         mpool.removeForBlock(block, ++blocknum, dummyConflicted);
         block.clear();
     }
+    BOOST_CHECK(mpool.estimateFee(1) == CFeeRate(0));
     for (int i = 1; i < 10; i++) {
-        BOOST_CHECK(mpool.estimateFee(i).GetFeePerK() < origFeeEst[i-1] - deltaFee);
+        if (i > 1)
+            BOOST_CHECK(mpool.estimateFee(i).GetFeePerK() < origFeeEst[i-1] - deltaFee);
         BOOST_CHECK(mpool.estimatePriority(i) < origPriEst[i-1] - deltaPri);
     }
 

@@ -10,6 +10,7 @@ Before every minor and major release:
 * Update [bips.md](bips.md) to account for changes since the last release.
 * Update version in sources (see below)
 * Write release notes (see below)
+* Update `src/chainparams.cpp` nMinimumChainWork with information from the getblockchaininfo rpc.
 
 Before every major release:
 
@@ -25,7 +26,7 @@ Check out the source code in the following directory hierarchy.
     git clone https://github.com/devrandom/gitian-builder.git
     git clone https://github.com/syscoin/syscoin2.git
 
-### syscoin maintainers/release engineers, update version in sources
+### Syscoin maintainers/release engineers, update version in sources
 
 Update the following:
 
@@ -85,7 +86,7 @@ Ensure gitian-builder is up-to-date:
 
     pushd ./gitian-builder
     mkdir -p inputs
-    wget -P inputs https://syscoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch
+    wget -P inputs https://bitcoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch
     wget -P inputs http://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz
     popd
 
@@ -109,7 +110,7 @@ NOTE: Offline builds must use the --url flag to ensure Gitian fetches only from 
 
 The gbuild invocations below <b>DO NOT DO THIS</b> by default.
 
-### Build and sign syscoin Core for Linux, Windows, and OS X:
+### Build and sign Syscoin Core for Linux, Windows, and OS X:
 
     pushd ./gitian-builder
     ./bin/gbuild --memory 3000 --commit syscoin=v${VERSION} ../syscoin/contrib/gitian-descriptors/gitian-linux.yml
@@ -137,10 +138,9 @@ Build output expected:
 
 ### Verify other gitian builders signatures to your own. (Optional)
 
-Add other gitian builders keys to your gpg keyring, and/or refresh keys.
+Add other gitian builders keys to your gpg keyring
 
     gpg --import syscoin/contrib/gitian-keys/*.pgp
-    gpg --refresh-keys
 
 Verify the signatures
 
@@ -245,14 +245,14 @@ syscoin.org (see below for syscoin.org update instructions).
 
 - Update syscoin.org version
 
-  - First, check to see if the syscoin.org maintainers have prepared a
+  - First, check to see if the Syscoin.org maintainers have prepared a
     release: https://github.com/syscoin-dot-org/syscoin.org/labels/Releases
 
       - If they have, it will have previously failed their Travis CI
         checks because the final release files weren't uploaded.
         Trigger a Travis CI rebuild---if it passes, merge.
 
-  - If they have not prepared a release, follow the syscoin.org release
+  - If they have not prepared a release, follow the Syscoin.org release
     instructions: https://github.com/syscoin-dot-org/syscoin.org#release-notes
 
   - After the pull request is merged, the website will automatically show the newest version within 15 minutes, as well
@@ -262,15 +262,15 @@ syscoin.org (see below for syscoin.org update instructions).
 
   - syscoin-dev and syscoin-core-dev mailing list
 
-  - syscoin Core announcements list https://syscoincore.org/en/list/announcements/join/
+  - Syscoin Core announcements list https://syscoincore.org/en/list/announcements/join/
 
   - syscoincore.org blog post
 
   - Update title of #syscoin on Freenode IRC
 
-  - Optionally twitter, reddit /r/syscoin, ... but this will usually sort out itself
+  - Optionally twitter, reddit /r/Syscoin, ... but this will usually sort out itself
 
-  - Notify BlueMatt so that he can start building [the PPAs](https://launchpad.net/~syscoin/+archive/ubuntu/syscoin)
+  - Notify BlueMatt so that he can start building [the PPAs](https://launchpad.net/~bitcoin/+archive/ubuntu/bitcoin)
 
   - Add release notes for the new version to the directory `doc/release-notes` in git master
 

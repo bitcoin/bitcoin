@@ -81,7 +81,7 @@ install necessary parts of boost:
 
 BerkeleyDB is required for the wallet. db4.8 packages are available [here](https://launchpad.net/~bitcoin/+archive/bitcoin).
 You can add the repository and install using the following commands:
-	
+
     sudo apt-get install software-properties-common
     sudo add-apt-repository ppa:bitcoin/bitcoin or sudo add-apt-repository ppa:syscoin/syscoin
     sudo apt-get update

@@ -19,7 +19,7 @@ bool DecodeMessageScript(const CScript& script, int& op, std::vector<std::vector
 bool IsMessageOp(int op);
 int IndexOfMessageOutput(const CTransaction& tx);
 bool ExtractMessageAddress(const CScript& script, std::string& address);
-CScript RemoveMessageScriptPrefix(const CScript& scriptIn);
+bool RemoveMessageScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
 void MessageTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 std::string messageFromOp(int op);
 static const unsigned int MAX_MESSAGE_LENGTH = 1024*4;

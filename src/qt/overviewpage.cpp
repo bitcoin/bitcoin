@@ -25,9 +25,9 @@ class TxViewDelegate : public QAbstractItemDelegate
 {
     Q_OBJECT
 public:
-    TxViewDelegate(const PlatformStyle *_platformStyle):
-        QAbstractItemDelegate(), unit(SyscoinUnits::SYS),
-        platformStyle(_platformStyle)
+    TxViewDelegate(const PlatformStyle *platformStyle, QObject *parent=nullptr):
+        QAbstractItemDelegate(parent), unit(SyscoinUnits::SYS),
+        platformStyle(platformStyle)
     {
 
     }
@@ -119,8 +119,7 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     currentWatchOnlyBalance(-1),
     currentWatchUnconfBalance(-1),
     currentWatchImmatureBalance(-1),
-    txdelegate(new TxViewDelegate(platformStyle)),
-    filter(0)
+    txdelegate(new TxViewDelegate(platformStyle, this))
 {
     ui->setupUi(this);
 
@@ -142,19 +141,12 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
 
     // start with displaying the "out of sync" warnings
     showOutOfSyncWarning(true);
-    connect(ui->labelWalletStatus, SIGNAL(clicked()), this, SLOT(handleOutOfSyncWarningClicks()));
-    connect(ui->labelTransactionsStatus, SIGNAL(clicked()), this, SLOT(handleOutOfSyncWarningClicks()));
 }
 
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)
 {
     if(filter)
         Q_EMIT transactionClicked(filter->mapToSource(index));
-}
-
-void OverviewPage::handleOutOfSyncWarningClicks()
-{
-    Q_EMIT outOfSyncWarningClicked();
 }
 
 OverviewPage::~OverviewPage()
@@ -222,7 +214,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
     if(model && model->getOptionsModel())
     {
         // Set up transaction list
-        filter = new TransactionFilterProxy();
+        filter.reset(new TransactionFilterProxy());
         filter->setSourceModel(model->getTransactionTableModel());
         filter->setLimit(NUM_ITEMS);
         filter->setDynamicSortFilter(true);
@@ -230,7 +222,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
         filter->setShowInactive(false);
         filter->sort(TransactionTableModel::Date, Qt::DescendingOrder);
 
-        ui->listTransactions->setModel(filter);
+        ui->listTransactions->setModel(filter.get());
         ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
 
         // Keep up to date with wallet

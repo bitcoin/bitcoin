@@ -147,18 +147,11 @@ bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigne
 }
 void RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut)
 {
-	vector<vector<unsigned char> > vvch;
-	int op;
-	if (DecodeAliasScript(scriptPubKeyIn, op, vvch))
-		scriptPubKeyOut = RemoveAliasScriptPrefix(scriptPubKeyIn);
-	else if (DecodeOfferScript(scriptPubKeyIn, op, vvch))
-		scriptPubKeyOut = RemoveOfferScriptPrefix(scriptPubKeyIn);
-	else if (DecodeCertScript(scriptPubKeyIn, op, vvch))
-		scriptPubKeyOut = RemoveCertScriptPrefix(scriptPubKeyIn);
-	else if (DecodeEscrowScript(scriptPubKeyIn, op, vvch))
-		scriptPubKeyOut = RemoveEscrowScriptPrefix(scriptPubKeyIn);
-	else if (DecodeMessageScript(scriptPubKeyIn, op, vvch))
-		scriptPubKeyOut = RemoveMessageScriptPrefix(scriptPubKeyIn);
+	if (!RemoveAliasScriptPrefix(scriptPubKeyIn, scriptPubKeyOut))
+		if(!RemoveOfferScriptPrefix(scriptPubKeyIn, scriptPubKeyOut))
+			if(!RemoveCertScriptPrefix(scriptPubKeyIn, scriptPubKeyOut))
+				if(!RemoveEscrowScriptPrefix(scriptPubKeyIn, scriptPubKeyOut))
+					RemoveMessageScriptPrefix(scriptPubKeyIn, scriptPubKeyOut);					
 }
 
 // how much is 1.1 BTC in syscoin? 1 BTC = 110000 SYS for example, nPrice would be 1.1, sysPrice would be 110000
@@ -646,8 +639,11 @@ void updateBans(const vector<unsigned char> &banData)
 	}
 }
 bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
-	if (tx.IsCoinBase())
+	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
+	{
+		LogPrintf("*Trying to add alias in coinbase transaction, skipping...");
 		return true;
+	}
 	if (fDebug)
 		LogPrintf("*** ALIAS %d %d op=%s %s nOut=%d %s\n", nHeight, chainActive.Tip()->nHeight, aliasFromOp(op).c_str(), tx.GetHash().ToString().c_str(), nOut, fJustCheck ? "JUSTCHECK" : "BLOCK");
 	const COutPoint *prevOutput = NULL;
@@ -847,7 +843,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		if(!vchData.empty())
 		{
-			CAmount fee = GetDataFee(tx.vout[nDataOut].scriptPubKey, dbAlias.vchAliasPeg, nHeight);	
+			CAmount fee = GetDataFee(tx.vout[nDataOut].scriptPubKey,  (op == OP_ALIAS_ACTIVATE)? theAlias.vchAliasPeg:dbAlias.vchAliasPeg, nHeight);	
 			// if this is an alias update get expire time and figure out if alias update pays enough fees for updating expiry
 			if(!theAlias.IsNull())
 			{
@@ -864,7 +860,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if(nTimeExpiry < 3600)
 					theAlias.nExpireTime = chainActive[nHeightTmp]->nTime+3600;
 			}
-			if (fee > tx.vout[nDataOut].nValue) 
+			if ((fee-10000) > tx.vout[nDataOut].nValue) 
 			{
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5019 - " + _("Transaction does not pay enough fees");
 				return true;
@@ -1575,41 +1571,44 @@ bool DecodeAliasScript(const CScript& script, int& op,
 		return false;
 
 	op = CScript::DecodeOP_N(opcode);
-
+	bool found = false;
 	for (;;) {
 		vector<unsigned char> vch;
 		if (!script.GetOp(pc, opcode, vch))
 			return false;
-		if (opcode == OP_DROP || opcode == OP_2DROP || opcode == OP_NOP)
+		if (opcode == OP_DROP || opcode == OP_2DROP)
+		{
+			found = true;
 			break;
+		}
 		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
 			return false;
 		vvch.push_back(vch);
 	}
 
 	// move the pc to after any DROP or NOP
-	while (opcode == OP_DROP || opcode == OP_2DROP || opcode == OP_NOP) {
+	while (opcode == OP_DROP || opcode == OP_2DROP) {
 		if (!script.GetOp(pc, opcode))
 			break;
 	}
 
 	pc--;
-	return IsAliasOp(op);
+	return found && IsAliasOp(op);
 }
 bool DecodeAliasScript(const CScript& script, int& op,
 		vector<vector<unsigned char> > &vvch) {
 	CScript::const_iterator pc = script.begin();
 	return DecodeAliasScript(script, op, vvch, pc);
 }
-CScript RemoveAliasScriptPrefix(const CScript& scriptIn) {
+bool RemoveAliasScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 	int op;
 	vector<vector<unsigned char> > vvch;
 	CScript::const_iterator pc = scriptIn.begin();
 
 	if (!DecodeAliasScript(scriptIn, op, vvch, pc))
-		throw runtime_error(
-				"RemoveAliasScriptPrefix() : could not decode name script");
-	return CScript(pc, scriptIn.end());
+		return false;
+	scriptOut = CScript(pc, scriptIn.end());
+	return true;
 }
 void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
 {
@@ -3008,6 +3007,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 UniValue generatepublickey(const UniValue& params, bool fHelp) {
 	if(!pwalletMain)
 		throw runtime_error("No wallet defined!");
+	EnsureWalletIsUnlocked();
 	CPubKey PubKey = pwalletMain->GenerateNewKey();
 	std::vector<unsigned char> vchPubKey(PubKey.begin(), PubKey.end());
 	UniValue res(UniValue::VARR);

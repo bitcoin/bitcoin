@@ -34,7 +34,6 @@ class CBlockTreeDB;
 class CBloomFilter;
 class CChainParams;
 class CInv;
-class CConnman;
 class CScriptCheck;
 class CTxMemPool;
 class CValidationInterface;
@@ -90,6 +89,15 @@ static const unsigned int BLOCK_STALLING_TIMEOUT = 2;
 /** Number of headers sent in one getheaders result. We rely on the assumption that if a peer sends
  *  less than this number, we reached its tip. Changing this value is a protocol upgrade. */
 static const unsigned int MAX_HEADERS_RESULTS = 2000;
+/** Size of the "block download window": how far ahead of our current height do we fetch?
+ *  Larger windows tolerate larger download speed differences between peer, but increase the potential
+ *  degree of disordering of blocks on disk (which make reindexing and in the future perhaps pruning
+ *  harder). We'll probably want to make this a per-peer adaptive value at some point. */
+/** Maximum depth of blocks we're willing to serve as compact blocks to peers
+ *  when requested. For older blocks, a regular BLOCK response will be sent. */
+static const int MAX_CMPCTBLOCK_DEPTH = 5;
+/** Maximum depth of blocks we're willing to respond to GETBLOCKTXN requests for. */
+static const int MAX_BLOCKTXN_DEPTH = 10;
 /** Size of the "block download window": how far ahead of our current height do we fetch?
  *  Larger windows tolerate larger download speed differences between peer, but increase the potential
  *  degree of disordering of blocks on disk (which make reindexing and in the future perhaps pruning
@@ -223,7 +231,7 @@ void UnregisterNodeSignals(CNodeSignals& nodeSignals);
  * @param[out]  dbp     The already known disk position of pblock, or NULL if not yet stored.
  * @return True if state.IsValid()
  */
-bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, CNode* pfrom, const CBlock* pblock, bool fForceProcessing, const CDiskBlockPos* dbp, CConnman* connman);
+bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, CNode* pfrom, const CBlock* pblock, bool fForceProcessing, const CDiskBlockPos* dbp, bool fMayBanPeerIfInvalid);
 /** Check whether enough disk space is available for an incoming block */
 bool CheckDiskSpace(uint64_t nAdditionalBytes = 0);
 /** Open a block file (blk?????.dat) */
@@ -241,14 +249,13 @@ bool LoadBlockIndex();
 /** Unload database information */
 void UnloadBlockIndex();
 /** Process protocol messages received from a given node */
-bool ProcessMessages(CNode* pfrom, CConnman& connman);
+bool ProcessMessages(CNode* pfrom);
 /**
  * Send queued protocol messages to be sent to a give node.
  *
  * @param[in]   pto             The node which we are sending messages to.
- * @param[in]   connman         The connection manager for that node.
  */
-bool SendMessages(CNode* pto, CConnman& connman);
+bool SendMessages(CNode* pto);
 /** Run an instance of the script checking thread */
 void ThreadScriptCheck();
 /** Check whether we are doing an initial block download (synchronizing from disk or network) */
@@ -264,7 +271,7 @@ std::string GetWarnings(const std::string& strFor);
 /** Retrieve a transaction (from memory pool, or from disk, if possible) */
 bool GetTransaction(const uint256 &hash, CTransaction &tx, const Consensus::Params& params, uint256 &hashBlock, bool fAllowSlow = false);
 /** Find the best known block, and make it the tip of the block chain */
-bool ActivateBestChain(CValidationState& state, const CChainParams& chainparams, const CBlock* pblock = NULL, CConnman* connman = NULL);
+bool ActivateBestChain(CValidationState& state, const CChainParams& chainparams, const CBlock* pblock = NULL);
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
 
 /**
@@ -355,21 +362,8 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);
 
-/** Transaction validation functions */
-
 /** Context-independent validity checks */
 bool CheckTransaction(const CTransaction& tx, CValidationState& state);
-
-namespace Consensus {
-
-/**
- * Check whether all inputs of this transaction are valid (no double spends and amounts)
- * This does not modify the UTXO set. This does not check scripts and sigs.
- * Preconditions: tx.IsCoinBase() is false.
- */
-bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight);
-
-} // namespace Consensus
 
 /**
  * Check if transaction is final and can be included in a block with the
@@ -466,7 +460,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
  *  set; UTXO-related validity checks are done in ConnectBlock(). */
 bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, int64_t nAdjustedTime);
 bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
-
+// SYSCOIN for auxpow tests
+bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params& params);
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
@@ -481,8 +476,7 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
 
 /** Check a block is completely valid from start to finish (only works on top of our current best block, with cs_main held) */
 bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
-// SYSCOIN for auxpow tests
-bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params& params);
+
 /** Check whether witness commitments are required for block. */
 bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params);
 

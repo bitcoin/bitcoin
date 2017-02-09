@@ -78,7 +78,7 @@ static int secp256k1_wnaf_const(int *wnaf, secp256k1_scalar s, int w) {
     /* Negative numbers will be negated to keep their bit representation below the maximum width */
     flip = secp256k1_scalar_is_high(&s);
     /* We add 1 to even numbers, 2 to odd ones, noting that negation flips parity */
-    bit = flip ^ (s.d[0] & 1);
+    bit = flip ^ !secp256k1_scalar_is_even(&s);
     /* We check for negative one, since adding 2 to it will cause an overflow */
     secp256k1_scalar_negate(&neg_s, &s);
     not_neg_one = !secp256k1_scalar_is_one(&neg_s);

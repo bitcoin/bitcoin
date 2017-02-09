@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# Copyright (c) 2013 The Syscoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 # Use the raw transactions API to spend syscoins received on particular addresses,
 # and send any change back to that same address.
@@ -67,7 +70,7 @@ def connect_JSON(config):
     testnet = config.get('testnet', '0')
     testnet = (int(testnet) > 0)  # 0/1 in config file, convert to True/False
     if not 'rpcport' in config:
-        config['rpcport'] = 18332 if testnet else 8332
+        config['rpcport'] = 18370 if testnet else 8370
     connect = "http://%s:%s@127.0.0.1:%s"%(config['rpcuser'], config['rpcpassword'], config['rpcport'])
     try:
         result = ServiceProxy(connect)

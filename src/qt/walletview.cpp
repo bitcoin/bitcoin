@@ -92,7 +92,6 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), transactionView, SLOT(focusTransaction(QModelIndex)));
-    connect(overviewPage, SIGNAL(outOfSyncWarningClicked()), this, SLOT(requestedSyncWarningInfo()));
 
     // Double-clicking on a transaction on the transaction history page shows details
     connect(transactionView, SIGNAL(doubleClicked(QModelIndex)), transactionView, SLOT(showDetails()));
@@ -126,8 +125,6 @@ void WalletView::setSyscoinGUI(SyscoinGUI *gui)
         // Pass through transaction notifications
         connect(this, SIGNAL(incomingTransaction(QString,int,CAmount,QString,QString,QString)), gui, SLOT(incomingTransaction(QString,int,CAmount,QString,QString,QString)));
 
-        // Connect HD enabled state signal 
-        connect(this, SIGNAL(hdEnabledStatusChanged(int)), gui, SLOT(setHDStatus(int)));
 		// SYSCOIN
 		aliasView->setSyscoinGUI(gui);
 		messageView->setSyscoinGUI(gui);
@@ -172,8 +169,6 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
         connect(_walletModel, SIGNAL(encryptionStatusChanged(int)), this, SIGNAL(encryptionStatusChanged(int)));
         updateEncryptionStatus();
 
-        // update HD status
-        Q_EMIT hdEnabledStatusChanged(_walletModel->hdEnabled());
 
         // Balloon pop-up for new transaction
         connect(_walletModel->getTransactionTableModel(), SIGNAL(rowsInserted(QModelIndex,int,int)),
@@ -388,7 +383,3 @@ void WalletView::showProgress(const QString &title, int nProgress)
         progressDialog->setValue(nProgress);
 }
 
-void WalletView::requestedSyncWarningInfo()
-{
-    Q_EMIT outOfSyncWarningClicked();
-}

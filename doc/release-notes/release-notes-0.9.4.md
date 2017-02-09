@@ -30,7 +30,7 @@ as are any built with the gitian deterministic build system.
 
 However, if you are running either
 
-- The Ubuntu PPA from https://launchpad.net/~syscoin/+archive/ubuntu/syscoin
+- The Ubuntu PPA from https://launchpad.net/~bitcoin/+archive/ubuntu/bitcoin
 - A third-party or self-compiled Syscoin Core
 
 upgrade to Syscoin Core 0.9.4, which includes a workaround, **before** updating

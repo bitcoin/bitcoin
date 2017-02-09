@@ -30,8 +30,13 @@ using namespace std;
 
 static bool fCreateBlank;
 static map<string,UniValue> registers;
+static const int CONTINUE_EXECUTION=-1;
 
-static bool AppInitRawTx(int argc, char* argv[])
+//
+// This function returns either one of EXIT_ codes when it's expected to stop the process or
+// CONTINUE_EXECUTION when it's expected to continue further.
+//
+static int AppInitRawTx(int argc, char* argv[])
 {
     //
     // Parameters
@@ -43,7 +48,7 @@ static bool AppInitRawTx(int argc, char* argv[])
         SelectParams(ChainNameFromCommandLine());
     } catch (const std::exception& e) {
         fprintf(stderr, "Error: %s\n", e.what());
-        return false;
+        return EXIT_FAILURE;
     }
 
     fCreateBlank = GetBoolArg("-create", false);
@@ -89,9 +94,13 @@ static bool AppInitRawTx(int argc, char* argv[])
         strUsage += HelpMessageOpt("set=NAME:JSON-STRING", _("Set register NAME to given JSON-STRING"));
         fprintf(stdout, "%s", strUsage.c_str());
 
-        return false;
+        if (argc < 2) {
+            fprintf(stderr, "Error: too few parameters\n");
+            return EXIT_FAILURE;
+        }
+        return EXIT_SUCCESS;
     }
-    return true;
+    return CONTINUE_EXECUTION;
 }
 
 static void RegisterSetJson(const string& key, const string& rawJson)
@@ -164,7 +173,7 @@ static void RegisterLoad(const string& strInput)
 static void MutateTxVersion(CMutableTransaction& tx, const string& cmdVal)
 {
     int64_t newVersion = atoi64(cmdVal);
-    if (newVersion < 1 || newVersion > CTransaction::CURRENT_VERSION)
+    if (newVersion < 1 || newVersion > CTransaction::MAX_STANDARD_VERSION)
         throw runtime_error("Invalid TX version requested");
 
     tx.nVersion = (int) newVersion;
@@ -233,8 +242,6 @@ static void MutateTxAddOutAddr(CMutableTransaction& tx, const string& strInput)
     CSyscoinAddress addr(strAddr);
     if (!addr.IsValid())
         throw runtime_error("invalid TX output address");
-
-    // build standard output script via GetScriptForDestination()
 	// SYSCOIN
 	CScript scriptPubKey =  GetScriptForDestination(addr.Get());
 	if(!addr.vchRedeemScript.empty())
@@ -399,8 +406,10 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
 
     if (!registers.count("privatekeys"))
         throw runtime_error("privatekeys register variable must be set.");
+    bool fGivenKeys = false;
     CBasicKeyStore tempKeystore;
     UniValue keysObj = registers["privatekeys"];
+    fGivenKeys = true;
 
     for (unsigned int kidx = 0; kidx < keysObj.size(); kidx++) {
         if (!keysObj[kidx].isStr())
@@ -456,7 +465,7 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
 
             // if redeemScript given and private keys given,
             // add redeemScript to the tempKeystore so it can be signed:
-            if ((scriptPubKey.IsPayToScriptHash() || scriptPubKey.IsPayToWitnessScriptHash()) &&
+            if (fGivenKeys && (scriptPubKey.IsPayToScriptHash() || scriptPubKey.IsPayToWitnessScriptHash()) &&
                 prevOut.exists("redeemScript")) {
                 UniValue v = prevOut["redeemScript"];
                 vector<unsigned char> rsData(ParseHexUV(v, "redeemScript"));
@@ -519,7 +528,7 @@ public:
 static void MutateTx(CMutableTransaction& tx, const string& command,
                      const string& commandVal)
 {
-    std::unique_ptr<Secp256k1Init> ecc;
+    boost::scoped_ptr<Secp256k1Init> ecc;
 
     if (command == "nversion")
         MutateTxVersion(tx, commandVal);
@@ -682,8 +691,9 @@ int main(int argc, char* argv[])
     SetupEnvironment();
 
     try {
-        if(!AppInitRawTx(argc, argv))
-            return EXIT_FAILURE;
+        int ret = AppInitRawTx(argc, argv);
+        if (ret != CONTINUE_EXECUTION)
+            return ret;
     }
     catch (const std::exception& e) {
         PrintExceptionContinue(&e, "AppInitRawTx()");

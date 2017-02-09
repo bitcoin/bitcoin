@@ -15,7 +15,7 @@
 #include <vector>
 
 
-/**
+/** 
  * secp256k1:
  * const unsigned int PRIVATE_KEY_SIZE = 279;
  * const unsigned int PUBLIC_KEY_SIZE  = 65;
@@ -45,8 +45,6 @@ private:
     //! The actual byte data
     unsigned char vch[32];
 
-    static_assert(sizeof(vch) == 32, "vch must be 32 bytes in length to not break serialization");
-
     //! Check whether the 32-byte array pointed to be vch is valid keydata.
     bool static Check(const unsigned char* vch);
 
@@ -72,19 +70,20 @@ public:
 
     friend bool operator==(const CKey& a, const CKey& b)
     {
-        return a.fCompressed == b.fCompressed &&
-            a.size() == b.size() &&
-            memcmp(&a.vch[0], &b.vch[0], a.size()) == 0;
+        return a.fCompressed == b.fCompressed && a.size() == b.size() &&
+               memcmp(&a.vch[0], &b.vch[0], a.size()) == 0;
     }
 
     //! Initialize using begin and end iterators to byte data.
     template <typename T>
     void Set(const T pbegin, const T pend, bool fCompressedIn)
     {
-        if (pend - pbegin != sizeof(vch)) {
+        if (pend - pbegin != 32) {
             fValid = false;
-        } else if (Check(&pbegin[0])) {
-            memcpy(vch, (unsigned char*)&pbegin[0], sizeof(vch));
+            return;
+        }
+        if (Check(&pbegin[0])) {
+            memcpy(vch, (unsigned char*)&pbegin[0], 32);
             fValid = true;
             fCompressed = fCompressedIn;
         } else {
@@ -93,7 +92,7 @@ public:
     }
 
     //! Simple read-only vector-like interface.
-    unsigned int size() const { return (fValid ? sizeof(vch) : 0); }
+    unsigned int size() const { return (fValid ? 32 : 0); }
     const unsigned char* begin() const { return vch; }
     const unsigned char* end() const { return vch + size(); }
 
@@ -111,7 +110,7 @@ public:
 
     /**
      * Convert the private key to a CPrivKey (serialized OpenSSL private key data).
-     * This is expensive.
+     * This is expensive. 
      */
     CPrivKey GetPrivKey() const;
 
@@ -147,6 +146,9 @@ public:
 
     //! Load private key and check that public key matches.
     bool Load(CPrivKey& privkey, CPubKey& vchPubKey, bool fSkipCheck);
+
+    //! Check whether an element of a signature (r or s) is valid.
+    static bool CheckSignatureElement(const unsigned char* vch, int len, bool half);
 };
 
 struct CExtKey {
@@ -158,11 +160,8 @@ struct CExtKey {
 
     friend bool operator==(const CExtKey& a, const CExtKey& b)
     {
-        return a.nDepth == b.nDepth &&
-            memcmp(&a.vchFingerprint[0], &b.vchFingerprint[0], sizeof(vchFingerprint)) == 0 &&
-            a.nChild == b.nChild &&
-            a.chaincode == b.chaincode &&
-            a.key == b.key;
+        return a.nDepth == b.nDepth && memcmp(&a.vchFingerprint[0], &b.vchFingerprint[0], 4) == 0 && a.nChild == b.nChild &&
+               a.chaincode == b.chaincode && a.key == b.key;
     }
 
     void Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const;

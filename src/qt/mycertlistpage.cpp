@@ -125,6 +125,7 @@ void MyCertListPage::on_sellCertButton_clicked()
 	QString certGUID = indexes.at(0).data(CertTableModel::NameRole).toString();
 	QString status = indexes.at(0).data(CertTableModel::ExpiredRole).toString();
 	QString category = indexes.at(0).data(CertTableModel::CategoryRole).toString();
+	QString alias = indexes.at(0).data(CertTableModel::AliasRole).toString();
 	if(status == QString("expired"))
 	{
            QMessageBox::information(this, windowTitle(),
@@ -132,7 +133,7 @@ void MyCertListPage::on_sellCertButton_clicked()
                QMessageBox::Ok, QMessageBox::Ok);
 		   return;
 	}
-    EditOfferDialog dlg(EditOfferDialog::NewCertOffer, "", certGUID, category);
+    EditOfferDialog dlg(EditOfferDialog::NewCertOffer, "", certGUID, alias, category);
     dlg.setModel(walletModel,0);
     dlg.exec();
 }

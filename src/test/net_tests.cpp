@@ -9,7 +9,6 @@
 #include "serialize.h"
 #include "streams.h"
 #include "net.h"
-#include "netbase.h"
 #include "chainparams.h"
 
 using namespace std;
@@ -52,12 +51,8 @@ public:
         int nUBuckets = ADDRMAN_NEW_BUCKET_COUNT ^ (1 << 30);
         s << nUBuckets;
 
-        CService serv;
-        Lookup("252.1.1.1", serv, 7777, false);
-        CAddress addr = CAddress(serv, NODE_NONE);
-        CNetAddr resolved;
-        LookupHost("252.2.2.2", resolved, false);
-        CAddrInfo info = CAddrInfo(addr, resolved);
+        CAddress addr = CAddress(CService("252.1.1.1", 7777), NODE_NONE);
+        CAddrInfo info = CAddrInfo(addr, CNetAddr("252.2.2.2"));
         s << info;
     }
 };
@@ -79,17 +74,14 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     CAddrManUncorrupted addrmanUncorrupted;
     addrmanUncorrupted.MakeDeterministic();
 
-    CService addr1, addr2, addr3;
-    Lookup("250.7.1.1", addr1, 8369, false);
-    Lookup("250.7.2.2", addr2, 9999, false);
-    Lookup("250.7.3.3", addr3, 9999, false);
+    CService addr1 = CService("250.7.1.1", 8369);
+    CService addr2 = CService("250.7.2.2", 9999);
+    CService addr3 = CService("250.7.3.3", 9999);
 
     // Add three addresses to new table.
-    CService source;
-    Lookup("252.5.1.1", source, 8369, false);
-    addrmanUncorrupted.Add(CAddress(addr1, NODE_NONE), source);
-    addrmanUncorrupted.Add(CAddress(addr2, NODE_NONE), source);
-    addrmanUncorrupted.Add(CAddress(addr3, NODE_NONE), source);
+    addrmanUncorrupted.Add(CAddress(addr1, NODE_NONE), CService("252.5.1.1", 8369));
+    addrmanUncorrupted.Add(CAddress(addr2, NODE_NONE), CService("252.5.1.1", 8369));
+    addrmanUncorrupted.Add(CAddress(addr3, NODE_NONE), CService("252.5.1.1", 8369));
 
     // Test that the de-serialization does not throw an exception.
     CDataStream ssPeers1 = AddrmanToStream(addrmanUncorrupted);
@@ -153,8 +145,6 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
 BOOST_AUTO_TEST_CASE(cnode_simple_test)
 {
     SOCKET hSocket = INVALID_SOCKET;
-    NodeId id = 0;
-    int height = 0;
 
     in_addr ipv4Addr;
     ipv4Addr.s_addr = 0xa0b0c001;
@@ -164,12 +154,12 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     bool fInboundIn = false;
 
     // Test that fFeeler is false by default.
-    CNode* pnode1 = new CNode(id++, NODE_NETWORK, height, hSocket, addr, 0, pszDest, fInboundIn);
+    CNode* pnode1 = new CNode(hSocket, addr, pszDest, fInboundIn);
     BOOST_CHECK(pnode1->fInbound == false);
     BOOST_CHECK(pnode1->fFeeler == false);
 
     fInboundIn = true;
-    CNode* pnode2 = new CNode(id++, NODE_NETWORK, height, hSocket, addr, 1, pszDest, fInboundIn);
+    CNode* pnode2 = new CNode(hSocket, addr, pszDest, fInboundIn);
     BOOST_CHECK(pnode2->fInbound == true);
     BOOST_CHECK(pnode2->fFeeler == false);
 }

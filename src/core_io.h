@@ -25,7 +25,7 @@ extern std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::strin
 
 // core_write.cpp
 extern std::string FormatScript(const CScript& script);
-extern std::string EncodeHexTx(const CTransaction& tx);
+extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 extern void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
 extern void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry);
 

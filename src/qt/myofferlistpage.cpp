@@ -223,6 +223,7 @@ void MyOfferListPage::on_editButton_clicked()
 	QString offerGUID = indexes.at(0).data(OfferTableModel::NameRole).toString();
 	QString certGUID = indexes.at(0).data(OfferTableModel::CertRole).toString();
 	QString status = indexes.at(0).data(OfferTableModel::ExpiredRole).toString();
+	QString alias = indexes.at(0).data(OfferTableModel::AliasRole).toString();
 	if(status == QString("expired"))
 	{
            QMessageBox::information(this, windowTitle(),
@@ -230,7 +231,7 @@ void MyOfferListPage::on_editButton_clicked()
                QMessageBox::Ok, QMessageBox::Ok);
 		   return;
 	}
-    EditOfferDialog dlg(EditOfferDialog::EditOffer, offerGUID, certGUID);
+    EditOfferDialog dlg(EditOfferDialog::EditOffer, offerGUID, certGUID, alias);
     dlg.setModel(walletModel, model);
     QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
     dlg.loadRow(origIndex.row());

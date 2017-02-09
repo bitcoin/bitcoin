@@ -444,7 +444,7 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     totalTxSize += entry.GetTxSize();
     minerPolicyEstimator->processTransaction(entry, fCurrentEstimate);
 
-    vTxHashes.emplace_back(hash, newit);
+    vTxHashes.emplace_back(tx.GetWitnessHash(), newit);
     newit->vTxHashesIdx = vTxHashes.size() - 1;
 
     return true;
@@ -576,6 +576,7 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
 void CTxMemPool::removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed)
 {
     // Remove transactions which depend on inputs of tx, recursively
+    list<CTransaction> result;
     LOCK(cs);
     BOOST_FOREACH(const CTxIn &txin, tx.vin) {
         auto it = mapNextTx.find(txin.prevout);
@@ -656,7 +657,6 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
     uint64_t innerUsage = 0;
 
     CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(pcoins));
-    const int64_t nSpendHeight = GetSpendHeight(mempoolDuplicate);
 
     LOCK(cs);
     list<const CTxMemPoolEntry*> waitingOnDependants;
@@ -737,9 +737,8 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             waitingOnDependants.push_back(&(*it));
         else {
             CValidationState state;
-            bool fCheckResult = tx.IsCoinBase() ||
-                Consensus::CheckTxInputs(tx, state, mempoolDuplicate, nSpendHeight);
-            assert(fCheckResult);
+            PrecomputedTransactionData txdata(tx);
+            assert(CheckInputs(tx, state, mempoolDuplicate, false, 0, false, txdata, NULL));
             UpdateCoins(tx, mempoolDuplicate, 1000000);
         }
     }
@@ -753,9 +752,8 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             stepsSinceLastRemove++;
             assert(stepsSinceLastRemove < waitingOnDependants.size());
         } else {
-            bool fCheckResult = entry->GetTx().IsCoinBase() ||
-                Consensus::CheckTxInputs(entry->GetTx(), state, mempoolDuplicate, nSpendHeight);
-            assert(fCheckResult);
+            PrecomputedTransactionData txdata(entry->GetTx());
+            assert(CheckInputs(entry->GetTx(), state, mempoolDuplicate, false, 0, false, txdata, NULL));
             UpdateCoins(entry->GetTx(), mempoolDuplicate, 1000000);
             stepsSinceLastRemove = 0;
         }
@@ -1135,4 +1133,11 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<uint256>* pvNoSpendsRe
 
     if (maxFeeRateRemoved > CFeeRate(0))
         LogPrint("mempool", "Removed %u txn, rolling minimum fee bumped to %s\n", nTxnRemoved, maxFeeRateRemoved.ToString());
+}
+
+bool CTxMemPool::TransactionWithinChainLimit(const uint256& txid, size_t chainLimit) const {
+    LOCK(cs);
+    auto it = mapTx.find(txid);
+    return it == mapTx.end() || (it->GetCountWithAncestors() < chainLimit &&
+       it->GetCountWithDescendants() < chainLimit);
 }

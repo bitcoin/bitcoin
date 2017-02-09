@@ -1,16 +1,17 @@
+# Copyright (c) 2013-2016 The Syscoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 bin_PROGRAMS += qt/test/test_syscoin-qt
 TESTS += qt/test/test_syscoin-qt
 
-TEST_QT_MOC_CPP = \
-  qt/test/moc_rpcnestedtests.cpp \
-  qt/test/moc_uritests.cpp
+TEST_QT_MOC_CPP = qt/test/moc_uritests.cpp
 
 if ENABLE_WALLET
 TEST_QT_MOC_CPP += qt/test/moc_paymentservertests.cpp
 endif
 
 TEST_QT_H = \
-  qt/test/rpcnestedtests.h \
   qt/test/uritests.h \
   qt/test/paymentrequestdata.h \
   qt/test/paymentservertests.h
@@ -19,7 +20,6 @@ qt_test_test_syscoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(SYSCOIN_
   $(QT_INCLUDES) $(QT_TEST_INCLUDES) $(PROTOBUF_CFLAGS)
 
 qt_test_test_syscoin_qt_SOURCES = \
-  qt/test/rpcnestedtests.cpp \
   qt/test/test_main.cpp \
   qt/test/uritests.cpp \
   $(TEST_QT_H)
