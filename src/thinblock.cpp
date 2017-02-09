@@ -48,6 +48,13 @@ CThinBlock::CThinBlock(const CBlock& block, CBloomFilter& filter)
 bool CThinBlock::process(CNode* pfrom, int nSizeThinBlock, string strCommand)
 {
 
+        // Xpress Validation - only perform xval if the chaintip matches the last blockhash in the thinblock
+        bool fXVal;
+        {
+            LOCK(cs_main);
+	    fXVal = (header.hashPrevBlock == chainActive.Tip()->GetBlockHash()) ? true : false;
+        }
+
         pfrom->nSizeThinBlock = nSizeThinBlock;
         pfrom->thinBlock.SetNull();
         pfrom->thinBlock.nVersion = header.nVersion;
@@ -63,11 +70,11 @@ bool CThinBlock::process(CNode* pfrom, int nSizeThinBlock, string strCommand)
         BOOST_FOREACH(CTransaction tx, vMissingTx) 
             mapMissingTx[tx.GetHash()] = tx;
 
-        LOCK2(cs_main, cs_xval);
+        // We don't have to keep the lock on mempool.cs here to do mempool.queryHashes 
+        // but we take the lock anyway so we don't have to re-lock again later.
+        LOCK2(mempool.cs, cs_xval);
         int missingCount = 0;
         int unnecessaryCount = 0;
-        // Xpress Validation - only perform xval if the chaintip matches the last blockhash in the thinblock
-        bool fXVal = (header.hashPrevBlock == chainActive.Tip()->GetBlockHash()) ? true : false;
 
         // Look for each transaction in our various pools and buffers.
         BOOST_FOREACH(const uint256 &hash, vTxHashes) 
