@@ -18,6 +18,7 @@
 #include <boost/version.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <boost/thread.hpp>
 
 using namespace std;
@@ -215,16 +216,16 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
     Dbc* pcursor = GetCursor();
     if (!pcursor)
         throw runtime_error(std::string(__func__) + ": cannot create DB cursor");
-    bool setRange = true;
+    unsigned int fFlags = DB_SET_RANGE;
     while (true)
     {
         // Read next record
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-        if (setRange)
+        if (fFlags == DB_SET_RANGE)
             ssKey << std::make_pair(std::string("acentry"), std::make_pair((fAllAccounts ? string("") : strAccount), uint64_t(0)));
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-        int ret = ReadAtCursor(pcursor, ssKey, ssValue, setRange);
-        setRange = false;
+        int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
+        fFlags = DB_NEXT;
         if (ret == DB_NOTFOUND)
             break;
         else if (ret != 0)
@@ -376,9 +377,9 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             if (!(CheckTransaction(wtx, state) && (wtx.GetHash() == hash) && state.IsValid()))
 			{
 				// SYSCOIN
-				if(wtx.GetHash() != hash && wtx.nVersion == GetSyscoinTxVersion())
-					return true;
-				strErr = "Error reading wallet database. CheckTransaction failed, validation state: " + FormatStateMessage(state);
+ 				if(wtx.GetHash() != hash && wtx.nVersion == GetSyscoinTxVersion())
+ 					return true;
+ 				strErr = "Error reading wallet database. CheckTransaction failed, validation state: " + FormatStateMessage(state);
                 return false;
 			}
 			// SYSCOIN don't need this
@@ -405,7 +406,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             if (wtx.nOrderPos == -1)
                 wss.fAnyUnordered = true;
 
-            pwallet->LoadToWallet(wtx);
+            pwallet->AddToWallet(wtx, true, NULL);
         }
         else if (strType == "acentry")
         {
@@ -561,8 +562,14 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssKey >> nIndex;
             CKeyPool keypool;
             ssValue >> keypool;
+            pwallet->setKeyPool.insert(nIndex);
 
-            pwallet->LoadKeyPool(nIndex, keypool);
+            // If no metadata exists yet, create a default with the pool key's
+            // creation time. Note that this may be overwritten by actually
+            // stored metadata for that key later, which is fine.
+            CKeyID keyid = keypool.vchPubKey.GetID();
+            if (pwallet->mapKeyMetadata.count(keyid) == 0)
+                pwallet->mapKeyMetadata[keyid] = CKeyMetadata(keypool.nTime);
         }
         else if (strType == "version")
         {
@@ -892,8 +899,8 @@ void ThreadFlushWalletDB(const string& strFile)
                 if (nRefCount == 0)
                 {
                     boost::this_thread::interruption_point();
-                    map<string, int>::iterator _mi = bitdb.mapFileUseCount.find(strFile);
-                    if (_mi != bitdb.mapFileUseCount.end())
+                    map<string, int>::iterator mi = bitdb.mapFileUseCount.find(strFile);
+                    if (mi != bitdb.mapFileUseCount.end())
                     {
                         LogPrint("db", "Flushing %s\n", strFile);
                         nLastFlushed = nWalletDBUpdated;
@@ -903,7 +910,7 @@ void ThreadFlushWalletDB(const string& strFile)
                         bitdb.CloseDb(strFile);
                         bitdb.CheckpointLSN(strFile);
 
-                        bitdb.mapFileUseCount.erase(_mi++);
+                        bitdb.mapFileUseCount.erase(mi++);
                         LogPrint("db", "Flushed %s %dms\n", strFile, GetTimeMillis() - nStart);
                     }
                 }
@@ -946,7 +953,7 @@ bool CWalletDB::Recover(CDBEnv& dbenv, const std::string& filename, bool fOnlyKe
     }
     LogPrintf("Salvage(aggressive) found %u records\n", salvagedData.size());
 
-    std::unique_ptr<Db> pdbCopy(new Db(dbenv.dbenv, 0));
+    boost::scoped_ptr<Db> pdbCopy(new Db(dbenv.dbenv, 0));
     int ret = pdbCopy->open(NULL,               // Txn pointer
                             filename.c_str(),   // Filename
                             "main",             // Logical db name

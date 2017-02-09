@@ -22,7 +22,7 @@ extern CRPCTable tableRPC;
 string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, double &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision, int &nFeePerByte, float &fEscrowFee);
 extern bool getCategoryList(vector<string>& categoryList);
 extern vector<unsigned char> vchFromString(const std::string &str);
-EditOfferDialog::EditOfferDialog(Mode mode,  const QString &strOffer,  const QString &strCert,  const QString &strCategory, QWidget *parent) :
+EditOfferDialog::EditOfferDialog(Mode mode,  const QString &strOffer,  const QString &strCert,  const QString &strAlias, const QString &strCategory, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::EditOfferDialog), mapper(0), mode(mode), model(0)
 {
@@ -48,8 +48,9 @@ EditOfferDialog::EditOfferDialog(Mode mode,  const QString &strOffer,  const QSt
 
 	ui->geolocationDisclaimer->setText(QString("<font color='blue'>") + tr("If you wish you may enter your merchant geolocation (latitude and longitude coordinates) to help track shipping rates and other logistics information") + QString("</font>"));
 	ui->currencyDisclaimer->setText(QString("<font color='blue'>") + tr("You will receive payment in Syscoin equivalent to the Market-value of the currency you have selected") + QString("</font>"));
-	ui->paymentOptionsDisclaimer->setText(QString("<font color='blue'>") + tr("Choose which crypto-currency you want to allow as a payment method for this offer. Your choices are any combination of SYS, BTC or ZEC. An example setting for all three: 'SYS+BTC+ZEC'. For SYS and ZEC: 'SYS+ZEC'. Please note that in order spend coins paid to you via Syscoin Marketplace, you will need to import your Syscoin private key in external wallet(s) if BTC or ZEC are chosen.") + QString("</font>"));
+	ui->paymentOptionsDisclaimer->setText(QString("<font color='blue'>") + tr("Choose which crypto-currency you want to allow as a payment method for this offer. Your choices are any combination of SYS, BTC or ZEC. An example setting for all three: 'SYS+BTC+ZEC'. For SYS and ZEC: 'SYS+ZEC'. Please note that in order to spend coins paid to you via Syscoin Marketplace, you will need to import your Syscoin private key in external wallet(s) if BTC or ZEC are chosen.") + QString("</font>"));
 	cert = strCert;
+	alias = strAlias;
 	ui->certEdit->clear();
 	ui->certEdit->addItem(tr("Select Certificate (optional)"));
 	loadAliases();
@@ -503,7 +504,15 @@ void EditOfferDialog::loadAliases()
 				if(expired == 0)
 				{
 					QString name = QString::fromStdString(name_str);
-					ui->aliasEdit->addItem(name, name);					
+					ui->aliasEdit->addItem(name, name);		
+					if(name == alias)
+					{
+						int index = ui->aliasEdit->findData(alias);
+						if ( index != -1 ) 
+						{
+							ui->aliasEdit->setCurrentIndex(index);
+						}
+					}
 				}
 				
 			}
@@ -631,6 +640,7 @@ bool EditOfferDialog::saveCurrentRow()
 		mode = NewOffer;
 	}
 	QString defaultPegAlias;
+	QVariant currentCategory;
 	QSettings settings;
 	UniValue params(UniValue::VARR);
 	string strMethod;
@@ -656,8 +666,9 @@ bool EditOfferDialog::saveCurrentRow()
 		}
 		strMethod = string("offernew");
 		params.push_back(ui->aliasEdit->currentText().toStdString());
-		if(ui->categoryEdit->currentIndex() >= 0)
-			params.push_back(ui->categoryEdit->itemData(ui->categoryEdit->currentIndex(), Qt::UserRole).toString().toStdString());
+		currentCategory = ui->categoryEdit->itemData(ui->categoryEdit->currentIndex(), Qt::UserRole);
+		if(ui->categoryEdit->currentIndex() > 0 &&  currentCategory != QVariant::Invalid)
+			params.push_back(currentCategory.toString().toStdString());
 		else
 			params.push_back(ui->categoryEdit->currentText().toStdString());
 		params.push_back(ui->nameEdit->text().toStdString());
@@ -733,8 +744,9 @@ bool EditOfferDialog::saveCurrentRow()
 			strMethod = string("offerupdate");
 			params.push_back(ui->aliasEdit->currentText().toStdString());
 			params.push_back(ui->offerEdit->text().toStdString());
-			if(ui->categoryEdit->currentIndex() >= 0)
-				params.push_back(ui->categoryEdit->itemData(ui->categoryEdit->currentIndex(), Qt::UserRole).toString().toStdString());
+			currentCategory = ui->categoryEdit->itemData(ui->categoryEdit->currentIndex(), Qt::UserRole);
+			if(ui->categoryEdit->currentIndex() > 0 &&  currentCategory != QVariant::Invalid)
+				params.push_back(currentCategory.toString().toStdString());
 			else
 				params.push_back(ui->categoryEdit->currentText().toStdString());
 			params.push_back(ui->nameEdit->text().toStdString());

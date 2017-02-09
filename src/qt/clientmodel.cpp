@@ -6,6 +6,7 @@
 
 #include "bantablemodel.h"
 #include "guiconstants.h"
+#include "guiutil.h"
 #include "peertablemodel.h"
 
 #include "chainparams.h"
@@ -27,9 +28,9 @@ static const int64_t nClientStartupTime = GetTime();
 static int64_t nLastHeaderTipUpdateNotification = 0;
 static int64_t nLastBlockTipUpdateNotification = 0;
 
-ClientModel::ClientModel(OptionsModel *_optionsModel, QObject *parent) :
+ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
     QObject(parent),
-    optionsModel(_optionsModel),
+    optionsModel(optionsModel),
     peerTableModel(0),
     banTableModel(0),
     pollTimer(0)
@@ -50,18 +51,16 @@ ClientModel::~ClientModel()
 
 int ClientModel::getNumConnections(unsigned int flags) const
 {
-    CConnman::NumConnections connections = CConnman::CONNECTIONS_NONE;
+    LOCK(cs_vNodes);
+    if (flags == CONNECTIONS_ALL) // Shortcut if we want total
+        return vNodes.size();
 
-    if(flags == CONNECTIONS_IN)
-        connections = CConnman::CONNECTIONS_IN;
-    else if (flags == CONNECTIONS_OUT)
-        connections = CConnman::CONNECTIONS_OUT;
-    else if (flags == CONNECTIONS_ALL)
-        connections = CConnman::CONNECTIONS_ALL;
+    int nNum = 0;
+    BOOST_FOREACH(const CNode* pnode, vNodes)
+        if (flags & (pnode->fInbound ? CONNECTIONS_IN : CONNECTIONS_OUT))
+            nNum++;
 
-    if(g_connman)
-         return g_connman->GetNodeCount(connections);
-    return 0;
+    return nNum;
 }
 
 int ClientModel::getNumBlocks() const
@@ -70,34 +69,14 @@ int ClientModel::getNumBlocks() const
     return chainActive.Height();
 }
 
-int ClientModel::getHeaderTipHeight() const
-{
-    LOCK(cs_main);
-    if (!pindexBestHeader)
-        return 0;
-    return pindexBestHeader->nHeight;
-}
-
-int64_t ClientModel::getHeaderTipTime() const
-{
-    LOCK(cs_main);
-    if (!pindexBestHeader)
-        return 0;
-    return pindexBestHeader->GetBlockTime();
-}
-
 quint64 ClientModel::getTotalBytesRecv() const
 {
-    if(!g_connman)
-        return 0;
-    return g_connman->GetTotalBytesRecv();
+    return CNode::GetTotalBytesRecv();
 }
 
 quint64 ClientModel::getTotalBytesSent() const
 {
-    if(!g_connman)
-        return 0;
-    return g_connman->GetTotalBytesSent();
+    return CNode::GetTotalBytesSent();
 }
 
 QDateTime ClientModel::getLastBlockDate() const
@@ -208,7 +187,7 @@ QString ClientModel::formatClientStartupTime() const
 
 QString ClientModel::dataDir() const
 {
-    return QString::fromStdString(GetDataDir().string());
+    return GUIUtil::boostPathToQString(GetDataDir());
 }
 
 void ClientModel::updateBanlist()
@@ -256,7 +235,7 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, const CB
     int64_t& nLastUpdateNotification = fHeader ? nLastHeaderTipUpdateNotification : nLastBlockTipUpdateNotification;
 
     // if we are in-sync, update the UI regardless of last update time
-    if (fHeader || !initialSync || now - nLastUpdateNotification > MODEL_UPDATE_DELAY) {
+    if (!initialSync || now - nLastUpdateNotification > MODEL_UPDATE_DELAY) {
         //pass a async signal to the UI thread
         QMetaObject::invokeMethod(clientmodel, "numBlocksChanged", Qt::QueuedConnection,
                                   Q_ARG(int, pIndex->nHeight),

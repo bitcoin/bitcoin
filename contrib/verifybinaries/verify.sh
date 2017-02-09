@@ -17,11 +17,11 @@ function clean_up {
    done
 }
 
-WORKINGDIR="/tmp/syscoin_verify_binaries"
+WORKINGDIR="/tmp/syscoin"
 TMPFILE="hashes.tmp"
 
 SIGNATUREFILENAME="SHA256SUMS.asc"
-RCSUBDIR="test"
+RCSUBDIR="test/"
 BASEDIR="https://syscoin.org/bin/"
 VERSIONPREFIX="syscoin-core-"
 RCVERSIONSTRING="rc"
@@ -46,7 +46,7 @@ if [ -n "$1" ]; then
    #  and simultaneously add RCSUBDIR to BASEDIR, where we will look for SIGNATUREFILENAME
    if [[ $VERSION == *"$RCVERSIONSTRING"* ]]; then
       BASEDIR="$BASEDIR${VERSION/%-$RCVERSIONSTRING*}/"
-      BASEDIR="$BASEDIR$RCSUBDIR.$RCVERSIONSTRING${VERSION: -1}/"
+      BASEDIR="$BASEDIR$RCSUBDIR"
    else
       BASEDIR="$BASEDIR$VERSION/"
    fi
@@ -96,7 +96,7 @@ fi
 FILES=$(awk '{print $2}' "$TMPFILE")
 
 #and download these one by one
-for file in $FILES
+for file in in $FILES
 do
    wget --quiet -N "$BASEDIR$file"
 done
@@ -111,16 +111,11 @@ if [ $? -eq 1 ]; then
    exit 1
 elif [ $? -gt 1 ]; then
    echo "Error executing 'diff'"
-   exit 2
+   exit 2   
 fi
 
-if [ -n "$2" ]; then
-   echo "Clean up the binaries"
-   clean_up $FILES $SIGNATUREFILENAME $TMPFILE
-else
-   echo "Keep the binaries in $WORKINGDIR"
-   clean_up $TMPFILE
-fi
+#everything matches! clean up the mess
+clean_up $FILES $SIGNATUREFILENAME $TMPFILE
 
 echo -e "Verified hashes of \n$FILES"
 

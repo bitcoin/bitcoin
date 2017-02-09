@@ -1,8 +1,9 @@
+# Copyright (c) 2013-2016 The Syscoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 ACLOCAL_AMFLAGS = -I build-aux/m4
 SUBDIRS = src
-if ENABLE_MAN
-SUBDIRS += doc/man
-endif
 .PHONY: deploy FORCE
 
 GZIP_ENV="-9n"
@@ -50,9 +51,9 @@ OSX_PACKAGING = $(OSX_DEPLOY_SCRIPT) $(OSX_FANCY_PLIST) $(OSX_INSTALLER_ICONS) \
   $(top_srcdir)/contrib/macdeploy/detached-sig-apply.sh \
   $(top_srcdir)/contrib/macdeploy/detached-sig-create.sh
 
-COVERAGE_INFO = baseline_filtered_combined.info baseline.info \
+COVERAGE_INFO = baseline_filtered_combined.info baseline.info block_test.info \
   leveldb_baseline.info test_syscoin_filtered.info total_coverage.info \
-  baseline_filtered.info rpc_test.info rpc_test_filtered.info \
+  baseline_filtered.info block_test_filtered.info rpc_test.info rpc_test_filtered.info \
   leveldb_baseline_filtered.info test_syscoin_coverage.info test_syscoin.info
 
 dist-hook:
@@ -178,6 +179,16 @@ test_syscoin.info: baseline_filtered_combined.info
 test_syscoin_filtered.info: test_syscoin.info
 	$(LCOV) -r $< "/usr/include/*" -o $@
 
+block_test.info: test_syscoin_filtered.info
+	$(MKDIR_P) qa/tmp
+	-@TIMEOUT=15 qa/pull-tester/run-syscoind-for-test.sh $(JAVA) -jar $(JAVA_COMPARISON_TOOL) qa/tmp/compTool $(COMPARISON_TOOL_REORG_TESTS)
+	$(LCOV) -c -d $(abs_builddir)/src --t SyscoinJBlockTest -o $@
+	$(LCOV) -z -d $(abs_builddir)/src
+	$(LCOV) -z -d $(abs_builddir)/src/leveldb
+
+block_test_filtered.info: block_test.info
+	$(LCOV) -r $< "/usr/include/*" -o $@
+
 rpc_test.info: test_syscoin_filtered.info
 	-@TIMEOUT=15 python qa/pull-tester/rpc-tests.py $(EXTENDED_RPC_TESTS)
 	$(LCOV) -c -d $(abs_builddir)/src --t rpc-tests -o $@
@@ -190,8 +201,8 @@ rpc_test_filtered.info: rpc_test.info
 test_syscoin_coverage.info: baseline_filtered_combined.info test_syscoin_filtered.info
 	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_syscoin_filtered.info -o $@
 
-total_coverage.info: baseline_filtered_combined.info test_syscoin_filtered.info rpc_test_filtered.info
-	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_syscoin_filtered.info -a rpc_test_filtered.info -o $@ | $(GREP) "\%" | $(AWK) '{ print substr($$3,2,50) "/" $$5 }' > coverage_percent.txt
+total_coverage.info: baseline_filtered_combined.info test_syscoin_filtered.info block_test_filtered.info rpc_test_filtered.info
+	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_syscoin_filtered.info -a block_test_filtered.info -a rpc_test_filtered.info -o $@ | $(GREP) "\%" | $(AWK) '{ print substr($$3,2,50) "/" $$5 }' > coverage_percent.txt
 
 test_syscoin.coverage/.dirstamp:  test_syscoin_coverage.info
 	$(GENHTML) -s $< -o $(@D)
@@ -205,6 +216,12 @@ cov: test_syscoin.coverage/.dirstamp total.coverage/.dirstamp
 
 endif
 
+if USE_COMPARISON_TOOL
+check-local:
+	$(MKDIR_P) qa/tmp
+	@qa/pull-tester/run-syscoind-for-test.sh $(JAVA) -jar $(JAVA_COMPARISON_TOOL) qa/tmp/compTool $(COMPARISON_TOOL_REORG_TESTS) 2>&1
+endif
+
 dist_noinst_SCRIPTS = autogen.sh
 
 EXTRA_DIST = $(top_srcdir)/share/genbuild.sh qa/pull-tester/rpc-tests.py qa/rpc-tests $(DIST_DOCS) $(WINDOWS_PACKAGING) $(OSX_PACKAGING) $(BIN_CHECKS)
@@ -215,8 +232,6 @@ CLEANFILES = $(OSX_DMG) $(SYSCOIN_WIN_INSTALLER)
 DISTCLEANFILES = qa/pull-tester/tests_config.pyc
 
 .INTERMEDIATE: $(COVERAGE_INFO)
-
-DISTCHECK_CONFIGURE_FLAGS = --enable-man
 
 clean-local:
 	rm -rf coverage_percent.txt test_syscoin.coverage/ total.coverage/ qa/tmp/ cache/ $(OSX_APP)

@@ -10,7 +10,7 @@
 #ifndef SYSCOIN_PROTOCOL_H
 #define SYSCOIN_PROTOCOL_H
 
-#include "netaddress.h"
+#include "netbase.h"
 #include "serialize.h"
 #include "uint256.h"
 #include "version.h"
@@ -267,9 +267,6 @@ enum ServiceFlags : uint64_t {
     // Indicates that a node can be asked for blocks and transactions including
     // witness data.
     NODE_WITNESS = (1 << 3),
-    // NODE_XTHIN means the node supports Xtreme Thinblocks
-    // If this is turned off then the node will not service nor make xthin requests
-    NODE_XTHIN = (1 << 4),
 
     // Bits 24-31 are reserved for temporary experiments. Just pick a bit that
     // isn't getting used, or one not being used much, and notify the

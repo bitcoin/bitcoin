@@ -12,7 +12,7 @@ def read_dump(file_name, addrs, hd_master_addr_old):
     Read the given dump, count the addrs that match, count change and reserve.
     Also check that the old hd_master is inactive
     """
-    with open(file_name) as inputfile:
+    with open(file_name, encoding='utf8') as inputfile:
         found_addr = 0
         found_addr_chg = 0
         found_addr_rsv = 0
@@ -61,7 +61,11 @@ class WalletDumpTest(SyscoinTestFramework):
         self.extra_args = [["-keypool=90"]]
 
     def setup_network(self, split=False):
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
+        # Use 1 minute timeout because the initial getnewaddress RPC can take
+        # longer than the default 30 seconds due to an expensive
+        # CWallet::TopUpKeyPool call, and the encryptwallet RPC made later in
+        # the test often takes even longer.
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args, timewait=60)
 
     def run_test (self):
         tmpdir = self.options.tmpdir

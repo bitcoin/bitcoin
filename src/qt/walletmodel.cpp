@@ -41,7 +41,7 @@ extern bool DecodeAndParseOfferTx(const CTransaction& tx, int& op, int& nOut, ve
 extern bool DecodeAndParseCertTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern bool DecodeAndParseMessageTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern bool DecodeAndParseEscrowTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
-extern std::string EncodeHexTx(const CTransaction& tx);
+extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 extern bool DecodeHexTx(CTransaction& tx, const std::string& strHexTx, bool fTryNoWitness = false);
 WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent), wallet(_wallet), optionsModel(_optionsModel), addressTableModel(0),
@@ -139,10 +139,9 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
         std::vector<COutput> vCoins;
         wallet->AvailableCoins(vCoins, true, coinControl);
         BOOST_FOREACH(const COutput& out, vCoins)
-		{
 			if(out.fSpendable)
 				nBalance += out.tx->vout[out.i].nValue;
-		}
+
         return nBalance;
     }
     return wallet->GetBalance();
@@ -483,7 +482,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
         }
 
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
-        if(!wallet->CommitTransaction(*newTx, *keyChange, g_connman.get()))
+        if(!wallet->CommitTransaction(*newTx, *keyChange))
             return TransactionCommitFailed;
 
         CTransaction* t = (CTransaction*)newTx;
@@ -910,14 +909,4 @@ bool WalletModel::abandonTransaction(uint256 hash) const
 {
     LOCK2(cs_main, wallet->cs_wallet);
     return wallet->AbandonTransaction(hash);
-}
-
-bool WalletModel::isWalletEnabled()
-{
-   return !GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET);
-}
-
-bool WalletModel::hdEnabled() const
-{
-    return wallet->IsHDEnabled();
 }

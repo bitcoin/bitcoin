@@ -47,10 +47,11 @@ namespace GUIUtil
     // Parse "syscoin:" URI into recipient object, return true on successful parsing
     bool parseSyscoinURI(const QUrl &uri, SendCoinsRecipient *out);
     bool parseSyscoinURI(QString uri, SendCoinsRecipient *out);
-    QString formatSyscoinURI(const SendCoinsRecipient &info);
 	// SYSCOIN
 	QString formatBitcoinURI(const SendCoinsRecipient &info);
 	QString formatZCashURI(const SendCoinsRecipient &info);
+    QString formatSyscoinURI(const SendCoinsRecipient &info);
+
     // Returns true if given address+amount meets "dust" definition
     bool isDust(const QString& address, const CAmount& amount);
 
@@ -60,8 +61,6 @@ namespace GUIUtil
 	// SYSCOIN
     /** Load global CSS theme */
     QString loadStyleSheet();
-
-    /** Return name of current CSS theme */
     QString getThemeName();
     /** Copy a field of the currently selected entry of a view to the clipboard. Does nothing if nothing
         is selected.
@@ -77,7 +76,7 @@ namespace GUIUtil
        @param[in] role    Data role to extract from the model
        @see  TransactionView::copyLabel, TransactionView::copyAmount, TransactionView::copyAddress
      */
-    QVariant getEntryData(QAbstractItemView *view, int column, int role);
+    QString getEntryData(QAbstractItemView *view, int column, int role);
 
     void setClipboard(const QString& str);
 
@@ -206,8 +205,6 @@ namespace GUIUtil
 
     /* Format a CNodeCombinedStats.nTimeOffset into a user-readable string. */
     QString formatTimeOffset(int64_t nTimeOffset);
-
-    QString formateNiceTimeOffset(qint64 secs);
 
 #if defined(Q_OS_MAC) && QT_VERSION >= 0x050000
     // workaround for Qt OSX Bug:

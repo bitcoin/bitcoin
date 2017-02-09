@@ -55,7 +55,6 @@ SYSCOIN_TESTS =\
   test/bip32_tests.cpp \
   test/blockencodings_tests.cpp \
   test/bloom_tests.cpp \
-  test/Checkpoints_tests.cpp \
   test/coins_tests.cpp \
   test/compress_tests.cpp \
   test/crypto_tests.cpp \
@@ -94,6 +93,8 @@ SYSCOIN_TESTS =\
   test/timedata_tests.cpp \
   test/transaction_tests.cpp \
   test/txvalidationcache_tests.cpp \
+  test/versionbits_tests.cpp \
+  test/auxpow_tests.cpp \
   test/uint256_tests.cpp \
   test/univalue_tests.cpp \
   test/util_tests.cpp
@@ -104,7 +105,8 @@ SYSCOIN_TESTS += \
   wallet/test/wallet_test_fixture.h \
   wallet/test/accounting_tests.cpp \
   wallet/test/wallet_tests.cpp \
-  wallet/test/crypto_tests.cpp
+  wallet/test/crypto_tests.cpp \
+  wallet/test/rpc_wallet_tests.cpp
 endif
 
 test_test_syscoin_SOURCES = $(SYSCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)

@@ -228,9 +228,6 @@ public:
     bool transactionCanBeAbandoned(uint256 hash) const;
     bool abandonTransaction(uint256 hash) const;
 
-    static bool isWalletEnabled();
-
-    bool hdEnabled() const;
 private:
     CWallet *wallet;
     bool fHaveWatchOnly;

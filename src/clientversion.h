@@ -16,7 +16,7 @@
 //! These need to be macros, as clientversion.cpp's and syscoin*-res.rc's voodoo requires it
 #define CLIENT_VERSION_MAJOR 0
 #define CLIENT_VERSION_MINOR 13
-#define CLIENT_VERSION_REVISION 00
+#define CLIENT_VERSION_REVISION 2
 #define CLIENT_VERSION_BUILD 0
 
 //! Set to true for release, false for prerelease or test build
@@ -26,7 +26,7 @@
  * Copyright year (2009-this)
  * Todo: update this when changing our copyright comments in the source
  */
-#define COPYRIGHT_YEAR 2017
+#define COPYRIGHT_YEAR 2016
 
 #endif //HAVE_CONFIG_H
 
@@ -51,7 +51,7 @@
 #include <string>
 #include <vector>
 // SYSCOIN
-static const std::string SYSCOIN_CLIENT_VERSION = "2.1.1";
+static const std::string SYSCOIN_CLIENT_VERSION = "2.1.2";
 static const int CLIENT_VERSION =
                            1000000 * CLIENT_VERSION_MAJOR
                          +   10000 * CLIENT_VERSION_MINOR

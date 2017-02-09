@@ -33,17 +33,17 @@
 const int FREEDESKTOP_NOTIFICATION_ICON_SIZE = 128;
 #endif
 
-Notificator::Notificator(const QString &_programName, QSystemTrayIcon *_trayIcon, QWidget *_parent) :
-    QObject(_parent),
-    parent(_parent),
-    programName(_programName),
+Notificator::Notificator(const QString &programName, QSystemTrayIcon *trayicon, QWidget *parent) :
+    QObject(parent),
+    parent(parent),
+    programName(programName),
     mode(None),
-    trayIcon(_trayIcon)
+    trayIcon(trayicon)
 #ifdef USE_DBUS
     ,interface(0)
 #endif
 {
-    if(_trayIcon && _trayIcon->supportsMessages())
+    if(trayicon && trayicon->supportsMessages())
     {
         mode = QSystemTray;
     }

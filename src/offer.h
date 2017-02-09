@@ -23,7 +23,7 @@ bool IsOfferOp(int op);
 int IndexOfOfferOutput(const CTransaction& tx);
 std::string offerFromOp(int op);
 void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
-CScript RemoveOfferScriptPrefix(const CScript& scriptIn);
+bool RemoveOfferScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
 #define PAYMENTOPTION_SYS 0x01
 #define PAYMENTOPTION_BTC 0x02
 #define PAYMENTOPTION_ZEC 0x04

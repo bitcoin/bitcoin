@@ -26,8 +26,6 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
 
-std::unique_ptr<CConnman> g_connman;
-
 extern bool fPrintToConsole;
 extern void noui_connect();
 
@@ -45,7 +43,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
 BasicTestingSetup::~BasicTestingSetup()
 {
         ECC_Stop();
-        g_connman.reset();
 }
 
 TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)
@@ -53,7 +50,6 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     const CChainParams& chainparams = Params();
         // Ideally we'd move all the RPC tests to the functional testing framework
         // instead of unit tests, but for now we need these here.
-
         RegisterAllCoreRPCCommands(tableRPC);
         ClearDatadirCache();
         pathTemp = GetTempPath() / strprintf("test_syscoin_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
@@ -72,8 +68,6 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         nScriptCheckThreads = 3;
         for (int i=0; i < nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
-        g_connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337)); // Deterministic randomness for tests.
-        connman = g_connman.get();
         RegisterNodeSignals(GetNodeSignals());
 }
 
@@ -124,7 +118,7 @@ TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>&
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
 
     CValidationState state;
-    ProcessNewBlock(state, chainparams, NULL, &block, true, NULL, connman);
+    ProcessNewBlock(state, chainparams, NULL, &block, true, NULL, false);
 
     CBlock result = block;
     delete pblocktemplate;
