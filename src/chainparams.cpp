@@ -115,7 +115,7 @@ public:
         pchMessageStart[1] = 0xeb;
         pchMessageStart[2] = 0xb3;
         pchMessageStart[3] = 0xdf;
-        vAlertPubKey = ParseHex("04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284");
+        vAlertPubKey = ParseHex("04977aae0411f4e1757e8682c87ee79180ad577ef0351054e6cda5c9381fcd8c7333e88ac250d3ab3e3aafd5d1c1d946f2ca62372db7f35c84398a878aa145f09a");
         nDefaultPort = 9340;
         bnProofOfWorkLimit = ~arith_uint256(0) >> 32;  // Crown starting difficulty is 1 / 2^12
         nSubsidyHalvingInterval = 2100000;
@@ -179,8 +179,8 @@ public:
         fTestnetToBeDeprecatedFieldRPC = false;
 
         nPoolMaxTransactions = 3;
-        strSporkKey = "04549ac134f694c0243f503e8c8a9a986f5de6610049c40b07816809b0d1d06a21b07be27b9bb555931773f62ba6cf35a25fd52f694d4e1106ccd237a7bb899fdd";
-        strThronePaymentsPubKey = "04549ac134f694c0243f503e8c8a9a986f5de6610049c40b07816809b0d1d06a21b07be27b9bb555931773f62ba6cf35a25fd52f694d4e1106ccd237a7bb899fdd";
+        strSporkKey = "04977aae0411f4e1757e8682c87ee79180ad577ef0351054e6cda5c9381fcd8c7333e88ac250d3ab3e3aafd5d1c1d946f2ca62372db7f35c84398a878aa145f09a"
+        strThronePaymentsPubKey = "04977aae0411f4e1757e8682c87ee79180ad577ef0351054e6cda5c9381fcd8c7333e88ac250d3ab3e3aafd5d1c1d946f2ca62372db7f35c84398a878aa145f09a";
         strDarksendPoolDummyAddress = "18WTcWvwrNnfqeQAn6th9QQ2EpnXMq5Th8";
         nStartThronePayments = 1403728576; //Wed, 25 Jun 2014 20:36:16 GMT
     }
