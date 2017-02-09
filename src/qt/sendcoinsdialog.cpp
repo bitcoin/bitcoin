@@ -268,16 +268,15 @@ void SendCoinsDialog::on_sendButton_clicked()
         {
             QString reuseWarningText = tr(
                         "You have sent to the Bitcoin address %1 already!\n\n"
-                        "Sending to the same address twice is technically not supported and "
-                        "will reduce your own security as well as the privacy of all Bitcoin users."
+                        "Address reuse is highly discouraged and will reduce "
+                        "your own security as well as the privacy of all Bitcoin users."
+                        "\n\nAre you sure you want to do this?"
                     ).arg(rcp.address) + "\n";
 
-            QMessageBox reuseMessage("Warning: address reuse!",
+            QMessageBox reuseMessage(QMessageBox::Warning,
+                                     "Warning: address reuse!",
                                      reuseWarningText,
-                                     QMessageBox::Warning,
-                                     QMessageBox::Yes | QMessageBox::Escape,
-                                     QMessageBox::Cancel | QMessageBox::Default,
-                                     QMessageBox::NoButton,
+                                     QMessageBox::Cancel | QMessageBox::Yes,
                                      this);
 
             if (reuseMessage.exec() != QMessageBox::Yes)

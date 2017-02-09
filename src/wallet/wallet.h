@@ -74,6 +74,11 @@ static const bool DEFAULT_USE_HD_WALLET = true;
 
 extern const char * DEFAULT_WALLET_DAT;
 
+/**
+ * destdata keys
+ */
+static const char * const DESTDATA_USED = "used";
+
 class CBlockIndex;
 class CCoinControl;
 class COutput;
