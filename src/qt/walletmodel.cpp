@@ -355,8 +355,6 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
 
                 std::map<CTxDestination, CAddressBookData>::iterator mi = wallet->mapAddressBook.find(dest);
 
-                wallet->AddDestData(mi->first, DESTDATA_USED, "1");
-
                 // Check if we have a new address or an updated label
                 if (mi == wallet->mapAddressBook.end())
                 {
@@ -366,6 +364,8 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
                 {
                     wallet->SetAddressBook(dest, strLabel, ""); // "" means don't change purpose
                 }
+
+                wallet->AddDestData(dest, DESTDATA_USED, "1");
             }
         }
         Q_EMIT coinsSent(wallet, rcp, transaction_array);
