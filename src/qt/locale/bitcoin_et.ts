@@ -214,6 +214,10 @@
 </context>
 <context>
     <name>BanTableModel</name>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>IP/Võrgumask</translation>
+    </message>
     </context>
 <context>
     <name>BitcoinGUI</name>
@@ -788,6 +792,10 @@
         <translation>&amp;Aken</translation>
     </message>
     <message>
+        <source>Hide tray icon</source>
+        <translation>Peida tegumiriba ikoon</translation>
+    </message>
+    <message>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Minimeeri systray alale.</translation>
     </message>
@@ -904,8 +912,28 @@
         <translation>N/A</translation>
     </message>
     <message>
+        <source>%1 ms</source>
+        <translation>%1 ms</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n tund</numerusform><numerusform>%n tundi</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n päev</numerusform><numerusform>%n päeva</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n nädal</numerusform><numerusform>%n nädalat</numerusform></translation>
+    </message>
+    <message>
         <source>%1 and %2</source>
         <translation>%1 ja %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n aasta</numerusform><numerusform>%n aastat</numerusform></translation>
     </message>
     </context>
 <context>
