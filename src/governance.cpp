@@ -374,7 +374,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
         break;
     }
 
-    LogPrintf("AddGovernanceObject -- %s new, received form %s\n", strHash, pfrom? pfrom->addrName : "NULL");
+    LogPrintf("AddGovernanceObject -- %s new, received form %s\n", strHash, pfrom? pfrom->GetAddrName() : "NULL");
     govobj.Relay(connman);
 
     // Update the rate buffer
