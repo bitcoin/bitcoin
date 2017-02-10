@@ -117,7 +117,7 @@ bool CThinBlock::process(CNode* pfrom, int nSizeThinBlock, string strCommand)
             thindata.UpdateInBound(nSizeThinBlock, blockSize);
             LogPrint("thin", "thin block stats: %s\n", thindata.ToString());
 
-            HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, GetInv());
+            PV.HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, GetInv());
             LOCK(cs_orphancache);
             BOOST_FOREACH(uint256 &hash, vTxHashes)
                 EraseOrphanTx(hash);
