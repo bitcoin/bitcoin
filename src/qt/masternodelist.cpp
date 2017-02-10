@@ -15,8 +15,6 @@
 #include <QTimer>
 #include <QMessageBox>
 
-CCriticalSection cs_masternodes;
-
 MasternodeList::MasternodeList(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::MasternodeList),
@@ -132,10 +130,14 @@ void MasternodeList::StartAll(std::string strCommand)
         std::string strError;
         CMasternodeBroadcast mnb;
 
-        CTxIn txin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
-        CMasternode *pmn = mnodeman.Find(txin);
+        int32_t nOutputIndex = 0;
+        if(!ParseInt32(mne.getOutputIndex(), &nOutputIndex)) {
+            continue;
+        }
 
-        if(strCommand == "start-missing" && pmn) continue;
+        CTxIn txin = CTxIn(uint256S(mne.getTxHash()), nOutputIndex);
+
+        if(strCommand == "start-missing" && mnodeman.Has(txin)) continue;
 
         bool fSuccess = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
@@ -164,9 +166,8 @@ void MasternodeList::StartAll(std::string strCommand)
     updateMyNodeList(true);
 }
 
-void MasternodeList::updateMyMasternodeInfo(QString strAlias, QString strAddr, CMasternode *pmn)
+void MasternodeList::updateMyMasternodeInfo(QString strAlias, QString strAddr, masternode_info_t& infoMn)
 {
-    LOCK(cs_mnlistupdate);
     bool fOldRowFound = false;
     int nNewRow = 0;
 
@@ -184,12 +185,13 @@ void MasternodeList::updateMyMasternodeInfo(QString strAlias, QString strAddr, C
     }
 
     QTableWidgetItem *aliasItem = new QTableWidgetItem(strAlias);
-    QTableWidgetItem *addrItem = new QTableWidgetItem(pmn ? QString::fromStdString(pmn->addr.ToString()) : strAddr);
-    QTableWidgetItem *protocolItem = new QTableWidgetItem(QString::number(pmn ? pmn->nProtocolVersion : -1));
-    QTableWidgetItem *statusItem = new QTableWidgetItem(QString::fromStdString(pmn ? pmn->GetStatus() : "MISSING"));
-    QTableWidgetItem *activeSecondsItem = new QTableWidgetItem(QString::fromStdString(DurationToDHMS(pmn ? (pmn->lastPing.sigTime - pmn->sigTime) : 0)));
-    QTableWidgetItem *lastSeenItem = new QTableWidgetItem(QString::fromStdString(DateTimeStrFormat("%Y-%m-%d %H:%M", pmn ? pmn->lastPing.sigTime + QDateTime::currentDateTime().offsetFromUtc() : 0)));
-    QTableWidgetItem *pubkeyItem = new QTableWidgetItem(QString::fromStdString(pmn ? CBitcoinAddress(pmn->pubKeyCollateralAddress.GetID()).ToString() : ""));
+    QTableWidgetItem *addrItem = new QTableWidgetItem(infoMn.fInfoValid ? QString::fromStdString(infoMn.addr.ToString()) : strAddr);
+    QTableWidgetItem *protocolItem = new QTableWidgetItem(QString::number(infoMn.fInfoValid ? infoMn.nProtocolVersion : -1));
+    QTableWidgetItem *statusItem = new QTableWidgetItem(QString::fromStdString(infoMn.fInfoValid ? CMasternode::StateToString(infoMn.nActiveState) : "MISSING"));
+    QTableWidgetItem *activeSecondsItem = new QTableWidgetItem(QString::fromStdString(DurationToDHMS(infoMn.fInfoValid ? (infoMn.nTimeLastPing - infoMn.sigTime) : 0)));
+    QTableWidgetItem *lastSeenItem = new QTableWidgetItem(QString::fromStdString(DateTimeStrFormat("%Y-%m-%d %H:%M",
+                                                                                                   infoMn.fInfoValid ? infoMn.nTimeLastPing + QDateTime::currentDateTime().offsetFromUtc() : 0)));
+    QTableWidgetItem *pubkeyItem = new QTableWidgetItem(QString::fromStdString(infoMn.fInfoValid ? CBitcoinAddress(infoMn.pubKeyCollateralAddress.GetID()).ToString() : ""));
 
     ui->tableWidgetMyMasternodes->setItem(nNewRow, 0, aliasItem);
     ui->tableWidgetMyMasternodes->setItem(nNewRow, 1, addrItem);
@@ -202,6 +204,10 @@ void MasternodeList::updateMyMasternodeInfo(QString strAlias, QString strAddr, C
 
 void MasternodeList::updateMyNodeList(bool fForce)
 {
+    TRY_LOCK(cs_mymnlist, fLockAcquired);
+    if(!fLockAcquired) {
+        return;
+    }
     static int64_t nTimeMyListUpdated = 0;
 
     // automatically update my masternode list only once in MY_MASTERNODELIST_UPDATE_SECONDS seconds,
@@ -214,10 +220,16 @@ void MasternodeList::updateMyNodeList(bool fForce)
 
     ui->tableWidgetMasternodes->setSortingEnabled(false);
     BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
-        CTxIn txin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
-        CMasternode *pmn = mnodeman.Find(txin);
+        int32_t nOutputIndex = 0;
+        if(!ParseInt32(mne.getOutputIndex(), &nOutputIndex)) {
+            continue;
+        }
 
-        updateMyMasternodeInfo(QString::fromStdString(mne.getAlias()), QString::fromStdString(mne.getIp()), pmn);
+        CTxIn txin = CTxIn(uint256S(mne.getTxHash()), nOutputIndex);
+
+        masternode_info_t infoMn = mnodeman.GetMasternodeInfo(txin);
+
+        updateMyMasternodeInfo(QString::fromStdString(mne.getAlias()), QString::fromStdString(mne.getIp()), infoMn);
     }
     ui->tableWidgetMasternodes->setSortingEnabled(true);
 
@@ -227,6 +239,11 @@ void MasternodeList::updateMyNodeList(bool fForce)
 
 void MasternodeList::updateNodeList()
 {
+    TRY_LOCK(cs_mnlist, fLockAcquired);
+    if(!fLockAcquired) {
+        return;
+    }
+
     static int64_t nTimeListUpdated = GetTime();
 
     // to prevent high cpu usage update only once in MASTERNODELIST_UPDATE_SECONDS seconds
@@ -240,9 +257,6 @@ void MasternodeList::updateNodeList()
 
     nTimeListUpdated = GetTime();
     fFilterUpdated = false;
-
-    TRY_LOCK(cs_masternodes, lockMasternodes);
-    if(!lockMasternodes) return;
 
     QString strToFilter;
     ui->countLabel->setText("Updating...");
@@ -296,15 +310,19 @@ void MasternodeList::on_filterLineEdit_textChanged(const QString &strFilterIn)
 
 void MasternodeList::on_startButton_clicked()
 {
-    // Find selected node alias
-    QItemSelectionModel* selectionModel = ui->tableWidgetMyMasternodes->selectionModel();
-    QModelIndexList selected = selectionModel->selectedRows();
+    std::string strAlias;
+    {
+        LOCK(cs_mymnlist);
+        // Find selected node alias
+        QItemSelectionModel* selectionModel = ui->tableWidgetMyMasternodes->selectionModel();
+        QModelIndexList selected = selectionModel->selectedRows();
 
-    if(selected.count() == 0) return;
+        if(selected.count() == 0) return;
 
-    QModelIndex index = selected.at(0);
-    int nSelectedRow = index.row();
-    std::string strAlias = ui->tableWidgetMyMasternodes->item(nSelectedRow, 0)->text().toStdString();
+        QModelIndex index = selected.at(0);
+        int nSelectedRow = index.row();
+        strAlias = ui->tableWidgetMyMasternodes->item(nSelectedRow, 0)->text().toStdString();
+    }
 
     // Display message box
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm masternode start"),

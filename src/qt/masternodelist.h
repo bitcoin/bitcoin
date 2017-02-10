@@ -45,7 +45,7 @@ private:
     bool fFilterUpdated;
 
 public Q_SLOTS:
-    void updateMyMasternodeInfo(QString strAlias, QString strAddr, CMasternode *pmn);
+    void updateMyMasternodeInfo(QString strAlias, QString strAddr, masternode_info_t& infoMn);
     void updateMyNodeList(bool fForce = false);
     void updateNodeList();
 
@@ -56,7 +56,13 @@ private:
     Ui::MasternodeList *ui;
     ClientModel *clientModel;
     WalletModel *walletModel;
-    CCriticalSection cs_mnlistupdate;
+
+    // Protects tableWidgetMasternodes
+    CCriticalSection cs_mnlist;
+
+    // Protects tableWidgetMyMasternodes
+    CCriticalSection cs_mymnlist;
+
     QString strCurrentFilter;
 
 private Q_SLOTS:

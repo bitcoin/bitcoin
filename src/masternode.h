@@ -112,6 +112,7 @@ struct masternode_info_t
           nTimeLastChecked(0),
           nTimeLastPaid(0),
           nTimeLastWatchdogVote(0),
+          nTimeLastPing(0),
           nActiveState(0),
           nProtocolVersion(0),
           fInfoValid(false)
@@ -126,6 +127,7 @@ struct masternode_info_t
     int64_t nTimeLastChecked;
     int64_t nTimeLastPaid;
     int64_t nTimeLastWatchdogVote;
+    int64_t nTimeLastPing;
     int nActiveState;
     int nProtocolVersion;
     bool fInfoValid;
