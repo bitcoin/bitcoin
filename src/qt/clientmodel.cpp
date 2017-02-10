@@ -142,11 +142,6 @@ void ClientModel::updateTimer1()
 
 void ClientModel::updateTimer2()
 {
-    // Use sweep in instead of dump so that we're not writing to disk every
-    // time the timer is triggered.  If/When the client shuts down the banned
-    // list will get updated.
-    CNode::SweepBanned();
-
     uiInterface.BannedListChanged();
 }
 
