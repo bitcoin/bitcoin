@@ -25,7 +25,9 @@ using namespace std;
 
 extern CCriticalSection cs_blockvalidationthread;
 
+// adds all the script check queues into the "allScriptCheckQueues" global variable and creates nScriptCheckThreads per check queue
 void AddAllScriptCheckQueuesAndThreads(int nScriptCheckThreads, boost::thread_group* threadGroup);
+// Entry point for the script check queue threads.
 void AddScriptCheckThreads(int i, CCheckQueue<CScriptCheck>* pqueue);
 
 extern CCriticalSection cs_semPV;
