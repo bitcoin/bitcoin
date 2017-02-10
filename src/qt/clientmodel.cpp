@@ -95,6 +95,12 @@ long ClientModel::getMempoolSize() const
     return mempool.size();
 }
 
+long ClientModel::getOrphanPoolSize() const
+{
+    LOCK(cs_orphancache);
+    return mapOrphanTransactions.size();
+}
+
 size_t ClientModel::getMempoolDynamicUsage() const
 {
     return mempool.DynamicMemoryUsage();
@@ -123,6 +129,7 @@ void ClientModel::updateTimer()
     // no locking required at this point
     // the following calls will aquire the required lock
     Q_EMIT mempoolSizeChanged(getMempoolSize(), getMempoolDynamicUsage());
+    Q_EMIT orphanPoolSizeChanged(getOrphanPoolSize());
     Q_EMIT bytesChanged(getTotalBytesRecv(), getTotalBytesSent());
     Q_EMIT transactionsPerSecondChanged(getTransactionsPerSecond()); // BU:
 }
