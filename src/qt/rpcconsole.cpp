@@ -299,6 +299,8 @@ static QString categoryClass(int category)
 void RPCConsole::clear()
 {
     ui->messagesWidget->clear();
+	history.clear();
+	historyPtr = 0;
     ui->lineEdit->clear();
     ui->lineEdit->setFocus();
 
