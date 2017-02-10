@@ -31,11 +31,13 @@ UniValue privatesend(const UniValue& params, bool fHelp)
             "  start       - Start mixing\n"
             "  stop        - Stop mixing\n"
             "  reset       - Reset mixing\n"
-            + HelpRequiringPassphrase());
+            );
 
     if(params[0].get_str() == "start") {
-        if (pwalletMain->IsLocked(true))
-            throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
+        {
+            LOCK(pwalletMain->cs_wallet);
+            EnsureWalletIsUnlocked();
+        }
 
         if(fMasterNode)
             return "Mixing is not supported from masternodes";
@@ -103,11 +105,10 @@ UniValue masternode(const UniValue& params, bool fHelp)
          strCommand != "debug" && strCommand != "current" && strCommand != "winner" && strCommand != "winners" && strCommand != "genkey" &&
          strCommand != "connect" && strCommand != "outputs" && strCommand != "status"))
             throw std::runtime_error(
-                "masternode \"command\"... ( \"passphrase\" )\n"
+                "masternode \"command\"...\n"
                 "Set of commands to execute masternode related actions\n"
                 "\nArguments:\n"
                 "1. \"command\"        (string or set of strings, required) The command to execute\n"
-                "2. \"passphrase\"     (string, optional) The wallet passphrase\n"
                 "\nAvailable commands:\n"
                 "  count        - Print number of all known masternodes (optional: 'ps', 'enabled', 'all', 'qualify')\n"
                 "  current      - Print info on current masternode winner to be paid the next block (calculated locally)\n"
@@ -572,17 +573,16 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
     if (fHelp  ||
         (strCommand != "create-alias" && strCommand != "create-all" && strCommand != "decode" && strCommand != "relay"))
         throw std::runtime_error(
-                "masternodebroadcast \"command\"... ( \"passphrase\" )\n"
+                "masternodebroadcast \"command\"...\n"
                 "Set of commands to create and relay masternode broadcast messages\n"
                 "\nArguments:\n"
                 "1. \"command\"        (string or set of strings, required) The command to execute\n"
-                "2. \"passphrase\"     (string, optional) The wallet passphrase\n"
                 "\nAvailable commands:\n"
                 "  create-alias  - Create single remote masternode broadcast message by assigned alias configured in masternode.conf\n"
                 "  create-all    - Create remote masternode broadcast messages for all masternodes configured in masternode.conf\n"
                 "  decode        - Decode masternode broadcast message\n"
                 "  relay         - Relay masternode broadcast message to the network\n"
-                + HelpRequiringPassphrase());
+                );
 
     if (strCommand == "create-alias")
     {
