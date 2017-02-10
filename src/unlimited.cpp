@@ -62,6 +62,24 @@ std::string ExcessiveBlockValidator(const unsigned int& value,unsigned int* item
   return std::string();
 }
 
+std::string MiningBlockSizeValidator(const uint64_t& value,uint64_t* item,bool validate)
+{
+  if (validate)
+    {
+      if (value > excessiveBlockSize) 
+	{
+        std::ostringstream ret;
+        ret << "Sorry, your excessive block size (" << excessiveBlockSize << ") is smaller than your proposed mined block size (" << value << ").  This would cause you to orphan your own blocks.";    
+        return ret.str();
+	}
+    }
+  else  // Do anything to "take" the new value
+    {
+      // nothing needed
+    }
+  return std::string();
+}
+
 std::string OutboundConnectionValidator(const int& value,int* item,bool validate)
 {
   if (validate)
@@ -394,6 +412,7 @@ std::string UnlimitedCmdLineHelp()
     strUsage += HelpMessageOpt("-maxexpeditedtxrecipients=<n>", _("The maximum number of nodes this node will forward expedited transactions to"));
     strUsage += HelpMessageOpt("-maxoutconnections=<n>", strprintf(_("Initiate at most <n> connections to peers (default: %u).  If this number is higher than --maxconnections, it will be reduced to --maxconnections."), DEFAULT_MAX_OUTBOUND_CONNECTIONS));
     strUsage += HelpMessageOpt("-parallel=<n>",  strprintf(_("Turn Parallel Block Validation on or off (off: 0, on: 1, default: %d)"), 1));
+    strUsage += TweakCmdLineHelp();
     return strUsage;
 }
 
@@ -415,9 +434,17 @@ std::string FormatCoinbaseMessage(const std::vector<std::string>& comments,const
 CNode* FindLikelyNode(const std::string& addrName)
 {
     LOCK(cs_vNodes);
+    bool wildcard = (addrName.find_first_of("*?") != std::string::npos);
+    
     BOOST_FOREACH (CNode* pnode, vNodes)
-      if (pnode->addrName.find(addrName) != std::string::npos)
+      {
+        if (wildcard) 
+          {
+            if (match(addrName.c_str(),pnode->addrName.c_str())) return (pnode);
+          }
+        else if (pnode->addrName.find(addrName) != std::string::npos)
             return (pnode);
+      }
     return NULL;
 }
 
@@ -499,16 +526,9 @@ UniValue pushtx(const UniValue& params, bool fHelp)
     CNode* node = NULL;
     {
         LOCK(cs_vNodes);
-        node = FindNode(strNode);
+        node = FindLikelyNode(strNode);
 
         if (!node) {
-#if 0
-        if (strCommand == "onetry") {
-            CAddress addr;
-            OpenNetworkConnection(addr, NULL, strNode.c_str());
-            return NullUniValue;
-        }
-#endif
             throw runtime_error("Unknown node");
         }
 

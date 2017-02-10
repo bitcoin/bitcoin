@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2015-2016 The Bitcoin Unlimited developers
+// Copyright (c) 2015-2017 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -213,7 +213,8 @@ QString ClientModel::clientName() const
 
 QString ClientModel::formatClientStartupTime() const
 {
-    return QDateTime::fromTime_t(nClientStartupTime).toString();
+    QString time_format = "MMM  d yyyy, HH:mm:ss";
+    return QDateTime::fromTime_t(nClientStartupTime).toString(time_format);
 }
 
 void ClientModel::updateBanlist()

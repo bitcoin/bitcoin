@@ -1,4 +1,4 @@
-// Copyright (c) 2016 The Bitcoin Unlimited developers
+// Copyright (c) 2016-2017 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -36,6 +36,10 @@ public:
         READWRITE(vTxHashes);
         READWRITE(vMissingTx);
     }
+
+    CInv GetInv() { return CInv(MSG_BLOCK, header.GetHash()); }
+    bool process(CNode* pfrom, int nSizeThinBlock, std::string strCommand);
+
 };
 
 class CXThinBlock

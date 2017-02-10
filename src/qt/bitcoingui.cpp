@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2015-2016 The Bitcoin Unlimited developers
+// Copyright (c) 2015-2017 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -545,6 +545,9 @@ void BitcoinGUI::createTrayIcon(const NetworkStyle *networkStyle)
     QString toolTip = tr("Bitcoin Unlimited client") + " " + networkStyle->getTitleAddText();
     trayIcon->setToolTip(toolTip);
     trayIcon->setIcon(networkStyle->getTrayAndWindowIcon());
+
+    trayIconMenu = new QMenu(this);
+    trayIcon->setContextMenu(trayIconMenu);
     trayIcon->show();
 #endif
 
@@ -554,12 +557,9 @@ void BitcoinGUI::createTrayIcon(const NetworkStyle *networkStyle)
 void BitcoinGUI::createTrayIconMenu()
 {
 #ifndef Q_OS_MAC
-    // return if trayIcon is unset (only on non-Mac OSes)
-    if (!trayIcon)
+    // return if trayIcon or trayIconMenu is unset (only on non-Mac OSes)
+    if (!trayIcon || !trayIconMenu)
         return;
-
-    trayIconMenu = new QMenu(this);
-    trayIcon->setContextMenu(trayIconMenu);
 
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
             this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));

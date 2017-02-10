@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2015-2016 The Bitcoin Unlimited developers
+// Copyright (c) 2015-2017 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -529,7 +529,9 @@ void RPCConsole::setNumConnections(int count)
 void RPCConsole::setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress)
 {
     ui->numberOfBlocks->setText(QString::number(count));
-    ui->lastBlockTime->setText(blockDate.toString());
+
+    QString time_format = "MMM  d yyyy, HH:mm:ss";
+    ui->lastBlockTime->setText(blockDate.toString(time_format));
 }
 
 void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)

@@ -1,4 +1,4 @@
-// Copyright (c) 2016 The Bitcoin Unlimited developers
+// Copyright (c) 2016-2017 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -412,7 +412,7 @@ void CRequestManager::SendRequests()
   // those blocks and txns can take much longer to download.
   unsigned int blkReqRetryInterval = MIN_BLK_REQUEST_RETRY_INTERVAL;
   unsigned int txReqRetryInterval = MIN_TX_REQUEST_RETRY_INTERVAL;
- if ((!IsChainNearlySyncd() && Params().NetworkIDString() != "regtest") || IsTrafficShapingEnabled()) 
+  if ((!IsChainNearlySyncd() && Params().NetworkIDString() != "regtest") || IsTrafficShapingEnabled()) 
     {
       blkReqRetryInterval *= 6;
       txReqRetryInterval *= (12*2);  // we want to optimise block DL during IBD (and give lots of time for shaped nodes) so push the TX retry up to 2 minutes (default val of MIN_TX is 5 sec)
@@ -490,8 +490,9 @@ void CRequestManager::SendRequests()
 	    }
 	  else
 	    {
-	      // node should never be null... but if it is then there's nothing to do.
-	      LogPrint("req", "Block %s has no available sources\n",item.obj.ToString());
+	      // There can be no block sources because a node dropped out.  In this case, nothing can be done so remove the item.
+	      LogPrint("req", "Block %s has no available sources. Removing\n",item.obj.ToString());
+              cleanup(itemIter);	      // node should never be null... but if it is then there's nothing to do.
 	    }
 
 	}    

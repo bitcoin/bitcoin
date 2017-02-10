@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2015-2016 The Bitcoin Unlimited developers
+// Copyright (c) 2015-2017 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -51,7 +51,7 @@ static const unsigned int MAX_ADDR_TO_SEND = 1000;
 /** The maximum # of bytes to receive at once */
 static const int64_t MAX_RECV_CHUNK = 256 * 1024;
 /** Maximum length of incoming protocol messages (no message over 2 MiB is currently acceptable). */
-//static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 2 * 1024 * 1024;  // BU: currently allowing 10*excessiveBlockSize as the max message
+//static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 2 * 1024 * 1024;  // BU: currently allowing DEFAULT_MAX_MESSAGE_SIZE_MULTIPLIER*excessiveBlockSize as the max message.
 /** Maximum length of strSubVer in `version` message */
 static const unsigned int MAX_SUBVERSION_LENGTH = 256;
 /** -listen default */

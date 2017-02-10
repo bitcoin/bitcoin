@@ -10,7 +10,7 @@ For example:
 it will change it to
 
 // Copyright (c) 2009-2015 The Bitcoin Unlimited developers
-// Copyright (c) 2015-2016 The Bitcoin Unlimited developers
+// Copyright (c) 2015-2017 The Bitcoin Unlimited developers
 '''
 import os
 import time
