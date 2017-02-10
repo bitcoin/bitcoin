@@ -16,6 +16,7 @@
 
 #include <boost/thread/thread.hpp>
 
+#define MAX_SCRIPT_CHECK_QUEUES 4
 
 static CCheckQueue<CScriptCheck> scriptcheckqueue1(128);
 static CCheckQueue<CScriptCheck> scriptcheckqueue2(128);
@@ -34,20 +35,14 @@ void AddScriptCheckThreads(int i, CCheckQueue<CScriptCheck>* pqueue)
 
 void AddAllScriptCheckQueuesAndThreads(int nScriptCheckThreads, boost::thread_group* threadGroup)
 {
-    vector<CCheckQueue<CScriptCheck>* > vScriptCheckQueue;
-    vScriptCheckQueue.push_back(&scriptcheckqueue1);
-    vScriptCheckQueue.push_back(&scriptcheckqueue2);
-    vScriptCheckQueue.push_back(&scriptcheckqueue3);
-    vScriptCheckQueue.push_back(&scriptcheckqueue4);
+    CCheckQueue<CScriptCheck>* pqueue[MAX_SCRIPT_CHECK_QUEUES] = { &scriptcheckqueue1, &scriptcheckqueue2, &scriptcheckqueue3, &scriptcheckqueue4 };
 
-    int i = 1;
-    BOOST_FOREACH(CCheckQueue<CScriptCheck>* pqueue, vScriptCheckQueue)
-    {
-        allScriptCheckQueues.Add(pqueue);
+    for (int i=0;i<MAX_SCRIPT_CHECK_QUEUES;i++)
+      {
+        allScriptCheckQueues.Add(pqueue[i]);
         for (int j = 0; j < nScriptCheckThreads; j++)
-            threadGroup->create_thread(boost::bind(&AddScriptCheckThreads, i, pqueue));
-        i++;
-    }
+            threadGroup->create_thread(boost::bind(&AddScriptCheckThreads, i+1, pqueue[i]));
+      }
 }
 
 CParallelValidation::CParallelValidation()
