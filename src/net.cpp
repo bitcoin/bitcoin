@@ -73,6 +73,7 @@ CCriticalSection cs_mapLocalHost;
 std::map<CNetAddr, LocalServiceInfo> mapLocalHost;
 static bool vfLimited[NET_MAX] = {};
 std::string strSubVersion;
+std::atomic<int> nBlocksToBeProcessed(0);
 
 limitedmap<uint256, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
 
@@ -673,7 +674,10 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
         nBytes -= handled;
 
         if (msg.complete()) {
-
+            if (msg.hdr.pchCommand == NetMsgType::BLOCK) {
+                nBlocksToBeProcessed++;
+                ::nBlocksToBeProcessed++;
+            }
             //store received bytes per message command
             //to prevent a memory DOS, only allow valid commands
             mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(msg.hdr.pchCommand);
@@ -1895,7 +1899,7 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
 
 void CConnman::ThreadMessageHandler()
 {
-    while (!flagInterruptMsgProc)
+    while (!flagInterruptMsgProc || nBlocksToBeProcessed > 0)
     {
         std::vector<CNode*> vNodesCopy;
         {
@@ -1916,15 +1920,15 @@ void CConnman::ThreadMessageHandler()
             // Receive messages
             bool fMoreNodeWork = GetNodeSignals().ProcessMessages(pnode, *this, flagInterruptMsgProc);
             fMoreWork |= (fMoreNodeWork && !pnode->fPauseSend);
-            if (flagInterruptMsgProc)
+            if (flagInterruptMsgProc && nBlocksToBeProcessed < 1)
                 return;
 
             // Send messages
+            if (!flagInterruptMsgProc)
             {
                 LOCK(pnode->cs_sendProcessing);
                 GetNodeSignals().SendMessages(pnode, *this, flagInterruptMsgProc);
-            }
-            if (flagInterruptMsgProc)
+            } else if (nBlocksToBeProcessed < 1)
                 return;
         }
 
@@ -1935,9 +1939,8 @@ void CConnman::ThreadMessageHandler()
         }
 
         std::unique_lock<std::mutex> lock(mutexMsgProc);
-        if (!fMoreWork) {
+        if (!fMoreWork && nBlocksToBeProcessed < 1)
             condMsgProc.wait_until(lock, std::chrono::steady_clock::now() + std::chrono::milliseconds(100), [this] { return fMsgProcWake; });
-        }
         fMsgProcWake = false;
     }
 }
@@ -2327,7 +2330,7 @@ void CConnman::DeleteNode(CNode* pnode)
 {
     assert(pnode);
     bool fUpdateConnectionTime = false;
-    GetNodeSignals().FinalizeNode(pnode->GetId(), fUpdateConnectionTime);
+    GetNodeSignals().FinalizeNode(pnode, fUpdateConnectionTime);
     if(fUpdateConnectionTime)
         addrman.Connected(pnode->addr);
     delete pnode;
@@ -2585,6 +2588,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     nRecvVersion = INIT_PROTO_VERSION;
     nLastSend = 0;
     nLastRecv = 0;
+    nBlocksToBeProcessed = 0;
     nSendBytes = 0;
     nRecvBytes = 0;
     nTimeConnected = GetSystemTimeInSeconds();
