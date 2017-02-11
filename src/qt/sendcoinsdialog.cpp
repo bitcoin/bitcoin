@@ -23,6 +23,8 @@
 #include "txmempool.h"
 #include "wallet/wallet.h"
 
+#include "darksend.h"
+
 #include <QMessageBox>
 #include <QScrollBar>
 #include <QSettings>
@@ -260,7 +262,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         strFunds = tr("using") + " <b>" + tr("anonymous funds") + "</b>";
         QString strNearestAmount(
             BitcoinUnits::formatWithUnit(
-                model->getOptionsModel()->getDisplayUnit(), 0.1 * COIN));
+                model->getOptionsModel()->getDisplayUnit(), vecPrivateSendDenominations.back()));
         strFee = QString(tr(
             "(privatesend requires this amount to be rounded up to the nearest %1)."
         ).arg(strNearestAmount));
