@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-# Copyright (c) 2014 Wladimir J. van der Laan
+#!/usr/bin/env python3
+# Copyright (c) 2014-2017 Wladimir J. van der Laan
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
@@ -31,7 +31,7 @@ The output will be two data structures with the peers in binary format:
 
 These should be pasted into `src/chainparamsseeds.h`.
 '''
-from __future__ import print_function, division
+
 from base64 import b32decode
 from binascii import a2b_hex
 import sys, os
