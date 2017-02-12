@@ -1,0 +1,24 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+Windows binary release checksums
+
+sha1sum xmr-stak-cpu.exe
+32f551c891040eda2c25e18e6287665471a5a653  xmr-stak-cpu.exe
+
+sha3sum xmr-stak-cpu.exe
+ed12841738c899a3eb61f51787aa670c25b64ce3c5a626717e6a8f6b  xmr-stak-cpu.exe
+
+date
+Mon 16 Jan 15:13:25 GMT 2017
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBCAAGBQJYfONvAAoJEPsk95p+1Bw02coH/0by+VMK76gnmpNjIxDcphkV
+S1GG+f0sIAYUrGpoMCJTXbr7hU3Na+grTbt6xLM2Tb0xJjX4Mc47Cixajzy7+TTx
+R2+CvBRl8LG9zob6JNiohvxD1+SK7RWDKWenFyDlr9BewgE/ArqZM+16BQBrLP9H
+XIWy1wh/lcSYuS548tnUYdNOmEnR9TqA454M4r8PED85HSpNmvI+eG8fZ8OK471C
+3yMupjYlAbiEBT+gE6bZwLeeCH9NO2gGeBAb31w8RBsMRjy+VvhFhTOoJwZbXj9e
+sMUwNBu+fLVoilMVvp8SDpQ7Uw/WFT085N2eJiCCuEbHgFAwM3uwD6VHz3eXd0s=
+=QJQj
+-----END PGP SIGNATURE-----
