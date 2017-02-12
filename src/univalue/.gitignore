@@ -1,7 +1,7 @@
 .deps/
 INSTALL
-Makefile
-Makefile.in
+# Makefile
+# Makefile.in
 aclocal.m4
 autom4te.cache/
 compile
@@ -14,7 +14,7 @@ depcomp
 install-sh
 missing
 stamp-h1
-univalue-config.h*
+# univalue-config.h*
 test-driver
 libtool
 ltmain.sh
