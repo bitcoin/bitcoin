@@ -10,7 +10,7 @@ src/test/test_bitcoin_fuzzy
 src/qt/test/test_bitcoin-qt
 
 # autoreconf
-Makefile.in
+# Makefile.in
 aclocal.m4
 autom4te.cache/
 build-aux/config.guess
@@ -28,21 +28,21 @@ build-aux/compile
 build-aux/test-driver
 config.log
 config.status
-configure
+# configure
 libtool
-src/config/bitcoin-config.h
-src/config/bitcoin-config.h.in
+# src/config/bitcoin-config.h
+# src/config/bitcoin-config.h.in
 src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
 
-src/univalue/gen
+# src/univalue/gen
 
-src/qt/*.moc
-src/qt/moc_*.cpp
-src/qt/forms/ui_*.h
+# src/qt/*.moc
+# src/qt/moc_*.cpp
+# src/qt/forms/ui_*.h
 
-src/qt/test/moc*.cpp
+# src/qt/test/moc*.cpp
 
 .deps
 .dirstamp
@@ -58,14 +58,14 @@ src/qt/test/moc*.cpp
 *.patch
 *.a
 *.pb.cc
-*.pb.h
+# *.pb.h
 
 *.log
 *.trs
 *.dmg
 
-*.json.h
-*.raw.h
+# *.json.h
+# *.raw.h
 
 #libtool object files
 *.lo
@@ -73,17 +73,17 @@ src/qt/test/moc*.cpp
 
 # Compilation and Qt preprocessor part
 *.qm
-Makefile
+# Makefile
 bitcoin-qt
 Bitcoin-Qt.app
 
 # Unit-tests
-Makefile.test
+# Makefile.test
 bitcoin-qt_test
 src/test/buildenv.py
 
 # Resources cpp
-qrc_*.cpp
+# qrc_*.cpp
 
 # Mac specific
 .DS_Store
@@ -112,6 +112,8 @@ libbitcoinconsensus.pc
 contrib/devtools/split-debug.sh
 
 
+
+autom4te.cache/*
 
 ## -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ##
 ## Ignore Visual Studio temporary files, build results, and
@@ -155,15 +157,15 @@ TestResult.xml
 # Build Results of an ATL Project
 [Dd]ebugPS/
 [Rr]eleasePS/
-dlldata.c
+# dlldata.c
 
 # DNX
 project.lock.json
 artifacts/
 
-*_i.c
-*_p.c
-*_i.h
+# *_i.c
+# *_p.c
+# *_i.h
 *.ilk
 *.meta
 *.obj

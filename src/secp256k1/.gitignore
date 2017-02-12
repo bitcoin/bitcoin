@@ -13,10 +13,10 @@ gen_context
 *.a
 !.gitignore
 
-Makefile
-configure
+# Makefile
+# configure
 .libs/
-Makefile.in
+# Makefile.in
 aclocal.m4
 autom4te.cache/
 config.log
@@ -29,9 +29,9 @@ libtool
 *.lo
 *.o
 *~
-src/libsecp256k1-config.h
-src/libsecp256k1-config.h.in
-src/ecmult_static_context.h
+# src/libsecp256k1-config.h
+# src/libsecp256k1-config.h.in
+# src/ecmult_static_context.h
 build-aux/config.guess
 build-aux/config.sub
 build-aux/depcomp
