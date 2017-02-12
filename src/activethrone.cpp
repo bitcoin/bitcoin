@@ -118,6 +118,10 @@ void CActiveThrone::ManageStatus()
                 return;
             }
 
+            //update to masternode list
+            LogPrintf("CActiveThrone::ManageStatus() - Update Throne List\n");
+            mnodeman.UpdateThroneList(mnb);
+
             //send to all peers
             LogPrintf("CActiveThrone::ManageStatus() - Relay broadcast vin = %s\n", vin.ToString());
             mnb.Relay();
