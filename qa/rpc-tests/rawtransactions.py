@@ -10,6 +10,7 @@
 #    - sendrawtransaction
 #    - decoderawtransaction
 #    - getrawtransaction
+#    - getconfirmations
 """
 
 from test_framework.test_framework import BitcoinTestFramework
@@ -188,6 +189,19 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtx   = self.nodes[0].createrawtransaction(inputs, outputs)
         decrawtx= self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['vin'][0]['sequence'], 4294967294)
+
+        # getconfirmations tests
+        # 1. valid parameters - supply unconfirmed txid
+        addr4 = self.nodes[0].getnewaddress()
+        txId2 = self.nodes[0].sendtoaddress(addr4, 0.0001)
+        assert_equal(self.nodes[0].getconfirmations(txId2), 0)
+
+        # 2. valid parameters - supply confirmed txid
+        self.nodes[0].generate(1)
+        assert_equal(self.nodes[0].getconfirmations(txId2), 1)
+
+        # 3. invalid parameters - supply non-existent txid
+        assert_raises(JSONRPCException, self.nodes[1].getconfirmations, "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000")
 
 if __name__ == '__main__':
     RawTransactionsTest().main()
