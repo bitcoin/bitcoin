@@ -98,7 +98,7 @@ void CActiveThrone::ManageStatus()
             }
 
             LOCK(pwalletMain->cs_wallet);
-            //pwalletMain->LockCoin(vin.prevout);
+            pwalletMain->LockCoin(vin.prevout);
 
             // send to all nodes
             CPubKey pubKeyThrone;
