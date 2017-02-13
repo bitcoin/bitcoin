@@ -102,6 +102,7 @@ private:
     QSpinBox *mempoolexpiry;
 
     QCheckBox *rejectunknownscripts;
+    QCheckBox *rejectspkreuse;
     BitcoinAmountField *minrelaytxfee;
     QSpinBox *bytespersigop, *bytespersigopstrict;
     QSpinBox *limitancestorcount;
