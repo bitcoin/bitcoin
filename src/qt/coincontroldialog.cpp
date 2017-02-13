@@ -504,7 +504,6 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             coinControl->UnSelect(outpt);
             continue;
         }
-
         // Quantity
         nQuantity++;
 

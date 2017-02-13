@@ -327,57 +327,30 @@ BOOST_AUTO_TEST_CASE(multisig_Sign)
 }
 BOOST_AUTO_TEST_CASE(cltv_freeze)
 {
-
+    ScriptError err;
     CKey key[4];
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 1; i++)
          key[i].MakeNewKey(true);
 
     // Create and unpack a CLTV script
-    vector<valtype> solutions;
-	txnouttype whichType;
+    CPubKey newKey = ToByteVector(key[0].GetPubKey());
+    CBitcoinAddress newAddr(newKey.GetID());
+    int64_t nFreezeLockTime = 50000;
+
+    CScript freezeScript = GetScriptForFreeze(nFreezeLockTime, newKey);
+
+    txnouttype type = TX_CLTV;
     vector<CTxDestination> addresses;
     int nRequiredReturn;
-    txnouttype type = TX_CLTV;
 
-    // check cltv solve for block
-    CPubKey newKey1 = ToByteVector(key[0].GetPubKey());
-    CBitcoinAddress newAddr1(newKey1.GetID());
-    CScriptNum nFreezeLockTime(50000);
-    CScript s1 = GetScriptForFreeze(nFreezeLockTime, newKey1);
-
-	BOOST_CHECK(Solver(s1, whichType, solutions));
-	BOOST_CHECK(whichType == TX_CLTV);
-	BOOST_CHECK(solutions.size() == 2);
-	BOOST_CHECK(CScriptNum(solutions[0], false) == nFreezeLockTime);
-
-	nRequiredReturn = 0;
-    ExtractDestinations(s1, type, addresses, nRequiredReturn);
+    ExtractDestinations(freezeScript, type, addresses, nRequiredReturn);
 
     BOOST_FOREACH(const CTxDestination& addr, addresses)
-		BOOST_CHECK(newAddr1.ToString() == CBitcoinAddress(addr).ToString());
+		BOOST_CHECK(newAddr.ToString() == CBitcoinAddress(addr).ToString());
 
     BOOST_CHECK(nRequiredReturn == 1);
 
-
-	// check cltv solve for datetime
-    CPubKey newKey2 = ToByteVector(key[0].GetPubKey());
-    CBitcoinAddress newAddr2(newKey2.GetID());
-	nFreezeLockTime = CScriptNum(1482255731);
-	CScript s2 = GetScriptForFreeze(nFreezeLockTime, newKey2);
-
-	BOOST_CHECK(Solver(s2, whichType, solutions));
-	BOOST_CHECK(whichType == TX_CLTV);
-	BOOST_CHECK(solutions.size() == 2);
-	BOOST_CHECK(CScriptNum(solutions[0],false) == nFreezeLockTime);
-
-	nRequiredReturn = 0;
-	ExtractDestinations(s2, type, addresses, nRequiredReturn);
-
-	BOOST_FOREACH(const CTxDestination& addr, addresses)
-		BOOST_CHECK(newAddr2.ToString() == CBitcoinAddress(addr).ToString());
-
-	BOOST_CHECK(nRequiredReturn == 1);
-
+}
 
 }
 BOOST_AUTO_TEST_CASE(opreturn_send)

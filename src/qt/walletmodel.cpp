@@ -250,7 +250,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
                 scriptPubKey = GetScriptForDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
             else {
                 scriptPubKey = GetScriptLabelPublic(rcp.labelPublic.toStdString());
-                --nAddresses; // duplicate addresses for OP_RETURNS are ok
+                --nAddresses; // remove duplicate address as rcp.adddress was copied in SendCoinsDialog::on_sendButton_clicked()
             }
 
             CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
@@ -610,12 +610,12 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
         COutput out(&wallet->mapWallet[outpoint.hash], outpoint.n, nDepth, true);
         if (outpoint.n < out.tx->vout.size() && wallet->IsMine(out.tx->vout[outpoint.n]) == ISMINE_SPENDABLE)
             vCoins.push_back(out);
+
     }
 
     BOOST_FOREACH(const COutput& out, vCoins)
     {
         COutput cout = out;
-
         while (wallet->IsChange(cout.tx->vout[cout.i]) && cout.tx->vin.size() > 0 && wallet->IsMine(cout.tx->vin[0]))
         {
             if (!wallet->mapWallet.count(cout.tx->vin[0].prevout.hash)) break;

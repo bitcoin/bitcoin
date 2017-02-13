@@ -88,11 +88,7 @@ public:
         READWRITE(sMessage);
         READWRITE(sPaymentRequest);
         READWRITE(sAuthenticatedMerchant);
-        if (nVersion >= 2)
-        {
-            READWRITE(sFreezeLockTime);
-            READWRITE(slabelPublic);
-        }
+        if (nVersion >= 2) READWRITE(sFreezeLockTime);
 
         if (ser_action.ForRead())
         {

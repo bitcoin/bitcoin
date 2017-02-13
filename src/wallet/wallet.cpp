@@ -199,12 +199,12 @@ bool CWallet::LoadCScript(const CScript& redeemScript)
     return CCryptoKeyStore::AddCScript(redeemScript);
 }
 
-bool CWallet::LoadFreezeScript(CPubKey newKey, CScriptNum nFreezeLockTime, std::string strLabel, std::string& address)
+bool CWallet::LoadFreezeScript(CPubKey newKey, unsigned int nLockTime, std::string strLabel, std::string& address)
 {
 	// Template rpcdump.cpp::ImportAddress();
 
 	// Get Freeze Script
-	CScript freezeScript = GetScriptForFreeze(nFreezeLockTime, newKey);
+	CScript freezeScript = GetScriptForFreeze(nLockTime, newKey);
 
 	// Test and Add Script to wallet
 	if (!this->HaveCScript(freezeScript) && !this->AddCScript(freezeScript))

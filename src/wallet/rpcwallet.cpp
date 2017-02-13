@@ -580,7 +580,7 @@ UniValue getreceivedbyaddress(const UniValue& params, bool fHelp)
     CScript scriptPubKey = GetScriptForDestination(address.Get());
 
     if (!IsMine(*pwalletMain,scriptPubKey, chainActive.Tip()))
-        return ValueFromAmount(0);
+        return (double)0.0;
 
     // Minimum confirmations
     int nMinDepth = 1;
