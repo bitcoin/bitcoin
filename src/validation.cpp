@@ -114,6 +114,8 @@ const std::vector<std::string> CHECKLEVEL_DOC {
  * */
 static constexpr int PRUNE_LOCK_BUFFER{10};
 
+SpkReuseModes SpkReuseMode;
+
 TRACEPOINT_SEMAPHORE(validation, block_connected);
 TRACEPOINT_SEMAPHORE(utxocache, flush);
 TRACEPOINT_SEMAPHORE(mempool, replaced);
@@ -838,6 +840,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_CONFLICT, "txn-same-nonwitness-data-in-mempool");
     }
 
+    auto spk_reuse_mode = SpkReuseMode;
+    SPKStates_t mapSPK;
+
     // Check for conflicts with in-memory transactions
     for (const CTxIn &txin : tx.vin)
     {
@@ -875,6 +880,19 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
                 ws.m_conflicts.insert(ptxConflicting->GetHash());
             }
+        }
+    }
+
+    if (spk_reuse_mode != SRM_ALLOW) {
+        for (const CTxOut& txout : tx.vout) {
+            uint160 hashSPK = ScriptHashkey(txout.scriptPubKey);
+            if (m_pool.mapUsedSPK.find(hashSPK) != m_pool.mapUsedSPK.end()) {
+                return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-spk-reused");
+            }
+            if (mapSPK.find(hashSPK) != mapSPK.end()) {
+                return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-spk-reused-twinoutputs");
+            }
+            mapSPK[hashSPK] = MemPool_SPK_State(mapSPK[hashSPK] | MSS_CREATED);
         }
     }
 
@@ -930,6 +948,27 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return false; // state filled in by CheckTxInputs
     }
 
+    if (spk_reuse_mode != SRM_ALLOW) {
+        for (const CTxIn& txin : tx.vin) {
+            const Coin &coin = m_view.AccessCoin(txin.prevout);
+            uint160 hashSPK = ScriptHashkey(coin.out.scriptPubKey);
+
+            SPKStates_t::iterator mssit = mapSPK.find(hashSPK);
+            if (mssit != mapSPK.end()) {
+                if (mssit->second & MSS_CREATED) {
+                    return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-spk-reused-change");
+                }
+            }
+            mssit = m_pool.mapUsedSPK.find(hashSPK);
+            if (mssit != m_pool.mapUsedSPK.end()) {
+                if (mssit->second & MSS_SPENT) {
+                    return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-spk-reused-spend");
+                }
+            }
+            mapSPK[hashSPK] = MemPool_SPK_State(mapSPK[hashSPK] | MSS_SPENT);
+        }
+    }
+
     if (m_pool.m_opts.require_standard && !AreInputsStandard(tx, m_view, "bad-txns-input-", reason, ignore_rejects)) {
         return state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, reason);
     }
@@ -959,6 +998,12 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         m_subpackage.m_changeset = m_pool.GetChangeSet();
     }
     ws.m_tx_handle = m_subpackage.m_changeset->StageAddition(ptx, ws.m_base_fees, nAcceptTime, m_active_chainstate.m_chain.Height(), entry_sequence, fSpendsCoinbase, nSigOpsCost, lock_points.value());
+
+    if (spk_reuse_mode != SRM_ALLOW) {
+        m_subpackage.m_changeset->m_to_add.modify(ws.m_tx_handle, [=](CTxMemPoolEntry& e) {
+            e.mapSPK = mapSPK;
+        });
+    }
 
     // ws.m_modified_fees includes any fee deltas from PrioritiseTransaction
     ws.m_modified_fees = ws.m_tx_handle->GetModifiedFee();

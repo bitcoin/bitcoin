@@ -64,6 +64,7 @@ static constexpr unsigned int MAX_STANDARD_SCRIPTSIG_SIZE{1650};
  * only increase the dust limit after prior releases were already not creating
  * outputs below the new threshold */
 static constexpr unsigned int DUST_RELAY_TX_FEE{3000};
+static const std::string DEFAULT_SPKREUSE{"allow"};
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
 static constexpr unsigned int DEFAULT_MIN_RELAY_TX_FEE{1000};
 /** Default for -limitancestorcount, max number of in-mempool ancestors */
