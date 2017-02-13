@@ -634,7 +634,8 @@ private:
         explicit Workspace(const CTransactionRef& ptx) : m_ptx(ptx), m_hash(ptx->GetHash()) {}
         /** Txids of mempool transactions that this transaction directly conflicts with or may
          * replace via sibling eviction. */
-        std::set<Txid> m_conflicts;
+        /** .second=true is a consensus conflict, and .second=false is a policy conflict. */
+        std::map<Txid, bool> m_conflicts_incl_policy;
         /** Iterators to mempool entries that this transaction directly conflicts with or may
          * replace via sibling eviction. */
         CTxMemPool::setEntries m_iters_conflicting;
@@ -852,7 +853,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 // Transaction conflicts with a mempool tx, but we're not allowing replacements.
                 return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "bip125-replacement-disallowed");
             }
-            if (!ws.m_conflicts.count(ptxConflicting->GetHash()))
+            if (!ws.m_conflicts_incl_policy.count(ptxConflicting->GetHash()))
             {
                 // Transactions that don't explicitly signal replaceability are
                 // *not* replaceable with the current logic, even if one of their
@@ -878,7 +879,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                     return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
                 }
 
-                ws.m_conflicts.insert(ptxConflicting->GetHash());
+                ws.m_conflicts_incl_policy.emplace(ptxConflicting->GetHash(), true);
             }
         }
     }
@@ -886,8 +887,14 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     if (spk_reuse_mode != SRM_ALLOW) {
         for (const CTxOut& txout : tx.vout) {
             uint160 hashSPK = ScriptHashkey(txout.scriptPubKey);
-            if (m_pool.mapUsedSPK.find(hashSPK) != m_pool.mapUsedSPK.end()) {
-                return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-spk-reused");
+            const auto& SPKUsedIn = m_pool.mapUsedSPK.find(hashSPK);
+            if (SPKUsedIn != m_pool.mapUsedSPK.end()) {
+                if (SPKUsedIn->second.first) {
+                    ws.m_conflicts_incl_policy.emplace(SPKUsedIn->second.first->GetHash(), false);
+                }
+                if (SPKUsedIn->second.second) {
+                    ws.m_conflicts_incl_policy.emplace(SPKUsedIn->second.second->GetHash(), false);
+                }
             }
             if (mapSPK.find(hashSPK) != mapSPK.end()) {
                 return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-spk-reused-twinoutputs");
@@ -962,7 +969,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             const auto& SPKit = m_pool.mapUsedSPK.find(hashSPK);
             if (SPKit != m_pool.mapUsedSPK.end()) {
                 if (SPKit->second.second /* Spent */) {
-                    return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-spk-reused-spend");
+                    ws.m_conflicts_incl_policy.emplace(SPKit->second.second->GetHash(), false);
                 }
             }
             mapSPK[hashSPK] = MemPool_SPK_State(mapSPK[hashSPK] | MSS_SPENT);
@@ -1038,14 +1045,18 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // feerate later.
     if (!args.m_package_feerates && !CheckFeeRate(ws.m_vsize, ws.m_modified_fees, state, args.m_ignore_rejects)) return false;
 
-    ws.m_iters_conflicting = m_pool.GetIterSet(ws.m_conflicts);
+    std::set<Txid> conflicts_as_a_set;
+    std::transform(ws.m_conflicts_incl_policy.begin(), ws.m_conflicts_incl_policy.end(),
+                    std::inserter(conflicts_as_a_set, conflicts_as_a_set.end()),
+                    [](const std::pair<Txid, bool>& pair){ return pair.first; });
+    ws.m_iters_conflicting = m_pool.GetIterSet(conflicts_as_a_set);
 
     // Note that these modifications are only applicable to single transaction scenarios;
     // carve-outs are disabled for multi-transaction evaluations.
     CTxMemPool::Limits maybe_rbf_limits = m_pool.m_opts.limits;
 
     // Calculate in-mempool ancestors, up to a limit.
-    if (ws.m_conflicts.size() == 1 && args.m_allow_carveouts) {
+    if (ws.m_conflicts_incl_policy.size() == 1 && args.m_allow_carveouts) {
         // In general, when we receive an RBF transaction with mempool conflicts, we want to know whether we
         // would meet the chain limits after the conflicts have been removed. However, there isn't a practical
         // way to do this short of calculating the ancestor and descendant sets with an overlay cache of
@@ -1129,7 +1140,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // check using the full ancestor set here because it's more convenient to use what we have
     // already calculated.
     if (m_pool.m_opts.truc_policy == TRUCPolicy::Enforce) {
-    if (const auto err{SingleTRUCChecks(ws.m_ptx, "truc-", reason, ignore_rejects, ws.m_ancestors, ws.m_conflicts, ws.m_vsize)}) {
+    if (const auto err{SingleTRUCChecks(ws.m_ptx, "truc-", reason, ignore_rejects, ws.m_ancestors, conflicts_as_a_set, ws.m_vsize)}) {
         // Single transaction contexts only.
         if (args.m_allow_sibling_eviction && err->second != nullptr) {
             // We should only be considering where replacement is considered valid as well.
@@ -1137,7 +1148,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
             // Potential sibling eviction. Add the sibling to our list of mempool conflicts to be
             // included in RBF checks.
-            ws.m_conflicts.insert(err->second->GetHash());
+            ws.m_conflicts_incl_policy.emplace(err->second->GetHash(), false);
+            conflicts_as_a_set.insert(err->second->GetHash());
             // Adding the sibling to m_iters_conflicting here means that it doesn't count towards
             // RBF Carve Out above. This is correct, since removing to-be-replaced transactions from
             // the descendant count is done separately in SingleTRUCChecks for TRUC transactions.
@@ -1156,14 +1168,18 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // that we have the set of all ancestors we can detect this
     // pathological case by making sure ws.m_conflicts and ws.m_ancestors don't
     // intersect.
-    if (const auto err_string{EntriesAndTxidsDisjoint(ws.m_ancestors, ws.m_conflicts, hash)}) {
+    bool has_policy_conflict{false};
+    if (const auto err_string{EntriesAndTxidsDisjoint(ws.m_ancestors, ws.m_conflicts_incl_policy, hash, &has_policy_conflict)}) {
         // We classify this as a consensus error because a transaction depending on something it
         // conflicts with would be inconsistent.
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-spends-conflicting-tx", *err_string);
     }
+    if (has_policy_conflict) {
+        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-spk-reused-chained");
+    }
 
     // We want to detect conflicts in any tx in a package to trigger package RBF logic
-    m_subpackage.m_rbf |= !ws.m_conflicts.empty();
+    m_subpackage.m_rbf |= !ws.m_conflicts_incl_policy.empty();
     return true;
 }
 
