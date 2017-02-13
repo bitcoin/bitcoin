@@ -53,6 +53,7 @@ static const unsigned int MAX_STANDARD_SCRIPTSIG_SIZE = 1650;
  * only increase the dust limit after prior releases were already not creating
  * outputs below the new threshold */
 static const unsigned int DUST_RELAY_TX_FEE = 3000;
+static const std::string DEFAULT_SPKREUSE = "allow";
 /**
  * Standard script verification flags that standard transactions will comply
  * with. However scripts violating these flags may still be present in valid
