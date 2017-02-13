@@ -427,7 +427,14 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     newit->vTxHashesIdx = vTxHashes.size() - 1;
 
     for (auto& vSPK : entry.mapSPK) {
-        mapUsedSPK[vSPK.first] = MemPool_SPK_State(mapUsedSPK[vSPK.first] | vSPK.second);
+        const uint160& SPKKey = vSPK.first;
+        const MemPool_SPK_State& claims = vSPK.second;
+        if (claims & MSS_CREATED) {
+            mapUsedSPK[SPKKey].first = &tx;
+        }
+        if (claims & MSS_SPENT) {
+            mapUsedSPK[SPKKey].second = &tx;
+        }
     }
 
     return true;
@@ -435,6 +442,7 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
 
 void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 {
+    const CTransaction& tx = it->GetTx();
     NotifyEntryRemoved(it->GetSharedTx(), reason);
     const uint256 hash = it->GetTx().GetHash();
     for (const CTxIn& txin : it->GetTx().vin)
@@ -450,10 +458,15 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
         vTxHashes.clear();
 
     for (auto& vSPK : it->mapSPK) {
-        if (vSPK.second == mapUsedSPK.find(vSPK.first)->second) {
-            mapUsedSPK.erase(vSPK.first);
-        } else {
-            mapUsedSPK[vSPK.first] = MemPool_SPK_State(mapUsedSPK[vSPK.first] & ~vSPK.second);
+        const uint160& SPKKey = vSPK.first;
+        if (mapUsedSPK[SPKKey].first == &tx) {
+            mapUsedSPK[SPKKey].first = NULL;
+        }
+        if (mapUsedSPK[SPKKey].second == &tx) {
+            mapUsedSPK[SPKKey].second = NULL;
+        }
+        if (!(mapUsedSPK[SPKKey].first || mapUsedSPK[SPKKey].second)) {
+            mapUsedSPK.erase(SPKKey);
         }
     }
 

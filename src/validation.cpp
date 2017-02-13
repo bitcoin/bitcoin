@@ -599,9 +599,9 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                         return state.DoS(0, false, REJECT_NONSTANDARD, "txn-spk-reused-change");
                     }
                 }
-                mssit = pool.mapUsedSPK.find(hashSPK);
-                if (mssit != pool.mapUsedSPK.end()) {
-                    if (mssit->second & MSS_SPENT) {
+                const auto& SPKit = pool.mapUsedSPK.find(hashSPK);
+                if (SPKit != pool.mapUsedSPK.end()) {
+                    if (SPKit->second.second /* Spent */) {
                         return state.DoS(0, false, REJECT_DUPLICATE, "txn-mempool-spk-reused-spend");
                     }
                 }
