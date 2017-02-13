@@ -402,7 +402,7 @@ public:
 
     uint64_t CalculateDescendantMaximum(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    SPKStates_t mapUsedSPK;
+    std::map<uint160, std::pair<const CTransaction *, const CTransaction *>> mapUsedSPK;
 
 private:
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
