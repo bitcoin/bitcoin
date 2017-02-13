@@ -54,8 +54,8 @@ struct LockPoints
 
 enum MemPool_SPK_State {
     MSS_UNSEEN  = 0,
-    MSS_SPENT   = 1,
-    MSS_CREATED = 2,
+    MSS_SPENT   = 1,  // .second
+    MSS_CREATED = 2,  // .first
     MSS_BOTH    = 3,
 };
 
@@ -586,7 +586,7 @@ public:
 
     uint64_t CalculateDescendantMaximum(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    SPKStates_t mapUsedSPK;
+    std::map<uint160, std::pair<const CTransaction *, const CTransaction *>> mapUsedSPK;
 
 private:
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
