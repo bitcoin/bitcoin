@@ -1,0 +1,1579 @@
+'\" t
+.\"     Title: ccache
+.\"    Author: [see the "Author" section]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 10/26/2016
+.\"    Manual: ccache Manual
+.\"    Source: ccache 3.3.3
+.\"  Language: English
+.\"
+.TH "CCACHE" "1" "10/26/2016" "ccache 3\&.3\&.3" "ccache Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+ccache \- a fast C/C++ compiler cache
+.SH "SYNOPSIS"
+.sp
+.nf
+\fBccache\fR [\fIoptions\fR]
+\fBccache\fR \fIcompiler\fR [\fIcompiler options\fR]
+\fIcompiler\fR [\fIcompiler options\fR]                   (via symbolic link)
+.fi
+.SH "DESCRIPTION"
+.sp
+ccache is a compiler cache\&. It speeds up recompilation by caching the result of previous compilations and detecting when the same compilation is being done again\&. Supported languages are C, C++, Objective\-C and Objective\-C++\&.
+.sp
+ccache has been carefully written to always produce exactly the same compiler output that you would get without the cache\&. The only way you should be able to tell that you are using ccache is the speed\&. Currently known exceptions to this goal are listed under CAVEATS\&. If you ever discover an undocumented case where ccache changes the output of your compiler, please let us know\&.
+.SS "Features"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Keeps statistics on hits/misses\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Automatic cache size management\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Can cache compilations that generate warnings\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Easy installation\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Low overhead\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Optionally uses hard links where possible to avoid copies\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Optionally compresses files in the cache to reduce disk space\&.
+.RE
+.SS "Limitations"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Only knows how to cache the compilation of a single C/C++/Objective\-C/Objective\-C++ file\&. Other types of compilations (multi\-file compilation, linking, etc) will silently fall back to running the real compiler\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Only works with GCC and compilers that behave similar enough\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Some compiler flags are not supported\&. If such a flag is detected, ccache will silently fall back to running the real compiler\&.
+.RE
+.SH "RUN MODES"
+.sp
+There are two ways to use ccache\&. You can either prefix your compilation commands with \fBccache\fR or you can let ccache masquerade as the compiler by creating a symbolic link (named as the compiler) to ccache\&. The first method is most convenient if you just want to try out ccache or wish to use it for some specific projects\&. The second method is most useful for when you wish to use ccache for all your compilations\&.
+.sp
+To use the first method, just make sure that \fBccache\fR is in your \fBPATH\fR\&.
+.sp
+To use the symlinks method, do something like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+cp ccache /usr/local/bin/
+ln \-s ccache /usr/local/bin/gcc
+ln \-s ccache /usr/local/bin/g++
+ln \-s ccache /usr/local/bin/cc
+ln \-s ccache /usr/local/bin/c++
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+And so forth\&. This will work as long as the directory with symlinks comes before the path to the compiler (which is usually in /usr/bin)\&. After installing you may wish to run \(lqwhich gcc\(rq to make sure that the correct link is being used\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBWarning\fR
+.ps -1
+.br
+.sp
+The technique of letting ccache masquerade as the compiler works well, but currently doesn\(cqt interact well with other tools that do the same thing\&. See USING CCACHE WITH OTHER COMPILER WRAPPERS\&.
+.sp .5v
+.RE
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBWarning\fR
+.ps -1
+.br
+.sp
+Do not use a hard link, use a symbolic link\&. A hard link will cause \(lqinteresting\(rq problems\&.
+.sp .5v
+.RE
+.SH "OPTIONS"
+.sp
+These options only apply when you invoke ccache as \(lqccache\(rq\&. When invoked as a compiler (via a symlink as described in the previous section), the normal compiler options apply and you should refer to the compiler\(cqs documentation\&.
+.PP
+\fB\-c, \-\-cleanup\fR
+.RS 4
+Clean up the cache by removing old cached files until the specified file number and cache size limits are not exceeded\&. This also recalculates the cache file count and size totals\&. Normally, there is no need to initiate cleanup manually as ccache keeps the cache below the specified limits at runtime and keeps statistics up to date on each compilation\&. Forcing a cleanup is mostly useful if you manually modify the cache contents or believe that the cache size statistics may be inaccurate\&.
+.RE
+.PP
+\fB\-C, \-\-clear\fR
+.RS 4
+Clear the entire cache, removing all cached files, but keeping the configuration file\&.
+.RE
+.PP
+\fB\-F, \-\-max\-files\fR=\fIN\fR
+.RS 4
+Set the maximum number of files allowed in the cache\&. Use 0 for no limit\&. The value is stored in a configuration file in the cache directory and applies to all future compilations\&.
+.RE
+.PP
+\fB\-h, \-\-help\fR
+.RS 4
+Print an options summary page\&.
+.RE
+.PP
+\fB\-M, \-\-max\-size\fR=\fISIZE\fR
+.RS 4
+Set the maximum size of the files stored in the cache\&.
+\fISIZE\fR
+should be a number followed by an optional suffix: k, M, G, T (decimal), Ki, Mi, Gi or Ti (binary)\&. The default suffix is G\&. Use 0 for no limit\&. The value is stored in a configuration file in the cache directory and applies to all future compilations\&.
+.RE
+.PP
+\fB\-o, \-\-set\-config\fR=\fIKEY=VALUE\fR
+.RS 4
+Set configuration
+\fIKEY\fR
+to
+\fIVALUE\fR\&. See
+CONFIGURATION
+for more information\&.
+.RE
+.PP
+\fB\-p, \-\-print\-config\fR
+.RS 4
+Print current configuration options and from where they originate (environment variable, configuration file or compile\-time default)\&.
+.RE
+.PP
+\fB\-s, \-\-show\-stats\fR
+.RS 4
+Print the current statistics summary for the cache\&.
+.RE
+.PP
+\fB\-V, \-\-version\fR
+.RS 4
+Print version and copyright information\&.
+.RE
+.PP
+\fB\-z, \-\-zero\-stats\fR
+.RS 4
+Zero the cache statistics (but not the configuration options)\&.
+.RE
+.SH "EXTRA OPTIONS"
+.sp
+When run as a compiler, ccache usually just takes the same command line options as the compiler you are using\&. The only exception to this is the option \fB\-\-ccache\-skip\fR\&. That option can be used to tell ccache to avoid interpreting the next option in any way and to pass it along to the compiler as\-is\&. \fBNote\fR: \fB\-\-ccache\-skip\fR currently only tells ccache not to interpret the next option as a special compiler option \(em the option will still be included in the direct mode hash\&.
+.sp
+The reason this can be important is that ccache does need to parse the command line and determine what is an input filename and what is a compiler option, as it needs the input filename to determine the name of the resulting object file (among other things)\&. The heuristic ccache uses when parsing the command line is that any argument that exists as a file is treated as an input file name\&. By using \fB\-\-ccache\-skip\fR you can force an option to not be treated as an input file name and instead be passed along to the compiler as a command line option\&.
+.sp
+Another case where \fB\-\-ccache\-skip\fR can be useful is if ccache interprets an option specially but shouldn\(cqt, since the option has another meaning for your compiler than what ccache thinks\&.
+.SH "CONFIGURATION"
+.sp
+ccache\(cqs default behavior can be overridden by configuration file settings, which in turn can be overridden by environment variables with names starting with \fBCCACHE_\fR\&. ccache normally reads configuration from two files: first a system\-level configuration file and secondly a cache\-specific configuration file\&. The priority of configuration settings is as follows (where 1 is highest):
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+Environment variables\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+The cache\-specific configuration file
+\fB<ccachedir>/ccache\&.conf\fR
+(typically
+\fB$HOME/\&.ccache/ccache\&.conf\fR)\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+The system\-wide configuration file
+\fB<sysconfdir>/ccache\&.conf\fR
+(typically
+\fB/etc/ccache\&.conf\fR
+or
+\fB/usr/local/etc/ccache\&.conf\fR)\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 4.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  4." 4.2
+.\}
+Compile\-time defaults\&.
+.RE
+.sp
+As a special case, if the environment variable \fBCCACHE_CONFIGPATH\fR is set, ccache reads configuration from the specified path instead of the default paths\&.
+.SS "Configuration file syntax"
+.sp
+Configuration files are in a simple \(lqkey = value\(rq format, one setting per line\&. Lines starting with a hash sign are comments\&. Blank lines are ignored, as is whitespace surrounding keys and values\&. Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# Set maximum cache size to 10 GB:
+max_size = 10G
+.fi
+.if n \{\
+.RE
+.\}
+.SS "Boolean values"
+.sp
+Some settings are boolean values (i\&.e\&. truth values)\&. In a configuration file, such values must be set to the string \fBtrue\fR or \fBfalse\fR\&. For the corresponding environment variables, the semantics are a bit different: a set environment variable means \(lqtrue\(rq regardless of the value (even if set to the empty string), and an unset environment variable means \(lqfalse\(rq\&. Each boolean environment variable also has a negated form starting with \fBCCACHE_NO\fR\&. For example, \fBCCACHE_COMPRESS\fR can be set to force compression and \fBCCACHE_NOCOMPRESS\fR can be set to force no compression\&.
+.SS "Configuration settings"
+.sp
+Below is a list of available configuration settings\&. The corresponding environment variable name is indicated in parentheses after each configuration setting key\&.
+.PP
+\fBbase_dir\fR (\fBCCACHE_BASEDIR\fR)
+.RS 4
+This setting should be an absolute path to a directory\&. ccache then rewrites absolute paths into relative paths before computing the hash that identifies the compilation, but only for paths under the specified directory\&. If set to the empty string (which is the default), no rewriting is done\&. See also the discussion under
+COMPILING IN DIFFERENT DIRECTORIES\&. If using GCC or newer versions of Clang, you might want to look into the
+\fB\-fdebug\-prefix\-map=old=new\fR
+option for relocating debug info to a common prefix (mapping prefix with old=new)\&.
+.RE
+.PP
+\fBcache_dir\fR (\fBCCACHE_DIR\fR)
+.RS 4
+This setting specifies where ccache will keep its cached compiler outputs\&. It will only take effect if set in the system\-wide configuration file or as an environment variable\&. The default is
+\fB$HOME/\&.ccache\fR\&.
+.RE
+.PP
+\fBcache_dir_levels\fR (\fBCCACHE_NLEVELS\fR)
+.RS 4
+This setting allows you to choose the number of directory levels in the cache directory\&. The default is 2\&. The minimum is 1 and the maximum is 8\&.
+.RE
+.PP
+\fBcompiler\fR (\fBCCACHE_CC\fR)
+.RS 4
+This setting can be used to force the name of the compiler to use\&. If set to the empty string (which is the default), ccache works it out from the command line\&.
+.RE
+.PP
+\fBcompiler_check\fR (\fBCCACHE_COMPILERCHECK\fR)
+.RS 4
+By default, ccache includes the modification time (\(lqmtime\(rq) and size of the compiler in the hash to ensure that results retrieved from the cache are accurate\&. This setting can be used to select another strategy\&. Possible values are:
+.PP
+\fBcontent\fR
+.RS 4
+Hash the content of the compiler binary\&. This makes ccache very slightly slower compared to the
+\fBmtime\fR
+setting, but makes it cope better with compiler upgrades during a build bootstrapping process\&.
+.RE
+.PP
+\fBmtime\fR
+.RS 4
+Hash the compiler\(cqs mtime and size, which is fast\&. This is the default\&.
+.RE
+.PP
+\fBnone\fR
+.RS 4
+Don\(cqt hash anything\&. This may be good for situations where you can safely use the cached results even though the compiler\(cqs mtime or size has changed (e\&.g\&. if the compiler is built as part of your build system and the compiler\(cqs source has not changed, or if the compiler only has changes that don\(cqt affect code generation)\&. You should only use the
+\fBnone\fR
+setting if you know what you are doing\&.
+.RE
+.PP
+\fBstring:value\fR
+.RS 4
+Use
+\fBvalue\fR
+as the string to calculate hash from\&. This can be the compiler revision number you retrieved earlier and set here via environment variable\&.
+.RE
+.PP
+\fIa command string\fR
+.RS 4
+Hash the standard output and standard error output of the specified command\&. The string will be split on whitespace to find out the command and arguments to run\&. No other interpretation of the command string will be done, except that the special word
+\fB%compiler%\fR
+will be replaced with the path to the compiler\&. Several commands can be specified with semicolon as separator\&. Examples:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+%compiler% \-v
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+%compiler% \-dumpmachine; %compiler% \-dumpversion
+.RE
+.sp
+You should make sure that the specified command is as fast as possible since it will be run once for each ccache invocation\&.
+.sp
+Identifying the compiler using a command is useful if you want to avoid cache misses when the compiler has been rebuilt but not changed\&.
+.sp
+Another case is when the compiler (as seen by ccache) actually isn\(cqt the real compiler but another compiler wrapper \(em in that case, the default
+\fBmtime\fR
+method will hash the mtime and size of the other compiler wrapper, which means that ccache won\(cqt be able to detect a compiler upgrade\&. Using a suitable command to identify the compiler is thus safer, but it\(cqs also slower, so you should consider continue using the
+\fBmtime\fR
+method in combination with the
+\fBprefix_command\fR
+setting if possible\&. See
+USING CCACHE WITH OTHER COMPILER WRAPPERS\&.
+.RE
+.RE
+.PP
+\fBcompression\fR (\fBCCACHE_COMPRESS\fR or \fBCCACHE_NOCOMPRESS\fR, see Boolean values above)
+.RS 4
+If true, ccache will compress object files and other compiler output it puts in the cache\&. However, this setting has no effect on how files are retrieved from the cache; compressed and uncompressed results will still be usable regardless of this setting\&. The default is false\&.
+.RE
+.PP
+\fBcompression_level\fR (\fBCCACHE_COMPRESSLEVEL\fR)
+.RS 4
+This setting determines the level at which ccache will compress object files\&. It only has effect if
+\fBcompression\fR
+is enabled\&. The value defaults to 6, and must be no lower than 1 (fastest, worst compression) and no higher than 9 (slowest, best compression)\&.
+.RE
+.PP
+\fBcpp_extension\fR (\fBCCACHE_EXTENSION\fR)
+.RS 4
+This setting can be used to force a certain extension for the intermediate preprocessed file\&. The default is to automatically determine the extension to use for intermediate preprocessor files based on the type of file being compiled, but that sometimes doesn\(cqt work\&. For example, when using the \(lqaCC\(rq compiler on HP\-UX, set the cpp extension to
+\fBi\fR\&.
+.RE
+.PP
+\fBdirect_mode\fR (\fBCCACHE_DIRECT\fR or \fBCCACHE_NODIRECT\fR, see Boolean values above)
+.RS 4
+If true, the direct mode will be used\&. The default is true\&. See
+THE DIRECT MODE\&.
+.RE
+.PP
+\fBdisable\fR (\fBCCACHE_DISABLE\fR or \fBCCACHE_NODISABLE\fR, see Boolean values above)
+.RS 4
+When true, ccache will just call the real compiler, bypassing the cache completely\&. The default is false\&.
+.RE
+.PP
+\fBextra_files_to_hash\fR (\fBCCACHE_EXTRAFILES\fR)
+.RS 4
+This setting is a list of paths to files that ccache will include in the the hash sum that identifies the build\&. The list separator is semicolon on Windows systems and colon on other systems\&.
+.RE
+.PP
+\fBhard_link\fR (\fBCCACHE_HARDLINK\fR or \fBCCACHE_NOHARDLINK\fR, see Boolean values above)
+.RS 4
+If true, ccache will attempt to use hard links from the cache directory when creating the compiler output rather than using a file copy\&. Using hard links may be slightly faster in some situations, but can confuse programs like \(lqmake\(rq that rely on modification times\&. Another thing to keep in mind is that if the resulting object file is modified in any way, this corrupts the cached object file as well\&. Hard links are never made for compressed cache files\&. This means that you should not enable compression if you want to use hard links\&. The default is false\&.
+.RE
+.PP
+\fBhash_dir\fR (\fBCCACHE_HASHDIR\fR or \fBCCACHE_NOHASHDIR\fR, see Boolean values above)
+.RS 4
+If true (which is the default), ccache will include the current working directory (CWD) in the hash that is used to distinguish two compilations when generating debug info (compiler option
+\fB\-g\fR
+with variations)\&. Exception: The CWD will not be included in the hash if
+\fBbase_dir\fR
+is set (and matches the CWD) and the compiler option
+\fB\-fdebug\-prefix\-map\fR
+is used\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The reason for including the CWD in the hash by default is to prevent a
+problem with the storage of the current working directory in the debug info
+of an object file, which can lead ccache to return a cached object file
+that has the working directory in the debug info set incorrectly\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+You can disable this setting to get cache hits when compiling the same
+source code in different directories if you don\*(Aqt mind that CWD in the
+debug info might be incorrect\&.
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
+\fBignore_headers_in_manifest\fR (\fBCCACHE_IGNOREHEADERS\fR)
+.RS 4
+This setting is a list of paths to files (or directories with headers) that ccache will
+\fBnot\fR
+include in the manifest list that makes up the direct mode\&. Note that this can cause stale cache hits if those headers do indeed change\&. The list separator is semicolon on Windows systems and colon on other systems\&.
+.RE
+.PP
+\fBkeep_comments_cpp\fR (\fBCCACHE_COMMENTS\fR or \fBCCACHE_NOCOMMENTS\fR, see Boolean values above)
+.RS 4
+If true, ccache will not discard the comments before hashing preprocessor output\&. This can be used to check documentation with
+\fB\-Wdocumentation\fR\&.
+.RE
+.PP
+\fBlimit_multiple\fR (\fBCCACHE_LIMIT_MULTIPLE\fR)
+.RS 4
+Sets the limit when cleaning up\&. Files are deleted (in LRU order) until the levels are below the limit\&. The default is 0\&.8 (= 80%)\&.
+.RE
+.PP
+\fBlog_file\fR (\fBCCACHE_LOGFILE\fR)
+.RS 4
+If set to a file path, ccache will write information on what it is doing to the specified file\&. This is useful for tracking down problems\&.
+.RE
+.PP
+\fBmax_files\fR (\fBCCACHE_MAXFILES\fR)
+.RS 4
+This option specifies the maximum number of files to keep in the cache\&. Use 0 for no limit (which is the default)\&.
+.RE
+.PP
+\fBmax_size\fR (\fBCCACHE_MAXSIZE\fR)
+.RS 4
+This option specifies the maximum size of the cache\&. Use 0 for no limit\&. The default value is 5G\&. Available suffixes: k, M, G, T (decimal) and Ki, Mi, Gi, Ti (binary)\&. The default suffix is "G"\&.
+.RE
+.PP
+\fBpath\fR (\fBCCACHE_PATH\fR)
+.RS 4
+If set, ccache will search directories in this list when looking for the real compiler\&. The list separator is semicolon on Windows systems and colon on other systems\&. If not set, ccache will look for the first executable matching the compiler name in the normal
+\fBPATH\fR
+that isn\(cqt a symbolic link to ccache itself\&.
+.RE
+.PP
+\fBprefix_command\fR (\fBCCACHE_PREFIX\fR)
+.RS 4
+This option adds a list of prefixes (separated by space) to the command line that ccache uses when invoking the compiler\&. See also
+USING CCACHE WITH OTHER COMPILER WRAPPERS\&.
+.RE
+.PP
+\fBprefix_command_cpp\fR (\fBCCACHE_PREFIX_CPP\fR)
+.RS 4
+This option adds a list of prefixes (separated by space) to the command line that ccache uses when invoking the preprocessor\&.
+.RE
+.PP
+\fBread_only\fR (\fBCCACHE_READONLY\fR or \fBCCACHE_NOREADONLY\fR, see Boolean values above)
+.RS 4
+If true, ccache will attempt to use existing cached object files, but it will not to try to add anything new to the cache\&. If you are using this because your ccache directory is read\-only, then you need to set
+\fBtemporary_dir\fR
+as otherwise ccache will fail to create temporary files\&.
+.RE
+.PP
+\fBread_only_direct\fR (\fBCCACHE_READONLY_DIRECT\fR or \fBCCACHE_NOREADONLY_DIRECT\fR, see Boolean values above)
+.RS 4
+Just like
+\fBread_only\fR
+except that ccache will only try to retrieve results from the cache using the direct mode, not the preprocessor mode\&. See documentation for
+\fBread_only\fR
+regarding using a read\-only ccache directory\&.
+.RE
+.PP
+\fBrecache\fR (\fBCCACHE_RECACHE\fR or \fBCCACHE_NORECACHE\fR, see Boolean values above)
+.RS 4
+If true, ccache will not use any previously stored result\&. New results will still be cached, possibly overwriting any pre\-existing results\&.
+.RE
+.PP
+\fBrun_second_cpp\fR (\fBCCACHE_CPP2\fR or \fBCCACHE_NOCPP2\fR, see Boolean values above)
+.RS 4
+If true, ccache will first run the preprocessor to preprocess the source code (see
+THE PREPROCESSOR MODE) and then on a cache miss run the compiler on the source code to get hold of the object file\&. This is the default\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+If false, ccache will first run preprocessor to preprocess the source code
+and then on a cache miss run the compiler on the _preprocessed source code_
+instead of the original source code\&. This makes cache misses slightly
+faster since the source code only has to be preprocessed once\&. The downside
+is that some compilers won\*(Aqt produce the same result (for instance
+diagnostics warnings) when compiling preprocessed source code\&.
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
+\fBsloppiness\fR (\fBCCACHE_SLOPPINESS\fR)
+.RS 4
+By default, ccache tries to give as few false cache hits as possible\&. However, in certain situations it\(cqs possible that you know things that ccache can\(cqt take for granted\&. This setting makes it possible to tell ccache to relax some checks in order to increase the hit rate\&. The value should be a comma\-separated string with options\&. Available options are:
+.PP
+\fBfile_macro\fR
+.RS 4
+Ignore
+\fB__FILE__\fR
+being present in the source\&.
+.RE
+.PP
+\fBfile_stat_matches\fR
+.RS 4
+ccache normally examines a file\(cqs contents to determine whether it matches the cached version\&. With this option set, ccache will consider a file as matching its cached version if the sizes, mtimes and ctimes match\&.
+.RE
+.PP
+\fBinclude_file_ctime\fR
+.RS 4
+By default, ccache also will not cache a file if it includes a header whose ctime is too new\&. This option disables that check\&.
+.RE
+.PP
+\fBinclude_file_mtime\fR
+.RS 4
+By default, ccache will not cache a file if it includes a header whose mtime is too new\&. This option disables that check\&.
+.RE
+.PP
+\fBno_system_headers\fR
+.RS 4
+By default, ccache will also include all system headers in the manifest\&. With this option set, ccache will only include system headers in the hash but not add the system header files to the list of include files\&.
+.RE
+.PP
+\fBpch_defines\fR
+.RS 4
+Be sloppy about #defines when precompiling a header file\&. See
+PRECOMPILED HEADERS
+for more information\&.
+.RE
+.PP
+\fBtime_macros\fR
+.RS 4
+Ignore
+\fB__DATE__\fR
+and
+\fB__TIME__\fR
+being present in the source code\&.
+.RE
+.sp
+See the discussion under
+TROUBLESHOOTING
+for more information\&.
+.RE
+.PP
+\fBstats\fR (\fBCCACHE_STATS\fR or \fBCCACHE_NOSTATS\fR, see Boolean values above)
+.RS 4
+If true, ccache will update the statistics counters on each compilation\&. The default is true\&.
+.RE
+.PP
+\fBtemporary_dir\fR (\fBCCACHE_TEMPDIR\fR)
+.RS 4
+This setting specifies where ccache will put temporary files\&. The default is
+\fB<cache_dir>/tmp\fR\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+In previous versions of ccache,
+\fBCCACHE_TEMPDIR\fR
+had to be on the same filesystem as the
+\fBCCACHE_DIR\fR
+path, but this requirement has been relaxed\&.)
+.sp .5v
+.RE
+.RE
+.PP
+\fBumask\fR (\fBCCACHE_UMASK\fR)
+.RS 4
+This setting specifies the umask for ccache and all child processes (such as the compiler)\&. This is mostly useful when you wish to share your cache with other users\&. Note that this also affects the file permissions set on the object files created from your compilations\&.
+.RE
+.PP
+\fBunify\fR (\fBCCACHE_UNIFY\fR or \fBCCACHE_NOUNIFY\fR, see Boolean values above)
+.RS 4
+If true, ccache will use a C/C++ unifier when hashing the preprocessor output if the
+\fB\-g\fR
+option is not used\&. The unifier is slower than a normal hash, so setting this environment variable loses a little bit of speed, but it means that ccache can take advantage of not recompiling when the changes to the source code consist of reformatting only\&. Note that enabling the unifier changes the hash, so cached compilations produced when the unifier is enabled cannot be reused when the unifier is disabled, and vice versa\&. Enabling the unifier may result in incorrect line number information in compiler warning messages and expansions of the
+\fB__LINE__\fR
+macro\&. Also note that enabling the unifier implies turning off the direct mode\&.
+.RE
+.SH "CACHE SIZE MANAGEMENT"
+.sp
+By default, ccache has a five gigabyte limit on the total size of files in the cache and no maximum number of files\&. You can set different limits using the \fB\-M\fR/\fB\-\-max\-size\fR and \fB\-F\fR/\fB\-\-max\-files\fR options\&. Use \fBccache \-s/\-\-show\-stats\fR to see the cache size and the currently configured limits (in addition to other various statistics)\&.
+.SH "CACHE COMPRESSION"
+.sp
+ccache can optionally compress all files it puts into the cache using the compression library zlib\&. While this may involve a tiny performance slowdown, it increases the number of files that fit in the cache\&. You can turn on compression with the \fBcompression\fR configuration setting and you can also tweak the compression level with \fBcompression_level\fR\&.
+.SH "HOW CCACHE WORKS"
+.sp
+The basic idea is to detect when you are compiling exactly the same code a second time and reuse the previously produced output\&. The detection is done by hashing different kinds of information that should be unique for the compilation and then using the hash sum to identify the cached output\&. ccache uses MD4, a very fast cryptographic hash algorithm, for the hashing\&. (MD4 is nowadays too weak to be useful in cryptographic contexts, but it should be safe enough to be used to identify recompilations\&.) On a cache hit, ccache is able to supply all of the correct compiler outputs (including all warnings, dependency file, etc) from the cache\&.
+.sp
+ccache has two ways of doing the detection:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+the
+\fBdirect mode\fR, where ccache hashes the source code and include files directly
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+the
+\fBpreprocessor mode\fR, where ccache runs the preprocessor on the source code and hashes the result
+.RE
+.sp
+The direct mode is generally faster since running the preprocessor has some overhead\&.
+.SS "Common hashed information"
+.sp
+For both modes, the following information is included in the hash:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+the extension used by the compiler for a file with preprocessor output (normally
+\fB\&.i\fR
+for C code and
+\fB\&.ii\fR
+for C++ code)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+the compiler\(cqs size and modification time (or other compiler\-specific information specified by the
+\fBcompiler_check\fR
+setting)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+the name of the compiler
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+the current directory (if the
+\fBhash_dir\fR
+setting is enabled)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+contents of files specified by the
+\fBextra_files_to_hash\fR
+setting (if any)
+.RE
+.SS "The direct mode"
+.sp
+In the direct mode, the hash is formed of the common information and:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+the input source file
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+the command line options
+.RE
+.sp
+Based on the hash, a data structure called \(lqmanifest\(rq is looked up in the cache\&. The manifest contains:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+references to cached compilation results (object file, dependency file, etc) that were produced by previous compilations that matched the hash
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+paths to the include files that were read at the time the compilation results were stored in the cache
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+hash sums of the include files at the time the compilation results were stored in the cache
+.RE
+.sp
+The current contents of the include files are then hashed and compared to the information in the manifest\&. If there is a match, ccache knows the result of the compilation\&. If there is no match, ccache falls back to running the preprocessor\&. The output from the preprocessor is parsed to find the include files that were read\&. The paths and hash sums of those include files are then stored in the manifest along with information about the produced compilation result\&.
+.sp
+There is a catch with the direct mode: header files that were used by the compiler are recorded, but header files that were \fBnot\fR used, but would have been used if they existed, are not\&. So, when ccache checks if a result can be taken from the cache, it currently can\(cqt check if the existence of a new header file should invalidate the result\&. In practice, the direct mode is safe to use in the absolute majority of cases\&.
+.sp
+The direct mode will be disabled if any of the following holds:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+the configuration setting
+\fBdirect_mode\fR
+is false
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+a modification time of one of the include files is too new (needed to avoid a race condition)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+the unifier is enabled (the configuration setting
+\fBunify\fR
+is true)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+a compiler option not supported by the direct mode is used:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+a
+\fB\-Wp,\fR\fB\fIX\fR\fR
+compiler option other than
+\fB\-Wp,\-MD,\fR\fB\fIpath\fR\fR,
+\fB\-Wp,\-MMD,\fR\fB\fIpath\fR\fR
+and
+\fB\-Wp,\-D_define_\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fB\-Xpreprocessor\fR
+.RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+the string \(lq__TIME__\(rq is present in the source code
+.RE
+.SS "The preprocessor mode"
+.sp
+In the preprocessor mode, the hash is formed of the common information and:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+the preprocessor output from running the compiler with
+\fB\-E\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+the command line options except options that affect include files (\fB\-I\fR,
+\fB\-include\fR,
+\fB\-D\fR, etc; the theory is that these options will change the preprocessor output if they have any effect at all)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+any standard error output generated by the preprocessor
+.RE
+.sp
+Based on the hash, the cached compilation result can be looked up directly in the cache\&.
+.SH "COMPILING IN DIFFERENT DIRECTORIES"
+.sp
+Some information included in the hash that identifies a unique compilation may contain absolute paths:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The preprocessed source code may contain absolute paths to include files if the compiler option
+\fB\-g\fR
+is used or if absolute paths are given to
+\fB\-I\fR
+and similar compiler options\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Paths specified by compiler options (such as
+\fB\-I\fR,
+\fB\-MF\fR, etc) may be absolute\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The source code file path may be absolute, and that path may substituted for
+\fB__FILE__\fR
+macros in the source code or included in warnings emitted to standard error by the preprocessor\&.
+.RE
+.sp
+This means that if you compile the same code in different locations, you can\(cqt share compilation results between the different build directories since you get cache misses because of the absolute build directory paths that are part of the hash\&. To mitigate this problem, you can specify a \(lqbase directory\(rq in the configuration setting \fBbase_dir\fR to an absolute path to the directory\&. ccache will then rewrite absolute paths that are under the base directory (i\&.e\&., paths that have the base directory as a prefix) to relative paths when constructing the hash\&. A typical path to use as the base directory is your home directory or another directory that is a parent of your build directories\&. (Don\(cqt use / as the base directory since that will make ccache also rewrite paths to system header files, which doesn\(cqt gain anything\&.)
+.sp
+The drawbacks of using a base directory are:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If you specify an absolute path to the source code file,
+\fB__FILE__\fR
+macros will be expanded to a relative path instead\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If you specify an absolute path to the source code file and compile with
+\fB\-g\fR, the source code path stored in the object file may point to the wrong directory, which may prevent debuggers like GDB from finding the source code\&. Sometimes, a work\-around is to change the directory explicitly with the \(lqcd\(rq command in GDB\&.
+.RE
+.SH "PRECOMPILED HEADERS"
+.sp
+ccache has support for GCC\(cqs precompiled headers\&. However, you have to do some things to make it work properly:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+You must set
+\fBsloppiness\fR
+to
+\fBpch_defines,time_macros\fR\&. The reason is that ccache can\(cqt tell whether
+\fB__TIME__\fR
+or
+\fB__DATE__\fR
+is used when using a precompiled header\&. Further, it can\(cqt detect changes in #defines in the source code because of how preprocessing works in combination with precompiled headers\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+You must either:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+use the
+\fB\-include\fR
+compiler option to include the precompiled header (i\&.e\&., don\(cqt use
+\fB#include\fR
+in the source code to include the header); or
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+(for the Clang compiler) use the
+\fB\-include\-pch\fR
+compiler option to include the PCH file generated from the precompiled header; or
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+add the
+\fB\-fpch\-preprocess\fR
+compiler option when compiling\&.
+.RE
+.sp
+If you don\(cqt do this, either the non\-precompiled version of the header file will be used (if available) or ccache will fall back to running the real compiler and increase the statistics counter \(lqpreprocessor error\(rq (if the non\-precompiled header file is not available)\&.
+.RE
+.SH "SHARING A CACHE"
+.sp
+A group of developers can increase the cache hit rate by sharing a cache directory\&. To share a cache without unpleasant side effects, the following conditions should to be met:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Use the same cache directory\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Make sure that the configuration setting
+\fBhard_link\fR
+is false (which is the default)\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Make sure that all users are in the same group\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Set the configuration setting
+\fBumask\fR
+to 002\&. This ensures that cached files are accessible to everyone in the group\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Make sure that all users have write permission in the entire cache directory (and that you trust all users of the shared cache)\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Make sure that the setgid bit is set on all directories in the cache\&. This tells the filesystem to inherit group ownership for new directories\&. The command \(lqfind $CCACHE_DIR \-type d | xargs chmod g+s\(rq might be useful for this\&.
+.RE
+.sp
+The reason to avoid the hard link mode is that the hard links cause unwanted side effects, as all links to a cached file share the file\(cqs modification timestamp\&. This results in false dependencies to be triggered by timestamp\-based build systems whenever another user links to an existing file\&. Typically, users will see that their libraries and binaries are relinked without reason\&.
+.sp
+You may also want to make sure that a base directory is set appropriately, as discussed in a previous section\&.
+.SH "SHARING A CACHE ON NFS"
+.sp
+It is possible to put the cache directory on an NFS filesystem (or similar filesystems), but keep in mind that:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Having the cache on NFS may slow down compilation\&. Make sure to do some benchmarking to see if it\(cqs worth it\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+ccache hasn\(cqt been tested very thoroughly on NFS\&.
+.RE
+.sp
+A tip is to set \fBtemporary_dir\fR to a directory on the local host to avoid NFS traffic for temporary files\&.
+.SH "USING CCACHE WITH OTHER COMPILER WRAPPERS"
+.sp
+The recommended way of combining ccache with another compiler wrapper (such as \(lqdistcc\(rq) is by letting ccache execute the compiler wrapper\&. This is accomplished by defining the configuration setting \fBprefix_command\fR, for example by setting the environment variable \fBCCACHE_PREFIX\fR to the name of the wrapper (e\&.g\&. \fBdistcc\fR)\&. ccache will then prefix the command line with the specified command when running the compiler\&. To specify several prefix commands, set \fBprefix_command\fR to a colon\-separated list of commands\&.
+.sp
+Unless you set \fBcompiler_check\fR to a suitable command (see the description of that configuration option), it is not recommended to use the form \fBccache anotherwrapper compiler args\fR as the compilation command\&. It\(cqs also not recommended to use the masquerading technique for the other compiler wrapper\&. The reason is that by default, ccache will in both cases hash the mtime and size of the other wrapper instead of the real compiler, which means that:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Compiler upgrades will not be detected properly\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The cached results will not be shared between compilations with and without the other wrapper\&.
+.RE
+.sp
+Another minor thing is that if \fBprefix_command\fR is used, ccache will not invoke the other wrapper when running the preprocessor, which increases performance\&. You can use the \fBprefix_command_cpp\fR configuration setting if you also want to invoke the other wrapper when doing preprocessing (normally by adding \fB\-E\fR)\&.
+.SH "CAVEATS"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The direct mode fails to pick up new header files in some rare scenarios\&. See
+THE DIRECT MODE
+above\&.
+.RE
+.SH "TROUBLESHOOTING"
+.SS "General"
+.sp
+A general tip for getting information about what ccache is doing is to enable debug logging by setting \fBlog_file\fR\&. The log contains executed commands, important decisions that ccache makes, read and written files, etc\&. Another way of keeping track of what is happening is to check the output of \fBccache \-s\fR\&.
+.SS "Performance"
+.sp
+ccache has been written to perform well out of the box, but sometimes you may have to do some adjustments of how you use the compiler and ccache in order to improve performance\&.
+.sp
+Since ccache works best when I/O is fast, put the cache directory on a fast storage device if possible\&. Having lots of free memory so that files in the cache directory stay in the disk cache is also preferable\&.
+.sp
+A good way of monitoring how well ccache works is to run \fBccache \-s\fR before and after your build and then compare the statistics counters\&. Here are some common problems and what may be done to increase the hit rate:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If \(lqcache hit (preprocessed)\(rq has been incremented instead of \(lqcache hit (direct)\(rq, ccache has fallen back to preprocessor mode, which is generally slower\&. Some possible reasons are:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The source code has been modified in such a way that the preprocessor output is not affected\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Compiler arguments that are hashed in the direct mode but not in the preprocessor mode have changed (\fB\-I\fR,
+\fB\-include\fR,
+\fB\-D\fR, etc) and they didn\(cqt affect the preprocessor output\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The compiler option
+\fB\-Xpreprocessor\fR
+or
+\fB\-Wp,\fR\fB\fIX\fR\fR
+(except
+\fB\-Wp,\-MD,\fR\fB\fIpath\fR\fR,
+\fB\-Wp,\-MMD,\fR\fB\fIpath\fR\fR, and
+\fB\-Wp,\-D_define_\fR) is used\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+This was the first compilation with a new value of the base directory setting\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+A modification time of one of the include files is too new (created the same second as the compilation is being done)\&. This check is made to avoid a race condition\&. To fix this, create the include file earlier in the build process, if possible, or set
+\fBsloppiness\fR
+to
+\fBinclude_file_mtime\fR
+if you are willing to take the risk\&. (The race condition consists of these events: the preprocessor is run; an include file is modified by someone; the new include file is hashed by ccache; the real compiler is run on the preprocessor\(cqs output, which contains data from the old header file; the wrong object file is stored in the cache\&.)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The
+\fB__TIME__\fR
+preprocessor macro is (potentially) being used\&. ccache turns off direct mode if \(lq__TIME__\(rq is present in the source code\&. This is done as a safety measure since the string indicates that a
+\fB__TIME__\fR
+macro
+\fImay\fR
+affect the output\&. (To be sure, ccache would have to run the preprocessor, but the sole point of the direct mode is to avoid that\&.) If you know that
+\fB__TIME__\fR
+isn\(cqt used in practise, or don\(cqt care if ccache produces objects where
+\fB__TIME__\fR
+is expanded to something in the past, you can set
+\fBsloppiness\fR
+to
+\fBtime_macros\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The
+\fB__DATE__\fR
+preprocessor macro is (potentially) being used and the date has changed\&. This is similar to how
+\fB__TIME__\fR
+is handled\&. If \(lq__DATE__\(rq is present in the source code, ccache hashes the current date in order to be able to produce the correct object file if the
+\fB__DATE__\fR
+macro affects the output\&. If you know that
+\fB__DATE__\fR
+isn\(cqt used in practise, or don\(cqt care if ccache produces objects where
+\fB__DATE__\fR
+is expanded to something in the past, you can set
+\fBsloppiness\fR
+to
+\fBtime_macros\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The
+\fB__FILE__\fR
+preprocessor macro is (potentially) being used and the file path has changed\&. If \(lq__FILE__\(rq is present in the source code, ccache hashes the current input file path in order to be able to produce the correct object file if the
+\fB__FILE__\fR
+macro affects the output\&. If you know that
+\fB__FILE__\fR
+isn\(cqt used in practise, or don\(cqt care if ccache produces objects where
+\fB__FILE__\fR
+is expanded to the wrong path, you can set
+\fBsloppiness\fR
+to
+\fBfile_macro\fR\&.
+.RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If \(lqcache miss\(rq has been incremented even though the same code has been compiled and cached before, ccache has either detected that something has changed anyway or a cleanup has been performed (either explicitly or implicitly when a cache limit has been reached)\&. Some perhaps unobvious things that may result in a cache miss are usage of
+\fB__TIME__\fR
+or
+\fB__DATE__\fR
+macros, or use of automatically generated code that contains a timestamp, build counter or other volatile information\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If \(lqmultiple source files\(rq has been incremented, it\(cqs an indication that the compiler has been invoked on several source code files at once\&. ccache doesn\(cqt support that\&. Compile the source code files separately if possible\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If \(lqunsupported compiler option\(rq has been incremented, enable debug logging and check which option was rejected\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If \(lqpreprocessor error\(rq has been incremented, one possible reason is that precompiled headers are being used\&. See
+PRECOMPILED HEADERS
+for how to remedy this\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If \(lqcan\(cqt use precompiled header\(rq has been incremented, see
+PRECOMPILED HEADERS\&.
+.RE
+.SS "Corrupt object files"
+.sp
+It should be noted that ccache is susceptible to general storage problems\&. If a bad object file sneaks into the cache for some reason, it will of course stay bad\&. Some possible reasons for erroneous object files are bad hardware (disk drive, disk controller, memory, etc), buggy drivers or file systems, a bad \fBprefix_command\fR or compiler wrapper\&. If this happens, the easiest way of fixing it is this:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+Build so that the bad object file ends up in the build tree\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+Remove the bad object file from the build tree\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+Rebuild with
+\fBCCACHE_RECACHE\fR
+set\&.
+.RE
+.sp
+An alternative is to clear the whole cache with \fBccache \-C\fR if you don\(cqt mind losing other cached results\&.
+.sp
+There are no reported issues about ccache producing broken object files reproducibly\&. That doesn\(cqt mean it can\(cqt happen, so if you find a repeatable case, please report it\&.
+.SH "MORE INFORMATION"
+.sp
+Credits, mailing list information, bug reporting instructions, source code, etc, can be found on ccache\(cqs web site: https://ccache\&.samba\&.org\&.
+.SH "AUTHOR"
+.sp
+ccache was originally written by Andrew Tridgell and is currently developed and maintained by Joel Rosdahl\&. See AUTHORS\&.txt or AUTHORS\&.html and https://ccache\&.samba\&.org/credits\&.html for a list of contributors\&.

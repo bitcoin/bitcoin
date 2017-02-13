@@ -1,0 +1,40 @@
+.stamp*
+
+
+boost
+
+# protobuf
+protobuf
+protobuf*.pc
+
+# zlib
+zconf.h
+zlib.h
+zlib.pc
+zlib.3
+
+# zmq
+zmq*.h
+libzmq.pc
+
+# berkeley db
+include/db*.h
+
+# miniupnpc
+miniupnpc
+
+# openssl
+openssl
+openssl.pc
+libssl.pc
+libcrypto.pc
+
+# GUI
+qrencode.h
+libqrencode.pc
+Qt*
+
+# libevent2
+event2
+include/ev*.h
+libevent*.pc
