@@ -48,6 +48,13 @@ CThinBlock::CThinBlock(const CBlock& block, CBloomFilter& filter)
 bool CThinBlock::process(CNode* pfrom, int nSizeThinBlock, string strCommand)
 {
 
+        // Xpress Validation - only perform xval if the chaintip matches the last blockhash in the thinblock
+        bool fXVal;
+        {
+            LOCK(cs_main);
+	    fXVal = (header.hashPrevBlock == chainActive.Tip()->GetBlockHash()) ? true : false;
+        }
+
         pfrom->nSizeThinBlock = nSizeThinBlock;
         pfrom->thinBlock.SetNull();
         pfrom->thinBlock.nVersion = header.nVersion;
@@ -63,11 +70,13 @@ bool CThinBlock::process(CNode* pfrom, int nSizeThinBlock, string strCommand)
         BOOST_FOREACH(CTransaction tx, vMissingTx) 
             mapMissingTx[tx.GetHash()] = tx;
 
-        LOCK2(cs_main, cs_xval);
+        {
+        LOCK(cs_orphancache);
+        // We don't have to keep the lock on mempool.cs here to do mempool.queryHashes 
+        // but we take the lock anyway so we don't have to re-lock again later.
+        LOCK2(mempool.cs, cs_xval);
         int missingCount = 0;
         int unnecessaryCount = 0;
-        // Xpress Validation - only perform xval if the chaintip matches the last blockhash in the thinblock
-        bool fXVal = (header.hashPrevBlock == chainActive.Tip()->GetBlockHash()) ? true : false;
 
         // Look for each transaction in our various pools and buffers.
         BOOST_FOREACH(const uint256 &hash, vTxHashes) 
@@ -98,6 +107,7 @@ bool CThinBlock::process(CNode* pfrom, int nSizeThinBlock, string strCommand)
         }
         pfrom->thinBlockWaitingForTxns = missingCount;
         LogPrint("thin", "Thinblock %s waiting for: %d, unnecessary: %d, txs: %d full: %d\n", pfrom->thinBlock.GetHash().ToString(), pfrom->thinBlockWaitingForTxns, unnecessaryCount, pfrom->thinBlock.vtx.size(), mapMissingTx.size());
+        } // end lock cs_orphancache, mempool.cs, cs_xval
 
         if (pfrom->thinBlockWaitingForTxns == 0) {
             // We have all the transactions now that are in this block: try to reassemble and process.
@@ -252,8 +262,8 @@ bool CXThinBlock::process(CNode* pfrom, int nSizeThinBlock, string strCommand)  
     map<uint64_t, uint256> mapPartialTxHash;
     vector<uint256> memPoolHashes;
 
-    // Do the orphans first before taking the mempool.cs lock, so that we maintain correct locking order.
     {
+    // Do the orphans first before taking the mempool.cs lock, so that we maintain correct locking order.
     LOCK(cs_orphancache);
     for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi) {
         uint64_t cheapHash = (*mi).first.GetCheapHash();
@@ -261,8 +271,7 @@ bool CXThinBlock::process(CNode* pfrom, int nSizeThinBlock, string strCommand)  
             collision = true;
         mapPartialTxHash[cheapHash] = (*mi).first;
     }
-    }
-    {
+
     // We don't have to keep the lock on mempool.cs here to do mempool.queryHashes 
     // but we take the lock anyway so we don't have to re-lock again later.
     LOCK2(mempool.cs, cs_xval);
@@ -321,7 +330,7 @@ bool CXThinBlock::process(CNode* pfrom, int nSizeThinBlock, string strCommand)  
             pfrom->thinBlock.vtx.push_back(tx);
           }
       }
-    }  // End locking mempool.cs and cs_xval
+    }  // End locking cs_orphancache, mempool.cs and cs_xval
 
     // There is a remote possiblity of a Tx hash collision therefore if it occurs we re-request a normal
     // thinblock which has the full Tx hash data rather than just the truncated hash.
