@@ -282,25 +282,13 @@
     <ClCompile Include="src\leveldb\util\arena.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\leveldb\util\arena_test.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\leveldb\util\bloom.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\util\bloom_test.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\leveldb\util\cache.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\leveldb\util\cache_test.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\leveldb\util\coding.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\util\coding_test.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\leveldb\util\comparator.cc">
@@ -309,16 +297,10 @@
     <ClCompile Include="src\leveldb\util\crc32c.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\leveldb\util\crc32c_test.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\leveldb\util\env.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\leveldb\util\env_posix.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\util\env_test.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\leveldb\util\env_win.cc">
@@ -328,9 +310,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\leveldb\util\hash.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\util\hash_test.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\leveldb\util\histogram.cc">
