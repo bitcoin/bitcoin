@@ -21,7 +21,7 @@
     <ClCompile Include="src\chainparams.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\bitcoin-tx.cpp">
+    <ClCompile Include="src\init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -30,6 +30,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\chainparams.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\init.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
