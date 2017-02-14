@@ -151,8 +151,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\bitcoind.cpp" />
+    <ClCompile Include="src\blockencodings.cpp" />
+    <ClCompile Include="src\bloom.cpp" />
+    <ClCompile Include="src\chain.cpp" />
     <ClCompile Include="src\chainparams.cpp" />
     <ClCompile Include="src\chainparamsbase.cpp" />
+    <ClCompile Include="src\checkpoints.cpp" />
     <ClCompile Include="src\clientversion.cpp" />
     <ClCompile Include="src\coins.cpp" />
     <ClCompile Include="src\compressor.cpp" />
@@ -176,13 +180,35 @@
     <ClCompile Include="src\random.cpp" />
     <ClCompile Include="src\rest.cpp" />
     <ClCompile Include="src\scheduler.cpp" />
+    <ClCompile Include="src\sync.cpp" />
+    <ClCompile Include="src\threadinterrupt.cpp" />
+    <ClCompile Include="src\timedata.cpp" />
+    <ClCompile Include="src\torcontrol.cpp" />
+    <ClCompile Include="src\txdb.cpp" />
+    <ClCompile Include="src\txmempool.cpp" />
+    <ClCompile Include="src\uint256.cpp" />
+    <ClCompile Include="src\ui_interface.cpp" />
+    <ClCompile Include="src\util.cpp" />
+    <ClCompile Include="src\utilmoneystr.cpp" />
+    <ClCompile Include="src\utilstrencodings.cpp" />
+    <ClCompile Include="src\utiltime.cpp" />
+    <ClCompile Include="src\validation.cpp" />
+    <ClCompile Include="src\validationinterface.cpp" />
+    <ClCompile Include="src\versionbits.cpp" />
+    <ClCompile Include="src\warnings.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\blockencodings.h" />
+    <ClInclude Include="src\bloom.h" />
+    <ClInclude Include="src\chain.h" />
     <ClInclude Include="src\chainparams.h" />
     <ClInclude Include="src\chainparamsbase.h" />
+    <ClInclude Include="src\chainparamsseeds.h" />
+    <ClInclude Include="src\checkpoints.h" />
+    <ClInclude Include="src\checkqueue.h" />
     <ClInclude Include="src\clientversion.h" />
     <ClInclude Include="src\coins.h" />
     <ClInclude Include="src\compat.h" />
@@ -212,6 +238,28 @@
     <ClInclude Include="src\random.h" />
     <ClInclude Include="src\reverselock.h" />
     <ClInclude Include="src\scheduler.h" />
+    <ClInclude Include="src\serialize.h" />
+    <ClInclude Include="src\streams.h" />
+    <ClInclude Include="src\sync.h" />
+    <ClInclude Include="src\threadinterrupt.h" />
+    <ClInclude Include="src\threadsafety.h" />
+    <ClInclude Include="src\timedata.h" />
+    <ClInclude Include="src\tinyformat.h" />
+    <ClInclude Include="src\torcontrol.h" />
+    <ClInclude Include="src\txdb.h" />
+    <ClInclude Include="src\txmempool.h" />
+    <ClInclude Include="src\uint256.h" />
+    <ClInclude Include="src\ui_interface.h" />
+    <ClInclude Include="src\undo.h" />
+    <ClInclude Include="src\util.h" />
+    <ClInclude Include="src\utilmoneystr.h" />
+    <ClInclude Include="src\utilstrencodings.h" />
+    <ClInclude Include="src\utiltime.h" />
+    <ClInclude Include="src\validation.h" />
+    <ClInclude Include="src\validationinterface.h" />
+    <ClInclude Include="src\version.h" />
+    <ClInclude Include="src\versionbits.h" />
+    <ClInclude Include="src\warnings.h" />
     <ClInclude Include="src\wintype.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
