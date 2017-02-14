@@ -26,6 +26,8 @@
 #include <algorithm>
 #include <vector>
 
+#include "wintype.h" // ssize_t
+
 enum TEST_ID {
     CBLOCK_DESERIALIZE=0,
     CTRANSACTION_DESERIALIZE,

@@ -212,6 +212,7 @@
     <ClInclude Include="src\random.h" />
     <ClInclude Include="src\reverselock.h" />
     <ClInclude Include="src\scheduler.h" />
+    <ClInclude Include="src\wintype.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
