@@ -116,13 +116,13 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
 {
     const char *argv_test[] = {"-ignored", "-reindex", "-txindex", "-connect=argument", "-connect=multiple", "f", "-d=e"};
 
-    ParseParameters(0, (char**)argv_test, AllowedArgs::Bitcoind);
+    ParseParameters(0, (char**)argv_test, AllowedArgs::Bitcoind());
     BOOST_CHECK(mapArgs.empty() && mapMultiArgs.empty());
 
-    ParseParameters(1, (char**)argv_test, AllowedArgs::Bitcoind);
+    ParseParameters(1, (char**)argv_test, AllowedArgs::Bitcoind());
     BOOST_CHECK(mapArgs.empty() && mapMultiArgs.empty());
 
-    ParseParameters(5, (char**)argv_test, AllowedArgs::Bitcoind);
+    ParseParameters(5, (char**)argv_test, AllowedArgs::Bitcoind());
     // expectation: -ignored is ignored (program name argument),
     // -reindex, -txindex and -connect end up in map, -d ignored because it is after
     // a non-option argument (non-GNU option parsing)
@@ -134,12 +134,6 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
 
     BOOST_CHECK(mapArgs["-reindex"] == "" && mapArgs["-connect"] == "multiple");
     BOOST_CHECK(mapMultiArgs["-connect"].size() == 2);
-}
-
-BOOST_AUTO_TEST_CASE(util_ParseParameters_unrecognized)
-{
-    const char *argv_test[] = {"-ignored", "-unrecognized_arg"};
-    BOOST_CHECK_THROW(ParseParameters(2, (char**)argv_test, AllowedArgs::Bitcoind), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(util_GetArg)

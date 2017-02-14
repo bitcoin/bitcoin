@@ -86,8 +86,9 @@ static int AppInitRPC(int argc, char* argv[])
     //
     // Parameters
     //
+    AllowedArgs::BitcoinCli allowedArgs;
     try {
-        ParseParameters(argc, argv, AllowedArgs::BitcoinCli);
+        ParseParameters(argc, argv, allowedArgs);
     } catch (const std::exception& e) {
         fprintf(stderr, "Error parsing program options: %s\n", e.what());
         return EXIT_FAILURE;

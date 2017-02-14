@@ -29,7 +29,7 @@ static void ResetArgs(const std::string& strArg)
     BOOST_FOREACH(std::string& s, vecArg)
         vecChar.push_back(s.c_str());
 
-    ParseParameters(vecChar.size(), &vecChar[0], AllowedArgs::Bitcoind);
+    ParseParameters(vecChar.size(), &vecChar[0], AllowedArgs::Bitcoind());
 }
 
 BOOST_AUTO_TEST_CASE(boolarg)

@@ -75,8 +75,6 @@ endif
 BITCOIN_CORE_H = \
   addrman.h \
   allowed_args.h \
-  amount.h \
-  arith_uint256.h \
   base58.h \
   bitnodes.h \
   bloom.h \

@@ -6,242 +6,175 @@
 
 #include "tinyformat.h"
 #include "util.h"
+#include "utilstrencodings.h"
 
 #include <set>
 
-const std::set<std::string> HELP_ARGS
-{
-  "?",
-  "h",
-  "help",
-  "version"
-};
+namespace AllowedArgs {
 
-const std::set<std::string> BITCOIND_ARGS
-{
-#ifdef ENABLE_WALLET
-    "disablewallet",
-    "fallbackfee",
-    "keypool",
-    "maxtxfee",
-    "mintxfee",
-    "paytxfee",
-    "rescan",
-    "salvagewallet",
-    "sendfreetransactions",
-    "spendzeroconfchange",
-    "txconfirmtarget",
-    "upgradewallet",
-    "wallet",
-    "walletbroadcast",
-    "walletnotify",
-    "zapwallettxes",
-#endif
-#if ENABLE_ZMQ
-    "zmqpubhashblock",
-    "zmqpubhashtx",
-    "zmqpubrawblock",
-    "zmqpubrawtx"
-#endif
-#ifdef USE_UPNP
-    "upnp",
-#endif
-#ifndef WIN32
-    "daemon",
-    "pid",
-#endif
-    "acceptnonstdtxn",
-    "addnode",
-    "admincookiefile",
-    "adminserver",
-    "alertnotify",
-    "banscore",
-    "bantime",
-    "bind",
-    "blockmaxsize",
-    "blockminsize",
-    "blocknotify",
-    "blockprioritysize",
-    "blocksizeacceptlimit",
-    "blocksonly",
-    "blockversion",
-    "bytespersigop",
-    "checkblockindex",
-    "checkblocks",
-    "checklevel",
-    "checkmempool",
-    "checkpoints",
-    "conf",
-    "connect",
-    "datacarrier",
-    "datacarriersize",
-    "datadir",
-    "dbcache",
-    "dblogsize",
-    "debug",
-    "disablesafemode",
-    "discover",
-    "dns",
-    "dnsseed",
-    "dropmessagestest",
-    "enforcenodebloom",
-    "excessiveblocksize",
-    "externalip",
-    "flextrans",
-    "flushwallet",
-    "forcednsseed",
-    "fuzzmessagestest",
-    "gen",
-    "gencoinbase",
-    "genproclimit",
-    "help-debug",
-    "limitancestorcount",
-    "limitancestorsize",
-    "limitdescendantcount",
-    "limitdescendantsize",
-    "limitfreerelay",
-    "listen",
-    "listenonion",
-    "loadblock",
-    "logips",
-    "logtimemicros",
-    "logtimestamps",
-    "maxconnections",
-    "maxmempool",
-    "maxorphantx",
-    "maxreceivebuffer",
-    "maxsendbuffer",
-    "maxsigcachesize",
-    "maxuploadtarget",
-    "mempoolexpiry",
-    "minrelaytxfee",
-    "mocktime",
-    "onion",
-    "onlynet",
-    "par",
-    "peerbloomfilters",
-    "permitbaremultisig",
-    "port",
-    "printpriority",
-    "printtoconsole",
-    "privdb",
-    "proxy",
-    "proxyrandomize",
-    "prune",
-    "reindex",
-    "relaypriority",
-    "regtest",
-    "rest",
-    "rpcallowip",
-    "rpcauth",
-    "rpcbind",
-    "rpccookiefile",
-    "rpcpassword",
-    "rpcport",
-    "rpcservertimeout",
-    "rpcthreads",
-    "rpcuser",
-    "rpcworkqueue",
-    "seednode",
-    "server",
-    "shrinkdebugfile",
-    "stopafterblockimport",
-    "testnet",
-    "testnet-ft",
-    "testsafemode",
-    "timeout",
-    "torcontrol",
-    "torpassword",
-    "txindex",
-    "uacomment",
-    "use-thinblocks",
-    "version",
-    "whitebind",
-    "whitelist",
-    "whitelistforcerelay",
-    "whitelistrelay"
-};
+static const int screenWidth = 79;
+static const int optIndent = 2;
+static const int msgIndent = 7;
 
-const std::set<std::string> BITCOIN_QT_ARGS
+std::string HelpMessageGroup(const std::string &message)
 {
-    "allowselfsignedrootcertificates",
-    "choosedatadir",
-    "lang",
-    "min",
-    "resetguisettings",
-    "rootcertificates",
-    "splash",
-    "uiplatform"
-};
-
-const std::set<std::string> BITCOIN_CLI_ARGS
-{
-    "conf",
-    "datadir",
-    "rpcclienttimeout",
-    "rpcconnect",
-    "rpcpassword",
-    "rpcport",
-    "rpcuser",
-    "rpcwait"
-};
-
-const std::set<std::string> BITCOIN_TX_ARGS
-{
-    "create",
-    "json",
-    "txid"
-};
-
-void unrecognizedOption(const std::string& strArg)
-{
-    throw std::runtime_error(strprintf(_("unrecognized option '%s'"), strArg));
+    return std::string(message) + std::string("\n\n");
 }
 
-void AllowedArgs::BitcoinCli(const std::string& strArg)
+std::string HelpMessageOpt(const std::string &option, const std::string &message)
 {
-    if (!HELP_ARGS.count(strArg) &&
-        !BITCOIN_CLI_ARGS.count(strArg))
-    {
-        unrecognizedOption(strArg);
+    return std::string(optIndent, ' ') + std::string(option) +
+           std::string("\n") + std::string(msgIndent, ' ') +
+           FormatParagraph(message, screenWidth - msgIndent, msgIndent) +
+           std::string("\n\n");
+}
+
+AllowedArgs& AllowedArgs::addHeader(const std::string& strHeader, bool debug)
+{
+
+    m_helpList.push_back(HelpComponent{strHeader + "\n\n", debug});
+    return *this;
+}
+
+AllowedArgs& AllowedArgs::addDebugArg(const std::string& strArgsDefinition, CheckValueFunc checkValueFunc, const std::string& strHelp)
+{
+    return addArg(strArgsDefinition, checkValueFunc, strHelp, true);
+}
+
+AllowedArgs& AllowedArgs::addArg(const std::string& strArgsDefinition, CheckValueFunc checkValueFunc, const std::string& strHelp, bool debug)
+{
+    std::string strArgs = strArgsDefinition;
+    std::string strExampleValue;
+    size_t is_index = strArgsDefinition.find('=');
+    if (is_index != std::string::npos) {
+        strExampleValue = strArgsDefinition.substr(is_index + 1);
+        strArgs = strArgsDefinition.substr(0, is_index);
     }
+
+    std::stringstream streamArgs(strArgs);
+    std::string strArg;
+    bool firstArg = true;
+    while (std::getline(streamArgs, strArg, ',')) {
+        m_args[strArg] = checkValueFunc;
+
+        std::string optionText = std::string(optIndent, ' ') + "-" + strArg;
+        if (!strExampleValue.empty())
+            optionText += "=" + strExampleValue;
+        optionText += "\n";
+        m_helpList.push_back(HelpComponent{optionText, debug || !firstArg});
+
+        firstArg = false;
+    }
+
+    std::string helpText = std::string(msgIndent, ' ') + FormatParagraph(strHelp, screenWidth - msgIndent, msgIndent) + "\n\n";
+    m_helpList.push_back(HelpComponent{helpText, debug});
+
+    return *this;
 }
 
-void AllowedArgs::Bitcoind(const std::string& strArg)
+void AllowedArgs::checkArg(const std::string& strArg, const std::string& strValue) const
 {
-    if (!HELP_ARGS.count(strArg) &&
-        !BITCOIND_ARGS.count(strArg))
-    {
-        unrecognizedOption(strArg);
-    }
+    // Actual checking is disabled until all child classes are implemented
+
+    // if (!m_args.count(strArg))
+    //     throw std::runtime_error(strprintf(_("unrecognized option '%s'"), strArg));
+
+    // if (!m_args.at(strArg)(strValue))
+    //     throw std::runtime_error(strprintf(_("invalid value '%s' for option '%s'"), strValue, strArg));
 }
 
-void AllowedArgs::BitcoinQt(const std::string& strArg)
+std::string AllowedArgs::helpMessage() const
 {
-    if (!HELP_ARGS.count(strArg) &&
-        !BITCOIND_ARGS.count(strArg) &&
-        !BITCOIN_QT_ARGS.count(strArg))
-    {
-        unrecognizedOption(strArg);
-    }
+    const bool showDebug = GetBoolArg("-help-debug", false);
+    std::string helpMessage;
+
+    for (HelpComponent helpComponent : m_helpList)
+        if (showDebug || !helpComponent.debug)
+            helpMessage += helpComponent.text;
+
+    return helpMessage;
 }
 
-void AllowedArgs::BitcoinTx(const std::string& strArg)
+//////////////////////////////////////////////////////////////////////////////
+//
+// CheckValueFunc functions
+//
+
+static const std::set<char> boolChars{'0', '1'};
+
+static bool validateString(const std::string& str, const std::set<char>& validChars)
 {
-    if (!HELP_ARGS.count(strArg) &&
-        !BITCOIN_TX_ARGS.count(strArg))
-    {
-        unrecognizedOption(strArg);
-    }
+    for (const char& c : str)
+        if (!validChars.count(c))
+            return false;
+    return true;
 }
 
-void AllowedArgs::ConfigFile(const std::string& strArg)
+static bool optionalBool(const std::string& str)
 {
-    if (!HELP_ARGS.count(strArg) &&
-        !BITCOIND_ARGS.count(strArg) &&
-        !BITCOIN_QT_ARGS.count(strArg) &&
-        !BITCOIN_CLI_ARGS.count(strArg))
-    {
-        unrecognizedOption(strArg);
-    }
+    if (str.empty())
+        return true;
+    return validateString(str, boolChars);
 }
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Argument definitions
+//
+
+// When adding new arguments to a category, please keep alphabetical ordering,
+// where appropriate. Do not translate _(...) addDebugArg help text: there are
+// many technical terms, and only a very small audience, so it would be an
+// unnecessary stress to translators.
+
+static void addHelpOptions(AllowedArgs& allowedArgs)
+{
+    allowedArgs
+        .addHeader(_("Help options:"))
+        .addArg("?,h,help", optionalBool, _("This help message"))
+        .addArg("version", optionalBool, _("Print version and exit"))
+        .addArg("help-debug", optionalBool, _("Show all debugging options (usage: --help -help-debug)"))
+        ;
+}
+
+static void addChainSelectionOptions(AllowedArgs& allowedArgs)
+{
+    allowedArgs
+        .addHeader(_("Chain selection options:"))
+        .addArg("testnet-ft", optionalBool, _("Use the flexible-transactions testnet"))
+        .addArg("testnet", optionalBool, _("Use the test chain"))
+        .addDebugArg("regtest", optionalBool,
+            "Enter regression test mode, which uses a special chain in which blocks can be solved instantly. "
+            "This is intended for regression testing tools and app development.")
+        ;
+}
+
+BitcoinCli::BitcoinCli()
+{
+}
+
+Bitcoind::Bitcoind()
+{
+}
+
+BitcoinQt::BitcoinQt()
+{
+}
+
+BitcoinTx::BitcoinTx()
+{
+    addHelpOptions(*this);
+    addChainSelectionOptions(*this);
+
+    addHeader(_("Transaction options:"))
+        .addArg("create", optionalBool, _("Create new, empty TX."))
+        .addArg("json", optionalBool, _("Select JSON output"))
+        .addArg("txid", optionalBool, _("Output only the hex-encoded transaction id of the resultant transaction."))
+        ;
+}
+
+ConfigFile::ConfigFile()
+{
+}
+
+} // namespace AllowedArgs
