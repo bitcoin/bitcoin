@@ -2482,7 +2482,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             LogPrint("net", "pong peer=%d: %s, %x expected, %x received, %u bytes\n",
                 pfrom->id,
                 sProblem,
-                pfrom->nPingNonceSent,
+                (uint64_t)pfrom->nPingNonceSent,
                 nonce,
                 nAvail);
         }
