@@ -336,19 +336,10 @@
     <ClCompile Include="src\keystore.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\leveldb\db\autocompact_test.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\leveldb\db\builder.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\leveldb\db\c.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\c_test.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\corruption_test.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\leveldb\db\db_bench.cc">
@@ -360,13 +351,7 @@
     <ClCompile Include="src\leveldb\db\db_iter.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\leveldb\db\db_test.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\leveldb\db\dbformat.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\dbformat_test.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\leveldb\db\dumpfile.cc">
@@ -375,25 +360,16 @@
     <ClCompile Include="src\leveldb\db\filename.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\leveldb\db\filename_test.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\leveldb\db\leveldbutil.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\leveldb\db\log_reader.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\leveldb\db\log_test.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\leveldb\db\log_writer.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\leveldb\db\memtable.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\recovery_test.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\leveldb\db\repair.cc">
@@ -406,9 +382,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\leveldb\db\version_set.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\version_set_test.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\leveldb\db\write_batch.cc">
