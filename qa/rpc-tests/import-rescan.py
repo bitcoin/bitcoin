@@ -54,7 +54,7 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
                 "scriptPubKey": {
                     "address": self.address["address"]
                 },
-                "timestamp": timestamp + (1 if self.rescan == Rescan.late_timestamp else 0),
+                "timestamp": timestamp + RESCAN_WINDOW + (1 if self.rescan == Rescan.late_timestamp else 0),
                 "pubkeys": [self.address["pubkey"]] if self.data == Data.pub else [],
                 "keys": [self.key] if self.data == Data.priv else [],
                 "label": self.label,
@@ -99,6 +99,9 @@ IMPORT_VARIANTS = [Variant(*variants) for variants in itertools.product(Call, Da
 ImportNode = collections.namedtuple("ImportNode", "prune rescan")
 IMPORT_NODES = [ImportNode(*fields) for fields in itertools.product((False, True), repeat=2)]
 
+# Rescans start at the earliest block up to 2 hours before the key timestamp.
+RESCAN_WINDOW = 2 * 60 * 60
+
 
 class ImportRescanTest(BitcoinTestFramework):
     def __init__(self):
@@ -130,7 +133,7 @@ class ImportRescanTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         assert_equal(self.nodes[0].getrawmempool(), [])
         timestamp = self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"]
-        set_node_times(self.nodes, timestamp + 1)
+        set_node_times(self.nodes, timestamp + RESCAN_WINDOW + 1)
         self.nodes[0].generate(1)
         sync_blocks(self.nodes)
 
