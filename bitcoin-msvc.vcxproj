@@ -213,6 +213,12 @@
     <ClCompile Include="src\validation.cpp" />
     <ClCompile Include="src\validationinterface.cpp" />
     <ClCompile Include="src\versionbits.cpp" />
+    <ClCompile Include="src\wallet\crypter.cpp" />
+    <ClCompile Include="src\wallet\db.cpp" />
+    <ClCompile Include="src\wallet\rpcdump.cpp" />
+    <ClCompile Include="src\wallet\rpcwallet.cpp" />
+    <ClCompile Include="src\wallet\wallet.cpp" />
+    <ClCompile Include="src\wallet\walletdb.cpp" />
     <ClCompile Include="src\warnings.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -291,6 +297,12 @@
     <ClInclude Include="src\validationinterface.h" />
     <ClInclude Include="src\version.h" />
     <ClInclude Include="src\versionbits.h" />
+    <ClInclude Include="src\wallet\coincontrol.h" />
+    <ClInclude Include="src\wallet\crypter.h" />
+    <ClInclude Include="src\wallet\db.h" />
+    <ClInclude Include="src\wallet\rpcwallet.h" />
+    <ClInclude Include="src\wallet\wallet.h" />
+    <ClInclude Include="src\wallet\walletdb.h" />
     <ClInclude Include="src\warnings.h" />
     <ClInclude Include="src\wintype.h" />
   </ItemGroup>
