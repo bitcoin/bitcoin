@@ -51,7 +51,7 @@ sudo apt-get install libqt4-dev libprotobuf-dev protobuf-compiler libqrencode-de
 sudo apt-get install software-properties-common
 
 ## this not needed if your wallet will use the new
-## format, ot if you're not going to use a wallet at all
+## format, or if you're not going to use a wallet at all
 sudo add-apt-repository ppa:bitcoin-unlimited/bu-ppa
 sudo apt-get update
 sudo apt-get install libdb4.8-dev libdb4.8++-dev
