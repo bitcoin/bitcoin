@@ -373,6 +373,7 @@
     <ClInclude Include="src\zmq\zmqconfig.h" />
     <ClInclude Include="src\zmq\zmqnotificationinterface.h" />
     <ClInclude Include="src\zmq\zmqpublishnotifier.h" />
+    <ClInclude Include="src\wintype.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

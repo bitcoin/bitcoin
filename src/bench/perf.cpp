@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "perf.h"
+#include "wintype.h" // ssize_t
 
 #if defined(__i386__) || defined(__x86_64__)
 

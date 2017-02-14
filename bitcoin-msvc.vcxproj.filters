@@ -668,6 +668,9 @@
     <ClInclude Include="src\policy\rbf.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\wintype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

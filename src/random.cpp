@@ -24,6 +24,8 @@
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
+#include "wintype.h" // ssize_t
+
 static void RandFailure()
 {
     LogPrintf("Failed to read randomness, aborting\n");
