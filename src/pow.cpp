@@ -8,6 +8,7 @@
 #include "arith_uint256.h"
 #include "chain.h"
 #include "consensus/validation.h"
+#include "keystore.h"
 #include "primitives/block.h"
 #include "uint256.h"
 
@@ -101,7 +102,7 @@ bool CheckProof(const CBlockHeader& block, const uint256& block_hash, CValidatio
     return true;
 }
 
-bool MaybeGenerateProof(const Consensus::Params& params, CBlockHeader* pblock, uint64_t& nTries)
+bool MaybeGenerateProof(const Consensus::Params& params, CBlockHeader* pblock, const CKeyStore* pkeystore, uint64_t& nTries)
 {
     static const int nInnerLoopCount = 0x10000;
     uint256 blockHash = pblock->GetHash();
@@ -116,7 +117,8 @@ bool MaybeGenerateProof(const Consensus::Params& params, CBlockHeader* pblock, u
 bool GenerateProof(const Consensus::Params& params, CBlockHeader* pblock)
 {
     uint64_t nTries = 10000;
-    return MaybeGenerateProof(params, pblock, nTries);
+    CBasicKeyStore dummyKeystore;
+    return MaybeGenerateProof(params, pblock, &dummyKeystore, nTries);
 }
 
 void ResetProof(CBlockHeader* pblock)
