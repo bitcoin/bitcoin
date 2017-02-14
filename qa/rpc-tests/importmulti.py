@@ -149,6 +149,7 @@ class ImportMultiTest (BitcoinTestFramework):
         # Address + Private key + !watchonly
         print("Should import an address with private key")
         address = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
+        timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
         result = self.nodes[1].importmulti([{
             "scriptPubKey": {
                 "address": address['address']
@@ -160,6 +161,7 @@ class ImportMultiTest (BitcoinTestFramework):
         address_assert = self.nodes[1].validateaddress(address['address'])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], True)
+        assert_equal(address_assert['timestamp'], timestamp)
 
         # Address + Private key + watchonly
         print("Should not import an address with private key and with watchonly")
