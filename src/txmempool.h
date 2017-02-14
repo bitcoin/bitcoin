@@ -510,8 +510,7 @@ public:
 
     /** Create a new CTxMemPool.
      */
-    CTxMemPool();
-    ~CTxMemPool();
+    CTxMemPool(CBlockPolicyEstimator* estimator = nullptr);
 
     /**
      * If sanity-checking is turned on, check makes sure the pool is
