@@ -163,6 +163,12 @@
     <ClCompile Include="src\httprpc.cpp" />
     <ClCompile Include="src\httpserver.cpp" />
     <ClCompile Include="src\init.cpp" />
+    <ClCompile Include="src\merkleblock.cpp" />
+    <ClCompile Include="src\miner.cpp" />
+    <ClCompile Include="src\net.cpp" />
+    <ClCompile Include="src\netaddress.cpp" />
+    <ClCompile Include="src\netbase.cpp" />
+    <ClCompile Include="src\net_processing.cpp" />
     <ClCompile Include="src\noui.cpp" />
     <ClCompile Include="src\pow.cpp" />
     <ClCompile Include="src\protocol.cpp" />
@@ -190,6 +196,14 @@
     <ClInclude Include="src\httpserver.h" />
     <ClInclude Include="src\indirectmap.h" />
     <ClInclude Include="src\init.h" />
+    <ClInclude Include="src\memusage.h" />
+    <ClInclude Include="src\merkleblock.h" />
+    <ClInclude Include="src\miner.h" />
+    <ClInclude Include="src\net.h" />
+    <ClInclude Include="src\netaddress.h" />
+    <ClInclude Include="src\netbase.h" />
+    <ClInclude Include="src\netmessagemaker.h" />
+    <ClInclude Include="src\net_processing.h" />
     <ClInclude Include="src\noui.h" />
     <ClInclude Include="src\pow.h" />
     <ClInclude Include="src\prevector.h" />
