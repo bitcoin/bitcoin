@@ -264,6 +264,7 @@
     <Import Project="packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.targets" Condition="Exists('packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.targets')" />
     <Import Project="packages\secp256k1_vc140.0.1.0.15\build\native\secp256k1_vc140.targets" Condition="Exists('packages\secp256k1_vc140.0.1.0.15\build\native\secp256k1_vc140.targets')" />
     <Import Project="packages\libevent2-vc140.2.1.8\build\native\libevent2-vc140.targets" Condition="Exists('packages\libevent2-vc140.2.1.8\build\native\libevent2-vc140.targets')" />
+    <Import Project="packages\miniupnpc-vc140.2.0.0\build\native\miniupnpc-vc140.targets" Condition="Exists('packages\miniupnpc-vc140.2.0.0\build\native\miniupnpc-vc140.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -317,5 +318,6 @@
     <Error Condition="!Exists('packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.targets'))" />
     <Error Condition="!Exists('packages\secp256k1_vc140.0.1.0.15\build\native\secp256k1_vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\secp256k1_vc140.0.1.0.15\build\native\secp256k1_vc140.targets'))" />
     <Error Condition="!Exists('packages\libevent2-vc140.2.1.8\build\native\libevent2-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\libevent2-vc140.2.1.8\build\native\libevent2-vc140.targets'))" />
+    <Error Condition="!Exists('packages\miniupnpc-vc140.2.0.0\build\native\miniupnpc-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\miniupnpc-vc140.2.0.0\build\native\miniupnpc-vc140.targets'))" />
   </Target>
 </Project>
