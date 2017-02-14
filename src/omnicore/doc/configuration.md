@@ -43,6 +43,7 @@ More information about the general configuration and Bitcoin Core specific optio
 | `omnitxcache`                | number       | `500000`       | the maximum number of transactions in the input transaction cache               |
 | `omniprogressfrequency`      | number       | `30`           | time in seconds after which the initial scanning progress is reported           |
 | `omniseedblockfilter`        | boolean      | `1`            | set skipping of blocks without Omni transactions during initial scan            |
+| `omnishowblockconsensushash` | number       | `0`            | calculate and log the consensus hash for the specified block                    |
 
 #### Log options:
 
@@ -57,7 +58,7 @@ More information about the general configuration and Bitcoin Core specific optio
 |------------------------------|--------------|----------------|---------------------------------------------------------------------------------|
 | `autocommit`                 | boolean      | `1`            | enable or disable broadcasting of transactions, when creating transactions      |
 | `datacarrier`                | boolean      | `1`            | if disabled, payloads are embedded multisig, and not in `OP_RETURN` scripts     |
-| `datacarriersize`            | number       | `40`           | the maximum size in byte of payloads embedded in `OP_RETURN` scripts            |
+| `datacarriersize`            | number       | `80`           | the maximum size in byte of payloads embedded in `OP_RETURN` scripts            |
 
 **Note:** the options `-datacarrier` and `datacarriersize` affect the global relay policies of transactions with `OP_RETURN` scripts.
 

@@ -5,6 +5,9 @@
 
 namespace mastercore
 {
+/** Checks if a given block should be consensus hashed. */
+bool ShouldConsensusHashBlock(int block);
+
 /** Obtains a hash of all balances to use for consensus verification and checkpointing. */
 uint256 GetConsensusHash();
 
