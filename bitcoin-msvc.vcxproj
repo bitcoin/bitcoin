@@ -185,12 +185,10 @@
     <ClCompile Include="src\leveldb\db\builder.cc" />
     <ClCompile Include="src\leveldb\db\c.cc" />
     <ClCompile Include="src\leveldb\db\dbformat.cc" />
-    <ClCompile Include="src\leveldb\db\db_bench.cc" />
     <ClCompile Include="src\leveldb\db\db_impl.cc" />
     <ClCompile Include="src\leveldb\db\db_iter.cc" />
     <ClCompile Include="src\leveldb\db\dumpfile.cc" />
     <ClCompile Include="src\leveldb\db\filename.cc" />
-    <ClCompile Include="src\leveldb\db\leveldbutil.cc" />
     <ClCompile Include="src\leveldb\db\log_reader.cc" />
     <ClCompile Include="src\leveldb\db\log_writer.cc" />
     <ClCompile Include="src\leveldb\db\memtable.cc" />

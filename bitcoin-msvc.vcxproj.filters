@@ -342,9 +342,6 @@
     <ClCompile Include="src\leveldb\db\c.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\leveldb\db\db_bench.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\leveldb\db\db_impl.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -358,9 +355,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\leveldb\db\filename.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\leveldbutil.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\leveldb\db\log_reader.cc">
