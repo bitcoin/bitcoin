@@ -1405,6 +1405,11 @@ void CConnman::ThreadSocketHandler()
                     LogPrintf("ping timeout: %fs\n", 0.000001 * (GetTimeMicros() - pnode->nPingUsecStart));
                     pnode->fDisconnect = true;
                 }
+                else if (!pnode->fSuccessfullyConnected)
+                {
+                    LogPrintf("version handshake timeout from %d\n", pnode->id);
+                    pnode->fDisconnect = true;
+                }
             }
         }
         ReleaseNodeVector(vNodesCopy);
