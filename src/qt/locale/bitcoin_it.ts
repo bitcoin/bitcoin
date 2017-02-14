@@ -703,10 +703,6 @@
         <translation>Errore</translation>
     </message>
     <message numerus="yes">
-        <source>%n GB of free space available</source>
-        <translation><numerusform>GB di spazio libero disponibile</numerusform><numerusform>%n GB di spazio disponibile</numerusform></translation>
-    </message>
-    <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation><numerusform>(di %nGB richiesti)</numerusform><numerusform>(%n GB richiesti)</numerusform></translation>
     </message>

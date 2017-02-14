@@ -330,6 +330,10 @@
         <translation>Kliknutím opět umožníš spojení do sítě.</translation>
     </message>
     <message>
+        <source>Syncing Headers (%1%)...</source>
+        <translation>Synchronizuji záhlaví bloků (%1 %)…</translation>
+    </message>
+    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Vytvářím nový index bloků na disku...</translation>
     </message>
@@ -480,6 +484,10 @@
     <message>
         <source>%1 client</source>
         <translation>%1 klient</translation>
+    </message>
+    <message>
+        <source>Connecting to peers...</source>
+        <translation>Připojuji se…</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -3090,6 +3098,14 @@
         <translation>Spustit příkaz, když se objeví transakce týkající se peněženky (%s se v příkazu nahradí za TxID)</translation>
     </message>
     <message>
+        <source>Extra transactions to keep in memory for compact block reconstructions (default: %u)</source>
+        <translation>Počet extra transakcí, které se mají držet v paměti pro účely rekonstrukce kompaktních bloků (výchozí: %u)</translation>
+    </message>
+    <message>
+        <source>If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)</source>
+        <translation>Pokud je tenhle blok v řetězci, tak předpokládat, že on i jeho následníci jsou platní, a potenciálně přeskočit ověřování jejich skriptů (0 = ověřovat vše, výchozí: %s, testnet: %s)</translation>
+    </message>
+    <message>
         <source>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</source>
         <translation>Maximální povolené seřizování času mediánem časů protějšků. Místní vnímání času může být ovlivněno protějšky, a to dopředu nebo dozadu až o toto množství. (výchozí: %u vteřin)</translation>
     </message>
@@ -3104,6 +3120,14 @@
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation>Prosíme, zapoj se nebo přispěj, pokud ti %s přijde užitečný. Více informací o programu je na %s.</translation>
+    </message>
+    <message>
+        <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;%u = automatically prune block files to stay under the specified target size in MiB)</source>
+        <translation>Omezit nároky na úložný prostor prořezáváním (mazáním) starých bloků. Tato volba také umožní použít RPC volání pruneblockchain ke smazání konkrétních bloků a dále automatické prořezávání starých bloků, pokud je zadána cílová velikost souborů s bloky v MiB. Tento režim není slučitelný s -txindex ani -rescan. Upozornění: opětovná změna tohoto nastavení bude vyžadovat nové stažení celého řetězce bloků. (výchozí: 0 = bloky neprořezávat, 1 = povolit ruční prořezávání skrze RPC, &gt;%u = automatické prořezávání bloků tak, aby byla udržena cílová velikost souborů s bloky, v MiB)</translation>
+    </message>
+    <message>
+        <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
+        <translation>Nastavit nejnižší akceptovatelný poplatek (v %s/kB) pro transakce, které mají být zahrnuty do nových bloků. (výchozí: %s)</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
