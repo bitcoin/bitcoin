@@ -153,6 +153,15 @@
     <ClCompile Include="src\bitcoind.cpp" />
     <ClCompile Include="src\chainparams.cpp" />
     <ClCompile Include="src\chainparamsbase.cpp" />
+    <ClCompile Include="src\clientversion.cpp" />
+    <ClCompile Include="src\coins.cpp" />
+    <ClCompile Include="src\compressor.cpp" />
+    <ClCompile Include="src\core_read.cpp" />
+    <ClCompile Include="src\core_write.cpp" />
+    <ClCompile Include="src\dbwrapper.cpp" />
+    <ClCompile Include="src\hash.cpp" />
+    <ClCompile Include="src\httprpc.cpp" />
+    <ClCompile Include="src\httpserver.cpp" />
     <ClCompile Include="src\init.cpp" />
     <ClCompile Include="src\noui.cpp" />
     <ClCompile Include="src\pow.cpp" />
@@ -168,6 +177,18 @@
   <ItemGroup>
     <ClInclude Include="src\chainparams.h" />
     <ClInclude Include="src\chainparamsbase.h" />
+    <ClInclude Include="src\clientversion.h" />
+    <ClInclude Include="src\coins.h" />
+    <ClInclude Include="src\compat.h" />
+    <ClInclude Include="src\compressor.h" />
+    <ClInclude Include="src\core_io.h" />
+    <ClInclude Include="src\core_memusage.h" />
+    <ClInclude Include="src\cuckoocache.h" />
+    <ClInclude Include="src\dbwrapper.h" />
+    <ClInclude Include="src\hash.h" />
+    <ClInclude Include="src\httprpc.h" />
+    <ClInclude Include="src\httpserver.h" />
+    <ClInclude Include="src\indirectmap.h" />
     <ClInclude Include="src\init.h" />
     <ClInclude Include="src\noui.h" />
     <ClInclude Include="src\pow.h" />
