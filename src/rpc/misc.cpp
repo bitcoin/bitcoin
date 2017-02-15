@@ -208,6 +208,9 @@ UniValue validateaddress(const JSONRPCRequest& request)
         if (pwalletMain) {
             const auto& meta = pwalletMain->mapKeyMetadata;
             auto it = address.GetKeyID(keyID) ? meta.find(keyID) : meta.end();
+            if (it == meta.end()) {
+                it = meta.find(CScriptID(scriptPubKey));
+            }
             if (it != meta.end()) {
                 ret.push_back(Pair("timestamp", it->second.nCreateTime));
                 if (!it->second.hdKeypath.empty()) {
