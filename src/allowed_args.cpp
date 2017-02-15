@@ -324,7 +324,7 @@ static void addWalletOptions(AllowedArgs& allowedArgs)
 static void addZmqOptions(AllowedArgs& allowedArgs)
 {
 #if ENABLE_ZMQ
-    allowedArgs.
+    allowedArgs
         .addHeader(_("ZeroMQ notification options:"))
         .addArg("zmqpubhashblock=<address>", requiredStr, _("Enable publish hash block in <address>"))
         .addArg("zmqpubhashtx=<address>", requiredStr, _("Enable publish hash transaction in <address>"))
