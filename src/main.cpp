@@ -5267,17 +5267,16 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 if (!fAlreadyHave && !fImporting && !fReindex) {  // BU request manager keeps track of all sources so no need for: && !mapBlocksInFlight.count(inv.hash)) {
 		    requester.AskFor(inv, pfrom);
                 }
-                else
-		  {
+                else {
 		    LogPrint("net", "skipping request of block %s.  already have: %d  importing: %d  reindex: %d  isChainNearlySyncd: %d\n",inv.hash.ToString(),fAlreadyHave,fImporting,fReindex,IsChainNearlySyncd());
-		  }
+		}
             }
             else
             {
                 if (fBlocksOnly)
                     LogPrint("net", "transaction (%s) inv sent in violation of protocol peer=%d\n", inv.hash.ToString(), pfrom->id);
-                else if (!fAlreadyHave && !fImporting && !fReindex) // BU removed && !IsInitialBlockDownload())
-                  requester.AskFor(inv,pfrom); // BU manage outgoing requests.  was: pfrom->AskFor(inv);
+                else if (!fAlreadyHave && !fImporting && !fReindex && !IsInitialBlockDownload())
+                    requester.AskFor(inv,pfrom); // BU manage outgoing requests.  was: pfrom->AskFor(inv);
             }
 
             // Track requests for our stuff
