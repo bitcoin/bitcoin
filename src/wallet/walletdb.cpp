@@ -559,8 +559,8 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     bool fNoncriticalErrors = false;
     DBErrors result = DB_LOAD_OK;
 
+    LOCK(pwallet->cs_wallet);
     try {
-        LOCK(pwallet->cs_wallet);
         int nMinVersion = 0;
         if (Read((string)"minversion", nMinVersion))
         {
