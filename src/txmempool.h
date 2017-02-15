@@ -617,10 +617,6 @@ public:
     TxMempoolInfo info(const uint256& hash) const;
     std::vector<TxMempoolInfo> infoAll() const;
 
-    /** Write/Read estimates to disk */
-    bool WriteFeeEstimates(CAutoFile& fileout) const;
-    bool ReadFeeEstimates(CAutoFile& filein);
-
     size_t DynamicMemoryUsage() const;
 
     boost::signals2::signal<void (CTransactionRef)> NotifyEntryAdded;
