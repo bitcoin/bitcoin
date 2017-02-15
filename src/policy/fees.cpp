@@ -290,6 +290,7 @@ void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHe
 // of no harm to try to remove them again.
 bool CBlockPolicyEstimator::removeTx(uint256 hash)
 {
+    LOCK(cs_feeEstimator);
     std::map<uint256, TxStatsInfo>::iterator pos = mapMemPoolTxs.find(hash);
     if (pos != mapMemPoolTxs.end()) {
         feeStats.removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.bucketIndex);
@@ -315,6 +316,7 @@ CBlockPolicyEstimator::CBlockPolicyEstimator()
 
 void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, bool validFeeEstimate)
 {
+    LOCK(cs_feeEstimator);
     unsigned int txHeight = entry.GetHeight();
     uint256 hash = entry.GetTx().GetHash();
     if (mapMemPoolTxs.count(hash)) {
@@ -374,6 +376,7 @@ bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxM
 void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
                                          std::vector<const CTxMemPoolEntry*>& entries)
 {
+    LOCK(cs_feeEstimator);
     if (nBlockHeight <= nBestSeenHeight) {
         // Ignore side chains and re-orgs; assuming they are random
         // they don't affect the estimate.
@@ -410,6 +413,7 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
 
 CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget)
 {
+    LOCK(cs_feeEstimator);
     // Return failure if trying to analyze a target we're not tracking
     // It's not possible to get reasonable estimates for confTarget of 1
     if (confTarget <= 1 || (unsigned int)confTarget > feeStats.GetMaxConfirms())
@@ -427,18 +431,24 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, int *answerFoun
 {
     if (answerFoundAtTarget)
         *answerFoundAtTarget = confTarget;
-    // Return failure if trying to analyze a target we're not tracking
-    if (confTarget <= 0 || (unsigned int)confTarget > feeStats.GetMaxConfirms())
-        return CFeeRate(0);
-
-    // It's not possible to get reasonable estimates for confTarget of 1
-    if (confTarget == 1)
-        confTarget = 2;
 
     double median = -1;
-    while (median < 0 && (unsigned int)confTarget <= feeStats.GetMaxConfirms()) {
-        median = feeStats.EstimateMedianVal(confTarget++, SUFFICIENT_FEETXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
-    }
+
+    {
+        LOCK(cs_feeEstimator);
+
+        // Return failure if trying to analyze a target we're not tracking
+        if (confTarget <= 0 || (unsigned int)confTarget > feeStats.GetMaxConfirms())
+            return CFeeRate(0);
+
+        // It's not possible to get reasonable estimates for confTarget of 1
+        if (confTarget == 1)
+            confTarget = 2;
+
+        while (median < 0 && (unsigned int)confTarget <= feeStats.GetMaxConfirms()) {
+            median = feeStats.EstimateMedianVal(confTarget++, SUFFICIENT_FEETXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
+        }
+    } // Must unlock cs_feeEstimator before taking mempool locks
 
     if (answerFoundAtTarget)
         *answerFoundAtTarget = confTarget - 1;
@@ -456,12 +466,14 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, int *answerFoun
 
 void CBlockPolicyEstimator::Write(CAutoFile& fileout)
 {
+    LOCK(cs_feeEstimator);
     fileout << nBestSeenHeight;
     feeStats.Write(fileout);
 }
 
 void CBlockPolicyEstimator::Read(CAutoFile& filein, int nFileVersion)
 {
+    LOCK(cs_feeEstimator);
     int nFileBestSeenHeight;
     filein >> nFileBestSeenHeight;
     feeStats.Read(filein);
