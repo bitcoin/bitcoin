@@ -5,6 +5,7 @@
 #include "consensus/validation.h"
 #include "wallet/feebumper.h"
 #include "wallet/wallet.h"
+#include "policy/fees.h"
 #include "policy/policy.h"
 #include "policy/rbf.h"
 #include "validation.h" //for mempool access
@@ -159,11 +160,11 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConf
     } else {
         // if user specified a confirm target then don't consider any global payTxFee
         if (specifiedConfirmTarget) {
-            nNewFee = CWallet::GetMinimumFee(maxNewTxSize, newConfirmTarget, mempool, CAmount(0));
+            nNewFee = CWallet::GetMinimumFee(maxNewTxSize, newConfirmTarget, mempool, ::feeEstimator, CAmount(0));
         }
         // otherwise use the regular wallet logic to select payTxFee or default confirm target
         else {
-            nNewFee = CWallet::GetMinimumFee(maxNewTxSize, newConfirmTarget, mempool);
+            nNewFee = CWallet::GetMinimumFee(maxNewTxSize, newConfirmTarget, mempool, ::feeEstimator);
         }
 
         nNewFeeRate = CFeeRate(nNewFee, maxNewTxSize);
