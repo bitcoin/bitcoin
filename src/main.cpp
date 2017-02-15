@@ -5257,7 +5257,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             const CInv &inv = vInv[nInv];
 
             boost::this_thread::interruption_point();
-            pfrom->AddInventoryKnown(inv);
 
             bool fAlreadyHave = AlreadyHave(inv);
             LogPrint("net", "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom->id);
@@ -5274,6 +5273,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             }
             else
             {
+                pfrom->AddInventoryKnown(inv);
                 if (fBlocksOnly)
                     LogPrint("net", "transaction (%s) inv sent in violation of protocol peer=%d\n", inv.hash.ToString(), pfrom->id);
                 else if (!fAlreadyHave && !fImporting && !fReindex) // BU removed && !IsInitialBlockDownload())
@@ -5836,7 +5836,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     }
                 }
             }
-            pfrom->AddInventoryKnown(inv);
             CXThinBlockTx thinBlockTx(thinRequestBlockTx.blockhash, vTx);
             pfrom->PushMessage(NetMsgType::XBLOCKTX, thinBlockTx);
             pfrom->blocksSent += 1;
@@ -5879,7 +5878,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (pfrom->thinBlockWaitingForTxns == 0) {
             // We have all the transactions now that are in this block: try to reassemble and process.
             pfrom->thinBlockWaitingForTxns = -1;
-            pfrom->AddInventoryKnown(inv);
             requester.Received(inv, pfrom, msgSize);
 
             // for compression statistics, we have to add up the size of xthinblock and the re-requested thinBlockTx.
@@ -5923,8 +5921,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CInv inv(MSG_BLOCK, block.GetHash());
         LogPrint("blk", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
         UnlimitedLogBlock(block,inv.hash.ToString(),receiptTime);
-
-        pfrom->AddInventoryKnown(inv);
 
         if (IsChainNearlySyncd()) // BU send the received block out expedited channels quickly
           {

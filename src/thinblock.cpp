@@ -113,7 +113,6 @@ bool CThinBlock::process(CNode* pfrom, int nSizeThinBlock, string strCommand)
             // We have all the transactions now that are in this block: try to reassemble and process.
             requester.Received(GetInv(), pfrom, nSizeThinBlock);
             pfrom->thinBlockWaitingForTxns = -1;
-            pfrom->AddInventoryKnown(GetInv());
             int blockSize = pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION);
             LogPrint("thin", "Reassembled thin block for %s (%d bytes). Message was %d bytes, compression ratio %3.2f\n",
                      pfrom->thinBlock.GetHash().ToString(),
@@ -349,7 +348,6 @@ bool CXThinBlock::process(CNode* pfrom, int nSizeThinBlock, string strCommand)  
     if (pfrom->thinBlockWaitingForTxns == 0) {
         // We have all the transactions now that are in this block: try to reassemble and process.
         pfrom->thinBlockWaitingForTxns = -1;
-        pfrom->AddInventoryKnown(GetInv());
         int blockSize = pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION);
         LogPrint("thin", "Reassembled thin block for %s (%d bytes). Message was %d bytes, compression ratio %3.2f\n",
 	       pfrom->thinBlock.GetHash().ToString(),
