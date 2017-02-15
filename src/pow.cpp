@@ -118,3 +118,8 @@ bool GenerateProof(const Consensus::Params& params, CBlockHeader* pblock)
     uint64_t nTries = 10000;
     return MaybeGenerateProof(params, pblock, nTries);
 }
+
+void ResetProof(CBlockHeader* pblock)
+{
+    pblock->nNonce = 0;
+}
