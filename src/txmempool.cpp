@@ -843,15 +843,6 @@ TxMempoolInfo CTxMemPool::info(const uint256& hash) const
     return GetInfo(i);
 }
 
-CFeeRate CTxMemPool::estimateFee(int nBlocks) const
-{
-    return minerPolicyEstimator->estimateFee(nBlocks);
-}
-CFeeRate CTxMemPool::estimateSmartFee(int nBlocks, int *answerFoundAtBlocks) const
-{
-    return minerPolicyEstimator->estimateSmartFee(nBlocks, answerFoundAtBlocks, *this);
-}
-
 bool
 CTxMemPool::WriteFeeEstimates(CAutoFile& fileout) const
 {

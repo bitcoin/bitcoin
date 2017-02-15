@@ -150,10 +150,10 @@ public:
      * @param nBlockHeight the current block height
      */
     double EstimateMedianVal(int confTarget, double sufficientTxVal,
-                             double minSuccess, bool requireGreater, unsigned int nBlockHeight);
+                             double minSuccess, bool requireGreater, unsigned int nBlockHeight) const;
 
     /** Return the max number of confirms we're tracking */
-    unsigned int GetMaxConfirms() { return confAvg.size(); }
+    unsigned int GetMaxConfirms() const { return confAvg.size(); }
 
     /** Write state of estimation data to a file*/
     void Write(CAutoFile& fileout);
@@ -217,13 +217,13 @@ public:
     bool removeTx(uint256 hash);
 
     /** Return a feerate estimate */
-    CFeeRate estimateFee(int confTarget);
+    CFeeRate estimateFee(int confTarget) const;
 
     /** Estimate feerate needed to get be included in a block within
      *  confTarget blocks. If no answer can be given at confTarget, return an
      *  estimate at the lowest target where one can be given.
      */
-    CFeeRate estimateSmartFee(int confTarget, int *answerFoundAtTarget, const CTxMemPool& pool);
+    CFeeRate estimateSmartFee(int confTarget, int *answerFoundAtTarget, const CTxMemPool& pool) const;
 
     /** Write estimation data to a file */
     void Write(CAutoFile& fileout);
