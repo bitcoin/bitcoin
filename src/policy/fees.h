@@ -157,7 +157,7 @@ public:
     unsigned int GetMaxConfirms() const { return confAvg.size(); }
 
     /** Write state of estimation data to a file*/
-    void Write(CAutoFile& fileout);
+    void Write(CAutoFile& fileout) const;
 
     /**
      * Read saved state of estimation data from a file and replace all internal data structures and
@@ -227,10 +227,10 @@ public:
     CFeeRate estimateSmartFee(int confTarget, int *answerFoundAtTarget, const CTxMemPool& pool) const;
 
     /** Write estimation data to a file */
-    void Write(CAutoFile& fileout);
+    bool Write(CAutoFile& fileout) const;
 
     /** Read estimation data from a file */
-    void Read(CAutoFile& filein, int nFileVersion);
+    bool Read(CAutoFile& filein);
 
 private:
     CFeeRate minTrackedFee;    //!< Passed to constructor to avoid dependency on main

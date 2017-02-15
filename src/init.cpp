@@ -27,6 +27,7 @@
 #include <netbase.h>
 #include <net_processing.h>
 #include <policy/policy.h>
+#include <policy/fees.h>
 #include <policy/feerate.h>
 #include <rpc/blockchain.h>
 #include <rpc/register.h>
@@ -44,6 +45,7 @@
 #include <validation.h>
 #include <validationinterface.h>
 #include <warnings.h>
+
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
 #endif
@@ -248,7 +250,7 @@ void Shutdown()
         fs::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
         CAutoFile est_fileout(fsbridge::fopen(est_path, "wb"), SER_DISK, CLIENT_VERSION);
         if (!est_fileout.IsNull())
-            mempool.WriteFeeEstimates(est_fileout);
+            ::feeEstimator.Write(est_fileout);
         else
             LogPrintf("%s: Failed to write fee estimates to %s\n", __func__, est_path.string());
         fFeeEstimatesInitialized = false;
@@ -1686,7 +1688,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     CAutoFile est_filein(fsbridge::fopen(est_path, "rb"), SER_DISK, CLIENT_VERSION);
     // Allowed to fail as this file IS missing on first startup.
     if (!est_filein.IsNull())
-        mempool.ReadFeeEstimates(est_filein);
+        ::feeEstimator.Read(est_filein);
     fFeeEstimatesInitialized = true;
 
     // ********************************************************* Step 8: load wallet
