@@ -6016,7 +6016,7 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
                 if (fBlocksOnly)
                     LogPrint("net", "transaction (%s) inv sent in violation of protocol peer=%d\n", inv.hash.ToString(),
                         pfrom->id);
-                else if (!fAlreadyHave && !fImporting && !fReindex) // BU removed && !IsInitialBlockDownload())
+                else if (!fAlreadyHave && !fImporting && !fReindex && !IsInitialBlockDownload())
                     requester.AskFor(inv, pfrom); // BU manage outgoing requests.  was: pfrom->AskFor(inv);
             }
 
