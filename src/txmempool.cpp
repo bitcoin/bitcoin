@@ -845,12 +845,10 @@ TxMempoolInfo CTxMemPool::info(const uint256& hash) const
 
 CFeeRate CTxMemPool::estimateFee(int nBlocks) const
 {
-    LOCK(cs);
     return minerPolicyEstimator->estimateFee(nBlocks);
 }
 CFeeRate CTxMemPool::estimateSmartFee(int nBlocks, int *answerFoundAtBlocks) const
 {
-    LOCK(cs);
     return minerPolicyEstimator->estimateSmartFee(nBlocks, answerFoundAtBlocks, *this);
 }
 
@@ -858,7 +856,6 @@ bool
 CTxMemPool::WriteFeeEstimates(CAutoFile& fileout) const
 {
     try {
-        LOCK(cs);
         fileout << 139900; // version required to read: 0.13.99 or later
         fileout << CLIENT_VERSION; // version that wrote the file
         minerPolicyEstimator->Write(fileout);
@@ -878,7 +875,6 @@ CTxMemPool::ReadFeeEstimates(CAutoFile& filein)
         filein >> nVersionRequired >> nVersionThatWrote;
         if (nVersionRequired > CLIENT_VERSION)
             return error("CTxMemPool::ReadFeeEstimates(): up-version (%d) fee estimate file", nVersionRequired);
-        LOCK(cs);
         minerPolicyEstimator->Read(filein, nVersionThatWrote);
     }
     catch (const std::exception&) {

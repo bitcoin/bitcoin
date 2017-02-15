@@ -8,6 +8,7 @@
 #include "amount.h"
 #include "uint256.h"
 #include "random.h"
+#include "sync.h"
 
 #include <map>
 #include <string>
@@ -248,6 +249,8 @@ private:
 
     unsigned int trackedTxs;
     unsigned int untrackedTxs;
+
+    mutable CCriticalSection cs_feeEstimator;
 
     /** Process a transaction confirmed in a block*/
     bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry);
