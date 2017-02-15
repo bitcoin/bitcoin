@@ -11,7 +11,7 @@
 
 #include "scheduler.h"
 
-extern const std::string DEFAULT_TOR_CONTROL;
+static const std::string DEFAULT_TOR_CONTROL = "127.0.0.1:9051";
 static const bool DEFAULT_LISTEN_ONION = true;
 
 void StartTorControl(boost::thread_group& threadGroup, CScheduler& scheduler);

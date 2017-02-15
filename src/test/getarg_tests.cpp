@@ -82,6 +82,7 @@ BOOST_AUTO_TEST_CASE(boolarg)
     BOOST_CHECK(!GetBoolArg("-listen", false));
     BOOST_CHECK(!GetBoolArg("-listen", true));
 
+    BOOST_CHECK_THROW(ResetArgs("-listen=text"), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(stringarg)
@@ -90,13 +91,13 @@ BOOST_AUTO_TEST_CASE(stringarg)
     BOOST_CHECK_EQUAL(GetArg("-uacomment", ""), "");
     BOOST_CHECK_EQUAL(GetArg("-uacomment", "eleven"), "eleven");
 
-    ResetArgs("-uacomment -listen");
-    BOOST_CHECK_EQUAL(GetArg("-uacomment", ""), "");
-    BOOST_CHECK_EQUAL(GetArg("-uacomment", "eleven"), "");
+    ResetArgs("-connect -listen"); // -connect is an optional string argument
+    BOOST_CHECK_EQUAL(GetArg("-connect", ""), "");
+    BOOST_CHECK_EQUAL(GetArg("-connect", "eleven"), "");
 
-    ResetArgs("-uacomment=");
-    BOOST_CHECK_EQUAL(GetArg("-uacomment", ""), "");
-    BOOST_CHECK_EQUAL(GetArg("-uacomment", "eleven"), "");
+    ResetArgs("-connect=");
+    BOOST_CHECK_EQUAL(GetArg("-connect", ""), "");
+    BOOST_CHECK_EQUAL(GetArg("-connect", "eleven"), "");
 
     ResetArgs("-uacomment=11");
     BOOST_CHECK_EQUAL(GetArg("-uacomment", ""), "11");
@@ -106,6 +107,8 @@ BOOST_AUTO_TEST_CASE(stringarg)
     BOOST_CHECK_EQUAL(GetArg("-uacomment", ""), "eleven");
     BOOST_CHECK_EQUAL(GetArg("-uacomment", "eleven"), "eleven");
 
+    BOOST_CHECK_THROW(ResetArgs("-uacomment"), std::runtime_error);
+    BOOST_CHECK_THROW(ResetArgs("-uacomment="), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(intarg)
@@ -114,17 +117,19 @@ BOOST_AUTO_TEST_CASE(intarg)
     BOOST_CHECK_EQUAL(GetArg("-maxconnections", 11), 11);
     BOOST_CHECK_EQUAL(GetArg("-maxconnections", 0), 0);
 
-    ResetArgs("-maxconnections -maxreceivebuffer");
+    ResetArgs("-maxconnections"); // -maxconnections is an optional int argument
     BOOST_CHECK_EQUAL(GetArg("-maxconnections", 11), 0);
-    BOOST_CHECK_EQUAL(GetArg("-maxreceivebuffer", 11), 0);
 
     ResetArgs("-maxconnections=11 -maxreceivebuffer=12");
     BOOST_CHECK_EQUAL(GetArg("-maxconnections", 0), 11);
     BOOST_CHECK_EQUAL(GetArg("-maxreceivebuffer", 11), 12);
 
-    ResetArgs("-maxconnections=NaN -maxreceivebuffer=NotANumber");
-    BOOST_CHECK_EQUAL(GetArg("-maxconnections", 1), 0);
-    BOOST_CHECK_EQUAL(GetArg("-maxreceivebuffer", 11), 0);
+    ResetArgs("-par=-1");
+    BOOST_CHECK_EQUAL(GetArg("-par", 0), -1);
+
+    BOOST_CHECK_THROW(ResetArgs("-maxreceivebuffer"), std::runtime_error);
+    BOOST_CHECK_THROW(ResetArgs("-maxreceivebuffer="), std::runtime_error);
+    BOOST_CHECK_THROW(ResetArgs("-maxreceivebuffer=NaN"), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(doubledash)
@@ -158,6 +163,28 @@ BOOST_AUTO_TEST_CASE(boolargno)
     ResetArgs("-nolisten -listen"); // -listen always wins:
     BOOST_CHECK(GetBoolArg("-listen", true));
     BOOST_CHECK(GetBoolArg("-listen", false));
+}
+
+BOOST_AUTO_TEST_CASE(blockSizeAcceptLimit)
+{
+    ResetArgs("-excessiveblocksize=5004000");
+    BOOST_CHECK_EQUAL(Policy::blockSizeAcceptLimit(), 5004000);
+
+    // blocksizeacceptlimit always wins
+    ResetArgs("-excessiveblocksize=5004000 -blocksizeacceptlimit=1.2");
+    BOOST_CHECK_EQUAL(Policy::blockSizeAcceptLimit(), 1200000);
+
+    ResetArgs("-blocksizeacceptlimit=1.2");
+    BOOST_CHECK_EQUAL(Policy::blockSizeAcceptLimit(), 1200000);
+
+    ResetArgs("-blocksizeacceptlimit=1.25");
+    BOOST_CHECK_EQUAL(Policy::blockSizeAcceptLimit(), 1200000);
+}
+
+BOOST_AUTO_TEST_CASE(unrecognizedArgs)
+{
+    BOOST_CHECK_THROW(ResetArgs("-unrecognized_arg"), std::runtime_error);
+    BOOST_CHECK_THROW(ResetArgs("-listen -unrecognized_arg"), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

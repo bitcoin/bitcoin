@@ -34,6 +34,10 @@ struct CCheckpointData {
     double fTransactionsPerDay;
 };
 
+static const int DEFAULT_MAINNET_PORT = 8333;
+static const int DEFAULT_TESTNET_PORT = 18333;
+static const int DEFAULT_NOLNET_PORT = 9333;
+
 /**
  * CChainParams defines various tweakable parameters of a given instance of the
  * Bitcoin system. There are three: the main network on which people trade goods

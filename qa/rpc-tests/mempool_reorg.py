@@ -54,7 +54,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         timelock_tx = timelock_tx[:-8] + hex(self.nodes[0].getblockcount() + 2)[2:] + "000000"
         timelock_tx = self.nodes[0].signrawtransaction(timelock_tx)["hex"]
         assert_raises(JSONRPCException, self.nodes[0].sendrawtransaction, timelock_tx)
- 
+
         # Broadcast and mine spend_102 and 103:
         spend_102_id = self.nodes[0].sendrawtransaction(spend_102_raw)
         spend_103_id = self.nodes[0].sendrawtransaction(spend_103_raw)
@@ -72,12 +72,12 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         self.sync_all()
         timelock_tx_id = self.nodes[0].sendrawtransaction(timelock_tx)
         self.sync_all()
- 
+
         # ... now put spend_101 and spend_102_1 in memory pools:
         spend_101_id = self.nodes[0].sendrawtransaction(spend_101_raw)
         spend_102_1_id = self.nodes[0].sendrawtransaction(spend_102_1_raw)
         self.sync_all()
- 
+
         assert_equal(set(self.nodes[0].getrawmempool()), {spend_101_id, spend_102_1_id, timelock_tx_id})
 
         for node in self.nodes:

@@ -16,7 +16,20 @@ static const int MAX_PASSPHRASE_SIZE = 1024;
 /* BitcoinGUI -- Size of icons in status bar */
 static const int STATUSBAR_ICONSIZE = 16;
 
+static const bool DEFAULT_CHOOSE_DATADIR = false;
+static const bool DEFAULT_SELFSIGNED_ROOTCERTS = false;
 static const bool DEFAULT_SPLASHSCREEN = true;
+
+static const std::string DEFAULT_UIPLATFORM =
+#if defined(Q_OS_MAC)
+    "macosx"
+#elif defined(Q_OS_WIN)
+    "windows"
+#else
+    "other"
+#endif
+    ;
+
 
 /* Invalid field background style */
 #define STYLE_INVALID "background:#FF8080"
