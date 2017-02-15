@@ -7,6 +7,7 @@
 #include "policy/policy.h"
 
 #include "amount.h"
+#include "clientversion.h"
 #include "primitives/transaction.h"
 #include "random.h"
 #include "streams.h"
@@ -173,7 +174,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
     return median;
 }
 
-void TxConfirmStats::Write(CAutoFile& fileout)
+void TxConfirmStats::Write(CAutoFile& fileout) const
 {
     fileout << decay;
     fileout << buckets;
@@ -464,21 +465,40 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, int *answerFoun
     return CFeeRate(median);
 }
 
-void CBlockPolicyEstimator::Write(CAutoFile& fileout)
+bool CBlockPolicyEstimator::Write(CAutoFile& fileout) const
 {
-    LOCK(cs_feeEstimator);
-    fileout << nBestSeenHeight;
-    feeStats.Write(fileout);
+    try {
+        LOCK(cs_feeEstimator);
+        fileout << 139900; // version required to read: 0.13.99 or later
+        fileout << CLIENT_VERSION; // version that wrote the file
+        fileout << nBestSeenHeight;
+        feeStats.Write(fileout);
+    }
+    catch (const std::exception&) {
+        LogPrintf("CBlockPolicyEstimator::Write(): unable to read policy estimator data (non-fatal)\n");
+        return false;
+    }
+    return true;
 }
 
-void CBlockPolicyEstimator::Read(CAutoFile& filein, int nFileVersion)
+bool CBlockPolicyEstimator::Read(CAutoFile& filein)
 {
-    LOCK(cs_feeEstimator);
-    int nFileBestSeenHeight;
-    filein >> nFileBestSeenHeight;
-    feeStats.Read(filein);
-    nBestSeenHeight = nFileBestSeenHeight;
-    // if nVersionThatWrote < 139900 then another TxConfirmStats (for priority) follows but can be ignored.
+    try {
+        LOCK(cs_feeEstimator);
+        int nVersionRequired, nVersionThatWrote, nFileBestSeenHeight;
+        filein >> nVersionRequired >> nVersionThatWrote;
+        if (nVersionRequired > CLIENT_VERSION)
+            return error("CBlockPolicyEstimator::Read(): up-version (%d) fee estimate file", nVersionRequired);
+        filein >> nFileBestSeenHeight;
+        feeStats.Read(filein);
+        nBestSeenHeight = nFileBestSeenHeight;
+        // if nVersionThatWrote < 139900 then another TxConfirmStats (for priority) follows but can be ignored.
+    }
+    catch (const std::exception&) {
+        LogPrintf("CBlockPolicyEstimator::Read(): unable to read policy estimator data (non-fatal)\n");
+        return false;
+    }
+    return true;
 }
 
 FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee)
