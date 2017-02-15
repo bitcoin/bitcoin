@@ -5,10 +5,8 @@
 """Test rescan behavior of importaddress, importpubkey, importprivkey, and
 importmulti RPCs with different types of keys and rescan options.
 
-Test uses three connected nodes.
-
 In the first part of the test, node 0 creates an address for each type of
-import RPC call and sends BTC to it. Then nodes 1 and 2 import the addresses,
+import RPC call and sends BTC to it. Then other nodes import the addresses,
 and the test makes listtransactions and getbalance calls to confirm that the
 importing node either did or did not execute rescans picking up the send
 transactions.
@@ -19,6 +17,7 @@ importing nodes pick up the new transactions regardless of whether rescans
 happened previously.
 """
 
+from test_framework.authproxy import JSONRPCException
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (start_nodes, connect_nodes, sync_blocks, assert_equal, set_node_times)
 from decimal import Decimal
@@ -32,7 +31,7 @@ Data = enum.Enum("Data", "address pub priv")
 Rescan = enum.Enum("Rescan", "no yes late_timestamp")
 
 
-class Variant(collections.namedtuple("Variant", "call data rescan")):
+class Variant(collections.namedtuple("Variant", "call data rescan prune")):
     """Helper for importing one key and verifying scanned transactions."""
 
     def do_import(self, timestamp):
@@ -40,12 +39,16 @@ class Variant(collections.namedtuple("Variant", "call data rescan")):
 
         if self.call == Call.single:
             if self.data == Data.address:
-                response = self.node.importaddress(self.address["address"], self.label, self.rescan == Rescan.yes)
+                response, error = try_rpc(self.node.importaddress, self.address["address"], self.label,
+                                          self.rescan == Rescan.yes)
             elif self.data == Data.pub:
-                response = self.node.importpubkey(self.address["pubkey"], self.label, self.rescan == Rescan.yes)
+                response, error = try_rpc(self.node.importpubkey, self.address["pubkey"], self.label,
+                                          self.rescan == Rescan.yes)
             elif self.data == Data.priv:
-                response = self.node.importprivkey(self.key, self.label, self.rescan == Rescan.yes)
+                response, error = try_rpc(self.node.importprivkey, self.key, self.label, self.rescan == Rescan.yes)
             assert_equal(response, None)
+            assert_equal(error, {'message': 'Rescan is disabled in pruned mode',
+                                 'code': -4} if self.expect_disabled else None)
         elif self.call == Call.multi:
             response = self.node.importmulti([{
                 "scriptPubKey": {
@@ -85,16 +88,29 @@ class Variant(collections.namedtuple("Variant", "call data rescan")):
 
 
 # List of Variants for each way a key or address could be imported.
-IMPORT_VARIANTS = [Variant(*variants) for variants in itertools.product(Call, Data, Rescan)]
+IMPORT_VARIANTS = [Variant(*variants) for variants in itertools.product(Call, Data, Rescan, (False, True))]
+
+# List of nodes to import keys to. Half the nodes will have pruning disabled,
+# half will have it enabled. Different nodes will be used for imports that are
+# expected to cause rescans, and imports that are not expected to cause
+# rescans, in order to prevent rescans during later imports picking up
+# transactions associated with earlier imports. This makes it easier to keep
+# track of expected balances and transactions.
+ImportNode = collections.namedtuple("ImportNode", "prune rescan")
+IMPORT_NODES = [ImportNode(*fields) for fields in itertools.product((False, True), repeat=2)]
 
 
 class ImportRescanTest(BitcoinTestFramework):
     def __init__(self):
         super().__init__()
-        self.num_nodes = 3
+        self.num_nodes = 1 + len(IMPORT_NODES)
 
     def setup_network(self):
         extra_args = [["-debug=1"] for _ in range(self.num_nodes)]
+        for i, import_node in enumerate(IMPORT_NODES, 1):
+            if import_node.prune:
+                extra_args[i] += ["-prune=1"]
+
         self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
         for i in range(1, self.num_nodes):
             connect_nodes(self.nodes[i], 0)
@@ -119,17 +135,13 @@ class ImportRescanTest(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         # For each variation of wallet key import, invoke the import RPC and
-        # check the results from getbalance and listtransactions. Import to
-        # node 1 if rescanning is expected, and to node 2 if rescanning is not
-        # expected. Node 2 is reserved for imports that do not cause rescans,
-        # so later import calls don't inadvertently cause the wallet to pick up
-        # transactions from earlier import calls where a rescan was not
-        # expected (this would make it complicated to figure out expected
-        # balances in the second part of the test.)
+        # check the results from getbalance and listtransactions.
         for variant in IMPORT_VARIANTS:
-            variant.node = self.nodes[1 if variant.rescan == Rescan.yes else 2]
+            variant.expect_disabled = variant.rescan == Rescan.yes and variant.prune and variant.call == Call.single
+            expect_rescan = variant.rescan == Rescan.yes and not variant.expect_disabled
+            variant.node = self.nodes[1 + IMPORT_NODES.index(ImportNode(variant.prune, expect_rescan))]
             variant.do_import(timestamp)
-            if variant.rescan == Rescan.yes:
+            if expect_rescan:
                 variant.expected_balance = variant.initial_amount
                 variant.expected_txs = 1
                 variant.check(variant.initial_txid, variant.initial_amount, 2)
@@ -151,9 +163,19 @@ class ImportRescanTest(BitcoinTestFramework):
 
         # Check the latest results from getbalance and listtransactions.
         for variant in IMPORT_VARIANTS:
-            variant.expected_balance += variant.sent_amount
-            variant.expected_txs += 1
-            variant.check(variant.sent_txid, variant.sent_amount, 1)
+            if not variant.expect_disabled:
+                variant.expected_balance += variant.sent_amount
+                variant.expected_txs += 1
+                variant.check(variant.sent_txid, variant.sent_amount, 1)
+            else:
+                variant.check()
+
+
+def try_rpc(func, *args, **kwargs):
+    try:
+        return func(*args, **kwargs), None
+    except JSONRPCException as e:
+        return None, e.error
 
 
 if __name__ == "__main__":
