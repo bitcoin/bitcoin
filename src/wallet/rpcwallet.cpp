@@ -15,6 +15,7 @@
 #include <keepass.h>
 #include <net.h>
 #include <netbase.h>
+#include <policy/fees.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
