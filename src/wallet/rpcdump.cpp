@@ -672,6 +672,9 @@ UniValue ProcessImport(const UniValue& data, const int64_t timestamp)
 
         if (!isScript) {
             address = CBitcoinAddress(output);
+            if (!address.IsValid()) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+            }
             script = GetScriptForDestination(address.Get());
         } else {
             if (!IsHex(output)) {
