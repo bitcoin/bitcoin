@@ -18,6 +18,7 @@ class CAutoFile;
 class CFeeRate;
 class CTxMemPoolEntry;
 class CTxMemPool;
+class TxConfirmStats;
 
 /** \class CBlockPolicyEstimator
  * The BlockPolicyEstimator is used for estimating the feerate needed
@@ -59,113 +60,6 @@ class CTxMemPool;
  * an estimate for any number of confirmations below the number of blocks
  * they've been outstanding.
  */
-
-/**
- * We will instantiate an instance of this class to track transactions that were
- * included in a block. We will lump transactions into a bucket according to their
- * approximate feerate and then track how long it took for those txs to be included in a block
- *
- * The tracking of unconfirmed (mempool) transactions is completely independent of the
- * historical tracking of transactions that have been confirmed in a block.
- */
-class TxConfirmStats
-{
-private:
-    //Define the buckets we will group transactions into
-    std::vector<double> buckets;              // The upper-bound of the range for the bucket (inclusive)
-    std::map<double, unsigned int> bucketMap; // Map of bucket upper-bound to index into all vectors by bucket
-
-    // For each bucket X:
-    // Count the total # of txs in each bucket
-    // Track the historical moving average of this total over blocks
-    std::vector<double> txCtAvg;
-    // and calculate the total for the current block to update the moving average
-    std::vector<int> curBlockTxCt;
-
-    // Count the total # of txs confirmed within Y blocks in each bucket
-    // Track the historical moving average of theses totals over blocks
-    std::vector<std::vector<double> > confAvg; // confAvg[Y][X]
-    // and calculate the totals for the current block to update the moving averages
-    std::vector<std::vector<int> > curBlockConf; // curBlockConf[Y][X]
-
-    // Sum the total feerate of all tx's in each bucket
-    // Track the historical moving average of this total over blocks
-    std::vector<double> avg;
-    // and calculate the total for the current block to update the moving average
-    std::vector<double> curBlockVal;
-
-    // Combine the conf counts with tx counts to calculate the confirmation % for each Y,X
-    // Combine the total value with the tx counts to calculate the avg feerate per bucket
-
-    double decay;
-
-    // Mempool counts of outstanding transactions
-    // For each bucket X, track the number of transactions in the mempool
-    // that are unconfirmed for each possible confirmation value Y
-    std::vector<std::vector<int> > unconfTxs;  //unconfTxs[Y][X]
-    // transactions still unconfirmed after MAX_CONFIRMS for each bucket
-    std::vector<int> oldUnconfTxs;
-
-public:
-    /**
-     * Create new TxConfirmStats. This is called by BlockPolicyEstimator's
-     * constructor with default values.
-     * @param defaultBuckets contains the upper limits for the bucket boundaries
-     * @param maxConfirms max number of confirms to track
-     * @param decay how much to decay the historical moving average per block
-     */
-    TxConfirmStats(const std::vector<double>& defaultBuckets, unsigned int maxConfirms, double decay);
-
-    /** Clear the state of the curBlock variables to start counting for the new block */
-    void ClearCurrent(unsigned int nBlockHeight);
-
-    /**
-     * Record a new transaction data point in the current block stats
-     * @param blocksToConfirm the number of blocks it took this transaction to confirm
-     * @param val the feerate of the transaction
-     * @warning blocksToConfirm is 1-based and has to be >= 1
-     */
-    void Record(int blocksToConfirm, double val);
-
-    /** Record a new transaction entering the mempool*/
-    unsigned int NewTx(unsigned int nBlockHeight, double val);
-
-    /** Remove a transaction from mempool tracking stats*/
-    void removeTx(unsigned int entryHeight, unsigned int nBestSeenHeight,
-                  unsigned int bucketIndex);
-
-    /** Update our estimates by decaying our historical moving average and updating
-        with the data gathered from the current block */
-    void UpdateMovingAverages();
-
-    /**
-     * Calculate a feerate estimate.  Find the lowest value bucket (or range of buckets
-     * to make sure we have enough data points) whose transactions still have sufficient likelihood
-     * of being confirmed within the target number of confirmations
-     * @param confTarget target number of confirmations
-     * @param sufficientTxVal required average number of transactions per block in a bucket range
-     * @param minSuccess the success probability we require
-     * @param requireGreater return the lowest feerate such that all higher values pass minSuccess OR
-     *        return the highest feerate such that all lower values fail minSuccess
-     * @param nBlockHeight the current block height
-     */
-    double EstimateMedianVal(int confTarget, double sufficientTxVal,
-                             double minSuccess, bool requireGreater, unsigned int nBlockHeight) const;
-
-    /** Return the max number of confirms we're tracking */
-    unsigned int GetMaxConfirms() const { return confAvg.size(); }
-
-    /** Write state of estimation data to a file*/
-    void Write(CAutoFile& fileout) const;
-
-    /**
-     * Read saved state of estimation data from a file and replace all internal data structures and
-     * variables with this state.
-     */
-    void Read(CAutoFile& filein);
-};
-
-
 
 /** Track confirm delays up to 25 blocks, can't estimate beyond that */
 static const unsigned int MAX_BLOCK_CONFIRMS = 25;
