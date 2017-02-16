@@ -14,7 +14,17 @@
 template<typename T>
 void SingleSignerTemplateTest(unsigned int flags, const T& data)
 {
+    CScript scriptSig;
+    CScript scriptPubKey;
     CBasicKeyStore keystore;
+    SignatureData scriptSigData;
+    SignatureData scriptSig1;
+    SignatureData scriptSig2;
+
+    SignatureData scriptExpected = GenericCombineSignatures(scriptPubKey, data, scriptSig1, scriptSig2);
+    BOOST_CHECK(!GenericSignScript(keystore, data, scriptPubKey, scriptSigData));
+    BOOST_CHECK(!GenericVerifyScript(scriptSig, scriptPubKey, flags, data));  
+
     SimpleSignatureCreator simpleSignatureCreator(&keystore, SerializeHash(data));
     std::vector<unsigned char> vchScriptSig;
     CKey key;
@@ -27,6 +37,9 @@ void SingleSignerTemplateTest(unsigned int flags, const T& data)
 
     BOOST_CHECK(simpleSignatureCreator.CreateSig(vchScriptSig, pubkey.GetID(), scriptCode, sigversion));
     BOOST_CHECK(simpleSignatureCreator.Checker().CheckSig(vchScriptSig, vchPubKey, scriptCode, sigversion));
+
+    // TODO BOOST_CHECK(GenericSignScript(keystore, data, scriptPubKey, scriptSigData));
+    // TODO BOOST_CHECK(GenericVerifyScript(scriptSigData.scriptSig, scriptPubKey, flags, data));
 }
 
 BOOST_AUTO_TEST_CASE(GenericSignTests)

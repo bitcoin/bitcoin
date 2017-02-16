@@ -45,4 +45,22 @@ public:
     }
 };
 
+template<typename T>
+bool GenericVerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigned int flags, const T& data)
+{
+    return VerifyScript(scriptSig, scriptPubKey, NULL, flags, SimpleSignatureChecker(SerializeHash(data)));
+}
+
+template<typename T>
+bool GenericSignScript(const CKeyStore& keystore, const T& data, const CScript& scriptPubKey, SignatureData& scriptSig)
+{
+    return ProduceSignature(SimpleSignatureCreator(&keystore, SerializeHash(data)), scriptPubKey, scriptSig);
+}
+
+template<typename T>
+SignatureData GenericCombineSignatures(const CScript& scriptPubKey, const T& data, const SignatureData& scriptSig1, const SignatureData& scriptSig2)
+{
+    return CombineSignatures(scriptPubKey, SimpleSignatureChecker(SerializeHash(data)), scriptSig1, scriptSig2);
+}
+
 #endif // H_BITCOIN_SCRIPT_GENERIC
