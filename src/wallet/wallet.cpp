@@ -1526,6 +1526,28 @@ bool CWallet::IsHDEnabled() const
     return !hdChain.seed_id.IsNull();
 }
 
+void CWallet::SetWalletFlag(uint64_t flags)
+{
+    LOCK(cs_wallet);
+    m_wallet_flags |= flags;
+    if (!WalletBatch(*database).WriteWalletFlags(m_wallet_flags))
+        throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
+}
+
+bool CWallet::IsWalletFlagSet(uint64_t flag)
+{
+    return (m_wallet_flags & flag);
+}
+
+void CWallet::SetWalletFlags(uint64_t overwriteFlags, bool memonly)
+{
+    LOCK(cs_wallet);
+    m_wallet_flags = overwriteFlags;
+    if (!memonly && !WalletBatch(*database).WriteWalletFlags(m_wallet_flags)) {
+        throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
+    }
+}
+
 int64_t CWalletTx::GetTxTime() const
 {
     int64_t n = nTimeSmart;

@@ -723,6 +723,7 @@ private:
     std::set<int64_t> set_pre_split_keypool;
     int64_t m_max_keypool_index = 0;
     std::map<CKeyID, int64_t> m_pool_key_to_index;
+    std::atomic<uint64_t> m_wallet_flags{0};
 
     int64_t nTimeFirstKey = 0;
 
@@ -1190,6 +1191,15 @@ public:
 
     /** Whether a given output is spendable by this wallet */
     bool OutputEligibleForSpending(const COutput& output, const CoinEligibilityFilter& eligibility_filter) const;
+
+    /** set a single wallet flag */
+    void SetWalletFlag(uint64_t flags);
+
+    /** check if a certain wallet flag is set */
+    bool IsWalletFlagSet(uint64_t flag);
+
+    /** overwrite all flags by the given uint64_t */
+    void SetWalletFlags(uint64_t overwriteFlags, bool memOnly);
 };
 
 /** A key allocated from the key pool. */
