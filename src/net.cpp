@@ -24,6 +24,7 @@
 
 #include "darksend.h"
 #include "instantx.h"
+#include "masternode-sync.h"
 #include "masternodeman.h"
 
 #ifdef WIN32
@@ -962,6 +963,12 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
 }
 
 static void AcceptConnection(const ListenSocket& hListenSocket) {
+    // don't accept incoming connections until fully synced
+    if(fMasterNode && !masternodeSync.IsSynced()) {
+        LogPrintf("AcceptConnection -- masternode is not synced yet, skipping inbound connection attempt\n");
+        return;
+    }
+
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
     SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr*)&sockaddr, &len);

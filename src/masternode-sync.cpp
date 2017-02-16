@@ -334,6 +334,12 @@ void CMasternodeSync::ProcessTick()
 
     BOOST_FOREACH(CNode* pnode, vNodesCopy)
     {
+        // Don't try to sync any data from outbound "masternode" connections -
+        // they are temporary and should be considered unreliable for a sync process.
+        // Inbound connection this early is most likely a "masternode" connection
+        // initialted from another node, so skip it too.
+        if(pnode->fMasternode || (fMasterNode && pnode->fInbound)) continue;
+
         // QUICK MODE (REGTEST ONLY!)
         if(Params().NetworkIDString() == CBaseChainParams::REGTEST)
         {
