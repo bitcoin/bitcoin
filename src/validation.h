@@ -300,9 +300,14 @@ double GuessVerificationProgress(const ChainTxData& data, CBlockIndex* pindex);
 void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight);
 
 /**
+ *  Mark one block file as pruned.
+ */
+void PruneOneBlockFile(const int fileNumber);
+
+/**
  *  Actually unlink the specified files
  */
-void UnlinkPrunedFiles(std::set<int>& setFilesToPrune);
+void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune);
 
 /** Create a new block index entry for a given block hash */
 CBlockIndex * InsertBlockIndex(uint256 hash);
@@ -561,6 +566,9 @@ static const unsigned int REJECT_HIGHFEE = 0x100;
 static const unsigned int REJECT_ALREADY_KNOWN = 0x101;
 /** Transaction conflicts with a transaction already known */
 static const unsigned int REJECT_CONFLICT = 0x102;
+
+/** Get block file info entry for one block file */
+CBlockFileInfo* GetBlockFileInfo(size_t n);
 
 /** Dump the mempool to disk. */
 void DumpMempool();
