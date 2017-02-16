@@ -108,13 +108,13 @@ private:
 
 public:
     /**
-     * Initialize the data structures.  This is called by BlockPolicyEstimator's
+     * Create new TxConfirmStats. This is called by BlockPolicyEstimator's
      * constructor with default values.
      * @param defaultBuckets contains the upper limits for the bucket boundaries
      * @param maxConfirms max number of confirms to track
      * @param decay how much to decay the historical moving average per block
      */
-    void Initialize(std::vector<double>& defaultBuckets, unsigned int maxConfirms, double decay);
+    TxConfirmStats(const std::vector<double>& defaultBuckets, unsigned int maxConfirms, double decay);
 
     /** Clear the state of the curBlock variables to start counting for the new block */
     void ClearCurrent(unsigned int nBlockHeight);
@@ -205,6 +205,7 @@ class CBlockPolicyEstimator
 public:
     /** Create new BlockPolicyEstimator and initialize stats tracking classes with default values */
     CBlockPolicyEstimator();
+    ~CBlockPolicyEstimator();
 
     /** Process all the transactions that have been included in a block */
     void processBlock(unsigned int nBlockHeight,
@@ -245,7 +246,7 @@ private:
     std::map<uint256, TxStatsInfo> mapMemPoolTxs;
 
     /** Classes to track historical data on transaction confirmations */
-    TxConfirmStats feeStats;
+    TxConfirmStats* feeStats;
 
     unsigned int trackedTxs;
     unsigned int untrackedTxs;

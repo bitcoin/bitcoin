@@ -14,8 +14,8 @@
 #include "txmempool.h"
 #include "util.h"
 
-void TxConfirmStats::Initialize(std::vector<double>& defaultBuckets,
-                                unsigned int maxConfirms, double _decay)
+TxConfirmStats::TxConfirmStats(const std::vector<double>& defaultBuckets,
+                               unsigned int maxConfirms, double _decay)
 {
     decay = _decay;
     for (unsigned int i = 0; i < defaultBuckets.size(); i++) {
@@ -294,7 +294,7 @@ bool CBlockPolicyEstimator::removeTx(uint256 hash)
     LOCK(cs_feeEstimator);
     std::map<uint256, TxStatsInfo>::iterator pos = mapMemPoolTxs.find(hash);
     if (pos != mapMemPoolTxs.end()) {
-        feeStats.removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.bucketIndex);
+        feeStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.bucketIndex);
         mapMemPoolTxs.erase(hash);
         return true;
     } else {
@@ -312,7 +312,12 @@ CBlockPolicyEstimator::CBlockPolicyEstimator()
         vfeelist.push_back(bucketBoundary);
     }
     vfeelist.push_back(INF_FEERATE);
-    feeStats.Initialize(vfeelist, MAX_BLOCK_CONFIRMS, DEFAULT_DECAY);
+    feeStats = new TxConfirmStats(vfeelist, MAX_BLOCK_CONFIRMS, DEFAULT_DECAY);
+}
+
+CBlockPolicyEstimator::~CBlockPolicyEstimator()
+{
+    delete feeStats;
 }
 
 void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, bool validFeeEstimate)
@@ -346,7 +351,7 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     CFeeRate feeRate(entry.GetFee(), entry.GetTxSize());
 
     mapMemPoolTxs[hash].blockHeight = txHeight;
-    mapMemPoolTxs[hash].bucketIndex = feeStats.NewTx(txHeight, (double)feeRate.GetFeePerK());
+    mapMemPoolTxs[hash].bucketIndex = feeStats->NewTx(txHeight, (double)feeRate.GetFeePerK());
 }
 
 bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry)
@@ -370,7 +375,7 @@ bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxM
     // Feerates are stored and reported as BTC-per-kb:
     CFeeRate feeRate(entry->GetFee(), entry->GetTxSize());
 
-    feeStats.Record(blocksToConfirm, (double)feeRate.GetFeePerK());
+    feeStats->Record(blocksToConfirm, (double)feeRate.GetFeePerK());
     return true;
 }
 
@@ -393,7 +398,7 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
     nBestSeenHeight = nBlockHeight;
 
     // Clear the current block state and update unconfirmed circular buffer
-    feeStats.ClearCurrent(nBlockHeight);
+    feeStats->ClearCurrent(nBlockHeight);
 
     unsigned int countedTxs = 0;
     // Repopulate the current block states
@@ -403,7 +408,7 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
     }
 
     // Update all exponential averages with the current block state
-    feeStats.UpdateMovingAverages();
+    feeStats->UpdateMovingAverages();
 
     LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy after updating estimates for %u of %u txs in block, since last block %u of %u tracked, new mempool map size %u\n",
              countedTxs, entries.size(), trackedTxs, trackedTxs + untrackedTxs, mapMemPoolTxs.size());
@@ -417,10 +422,10 @@ CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget) const
     LOCK(cs_feeEstimator);
     // Return failure if trying to analyze a target we're not tracking
     // It's not possible to get reasonable estimates for confTarget of 1
-    if (confTarget <= 1 || (unsigned int)confTarget > feeStats.GetMaxConfirms())
+    if (confTarget <= 1 || (unsigned int)confTarget > feeStats->GetMaxConfirms())
         return CFeeRate(0);
 
-    double median = feeStats.EstimateMedianVal(confTarget, SUFFICIENT_FEETXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
+    double median = feeStats->EstimateMedianVal(confTarget, SUFFICIENT_FEETXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
 
     if (median < 0)
         return CFeeRate(0);
@@ -439,15 +444,15 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, int *answerFoun
         LOCK(cs_feeEstimator);
 
         // Return failure if trying to analyze a target we're not tracking
-        if (confTarget <= 0 || (unsigned int)confTarget > feeStats.GetMaxConfirms())
+        if (confTarget <= 0 || (unsigned int)confTarget > feeStats->GetMaxConfirms())
             return CFeeRate(0);
 
         // It's not possible to get reasonable estimates for confTarget of 1
         if (confTarget == 1)
             confTarget = 2;
 
-        while (median < 0 && (unsigned int)confTarget <= feeStats.GetMaxConfirms()) {
-            median = feeStats.EstimateMedianVal(confTarget++, SUFFICIENT_FEETXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
+        while (median < 0 && (unsigned int)confTarget <= feeStats->GetMaxConfirms()) {
+            median = feeStats->EstimateMedianVal(confTarget++, SUFFICIENT_FEETXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
         }
     } // Must unlock cs_feeEstimator before taking mempool locks
 
@@ -472,7 +477,7 @@ bool CBlockPolicyEstimator::Write(CAutoFile& fileout) const
         fileout << 139900; // version required to read: 0.13.99 or later
         fileout << CLIENT_VERSION; // version that wrote the file
         fileout << nBestSeenHeight;
-        feeStats.Write(fileout);
+        feeStats->Write(fileout);
     }
     catch (const std::exception&) {
         LogPrintf("CBlockPolicyEstimator::Write(): unable to read policy estimator data (non-fatal)\n");
@@ -490,7 +495,7 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
         if (nVersionRequired > CLIENT_VERSION)
             return error("CBlockPolicyEstimator::Read(): up-version (%d) fee estimate file", nVersionRequired);
         filein >> nFileBestSeenHeight;
-        feeStats.Read(filein);
+        feeStats->Read(filein);
         nBestSeenHeight = nFileBestSeenHeight;
         // if nVersionThatWrote < 139900 then another TxConfirmStats (for priority) follows but can be ignored.
     }
