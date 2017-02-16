@@ -38,7 +38,7 @@ fixes or code moves with actual code changes.
 Commit messages should be verbose by default consisting of a short subject line
 (50 chars max), a blank line and detailed explanatory text as separate
 paragraph(s); unless the title alone is self-explanatory (like "Corrected typo
-in main.cpp") then a single title line is sufficient. Commit messages should be
+in init.cpp") then a single title line is sufficient. Commit messages should be
 helpful to people reading your code in the future, so explain the reasoning for
 your decisions. Further explanation [here](http://chris.beams.io/posts/git-commit/).
 
@@ -79,7 +79,7 @@ Examples:
     Consensus: Add new opcode for BIP-XXXX OP_CHECKAWESOMESIG
     Net: Automatically create hidden service, listen on Tor
     Qt: Add feed bump button
-    Trivial: Fix typo in main.cpp
+    Trivial: Fix typo in init.cpp
 
 If a pull request is specifically not to be considered for merging (yet) please
 prefix the title with [WIP] or use [Tasks Lists](https://help.github.com/articles/basic-writing-and-formatting-syntax/#task-lists)
