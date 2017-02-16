@@ -234,6 +234,7 @@ public:
     //! write the hdchain model (external chain child index counter)
     bool WriteHDChain(const CHDChain& chain);
 
+    bool WriteWalletFlags(const uint64_t flags);
     //! Begin a new transaction
     bool TxnBegin();
     //! Commit current transaction
