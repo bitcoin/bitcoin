@@ -482,10 +482,7 @@ void CBlockPolicyEstimator::Read(CAutoFile& filein, int nFileVersion)
     filein >> nFileBestSeenHeight;
     feeStats.Read(filein);
     nBestSeenHeight = nFileBestSeenHeight;
-    if (nFileVersion < 139900) {
-        TxConfirmStats priStats;
-        priStats.Read(filein);
-    }
+    // if nVersionThatWrote < 139900 then another TxConfirmStats (for priority) follows but can be ignored.
 }
 
 FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee)
