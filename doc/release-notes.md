@@ -33,6 +33,28 @@ frequently tested on them.
 Notable changes
 ===============
 
+Performance Improvements
+--------------
+
+Validation speed and network propagation performance have been greatly
+improved, leading to much shorter sync and initial block download times.
+
+- The script signature cache has been reimplemented as a "cuckoo cache",
+  allowing for more signatures to be cached and faster lookups.
+- Assumed-valid blocks have been introduced which allows script validation to
+  be skipped for ancestors of known-good blocks, without changing the security
+  model. See below for more details.
+- In some cases, compact blocks are now relayed before being fully validated as
+  per BIP152.
+- P2P networking has been refactored with a focus on concurrency and
+  throughput. Network operations are no longer bottlenecked by validation. As a
+  result, block fetching is several times faster than previous releases in many
+  cases.
+- The UTXO cache now claims unused mempool memory. This speeds up initial block
+  download as UTXO lookups are a major bottleneck there, and there is no use for
+  the mempool at that stage.
+
+
 Manual Pruning
 --------------
 
