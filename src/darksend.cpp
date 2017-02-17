@@ -2527,6 +2527,9 @@ void ThreadCheckDarkSendPool()
                 mnpayments.CheckAndRemove();
                 instantsend.CheckAndRemove();
             }
+            if(fMasterNode && (nTick % (60 * 5) == 0)) {
+                mnodeman.DoFullVerificationStep();
+            }
 
             darkSendPool.CheckTimeout();
             darkSendPool.CheckForCompleteQueue();

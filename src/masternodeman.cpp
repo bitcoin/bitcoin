@@ -102,6 +102,9 @@ CMasternodeMan::CMasternodeMan()
   mAskedUsForMasternodeList(),
   mWeAskedForMasternodeList(),
   mWeAskedForMasternodeListEntry(),
+  mWeAskedForVerification(),
+  mMnbRecoveryRequests(),
+  mMnbRecoveryGoodReplies(),
   listScheduledMnbRequestConnections(),
   nLastIndexRebuildTime(0),
   indexMasternodes(),
@@ -967,7 +970,6 @@ void CMasternodeMan::DoFullVerificationStep()
     LOCK2(cs_main, cs);
 
     int nCount = 0;
-    int nCountMax = std::max(10, (int)vMasternodes.size() / 100); // verify at least 10 masternode at once but at most 1% of all known masternodes
 
     int nMyRank = -1;
     int nRanksTotal = (int)vecMasternodeRanks.size();
@@ -983,7 +985,7 @@ void CMasternodeMan::DoFullVerificationStep()
         if(it->second.vin == activeMasternode.vin) {
             nMyRank = it->first;
             LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Found self at rank %d/%d, verifying up to %d masternodes\n",
-                        nMyRank, nRanksTotal, nCountMax);
+                        nMyRank, nRanksTotal, (int)MAX_POSE_CONNECTIONS);
             break;
         }
         ++it;
@@ -992,9 +994,9 @@ void CMasternodeMan::DoFullVerificationStep()
     // edge case: list is too short and this masternode is not enabled
     if(nMyRank == -1) return;
 
-    // send verify requests to up to nCountMax masternodes starting from
-    // (MAX_POSE_RANK + nCountMax * (nMyRank - 1) + 1)
-    int nOffset = MAX_POSE_RANK + nCountMax * (nMyRank - 1);
+    // send verify requests to up to MAX_POSE_CONNECTIONS masternodes
+    // starting from MAX_POSE_RANK + nMyRank and using MAX_POSE_CONNECTIONS as a step
+    int nOffset = MAX_POSE_RANK + nMyRank - 1;
     if(nOffset >= (int)vecMasternodeRanks.size()) return;
 
     std::vector<CMasternode*> vSortedByAddr;
@@ -1012,16 +1014,20 @@ void CMasternodeMan::DoFullVerificationStep()
                         it->second.IsPoSeVerified() && it->second.IsPoSeBanned() ? " and " : "",
                         it->second.IsPoSeBanned() ? "banned" : "",
                         it->second.vin.prevout.ToStringShort(), it->second.addr.ToString());
-            ++it;
+            nOffset += MAX_POSE_CONNECTIONS;
+            if(nOffset >= (int)vecMasternodeRanks.size()) break;
+            it += MAX_POSE_CONNECTIONS;
             continue;
         }
         LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Verifying masternode %s rank %d/%d address %s\n",
                     it->second.vin.prevout.ToStringShort(), it->first, nRanksTotal, it->second.addr.ToString());
         if(SendVerifyRequest((CAddress)it->second.addr, vSortedByAddr)) {
             nCount++;
-            if(nCount >= nCountMax) break;
+            if(nCount >= MAX_POSE_CONNECTIONS) break;
         }
-        ++it;
+        nOffset += MAX_POSE_CONNECTIONS;
+        if(nOffset >= (int)vecMasternodeRanks.size()) break;
+        it += MAX_POSE_CONNECTIONS;
     }
 
     LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Sent verification requests to %d masternodes\n", nCount);
@@ -1640,7 +1646,6 @@ void CMasternodeMan::UpdatedBlockTip(const CBlockIndex *pindex)
     CheckSameAddr();
 
     if(fMasterNode) {
-        DoFullVerificationStep();
         // normal wallet does not need to update this every block, doing update on rpc call should be enough
         UpdateLastPaid();
     }
