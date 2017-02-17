@@ -35,7 +35,7 @@
      <item>
       <widget class="QValidatedLineEdit" name="addressIn">
        <property name="toolTip">
-        <string>The address for authentification (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</string>
+        <string>The address for authentification (e.g. 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)</string>
        </property>
        <property name="maxLength">
         <number>34</number>
