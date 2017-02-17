@@ -313,5 +313,105 @@ Credits
 
 Thanks to everyone who directly contributed to this release:
 
+- accraze
+- adlawren
+- Alex Morcos
+- Alexey Vesnin
+- Amir Abrams
+- Anders Øyvind Urke-Sætre
+- Anditto Heristyo
+- Andrew Chow
+- anduck
+- Anthony Towns
+- Brian Deery
+- BtcDrak
+- Chris Moore
+- Chris Stewart
+- Christian Barcenas
+- Christian Decker
+- Cory Fields
+- crowning-
+- CryptAxe
+- CryptoVote
+- Dagur Valberg Johannsson
+- Daniel Cousens
+- Daniel Kraft
+- Derek Miller
+- djpnewton
+- Don Patterson
+- Doug
+- Douglas Roark
+- Ethan Heilman
+- fsb4000
+- Gaurav Rana
+- Geoffrey Tsui
+- Greg Walker
+- Gregory Maxwell
+- Gregory Sanders
+- Hampus Sjöberg
+- instagibbs
+- isle2983
+- Ivo van der Sangen
+- James White
+- Jameson Lopp
+- Jeremy Rubin
+- Jiaxing Wang
+- jnewbery
+- John Newbery
+- Johnson Lau
+- Jon Lund Steffensen
+- Jonas Schnelli
+- jonnynewbs
+- Jorge Timón
+- Justin Camarena
+- Karl-Johan Alm
+- Kaz Wesley
+- Koki Takahashi
+- Lauda
+- leijurv
+- lizhi
+- Luke Dashjr
+- maiiz
+- MarcoFalke
+- Marty Jones
+- Masahiko Hyuga
+- Matt Corallo
+- Matthew King
+- matthias
+- Micha
+- Michael Ford
+- Michael Rotarius
+- Mitchell Cash
+- mrbandrews
+- mruddy
+- Nicolas DORIER
+- NicolasDorier
+- nomnombtc
+- Patrick Strateman
+- Pavel Janík
+- Pedro Branco
+- Peter Todd
+- Pieter Wuille
+- poole\_party
+- practicalswift
+- R E Broadley
+- randy-waterhouse
+- Richard Kiss
+- Robert McLaughlin
+- rodasmith
+- Russell Yanofsky
+- S. Matthew English
+- Sev
+- Spencer Lievens
+- Stanislas Marion
+- Steven
+- Suhas Daftuar
+- Thomas Snider
+- UdjinM6
+- unsystemizer
+- whythat
+- Will Binns
+- Wladimir J. van der Laan
+- wodry
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
