@@ -6,6 +6,10 @@
         <translation>Skep 'n nuwe adres</translation>
     </message>
     <message>
+        <source>&amp;New</source>
+        <translation>&amp;Nuwe</translation>
+    </message>
+    <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Maak 'n kopie van die huidige adres na die stelsel klipbord</translation>
     </message>
@@ -18,12 +22,56 @@
         <translation>Verwyder die huidiglik gekieste address van die lys</translation>
     </message>
     <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Voer inligting uit van die huidige blad na n lêer</translation>
+    </message>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Uitvoer</translation>
+    </message>
+    <message>
         <source>&amp;Delete</source>
         <translation>&amp;Verwyder</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
         <translation>Kies die address na wie die muntstukke gestuur moet word</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>K&amp;ies</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Stuur adresse</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Ontvang adresse</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Kopie adres</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>Kopie &amp;Etiket</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>&amp;Wysig</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>Voer adres lys uit</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Koma geskeide lêers (*.csv)</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Uitvoering Misluk</translation>
     </message>
     </context>
 <context>
@@ -661,6 +709,10 @@
         <translation>Kopieer bedrag</translation>
     </message>
     <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Koma geskeide lêers (*.csv)</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>Datum</translation>
     </message>
@@ -679,6 +731,10 @@
     <message>
         <source>ID</source>
         <translation>ID</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Uitvoering Misluk</translation>
     </message>
     <message>
         <source>Range:</source>
@@ -704,6 +760,14 @@
 </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Uitvoer</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Voer inligting uit van die huidige blad na n lêer</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>

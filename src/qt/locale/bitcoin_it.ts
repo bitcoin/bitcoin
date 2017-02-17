@@ -563,10 +563,74 @@
         <translation>Confermato</translation>
     </message>
     <message>
+        <source>Copy address</source>
+        <translation>Copia indirizzo</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>Copia etichetta</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Copia l'importo</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>Copia l'ID transazione</translation>
+    </message>
+    <message>
+        <source>Lock unspent</source>
+        <translation>Bloccare non spesi</translation>
+    </message>
+    <message>
+        <source>Unlock unspent</source>
+        <translation>Sbloccare non spesi</translation>
+    </message>
+    <message>
+        <source>Copy quantity</source>
+        <translation>Copia quantità</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>Copia commissione</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation>Copia dopo commissione</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>Copia byte</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation>Copia trascurabile</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>Copia resto</translation>
+    </message>
+    <message>
+        <source>(%1 locked)</source>
+        <translation>(%1 bloccato)</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>sì</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>no</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(nessuna etichetta)</translation>
     </message>
-    </context>
+    <message>
+        <source>(change)</source>
+        <translation>(resto)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -703,6 +767,10 @@
         <translation>Errore</translation>
     </message>
     <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>GB di spazio libero disponibile</numerusform><numerusform>%n GB di spazio disponibile</numerusform></translation>
+    </message>
+    <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation><numerusform>(di %nGB richiesti)</numerusform><numerusform>(%n GB richiesti)</numerusform></translation>
     </message>
@@ -712,6 +780,10 @@
     <message>
         <source>Form</source>
         <translation>Modulo</translation>
+    </message>
+    <message>
+        <source>Unknown...</source>
+        <translation>Sconosciuto...</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1054,6 +1126,14 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
 </context>
 <context>
     <name>PaymentServer</name>
+    <message>
+        <source>Payment request expired.</source>
+        <translation>Richiesta di pagamento scaduta.</translation>
+    </message>
+    <message>
+        <source>Invalid payment request.</source>
+        <translation>Richiesta di pagamento invalida</translation>
+    </message>
     </context>
 <context>
     <name>PeerTableModel</name>
@@ -1065,7 +1145,11 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <source>Node/Service</source>
         <translation>Nodo/Servizio</translation>
     </message>
-    </context>
+    <message>
+        <source>Ping</source>
+        <translation>Ping</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -1104,17 +1188,49 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <source>%1 ms</source>
         <translation>%1 ms</translation>
     </message>
+    <message numerus="yes">
+        <source>%n second(s)</source>
+        <translation><numerusform>%n secondo</numerusform><numerusform>%n secondi</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n minute(s)</source>
+        <translation><numerusform>%n minuto</numerusform><numerusform>%n minuti</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n ora</numerusform><numerusform>%n ore</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n giorno</numerusform><numerusform>%n giorni</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n settimana</numerusform><numerusform>%n settimane</numerusform></translation>
+    </message>
     <message>
         <source>%1 and %2</source>
         <translation>%1 e %2</translation>
     </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n anno</numerusform><numerusform>%n anni</numerusform></translation>
+    </message>
     </context>
 <context>
     <name>QObject::QObject</name>
-    </context>
+    <message>
+        <source>Error: %1</source>
+        <translation>Errore: %1</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
-    </context>
+    <message>
+        <source>PNG Image (*.png)</source>
+        <translation>Immagine PNG (*.png)</translation>
+    </message>
+</context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -1464,7 +1580,23 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <source>Remove</source>
         <translation>Rimuovi</translation>
     </message>
-    </context>
+    <message>
+        <source>Copy URI</source>
+        <translation>Copia URI</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>Copia etichetta</translation>
+    </message>
+    <message>
+        <source>Copy message</source>
+        <translation>Copia il messaggio</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Copia l'importo</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -1484,25 +1616,57 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>&amp;Salva Immagine...</translation>
     </message>
     <message>
+        <source>URI</source>
+        <translation>URI</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation>Indirizzo</translation>
     </message>
     <message>
+        <source>Amount</source>
+        <translation>Importo</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>Etichetta</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Messaggio</translation>
     </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
+        <source>Date</source>
+        <translation>Data</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>Etichetta</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Messaggio</translation>
     </message>
     <message>
         <source>(no label)</source>
         <translation>(nessuna etichetta)</translation>
     </message>
-    </context>
+    <message>
+        <source>(no message)</source>
+        <translation>(nessun messaggio)</translation>
+    </message>
+    <message>
+        <source>(no amount requested)</source>
+        <translation>(nessun importo richiesto)</translation>
+    </message>
+    <message>
+        <source>Requested</source>
+        <translation>Richiesto</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1646,6 +1810,54 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>&amp;Invia</translation>
     </message>
     <message>
+        <source>Copy quantity</source>
+        <translation>Copia quantità</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Copia l'importo</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>Copia commissione</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation>Copia dopo commissione</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>Copia byte</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation>Copia trascurabile</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>Copia resto</translation>
+    </message>
+    <message>
+        <source>%1 to %2</source>
+        <translation>%1 a %2</translation>
+    </message>
+    <message>
+        <source>Payment request expired.</source>
+        <translation>Richiesta di pagamento scaduta.</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n block(s)</source>
+        <translation><numerusform>%n blocco</numerusform><numerusform>%n blocchi</numerusform></translation>
+    </message>
+    <message>
+        <source>Warning: Invalid Bitcoin address</source>
+        <translation>Attenzione: Indirizzo Bitcoin non valido</translation>
+    </message>
+    <message>
+        <source>Warning: Unknown change address</source>
+        <translation>Attenzione: Indirizzo per il resto sconosciuto</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(nessuna etichetta)</translation>
     </message>
@@ -1731,7 +1943,11 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     </context>
 <context>
     <name>SendConfirmationDialog</name>
-    </context>
+    <message>
+        <source>Yes</source>
+        <translation>Si</translation>
+    </message>
+</context>
 <context>
     <name>ShutdownWindow</name>
     <message>
@@ -1829,7 +2045,55 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <source>Reset all verify message fields</source>
         <translation>Reimposta tutti i campi della verifica messaggio</translation>
     </message>
-    </context>
+    <message>
+        <source>The entered address is invalid.</source>
+        <translation>L'indirizzo inserito non è valido.</translation>
+    </message>
+    <message>
+        <source>Please check the address and try again.</source>
+        <translation>Per favore controlla l'indirizzo e prova di nuovo.</translation>
+    </message>
+    <message>
+        <source>The entered address does not refer to a key.</source>
+        <translation>L'indirizzo bitcoin inserito non è associato a nessuna chiave.</translation>
+    </message>
+    <message>
+        <source>Wallet unlock was cancelled.</source>
+        <translation>Sblocco del portamonete annullato.</translation>
+    </message>
+    <message>
+        <source>Private key for the entered address is not available.</source>
+        <translation>La chiave privata per l'indirizzo inserito non è disponibile.</translation>
+    </message>
+    <message>
+        <source>Message signing failed.</source>
+        <translation>Firma messaggio fallita.</translation>
+    </message>
+    <message>
+        <source>Message signed.</source>
+        <translation>Messaggio firmato.</translation>
+    </message>
+    <message>
+        <source>The signature could not be decoded.</source>
+        <translation>Non è stato possibile decodificare la firma.</translation>
+    </message>
+    <message>
+        <source>Please check the signature and try again.</source>
+        <translation>Per favore controlla la firma e prova di nuovo.</translation>
+    </message>
+    <message>
+        <source>The signature did not match the message digest.</source>
+        <translation>La firma non corrisponde al digest del messaggio.</translation>
+    </message>
+    <message>
+        <source>Message verification failed.</source>
+        <translation>Verifica messaggio fallita.</translation>
+    </message>
+    <message>
+        <source>Message verified.</source>
+        <translation>Messaggio verificato.</translation>
+    </message>
+</context>
 <context>
     <name>SplashScreen</name>
     <message>
@@ -1846,7 +2110,123 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
 </context>
 <context>
     <name>TransactionDesc</name>
-    </context>
+    <message>
+        <source>%1/offline</source>
+        <translation>%1/offline</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Stato</translation>
+    </message>
+    <message>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>, non è ancora stata trasmessa con successo</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>Data</translation>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation>Sorgente</translation>
+    </message>
+    <message>
+        <source>Generated</source>
+        <translation>Generato</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>Da</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>sconosciuto</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>A</translation>
+    </message>
+    <message>
+        <source>own address</source>
+        <translation>proprio indirizzo</translation>
+    </message>
+    <message>
+        <source>watch-only</source>
+        <translation>sola lettura</translation>
+    </message>
+    <message>
+        <source>label</source>
+        <translation>etichetta</translation>
+    </message>
+    <message>
+        <source>Credit</source>
+        <translation>Credito</translation>
+    </message>
+    <message>
+        <source>not accepted</source>
+        <translation>non accettate</translation>
+    </message>
+    <message>
+        <source>Debit</source>
+        <translation>Debito</translation>
+    </message>
+    <message>
+        <source>Total debit</source>
+        <translation>Debito totale</translation>
+    </message>
+    <message>
+        <source>Total credit</source>
+        <translation>Credito totale</translation>
+    </message>
+    <message>
+        <source>Transaction fee</source>
+        <translation>Commissione transazione</translation>
+    </message>
+    <message>
+        <source>Net amount</source>
+        <translation>Importo netto</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Messaggio</translation>
+    </message>
+    <message>
+        <source>Comment</source>
+        <translation>Commento</translation>
+    </message>
+    <message>
+        <source>Transaction ID</source>
+        <translation>ID della transazione</translation>
+    </message>
+    <message>
+        <source>Merchant</source>
+        <translation>Commerciante</translation>
+    </message>
+    <message>
+        <source>Debug information</source>
+        <translation>Informazione di debug</translation>
+    </message>
+    <message>
+        <source>Transaction</source>
+        <translation>Transazione</translation>
+    </message>
+    <message>
+        <source>Inputs</source>
+        <translation>Input</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Importo</translation>
+    </message>
+    <message>
+        <source>true</source>
+        <translation>vero</translation>
+    </message>
+    <message>
+        <source>false</source>
+        <translation>falso</translation>
+    </message>
+</context>
 <context>
     <name>TransactionDescDialog</name>
     <message>
@@ -1857,19 +2237,199 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
 <context>
     <name>TransactionTableModel</name>
     <message>
+        <source>Date</source>
+        <translation>Data</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation>Tipo</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>Etichetta</translation>
+    </message>
+    <message>
+        <source>Offline</source>
+        <translation>Offline</translation>
+    </message>
+    <message>
+        <source>Unconfirmed</source>
+        <translation>Non confermata</translation>
+    </message>
+    <message>
+        <source>Confirmed (%1 confirmations)</source>
+        <translation>Confermata (%1 conferme)</translation>
+    </message>
+    <message>
+        <source>This block was not received by any other nodes and will probably not be accepted!</source>
+        <translation>Questo blocco non è stato ricevuto da alcun altro nodo e probabilmente non sarà accettato!</translation>
+    </message>
+    <message>
+        <source>Generated but not accepted</source>
+        <translation>Generati, ma non accettati</translation>
+    </message>
+    <message>
+        <source>Received with</source>
+        <translation>Ricevuto tramite</translation>
+    </message>
+    <message>
+        <source>Sent to</source>
+        <translation>Inviato a</translation>
+    </message>
+    <message>
+        <source>Payment to yourself</source>
+        <translation>Pagamento a te stesso</translation>
+    </message>
+    <message>
+        <source>Mined</source>
+        <translation>Ottenuto dal mining</translation>
+    </message>
+    <message>
+        <source>watch-only</source>
+        <translation>sola lettura</translation>
+    </message>
+    <message>
+        <source>(n/a)</source>
+        <translation>(n/d)</translation>
     </message>
     <message>
         <source>(no label)</source>
         <translation>(nessuna etichetta)</translation>
     </message>
-    </context>
+    <message>
+        <source>Transaction status. Hover over this field to show number of confirmations.</source>
+        <translation>Stato della transazione. Passare con il mouse su questo campo per visualizzare il numero di conferme.</translation>
+    </message>
+    <message>
+        <source>Date and time that the transaction was received.</source>
+        <translation>Data e ora in cui la transazione è stata ricevuta.</translation>
+    </message>
+    <message>
+        <source>Type of transaction.</source>
+        <translation>Tipo di transazione.</translation>
+    </message>
+    <message>
+        <source>Whether or not a watch-only address is involved in this transaction.</source>
+        <translation>Indica se un indirizzo di sola lettura sia o meno coinvolto in questa transazione.</translation>
+    </message>
+    <message>
+        <source>User-defined intent/purpose of the transaction.</source>
+        <translation>Intento/scopo della transazione definito dall'utente.</translation>
+    </message>
+    <message>
+        <source>Amount removed from or added to balance.</source>
+        <translation>Importo rimosso o aggiunto al saldo.</translation>
+    </message>
+</context>
 <context>
     <name>TransactionView</name>
     <message>
+        <source>All</source>
+        <translation>Tutti</translation>
+    </message>
+    <message>
+        <source>Today</source>
+        <translation>Oggi</translation>
+    </message>
+    <message>
+        <source>This week</source>
+        <translation>Questa settimana</translation>
+    </message>
+    <message>
+        <source>This month</source>
+        <translation>Questo mese</translation>
+    </message>
+    <message>
+        <source>Last month</source>
+        <translation>Il mese scorso</translation>
+    </message>
+    <message>
+        <source>This year</source>
+        <translation>Quest'anno</translation>
+    </message>
+    <message>
+        <source>Range...</source>
+        <translation>Intervallo...</translation>
+    </message>
+    <message>
+        <source>Received with</source>
+        <translation>Ricevuto tramite</translation>
+    </message>
+    <message>
+        <source>Sent to</source>
+        <translation>Inviato a</translation>
+    </message>
+    <message>
+        <source>To yourself</source>
+        <translation>A te stesso</translation>
+    </message>
+    <message>
+        <source>Mined</source>
+        <translation>Ottenuto dal mining</translation>
+    </message>
+    <message>
+        <source>Other</source>
+        <translation>Altro</translation>
+    </message>
+    <message>
+        <source>Enter address or label to search</source>
+        <translation>Inserisci un indirizzo o un'etichetta da cercare</translation>
+    </message>
+    <message>
+        <source>Min amount</source>
+        <translation>Importo minimo</translation>
+    </message>
+    <message>
+        <source>Copy address</source>
+        <translation>Copia indirizzo</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>Copia etichetta</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Copia l'importo</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>Copia l'ID transazione</translation>
+    </message>
+    <message>
+        <source>Copy raw transaction</source>
+        <translation>Copia la transazione raw</translation>
+    </message>
+    <message>
+        <source>Edit label</source>
+        <translation>Modifica l'etichetta</translation>
+    </message>
+    <message>
+        <source>Show transaction details</source>
+        <translation>Mostra i dettagli della transazione</translation>
+    </message>
+    <message>
+        <source>Export Transaction History</source>
+        <translation>Esporta lo storico delle transazioni</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Testo CSV (*.csv)</translation>
+    </message>
+    <message>
+        <source>Confirmed</source>
+        <translation>Confermato</translation>
+    </message>
+    <message>
+        <source>Watch-only</source>
+        <translation>Sola lettura</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>Data</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation>Tipo</translation>
     </message>
     <message>
         <source>Label</source>
@@ -1880,10 +2440,34 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Indirizzo</translation>
     </message>
     <message>
+        <source>ID</source>
+        <translation>ID</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation>Esportazione Fallita</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the transaction history to %1.</source>
+        <translation>Si è verificato un errore durante il salvataggio dello storico delle transazioni in %1.</translation>
+    </message>
+    <message>
+        <source>Exporting Successful</source>
+        <translation>Esportazione Riuscita</translation>
+    </message>
+    <message>
+        <source>The transaction history was successfully saved to %1.</source>
+        <translation>Lo storico delle transazioni e' stato salvato con successo in %1.</translation>
+    </message>
+    <message>
+        <source>Range:</source>
+        <translation>Intervallo:</translation>
+    </message>
+    <message>
+        <source>to</source>
+        <translation>a</translation>
+    </message>
+</context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
@@ -1893,13 +2477,53 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
 </context>
 <context>
     <name>WalletFrame</name>
-    </context>
+    <message>
+        <source>No wallet has been loaded.</source>
+        <translation>Non è stato caricato alcun portamonete.</translation>
+    </message>
+</context>
 <context>
     <name>WalletModel</name>
-    </context>
+    <message>
+        <source>Send Coins</source>
+        <translation>Invia Bitcoin</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
-    </context>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Esporta</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Esporta su file i dati contenuti nella tabella corrente</translation>
+    </message>
+    <message>
+        <source>Backup Wallet</source>
+        <translation>Backup Portamonete</translation>
+    </message>
+    <message>
+        <source>Wallet Data (*.dat)</source>
+        <translation>Dati Portamonete (*.dat)</translation>
+    </message>
+    <message>
+        <source>Backup Failed</source>
+        <translation>Backup Fallito</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the wallet data to %1.</source>
+        <translation>Si è verificato un errore durante il salvataggio dei dati del portamonete in %1.</translation>
+    </message>
+    <message>
+        <source>Backup Successful</source>
+        <translation>Backup eseguito con successo</translation>
+    </message>
+    <message>
+        <source>The wallet data was successfully saved to %1.</source>
+        <translation>Il portamonete è stato correttamente salvato in %1.</translation>
+    </message>
+</context>
 <context>
     <name>bitcoin-core</name>
     <message>

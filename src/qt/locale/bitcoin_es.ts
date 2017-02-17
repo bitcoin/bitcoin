@@ -3748,6 +3748,10 @@ Establecer la serialización de las transacciones sin procesar o el bloque hex d
         <translation>Iniciando funciones de red...</translation>
     </message>
     <message>
+        <source>This is the minimum transaction fee you pay on every transaction.</source>
+        <translation>Esta es la tarifa mínima de transacción que usted paga en cada transacción.</translation>
+    </message>
+    <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
         <translation>Umbral para la desconexión de pares con mal comportamiento (predeterminado: %u)</translation>
     </message>
