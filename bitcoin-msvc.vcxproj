@@ -90,6 +90,7 @@
       <PreprocessorDefinitions>LEVELDB_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;HAVE_CONFIG_H;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)/src;$(ProjectDir)/src/config;$(ProjectDir)/src/leveldb;$(ProjectDir)/src/leveldb/include;$(ProjectDir)/src/leveldb/helpers/memenv;$(ProjectDir)/src/univalue/include</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -105,6 +106,7 @@
       <PreprocessorDefinitions>LEVELDB_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;HAVE_CONFIG_H;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)/src;$(ProjectDir)/src/config;$(ProjectDir)/src/leveldb;$(ProjectDir)/src/leveldb/include;$(ProjectDir)/src/leveldb/helpers/memenv;$(ProjectDir)/src/univalue/include</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -122,6 +124,7 @@
       <PreprocessorDefinitions>LEVELDB_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;HAVE_CONFIG_H;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)/src;$(ProjectDir)/src/config;$(ProjectDir)/src/leveldb;$(ProjectDir)/src/leveldb/include;$(ProjectDir)/src/leveldb/helpers/memenv;$(ProjectDir)/src/univalue/include</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -141,6 +144,7 @@
       <PreprocessorDefinitions>LEVELDB_PLATFORM_WINDOWS;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;HAVE_CONFIG_H;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)/src;$(ProjectDir)/src/config;$(ProjectDir)/src/leveldb;$(ProjectDir)/src/leveldb/include;$(ProjectDir)/src/leveldb/helpers/memenv;$(ProjectDir)/src/univalue/include</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
