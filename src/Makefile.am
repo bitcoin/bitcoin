@@ -28,6 +28,7 @@ LIBBITCOIN_COMMON=libbitcoin_common.a
 LIBBITCOIN_CLI=libbitcoin_cli.a
 LIBBITCOIN_UTIL=libbitcoin_util.a
 LIBBITCOIN_CRYPTO=crypto/libbitcoin_crypto.a
+LIBBITCOIN_CRYPTO_X86=libbitcoin_crypto_x86.a
 LIBBITCOIN_UNIVALUE=univalue/libbitcoin_univalue.a
 LIBBITCOINQT=qt/libbitcoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
@@ -41,6 +42,7 @@ EXTRA_LIBRARIES = \
   crypto/libbitcoin_crypto.a \
   libbitcoin_util.a \
   libbitcoin_common.a \
+  libbitcoin_crypto_x86.a \
   univalue/libbitcoin_univalue.a \
   libbitcoin_server.a \
   libbitcoin_cli.a
@@ -71,6 +73,8 @@ endif
 # hodlcoin core #
 BITCOIN_CORE_H = \
   addrman.h \
+  aligned_malloc.h \
+  aes.h \
   alert.h \
   amount.h \
   arith_uint256.h \
@@ -129,6 +133,7 @@ BITCOIN_CORE_H = \
   script/sigcache.h \
   script/sign.h \
   script/standard.h \
+  sha512.h \
   serialize.h \
   streams.h \
   support/allocators/secure.h \
@@ -244,6 +249,11 @@ univalue_libbitcoin_univalue_a_SOURCES = \
   univalue/univalue_read.cpp \
   univalue/univalue_write.cpp
 
+libbitcoin_crypto_x86_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(CRYPTO_X86_CXXFLAGS) $(CRYPTO_AES_CXXFLAGS) $(CRYPTO_AVX2_CXXFLAGS)
+libbitcoin_crypto_x86_a_SOURCES = \
+  aes.cpp \
+  sha512.cpp
+
 # common: shared between hodlcoind, and hodlcoin-qt and non-server tools
 libbitcoin_common_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_common_a_SOURCES = \
@@ -324,6 +334,7 @@ hodlcoind_LDADD = \
   $(LIBBITCOIN_UNIVALUE) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO) \
+  $(LIBBITCOIN_CRYPTO_X86) \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
@@ -365,6 +376,7 @@ hodlcoin_tx_LDADD = \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO) \
+  $(LIBBITCOIN_CRYPTO_X86) \
   $(LIBSECP256K1)
 
 hodlcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)

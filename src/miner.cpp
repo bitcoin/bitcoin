@@ -24,6 +24,7 @@
 #include "wallet/wallet.h"
 #endif
 
+#include "aligned_malloc.h"
 #include <boost/thread.hpp>
 
 using namespace std;
@@ -517,7 +518,7 @@ void static BitcoinMiner(CWallet *pwallet, uint32_t minerI, uint32_t minerN, int
     CReserveKey reservekey(pwallet);
     unsigned int nExtraNonce = 0;
 
-    char __attribute__ ((aligned (16))) *scratchpad = new char[(1<<30)];
+    char __attribute__ ((aligned (32))) *scratchpad = (char*)aligned_malloc(1<<30);
     /*
 		__thread char *scratchpad = NULL;
 		scratchpad = (char*) mmap(0, 1<<30, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_POPULATE, 0, 0);
@@ -643,14 +644,14 @@ void static BitcoinMiner(CWallet *pwallet, uint32_t minerI, uint32_t minerN, int
     catch (const boost::thread_interrupted&)
     {
         LogPrintf("HOdlcoinMiner terminated\n");
-        delete [] scratchpad;
+        aligned_free(scratchpad);
         fGenerate = false;
         return;
     }
     catch (const std::runtime_error &e)
     {
         LogPrintf("HOdlcoinMiner runtime error: %s\n", e.what());
-        delete [] scratchpad;
+        aligned_free(scratchpad);
         fGenerate = false;
         return;
     }

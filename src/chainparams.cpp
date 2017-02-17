@@ -10,6 +10,7 @@
 #include "arith_uint256.h"
 
 #include <assert.h>
+#include "aligned_malloc.h"
 
 #include <boost/assign/list_of.hpp>
 
@@ -88,7 +89,7 @@ public:
             arith_uint256 hashTarget = arith_uint256().SetCompact(genesis.nBits);
             uint256 thash;
             char *scratchpad;
-            scratchpad=new char[(1<<30)];
+            scratchpad = (char*)aligned_malloc(1<<30);
             while(true){
                 int collisions=0;
 								int tmpflag=0;
@@ -103,7 +104,7 @@ public:
                     ++genesis.nTime;
                 }
             }
-            delete scratchpad;
+            aligned_free(scratchpad);
             LogPrintf("block.nTime = %u \n", genesis.nTime);
             LogPrintf("block.nNonce = %u \n", genesis.nNonce);
             LogPrintf("block.GetHash = %s\n", genesis.GetHash().ToString().c_str());
@@ -195,7 +196,7 @@ public:
             arith_uint256 hashTarget = arith_uint256().SetCompact(genesis.nBits);
             uint256 thash;
             char *scratchpad;
-            scratchpad=new char[(1<<30)];
+            scratchpad=(char*)aligned_malloc(1<<30);
             while(true){
                 int collisions=0;
 								int tmpflag=0;
@@ -210,7 +211,7 @@ public:
                     ++genesis.nTime;
                 }
             }
-            delete scratchpad;
+            aligned_free(scratchpad);
             LogPrintf("block.nTime = %u \n", genesis.nTime);
             LogPrintf("block.nNonce = %u \n", genesis.nNonce);
             LogPrintf("block.GetHash = %s\n", genesis.GetHash().ToString().c_str());

@@ -902,6 +902,15 @@ CPPFLAGS_TEMP="$CPPFLAGS"
 unset CPPFLAGS
 CPPFLAGS="$CPPFLAGS_TEMP"
 
+case $host in
+   x86_64-*-*)
+     CRYPTO_AES_CXXFLAGS="-maes"
+     CRYPTO_AVX2_CXXFLAGS="-mavx2"
+     ;;
+esac
+AC_SUBST(CRYPTO_AES_CXXFLAGS)
+AC_SUBST(CRYPTO_AVX2_CXXFLAGS)
+
 LDFLAGS_TEMP="$LDFLAGS"
 unset LDFLAGS
 LDFLAGS="$LDFLAGS_TEMP"
@@ -933,3 +942,4 @@ case $host in
      chmod 755 libtool
    ;;
 esac
+
