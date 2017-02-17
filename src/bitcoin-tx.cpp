@@ -756,7 +756,7 @@ static int CommandLineRawTx(int argc, char* argv[])
             argv++;
         }
 
-        CMutableTransaction tx;
+        CMutableTransaction tx, witTx;
         int startArg;
 
         if (!fCreateBlank) {
@@ -769,8 +769,19 @@ static int CommandLineRawTx(int argc, char* argv[])
             if (strHexTx == "-")                 // "-" implies standard input
                 strHexTx = readStdin();
 
-            if (!DecodeHexTx(tx, strHexTx, true))
+            // First attempt to decode the transaction as a non-witness transaction
+            if (!DecodeHexTx(tx, strHexTx, true)) {
                 throw std::runtime_error("invalid transaction encoding");
+            }
+            // If the transaction has 0-inputs (either a 0-input non-witness transaction or a witness transaction)
+            // then attempt to decode it as a witness transaction. If this is successful, then the transaction is
+            // a witness transaction and that is used. Otherwise it is a 0-input non-witness transaction and the
+            // non-witness decoding is used.
+            if (tx.vin.size() == 0) {
+                 if (DecodeHexTx(witTx, strHexTx, false)) {
+                    tx = witTx;
+                }
+            }
 
             startArg = 2;
         } else
