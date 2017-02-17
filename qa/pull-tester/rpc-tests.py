@@ -8,6 +8,8 @@ rpc-tests.py - run regression test suite
 This module calls down into individual test cases via subprocess. It will
 forward all unrecognized arguments onto the individual test scripts.
 
+RPC tests are disabled on Windows by default. Use --force to run them anyway.
+
 For a description of arguments recognized by test scripts, see
 `qa/pull-tester/test_framework/test_framework.py:BitcoinTestFramework.main`.
 
@@ -24,8 +26,8 @@ import tempfile
 import re
 
 BASE_SCRIPTS= [
-    # Scripts that are run by the travis build process
-    # longest test should go first, to favor running tests in parallel
+    # Scripts that are run by the travis build process.
+    # Longest test should go first, to favor running tests in parallel
     'wallet-hd.py',
     'walletbackup.py',
     # vv Tests less than 5m vv
@@ -130,11 +132,11 @@ def main():
                                      formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('--coverage', action='store_true', help='generate a basic coverage report for the RPC interface')
     parser.add_argument('--extended', action='store_true', help='run the extended test suite in addition to the basic tests')
+    parser.add_argument('--force', '-f', action='store_true', help='run tests even on platforms where they are disabled by default (e.g. windows).')
     parser.add_argument('--help', '-h', '-?', action='store_true', help='print help text and exit')
-    parser.add_argument('--nozmq', action='store_true', help='do not run the zmq tests')
     parser.add_argument('--jobs', '-j', type=int, default=4, help='how many test scripts to run in parallel. Default=4.')
-    parser.add_argument('--win', action='store_true', help='signal that this is running in a Windows environment and that we should run the tests')
-    (args, unknown_args) = parser.parse_known_args()
+    parser.add_argument('--nozmq', action='store_true', help='do not run the zmq tests')
+    args, unknown_args = parser.parse_known_args()
 
     # Create a set to store arguments and create the passon string
     tests = set(arg for arg in unknown_args if arg[:2] != "--")
@@ -144,15 +146,15 @@ def main():
     config = configparser.ConfigParser()
     config.read_file(open(os.path.dirname(__file__) + "/tests_config.ini"))
 
-    enable_wallet = config["components"]["ENABLE_WALLET"] == "True"
-    enable_utils = config["components"]["ENABLE_UTILS"] == "True"
-    enable_bitcoind = config["components"]["ENABLE_BITCOIND"] == "True"
-    enable_zmq = config["components"]["ENABLE_ZMQ"] == "True" and not args.nozmq
+    enable_wallet = config["components"].getboolean("ENABLE_WALLET")
+    enable_utils = config["components"].getboolean("ENABLE_UTILS")
+    enable_bitcoind = config["components"].getboolean("ENABLE_BITCOIND")
+    enable_zmq = config["components"].getboolean("ENABLE_ZMQ") and not args.nozmq
 
-    if config["environment"]["EXEEXT"] == ".exe" and not args.win:
+    if config["environment"]["EXEEXT"] == ".exe" and not args.force:
         # https://github.com/bitcoin/bitcoin/commit/d52802551752140cf41f0d9a225a43e84404d3e9
         # https://github.com/bitcoin/bitcoin/pull/5677#issuecomment-136646964
-        print("Win tests currently disabled by default.  Use --win option to enable")
+        print("Tests currently disabled on Windows by default. Use --force option to enable")
         sys.exit(0)
 
     if not (enable_wallet and enable_utils and enable_bitcoind):
@@ -170,12 +172,12 @@ def main():
             raise
 
     # Build list of tests
-    if len(tests) != 0:
+    if tests:
         # Individual tests have been specified. Run specified tests that exist
         # in the ALL_SCRIPTS list. Accept the name with or without .py extension.
         test_list = [t for t in ALL_SCRIPTS if
                 (t in tests or re.sub(".py$", "", t) in tests)]
-        if len(test_list) == 0:
+        if not test_list:
             print("No valid test scripts specified. Check that your test is in one "
                   "of the test lists in rpc-tests.py or run rpc-tests.py with no arguments to run all tests")
             print("Scripts not found:")
@@ -200,9 +202,9 @@ def main():
         subprocess.check_call((config["environment"]["SRCDIR"] + '/qa/rpc-tests/' + test_list[0]).split() + ['-h'])
         sys.exit(0)
 
-    runtests(test_list, config["environment"]["SRCDIR"], config["environment"]["BUILDDIR"], config["environment"]["EXEEXT"], args.jobs, args.coverage, passon_args)
+    run_tests(test_list, config["environment"]["SRCDIR"], config["environment"]["BUILDDIR"], config["environment"]["EXEEXT"], args.jobs, args.coverage, passon_args)
 
-def runtests(test_list, src_dir, build_dir, exeext, jobs=1, enable_coverage=False, args=[]):
+def run_tests(test_list, src_dir, build_dir, exeext, jobs=1, enable_coverage=False, args=[]):
     BOLD = ("","")
     if os.name == 'posix':
         # primitive formatting on supported
