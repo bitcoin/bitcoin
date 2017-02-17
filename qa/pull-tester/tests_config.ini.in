@@ -5,13 +5,6 @@
 # These environment variables are set by the build process and read by
 # rpc-tests.py
 
-[DEFAULT]
-# Provides default values for whether different components are enabled
-ENABLE_WALLET=False
-ENABLE_UTILS=False
-ENABLE_BITCOIND=False
-ENABLE_ZMQ=False
-
 [environment]
 SRCDIR=@abs_top_srcdir@
 BUILDDIR=@abs_top_builddir@
@@ -19,7 +12,7 @@ EXEEXT=@EXEEXT@
 
 [components]
 # Which components are enabled. These are commented out by `configure` if they were disabled when running config.
-@ENABLE_WALLET_TRUE@ENABLE_WALLET=True
-@BUILD_BITCOIN_UTILS_TRUE@ENABLE_UTILS=True
-@BUILD_BITCOIND_TRUE@ENABLE_BITCOIND=True
-@ENABLE_ZMQ_TRUE@ENABLE_ZMQ=True
+@ENABLE_WALLET_TRUE@ENABLE_WALLET=true
+@BUILD_BITCOIN_UTILS_TRUE@ENABLE_UTILS=true
+@BUILD_BITCOIND_TRUE@ENABLE_BITCOIND=true
+@ENABLE_ZMQ_TRUE@ENABLE_ZMQ=true
