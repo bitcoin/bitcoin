@@ -660,7 +660,7 @@ bool CMasternodePaymentVote::IsValid(CNode* pnode, int nValidationHeight, std::s
     if(!pmn) {
         strError = strprintf("Unknown Masternode: prevout=%s", vinMasternode.prevout.ToStringShort());
         // Only ask if we are already synced and still have no idea about that Masternode
-        if(masternodeSync.IsSynced()) {
+        if(masternodeSync.IsMasternodeListSynced()) {
             mnodeman.AskForMN(pnode, vinMasternode);
         }
 
@@ -772,7 +772,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 void CMasternodePaymentVote::Relay()
 {
     // do not relay until synced
-    if (!masternodeSync.IsSynced()) return;
+    if (!masternodeSync.IsWinnersListSynced()) return;
     CInv inv(MSG_MASTERNODE_PAYMENT_VOTE, GetHash());
     RelayInv(inv);
 }
@@ -791,7 +791,7 @@ bool CMasternodePaymentVote::CheckSignature(const CPubKey& pubKeyMasternode, int
         // Only ban for future block vote when we are already synced.
         // Otherwise it could be the case when MN which signed this vote is using another key now
         // and we have no idea about the old one.
-        if(masternodeSync.IsSynced() && nBlockHeight > nValidationHeight) {
+        if(masternodeSync.IsMasternodeListSynced() && nBlockHeight > nValidationHeight) {
             nDos = 20;
         }
         return error("CMasternodePaymentVote::CheckSignature -- Got bad Masternode payment signature, masternode=%s, error: %s", vinMasternode.prevout.ToStringShort().c_str(), strError);
