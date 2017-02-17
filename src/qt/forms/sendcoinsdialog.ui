@@ -764,9 +764,11 @@
             <property name="toolTip">
              <string>Using the fallbackfee can result in sending a transaction that will take serval hours or days (or never) to confirm. Consider choosing your fee manually or wait until your have validated the complete chain.</string>
             </property>
-            <property name="styleSheet">
-             <string notr="true">color: rgb(255, 150, 0);
-font-weight: bold;</string>
+            <property name="font">
+            <font>
+                <weight>75</weight>
+                <bold>true</bold>
+            </font>
             </property>
             <property name="text">
              <string>Warning: Fee estimation is currently not possible.</string>
