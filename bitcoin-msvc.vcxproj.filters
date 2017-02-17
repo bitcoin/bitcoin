@@ -381,6 +381,15 @@
     <ClCompile Include="src\leveldb\db\write_batch.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\compat\glibc_sanity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\compat\glibcxx_sanity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\compat\strnlen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -831,6 +840,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\leveldb\db\write_batch_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\compat\byteswap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\compat\endian.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\compat\sanity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

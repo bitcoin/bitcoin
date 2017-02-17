@@ -168,6 +168,9 @@
     <ClCompile Include="src\checkpoints.cpp" />
     <ClCompile Include="src\clientversion.cpp" />
     <ClCompile Include="src\coins.cpp" />
+    <ClCompile Include="src\compat\glibcxx_sanity.cpp" />
+    <ClCompile Include="src\compat\glibc_sanity.cpp" />
+    <ClCompile Include="src\compat\strnlen.cpp" />
     <ClCompile Include="src\compressor.cpp" />
     <ClCompile Include="src\consensus\merkle.cpp" />
     <ClCompile Include="src\core_read.cpp" />
@@ -297,6 +300,9 @@
     <ClInclude Include="src\clientversion.h" />
     <ClInclude Include="src\coins.h" />
     <ClInclude Include="src\compat.h" />
+    <ClInclude Include="src\compat\byteswap.h" />
+    <ClInclude Include="src\compat\endian.h" />
+    <ClInclude Include="src\compat\sanity.h" />
     <ClInclude Include="src\compressor.h" />
     <ClInclude Include="src\consensus\consensus.h" />
     <ClInclude Include="src\consensus\merkle.h" />
