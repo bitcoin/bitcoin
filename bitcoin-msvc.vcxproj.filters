@@ -279,106 +279,10 @@
     <ClCompile Include="src\consensus\merkle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\leveldb\util\arena.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\util\bloom.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\util\cache.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\util\coding.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\util\comparator.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\util\crc32c.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\util\env.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\util\env_posix.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\util\env_win.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\util\filter_policy.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\util\hash.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\util\histogram.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\util\logging.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\util\options.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\util\status.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\util\testharness.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\util\testutil.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\key.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\keystore.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\builder.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\c.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\db_impl.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\db_iter.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\dbformat.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\dumpfile.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\filename.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\log_reader.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\log_writer.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\memtable.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\repair.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\table_cache.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\version_edit.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\version_set.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\leveldb\db\write_batch.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\compat\glibc_sanity.cpp">
@@ -701,48 +605,6 @@
     <ClInclude Include="src\univalue\lib\univalue_utffilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\leveldb\include\leveldb\c.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\include\leveldb\cache.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\include\leveldb\comparator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\include\leveldb\db.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\include\leveldb\dumpfile.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\include\leveldb\env.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\include\leveldb\filter_policy.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\include\leveldb\iterator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\include\leveldb\options.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\include\leveldb\slice.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\include\leveldb\status.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\include\leveldb\table.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\include\leveldb\table_builder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\include\leveldb\write_batch.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\consensus\validation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -755,39 +617,6 @@
     <ClInclude Include="src\consensus\params.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\leveldb\util\arena.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\util\coding.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\util\crc32c.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\util\hash.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\util\histogram.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\util\logging.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\util\mutexlock.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\util\posix_logger.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\util\random.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\util\testharness.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\util\testutil.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\key.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -795,51 +624,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\limitedmap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\db\builder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\db\db_impl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\db\db_iter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\db\dbformat.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\db\filename.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\db\log_format.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\db\log_reader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\db\log_writer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\db\memtable.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\db\skiplist.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\db\snapshot.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\db\table_cache.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\db\version_edit.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\db\version_set.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\leveldb\db\write_batch_internal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\compat\byteswap.h">
