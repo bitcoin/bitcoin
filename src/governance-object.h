@@ -316,6 +316,8 @@ public:
         if(nType & SER_DISK) {
             // Only include these for the disk file format
             LogPrint("gobject", "CGovernanceObject::SerializationOp Reading/writing votes from/to disk\n");
+            READWRITE(nDeletionTime);
+            READWRITE(fExpired);
             READWRITE(mapCurrentMNVotes);
             READWRITE(fileVotes);
             LogPrint("gobject", "CGovernanceObject::SerializationOp hash = %s, vote count = %d\n", GetHash().ToString(), fileVotes.GetVoteCount());
