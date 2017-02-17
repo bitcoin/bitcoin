@@ -88,9 +88,6 @@ uint64_t CNode::nTotalBytesSent = 0;
 CCriticalSection CNode::cs_totalBytesRecv;
 CCriticalSection CNode::cs_totalBytesSent;
 
-bool fIsChainNearlySyncd;
-CCriticalSection cs_ischainnearlysyncd;
-
 // critical sections from net.cpp
 CCriticalSection cs_setservAddNodeAddresses;
 CCriticalSection cs_vAddedNodes;
