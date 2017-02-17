@@ -1191,7 +1191,8 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
             "                                                              or the string \"now\" to substitute the current synced blockchain time. The timestamp of the oldest\n"
             "                                                              key will determine how far back blockchain rescans need to begin for missing wallet transactions.\n"
             "                                                              \"now\" can be specified to bypass scanning, for keys which are known to never have been used, and\n"
-            "                                                              0 can be specified to scan the entire blockchain.\n"
+            "                                                              0 can be specified to scan the entire blockchain. Blocks up to 2 hours before the earliest key\n"
+            "                                                              creation time of all keys being imported by the importmulti call will be scanned.\n"
             "      \"redeemscript\": \"<script>\"                            , (string, optional) Allowed only if the scriptPubKey is a P2SH address or a P2SH scriptPubKey\n"
             "      \"pubkeys\": [\"<pubKey>\", ... ]                         , (array, optional) Array of strings giving pubkeys that must occur in the output or redeemscript\n"
             "      \"keys\": [\"<key>\", ... ]                               , (array, optional) Array of strings giving private keys whose corresponding public keys must occur in the output or redeemscript\n"
@@ -1275,7 +1276,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
     }
 
     if (fRescan && fRunScan && requests.size()) {
-        CBlockIndex* pindex = nLowestTimestamp > minimumTimestamp ? chainActive.FindEarliestAtLeast(nLowestTimestamp) : chainActive.Genesis();
+        CBlockIndex* pindex = nLowestTimestamp > minimumTimestamp ? chainActive.FindEarliestAtLeast(std::max<int64_t>(nLowestTimestamp - 7200, 0)) : chainActive.Genesis();
         CBlockIndex* scannedRange = nullptr;
         if (pindex) {
             scannedRange = pwalletMain->ScanForWalletTransactions(pindex, true);
