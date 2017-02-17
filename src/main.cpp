@@ -5264,6 +5264,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
             if (inv.type == MSG_BLOCK) {
                 UpdateBlockAvailability(pfrom->GetId(), inv.hash);
+                // RE !IsInitialBlockDownload(): We do not want to get the block if the system is executing the initial block download because
+                // blocks are stored in block files in the order of arrival.  So grabbing blocks "early" will cause new blocks to be sprinkled
+                // throughout older block files.  This will stop those files from being pruned.   !IsInitialBlockDownload() can be removed if
+                // a better block storage system is devised.
                 if ((!fAlreadyHave && !fImporting && !fReindex && !IsInitialBlockDownload()) ||
                     (!fAlreadyHave && !fImporting && !fReindex && Params().NetworkIDString() == "regtest")) {  // BU request && !mapBlocksInFlight.count(inv.hash)) {
 		    requester.AskFor(inv, pfrom);
@@ -5276,6 +5280,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             {
                 if (fBlocksOnly)
                     LogPrint("net", "transaction (%s) inv sent in violation of protocol peer=%d\n", inv.hash.ToString(), pfrom->id);
+                // RE !IsInitialBlockDownload(): during IBD, its a waste of bandwidth to grab transactions, they will likely be included
+                // in blocks that we IBD download anyway.  This is especially important as transaction volumes increase.
                 else if (!fAlreadyHave && !fImporting && !fReindex && !IsInitialBlockDownload())
                     requester.AskFor(inv,pfrom); // BU manage outgoing requests.  was: pfrom->AskFor(inv);
             }
