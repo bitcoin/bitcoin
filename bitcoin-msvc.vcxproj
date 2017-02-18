@@ -247,6 +247,9 @@
     <ClCompile Include="src\wallet\wallet.cpp" />
     <ClCompile Include="src\wallet\walletdb.cpp" />
     <ClCompile Include="src\warnings.cpp" />
+    <ClCompile Include="src\zmq\zmqabstractnotifier.cpp" />
+    <ClCompile Include="src\zmq\zmqnotificationinterface.cpp" />
+    <ClCompile Include="src\zmq\zmqpublishnotifier.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -364,6 +367,10 @@
     <ClInclude Include="src\wallet\walletdb.h" />
     <ClInclude Include="src\warnings.h" />
     <ClInclude Include="src\wintype.h" />
+    <ClInclude Include="src\zmq\zmqabstractnotifier.h" />
+    <ClInclude Include="src\zmq\zmqconfig.h" />
+    <ClInclude Include="src\zmq\zmqnotificationinterface.h" />
+    <ClInclude Include="src\zmq\zmqpublishnotifier.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

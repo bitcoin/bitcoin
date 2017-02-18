@@ -294,6 +294,15 @@
     <ClCompile Include="src\compat\strnlen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\zmq\zmqpublishnotifier.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\zmq\zmqnotificationinterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\zmq\zmqabstractnotifier.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -633,6 +642,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\compat\sanity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\zmq\zmqpublishnotifier.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\zmq\zmqnotificationinterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\zmq\zmqconfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\zmq\zmqabstractnotifier.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
