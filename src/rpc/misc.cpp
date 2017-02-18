@@ -445,7 +445,7 @@ UniValue setmocktime(const JSONRPCRequest& request)
     // this could have an effect on mempool time-based eviction, as well as
     // IsCurrentForFeeEstimation() and IsInitialBlockDownload().
     // TODO: figure out the right way to synchronize around mocktime, and
-    // ensure all callsites of GetTime() are accessing this safely.
+    // ensure all call sites of GetTime() are accessing this safely.
     LOCK(cs_main);
 
     RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VNUM));
