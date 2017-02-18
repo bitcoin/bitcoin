@@ -508,6 +508,7 @@ void CNode::ClearBanned()
     LOCK(cs_setBanned);
     setBanned.clear();
     setBannedIsDirty = true;
+    uiInterface.BannedListChanged();
 }
 
 bool CNode::IsBanned(CNetAddr ip)
@@ -563,6 +564,7 @@ void CNode::Ban(const CSubNet& subNet, const BanReason &banReason, int64_t banti
         setBanned[subNet] = banEntry;
 
     setBannedIsDirty = true;
+    uiInterface.BannedListChanged();
 }
 
 bool CNode::Unban(const CNetAddr &addr) {
@@ -575,6 +577,9 @@ bool CNode::Unban(const CSubNet &subNet) {
     if (setBanned.erase(subNet))
     {
         setBannedIsDirty = true;
+
+        SweepBanned();
+        uiInterface.BannedListChanged();
         return true;
     }
     return false;
@@ -583,6 +588,7 @@ bool CNode::Unban(const CSubNet &subNet) {
 void CNode::GetBanned(banmap_t &banMap)
 {
     LOCK(cs_setBanned);
+    SweepBanned();
     banMap = setBanned; //create a thread safe copy
 }
 
@@ -1720,6 +1726,19 @@ void DumpAddresses()
     adb.Write(addrman);
 
     LogPrint("net", "Flushed %d addresses to peers.dat  %dms\n", addrman.size(), GetTimeMillis() - nStart);
+}
+
+void DumpBanlist()
+{
+    int64_t nStart = GetTimeMillis();
+
+    CBanDB bandb;
+    banmap_t banmap;
+    CNode::GetBanned(banmap);
+    bandb.Write(banmap);
+
+    LogPrint("net", "Flushed %d banned node ips/subnets to banlist.dat  %dms\n",
+             banmap.size(), GetTimeMillis() - nStart);
 }
 
 void DumpData()
@@ -2973,21 +2992,6 @@ bool CBanDB::Read(banmap_t& banSet)
     }
     
     return true;
-}
-
-void DumpBanlist()
-{
-    int64_t nStart = GetTimeMillis();
-
-    CNode::SweepBanned(); //clean unused entries (if bantime has expired)
-
-    CBanDB bandb;
-    banmap_t banmap;
-    CNode::GetBanned(banmap);
-    bandb.Write(banmap);
-
-    LogPrint("net", "Flushed %d banned node ips/subnets to banlist.dat  %dms\n",
-             banmap.size(), GetTimeMillis() - nStart);
 }
 
 int64_t PoissonNextSend(int64_t nNow, int average_interval_seconds) {
