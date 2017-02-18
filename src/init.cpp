@@ -886,6 +886,15 @@ bool AppInitParameterInteraction()
     if (nMaxConnections < nUserMaxConnections)
         InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
 
+    // if running in blocksonly mode, mempool size should be zero.
+    if (GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)) {
+        if (SoftSetArg("-maxmempool", std::string("0"))) {
+            LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -maxmempool=0\n", __func__);
+        } else if (GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) > 0) {
+            return InitError(_("-blocksonly nodes do not have a mempool. -maxmempool should not be set."));
+        }
+    }
+
     // ********************************************************* Step 3: parameter-to-internal-flags
 
     fDebug = mapMultiArgs.count("-debug");
@@ -929,11 +938,18 @@ bool AppInitParameterInteraction()
     else
         LogPrintf("Validating signatures for all blocks.\n");
 
-    // mempool limits
-    int64_t nMempoolSizeMax = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
-    int64_t nMempoolSizeMin = GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000 * 40;
-    if (nMempoolSizeMax < 0 || nMempoolSizeMax < nMempoolSizeMin)
-        return InitError(strprintf(_("-maxmempool must be at least %d MB"), std::ceil(nMempoolSizeMin / 1000000.0)));
+    if (!GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)) {
+        // Verify that -maxmempool size is at least
+        // 10*-limitdescendantsize, as it is easy for an attacker
+        // to play games with the cheapest -limitdescendantsize
+        // transactions. -blocksonly nodes do not have a mempool, so we
+        // don't need to do this check.
+        int64_t nMempoolSizeMax = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+        int64_t nMempoolSizeMin = GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000 * 40;
+        if (nMempoolSizeMax < 0 || nMempoolSizeMax < nMempoolSizeMin) {
+            return InitError(strprintf(_("-maxmempool must be at least %d MB"), std::ceil(nMempoolSizeMin / 1000000.0)));
+        }
+    }
     // incremental relay fee sets the minimimum feerate increase necessary for BIP 125 replacement in the mempool
     // and the amount the mempool min fee increases above the feerate of txs evicted due to mempool limiting.
     if (IsArgSet("-incrementalrelayfee"))
