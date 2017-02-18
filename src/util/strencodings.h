@@ -18,6 +18,7 @@
 #include <vector>
 
 #define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
+#define BEGIN(a)            ((char*)&(a))
 
 /** Used by SanitizeString() */
 enum SafeChars
