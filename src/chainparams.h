@@ -28,6 +28,10 @@ typedef std::map<int, uint256> MapCheckpoints;
 
 struct CCheckpointData {
     MapCheckpoints mapCheckpoints;
+
+    CCheckpointData() : mapCheckpoints() {}
+    CCheckpointData(const MapCheckpoints& _mapCheckpoints) : mapCheckpoints(_mapCheckpoints) {}
+//  CCheckpointData(const boost::assign_detail::generic_list< std::pair<int, uint256> >& _mapCheckpoints) : mapCheckpoints(_mapCheckpoints) {}
 };
 
 struct ChainTxData {

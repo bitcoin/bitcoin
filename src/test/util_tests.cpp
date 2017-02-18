@@ -17,6 +17,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "wintype.h" // ssize_t
+
 extern std::map<std::string, std::string> mapArgs;
 
 BOOST_FIXTURE_TEST_SUITE(util_tests, BasicTestingSetup)
