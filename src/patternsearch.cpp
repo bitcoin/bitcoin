@@ -197,20 +197,27 @@ namespace patternsearch
 		boost::this_thread::disable_interruption di;
 		std::vector< std::pair<uint32_t,uint32_t> > results;
 
-		bool aes_ni_supported = false;
-		bool avx2_supported = false;
+        bool aes_ni_supported = GetArg("-optimineraes", true);
+        bool avx2_supported = GetArg("-optimineravx2", false);
+        LogPrintf("Optiminer Flags: AES-NI = %b, AVX2 = %b\n", aes_ni_supported, avx2_supported);
+
 #if (__x86_64__)
 		uint32_t eax, ebx, ecx, edx;
 		eax = ebx = ecx = edx = 0;
 		__get_cpuid(1, &eax, &ebx, &ecx, &edx);
-		aes_ni_supported = ecx & (1 << 25) /* bit_AES */;
+        aes_ni_supported = aes_ni_supported && (ecx & (1 << 25)) /* bit_AES */;
 		if (__get_cpuid_max(0, NULL) >= 7) {
 			__cpuid_count (7, 0, eax, ebx, ecx, edx);
-			avx2_supported = ebx & (1 << 5) /* bit_AVX2 */;
+            avx2_supported = avx2_supported && (ebx & (1 << 5)) /* bit_AVX2 */;
 		}
-		LogPrintf("CPU support: AES-NI = %b, AVX2 = %b\n", aes_ni_supported, avx2_supported);
+#else
+        aes_ni_supported=false;
+        avx2_supported=false;
+        LogPrintf("32 bit compile, neither optimineraes nor optimineravx2 can be used\n");
 #endif
-		clock_t t1 = clock();
+        LogPrintf("Optiminer Flags and CPU support: AES-NI = %b, AVX2 = %b\n", aes_ni_supported, avx2_supported);
+
+        clock_t t1 = clock();
 		boost::thread_group* sha512Threads = new boost::thread_group();
 		for (int i = 0; i < totalThreads; i++) {
 			if (avx2_supported) {

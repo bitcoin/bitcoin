@@ -603,6 +603,7 @@ void static BitcoinMiner(CWallet *pwallet, uint32_t minerI, uint32_t minerN, int
                     dHashesPerSec = (time(NULL) != startTime ? totalHashes / (time(NULL) - startTime) : 0);
                     LogPrintf("HOdlcoinMiner: %d/%d\n", minerI, minerN);
                     LogPrintf("search finished - best hash  \n  hash: %s collisions:%d gethash:%s ba:%d bb:%d nonce:%d \ntarget: %s\n", hash.GetHex(), collisions, pblock->GetHash().GetHex(), pblock->nStartLocation, pblock->nFinalCalculation, pblock->nNonce, hashTarget.GetHex());
+                    assert(hash.GetHex()==pblock->GetHash().GetHex());
                     LogPrintf("Hashes Per Second=%d (total seconds=%d hashes=%d)\n", dHashesPerSec, time(NULL) - startTime, totalHashes);
                     
                     if (UintToArith256(hash) <= hashTarget) {
