@@ -303,6 +303,15 @@
     <ClCompile Include="src\zmq\zmqabstractnotifier.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\policy\fees.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\policy\policy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\policy\rbf.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -654,6 +663,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\zmq\zmqabstractnotifier.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\policy\fees.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\policy\policy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\policy\rbf.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

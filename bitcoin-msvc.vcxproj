@@ -196,6 +196,9 @@
     <ClCompile Include="src\netbase.cpp" />
     <ClCompile Include="src\net_processing.cpp" />
     <ClCompile Include="src\noui.cpp" />
+    <ClCompile Include="src\policy\fees.cpp" />
+    <ClCompile Include="src\policy\policy.cpp" />
+    <ClCompile Include="src\policy\rbf.cpp" />
     <ClCompile Include="src\pow.cpp" />
     <ClCompile Include="src\primitives\block.cpp" />
     <ClCompile Include="src\primitives\transaction.cpp" />
@@ -308,6 +311,9 @@
     <ClInclude Include="src\netmessagemaker.h" />
     <ClInclude Include="src\net_processing.h" />
     <ClInclude Include="src\noui.h" />
+    <ClInclude Include="src\policy\fees.h" />
+    <ClInclude Include="src\policy\policy.h" />
+    <ClInclude Include="src\policy\rbf.h" />
     <ClInclude Include="src\pow.h" />
     <ClInclude Include="src\prevector.h" />
     <ClInclude Include="src\primitives\block.h" />
