@@ -135,13 +135,16 @@ void ClientModel::updateTimer1()
     // no locking required at this point
     // the following calls will aquire the required lock
     Q_EMIT mempoolSizeChanged(getMempoolSize(), getMempoolDynamicUsage());
-    Q_EMIT orphanPoolSizeChanged(getOrphanPoolSize());
-    Q_EMIT bytesChanged(getTotalBytesRecv(), getTotalBytesSent());
     Q_EMIT transactionsPerSecondChanged(getTransactionsPerSecond());
 }
 
 void ClientModel::updateTimer2()
 {
+    // no locking required at this point
+    // the following calls will aquire the required lock
+    Q_EMIT orphanPoolSizeChanged(getOrphanPoolSize());
+    Q_EMIT bytesChanged(getTotalBytesRecv(), getTotalBytesSent());
+
     uiInterface.BannedListChanged();
 }
 
