@@ -32,11 +32,42 @@ uint256 GetRandHash();
 void seed_insecure_rand(bool fDeterministic = false);
 
 /**
- * MWC RNG of George Marsaglia
- * This is intended to be fast. It has a period of 2^59.3, though the
- * least significant 16 bits only have a period of about 2^30.1.
- *
- * @return random value
+ * Fast randomness source. This is seeded once with secure random data, but
+ * is completely deterministic and insecure after that.
+ * This class is not thread-safe.
+ */
+class FastRandomContext {
+public:
+    explicit FastRandomContext(bool fDeterministic=false);
+
+    uint32_t rand32() {
+        Rz = 36969 * (Rz & 65535) + (Rz >> 16);
+        Rw = 18000 * (Rw & 65535) + (Rw >> 16);
+        return (Rw << 16) + Rz;
+    }
+
+    bool randbool() {
+        return rand32() & 1;
+    }
+
+    uint32_t Rz;
+    uint32_t Rw;
+};
+
+/* Number of random bytes returned by GetOSRand.
+ * When changing this constant make sure to change all call sites, and make
+ * sure that the underlying OS APIs for all platforms support the number.
+ * (many cap out at 256 bytes).
+ */
+static const ssize_t NUM_OS_RANDOM_BYTES = 32;
+
+/** Get 32 bytes of system entropy. Do not use this in application code: use
+ * GetStrongRandBytes instead.
+ */
+void GetOSRand(unsigned char *ent32);
+
+/** Check that OS randomness is available and returning the requested number
+ * of bytes.
  */
 extern uint32_t insecure_rand_Rz;
 extern uint32_t insecure_rand_Rw;
