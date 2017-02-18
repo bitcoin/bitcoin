@@ -202,7 +202,7 @@ CTweak<uint64_t> checkScriptDays("blockchain.checkScriptDays","The number of day
 
 CRequestManager requester;  // after the maps nodes and tweaks
 
-CStatHistory<unsigned int, MinValMax<unsigned int> > txAdded; //"memPool/txAdded");
+CStatHistory<unsigned int> txAdded; //"memPool/txAdded");
 CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize; // "memPool/size",STAT_OP_AVE);
 CStatHistory<uint64_t > recvAmt; 
 CStatHistory<uint64_t > sendAmt; 

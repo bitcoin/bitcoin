@@ -181,7 +181,7 @@ void UpdateSendStats(CNode* pfrom, const char* strCommand, int msgSize, int64_t 
 
 void UpdateRecvStats(CNode* pfrom, const std::string& strCommand, int msgSize, int64_t nTimeReceived);
 // txn mempool statistics
-extern CStatHistory<unsigned int, MinValMax<unsigned int> > txAdded;
+extern CStatHistory<unsigned int> txAdded;
 extern CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize;
 
 // Configuration variable validators

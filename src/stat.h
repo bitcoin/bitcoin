@@ -483,10 +483,10 @@ public:
   // happens when results are moved from a faster series to a slower one.
   MinValMax& operator+=(const MinValMax& rhs)
     {
-      //if (rhs.max > max) max=rhs.max;
-      //if (rhs.min < min) min=rhs.min;
-      max += rhs.max;
-      min += rhs.min;
+      if (rhs.max > max) max=rhs.max;
+      if (rhs.min < min) min=rhs.min;
+//      max += rhs.max;
+//      min += rhs.min;
       val += rhs.val;
       samples += rhs.samples;
       return *this;
@@ -501,8 +501,8 @@ public:
   MinValMax& operator/=(const NUM& rhs)
     {
       val /= rhs;
-      min /= rhs;
-      max /= rhs;
+//      min /= rhs;
+//      max /= rhs;
       return *this;
     }
    
