@@ -424,6 +424,8 @@
     <Import Project="packages\miniupnpc-vc140.2.0.0\build\native\miniupnpc-vc140.targets" Condition="Exists('packages\miniupnpc-vc140.2.0.0\build\native\miniupnpc-vc140.targets')" />
     <Import Project="packages\BerkeleyDB-4_8_30-Cpp.4.8.30.2\build\native\BerkeleyDB-4_8_30-Cpp.targets" Condition="Exists('packages\BerkeleyDB-4_8_30-Cpp.4.8.30.2\build\native\BerkeleyDB-4_8_30-Cpp.targets')" />
     <Import Project="packages\leveldb-vc140.1.16.0.5\build\native\leveldb-vc140.targets" Condition="Exists('packages\leveldb-vc140.1.16.0.5\build\native\leveldb-vc140.targets')" />
+    <Import Project="packages\libzmq-nightly.redist.4.2.2.4\build\native\libzmq-nightly.redist.targets" Condition="Exists('packages\libzmq-nightly.redist.4.2.2.4\build\native\libzmq-nightly.redist.targets')" />
+    <Import Project="packages\libzmq-nightly.4.2.2.4\build\native\libzmq-nightly.targets" Condition="Exists('packages\libzmq-nightly.4.2.2.4\build\native\libzmq-nightly.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -479,5 +481,7 @@
     <Error Condition="!Exists('packages\miniupnpc-vc140.2.0.0\build\native\miniupnpc-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\miniupnpc-vc140.2.0.0\build\native\miniupnpc-vc140.targets'))" />
     <Error Condition="!Exists('packages\BerkeleyDB-4_8_30-Cpp.4.8.30.2\build\native\BerkeleyDB-4_8_30-Cpp.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\BerkeleyDB-4_8_30-Cpp.4.8.30.2\build\native\BerkeleyDB-4_8_30-Cpp.targets'))" />
     <Error Condition="!Exists('packages\leveldb-vc140.1.16.0.5\build\native\leveldb-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\leveldb-vc140.1.16.0.5\build\native\leveldb-vc140.targets'))" />
+    <Error Condition="!Exists('packages\libzmq-nightly.redist.4.2.2.4\build\native\libzmq-nightly.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\libzmq-nightly.redist.4.2.2.4\build\native\libzmq-nightly.redist.targets'))" />
+    <Error Condition="!Exists('packages\libzmq-nightly.4.2.2.4\build\native\libzmq-nightly.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\libzmq-nightly.4.2.2.4\build\native\libzmq-nightly.targets'))" />
   </Target>
 </Project>
