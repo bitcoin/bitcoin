@@ -791,7 +791,6 @@ Thanks to everyone who directly contributed to this release:
 - mrbandrews
 - mruddy
 - Nicolas DORIER
-- NicolasDorier
 - nomnombtc
 - Patrick Strateman
 - Pavel Janík
