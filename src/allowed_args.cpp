@@ -343,7 +343,7 @@ static void addDebuggingOptions(AllowedArgs& allowedArgs, HelpMessageMode mode)
     allowedArgs
         .addHeader(_("Debugging/Testing options:"))
         .addArg("uacomment=<cmt>", requiredStr, _("Append comment to the user agent string"))
-        .addDebugArg("checkblockindex", optionalBool, strprintf("Do a full consistency check for mapBlockIndex, setBlockIndexCandidates, chainActive and mapBlocksUnlinked occasionally. Also sets -checkmempool (default: %u)", false))
+        .addDebugArg("checkblockindex", optionalBool, strprintf("Do a full consistency check for mapBlockIndex, setBlockIndexCandidates, chainActive and mapBlocksUnlinked occasionally (default: %u)", false))
         .addDebugArg("checkmempool=<n>", requiredInt, strprintf("Run checks every <n> transactions (default: %u)", false))
         .addDebugArg("checkpoints", optionalBool, strprintf("Disable expensive verification for known chain history (default: %u)", DEFAULT_CHECKPOINTS_ENABLED))
 #ifdef ENABLE_WALLET
