@@ -170,7 +170,7 @@ Final Alert
 -----------
 
 The Alert System was [disabled and deprecated](https://bitcoin.org/en/alert/2016-11-01-alert-retirement) in Bitcoin Core 0.12.1 and removed in 0.13.0. 
-To Alert System was retired with a maximum sequence final alert which causes any nodes
+The Alert System was retired with a maximum sequence final alert which causes any nodes
 supporting the Alert System to display a static hard-coded "Alert Key Compromised" message which also
 prevents any other alerts from overriding it. This final alert is hard-coded into this release
 so that all old nodes receive the final alert.
