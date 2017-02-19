@@ -67,7 +67,7 @@
              <item>
               <widget class="QLabel" name="updateNote">
                <property name="text">
-                <string>Note: Status of your masternodes in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your node should be running but you still see "MISSING" in "Status" field.</string>
+                <string>Note: Status of your masternodes in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your masternode should be running but you still do not see "ENABLED" in "Status" field.</string>
                </property>
               </widget>
              </item>
@@ -134,7 +134,7 @@
              </column>
              <column>
               <property name="text">
-               <string>Pubkey</string>
+               <string>Payee</string>
               </property>
              </column>
             </widget>
@@ -257,7 +257,7 @@
            </column>
            <column>
             <property name="text">
-             <string>Pubkey</string>
+             <string>Payee</string>
             </property>
            </column>
           </widget>

@@ -915,7 +915,7 @@ void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode)
         }
         // We should not violate GETDATA rules
         if(vToFetch.size() == MAX_INV_SZ) {
-            LogPrintf("CMasternodePayments::SyncLowDataPaymentBlocks -- asking peer %d for %d blocks\n", pnode->id, MAX_INV_SZ);
+            LogPrintf("CMasternodePayments::SyncLowDataPaymentBlocks -- asking peer %d for %d payment blocks\n", pnode->id, MAX_INV_SZ);
             pnode->PushMessage(NetMsgType::GETDATA, vToFetch);
             // Start filling new batch
             vToFetch.clear();
@@ -924,7 +924,7 @@ void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode)
     }
     // Ask for the rest of it
     if(!vToFetch.empty()) {
-        LogPrintf("CMasternodePayments::SyncLowDataPaymentBlocks -- asking peer %d for %d blocks\n", pnode->id, vToFetch.size());
+        LogPrintf("CMasternodePayments::SyncLowDataPaymentBlocks -- asking peer %d for %d payment blocks\n", pnode->id, vToFetch.size());
         pnode->PushMessage(NetMsgType::GETDATA, vToFetch);
     }
 }

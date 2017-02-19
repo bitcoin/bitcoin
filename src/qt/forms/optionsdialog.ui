@@ -505,7 +505,7 @@
        <item>
         <widget class="QCheckBox" name="connectSocksTor">
          <property name="toolTip">
-          <string>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</string>
+          <string>Connect to the Dash network through a separate SOCKS5 proxy for Tor hidden services.</string>
          </property>
          <property name="text">
           <string>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</string>
