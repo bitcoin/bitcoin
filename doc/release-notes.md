@@ -170,7 +170,7 @@ Final Alert
 -----------
 
 The Alert System was [disabled and deprecated](https://bitcoin.org/en/alert/2016-11-01-alert-retirement) in Bitcoin Core 0.12.1 and removed in 0.13.0. 
-To Alert System was retired with a maximum sequence final alert which causes any nodes
+The Alert System was retired with a maximum sequence final alert which causes any nodes
 supporting the Alert System to display a static hard-coded "Alert Key Compromised" message which also
 prevents any other alerts from overriding it. This final alert is hard-coded into this release
 so that all old nodes receive the final alert.
@@ -204,7 +204,7 @@ Low-level RPC changes
  - The first boolean argument to `getaddednodeinfo` has been removed. This is 
    an incompatible change.
 
- - RPC command "getmininginfo" loses the "testnet" field in favor of the more
+ - RPC command `getmininginfo` loses the "testnet" field in favor of the more
    generic "chain" (which has been present for years).
 
  - A new RPC command `preciousblock` has been added which marks a block as
@@ -259,7 +259,7 @@ Removal of Priority Estimation
 ------------------------------
 
 - Estimation of "priority" needed for a transaction to be included within a target
-  number of blocks has been removed.  The rpc calls are deprecated and will either
+  number of blocks has been removed.  The RPC calls are deprecated and will either
   return -1 or 1e24 appropriately. The format for `fee_estimates.dat` has also
   changed to no longer save these priority estimates. It will automatically be
   converted to the new format which is not readable by prior versions of the
@@ -755,7 +755,6 @@ Thanks to everyone who directly contributed to this release:
 - Gregory Maxwell
 - Gregory Sanders
 - Hampus Sjöberg
-- instagibbs
 - isle2983
 - Ivo van der Sangen
 - James White
@@ -791,7 +790,6 @@ Thanks to everyone who directly contributed to this release:
 - mrbandrews
 - mruddy
 - Nicolas DORIER
-- NicolasDorier
 - nomnombtc
 - Patrick Strateman
 - Pavel Janík
@@ -819,5 +817,6 @@ Thanks to everyone who directly contributed to this release:
 - Will Binns
 - Wladimir J. van der Laan
 - wodry
+- Zak Wilcox
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
