@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # Copyright (c) 2014 Wladimir J. van der Laan
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -65,6 +65,14 @@ def split_format_specifiers(specifiers):
         else:
             other.append(s)
 
+    # If both numeric format specifiers and "others" are used, assume we're dealing
+    # with a Qt-formatted message. In the case of Qt formatting (see https://doc.qt.io/qt-5/qstring.html#arg)
+    # only numeric formats are replaced at all. This means "(percentage: %1%)" is valid, without needing
+    # any kind of escaping that would be necessary for strprintf. Without this, this function
+    # would wrongly detect '%)' as a printf format specifier.
+    if numeric:
+        other = []
+
     # numeric (Qt) can be present in any order, others (strprintf) must be in specified order
     return set(numeric),other
 
@@ -72,7 +80,7 @@ def sanitize_string(s):
     '''Sanitize string for printing'''
     return s.replace('\n',' ')
 
-def check_format_specifiers(source, translation, errors):
+def check_format_specifiers(source, translation, errors, numerus):
     source_f = split_format_specifiers(find_format_specifiers(source))
     # assert that no source messages contain both Qt and strprintf format specifiers
     # if this fails, go change the source as this is hacky and confusing!
@@ -80,10 +88,13 @@ def check_format_specifiers(source, translation, errors):
     try:
         translation_f = split_format_specifiers(find_format_specifiers(translation))
     except IndexError:
-        errors.append("Parse error in translation '%s'" % sanitize_string(translation))
+        errors.append("Parse error in translation for '%s': '%s'" % (sanitize_string(source), sanitize_string(translation)))
         return False
     else:
         if source_f != translation_f:
+            if numerus and source_f == (set(), ['n']) and translation_f == (set(), []) and translation.find('%') == -1:
+                # Allow numerus translations to omit %n specifier (usually when it only has one possible value)
+                return True
             errors.append("Mismatch between '%s' and '%s'" % (sanitize_string(source), sanitize_string(translation)))
             return False
     return True
@@ -150,7 +161,7 @@ def postprocess_translations(reduce_diff_hacks=False):
                     if translation is None:
                         continue
                     errors = []
-                    valid = check_format_specifiers(source, translation, errors)
+                    valid = check_format_specifiers(source, translation, errors, numerus)
 
                     for error in errors:
                         print('%s: %s' % (filename, error))

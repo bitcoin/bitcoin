@@ -1,8 +1,8 @@
 package=boost
-$(package)_version=1_58_0
-$(package)_download_path=http://sourceforge.net/projects/boost/files/boost/1.58.0
+$(package)_version=1_63_0
+$(package)_download_path=https://sourceforge.net/projects/boost/files/boost/1.63.0
 $(package)_file_name=$(package)_$($(package)_version).tar.bz2
-$(package)_sha256_hash=fdfc204fc33ec79c99b9a74944c3e54bd78be4f7f15e260c0e2700a36dc7d3e5
+$(package)_sha256_hash=beae2529f759f6b3bf3f4969a19c2e9d6f0c503edcb2de4a61d1428519fcb3b0
 
 define $(package)_set_vars
 $(package)_config_opts_release=variant=release
@@ -20,7 +20,7 @@ $(package)_archiver_$(host_os)=$($(package)_ar)
 $(package)_toolset_darwin=darwin
 $(package)_archiver_darwin=$($(package)_libtool)
 $(package)_config_libraries=chrono,filesystem,program_options,system,thread,test
-$(package)_cxxflags=-fvisibility=hidden
+$(package)_cxxflags=-std=c++11 -fvisibility=hidden
 $(package)_cxxflags_linux=-fPIC
 endef
 

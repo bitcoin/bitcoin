@@ -1,3 +1,7 @@
+// Copyright (c) 2015-2016 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef BITCOIN_TEST_TEST_BITCOIN_H
 #define BITCOIN_TEST_TEST_BITCOIN_H
 
@@ -5,6 +9,7 @@
 #include "key.h"
 #include "pubkey.h"
 #include "txdb.h"
+#include "txmempool.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
@@ -20,13 +25,14 @@ struct BasicTestingSetup {
 };
 
 /** Testing setup that configures a complete environment.
- * Included are data directory, coins database, script check threads
- * and wallet (if enabled) setup.
+ * Included are data directory, coins database, script check threads setup.
  */
+class CConnman;
 struct TestingSetup: public BasicTestingSetup {
     CCoinsViewDB *pcoinsdbview;
     boost::filesystem::path pathTemp;
     boost::thread_group threadGroup;
+    CConnman* connman;
 
     TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~TestingSetup();
@@ -64,23 +70,23 @@ struct TestMemPoolEntryHelper
     int64_t nTime;
     double dPriority;
     unsigned int nHeight;
-    bool hadNoDependencies;
     bool spendsCoinbase;
-    unsigned int sigOpCount;
-    
+    unsigned int sigOpCost;
+    LockPoints lp;
+
     TestMemPoolEntryHelper() :
         nFee(0), nTime(0), dPriority(0.0), nHeight(1),
-        hadNoDependencies(false), spendsCoinbase(false), sigOpCount(1) { }
+        spendsCoinbase(false), sigOpCost(4) { }
     
-    CTxMemPoolEntry FromTx(CMutableTransaction &tx, CTxMemPool *pool = NULL);
+    CTxMemPoolEntry FromTx(const CMutableTransaction &tx, CTxMemPool *pool = NULL);
+    CTxMemPoolEntry FromTx(const CTransaction &tx, CTxMemPool *pool = NULL);
 
     // Change the default value
     TestMemPoolEntryHelper &Fee(CAmount _fee) { nFee = _fee; return *this; }
     TestMemPoolEntryHelper &Time(int64_t _time) { nTime = _time; return *this; }
     TestMemPoolEntryHelper &Priority(double _priority) { dPriority = _priority; return *this; }
     TestMemPoolEntryHelper &Height(unsigned int _height) { nHeight = _height; return *this; }
-    TestMemPoolEntryHelper &HadNoDependencies(bool _hnd) { hadNoDependencies = _hnd; return *this; }
     TestMemPoolEntryHelper &SpendsCoinbase(bool _flag) { spendsCoinbase = _flag; return *this; }
-    TestMemPoolEntryHelper &SigOps(unsigned int _sigops) { sigOpCount = _sigops; return *this; }
+    TestMemPoolEntryHelper &SigOpsCost(unsigned int _sigopsCost) { sigOpCost = _sigopsCost; return *this; }
 };
 #endif

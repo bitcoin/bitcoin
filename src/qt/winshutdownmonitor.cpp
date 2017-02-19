@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Bitcoin Core developers
+// Copyright (c) 2014-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,7 +27,7 @@ bool WinShutdownMonitor::nativeEventFilter(const QByteArray &eventType, void *pM
             // Warn only once as this is performance-critical
             static bool warned = false;
             if (!warned) {
-                LogPrint("%s: OpenSSL RAND_event() failed to seed OpenSSL PRNG with enough data.\n", __func__);
+                LogPrintf("%s: OpenSSL RAND_event() failed to seed OpenSSL PRNG with enough data.\n", __func__);
                 warned = true;
             }
        }

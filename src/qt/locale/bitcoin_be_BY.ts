@@ -26,10 +26,6 @@
         <translation>Зачыніць</translation>
     </message>
     <message>
-        <source>&amp;Copy Address</source>
-        <translation>Капіяваць адрас</translation>
-    </message>
-    <message>
         <source>Delete the currently selected address from the list</source>
         <translation>Выдаліць абраны адрас са спісу</translation>
     </message>
@@ -72,6 +68,10 @@
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
         <translation>Тут знаходзяцца Біткойн-адрасы для прымання плацяжоў. Пажадана выкарыстоўваць новы адрас для кожнай транзакцыі.</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>Капіяваць адрас</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -132,6 +132,10 @@
         <translation>Паўтарыце новую кодавую фразу</translation>
     </message>
     <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Увядзіце новы пароль для гаманца.&lt;br/&gt;Парольная фраза павинна складацца&lt;b&gt; не меньш чым з дзесяці сімвалаў&lt;/b&gt;, ці &lt;b&gt;больш чым з васьмі слоў&lt;/b&gt;.</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>Зашыфраваць гаманец.</translation>
     </message>
@@ -156,6 +160,10 @@
         <translation>Змяніць пароль</translation>
     </message>
     <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Увядзіце стары пароль і новы пароль для гаманца.</translation>
+    </message>
+    <message>
         <source>Confirm wallet encryption</source>
         <translation>Пацвердзіце шыфраванне гаманца</translation>
     </message>
@@ -168,28 +176,12 @@
         <translation>Ці ўпэўненыя вы, што жадаеце зашыфраваць свой гаманец?</translation>
     </message>
     <message>
-        <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin Core зараз будзе зачынены, каб фіналізаваць працэс шыфравання. Памятайце, што шыфраванне вашага гаманца не гарантуе абсалютную абарону ад магчымасці крадзяжу біткойнаў шкоднымі праграмамі, якія могуць інфікаваць ваш камп'ютар.</translation>
-    </message>
-    <message>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>ВАЖНА: Усе папярэднія копіі гаманца варта замяніць новым зашыфраваным файлам. У мэтах бяспекі папярэднія копіі незашыфраванага файла-гаманца стануць неўжывальнымі, калі вы станеце карыстацца новым зашыфраваным гаманцом.</translation>
-    </message>
-    <message>
-        <source>Warning: The Caps Lock key is on!</source>
-        <translation>Увага: Caps Lock уключаны!</translation>
-    </message>
-    <message>
         <source>Wallet encrypted</source>
         <translation>Гаманец зашыфраваны</translation>
     </message>
     <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Увядзіце новы пароль для гаманца.&lt;br/&gt;Парольная фраза павинна складацца&lt;b&gt; не меньш чым з дзесяці сімвалаў&lt;/b&gt;, ці &lt;b&gt;больш чым з васьмі слоў&lt;/b&gt;.</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Увядзіце стары пароль і новы пароль для гаманца.</translation>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>ВАЖНА: Усе папярэднія копіі гаманца варта замяніць новым зашыфраваным файлам. У мэтах бяспекі папярэднія копіі незашыфраванага файла-гаманца стануць неўжывальнымі, калі вы станеце карыстацца новым зашыфраваным гаманцом.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -218,6 +210,10 @@
     <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation>Парольная фраза гаманца паспяхова зменена.</translation>
+    </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Увага: Caps Lock уключаны!</translation>
     </message>
 </context>
 <context>
@@ -298,14 +294,6 @@
         <translation>Адчыниць &amp;URI...</translation>
     </message>
     <message>
-        <source>Bitcoin Core client</source>
-        <translation>Bitcoin Core кліент</translation>
-    </message>
-    <message>
-        <source>Importing blocks from disk...</source>
-        <translation>Імпартуюцца блокі з дыску...</translation>
-    </message>
-    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Пераіндэксацыя блокаў на дыску...</translation>
     </message>
@@ -350,10 +338,6 @@
         <translation>Атрымаць</translation>
     </message>
     <message>
-        <source>Show information about Bitcoin Core</source>
-        <translation>Паказаць інфармацыю аб Bitcoin Core</translation>
-    </message>
-    <message>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Паказаць / Схаваць</translation>
     </message>
@@ -386,20 +370,8 @@
         <translation>Дапамога</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
-    </message>
-    <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
         <translation>Запатрабаваць плацёж (генеруецца QR-код для біткойн URI)</translation>
-    </message>
-    <message>
-        <source>&amp;About Bitcoin Core</source>
-        <translation>Аб Bitcoin Core</translation>
-    </message>
-    <message>
-        <source>Modify configuration options for Bitcoin Core</source>
-        <translation>Мадыфікаваць опцыі канфігурацыі Bitcoin Core</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -416,42 +388,6 @@
     <message>
         <source>&amp;Command-line options</source>
         <translation>Опцыі каманднага радка</translation>
-    </message>
-    <message>
-        <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
-        <translation>Паказваць даведку Bitcoin Core каб атрымаць спіс магчымых опцый каманднага радка</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n актыўнае злучэнне з сецівам Bitcoin</numerusform><numerusform>%n актыўных злучэнняў з сецівам Bitcoin</numerusform><numerusform>%n актыўных злучэнняў з сецівам Bitcoin</numerusform><numerusform>%n актыўных злучэнняў з сецівам Bitcoin</numerusform></translation>
-    </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>Крыніца блокаў недасяжная...</translation>
-    </message>
-    <message numerus="yes">
-        <source>Processed %n block(s) of transaction history.</source>
-        <translation><numerusform>Апрацаваны %n блок гісторыі транзакцый.</numerusform><numerusform>Апрацавана %n блокі гісторыі транзакцый.</numerusform><numerusform>Апрацавана %n блокаў гісторыі транзакцый.</numerusform><numerusform>Апрацавана %n блокаў гісторыі транзакцый.</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n гадзіна</numerusform><numerusform>%n гадзіны</numerusform><numerusform>%n гадзін</numerusform><numerusform>%n гадзін</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n дзень</numerusform><numerusform>%n дні</numerusform><numerusform>%n дзён</numerusform><numerusform>%n дзён</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n тыдзень</numerusform><numerusform>%n тыдні</numerusform><numerusform>%n тыдняў</numerusform><numerusform>%n тыдняў</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 і %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n год</numerusform><numerusform>%n гады</numerusform><numerusform>%n гадоў</numerusform><numerusform>%n гадоў</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -531,14 +467,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Гаманец &lt;b&gt;зашыфраваны&lt;/b&gt; і зараз &lt;b&gt;заблакаваны&lt;/b&gt;</translation>
     </message>
-</context>
-<context>
-    <name>ClientModel</name>
-    <message>
-        <source>Network Alert</source>
-        <translation>Трывога Сеціва</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -552,10 +481,6 @@
     <message>
         <source>Amount:</source>
         <translation>Колькасць:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Прыярытэт:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -606,10 +531,6 @@
         <translation>Пацверджана</translation>
     </message>
     <message>
-        <source>Priority</source>
-        <translation>Прыярытэт</translation>
-    </message>
-    <message>
         <source>Copy address</source>
         <translation>Капіяваць адрас</translation>
     </message>
@@ -650,48 +571,8 @@
         <translation>Капіяваць байты</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>Капіяваць прыярытэт</translation>
-    </message>
-    <message>
         <source>Copy dust</source>
         <translation>Капіяваць пыл</translation>
-    </message>
-    <message>
-        <source>highest</source>
-        <translation>найвышэйшы</translation>
-    </message>
-    <message>
-        <source>higher</source>
-        <translation>вышэйшы</translation>
-    </message>
-    <message>
-        <source>high</source>
-        <translation>высокі</translation>
-    </message>
-    <message>
-        <source>medium-high</source>
-        <translation>вышэй сярэдняга</translation>
-    </message>
-    <message>
-        <source>medium</source>
-        <translation>сярэдні</translation>
-    </message>
-    <message>
-        <source>low-medium</source>
-        <translation>ніжэй сярэдняга</translation>
-    </message>
-    <message>
-        <source>low</source>
-        <translation>нізкі</translation>
-    </message>
-    <message>
-        <source>lower</source>
-        <translation>ніжэйшы</translation>
-    </message>
-    <message>
-        <source>lowest</source>
-        <translation>найніжэйшы</translation>
     </message>
     <message>
         <source>yes</source>
@@ -700,14 +581,6 @@
     <message>
         <source>no</source>
         <translation>не</translation>
-    </message>
-    <message>
-        <source>This means a fee of at least %1 per kB is required.</source>
-        <translation>Гэта значыць патрэбную камісію мінімум %1 на Кб.</translation>
-    </message>
-    <message>
-        <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation>Транзакцыя большага прыярытэту больш прываблівая для ўключэння ў блок.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -775,16 +648,8 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
-    </message>
-    <message>
         <source>(%1-bit)</source>
         <translation>(%1-біт)</translation>
-    </message>
-    <message>
-        <source>About Bitcoin Core</source>
-        <translation>Аб Bitcoin Core</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -798,7 +663,11 @@
         <source>command-line options</source>
         <translation>опцыі каманднага радка</translation>
     </message>
-</context>
+    <message>
+        <source>Start minimized</source>
+        <translation>Стартаваць ммінімізаванай</translation>
+    </message>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -806,26 +675,17 @@
         <translation>Вітаем</translation>
     </message>
     <message>
-        <source>Welcome to Bitcoin Core.</source>
-        <translation>Вітаем у Bitcoin Core.</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Памылка</translation>
     </message>
-    <message numerus="yes">
-        <source>%n GB of free space available</source>
-        <translation><numerusform>%n Гб вольнага месца даступна</numerusform><numerusform>%n Гб вольнага месца даступна</numerusform><numerusform>%n Гб вольнага месца даступна</numerusform><numerusform>%n Гб вольнага месца даступна</numerusform></translation>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Форма</translation>
     </message>
-    <message numerus="yes">
-        <source>(of %n GB needed)</source>
-        <translation><numerusform>(з %n Гб патрэбна)</numerusform><numerusform>(з %n Гб патрэбна)</numerusform><numerusform>(з %n Гб патрэбна)</numerusform><numerusform>(з %n Гб патрэбна)</numerusform></translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -842,6 +702,10 @@
     <message>
         <source>MB</source>
         <translation>Мб</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>Гаманец</translation>
     </message>
     </context>
 <context>
@@ -863,15 +727,34 @@
         <source>Amount</source>
         <translation>Колькасць</translation>
     </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 і %2</translation>
+    </message>
+    </context>
+<context>
+    <name>QObject::QObject</name>
     </context>
 <context>
     <name>QRImageWidget</name>
     </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <source>&amp;Information</source>
+        <translation>Інфармацыя</translation>
+    </message>
+    <message>
+        <source>Debug window</source>
+        <translation>Вакно адладкі</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>&amp;Amount:</source>
+        <translation>&amp;Колькасць:</translation>
+    </message>
     <message>
         <source>&amp;Label:</source>
         <translation>Метка:</translation>
@@ -887,6 +770,10 @@
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>Капіяваць адрас</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>Адрас</translation>
@@ -919,10 +806,6 @@
         <translation>Паведамленне</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>Колькасць</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>непазначаны</translation>
     </message>
@@ -932,6 +815,10 @@
     <message>
         <source>Send Coins</source>
         <translation>Даслаць Манеты</translation>
+    </message>
+    <message>
+        <source>Insufficient funds!</source>
+        <translation>Недастаткова сродкаў</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -944,10 +831,6 @@
     <message>
         <source>Amount:</source>
         <translation>Колькасць:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Прыярытэт:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -974,10 +857,6 @@
         <translation>Пацвердзіць дасыланне</translation>
     </message>
     <message>
-        <source>Confirm send coins</source>
-        <translation>Пацвердзіць дасыланне манет</translation>
-    </message>
-    <message>
         <source>Copy quantity</source>
         <translation>Капіяваць колькасць</translation>
     </message>
@@ -998,8 +877,12 @@
         <translation>Капіяваць байты</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>Капіяваць прыярытэт</translation>
+        <source>Copy dust</source>
+        <translation>Капіяваць пыл</translation>
+    </message>
+    <message>
+        <source>Confirm send coins</source>
+        <translation>Пацвердзіць дасыланне манет</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
@@ -1009,11 +892,7 @@
         <source>(no label)</source>
         <translation>непазначаны</translation>
     </message>
-    <message>
-        <source>Copy dust</source>
-        <translation>Капіяваць пыл</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -1023,10 +902,6 @@
     <message>
         <source>Pay &amp;To:</source>
         <translation>Заплаціць да:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Увядзіце пазнаку гэтаму адрасу, каб дадаць яго ў адрасную кнігу</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -1045,10 +920,25 @@
         <translation>Alt+P</translation>
     </message>
     <message>
+        <source>Message:</source>
+        <translation>Паведамленне:</translation>
+    </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>Заплаціць да:</translation>
+    </message>
+    <message>
         <source>Memo:</source>
         <translation>Памятка:</translation>
     </message>
+    <message>
+        <source>Enter a label for this address to add it to your address book</source>
+        <translation>Увядзіце пазнаку гэтаму адрасу, каб дадаць яго ў адрасную кнігу</translation>
+    </message>
 </context>
+<context>
+    <name>SendConfirmationDialog</name>
+    </context>
 <context>
     <name>ShutdownWindow</name>
     </context>
@@ -1069,14 +959,6 @@
     </context>
 <context>
     <name>SplashScreen</name>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
-    </message>
-    <message>
-        <source>The Bitcoin Core developers</source>
-        <translation>Распрацоўнікі Bitcoin Core</translation>
-    </message>
     <message>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
@@ -1108,8 +990,16 @@
         <translation>Статус</translation>
     </message>
     <message>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>, пакуль не было паспяхова транслявана</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>Дата</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>невядома</translation>
     </message>
     <message>
         <source>Message</source>
@@ -1127,26 +1017,14 @@
         <source>Amount</source>
         <translation>Колькасць</translation>
     </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, пакуль не было паспяхова транслявана</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>невядома</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>TransactionDescDialog</name>
-    <message>
-        <source>Transaction details</source>
-        <translation>Дэталі транзакцыі</translation>
-    </message>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Гэтая панэль паказвае дэтальнае апісанне транзакцыі</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -1156,6 +1034,10 @@
     <message>
         <source>Type</source>
         <translation>Тып</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Метка</translation>
     </message>
     <message>
         <source>Confirmed (%1 confirmations)</source>
@@ -1168,10 +1050,6 @@
     <message>
         <source>Generated but not accepted</source>
         <translation>Згенеравана, але не прынята</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Метка</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -1196,6 +1074,10 @@
     <message>
         <source>(n/a)</source>
         <translation>(n/a)</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>непазначаны</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
@@ -1293,10 +1175,6 @@
         <translation>Рэдагаваць пазнаку</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>Экспартаванне няўдалае</translation>
-    </message>
-    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Коскамі падзелены файл (*.csv)</translation>
     </message>
@@ -1323,6 +1201,10 @@
     <message>
         <source>ID</source>
         <translation>ID</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Экспартаванне няўдалае</translation>
     </message>
     <message>
         <source>Range:</source>
@@ -1376,6 +1258,10 @@
         <translation>Запусціць у фоне як дэман і прымаць каманды</translation>
     </message>
     <message>
+        <source>Bitcoin Core</source>
+        <translation>Bitcoin Core</translation>
+    </message>
+    <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>Ці жадаеце вы перабудаваць зараз базу звестак блокаў?</translation>
     </message>
@@ -1424,10 +1310,6 @@
         <translation>Опцыі гаманца:</translation>
     </message>
     <message>
-        <source>Activating best chain...</source>
-        <translation>Актывацыя лепшага ланцуга...</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>Інфармацыя</translation>
     </message>
@@ -1474,14 +1356,6 @@
     <message>
         <source>Loading addresses...</source>
         <translation>Загружаем адрасы...</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Памылка загрузкі wallet.dat: гаманец пашкоджаны</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat</source>
-        <translation>Памылка загрузкі wallet.dat</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

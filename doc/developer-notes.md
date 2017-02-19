@@ -4,14 +4,22 @@ Developer Notes
 Various coding styles have been used during the history of the codebase,
 and the result is not very consistent. However, we're now trying to converge to
 a single style, so please use it in new code. Old code will be converted
-gradually.
-- Basic rules specified in src/.clang-format. Use a recent clang-format-3.5 to format automatically.
+gradually and you are encouraged to use the provided
+[clang-format-diff script](/contrib/devtools/README.md#clang-format-diffpy)
+to clean up the patch automatically before submitting a pull request.
+
+- Basic rules specified in [src/.clang-format](/src/.clang-format).
   - Braces on new lines for namespaces, classes, functions, methods.
   - Braces on the same line for everything else.
   - 4 space indentation (no tabs) for every block except namespaces.
-  - No indentation for public/protected/private or for namespaces.
+  - No indentation for `public`/`protected`/`private` or for `namespace`.
   - No extra spaces inside parenthesis; don't do ( this )
-  - No space after function names; one space after if, for and while.
+  - No space after function names; one space after `if`, `for` and `while`.
+  - If an `if` only has a single-statement then-clause, it can appear
+    on the same line as the if, without braces. In every other case,
+    braces are required, and the then and else clauses must appear
+    correctly indented on a new line.
+  - `++i` is preferred over `i++`.
 
 Block style example:
 ```c++
@@ -19,14 +27,18 @@ namespace foo
 {
 class Class
 {
-    bool Function(char* psz, int n)
+    bool Function(const std::string& s, int n)
     {
         // Comment summarising what this section of code does
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < n; ++i) {
             // When something fails, return early
-            if (!Something())
-                return false;
+            if (!Something()) return false;
             ...
+            if (SomethingElse()) {
+                DoMore();
+            } else {
+                DoLess();
+            }
         }
 
         // Success return is usually at the end
@@ -69,6 +81,12 @@ class CAlert
 To describe a member or variable use:
 ```c++
 int var; //!< Detailed description after the member
+```
+
+or
+```cpp
+//! Description before the member
+int var;
 ```
 
 Also OK:
@@ -223,9 +241,9 @@ General Bitcoin Core
   - *Rationale*: Makes sure that they pass thorough testing, and that the tester will keep passing
      on the master branch. Otherwise all new pull requests will start failing the tests, resulting in
      confusion and mayhem
- 
+
   - *Explanation*: If the test suite is to be updated for a change, this has to
-    be done first 
+    be done first
 
 Wallet
 -------
@@ -257,7 +275,7 @@ General C++
       the `.h` to the `.cpp` should not result in build errors
 
 - Use the RAII (Resource Acquisition Is Initialization) paradigm where possible. For example by using
-  `scoped_pointer` for allocations in a function.
+  `unique_ptr` for allocations in a function.
 
   - *Rationale*: This avoids memory and resource leaks, and ensures exception safety
 
@@ -276,10 +294,9 @@ C++ data structures
   - *Rationale*: Behavior is undefined. In C++ parlor this means "may reformat
     the universe", in practice this has resulted in at least one hard-to-debug crash bug
 
-- Watch out for vector out-of-bounds exceptions. `&vch[0]` is illegal for an
-  empty vector, `&vch[vch.size()]` is always illegal. Use `begin_ptr(vch)` and
-  `end_ptr(vch)` to get the begin and end pointer instead (defined in
-  `serialize.h`)
+- Watch out for out-of-bounds vector access. `&vch[vch.size()]` is illegal,
+  including `&vch[0]` for an empty vector. Use `vch.data()` and `vch.data() +
+  vch.size()` instead.
 
 - Vector bounds checking is only enabled in debug mode. Do not rely on it
 
@@ -315,13 +332,39 @@ Strings and formatting
     buffer overflows and surprises with `\0` characters. Also some C string manipulations
     tend to act differently depending on platform, or even the user locale
 
-- Use `ParseInt32`, `ParseInt64`, `ParseDouble` from `utilstrencodings.h` for number parsing
+- Use `ParseInt32`, `ParseInt64`, `ParseUInt32`, `ParseUInt64`, `ParseDouble` from `utilstrencodings.h` for number parsing
 
   - *Rationale*: These functions do overflow checking, and avoid pesky locale issues
 
 - For `strprintf`, `LogPrint`, `LogPrintf` formatting characters don't need size specifiers
 
   - *Rationale*: Bitcoin Core uses tinyformat, which is type safe. Leave them out to avoid confusion
+
+Variable names
+--------------
+
+The shadowing warning (`-Wshadow`) is enabled by default. It prevents issues rising
+from using a different variable with the same name.
+
+Please name variables so that their names do not shadow variables defined in the source code.
+
+E.g. in member initializers, prepend `_` to the argument name shadowing the
+member name:
+
+```c++
+class AddressBookPage
+{
+    Mode mode;
+}
+
+AddressBookPage::AddressBookPage(Mode _mode) :
+      mode(_mode)
+...
+```
+
+When using nested cycles, do not name the inner cycle variable the same as in
+upper cycle etc.
+
 
 Threads and synchronization
 ----------------------------
@@ -373,3 +416,82 @@ GUI
   - *Rationale*: Model classes pass through events and data from the core, they
     should not interact with the user. That's where View classes come in. The converse also
     holds: try to not directly access core data structures from Views.
+
+Subtrees
+----------
+
+Several parts of the repository are subtrees of software maintained elsewhere.
+
+Some of these are maintained by active developers of Bitcoin Core, in which case changes should probably go
+directly upstream without being PRed directly against the project.  They will be merged back in the next
+subtree merge.
+
+Others are external projects without a tight relationship with our project.  Changes to these should also
+be sent upstream but bugfixes may also be prudent to PR against Bitcoin Core so that they can be integrated
+quickly.  Cosmetic changes should be purely taken upstream.
+
+There is a tool in contrib/devtools/git-subtree-check.sh to check a subtree directory for consistency with
+its upstream repository.
+
+Current subtrees include:
+
+- src/leveldb
+  - Upstream at https://github.com/google/leveldb ; Maintained by Google, but open important PRs to Core to avoid delay
+
+- src/libsecp256k1
+  - Upstream at https://github.com/bitcoin-core/secp256k1/ ; actively maintaned by Core contributors.
+
+- src/crypto/ctaes
+  - Upstream at https://github.com/bitcoin-core/ctaes ; actively maintained by Core contributors.
+
+- src/univalue
+  - Upstream at https://github.com/jgarzik/univalue ; report important PRs to Core to avoid delay.
+
+
+Git and GitHub tips
+---------------------
+
+- For resolving merge/rebase conflicts, it can be useful to enable diff3 style using
+  `git config merge.conflictstyle diff3`. Instead of
+
+        <<<
+        yours
+        ===
+        theirs
+        >>>
+
+  you will see
+
+        <<<
+        yours
+        |||
+        original
+        ===
+        theirs
+        >>>
+
+  This may make it much clearer what caused the conflict. In this style, you can often just look
+  at what changed between *original* and *theirs*, and mechanically apply that to *yours* (or the other way around).
+
+- When reviewing patches which change indentation in C++ files, use `git diff -w` and `git show -w`. This makes
+  the diff algorithm ignore whitespace changes. This feature is also available on github.com, by adding `?w=1`
+  at the end of any URL which shows a diff.
+
+- When reviewing patches that change symbol names in many places, use `git diff --word-diff`. This will instead
+  of showing the patch as deleted/added *lines*, show deleted/added *words*.
+
+- When reviewing patches that move code around, try using
+  `git diff --patience commit~:old/file.cpp commit:new/file/name.cpp`, and ignoring everything except the
+  moved body of code which should show up as neither `+` or `-` lines. In case it was not a pure move, this may
+  even work when combined with the `-w` or `--word-diff` options described above.
+
+- When looking at other's pull requests, it may make sense to add the following section to your `.git/config`
+  file:
+
+        [remote "upstream-pull"]
+                fetch = +refs/pull/*:refs/remotes/upstream-pull/*
+                url = git@github.com:bitcoin/bitcoin.git
+
+  This will add an `upstream-pull` remote to your git repository, which can be fetched using `git fetch --all`
+  or `git fetch upstream-pull`. Afterwards, you can use `upstream-pull/NUMBER/head` in arguments to `git show`,
+  `git checkout` and anywhere a commit id would be acceptable to see the changes from pull request NUMBER.

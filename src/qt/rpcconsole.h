@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +11,8 @@
 #include "net.h"
 
 #include <QWidget>
+#include <QCompleter>
+#include <QThread>
 
 class ClientModel;
 class PlatformStyle;
@@ -33,6 +35,11 @@ class RPCConsole: public QWidget
 public:
     explicit RPCConsole(const PlatformStyle *platformStyle, QWidget *parent);
     ~RPCConsole();
+
+    static bool RPCParseCommandLine(std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = NULL);
+    static bool RPCExecuteCommandLine(std::string &strResult, const std::string &strCommand, std::string * const pstrFilteredOut = NULL) {
+        return RPCParseCommandLine(strResult, strCommand, true, pstrFilteredOut);
+    }
 
     void setClientModel(ClientModel *model);
 
@@ -77,13 +84,18 @@ private Q_SLOTS:
     void clearSelectedNode();
 
 public Q_SLOTS:
-    void clear();
+    void clear(bool clearHistory = true);
+    void fontBigger();
+    void fontSmaller();
+    void setFontSize(int newSize);
     /** Append the message to the message widget */
     void message(int category, const QString &message, bool html = false);
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
+    /** Set network state shown in the UI */
+    void setNetworkActive(bool networkActive);
     /** Set number of blocks and last block date shown in the UI */
-    void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress);
+    void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool headers);
     /** Set size (number of transactions and memory usage) of the mempool in the UI */
     void setMempoolSize(long numberOfTxs, size_t dynUsage);
     /** Go forward or back in history */
@@ -92,6 +104,8 @@ public Q_SLOTS:
     void scrollToEnd();
     /** Handle selection of peer in peers list */
     void peerSelected(const QItemSelection &selected, const QItemSelection &deselected);
+    /** Handle selection caching before update */
+    void peerLayoutAboutToChange();
     /** Handle updated peer information */
     void peerLayoutChanged();
     /** Disconnect a selected node on the Peers tab */
@@ -118,7 +132,7 @@ private:
     enum ColumnWidths
     {
         ADDRESS_COLUMN_WIDTH = 200,
-        SUBVERSION_COLUMN_WIDTH = 100,
+        SUBVERSION_COLUMN_WIDTH = 150,
         PING_COLUMN_WIDTH = 80,
         BANSUBNET_COLUMN_WIDTH = 200,
         BANTIME_COLUMN_WIDTH = 250
@@ -129,11 +143,18 @@ private:
     ClientModel *clientModel;
     QStringList history;
     int historyPtr;
-    NodeId cachedNodeid;
+    QString cmdBeforeBrowsing;
+    QList<NodeId> cachedNodeids;
     const PlatformStyle *platformStyle;
     RPCTimerInterface *rpcTimerInterface;
     QMenu *peersTableContextMenu;
     QMenu *banTableContextMenu;
+    int consoleFontSize;
+    QCompleter *autoCompleter;
+    QThread thread;
+
+    /** Update UI with latest network info from model. */
+    void updateNetworkState();
 };
 
 #endif // BITCOIN_QT_RPCCONSOLE_H

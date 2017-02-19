@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -49,6 +49,8 @@ private Q_SLOTS:
     void on_resetButton_clicked();
     void on_okButton_clicked();
     void on_cancelButton_clicked();
+    
+    void on_hideTrayIcon_stateChanged(int fState);
 
     void showRestartWarning(bool fPersistent = false);
     void clearStatusLabel();

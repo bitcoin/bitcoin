@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,9 +24,6 @@
 using namespace std;
 
 
-unsigned int nWalletDBUpdated;
-
-
 //
 // CDB
 //
@@ -43,7 +40,7 @@ void CDBEnv::EnvShutdown()
     if (ret != 0)
         LogPrintf("CDBEnv::EnvShutdown: Error %d shutting down database environment: %s\n", ret, DbEnv::strerror(ret));
     if (!fMockDb)
-        DbEnv(0).remove(strPath.c_str(), 0);
+        DbEnv((u_int32_t)0).remove(strPath.c_str(), 0);
 }
 
 void CDBEnv::Reset()
@@ -165,6 +162,11 @@ CDBEnv::VerifyResult CDBEnv::Verify(const std::string& strFile, bool (*recoverFu
     return (fRecovered ? RECOVER_OK : RECOVER_FAIL);
 }
 
+/* End of headers, beginning of key/value data */
+static const char *HEADER_END = "HEADER=END";
+/* End of key/value data */
+static const char *DATA_END = "DATA=END";
+
 bool CDBEnv::Salvage(const std::string& strFile, bool fAggressive, std::vector<CDBEnv::KeyValPair>& vResult)
 {
     LOCK(cs_db);
@@ -193,22 +195,33 @@ bool CDBEnv::Salvage(const std::string& strFile, bool fAggressive, std::vector<C
     // Format of bdb dump is ascii lines:
     // header lines...
     // HEADER=END
-    // hexadecimal key
-    // hexadecimal value
-    // ... repeated
+    //  hexadecimal key
+    //  hexadecimal value
+    //  ... repeated
     // DATA=END
 
     string strLine;
-    while (!strDump.eof() && strLine != "HEADER=END")
+    while (!strDump.eof() && strLine != HEADER_END)
         getline(strDump, strLine); // Skip past header
 
     std::string keyHex, valueHex;
-    while (!strDump.eof() && keyHex != "DATA=END") {
+    while (!strDump.eof() && keyHex != DATA_END) {
         getline(strDump, keyHex);
-        if (keyHex != "DATA_END") {
+        if (keyHex != DATA_END) {
+            if (strDump.eof())
+                break;
             getline(strDump, valueHex);
+            if (valueHex == DATA_END) {
+                LogPrintf("CDBEnv::Salvage: WARNING: Number of keys in data does not match number of values.\n");
+                break;
+            }
             vResult.push_back(make_pair(ParseHex(keyHex), ParseHex(valueHex)));
         }
+    }
+
+    if (keyHex != DATA_END) {
+        LogPrintf("CDBEnv::Salvage: WARNING: Unexpected end of file while reading salvage output.\n");
+        return false;
     }
 
     return (result == 0);
@@ -268,7 +281,7 @@ CDB::CDB(const std::string& strFilename, const char* pszMode, bool fFlushOnClose
                 pdb = NULL;
                 --bitdb.mapFileUseCount[strFile];
                 strFile = "";
-                throw runtime_error(strprintf("CDB: Error %d, can't open database %s", ret, strFile));
+                throw runtime_error(strprintf("CDB: Error %d, can't open database %s", ret, strFilename));
             }
 
             if (fCreate && !Exists(string("version"))) {
@@ -371,25 +384,25 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                         while (fSuccess) {
                             CDataStream ssKey(SER_DISK, CLIENT_VERSION);
                             CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-                            int ret = db.ReadAtCursor(pcursor, ssKey, ssValue, DB_NEXT);
-                            if (ret == DB_NOTFOUND) {
+                            int ret1 = db.ReadAtCursor(pcursor, ssKey, ssValue);
+                            if (ret1 == DB_NOTFOUND) {
                                 pcursor->close();
                                 break;
-                            } else if (ret != 0) {
+                            } else if (ret1 != 0) {
                                 pcursor->close();
                                 fSuccess = false;
                                 break;
                             }
                             if (pszSkip &&
-                                strncmp(&ssKey[0], pszSkip, std::min(ssKey.size(), strlen(pszSkip))) == 0)
+                                strncmp(ssKey.data(), pszSkip, std::min(ssKey.size(), strlen(pszSkip))) == 0)
                                 continue;
-                            if (strncmp(&ssKey[0], "\x07version", 8) == 0) {
+                            if (strncmp(ssKey.data(), "\x07version", 8) == 0) {
                                 // Update version:
                                 ssValue.clear();
                                 ssValue << CLIENT_VERSION;
                             }
-                            Dbt datKey(&ssKey[0], ssKey.size());
-                            Dbt datValue(&ssValue[0], ssValue.size());
+                            Dbt datKey(ssKey.data(), ssKey.size());
+                            Dbt datValue(ssValue.data(), ssValue.size());
                             int ret2 = pdbCopy->put(NULL, &datKey, &datValue, DB_NOOVERWRITE);
                             if (ret2 > 0)
                                 fSuccess = false;

@@ -47,10 +47,7 @@ implements the test logic.
 * ```NodeConn``` is the class used to connect to a bitcoind.  If you implement
 a callback class that derives from ```NodeConnCB``` and pass that to the
 ```NodeConn``` object, your code will receive the appropriate callbacks when
-events of interest arrive.  NOTE: be sure to call
-```self.create_callback_map()``` in your derived classes' ```__init__```
-function, so that the correct mappings are set up between p2p messages and your
-callback functions.
+events of interest arrive.
 
 * You can pass the same handler to multiple ```NodeConn```'s if you like, or pass
 different ones to each -- whatever makes the most sense for your test.

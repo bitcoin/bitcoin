@@ -1,0 +1,11 @@
+{
+    "txid": "4ebd325a4b394cff8c57e8317ccf5a8d0e2bdf1b8526f8aad6c8e43d8240621a",
+    "hash": "4ebd325a4b394cff8c57e8317ccf5a8d0e2bdf1b8526f8aad6c8e43d8240621a",
+    "version": 2,
+    "locktime": 0,
+    "vin": [
+    ],
+    "vout": [
+    ],
+    "hex": "02000000000000000000"
+}

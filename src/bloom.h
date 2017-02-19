@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2014 The Bitcoin Core developers
+// Copyright (c) 2012-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -73,7 +73,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(vData);
         READWRITE(nHashFuncs);
         READWRITE(nTweak);
@@ -135,20 +135,9 @@ private:
     int nEntriesPerGeneration;
     int nEntriesThisGeneration;
     int nGeneration;
-    std::vector<uint32_t> data;
+    std::vector<uint64_t> data;
     unsigned int nTweak;
     int nHashFuncs;
-
-    unsigned int Hash(unsigned int nHashNum, const std::vector<unsigned char>& vDataToHash) const;
-
-    inline int get(uint32_t position) const {
-        return (data[(position >> 4) % data.size()] >> (2 * (position & 0xF))) & 0x3;
-    }
-
-    inline void put(uint32_t position, uint32_t val) {
-        uint32_t& cell = data[(position >> 4) % data.size()];
-        cell = (cell & ~(((uint32_t)3) << (2 * (position & 0xF)))) | (val << (2 * (position & 0xF)));
-    }
 };
 
 #endif // BITCOIN_BLOOM_H

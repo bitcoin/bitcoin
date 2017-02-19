@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 
 #include <QSplashScreen>
 
+class CWallet;
 class NetworkStyle;
 
 /** Class for the splashscreen with information of the running client.
@@ -39,11 +40,15 @@ private:
     void subscribeToCoreSignals();
     /** Disconnect core signals to splash screen */
     void unsubscribeFromCoreSignals();
+    /** Connect wallet signals to splash screen */
+    void ConnectWallet(CWallet*);
 
     QPixmap pixmap;
     QString curMessage;
     QColor curColor;
     int curAlignment;
+
+    QList<CWallet*> connectedWallets;
 };
 
 #endif // BITCOIN_QT_SPLASHSCREEN_H

@@ -1,4 +1,4 @@
-// Copyright (c) 2015 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,7 +18,11 @@ static inline size_t RecursiveDynamicUsage(const COutPoint& out) {
 }
 
 static inline size_t RecursiveDynamicUsage(const CTxIn& in) {
-    return RecursiveDynamicUsage(in.scriptSig) + RecursiveDynamicUsage(in.prevout);
+    size_t mem = RecursiveDynamicUsage(in.scriptSig) + RecursiveDynamicUsage(in.prevout) + memusage::DynamicUsage(in.scriptWitness.stack);
+    for (std::vector<std::vector<unsigned char> >::const_iterator it = in.scriptWitness.stack.begin(); it != in.scriptWitness.stack.end(); it++) {
+         mem += memusage::DynamicUsage(*it);
+    }
+    return mem;
 }
 
 static inline size_t RecursiveDynamicUsage(const CTxOut& out) {
@@ -49,8 +53,8 @@ static inline size_t RecursiveDynamicUsage(const CMutableTransaction& tx) {
 
 static inline size_t RecursiveDynamicUsage(const CBlock& block) {
     size_t mem = memusage::DynamicUsage(block.vtx);
-    for (std::vector<CTransaction>::const_iterator it = block.vtx.begin(); it != block.vtx.end(); it++) {
-        mem += RecursiveDynamicUsage(*it);
+    for (const auto& tx : block.vtx) {
+        mem += memusage::DynamicUsage(tx) + RecursiveDynamicUsage(*tx);
     }
     return mem;
 }
