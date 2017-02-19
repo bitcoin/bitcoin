@@ -497,7 +497,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
     if (tx.vout.empty())
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
     // Size limits (this doesn't take the witness into account, as that hasn't been checked for malleability)
-    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > MAX_BLOCK_BASE_SIZE)
+    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > MAX_STRIPPED_TRANSACTION_SIZE)
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
 
     // Check for negative or overflow output values
@@ -1700,6 +1700,39 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
     return nVersion;
 }
 
+uint32_t GetMaxStrippedBlockSize(const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams, int64_t nMedianTimePast) {
+    if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_BLKSIZE, versionbitscache) != THRESHOLD_ACTIVE) {
+        return MAX_BIP141_STRIPPED_BLOCK_SIZE;
+    }
+
+    // In case we activate early on regtest.
+    if (nMedianTimePast < 1483246800) {
+        return 300000;
+    }
+    // The first step is on January 1st 2017.
+    // After that, one step happens every 2^23 seconds.
+    int64_t step = (nMedianTimePast - 1483246800) >> 23;
+    // Don't do more than 107 steps, to stay under 32 MB.
+    step = std::min<int64_t>(step, 107);
+    // Every step is a 2^(1/16) factor.
+    static const uint32_t bases[16] = {
+        // bases[i] == round(300000 * pow(2.0, i / 16.0))
+        300000, 313282, 327152, 341637,
+        356762, 372557, 389052, 406277,
+        424264, 443048, 462663, 483147,
+        504538, 526876, 550202, 574562
+    };
+    return bases[step & 15] << (step / 16);
+}
+
+uint32_t GetMaxBlockSize(const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams, int64_t nMedianTimePast) {
+    if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_BLKSIZE, versionbitscache) != THRESHOLD_ACTIVE && VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE) {
+        return MAX_BIP141_BLOCK_SIZE;
+    } else {
+        return GetMaxStrippedBlockSize(pindexPrev, consensusParams, nMedianTimePast);
+    }
+}
+
 /**
  * Threshold condition checker that triggers when unknown versionbits are seen on the network.
  */
@@ -2867,7 +2900,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     // checks that use witness data may be performed here.
 
     // Size limits
-    if (block.vtx.empty() || block.vtx.size() > MAX_BLOCK_BASE_SIZE || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > MAX_BLOCK_BASE_SIZE)
+    if (block.vtx.empty() || block.vtx.size() > MAX_POSSIBLE_BLOCK_SIZE || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > MAX_POSSIBLE_BLOCK_SIZE)
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
 
     // First transaction must be coinbase, the rest must not be
@@ -3000,6 +3033,12 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
 bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
     const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
+    const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
+
+    // Size limits
+    const uint32_t maxStrippedBlockSize = GetMaxStrippedBlockSize(pindexPrev, consensusParams, nMedianTimePast);
+    if (::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > maxStrippedBlockSize)
+        return state.DoS(100, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
 
     // Start enforcing BIP113 (Median Time Past) using versionbits logic.
     int nLockTimeFlags = 0;
@@ -3071,8 +3110,19 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
     // large by filling up the coinbase witness, which doesn't change
     // the block hash, so we couldn't mark the block as permanently
     // failed).
-    if (GetBlockWeight(block) > MAX_BLOCK_WEIGHT) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-blk-weight", false, strprintf("%s : weight limit failed", __func__));
+    if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_BLKSIZE, versionbitscache) == THRESHOLD_ACTIVE) {
+        const uint32_t maxBlockSize = GetMaxBlockSize(pindexPrev, consensusParams, nMedianTimePast);
+        if (::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > maxBlockSize) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
+        }
+        const int64_t nMaxBlockWeight = maxBlockSize * 2;
+        if (GetBlockWeight(block, SERIALIZE_TRANSACTION_NO_SIGS) > nMaxBlockWeight) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-blk-weight", false, strprintf("%s : weight limit failed", __func__));
+        }
+    } else {
+        if (GetBlockWeight(block, SERIALIZE_TRANSACTION_NO_WITNESS) > MAX_BIP141_BLOCK_WEIGHT) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-blk-weight", false, strprintf("%s : weight limit failed", __func__));
+        }
     }
 
     return true;
@@ -3866,7 +3916,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
     int nLoaded = 0;
     try {
         // This takes over fileIn and calls fclose() on it in the CBufferedFile destructor
-        CBufferedFile blkdat(fileIn, 2*MAX_BLOCK_SERIALIZED_SIZE, MAX_BLOCK_SERIALIZED_SIZE+8, SER_DISK, CLIENT_VERSION);
+        CBufferedFile blkdat(fileIn, 2*MAX_POSSIBLE_BLOCK_SIZE, MAX_POSSIBLE_BLOCK_SIZE+8, SER_DISK, CLIENT_VERSION);
         uint64_t nRewind = blkdat.GetPos();
         while (!blkdat.eof()) {
             boost::this_thread::interruption_point();
@@ -3885,7 +3935,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                     continue;
                 // read size
                 blkdat >> nSize;
-                if (nSize < 80 || nSize > MAX_BLOCK_SERIALIZED_SIZE)
+                if (nSize < 80 || nSize > MAX_POSSIBLE_BLOCK_SIZE)
                     continue;
             } catch (const std::exception&) {
                 // no valid block header found; don't complain
