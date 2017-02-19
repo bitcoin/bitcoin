@@ -389,12 +389,16 @@ static void addNodeRelayOptions(AllowedArgs& allowedArgs)
     allowedArgs
         .addHeader(_("Node relay options:"))
         .addDebugArg("acceptnonstdtxn", optionalBool, strprintf("Relay and mine \"non-standard\" transactions (%sdefault: %u)", "testnet/regtest only; ", true))
-        .addArg("minrelaytxfee=<amt>", requiredAmount, strprintf(_("Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)"),
-            CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)))
+        .addArg("blocksizeacceptlimit=<n>", requiredAmount, strprintf("This node will not accept blocks larger than this limit. Unit is in MB (default: %.1f)", DEFAULT_BLOCK_ACCEPT_SIZE))
         .addArg("bytespersigop=<n>", requiredInt, strprintf(_("Minimum bytes per sigop in transactions we relay and mine (default: %u)"), DEFAULT_BYTES_PER_SIGOP))
         .addArg("datacarrier", optionalBool, strprintf(_("Relay and mine data carrier transactions (default: %u)"), DEFAULT_ACCEPT_DATACARRIER))
         .addArg("datacarriersize=<n>", requiredInt, strprintf(_("Maximum size of data in data carrier transactions we relay and mine (default: %u)"), MAX_OP_RETURN_RELAY))
-        .addArg("blocksizeacceptlimit,excessiveblocksize=<n>", requiredAmount, strprintf("This node will not accept blocks larger than this limit. Unit is in MB (default: %.1f)", DEFAULT_BLOCK_ACCEPT_SIZE))
+        .addDebugArg("excessiveblocksize=<n>", requiredInt, "This node will not accept blocks larger than this limit. Unit is in bytes. Superseded by -blocksizeacceptlimit")
+        .addArg("expeditedblock=<host>", requiredStr, _("Request expedited blocks from this host whenever we are connected to it"))
+        .addArg("maxexpeditedblockrecipients=<n>", requiredInt, _("The maximum number of nodes this node will forward expedited blocks to"))
+        .addArg("maxexpeditedtxrecipients=<n>", requiredInt, _("The maximum number of nodes this node will forward expedited transactions to"))
+        .addArg("minrelaytxfee=<amt>", requiredAmount, strprintf(_("Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)"),
+            CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)))
         .addArg("use-thinblocks", optionalBool, _("Enable thin blocks to speed up the relay of blocks (default: 1)"))
         ;
 }
