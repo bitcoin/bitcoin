@@ -204,7 +204,7 @@ Low-level RPC changes
  - The first boolean argument to `getaddednodeinfo` has been removed. This is 
    an incompatible change.
 
- - RPC command "getmininginfo" loses the "testnet" field in favor of the more
+ - RPC command `getmininginfo` loses the "testnet" field in favor of the more
    generic "chain" (which has been present for years).
 
  - A new RPC command `preciousblock` has been added which marks a block as
