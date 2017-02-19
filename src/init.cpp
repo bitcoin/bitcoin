@@ -662,7 +662,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     fDebug = !mapMultiArgs["-debug"].empty();
     // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
     const vector<string>& categories = mapMultiArgs["-debug"];
-    if (GetBoolArg("-nodebug", false) || find(categories.begin(), categories.end(), string("0")) != categories.end())
+    if (find(categories.begin(), categories.end(), string("0")) != categories.end())
         fDebug = false;
 
     // Checkmempool and checkblockindex default to true in regtest mode
