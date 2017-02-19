@@ -544,7 +544,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
         // GET MAIN PARAMETER FOR THIS MODE, VALID OR ALL?
 
         std::string strShow = "valid";
-        if (params.size() == 2) strShow = params[1].get_str();
+        if (params.size() >= 2) strShow = params[1].get_str();
         if (strShow != "valid" && strShow != "all")
             return "Invalid mode, should be 'valid' or 'all'";
 
