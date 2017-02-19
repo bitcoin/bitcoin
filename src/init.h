@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,9 @@
 #define BITCOIN_INIT_H
 
 #include <string>
+#include "statsd_client.h"
 
+extern statsd::StatsdClient statsClient;
 class CScheduler;
 class CWallet;
 
@@ -25,7 +27,30 @@ void Shutdown();
 void InitLogging();
 //!Parameter interaction: change current parameters depending on various rules
 void InitParameterInteraction();
-bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler);
+
+/** Initialize bitcoin core: Basic context setup.
+ *  @note This can be done before daemonization.
+ *  @pre Parameters should be parsed and config file should be read.
+ */
+bool AppInitBasicSetup();
+/**
+ * Initialization: parameter interaction.
+ * @note This can be done before daemonization.
+ * @pre Parameters should be parsed and config file should be read, AppInitBasicSetup should have been called.
+ */
+bool AppInitParameterInteraction();
+/**
+ * Initialization sanity checks: ecc init, sanity checks, dir lock.
+ * @note This can be done before daemonization.
+ * @pre Parameters should be parsed and config file should be read, AppInitParameterInteraction should have been called.
+ */
+bool AppInitSanityChecks();
+/**
+ * Bitcoin core main initialization.
+ * @note This should only be done after daemonization.
+ * @pre Parameters should be parsed and config file should be read, AppInitSanityChecks should have been called.
+ */
+bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler);
 
 /** The help message mode determines what help message to show */
 enum HelpMessageMode {

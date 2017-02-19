@@ -128,7 +128,7 @@ def main():
         line_count = int(match.group(3))
       if line_count == 0:
         continue
-      end_line = start_line + line_count - 1;
+      end_line = start_line + line_count - 1
       lines_by_file.setdefault(filename, []).extend(
           ['-lines', str(start_line) + ':' + str(end_line)])
 
@@ -147,7 +147,7 @@ def main():
                          stderr=None, stdin=subprocess.PIPE)
     stdout, stderr = p.communicate()
     if p.returncode != 0:
-      sys.exit(p.returncode);
+      sys.exit(p.returncode)
 
     if not args.i:
       with open(filename) as f:

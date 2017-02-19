@@ -22,7 +22,7 @@ static void RIPEMD160(benchmark::State& state)
     uint8_t hash[CRIPEMD160::OUTPUT_SIZE];
     std::vector<uint8_t> in(BUFFER_SIZE,0);
     while (state.KeepRunning())
-        CRIPEMD160().Write(begin_ptr(in), in.size()).Finalize(hash);
+        CRIPEMD160().Write(in.data(), in.size()).Finalize(hash);
 }
 
 static void SHA1(benchmark::State& state)
@@ -30,7 +30,7 @@ static void SHA1(benchmark::State& state)
     uint8_t hash[CSHA1::OUTPUT_SIZE];
     std::vector<uint8_t> in(BUFFER_SIZE,0);
     while (state.KeepRunning())
-        CSHA1().Write(begin_ptr(in), in.size()).Finalize(hash);
+        CSHA1().Write(in.data(), in.size()).Finalize(hash);
 }
 
 static void SHA256(benchmark::State& state)
@@ -38,7 +38,7 @@ static void SHA256(benchmark::State& state)
     uint8_t hash[CSHA256::OUTPUT_SIZE];
     std::vector<uint8_t> in(BUFFER_SIZE,0);
     while (state.KeepRunning())
-        CSHA256().Write(begin_ptr(in), in.size()).Finalize(hash);
+        CSHA256().Write(in.data(), in.size()).Finalize(hash);
 }
 
 static void SHA256_32b(benchmark::State& state)
@@ -46,7 +46,7 @@ static void SHA256_32b(benchmark::State& state)
     std::vector<uint8_t> in(32,0);
     while (state.KeepRunning()) {
         for (int i = 0; i < 1000000; i++) {
-            CSHA256().Write(begin_ptr(in), in.size()).Finalize(&in[0]);
+            CSHA256().Write(in.data(), in.size()).Finalize(&in[0]);
         }
     }
 }
@@ -56,7 +56,7 @@ static void SHA512(benchmark::State& state)
     uint8_t hash[CSHA512::OUTPUT_SIZE];
     std::vector<uint8_t> in(BUFFER_SIZE,0);
     while (state.KeepRunning())
-        CSHA512().Write(begin_ptr(in), in.size()).Finalize(hash);
+        CSHA512().Write(in.data(), in.size()).Finalize(hash);
 }
 
 static void SipHash_32b(benchmark::State& state)

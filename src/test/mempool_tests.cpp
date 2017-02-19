@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -55,17 +55,17 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
 
 
     CTxMemPool testPool(CFeeRate(0));
-    std::vector<std::shared_ptr<const CTransaction>> removed;
 
     // Nothing in pool, remove should do nothing:
-    testPool.removeRecursive(txParent, &removed);
-    BOOST_CHECK_EQUAL(removed.size(), 0);
+    unsigned int poolSize = testPool.size();
+    testPool.removeRecursive(txParent);
+    BOOST_CHECK_EQUAL(testPool.size(), poolSize);
 
     // Just the parent:
     testPool.addUnchecked(txParent.GetHash(), entry.FromTx(txParent));
-    testPool.removeRecursive(txParent, &removed);
-    BOOST_CHECK_EQUAL(removed.size(), 1);
-    removed.clear();
+    poolSize = testPool.size();
+    testPool.removeRecursive(txParent);
+    BOOST_CHECK_EQUAL(testPool.size(), poolSize - 1);
     
     // Parent, children, grandchildren:
     testPool.addUnchecked(txParent.GetHash(), entry.FromTx(txParent));
@@ -75,19 +75,21 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
         testPool.addUnchecked(txGrandChild[i].GetHash(), entry.FromTx(txGrandChild[i]));
     }
     // Remove Child[0], GrandChild[0] should be removed:
-    testPool.removeRecursive(txChild[0], &removed);
-    BOOST_CHECK_EQUAL(removed.size(), 2);
-    removed.clear();
+    poolSize = testPool.size();
+    testPool.removeRecursive(txChild[0]);
+    BOOST_CHECK_EQUAL(testPool.size(), poolSize - 2);
     // ... make sure grandchild and child are gone:
-    testPool.removeRecursive(txGrandChild[0], &removed);
-    BOOST_CHECK_EQUAL(removed.size(), 0);
-    testPool.removeRecursive(txChild[0], &removed);
-    BOOST_CHECK_EQUAL(removed.size(), 0);
+    poolSize = testPool.size();
+    testPool.removeRecursive(txGrandChild[0]);
+    BOOST_CHECK_EQUAL(testPool.size(), poolSize);
+    poolSize = testPool.size();
+    testPool.removeRecursive(txChild[0]);
+    BOOST_CHECK_EQUAL(testPool.size(), poolSize);
     // Remove parent, all children/grandchildren should go:
-    testPool.removeRecursive(txParent, &removed);
-    BOOST_CHECK_EQUAL(removed.size(), 5);
+    poolSize = testPool.size();
+    testPool.removeRecursive(txParent);
+    BOOST_CHECK_EQUAL(testPool.size(), poolSize - 5);
     BOOST_CHECK_EQUAL(testPool.size(), 0);
-    removed.clear();
 
     // Add children and grandchildren, but NOT the parent (simulate the parent being in a block)
     for (int i = 0; i < 3; i++)
@@ -97,10 +99,10 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
     }
     // Now remove the parent, as might happen if a block-re-org occurs but the parent cannot be
     // put into the mempool (maybe because it is non-standard):
-    testPool.removeRecursive(txParent, &removed);
-    BOOST_CHECK_EQUAL(removed.size(), 6);
+    poolSize = testPool.size();
+    testPool.removeRecursive(txParent);
+    BOOST_CHECK_EQUAL(testPool.size(), poolSize - 6);
     BOOST_CHECK_EQUAL(testPool.size(), 0);
-    removed.clear();
 }
 
 template<typename name>
@@ -118,7 +120,6 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
 {
     CTxMemPool pool(CFeeRate(0));
     TestMemPoolEntryHelper entry;
-    entry.hadNoDependencies = true;
 
     /* 3rd highest fee */
     CMutableTransaction tx1 = CMutableTransaction();
@@ -321,7 +322,6 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
 {
     CTxMemPool pool(CFeeRate(0));
     TestMemPoolEntryHelper entry;
-    entry.hadNoDependencies = true;
 
     /* 3rd highest fee */
     CMutableTransaction tx1 = CMutableTransaction();
@@ -388,7 +388,12 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
 
     pool.addUnchecked(tx6.GetHash(), entry.Fee(0LL).FromTx(tx6));
     BOOST_CHECK_EQUAL(pool.size(), 6);
-    sortedOrder.push_back(tx6.GetHash().ToString());
+    // Ties are broken by hash
+    if (tx3.GetHash() < tx6.GetHash())
+        sortedOrder.push_back(tx6.GetHash().ToString());
+    else
+        sortedOrder.insert(sortedOrder.end()-1,tx6.GetHash().ToString());
+
     CheckSort<ancestor_score>(pool, sortedOrder);
 
     CMutableTransaction tx7 = CMutableTransaction();
@@ -410,12 +415,16 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
     CheckSort<ancestor_score>(pool, sortedOrder);
 
     /* after tx6 is mined, tx7 should move up in the sort */
-    std::vector<CTransaction> vtx;
-    vtx.push_back(tx6);
-    pool.removeForBlock(vtx, 1, NULL, false);
+    std::vector<CTransactionRef> vtx;
+    vtx.push_back(MakeTransactionRef(tx6));
+    pool.removeForBlock(vtx, 1);
 
     sortedOrder.erase(sortedOrder.begin()+1);
-    sortedOrder.pop_back();
+    // Ties are broken by hash
+    if (tx3.GetHash() < tx6.GetHash())
+        sortedOrder.pop_back();
+    else
+        sortedOrder.erase(sortedOrder.end()-2);
     sortedOrder.insert(sortedOrder.begin(), tx7.GetHash().ToString());
     CheckSort<ancestor_score>(pool, sortedOrder);
 }
@@ -546,8 +555,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     pool.addUnchecked(tx5.GetHash(), entry.Fee(1000LL).FromTx(tx5, &pool));
     pool.addUnchecked(tx7.GetHash(), entry.Fee(9000LL).FromTx(tx7, &pool));
 
-    std::vector<CTransaction> vtx;
-    std::vector<std::shared_ptr<const CTransaction>> conflicts;
+    std::vector<CTransactionRef> vtx;
     SetMockTime(42);
     SetMockTime(42 + CTxMemPool::ROLLING_FEE_HALFLIFE);
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), maxFeeRateRemoved.GetFeePerK() + 1000);

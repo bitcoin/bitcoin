@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2015 The Bitcoin Core developers
+// Copyright (c) 2012-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include "addrman.h"
@@ -9,8 +9,6 @@
 #include "hash.h"
 #include "netbase.h"
 #include "random.h"
-
-using namespace std;
 
 class CAddrManTest : public CAddrMan
 {
@@ -299,7 +297,7 @@ BOOST_AUTO_TEST_CASE(addrman_find)
     // Test 18; Find does not discriminate by port number.
     CAddrInfo* info2 = addrman.Find(addr2);
     BOOST_CHECK(info2);
-    if (info2)
+    if (info2 && info1)
         BOOST_CHECK(info2->ToString() == info1->ToString());
 
     // Test 19: Find returns another IP matching what we searched on.
@@ -365,7 +363,7 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
     // Test 22: Sanity check, GetAddr should never return anything if addrman
     //  is empty.
     BOOST_CHECK(addrman.size() == 0);
-    vector<CAddress> vAddr1 = addrman.GetAddr();
+    std::vector<CAddress> vAddr1 = addrman.GetAddr();
     BOOST_CHECK(vAddr1.size() == 0);
 
     CAddress addr1 = CAddress(ResolveService("250.250.2.1", 8333), NODE_NONE);
@@ -401,7 +399,7 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
         int octet1 = i % 256;
         int octet2 = (i / 256) % 256;
         int octet3 = (i / (256 * 2)) % 256;
-        string strAddr = boost::to_string(octet1) + "." + boost::to_string(octet2) + "." + boost::to_string(octet3) + ".23";
+        std::string strAddr = boost::to_string(octet1) + "." + boost::to_string(octet2) + "." + boost::to_string(octet3) + ".23";
         CAddress addr = CAddress(ResolveService(strAddr), NODE_NONE);
         
         // Ensure that for all addrs in addrman, isTerrible == false.
@@ -410,7 +408,7 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
         if (i % 8 == 0)
             addrman.Good(addr);
     }
-    vector<CAddress> vAddr = addrman.GetAddr();
+    std::vector<CAddress> vAddr = addrman.GetAddr();
 
     size_t percent23 = (addrman.size() * 23) / 100;
     BOOST_CHECK(vAddr.size() == percent23);
@@ -452,7 +450,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
     BOOST_CHECK(info1.GetKey() != info2.GetKey());
     BOOST_CHECK(info1.GetTriedBucket(nKey1) != info2.GetTriedBucket(nKey1));
 
-    set<int> buckets;
+    std::set<int> buckets;
     for (int i = 0; i < 255; i++) {
         CAddrInfo infoi = CAddrInfo(
             CAddress(ResolveService("250.1.1." + boost::to_string(i)), NODE_NONE),
@@ -505,7 +503,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
     BOOST_CHECK(info1.GetKey() != info2.GetKey());
     BOOST_CHECK(info1.GetNewBucket(nKey1) == info2.GetNewBucket(nKey1));
 
-    set<int> buckets;
+    std::set<int> buckets;
     for (int i = 0; i < 255; i++) {
         CAddrInfo infoi = CAddrInfo(
             CAddress(ResolveService("250.1.1." + boost::to_string(i)), NODE_NONE),

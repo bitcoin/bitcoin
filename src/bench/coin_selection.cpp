@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2015 The Bitcoin Core developers
+// Copyright (c) 2012-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,9 +8,7 @@
 #include <boost/foreach.hpp>
 #include <set>
 
-using namespace std;
-
-static void addCoin(const CAmount& nValue, const CWallet& wallet, vector<COutput>& vCoins)
+static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<COutput>& vCoins)
 {
     int nInput = 0;
 
@@ -19,7 +17,7 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, vector<COutput
     tx.nLockTime = nextLockTime++; // so all transactions get different hashes
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
-    CWalletTx* wtx = new CWalletTx(&wallet, tx);
+    CWalletTx* wtx = new CWalletTx(&wallet, MakeTransactionRef(std::move(tx)));
 
     int nAge = 6 * 24;
     COutput output(wtx, nInput, nAge, true, true);
@@ -36,7 +34,7 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, vector<COutput
 static void CoinSelection(benchmark::State& state)
 {
     const CWallet wallet;
-    vector<COutput> vCoins;
+    std::vector<COutput> vCoins;
     LOCK(wallet.cs_wallet);
 
     while (state.KeepRunning()) {
@@ -50,9 +48,9 @@ static void CoinSelection(benchmark::State& state)
             addCoin(1000 * COIN, wallet, vCoins);
         addCoin(3 * COIN, wallet, vCoins);
 
-        set<pair<const CWalletTx*, unsigned int> > setCoinsRet;
+        std::set<std::pair<const CWalletTx*, unsigned int> > setCoinsRet;
         CAmount nValueRet;
-        bool success = wallet.SelectCoinsMinConf(1003 * COIN, 1, 6, vCoins, setCoinsRet, nValueRet);
+        bool success = wallet.SelectCoinsMinConf(1003 * COIN, 1, 6, 0, vCoins, setCoinsRet, nValueRet);
         assert(success);
         assert(nValueRet == 1003 * COIN);
         assert(setCoinsRet.size() == 2);

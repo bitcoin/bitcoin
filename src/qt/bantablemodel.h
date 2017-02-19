@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -40,6 +40,7 @@ class BanTableModel : public QAbstractTableModel
 
 public:
     explicit BanTableModel(ClientModel *parent = 0);
+    ~BanTableModel();
     void startAutoRefresh();
     void stopAutoRefresh();
 
@@ -66,7 +67,7 @@ public Q_SLOTS:
 private:
     ClientModel *clientModel;
     QStringList columns;
-    BanTablePriv *priv;
+    std::unique_ptr<BanTablePriv> priv;
 };
 
 #endif // BITCOIN_QT_BANTABLEMODEL_H

@@ -1,4 +1,4 @@
-// Copyright (c) 2015 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -248,6 +248,10 @@ public:
         }
     }
 
+    prevector(prevector<N, T, Size, Diff>&& other) : _size(0) {
+        swap(other);
+    }
+
     prevector& operator=(const prevector<N, T, Size, Diff>& other) {
         if (&other == this) {
             return *this;
@@ -260,6 +264,11 @@ public:
             new(static_cast<void*>(item_ptr(size() - 1))) T(*it);
             ++it;
         }
+        return *this;
+    }
+
+    prevector& operator=(prevector<N, T, Size, Diff>&& other) {
+        swap(other);
         return *this;
     }
 

@@ -96,13 +96,13 @@ pass `--with-incompatible-bdb` to configure.
 
 See the section "Disable-wallet mode" to build Bitcoin Core without wallet.
 
-Optional:
+Optional (see --with-miniupnpc and --enable-upnp-default):
 
-    sudo apt-get install libminiupnpc-dev (see --with-miniupnpc and --enable-upnp-default)
+    sudo apt-get install libminiupnpc-dev
 
-ZMQ dependencies:
+ZMQ dependencies (provides ZMQ API 4.x):
 
-    sudo apt-get install libzmq3-dev (provides ZMQ API 4.x)
+    sudo apt-get install libzmq3-dev
 
 Dependencies for the GUI: Ubuntu & Debian
 -----------------------------------------
@@ -315,7 +315,7 @@ For further documentation on the depends system see [README.md](../depends/READM
 Building on FreeBSD
 --------------------
 
-(Updated as of FreeBSD 10.3)
+(Updated as of FreeBSD 11.0)
 
 Clang is installed by default as `cc` compiler, this makes it easier to get
 started than on [OpenBSD](build-openbsd.md). Installing dependencies:
@@ -337,7 +337,7 @@ with 4.8-built Bitcoin Core is needed follow the steps under "Berkeley DB" above
 Then build using:
 
     ./autogen.sh
-    ./configure --with-incompatible-bdb CPPFLAGS=-I/usr/local/include/db5 LDFLAGS=-L/usr/local/lib/db5
+    ./configure --with-incompatible-bdb BDB_CFLAGS="-I/usr/local/include/db5" BDB_LIBS="-L/usr/local/lib -ldb_cxx-5"
     make
 
 *Note on debugging*: The version of `gdb` installed by default is [ancient and considered harmful](https://wiki.freebsd.org/GdbRetirement).

@@ -1,4 +1,4 @@
-Bitcoin Core 0.13.99
+Bitcoin Core 0.14.99
 =====================
 
 Setup
@@ -53,7 +53,6 @@ The Bitcoin repo's [root README](/README.md) contains relevant information on th
 - [Source Code Documentation (External Link)](https://dev.visucore.com/bitcoin/doxygen/)
 - [Translation Process](translation_process.md)
 - [Translation Strings Policy](translation_strings_policy.md)
-- [Unit Tests](unit-tests.md)
 - [Travis CI](travis-ci.md)
 - [Unauthenticated REST Interface](REST-interface.md)
 - [Shared Libraries](shared-libraries.md)
@@ -69,6 +68,7 @@ The Bitcoin repo's [root README](/README.md) contains relevant information on th
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)
 - [Files](files.md)
+- [Fuzz-testing](fuzzing.md)
 - [Reduce Traffic](reduce-traffic.md)
 - [Tor Support](tor.md)
 - [Init Scripts (systemd/upstart/openrc)](init.md)

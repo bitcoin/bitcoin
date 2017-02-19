@@ -9,6 +9,17 @@
         <source>&amp;Delete</source>
         <translation>Ө&amp;чүрүү</translation>
     </message>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    <message>
+        <source>Address</source>
+        <translation>Дарек</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(аты жок)</translation>
+    </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -65,6 +76,10 @@
         <source>Date</source>
         <translation>Дата</translation>
     </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(аты жок)</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -72,7 +87,7 @@
         <source>&amp;Address</source>
         <translation>&amp;Дарек</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     </context>
@@ -89,6 +104,9 @@
         <source>Error</source>
         <translation>Ката</translation>
     </message>
+    </context>
+<context>
+    <name>ModalOverlay</name>
     </context>
 <context>
     <name>OpenURIDialog</name>
@@ -136,10 +154,19 @@
     <name>OverviewPage</name>
     </context>
 <context>
+    <name>PaymentServer</name>
+    </context>
+<context>
     <name>PeerTableModel</name>
     </context>
 <context>
     <name>QObject</name>
+    </context>
+<context>
+    <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRImageWidget</name>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -181,6 +208,29 @@
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Address</source>
+        <translation>Дарек</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Билдирүү</translation>
+    </message>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Дата</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Билдирүү</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(аты жок)</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -191,6 +241,10 @@
     <message>
         <source>S&amp;end</source>
         <translation>&amp;Жөнөтүү</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(аты жок)</translation>
     </message>
 </context>
 <context>
@@ -203,6 +257,9 @@
         <source>Message:</source>
         <translation>Билдирүү:</translation>
     </message>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
     </context>
 <context>
     <name>ShutdownWindow</name>
@@ -225,10 +282,56 @@
     <name>TrafficGraphWidget</name>
     </context>
 <context>
+    <name>TransactionDesc</name>
+    <message>
+        <source>%1/offline</source>
+        <translation>%1/тармакта эмес</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>Дата</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Билдирүү</translation>
+    </message>
+    </context>
+<context>
     <name>TransactionDescDialog</name>
     </context>
 <context>
+    <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Дата</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(аты жок)</translation>
+    </message>
+    </context>
+<context>
+    <name>TransactionView</name>
+    <message>
+        <source>Date</source>
+        <translation>Дата</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Дарек</translation>
+    </message>
+    </context>
+<context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
     </context>
 <context>
     <name>bitcoin-core</name>

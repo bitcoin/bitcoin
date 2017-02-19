@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -159,14 +159,24 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         std::string data_to_verify;                     // Everything but the signature
         rcopy.SerializeToString(&data_to_verify);
 
-        EVP_MD_CTX ctx;
+#if HAVE_DECL_EVP_MD_CTX_NEW
+        EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+        if (!ctx) throw SSLVerifyError("Error allocating OpenSSL context.");
+#else
+        EVP_MD_CTX _ctx;
+        EVP_MD_CTX *ctx;
+        ctx = &_ctx;
+#endif
         EVP_PKEY *pubkey = X509_get_pubkey(signing_cert);
-        EVP_MD_CTX_init(&ctx);
-        if (!EVP_VerifyInit_ex(&ctx, digestAlgorithm, NULL) ||
-            !EVP_VerifyUpdate(&ctx, data_to_verify.data(), data_to_verify.size()) ||
-            !EVP_VerifyFinal(&ctx, (const unsigned char*)paymentRequest.signature().data(), (unsigned int)paymentRequest.signature().size(), pubkey)) {
+        EVP_MD_CTX_init(ctx);
+        if (!EVP_VerifyInit_ex(ctx, digestAlgorithm, NULL) ||
+            !EVP_VerifyUpdate(ctx, data_to_verify.data(), data_to_verify.size()) ||
+            !EVP_VerifyFinal(ctx, (const unsigned char*)paymentRequest.signature().data(), (unsigned int)paymentRequest.signature().size(), pubkey)) {
             throw SSLVerifyError("Bad signature, invalid payment request.");
         }
+#if HAVE_DECL_EVP_MD_CTX_NEW
+        EVP_MD_CTX_free(ctx);
+#endif
 
         // OpenSSL API for getting human printable strings from certs is baroque.
         int textlen = X509_NAME_get_text_by_NID(certname, NID_commonName, NULL, 0);

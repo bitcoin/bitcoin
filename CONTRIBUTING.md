@@ -38,7 +38,7 @@ fixes or code moves with actual code changes.
 Commit messages should be verbose by default consisting of a short subject line
 (50 chars max), a blank line and detailed explanatory text as separate
 paragraph(s); unless the title alone is self-explanatory (like "Corrected typo
-in main.cpp") then a single title line is sufficient. Commit messages should be
+in init.cpp") then a single title line is sufficient. Commit messages should be
 helpful to people reading your code in the future, so explain the reasoning for
 your decisions. Further explanation [here](http://chris.beams.io/posts/git-commit/).
 
@@ -53,12 +53,33 @@ about Git.
   - Create pull request
 
 The title of the pull request should be prefixed by the component or area that
-the pull request affects. Examples:
+the pull request affects. Valid areas as:
+
+  - *Consensus* for changes to consensus critical code
+  - *Docs* for changes to the documentation
+  - *Qt* for changes to bitcoin-qt
+  - *Mining* for changes to the mining code
+  - *Net* or *P2P* for changes to the peer-to-peer network code
+  - *RPC/REST/ZMQ* for changes to the RPC, REST or ZMQ APIs
+  - *Scripts and tools* for changes to the scripts and tools
+  - *Tests* for changes to the bitcoin unit tests or QA tests
+  - *Trivial* should **only** be used for PRs that do not change generated
+    executable code. Notably, refactors (change of function arguments and code
+    reorganization) and changes in behavior should **not** be marked as trivial.
+    Examples of trivial PRs are changes to:
+    - comments
+    - whitespace
+    - variable names
+    - logging and messages
+  - *Utils and libraries* for changes to the utils and libraries
+  - *Wallet* for changes to the wallet code
+
+Examples:
 
     Consensus: Add new opcode for BIP-XXXX OP_CHECKAWESOMESIG
     Net: Automatically create hidden service, listen on Tor
     Qt: Add feed bump button
-    Trivial: Fix typo in main.cpp
+    Trivial: Fix typo in init.cpp
 
 If a pull request is specifically not to be considered for merging (yet) please
 prefix the title with [WIP] or use [Tasks Lists](https://help.github.com/articles/basic-writing-and-formatting-syntax/#task-lists)
@@ -173,7 +194,7 @@ request. Typically reviewers will review the code for obvious errors, as well as
 test out the patch set and opine on the technical merits of the patch. Project
 maintainers take into account the peer review when determining if there is
 consensus to merge a pull request (remember that discussions may have been
-spread out over github, mailing list and IRC discussions). The following
+spread out over GitHub, mailing list and IRC discussions). The following
 language is used within pull-request comments:
 
   - ACK means "I have tested the code and I agree it should be merged";

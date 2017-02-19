@@ -520,7 +520,7 @@ void test_num_mod(void) {
     secp256k1_num order, n;
 
     /* check that 0 mod anything is 0 */
-    random_scalar_order_test(&s); 
+    random_scalar_order_test(&s);
     secp256k1_scalar_get_num(&order, &s);
     secp256k1_scalar_set_int(&s, 0);
     secp256k1_scalar_get_num(&n, &s);
@@ -535,7 +535,7 @@ void test_num_mod(void) {
     CHECK(secp256k1_num_is_zero(&n));
 
     /* check that increasing the number past 2^256 does not break this */
-    random_scalar_order_test(&s); 
+    random_scalar_order_test(&s);
     secp256k1_scalar_get_num(&n, &s);
     /* multiply by 2^8, which'll test this case with high probability */
     for (i = 0; i < 8; ++i) {
@@ -568,7 +568,7 @@ void test_num_jacobi(void) {
     /* we first need a scalar which is not a multiple of 5 */
     do {
         secp256k1_num fiven;
-        random_scalar_order_test(&sqr); 
+        random_scalar_order_test(&sqr);
         secp256k1_scalar_get_num(&fiven, &five);
         secp256k1_scalar_get_num(&n, &sqr);
         secp256k1_num_mod(&n, &fiven);
@@ -587,7 +587,7 @@ void test_num_jacobi(void) {
 
     /** test with secp group order as order */
     secp256k1_scalar_order_get_num(&order);
-    random_scalar_order_test(&sqr); 
+    random_scalar_order_test(&sqr);
     secp256k1_scalar_sqr(&sqr, &sqr);
     /* test residue */
     secp256k1_scalar_get_num(&n, &sqr);
@@ -1733,18 +1733,18 @@ void run_field_inv_all_var(void) {
     secp256k1_fe x[16], xi[16], xii[16];
     int i;
     /* Check it's safe to call for 0 elements */
-    secp256k1_fe_inv_all_var(0, xi, x);
+    secp256k1_fe_inv_all_var(xi, x, 0);
     for (i = 0; i < count; i++) {
         size_t j;
         size_t len = secp256k1_rand_int(15) + 1;
         for (j = 0; j < len; j++) {
             random_fe_non_zero(&x[j]);
         }
-        secp256k1_fe_inv_all_var(len, xi, x);
+        secp256k1_fe_inv_all_var(xi, x, len);
         for (j = 0; j < len; j++) {
             CHECK(check_fe_inverse(&x[j], &xi[j]));
         }
-        secp256k1_fe_inv_all_var(len, xii, xi);
+        secp256k1_fe_inv_all_var(xii, xi, len);
         for (j = 0; j < len; j++) {
             CHECK(check_fe_equal(&x[j], &xii[j]));
         }
@@ -1930,7 +1930,7 @@ void test_ge(void) {
                 zs[i] = gej[i].z;
             }
         }
-        secp256k1_fe_inv_all_var(4 * runs + 1, zinv, zs);
+        secp256k1_fe_inv_all_var(zinv, zs, 4 * runs + 1);
         free(zs);
     }
 
@@ -2050,8 +2050,8 @@ void test_ge(void) {
                 secp256k1_fe_mul(&zr[i + 1], &zinv[i], &gej[i + 1].z);
             }
         }
-        secp256k1_ge_set_table_gej_var(4 * runs + 1, ge_set_table, gej, zr);
-        secp256k1_ge_set_all_gej_var(4 * runs + 1, ge_set_all, gej, &ctx->error_callback);
+        secp256k1_ge_set_table_gej_var(ge_set_table, gej, zr, 4 * runs + 1);
+        secp256k1_ge_set_all_gej_var(ge_set_all, gej, 4 * runs + 1, &ctx->error_callback);
         for (i = 0; i < 4 * runs + 1; i++) {
             secp256k1_fe s;
             random_fe_non_zero(&s);

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2015 The Bitcoin Core developers
+// Copyright (c) 2012-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,9 +11,51 @@
 
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
-
 BOOST_FIXTURE_TEST_SUITE(serialize_tests, BasicTestingSetup)
+
+class CSerializeMethodsTestSingle
+{
+protected:
+    int intval;
+    bool boolval;
+    std::string stringval;
+    const char* charstrval;
+    CTransactionRef txval;
+public:
+    CSerializeMethodsTestSingle() = default;
+    CSerializeMethodsTestSingle(int intvalin, bool boolvalin, std::string stringvalin, const char* charstrvalin, CTransaction txvalin) : intval(intvalin), boolval(boolvalin), stringval(std::move(stringvalin)), charstrval(charstrvalin), txval(MakeTransactionRef(txvalin)){}
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(intval);
+        READWRITE(boolval);
+        READWRITE(stringval);
+        READWRITE(FLATDATA(charstrval));
+        READWRITE(txval);
+    }
+
+    bool operator==(const CSerializeMethodsTestSingle& rhs)
+    {
+        return  intval == rhs.intval && \
+                boolval == rhs.boolval && \
+                stringval == rhs.stringval && \
+                strcmp(charstrval, rhs.charstrval) == 0 && \
+                *txval == *rhs.txval;
+    }
+};
+
+class CSerializeMethodsTestMany : public CSerializeMethodsTestSingle
+{
+public:
+    using CSerializeMethodsTestSingle::CSerializeMethodsTestSingle;
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITEMANY(intval, boolval, stringval, FLATDATA(charstrval), txval);
+    }
+};
 
 BOOST_AUTO_TEST_CASE(sizes)
 {
@@ -48,7 +90,7 @@ BOOST_AUTO_TEST_CASE(sizes)
 
 BOOST_AUTO_TEST_CASE(floats_conversion)
 {
-    // Choose values that map unambigiously to binary floating point to avoid
+    // Choose values that map unambiguously to binary floating point to avoid
     // rounding issues at the compiler side.
     BOOST_CHECK_EQUAL(ser_uint32_to_float(0x00000000), 0.0F);
     BOOST_CHECK_EQUAL(ser_uint32_to_float(0x3f000000), 0.5F);
@@ -67,7 +109,7 @@ BOOST_AUTO_TEST_CASE(floats_conversion)
 
 BOOST_AUTO_TEST_CASE(doubles_conversion)
 {
-    // Choose values that map unambigiously to binary floating point to avoid
+    // Choose values that map unambiguously to binary floating point to avoid
     // rounding issues at the compiler side.
     BOOST_CHECK_EQUAL(ser_uint64_to_double(0x0000000000000000ULL), 0.0);
     BOOST_CHECK_EQUAL(ser_uint64_to_double(0x3fe0000000000000ULL), 0.5);
@@ -184,7 +226,7 @@ BOOST_AUTO_TEST_CASE(varints_bitpatterns)
 BOOST_AUTO_TEST_CASE(compactsize)
 {
     CDataStream ss(SER_DISK, 0);
-    vector<char>::size_type i, j;
+    std::vector<char>::size_type i, j;
 
     for (i = 1; i <= MAX_SIZE; i *= 2)
     {
@@ -217,7 +259,7 @@ BOOST_AUTO_TEST_CASE(noncanonical)
     // Write some non-canonical CompactSize encodings, and
     // make sure an exception is thrown when read back.
     CDataStream ss(SER_DISK, 0);
-    vector<char>::size_type n;
+    std::vector<char>::size_type n;
 
     // zero encoded with three bytes:
     ss.write("\xfd\x00\x00", 3);
@@ -295,6 +337,32 @@ BOOST_AUTO_TEST_CASE(insert_delete)
     CSerializeData d;
     ss.GetAndClear(d);
     BOOST_CHECK_EQUAL(ss.size(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(class_methods)
+{
+    int intval(100);
+    bool boolval(true);
+    std::string stringval("testing");
+    const char* charstrval("testing charstr");
+    CMutableTransaction txval;
+    CSerializeMethodsTestSingle methodtest1(intval, boolval, stringval, charstrval, txval);
+    CSerializeMethodsTestMany methodtest2(intval, boolval, stringval, charstrval, txval);
+    CSerializeMethodsTestSingle methodtest3;
+    CSerializeMethodsTestMany methodtest4;
+    CDataStream ss(SER_DISK, PROTOCOL_VERSION);
+    BOOST_CHECK(methodtest1 == methodtest2);
+    ss << methodtest1;
+    ss >> methodtest4;
+    ss << methodtest2;
+    ss >> methodtest3;
+    BOOST_CHECK(methodtest1 == methodtest2);
+    BOOST_CHECK(methodtest2 == methodtest3);
+    BOOST_CHECK(methodtest3 == methodtest4);
+
+    CDataStream ss2(SER_DISK, PROTOCOL_VERSION, intval, boolval, stringval, FLATDATA(charstrval), txval);
+    ss2 >> methodtest3;
+    BOOST_CHECK(methodtest3 == methodtest4);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

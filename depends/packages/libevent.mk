@@ -1,13 +1,11 @@
 package=libevent
-$(package)_version=2.0.22
-$(package)_download_path=https://github.com/libevent/libevent/releases/download/release-2.0.22-stable
-$(package)_file_name=$(package)-$($(package)_version)-stable.tar.gz
-$(package)_sha256_hash=71c2c49f0adadacfdbe6332a372c38cf9c8b7895bb73dabeaa53cdcc1d4e1fa3
-$(package)_patches=reuseaddr.patch libevent-2-fixes.patch
+$(package)_version=2.1.7
+$(package)_download_path=https://github.com/libevent/libevent/archive/
+$(package)_file_name=release-$($(package)_version)-rc.tar.gz
+$(package)_sha256_hash=548362d202e22fe24d4c3fad38287b4f6d683e6c21503341373b89785fa6f991
 
 define $(package)_preprocess_cmds
-  patch -p1 < $($(package)_patch_dir)/reuseaddr.patch && \
-  patch -p1 < $($(package)_patch_dir)/libevent-2-fixes.patch
+  ./autogen.sh
 endef
 
 define $(package)_set_vars

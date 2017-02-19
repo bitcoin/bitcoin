@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2015 The Bitcoin Core developers
+// Copyright (c) 2012-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     {
         CMutableTransaction tx(wtx);
         --tx.nLockTime;  // Just to change the hash :)
-        *static_cast<CTransaction*>(&wtx) = CTransaction(tx);
+        wtx.SetTx(MakeTransactionRef(std::move(tx)));
     }
     pwalletMain->AddToWallet(wtx);
     vpwtx.push_back(&pwalletMain->mapWallet[wtx.GetHash()]);
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     {
         CMutableTransaction tx(wtx);
         --tx.nLockTime;  // Just to change the hash :)
-        *static_cast<CTransaction*>(&wtx) = CTransaction(tx);
+        wtx.SetTx(MakeTransactionRef(std::move(tx)));
     }
     pwalletMain->AddToWallet(wtx);
     vpwtx.push_back(&pwalletMain->mapWallet[wtx.GetHash()]);

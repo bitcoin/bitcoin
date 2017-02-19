@@ -25,7 +25,14 @@
         <source>&amp;Delete</source>
         <translation>&amp;سڕینەوە</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    <message>
+        <source>Address</source>
+        <translation>ناوونیشان</translation>
+    </message>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     </context>
@@ -70,10 +77,6 @@
         <translation>کۆ:</translation>
     </message>
     <message>
-        <source>Priority:</source>
-        <translation>لەپێشی:</translation>
-    </message>
-    <message>
         <source>Fee:</source>
         <translation>تێچوون:</translation>
     </message>
@@ -86,10 +89,14 @@
         <translation>رێکەت</translation>
     </message>
     <message>
-        <source>Priority</source>
-        <translation>لەپێشی</translation>
+        <source>yes</source>
+        <translation>بەڵێ</translation>
     </message>
-</context>
+    <message>
+        <source>no</source>
+        <translation>نەخێر</translation>
+    </message>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     </context>
@@ -119,6 +126,9 @@
     </message>
     </context>
 <context>
+    <name>ModalOverlay</name>
+    </context>
+<context>
     <name>OpenURIDialog</name>
     </context>
 <context>
@@ -136,6 +146,9 @@
     </message>
     </context>
 <context>
+    <name>PaymentServer</name>
+    </context>
+<context>
     <name>PeerTableModel</name>
     </context>
 <context>
@@ -146,18 +159,40 @@
     </message>
     </context>
 <context>
+    <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRImageWidget</name>
+    </context>
+<context>
     <name>RPCConsole</name>
     <message>
         <source>&amp;Information</source>
         <translation>&amp;زانیاری</translation>
     </message>
     <message>
+        <source>General</source>
+        <translation>گشتی</translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <translation>تۆڕ</translation>
+    </message>
+    <message>
         <source>Name</source>
         <translation>ناو</translation>
     </message>
     <message>
+        <source>Sent</source>
+        <translation>نێدرا</translation>
+    </message>
+    <message>
         <source>Version</source>
         <translation>وەشان</translation>
+    </message>
+    <message>
+        <source>Services</source>
+        <translation>خزمەتگوزاریەکان</translation>
     </message>
     <message>
         <source>&amp;Open</source>
@@ -170,6 +205,34 @@
     <message>
         <source>Totals</source>
         <translation>گشتییەکان</translation>
+    </message>
+    <message>
+        <source>In:</source>
+        <translation>لە ناو</translation>
+    </message>
+    <message>
+        <source>Out:</source>
+        <translation>لەدەرەوە</translation>
+    </message>
+    <message>
+        <source>1 &amp;hour</source>
+        <translation>1&amp;سات</translation>
+    </message>
+    <message>
+        <source>1 &amp;day</source>
+        <translation>1&amp;ڕۆژ</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1&amp;هەفتە</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1&amp;ساڵ</translation>
+    </message>
+    <message>
+        <source>never</source>
+        <translation>هەرگیز</translation>
     </message>
     <message>
         <source>Yes</source>
@@ -202,19 +265,30 @@
         <source>Remove</source>
         <translation>سڕینەوە</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Address</source>
+        <translation>ناوونیشان</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>سەرجەم</translation>
+    </message>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>رێکەت</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Amount:</source>
         <translation>کۆ:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>لەپێشی:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -233,6 +307,13 @@
     </message>
     </context>
 <context>
+    <name>SendConfirmationDialog</name>
+    <message>
+        <source>Yes</source>
+        <translation>بەڵێ</translation>
+    </message>
+</context>
+<context>
     <name>ShutdownWindow</name>
     </context>
 <context>
@@ -245,10 +326,52 @@
     <name>TrafficGraphWidget</name>
     </context>
 <context>
+    <name>TransactionDesc</name>
+    <message>
+        <source>Date</source>
+        <translation>رێکەت</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>سەرجەم</translation>
+    </message>
+    </context>
+<context>
     <name>TransactionDescDialog</name>
     </context>
 <context>
+    <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>رێکەت</translation>
+    </message>
+    </context>
+<context>
+    <name>TransactionView</name>
+    <message>
+        <source>Date</source>
+        <translation>رێکەت</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>ناوونیشان</translation>
+    </message>
+    </context>
+<context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;هەناردن</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>

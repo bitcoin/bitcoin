@@ -14,14 +14,14 @@ class CTxMemPool;
 // Dumb helper to handle CTransaction compression at serialize-time
 struct TransactionCompressor {
 private:
-    CTransaction& tx;
+    CTransactionRef& tx;
 public:
-    TransactionCompressor(CTransaction& txIn) : tx(txIn) {}
+    TransactionCompressor(CTransactionRef& txIn) : tx(txIn) {}
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(tx); //TODO: Compress tx encoding
     }
 };
@@ -35,7 +35,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(blockhash);
         uint64_t indexes_size = (uint64_t)indexes.size();
         READWRITE(COMPACTSIZE(indexes_size));
@@ -72,7 +72,7 @@ class BlockTransactions {
 public:
     // A BlockTransactions message
     uint256 blockhash;
-    std::vector<CTransaction> txn;
+    std::vector<CTransactionRef> txn;
 
     BlockTransactions() {}
     BlockTransactions(const BlockTransactionsRequest& req) :
@@ -81,7 +81,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(blockhash);
         uint64_t txn_size = (uint64_t)txn.size();
         READWRITE(COMPACTSIZE(txn_size));
@@ -99,17 +99,17 @@ public:
     }
 };
 
-// Dumb serialization/storage-helper for CBlockHeaderAndShortTxIDs and PartiallyDownlaodedBlock
+// Dumb serialization/storage-helper for CBlockHeaderAndShortTxIDs and PartiallyDownloadedBlock
 struct PrefilledTransaction {
     // Used as an offset since last prefilled tx in CBlockHeaderAndShortTxIDs,
     // as a proper transaction-in-block-index in PartiallyDownloadedBlock
     uint16_t index;
-    CTransaction tx;
+    CTransactionRef tx;
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         uint64_t idx = index;
         READWRITE(COMPACTSIZE(idx));
         if (idx > std::numeric_limits<uint16_t>::max())
@@ -124,6 +124,8 @@ typedef enum ReadStatus_t
     READ_STATUS_OK,
     READ_STATUS_INVALID, // Invalid object, peer is sending bogus crap
     READ_STATUS_FAILED, // Failed to process object
+    READ_STATUS_CHECKBLOCK_FAILED, // Used only by FillBlock to indicate a
+                                   // failure in CheckBlock.
 } ReadStatus;
 
 class CBlockHeaderAndShortTxIDs {
@@ -155,7 +157,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(header);
         READWRITE(nonce);
 
@@ -191,16 +193,17 @@ public:
 
 class PartiallyDownloadedBlock {
 protected:
-    std::vector<std::shared_ptr<const CTransaction> > txn_available;
-    size_t prefilled_count = 0, mempool_count = 0;
+    std::vector<CTransactionRef> txn_available;
+    size_t prefilled_count = 0, mempool_count = 0, extra_count = 0;
     CTxMemPool* pool;
 public:
     CBlockHeader header;
     PartiallyDownloadedBlock(CTxMemPool* poolIn) : pool(poolIn) {}
 
-    ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock);
+    // extra_txn is a list of extra transactions to look at, in <witness hash, reference> form
+    ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<uint256, CTransactionRef>>& extra_txn);
     bool IsTxAvailable(size_t index) const;
-    ReadStatus FillBlock(CBlock& block, const std::vector<CTransaction>& vtx_missing) const;
+    ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing);
 };
 
 #endif

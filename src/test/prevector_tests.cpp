@@ -1,15 +1,15 @@
-// Copyright (c) 2015 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <vector>
 #include "prevector.h"
-#include "test_random.h"
 
 #include "serialize.h"
 #include "streams.h"
 
 #include "test/test_bitcoin.h"
+#include "test/test_random.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -169,6 +169,19 @@ public:
         pre_vector.swap(pre_vector_alt);
         test();
     }
+
+    void move() {
+        real_vector = std::move(real_vector_alt);
+        real_vector_alt.clear();
+        pre_vector = std::move(pre_vector_alt);
+        pre_vector_alt.clear();
+    }
+
+    void copy() {
+        real_vector = real_vector_alt;
+        pre_vector = pre_vector_alt;
+    }
+
     ~prevector_tester() {
         BOOST_CHECK_MESSAGE(passed, "insecure_rand_Rz: "
                 << rand_cache.Rz
@@ -240,8 +253,14 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
             if (((r >> 21) % 512) == 12) {
                 test.assign(insecure_rand() % 32, insecure_rand());
             }
-            if (((r >> 15) % 64) == 3) {
+            if (((r >> 15) % 8) == 3) {
                 test.swap();
+            }
+            if (((r >> 15) % 16) == 8) {
+                test.copy();
+            }
+            if (((r >> 15) % 32) == 18) {
+                test.move();
             }
         }
     }

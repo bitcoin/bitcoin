@@ -4,6 +4,7 @@
 
 TESTS += test/test_bitcoin
 bin_PROGRAMS += test/test_bitcoin
+noinst_PROGRAMS += test/test_bitcoin_fuzzy
 TEST_SRCDIR = test
 TEST_BINARY=test/test_bitcoin$(EXEEXT)
 
@@ -12,18 +13,54 @@ EXTRA_DIST += \
 	test/bctest.py \
 	test/bitcoin-util-test.py \
 	test/data/bitcoin-util-test.json \
-	test/data/blanktx.hex \
+	test/data/blanktxv1.hex \
+	test/data/blanktxv1.json \
+	test/data/blanktxv2.hex \
+	test/data/blanktxv2.json \
 	test/data/tt-delin1-out.hex \
+	test/data/tt-delin1-out.json \
 	test/data/tt-delout1-out.hex \
+	test/data/tt-delout1-out.json \
 	test/data/tt-locktime317000-out.hex \
+	test/data/tt-locktime317000-out.json \
 	test/data/tx394b54bb.hex \
 	test/data/txcreate1.hex \
+	test/data/txcreate1.json \
 	test/data/txcreate2.hex \
+	test/data/txcreate2.json \
 	test/data/txcreatedata1.hex \
+	test/data/txcreatedata1.json \
 	test/data/txcreatedata2.hex \
-	test/data/txcreatesign.hex \
+	test/data/txcreatedata2.json \
 	test/data/txcreatedata_seq0.hex \
-	test/data/txcreatedata_seq1.hex
+	test/data/txcreatedata_seq0.json \
+	test/data/txcreatedata_seq1.hex \
+	test/data/txcreatedata_seq1.json \
+	test/data/txcreatemultisig1.hex \
+	test/data/txcreatemultisig1.json \
+	test/data/txcreatemultisig2.hex \
+	test/data/txcreatemultisig2.json \
+	test/data/txcreatemultisig3.hex \
+	test/data/txcreatemultisig3.json \
+	test/data/txcreatemultisig4.hex \
+	test/data/txcreatemultisig4.json \
+	test/data/txcreateoutpubkey1.hex \
+	test/data/txcreateoutpubkey1.json \
+	test/data/txcreateoutpubkey2.hex \
+	test/data/txcreateoutpubkey2.json \
+	test/data/txcreateoutpubkey3.hex \
+	test/data/txcreateoutpubkey3.json \
+	test/data/txcreatescript1.hex \
+	test/data/txcreatescript1.json \
+	test/data/txcreatescript2.hex \
+	test/data/txcreatescript2.json \
+	test/data/txcreatescript3.hex \
+	test/data/txcreatescript3.json \
+	test/data/txcreatescript4.hex \
+	test/data/txcreatescript4.json \
+	test/data/txcreatesignv1.hex \
+	test/data/txcreatesignv1.json \
+	test/data/txcreatesignv2.hex
 
 JSON_TEST_FILES = \
   test/data/script_tests.json \
@@ -38,6 +75,7 @@ RAW_TEST_FILES =
 
 GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
 
+# test_bitcoin binary #
 BITCOIN_TESTS =\
   test/arith_uint256_tests.cpp \
   test/scriptnum10.h \
@@ -50,10 +88,11 @@ BITCOIN_TESTS =\
   test/bip32_tests.cpp \
   test/blockencodings_tests.cpp \
   test/bloom_tests.cpp \
-  test/Checkpoints_tests.cpp \
+  test/bswap_tests.cpp \
   test/coins_tests.cpp \
   test/compress_tests.cpp \
   test/crypto_tests.cpp \
+  test/cuckoocache_tests.cpp \
   test/DoS_tests.cpp \
   test/getarg_tests.cpp \
   test/hash_tests.cpp \
@@ -71,6 +110,7 @@ BITCOIN_TESTS =\
   test/policyestimator_tests.cpp \
   test/pow_tests.cpp \
   test/prevector_tests.cpp \
+  test/raii_event_tests.cpp \
   test/reverselock_tests.cpp \
   test/rpc_tests.cpp \
   test/sanity_tests.cpp \
@@ -85,6 +125,7 @@ BITCOIN_TESTS =\
   test/streams_tests.cpp \
   test/test_bitcoin.cpp \
   test/test_bitcoin.h \
+  test/test_random.h \
   test/testutil.cpp \
   test/testutil.h \
   test/timedata_tests.cpp \
@@ -105,9 +146,9 @@ BITCOIN_TESTS += \
 endif
 
 test_test_bitcoin_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
-test_test_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -I$(builddir)/test/ $(TESTDEFS)
+test_test_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -I$(builddir)/test/ $(TESTDEFS) $(EVENT_CFLAGS)
 test_test_bitcoin_LDADD = $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
-  $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1)
+  $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS)
 test_test_bitcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 if ENABLE_WALLET
 test_test_bitcoin_LDADD += $(LIBBITCOIN_WALLET)
@@ -119,6 +160,25 @@ test_test_bitcoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -s
 if ENABLE_ZMQ
 test_test_bitcoin_LDADD += $(ZMQ_LIBS)
 endif
+#
+
+# test_bitcoin_fuzzy binary #
+test_test_bitcoin_fuzzy_SOURCES = test/test_bitcoin_fuzzy.cpp
+test_test_bitcoin_fuzzy_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_test_bitcoin_fuzzy_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_test_bitcoin_fuzzy_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+
+test_test_bitcoin_fuzzy_LDADD = \
+  $(LIBUNIVALUE) \
+  $(LIBBITCOIN_SERVER) \
+  $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_CONSENSUS) \
+  $(LIBBITCOIN_CRYPTO) \
+  $(LIBSECP256K1)
+
+test_test_bitcoin_fuzzy_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+#
 
 nodist_test_test_bitcoin_SOURCES = $(GENERATED_TEST_FILES)
 
@@ -149,16 +209,10 @@ endif
 
 %.json.h: %.json
 	@$(MKDIR_P) $(@D)
-	@echo "namespace json_tests{" > $@
-	@echo "static unsigned const char $(*F)[] = {" >> $@
-	@$(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' >> $@
-	@echo "};};" >> $@
-	@echo "Generated $@"
-
-%.raw.h: %.raw
-	@$(MKDIR_P) $(@D)
-	@echo "namespace alert_tests{" > $@
-	@echo "static unsigned const char $(*F)[] = {" >> $@
-	@$(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' >> $@
-	@echo "};};" >> $@
+	@{ \
+	 echo "namespace json_tests{" && \
+	 echo "static unsigned const char $(*F)[] = {" && \
+	 $(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' && \
+	 echo "};};"; \
+	} > "$@.new" && mv -f "$@.new" "$@"
 	@echo "Generated $@"

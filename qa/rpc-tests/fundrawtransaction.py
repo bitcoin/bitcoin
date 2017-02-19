@@ -226,7 +226,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             assert(False)
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx, {'changeAddress': change, 'changePosition': 0})
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
-        out = dec_tx['vout'][0];
+        out = dec_tx['vout'][0]
         assert_equal(change, out['scriptPubKey']['addresses'][0])
 
 
@@ -484,6 +484,23 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.is_network_split=False
         self.sync_all()
 
+        # drain the keypool
+        self.nodes[1].getnewaddress()
+        inputs = []
+        outputs = {self.nodes[0].getnewaddress():1.1}
+        rawTx = self.nodes[1].createrawtransaction(inputs, outputs)
+        # fund a transaction that requires a new key for the change output
+        # creating the key must be impossible because the wallet is locked
+        try:
+            fundedTx = self.nodes[1].fundrawtransaction(rawTx)
+            raise AssertionError("Wallet unlocked without passphrase")
+        except JSONRPCException as e:
+            assert('Keypool ran out' in e.error['message'])
+
+        #refill the keypool
+        self.nodes[1].walletpassphrase("test", 100)
+        self.nodes[1].walletlock()
+
         try:
             self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1.2)
             raise AssertionError("Wallet unlocked without passphrase")
@@ -498,7 +515,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         fundedTx = self.nodes[1].fundrawtransaction(rawTx)
 
         #now we need to unlock
-        self.nodes[1].walletpassphrase("test", 100)
+        self.nodes[1].walletpassphrase("test", 600)
         signedTx = self.nodes[1].signrawtransaction(fundedTx['hex'])
         txId = self.nodes[1].sendrawtransaction(signedTx['hex'])
         self.nodes[1].generate(1)
@@ -634,7 +651,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[3].listunspent(1)), 1)
 
         inputs = []
-        outputs = {self.nodes[2].getnewaddress() : 1}
+        outputs = {self.nodes[3].getnewaddress() : 1}
         rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
         result = self.nodes[3].fundrawtransaction(rawtx) # uses min_relay_tx_fee (set by settxfee)
         result2 = self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 2*min_relay_tx_fee})
@@ -642,6 +659,102 @@ class RawTransactionsTest(BitcoinTestFramework):
         result_fee_rate = result['fee'] * 1000 / count_bytes(result['hex'])
         assert_fee_amount(result2['fee'], count_bytes(result2['hex']), 2 * result_fee_rate)
         assert_fee_amount(result3['fee'], count_bytes(result3['hex']), 10 * result_fee_rate)
+
+        #############################
+        # Test address reuse option #
+        #############################
+
+        result3 = self.nodes[3].fundrawtransaction(rawtx, {"reserveChangeKey": False})
+        res_dec = self.nodes[0].decoderawtransaction(result3["hex"])
+        changeaddress = ""
+        for out in res_dec['vout']:
+            if out['value'] > 1.0:
+                changeaddress += out['scriptPubKey']['addresses'][0]
+        assert(changeaddress != "")
+        nextaddr = self.nodes[3].getnewaddress()
+        # frt should not have removed the key from the keypool
+        assert(changeaddress == nextaddr)
+
+        result3 = self.nodes[3].fundrawtransaction(rawtx)
+        res_dec = self.nodes[0].decoderawtransaction(result3["hex"])
+        changeaddress = ""
+        for out in res_dec['vout']:
+            if out['value'] > 1.0:
+                changeaddress += out['scriptPubKey']['addresses'][0]
+        assert(changeaddress != "")
+        nextaddr = self.nodes[3].getnewaddress()
+        # Now the change address key should be removed from the keypool
+        assert(changeaddress != nextaddr)
+
+        ######################################
+        # Test subtractFeeFromOutputs option #
+        ######################################
+
+        # Make sure there is exactly one input so coin selection can't skew the result
+        assert_equal(len(self.nodes[3].listunspent(1)), 1)
+
+        inputs = []
+        outputs = {self.nodes[2].getnewaddress(): 1}
+        rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
+
+        result = [self.nodes[3].fundrawtransaction(rawtx), # uses min_relay_tx_fee (set by settxfee)
+                  self.nodes[3].fundrawtransaction(rawtx, {"subtractFeeFromOutputs": []}), # empty subtraction list
+                  self.nodes[3].fundrawtransaction(rawtx, {"subtractFeeFromOutputs": [0]}), # uses min_relay_tx_fee (set by settxfee)
+                  self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 2*min_relay_tx_fee}),
+                  self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 2*min_relay_tx_fee, "subtractFeeFromOutputs": [0]})]
+
+        dec_tx = [self.nodes[3].decoderawtransaction(tx['hex']) for tx in result]
+        output = [d['vout'][1 - r['changepos']]['value'] for d, r in zip(dec_tx, result)]
+        change = [d['vout'][r['changepos']]['value'] for d, r in zip(dec_tx, result)]
+
+        assert_equal(result[0]['fee'], result[1]['fee'], result[2]['fee'])
+        assert_equal(result[3]['fee'], result[4]['fee'])
+        assert_equal(change[0], change[1])
+        assert_equal(output[0], output[1])
+        assert_equal(output[0], output[2] + result[2]['fee'])
+        assert_equal(change[0] + result[0]['fee'], change[2])
+        assert_equal(output[3], output[4] + result[4]['fee'])
+        assert_equal(change[3] + result[3]['fee'], change[4])
+
+        inputs = []
+        outputs = {self.nodes[2].getnewaddress(): value for value in (1.0, 1.1, 1.2, 1.3)}
+        keys = list(outputs.keys())
+        rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
+
+        result = [self.nodes[3].fundrawtransaction(rawtx),
+                  # split the fee between outputs 0, 2, and 3, but not output 1
+                  self.nodes[3].fundrawtransaction(rawtx, {"subtractFeeFromOutputs": [0, 2, 3]})]
+
+        dec_tx = [self.nodes[3].decoderawtransaction(result[0]['hex']),
+                  self.nodes[3].decoderawtransaction(result[1]['hex'])]
+
+        # Nested list of non-change output amounts for each transaction
+        output = [[out['value'] for i, out in enumerate(d['vout']) if i != r['changepos']]
+                  for d, r in zip(dec_tx, result)]
+
+        # List of differences in output amounts between normal and subtractFee transactions
+        share = [o0 - o1 for o0, o1 in zip(output[0], output[1])]
+
+        # output 1 is the same in both transactions
+        assert_equal(share[1], 0)
+
+        # the other 3 outputs are smaller as a result of subtractFeeFromOutputs
+        assert_greater_than(share[0], 0)
+        assert_greater_than(share[2], 0)
+        assert_greater_than(share[3], 0)
+
+        # outputs 2 and 3 take the same share of the fee
+        assert_equal(share[2], share[3])
+
+        # output 0 takes at least as much share of the fee, and no more than 2 satoshis more, than outputs 2 and 3
+        assert_greater_than_or_equal(share[0], share[2])
+        assert_greater_than_or_equal(share[2] + Decimal(2e-8), share[0])
+
+        # the fee is the same in both transactions
+        assert_equal(result[0]['fee'], result[1]['fee'])
+
+        # the total subtracted from the outputs is equal to the fee
+        assert_equal(share[0] + share[2] + share[3], result[0]['fee'])
 
 if __name__ == '__main__':
     RawTransactionsTest().main()

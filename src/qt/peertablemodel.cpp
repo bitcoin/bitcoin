@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,6 +8,7 @@
 #include "guiconstants.h"
 #include "guiutil.h"
 
+#include "validation.h" // for cs_main
 #include "sync.h"
 
 #include <QDebug>
@@ -114,17 +115,22 @@ PeerTableModel::PeerTableModel(ClientModel *parent) :
     timer(0)
 {
     columns << tr("NodeId") << tr("Node/Service") << tr("User Agent") << tr("Ping");
-    priv = new PeerTablePriv();
+    priv.reset(new PeerTablePriv());
     // default to unsorted
     priv->sortColumn = -1;
 
     // set up timer for auto refresh
-    timer = new QTimer();
+    timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), SLOT(refresh()));
     timer->setInterval(MODEL_UPDATE_DELAY);
 
     // load initial data
     refresh();
+}
+
+PeerTableModel::~PeerTableModel()
+{
+    // Intentionally left empty
 }
 
 void PeerTableModel::startAutoRefresh()
