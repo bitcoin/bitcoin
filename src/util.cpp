@@ -214,12 +214,13 @@ void OpenDebugLog()
     assert(vMsgsBeforeOpenLog);
     boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
     fileout = fopen(pathDebug.string().c_str(), "a");
-    if (fileout) setbuf(fileout, NULL); // unbuffered
-
-    // dump buffered messages from before we opened the log
-    while (!vMsgsBeforeOpenLog->empty()) {
-        FileWriteStr(vMsgsBeforeOpenLog->front(), fileout);
-        vMsgsBeforeOpenLog->pop_front();
+    if (fileout) {
+        setbuf(fileout, NULL); // unbuffered
+        // dump buffered messages from before we opened the log
+        while (!vMsgsBeforeOpenLog->empty()) {
+            FileWriteStr(vMsgsBeforeOpenLog->front(), fileout);
+            vMsgsBeforeOpenLog->pop_front();
+        }
     }
 
     delete vMsgsBeforeOpenLog;
