@@ -282,7 +282,7 @@ UniValue prioritisetransaction(const JSONRPCRequest& request)
     uint256 hash = ParseHashStr(request.params[0].get_str(), "txid");
     CAmount nAmount = request.params[2].get_int64();
 
-    mempool.PrioritiseTransaction(hash, request.params[0].get_str(), request.params[1].get_real(), nAmount);
+    mempool.PrioritiseTransaction(hash, request.params[1].get_real(), nAmount);
     return true;
 }
 
