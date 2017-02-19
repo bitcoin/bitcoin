@@ -144,6 +144,11 @@ extern CLeakyBucket sendShaper;
 // Test to determine if traffic shaping is enabled
 extern bool IsTrafficShapingEnabled();
 
+// Check whether we are doing an initial block download (synchronizing from disk or network)
+extern bool IsInitialBlockDownload();
+extern void IsInitialBlockDownloadInit();
+
+// Check whether we are nearly sync'd.  Used primarily to determine whether an xthin can be retrieved.
 extern bool IsChainNearlySyncd();
 extern void IsChainNearlySyncdInit();
 extern uint64_t LargestBlockSeen(uint64_t nBlockSize = 0);
