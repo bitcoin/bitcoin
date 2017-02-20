@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DbEnv::rep_set_clockskew()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="rep.html" title="Chapter 11.  Replication Methods" />
+    <link rel="prev" href="repmessage.html" title="DbEnv::rep_process_message()" />
+    <link rel="next" href="repconfig.html" title="DbEnv::rep_set_config()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DbEnv::rep_set_clockskew()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="repmessage.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 11. 
+                Replication Methods
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="repconfig.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="repclockskew"></a>DbEnv::rep_set_clockskew()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+
+int
+DbEnv::rep_set_clockskew(u_int32_t fast_clock, u_int32_t slow_clock); </pre>
+      <p>
+         The <code class="methodname">DbEnv::rep_set_clockskew()</code> method sets the clock skew ratio
+         among replication group members based on the fastest and slowest
+         measurements among the group for use with master leases.  Calling this
+         method is optional; the default values for clock skew assume no skew. 
+         The user must also configure leases via the <a class="xref" href="repconfig.html" title="DbEnv::rep_set_config()">DbEnv::rep_set_config()</a> 
+         method. Additionally, the user must also set the master lease timeout
+         via the <a class="xref" href="repset_timeout.html" title="DbEnv::rep_set_timeout()">DbEnv::rep_set_timeout()</a> 
+         method and the number of sites in the replication group via the 
+         <a class="xref" href="repnsites.html" title="DbEnv::rep_set_nsites()">DbEnv::rep_set_nsites()</a> 
+         method.  These methods may be called in any order.  For a description
+         of the clock skew values, see <a href="../../programmer_reference/rep_clock_skew.html" class="olink">Clock skew</a>
+         in the <em class="citetitle">Berkeley DB Programmer's Reference Guide</em>.  For a
+         description of master leases, see 
+         <a href="../../programmer_reference/rep_lease.html" class="olink">Master leases</a> in the
+         <em class="citetitle">Berkeley DB Programmer's Reference Guide</em>.
+    </p>
+      <p>
+         These arguments can be used to express either raw measurements of a
+         clock timing experiment or a percentage across machines.  For example, if
+         a group of sites has a 2% variance, then <span class="bold"><strong>fast_clock</strong></span> should be set to 102, and
+         <span class="bold"><strong>slow_clock</strong></span> should be set to 100.  Or,
+         for a 0.03% difference, you can use 10003 and 10000 respectively.
+    </p>
+      <p>
+         The database environment's replication subsystem may also be
+         configured using the environment's <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a> file.  The
+         syntax of the entry in that file is a single line with the string
+         "rep_set_clockskew", one or more whitespace characters, and the
+         clockskew specified in two parts: the fast_clock and the slow_clock.
+         For example, "rep_set_clockskew 102 100". Because the <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a> file is
+         read when the database environment is opened, it will silently
+         overrule configuration done before that time.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::rep_set_clockskew()</code> method configures a database
+         environment, not only operations performed using the specified 
+         <a class="link" href="env.html" title="Chapter 5.  The DbEnv Handle">DbEnv</a>  handle.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::rep_set_clockskew()</code> method may not be called after the
+         <a class="xref" href="repmgrstart.html" title="DbEnv::repmgr_start()">DbEnv::repmgr_start()</a>  or
+         <a class="xref" href="repstart.html" title="DbEnv::rep_start()">DbEnv::rep_start()</a> 
+         methods are called.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::rep_set_clockskew()</code> <span>
+            
+            <span>
+                method either returns a non-zero error value or throws an
+                exception that encapsulates a non-zero error value on
+                failure, and returns 0 on success.
+            </span>
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1702800"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1702809"></a>fast_clock</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                         The value, relative to the <span class="bold"><strong>slow_clock</strong></span>, 
+                         of the fastest clock in the group of sites.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1702781"></a>slow_clock</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The value of the slowest clock in the group of sites.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1702888"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DbEnv::rep_set_clockskew()</code> <span>
+            
+            <span>
+                method may fail and throw a <a class="link" href="dbexception.html" title="Chapter 6. The DbException Class">DbException</a> 
+                exception, encapsulating one of the following non-zero errors, or return one
+                of the following non-zero errors:
+            </span>
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1703049"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                If the method was called after replication is started 
+with a call to the <a class="xref" href="repmgrstart.html" title="DbEnv::repmgr_start()">DbEnv::repmgr_start()</a> or
+the <a class="xref" href="repstart.html" title="DbEnv::rep_start()">DbEnv::rep_start()</a> method;
+                or if an invalid flag value or parameter was specified.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1703050"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="env.html" title="Chapter 5.  The DbEnv Handle">DbEnv</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1702982"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="rep.html#replist" title="Replication and Related Methods">Replication and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="repmessage.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="rep.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="repconfig.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DbEnv::rep_process_message() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DbEnv::rep_set_config()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

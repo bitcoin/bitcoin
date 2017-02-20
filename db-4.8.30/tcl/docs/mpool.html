@@ -1,0 +1,189 @@
+<!--Copyright 1999-2009 Oracle.  All rights reserved.-->
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.08 [en] (X11; I; FreeBSD 2.2.8-19990120-SNAP i386) [Netscape]">
+</HEAD>
+<BODY>
+
+<H2>
+<A NAME="Memory Pool Commands"></A>Memory Pool Commands</H2>
+Memory pools are used in a manner similar to the other subsystems.&nbsp;
+We create a handle to the pool and&nbsp; then use it for a variety of operations.&nbsp;
+Some of the memory pool commands use the environment instead. Those are
+presented first.
+<P><B>> &lt;env> mpool_stat</B>
+<P>This command returns&nbsp; the statistics associated with the memory
+pool subsystem.&nbsp; It is a direct call to the <A HREF="../../docs/api_c/memp_stat.html">memp_stat</A>
+function.&nbsp; It returns a list of name/value pairs of the DB_MPOOL_STAT
+structure.
+<BR>
+<HR WIDTH="100%">
+<BR><B>> &lt;env> mpool_sync <I>lsn</I></B>
+<P>This command flushes the memory pool for all pages with a log sequence
+number less than <B><I>lsn</I></B>.&nbsp; It is a direct call to the <A HREF="../../docs/api_c/memp_sync.html">memp_sync&nbsp;</A>
+function.&nbsp; It returns either a 0 (for success), a DB error message
+or it throws a Tcl error with a system message.
+<BR>
+<HR WIDTH="100%">
+<BR><B>> &lt;env> mpool_trickle <I>percent</I></B>
+<P>This command tells DB to ensure that at least <B><I>percent</I></B>
+percent of the pages are clean by writing out enough to dirty pages to
+achieve that percentage.&nbsp; It is a direct call to the <A HREF="../../docs/api_c/memp_trickle.html">memp_trickle</A>
+function.&nbsp; The command will return the number of pages actually written.&nbsp;
+It returns either the number of pages on success, or it throws a Tcl error
+with a system message.
+<BR>
+<HR WIDTH="100%">
+<P><B>> &lt;env> mpool [-create] [-nommap] [-rdonly] [-mode <I>mode</I>]
+-pagesize <I>size</I> [<I>file</I>]</B>
+<P>This command creates a new memory pool.&nbsp; It invokes the <A HREF="../../docs/api_c/memp_fopen.html">memp_fopen</A>
+function.&nbsp; After it successfully gets a handle to a memory pool, we
+bind it to a new Tcl command of the form <B><I>$env.mpX</I></B>, where
+X is an integer starting at&nbsp; 0 (e.g. <B>$env.mp0, $env.mp1, </B>etc).&nbsp;
+We use the <I>Tcl_CreateObjCommand()</I> to create the top level memory
+pool functions.&nbsp; It is through this handle that the user can manipulate
+the pool.&nbsp; Internally, the handle we get back from DB will be stored
+as the <I>ClientData</I> portion of the new command set so that future
+memory pool calls will have that handle readily available.&nbsp; Additionally,
+we need to maintain this handle in relation to the environment so that
+if the user calls <A HREF="../../docs/api_tcl/env_close.html">&lt;env> close</A> without closing
+the memory pool we can properly clean up.&nbsp; The arguments are:
+<UL>
+<LI>
+<B><I>file</I></B> is the name of the file to open</LI>
+
+<LI>
+<B>-create </B>selects the DB_CREATE flag to create underlying file</LI>
+
+<LI>
+<B>-mode <I>mode </I></B>sets the permissions of created file to <B><I>mode</I></B></LI>
+
+<LI>
+<B>-nommap</B> selects the DB_NOMMAP flag to disallow using mmap'ed files</LI>
+
+<LI>
+<B>-pagesize</B> sets the underlying file page size to <B><I>size</I></B></LI>
+
+<LI>
+<B>-rdonly </B>selects the DB_RDONLY flag for read only access</LI>
+</UL>
+
+<HR WIDTH="100%">
+<BR><B>> &lt;mp> close</B>
+<P>This command closes the memory pool.&nbsp; It is a direct call to the
+<A HREF="../../docs/api_c/memp_fclose.html">memp_close</A>
+function.&nbsp; It returns either a 0 (for success), a DB error message
+or it throws a Tcl error with a system message.
+<P>Additionally, since the handle is no longer valid, we will call
+<I>Tcl_DeleteCommand()
+</I>so
+that further uses of the handle will be dealt with properly by Tcl itself.&nbsp;
+We must also remove the reference to this handle from the environment.&nbsp;
+We will go through the list of pinned pages that were acquired by the <A HREF="#> <mp> get">get</A>
+command and
+<A HREF="#> <pg> put">put</A> them back.
+<HR WIDTH="100%">
+<BR><B>> &lt;mp> fsync</B>
+<P>This command flushes all of the file's dirty pages to disk.&nbsp; It
+is a direct call to the <A HREF="../../docs/api_c/memp_fsync.html">memp_fsync</A>
+function.&nbsp; It returns either a 0 (for success), a DB error message
+or it throws a Tcl error with a system message.
+<HR WIDTH="100%">
+<BR><A NAME="> <mp> get"></A><B>> &lt;mp> get [-create] [-last] [-new]
+[<I>pgno</I>]</B>
+<P>This command gets the&nbsp; <B><I>pgno </I></B>page from the memory
+pool.&nbsp; It invokes the <A HREF="../../docs/api_c/memp_fget.html">memp_fget</A>
+function and possibly the <A HREF="../../docs/api_c/memp_fset.html">memp_fset</A>
+function if any options are chosen to set the page characteristics.&nbsp;
+After it successfully gets a handle to a page,&nbsp; we bind it to and
+return a new Tcl command of the form <B><I>$env.mpN.pX</I></B>, where X
+is an integer starting at&nbsp; 0 (e.g. <B>$env.mp0.p0, $env.mp1.p0, </B>etc).&nbsp;
+We use the <I>Tcl_CreateObjCommand()</I> to create the top level page functions.&nbsp;
+It is through this handle that the user can manipulate the page.&nbsp;
+Internally, the handle we get back from DB will be stored as the <I>ClientData</I>
+portion of the new command set.&nbsp; We need to store this handle in&nbsp;
+relation to the memory pool handle so that if the memory pool is closed,
+we will <A HREF="#> <pg> put">put</A> back the pages (setting the discard
+flag) and delete that set of commands.
+<P>The arguments are:
+<UL>
+<LI>
+<B>-create </B>selects the DB_MPOOL_CREATE flag&nbsp; to create the page
+if it does not exist.</LI>
+
+<LI>
+<B>-last</B> selects the DB_MPOOL_LAST flag to return the last page in
+the file</LI>
+
+<LI>
+<B>-new</B> selects the DB_MPOOL_NEW flag to create a new page</LI>
+</UL>
+
+<HR WIDTH="100%">
+<BR><B>> &lt;pg> pgnum</B>
+<P>This command returns the page number associated with this memory pool
+page.&nbsp; Primarily it will be used after an <A HREF="#> <mp> get">&lt;mp>
+get</A> call.
+<BR>
+<HR WIDTH="100%"><B>> &lt;pg> pgsize</B>
+<P>This command returns the page size associated with this memory pool
+page.&nbsp; Primarily it will be used after an <A HREF="#> <mp> get">&lt;mp>
+get</A> call.
+<BR>
+<HR WIDTH="100%"><B>> &lt;pg> set [-clean] [-dirty] [-discard]</B>
+<P>This command sets the characteristics of the page.&nbsp; It is a direct
+call to the <A HREF="../../docs/api_c/memp_fset.html">memp_fset</A> function.&nbsp;
+It returns either a 0 (for success), a DB error message or it throws a
+Tcl error with a system message.&nbsp; The arguments are:
+<UL>
+<LI>
+<B>-clean</B> selects the DB_MPOOL_CLEAN flag to indicate this is a clean
+page</LI>
+
+<LI>
+<B>-dirty</B> selects the DB_MPOOL_DIRTY flag to indicate this page should
+be flushed before eviction</LI>
+
+<LI>
+<B>-discard</B> selects the DB_MPOOL_DISCARD flag to indicate this page
+is unimportant</LI>
+</UL>
+
+<HR WIDTH="100%">
+<BR><A NAME="> <pg> put"></A><B>> &lt;pg> put [-clean] [-dirty] [-discard]</B>
+<P>This command will put back the page to the memory pool.&nbsp; It is
+a direct call to the <A HREF="../../docs/api_c/memp_fput.html">memp_fput</A>
+function.&nbsp; It returns either a 0 (for success), a DB error message
+or it throws a Tcl error with a system message. Additionally, since the
+handle is no longer valid, we will call
+<I>Tcl_DeleteCommand()
+</I>so that
+further uses of the handle will be dealt with properly by Tcl itself.&nbsp;
+We must also remove the reference to this handle from the memory pool.
+<P>The arguments are:
+<UL>
+<LI>
+<B>-clean</B> selects the DB_MPOOL_CLEAN flag to indicate this is a clean
+page</LI>
+
+<LI>
+<B>-dirty</B> selects the DB_MPOOL_DIRTY flag to indicate this page should
+be flushed before eviction</LI>
+
+<LI>
+<B>-discard</B> selects the DB_MPOOL_DISCARD flag to indicate this page
+is unimportant</LI>
+</UL>
+
+<HR WIDTH="100%">
+<BR><B>> &lt;pg> init <I>val|string</I></B>
+<P>This command initializes the page to the <B><I>val</I></B> given or
+places the <B><I>string</I></B> given at the beginning of the page.&nbsp;
+It returns a 0 for success or it throws a Tcl error with an error message.
+<P>
+<HR WIDTH="100%">
+<BR><B>> &lt;pg> is_setto <I>val|string</I></B>
+<P>This command verifies the page contains the <B><I>val</I></B> given
+or checks that the <B>string</B> given is at the beginning of the page.&nbsp;
+It returns a 1 if the page is correctly set to the value and a 0 otherwise.

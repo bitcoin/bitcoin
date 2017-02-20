@@ -1,0 +1,28 @@
+#!/bin/sh
+#
+# Build the HTML documentation for the Java API.
+
+. RELEASE
+
+# Save the absolute path of the target Berkeley DB documents directory.
+DB_HOME=`dirname $0`/..
+
+javadoc $JAVADOC_ARGS -protected -d $DB_HOME/docs/java \
+    -use -link http://java.sun.com/j2se/1.5.0/docs/api/ \
+    -link http://java.sun.com/javaee/5/docs/api/ \
+    -sourcepath $DB_HOME/java/src \
+    -source 1.5 \
+    -stylesheetfile $DB_HOME/java/doc/style.css \
+    -header '<b>Berkeley DB</b><br><font size="-1"> version '$DB_VERSION_MAJOR.$DB_VERSION_MINOR.$DB_VERSION_PATCH'</font>' \
+    -windowtitle 'Oracle - Berkeley DB Java API' -bottom '<font size=1>Copyright (c) 1996-2009 Oracle.  All rights reserved.</font>' \
+    com.sleepycat.db \
+    com.sleepycat.bind com.sleepycat.bind.serial com.sleepycat.bind.tuple \
+    com.sleepycat.collections \
+    com.sleepycat.persist com.sleepycat.persist.model \
+    com.sleepycat.persist.evolve com.sleepycat.persist.raw \
+    com.sleepycat.util \
+    -group 'Berkeley DB Core Package' com.sleepycat.db \
+    -group 'Berkeley DB Direct Persistence Layer (DPL) Packages' \
+    com.sleepycat.persist:com.sleepycat.persist.model:com.sleepycat.persist.evolve:com.sleepycat.persist.raw \
+    -group 'Berkeley DB Bind and Collections Packages' com.sleepycat.bind:com.sleepycat.bind.serial:com.sleepycat.bind.tuple:com.sleepycat.collections:com.sleepycat.util | \
+    egrep -v 'Generating|first sentence'

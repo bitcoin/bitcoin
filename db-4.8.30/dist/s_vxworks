@@ -1,0 +1,528 @@
+#!/bin/sh -
+#	$Id$
+#
+# Build the VxWorks files.
+
+msgc="/* DO NOT EDIT: automatically built by dist/s_vxworks. */"
+
+. RELEASE
+
+s=/tmp/__db_a
+t=/tmp/__db_b
+u=/tmp/__db_c
+vxfilelist=/tmp/__db_d
+vxsmallfiles=/tmp/__db_e
+
+trap 'rm -f $s $t $u $vxfilelist $vxsmallfiles ; exit 0' 0
+trap 'rm -f $s $t $u $vxfilelist $vxsmallfiles ; exit 1' 1 2 3 13 15
+
+# Build the VxWorks db.h.
+cat <<ENDOFSEDTEXT > $s
+/extern "C" {/{
+n
+n
+i\\
+\\
+/* Tornado 2 does not provide a standard C pre-processor #define. */\\
+#ifndef __vxworks\\
+#define	__vxworks\\
+#endif
+}
+/@inttypes_h_decl@/d
+/@stddef_h_decl@/d
+/@stdint_h_decl@/d
+/@unistd_h_decl@/d
+/@thread_h_decl@/d
+s/@u_int8_decl@/typedef unsigned char u_int8_t;/
+/@int16_decl@/d
+s/@u_int16_decl@/typedef unsigned short u_int16_t;/
+/@int32_decl@/d
+s/@u_int32_decl@/typedef unsigned int u_int32_t;/
+s/@int64_decl@//
+s/@u_int64_decl@/typedef unsigned long long u_int64_t;/
+/@u_char_decl@/d
+/@u_int_decl@/d
+/@u_long_decl@/d
+/@u_short_decl@/d
+s/@uintmax_t_decl@/typedef unsigned long uintmax_t;/
+s/@uintptr_t_decl@/typedef unsigned long uintptr_t;/
+/@FILE_t_decl@/d
+/@off_t_decl@/d
+/@pid_t_decl@/d
+/@size_t_decl@/d
+/@ssize_t_decl@/d
+/@time_t_decl@/d
+s/@db_seq_decl@/typedef int db_seq_t;/
+s/@db_threadid_t_decl@/typedef uintmax_t db_threadid_t;/
+s/@DB_VERSION_MAJOR@/$DB_VERSION_MAJOR/
+s/@DB_VERSION_MINOR@/$DB_VERSION_MINOR/
+s/@DB_VERSION_PATCH@/$DB_VERSION_PATCH/
+s/@DB_VERSION_STRING@/"$DB_VERSION_STRING"/
+s/@DB_VERSION_UNIQUE_NAME@//
+s/@DB_CONST@//
+s/@DB_PROTO1@/#undef __P/
+s/@DB_PROTO2@/#define	__P(protos)	protos/
+/@platform_header@/d
+/@platform_footer@/d
+ENDOFSEDTEXT
+(echo "$msgc" &&
+    sed -f $s ../dbinc/db.in &&
+    cat ../dbinc_auto/api_flags.in &&
+    cat ../dbinc_auto/ext_prot.in) > $t
+test `egrep '@.*@' $t` && {
+	egrep '@.*@' $t
+	echo 'Unexpanded autoconf variables found in VxWorks db.h.'
+	exit 1
+}
+f=../build_vxworks/db.h
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+
+# Build the VxWorks db_cxx.h.
+cat <<ENDOFSEDTEXT > $s
+s/@cxx_have_stdheaders@/#define	HAVE_CXX_STDHEADERS 1/
+ENDOFSEDTEXT
+(echo "$msgc" && sed -f $s ../dbinc/db_cxx.in) > $t
+test `egrep '@.*@' $t` && {
+	egrep '@.*@' $t
+	echo 'Unexpanded autoconf variables found in VxWorks db_cxx.h.'
+	exit 1
+}
+f=../build_vxworks/db_cxx.h
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+
+# Build the VxWorks db_int.h.
+cat <<ENDOFSEDTEXT > $s
+s/@PATH_SEPARATOR@/\/\\\\\\\\/
+s/@db_int_def@//
+/#ifdef.*HAVE_SYSTEM_INCLUDE_FILES/i\\
+#include "vxWorks.h"
+/#endif.*HAVE_SYSTEM_INCLUDE_FILES/a\\
+#include "clib_port.h"\\
+#include "db.h"
+ENDOFSEDTEXT
+(echo "$msgc" && sed -f $s ../dbinc/db_int.in) > $t
+test `egrep '@.*@' $t` && {
+	egrep '@.*@' $t
+	echo 'Unexpanded autoconf variables found in VxWorks db_int.h.'
+	exit 1
+}
+f=../build_vxworks/db_int.h
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+
+# Build the VxWorks db_config.h.
+# We don't fail, but we complain if the vx_config.in file isn't up-to-date.
+check_config()
+{
+	egrep '^#undef' config.hin | awk '{print $2}' | sort > $s
+	(egrep '#undef' $1 | awk '{print $3}'
+	 egrep '^#define' $1 | awk '{print $2}') | sort > $t
+	cmp $s $t > /dev/null || {
+		echo "config.hin and $1 differ"
+		echo "<<< config.hin >>> $1"
+		diff $s $t
+	}
+}
+check_config vx_config.in
+f=../build_vxworks/db_config.h
+(echo "$msgc" && sed "s/__EDIT_DB_VERSION__/$DB_VERSION/" vx_config.in) > $t
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+
+# Build the VxWorks db_config_small.h.
+f=../build_vxworks/db_config_small.h
+(echo "$msgc" &&
+    sed -e "s/__EDIT_DB_VERSION__/$DB_VERSION/" \
+	-e "s;^#define.*HAVE_CRYPTO.*1;/* #undef HAVE_CRYPTO */;" \
+	-e "s;^#define.*HAVE_HASH.*1;/* #undef HAVE_HASH */;" \
+	-e "s;^#define.*HAVE_QUEUE.*1;/* #undef HAVE_QUEUE */;" \
+	-e "s;^#define.*HAVE_REPLICATION.*1;/* #undef HAVE_REPLICATION */;" \
+	-e "s;^#define.*HAVE_STATISTICS.*1;/* #undef HAVE_STATISTICS */;" \
+	-e "s;^#define.*HAVE_VERIFY.*1;/* #undef HAVE_VERIFY */;" \
+    vx_config.in) > $t
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+
+# Build the VxWorks clib_port.h.
+cat <<ENDOFSEDTEXT > $s
+s/@INT64_FMT@/#define	INT64_FMT	"%lld"/
+s/@UINT64_FMT@/#define	UINT64_FMT	"%llu"/
+ENDOFSEDTEXT
+sed -f $s clib_port.in > $t
+test `egrep '@.*@' $t` && {
+	egrep '@.*@' $t
+	echo 'Unexpanded autoconf variables found in VxWorks clib_port.h.'
+	exit 1
+}
+f=../build_vxworks/clib_port.h
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+
+# Build a sed script that will change a "standard" DB utility into
+# VxWorks-compatible code.
+transform()
+{
+	# Build a sed script that will add argument parsing support and
+	# rename all of the functions to be private to this file.
+cat <<ENDOFSEDTEXT
+/^main(argc, argv)$/{
+i\\
+$1(args)\\
+\\	char *args;\\
+{\\
+\\	int argc;\\
+\\	char **argv;\\
+\\
+\\	__db_util_arg("$1", args, &argc, &argv);\\
+\\	return ($1_main(argc, argv) ? EXIT_FAILURE : EXIT_SUCCESS);\\
+}\\
+\\
+#include <stdio.h>\\
+#define	ERROR_RETURN	ERROR\\
+\\
+int\\
+$1_main(argc, argv)
+d
+}
+/^	while ((ch = getopt/i\\
+\\	__db_getopt_reset = 1;
+/^[	]*extern int optind;/s/;/, __db_getopt_reset;/
+ENDOFSEDTEXT
+
+	# Convert the ex_access sample into dbdemo for VxWorks.
+	echo 's/progname = "ex_access";/progname = "dbdemo";/'
+
+	# The example programs have to load db_int.h, not db.h -- else
+	# they won't have the right Berkeley DB prototypes for getopt
+	# and friends.
+	echo '/#include.*db.h/c\'
+	echo '#include <db_config.h>\'
+	echo '#include <db_int.h>'
+
+	# Replace all function names with VxWorks safe names.
+	# Function names are:
+	#	Tokens starting at the beginning of the line, immediately
+	#	followed by an opening parenthesis.
+	# Replace:
+	#	Matches preceded by a non-C-token character and immediately
+	#	followed by an opening parenthesis.
+	#	Matches preceded by a non-C-token character and immediately
+	#	followed by " __P".
+	#	Matches starting at the beginning of the line, immediately
+	#	followed by an opening parenthesis.
+	#
+	# Skip any line that starts with the name we're using as a prefix,
+	# it's a case we can't handle very well here, and it's been done by
+	# hand.
+	sed \
+	    -e "/^$1/d" \
+	    -e 's/^\([a-zA-Z_][a-zA-Z0-9_]*\)(.*$/\1/p' -e d > $u
+	for k in `cat $u`; do
+cat <<ENDOFSEDTEXT
+		s/\([^a-zA-Z0-9_]\)\($k(\)/\1$1_\2/g
+		s/\([^a-zA-Z0-9_]\)\($k[	 ]__P\)/\1$1_\2/g
+		s/^\($k(\)/$1_\1/g
+ENDOFSEDTEXT
+	done
+}
+
+PROGRAM_LIST="\
+	db_archive
+	db_checkpoint
+	db_deadlock
+	db_dump
+	db_hotbackup
+	db_load
+	db_printlog
+	db_recover
+	db_stat
+	db_upgrade
+	db_verify
+	ex_access
+	test_micro"
+
+FILE_LIST="\
+	db_archive/db_archive.c
+	db_checkpoint/db_checkpoint.c
+	db_deadlock/db_deadlock.c
+	db_dump/db_dump.c
+	db_hotbackup/db_hotbackup.c
+	db_load/db_load.c
+	db_printlog/db_printlog.c
+	db_recover/db_recover.c
+	db_stat/db_stat.c
+	db_upgrade/db_upgrade.c
+	db_verify/db_verify.c
+	examples_c/ex_access.c
+	test_micro/source/b_curalloc.c
+	test_micro/source/b_curwalk.c
+	test_micro/source/b_del.c
+	test_micro/source/b_get.c
+	test_micro/source/b_inmem.c
+	test_micro/source/b_latch.c
+	test_micro/source/b_load.c
+	test_micro/source/b_open.c
+	test_micro/source/b_put.c
+	test_micro/source/b_recover.c
+	test_micro/source/b_txn.c
+	test_micro/source/b_txn_write.c
+	test_micro/source/b_uname.c
+	test_micro/source/b_util.c
+	test_micro/source/b_workload.c
+	test_micro/source/b_workload.h
+	test_micro/source/bench.h
+	test_micro/source/test_micro.c"
+
+# Build VxWorks versions of the files.
+for i in $FILE_LIST; do
+	# Lots of noise to transform random paths into VxWorks conventions.
+	case $i in
+	*ex_access*)
+		target=dbdemo/dbdemo.c
+		cat ../$i | transform dbdemo > $s
+		cat ../$i | sed -f $s > $t;;
+	test_micro*)
+		target=test_micro/`basename $i`
+		cat ../$i | transform `basename $i .c` > $s
+		cat ../$i | sed -f $s > $t;;
+	*)
+		target="$i"
+		cat ../$i | transform `basename $i .c` > $s
+		cat ../$i | sed -f $s > $t;;
+	esac
+
+	f=../build_vxworks/$target
+	cmp $t $f > /dev/null 2>&1 ||
+	    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+done
+
+# Output the build lines for a single utility.
+#	$1 == application name
+util_one()
+{
+	egrep "app=$1" srcfiles.in |
+	awk '{print $1}' |
+	sed 's/ex_access/dbdemo/' > $u
+
+	# Build a list of source files.
+	for i in `cat $u`; do
+		if test "$1" = "ex_access" -o "$1" = `basename $i .c`; then
+			i=`basename $i`
+		else
+			i="\$(PRJ_DIR)/../../$i"
+		fi
+		o="<BEGIN> FILE_$i"
+
+		echo "${o}_dependDone"
+		echo "FALSE"
+		echo "<END>"
+		echo
+		echo "${o}_dependencies"
+		echo "<END>"
+		echo
+		echo "${o}_objects"
+		echo "`basename $i .c`.o"
+		echo "<END>"
+		echo
+		echo "${o}_tool"
+		echo "C/C++ compiler"
+		echo "<END>"
+		echo
+	done
+	echo "<BEGIN> PROJECT_FILES"
+	for i in `cat $u`; do
+		if test "$1" = "ex_access" -o "$1" = `basename $i .c`; then
+			i="`basename $i`"
+		else
+			i="../../$i"
+		fi
+		echo "\$(PRJ_DIR)/$i"
+	done |
+	sed -e '${' \
+	    -e 'p' \
+	    -e 'd' \
+	    -e '}' \
+	    -e 's/$/ \\/'
+	echo "<END>"
+	echo
+	echo "<BEGIN> userComments"
+	if test "$1" = "ex_access"; then
+		echo "dbdemo"
+	else
+		echo "$1"
+	fi
+	echo "<END>"
+}
+
+# Build VxWorks Tornado 2.0 project files for the utilities.
+for i in $PROGRAM_LIST; do
+	if [ $i = "ex_access" ]; then
+		target=dbdemo
+	else
+		target=$i
+	fi
+
+	(sed -e "s/__DB_APPLICATION_NAME__/$target/g" < vx_2.0/wpj.in
+	    util_one $i) > $t
+	f=../build_vxworks/$target/${target}20.wpj
+	cmp $t $f > /dev/null 2>&1 ||
+	    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+
+	(sed -e "s/__DB_APPLICATION_NAME__/$target/g" < vx_2.2/wpj.in
+	    util_one $i) > $t
+	f=../build_vxworks/$target/${target}22.wpj
+	cmp $t $f > /dev/null 2>&1 ||
+	    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+done
+
+# Build the list of "normal build" files VxWorks knows about.
+sed -e '/^$/d' -e '/^[	 #]/d' srcfiles.in |
+    egrep -w vx |
+    sed 's/[	 ].*//' > $vxfilelist
+
+# Build the list of "small build" files VxWorks knows about.
+sed -e '/^$/d' -e '/^[	 #]/d' srcfiles.in |
+    egrep -w vxsmall |
+    sed 's/[	 ].*//' > $vxsmallfiles
+
+# Build VxWorks Tornado 2.0 project files for the library itself.
+for v in 0 2 ; do
+	#
+	# Build regular project files
+	#
+	(cat vx_2.${v}/BerkeleyDB.wpj
+	for i in `cat $vxfilelist`; do
+		o="<BEGIN> FILE_\$(PRJ_DIR)/../$i"
+		echo "${o}_dependDone"
+		echo "TRUE"
+		echo "<END>"
+		echo
+		echo "${o}_dependencies"
+		echo "\$(PRJ_DIR)/db_config.h \\"
+		echo "	\$(PRJ_DIR)/db_int.h \\"
+		echo "	\$(PRJ_DIR)/db.h"
+		echo "<END>"
+		echo
+		echo "${o}_objects"
+		echo "`basename $i .c`.o"
+		echo "<END>"
+		echo
+		echo "${o}_tool"
+		echo "C/C++ compiler"
+		echo "<END>"
+		echo
+	done
+	echo "<BEGIN> PROJECT_FILES"
+	sed -e '$!s/$/ \\/' \
+	    -e 's/^/$(PRJ_DIR)\/..\//' \
+	    -e '1!s/^/	/' < $vxfilelist
+	echo "<END>"
+	echo
+	echo "<BEGIN> userComments"
+	echo "BerkeleyDB"
+	echo "<END>") > $t
+	#
+	# Build small lib project files
+	#
+	(cat vx_2.${v}/BerkeleyDBsmall.wpj
+	for i in `cat $vxsmallfiles`; do
+		o="<BEGIN> FILE_\$(PRJ_DIR)/../$i"
+		echo "${o}_dependDone"
+		echo "TRUE"
+		echo "<END>"
+		echo
+		echo "${o}_dependencies"
+		echo "\$(PRJ_DIR)/db_config.h \\"
+		echo "	\$(PRJ_DIR)/db_int.h \\"
+		echo "	\$(PRJ_DIR)/db.h"
+		echo "<END>"
+		echo
+		echo "${o}_objects"
+		echo "`basename $i .c`.o"
+		echo "<END>"
+		echo
+		echo "${o}_tool"
+		echo "C/C++ compiler"
+		echo "<END>"
+		echo
+	done
+	echo "<BEGIN> PROJECT_FILES"
+	sed -e '$!s/$/ \\/' \
+	    -e 's/^/$(PRJ_DIR)\/..\//' \
+	    -e '1!s/^/	/' < $vxsmallfiles
+	echo "<END>"
+	echo
+	echo "<BEGIN> userComments"
+	echo "BerkeleyDB"
+	echo "<END>") > $u
+	f=../build_vxworks/BerkeleyDB2${v}.wpj
+	cmp $t $f > /dev/null 2>&1 ||
+	    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+	f=../build_vxworks/BerkeleyDB2${v}small.wpj
+	cmp $u $f > /dev/null 2>&1 ||
+	    (echo "Building $f" && rm -f $f && cp $u $f && chmod 444 $f)
+done
+
+# vx6 --
+#	Generate a VxWorks 6.X Makefile.
+#
+# $1: list of files
+vx6()
+{
+	# Build VxWorks 6x Makefile.
+	cat vx_6/Makefile.1
+	echo
+	sed -e 's/\.c$//p' -e d < $1 > $s
+	for i in `cat $s`; do
+		sed "s;__FILENAME__;$i;g" < vx_6/cfile
+	done
+	echo
+	sed -e 's/\.cpp$//p' -e d < $1 > $s
+	for i in `cat $s`; do
+		sed "s;__FILENAME__;$i;g" < vx_6/cxxfile
+	done
+	echo
+	sed -e 's/\.c.*//' < $1 > $s
+	/bin/echo -n "OBJECTS_bdbvxw ="
+	sep=" \\"
+	for i in `cat $s`; do
+		echo "$sep"
+		/bin/echo -n '	bdbvxw/$(MODE_DIR)/Objects/$(BDB_OBJECT_DIR)/'
+		/bin/echo -n "$i.o"
+	done
+	echo
+	echo
+	cat vx_6/Makefile.2
+	echo
+	/bin/echo -n "DEP_FILES :="
+	for i in `cat $s`; do
+		echo "$sep"
+		/bin/echo -n '	bdbvxw/$(MODE_DIR)/Objects/$(BDB_OBJECT_DIR)/'
+		/bin/echo -n "$i.d"
+	done
+	echo
+	echo
+	cat vx_6/Makefile.3
+}
+
+# Build the list of "normal build" files VxWorks 6x knows about -- it's
+# the standard Vx list plus some additions.
+sed -e '/^$/d' -e '/^[	 #]/d' srcfiles.in |
+    egrep -w vx6 |
+    sed 's/[	 ].*//' >> $vxfilelist
+vx6 $vxfilelist > $t
+f=../build_vxworks/Makefile.6x
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+
+# Build the list of "small build" files VxWorks 6x knows about -- it's
+# the standard vxsmall list.
+sed -e '/^$/d' -e '/^[	 #]/d' srcfiles.in |
+    egrep -w vxsmall |
+    sed 's/[	 ].*//' >> $vxfilelist
+vx6 $vxsmallfiles > $t
+f=../build_vxworks/Makefile.6x.small
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)

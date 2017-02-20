@@ -1,0 +1,41 @@
+body { width: 45em; 
+       margin-left: 3em;
+       font-family: Arial, Helvetica, sans-serif;
+       font-size: 11pt;
+      }
+
+h2.title { margin-left: -1em;
+            font-family: Verdana, serif;
+            font-size: 16pt;
+    }
+
+h3.title { font-family: Verdana, serif;
+            font-size: 14pt;
+        }
+
+pre.programlisting {
+    font-family: monospace;
+    background-color: #eae8e9;
+}
+
+div.navheader { font-size: 10pt;
+                width: 60em;
+                margin-left: -2em;
+              }
+
+div.navheader table tr td { font-size: 10pt; }
+                
+div.navfooter { font-size: 10pt;
+                width: 60em;
+                margin-left: -2em;
+              }
+div.navfooter table tr td { font-size: 10pt; }
+
+span.emphasis { font-style: italic;}
+
+div.appendix div.informaltable { font-size: 9pt; }
+div.appendix div.informaltable td  { vertical-align: top; }
+div.appendix div.informaltable p  { margin-top: .25em; }
+div.appendix div.informaltable p  { margin-bottom: .25em; }
+
+

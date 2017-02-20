@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB_MPOOLFILE-&gt;get()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="memp.html" title="Chapter 8.  The DB_MPOOLFILE Handle" />
+    <link rel="prev" href="mempfclose.html" title="DB_MPOOLFILE-&gt;close()" />
+    <link rel="next" href="mempfopen.html" title="DB_MPOOLFILE-&gt;open()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB_MPOOLFILE-&gt;get()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="mempfclose.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 8. 
+              The  DB_MPOOLFILE Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="mempfopen.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="mempfget"></a>DB_MPOOLFILE-&gt;get()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB_MPOOLFILE-&gt;get(DB_MPOOLFILE *mpf,
+    db_pgno_t *pgnoaddr, DB_TXN * txnid, u_int32_t flags, void **pagep);  </pre>
+      <p>
+        The <code class="methodname">DB_MPOOLFILE-&gt;get()</code> method returns pages from the cache.
+    </p>
+      <p>
+         All pages returned by <code class="methodname">DB_MPOOLFILE-&gt;get()</code> will be retained (that is,
+         <span class="emphasis"><em>latched</em></span>) in the cache until a subsequent call to
+         <a class="xref" href="mempput.html" title="DB_MPOOLFILE-&gt;put()">DB_MPOOLFILE-&gt;put()</a>.
+     There is no deadlock detection amoung latches so care must be taken in the application if the DB_MPOOL_DIRTY
+     or DB_MPOOL_EDIT flags are used as these get exlusive latches on the pages.
+    </p>
+      <p>
+         The returned page is <span class="bold"><strong>size_t</strong></span> type
+         aligned.
+    </p>
+      <p>
+         Fully or partially created pages have all their bytes set to a nul
+         byte, unless the 
+         <a class="xref" href="mempset_clear_len.html" title="DB_MPOOLFILE-&gt;set_clear_len()">DB_MPOOLFILE-&gt;set_clear_len()</a> 
+         method was called to specify other behavior before the file was
+         opened.
+    </p>
+      <p><a id="fget_DB_PAGE_NOTFOUND"></a>
+        The <code class="methodname">DB_MPOOLFILE-&gt;get()</code> method will return
+        <code class="literal">DB_PAGE_NOTFOUND</code> if the requested page does not exist and DB_MPOOL_CREATE
+        was not set. Unless otherwise specified, the <code class="methodname">DB_MPOOLFILE-&gt;get()</code>
+        <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1689424"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1689441"></a>flags</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>flags</strong></span> parameter must be set to 0
+                          or by bitwise inclusively <span class="bold"><strong>OR</strong></span>'ing
+                          together one or more of the following values:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="mpoolfget_DB_MPOOL_CREATE"></a>
+                     <code class="literal">DB_MPOOL_CREATE</code>
+            </p>
+                <p>
+                 If the specified page does not exist, create it.  In this case, the
+                 <a class="link" href="mempregister.html" title="DB_ENV-&gt;memp_register()">pgin</a> method, if
+                 specified, is called.
+            </p>
+              </li>
+              <li>
+                <p><a id="fget_DB_MPOOL_DIRTY"></a>
+                  <code class="literal">DB_MPOOL_DIRTY</code>
+            </p>
+                <p>
+                 The page will be modified and must be written to the source file
+                 before being evicted from the cache.  For files open with the 
+                 <a class="link" href="dbopen.html#dbopen_DB_MULTIVERSION">DB_MULTIVERSION</a> 
+                 flag set, a new copy of the page will be made if this is the first
+                 time the specified transaction is modifying it.
+         A page fetched with the <code class="literal">DB_MPOOL_DIRTY</code> flag will be
+         <span class="bold"><strong>excluively latched</strong></span> until 
+        a subsequent call to <a class="xref" href="mempput.html" title="DB_MPOOLFILE-&gt;put()">DB_MPOOLFILE-&gt;put()</a>.
+            </p>
+              </li>
+              <li>
+                <p><a id="fget_DB_MPOOL_EDIT"></a>
+                  <code class="literal">DB_MPOOL_EDIT</code>
+            </p>
+                <p>
+                 The page will be modified and must be written to the source file
+                 before being evicted from the cache.  No copy of the page will be made,
+                 regardless of the 
+                 <a class="link" href="dbopen.html#dbopen_DB_MULTIVERSION">DB_MULTIVERSION</a> 
+                 setting.  This flag is only intended for use in situations where a
+                 transaction handle is not available, such as during aborts or
+                 recovery.
+         A page fetched with the <code class="literal">DB_MPOOL_EDIT</code> flag will be
+         <span class="bold"><strong>excluively latched</strong></span> until 
+        a subsequent call to <a class="xref" href="mempput.html" title="DB_MPOOLFILE-&gt;put()">DB_MPOOLFILE-&gt;put()</a>.
+            </p>
+              </li>
+              <li>
+                <p><a id="fget_DB_MPOOL_LAST"></a>
+                  <code class="literal">DB_MPOOL_LAST</code>
+            </p>
+                <p>
+                 Return the last page of the source file, and copy its page number into
+                 the memory location to which <span class="bold"><strong>pgnoaddr</strong></span>
+                 refers.
+            </p>
+              </li>
+              <li>
+                <p><a id="mpoolfget_DB_MPOOL_NEW"></a>
+                  <code class="literal">DB_MPOOL_NEW</code>
+            </p>
+                <p>
+                 Create a new page in the file, and copy its page number into the
+                 memory location to which <span class="bold"><strong>pgnoaddr</strong></span>
+                 refers.  In this case, the <code class="literal">pgin_fcn</code> callback, if specified on
+                 <a class="xref" href="mempregister.html" title="DB_ENV-&gt;memp_register()">DB_ENV-&gt;memp_register()</a>, is
+                 <span class="bold"><strong>not</strong></span> called.
+            </p>
+              </li>
+            </ul>
+          </div>
+          <p>
+                The <code class="literal">DB_MPOOL_CREATE</code>, <code class="literal">DB_MPOOL_LAST</code>, and
+                <code class="literal">DB_MPOOL_NEW</code> flags are mutually exclusive.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1689759"></a>pagep</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>pagep</strong></span> parameter references memory
+                          into which a pointer to the returned page is copied.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1689735"></a>pgnoaddr</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If the <span class="bold"><strong>flags</strong></span> parameter is set to
+                          <code class="literal">DB_MPOOL_LAST</code> or <code class="literal">DB_MPOOL_NEW</code>, the
+                          page number of the created page is copied into the memory location to
+                          which the <span class="bold"><strong>pgnoaddr</strong></span> parameter refers.
+                          Otherwise, the <span class="bold"><strong>pgnoaddr</strong></span> parameter is the
+                          page to create or retrieve.
+                     </p>
+          <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+            <h3 class="title">Note</h3>
+            <p>
+                             Page numbers begin at 0; that is, the first page in the file is page number 0, 
+                             not page number 1.
+                         </p>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1689745"></a>txnid</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If the operation is part of an application-specified transaction, the
+                          <span class="bold"><strong>txnid</strong></span> parameter is a transaction
+                          handle returned from <a class="xref" href="txnbegin.html" title="DB_ENV-&gt;txn_begin()">DB_ENV-&gt;txn_begin()</a>; 
+                          otherwise NULL.  A transaction is required if the file is open for multiversion
+                          concurrency control by passing 
+                          <a class="link" href="dbopen.html#dbopen_DB_MULTIVERSION">DB_MULTIVERSION</a>  
+                          to
+                          <a class="xref" href="mempfopen.html" title="DB_MPOOLFILE-&gt;open()">DB_MPOOLFILE-&gt;open()</a> 
+                          and the DB_MPOOL_DIRTY, DB_MPOOL_CREATE or DB_MPOOL_NEW flags were
+                          specified.  Otherwise it is ignored.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1689577"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DB_MPOOLFILE-&gt;get()</code> <span>
+            <span>
+                 method may fail and return one of the following non-zero errors:
+            </span>
+            
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1689663"></a>EACCES</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                             The <code class="literal">DB_MPOOL_DIRTY</code> or
+                             <code class="literal">DB_MPOOL_EDIT</code> flag was set and the source file was
+                             not opened for writing.
+                         </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1689754"></a>EAGAIN</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                              The page reference count has overflowed.  (This should never happen
+                              unless there is a bug in the application.)
+                         </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1689606"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                             If the <code class="literal">DB_MPOOL_NEW</code> flag was set, and the source
+                             file was not opened for writing; more than one of
+                             <code class="literal">DB_MPOOL_CREATE</code>, <code class="literal">DB_MPOOL_LAST</code>,
+                             and <code class="literal">DB_MPOOL_NEW</code> was set; or if an invalid flag
+                             value or parameter was specified.
+                         </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1689278"></a>DB_LOCK_DEADLOCK</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                              For transactions configured with 
+                              <a class="link" href="txnbegin.html#txnbegin_DB_TXN_SNAPSHOT">DB_TXN_SNAPSHOT</a>,
+                              the page has been modified since the transaction began.
+                         </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1689437"></a>ENOMEM</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                              The cache is full, and no more pages will fit in the cache.
+                         </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1689659"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                 <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>, <a class="link" href="memp.html" title="Chapter 8.  The DB_MPOOLFILE Handle">DB_MPOOLFILE</a> 
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1689400"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="memp.html#memplist" title="Memory Pools and Related Methods">Memory Pools and Related Methods</a>  
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="mempfclose.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="memp.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="mempfopen.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB_MPOOLFILE-&gt;close() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_MPOOLFILE-&gt;open()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

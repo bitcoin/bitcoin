@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 5. Saving and Retrieving Objects</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="dpl.html" title="Part I. Programming with the Direct Persistence Layer" />
+    <link rel="prev" href="dplindexcreate.html" title="Creating Indexes" />
+    <link rel="next" href="simpleda.html" title="SimpleDA.class" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 5. Saving and Retrieving Objects</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dplindexcreate.html">Prev</a> </td>
+          <th width="60%" align="center">Part I. Programming with the Direct Persistence Layer</th>
+          <td width="20%" align="right"> <a accesskey="n" href="simpleda.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="persist_access"></a>Chapter 5. Saving and Retrieving Objects</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="persist_access.html#simpleentity">A Simple Entity Class</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="simpleda.html">SimpleDA.class</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="simpleput.html">Placing Objects in an Entity Store</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="simpleget.html">Retrieving Objects from an Entity Store</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="getmultiple.html">Retrieving Multiple Objects</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="getmultiple.html#dpl_cursor_initialize">Cursor Initialization</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="getmultiple.html#dpl_dups">Working with Duplicate Keys</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="getmultiple.html#dpl_cursor_range">Key Ranges</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <span class="sect1">
+              <a href="dpl_entityjoin.html">Join Cursors</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="dpl_delete.html">Deleting Entity Objects</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="dpl_replace.html">Replacing Entity Objects</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+          To store an object in an <code class="classname">EntityStore</code> you
+          must annotate the class appropriately and then store it using
+          <code class="methodname">PrimaryIndex.put()</code>.
+  </p>
+      <p>
+          To retrieve and object from an <code class="classname">EntityStore</code>
+          you use the <code class="methodname">get()</code> method from either the
+          <code class="classname">PrimaryIndex</code> or
+          <code class="classname">SecondaryIndex</code>, whichever is most
+          appropriate for your application.
+  </p>
+      <p>
+          In both cases, it simplifies things greatly if you create a data
+          accessor class to organize your indexes.
+  </p>
+      <p>
+          In the next few sections we:
+  </p>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <p>
+                          Create an entity class that is ready to be stored
+                          in an entity store. This class will have both a
+                          primary index (required) declared for it, as well
+                          as a secondary index (which is optional).
+                  </p>
+            <p>
+                          See the next section for this implementation.
+                  </p>
+          </li>
+          <li>
+            <p>
+                          Create a data accessor class which is used to
+                          organize our data.
+                  </p>
+            <p>
+                          See <a class="xref" href="simpleda.html" title="SimpleDA.class">SimpleDA.class</a>
+                          for this implementation.
+                  </p>
+          </li>
+          <li>
+            <p>
+                          Create a simple class that is used to put objects
+                          to our entity store.
+                  </p>
+            <p>
+                          See <a class="xref" href="simpleput.html" title="Placing Objects in an Entity Store">Placing Objects in an Entity Store</a>
+                          for this implementation.
+                  </p>
+          </li>
+          <li>
+            <p>
+                          Create another class that retrieves objects from
+                          our entity store.
+                  </p>
+            <p>
+                          See <a class="xref" href="simpleget.html" title="Retrieving Objects from an Entity Store">Retrieving Objects from an Entity Store</a>
+                          for this implementation.
+                  </p>
+          </li>
+        </ol>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="simpleentity"></a>A Simple Entity Class</h2>
+            </div>
+          </div>
+        </div>
+        <p>
+                  For clarity's sake, this entity class is a simple a class as we can write.
+                  It contains only two data members, both of which are set
+                  and retrieved by simple setter and getter methods. Beyond
+                  that, by design this class does not do anything or particular
+                  interest.
+          </p>
+        <p>
+                  Its implementation is as follows:
+          </p>
+        <pre class="programlisting">package persist.gettingStarted;
+
+import com.sleepycat.persist.model.Entity;
+import com.sleepycat.persist.model.PrimaryKey;
+import static com.sleepycat.persist.model.Relationship.*;
+import com.sleepycat.persist.model.SecondaryKey;
+
+@Entity
+public class SimpleEntityClass {
+
+    // Primary key is pKey
+    @PrimaryKey
+    private String pKey;
+
+    // Secondary key is the sKey
+    @SecondaryKey(relate=MANY_TO_ONE)
+    private String sKey;
+
+    public void setPKey(String data) {
+        pKey = data;
+    }
+
+    public void setSKey(String data) {
+        sKey = data;
+    }
+
+    public String getPKey() {
+        return pKey;
+    }
+
+    public String getSKey() {
+        return sKey;
+    }
+} </pre>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dplindexcreate.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="dpl.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="simpleda.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Creating Indexes </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> SimpleDA.class</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

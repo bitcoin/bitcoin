@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 2.0: converting applications</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_2_0_toc.html" title="Chapter 32. Upgrading Berkeley DB 1.85 or 1.86 applications to Berkeley DB 2.0" />
+    <link rel="prev" href="upgrade_2_0_system.html" title="Release 2.0: system integration" />
+    <link rel="next" href="upgrade_2_0_disk.html" title="Release 2.0: Upgrade Requirements" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 2.0: converting applications</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_2_0_system.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 32. Upgrading Berkeley DB 1.85 or 1.86 applications to Berkeley DB 2.0</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_2_0_disk.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_2_0_convert"></a>Release 2.0: converting applications</h2>
+          </div>
+        </div>
+      </div>
+      <p>Mapping the Berkeley DB 1.85 functionality into Berkeley DB version 2 is almost always
+simple.  The manual page <a href="../api_reference/C/dbopen.html" class="olink">DB-&gt;open()</a> replaces the Berkeley DB 1.85 manual
+pages <code class="literal">dbopen</code>(3), <code class="literal">btree</code>(3), <code class="literal">hash</code>(3) and
+<code class="literal">recno</code>(3).  You should be able to convert each 1.85 function
+call into a Berkeley DB version 2 function call using just the <a href="../api_reference/C/dbopen.html" class="olink">DB-&gt;open()</a>
+documentation.</p>
+      <p>Some guidelines and things to watch out for:</p>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>Most access method functions have exactly the same semantics as in Berkeley DB
+1.85, although the arguments to the functions have changed in some cases.
+To get your code to compile, the most common change is to add the
+transaction ID as an argument (NULL, since Berkeley DB 1.85 did not support
+transactions.)</li>
+          <li>You must always initialize DBT structures to zero before using them with
+any Berkeley DB version 2 function.  (They do not normally have to be
+reinitialized each time, only when they are first allocated.  Do this by
+declaring the DBT structure external or static, or by calling the C
+library routine <code class="literal">bzero</code>(3) or <code class="literal">memset</code>(3).)</li>
+          <li>The error returns are completely different in the two versions.  In Berkeley DB
+1.85, &lt; 0 meant an error, and &gt; 0 meant a minor Berkeley DB exception.
+In Berkeley DB 2.0, &gt; 0 means an error (the Berkeley DB version 2 functions
+return <code class="literal">errno</code> on error) and &lt; 0 means a Berkeley DB exception.
+See <a class="xref" href="program_errorret.html" title="Error returns to applications">Error returns to applications</a>
+for more information.</li>
+          <li>The Berkeley DB 1.85 DB-&gt;seq function has been replaced by cursors in Berkeley DB
+version 2.  The semantics are approximately the same, but cursors require
+the creation of an extra object (the DBC object), which is then used to
+access the database.
+<p>Specifically, the partial key match and range search functionality of the
+R_CURSOR flag in DB-&gt;seq has been replaced by the <a href="../api_reference/C/dbcget.html#dbcget_DB_SET_RANGE" class="olink">DB_SET_RANGE</a> flag in
+<a href="../api_reference/C/dbcget.html" class="olink">DBC-&gt;get()</a>.</p></li>
+          <li>In version 2 of the Berkeley DB library, additions or deletions into Recno
+(fixed and variable-length record) databases no longer automatically
+logically renumber all records after the add/delete point, by default.
+The default behavior is that deleting records does not cause subsequent
+records to be renumbered, and it is an error to attempt to add new records
+between records already in the database.  Applications wanting the
+historic Recno access method semantics should call the
+<a href="../api_reference/C/dbset_flags.html" class="olink">DB-&gt;set_flags()</a> method with the <a href="../api_reference/C/dbset_flags.html#dbset_flags_DB_RENUMBER" class="olink">DB_RENUMBER</a> flag.</li>
+          <li>Opening a database in Berkeley DB version 2 is a much heavier-weight operation
+than it was in Berkeley DB 1.85.  Therefore, if your historic applications were
+written to open a database, perform a single operation, and close the
+database, you may observe performance degradation.  In most cases, this
+is due to the expense of creating the environment upon each open.   While
+we encourage restructuring your application to avoid repeated opens and
+closes, you can probably recover most of the lost performance by simply
+using a persistent environment across invocations.</li>
+        </ol>
+      </div>
+      <p>While simply converting Berkeley DB 1.85 function calls to Berkeley DB version 2
+function calls will work, we recommend that you eventually reconsider your
+application's interface to the Berkeley DB database library in light of the
+additional functionality supplied by Berkeley DB version 2, as it is likely to
+result in enhanced application performance.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_2_0_system.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_2_0_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_2_0_disk.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 2.0: system integration </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 2.0: Upgrade Requirements</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

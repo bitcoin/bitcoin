@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>The Berkeley DB products</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="intro.html" title="Chapter 1.  Introduction" />
+    <link rel="prev" href="intro_where.html" title="Where does Berkeley DB run?" />
+    <link rel="next" href="am_conf.html" title="Chapter 2.  Access Method Configuration" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">The Berkeley DB products</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="intro_where.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 1. 
+        Introduction
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="am_conf.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="intro_products"></a>The Berkeley DB products</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="intro_products.html#id1587931">Berkeley DB Data Store</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="intro_products.html#id1588210">Berkeley DB Concurrent Data Store</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="intro_products.html#id1588893">Berkeley DB Transactional Data Store</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="intro_products.html#id1587492">Berkeley DB High Availability</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>Oracle licenses four different products that use the Berkeley DB technology.
+Each product offers a distinct level of database support.  It is not
+possible to mix-and-match products, that is, each application or group
+of applications must use the same Berkeley DB product.</p>
+      <p>All four products are included in the single Open Source distribution
+of Berkeley DB from Oracle, and building that distribution automatically
+builds all four products.  Each product adds new interfaces and services
+to the product that precedes it in the list.  As a result, developers
+can download Berkeley DB and build an application that does only single-user,
+read-only database access, and easily add support later for more users
+and more complex database access patterns.</p>
+      <p>Users who distribute Berkeley DB must ensure that they are licensed for the
+Berkeley DB interfaces they use.  Information on licensing is available from
+Oracle.</p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1587931"></a>Berkeley DB Data Store</h3>
+            </div>
+          </div>
+        </div>
+        <p>The Berkeley DB Data Store product is an embeddable, high-performance data store.  It
+supports multiple concurrent threads of control (including multiple
+processes and multiple threads of control within a process) reading
+information managed by Berkeley DB.  When updates are required, only a single
+thread of control may be using the database.  The Berkeley DB Data Store does no locking,
+and so provides no guarantees of correct behavior if more than one
+thread of control is updating the database at a time.  The Berkeley DB Data Store is
+intended for use in read-only applications or applications which can
+guarantee no more than one thread of control will ever update the
+database at a time.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1588210"></a>Berkeley DB Concurrent Data Store</h3>
+            </div>
+          </div>
+        </div>
+        <p>The Berkeley DB Concurrent Data Store product adds multiple-reader, single writer capabilities to
+the Berkeley DB Data Store product, supporting applications that need concurrent updates
+and do not want to implement their own locking protocols.  Berkeley DB Concurrent Data Store is
+intended for applications that require occasional write access to a
+database that is largely used for reading.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1588893"></a>Berkeley DB Transactional Data Store</h3>
+            </div>
+          </div>
+        </div>
+        <p>The Berkeley DB Transactional Data Store product adds full transactional support and recoverability
+to the Berkeley DB Data Store product.  Berkeley DB Transactional Data Store is intended for applications that require
+industrial-strength database services, including excellent performance
+under high-concurrency workloads with a mixture of readers and writers,
+the ability to commit or roll back multiple changes to the database at
+a single instant, and the guarantee that even in the event of a
+catastrophic system or hardware failure, any committed database changes
+will be preserved.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1587492"></a>Berkeley DB High Availability</h3>
+            </div>
+          </div>
+        </div>
+        <p>The Berkeley DB High Availability product support for data replication.  A single master system
+handles all updates, and distributes them to as many replicas as the
+application requires. All replicas can handle read requests during
+normal processing. If the master system fails for any reason, one of
+the replicas takes over as the new master system, and distributes
+updates to the remaining replicas.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="intro_where.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="intro.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="am_conf.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Where does Berkeley DB run? </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 2. 
+        Access Method Configuration
+        </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

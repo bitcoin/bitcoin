@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Dbstl container specific notes</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="stl.html" title="Chapter 7. Standard Template Library API" />
+    <link rel="prev" href="stl_persistence.html" title="Dbstl persistence" />
+    <link rel="next" href="stl_efficienct_use.html" title="Using dbstl efficiently" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Dbstl container specific notes</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="stl_persistence.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 7. Standard Template Library API</th>
+          <td width="20%" align="right"> <a accesskey="n" href="stl_efficienct_use.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="stl_container_specific"></a>Dbstl container specific notes</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="stl_container_specific.html#id1601960">db_vector specific notes</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="stl_container_specific.html#id1602573">Associative container specific notes</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1601960"></a>db_vector specific notes</h3>
+            </div>
+          </div>
+        </div>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+                Set the <a href="../api_reference/C/dbset_flags.html#dbset_flags_DB_RENUMBER" class="olink">DB_RENUMBER</a> flag in the database handle if you want
+                <code class="classname">db_vector&lt;&gt;</code> to work like
+                <code class="classname">std::vector</code> or <code class="classname">std::deque</code>.  Do not set
+                <a href="../api_reference/C/dbset_flags.html#dbset_flags_DB_RENUMBER" class="olink">DB_RENUMBER</a> if you want <code class="classname">db_vector&lt;&gt;</code> to work like
+                <code class="classname">std::list</code>. Note that without <a href="../api_reference/C/dbset_flags.html#dbset_flags_DB_RENUMBER" class="olink">DB_RENUMBER</a> set,
+                <code class="classname">db_vector&lt;&gt;</code> can work faster.
+            </p>
+              <p>
+                For example, to construct a fast std::queue/std::stack object, you only need a
+                <code class="classname">db_vector&lt;&gt;</code> object whose database handle does not have
+                <a href="../api_reference/C/dbset_flags.html#dbset_flags_DB_RENUMBER" class="olink">DB_RENUMBER</a> set.  Of course, if the database handle has <a href="../api_reference/C/dbset_flags.html#dbset_flags_DB_RENUMBER" class="olink">DB_RENUMBER</a> set, it
+                still works for this kind of scenario, just not as fast.
+            </p>
+              <p>
+                <code class="classname">db_vector</code> does not check whether <a href="../api_reference/C/dbset_flags.html#dbset_flags_DB_RENUMBER" class="olink">DB_RENUMBER</a> is set.  If
+                you do not set it, <code class="classname">db_vector&lt;&gt;</code> will not work like
+                std::vector&lt;&gt;/std::deque&lt;&gt; with regard to operator[], because the
+                indices are not maintained in that case.
+            </p>
+              <p>
+                You can find example code showing how to use this feature in the
+                <code class="methodname">TestVector::test_queue_stack()</code> method, which is
+                available in the dbstl test suite.
+            </p>
+            </li>
+            <li>
+              <p>
+                Just as is the case with <code class="classname">std::vector</code>, inserting/deleting in
+                the middle of a <code class="classname">db_vector</code> is slower than doing the same
+                action at the end of the sequence. This is because the underlying DB_RECNO DB (with
+                the <a href="../api_reference/C/dbset_flags.html#dbset_flags_DB_RENUMBER" class="olink">DB_RENUMBER</a> flag set) is relatively slow when inserting/deleting in the middle
+                or the head — it has to update the index numbers of all the records following
+                the one that was inserted/deleted. If you do not need to keep the index ordered on
+                insert/delete, you can use <code class="classname">db_map</code> instead.
+            </p>
+              <p>
+                <code class="classname">db_vector</code> also contains methods inherited from
+                <code class="classname">std::list</code> and <code class="classname">std::deque</code>,
+                including <code class="classname">std::list&lt;&gt;'s</code> unique methods
+                <code class="methodname">remove()</code>, <code class="methodname">remove_if()</code>,
+                <code class="methodname">unique()</code>, <code class="methodname">merge()</code>,
+                <code class="methodname">sort()</code>, <code class="methodname">reverse()</code>, and
+                <code class="methodname">splice()</code>. These use the identical semantics/behaviors
+                of the <code class="classname">std::list&lt;&gt;</code> methods, although
+                pushing/deleting at the head is slower than the
+                <code class="methodname">std::deque</code> and <code class="methodname">std::list</code> 
+                equivalent when there are quite a lot of elements in the database.
+            </p>
+            </li>
+            <li>
+              <p>
+                You can use <code class="classname">std::queue</code>,
+                <code class="classname">std::priority_queue</code> and <code class="classname">std::stack</code>
+                container adapters with <code class="classname">db_vector</code>; they work with db_vector
+                even without <a href="../api_reference/C/dbset_flags.html#dbset_flags_DB_RENUMBER" class="olink">DB_RENUMBER</a> set.
+            </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1602573"></a>Associative container specific notes</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+        <code class="classname">db_map</code> contains the union of method set from
+        <code class="classname">std::map</code> and <code class="classname">hash_map</code>, but there are some
+        methods that can only be called on containers backed by <code class="literal">DB_BTREE</code> or
+        <code class="literal">DB_HASH</code> databases.  You can call
+        <code class="function">db_map&lt;&gt;::is_hash()</code> to figure out the type of the backing
+        database. If you call unsupported methods then an InvalidFunctionCall exception is thrown. 
+    </p>
+        <p>
+        These are the <code class="literal">DB_BTREE</code> specific methods: <code class="methodname">upper_bound()</code>,
+        <code class="methodname">lower_bound()</code>, <code class="methodname">key_comp()</code>,
+        and <code class="methodname">value_comp()</code>. The <code class="literal">DB_HASH</code> specific methods are
+        <code class="methodname">key_eq()</code>, <code class="methodname">hash_funct()</code>.
+    </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="stl_persistence.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="stl.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="stl_efficienct_use.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Dbstl persistence </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Using dbstl efficiently</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

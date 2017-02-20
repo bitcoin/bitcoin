@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Creating Tuple Key Bindings</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Collections Tutorial" />
+    <link rel="up" href="Tuple.html" title="Chapter 5.  Using Tuples" />
+    <link rel="prev" href="tupleswithkeycreators.html" title="Using Tuples with Key Creators" />
+    <link rel="next" href="tuple-serialentitybindings.html" title="Creating Tuple-Serial Entity Bindings" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">
+        Creating Tuple Key Bindings
+    </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="tupleswithkeycreators.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. 
+        Using Tuples
+    </th>
+          <td width="20%" align="right"> <a accesskey="n" href="tuple-serialentitybindings.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="tuplekeybindings"></a>
+        Creating Tuple Key Bindings
+    </h2>
+          </div>
+        </div>
+      </div>
+      <p>
+    Serial bindings were used in prior examples as key bindings, and
+    keys were stored as serialized objects. In this example, a tuple
+    binding is used for each key since keys will be stored as tuples.
+    Because keys are no longer stored as serialized objects, the
+    <code class="classname">PartKey</code>, <code class="classname">SupplierKey</code> and <code class="classname">ShipmentKey</code> classes
+    no longer implement the 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/io/Serializable.html" target="_top">Serializable</a>
+    
+    interface (this is the only change to these classes and is not
+    shown below).
+</p>
+      <p>
+    For the <code class="classname">Part</code> key, <code class="classname">Supplier</code> key, 
+    and <code class="classname">Shipment</code> key, the
+    <code class="classname">SampleViews</code> class was changed in this example to create a
+    custom 
+    <a class="ulink" href="../../java/com/sleepycat/bind/tuple/TupleBinding.html" target="_top">TupleBinding</a>
+    
+    instead of a 
+    <a class="ulink" href="../../java/com/sleepycat/bind/serial/SerialBinding.html" target="_top">SerialBinding</a>.
+    The custom tuple key binding classes are defined further below.
+</p>
+      <a id="tuple_sampleviews"></a>
+      <pre class="programlisting"><strong class="userinput"><code>import com.sleepycat.bind.tuple.TupleBinding;
+...</code></strong>
+public class SampleViews
+{
+    ...
+    public SampleViews(SampleDatabase db)
+    {
+        ...
+        ClassCatalog catalog = db.getClassCatalog();
+<strong class="userinput"><code>        EntryBinding partKeyBinding =
+            new PartKeyBinding();
+        EntityBinding partDataBinding =
+            new PartBinding(catalog, PartData.class);
+        EntryBinding supplierKeyBinding =
+            new SupplierKeyBinding();
+        EntityBinding supplierDataBinding =
+            new SupplierBinding(catalog, SupplierData.class);
+        EntryBinding shipmentKeyBinding =
+            new ShipmentKeyBinding();
+        EntityBinding shipmentDataBinding =
+            new ShipmentBinding(catalog, ShipmentData.class);
+        EntryBinding cityKeyBinding =
+            TupleBinding.getPrimitiveBinding(String.class);</code></strong>
+        ...
+    }
+} </pre>
+      <p>
+    For the City key, however, a custom binding class is not needed
+    because the key class is a primitive Java type, 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/lang/String.html" target="_top">String</a>.
+    For any primitive Java type, a tuple binding may be created using the 
+    <a class="ulink" href="../../java/com/sleepycat/bind/tuple/TupleBinding.html#getPrimitiveBinding(java.lang.Class)" target="_top">TupleBinding.getPrimitiveBinding</a>
+    
+    static method.
+</p>
+      <p>
+    The custom key binding classes, <code class="classname">PartKeyBinding</code>,
+    <code class="classname">SupplierKeyBinding</code> and <code class="classname">ShipmentKeyBinding</code>, are
+    defined by extending the 
+    <a class="ulink" href="../../java/com/sleepycat/bind/tuple/TupleBinding.html" target="_top">TupleBinding</a>
+    
+    class. The 
+    <a class="ulink" href="../../java/com/sleepycat/bind/tuple/TupleBinding.html" target="_top">TupleBinding</a>
+    
+    abstract class implements the 
+    <a class="ulink" href="../../java/com/sleepycat/bind/EntryBinding.html" target="_top">EntryBinding</a>
+    
+    interface, and is used for one-to-one bindings between tuples and
+    objects. Each binding class implements two methods for converting
+    between tuples and objects. Tuple fields are read using the
+    <a class="ulink" href="../../java/com/sleepycat/bind/tuple/TupleInput.html" target="_top">TupleInput</a>
+    
+    parameter and written using the 
+    <a class="ulink" href="../../java/com/sleepycat/bind/tuple/TupleOutput.html" target="_top">TupleOutput</a>
+    
+    parameter.
+</p>
+      <a id="tuple_partkeybinding"></a>
+      <pre class="programlisting"><strong class="userinput"><code>import com.sleepycat.bind.tuple.TupleBinding;
+import com.sleepycat.bind.tuple.TupleInput;
+import com.sleepycat.bind.tuple.TupleOutput;
+...</code></strong>
+public class SampleViews
+{
+...
+
+    <strong class="userinput"><code>private static class PartKeyBinding extends TupleBinding
+    {
+        private PartKeyBinding()
+        {
+        }
+
+        public Object entryToObject(TupleInput input)
+        {
+            String number = input.readString();
+            return new PartKey(number);
+        }
+
+        public void objectToEntry(Object object, TupleOutput output)
+        {
+            PartKey key = (PartKey) object;
+            output.writeString(key.getNumber());
+        }
+    }
+    ...
+    private static class SupplierKeyBinding extends TupleBinding
+    {
+        private SupplierKeyBinding()
+        {
+        }
+
+        public Object entryToObject(TupleInput input)
+        {
+            String number = input.readString();
+            return new SupplierKey(number);
+        }
+
+        public void objectToEntry(Object object, TupleOutput output)
+        {
+            SupplierKey key = (SupplierKey) object;
+            output.writeString(key.getNumber());
+        }
+    }
+    ...
+    private static class ShipmentKeyBinding extends TupleBinding
+    {
+        private ShipmentKeyBinding()
+        {
+        }
+
+        public Object entryToObject(TupleInput input)
+        {
+            String partNumber = input.readString();
+            String supplierNumber = input.readString();
+            return new ShipmentKey(partNumber, supplierNumber);
+        }
+
+        public void objectToEntry(Object object, TupleOutput output)
+        {
+            ShipmentKey key = (ShipmentKey) object;
+            output.writeString(key.getPartNumber());
+            output.writeString(key.getSupplierNumber());
+        }
+    }</code></strong>
+    ...
+} </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="tupleswithkeycreators.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="Tuple.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="tuple-serialentitybindings.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+        Using Tuples with Key Creators
+     </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+Creating Tuple-Serial Entity Bindings
+</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Access method tuning</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="am_misc.html" title="Chapter 4.  Access Method Wrapup" />
+    <link rel="prev" href="am_misc_db_sql.html" title="Specifying a Berkeley DB schema using SQL DDL" />
+    <link rel="next" href="am_misc_faq.html" title="Access method FAQ" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Access method tuning</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="am_misc_db_sql.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 4. 
+        Access Method Wrapup
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="am_misc_faq.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="am_misc_tune"></a>Access method tuning</h2>
+          </div>
+        </div>
+      </div>
+      <p>There are a few different issues to consider when tuning the performance
+of Berkeley DB access method applications.</p>
+      <div class="variablelist">
+        <dl>
+          <dt>
+            <span class="term">access method</span>
+          </dt>
+          <dd>An application's choice of a database access method can significantly
+affect performance.  Applications using fixed-length records and integer
+keys are likely to get better performance from the Queue access method.
+Applications using variable-length records are likely to get better
+performance from the Btree access method, as it tends to be faster for
+most applications than either the Hash or Recno access methods.  Because
+the access method APIs are largely identical between the Berkeley DB access
+methods, it is easy for applications to benchmark the different access
+methods against each other.  See <a class="xref" href="am_conf_select.html" title="Selecting an access method">Selecting an access method</a> for more information.</dd>
+          <dt>
+            <span class="term">cache size</span>
+          </dt>
+          <dd>The Berkeley DB database cache defaults to a fairly small size, and most
+applications concerned with performance will want to set it explicitly.
+Using a too-small cache will result in horrible performance.  The first
+step in tuning the cache size is to use the db_stat utility (or the
+statistics returned by the <a href="../api_reference/C/dbstat.html" class="olink">DB-&gt;stat()</a> function) to measure the
+effectiveness of the cache.  The goal is to maximize the cache's hit
+rate.  Typically, increasing the size of the cache until the hit rate
+reaches 100% or levels off will yield the best performance.  However,
+if your working set is sufficiently large, you will be limited by the
+system's available physical memory.  Depending on the virtual memory
+and file system buffering policies of your system, and the requirements
+of other applications, the maximum cache size will be some amount
+smaller than the size of physical memory.  If you find that
+the <a href="../api_reference/C/db_stat.html" class="olink">db_stat utility</a> shows that increasing the cache size improves your hit
+rate, but performance is not improving (or is getting worse), then it's
+likely you've hit other system limitations.  At this point, you should
+review the system's swapping/paging activity and limit the size of the
+cache to the maximum size possible without triggering paging activity.
+Finally, always remember to make your measurements under conditions as
+close as possible to the conditions your deployed application will run
+under, and to test your final choices under worst-case conditions.</dd>
+          <dt>
+            <span class="term">shared memory</span>
+          </dt>
+          <dd>By default, Berkeley DB creates its database environment shared regions in
+filesystem backed memory.  Some systems do not distinguish between
+regular filesystem pages and memory-mapped pages backed by the
+filesystem, when selecting dirty pages to be flushed back to disk.  For
+this reason, dirtying pages in the Berkeley DB cache may cause intense
+filesystem activity, typically when the filesystem sync thread or
+process is run.  In some cases, this can dramatically affect application
+throughput.  The workaround to this problem is to create the shared
+regions in system shared memory (<a href="../api_reference/C/envopen.html#envopen_DB_SYSTEM_MEM" class="olink">DB_SYSTEM_MEM</a>) or application
+private memory (<a href="../api_reference/C/envopen.html#open_DB_PRIVATE" class="olink">DB_PRIVATE</a>), or, in cases where this behavior
+is configurable, to turn off the operating system's flushing of
+memory-mapped pages.</dd>
+          <dt>
+            <span class="term">large key/data items</span>
+          </dt>
+          <dd>Storing large key/data items in a database can alter the performance
+characteristics of Btree, Hash and Recno databases.  The first parameter
+to consider is the database page size.  When a key/data item is too
+large to be placed on a database page, it is stored on "overflow" pages
+that are maintained outside of the normal database structure (typically,
+items that are larger than one-quarter of the page size are deemed to
+be too large).  Accessing these overflow pages requires at least one
+additional page reference over a normal access, so it is usually better
+to increase the page size than to create a database with a large number
+of overflow pages.  Use the <a href="../api_reference/C/db_stat.html" class="olink">db_stat utility</a> (or the statistics
+returned by the <a href="../api_reference/C/dbstat.html" class="olink">DB-&gt;stat()</a> method) to review the number of overflow
+pages in the database.
+<p>The second issue is using large key/data items instead of duplicate data
+items.  While this can offer performance gains to some applications
+(because it is possible to retrieve several data items in a single get
+call), once the key/data items are large enough to be pushed off-page,
+they will slow the application down.  Using duplicate data items is
+usually the better choice in the long run.</p></dd>
+        </dl>
+      </div>
+      <p>A common question when tuning Berkeley DB applications is scalability.  For
+example, people will ask why, when adding additional threads or
+processes to an application, the overall database throughput decreases,
+even when all of the operations are read-only queries.</p>
+      <p>First, while read-only operations are logically concurrent, they still
+have to acquire mutexes on internal Berkeley DB data structures.  For example,
+when searching a linked list and looking for a database page, the linked
+list has to be locked against other threads of control attempting to add
+or remove pages from the linked list.  The more threads of control you
+add, the more contention there will be for those shared data structure
+resources.</p>
+      <p>Second, once contention starts happening, applications will also start
+to see threads of control convoy behind locks (especially on
+architectures supporting only test-and-set spin mutexes, rather than
+blocking mutexes).  On test-and-set architectures, threads of control
+waiting for locks must attempt to acquire the mutex, sleep, check the
+mutex again, and so on.  Each failed check of the mutex and subsequent
+sleep wastes CPU and decreases the overall throughput of the system.</p>
+      <p>Third, every time a thread acquires a shared mutex, it has to shoot down
+other references to that memory in every other CPU on the system.  Many
+modern snoopy cache architectures have slow shoot down characteristics.</p>
+      <p>Fourth, schedulers don't care what application-specific mutexes a thread
+of control might hold when de-scheduling a thread.  If a thread of
+control is descheduled while holding a shared data structure mutex,
+other threads of control will be blocked until the scheduler decides to
+run the blocking thread of control again.  The more threads of control
+that are running, the smaller their quanta of CPU time, and the more
+likely they will be descheduled while holding a Berkeley DB mutex.</p>
+      <p>The results of adding new threads of control to an application, on the
+application's throughput, is application and hardware specific and
+almost entirely dependent on the application's data access pattern and
+hardware.  In general, using operating systems that support blocking
+mutexes will often make a tremendous difference, and limiting threads
+of control to to some small multiple of the number of CPUs is usually
+the right choice to make.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="am_misc_db_sql.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="am_misc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="am_misc_faq.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Specifying a Berkeley DB schema using SQL DDL </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Access method FAQ</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

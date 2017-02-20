@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB_MULTIPLE_KEY_RESERVE_NEXT</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="dbt.html" title="Chapter 4.  The DBT Handle" />
+    <link rel="prev" href="DB_MULTIPLE_KEY_WRITE_NEXT.html" title="DB_MULTIPLE_KEY_WRITE_NEXT" />
+    <link rel="next" href="DB_MULTIPLE_RECNO_WRITE_INIT.html" title="DB_MULTIPLE_RECNO_WRITE_INIT" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB_MULTIPLE_KEY_RESERVE_NEXT</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="DB_MULTIPLE_KEY_WRITE_NEXT.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 4. 
+                The DBT Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="DB_MULTIPLE_RECNO_WRITE_INIT.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="DB_MULTIPLE_KEY_RESERVE_NEXT"></a>DB_MULTIPLE_KEY_RESERVE_NEXT</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+DB_MULTIPLE_KEY_RESERVE_NEXT(void *pointer, DBT *dbt,
+    void *kdest, size_t klen, void *ddest, size_t dlen); </pre>
+      <p>
+        Reserves space for a key / data pair in a bulk buffer.
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1659389"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1659133"></a>pointer</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+            The <span class="bold"><strong>pointer</strong></span> parameter
+            is a variable that must have been initialized by a call
+            to <a class="xref" href="DB_MULTIPLE_WRITE_INIT.html" title="DB_MULTIPLE_WRITE_INIT">DB_MULTIPLE_WRITE_INIT</a>.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1659353"></a>kdest</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+            The <span class="bold"><strong>kdest</strong></span> parameter is
+            set to the location reserved in the bulk buffer for the
+            key.
+                     </p>
+          <p>
+                 This parameter is set to NULL if the data item does not
+             fit in the buffer.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1659668"></a>klen</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                         The number of bytes to be reserved for the key.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1659650"></a>ddest</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+            The <span class="bold"><strong>ddest</strong></span> parameter is
+            set to the location reserved in the bulk buffer for the
+            data item.
+                     </p>
+          <p>
+                 This parameter is set to NULL if the data item does not
+             fit in the buffer.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1659657"></a>dlen</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                         The number of bytes to be reserved for the data item.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1659390"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1659580"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="dbt.html#dbtlist" title="DBT and Bulk Operations">DBT and Bulk Operations</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="DB_MULTIPLE_KEY_WRITE_NEXT.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="dbt.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="DB_MULTIPLE_RECNO_WRITE_INIT.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB_MULTIPLE_KEY_WRITE_NEXT </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_MULTIPLE_RECNO_WRITE_INIT</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

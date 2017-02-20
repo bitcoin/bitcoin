@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 11.  Replication Methods</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="prev" href="mutexunlock.html" title="DbEnv::mutex_unlock()" />
+    <link rel="next" href="repelect.html" title="DbEnv::rep_elect()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 11. 
+                Replication Methods
+        </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="mutexunlock.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="repelect.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="rep"></a>Chapter 11. 
+                Replication Methods
+        </h2>
+          </div>
+        </div>
+      </div>
+      <p>
+                This chapter describes the APIs available to build Berkeley DB replicated
+                applications. There are two different ways to build replication into a Berkeley DB
+                application, and the APIs for both are described in this chapter.
+        </p>
+      <p>
+            For an overview of the two different ways to build a replicated
+            application, see the <em class="citetitle">Berkeley DB Getting Started with Replicated Applications</em> guide.
+        </p>
+      <p>
+                The first, and simplest, way to build a replication Berkeley DB application is via
+                the <span class="emphasis"><em>Replication Manager</em></span>. If the Replication Manager does not
+                meet your application's architectural requirements, they you can write your own
+                replication implementation using the "Base APIs". 
+        </p>
+      <p>
+                Note that the Replication Manager is written using the Base APIs.
+        </p>
+      <p>
+                Note, also, that applications which make use of the Replication Manager 
+                use many of the Base APIs as the situation warrants. That said,
+                a few Base API methods cannot be used by applications that
+                are making use of the Replication Manager. Where this is
+                the case, this is noted in the following method
+                descriptions.
+        </p>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="replist"></a>Replication and Related Methods</h2>
+            </div>
+          </div>
+        </div>
+        <div class="navtable">
+          <table border="1" width="80%">
+            <thead>
+              <tr>
+                <th>Replication Manager Methods</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <a class="xref" href="repmgrremote_site.html" title="DbEnv::repmgr_add_remote_site()">DbEnv::repmgr_add_remote_site()</a>
+                </td>
+                <td>Specify the Replication Manager's remote sites</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="repmgrset_ack_policy.html" title="DbEnv::repmgr_set_ack_policy()">DbEnv::repmgr_set_ack_policy()</a>, <a class="xref" href="repmgrget_ack_policy.html" title="DbEnv::repmgr_get_ack_policy()">DbEnv::repmgr_get_ack_policy()</a></td>
+                <td>Specify the Replication Manager's client acknowledgement policy</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="repmgrlocal_site.html" title="DbEnv::repmgr_set_local_site()">DbEnv::repmgr_set_local_site()</a>
+                </td>
+                <td>Specify the Replication Manager's local site</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="repmgrsite_list.html" title="DbEnv::repmgr_site_list()">DbEnv::repmgr_site_list()</a>
+                </td>
+                <td>List the sites and their status</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="repmgrstart.html" title="DbEnv::repmgr_start()">DbEnv::repmgr_start()</a>
+                </td>
+                <td>Start the Replication Manager</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="repmgrstat.html" title="DbEnv::repmgr_stat()">DbEnv::repmgr_stat()</a>
+                </td>
+                <td>Replication Manager statistics</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="repmgrstat_print.html" title="DbEnv::repmgr_stat_print()">DbEnv::repmgr_stat_print()</a>
+                </td>
+                <td>Print Replication Manager statistics</td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <span class="bold">
+                    <strong>Base API Methods</strong>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="repelect.html" title="DbEnv::rep_elect()">DbEnv::rep_elect()</a>
+                </td>
+                <td>Hold a replication election</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="repmessage.html" title="DbEnv::rep_process_message()">DbEnv::rep_process_message()</a>
+                </td>
+                <td>Process a replication message</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="reptransport.html" title="DbEnv::rep_set_transport()">DbEnv::rep_set_transport()</a>
+                </td>
+                <td>Configure replication transport callback</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="repstart.html" title="DbEnv::rep_start()">DbEnv::rep_start()</a>
+                </td>
+                <td>Start replication</td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <span class="bold">
+                    <strong>Additional Replication Methods</strong>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="repstat.html" title="DbEnv::rep_stat()">DbEnv::rep_stat()</a>
+                </td>
+                <td>Replication statistics</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="repstat_print.html" title="DbEnv::rep_stat_print()">DbEnv::rep_stat_print()</a>
+                </td>
+                <td>Print replication statistics</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="repsync.html" title="DbEnv::rep_sync()">DbEnv::rep_sync()</a>
+                </td>
+                <td>Replication synchronization</td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <span class="bold">
+                    <strong>Replication Configuration</strong>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="repclockskew.html" title="DbEnv::rep_set_clockskew()">DbEnv::rep_set_clockskew()</a>, <a class="xref" href="repget_clockskew.html" title="DbEnv::rep_get_clockskew()">DbEnv::rep_get_clockskew()</a></td>
+                <td>Configure master lease clock adjustment</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="repconfig.html" title="DbEnv::rep_set_config()">DbEnv::rep_set_config()</a>, <a class="xref" href="repget_config.html" title="DbEnv::rep_get_config()">DbEnv::rep_get_config()</a></td>
+                <td>Configure the replication subsystem</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="repset_limit.html" title="DbEnv::rep_set_limit()">DbEnv::rep_set_limit()</a>, <a class="xref" href="repget_limit.html" title="DbEnv::rep_get_limit()">DbEnv::rep_get_limit()</a></td>
+                <td>Limit data sent in response to a single message</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="repnsites.html" title="DbEnv::rep_set_nsites()">DbEnv::rep_set_nsites()</a>, <a class="xref" href="repget_nsites.html" title="DbEnv::rep_get_nsites()">DbEnv::rep_get_nsites()</a></td>
+                <td>Configure replication group site count</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="reppriority.html" title="DbEnv::rep_set_priority()">DbEnv::rep_set_priority()</a>, <a class="xref" href="repget_priority.html" title="DbEnv::rep_get_priority()">DbEnv::rep_get_priority()</a></td>
+                <td>Configure replication site priority</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="repset_request.html" title="DbEnv::rep_set_request()">DbEnv::rep_set_request()</a>, <a class="xref" href="repget_request.html" title="DbEnv::rep_get_request()">DbEnv::rep_get_request()</a></td>
+                <td>Configure replication client retransmission requests</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="repset_timeout.html" title="DbEnv::rep_set_timeout()">DbEnv::rep_set_timeout()</a>, <a class="xref" href="repget_timeout.html" title="DbEnv::rep_get_timeout()">DbEnv::rep_get_timeout()</a></td>
+                <td>Configure replication timeouts</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="mutexunlock.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="repelect.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DbEnv::mutex_unlock() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DbEnv::rep_elect()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

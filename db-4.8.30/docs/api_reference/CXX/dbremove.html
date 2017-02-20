@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Db::remove()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="db.html" title="Chapter 2.  The Db Handle" />
+    <link rel="prev" href="dbput.html" title="Db::put()" />
+    <link rel="next" href="dbrename.html" title="Db::rename()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Db::remove()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbput.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+                The Db Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbrename.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dbremove"></a>Db::remove()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+ 
+int
+Db::remove(const char *file, const char *database, u_int32_t flags);</pre>
+      <p>
+         The <code class="methodname">Db::remove()</code> method removes the database specified by the
+         <span class="bold"><strong>file</strong></span> and <span class="bold"><strong>database</strong></span> parameters.  If no <span class="bold"><strong>database</strong></span> is specified, the underlying file
+         represented by <span class="bold"><strong>file</strong></span> is removed,
+         incidentally removing all of the databases it contained.
+    </p>
+      <p>
+         Applications should never remove databases with open 
+         <a class="link" href="db.html" title="Chapter 2.  The Db Handle">Db</a>  handles, or in the case of
+         removing a file, when any database in the file has an open handle. 
+         For example, some architectures do not permit the removal of files
+         with open system handles.  On these architectures, attempts to remove
+         databases currently in use by any thread of control in the system may
+         fail.
+    </p>
+      <p>
+         The <code class="methodname">Db::remove()</code> method should not be called if the remove is
+         intended to be transactionally safe; the 
+         <a class="xref" href="envdbremove.html" title="DbEnv::dbremove()">DbEnv::dbremove()</a> method
+         should be used instead.
+    </p>
+      <p>
+        The <code class="methodname">Db::remove()</code> method may not be called after calling the 
+        <a class="xref" href="dbopen.html" title="Db::open()">Db::open()</a>  method on any 
+        <a class="link" href="db.html" title="Chapter 2.  The Db Handle">Db</a>  handle.  If the 
+         <a class="xref" href="dbopen.html" title="Db::open()">Db::open()</a> method has already
+         been called on a <a class="link" href="db.html" title="Chapter 2.  The Db Handle">Db</a> 
+         handle, close the existing handle and create a new one before calling
+         <code class="methodname">Db::remove.
+()</code>    </p>
+      <p>
+         The <a class="link" href="db.html" title="Chapter 2.  The Db Handle">Db</a>  handle may not be
+         accessed again after <code class="methodname">Db::remove()</code> is called, regardless of its
+         return.
+    </p>
+      <p>
+         The <code class="methodname">Db::remove()</code> <span>
+            
+            <span>
+                method either returns a non-zero error value or throws an
+                exception that encapsulates a non-zero error value on
+                failure, and returns 0 on success.
+            </span>
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1641922"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1641945"></a>database</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>database</strong></span> parameter is the
+                          database to be removed.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1642028"></a>file</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>file</strong></span> parameter is the physical
+                          file which contains the database(s) to be removed.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1642041"></a>Environment Variables</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         If the database was opened within a database environment, the
+                         environment variable <code class="literal">DB_HOME</code> may be used as the path of the
+                         database environment home.
+                    </p>
+        <p>
+                            <code class="methodname">Db::remove()</code> is affected by any database directory specified using the
+                            <a class="xref" href="envset_data_dir.html" title="DbEnv::set_data_dir()">DbEnv::set_data_dir()</a>
+                            method, or by setting the "set_data_dir" string in the environment's
+                            <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a>
+                            file.
+                    </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1642008"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">Db::remove()</code> <span>
+            
+            <span>
+                method may fail and throw a <a class="link" href="dbexception.html" title="Chapter 6. The DbException Class">DbException</a> 
+                exception, encapsulating one of the following non-zero errors, or return one
+                of the following non-zero errors:
+            </span>
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1641928"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                If the method was called after <a class="xref" href="dbopen.html" title="Db::open()">Db::open()</a> 
+                was called; or if an invalid flag value or parameter was specified.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1641939"></a>ENOENT</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                The file or directory does not exist.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1641936"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="db.html" title="Chapter 2.  The Db Handle">Db</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1641871"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="db.html#dblist" title="Database and Related Methods">Database and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbput.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="db.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbrename.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Db::put() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Db::rename()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

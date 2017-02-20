@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Locking without transactions</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="lock.html" title="Chapter 15.  The Locking Subsystem" />
+    <link rel="prev" href="lock_page.html" title="Locking granularity" />
+    <link rel="next" href="lock_twopl.html" title="Locking with transactions: two-phase locking" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Locking without transactions</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="lock_page.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 15. 
+        The Locking Subsystem
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="lock_twopl.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="lock_notxn"></a>Locking without transactions</h2>
+          </div>
+        </div>
+      </div>
+      <p>If an application runs with locking specified, but not transactions (for
+example, <a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a> is callsed with <a href="../api_reference/C/envopen.html#envopen_DB_INIT_LOCK" class="olink">DB_INIT_LOCK</a> or
+<a href="../api_reference/C/envopen.html#envopen_DB_INIT_CDB" class="olink">DB_INIT_CDB</a> specified, but not <a href="../api_reference/C/envopen.html#envopen_DB_INIT_TXN" class="olink">DB_INIT_TXN</a>), locks are
+normally acquired during each Berkeley DB operation and released before the
+operation returns to the caller.  The only exception is in the case of
+cursor operations.  Cursors identify a particular position in a file.
+For this reason, cursors must retain read locks across cursor calls to
+make sure that the position is uniquely identifiable during a subsequent
+cursor call, and so that an operation using <a href="../api_reference/C/dbcget.html#dbcget_DB_CURRENT" class="olink">DB_CURRENT</a> will
+always refer to the same record as a previous cursor call.  These cursor
+locks cannot be released until the cursor is either repositioned and a
+new cursor lock established (for example, using the <a href="../api_reference/C/dbcget.html#dbcget_DB_NEXT" class="olink">DB_NEXT</a>
+or <a href="../api_reference/C/dbcget.html#dbcget_DB_SET" class="olink">DB_SET</a> flags), or the cursor is closed.  As a result,
+application writers are encouraged to close cursors as soon as
+possible.</p>
+      <p>It is important to realize that concurrent applications that use locking
+must ensure that two concurrent threads do not block each other.
+However, because Btree and Hash access method page splits can occur at
+any time, there is virtually no way to guarantee that an application
+that writes the database cannot deadlock.  Applications running without
+the protection of transactions may deadlock, and can leave the database
+in an inconsistent state when they do so.  Applications that need
+concurrent access, but not transactions, are more safely implemented
+using the Berkeley DB Concurrent Data Store Product.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="lock_page.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="lock.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="lock_twopl.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Locking granularity </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Locking with transactions: two-phase locking</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,672 @@
+<html>
+<head>
+<title>Challenges in Embedded Database System Administration</title>
+</head>
+<body bgcolor=white>
+<center>
+<h1>Challenges in Embedded Database System Administration</h1>
+<h3>Margo Seltzer, Harvard University</h3>
+<h3>Michael Olson, Sleepycat Software, Inc.</h3>
+<em>{margo,mao}@sleepycat.com</em>
+</center>
+<p>
+Database configuration and maintenance have historically been complex tasks,
+often
+requiring expert knowledge of database design and application
+behavior.
+In an embedded environment, it is not feasible to require such
+expertise and ongoing database maintenance.
+This paper discusses the database administration
+challenges posed by embedded systems and describes how the
+Berkeley DB architecture addresses these challenges.
+
+<h2>1. Introduction</h2>
+
+Embedded systems provide a combination of opportunities and challenges
+in application and system configuration and management.
+As an embedded system is most often dedicated to a single application or
+small set of tasks, the operating conditions of the system are
+typically better understood than those of general purpose computing
+environments.
+Similarly, as embedded systems are dedicated to a small set of tasks,
+one would expect that the software to manage them should be small
+and simple.
+On the other hand, once an embedded system is deployed, it must
+continue to function without interruption and without administrator
+intervention.
+<p>
+Database administration consists of two components,
+initial configuration and ongoing maintenance.
+Initial configuration consists of database design, manifestation,
+and tuning.
+The instantiation of the design includes decomposing the design
+into tables, relations, or objects and designating proper indices
+and their implementations (e.g., Btrees, hash tables, etc.).
+Tuning a design requires selecting a location for the log and
+data files, selecting appropriate database page sizes, specifying
+the size of in-memory caches, and specifying the limits of 
+multi-threading and concurrency.
+As embedded systems define a specific environment and set of tasks,
+requiring expertise during the initial system
+configuration process is acceptable, and we focus our efforts on
+the ongoing maintenance of the system.
+In this way, our emphasis differs from other projects such as
+Microsoft's AutoAdmin project <a href="#Chaud982">[3]</a>, and the "no-knobs"
+administration that is identified as an area of important future
+research by the Asilomar authors<a href="#Bern98">[1]</a>.
+<p> 
+In this paper, we focus on what the authors
+of the Asilomar report call "gizmo" databases <a href="#Bern98"> [1]</a>,
+databases
+that reside in devices such as smart cards, toasters, or telephones.
+The key characteristics of such databases are that their
+functionality is completely transparent to users, no one ever
+performs explicit database operations or
+database maintenance, the database may crash at any time and
+must recover instantly, the device may undergo a hard reset at
+any time, requiring that the database return to its initial
+state, and the semantic integrity of the database must be maintained
+at all times.
+In Section 2, we provide more detail on the sorts of tasks
+typically performed by database administrators (DBAs) that must
+be automated in an embedded system.
+<p>
+The rest of this paper is structured as follows.
+In Section 2, we outline the requirements for embedded database support.
+In Section 3, we discuss how Berkeley DB
+is conducive to the hands-off management
+required in embedded systems.
+In Section 4, we discuss novel features that 
+enhance Berkeley
+DB's suitability for the embedded applications.
+In Section 5, we discuss issues of footprint size.
+In Section 6 we discuss related work, and we conclude
+in Section 7.
+
+<h2>2. Embedded Database Requirements</h2>
+Historically, much of the commercial database industry has been driven
+by the requirements of high performance online transaction
+processing (OLTP), complex query processing, and the industry
+standard benchmarks that have emerged (e.g., TPC-C <a href="#TPCC">[9]</a>,
+TPC-D <a href="#TPCD">[10]</a>) to
+allow for system comparisons.
+As embedded systems typically perform fairly simple queries,
+such metrics are not nearly as relevant for embedded database
+systems as are ease of maintenance, robustness, and small footprint.
+Of these three requirements, robustness and ease of maintenance
+are the key issues.
+Users must trust the data stored in their devices and must not need
+to manually perform anything resembling system administration in order
+to get their unit to work properly.
+Fortunately, ease of use and robustness are important side
+effects of simplicity and good design.
+These, in turn, lead to a small size, providing the third
+requirement of an embedded system.
+<h3>2.1 The User Perspective</h3>
+<p>
+In the embedded database arena, it is the ongoing maintenance tasks
+that must be automated, not necessarily the initial system configuration.
+There are five tasks
+that are traditionally performed by DBAs,
+but must be performed automatically
+in embedded database systems.
+These tasks are
+log archival and reclamation,
+backup,
+data compaction/reorganization,
+automatic and rapid recovery, and
+reinitialization from scratch.
+<P>
+Log archival and backup are tightly coupled.
+Database backups are part of any
+large database installation, and log archival is analogous to incremental
+backup.
+It is not clear what the implications of backup and archival are in
+an embedded system.
+Consumers do not back up their VCRs or refrigerators, yet they do
+(or should) back up their personal computers or personal digital
+assistants.
+For the remainder of this paper, we assume that backups, in some form,
+are required for gizmo databases (imagine having to reprogram, manually,
+the television viewing access pattern learned by some set-top television
+systems today).
+Furthermore, we require that those backups are nearly instantaneous or
+completely transparent,
+as users should not be aware that their gizmos are being backed up
+and should not have to explicitly initiate such backups.
+<p>
+Data compaction or reorganization has traditionally required periodic
+dumping and restoration of
+database tables and the recreation of indices.
+In an embedded system, such reorganization must happen automatically.
+<p>
+Recovery issues are similar in embedded and traditional environments
+with a few exceptions.
+While a few seconds or even a minute recovery is acceptable
+for a large server installation, no one is willing to wait
+for their telephone or television to reboot.
+As with archival, recovery must be nearly instantaneous in an embedded product.
+Secondly, it is often the case that a system will be completely
+reinitialized, rather than simply rebooted.
+In this case, the embedded database must be restored to its initial
+state, freeing all its resources.
+This is not typically a requirement of large server systems.
+<h3>2.2 The Developer Perspective</h3>
+<p>
+In addition to the maintenance-free operation required of the
+embedded systems, there are a number of requirements that fall
+out of the constrained resources typically found in the "gizmos"
+using gizmo databases. These requirements are:
+small footprint,
+short code-path,
+programmatic interface for tight application coupling and
+to avoid the overhead (in both time and size) of 
+interfaces such as SQL and ODBC,
+application configurability and flexibility,
+support for complete memory-resident operation (e.g., these systems
+must run on gizmos without file systems), and
+support for multi-threading.
+<p>
+A small footprint and short code-path are self-explanatory, however
+what is not as obvious is that the programmatic interface requirement
+is the logical result of them.
+Traditional interfaces such as ODBC and SQL add significant
+size overhead and frequently add multiple context/thread switches
+per operation, not to mention several IPC calls.
+An embedded product is less likely to require the complex
+query processing that SQL enables.
+Instead, in the embedded space, the ability for an application
+to configure the database for the specific tasks in question
+is more important than a general query interface.
+<p>
+As some systems do not provide storage other than RAM and ROM,
+it is essential that an embedded database work seemlessly
+in memory-only environments.
+Similarly, many of today's embedded operating systems provide a
+single address space architecture, so a simple, multi-threaded
+capability is essential for application requiring any concurrency.
+<p>
+In general, embedded applications run on gizmos whose native
+operating system support varies tremendously.
+For example, the embedded OS may or may
+not support user-level processing or multi-threading.
+Even if it does, a particular embedded
+application may or may not need it.
+Not all applications need more than one thread of control.
+An embedded database must provide mechanisms to developers
+without deciding policy.
+For example, the threading model in an application is a matter of policy,
+and depends
+not on the database software, but on the hardware, operating
+system, and the application's feature set.
+Therefore, the data manager must provide for the use of multi-threading,
+but not require it.
+
+<h2>3. Berkeley DB: A Database for Embedded Systems</h2>
+Berkeley DB is the result of implementing database functionality 
+using the UNIX tool-based philosophy.
+The current Berkeley DB package, as distributed by Sleepycat
+Software, is a descendant of the hash and btree access methods
+distributed with 4.4BSD and its descendents.
+The original package (referred to as DB-1.85),
+while intended as a public domain replacement for dbm and
+its followers (e.g., ndbm, gdbm, etc), rapidly became widely
+used as an efficient, easy-to-use data store. 
+It was incorporated into a number of Open Source packages including
+Perl, Sendmail, Kerberos, and the GNU C-library.
+<p>
+Versions 2.X and higher are distributed by Sleepycat Software and
+add functionality for concurrency, logging, transactions, and
+recovery.
+Each piece of additional functionality is implemented as an independent
+module, which means that the subsystems can be used outside the
+context of Berkeley DB.  For example, the locking subsystem can
+easily be used to implement locking for a non-DB application and
+the shared memory buffer pool can be used for any application
+caching data in main memory.
+This subsystem design allows a designer to pick and choose
+the functionality necessary for the application, minimizing
+memory footprint and maximizing performance.
+This addresses the small footprint and short code-path criteria
+mentioned in the previous section.
+<p>
+As Berkeley DB grew out of a replacement for dbm, its primary
+implementation language has always been C and its interface has
+been programmatic.  The C interface is the native interface,
+unlike many database systems where the programmatic API is simply
+a layer on top of an already-costly query interface (e.g. embedded
+SQL).
+Berkeley DB's heritage is also apparent in its data model; it has
+none.
+The database stores unstructured key/data pairs, specified as
+variable length byte strings.
+This leaves schema design and representation issues the responsibility
+of the application, which is ideal for an embedded environment.
+Applications retain full control over specification of their data
+types, representation, index values, and index relationships.
+In other words, Berkeley DB provides a robust, high-performance,
+keyed storage system, not a particular database management system.
+We have designed for simplicity and performance, trading off
+complex, general purpose support that is better encapsulated in
+applications.
+<p>
+Another element of Berkeley DB's programmatic interface is its
+customizability; applications can specify Btree comparison and
+prefix compression functions, hash functions, error routines,
+and recovery models.
+This means that embedded applications can tailor the underlying
+database to best suit their data demands.
+Similarly, the utilities traditionally bundled with a database
+manager (e.g., recovery, dump/restore, archive) are implemented
+as tiny wrapper programs around library routines.  This means
+that it is not necessary to run separate applications for the
+utilities.  Instead, independent threads can act as utility
+daemons, or regular query threads can perform utility functions.
+Many of the current products built on Berkeley DB are bundled as
+a single large server with independent threads that perform functions
+such as checkpoint, deadlock detection, and performance monitoring.
+<p>
+As mentioned earlier, living in an embedded environment requires
+flexible management of storage.
+Berkeley DB does not require any preallocation of disk space
+for log or data files.
+While many commercial database systems take complete control
+of a raw device, Berkeley DB uses a normal file system, and
+can therefore, safely and easily share a data space with other
+programs.
+All databases and log files are native files of the host environment,
+so whatever utilities are provided by the environment can be used
+to manage database files as well.
+<p>
+Berkeley DB provides three different memory models for its
+management of shared information.
+Applications can use the IEEE Std 1003.1b-1993 (POSIX) <tt>mmap</tt>
+interface to share
+data, they can use system shared memory, as frequently provided
+by the shmget family of interfaces, or they can use per-process
+heap memory (e.g., malloc).
+Applications that require no permanent storage and do not provide
+shared memory facilities can still use Berkeley DB by requesting
+strictly private memory and specifying that all databases be
+memory-resident.
+This provides pure-memory operation.
+<p>
+Lastly, Berkeley DB is designed for rapid startup -- recovery can
+happen automatically as part of system initialization.
+This means that Berkeley DB works correctly in environments where
+gizmos are suddenly shut down and restarted.
+
+<h2>4. Extensions for Embedded Environments </h2>
+While the Berkeley DB library has been designed for use in
+embedded systems, all the features described above are useful
+in more conventional systems as well.
+In this section, we discuss a number of features and "automatic
+knobs" that are specifically geared
+toward the more constrained environments found in gizmo databases.
+
+<h3>4.1 Automatic compression</h3>
+Following the programmatic interface design philosophy, we 
+support application-specific (or default) compression routines.
+These can be geared toward the particular data types present
+in the application's dataset, thus providing better compression
+than a general purpose routine.
+Note that the application could instead specify an encryption
+function and create encrypted databases instead of compressed ones.
+Alternately, the application might specify a function that performs
+both compression and encryption.
+<p>
+As applications are also permitted to specify comparison and hash
+functions, the application can chose to organize its data based
+either on uncompressed and clear-text data or compressed and encrypted
+data.
+If the application indicates that data should be compared in its
+processed form (i.e., compressed and encrypted), then the compression
+and encryption are performed on individual data items and the in-memory
+representation retains these characteristics.
+However, if the application indicates that data should be compared in
+its original form, then entire pages are transformed upon being read
+into or written out of the main memory buffer cache.
+These two alternatives provide the flexibility to trade space
+and security for performance.
+
+<h3>4.2 In-memory logging & transactions</h3>
+One of the four key properties of transaction systems is durability.
+This means that transaction systems are designed for permanent storage
+(most commonly disk).  However, as mentioned above, embedded systems
+do not necessarily contain any such storage.
+Nevertheless, transactions can be useful in this environment to
+preserve the semantic integrity of the underlying storage.
+Berkeley DB optionally provides logging functionality and
+transaction support regardless of whether the database and logs
+are on disk or in memory.
+
+<h3>4.3 Remote Logs</h3>
+While we do not expect users to backup their television sets and
+toasters, it is conceivable that a set-top box provided by a
+cable carrier should, in fact, be backed up by that cable carrier.
+The ability to store logs remotely can provide "information appliance"
+functionality, and can also be used in conjunction with local logs
+to enhance reliability.
+Furthermore, remote logs provide for catastrophic recovery, e.g., loss
+of the gizmo, destruction of the gizmo, etc.
+
+<h3>4.4 Application References to Database Buffers</h3>
+
+Typically, when data is returned to the user, it must be copied
+from the data manager's buffer cache (or data page) into the
+application's memory.
+However, in an embedded environment, the robustness of the
+total software package is of paramount importance, not the
+isolation between the application and the data manager.
+As a result, it is possible for the data manager to avoid
+copies by giving applications direct references to data items
+in a shared memory cache.
+This is a significant performance optimization that can be
+allowed when the application and data manager are tightly
+integrated.
+
+<h3>4.5 Recoverable database creation/deletion</h3>
+
+In a conventional database management system, the creation of
+database tables (relations) and indices are heavyweight operations
+that are not recoverable.
+This is not acceptable in a complex embedded environment where
+instantaneous recovery and robust operation in the face of
+all types of database operations is essential.
+While Berkeley DB files can be removed using normal file system
+utilities, we provide transaction protected utilities that
+allow us to recover both database creation and deletion.
+
+<h3>4.6 Adaptive concurrency control</h3>
+The Berkeley DB package uses page-level locking by default.
+This trades off fine grain concurrency control for simplicity
+during recovery. (Finer grain concurrency control can be
+obtained by reducing the page size in the database.)
+However, when multiple threads/processes perform page-locking
+in the presence of writing operations, there is the
+potential for deadlock.
+As some environments do not need or desire the overhead of
+logging and transactions, it is important to provide the
+ability for concurrent access without the potential for
+deadlock.
+<p>
+Berkeley DB provides an option to perform coarser grain,
+deadlock-free locking.
+Rather than locking on pages, locking is performed at the
+interface to the database.
+Multiple readers or a single writer are allowed to be
+active in the database at any instant in time, with
+conflicting requests queued automatically.
+The presence of cursors, through which applications can both
+read and write data, complicates this design.
+If a cursor is currently being used for reading, but will later
+be used to write, the system will be deadlock prone if no
+special precautions are taken.
+To handle this situation, we require that, when a cursor is
+created, the application specify any future intention to write.
+If there is an intention to write, the cursor is granted an
+intention-to-write lock which does not conflict with readers,
+but does conflict with other intention-to-write locks and write
+locks.
+The end result is that the application is limited to a single
+potentially writing cursor accessing the database at any point
+in time.
+<p>
+Under periods of low contention (but potentially high throughput),
+the normal page-level locking provides the best overall throughput.
+However, as contention rises, so does the potential for deadlock.
+As some cross-over point, switching to the less concurrent, but
+deadlock-free locking protocol will result in higher throughput
+as operations must never be retried.
+Given the operating conditions of an embedded database manager,
+it is useful to make this change automatically as the system
+itself detects high contention.
+
+<h3>4.7 Adaptive synchronization</h3>
+
+In addition to the logical locks that protect the integrity of the
+database pages, Berkeley DB must synchronize access to shared memory
+data structures, such as the lock table, in-memory buffer pool, and
+in-memory log buffer.
+Each independent module uses a single mutex to protect its shared
+data structures, under the assumption that operations that require
+the mutex are very short and the potential for conflict is
+low.
+Unfortunately, in highly concurrent environments with multiple processors
+present, this assumption is not always true.
+When this assumption becomes invalid (that is, we observe significant
+contention for the subsystem mutexes), we can switch over to a finer-grained
+concurrency model for the mutexes.
+Once again, there is a performance trade-off.  Fine-grain mutexes
+impose a penalty of approximately 25% (due to the increased number
+of mutexes required for each operation), but allow for higher throughput.
+Using fine-grain mutexes under low contention would cause a decrease
+in performance, so it is important to monitor the system carefully,
+so that the change can be executed only when it will increase system
+throughput without jeopardizing latency.
+
+<h2>5. Footprint of an Embedded System</h2>
+While traditional systems compete on price-performance, the
+embedded players will compete on price, features, and footprint.
+The earlier sections have focused on features; in this section
+we focus on footprint.
+<p>
+Oracle reports that Oracle Lite 3.0 requires 350 KB to 750 KB
+of memory and approximately 2.5 MB of hard disk space <a href="#Oracle">[7]</a>.
+This includes drivers for interfaces such as ODBC and JDBC.
+In contrast, Berkeley DB ranges in size from 75 KB to under 200 KB,
+foregoing heavyweight interfaces such as ODBC and JDBC and
+providing a variety of deployed sizes that can be used depending
+on application needs.  At the low end, applications requiring
+a simple single-user access method can choose from either extended
+linear hashing, B+ trees, or record-number based retrieval and
+pay only the 75 KB space requirement.
+Applications requiring all three access methods will observe the
+110 KB footprint.
+At the high end, a fully recoverable, high-performance system
+occupies less than a quarter megabyte of memory.
+This is a system you can easily incorporate in your toaster oven.
+Table 1 shows the per-module break down of the entire Berkeley DB
+library.  Note that this does not include memory used to cache database
+pages.
+
+<table border>
+<tr><th colspan=4>Object sizes in bytes</th></tr>
+<tr><th align=left>Subsystem</th><th align=center>Text</th><th align=center>Data</th><th align=center>Bss</th></tr>
+<tr><td>Btree-specific routines</td><td align=right>28812</td><td align=right>0</td><td align=right>0</td></tr>
+<tr><td>Recno-specific routines</td><td align=right>7211</td><td align=right>0</td><td align=right>0</td></tr>
+<tr><td>Hash-specific routines</td><td align=right>23742</td><td align=right>0</td><td align=right>0</td></tr>
+<tr><td colspan=4></td></tr>
+<tr><td>Memory Pool</td><td align=right>14535</td><td align=right>0</td><td align=right>0</td></tr>
+<tr><td>Access method common code</td><td align=right>23252</td><td align=right>0</td><td align=right>0</td></tr>
+<tr><td>OS compatibility library</td><td align=right>4980</td><td align=right>52</td><td align=right>0</td></tr>
+<tr><td>Support utilities</td><td align=right>6165</td><td align=right>0</td><td align=right>0</td></tr>
+<tr><td colspan=4></td></tr>
+<tr><th>All modules for Btree access method only</th><td align=right>77744</td><td align=right>52</td><td align=right>0</td></tr>
+<tr><th>All modules for Recno access method only</th><td align=right>84955</td><td align=right>52</td><td align=right>0</td></tr>
+<tr><th>All modules for Hash access method only</th><td align=right>72674</td><td align=right>52</td><td align=right>0</td></tr>
+<tr><td colspan=4></td></tr>
+<tr><th align=left>All Access Methods</th><td align=right>108697</td><td align=right>52</td><td align=right>0</td></tr>
+<tr><td colspan=4><br></td></tr>
+<tr><td>Locking</td><td align=right>12533</td><td align=right>0</td><td align=right>0</td></tr>
+<tr><td colspan=4></td></tr>
+<tr><td>Recovery</td><td align=right>26948</td><td align=right>8</td><td align=right>4</td></tr>
+<tr><td>Logging</td><td align=right>37367</td><td align=right>0</td><td align=right>0</td></tr>
+<tr><td colspan=4></td></tr>
+<tr><th align=left>Full Package</th><td align=right>185545</td><td align=right>60</td><td align=right>4</td></tr>
+<tr><br></tr>
+</table>
+
+<h2>6. Related Work</h2>
+
+Every three to five years, leading researchers in the database
+community convene to identify future directions in database
+research.
+They produce a report of this meeting, named for the year and
+location of the meeting.
+The most recent of these reports, the 1998 Asilomar report,
+identifies the embedded database market as one of the
+high growth areas in database research <a href="#Bern98">[1]</a>.
+Not surprisingly, market analysts identify the embedded database
+market as a high-growth area in the commercial sector as well <a href="#Host98">
+[5]</a>.
+<p>
+The Asilomar report identifies a new class of database applications, which they
+term "gizmo" databases, small databases embedded in tiny mobile
+appliances, e.g., smart-cards, telephones, personal digital assistants.
+Such databases must be self-managing, secure and reliable.
+Thus, the idea is that gizmo databases require plug and play data
+management with no database administrator (DBA), no human settable
+parameters, and the ability to adapt to changing conditions.
+More specifically, the Asilomar authors claim that the goal is
+self-tuning, including defining the physical DB design, the
+logical DB design, and automatic reports and utilities <a href="#Bern98">[1]</a>
+To date,
+few researchers have accepted this challenge, and there is a dearth
+of research literature on the subject.
+<p>
+Our approach to embedded database administration is fundamentally
+different than that described by the Asilomar authors.
+We adopt their terminology, but view the challenge in supporting
+gizmo databases to be that of self-sustenance <em>after</em> initial
+deployment.  Therefore, we find it, not only acceptable, but
+desirable to assume that application developers control initial
+database design and configuration.  To the best of our knowledge,
+none of the published work in this area addresses this approach.
+<p>
+As the research community has not provided guidance in this
+arena, most work in embedded database administration has fallen
+to the commercial vendors.
+These vendors fall into two camps, companies selling databases
+specifically designed for embedding or programmatic access
+and the major database vendors (e.g., Oracle, Informix, Sybase).
+<p>
+The embedded vendors all acknowledge the need for automatic
+administration, but fail to identify precisely how their
+products actually accomplish this.
+A notable exception is Interbase whose white paper
+comparison with Sybase and Microsoft's SQL servers
+explicitly address features of maintenance ease.
+Interbase claims that as they use no log files, there is
+no need for log reclamation, checkpoint tuning, or other
+tasks associated with log management.  However, Interbase
+uses Transaction Information Pages, and it is unclear
+how these are reused or reclaimed <a href="#Interbase">[6]</a>.
+Additionally, with a log-free system, they must use
+a FORCE policy (write all pages to disk at commit),
+as defined by Haerder and Reuter <a href="#Haerder">[4]</a>.  This has
+serious performance consequences for disk-based systems.
+The approach described in this paper does use logs and
+therefore requires log reclamation,
+but provides hooks so the application may reclaim logs
+safely and programmatically.
+While Berkeley DB does require checkpoints, the goal of
+tuning the checkpoint interval is to bound recovery time.
+Since the checkpoint interval in Berkeley DB can be expressed
+by the amount of log data written, it requires no tuning.
+The application designer sets a target recovery time, and
+selects the amount of log data that can be read in that interval
+and specifies the checkpoint interval appropriately.  Even as
+load changes, the time to recover does not.
+<p>
+The backup approaches taken by Interbase and Berkeley DB
+are similar in that they both allow online backup, but
+rather different in their affect on transactions running
+during backup.  As Interbase performs backups as transactions
+<a href="#Interbase">[6]</a>, concurrent queries can suffer potentially long
+delays.  Berkeley DB uses native operating system system utilities
+and recovery for backups, so there is no interference with
+concurrent activity, other than potential contention on disk
+arms.
+<p>
+There are a number of database vendors selling in
+the embedded market (e.g., Raima, 
+Centura, Pervasive, Faircom), but none highlight
+the special requirements of embedded database
+applications.
+On the other end of the spectrum, the major vendors,
+Oracle, Sybase, Microsoft, are all becoming convinced
+of the importance of the embedded market.
+As mentioned earlier, Oracle has announced its
+Oracle Lite server for embedded use.
+Sybase has announced its UltraLite platform for "application-optimized,
+high-performance, SQL database engine for professional
+application developers building solutions for mobile and embedded platforms."
+<a href="#Sybase">[8]</a>.
+We believe that SQL is incompatible with the
+gizmo database environment or truly embedded systems for which Berkeley
+DB is most suitable.
+Microsoft research is taking a different approach, developing
+technology to assist in automating initial database design and
+index specification <a href="#Chaud98">[2]</a><a href="#Chaud982">[3]</a>.
+As mentioned earlier, we believe that such configuration is, not only
+acceptable in the embedded market, but desirable so that applications
+can tune their database management for the target environment.
+<h2>7. Conclusions</h2>
+The coming wave of embedded systems poses a new set of challenges
+for data management.
+The traditional server-based, big footprint systems designed for
+high performance on big iron are not the right approach in this
+environment.
+Instead, application developers need small, fast, versatile systems
+that can be tailored to a specific environment.
+In this paper, we have identified several of the key issues in
+providing these systems and shown how Berkeley DB provides
+many of the characteristics necessary for such applications.
+
+<h2>8. References</h2>
+<p>
+[1] <a name="Bern98"> Bernstein, P., Brodie, M., Ceri, S., DeWitt, D., Franklin, M.,
+Garcia-Molina, H., Gray, J., Held, J., Hellerstein, J.,
+Jagadish, H., Lesk, M., Maier, D., Naughton, J.,
+Pirahesh, H., Stonebraker, M., Ullman, J.,
+"The Asilomar Report on Database Research,"
+SIGMOD Record 27(4): 74-80, 1998.
+</a>
+<p>
+[2] <a name="Chaud98"> Chaudhuri, S., Narasayya, V.,
+"AutoAdmin 'What-If' Index Analysis Utility,"
+<em>Proceedings of the ACM SIGMOD Conference</em>, Seattle, 1998.
+</a>
+<p>
+[3] <a name="Chaud982"> Chaudhuri, S., Narasayya, V.,
+"An Efficient, Cost-Driver Index Selection Tool for Microsoft SQL Server,"
+<em>Proceedings of the 23rd VLDB Conference</em>, Athens, Greece, 1997.
+</a>
+<p>
+[4] <a name="Harder"> Haerder, T., Reuter, A.,
+"Principles of Transaction-Oriented Database Recovery,"
+<em>Computing Surveys 15</em>,4 (1983), 237-318.
+</a>
+<p>
+[5] <a name="Host98"> Hostetler, M., "Cover Is Off A New Type of Database,"
+Embedded DB News,
+http://www.theadvisors.com/embeddeddbnews.htm,
+5/6/98.
+</a>
+<p>
+[6] <a name="Interbase"> Interbase, "A Comparison of Borland InterBase 4.0
+Sybase SQL Server and Microsoft SQL Server,"
+http://web.interbase.com/products/doc_info_f.html.
+</a>
+<p>
+[7] <a name="Oracle"> Oracle, "Oracle Delivers New Server, Application Suite
+to Power the Web for Mission-Critical Business,"
+http://www.oracle.com.sg/partners/news/newserver.htm,
+May 1998.
+</a>
+<p>
+[8] <a name="Sybase"> Sybase, Sybase UltraLite, http://www.sybase.com/products/ultralite/beta.
+</a>
+<p>
+[9] <a name="TPCC"> Transaction Processing Council, "TPC-C Benchmark Specification,
+Version 3.4," San Jose, CA, August 1998.
+</a>
+<p>
+[10] <a name="TPCD"> Transaction Processing Council, "TPC-D Benchmark Specification,
+Version 2.1," San Jose, CA, April 1999.
+</a>
+</body>
+</html>
+
+

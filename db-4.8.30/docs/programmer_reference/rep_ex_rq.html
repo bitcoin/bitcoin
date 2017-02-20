@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Ex_rep_base: putting it all together</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="rep.html" title="Chapter 12.  Berkeley DB Replication" />
+    <link rel="prev" href="rep_ex_comm.html" title="Ex_rep_base: a TCP/IP based communication infrastructure" />
+    <link rel="next" href="apprec.html" title="Chapter 13.  Application Specific Logging and Recovery" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Ex_rep_base: putting it all together</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="rep_ex_comm.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 12. 
+        Berkeley DB Replication
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="apprec.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="rep_ex_rq"></a>Ex_rep_base: putting it all together</h2>
+          </div>
+        </div>
+      </div>
+      <p>Beyond simply initializing a replicated environment, a Base API application
+must set up its communication
+infrastructure, and then make sure that incoming messages are received
+and processed.</p>
+      <p>To initialize replication, ex_rep_base creates a Berkeley DB environment and
+calls <a href="../api_reference/C/reptransport.html" class="olink">DB_ENV-&gt;rep_set_transport()</a> to establish a send function.  (See
+the main function in <code class="filename">ex_rep/base/rep_base.c</code>, including its
+calls to the create_env and env_init functions in
+<code class="filename">ex_rep/common/rep_common.c</code>.)</p>
+      <p>ex_rep_base opens a listening socket for incoming connections and opens
+an outgoing connection to every machine that it knows about (that is,
+all the sites listed in the <span class="bold"><strong>-r</strong></span> and 
+<span class="bold"><strong>-R</strong></span> command line arguments).
+Applications can structure the details of this in different ways, but
+ex_rep_base creates a user-level thread to listen on its socket, plus
+a thread to loop and handle messages on each socket, in addition to the
+threads needed to manage the user interface, update the database on the
+master, and read from the database on the client (in other words, in
+addition to the normal functionality of any database application).</p>
+      <p>Once the initial threads have all been started and the communications
+infrastructure is initialized, the application signals that it is ready
+for replication and joins a replication group by calling
+<a href="../api_reference/C/repstart.html" class="olink">DB_ENV-&gt;rep_start()</a>.  (Again, see the main function in
+<code class="filename">ex_rep/base/rep_base.c</code>.)</p>
+      <p>Note the use of the optional second argument to <a href="../api_reference/C/repstart.html" class="olink">DB_ENV-&gt;rep_start()</a> in
+the client initialization code.  The argument "local" is a piece of
+data, opaque to Berkeley DB, that will be broadcast to each member of a
+replication group; it allows new clients to join a replication group,
+without knowing the location of all its members;  the new client will
+be contacted by the members it does not know about, who will receive
+the new client's contact information that was specified in "myaddr."
+See <a class="xref" href="rep_newsite.html" title="Connecting to a new site">Connecting to a new site</a> for more
+information.</p>
+      <p>The final piece of a replicated application is the code that loops,
+receives, and processes messages from a given remote environment.
+ex_rep_base runs one of these loops in a parallel thread for each
+socket connection (see the hm_loop function in
+<code class="filename">ex_rep/base/rep_msg.c</code>).  Other applications may want to queue
+messages somehow and process them asynchronously, or select() on a
+number of sockets and either look up the correct environment ID for each
+or encapsulate the ID in the communications protocol.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="rep_ex_comm.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="rep.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="apprec.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Ex_rep_base: a TCP/IP based communication infrastructure </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 13. 
+        Application Specific Logging and Recovery
+        </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

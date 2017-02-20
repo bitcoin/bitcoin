@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Run-time configuration</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="program.html" title="Chapter 14.  Programmer Notes" />
+    <link rel="prev" href="program_compatible.html" title="Compatibility with historic UNIX interfaces" />
+    <link rel="next" href="program_faq.html" title="Programmer notes FAQ" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Run-time configuration</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="program_compatible.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 14. 
+        Programmer Notes
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="program_faq.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="program_runtime"></a>Run-time configuration</h2>
+          </div>
+        </div>
+      </div>
+      <p>It is possible for applications to configure Berkeley DB at run-time to
+redirect Berkeley DB library and system calls to alternate interfaces.  For
+example, an application might want Berkeley DB to call debugging memory
+allocation routines rather than the standard C library interfaces.  The
+following interfaces support this functionality:</p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_close.html" class="olink">db_env_set_func_close</a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_dirfree.html" class="olink">db_env_set_func_dirfree</a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_dirlist.html" class="olink">db_env_set_func_dirlist</a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_exists.html" class="olink">db_env_set_func_exists</a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_file_map.html" class="olink">db_env_set_func_file_map</a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_free.html" class="olink">db_env_set_func_free</a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_fsync.html" class="olink">db_env_set_func_fsync</a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_ftruncate.html" class="olink">db_env_set_func_ftruncate</a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_ioinfo.html" class="olink">db_env_set_func_ioinfo</a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_malloc.html" class="olink">db_env_set_func_malloc</a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_open.html" class="olink">db_env_set_func_open</a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_pread.html" class="olink">db_env_set_func_pread</a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_pwrite.html" class="olink">db_env_set_func_pwrite</a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_read.html" class="olink">db_env_set_func_read</a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_realloc.html" class="olink">db_env_set_func_realloc</a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_region_map.html" class="olink">db_env_set_func_region_map</a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_rename.html" class="olink">db_env_set_func_rename</a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_seek.html" class="olink">db_env_set_func_seek</a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_unlink.html" class="olink">db_env_set_func_unlink</a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_write.html" class="olink">db_env_set_func_write</a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a href="../api_reference/C/db_env_set_func_yield.html" class="olink">db_env_set_func_yield</a>
+        </p>
+          </li>
+        </ul>
+      </div>
+      <p>These interfaces are available only on POSIX platforms and from the
+Berkeley DB C language API.</p>
+      <p>A not-uncommon problem for applications is the new API in Solaris 2.6
+for manipulating large files.  Because this API was not part of Solaris
+2.5, it is difficult to create a single binary that takes advantage of
+the large file functionality in Solaris 2.6, but still runs on Solaris
+2.5.  <a class="ulink" href="solaris.txt" target="_top">Example code</a> that supports this is
+included in the Berkeley DB distribution, however, the example code was
+written using previous versions of the Berkeley DB APIs, and is only useful
+as an example.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="program_compatible.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="program.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="program_faq.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Compatibility with historic UNIX interfaces </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Programmer notes FAQ</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

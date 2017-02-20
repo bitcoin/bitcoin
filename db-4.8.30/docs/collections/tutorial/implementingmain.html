@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Implementing the Main Program</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Collections Tutorial" />
+    <link rel="up" href="BasicProgram.html" title="Chapter 2.  The Basic Program" />
+    <link rel="prev" href="createbindingscollections.html" title="Creating Bindings and Collections" />
+    <link rel="next" href="usingtransactions.html" title="Using Transactions" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">
+        Implementing the Main Program
+    </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="createbindingscollections.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+        The Basic Program
+    </th>
+          <td width="20%" align="right"> <a accesskey="n" href="usingtransactions.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="implementingmain"></a>
+        Implementing the Main Program
+    </h2>
+          </div>
+        </div>
+      </div>
+      <p>
+    The main program opens the environment and databases, stores and retrieves
+    objects within a transaction, and finally closes the environment
+    databases. This section describes the main program shell, and the
+    next section describes how to run transactions for storing and
+    retrieving objects.
+</p>
+      <p>
+    The <code class="classname">Sample</code> class contains the main program. The skeleton
+    for the <code class="classname">Sample</code> class follows.
+</p>
+      <a id="cb_java_sample"></a>
+      <pre class="programlisting"><strong class="userinput"><code>import com.sleepycat.db.DatabaseException;
+import java.io.FileNotFoundException;
+
+public class Sample
+{
+    private SampleDatabase db;
+    private SampleViews views;
+
+    public static void main(String args)
+    {
+    }
+
+    private Sample(String homeDir)
+        throws DatabaseException, FileNotFoundException
+    {
+    }
+
+    private void close()
+        throws DatabaseException
+    {
+    }
+
+    private void run()
+        throws Exception
+    {
+    }
+}</code></strong> </pre>
+      <p>
+    The main program uses the <code class="classname">SampleDatabase</code> and
+    <code class="classname">SampleViews</code> classes that were described in the preceding
+    sections. The <code class="methodname">main</code> method will create an instance of the
+    <code class="classname">Sample</code> class, and call its <code class="methodname">run()</code> and <code class="methodname">close()</code>
+    methods.
+    
+</p>
+      <p>
+    The following statements parse the program's command line
+    arguments.
+</p>
+      <a id="cb_main"></a>
+      <pre class="programlisting">    public static void main(String[] args)
+    {
+<strong class="userinput"><code>        System.out.println("\nRunning sample: " + Sample.class);
+        String homeDir = "./tmp";
+        for (int i = 0; i &lt; args.length; i += 1)
+        {
+            String arg = args[i];
+            if (args[i].equals("-h") &amp;&amp; i &lt; args.length - 1)
+            {
+                i += 1;
+                homeDir = args[i];
+            }
+            else
+            {
+                System.err.println("Usage:\n java " + 
+                                   Sample.class.getName() +
+                                  "\n  [-h &lt;home-directory&gt;]");
+                System.exit(2);
+            }
+        }</code></strong>
+        ...
+    } </pre>
+      <p>
+    The usage command is:
+</p>
+      <pre class="programlisting"><strong class="userinput"><code>java com.sleepycat.examples.bdb.shipment.basic.Sample
+     [-h &lt;home-directory&gt; ]</code></strong> </pre>
+      <p>
+    The <code class="literal">-h</code> command is used to set the <code class="filename">homeDir</code>
+    variable, which will later be passed to the <code class="methodname">SampleDatabase()</code>
+    constructor. Normally all Berkeley DB programs should provide a way
+    to configure their database environment home directory.
+</p>
+      <p>
+    The default for the home directory is <code class="filename">./tmp</code> — the tmp
+    subdirectory of the current directory where the sample is run. The
+    home directory must exist before running the sample. To re-create
+    the sample database from scratch, delete all files in the home
+    directory before running the sample.
+</p>
+      <p>
+    The home directory was described previously in
+    <a class="xref" href="opendbenvironment.html" title="Opening and Closing the Database Environment">
+        Opening and Closing the Database Environment
+    </a>.
+</p>
+      <p>
+    Of course, the command line arguments shown are only examples
+    and a real-life application may use different techniques for
+    configuring these options.
+    
+</p>
+      <p>
+    The following statements create an instance of the <code class="classname">Sample</code>
+    class and call its <code class="methodname">run()</code> and <code class="methodname">close()</code> methods.
+</p>
+      <a id="cb_main2"></a>
+      <pre class="programlisting">    public static void main(String args)
+    {
+        ...
+<strong class="userinput"><code>        Sample sample = null;
+        try
+        {
+            sample = new Sample(homeDir);
+            sample.run();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            if (sample != null)
+            {
+                try
+                {
+                    sample.close();
+                }
+                catch (Exception e)
+                {
+                    System.err.println("Exception during database close:");
+                    e.printStackTrace();
+                }
+            }
+        }</code></strong>
+    } </pre>
+      <p>
+    The <code class="methodname">Sample()</code> constructor will open the environment and
+    databases, and the <code class="methodname">run()</code> method will run transactions for
+    storing and retrieving objects. If either of these throws an
+    exception, then the program was unable to run and should normally
+    terminate. (Transaction retries are handled at a lower level and
+    will be described later.) The first <code class="literal">catch</code> statement handles
+    such exceptions.
+</p>
+      <p>
+    The <code class="literal">finally</code> statement is used to call the <code class="methodname">close()</code>
+    method since an attempt should always be made to close the environment and
+    databases
+    cleanly. If an exception is thrown during close and a prior
+    exception occurred above, then the exception during close is likely
+    a side effect of the prior exception.
+</p>
+      <p>
+    The <code class="methodname">Sample()</code> constructor creates the <code class="literal">SampleDatabase</code>
+    and <code class="classname">SampleViews</code> objects.
+</p>
+      <a id="cb_sample"></a>
+      <pre class="programlisting">    private Sample(String homeDir)
+        throws DatabaseException, FileNotFoundException
+    {
+<strong class="userinput"><code>        db = new SampleDatabase(homeDir);
+        views = new SampleViews(db);</code></strong>
+    } </pre>
+      <p>
+    Recall that creating the <code class="classname">SampleDatabase</code> object will open
+    the environment and all databases.
+</p>
+      <p>
+    To close the database the <code class="methodname">Sample.close()</code> method simply
+    calls <code class="methodname">SampleDatabase.close()</code>.
+</p>
+      <a id="cb_sample-close"></a>
+      <pre class="programlisting">     private void close()
+        throws DatabaseException
+    {
+<strong class="userinput"><code>        db.close();</code></strong>
+    } </pre>
+      <p>
+    The <code class="methodname">run()</code> method is described in the next section.
+</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="createbindingscollections.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="BasicProgram.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="usingtransactions.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+        Creating Bindings and Collections
+     </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+        Using Transactions
+    </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

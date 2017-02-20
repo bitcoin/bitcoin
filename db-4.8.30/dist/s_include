@@ -1,0 +1,165 @@
+#!/bin/sh -
+#	$Id$
+#
+# Build the automatically generated function prototype files.
+
+msgc="/* DO NOT EDIT: automatically built by dist/s_include. */"
+
+. ./RELEASE
+
+head()
+{
+	defonly=0
+	while :
+		do case "$1" in
+		space)
+			echo ""; shift;;
+		defonly)
+			defonly=1; shift;;
+		*)
+			name="$1"; break;;
+		esac
+	done
+
+	echo "$msgc"
+	echo "#ifndef	$name"
+	echo "#define	$name"
+	echo ""
+	if [ $defonly -eq 0 ]; then
+		echo "#if defined(__cplusplus)"
+		echo "extern \"C\" {"
+		echo "#endif"
+		echo ""
+	fi
+}
+
+tail()
+{
+	defonly=0
+	while :
+		do case "$1" in
+		defonly)
+			defonly=1; shift;;
+		*)
+			name="$1"; break;;
+		esac
+	done
+
+	echo ""
+	if [ $defonly -eq 0 ]; then
+		echo "#if defined(__cplusplus)"
+		echo "}"
+		echo "#endif"
+	fi
+	echo "#endif /* !$name */"
+}
+
+# This script is run on a variety of systems.  To avoid spurious changes, fix
+# some variables that affect sort order of ls(1).
+unset LANG
+export LANG
+LC_ALL="C"
+export LC_ALL
+
+# We are building several files:
+#	1 external #define file
+#	1 external prototype file
+#	1 internal #define file
+#	N internal prototype files
+e_dfile=/tmp/__db_c.$$
+e_pfile=/tmp/__db_a.$$
+i_dfile=/tmp/__db_d.$$
+i_pfile=/tmp/__db_b.$$
+trap 'rm -f $e_dfile $e_pfile $i_dfile $i_pfile; exit 0' 0 1 2 3 13 15
+
+head defonly space _DB_EXT_DEF_IN_ > $e_dfile
+head space _DB_EXT_PROT_IN_ > $e_pfile
+head defonly _DB_INT_DEF_IN_ > $i_dfile
+
+# Process the standard directories, creating per-directory prototype
+# files and adding to the external prototype and #define files.
+for i in db btree clib common crypto dbreg env fileops hash hmac \
+    lock log mp mutex os qam rep repmgr rpc_client rpc_server \
+    sequence tcl txn; do
+	head "_${i}_ext_h_" > $i_pfile
+
+	if [ $i = os ] ; then
+		f=`ls ../$i/*.c \
+	    ../os_brew/*.c ../os_qnx/*.c ../os_vxworks/*.c ../os_windows/*.c`
+	elif [ $i = rpc_server ] ; then
+		f=`ls ../$i/c/*.c`
+	elif [ $i = crypto ] ; then
+		f=`ls ../$i/*.c ../$i/*/*.c`
+	elif [ $i = env ] ; then
+		f=`ls ../$i/*.c ../repmgr/repmgr_stub.c`
+	else
+		f=`ls ../$i/*.c`
+	fi
+	awk -f gen_inc.awk \
+	    -v db_version_unique_name=$DB_VERSION_UNIQUE_NAME \
+	    -v e_dfile=$e_dfile \
+	    -v e_pfile=$e_pfile \
+	    -v i_dfile=$i_dfile \
+	    -v i_pfile=$i_pfile $f
+
+	tail "_${i}_ext_h_" >> $i_pfile
+
+	f=../dbinc_auto/${i}_ext.h
+	cmp $i_pfile $f > /dev/null 2>&1 ||
+	    (echo "Building $f" && rm -f $f && cp $i_pfile $f && chmod 444 $f)
+done
+
+# Process directories which only add to the external prototype and #define
+# files.
+for i in dbm hsearch; do
+	f=`ls ../$i/*.c`
+	awk -f gen_inc.awk \
+	    -v db_version_unique_name=$DB_VERSION_UNIQUE_NAME \
+	    -v e_dfile=$e_dfile \
+	    -v e_pfile=$e_pfile \
+	    -v i_dfile="" \
+	    -v i_pfile="" $f
+done
+
+# There are a few global variables in DB -- add them to the external/internal
+# #define files.
+(echo "#define	__db_global_values __db_global_values@DB_VERSION_UNIQUE_NAME@";
+    echo "#define	__repmgr_guesstimated_max __repmgr_guesstimated_max@DB_VERSION_UNIQUE_NAME@") >> $i_dfile
+
+# Wrap up the external #defines/prototypes, and internal #defines.
+tail defonly _DB_EXT_DEF_IN_ >> $e_dfile
+f=../dbinc_auto/ext_def.in
+cmp $e_dfile $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $e_dfile $f && chmod 444 $f)
+
+tail _DB_EXT_PROT_IN_ >> $e_pfile
+f=../dbinc_auto/ext_prot.in
+cmp $e_pfile $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $e_pfile $f && chmod 444 $f)
+
+tail defonly _DB_INT_DEF_IN_ >> $i_dfile
+f=../dbinc_auto/int_def.in
+cmp $i_dfile $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $i_dfile $f && chmod 444 $f)
+
+# DB185 compatibility support.
+head space defonly _DB_EXT_185_DEF_IN_ > $e_dfile
+head space _DB_EXT_185_PROT_IN_ > $e_pfile
+
+f=`ls ../db185/*.c`
+awk -f gen_inc.awk \
+    -v db_version_unique_name=$DB_VERSION_UNIQUE_NAME \
+    -v e_dfile=$e_dfile \
+    -v e_pfile=$e_pfile \
+    -v i_dfile="" \
+    -v i_pfile="" $f
+
+tail defonly _DB_EXT_185_DEF_IN_ >> $e_dfile
+f=../dbinc_auto/ext_185_def.in
+cmp $e_dfile $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $e_dfile $f && chmod 444 $f)
+
+tail _DB_EXT_185_PROT_IN_ >> $e_pfile
+f=../dbinc_auto/ext_185_prot.in
+cmp $e_pfile $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $e_pfile $f && chmod 444 $f)

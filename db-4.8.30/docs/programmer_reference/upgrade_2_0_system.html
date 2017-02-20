@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 2.0: system integration</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_2_0_toc.html" title="Chapter 32. Upgrading Berkeley DB 1.85 or 1.86 applications to Berkeley DB 2.0" />
+    <link rel="prev" href="upgrade_2_0_toc.html" title="Chapter 32. Upgrading Berkeley DB 1.85 or 1.86 applications to Berkeley DB 2.0" />
+    <link rel="next" href="upgrade_2_0_convert.html" title="Release 2.0: converting applications" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 2.0: system integration</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_2_0_toc.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 32. Upgrading Berkeley DB 1.85 or 1.86 applications to Berkeley DB 2.0</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_2_0_convert.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_2_0_system"></a>Release 2.0: system integration</h2>
+          </div>
+        </div>
+      </div>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>It is possible to maintain both the Berkeley DB 1.85 and Berkeley DB version 2
+libraries on your system.  However, the <code class="filename">db.h</code> include file that
+was distributed with Berkeley DB 1.85 is not compatible with the <code class="filename">db.h</code>
+file distributed with Berkeley DB version 2, so you will have to install them
+in different locations.  In addition, both the Berkeley DB 1.85 and Berkeley DB
+version 2 libraries are named <code class="filename">libdb.a</code>.
+<p>As the Berkeley DB 1.85 library did not have an installation target in the
+Makefile, there's no way to know exactly where it was installed on the
+system.  In addition, many vendors included it in the C library instead
+of as a separate library, and so it may actually be part of libc and the
+<code class="filename">db.h</code> include file may be installed in <code class="filename">/usr/include</code>.</p><p>For these reasons, the simplest way to maintain both libraries is to
+install Berkeley DB version 2 in a completely separate area of your system.
+The Berkeley DB version 2 installation process allows you to install into a
+standalone directory hierarchy on your system.  See the
+<a class="xref" href="build_unix.html#build_unix_intro" title="Building for UNIX/POSIX">Building for UNIX/POSIX</a>
+documentation for more information and instructions on how to install the
+Berkeley DB version 2 library, include files and documentation into specific
+locations.</p></li>
+          <li>Alternatively, you can replace Berkeley DB 1.85 on your system with Berkeley DB
+version 2.  In this case, you'll probably want to install Berkeley DB version
+2 in the normal place on your system, wherever that may be, and delete
+the Berkeley DB 1.85 include files, manual pages and libraries.
+<p>To replace 1.85 with version 2, you must either convert your 1.85
+applications to use the version 2 API or build the Berkeley DB version 2 library
+to include Berkeley DB 1.85 interface compatibility code.  Whether converting
+your applications to use the version 2 interface or using the version 1.85
+compatibility API, you will need to recompile or relink your 1.85
+applications, and you must convert any persistent application databases
+to the Berkeley DB version 2 database formats.</p><p>If you want to recompile your Berkeley DB 1.85 applications, you will have to
+change them to include the file <code class="filename">db_185.h</code> instead of
+<code class="filename">db.h</code>.  (The <code class="filename">db_185.h</code> file is automatically installed
+during the Berkeley DB version 2 installation process.)  You can then recompile
+the applications, linking them against the Berkeley DB version 2 library.</p><p>For more information on compiling the Berkeley DB 1.85 compatibility code into
+the Berkeley DB version 2 library, see <a class="xref" href="build_unix.html#build_unix_intro" title="Building for UNIX/POSIX">Building for UNIX/POSIX</a>.</p><p>For more information on converting databases from the Berkeley DB 1.85 formats to the Berkeley DB version 2 formats, see the <a href="../api_reference/C/db_dump.html" class="olink">db_dump185 utility</a> and the <a href="../api_reference/C/db_load.html" class="olink">db_load utility</a> documentation.</p></li>
+          <li>Finally, although we certainly do not recommend it, it is possible to
+load both Berkeley DB 1.85 and Berkeley DB version 2 into the same library.
+Similarly, it is possible to use both Berkeley DB 1.85 and Berkeley DB version 2
+within a single application, although it is not possible to use them from
+within the same file.
+<p>The name space in Berkeley DB version 2 has been changed from that of previous Berkeley DB versions, notably version 1.85, for portability and consistency reasons.  The only name collisions in the two libraries are the names used by the historic <a href="../api_reference/C/dbm.html" class="olink">dbm</a> and <a href="../api_reference/C/hsearch.html" class="olink">hsearch</a> interfaces, and the Berkeley DB 1.85 compatibility interfaces in the Berkeley DB version 2 library.</p><p>If you are loading both Berkeley DB 1.85 and Berkeley DB version 2 into a single library, remove the historic interfaces from one of the two library builds, and configure the Berkeley DB version 2 build to not include the Berkeley DB 1.85 compatibility API, otherwise you could have collisions and undefined behavior.  This can be done by editing the library Makefiles and reconfiguring and rebuilding the Berkeley DB version 2 library.  Obviously, if you use the historic interfaces, you will get the version in the library from which you did not remove them.  Similarly, you will not be able to access Berkeley DB version 2 files using the Berkeley DB 1.85 compatibility interface, since you have removed that from the library as well.</p></li>
+        </ol>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_2_0_toc.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_2_0_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_2_0_convert.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 32. Upgrading Berkeley DB 1.85 or 1.86 applications to Berkeley DB 2.0 </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 2.0: converting applications</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

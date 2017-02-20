@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>db_env_set_func_file_map</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="setfunc.html" title="Appendix 3.  Berkeley DB Application Space Static Functions" />
+    <link rel="prev" href="db_env_set_func_exists.html" title="db_env_set_func_exists" />
+    <link rel="next" href="db_env_set_func_free.html" title="db_env_set_func_free" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">db_env_set_func_file_map</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="db_env_set_func_exists.html">Prev</a> </td>
+          <th width="60%" align="center">Appendix 3. 
+                Berkeley DB Application Space Static Functions
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="db_env_set_func_free.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="db_env_set_func_file_map"></a>db_env_set_func_file_map</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+db_env_set_func_file_map(int (*func_file_map)(DB_ENV *dbenv, char *path, 
+    size_t len, int is_rdonly, void **addr),
+    int (*func_file_unmap)(DB_ENV *dbenv, void *addr));  </pre>
+      <p>
+         The Berkeley DB library optionally uses the ability to map a file into
+         memory.
+    </p>
+      <p>
+         The <code class="function">db_env_set_func_file_map()</code> function configures all operations
+         performed by a process and all of its threads of control, not
+         operations confined to a single database environment.
+    </p>
+      <p>
+         Although the <code class="function">db_env_set_func_file_map()</code> function may be called at any time
+         during the life of the application, it should normally be called
+         before making calls to the <a class="xref" href="envcreate.html" title="db_env_create">db_env_create</a> or
+         <a class="xref" href="dbcreate.html" title="db_create">db_create</a> methods.
+    </p>
+      <p>
+         The <code class="function">db_env_set_func_file_map()</code> <span>
+                  function returns a non-zero error value on failure and 0 on success.
+            </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1718850"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1718978"></a>func_file_map</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>func_file_map</strong></span> parameter is the
+                          function which maps a file into memory.  The function takes 5
+                          parameters:
+                      </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p>
+                            <span class="bold"><strong>dbenv</strong></span>     
+                          </p>
+                <p>
+                            The <span class="bold"><strong>dbenv</strong></span> parameter is the enclosing
+                            database environment handle.
+                          </p>
+              </li>
+              <li>
+                <p>
+                            <span class="bold"><strong>path</strong></span>     
+                          </p>
+                <p>
+                            The <span class="bold"><strong>path</strong></span> parameter is the name of
+                            file.  Repeated requests for the mapping of the same name should
+                            return a reference to the same memory.
+                          </p>
+              </li>
+              <li>
+                <p>
+                             <span class="bold"><strong>len</strong></span>     
+                          </p>
+                <p>
+                            The <span class="bold"><strong>len</strong></span> parameter is the length, in
+                            bytes, of the file.
+                          </p>
+              </li>
+              <li>
+                <p>
+                            <span class="bold"><strong>is_rdonly</strong></span>     
+                          </p>
+                <p>
+                            The <span class="bold"><strong>is_rdonly</strong></span> parameter will be
+                            non-zero if the mapped file is read-only.
+                          </p>
+              </li>
+              <li>
+                <p>
+                            <span class="bold"><strong>addr</strong></span>     
+                          </p>
+                <p>
+                            The <span class="bold"><strong>addr</strong></span> parameter is the memory
+                            location into which a pointer     to the mapped file is returned.
+                          </p>
+              </li>
+            </ul>
+          </div>
+          <p>
+                          The <span class="bold"><strong>func_file_map</strong></span> function must
+                          return the value of <span class="bold"><strong>errno</strong></span> on failure
+                          and 0 on success.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1719171"></a>func_file_unmap</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>func_file_unmap</strong></span> parameter is the
+                          function which unmaps a file from memory.  The function takes 2
+                          parameters:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p>
+                                <span class="bold"><strong>dbenv</strong></span>
+                            </p>
+                <p>
+                                The <span class="bold"><strong>dbenv</strong></span> parameter is the enclosing
+                                database environment handle.
+                            </p>
+              </li>
+              <li>
+                <p>
+                                <code class="literal">addr</code>
+                            </p>
+                <p>
+                                The <span class="bold"><strong>addr</strong></span> parameter is the value
+                                returned by the <span class="bold"><strong>func_file_map</strong></span>
+                                function when the file or region was mapped into memory.
+                            </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1719186"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+          <a href="../../programmer_reference/program_runtime.html" class="olink">Run-time configuration</a>
+
+     </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="db_env_set_func_exists.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="setfunc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="db_env_set_func_free.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">db_env_set_func_exists </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> db_env_set_func_free</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

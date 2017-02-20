@@ -1,0 +1,10 @@
+#
+# Install configuration file.
+#
+# Note: This file may be modified during the pool manufacturing process to
+#	add additional configuration statements. This file is sourced by
+#	INSTW32.TCL.
+#
+
+cdromDescSet "Berkeley DB @DB_VERSION_MAJOR@.@DB_VERSION_MINOR@.@DB_VERSION_PATCH@"
+

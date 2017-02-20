@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Shared memory regions</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="env.html" title="Chapter 9.  The Berkeley DB Environment" />
+    <link rel="prev" href="env_naming.html" title="File naming" />
+    <link rel="next" href="env_security.html" title="Security" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Shared memory regions</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="env_naming.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 9. 
+        The Berkeley DB Environment
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="env_security.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="env_region"></a>Shared memory regions</h2>
+          </div>
+        </div>
+      </div>
+      <p>Each of the Berkeley DB subsystems within an environment is described by one
+or more regions, or chunks of memory.  The regions contain all of the
+per-process and per-thread shared information (including mutexes), that
+comprise a Berkeley DB environment.  These regions are created in one of three
+types of memory, depending on the flags specified to the
+<a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a> method:</p>
+      <div class="orderedlist">
+        <p>The system memory used by Berkeley DB is potentially useful past the lifetime
+of any particular process.  Therefore, additional cleanup may be
+necessary after an application fails because there may be no way for
+Berkeley DB to ensure that system resources backing the shared memory regions
+are returned to the system.</p>
+        <p>The system memory that is used is architecture-dependent.  For example,
+on systems supporting X/Open-style shared memory interfaces, such as
+UNIX systems, the <code class="literal">shmget</code>(2) and related System V IPC
+interfaces are used. Additionally, VxWorks systems use system memory.
+In these cases, an initial segment ID must be specified by the
+application to ensure that applications do not overwrite each other's
+database environments, so that the number of segments created does not
+grow without bounds.  See the <a href="../api_reference/C/envset_shm_key.html" class="olink">DB_ENV-&gt;set_shm_key()</a> method for more
+information.</p>
+        <p>On Windows platforms, the use of the <a href="../api_reference/C/envopen.html#envopen_DB_SYSTEM_MEM" class="olink">DB_SYSTEM_MEM</a> flag is
+problematic because the operating system uses reference counting to
+clean up shared objects in the paging file automatically.  In addition,
+the default access permissions for shared objects are different from
+files, which may cause problems when an environment is accessed by
+multiple processes running as different users.  See
+<a class="xref" href="build_win_notes.html" title="Windows notes">Windows notes</a> for more
+information.</p>
+        <ol type="1">
+          <li>
+            <p>If the <a href="../api_reference/C/envopen.html#open_DB_PRIVATE" class="olink">DB_PRIVATE</a> flag is specified to the <a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a> method,
+regions are created in per-process heap memory; that is, memory returned
+by <code class="literal">malloc</code>(3).</p>
+            <p>This flag should not be specified if more than a single process is
+accessing the environment because it is likely to cause database
+corruption and unpredictable behavior.  For example, if both a server
+application and Berkeley DB utilities (for example, the <a href="../api_reference/C/db_archive.html" class="olink">db_archive utility</a>, 
+the <a href="../api_reference/C/db_checkpoint.html" class="olink">db_checkpoint utility</a> or the <a href="../api_reference/C/db_stat.html" class="olink">db_stat utility</a>) are expected to access the environment, 
+the <a href="../api_reference/C/envopen.html#open_DB_PRIVATE" class="olink">DB_PRIVATE</a> flag should not be specified.</p>
+          </li>
+          <li>If the <a href="../api_reference/C/envopen.html#envopen_DB_SYSTEM_MEM" class="olink">DB_SYSTEM_MEM</a> flag is specified to <a href="../api_reference/C/dbopen.html" class="olink">DB-&gt;open()</a>,
+shared regions are created in system memory rather than files.  This is
+an alternative mechanism for sharing the Berkeley DB environment among
+multiple processes and multiple threads within processes.</li>
+          <li>If no memory-related flags are specified to <a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a>, memory
+backed by the filesystem is used to store the regions.  On UNIX systems,
+the Berkeley DB library will use the POSIX mmap interface. If mmap is not available,
+the UNIX shmget interfaces may be used instead, if they are available.</li>
+        </ol>
+      </div>
+      <p>Any files created in the filesystem to back the regions are created in
+the environment home directory specified to the <a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a> call.
+These files are named __db.### (for example, __db.001, __db.002 and
+so on).  When region files are backed by the filesystem, one file per
+region is created.  When region files are backed by system memory, a
+single file will still be created because there must be a well-known
+name in the filesystem so that multiple processes can locate the system
+shared memory that is being used by the environment.</p>
+      <p>Statistics about the shared memory regions in the environment can be
+displayed using the <span class="bold"><strong>-e</strong></span> option to the <a href="../api_reference/C/db_stat.html" class="olink">db_stat utility</a>.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="env_naming.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="env.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="env_security.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">File naming </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Security</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

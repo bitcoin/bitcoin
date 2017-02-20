@@ -1,0 +1,279 @@
+/*-
+ * See the file LICENSE for redistribution information.
+ *
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
+ *
+ * $Id$
+ */
+/*
+ * Copyright (c) 1995, 1996
+ *	Margo Seltzer.  All rights reserved.
+ */
+/*
+ * Copyright (c) 1995, 1996
+ *	The President and Fellows of Harvard University.  All rights reserved.
+ *
+ * This code is derived from software contributed to Berkeley by
+ * Margo Seltzer.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+
+DBPRIVATE
+PREFIX	__ham
+
+INCLUDE #include "db_int.h"
+INCLUDE #include "dbinc/crypto.h"
+INCLUDE #include "dbinc/db_page.h"
+INCLUDE #include "dbinc/db_dispatch.h"
+INCLUDE #include "dbinc/db_am.h"
+INCLUDE #include "dbinc/hash.h"
+INCLUDE #include "dbinc/log.h"
+INCLUDE #include "dbinc/txn.h"
+INCLUDE
+
+/*
+ * HASH-insdel: used for hash to insert/delete a pair of entries onto a master
+ * page. The pair might be regular key/data pairs or they might be the
+ * structures that refer to off page items, duplicates or offpage duplicates.
+ *  opcode - PUTPAIR/DELPAIR + big masks
+ *  fileid - identifies the file referenced
+ *  pgno - page within file
+ *  ndx - index on the page of the item being added (item index)
+ *  pagelsn - lsn on the page before the update
+ *  key - the key being inserted
+ *  data - the data being inserted
+ */
+BEGIN insdel		42	21
+ARG	opcode		u_int32_t	lu
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+ARG	ndx		u_int32_t	lu
+POINTER	pagelsn		DB_LSN *	lu
+DBT	key		DBT		s
+DBT	data		DBT		s
+END
+
+/*
+ * Used to add and remove overflow pages.
+ * prev_pgno is the previous page that is going to get modified to
+ *	point to this one.  If this is the first page in a chain
+ *	then prev_pgno should be PGNO_INVALID.
+ * new_pgno is the page being allocated.
+ * next_pgno is the page that follows this one.  On allocation,
+ *	this should be PGNO_INVALID.  For deletes, it may exist.
+ * pagelsn is the old lsn on the page.
+ */
+BEGIN newpage		42	22
+ARG	opcode		u_int32_t	lu
+DB	fileid		int32_t		ld
+ARG	prev_pgno	db_pgno_t	lu
+POINTER	prevlsn		DB_LSN *	lu
+ARG	new_pgno	db_pgno_t	lu
+POINTER	pagelsn		DB_LSN *	lu
+ARG	next_pgno	db_pgno_t	lu
+POINTER	nextlsn		DB_LSN *	lu
+END
+
+/*
+ * Splitting requires two types of log messages.  The second logs the
+ * data on the original page.  To redo the split, we have to visit the
+ * new page (pages) and add the items back on the page if they are not
+ * yet there.
+ */
+BEGIN splitdata		42	24
+DB	fileid		int32_t		ld
+ARG	opcode		u_int32_t	lu
+ARG	pgno		db_pgno_t	lu
+PGDBT	pageimage	DBT		s
+POINTER	pagelsn		DB_LSN *	lu
+END
+
+/*
+ * HASH-replace: is used for hash to handle partial puts that only
+ * affect a single master page.
+ *  fileid - identifies the file referenced
+ *  pgno - page within file
+ *  ndx - index on the page of the item being modified (item index)
+ *  pagelsn - lsn on the page before the update
+ *  off - offset in the old item where the new item is going.
+ *  olditem - DBT that describes the part of the item being replaced.
+ *  newitem - DBT of the new item.
+ *  makedup - this was a replacement that made an item a duplicate.
+ */
+BEGIN replace		42	25
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+ARG	ndx		u_int32_t	lu
+POINTER	pagelsn		DB_LSN *	lu
+ARG	off		int32_t		ld
+DBT	olditem		DBT		s
+DBT	newitem		DBT		s
+ARG	makedup		u_int32_t	lu
+END
+
+/*
+ * Used when we empty the first page in a bucket and there are pages after
+ * it.  The page after it gets copied into the bucket page (since bucket
+ * pages have to be in fixed locations).
+ * pgno: the bucket page
+ * pagelsn: the old LSN on the bucket page
+ * next_pgno: the page number of the next page
+ * nnext_pgno: page after next_pgno (may need to change its prev)
+ * nnextlsn: the LSN of nnext_pgno.
+ */
+BEGIN copypage		42	28
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+POINTER	pagelsn		DB_LSN *	lu
+ARG	next_pgno	db_pgno_t	lu
+POINTER	nextlsn		DB_LSN *	lu
+ARG	nnext_pgno	db_pgno_t	lu
+POINTER	nnextlsn	DB_LSN *	lu
+PGDBT	page		DBT		s
+END
+
+/*
+ * This record logs the meta-data aspects of a split operation.  It has enough
+ * information so that we can record both an individual page allocation as well
+ * as a group allocation which we do because in sub databases, the pages in
+ * a hash doubling, must be contiguous.  If we do a group allocation, the
+ * number of pages allocated is bucket + 1, pgno is the page number of the
+ * first newly allocated bucket.
+ *
+ * bucket:	Old maximum bucket number.
+ * mmpgno:	Master meta-data page number (0 if same as mpgno).
+ * mmetalsn:	Lsn of the master meta-data page.
+ * mpgno:	Meta-data page number.
+ * metalsn:	Lsn of the meta-data page.
+ * pgno:	Page allocated to bucket + 1 (first newly allocated page)
+ * pagelsn:	Lsn of either the first page allocated (if newalloc == 0) or
+ *		the last page allocated (if newalloc == 1).
+ * newalloc:	1 indicates that this record did the actual allocation;
+ *		0 indicates that the pages were already allocated from a
+ *		previous (failed) allocation.
+ * last_pgno:	the last page in the file before this op (4.3+).
+ */
+BEGIN_COMPAT metagroup		42	29
+DB	fileid		int32_t		ld
+ARG	bucket		u_int32_t	lu
+ARG	 mmpgno		db_pgno_t	lu
+POINTER	mmetalsn	DB_LSN *	lu
+ARG	mpgno		db_pgno_t	lu
+POINTER	metalsn		DB_LSN *	lu
+ARG	pgno		db_pgno_t	lu
+POINTER	pagelsn		DB_LSN *	lu
+ARG	newalloc	u_int32_t	lu
+END
+
+BEGIN metagroup		43	29
+DB	fileid		int32_t		ld
+ARG	bucket		u_int32_t	lu
+ARG	 mmpgno		db_pgno_t	lu
+POINTER	mmetalsn	DB_LSN *	lu
+ARG	mpgno		db_pgno_t	lu
+POINTER	metalsn		DB_LSN *	lu
+ARG	pgno		db_pgno_t	lu
+POINTER	pagelsn		DB_LSN *	lu
+ARG	newalloc	u_int32_t	lu
+ARG	last_pgno	db_pgno_t	lu
+END
+
+/*
+ * groupalloc
+ *
+ * This is used in conjunction with MPOOL_NEW_GROUP when we are creating
+ * a new database to make sure that we recreate or reclaim free pages
+ * when we allocate a chunk of contiguous ones during database creation.
+ *
+ * meta_lsn: meta-data lsn
+ * start_pgno:	starting page number
+ * num: number	of allocated pages
+ * unused:	unused, historically the meta-data free list page number
+ * last_pgno:	the last page in the file before this op (4.3+).
+ */
+BEGIN_COMPAT groupalloc	42	32
+DB	fileid		int32_t		ld
+POINTER	meta_lsn	DB_LSN *	lu
+ARG	start_pgno	db_pgno_t	lu
+ARG	num		u_int32_t	lu
+ARG	free		db_pgno_t	lu
+END
+
+BEGIN groupalloc	43	32
+DB	fileid		int32_t		ld
+POINTER	meta_lsn	DB_LSN *	lu
+ARG	start_pgno	db_pgno_t	lu
+ARG	num		u_int32_t	lu
+ARG	unused		db_pgno_t	lu
+ARG	last_pgno	db_pgno_t	lu
+END
+
+/*
+ * Records for backing out cursor adjustment.
+ *   curadj - added or deleted a record or a dup
+ *	within a record.
+ *	pgno	- page that was effected
+ *	indx	- indx of recrod effected.
+ *	len	- if a dup its length.
+ *	dup_off	- if a dup its offset
+ *	add	- 1 if add 0 if delete
+ *	is_dup  - 1 if dup 0 otherwise.
+ *	order	- order assigned to this deleted record or dup.
+ *
+ *   chgpg - rmoved a page, move the records to a new page
+ *	mode	- CHGPG page was deleted or records move to new page.
+ *		- SPLIT we split a bucket
+ *		- DUP we convered to off page duplicates.
+ *	old_pgno, new_pgno - old and new page numbers.
+ *	old_index, new_index - old and new index numbers, NDX_INVALID if
+ *		it effects all records on the page.
+ *		For three opcodes new in 3.3 (DB_HAM_DELFIRSTPG, DELMIDPG,
+ *		and DELLASTPG), we overload old_indx and new_indx to avoid
+ *		needing a new log record type:  old_indx stores the only
+ *		indx of interest to these records, and new_indx stores the
+ *		order that's assigned to the lowest deleted record we're
+ *		moving.
+ */
+BEGIN curadj	42	33
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+ARG	indx		u_int32_t	lu
+ARG	len		u_int32_t	lu
+ARG	dup_off		u_int32_t	lu
+ARG	add		int		ld
+ARG	is_dup		int		ld
+ARG	order		u_int32_t	lu
+END
+
+BEGIN chgpg	42	34
+DB	fileid		int32_t		ld
+ARG	mode		db_ham_mode	ld
+ARG	old_pgno	db_pgno_t	lu
+ARG	new_pgno	db_pgno_t	lu
+ARG	old_indx	u_int32_t	lu
+ARG	new_indx	u_int32_t	lu
+END
+

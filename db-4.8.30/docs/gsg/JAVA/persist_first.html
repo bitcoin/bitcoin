@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 3. Direct Persistence Layer First Steps</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="dpl.html" title="Part I. Programming with the Direct Persistence Layer" />
+    <link rel="prev" href="dpl.html" title="Part I. Programming with the Direct Persistence Layer" />
+    <link rel="next" href="persistobject.html" title="Persistent Objects" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 3. Direct Persistence Layer First Steps</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dpl.html">Prev</a> </td>
+          <th width="60%" align="center">Part I. Programming with the Direct Persistence Layer</th>
+          <td width="20%" align="right"> <a accesskey="n" href="persistobject.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="persist_first"></a>Chapter 3. Direct Persistence Layer First Steps</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="persist_first.html#entitystore">Entity Stores</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="persist_first.html#persist-open">Opening and Closing Environments and Stores</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <span class="sect1">
+              <a href="persistobject.html">Persistent Objects</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="saveret.html">Saving a Retrieving Data</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+          This chapter guides you through the first few steps required to
+          use the DPL with your application. These steps include:
+  </p>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <p>
+                          Opening your environment as was described in
+                          
+                          <span>
+                          <a class="xref" href="Env.html#EnvOpen" title="Opening Database Environments">Opening Database Environments</a>.
+                          </span>
+                  </p>
+          </li>
+          <li>
+            <p>
+                          Opening your entity store.
+                  </p>
+          </li>
+          <li>
+            <p>
+                          Identifying the classes that you want to store in
+                          DB as either a <code class="literal">persistent</code>
+                          class or an <code class="literal">entity</code>.
+                  </p>
+          </li>
+        </ol>
+      </div>
+      <p>
+          Once you have done these things, you can write your classes to
+          the DB databases, read them back from the databases, delete
+          them from the databases, and so forth. These activities are
+          described in the chapters that follow in this part of this manual.
+  </p>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="entitystore"></a>Entity Stores</h2>
+            </div>
+          </div>
+        </div>
+        <div class="toc">
+          <dl>
+            <dt>
+              <span class="sect2">
+                <a href="persist_first.html#persist-open">Opening and Closing Environments and Stores</a>
+              </span>
+            </dt>
+          </dl>
+        </div>
+        <p>
+                Entity stores are the basic unit of storage that you use with the DPL. That is, it
+                is a unit of encapsulation for the classes that you want to store in DB. Under
+                the hood it actually interacts with DB databases, but the DPL provides a layer
+                of abstraction from the underlying DB APIs. The store, therefore, provides a
+                simplified mechanism by which you read and write your stored classes. By using a
+                store, you have access to your classes that is more simplified than if you were
+                interacting with databases directly, but this simplified access comes at the cost of
+                reduced flexibility.
+          </p>
+        <p>
+                  Entity stores have configurations in the same way that environments have
+                  configurations. You can use a <code class="classname">StoreConfig</code> object 
+                  to identify store properties. Among these are methods that allow you to declare
+                  whether:
+          </p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+                                  the store can be created if it does not exist at the time
+                                  it is opened. Use the
+                                  <code class="methodname">StoreConfig.setAllowCreate()</code>
+                                  method to set this.
+                          </p>
+            </li>
+            <li>
+              <p>
+                                  the store is read-only. Use the
+                                  <code class="methodname">StoreConfig.setReadOnly()</code>
+                                  method to set this.
+                          </p>
+            </li>
+            <li>
+              <p>
+                                  the store supports transactions. Use the
+                                  <code class="methodname">StoreConfig.setTransactional()</code>
+                                  method to set this.
+                          </p>
+              <p>
+                                  Writing DB transactional applications is described in  the
+                                  <em class="citetitle">Berkeley DB Java Edition Getting Started with Transaction Processing</em> guide.
+                          </p>
+            </li>
+          </ul>
+        </div>
+        <p>
+                  <code class="classname">EntityStore</code> objects also provide methods for retrieving
+                  information about the store, such as:
+          </p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+                                  the store's name. Use the
+                                  <code class="methodname">EntityStore.getStoreName()</code>
+                                  method to retrieve this.
+                          </p>
+            </li>
+            <li>
+              <p>
+                                  a handle to the environment in which the store is opened. Use the
+                                  <code class="methodname">EntityStore.getEnvironment</code>
+                                  method to retrieve this handle.
+                          </p>
+            </li>
+          </ul>
+        </div>
+        <p>
+                  You can also use the <code class="classname">EntityStore</code> to
+                  retrieve all the primary and secondary indexes related to a given type of entity
+                  object contained in the store. See <a class="xref" href="persist_index.html" title="Chapter 4. Working with Indices">Working with Indices</a> for
+                  more information.
+          </p>
+        <div class="sect2" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title"><a id="persist-open"></a>Opening and Closing Environments and Stores</h3>
+              </div>
+            </div>
+          </div>
+          <p>
+                  As described in
+                  
+                  <span>
+                          <a class="xref" href="Env.html" title="Chapter 2. Database Environments">Database Environments</a>, 
+                  </span>
+                          
+                  an
+                  <span class="emphasis"><em>environment</em></span> is a unit of
+                  encapsulation for DB databases. It also provides a
+                  handle by which activities common across the databases
+                  can be managed.
+          </p>
+          <p>
+                  To use an entity store, you must first open an environment and then provide that
+                  environment handle to the <code class="classname">EntityStore</code> constructor. 
+          </p>
+          <p>
+                  For example, the following code fragment configures both
+                  the environment and the entity store such that they can
+                  be created if they do not exist. Both the environment and
+                  the entity store are then opened.
+          </p>
+          <pre class="programlisting">package persist.gettingStarted;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.Environment;
+import com.sleepycat.db.EnvironmentConfig;
+
+import com.sleepycat.persist.EntityStore;
+import com.sleepycat.persist.StoreConfig;
+
+...
+
+private Environment myEnv;
+private EntityStore store;
+
+try {
+    EnvironmentConfig myEnvConfig = new EnvironmentConfig();
+    StoreConfig storeConfig = new StoreConfig();
+
+    myEnvConfig.setAllowCreate(!readOnly);
+    storeConfig.setAllowCreate(!readOnly);
+
+    try {
+        // Open the environment and entity store
+        myEnv = new Environment(envHome, myEnvConfig);
+        store = new EntityStore(myEnv, "EntityStore", storeConfig);
+    } catch (FileNotFoundException fnfe) {
+        System.err.println(fnfe.toString());
+        System.exit(-1);
+    }
+} catch(DatabaseException dbe) {
+    System.err.println("Error opening environment and store: " +
+                        dbe.toString());
+    System.exit(-1);
+} </pre>
+          <p>
+            As always, before you exit your program you should close both
+            your store and your environment. Be sure to close your store before you close your
+            environment. 
+    </p>
+          <pre class="programlisting">if (store != null) {
+    try {
+        store.close();
+    } catch(DatabaseException dbe) {
+        System.err.println("Error closing store: " +
+                            dbe.toString());
+        System.exit(-1);
+    }
+}
+
+if (myEnv != null) {
+    try {
+        // Finally, close environment.
+        myEnv.close();
+    } catch(DatabaseException dbe) {
+        System.err.println("Error closing MyDbEnv: " +
+                            dbe.toString());
+        System.exit(-1);
+    }
+} </pre>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dpl.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="dpl.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="persistobject.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Part I. Programming with the Direct Persistence Layer </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Persistent Objects</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

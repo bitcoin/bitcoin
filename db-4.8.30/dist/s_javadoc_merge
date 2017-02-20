@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+
+from glob import glob
+import os, re, sys
+
+classre = re.compile(r'(?P<javadoc>(/\*\*([^/]|/[^*])*?\*/\s*)?)(?P<mods>public\s+((abstract)\s+)*)(?P<class_type>(class|interface)\s+)?(?P<class_name>\w+)\s*(?P<end>(extends|implements|{))', re.DOTALL)
+fieldre = re.compile(r'(?P<javadoc>(/\*\*([^/]|/[^*])*?\*/\s*)?)(?P<mods>public\s+((abstract|final|static)\s+)*)(?P<field_type>\w+\s+)?(?P<field_name>\w+)(?P<params>\s*(\(.*?\)|=|;))', re.DOTALL)
+paramre = re.compile(r'\s*(?:final\s*)?(?P<param_type>\w+(\[\])?)\s+(?P<param_name>\w+)\s*(?P<comma>,?)')
+
+def fieldsig(m):
+	return '%s%s' % (m.group('field_name'), paramre.sub('\g<param_type>\g<comma>', m.group('params') or ''))
+
+def parse(input):
+	javadoc = {}
+	for m in classre.finditer(input):
+		javadoc[m.group('class_name')] = m.group('javadoc')
+	for m in fieldre.finditer(input):
+		javadoc[fieldsig(m)] = m.group('javadoc')
+	return javadoc
+
+def mkclass(m):
+	#if debug:
+		#print "Looking up", m.group('class_name')
+	return '%s%s%s%s %s' % (javadoc.get(m.group('class_name'), '/** TODO */\n'), m.group('mods'), (m.group('class_type') or ''), m.group('class_name'), m.group('end'))
+
+def mkfield(m):
+	#if debug:
+		#print "Looking up", fieldsig(m)
+	return '%s%s%s%s%s' % (javadoc.get(fieldsig(m), '/** TODO */\n    '), m.group('mods'), (m.group('field_type') or ''), m.group('field_name'), m.group('params'))
+
+if len(sys.argv) < 3 or not os.path.isfile(sys.argv[1]) or not os.path.isfile(sys.argv[2]):
+	print >>sys.stderr, "Usage %s <docfile> <srcfile>" % sys.argv[0]
+	sys.exit(-1)
+docfile, srcfile = sys.argv[1:3]
+
+# Parse the javadoc from the doc file
+#debug = True or (os.path.basename(docfile) == 'Database.java')
+javadoc = parse(open(docfile).read())
+#if debug:
+	#print repr(javadoc)
+
+# Merge the javadoc with the source file
+newsrc = classre.sub(mkclass, open(srcfile).read())
+newsrc = fieldre.sub(mkfield, newsrc)
+sys.stdout.write(newsrc)

@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>operator-</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ Standard Template Library API Reference" />
+    <link rel="up" href="db_vector_base_iterator.html" title="Chapter 12.  Db_vector_base_iterator" />
+    <link rel="prev" href="stldb_vector_base_iteratoroperator_ia.html" title="operator+=" />
+    <link rel="next" href="stldb_vector_base_iteratoroperator_sa.html" title="operator-=" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">
+operator-
+</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="stldb_vector_base_iteratoroperator_ia.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 12. 
+ Db_vector_base_iterator  </th>
+          <td width="20%" align="right"> <a accesskey="n" href="stldb_vector_base_iteratoroperator_sa.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="stldb_vector_base_iteratoroperator_sub"></a>
+operator-
+</h2>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="func_details"></a>
+Function Details</h3>
+            </div>
+          </div>
+        </div>
+        <pre class="programlisting">
+self operator-(difference_type n) const
+ </pre>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage"></div>
+          <p>Iterator movement operator. </p>
+          <p>Return another iterator by moving this iterator backward by n elements. </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1560204"></a>
+Parameters</h4>
+              </div>
+            </div>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1560322"></a>
+ n </h5>
+                </div>
+              </div>
+            </div>
+            <p>The amount and direction of movement. If negative, will move backward by |n| element. </p>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1560198"></a>
+Return Value</h4>
+              </div>
+            </div>
+          </div>
+          <p>The new iterator at new position. </p>
+        </div>
+        <pre class="programlisting">
+difference_type operator-(const self &amp;itr) const
+ </pre>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage"></div>
+          <p>Iterator distance operator. </p>
+          <p>Return the index difference of this iterator and itr, so if this iterator sits on an element with a smaller index, this call will return a negative number. </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1560417"></a>
+Parameters</h4>
+              </div>
+            </div>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1560377"></a>
+ itr </h5>
+                </div>
+              </div>
+            </div>
+            <p>The other iterator to substract. itr can be the invalid iterator after last element or before first element, their index will be regarded as last element's index + 1 and -1 respectively. </p>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1560323"></a>
+Return Value</h4>
+              </div>
+            </div>
+          </div>
+          <p>The index difference. </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1560341"></a>
+Group: Iterator movement operators.</h3>
+            </div>
+          </div>
+        </div>
+        <p>When we talk about iterator movement, we think the container is a uni-directional range, represented by [begin, end), and this is true no matter we are using iterators or reverse iterators.</p>
+        <p>When an iterator is moved closer to "begin", we say it is moved forward, otherwise we say it is moved backward. </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1560371"></a>
+Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+  <a class="link" href="db_vector_base_iterator.html" title="Chapter 12.  Db_vector_base_iterator">
+  db_vector_base_iterator</a>
+     </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="stldb_vector_base_iteratoroperator_ia.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="db_vector_base_iterator.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="stldb_vector_base_iteratoroperator_sa.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+operator+=
+ </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+operator-=
+</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

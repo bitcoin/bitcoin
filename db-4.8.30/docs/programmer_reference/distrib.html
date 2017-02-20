@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 47.  Distribution</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="prev" href="test_faq.html" title="Test suite FAQ" />
+    <link rel="next" href="distrib_layout.html" title="Source code layout" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 47. 
+        Distribution
+        </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="test_faq.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="distrib_layout.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="distrib"></a>Chapter 47. 
+        Distribution
+        </h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="distrib.html#distrib_port">Porting Berkeley DB to new architectures</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="distrib_layout.html">Source code layout</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="distrib_port"></a>Porting Berkeley DB to new architectures</h2>
+            </div>
+          </div>
+        </div>
+        <p>Berkeley DB is generally easy to port to new architectures.  Berkeley DB was
+designed to be as portable as possible, and has been ported to a wide
+variety of systems, from Wind River's Tornado system, to VMS, to
+Windows/NT and Windows/95, and most existing UNIX platforms.  It runs
+on 16, 32 and 64-bit machines, little or big-endian.  The difficulty of
+a port depends on how much of the ANSI C and POSIX 1003.1 standards the
+new architecture offers.</p>
+        <p>An abstraction layer separates the main Berkeley DB code from the operating
+system and architecture specific components.   This layer is comprised
+of approximately 2500 lines of C language code, found in the <code class="filename">os</code>
+subdirectory of the Berkeley DB distribution.  The following list of files
+include functionality that may need to be modified or implemented in
+order to support a new architecture.  Within each file, there is usually
+one, but sometimes several functions (for example, the
+<code class="filename">os_alloc.c</code> file contains the malloc, calloc, realloc, free,
+and strdup functions).</p>
+        <div class="informaltable">
+          <table border="1" width="80%">
+            <colgroup>
+              <col />
+              <col />
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Source file</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>os_abs.c</td>
+                <td>Return if a filename is an absolute pathname</td>
+              </tr>
+              <tr>
+                <td>os_alloc.c</td>
+                <td>ANSI C malloc, calloc, realloc, strdup, free front-ends</td>
+              </tr>
+              <tr>
+                <td>os_clock.c</td>
+                <td>Return the current time-of-day</td>
+              </tr>
+              <tr>
+                <td>os_config.c</td>
+                <td>Return run-time configuration information</td>
+              </tr>
+              <tr>
+                <td>os_dir.c</td>
+                <td>Read the filenames from a directory</td>
+              </tr>
+              <tr>
+                <td>os_errno.c</td>
+                <td>Set/get the ANSI C errno value</td>
+              </tr>
+              <tr>
+                <td>os_fid.c</td>
+                <td>Create a unique ID for a file</td>
+              </tr>
+              <tr>
+                <td>os_fsync.c</td>
+                <td>POSIX 1003.1 fsync front-end</td>
+              </tr>
+              <tr>
+                <td>os_handle.c</td>
+                <td>Open file handles</td>
+              </tr>
+              <tr>
+                <td>os_id.c</td>
+                <td>Return thread ID</td>
+              </tr>
+              <tr>
+                <td>os_map.c</td>
+                <td>Map a shared memory area</td>
+              </tr>
+              <tr>
+                <td>os_method.c</td>
+                <td>Run-time replacement of system calls</td>
+              </tr>
+              <tr>
+                <td>os_oflags.c</td>
+                <td>Convert POSIX 1003.1 open flags, modes to Berkeley DB flags</td>
+              </tr>
+              <tr>
+                <td>os_open.c</td>
+                <td>Open file handles</td>
+              </tr>
+              <tr>
+                <td>os_region.c</td>
+                <td>Map a shared memory area</td>
+              </tr>
+              <tr>
+                <td>os_rename.c</td>
+                <td>POSIX 1003.1 rename call</td>
+              </tr>
+              <tr>
+                <td>os_root.c</td>
+                <td>Return if application has special permissions</td>
+              </tr>
+              <tr>
+                <td>os_rpath.c</td>
+                <td>Return last pathname separator</td>
+              </tr>
+              <tr>
+                <td>os_rw.c</td>
+                <td>POSIX 1003.1 read/write calls</td>
+              </tr>
+              <tr>
+                <td>os_seek.c</td>
+                <td>POSIX 1003.1 seek call</td>
+              </tr>
+              <tr>
+                <td>os_sleep.c</td>
+                <td>Cause a thread of control to release the CPU</td>
+              </tr>
+              <tr>
+                <td>os_spin.c</td>
+                <td>Return the times to spin while waiting for a mutex</td>
+              </tr>
+              <tr>
+                <td>os_stat.c</td>
+                <td>POSIX 1003.1 stat call</td>
+              </tr>
+              <tr>
+                <td>os_tmpdir.c</td>
+                <td>Set the path for temporary files</td>
+              </tr>
+              <tr>
+                <td>os_unlink.c</td>
+                <td>POSIX 1003.1 unlink call</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>All but a few of these files contain relatively trivial pieces of code.
+Typically, there is only a single version of the code for all platforms
+Berkeley DB supports, and that code lives in the <code class="filename">os</code> directory of the
+distribution.  Where different code is required, the code is either
+conditionally compiled or an entirely different version is written. For
+example, VxWorks versions of some of these files can be found in the
+distribution directory os_vxworks, and Windows versions can be found in
+os_windows.</p>
+        <p>Historically, there are only two difficult questions to answer for each
+new port.  The first question is how to handle shared memory.  In order
+to write multiprocess database applications (not multithreaded, but
+threads of control running in different address spaces), Berkeley DB must be
+able to name pieces of shared memory and access them from multiple
+processes.  On UNIX/POSIX systems, we use <span class="bold"><strong>mmap</strong></span> and
+<span class="bold"><strong>shmget</strong></span> for that purpose, but any interface that provides access
+to named shared memory is sufficient.  If you have a simple, flat
+address space, you should be able to use the code in
+<code class="filename">os_vxworks/os_map.c</code> as a starting point for the port.  If you
+are not intending to write multiprocess database applications, then
+this won't be necessary, as Berkeley DB can simply allocate memory from the
+heap if all threads of control will live in a single address space.</p>
+        <p>The second question is mutex support.  Berkeley DB requires some form of
+<span class="bold"><strong>self-blocking</strong></span> mutual exclusion mutex.  Blocking mutexes are
+preferred as they tend to be less CPU-expensive and less likely to cause
+thrashing.  If blocking mutexes are not available, however, test-and-set
+will work as well.  The code for mutexes is in two places in the system:
+the include file <code class="filename">dbinc/mutex.h</code>, and the distribution directory
+<code class="filename">mutex</code>.</p>
+        <p>Berkeley DB uses the GNU autoconf tools for configuration on almost all of
+the platforms it supports.  Specifically, the include file
+<code class="filename">db_config.h</code> configures the Berkeley DB build.  The simplest way to
+begin a port is to configure and build Berkeley DB on a UNIX or UNIX-like
+system, and then take the <code class="filename">Makefile</code> and <code class="filename">db_config.h</code>
+file created by that configuration, and modify it by hand to reflect
+the needs of the new architecture.  Unless you're already familiar with
+the GNU autoconf toolset, we don't recommend you take the time to
+integrate your changes back into the Berkeley DB autoconfiguration framework.
+Instead, send us context diffs of your changes and any new source files
+you created, and we'll integrate the changes into our source tree.</p>
+        <p>Finally, we're happy to work with you on the port, or potentially, do
+the port ourselves, if that is of interest to you.  Regardless, if you
+have any porting questions, just let us know, and we will be happy to
+answer them.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="test_faq.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="distrib_layout.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Test suite FAQ </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Source code layout</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

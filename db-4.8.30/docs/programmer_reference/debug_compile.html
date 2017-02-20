@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Compile-time configuration</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="debug.html" title="Chapter 24.  Debugging Applications" />
+    <link rel="prev" href="debug.html" title="Chapter 24.  Debugging Applications" />
+    <link rel="next" href="debug_runtime.html" title="Run-time error information" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Compile-time configuration</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="debug.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 24. 
+        Debugging Applications
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="debug_runtime.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="debug_compile"></a>Compile-time configuration</h2>
+          </div>
+        </div>
+      </div>
+      <p>There are three compile-time configuration options that assist in
+debugging Berkeley DB and Berkeley DB applications:</p>
+      <div class="variablelist">
+        <dl>
+          <dt>
+            <span class="term">
+              <a class="link" href="build_unix_conf.html#build_unix_conf.--enable-debug">--enable-debug</a>
+            </span>
+          </dt>
+          <dd>If you want to build Berkeley DB with <span class="bold"><strong>-g</strong></span> as the C and C++ compiler
+flag, enter --enable-debug as an argument to configure. This will create
+Berkeley DB with debugging symbols, as well as load various Berkeley DB routines
+that can be called directly from a debugger to display database page
+content, cursor queues, and so forth.  (Note that the <span class="bold"><strong>-O</strong></span>
+optimization flag will still be specified.  To compile with only the
+<span class="bold"><strong>-g</strong></span>, explicitly set the <code class="literal">CFLAGS</code> environment variable
+before configuring.)</dd>
+          <dt>
+            <span class="term">
+              <a class="link" href="build_unix_conf.html#build_unix_conf.--enable-diagnostic">--enable-diagnostic</a>
+            </span>
+          </dt>
+          <dd>If you want to build Berkeley DB with debugging run-time sanity checks and with
+DIAGNOSTIC #defined during compilation, enter --enable-diagnostic as an
+argument to configure. This will cause a number of special checks to be
+performed when Berkeley DB is running. This flag should not be defined when
+configuring to build production binaries because it degrades performance.</dd>
+          <dt>
+            <span class="term">
+              <a class="link" href="build_unix_conf.html#build_unix_conf.--enable-umrw">--enable-umrw</a>
+            </span>
+          </dt>
+          <dd>When compiling Berkeley DB for use in run-time memory consistency checkers
+(in particular, programs that look for reads and writes of uninitialized
+memory), use --enable-umrw as an argument to configure.  This
+guarantees, among other things, that Berkeley DB will completely initialize
+allocated pages rather than initializing only the minimum necessary
+amount.</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="debug.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="debug.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="debug_runtime.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 24. 
+        Debugging Applications
+         </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Run-time error information</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

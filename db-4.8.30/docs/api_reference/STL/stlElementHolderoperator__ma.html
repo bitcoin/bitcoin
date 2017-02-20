@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>operator *=</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ Standard Template Library API Reference" />
+    <link rel="up" href="ElementHolder.html" title="Chapter 23.  ElementHolder" />
+    <link rel="prev" href="stlElementHolderoperator_sa.html" title="operator-=" />
+    <link rel="next" href="stlElementHolderoperator_da.html" title="operator/=" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">
+operator *=
+</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="stlElementHolderoperator_sa.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 23. 
+ ElementHolder  </th>
+          <td width="20%" align="right"> <a accesskey="n" href="stlElementHolderoperator_da.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="stlElementHolderoperator__ma"></a>
+operator *=
+</h2>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="func_details"></a>
+Function Details</h3>
+            </div>
+          </div>
+        </div>
+        <pre class="programlisting">
+const self&amp; operator *=(const ElementHolder&lt; T2 &gt; &amp;p2)
+ </pre>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage"></div>
+        </div>
+        <pre class="programlisting">
+const self&amp; operator *=(const self &amp;p2)
+ </pre>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage"></div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1569137"></a>
+Group: Math operators.</h3>
+            </div>
+          </div>
+        </div>
+        <p><a class="link" href="ElementHolder.html" title="Chapter 23.  ElementHolder">ElementHolder</a>
+ class templates also have all C/C++ self mutating operators for numeric primitive types, including: +=, -=, *=, /=, =, &lt;&lt;=, &gt;&gt;=, &amp;=, |=, ^=, ++, -- These operators should not be used when ddt is a sequence pointer type like char* or wchar_t* or T*, otherwise the behavior is undefined.</p>
+        <p>These methods exist only to override default bahavior to store the new updated value, otherwise, the type convert operator could have done all the job. As you know, some of them are not applicable to float or double types or <a class="link" href="ElementHolder.html" title="Chapter 23.  ElementHolder">ElementHolder</a>
+ wrapper types for float/double types. These operators not only modifies the cached data element, but also stores new value to database if it associates a database key/data pair. </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1569241"></a>
+Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+  <a class="link" href="ElementHolder.html" title="Chapter 23.  ElementHolder">
+  ElementHolder</a>
+     </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="stlElementHolderoperator_sa.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="ElementHolder.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="stlElementHolderoperator_da.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+operator-=
+ </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+operator/=
+</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

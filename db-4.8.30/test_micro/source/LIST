@@ -1,0 +1,101 @@
+Test list:
+
+b_curalloc
+	Cursor allocation
+
+	usage: b_curalloc [-c count]
+
+	-c	Cursor count
+
+b_curwalk
+	Walk a cursor through N records
+
+	usage: b_curwalk [-pSs] [-C cachesz]
+	    [-c cnt] [-d dupcnt] [-P pagesz] [-t type] [-w walkcnt]
+	-C	Cache size
+	-c	Record count
+	-d	Duplicate record count
+	-P	Page size
+	-p	Walk backward instead of forward
+	-S	Skip duplicates
+	-s	Sort duplicates
+	-t	Database type (B | H | Q | R)
+
+b_del
+	Delete records
+
+	usage: b_del [-w] [-C cachesz] [-c count] [-t type]
+
+	-C	Cache size
+	-c	Record count
+	-t	Database type (B | H | Q | R)
+	-w	Delete through cursor
+
+b_get
+	Read records
+
+	usage: b_get [-C cachesz] [-c count] [-t type]
+
+	-C	Cache size
+	-c	Record count
+	-t	Database type (B | H | Q | R)
+
+b_load
+	Insert records
+
+	usage: b_load [-d] [-C cachesz] [-c count] [-t type]
+
+	-C	Cache size
+	-c	Record count
+	-d	Use duplicate records
+	-t	Database type (B | H | Q | R)
+
+b_open
+	Database open/close
+
+	usage: b_open [-df] [-c count] [-t type]
+
+	-d	Open/close a subdatabase
+	-f	Open/close a physical file
+	-c	Open/close count
+	-t	Database type (B | H | Q | R)
+
+b_put
+	Overwrite record 
+
+	usage: b_put [-C cachesz]
+	    [-c count] [-d bytes] [-s secondaries] [-t type]
+
+	-C	Cache size
+	-c	Record count
+	-d	Data size
+	-s	Number of secondaries
+	-t	Database type (B | H | Q | R)
+
+b_recover
+	Run recovery
+
+	usage: b_recover [-C cachesz] [-c count]
+
+	-C	Cache size
+	-c	Transactions to recover
+
+b_txn
+	Abort or commit a transaction containing no operations
+
+	usage: b_txn [-a] [-c count]
+
+	-a	Abort rather than commit
+	-c	Transaction count
+
+b_txn_write
+	Write/commit transaction
+
+	usage: b_txn_write [-arw] [-c count]
+
+	-a	nosync
+	-c	Transaction count
+	-r	Configure replication stub callback
+	-w	write-nosync
+
+b_workload

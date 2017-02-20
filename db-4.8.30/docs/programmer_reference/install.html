@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 23.  System Installation Notes</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="prev" href="dumpload_text.html" title="Loading text into databases" />
+    <link rel="next" href="install_multiple.html" title="Building with multiple versions of Berkeley DB" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 23. 
+        System Installation Notes
+        </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dumpload_text.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="install_multiple.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="install"></a>Chapter 23. 
+        System Installation Notes
+        </h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="install.html#install_file">File utility /etc/magic information</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="install_multiple.html">Building with multiple versions of Berkeley DB</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="install_file"></a>File utility /etc/magic information</h2>
+            </div>
+          </div>
+        </div>
+        <p>The <code class="literal">file</code>(1) utility is a UNIX utility that examines and
+classifies files, based on information found in its database of file
+types, the /etc/magic file.  The following information may be added
+to your system's /etc/magic file to enable <code class="literal">file</code>(1) to
+correctly identify Berkeley DB database files.</p>
+        <p>The <code class="literal">file</code>(1) utility <code class="literal">magic</code>(5) information for the
+standard System V UNIX implementation of the <code class="literal">file</code>(1) utility
+is included in the Berkeley DB distribution for both
+<a class="ulink" href="magic.s5.be.txt" target="_top">big-endian</a> (for example, Sparc) and
+<a class="ulink" href="magic.s5.le.txt" target="_top">little-endian</a> (for example, x86) architectures.</p>
+        <p>The <code class="literal">file</code>(1) utility <code class="literal">magic</code>(5) information for
+Release 3.X of Ian Darwin's implementation of the file utility (as
+distributed by FreeBSD and most Linux distributions) is included in the
+Berkeley DB distribution.  This <a class="ulink" href="magic.txt" target="_top">magic.txt</a> information
+is correct for both big-endian and little-endian architectures.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dumpload_text.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="install_multiple.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Loading text into databases </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Building with multiple versions of Berkeley DB</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

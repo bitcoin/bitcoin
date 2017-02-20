@@ -1,0 +1,27 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Check to make sure the @OSDIR@ entries in the Makefile are correct.
+
+d=../../dist
+
+[ -d $d ] || {
+	echo 'FAIL: cannot find source distribution directory.'
+	exit 1
+}
+
+t1=__1
+t2=__2
+
+egrep '/@OSDIR@/' $d/Makefile.in | sed -e 's/@.*/.c/' > t1
+
+(cd $d/../os_windows && ls os_*.c) > t2
+
+cmp t1 t2 || {
+	echo "Makefile @OSDIR@ mismatch with os_windows files"
+	echo "<<< Makefile >>> os_windows"
+	diff t1 t2
+	exit 1
+}
+exit 0

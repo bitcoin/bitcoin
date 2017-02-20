@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Aborting a Transaction</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB Transaction Processing" />
+    <link rel="up" href="usingtxns.html" title="Chapter 3. Transaction Basics" />
+    <link rel="prev" href="usingtxns.html" title="Chapter 3. Transaction Basics" />
+    <link rel="next" href="autocommit.html" title="Auto Commit" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Aborting a Transaction</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="usingtxns.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. Transaction Basics</th>
+          <td width="20%" align="right"> <a accesskey="n" href="autocommit.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="abortresults"></a>Aborting a Transaction</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+                When you abort a transaction, all database 
+                <span>
+                        or store
+                </span>
+                modifications performed
+            under the protection of the transaction are discarded, and all
+            locks currently held by the transaction are released. In this event,
+            your data is simply left in the
+            state that it was in before the transaction began performing data
+            modifications.
+        </p>
+      <p>
+                Once you have aborted a transaction, the transaction
+                handle that you used for the transaction is no longer valid. To
+                perform database activities under the control of a new
+                transaction, you must obtain a fresh transactional handle.
+              </p>
+      <p>
+            To abort a transaction, call
+            
+            
+            <span><code class="methodname">Transaction.abort()</code>.</span>
+            
+            
+        </p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="usingtxns.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="usingtxns.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="autocommit.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 3. Transaction Basics </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Auto Commit</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

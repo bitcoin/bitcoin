@@ -1,0 +1,34 @@
+# $Id$
+
+Berkeley DB log dump utility.  This utility dumps out a DB log in human
+readable form, a record at a time, to assist in recovery and transaction
+abort debugging.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+commit.awk	Output transaction ID of committed transactions.
+
+count.awk	Print out the number of log records for transactions
+		that we encountered.
+
+dbname.awk      Take a comma-separated list of database names and spit
+		out all the log records that affect those databases.
+
+fileid.awk      Take a comma-separated list of file numbers and spit out
+		all the log records that affect those file numbers.
+
+logstat.awk	Display log record count/size statistics.
+
+pgno.awk	Take a comma-separated list of page numbers and spit
+		out all the log records that affect those page numbers.
+
+range.awk	Print out a range of the log.
+
+rectype.awk     Print out a range of the log -- command line should
+		set RECTYPE to the a comma separated list of the
+		rectypes (or partial strings of rectypes) sought.
+
+status.awk	Read through db_printlog output and list the transactions
+		encountered, and whether they committed or aborted.
+
+txn.awk		Print out all the records for a comma-separated list of
+		transaction IDs.

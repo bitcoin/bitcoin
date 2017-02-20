@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>db_create</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="db.html" title="Chapter 2.  The DB Handle" />
+    <link rel="prev" href="dbclose.html" title="DB-&gt;close()" />
+    <link rel="next" href="dbcompact.html" title="DB-&gt;compact()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">db_create</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbclose.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+                The DB Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbcompact.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dbcreate"></a>db_create</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int db_create(DB **dbp, DB_ENV *dbenv, u_int32_t flags);  </pre>
+      <p>
+        The <code class="function">db_create()</code> function creates a <a class="link" href="db.html" title="Chapter 2.  The DB Handle">DB</a> 
+        structure that is the handle for a Berkeley DB database. This function allocates memory for the
+        structure, returning a pointer to the structure in the memory to which 
+        <span class="bold"><strong>dbp</strong></span> refers.  To release the allocated memory and 
+        discard the handle, call the <a class="xref" href="dbclose.html" title="DB-&gt;close()">DB-&gt;close()</a>, 
+        <a class="xref" href="dbremove.html" title="DB-&gt;remove()">DB-&gt;remove()</a>, 
+        <a class="xref" href="dbrename.html" title="DB-&gt;rename()">DB-&gt;rename()</a>, or 
+        <a class="xref" href="dbverify.html" title="DB-&gt;verify()">DB-&gt;verify()</a> methods.
+    </p>
+      <p>
+        DB handles are free-threaded if the 
+        <a class="link" href="envopen.html#envopen_DB_THREAD">DB_THREAD</a> flag is specified to 
+        the <a class="xref" href="dbopen.html" title="DB-&gt;open()">DB-&gt;open()</a> method when the database is opened or 
+        if the database environment in which the database is opened is free-threaded. The handle 
+        should not be closed while any other handle that refers to the database is in use; for 
+        example, database handles must not be closed while cursor handles into the database remain 
+        open, or transactions that include operations on the database have not yet been committed 
+        or aborted.  Once the <a class="xref" href="dbclose.html" title="DB-&gt;close()">DB-&gt;close()</a>, 
+        <a class="xref" href="dbremove.html" title="DB-&gt;remove()">DB-&gt;remove()</a>, 
+        <a class="xref" href="dbrename.html" title="DB-&gt;rename()">DB-&gt;rename()</a>, or
+        <a class="xref" href="dbverify.html" title="DB-&gt;verify()">DB-&gt;verify()</a> 
+        methods are called, the handle may not be accessed again, regardless of the method's return.
+    </p>
+      <p>
+        The DB handle contains a special field, <code class="literal">app_private</code>, 
+        which is declared as type <code class="literal">void *</code>. This field is provided for the use
+        of the application program. It is initialized to NULL and is not further used by 
+        Berkeley DB in any way.
+    </p>
+      <p>
+        The <code class="literal">db_create</code> function returns a non-zero error value on failure
+        and 0 on success.
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1632467"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1632665"></a>dbp</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                The <span class="bold"><strong>dbp</strong></span> parameter references the
+                memory into which the returned structure pointer is stored.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1632600"></a>dbenv</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                <span>If the <span class="bold"><strong>dbenv</strong></span> parameter is NULL,</span> 
+                 
+                the database is standalone; that is, it is not part of any Berkeley DB
+                environment.
+            </p>
+          <p>
+                <span>
+                    If the <span class="bold"><strong>dbenv</strong></span> parameter is not NULL,
+                </span>
+                
+                the database is created within the specified Berkeley DB environment. 
+                The database access methods automatically make calls to the other
+                subsystems in Berkeley DB, based on the enclosing environment.  For
+                example, if the environment has been configured to use locking, the
+                access methods will automatically acquire the correct locks when
+                reading and writing pages of the database.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1632578"></a>flags</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                  The <span class="bold"><strong>flags</strong></span> parameter is currently
+                  unused, and must be set to 0.
+             </p>
+          <div class="itemizedlist">
+            <ul type="disc"></ul>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1632748"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                        The <code class="function">db_create()</code> function may fail and return one of the following non-zero
+                         errors:
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1632410"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                An invalid flag value or parameter was specified.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1632411"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+            <a class="link" href="db.html" title="Chapter 2.  The DB Handle">DB</a>
+        </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1632381"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+            <a class="xref" href="db.html#dblist" title="Database and Related Methods">Database and Related Methods</a> 
+        </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbclose.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="db.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbcompact.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB-&gt;close() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB-&gt;compact()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

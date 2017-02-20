@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>VxWorks notes</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="build_vxworks.html" title="Chapter 30.  Building Berkeley DB for VxWorks" />
+    <link rel="prev" href="build_vxworks_intro6x.html" title="Building for VxWorks 6.x" />
+    <link rel="next" href="build_vxworks_faq.html" title="VxWorks FAQ" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">VxWorks notes</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="build_vxworks_intro6x.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 30. 
+        Building Berkeley DB for VxWorks
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="build_vxworks_faq.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="build_vxworks_notes"></a>VxWorks notes</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="build_vxworks_notes.html#id1634647">Building and Running the Demo Program</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="build_vxworks_notes.html#id1634846">Building and Running the Utility Programs</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="build_vxworks_notes.html#id1634749">VxWorks 5.4/5.5: shared memory</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="build_vxworks_notes.html#id1634867">VxWorks 5.4/5.5: building a small memory footprint library</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>Berkeley DB currently disallows the <a href="../api_reference/C/dbopen.html#open_DB_TRUNCATE" class="olink">DB_TRUNCATE</a> flag to the
+<a href="../api_reference/C/dbopen.html" class="olink">DB-&gt;open()</a> method on VxWorks because the operations this flag represents
+are not fully supported under VxWorks.</p>
+      <p>The <a href="../api_reference/C/dbsync.html" class="olink">DB-&gt;sync()</a> method is implemented using an ioctl call into the file
+system driver with the FIOSYNC command.  Most, but not all file system
+drivers support this call.  Berkeley DB requires the use of a file system
+that supports FIOSYNC.</p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1634647"></a>Building and Running the Demo Program</h3>
+            </div>
+          </div>
+        </div>
+        <p>The demo program should be built in a manner very similar to building
+Berkeley DB.  If you want different or additional BSP build specifications you
+should add them by following the directions indicated in
+<a class="xref" href="build_vxworks.html#build_vxworks_intro" title="Building for VxWorks 5.4 and 5.5">Building for VxWorks 5.4 and 5.5</a>.</p>
+        <p>The demo program can be downloaded and run by calling the entry function
+<span class="bold"><strong>dbdemo</strong></span> with the pathname of a database to use.  The demo
+program will ask for some input keys.  It creates a database and adds
+those keys into the database, using the reverse of the key as the data
+value.  When complete you can either enter EOF (control-D) or
+<span class="bold"><strong>quit</strong></span> and the demo program will display all of the key/data
+items in the database.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1634846"></a>Building and Running the Utility Programs</h3>
+            </div>
+          </div>
+        </div>
+        <p>The Berkeley DB utilities can be downloaded and run by calling the function equivalent to the utility's name.  The utility functions take a string containing all the supported arguments.  The program will then decompose that string into a traditional argc/argv used internally.  For example, to execute <a href="../api_reference/C/db_stat.html" class="olink">db_stat utility</a> on a database within an environment you would execute the following from the windsh prompt.  Obviously you would change the pathname and database name to reflect
+your system.</p>
+        <pre class="programlisting">&gt; db_stat "-h /tmp/myenvhome -d mydatabase.db"</pre>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1634749"></a>VxWorks 5.4/5.5: shared memory</h3>
+            </div>
+          </div>
+        </div>
+        <p>The memory on VxWorks is always resident and fully shared among all
+tasks running on the target.  For this reason, the <a href="../api_reference/C/envopen.html#open_DB_LOCKDOWN" class="olink">DB_LOCKDOWN</a>
+flag has no effect and the <a href="../api_reference/C/envopen.html#envopen_DB_SYSTEM_MEM" class="olink">DB_SYSTEM_MEM</a> flag is implied for any
+application that does not specify the <a href="../api_reference/C/envopen.html#open_DB_PRIVATE" class="olink">DB_PRIVATE</a> flag.   Note
+that the <a href="../api_reference/C/envopen.html#envopen_DB_SYSTEM_MEM" class="olink">DB_SYSTEM_MEM</a> flag requires all applications use a
+segment ID to ensure the applications do not overwrite each other's
+database environments: see the <a href="../api_reference/C/envset_shm_key.html" class="olink">DB_ENV-&gt;set_shm_key()</a> method for more
+information.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1634867"></a>VxWorks 5.4/5.5: building a small memory footprint library</h3>
+            </div>
+          </div>
+        </div>
+        <p>A default small footprint build is provided.  This default provides
+equivalent to the <span class="bold"><strong>--enable-smallbuild</strong></span> configuration option
+described in <a class="xref" href="build_unix_small.html" title="Building a small memory footprint library">Building a small memory footprint library</a>.  In order to build the small
+footprint, you should move <code class="filename">db_config.h</code> aside and copy
+<code class="filename">db_config_small.h</code> to <code class="filename">db_config.h</code>.  Then open up
+the appropriate small workspace file via Tornado and build as usual.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="build_vxworks_intro6x.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="build_vxworks.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="build_vxworks_faq.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Building for VxWorks 6.x </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> VxWorks FAQ</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

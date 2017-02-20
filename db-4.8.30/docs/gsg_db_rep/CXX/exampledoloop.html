@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Example Processing Loop</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Replicated Berkeley DB Applications" />
+    <link rel="up" href="fwrkmasterreplica.html" title="Chapter 4. Replica versus Master Processes" />
+    <link rel="prev" href="processingloop.html" title="Processing Loop" />
+    <link rel="next" href="addfeatures.html" title="Chapter 5. Additional Features" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Example Processing Loop</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="processingloop.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 4. Replica versus Master Processes</th>
+          <td width="20%" align="right"> <a accesskey="n" href="addfeatures.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="exampledoloop"></a>Example Processing Loop</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="exampledoloop.html#runningit">Running It</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+                          In this section we take the example
+                          processing loop that we presented in the
+                          previous section and we flesh it out to
+                          provide a more complete example. We do this
+                          by updating the
+                          <code class="function">doloop()</code>
+                          function that our original transaction
+                          application used 
+                          
+                          <span>(see <a class="xref" href="simpleprogramlisting.html#doloop_cxx" title="Method: SimpleTxn::doloop()">Method: SimpleTxn::doloop()</a>)</span>
+                          
+                          to fully support our replicated application. 
+                  </p>
+      <p>
+                          In the following example code, code that we
+                          add to the original example is presented in 
+                          <strong class="userinput"><code>bold</code></strong>.
+                  </p>
+      <p>
+                          To begin, we include a new header file into
+                          our application so that we can check for the 
+                          <code class="literal">ENOENT</code> return value later
+                          in our processing loop. We also define our 
+                            <code class="literal">APP_DATA</code>
+                          structure, and we define a
+                          <code class="literal">sleeptime</code> value. 
+
+                          
+
+                          <span>
+                          Finally, we update <code class="classname">RepMgrGSG</code>
+                          to have a new method for our event notification
+                          callback, and to add a new data member for our 
+                          <code class="literal">APP_DATA</code> data member.
+                          </span>
+                  </p>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+#include &lt;iostream&gt;
+<strong class="userinput"><code>#include &lt;errno.h&gt;</code></strong>
+
+...
+// Skipping all the RepHostInfoObj and RepConfigInfo code, which does not
+// change.
+...
+
+using std::cout;
+using std::cin;
+using std::cerr;
+using std::endl;
+using std::flush;
+
+#define CACHESIZE   (10 * 1024 * 1024)
+#define DATABASE    "quote.db"
+<strong class="userinput"><code>#define SLEEPTIME   3</code></strong>
+
+const char *progname = "RepMgrGSG";
+
+<strong class="userinput"><code>// Struct used to store information in Db app_private field.
+typedef struct {
+    int is_master;
+} APP_DATA;</code></strong>
+
+class RepMgrGSG
+{
+public:
+    // Constructor.
+    RepMgrGSG();
+    // Initialization method. Creates and opens our environment handle.
+    int init(RepConfigInfo* config);
+    // The doloop is where all the work is performed.
+    int doloop();
+    // terminate() provides our shutdown code.
+    int terminate();
+
+    <strong class="userinput"><code>// event notification callback
+    static void 
+    event_callback(DbEnv * dbenv, u_int32_t which, void *info);</code></strong>
+
+private:
+    // disable copy constructor.
+    RepMgrGSG(const RepMgrGSG &amp;);
+    void operator = (const RepMgrGSG &amp;);
+
+    // internal data members.
+    <strong class="userinput"><code>APP_DATA        app_data;</code></strong>
+    RepConfigInfo   *app_config;
+    DbEnv           dbenv;
+
+    // private methods.
+    // print_stocks() is used to display the contents of our database.
+    static int print_stocks(Db *dbp);
+}; </pre>
+      <p>
+        That done, we can skip the 
+        
+        <span><code class="methodname">main()</code> method, because it does not change.</span>
+        
+        
+        Instead, we skip down to our
+        <span><code class="classname">RepMgrGSG</code> constructor where we initialize our
+        <code class="literal">APP_DATA is_master</code> data member:</span>
+
+        
+</p>
+      <pre class="programlisting">
+RepMgrGSG::RepMgrGSG() : app_config(0), dbenv(0)
+{
+    <strong class="userinput"><code>app_data.is_master = 0; // assume I start out as client</code></strong>
+}
+</pre>
+      <p>
+            That done, we must also
+            update <code class="methodname">RepMgrGSG::init()</code>  to do a couple
+            of things. First, we need to register our event callback with
+            the environment handle. We also need to make our
+            <code class="literal">APP_DATA</code> data member available through our
+            environment handle's <code class="methodname">app_private</code>
+            field. This is a fairly trivial update, and it happens at the
+            top of the method (we skip the rest of the method's listing
+            since it does not change):
+
+    </p>
+      <pre class="programlisting">int RepMgrGSG::init(RepConfigInfo *config)
+{
+    int ret = 0;
+
+    app_config = config;
+
+    dbenv.set_errfile(stderr);
+    dbenv.set_errpfx(progname);
+    <strong class="userinput"><code>dbenv.set_app_private(&amp;app_data);
+    dbenv.set_event_notify(event_callback);</code></strong>
+
+    ...  </pre>
+      <p>
+        That done, we need to implement our
+        <code class="function">event_callback()</code> callback. Note that what we use
+        here is no different from the callback that we described in
+        the previous section. However, for the sake of completeness we
+        provide the implementation here again.
+</p>
+      <pre class="programlisting">
+        <strong class="userinput">
+          <code>/*
+ * A callback used to determine whether the local environment is a 
+ * replica or a master. This is called by the Replication Manager
+ * when the local replication environment changes state.
+ */
+void RepMgrGSG::event_callback(DbEnv *dbenv, u_int32_t which, void *info)
+{
+    APP_DATA *app = dbenv-&gt;get_app_private();
+
+    info = NULL;                /* Currently unused. */
+
+    switch (which) {
+    case DB_EVENT_REP_MASTER:
+        app-&gt;is_master = 1;
+        break;
+
+    case DB_EVENT_REP_CLIENT:
+        app-&gt;is_master = 0;
+        break;
+
+    case DB_EVENT_REP_STARTUPDONE: /* fallthrough */
+    case DB_EVENT_REP_NEWMASTER:
+        /* Ignore. */
+        break;
+
+    default:
+        dbenv-&gt;errx(dbenv, "ignoring event %d", which);
+    }
+}</code>
+        </strong>
+      </pre>
+      <p>
+        That done, we need to update our
+        <code class="function">doloop()</code> 
+        
+
+        <span>method.</span>
+</p>
+      <p>
+            We begin by updating our database handle open flags to
+            determine which flags to use, depending on whether the
+            application is running as a master.
+    </p>
+      <pre class="programlisting">#define BUFSIZE 1024
+int RepMgrGSG::doloop()
+{
+    Db *dbp;
+    Dbt key, data;
+    char buf[BUFSIZE], *rbuf;
+    int ret;
+
+    dbp = 0;
+    memset(&amp;key, 0, sizeof(key));
+    memset(&amp;data, 0, sizeof(data));
+    ret = 0; 
+
+    for (;;) {
+        if (dbp == 0) {
+            dbp = new Db(&amp;dbenv, 0);
+
+            try {
+                dbp-&gt;open(NULL, DATABASE, NULL, DB_BTREE,
+                    <strong class="userinput"><code>app_data.is_master ? DB_CREATE | DB_AUTO_COMMIT :
+                    DB_AUTO_COMMIT</code></strong>, 0); </pre>
+      <p>
+    When we open the database, we modify our error handling to
+    account for the case where the database does not yet exist. This can
+    happen if our code is running as a replica and the Replication Manager has not
+    yet had a chance to create the databases for us. Recall that replicas never
+    write to their own databases directly, and so they cannot
+    create databases on their own.
+</p>
+      <p>
+        If we detect that the database does not yet exist, we simply
+        close the database handle, sleep for a short period of time
+        and then continue processing. This gives the Replication Manager a chance to
+        create the database so that our replica can continue
+        operations.
+</p>
+      <pre class="programlisting">            } catch(DbException dbe) {
+                <strong class="userinput"><code>/* It is expected that this condition will be triggered
+                 * when client sites start up.
+                 * It can take a while for the master site to be found
+                 * and synced, and no DB will be available until then.
+                 */
+                if (dbe.get_errno() == ENOENT) {
+                    cout &lt;&lt; "No stock db available yet - "
+                         &lt;&lt; "retrying." &lt;&lt; endl;
+                    try {
+                        dbp-&gt;close(0);
+                    } catch (DbException dbe2) {
+                        cout &lt;&lt; "Unexpected error closing after failed"
+                             &lt;&lt; " open, message: " &lt;&lt; dbe2.what() &lt;&lt; endl;
+                        dbp = NULL;
+                        goto err;
+                    }
+                    dbp = NULL;
+                    sleep(SLEEPTIME);
+                    continue;
+                } else {</code></strong>
+                    dbenv.err(ret, "DB-&gt;open");
+                    throw dbe;
+                <strong class="userinput"><code>}</code></strong>
+            }
+        } </pre>
+      <p>
+        Next we modify our prompt, so that if the local process is running
+        as a replica, we can tell from the shell that the prompt is for a
+        read-only process.
+    </p>
+      <pre class="programlisting">        <strong class="userinput"><code>cout &lt;&lt; "QUOTESERVER" ;
+        if (!app_data.is_master)
+            cout &lt;&lt; "(read-only)";
+        cout &lt;&lt; "&gt; " &lt;&lt; flush; </code></strong></pre>
+      <p>
+            When we collect data from the prompt, there is a case that says
+            if no data is entered then show the entire stocks database.
+            This display is performed by our
+            <code class="function">print_stocks()</code> 
+             
+            <span>method</span> 
+            (which has not
+            required a modification since we first introduced it in 
+            <a class="xref" href="simpleprogramlisting.html#printstocks_c" title="Method: SimpleTxn::print_stocks()">
+                            
+                            <span>Method: SimpleTxn::print_stocks()</span>
+                            
+                    </a>).
+    </p>
+      <p>
+            When we call 
+               <span><code class="function">print_stocks()</code>, </span>
+               
+            we check for a dead replication handle. Dead
+            replication handles happen whenever a replication election
+            results in a previously committed transaction becoming
+            invalid. This is an error scenario caused by a new master having a
+            slightly older version of the data than the original
+            master and so all replicas must modify their database(s) to
+            reflect that of the new master. In this situation, some
+            number of previously committed transactions may have to be
+            unrolled. From the replica's perspective, the database
+            handles should all be closed and then opened again.
+    </p>
+      <pre class="programlisting">
+        if (fgets(buf, sizeof(buf), stdin) == NULL)
+            break;
+        if (strtok(&amp;buf[0], " \t\n") == NULL) {
+            switch ((ret = print_stocks(dbp))) {
+            case 0:
+                continue;
+            <strong class="userinput"><code>case DB_REP_HANDLE_DEAD:
+                (void)dbp-&gt;close(DB_NOSYNC);
+                cout &lt;&lt; "closing db handle due to rep handle dead" &lt;&lt; endl;
+                dbp = NULL;
+                continue;</code></strong>
+            default:
+                dbp-&gt;err(ret, "Error traversing data");
+                goto err;
+            }
+        }
+        rbuf = strtok(NULL, " \t\n");
+        if (rbuf == NULL || rbuf[0] == '\0') {
+            if (strncmp(buf, "exit", 4) == 0 ||
+                strncmp(buf, "quit", 4) == 0)
+                break;
+            dbenv.errx("Format: TICKER VALUE");
+            continue;
+        } </pre>
+      <p>
+            That done, we need to add a little error checking to our
+            command prompt to make sure the user is not attempting to
+            modify the database at a replica. Remember, replicas must never
+            modify their local databases on their own. This guards against
+            that happening due to user input at the prompt.
+    </p>
+      <pre class="programlisting">        <strong class="userinput"><code>if (!app_data.is_master) {
+            dbenv-&gt;errx(dbenv, "Can't update at client");
+            continue;
+        }</code></strong>
+
+        key.set_data(buf);
+        key.set_size((u_int32_t)strlen(buf));
+
+        data.set_data(rbuf);
+        data.set_size((u_int32_t)strlen(rbuf));
+
+        if ((ret = dbp-&gt;put(NULL, &amp;key, &amp;data, 0)) != 0)
+        {
+            dbp-&gt;err(ret, "DB-&gt;put");
+            if (ret != DB_KEYEXIST)
+                goto err;
+        }
+    }
+
+err:    if (dbp != 0)
+        (void)dbp-&gt;close(dbp, DB_NOSYNC);
+
+    return (ret);
+} </pre>
+      <p>
+        With that completed, we are all done updating our application
+        for replication. 
+
+        The only remaining 
+         
+        <span>method, <code class="function">print_stocks()</code>,</span> 
+         
+
+        is unmodified from when we
+        originally introduced it. For details on that function, see
+        <a class="xref" href="simpleprogramlisting.html#printstocks_c" title="Method: SimpleTxn::print_stocks()">
+                            
+                            <span>Method: SimpleTxn::print_stocks()</span>
+                            
+                    </a>.
+</p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="runningit"></a>Running It</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                To run our replicated application, we need to make
+                sure each participating environment has its own unique
+                home directory. We can do this by running
+                each site on a separate networked machine, but that
+                is not strictly necessary; multiple instances of this
+                code can run on the same machine provided the
+                environment home restriction is observed.
+        </p>
+        <p>
+                To run a process, make sure the environment home
+                exists and then start the process using the
+                <code class="literal">-h</code> option to specify that
+                directory. You must also use the <code class="literal">-l</code>
+                option to identify the local host and port that this
+                process will use to listen for replication messages, the
+                <code class="literal">-n</code> option to specify the number of sites
+                in the replication group, and
+                the <code class="literal">-r</code> option to identify the other
+                processes in the replication group. Finally, use the
+                <code class="literal">-p</code> option to specify a priority.
+                The process that you designate to have the highest priority will become
+                the master.
+        </p>
+        <pre class="programlisting">&gt; mkdir env1
+&gt; ./RepMgrGSG -h env1 -n 2 -l localhost:8080 -r localhost:8081 -p 10
+No stock database yet available.
+No stock database yet available.  </pre>
+        <p>
+        Now, start another process. This time, change the environment
+        home to something else, use the <code class="literal">-l</code> flag to at
+        least change the port number the process is listening on, and
+        use the <code class="literal">-r</code> option to identify the host and
+        port of the other replication process:
+</p>
+        <pre class="programlisting">&gt; mkdir env2
+&gt; ./RepMgrGSG -h env2 -n 2 -l localhost:8081 -r localhost:8080 -p 20</pre>
+        <p>
+        After a short pause, the second process should display the master
+        prompt:
+</p>
+        <pre class="programlisting">
+QUOTESERVER &gt; </pre>
+        <p>
+        And the first process should 
+        display the read-only prompt:
+</p>
+        <pre class="programlisting">
+QUOTESERVER (read-only)&gt; </pre>
+        <p>
+        Now go to the master process and give it a couple of stocks and stock
+        prices:
+</p>
+        <pre class="programlisting">QUOTESERVER&gt; FAKECO 9.87
+QUOTESERVER&gt; NOINC .23
+QUOTESERVER&gt; </pre>
+        <p>
+    Then, go to the replica and hit <strong class="userinput"><code>return</code></strong> at the prompt to
+    see the new values:
+</p>
+        <pre class="programlisting">QUOTESERVER (read-only)&gt; 
+        Symbol  Price
+        ======  =====
+        FAKECO  9.87
+        NOINC    .23 
+QUOTESERVER (read-only)&gt; </pre>
+        <p>
+        Doing the same at the master results in the same thing:
+</p>
+        <pre class="programlisting">QUOTESERVER&gt; 
+        Symbol  Price
+        ======  =====
+        FAKECO  9.87
+        NOINC    .23 
+QUOTESERVER&gt; </pre>
+        <p>
+        You can change a stock by simply entering the stock value and
+        new price at the master's prompt:
+</p>
+        <pre class="programlisting">QUOTESERVER&gt; FAKECO 10.01 
+QUOTESERVER&gt; </pre>
+        <p>
+        Then, go to either the master or the replica to see the updated
+        database. On the master:
+</p>
+        <pre class="programlisting">QUOTESERVER&gt; 
+        Symbol  Price
+        ======  =====
+        FAKECO  10.01
+        NOINC    .23 
+QUOTESERVER&gt; </pre>
+        <p>
+        And on the replica:
+</p>
+        <pre class="programlisting">QUOTESERVER (read-only)&gt; 
+        Symbol  Price
+        ======  =====
+        FAKECO  10.01
+        NOINC    .23 
+QUOTESERVER (read-only)&gt; </pre>
+        <p>
+        Finally, to quit the applications, simply type
+        <code class="literal">quit</code> at both prompts. On the replica:
+</p>
+        <pre class="programlisting">QUOTESERVER (read-only)&gt; quit
+&gt; </pre>
+        <p>
+        And on the master as well:
+</p>
+        <pre class="programlisting">QUOTESERVER&gt; quit
+&gt; </pre>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="processingloop.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="fwrkmasterreplica.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="addfeatures.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Processing Loop </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 5. Additional Features</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

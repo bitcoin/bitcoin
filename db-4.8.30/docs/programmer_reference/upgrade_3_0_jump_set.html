@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 3.0: db_jump_set</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_3_0_toc.html" title="Chapter 33. Upgrading Berkeley DB 2.X applications to Berkeley DB 3.0" />
+    <link rel="prev" href="upgrade_3_0_eacces.html" title="Release 3.0: EACCES" />
+    <link rel="next" href="upgrade_3_0_value_set.html" title="Release 3.0: db_value_set" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 3.0: db_jump_set</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_3_0_eacces.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 33. Upgrading Berkeley DB 2.X applications to Berkeley DB 3.0</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_3_0_value_set.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_3_0_jump_set"></a>Release 3.0: db_jump_set</h2>
+          </div>
+        </div>
+      </div>
+      <p>The db_jump_set interface has been removed from the Berkeley DB 3.0 release,
+replaced by method calls on the <a href="../api_reference/C/env.html" class="olink">DB_ENV</a> handle.</p>
+      <p>The following table lists the db_jump_set arguments previously used by
+applications and the methods that should now be used instead.</p>
+      <div class="informaltable">
+        <table border="1" width="80%">
+          <colgroup>
+            <col />
+            <col />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>db_jump_set argument</th>
+              <th>Berkeley DB 3.X method</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>DB_FUNC_CLOSE</td>
+              <td>
+                <a href="../api_reference/C/db_env_set_func_close.html" class="olink">db_env_set_func_close</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_FUNC_DIRFREE</td>
+              <td>
+                <a href="../api_reference/C/db_env_set_func_dirfree.html" class="olink">db_env_set_func_dirfree</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_FUNC_DIRLIST</td>
+              <td>
+                <a href="../api_reference/C/db_env_set_func_dirlist.html" class="olink">db_env_set_func_dirlist</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_FUNC_EXISTS</td>
+              <td>
+                <a href="../api_reference/C/db_env_set_func_exists.html" class="olink">db_env_set_func_exists</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_FUNC_FREE</td>
+              <td>
+                <a href="../api_reference/C/db_env_set_func_free.html" class="olink">db_env_set_func_free</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_FUNC_FSYNC</td>
+              <td>
+                <a href="../api_reference/C/db_env_set_func_fsync.html" class="olink">db_env_set_func_fsync</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_FUNC_IOINFO</td>
+              <td>
+                <a href="../api_reference/C/db_env_set_func_ioinfo.html" class="olink">db_env_set_func_ioinfo</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_FUNC_MALLOC</td>
+              <td>
+                <a href="../api_reference/C/db_env_set_func_malloc.html" class="olink">db_env_set_func_malloc</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_FUNC_MAP</td>
+              <td>dbenv_set_func_map</td>
+            </tr>
+            <tr>
+              <td>DB_FUNC_OPEN</td>
+              <td>
+                <a href="../api_reference/C/db_env_set_func_open.html" class="olink">db_env_set_func_open</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_FUNC_READ</td>
+              <td>
+                <a href="../api_reference/C/db_env_set_func_read.html" class="olink">db_env_set_func_read</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_FUNC_REALLOC</td>
+              <td>
+                <a href="../api_reference/C/db_env_set_func_realloc.html" class="olink">db_env_set_func_realloc</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_FUNC_RUNLINK</td>
+              <td>The DB_FUNC_RUNLINK functionality has been removed from the Berkeley DB
+3.0 release, and should be removed from the application.</td>
+            </tr>
+            <tr>
+              <td>DB_FUNC_SEEK</td>
+              <td>
+                <a href="../api_reference/C/db_env_set_func_seek.html" class="olink">db_env_set_func_seek</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_FUNC_SLEEP</td>
+              <td>db_env_set_func_sleep</td>
+            </tr>
+            <tr>
+              <td>DB_FUNC_UNLINK</td>
+              <td>
+                <a href="../api_reference/C/db_env_set_func_unlink.html" class="olink">db_env_set_func_unlink</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_FUNC_UNMAP</td>
+              <td>dbenv_set_func_unmap</td>
+            </tr>
+            <tr>
+              <td>DB_FUNC_WRITE</td>
+              <td>
+                <a href="../api_reference/C/db_env_set_func_write.html" class="olink">db_env_set_func_write</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_FUNC_YIELD</td>
+              <td>
+                <a href="../api_reference/C/db_env_set_func_yield.html" class="olink">db_env_set_func_yield</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_3_0_eacces.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_3_0_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_3_0_value_set.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 3.0: EACCES </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 3.0: db_value_set</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

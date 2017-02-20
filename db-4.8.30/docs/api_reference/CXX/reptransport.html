@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DbEnv::rep_set_transport()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="rep.html" title="Chapter 11.  Replication Methods" />
+    <link rel="prev" href="repset_timeout.html" title="DbEnv::rep_set_timeout()" />
+    <link rel="next" href="repstart.html" title="DbEnv::rep_start()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DbEnv::rep_set_transport()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="repset_timeout.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 11. 
+                Replication Methods
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="repstart.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="reptransport"></a>DbEnv::rep_set_transport()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+ 
+int
+DbEnv::rep_set_transport(int envid,
+    int (*send)(DB_ENV *dbenv,
+    const Dbt *control, const Dbt *rec, const DbLsn *lsnp,
+    int envid, u_int32_t flags));</pre>
+      <p>
+         The <code class="methodname">DbEnv::rep_set_transport()</code> method initializes the communication
+         infrastructure for a database environment participating in a replicated application.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::rep_set_transport()</code> method is not called by most
+         replication applications.  It should only be called by Base API applications
+         implementing their own network transport layer, explicitly holding
+         replication group elections and handling replication messages outside
+         of the Replication Manager framework.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::rep_set_transport()</code> method configures operations
+         performed using the specified <a class="link" href="env.html" title="Chapter 5.  The DbEnv Handle">DbEnv</a>  handle, 
+         not all operations performed on the underlying database environment.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::rep_set_transport()</code> method may be called at any time
+         during the life of the application.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::rep_set_transport()</code> <span>
+            
+            <span>
+                method either returns a non-zero error value or throws an
+                exception that encapsulates a non-zero error value on
+                failure, and returns 0 on success.
+            </span>
+        </span>
+    </p>
+      <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+        <h3 class="title">Note</h3>
+        <p>
+                    Berkeley DB is not re-entrant. The callback function
+for this method should not attempt to make
+                    library calls (for example, to release locks or close open handles). Re-entering
+                    Berkeley DB is not guaranteed to work correctly, and the results are undefined.
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1703770"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1704762"></a>envid</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>envid</strong></span> parameter is the local
+                          environment's ID.  It must be a non-negative integer and uniquely identify
+                          this Berkeley DB database environment (see 
+                          <a href="../../programmer_reference/rep_id.html" class="olink">Replication environment IDs</a> 
+                          for more information).
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1704895"></a>send</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>send</strong></span> callback function is used to
+                          transmit data using the replication application's communication
+                          infrastructure.  The parameters to <span class="bold"><strong>send</strong></span> are as follows:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p>
+                <code class="literal">dbenv</code>
+            </p>
+                <p>
+                 The <span class="bold"><strong>dbenv</strong></span> parameter is the enclosing
+                 database environment handle.
+            </p>
+              </li>
+              <li>
+                <p>
+                <code class="literal">control</code>
+            </p>
+                <p>
+                 The <span class="bold"><strong>control</strong></span> parameter is the first of
+                 the two data elements to be transmitted by the <span class="bold"><strong>send</strong></span> function.
+            </p>
+              </li>
+              <li>
+                <p>
+                <code class="literal">rec</code>
+            </p>
+                <p>
+                 The <span class="bold"><strong>rec</strong></span> parameter is the second of
+                 the two data elements to be transmitted by the <span class="bold"><strong>send</strong></span> function.
+            </p>
+              </li>
+              <li>
+                <p>
+                <code class="literal">lsnp</code>
+            </p>
+                <p>
+                 If the type of message to be sent has an LSN associated with it, then
+                 the <span class="bold"><strong>lsnp</strong></span> parameter contains the LSN
+                 of the record being sent. This LSN can be used to determine that
+                 certain records have been processed successfully by clients.
+            </p>
+              </li>
+              <li>
+                <p>
+                <code class="literal">envid</code>
+            </p>
+                <p>
+                 The <span class="bold"><strong>envid</strong></span> parameter is a positive
+                 integer identifier that specifies the replication environment to which
+                 the message should be sent (see <a href="../../programmer_reference/rep_id.html" class="olink">Replication environment IDs</a> for more
+                 information).
+            </p>
+                <p><a id="transport_DB_EID_BROADCAST"></a>
+                The special identifier <code class="literal">DB_EID_BROADCAST</code> indicates that a message
+                should be broadcast to every environment in the replication group.  The application
+                may use a true broadcast protocol or may send the message in sequence to each
+                machine with which it is in communication.  In both cases, the sending site should
+                not be asked to process the message.
+            </p>
+                <p>
+                The special identifier 
+                <a href="../../programmer_reference/rep_id.html#rep_id.DB_EID_INVALID" class="olink">DB_EID_INVALID</a>
+                indicates an invalid environment ID.  This may be used to initialize
+                values that are subsequently checked for validity.
+            </p>
+              </li>
+              <li>
+                <p>
+                <code class="literal">flags</code>
+            </p>
+                <p>
+                 The <span class="bold"><strong>flags</strong></span> parameter must be set to 0
+                 or by bitwise inclusively <span class="bold"><strong>OR</strong></span>'ing
+                 together one or more of the following values:
+            </p>
+                <div class="itemizedlist">
+                  <ul type="circle">
+                    <li>
+                      <p><a id="transport_DB_REP_ANYWHERE"></a>
+                     <code class="literal">DB_REP_ANYWHERE</code>
+            </p>
+                      <p>
+                 The message is a client request that can be satisfied by another
+                 client as well as by the master.
+            </p>
+                    </li>
+                    <li>
+                      <p><a id="transport_DB_REP_NOBUFFER"></a>
+                  <code class="literal">DB_REP_NOBUFFER</code>
+            </p>
+                      <p>
+                 The record being sent should be transmitted immediately and not
+                 buffered or delayed.
+            </p>
+                    </li>
+                    <li>
+                      <p><a id="transport_DB_REP_PERMANENT"></a>
+                  <code class="literal">DB_REP_PERMANENT</code>
+            </p>
+                      <p>
+                 The record being sent is critical for maintaining database integrity
+                 (for example, the message includes a transaction commit).  The
+                 application should take appropriate action to enforce the reliability
+                 guarantees it has chosen, such as waiting for acknowledgement from one
+                 or more clients.
+            </p>
+                    </li>
+                    <li>
+                      <p><a id="transport_DB_REP_REREQUEST"></a>
+                  <code class="literal">DB_REP_REREQUEST</code>
+            </p>
+                      <p>
+                 The message is a client request that has already been made and to
+                 which no response was received.
+            </p>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <p>
+
+                    It may sometimes be useful to pass application-specific data to the send
+                    function; see <a href="../../programmer_reference/env_faq.html" class="olink">Environment FAQ</a>
+                    for a discussion on how to do this.
+
+            </p>
+          <p>
+                    The <span class="bold"><strong>send</strong></span> function must return 0 on success and non-zero on failure.
+                    If the send function fails, the message being sent is necessary to maintain database integrity, and
+                    the local log is not configured for synchronous flushing, the local log will be flushed; otherwise,
+                    any error from the <span class="bold"><strong>send</strong></span> function will be ignored.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1704926"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DbEnv::rep_set_transport()</code> <span>
+            
+            <span>
+                method may fail and throw a <a class="link" href="dbexception.html" title="Chapter 6. The DbException Class">DbException</a> 
+                exception, encapsulating one of the following non-zero errors, or return one
+                of the following non-zero errors:
+            </span>
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1705322"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                The method is called from a Replication Manager application; or an invalid flag value or 
+                parameter was specified.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1704691"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="env.html" title="Chapter 5.  The DbEnv Handle">DbEnv</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1704564"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="rep.html#replist" title="Replication and Related Methods">Replication and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="repset_timeout.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="rep.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="repstart.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DbEnv::rep_set_timeout() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DbEnv::rep_start()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

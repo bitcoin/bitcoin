@@ -1,0 +1,13 @@
+This apache module requires db-4.3 compiled with c++ extensions 
+and libmm (a shared memory manager).
+
+To build this apache module, perform the following steps:
+
+> ./configure --with-apxs=/path/to/apxs
+--with-db4=/usr/local/BerkeleyDb-4.3 --with-mm=/usr/local
+> make
+> su -
+# make install
+
+Post-installation, modules can use this extension via the functions
+documented in $APACHE_INCLUDEDIR/mod_db4_export.h

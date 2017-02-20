@@ -1,0 +1,35 @@
+# $Id$
+# Lists features that can be installed on Windows,
+# and their dependencies.
+
+# Note: columns below must be separated by tabs.
+#
+# Feature: the feature identifier.  If it is dependent on another feature,
+#          that is specified via Dependent/Featurename
+# Short name: the name as it shows in the installer's tree display
+# Description: the description that shows when the item is selected
+#
+# Options are one or more of:
+# +default:   the feature is installed by default
+# +required:  the feature cannot be deselected (implies default)
+# +invisible: the feature is not shown to the user (implies required)
+#
+
+# feature	short name	description	options
+
+CsharpAPI	"C sharp"	".NET C sharp API libraries"
+CoreAPI		"Core Features"	"C/C++ API and required binaries"	+required
+CoreAPI/DCoreAPI	"Debug Core Features"	""	
+CoreTools	"Tools and Utilities"	"Compiled tools for DB maintenance"	+default
+CoreEx		"C/C++ Examples"	"C and C++ compiled examples (requires debug libraries to function)"	+default
+
+JavaAPI		"Java"		"Java API JAR and JNI native libraries"
+JavaAPI/JavaEx	"Java Examples"	"Java examples JAR"
+JavaAPI/DJavaAPI	"Debug Java"	""	
+JavaAPI/DJavaAPI/DJavaEx	"Debug Java Examples"	""	
+PerlAPI		"Perl"		"Perl API .pm and .pod files"
+StlAPI		"DB STL"	"DB C++ STL API"
+TclAPI		"Tcl"		"Tcl API binaries"
+TclAPI/DTclAPI		"Debug Tcl"	""	
+Docs		"Documentation"	"Documentation for all products"
+Sources		"Source files"	"Source files for all products"	+default

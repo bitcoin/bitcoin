@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 3.0: db_xa_open</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_3_0_toc.html" title="Chapter 33. Upgrading Berkeley DB 2.X applications to Berkeley DB 3.0" />
+    <link rel="prev" href="upgrade_3_0_open.html" title="Release 3.0: database open/close" />
+    <link rel="next" href="upgrade_3_0_db.html" title="Release 3.0: the DB structure" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 3.0: db_xa_open</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_3_0_open.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 33. Upgrading Berkeley DB 2.X applications to Berkeley DB 3.0</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_3_0_db.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_3_0_xa"></a>Release 3.0: db_xa_open</h2>
+          </div>
+        </div>
+      </div>
+      <p>The following change applies only to applications using Berkeley DB as an XA
+Resource Manager.  If your application is not using Berkeley DB in this way,
+you can ignore this change.</p>
+      <p>The db_xa_open function has been replaced with the 
+<code class="literal">DB_XA_CREATE</code> flag to the <a href="../api_reference/C/dbcreate.html" class="olink">db_create()</a> function.  All calls to db_xa_open should
+be replaced with calls to <a href="../api_reference/C/dbcreate.html" class="olink">db_create()</a> with the <code class="literal">DB_XA_CREATE</code> flag
+set, followed by a call to the <a href="../api_reference/C/dbopen.html" class="olink">DB-&gt;open()</a> function.</p>
+      <p>A similar change has been made for the C++ API, where the
+<code class="literal">DB_XA_CREATE</code> flag should be specified to the Db constructor. All
+calls to the Db::xa_open method should be replaced with the
+<code class="literal">DB_XA_CREATE</code> flag to the Db constructor, followed by a call to
+the DB::open method.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_3_0_open.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_3_0_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_3_0_db.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 3.0: database open/close </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 3.0: the DB structure</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

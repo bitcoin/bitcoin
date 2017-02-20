@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 4.5: --enable-pthread_self</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_4_5_toc.html" title="Chapter 42. Upgrading Berkeley DB 4.4 applications to Berkeley DB 4.5" />
+    <link rel="prev" href="upgrade_4_5_collect.html" title="Release 4.5: Collections API" />
+    <link rel="next" href="upgrade_4_5_source.html" title="Release 4.5: Recno backing text source files" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 4.5: --enable-pthread_self</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_4_5_collect.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 42. Upgrading Berkeley DB 4.4 applications to Berkeley DB 4.5</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_4_5_source.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_4_5_config"></a>Release 4.5: --enable-pthread_self</h2>
+          </div>
+        </div>
+      </div>
+      <p>In previous releases, the --enable-pthread_self configuration option was
+used to force Berkeley DB to use the POSIX pthread pthread_self function to
+identify threads of control (even when Berkeley DB was configured for
+test-and-set mutexes).  In the 4.5 release, the --enable-pthread_self
+option has been replaced with the
+<a class="link" href="build_unix_conf.html#build_unix_conf.--enable-pthread_api">--enable-pthread_api</a> option.  
+This option has the same effect as
+the previous option, but configures the Berkeley DB build for a POSIX pthread
+application in other ways (for example, configuring Berkeley DB to use the
+pthread_self function).</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_4_5_collect.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_4_5_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_4_5_source.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 4.5: Collections API </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 4.5: Recno backing text source files</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

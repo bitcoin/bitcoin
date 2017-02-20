@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Name spaces</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="program.html" title="Chapter 14.  Programmer Notes" />
+    <link rel="prev" href="program_scope.html" title="Berkeley DB handles" />
+    <link rel="next" href="program_ram.html" title="Memory-only or Flash configurations" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Name spaces</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="program_scope.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 14. 
+        Programmer Notes
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="program_ram.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="program_namespace"></a>Name spaces</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="program_namespace.html#id1619264">C Language Name Space</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="program_namespace.html#id1619124">Filesystem Name Space</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1619264"></a>C Language Name Space</h3>
+            </div>
+          </div>
+        </div>
+        <p>The Berkeley DB library is careful to avoid C language programmer name spaces,
+but there are a few potential areas for concern, mostly in the Berkeley DB
+include file db.h.  The db.h include file defines a number of types and
+strings.  Where possible, all of these types and strings are prefixed with
+"DB_" or "db_".  There are a few notable exceptions.</p>
+        <p>The Berkeley DB library uses a macro named "__P" to configure for systems that
+do not provide ANSI C function prototypes.  This could potentially collide
+with other systems using a "__P" macro for similar or different purposes.</p>
+        <p>The Berkeley DB library needs information about specifically sized types for
+each architecture.  If they are not provided by the system, they are
+typedef'd in the db.h include file.  The types that may be typedef'd
+by db.h include the following: u_int8_t, int16_t, u_int16_t, int32_t,
+u_int32_t, u_char, u_short, u_int, and u_long.</p>
+        <p>The Berkeley DB library declares a few external routines.  All these routines
+are prefixed with the strings "db_".  All internal Berkeley DB routines are
+prefixed with the strings "__XXX_", where "XXX" is the subsystem prefix
+(for example, "__db_XXX_" and "__txn_XXX_").</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1619124"></a>Filesystem Name Space</h3>
+            </div>
+          </div>
+        </div>
+        <p>Berkeley DB environments create or use some number of files in environment
+home directories.  These files are named <a class="link" href="env_db_config.html" title="DB_CONFIG configuration file">DB_CONFIG</a>, "log.NNNNN"
+(for example, log.0000000003, where the number of digits following the
+dot is unspecified), or with the string prefix "__db" (for example,
+__db.001).  Applications should never create files or databases in
+database environment home directories with names beginning with the
+characters "log" or "__db".</p>
+        <p>In some cases, applications may choose to remove Berkeley DB files as part of
+their cleanup procedures, using system utilities instead of Berkeley DB
+interfaces (for example, using the UNIX rm utility instead of the
+<a href="../api_reference/C/envremove.html" class="olink">DB_ENV-&gt;remove()</a> method).  This is not a problem, as long as applications
+limit themselves to removing only files named "__db.###", where "###"
+are the digits 0 through 9.  Applications should never remove any files
+named with the prefix "__db" or "log", other than "__db.###" files.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="program_scope.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="program.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="program_ram.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Berkeley DB handles </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Memory-only or Flash configurations</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

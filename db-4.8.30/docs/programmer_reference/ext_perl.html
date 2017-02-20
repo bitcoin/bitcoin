@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Using Berkeley DB with Perl</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="ext.html" title="Chapter 21.  Berkeley DB Extensions" />
+    <link rel="prev" href="ext.html" title="Chapter 21.  Berkeley DB Extensions" />
+    <link rel="next" href="ext_php.html" title="Using Berkeley DB with PHP" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Using Berkeley DB with Perl</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="ext.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 21. 
+        Berkeley DB Extensions
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="ext_php.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="ext_perl"></a>Using Berkeley DB with Perl</h2>
+          </div>
+        </div>
+      </div>
+      <p>The original Perl module for Berkeley DB was DB_File, which was written to
+interface to Berkeley DB version 1.85.  The newer Perl module for Berkeley DB is
+BerkeleyDB, which was written to interface to version 2.0 and subsequent
+releases.  Because Berkeley DB version 2.X has a compatibility API for version
+1.85, you can (and should!) build DB_File using version 2.X of Berkeley DB,
+although DB_File will still only support the 1.85 functionality.</p>
+      <p>DB_File is distributed with the standard Perl source distribution (look
+in the directory "ext/DB_File").  You can find both DB_File and BerkeleyDB
+on CPAN, the Comprehensive Perl Archive Network of mirrored FTP sites.
+The master CPAN site is
+<a class="ulink" href="ftp://ftp.funet.fi/" target="_top">ftp://ftp.funet.fi/</a>.</p>
+      <p>Versions of both BerkeleyDB and DB_File that are known to work correctly
+with each release of Berkeley DB are included in the distributed Berkeley DB source
+tree, in the subdirectories <code class="filename">perl.BerkeleyDB</code> and
+<code class="filename">perl.DB_File</code>.  Each of those directories contains a
+<code class="filename">README</code> file with instructions on installing and using those
+modules.</p>
+      <p>The Perl interface is not maintained by Oracle.  Questions about the
+DB_File and BerkeleyDB modules are best asked on the Usenet newsgroup
+comp.lang.perl.modules.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="ext.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="ext.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="ext_php.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 21. 
+        Berkeley DB Extensions
+         </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Using Berkeley DB with PHP</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

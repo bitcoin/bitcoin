@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>hsearch</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="historic.html" title="Appendix 2.  Historic Interfaces" />
+    <link rel="prev" href="dbm.html" title="dbm/ndbm" />
+    <link rel="next" href="setfunc.html" title="Appendix 3.  Berkeley DB Application Space Static Functions" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">hsearch</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbm.html">Prev</a> </td>
+          <th width="60%" align="center">Appendix 2. 
+                Historic Interfaces
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="setfunc.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="hsearch"></a>hsearch</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#define DB_DBM_HSEARCH    1
+#include &lt;db.h&gt;
+
+typedef enum {
+        FIND, ENTER
+} ACTION;
+
+typedef struct entry {
+        char *key;
+        void *data;
+} ENTRY;
+
+ENTRY *
+hsearch(ENTRY item, ACTION action);
+
+int
+hcreate(size_t nelem);
+
+void
+hdestroy(void);  </pre>
+      <p>
+         The hsearch functions are intended to provide a high-performance
+         implementation and source code compatibility for applications written
+         to the historic hsearch interface.  It is not recommended for any
+         other purpose.
+    </p>
+      <p>
+         To compile hsearch applications, replace the application's <span class="bold"><strong>#include</strong></span> of the hsearch include file (for
+         example, <span class="bold"><strong>#include &lt;search.h&gt;</strong></span>)
+         with the following two lines:
+    </p>
+      <pre class="programlisting">#define DB_DBM_HSEARCH    1 
+        #include &lt;db.h&gt;</pre>
+      <p>
+        and recompile.
+    </p>
+      <p>
+         The hcreate function creates an in-memory database.  The <span class="bold"><strong>nelem</strong></span> parameter is an estimation of the maximum
+         number of key/data pairs that will be stored in the database.
+    </p>
+      <p>
+         The <span class="bold"><strong>hdestroy</strong></span> function discards the
+         database.
+    </p>
+      <p>
+         Database elements are structures of type <span class="bold"><strong>ENTRY</strong></span>, which contain at least two fields:
+         <span class="bold"><strong>key</strong></span> and <span class="bold"><strong>data</strong></span>.  The field <span class="bold"><strong>key</strong></span> is declared to be of type <span class="bold"><strong>char *</strong></span>, and is the key used for storage and
+         retrieval.  The field <span class="bold"><strong>data</strong></span> is
+         declared to be of type <span class="bold"><strong>void *</strong></span>, and is
+         its associated data.
+    </p>
+      <p>
+         The hsearch function retrieves key/data pairs from, and stores
+         key/data pairs into the database.
+    </p>
+      <p>
+         The <span class="bold"><strong>action</strong></span> parameter must be set to
+         one of two values:
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                <span class="bold"><strong>ENTER</strong></span>
+            </p>
+            <p>
+                If the key does not already appear in the database, insert the
+                key/data pair into the database.  If the key already appears in the
+                database, return a reference to an <span class="bold"><strong>ENTRY</strong></span> structure which refers to the existing
+                key and its associated data element.
+            </p>
+          </li>
+          <li>
+            <p>
+                <span class="bold"><strong>FIND</strong></span>
+            </p>
+            <p>
+                Retrieve the specified key/data pair from the database.
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="hsearch_compatnotes"></a>Compatibility Notes</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+         Historically, hsearch required applications to maintain the keys and
+         data in the application's memory for as long as the <span class="bold"><strong>hsearch</strong></span> database existed.  Because Berkeley DB
+         handles key and data management internally, there is no requirement
+         that applications maintain local copies of key and data items,
+         although the only effect of doing so should be the allocation of
+         additional memory.
+    </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="hsearch_diagnostics"></a>Hsearch Diagnostics</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+         The <span class="bold"><strong>hcreate</strong></span> function returns 0 on
+         failure, setting <span class="bold"><strong>errno</strong></span>, and non-zero
+         on success.
+    </p>
+        <p>
+         The <span class="bold"><strong>hsearch</strong></span> function returns a
+         pointer to an ENTRY structure on success, and NULL, setting <span class="bold"><strong>errno</strong></span>, if the <span class="bold"><strong>action</strong></span> specified was FIND and the item did not
+         appear in the database.
+    </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="hsearch_errors"></a>Hsearch Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+         The <span class="bold"><strong>hsearch</strong></span> function will fail,
+         setting <span class="bold"><strong>errno</strong></span> to 0, if the <span class="bold"><strong>action</strong></span> specified was FIND and the item did not
+         appear in the database.
+    </p>
+        <p>
+         In addition, the hcreate, hsearch and hdestroy functions may fail and
+         return an error for errors specified for other Berkeley DB and C
+         library or system functions.
+    </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbm.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="historic.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="setfunc.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">dbm/ndbm </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Appendix 3. 
+                Berkeley DB Application Space Static Functions
+        </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

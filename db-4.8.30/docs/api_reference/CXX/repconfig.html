@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DbEnv::rep_set_config()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="rep.html" title="Chapter 11.  Replication Methods" />
+    <link rel="prev" href="repclockskew.html" title="DbEnv::rep_set_clockskew()" />
+    <link rel="next" href="repset_limit.html" title="DbEnv::rep_set_limit()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DbEnv::rep_set_config()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="repclockskew.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 11. 
+                Replication Methods
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="repset_limit.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="repconfig"></a>DbEnv::rep_set_config()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+
+int
+DbEnv::rep_set_config(u_int32_t which, int onoff); </pre>
+      <p>
+         The <code class="methodname">DbEnv::rep_set_config()</code> method configures the Berkeley DB
+         replication subsystem.
+    </p>
+      <p>
+         The database environment's replication subsystem may also be
+         configured using the environment's <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a> file.  The
+         syntax of the entry in that file is a single line with the string
+         "rep_set_config", one or more whitespace characters, and the method
+         <span class="bold"><strong>which</strong></span> parameter as a string; for
+         example, "rep_set_config DB_REP_CONF_NOWAIT". Because the <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a> file is
+         read when the database environment is opened, it will silently
+         overrule configuration done before that time.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::rep_set_config()</code> method configures a database
+         environment, not only operations performed using the specified 
+         <a class="link" href="env.html" title="Chapter 5.  The DbEnv Handle">DbEnv</a>  handle.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::rep_set_config()</code> method may not be
+         called to set in-memory replication after the environment is
+         opened using the 
+         <a class="xref" href="envopen.html" title="DbEnv::open()">DbEnv::open()</a> method. 
+         This method may also not be called to set master leases after the
+         <a class="xref" href="repstart.html" title="DbEnv::rep_start()">DbEnv::rep_start()</a> or 
+         <a class="xref" href="repmgrstart.html" title="DbEnv::repmgr_start()">DbEnv::repmgr_start()</a> methods
+         are called.  For all other <span class="bold"><strong>which</strong></span>
+         parameters, this method may be called at any time during the life
+         of the application.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::rep_set_config()</code> <span>
+            
+            <span>
+                method either returns a non-zero error value or throws an
+                exception that encapsulates a non-zero error value on
+                failure, and returns 0 on success.
+            </span>
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1702959"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1702812"></a>onoff</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If the <span class="bold"><strong>onoff</strong></span> parameter is zero, the
+                          configuration flag is turned off.
+Otherwise, it is turned on. All configuration flags are turned off by default.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1703132"></a>which</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>which</strong></span> parameter must be set to
+                          one of the following values:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="config_DB_REP_CONF_BULK"></a>
+                                <code class="literal">DB_REP_CONF_BULK</code>
+                            </p>
+                <p>
+                                The replication master sends groups of records to the clients in a
+                                single network transfer.
+                            </p>
+              </li>
+              <li>
+                <p><a id="config_DB_REP_CONF_DELAYCLIENT"></a>
+                                <code class="literal">DB_REP_CONF_DELAYCLIENT</code>
+                            </p>
+                <p>
+                                The client should delay synchronizing to a newly declared master.  Clients configured in this way will remain
+                                unsynchronized until the application calls the 
+                                <a class="xref" href="repsync.html" title="DbEnv::rep_sync()">DbEnv::rep_sync()</a>  method.
+                            </p>
+              </li>
+              <li>
+                <p><a id="config_DB_REP_CONF_INMEM"></a>
+                                <code class="literal">DB_REP_CONF_INMEM</code>
+                            </p>
+                <p>
+                                Store internal replication information in memory only.
+                            </p>
+                <p>
+                                By default, replication creates files in the environment home directory
+                                to preserve some internal information. If this configuration flag is turned
+                                on, replication only stores this internal information in-memory and cannot
+                                keep persistent state across a site crash or reboot. This results in the
+                                following limitations:
+                            </p>
+                <div class="itemizedlist">
+                  <ul type="circle">
+                    <li>
+                      <p>
+                                        A master site should not reappoint itself master
+                                        immediately after crashing or rebooting because the application would incur a
+                                        slightly higher risk of client crashes. The former master site should rejoin
+                                        the replication group as a client. The application should either hold an
+                                        election or appoint a different site to be the next master.
+                                    </p>
+                    </li>
+                    <li>
+                      <p>
+                                        An application has a slightly higher risk that elections will fail or be
+                                        unable to complete. Calling additional elections should eventually yield a
+                                        winner.
+                                    </p>
+                    </li>
+                    <li>
+                      <p>
+                                        An application has a slight risk that the wrong site may win an election,
+                                        resulting in the loss of some data. This is consistent with the general loss
+                                        of data durability when running in-memory.
+                                    </p>
+                    </li>
+                  </ul>
+                </div>
+                <p>
+                                This configuration flag can only be turned on before the environment
+                                is opened with the <a class="xref" href="envopen.html" title="DbEnv::open()">DbEnv::open()</a>
+                                method. Its value cannot be changed while the environment is open.
+                            </p>
+              </li>
+              <li>
+                <p>
+                                <code class="literal">DB_REP_CONF_LEASE</code>
+                            </p>
+                <p>
+                                Master leases will be used for this site.
+                            </p>
+                <p>
+                                Configuring this option may result in
+                                <code class="literal">DB_REP_LEASE_EXPIRED</code> error returns
+                                from the <a class="xref" href="dbget.html" title="Db::get()">Db::get()</a>  and
+                                <a class="xref" href="dbcget.html" title="Dbc::get()">Dbc::get()</a>  methods
+                                when attempting to read entries from a database after the site's
+                                master lease has expired.
+                            </p>
+                <p>
+                                This configuration flag may not be set after the
+                                <a class="xref" href="repmgrstart.html" title="DbEnv::repmgr_start()">DbEnv::repmgr_start()</a>  method or the
+                                <a class="xref" href="repstart.html" title="DbEnv::rep_start()">DbEnv::rep_start()</a> 
+                                method is called.
+                            </p>
+              </li>
+              <li>
+                <p><a id="config_DB_REP_CONF_NOAUTOINIT"></a>
+                                <code class="literal">DB_REP_CONF_NOAUTOINIT</code>
+                            </p>
+                <p>
+                                The replication master will not automatically re-initialize outdated
+                                clients.
+                            </p>
+              </li>
+              <li>
+                <p><a id="config_DB_REP_CONF_NOWAIT"></a>
+                                <code class="literal">DB_REP_CONF_NOWAIT</code>
+                            </p>
+                <p>
+                                Berkeley DB method calls that would normally block while clients are
+                                in recovery will return errors immediately.
+                            </p>
+              </li>
+              <li>
+                <p><a id="config_DB_REPMGR_CONF_2SITE_STRICT"></a>
+                                <code class="literal">DB_REPMGR_CONF_2SITE_STRICT</code>
+                            </p>
+                <p>
+                                Replication Manager observes the strict "majority" rule in managing
+                                elections, even in a group with only 2 sites.  This means the client
+                                in a 2-site group will be unable to take over as master if the
+                                original master fails or becomes disconnected.  (See the <a href="../../programmer_reference/rep_elect.html" class="olink">Elections</a> section in the <em class="citetitle">Berkeley DB Programmer's Reference Guide</em> for more information.)  Both sites in the
+                                replication group should have the same value for this configuration flag.
+                            </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1703201"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DbEnv::rep_set_config()</code> <span>
+            
+            <span>
+                method may fail and throw a <a class="link" href="dbexception.html" title="Chapter 6. The DbException Class">DbException</a> 
+                exception, encapsulating one of the following non-zero errors, or return one
+                of the following non-zero errors:
+            </span>
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1703489"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                If setting in-memory replication after the database environment is already
+                opened; if setting master leases after replication is started; if setting
+                the 2-site strict majority rule for a Base API application;
+                or if an invalid flag value or parameter was specified.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1703437"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="env.html" title="Chapter 5.  The DbEnv Handle">DbEnv</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1703033"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="rep.html#replist" title="Replication and Related Methods">Replication and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="repclockskew.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="rep.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="repset_limit.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DbEnv::rep_set_clockskew() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DbEnv::rep_set_limit()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

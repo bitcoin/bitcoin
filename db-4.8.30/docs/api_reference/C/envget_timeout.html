@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB_ENV-&gt;get_timeout()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="env.html" title="Chapter 5.  The DB_ENV Handle" />
+    <link rel="prev" href="envget_thread_count.html" title="DB_ENV-&gt;get_thread_count()" />
+    <link rel="next" href="envget_tmp_dir.html" title="DB_ENV-&gt;get_tmp_dir()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB_ENV-&gt;get_timeout()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="envget_thread_count.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. 
+                The DB_ENV Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="envget_tmp_dir.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="envget_timeout"></a>DB_ENV-&gt;get_timeout()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB_ENV-&gt;get_timeout(DB_ENV *dbenv, db_timeout_t *timeoutp, 
+    u_int32_t flag);  </pre>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;get_timeout()</code> method returns a value, in
+         microseconds, representing either lock or transaction timeouts. These values are set using the
+         <a class="xref" href="envset_timeout.html" title="DB_ENV-&gt;set_timeout()">DB_ENV-&gt;set_timeout()</a>
+         method.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;get_timeout()</code> method may be called at any time during the
+         life of the application.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;get_timeout()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1664049"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1664125"></a>flag</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>flags</strong></span> parameter must be set to
+                          one of the following values:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="get_timeout_DB_SET_LOCK_TIMEOUT"></a>
+                  <code class="literal">DB_SET_LOCK_TIMEOUT</code>
+            </p>
+                <p>
+                 Return the timeout value for locks in this database environment.
+            </p>
+              </li>
+              <li>
+                <p><a id="get_timeout_DB_SET_TXN_TIMEOUT"></a>
+                  <code class="literal">DB_SET_TXN_TIMEOUT</code>
+            </p>
+                <p>
+                 Return the timeout value for transactions in this database
+                 environment.
+            </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1663754"></a>timeoutp</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>timeoutp</strong></span> parameter references
+                          memory into which  the timeout value of the specified <span class="bold"><strong>flag</strong></span> parameter is copied.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1663871"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1663864"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="env.html#envlist" title="Database Environments and Related Methods">Database Environments and Related Methods</a>, 
+                     <a class="xref" href="envset_timeout.html" title="DB_ENV-&gt;set_timeout()">DB_ENV-&gt;set_timeout()</a>
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="envget_thread_count.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="env.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="envget_tmp_dir.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB_ENV-&gt;get_thread_count() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_ENV-&gt;get_tmp_dir()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

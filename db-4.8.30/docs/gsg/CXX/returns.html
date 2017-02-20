@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Error Returns</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="introduction.html" title="Chapter 1. Introduction to Berkeley DB" />
+    <link rel="prev" href="coreExceptions.html" title="Exception Handling" />
+    <link rel="next" href="gettingit.html" title="Getting and Using DB" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Error Returns</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="coreExceptions.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 1. Introduction to Berkeley DB </th>
+          <td width="20%" align="right"> <a accesskey="n" href="gettingit.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="returns"></a>Error Returns</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+        <span>In addition to exceptions, the</span>
+        
+        DB interfaces always return a value of 0 on success. If the
+        operation does not succeed for any reason, the return value will be
+        non-zero.
+    </p>
+      <p>
+        If a system error occurred (for example, DB ran out of disk
+        space, or permission to access a file was denied, or an illegal argument
+        was specified to one of the interfaces), DB returns an
+        <code class="literal">errno</code>
+        value. All of the possible values of <code class="literal">errno</code> are greater than 0.
+    </p>
+      <p>
+        If the operation did not fail due to a system error, but was not
+        successful either, DB returns a special error value. For
+        example, if you tried to retrieve data from the database and the
+        record for which you are searching does not exist, DB would return
+        <code class="literal">DB_NOTFOUND</code>, a special error value that means the requested
+        key does not appear in the database. All of the possible special error
+        values are less than 0.
+    </p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="coreExceptions.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="introduction.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="gettingit.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Exception Handling </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Getting and Using DB </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

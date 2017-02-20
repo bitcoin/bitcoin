@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Using Transient Fields in an Entity Binding</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Collections Tutorial" />
+    <link rel="up" href="SerializableEntity.html" title="Chapter 6.  Using Serializable Entities" />
+    <link rel="prev" href="SerializableEntity.html" title="Chapter 6.  Using Serializable Entities" />
+    <link rel="next" href="removingredundantvalueclasses.html" title="Removing the Redundant Value Classes" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">
+        Using Transient Fields in an Entity Binding
+    </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="SerializableEntity.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 6. 
+        Using Serializable Entities
+    </th>
+          <td width="20%" align="right"> <a accesskey="n" href="removingredundantvalueclasses.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="transientfieldsinbinding"></a>
+        Using Transient Fields in an Entity Binding
+    </h2>
+          </div>
+        </div>
+      </div>
+      <p>
+    The entity bindings from the prior example have been changed in
+    this example to use the entity object both as a value object and an
+    entity object.
+</p>
+      <p>
+    Before, the <code class="methodname">entryToObject()</code> method combined the
+    deserialized value object with the key fields to create a new
+    entity object. Now, this method uses the deserialized object
+    directly as an entity, and initializes its key using the fields
+    read from the key tuple.
+</p>
+      <p>
+    Before, the <code class="methodname">objectToData()</code> method constructed a new value
+    object using information in the entity. Now it simply returns the
+    entity. Nothing needs to be changed in the entity, since the
+    transient key fields won't be serialized.
+</p>
+      <a id="sentity_partbinding"></a>
+      <pre class="programlisting">import com.sleepycat.bind.serial.ClassCatalog;
+...
+public class SampleViews
+{
+    ...
+    private static class PartBinding extends TupleSerialBinding
+    {
+        private PartBinding(ClassCatalog classCatalog, Class dataClass)
+        {
+            super(classCatalog, dataClass);
+        }
+
+        public Object entryToObject(TupleInput keyInput, Object dataInput)
+        {
+            String number = keyInput.readString();
+<strong class="userinput"><code>            Part part = (Part) dataInput;
+            part.setKey(number);
+            return part;</code></strong>
+        }
+
+        public void objectToKey(Object object, TupleOutput output)
+        {
+            Part part = (Part) object;
+            output.writeString(part.getNumber());
+        }
+
+        public Object objectToData(Object object)
+        {
+<strong class="userinput"><code>            return object;</code></strong>
+        }
+    }
+
+    private static class SupplierBinding extends TupleSerialBinding
+    {
+        private SupplierBinding(ClassCatalog classCatalog, Class dataClass)
+        {
+            super(classCatalog, dataClass);
+        }
+
+        public Object entryToObject(TupleInput keyInput, Object dataInput)
+        {
+            String number = keyInput.readString();
+<strong class="userinput"><code>            Supplier supplier = (Supplier) dataInput;
+            supplier.setKey(number);
+            return supplier;</code></strong>
+        }
+
+        public void objectToKey(Object object, TupleOutput output)
+        {
+            Supplier supplier = (Supplier) object;
+            output.writeString(supplier.getNumber());
+        }
+
+        public Object objectToData(Object object)
+        {
+<strong class="userinput"><code>            return object;</code></strong>
+        }
+    }
+
+    private static class ShipmentBinding extends TupleSerialBinding
+    {
+        private ShipmentBinding(ClassCatalog classCatalog, Class dataClass)
+        {
+            super(classCatalog, dataClass);
+        }
+
+        public Object entryToObject(TupleInput keyInput, Object dataInput)
+        {
+            String partNumber = keyInput.readString();
+            String supplierNumber = keyInput.readString();
+<strong class="userinput"><code>            Shipment shipment = (Shipment) dataInput;
+            shipment.setKey(partNumber, supplierNumber);
+            return shipment;</code></strong>
+        }
+
+        public void objectToKey(Object object, TupleOutput output)
+        {
+            Shipment shipment = (Shipment) object;
+            output.writeString(shipment.getPartNumber());
+            output.writeString(shipment.getSupplierNumber());
+        }
+
+        public Object objectToData(Object object)
+        {
+<strong class="userinput"><code>            return object;</code></strong>
+        }
+    }
+} </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="SerializableEntity.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="SerializableEntity.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="removingredundantvalueclasses.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 6. 
+        Using Serializable Entities
+     </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+        Removing the Redundant Value Classes
+    </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

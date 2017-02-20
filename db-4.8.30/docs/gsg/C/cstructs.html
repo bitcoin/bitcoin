@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Using C Structures with DB</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="DBEntry.html" title="Chapter 3. Database Records" />
+    <link rel="prev" href="usingDbt.html" title="Reading and Writing Database Records" />
+    <link rel="next" href="DbUsage.html" title="Database Usage Example" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Using C Structures with DB</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="usingDbt.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. Database Records</th>
+          <td width="20%" align="right"> <a accesskey="n" href="DbUsage.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="cstructs"></a>Using C Structures with DB</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="cstructs.html#cstructdynamic">C Structures with Pointers</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+        Storing data in structures is a handy way to pack varied types of
+        information into each database record. DB databases are sometimes
+        thought of as a two column table where column 1 is the key and column 2 is
+        the data. By using structures, you can effectively turn this table into
+        <span class="emphasis"><em>n</em></span> columns where <span class="emphasis"><em>n-1</em></span> columns
+        are contained in the structure.
+    </p>
+      <p>
+       So long as a C structure contains fields that are not pointers, you can safely
+       store and retrieve them in the same way as you would any primitive
+       datatype.  The following code fragment illustrates this:
+    </p>
+      <a id="c_dbt6"></a>
+      <pre class="programlisting">#include &lt;db.h&gt;
+#include &lt;string.h&gt;
+
+typedef struct my_struct {
+    int id;
+    char familiar_name[MAXLINE]; /* Some suitably large value */
+    char surname[MAXLINE];
+} MY_STRUCT;
+
+...
+
+DBT key, data;
+DB *my_database;
+MY_STRUCT user;
+char *fname = "David";
+char *sname = "Rider";
+
+/* Database open omitted for clarity */
+
+user.id = 1;
+strncpy(user.familiar_name, fname, strlen(fname)+1);
+strncpy(user.surname, sname, strlen(sname)+1);
+
+/* Zero out the DBTs before using them. */
+memset(&amp;key, 0, sizeof(DBT));
+memset(&amp;data, 0, sizeof(DBT));
+
+key.data = &amp;(user.id);
+key.size = sizeof(int);
+
+data.data = &amp;user;
+data.size = sizeof(MY_STRUCT); 
+
+my_database-&gt;put(my_database, NULL, &amp;key, &amp;data, DB_NOOVERWRITE);</pre>
+      <p>
+        To retrieve the structure, make sure you supply your own
+        memory. The reason why is that like real numbers, some systems require
+        structures to be aligned in a specific way. Because it is possible that
+        the memory DB provides is not aligned properly, for safest result simply
+        use your own memory:
+    </p>
+      <a id="c_dbt7"></a>
+      <pre class="programlisting">#include &lt;db.h&gt;
+#include &lt;string.h&gt;
+
+...
+
+DBT key, data;
+DB *my_database;
+MY_STRUCT user;
+
+/* Database open omitted for clarity */
+
+/* Zero out the DBTs before using them. */
+memset(&amp;key, 0, sizeof(DBT));
+memset(&amp;data, 0, sizeof(DBT));
+
+/* Initialize the structure */
+memset(&amp;user, 0, sizeof(MY_STRUCT));
+user.id = 1;
+
+key.data = &amp;user.id;
+key.size = sizeof(int);
+
+/* Use our memory to retrieve the structure */
+data.data = &amp;user;
+data.ulen = sizeof(MY_STRUCT); 
+data.flags = DB_DBT_USERMEM;
+
+my_database-&gt;get(my_database, NULL, &amp;key, &amp;data, 0);
+
+printf("Familiar name: %s\n", user.familiar_name);
+printf("Surname: %s\n", user.surname); </pre>
+      <p>
+        Be aware that while this is the easiest way to manage structures stored
+        in DB databases, this approach does suffer from causing your
+        database to be larger than is strictly necessary. Each structure stored
+        in the database is of a fixed size, and you do not see any space savings
+        from storing a (for example) 5 character surname versus a 20 character
+        surname. 
+    </p>
+      <p>
+        For a simple example such as this, the padding stored with each record
+        is probably not critical. However, if you are storing structures that
+        contain a very large number of character arrays, or if you are simply
+        storing millions of records, then you may want to avoid this approach.
+        The wasted space in each record will only serve to make your databases
+        larger than need be, which will in turn require a larger cache and more
+        disk I/O than you would ordinarily need.
+    </p>
+      <p>
+        An alternative approach is described next.
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="cstructdynamic"></a>C Structures with Pointers</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+        It is often necessary in C structures 
+            
+            
+            to use fields 
+            
+            
+        that are pointers to
+        dynamically allocated memory. This is particularly
+        true if you want to store character strings (or any kind of an array for
+        that matter), and you want to avoid any overhead caused by
+        pre-designating the size of the array. 
+    </p>
+        <p>
+       When storing structures 
+            
+       like these you need to make sure that all of
+       the data pointed to and contained by the structure 
+       
+            
+       is lined up in a
+       single contiguous block of memory.  Remember that DB stores data
+       located at a specific address and of a particular size. If your structure
+            
+       includes fields 
+            
+       that are pointing to dynamically allocated memory, then
+       the data that you want to store can be located in different, not
+       necessarily contiguous, locations on the heap. 
+    </p>
+        <p>
+        The easiest way to solve this problem is to pack your data
+        into a single memory location and then store the data in that location.
+        (This process is sometimes called <span class="emphasis"><em>marshalling the
+        data</em></span>.)
+        For example:
+    </p>
+        <a id="c_dbt8"></a>
+        <pre class="programlisting">#include &lt;db.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct my_struct {
+    int id;
+    char *familiar_name;
+    char *surname;
+} MY_STRUCT;
+
+...
+
+DBT key, data;
+DB *my_database;
+MY_STRUCT user;
+int buffsize, bufflen;
+char fname[ ] = "Pete";
+char sname[10];
+char *databuff;
+
+strncpy(sname, "Oar", strlen("Oar")+1);
+
+/* Database open omitted for clarity */
+
+user.id = 1;
+user.familiar_name = fname;
+user.surname = sname;
+
+/* Some of the structure's data is on the stack, and 
+ * some is on the heap. To store this structure's data, we
+ * need to marshall it -- pack it all into a single location 
+ * in memory.
+ */
+
+/* Get the buffer */
+buffsize = sizeof(int) + 
+  (strlen(user.familiar_name) + strlen(user.surname) + 2);
+databuff = malloc(buffsize);
+memset(databuff, 0, buffsize);
+
+/* copy everything to the buffer */
+memcpy(databuff, &amp;(user.id), sizeof(int));
+bufflen = sizeof(int);
+
+memcpy(databuff + bufflen, user.familiar_name, 
+  strlen(user.familiar_name) + 1);
+bufflen += strlen(user.familiar_name) + 1;
+
+memcpy(databuff + bufflen, user.surname, 
+  strlen(user.surname) + 1);
+bufflen += strlen(user.surname) + 1;
+
+/* Now store it */
+
+/* Zero out the DBTs before using them. */
+memset(&amp;key, 0, sizeof(DBT));
+memset(&amp;data, 0, sizeof(DBT));
+
+key.data = &amp;(user.id);
+key.size = sizeof(int);
+
+data.data = databuff;
+data.size = bufflen;
+
+my_database-&gt;put(my_database, NULL, &amp;key, &amp;data, DB_NOOVERWRITE);
+free(sname);
+free(databuff);</pre>
+        <p>
+        To retrieve the stored structure:
+    </p>
+        <a id="c_dbt9"></a>
+        <pre class="programlisting">#include &lt;db.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct my_struct {
+    char *familiar_name;
+    char *surname;
+    int id;
+} MY_STRUCT;
+
+...
+
+int id;
+DBT key, data;
+DB *my_database;
+MY_STRUCT user;
+char *buffer;
+
+/* Database open omitted for clarity */
+
+
+/* Zero out the DBTs before using them. */
+memset(&amp;key, 0, sizeof(DBT));
+memset(&amp;data, 0, sizeof(DBT));
+
+id = 1;
+key.data = &amp;id;
+key.size = sizeof(int);
+
+my_database-&gt;get(my_database, NULL, &amp;key, &amp;data, 0);
+
+/* 
+ * Some compilers won't allow pointer arithmetic on void *'s,
+ * so use a char * instead.
+ */
+buffer = data.data;
+
+user.id = *((int *)data.data);
+user.familiar_name = buffer + sizeof(int);
+user.surname = buffer + sizeof(int) + strlen(user.familiar_name) + 1; </pre>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="usingDbt.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="DBEntry.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="DbUsage.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Reading and Writing Database Records </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Database Usage Example</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,51 @@
+This directory contains unit tests for the Java APIs that are common the BDB
+and BDB JE products:  the bind, collections, persist (DPL) and util packages.
+
+These tests are run using Apache Ant and JUnit.
+
+External software requirements:
+
+    Java 1.5 or later.
+    The Sun JDK is normally used, but any compatible JVM should work.
+
+    Apache Ant 7.0 or later.
+    http://ant.apache.org/bindownload.cgi
+
+    JUnit 3.8.1 or 3.8.2 (later versions do not currently work)
+    http://prdownloads.sourceforge.net/junit/junit3.8.1.zip?download
+
+The bin directories of both Java and Ant must be in your executable path.  The
+junit.jar file must be available to Ant. The simplest way to do this is to copy
+the junit.jar file into your Ant's lib directory.
+
+There are two configuration settings for specifying the DB release to be
+tested:
+
+    The release binaries must be in your system library path (LD_LIBRARY_PATH
+    on Unix).
+
+    The Java property db.jar is specified to override the default location,
+    which is the build_unix/db.jar file in this release directory.
+
+The following ant commands should be executed from this directory:
+
+    # To perform a clean build of the tests
+    ant clean build 
+
+    # To build (if needed) and run the tests
+    ant test
+
+    # To test the examples
+    ant examples
+
+For example, here are commands to build and test in a local db directory.
+
+    cd ~/db/test/scr024
+    ant clean build
+    ant test
+
+Several output directories are creating when building and testing.  These can
+be deleted with:
+
+    ant clean
+

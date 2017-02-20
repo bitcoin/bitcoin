@@ -1,0 +1,146 @@
+#!/usr/local/bin/perl5
+
+# Filename: mkpod
+#
+# Author:	Paul Marquess
+
+# File types
+#
+#    Macro files end with .M
+#    Tagged source files end with .T
+#    Output from the code ends with .O
+#    Pre-Pod file ends with .P
+#    
+# Tags
+#
+#    ## BEGIN tagname
+#     ...
+#    ## END tagname
+#
+#    ## 0
+#    ## 1
+#
+
+# Constants
+
+$TOKEN = '##' ;
+$Verbose = 1 if $ARGV[0] =~ /^-v/i ;
+
+# Macros files first
+foreach $file (glob("*.M"))
+{
+    open (F, "<$file") or die "Cannot open '$file':$!\n" ;
+    print "    Processing Macro file $file\n"  ;
+    while (<F>)
+    {
+        # Skip blank & comment lines
+        next if /^\s*$/ || /^\s*#/ ;
+	
+	# 
+	($name, $expand) = split (/\t+/, $_, 2) ;
+
+	$expand =~ s/^\s*// ;
+        $expand =~ s/\s*$// ;
+
+	if ($expand =~ /\[#/ )
+	{
+	}
+
+	$Macros{$name} = $expand ;
+    }
+    close F ;
+}
+
+# Suck up all the code files
+foreach $file (glob("t/*.T"))
+{
+    ($newfile = $file) =~ s/\.T$// ;
+    open (F, "<$file") or die "Cannot open '$file':$!\n" ;
+    open (N, ">$newfile") or die "Cannot open '$newfile':$!\n" ;
+
+    print "    Processing $file -> $newfile\n"  ;
+
+    while ($line = <F>)
+    {
+        if ($line =~ /^$TOKEN\s*BEGIN\s+(\w+)\s*$/ or
+            $line =~ m[\s*/\*$TOKEN\s*BEGIN\s+(\w+)\s*$] )
+        {
+	    print "    Section $1 begins\n" if $Verbose ;
+	    $InSection{$1} ++ ;
+	    $Section{$1} = '' unless $Section{$1} ;
+        }
+        elsif ($line =~ /^$TOKEN\s*END\s+(\w+)\s*$/ or
+               $line =~ m[^\s*/\*$TOKEN\s*END\s+(\w+)\s*$] )
+        {
+	    warn "Encountered END without a begin [$line]\n"
+		unless $InSection{$1} ;
+
+	    delete $InSection{$1}  ;
+	    print "    Section $1 ends\n" if $Verbose ;
+        }
+        else
+        {
+	    print N $line ;
+	    chop $line ;
+	    $line =~ s/\s*$// ;
+
+	    # Save the current line in each of the sections
+	    foreach( keys %InSection)
+	    {
+		if ($line !~ /^\s*$/ )
+	          #{ $Section{$_} .= "    $line" }
+	          { $Section{$_} .= $line }
+	        $Section{$_} .= "\n" ;
+	    }
+        }
+
+    }
+
+    if (%InSection)
+    {
+        # Check for unclosed sections
+	print "The following Sections are not terminated\n" ;
+        foreach (sort keys %InSection)
+          { print "\t$_\n" }
+	exit 1 ;
+    }
+
+    close F ;
+    close N ;
+}
+
+print "\n\nCreating pod file(s)\n\n" if $Verbose ;
+
+@ppods = glob('*.P') ;
+#$ppod = $ARGV[0] ;
+#$pod = $ARGV[1] ;
+
+# Now process the pre-pod file
+foreach $ppod (@ppods)
+{
+    ($pod = $ppod) =~ s/\.P$// ;
+    open (PPOD, "<$ppod") or die "Cannot open file '$ppod': $!\n" ;
+    open (POD, ">$pod") or die "Cannot open file '$pod': $!\n" ;
+
+    print "    $ppod -> $pod\n" ;
+
+    while ($line = <PPOD>)
+    {
+        if ( $line =~ /^\s*$TOKEN\s*(\w+)\s*$/)
+        {
+            warn "No code insert '$1' available\n"
+	        unless $Section{$1} ;
+    
+	    print "Expanding section $1\n" if $Verbose ;
+	    print POD $Section{$1} ;
+        }
+        else
+        {
+#	    $line =~ s/\[#([^\]])]/$Macros{$1}/ge ;
+	    print POD $line ;
+        }
+    }
+    
+    close PPOD ;
+    close POD ;
+}

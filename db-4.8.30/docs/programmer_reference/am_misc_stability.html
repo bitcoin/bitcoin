@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Cursor stability</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="am_misc.html" title="Chapter 4.  Access Method Wrapup" />
+    <link rel="prev" href="am_misc_error.html" title="Error support" />
+    <link rel="next" href="am_misc_dbsizes.html" title="Database limits" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Cursor stability</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="am_misc_error.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 4. 
+        Access Method Wrapup
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="am_misc_dbsizes.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="am_misc_stability"></a>Cursor stability</h2>
+          </div>
+        </div>
+      </div>
+      <p>In the absence of locking, no guarantees are made about the stability
+of cursors in different threads of control.  However, the Btree, Queue
+and Recno access methods guarantee that cursor operations, interspersed
+with any other operation in the same thread of control will always
+return keys in order and will return each non-deleted key/data pair
+exactly once.  Because the Hash access method uses a dynamic hashing
+algorithm, it cannot guarantee any form of stability in the presence of
+inserts and deletes unless transactional locking is performed.</p>
+      <p>If locking was specified when the Berkeley DB environment was opened, but
+transactions are not in effect, the access methods provide repeatable
+reads with respect to the cursor.  That is, a <a href="../api_reference/C/dbcget.html#dbcget_DB_CURRENT" class="olink">DB_CURRENT</a> call
+on the cursor is guaranteed to return the same record as was returned
+on the last call to the cursor.</p>
+      <p>In the presence of transactions, the Btree, Hash and Recno access
+methods provide degree 3 isolation (serializable transactions).  The
+Queue access method provides degree 3 isolation with the exception that
+it permits phantom records to appear between calls.  That is, deleted
+records are not locked, therefore another transaction may replace a
+deleted record between two calls to retrieve it.  The record would not
+appear in the first call but would be seen by the second call.  For
+readers not enclosed in transactions, all access method calls provide
+degree 2 isolation, that is, reads are not repeatable.  A transaction
+may be declared to run with degree 2 isolation by specifying the
+<a href="../api_reference/C/dbcget.html#dbcget_DB_READ_COMMITTED" class="olink">DB_READ_COMMITTED</a> flag.  Finally, Berkeley DB provides degree 1 isolation
+when the <a href="../api_reference/C/dbopen.html#dbopen_DB_READ_UNCOMMITTED" class="olink">DB_READ_UNCOMMITTED</a> flag is specified; that is, reads
+may see data modified in transactions which have not yet committed.</p>
+      <p>For all access methods, a cursor scan of the database performed within
+the context of a transaction is guaranteed to return each key/data pair
+once and only once, except in the following case.  If, while performing
+a cursor scan using the Hash access method, the transaction performing
+the scan inserts a new pair into the database, it is possible that
+duplicate key/data pairs will be returned.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="am_misc_error.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="am_misc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="am_misc_dbsizes.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Error support </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Database limits</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

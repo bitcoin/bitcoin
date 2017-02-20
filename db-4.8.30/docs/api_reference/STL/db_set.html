@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 7.  Db_set</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ Standard Template Library API Reference" />
+    <link rel="up" href="index.html" title="Berkeley DB C++ Standard Template Library API Reference" />
+    <link rel="prev" href="stldb_multimapoperator_ueq.html" title="operator!=" />
+    <link rel="next" href="stldb_setdstr_db_set.html" title="~db_set" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 7. 
+ Db_set  </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="stldb_multimapoperator_ueq.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="stldb_setdstr_db_set.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="db_set"></a>Chapter 7. 
+ Db_set  </h2>
+          </div>
+        </div>
+      </div>
+      <p>This class is the combination of std::set and hash_set. </p>
+      <p>By setting database handles of DB_BTREE or DB_HASH type, you will be using the equivalent of std::set or hash_set. This container stores the key in the key element of a key/data pair in the underlying database, but doesn't store anything in the data element. Database and environment handle requirement: The same as that of <a class="link" href="db_map.html" title="Chapter 5.  Db_map">db_map</a>
+. </p>
+      <h4><a id="id1554608"></a>
+See Also
+</h4>
+      <p> </p>
+      <p><a class="link" href="db_map.html" title="Chapter 5.  Db_map">db_map</a>
+ <a class="link" href="db_container.html" title="Chapter 3.  Db_container">db_container</a>
+ </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1554869"></a>
+Class Template Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1554781"></a>
+kdt</h4>
+              </div>
+            </div>
+          </div>
+          <p>The key data type. </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1554925"></a>
+value_type_sub</h4>
+              </div>
+            </div>
+          </div>
+          <p>If kdt is a class/struct type, do not specify anything in this parameter; Otherwise specify ElementHolder&lt;kdt&gt;. </p>
+        </div>
+      </div>
+      <h4><a id="id1554362"></a> Public Members </h4>
+      <div class="informaltable">
+        <table border="1" width="80%">
+          <colgroup>
+            <col />
+            <col />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+<a class="xref" href="db_set.html#stldb_setdb_set" title="db_set">
+db_set
+</a>
+</td>
+              <td>
+   <p>Create a std::set/hash_set equivalent associative container. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldb_setdstr_db_set.html" title="~db_set">
+~db_set
+</a>
+</td>
+              <td>
+   </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldb_setinsert.html" title="insert">
+insert
+</a>
+</td>
+              <td>
+   <p>Insert a single key/data pair if the key is not in the container. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldb_setoperator_assign.html" title="operator=">
+operator=
+</a>
+</td>
+              <td>
+   <p>Container content assignment operator. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldb_setvalue_comp.html" title="value_comp">
+value_comp
+</a>
+</td>
+              <td>
+   <p>Get value comparison functor. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldb_setswap.html" title="swap">
+swap
+</a>
+</td>
+              <td>
+   <p>Swap content with another container. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldb_setoperator_eq.html" title="operator==">
+operator==
+</a>
+</td>
+              <td>
+   <p>Set content equality comparison operator. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldb_setoperator_ueq.html" title="operator!=">
+operator!=
+</a>
+</td>
+              <td>
+   <p>Inequality comparison operator. </p>        </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h4><a id="id1555581"></a>
+Group</h4>
+      <p>
+<a class="xref" href="dbstl_containers.html" title="Chapter 2.  Dbstl Container Classes">
+ Dbstl Container Classes  </a>
+</p>
+      <p>
+</p>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="stldb_setdb_set"></a>
+db_set
+</h2>
+            </div>
+          </div>
+        </div>
+        <div class="sect2" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title"><a id="func_details"></a>
+Function Details</h3>
+              </div>
+            </div>
+          </div>
+          <pre class="programlisting">
+db_set(Db *dbp=NULL,
+    DbEnv *envp=NULL)
+ </pre>
+          <div class="sect3" lang="en" xml:lang="en">
+            <div class="titlepage"></div>
+            <p>Create a std::set/hash_set equivalent associative container. </p>
+            <p>See the handle requirement in class details to pass correct database/environment handles. </p>
+          </div>
+          <div class="sect3" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h4 class="title"><a id="id1555521"></a>
+Parameters</h4>
+                </div>
+              </div>
+            </div>
+            <div class="sect4" lang="en" xml:lang="en">
+              <div class="titlepage">
+                <div>
+                  <div>
+                    <h5 class="title"><a id="id1555506"></a>
+ dbp </h5>
+                  </div>
+                </div>
+              </div>
+              <p>The database handle. </p>
+            </div>
+            <div class="sect4" lang="en" xml:lang="en">
+              <div class="titlepage">
+                <div>
+                  <div>
+                    <h5 class="title"><a id="id1555460"></a>
+ envp </h5>
+                  </div>
+                </div>
+              </div>
+              <p>The database environment handle. </p>
+            </div>
+          </div>
+          <div class="sect3" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h4 class="title"><a id="id1555655"></a>
+See Also</h4>
+                </div>
+              </div>
+            </div>
+            <p>
+    </p>
+            <p><a class="link" href="db_map.html#stldb_mapdb_map" title="db_map">db_map(Db*, DbEnv*)</a>
+ <a class="link" href="stldb_containerdb_container.html" title="db_container">db_container(Db*, DbEnv*)</a>
+ </p>
+            <p>   </p>
+          </div>
+          <pre class="programlisting">
+db_set(Db *dbp, DbEnv *envp, InputIterator first,
+    InputIterator last)
+ </pre>
+          <div class="sect3" lang="en" xml:lang="en">
+            <div class="titlepage"></div>
+            <p>Iteration constructor. </p>
+            <p>Iterates between first and last, copying each of the elements in the range into this container. Create a std::set/hash_set equivalent associative container. Insert a range of elements into the database. The range is [first, last), which contains elements that can be converted to type ddt automatically. This function supports auto-commit. See the handle requirement in class details to pass correct database/environment handles. </p>
+          </div>
+          <div class="sect3" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h4 class="title"><a id="id1555664"></a>
+Parameters</h4>
+                </div>
+              </div>
+            </div>
+            <div class="sect4" lang="en" xml:lang="en">
+              <div class="titlepage">
+                <div>
+                  <div>
+                    <h5 class="title"><a id="id1555424"></a>
+ dbp </h5>
+                  </div>
+                </div>
+              </div>
+              <p>The database handle. </p>
+            </div>
+            <div class="sect4" lang="en" xml:lang="en">
+              <div class="titlepage">
+                <div>
+                  <div>
+                    <h5 class="title"><a id="id1555799"></a>
+ envp </h5>
+                  </div>
+                </div>
+              </div>
+              <p>The database environment handle. </p>
+            </div>
+            <div class="sect4" lang="en" xml:lang="en">
+              <div class="titlepage">
+                <div>
+                  <div>
+                    <h5 class="title"><a id="id1555697"></a>
+ last </h5>
+                  </div>
+                </div>
+              </div>
+              <p>The open boundary of the range. </p>
+            </div>
+            <div class="sect4" lang="en" xml:lang="en">
+              <div class="titlepage">
+                <div>
+                  <div>
+                    <h5 class="title"><a id="id1555396"></a>
+ first </h5>
+                  </div>
+                </div>
+              </div>
+              <p>The closed boundary of the range. </p>
+            </div>
+          </div>
+          <div class="sect3" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h4 class="title"><a id="id1555110"></a>
+See Also</h4>
+                </div>
+              </div>
+            </div>
+            <p>
+    </p>
+            <p><a class="link" href="db_map.html#stldb_mapdb_map" title="db_map">db_map(Db*, DbEnv*, InputIterator, InputIterator)</a>
+ </p>
+            <p>   </p>
+          </div>
+          <pre class="programlisting">
+db_set(const self &amp;x)
+ </pre>
+          <div class="sect3" lang="en" xml:lang="en">
+            <div class="titlepage"></div>
+            <p>Copy constructor. </p>
+            <p>Create a database and insert all key/data pairs in x into this container. x's data members are not copied. This function supports auto-commit. </p>
+          </div>
+          <div class="sect3" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h4 class="title"><a id="id1555961"></a>
+Parameters</h4>
+                </div>
+              </div>
+            </div>
+            <div class="sect4" lang="en" xml:lang="en">
+              <div class="titlepage">
+                <div>
+                  <div>
+                    <h5 class="title"><a id="id1555537"></a>
+ x </h5>
+                  </div>
+                </div>
+              </div>
+              <p>The source container to initialize this container. </p>
+            </div>
+          </div>
+          <div class="sect3" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h4 class="title"><a id="id1555781"></a>
+See Also</h4>
+                </div>
+              </div>
+            </div>
+            <p>
+    </p>
+            <p><a class="link" href="db_map.html#stldb_mapdb_map" title="db_map">db_map(const db_map&amp;)</a>
+ <a class="link" href="stldb_containerdb_container.html" title="db_container">db_container(const db_container&amp;)</a>
+ </p>
+            <p>   </p>
+          </div>
+        </div>
+        <div class="sect2" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title"><a id="id1556015"></a>
+Class</h3>
+              </div>
+            </div>
+          </div>
+          <p>
+  <a class="link" href="db_set.html" title="Chapter 7.  Db_set">
+  db_set</a>
+     </p>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="stldb_multimapoperator_ueq.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="stldb_setdstr_db_set.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+operator!=
+ </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+~db_set
+</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

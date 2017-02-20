@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 4.6: Verbose Output</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_4_6_toc.html" title="Chapter 43. Upgrading Berkeley DB 4.5 applications to Berkeley DB 4.6" />
+    <link rel="prev" href="upgrade_4_6_full_election.html" title="Release 4.6: DB_REP_FULL_ELECTION" />
+    <link rel="next" href="upgrade_4_6_verb.html" title="Release 4.6: DB_VERB_REPLICATION" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 4.6: Verbose Output</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_4_6_full_election.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 43. Upgrading Berkeley DB 4.5 applications to Berkeley DB 4.6</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_4_6_verb.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_4_6_verbose"></a>Release 4.6: Verbose Output</h2>
+          </div>
+        </div>
+      </div>
+      <p>When an error occurs in the Berkeley DB library, an exception is thrown or an
+error return value is returned by the interface.  In some cases,
+however, the exception or returned value may be insufficient to
+completely describe the cause of the error, especially during initial
+application debugging.  Applications can configure Berkeley DB for verbose
+messages to be output when an error occurs, but it's a common cause of
+confusion for new users that no verbose messages are available by
+default.</p>
+      <p>In the Berkeley DB 4.6 release, verbose messages are configured by default.
+For the C and C++ APIs, this means the default configuration when
+applications first create <a href="../api_reference/C/db.html" class="olink">DB</a> or <a href="../api_reference/C/env.html" class="olink">DB_ENV</a> handles is as if
+the <a href="../api_reference/C/envset_errfile.html" class="olink">DB_ENV-&gt;set_errfile()</a> or <a href="../api_reference/C/dbset_errfile.html" class="olink">DB-&gt;set_errfile()</a> methods were called
+with the standard error output (stderr) specified as the FILE *
+argument.  Applications wanting no output at all can turn off this
+default configuration by calling the <a href="../api_reference/C/envset_errfile.html" class="olink">DB_ENV-&gt;set_errfile()</a> or
+<a href="../api_reference/C/dbset_errfile.html" class="olink">DB-&gt;set_errfile()</a> methods with NULL as the FILE * argument.
+Additionally, explicitly configuring the error output channel using any
+of the <a href="../api_reference/C/envset_errfile.html" class="olink">DB_ENV-&gt;set_errfile()</a>, <a href="../api_reference/C/envset_errcall.html" class="olink">DB_ENV-&gt;set_errcall()</a>, <a href="../api_reference/CXX/envset_error_stream.html" class="olink">DbEnv::set_error_stream()</a> or <a href="../api_reference/CXX/dbset_error_stream.html" class="olink">Db::set_error_stream()</a> 
+methods will also turn off this default output for the application.</p>
+      <p>Applications which configure Berkeley DB with any error output channel should
+not require any changes.</p>
+      <p>Applications which depend on having no output from the Berkeley DB library by
+default, should be changed to call the <a href="../api_reference/C/envset_errfile.html" class="olink">DB_ENV-&gt;set_errfile()</a> or
+<a href="../api_reference/C/dbset_errfile.html" class="olink">DB-&gt;set_errfile()</a> methods with NULL as the FILE * argument.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_4_6_full_election.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_4_6_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_4_6_verb.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 4.6: DB_REP_FULL_ELECTION </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 4.6: DB_VERB_REPLICATION</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

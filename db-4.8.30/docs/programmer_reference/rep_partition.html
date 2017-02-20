@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Network partitions</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="rep.html" title="Chapter 12.  Berkeley DB Replication" />
+    <link rel="prev" href="rep_clock_skew.html" title="Clock Skew" />
+    <link rel="next" href="rep_faq.html" title="Replication FAQ" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Network partitions</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="rep_clock_skew.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 12. 
+        Berkeley DB Replication
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="rep_faq.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="rep_partition"></a>Network partitions</h2>
+          </div>
+        </div>
+      </div>
+      <p>The Berkeley DB replication implementation can be affected by network
+partitioning problems.</p>
+      <p>For example, consider a replication group with N members.  The network
+partitions with the master on one side and more than N/2 of the sites
+on the other side.  The sites on the side with the master will continue
+forward, and the master will continue to accept write queries for the
+databases.  Unfortunately, the sites on the other side of the partition,
+realizing they no longer have a master, will hold an election.  The
+election will succeed as there are more than N/2 of the total sites
+participating, and there will then be two masters for the replication
+group.  Since both masters are potentially accepting write queries, the
+databases could diverge in incompatible ways.</p>
+      <p>If multiple masters are ever found to exist in a replication group, a
+master detecting the problem will return <a href="../api_reference/C/repmessage.html#repmsg_DB_REP_DUPMASTER" class="olink">DB_REP_DUPMASTER</a>.  If
+the application sees this return, it should reconfigure itself as a
+client (by calling <a href="../api_reference/C/repstart.html" class="olink">DB_ENV-&gt;rep_start()</a>), and then call for an election
+(by calling <a href="../api_reference/C/repelect.html" class="olink">DB_ENV-&gt;rep_elect()</a>).  The site that wins the election may be
+one of the two previous masters, or it may be another site entirely.
+Regardless, the winning system will bring all of the other systems into
+conformance.</p>
+      <p>As another example, consider a replication group with a master
+environment and two clients A and B, where client A may upgrade to
+master status and client B cannot.  Then, assume client A is partitioned
+from the other two database environments, and it becomes out-of-date
+with respect to the master.  Then, assume the master crashes and does
+not come back on-line.  Subsequently, the network partition is restored,
+and clients A and B hold an election.  As client B cannot win the
+election, client A will win by default, and in order to get back into
+sync with client B, possibly committed transactions on client B will be
+unrolled until the two sites can once again move forward together.</p>
+      <p>In both of these examples, there is a phase where a newly elected master
+brings the members of a replication group into conformance with itself
+so that it can start sending new information to them.  This can result
+in the loss of information as previously committed transactions are
+unrolled.</p>
+      <p>In architectures where network partitions are an issue, applications
+may want to implement a heart-beat protocol to minimize the consequences
+of a bad network partition.  As long as a master is able to contact at
+least half of the sites in the replication group, it is impossible for
+there to be two masters.  If the master can no longer contact a
+sufficient number of systems, it should reconfigure itself as a client,
+and hold an election.  Replication Manager does not currently
+implement such a feature, so this technique is only available to Base API
+applications.</p>
+      <p>There is another tool applications can use to minimize the damage in
+the case of a network partition.  By specifying an <span class="bold"><strong>nsites</strong></span>
+argument to <a href="../api_reference/C/repelect.html" class="olink">DB_ENV-&gt;rep_elect()</a> that is larger than the actual number of
+database environments in the replication group, Base API applications can keep
+systems from declaring themselves the master unless they can talk to
+a large percentage of the sites in the system.  For example, if there
+are 20 database environments in the replication group, and an argument
+of 30 is specified to the <a href="../api_reference/C/repelect.html" class="olink">DB_ENV-&gt;rep_elect()</a> method, then a system will have
+to be able to talk to at least 16 of the sites to declare itself the
+master.</p>
+      <p>Replication Manager uses the value of <span class="bold"><strong>nsites</strong></span> (configured by
+the <a href="../api_reference/C/repnsites.html" class="olink">DB_ENV-&gt;rep_set_nsites()</a> method) for elections as well as in calculating how
+many acknowledgements to wait for when sending a
+<a href="../api_reference/C/reptransport.html#transport_DB_REP_PERMANENT" class="olink">DB_REP_PERMANENT</a> message.  So this technique may be useful here
+as well, unless the application uses the <a href="../api_reference/C/repmgrset_ack_policy.html#ackspolicy_DB_REPMGR_ACKS_ALL" class="olink">DB_REPMGR_ACKS_ALL</a> or
+<a href="../api_reference/C/repmgrset_ack_policy.html#ackspolicy_DB_REPMGR_ACKS_ALL_PEERS" class="olink">DB_REPMGR_ACKS_ALL_PEERS</a> acknowledgement policies.</p>
+      <p>Specifying a <span class="bold"><strong>nsites</strong></span> argument to <a href="../api_reference/C/repelect.html" class="olink">DB_ENV-&gt;rep_elect()</a> that is
+smaller than the actual number of database environments in the
+replication group has its uses as well.  For example, consider a
+replication group with 2 environments.  If they are partitioned from
+each other, neither of the sites could ever get enough votes to become
+the master.  A reasonable alternative would be to specify a
+<span class="bold"><strong>nsites</strong></span> argument of 2 to one of the systems 
+and a <span class="bold"><strong>nsites</strong></span>
+argument of 1 to the other.  That way, one of the systems could win
+elections even when partitioned, while the other one could not.  This
+would allow one of the systems to continue accepting write
+queries after the partition.</p>
+      <p>In a 2-site group, Replication Manager by default reacts to the loss of
+communication with the master by assuming the master has crashed: the
+surviving client simply declares itself to be master.  Thus it avoids
+the problem of the survivor never being able to get enough votes to
+prevail.  But it does leave the group vulnerable to the risk of
+multiple masters, if both sites are running but cannot communicate.
+If this risk of multiple masters is unacceptable, there is a
+configuration option to observe a strict majority rule that
+prevents the survivor from taking over. See the <a href="../api_reference/C/repconfig.html" class="olink">DB_ENV-&gt;rep_set_config()</a> method
+<a href="../api_reference/C/repconfig.html#config_DB_REPMGR_CONF_2SITE_STRICT" class="olink">DB_REPMGR_CONF_2SITE_STRICT</a> flag for more information.</p>
+      <p>These scenarios stress the importance of good network infrastructure in
+Berkeley DB replicated environments.  When replicating database environments
+over sufficiently lossy networking, the best solution may well be to
+pick a single master, and only hold elections when human intervention
+has determined the selected master is unable to recover at all.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="rep_clock_skew.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="rep.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="rep_faq.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Clock Skew </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Replication FAQ</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

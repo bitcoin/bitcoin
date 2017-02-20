@@ -1,0 +1,41 @@
+# $Id$
+
+StlAccessExample.cpp		Simple Database Access.
+
+	Exstl_access uses STL simple features based on the DB access methods.
+
+	Build: make exstl_access
+
+
+repquote/			Replication.  
+
+	Exstl_repquote creates a toy stock quote server
+	with DB's single-master, multiple-client replication
+	with communication over TCP, via STL API.  See repquote/README.
+
+	Build: make exstl_repquote
+
+
+StlTransactionGuideExample.cpp	Multithreaded DB Access.
+
+	StlTxnGuide runs multiple threads to access databases via STL API.
+
+	Build: make StlTxnGuide
+
+
+StlTpcbExample.cpp		TPC/B.
+
+	Exstl_tpcb sets up a framework in which to run a TPC/B test 
+	via the STL API.
+
+	Database initialization (the -i flag) and running the
+	benchmark (-n flag) must take place separately (i.e.,
+	first create the database, then run 1 or more copies of
+	the benchmark).  Furthermore, when running more than one
+	TPCB process, it is necessary to run the deadlock detector
+	(db_deadlock), since it is possible for concurrent tpcb
+	processes to deadlock.  For performance measurement, it
+	will also be beneficial to run the db_checkpoint process
+	as well.
+
+	Build: make exstl_tpcb

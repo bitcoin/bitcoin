@@ -1,0 +1,62 @@
+# Berkeley DB
+#
+# Ian Darwin's file /etc/magic files: big/little-endian version.
+#
+# Hash 1.85/1.86 databases store metadata in network byte order.
+# Btree 1.85/1.86 databases store the metadata in host byte order.
+# Hash and Btree 2.X and later databases store the metadata in host byte order.
+
+0	long	0x00061561	Berkeley DB
+>8	belong	4321
+>>4	belong	>2		1.86
+>>4	belong	<3		1.85
+>>4	belong	>0		(Hash, version %d, native byte-order)
+>8	belong	1234
+>>4	belong	>2		1.86
+>>4	belong	<3		1.85
+>>4	belong	>0		(Hash, version %d, little-endian)
+
+0	belong	0x00061561	Berkeley DB
+>8	belong	4321
+>>4	belong	>2		1.86
+>>4	belong	<3		1.85
+>>4	belong	>0		(Hash, version %d, big-endian)
+>8	belong	1234
+>>4	belong	>2		1.86
+>>4	belong	<3		1.85
+>>4	belong	>0		(Hash, version %d, native byte-order)
+
+0	long	0x00053162	Berkeley DB 1.85/1.86
+>4	long	>0		(Btree, version %d, native byte-order)
+0	belong	0x00053162	Berkeley DB 1.85/1.86
+>4	belong	>0		(Btree, version %d, big-endian)
+0	lelong	0x00053162	Berkeley DB 1.85/1.86
+>4	lelong	>0		(Btree, version %d, little-endian)
+
+12	long	0x00061561	Berkeley DB
+>16	long	>0		(Hash, version %d, native byte-order)
+12	belong	0x00061561	Berkeley DB
+>16	belong	>0		(Hash, version %d, big-endian)
+12	lelong	0x00061561	Berkeley DB
+>16	lelong	>0		(Hash, version %d, little-endian)
+
+12	long	0x00053162	Berkeley DB
+>16	long	>0		(Btree, version %d, native byte-order)
+12	belong	0x00053162	Berkeley DB
+>16	belong	>0		(Btree, version %d, big-endian)
+12	lelong	0x00053162	Berkeley DB
+>16	lelong	>0		(Btree, version %d, little-endian)
+
+12	long	0x00042253	Berkeley DB
+>16	long	>0		(Queue, version %d, native byte-order)
+12	belong	0x00042253	Berkeley DB
+>16	belong	>0		(Queue, version %d, big-endian)
+12	lelong	0x00042253	Berkeley DB
+>16	lelong	>0		(Queue, version %d, little-endian)
+
+12	long	0x00040988	Berkeley DB
+>16	long	>0		(Log, version %d, native byte-order)
+12	belong	0x00040988	Berkeley DB
+>16	belong	>0		(Log, version %d, big-endian)
+12	lelong	0x00040988	Berkeley DB
+>16	lelong	>0		(Log, version %d, little-endian)

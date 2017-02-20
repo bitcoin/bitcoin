@@ -1,0 +1,617 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>In-Memory Transaction Example</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB Transaction Processing" />
+    <link rel="up" href="wrapup.html" title="Chapter 6. Summary and Examples" />
+    <link rel="prev" href="txnexample_c.html" title="Transaction Example" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">In-Memory Transaction Example</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="txnexample_c.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 6. Summary and Examples</th>
+          <td width="20%" align="right"> </td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="inmem_txnexample_c"></a>In-Memory Transaction Example</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+        DB is sometimes used for applications that simply need to cache
+        data retrieved from some other location (such as a remote database
+        server). DB is also often used in embedded systems.
+    </p>
+      <p>
+        In both cases, applications may want to use transactions for
+        atomicity, consistency, and isolation guarantees, but they may also want
+        to forgo the durability guarantee entirely. In doing so, they can keep
+        their DB environment and databases entirely in-memory so
+        as to avoid the performance impact of unneeded disk I/O.
+    </p>
+      <p>
+        To do this:
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                Refrain from specifying a home directory when you open your
+                environment. The exception to this is if you are using the
+                <code class="literal">DB_CONFIG</code> configuration file — in
+                that case you must identify the environment's home
+                directory so that the configuration file can be found.
+            </p>
+          </li>
+          <li>
+            <p>
+                Configure your environment to back your regions from
+                system memory instead of the filesystem.
+            </p>
+          </li>
+          <li>
+            <p>
+                Configure your logging subsystem such that log files are kept
+                entirely in-memory.
+            </p>
+          </li>
+          <li>
+            <p>
+                Increase the size of your in-memory log buffer so that it
+                is large enough to hold the largest set of concurrent write operations.
+            </p>
+          </li>
+          <li>
+            <p>
+                Increase the size of your in-memory cache so that it can
+                hold your entire data set. You do not want your cache to
+                page to disk.
+            </p>
+          </li>
+          <li>
+            <p>
+                Do not specify a file name when you open your database(s).
+            </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+        As an example, this section takes the transaction example provided
+        in <a class="xref" href="txnexample_c.html" title="Transaction Example">Transaction Example</a>
+        and it updates that example so that the environment, database, log
+        files, and regions are all kept entirely in-memory. 
+    </p>
+      <p>
+        For illustration purposes, we also modify this example so that 
+        uncommitted reads are no longer used to enable the 
+            <code class="function">count_records()</code>
+            
+        function. Instead, we simply provide a transaction handle to
+            <code class="function">count_records()</code>
+            
+        so as to avoid the self-deadlock. Be aware that using a transaction handle here rather than
+        uncommitted reads will work just as well as if we had continued to use uncommitted reads. However,
+            the usage of the transaction handle here will 
+            probably cause more deadlocks than using read-uncommitted does, because more locking is being performed in
+            this case.
+    </p>
+      <p>
+        To begin, we simplify the beginning of our example a bit. Because
+        we no longer need an environment home directory, we can remove all
+        the code that we used to determine path delimiters
+        and include the <code class="function">getopt</code> function. We can also
+        remove our <code class="function">usage()</code> function because we no
+        longer require any command line arguments. 
+    </p>
+      <pre class="programlisting">/* File: txn_guide_inmemory.c */
+
+/* We assume an ANSI-compatible compiler */
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;pthread.h&gt;
+#include &lt;db.h&gt;
+
+/* Run 5 writers threads at a time. */
+#define NUMWRITERS 5
+
+/*
+ * Printing of pthread_t is implementation-specific, so we
+ * create our own thread IDs for reporting purposes.
+ */
+int global_thread_num;
+pthread_mutex_t thread_num_lock;
+
+/* Forward declarations */
+int count_records(DB *, DB_TXN *);
+int open_db(DB **, const char *, const char *, DB_ENV *, u_int32_t);
+int writer_thread(void *);  </pre>
+      <p>
+    Next, in our <code class="function">main()</code>, we also eliminate some
+    variables that this example no longer needs. In particular, we are able to remove
+    the 
+        <code class="literal">db_home_dir</code> 
+         
+    and 
+        <code class="literal">file_name</code>
+        
+    variables. We also remove all our <code class="function">getopt</code> code.
+</p>
+      <pre class="programlisting">int
+main(void)
+{
+    /* Initialize our handles */
+    DB *dbp = NULL;
+    DB_ENV *envp = NULL;
+
+    pthread_t writer_threads[NUMWRITERS];
+    int i, ret, ret_t;
+    u_int32_t env_flags;
+
+    /* Application name */
+    const char *prog_name = "txn_guide_inmemory";  </pre>
+      <p>
+        Next we create our environment as always. However, we add
+        <code class="literal">DB_PRIVATE</code> to our environment open flags. This
+        flag causes our environment to back regions using our
+        application's heap memory rather than by using the filesystem.
+        This is the first important step to keeping our DB data
+        entirely in-memory.
+    </p>
+      <p>
+        We also remove the <code class="literal">DB_RECOVER</code> flag from the environment open flags. Because our databases,
+        logs, and regions are maintained in-memory, there will never be anything to recover.
+    </p>
+      <p>
+        Note that we show the additional code here in
+        <strong class="userinput"><code>bold.</code></strong>
+    </p>
+      <pre class="programlisting">    /* Create the environment */
+    ret = db_env_create(&amp;envp, 0);
+    if (ret != 0) {
+        fprintf(stderr, "Error creating environment handle: %s\n",
+            db_strerror(ret));
+        goto err;
+    }
+
+    env_flags =
+      DB_CREATE     |  /* Create the environment if it does not exist */ 
+      DB_INIT_LOCK  |  /* Initialize the locking subsystem */
+      DB_INIT_LOG   |  /* Initialize the logging subsystem */
+      DB_INIT_TXN   |  /* Initialize the transactional subsystem. This
+                        * also turns on logging. */
+      DB_INIT_MPOOL |  /* Initialize the memory pool (in-memory cache) */
+      <strong class="userinput"><code>DB_PRIVATE    |  /* Region files are not backed by the filesystem. 
+                        * Instead, they are backed by heap memory.  */</code></strong>
+      DB_THREAD;       /* Cause the environment to be free-threaded */ </pre>
+      <p>
+        Now we configure our environment to keep the log files in memory,
+        increase the log buffer size to 10 MB, and increase our in-memory
+        cache to 10 MB. These values should be more than enough for our
+        application's workload.
+      </p>
+      <pre class="programlisting">
+        <strong class="userinput">
+          <code>    /* Specify in-memory logging */
+    ret = envp-&gt;log_set_config(envp, DB_LOG_IN_MEMORY, 1);
+    if (ret != 0) {
+        fprintf(stderr, "Error setting log subsystem to in-memory: %s\n",
+            db_strerror(ret));
+        goto err;
+    }
+
+    /* 
+     * Specify the size of the in-memory log buffer. 
+     */
+    ret = envp-&gt;set_lg_bsize(envp, 10 * 1024 * 1024);
+    if (ret != 0) {
+        fprintf(stderr, "Error increasing the log buffer size: %s\n",
+            db_strerror(ret));
+        goto err;
+    }
+
+    /* 
+     * Specify the size of the in-memory cache. 
+     */
+    ret = envp-&gt;set_cachesize(envp, 0, 
+        10 * 1024 * 1024, 1);
+    if (ret != 0) {
+        fprintf(stderr, "Error increasing the cache size: %s\n",
+            db_strerror(ret));
+        goto err;
+    }</code>
+        </strong>
+      </pre>
+      <p>
+    Next, we open the environment and setup our lock detection. This is
+    identical to how the example previously worked, except that we do not
+    provide a location for the environment's home directory.
+ </p>
+      <pre class="programlisting">    /*
+     * Indicate that we want db to perform lock detection internally.
+     * Also indicate that the transaction with the fewest number of
+     * write locks will receive the deadlock notification in 
+     * the event of a deadlock.
+     */  
+    ret = envp-&gt;set_lk_detect(envp, DB_LOCK_MINWRITE);
+    if (ret != 0) {
+        fprintf(stderr, "Error setting lock detect: %s\n",
+            db_strerror(ret));
+        goto err;
+    } 
+
+    /* Now actually open the environment */
+    ret = envp-&gt;open(envp, <strong class="userinput"><code>NULL</code></strong>, env_flags, 0);
+    if (ret != 0) {
+        fprintf(stderr, "Error opening environment: %s\n",
+            db_strerror(ret));
+        goto err;
+    } </pre>
+      <p>
+        When we call 
+            <span><code class="function">open_db()</code>,</span> 
+             
+        which is what we use
+        to open our database, we no not provide a database filename for the
+        third parameter. When the filename is <code class="literal">NULL</code>, the database is not
+        backed by the filesystem.
+    </p>
+      <pre class="programlisting">    /*
+     * If we had utility threads (for running checkpoints or 
+     * deadlock detection, for example) we would spawn those
+     * here. However, for a simple example such as this,
+     * that is not required.
+     */
+
+    /* Open the database */
+    ret = open_db(&amp;dbp, prog_name, <strong class="userinput"><code>NULL</code></strong>, 
+      envp, DB_DUPSORT);
+    if (ret != 0)
+        goto err; </pre>
+      <p>
+    After that, our <code class="function">main()</code> function is unchanged,
+    except that when we 
+        <span>close the database,</span>
+        
+    we change the error message string so as to not reference the database filename.
+  </p>
+      <pre class="programlisting">    /* Initialize a pthread mutex. Used to help provide thread ids. */
+    (void)pthread_mutex_init(&amp;thread_num_lock, NULL);
+
+    /* Start the writer threads. */
+    for (i = 0; i &lt; NUMWRITERS; i++)
+        (void)pthread_create(
+      &amp;writer_threads[i], NULL, (void *)writer_thread, (void *)dbp);
+
+    /* Join the writers */
+    for (i = 0; i &lt; NUMWRITERS; i++)
+        (void)pthread_join(writer_threads[i], NULL);
+
+err:
+    /* Close our database handle, if it was opened. */
+    if (dbp != NULL) {
+        ret_t = dbp-&gt;close(dbp, 0);
+        if (ret_t != 0) {
+            <strong class="userinput"><code>fprintf(stderr, "%s database close failed.\n",
+                db_strerror(ret_t));</code></strong>
+            ret = ret_t;
+        }
+    }
+
+    /* Close our environment, if it was opened. */
+    if (envp != NULL) {
+        ret_t = envp-&gt;close(envp, 0);
+        if (ret_t != 0) {
+            fprintf(stderr, "environment close failed: %s\n",
+                db_strerror(ret_t));
+                ret = ret_t;
+        }
+    }
+
+    /* Final status message and return. */
+    printf("I'm all done.\n");
+    return (ret == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
+} </pre>
+      <p>
+        That completes <code class="function">main()</code>. The bulk of our 
+        <code class="function">writer_thread()</code> function implementation is
+        unchanged from the initial transaction example, except that we no
+        longer check for <code class="literal">DB_KEYEXISTS</code> in our 
+        <code class="methodname">DB-&gt;put()</code> return code. Because we are
+        configuring for a completely in-memory database, there is no
+        possibility that we can run this code against an existing database.
+        Therefore, there is no way that <code class="literal">DB_KEYEXISTS</code>
+        will be returned by <code class="methodname">DB-&gt;put()</code>.
+    </p>
+      <pre class="programlisting">/* 
+ * A function that performs a series of writes to a
+ * Berkeley DB database. The information written
+ * to the database is largely nonsensical, but the
+ * mechanism of transactional commit/abort and
+ * deadlock detection is illustrated here.
+ */
+int
+writer_thread(void *args)
+{
+    DBT key, value;
+    DB_TXN *txn;
+    int i, j, payload, ret, thread_num;
+    int retry_count, max_retries = 20;   /* Max retry on a deadlock */
+    char *key_strings[] = {"key 1", "key 2", "key 3", "key 4",
+                           "key 5", "key 6", "key 7", "key 8",
+                           "key 9", "key 10"};
+
+    DB *dbp = (DB *)args;
+    DB_ENV *envp = dbp-&gt;get_env(dbp);
+
+    /* Get the thread number */
+    (void)pthread_mutex_lock(&amp;thread_num_lock);
+    global_thread_num++;
+    thread_num = global_thread_num;
+    (void)pthread_mutex_unlock(&amp;thread_num_lock);
+
+    /* Initialize the random number generator */
+    srand((u_int)pthread_self());
+
+    /* Write 50 times and then quit */
+    for (i = 0; i &lt; 50; i++) {
+        retry_count = 0; /* Used for deadlock retries */
+
+retry:
+        ret = envp-&gt;txn_begin(envp, NULL, &amp;txn, 0);
+        if (ret != 0) {
+            envp-&gt;err(envp, ret, "txn_begin failed");
+            return (EXIT_FAILURE);
+        }
+        for (j = 0; j &lt; 10; j++) {
+            /* Set up our key and values DBTs */
+            memset(&amp;key, 0, sizeof(DBT));
+            key.data = key_strings[j];
+            key.size = (strlen(key_strings[j]) + 1) * sizeof(char);
+
+            memset(&amp;value, 0, sizeof(DBT));
+            payload = rand() + i;
+            value.data = &amp;payload;
+            value.size = sizeof(int);
+
+            /* Perform the database put. */
+            switch (ret = dbp-&gt;put(dbp, txn, &amp;key, &amp;value, 0)) {
+                case 0:
+                    break;
+
+                /*
+                 * Here's where we perform deadlock detection. If 
+                 * DB_LOCK_DEADLOCK is returned by the put operation, 
+                 * then this thread has been chosen to break a deadlock.
+                 * It must abort its operation, and optionally retry the
+                 * put.
+                 */
+                case DB_LOCK_DEADLOCK:
+                    /* 
+                     * First that we MUST do is abort the 
+                     * transaction.
+                     */
+                    (void)txn-&gt;abort(txn);
+                    /*
+                     * Now we decide if we want to retry the operation.
+                     * If we have retried less than max_retries,
+                     * increment the retry count and goto retry.
+                     */
+                    if (retry_count &lt; max_retries) {
+                        printf("Writer %i: Got DB_LOCK_DEADLOCK.\n", 
+                            thread_num);
+                        printf("Writer %i: Retrying write operation.\n",
+                            thread_num);
+                        retry_count++;
+                        goto retry;
+                    }
+                    /*
+                     * Otherwise, just give up.
+                     */
+                    printf("Writer %i: ", thread_num);
+                    printf("Got DB_LOCK_DEADLOCK and out of retries.\n");
+                    printf("Writer %i: Giving up.\n", thread_num);
+                    return (EXIT_FAILURE);
+                /* 
+                 * If a generic error occurs, we simply abort the 
+                 * transaction and exit the thread completely.
+                 */
+                default:
+                    envp-&gt;err(envp, ret, "db put failed");
+                    ret = txn-&gt;abort(txn);
+                    if (ret != 0)
+                        envp-&gt;err(envp, ret, "txn abort failed");
+                    return (EXIT_FAILURE);
+             } /** End case statement **/
+
+        }   /** End for loop **/  </pre>
+      <p>
+            The only other change to <code class="function">writer_thread()</code>
+            is that we pass <code class="function">count_records()</code> a
+            transaction handle, rather than configuring our entire
+            application for uncommitted reads. Both mechanisms work well-enough
+            for preventing a self-deadlock. However, the individual count
+            in this example will tend to be lower than the counts seen in
+            the previous transaction example, because
+            <code class="function">count_records()</code> can no longer see records
+            created but not yet committed by other threads.
+        </p>
+      <pre class="programlisting">        /* 
+         * print the number of records found in the database. 
+         * See count_records() for usage information.
+         */
+        printf("Thread %i. Record count: %i\n", thread_num, 
+            count_records(dbp, <strong class="userinput"><code>txn</code></strong>));
+
+        /* 
+         * If all goes well, we can commit the transaction and
+         * loop to the next transaction.
+         */
+        ret = txn-&gt;commit(txn, 0);
+        if (ret != 0) {
+            envp-&gt;err(envp, ret, "txn commit failed");
+            return (EXIT_FAILURE);
+        }
+    }
+    return (EXIT_SUCCESS);
+} </pre>
+      <p>
+    Next we update 
+        <span><code class="function">count_records()</code>.</span>
+        
+    The only difference
+    here is that we no longer specify <code class="literal">DB_READ_UNCOMMITTED</code> when
+    we open our cursor. Note that even this minor change is not required.
+    If we do not configure our database to support uncommitted reads,
+    <code class="literal">DB_READ_UNCOMMITTED</code> on the cursor open will be silently
+    ignored. However, we remove the flag anyway from the cursor open so as to
+    avoid confusion.
+</p>
+      <pre class="programlisting">int
+count_records(DB *dbp, DB_TXN *txn)
+{
+    DBT key, value;
+    DBC *cursorp;
+    int count, ret;
+
+    cursorp = NULL;
+    count = 0;
+
+    /* Get the cursor */
+    ret = dbp-&gt;cursor(dbp, txn, &amp;cursorp, <strong class="userinput"><code>0</code></strong>);
+    if (ret != 0) {
+        dbp-&gt;err(dbp, ret, "count_records: cursor open failed.");
+        goto cursor_err;
+    }
+
+    /* Get the key DBT used for the database read */
+    memset(&amp;key, 0, sizeof(DBT));
+    memset(&amp;value, 0, sizeof(DBT));
+    do {
+        ret = cursorp-&gt;get(cursorp, &amp;key, &amp;value, DB_NEXT);
+        switch (ret) {
+            case 0:
+                count++;
+                break;
+            case DB_NOTFOUND:
+                break;
+            default:
+                dbp-&gt;err(envp, ret, 
+                    "Count records unspecified error");
+                goto cursor_err;
+        }
+    } while (ret == 0);
+
+cursor_err:
+    if (cursorp != NULL) {
+        ret = cursorp-&gt;close(cursorp);
+        if (ret != 0) {
+            dbp-&gt;err(dbp, ret,
+                "count_records: cursor close failed.");
+        }
+    }
+
+    return (count);
+}</pre>
+      <p>
+        Finally, we update 
+            <span><code class="function">open_db()</code>.</span> 
+             
+        This involves
+        removing <code class="literal">DB_READ_UNCOMMITTED</code> from the
+        open flags. 
+
+        <span>We are also careful to change our database open error
+        message to no longer use the <code class="literal">file_name</code> 
+        variable because that value will always be <code class="literal">NULL</code> for this example.</span>
+    </p>
+      <pre class="programlisting">/* Open a Berkeley DB database */
+int
+open_db(DB **dbpp, const char *progname, const char *file_name,
+  DB_ENV *envp, u_int32_t extra_flags)
+{
+    int ret;
+    u_int32_t open_flags;
+    DB *dbp;
+
+    /* Initialize the DB handle */
+    ret = db_create(&amp;dbp, envp, 0);
+    if (ret != 0) {
+        fprintf(stderr, "%s: %s\n", progname,
+                db_strerror(ret));
+        return (EXIT_FAILURE);
+    }
+
+    /* Point to the memory malloc'd by db_create() */
+    *dbpp = dbp;
+
+    if (extra_flags != 0) {
+        ret = dbp-&gt;set_flags(dbp, extra_flags);
+        if (ret != 0) {
+            dbp-&gt;err(dbp, ret, 
+                "open_db: Attempt to set extra flags failed.");
+            return (EXIT_FAILURE);
+        }
+    }
+
+    /* Now open the database */
+    <strong class="userinput"><code>open_flags = DB_CREATE        | /* Allow database creation */ 
+                 DB_THREAD        |        
+                 DB_AUTO_COMMIT;    /* Allow auto commit */</code></strong>
+
+    ret = dbp-&gt;open(dbp,        /* Pointer to the database */
+                    NULL,       /* Txn pointer */
+                    file_name,  /* File name */
+                    NULL,       /* Logical db name */
+                    DB_BTREE,   /* Database type (using btree) */
+                    open_flags, /* Open flags */
+                    0);         /* File mode. Using defaults */
+    if (ret != 0) {
+        <strong class="userinput"><code>dbp-&gt;err(dbp, ret, "Database  open failed");
+        return (EXIT_FAILURE);</code></strong>
+    }
+    return (EXIT_SUCCESS);
+} </pre>
+      <p>
+    This completes our in-memory transactional example. If you would like to
+    experiment with this code, you can find the example in the following
+    location in your DB distribution:
+</p>
+      <pre class="programlisting"><span class="emphasis"><em>DB_INSTALL</em></span>/examples_c/txn_guide</pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="txnexample_c.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="wrapup.html">Up</a>
+          </td>
+          <td width="40%" align="right"> </td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Transaction Example </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

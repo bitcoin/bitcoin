@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 8. Database Records</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="baseapi.html" title="Part II. Programming with the Base API" />
+    <link rel="prev" href="CoreJavaUsage.html" title="Database Example" />
+    <link rel="next" href="usingDbt.html" title="Reading and Writing Database Records" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 8. Database Records</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="CoreJavaUsage.html">Prev</a> </td>
+          <th width="60%" align="center">Part II. Programming with the Base API</th>
+          <td width="20%" align="right"> <a accesskey="n" href="usingDbt.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="DBEntry"></a>Chapter 8. Database Records</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="DBEntry.html#usingDbEntry">Using Database Records</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="usingDbt.html">Reading and Writing Database Records</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="usingDbt.html#databaseWrite">Writing Records to the Database</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="usingDbt.html#databaseRead">Getting Records from the Database</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="usingDbt.html#recordDelete">Deleting Records</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="usingDbt.html#datapersist">Data Persistence</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <span class="sect1">
+              <a href="bindAPI.html">Using the BIND APIs</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="bindAPI.html#bindPrimitive">Numerical and String Objects</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="bindAPI.html#object2dbt">Serializable Complex Objects</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="bindAPI.html#customTuple">Custom Tuple Bindings</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <span class="sect1">
+              <a href="dbtJavaUsage.html">Database Usage Example</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+      DB records contain two parts — a key and some data. Both the key
+    and its corresponding data are 
+      encapsulated in
+          <span><code class="classname">DatabaseEntry</code> class objects.</span> 
+           
+           
+    Therefore, to access a DB record, you need two such
+        
+        <span>objects,</span> one for the key and
+        one for the data.
+  </p>
+      <p>
+    <code class="classname">DatabaseEntry</code> can hold any kind of data from simple
+    Java primitive types to complex Java objects so long as that data can be
+    represented as a Java <code class="literal">byte</code> array. Note that due to
+    performance considerations, you should not use Java serialization to convert
+    a Java object to a <code class="literal">byte</code> array. Instead, use the Bind APIs
+    to perform this conversion (see 
+    <a class="xref" href="bindAPI.html" title="Using the BIND APIs">Using the BIND APIs</a> for more
+    information).
+  </p>
+      <p>
+    This chapter describes how you can convert both Java primitives and Java
+    class objects into and out of <code class="literal">byte</code> arrays. It also
+    introduces storing and retrieving key/value pairs from a database. In
+    addition, this chapter describes how you can use comparators to influence
+    how DB sorts its database records.
+  </p>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="usingDbEntry"></a>Using Database Records</h2>
+            </div>
+          </div>
+        </div>
+        <p>
+        Each database record is comprised of two 
+        <span><code class="classname">DatabaseEntry</code> objects</span>
+        
+        
+        — one for the key and another for the data. 
+
+        <span>The key and data information are passed to-
+        and returned from DB using
+        <code class="classname">DatabaseEntry</code> objects as <code class="literal">byte</code>
+        arrays. Using <code class="classname">DatabaseEntry</code>s allows DB to
+        change the underlying byte array as well as return multiple values (that
+        is, key and data).  Therefore, using <code class="classname">DatabaseEntry</code> instances
+        is mostly an exercise in efficiently moving your keys and your data in
+        and out of <code class="literal">byte</code> arrays.</span>
+    </p>
+        <p>
+        For example, to store a database record where both the key and the
+        data are Java <code class="classname">String</code> objects, you instantiate a
+        pair of <code class="classname">DatabaseEntry</code> objects:
+    </p>
+        <a id="java_dbt1"></a>
+        <pre class="programlisting">package db.GettingStarted;
+
+import com.sleepycat.db.DatabaseEntry;
+
+...
+
+String aKey = "key";
+String aData = "data";
+
+try {
+    DatabaseEntry theKey = new DatabaseEntry(aKey.getBytes("UTF-8"));
+    DatabaseEntry theData = new DatabaseEntry(aData.getBytes("UTF-8"));
+} catch (Exception e) {
+    // Exception handling goes here
+}
+
+    // Storing the record is described later in this chapter </pre>
+        <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+          <h3 class="title">Note</h3>
+          <p>
+            Notice that we specify <code class="literal">UTF-8</code> when we retrieve the
+            <code class="literal">byte</code> array from our <code class="classname">String</code>
+            object. Without parameters, <code class="methodname">String.getBytes()</code> uses the
+            Java system's default encoding. You should never use a system's default
+            encoding when storing data in a database because the encoding can change.
+        </p>
+        </div>
+        <p>
+        When the record is retrieved from the database, the method that you
+        use to perform this operation populates two <code class="classname">DatabaseEntry</code>
+        instances for you, one for the key and another for the data. Assuming Java
+        <code class="classname">String</code> objects, you retrieve your data from the
+        <code class="classname">DatabaseEntry</code> as follows:
+    </p>
+        <a id="java_dbt2"></a>
+        <pre class="programlisting">package db.GettingStarted;
+
+import com.sleepycat.db.DatabaseEntry;
+
+...
+
+// theKey and theData are DatabaseEntry objects. Database
+// retrieval is described later in this chapter. For now, 
+// we assume some database get method has populated these
+// objects for us.
+
+// Use DatabaseEntry.getData() to retrieve the encapsulated Java
+// byte array.
+
+byte[] myKey = theKey.getData();
+byte[] myData = theData.getData();
+
+String key = new String(myKey, "UTF-8");
+String data = new String(myData, "UTF-8"); </pre>
+        <p>
+        There are a large number of mechanisms that you can use to move data in
+        and out of <code class="literal">byte</code> arrays. To help you with this
+        activity, DB provides the bind APIs. These APIs allow you to
+        efficiently store both primitive data types and complex objects in
+        <code class="literal">byte</code> arrays.
+    </p>
+        <p>
+        The next section describes basic database put and get operations. A
+        basic understanding of database access is useful when describing database
+        storage of more complex data such as is supported by the bind APIs. Basic
+        bind API usage is then described in <a class="xref" href="bindAPI.html" title="Using the BIND APIs">Using the BIND APIs</a>.
+    </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="CoreJavaUsage.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="baseapi.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="usingDbt.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Database Example </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Reading and Writing Database Records</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Reading Secondary Databases</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="indexes.html" title="Chapter 5. Secondary Databases" />
+    <link rel="prev" href="keyCreator.html" title="Implementing Key Extractors" />
+    <link rel="next" href="secondaryDelete.html" title="Deleting Secondary Database Records" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Reading Secondary Databases</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="keyCreator.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. Secondary Databases</th>
+          <td width="20%" align="right"> <a accesskey="n" href="secondaryDelete.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="readSecondary"></a>Reading Secondary Databases</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+        Like a primary database, you can read records from your secondary
+        database either by using the 
+            
+            <span>
+                <code class="methodname">DB-&gt;get()</code>
+                
+                or
+                <code class="methodname">DB-&gt;pget()</code>
+                
+            methods, 
+            </span>
+        or by using  
+             
+            <span>a cursor on the secondary database.</span> 
+            
+        The main difference between reading secondary and primary databases is that when
+        you read a secondary database record, the secondary record's data is not
+        returned to you. Instead, the primary key and data corresponding to the
+        secondary key are returned to you.
+    </p>
+      <p>
+        For example, assuming your secondary database contains keys related
+         to a person's full name:
+    </p>
+      <a id="c_index6"></a>
+      <pre class="programlisting">#include &lt;db.h&gt;
+#include &lt;string.h&gt;
+
+...
+
+DB *my_secondary_database;
+DBT key; /* Used for the search key */
+DBT pkey, pdata; /* Used to return the primary key and data */
+char *search_name = "John Doe";
+
+/* Primary and secondary database opens omitted for brevity */
+                                                                                                                                     
+/* Zero out the DBTs before using them. */
+memset(&amp;key, 0, sizeof(DBT));
+memset(&amp;pkey, 0, sizeof(DBT));
+memset(&amp;pdata, 0, sizeof(DBT));
+                                                                                                                                     
+key.data = search_name;
+key.size = strlen(search_name) + 1;
+                                                                                                                                     
+/* Returns the key from the secondary database, and the data from the 
+ * associated primary database entry.
+ */
+my_secondary_database-&gt;get(my_secondary_database, NULL, 
+  &amp;key, &amp;pdata, 0);
+
+/* Returns the key from the secondary database, and the key and data 
+ * from the associated primary database entry.
+ */
+my_secondary_database-&gt;pget(my_secondary_database, NULL, 
+  &amp;key, &amp;pkey, &amp;pdata, 0); </pre>
+      <p>
+        Note that, just like 
+            
+            <span>a primary database,</span>
+            
+        if your secondary database supports duplicate records then
+             
+            <span>
+                <code class="methodname">DB-&gt;get()</code> 
+                 
+                and
+                <code class="methodname">DB-&gt;pget()</code> 
+                 
+            </span>
+        only return the first record found in a matching duplicates set. If you 
+        want to see all the records related to a specific secondary key, then use a
+            
+            <span>
+                cursor opened on the secondary database. Cursors are described in 
+                <a class="xref" href="Cursors.html" title="Chapter 4. Using Cursors">Using Cursors</a>.
+            </span>
+     </p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="keyCreator.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="indexes.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="secondaryDelete.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Implementing Key 
+        
+        <span>Extractors</span>
+         </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Deleting Secondary Database Records</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

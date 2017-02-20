@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Nested Transactions</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB Transaction Processing" />
+    <link rel="up" href="usingtxns.html" title="Chapter 3. Transaction Basics" />
+    <link rel="prev" href="autocommit.html" title="Auto Commit" />
+    <link rel="next" href="txncursor.html" title="Transactional Cursors" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Nested Transactions</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="autocommit.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. Transaction Basics</th>
+          <td width="20%" align="right"> <a accesskey="n" href="txncursor.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="nestedtxn"></a>Nested Transactions</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+            A <span class="emphasis"><em>nested transaction</em></span> is used to provide a
+            transactional guarantee for a subset of operations performed within
+            the scope of a larger transaction. Doing this allows you to commit
+            and abort the subset of operations independently of the larger
+            transaction. 
+        </p>
+      <p>
+            The rules to the usage of a nested transaction are as follows:
+        </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                    While the nested (child) transaction is active, the parent
+                    transaction may not perform any operations other than to commit
+                    or abort, or to create more child transactions.
+                </p>
+          </li>
+          <li>
+            <p>
+                    Committing a nested transaction has no effect on the state
+                    of the parent transaction. The parent transaction is still
+                    uncommitted. However, the parent transaction can now
+                    see any modifications made by the child transaction.
+                    Those modifications, of course, are still hidden to all
+                    other transactions until the parent also commits.
+                </p>
+          </li>
+          <li>
+            <p>
+                    Likewise, aborting the nested transaction has no effect on
+                    the state of the parent transaction. The only result of the
+                    abort is that neither the parent nor any
+                    other transactions will see any of the
+                    database modifications performed under the protection of the
+                    nested transaction.
+                </p>
+          </li>
+          <li>
+            <p>
+                    If the parent transaction commits or aborts while it has
+                    active children, the child transactions are resolved in the
+                    same way as the parent. That is, if the parent aborts, then
+                    the child transactions abort as well. If the parent commits,
+                    then whatever modifications have been performed by the child
+                    transactions are also committed. 
+                </p>
+          </li>
+          <li>
+            <p>
+                    The locks held by a nested transaction are not released when
+                    that transaction commits. Rather, they are now held by the
+                    parent transaction until such a time as that parent commits.
+                </p>
+          </li>
+          <li>
+            <p>
+                    Any database modifications performed by the nested transaction
+                    are not visible outside of the larger encompassing
+                    transaction until such a time as that parent transaction is
+                    committed. 
+                </p>
+          </li>
+          <li>
+            <p>
+                    The depth of the nesting that you can achieve with nested
+                    transaction is limited only by memory.
+                </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+            To create a nested transaction, simply pass the parent transaction's
+            handle when you created the nested transaction's handle. For
+            example:
+        </p>
+      <pre class="programlisting">    // parent transaction
+    DbTxn *parentTxn, *childTxn;
+    ret = myEnv.txn_begin(NULL, &amp;parentTxn, 0);
+    // child transaction
+    ret = myEnv.txn_begin(parent_txn, &amp;childTxn, 0); </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="autocommit.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="usingtxns.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="txncursor.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Auto Commit </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Transactional Cursors</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

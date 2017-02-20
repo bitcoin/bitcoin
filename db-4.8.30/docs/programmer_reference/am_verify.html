@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Database verification and salvage</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="am.html" title="Chapter 3.  Access Method Operations" />
+    <link rel="prev" href="am_upgrade.html" title="Database upgrade" />
+    <link rel="next" href="am_sync.html" title="Flushing the database cache" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Database verification and salvage</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="am_upgrade.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. 
+        Access Method Operations
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="am_sync.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="am_verify"></a>Database verification and salvage</h2>
+          </div>
+        </div>
+      </div>
+      <p>The <a href="../api_reference/C/dbverify.html" class="olink">DB-&gt;verify()</a> method verifies that a file, and any databases it may
+contain, are uncorrupted.  In addition, the method may optionally be
+called with a file stream argument to which all key/data pairs found in
+the database are output.  There are two modes for finding key/data pairs
+to be output:</p>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>If the <a href="../api_reference/C/dbverify.html#verify_DB_SALVAGE" class="olink">DB_SALVAGE</a> flag is specified, the key/data pairs in the
+database are output.  When run in this mode, the database is assumed to
+be largely uncorrupted. For example, the <a href="../api_reference/C/dbverify.html" class="olink">DB-&gt;verify()</a> method will
+search for pages that are no longer linked into the database, and will
+output key/data pairs from such pages.  However, key/data items that
+have been marked as deleted in the database will not be output, as the
+page structures are generally trusted in this mode.</li>
+          <li>If both the <a href="../api_reference/C/dbverify.html#verify_DB_SALVAGE" class="olink">DB_SALVAGE</a>  and <a href="../api_reference/C/dbverify.html#verify_DB_AGGRESSIVE" class="olink">DB_AGGRESSIVE</a> flags are
+specified, all possible key/data pairs are output.  When run in this mode,
+the database is assumed to be seriously corrupted.  For example, key/data
+pairs that have been deleted will re-appear in the output.  In addition,
+because pages may have been subsequently reused and modified during
+normal database operations after the key/data pairs were deleted, it is
+not uncommon for apparently corrupted key/data pairs to be output in this
+mode, even when there is no corruption in the underlying database.  The
+output will almost always have to be edited by hand or other means before
+the data is ready for reload into another database.  We recommend that
+<a href="../api_reference/C/dbverify.html#verify_DB_SALVAGE" class="olink">DB_SALVAGE</a> be tried first, and <a href="../api_reference/C/dbverify.html#verify_DB_AGGRESSIVE" class="olink">DB_AGGRESSIVE</a> only tried
+if the output from that first attempt is obviously missing data items or
+the data is sufficiently valuable that human review of the output is
+preferable to any kind of data loss.</li>
+        </ol>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="am_upgrade.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="am.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="am_sync.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Database upgrade </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Flushing the database cache</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

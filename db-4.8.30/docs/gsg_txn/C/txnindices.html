@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Secondary Indices with Transaction Applications</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB Transaction Processing" />
+    <link rel="up" href="usingtxns.html" title="Chapter 3. Transaction Basics" />
+    <link rel="prev" href="txncursor.html" title="Transactional Cursors" />
+    <link rel="next" href="maxtxns.html" title="Configuring the Transaction Subsystem" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Secondary Indices with Transaction Applications</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="txncursor.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. Transaction Basics</th>
+          <td width="20%" align="right"> <a accesskey="n" href="maxtxns.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="txnindices"></a>Secondary Indices with Transaction Applications</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+            You can use transactions with your secondary indices so long as you
+
+            <span>
+                open the secondary index so that it supports transactions (that is,
+                you wrap the database open in a transaction, or use auto commit,
+                in the same way as when you open a primary transactional database).
+            </span>
+
+            
+                
+            <span>
+                In addition, you must make sure that when you associate the
+                secondary index with the primary database, the association is
+                performed using a transaction. The easiest thing to do here is
+                to simply specify <code class="literal">DB_AUTO_COMMIT</code> when you
+                perform the association.
+            </span>
+        </p>
+      <p>
+            All other aspects of using secondary indices with transactions are
+            identical to using secondary indices without transactions. In
+            addition, transaction-protecting 
+                <span>
+                    cursors opened against secondary indices is performed in
+                    exactly the same way as when you use transactional cursors
+                    against a primary database. 
+                </span>
+                
+                    See <a class="xref" href="txncursor.html" title="Transactional Cursors">Transactional Cursors</a> for details.
+        </p>
+      <p>
+            Note that when you use transactions to protect your database writes, your secondary indices are protected from
+            corruption because updates to the primary and the secondaries are performed in a single atomic transaction.
+        </p>
+      <p>
+            For example:
+        </p>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+...
+
+DB_ENV *envp;      /* Environment pointer */
+DB *dbp, *sdbp;    /* Primary and secondary DB handles */
+u_int32_t flags;   /* Primary database open flags */
+int ret;           /* Function return value */
+
+/* Environment and primary database opens omitted */
+
+/* Secondary */
+ret = db_create(&amp;sdbp, envp, 0);
+if (ret != 0) {
+  /* Error handling goes here */
+}
+/* open the secondary database */
+ret = sdbp-&gt;open(sdbp,          /* DB structure pointer */
+                 NULL,            /* Transaction pointer */
+                 "my_secdb.db",   /* On-disk file that holds the database. */
+                 NULL,            /* Optional logical database name */
+                 DB_BTREE,        /* Database access method */
+                 DB_AUTO_COMMIT,  /* Open flags */
+                 0);              /* File mode (using defaults) */
+if (ret != 0) {
+  /* Error handling goes here */
+}
+
+/* Now associate the secondary to the primary */
+dbp-&gt;associate(dbp,            /* Primary database */
+               NULL,           /* TXN id */
+               sdbp,           /* Secondary database */
+               get_sales_rep,  /* Callback used for key creation. This
+                                * is described in the Getting Started
+                                * guide. */
+               DB_AUTO_COMMIT);/* Flags */</pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="txncursor.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="usingtxns.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="maxtxns.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Transactional Cursors </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Configuring the Transaction Subsystem</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

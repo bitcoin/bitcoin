@@ -1,0 +1,596 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Program Listing</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Replicated Berkeley DB Applications" />
+    <link rel="up" href="txnapp.html" title="Chapter 2. Transactional Application" />
+    <link rel="prev" href="txnapp.html" title="Chapter 2. Transactional Application" />
+    <link rel="next" href="repapp.html" title="Chapter 3. The DB Replication Manager" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Program Listing</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="txnapp.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. Transactional Application</th>
+          <td width="20%" align="right"> <a accesskey="n" href="repapp.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="simpleprogramlisting"></a>Program Listing</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="simpleprogramlisting.html#repconfiginfo_cxx">
+                            
+                            <span>Class: RepConfig</span>
+                    </a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="simpleprogramlisting.html#simpletxnusage_java">Class: SimpleTxn</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="simpleprogramlisting.html#simpletxnmain_java">Method: SimpleTxn.main()</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="simpleprogramlisting.html#simpletxn_init_java">Method: SimpleTxn.init()</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="simpleprogramlisting.html#doloop_java">Method: SimpleTxn.doloop()</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="simpleprogramlisting.html#printstocks_c">
+                            
+                            
+                            <span>Method: SimpleTxn.printStocks()</span>
+                    </a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+                Our example program is a fairly simple transactional
+                application. At this early stage of its development, the
+                application contains no hint that it must be network-aware
+                so the only command line argument that it takes is one that
+                allows us to specify the environment home directory.
+                (Eventually, we will specify things like host names and
+                ports from the command line).
+            </p>
+      <p>
+                Note that the application performs all writes under the
+                protection of a transaction; however, multiple database
+                operations are not performed per transaction. Consequently,
+                we simplify things a bit by using autocommit for our 
+                database writes.
+            </p>
+      <p>
+                Also, this application is single-threaded. It is possible
+                to write a multi-threaded or multi-process application that 
+                performs replication. That said, the concepts described in
+                this book are applicable to both single threaded and
+                multi-threaded applications so nothing
+                is gained by multi-threading this application other than
+                distracting complexity. This manual
+                does, however, identify where care must be taken when
+                performing replication with a non-single threaded
+                application.
+            </p>
+      <p>
+                Finally, remember that transaction processing is not described in
+                this manual. Rather, see the 
+                <em class="citetitle">Berkeley DB Getting Started with Transaction Processing</em> guide for details on 
+                that topic.
+            </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="repconfiginfo_cxx"></a>
+                            
+                            <span>Class: RepConfig</span>
+                    </h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                            Before we begin, we present a 
+                            class that we will use to maintain useful
+                            information for us. Under normal circumstances,
+                            this class would not be necessary for a simple
+                            transactional example such as this. However, this code will
+                            grow into a replicated example that needs to
+                            track a lot more information for the
+                            application, and so we lay the groundwork for
+                            it here.
+                    </p>
+        <p>
+                            The class that we create is called
+                            
+                            <code class="classname">RepConfig</code>
+                            and its only purpose at this time is to track
+                            the location of our environment home directory.
+                    </p>
+        <pre class="programlisting">package db.repquote_gsg;
+
+public class RepConfig
+{
+    // Constant values used in the RepQuote application.
+    public static final String progname = "SimpleTxn";
+    public static final int CACHESIZE = 10 * 1024 * 1024;
+
+    // member variables containing configuration information
+    public String home; // String specifying the home directory for 
+                        // rep files.
+
+    public RepConfig()
+    {
+        home = "TESTDIR";
+    }
+
+    public java.io.File getHome()
+    {
+        return new java.io.File(home);
+    }
+
+}  </pre>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="simpletxnusage_java"></a>Class: SimpleTxn</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                            Our transactional example will 
+                            consist of a class,
+                            <code class="classname">SimpleTxn</code>, that performs
+                            all our work for us. 
+                    </p>
+        <p>
+                            First, we provide the package declaration and
+                            then a few import statements that the class
+                            needs.
+                    </p>
+        <pre class="programlisting">package db.repquote_gsg;
+
+import java.io.FileNotFoundException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+
+import com.sleepycat.db.Cursor;
+import com.sleepycat.db.Database;
+import com.sleepycat.db.DatabaseConfig;
+import com.sleepycat.db.DatabaseEntry;
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.DatabaseType;
+import com.sleepycat.db.Environment;
+import com.sleepycat.db.EnvironmentConfig;
+import com.sleepycat.db.LockMode;
+import com.sleepycat.db.OperationStatus;
+import db.repquote_gsg.RepConfig;
+
+public class SimpleTxn
+{
+    private RepConfig repConfig;
+    private Environment dbenv; </pre>
+        <p>
+        Next, we provide our class constructor. This simply initializes our
+        class data members.
+</p>
+        <pre class="programlisting">    public SimpleTxn()
+        throws DatabaseException
+    {
+        repConfig = null;
+        dbenv = null;
+    }  </pre>
+        <p>
+        And then we provide our <code class="methodname">usage()</code> method. At
+        this point, this method has very little to report:
+</p>
+        <pre class="programlisting">    public static void usage()
+    {
+        System.err.println("usage: " + repConfig.progname);
+        System.err.println("-h home");
+
+        System.err.println("\t -h home directory\n");
+
+        System.exit(1);
+    }  </pre>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="simpletxnmain_java"></a>Method: SimpleTxn.main()</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                            Having implemented our
+                            <code class="methodname">usage()</code>
+                            method, we can jump directly into our
+                            <code class="methodname">main()</code>
+                            method. This method begins by instantiating a
+                            <code class="classname">RepConfig</code> object, and
+                            then collecting the command line arguments so
+                            that it can populate the object with the
+                            appropriate data (just the environment home
+                            directory, at this time):
+                    </p>
+        <pre class="programlisting">    public static void main(String[] argv)
+        throws Exception
+    {
+        RepConfig config = new RepConfig();
+        // Extract the command line parameters
+        for (int i = 0; i &lt; argv.length; i++)
+        {
+            if (argv[i].compareTo("-h") == 0) {
+                // home - a string arg.
+                i++;
+                config.home = argv[i];
+            } else {
+                System.err.println("Unrecognized option: " + argv[i]);
+                usage();
+            }
+        }  </pre>
+        <p>
+        And then perform a little sanity checking on the command line
+        input:
+</p>
+        <pre class="programlisting">        // Error check command line.
+        if (config.home.length() == 0)
+            usage();  </pre>
+        <p>
+            Now we perform the class' work. To begin, we initialize the
+            object. The <code class="methodname">init()</code> method actually
+            opens our environment for us (shown in the next section).
+    </p>
+        <pre class="programlisting">        SimpleTxn runner = null;
+        try {
+            runner = new SimpleTxn();
+            runner.init(config);  </pre>
+        <p>
+            And then we call our <code class="methodname">doloop()</code>
+            method. This method is where we perform all our database
+            activity. See <a class="xref" href="simpleprogramlisting.html#doloop_java" title="Method: SimpleTxn.doloop()">Method: SimpleTxn.doloop()</a>
+            for it's details.
+    </p>
+        <pre class="programlisting">                    runner.doloop();  </pre>
+        <p>
+            And then, finally terminate the application (which closes our
+            environment handle) and end the method.
+    </p>
+        <pre class="programlisting">            runner.terminate();
+        } catch (DatabaseException dbe) {
+            System.err.println("Caught an exception during " +
+                "initialization or processing: " + dbe.toString());
+            if (runner != null)
+                runner.terminate();
+        }
+            System.exit(0);
+    } // end main  </pre>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="simpletxn_init_java"></a>Method: SimpleTxn.init()</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                        The <code class="methodname">SimpleTxn.init()</code>
+                        method is used to open our environment handle.
+                        For readers familiar with writing transactional
+                        DB applications, there should be no surprises
+                        here. However, we will be adding to this in later
+                        chapters as we roll replication into this example.
+                </p>
+        <p>
+        The only thing worth noting in this method here is that 
+        we relax our transactional durability guarantee for this application.
+        We do this because the application will eventually be replicated and
+        so we don't need a high durability guarantee.
+</p>
+        <pre class="programlisting">    public int init(RepConfig config)
+        throws DatabaseException
+    {
+        int ret = 0;
+        repConfig = config;
+        EnvironmentConfig envConfig = new EnvironmentConfig();
+        envConfig.setErrorStream(System.err);
+        envConfig.setErrorPrefix(RepConfig.progname);
+
+        envConfig.setCacheSize(RepConfig.CACHESIZE);
+        envConfig.setTxnNoSync(true);
+
+        envConfig.setAllowCreate(true);
+        envConfig.setRunRecovery(true);
+        envConfig.setInitializeLocking(true);
+        envConfig.setInitializeLogging(true);
+        envConfig.setInitializeCache(true);
+        envConfig.setTransactional(true);
+        try {
+            dbenv = new Environment(repConfig.getHome(), envConfig);
+        } catch(FileNotFoundException e) {
+            System.err.println("FileNotFound exception: " + e.toString());
+            System.err.println(
+                "Ensure that the environment directory is pre-created.");
+            ret = 1;
+        }
+
+        return ret;
+    }  </pre>
+        <p>
+        Finally, we present the <code class="methodname">SimpleTxn.terminate()</code>
+        method here. All this does is close the environment handle. Again,
+        there should be no surprises here, but we provide the
+        implementation for the sake of completeness anyway.
+</p>
+        <pre class="programlisting">    public void terminate()
+        throws DatabaseException
+    {
+            dbenv.close();
+    }  </pre>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="doloop_java"></a>Method: SimpleTxn.doloop()</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                        We now implement our application's
+                        primary data processing method. This
+                        method provides a command prompt at which the
+                        user can enter a stock ticker value and a price for
+                        that value. This information is then entered to the
+                        database.
+                    </p>
+        <p>
+                            To display the database, simply enter
+                            <code class="literal">return</code> at the prompt.
+                    </p>
+        <p>
+                        To begin, we declare a database pointer:
+                    </p>
+        <pre class="programlisting">    public int doloop()
+        throws DatabaseException, , UnsupportedEncodingException
+    {
+        Database db = null;  </pre>
+        <p>
+                    Next, we begin the loop and we immediately open our
+                    database if it has not already been opened. 
+                </p>
+        <pre class="programlisting">        for (;;)
+        {
+            if (db == null) {
+                DatabaseConfig dbconf = new DatabaseConfig();
+                dbconf.setType(DatabaseType.BTREE);
+                dbconf.setAllowCreate(true);
+                dbconf.setTransactional(true);
+
+                try {
+                    db = dbenv.openDatabase(null,           // Txn handle
+                                        RepConfig.progname, // db filename
+                                        null,               // db name
+                                        dbconf);
+               } catch (FileNotFoundException fnfe) {
+                 System.err.println("File not found exception" + fnfe.toString());
+                // Get here only if the environment home directory
+                // somehow does not exist.
+               }
+            }  </pre>
+        <p>
+            Now we implement our command prompt. This is a simple and not
+            very robust implementation of a command prompt.
+            If the user enters the keywords <code class="literal">exit</code>
+            or <code class="literal">quit</code>, the loop is exited and the
+            application ends. If the user enters nothing and instead simply
+            presses <code class="literal">return</code>, the entire contents of the
+            database is displayed. We use our
+            <code class="methodname">printStocks()</code> method to display the
+            database. (That implementation is shown next in this chapter.)
+        </p>
+        <p>
+           Notice that very little error checking is performed on the data
+           entered at this prompt.  If the user fails to enter at least one 
+            space in the value string, a simple help message is printed and
+            the prompt is returned to the user. That is the only error
+            checking performed here. In a real-world application,
+            at a minimum the application would probably check to ensure
+            that the price was in fact an integer or float value. 
+            However, in order to keep this example code as simple as
+            possible, we refrain from implementing a thorough user interface.
+        </p>
+        <pre class="programlisting">            BufferedReader stdin =
+                new BufferedReader(new InputStreamReader(System.in));
+
+            // listen for input, and add it to the database.
+            System.out.print("QUOTESERVER&gt; ");
+            System.out.flush();
+            String nextline = null;
+            try {
+                nextline = stdin.readLine();
+            } catch (IOException ioe) {
+                System.err.println("Unable to get data from stdin");
+                break;
+            }
+            String[] words = nextline.split("\\s");
+
+            // A blank line causes the DB to be dumped to stdout.
+            if (words.length == 0 ||
+                (words.length == 1 &amp;&amp; words[0].length() == 0)) {
+                try {
+                    printStocks(db);
+                } catch (DatabaseException e) {
+                    System.err.println("Got db exception reading " +
+                        "DB: " + e.toString());
+                    break;
+                }
+                continue;
+            }
+
+            if (words.length == 1 &amp;&amp;
+                (words[0].compareToIgnoreCase("quit") == 0 ||
+                words[0].compareToIgnoreCase("exit") == 0)) {
+                break;
+            } else if (words.length != 2) {
+                System.err.println("Format: TICKER VALUE");
+                continue;
+            }  </pre>
+        <p>
+                Now we assign data to the <code class="classname">DatabaseEntry</code> 
+                classes that we will use to write the new information to the database.
+            </p>
+        <pre class="programlisting">            DatabaseEntry key =
+                    new DatabaseEntry(words[0].getBytes("UTF-8"));
+            DatabaseEntry data =
+                    new DatabaseEntry(words[1].getBytes("UTF-8"));  </pre>
+        <p>
+                Having done that, we can write the new information to the
+                database. Remember that because a transaction handle is not
+                explicitly used, but we did open the database such that it
+                supports transactions, then autocommit is automatically
+                used for this database write.
+            </p>
+        <p>
+                    Autocommit is described in the 
+                    <em class="citetitle">Berkeley DB Getting Started with Transaction Processing</em> guide.
+                </p>
+        <p>
+                Also, the database is not configured for duplicate records, so
+                the data portion of a record is overwritten if the provided
+                key already exists in the database. However, in this case
+                DB returns <code class="methodname">OperationStatus.KEYEXIST</code> — which
+                we ignore.
+            </p>
+        <pre class="programlisting">            db.put(null, key, data);  </pre>
+        <p>
+            Finally, we close our database before returning from the
+            method.
+        </p>
+        <pre class="programlisting">        }
+        if (db != null)
+            db.close(true);
+        return 0;
+    }  </pre>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="printstocks_c"></a>
+                            
+                            
+                            <span>Method: SimpleTxn.printStocks()</span>
+                    </h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                        The  
+                         <code class="methodname">printStocks()</code> 
+                        
+                        <span>method</span>
+                        simply takes a database handle, opens a cursor, and uses 
+                        it to display all the information it finds in a database.
+                        This is trivial cursor operation that should hold
+                        no surprises for you. We simply provide it here for
+                        the sake of completeness.
+                    </p>
+        <p>
+                        If you are unfamiliar with basic cursor operations,
+                        please see the <em class="citetitle">Getting Started with Berkeley DB</em>
+                        guide.
+                    </p>
+        <pre class="programlisting">    public void terminate()
+        throws DatabaseException
+    {
+            dbenv.close();
+    }
+
+    /*
+     * void return type since error conditions are propagated
+     * via exceptions.
+     */
+    private void printStocks(Database db)
+        throws DatabaseException
+    {
+        Cursor dbc = db.openCursor(null, null);
+
+        System.out.println("\tSymbol\tPrice");
+        System.out.println("\t======\t=====");
+
+        DatabaseEntry key = new DatabaseEntry();
+        DatabaseEntry data = new DatabaseEntry();
+        OperationStatus ret;
+        for (ret = dbc.getFirst(key, data, LockMode.DEFAULT);
+            ret == OperationStatus.SUCCESS;
+            ret = dbc.getNext(key, data, LockMode.DEFAULT)) {
+            String keystr = new String
+                (key.getData(), key.getOffset(), key.getSize());
+            String datastr = new String
+                (data.getData(), data.getOffset(), data.getSize());
+            System.out.println("\t"+keystr+"\t"+datastr);
+
+        }
+        dbc.close();
+    }
+} // end class  </pre>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="txnapp.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="txnapp.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="repapp.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 2. Transactional Application </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 3. The DB Replication Manager</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

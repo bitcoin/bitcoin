@@ -1,0 +1,455 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DBcursor-&gt;put()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="dbc.html" title="Chapter 3.  The DBcursor Handle" />
+    <link rel="prev" href="dbcget_priority.html" title="DBcursor-&gt;get_priority()" />
+    <link rel="next" href="dbcset_priority.html" title="DBcursor-&gt;set_priority()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DBcursor-&gt;put()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbcget_priority.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. 
+                The DBcursor Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbcset_priority.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dbcput"></a>DBcursor-&gt;put()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DBcursor-&gt;put(DBC *DBcursor, DBT *key, DBT *data, u_int32_t flags);  </pre>
+      <p>
+         The <code class="methodname">DBcursor-&gt;put()</code> method stores key/data pairs into the database.
+    </p>
+      <p>
+         Unless otherwise specified, the <code class="methodname">DBcursor-&gt;put()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <p>
+         If <code class="methodname">DBcursor-&gt;put()</code> fails for any reason, the state of the cursor will
+         be unchanged.  If <code class="methodname">DBcursor-&gt;put()</code> succeeds and an item is inserted
+         into the database, the cursor is always positioned to refer to the
+         newly inserted item.
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1656292"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1656236"></a>data</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                             The data 
+                             <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a>  operated on.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1656422"></a>flags</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>flags</strong></span> parameter must be set to
+                          one of the following values:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="put_DB_AFTER"></a>
+                  <code class="literal">DB_AFTER</code>
+            </p>
+                <p>
+                 In the case of the Btree and Hash access methods, insert the data
+                 element as a duplicate element of the key to which the cursor refers.
+                 The new element appears immediately after the current cursor position.
+                 It is an error to specify DB_AFTER if the underlying Btree or Hash
+                 database is not configured for unsorted duplicate data items.  The
+                 <span class="bold"><strong>key</strong></span> parameter is ignored.
+            </p>
+                <p>
+                 In the case of the Recno access method, it is an error to specify
+                 DB_AFTER if the underlying Recno database was not created with the
+                 <a class="link" href="dbset_flags.html#dbset_flags_DB_RENUMBER">DB_RENUMBER</a>
+                 flag.  If the 
+                 <a class="link" href="dbset_flags.html#dbset_flags_DB_RENUMBER">DB_RENUMBER</a>
+                 flag was specified, a new key is created, all records after the inserted
+                 item are automatically renumbered, and the key of the new record is
+                 returned in the structure to which the <span class="bold"><strong>key</strong></span> parameter refers.  The initial value of the
+                <span class="bold"><strong>key</strong></span> parameter is ignored.  See 
+                <a class="xref" href="dbopen.html" title="DB-&gt;open()">DB-&gt;open()</a>  for more information.
+            </p>
+                <p>
+                 The DB_AFTER flag may not be specified to the Queue access method.
+            </p>
+                <p>
+                 The <code class="methodname">DBcursor-&gt;put()</code> method will return <a href="../../programmer_reference/program_errorret.html#program_errorret.DB_NOTFOUND" class="olink">DB_NOTFOUND</a> if
+                 the current cursor record has already been deleted and the underlying
+                 access method is Hash.
+            </p>
+              </li>
+              <li>
+                <p><a id="put_DB_BEFORE"></a>
+                  <code class="literal">DB_BEFORE</code>
+            </p>
+                <p>
+                 In the case of the Btree and Hash access methods, insert the data
+                 element as a duplicate element of the key to which the cursor refers.
+                 The new element appears immediately before the current cursor
+                 position. It is an error to specify DB_AFTER if the underlying Btree
+                 or Hash database is not configured for unsorted duplicate data items. 
+                 The <span class="bold"><strong>key</strong></span> parameter is ignored.
+            </p>
+                <p>
+                 In the case of the Recno access method, it is an error to specify
+                 DB_BEFORE if the underlying Recno database was not created with the
+                 <a class="link" href="dbset_flags.html#dbset_flags_DB_RENUMBER">DB_RENUMBER</a>
+                 flag.  If the 
+                 <a class="link" href="dbset_flags.html#dbset_flags_DB_RENUMBER">DB_RENUMBER</a>
+                 flag was specified, a new key is created, the current record and all
+                 records after it are automatically renumbered, and the key of the new
+                 record is returned in the structure to which the <span class="bold"><strong>key</strong></span> parameter refers. The initial value of the
+                 <span class="bold"><strong>key</strong></span> parameter is ignored.  See 
+                <a class="xref" href="dbopen.html" title="DB-&gt;open()">DB-&gt;open()</a>  for more information.
+            </p>
+                <p>
+                 The DB_BEFORE flag may not be specified to the Queue access method.
+            </p>
+                <p>
+                 The <code class="methodname">DBcursor-&gt;put()</code> method will return <a href="../../programmer_reference/program_errorret.html#program_errorret.DB_NOTFOUND" class="olink">DB_NOTFOUND</a> if
+                 the current cursor record has already been deleted and the underlying
+                 access method is Hash.
+            </p>
+              </li>
+              <li>
+                <p><a id="put_DB_CURRENT"></a>
+                  <code class="literal">DB_CURRENT</code>
+            </p>
+                <p>
+                 Overwrite the data of the key/data pair to which the cursor refers
+                 with the specified data item.  The <span class="bold"><strong>key</strong></span> parameter is ignored.
+            </p>
+                <p>
+                 The <code class="methodname">DBcursor-&gt;put()</code> method will return <a href="../../programmer_reference/program_errorret.html#program_errorret.DB_NOTFOUND" class="olink">DB_NOTFOUND</a> if
+                 the current cursor record has already been deleted.
+            </p>
+              </li>
+              <li>
+                <p><a id="put_DB_KEYFIRST"></a>
+                  <code class="literal">DB_KEYFIRST</code>
+            </p>
+                <p>
+                 Insert the specified key/data pair into the database.
+            </p>
+                <p>
+                 If the underlying database supports duplicate data items, and if the
+                 key already exists in the database and a duplicate sort function has
+                 been specified, the inserted data item is added in its sorted
+                 location. If the key already exists in the database and no duplicate
+                 sort function has been specified, the inserted data item is added as
+                 the first of the data items for that key.
+            </p>
+              </li>
+              <li>
+                <p><a id="put_DB_KEYLAST"></a>
+                  <code class="literal">DB_KEYLAST</code>
+            </p>
+                <p>
+                 Insert the specified key/data pair into the database.
+            </p>
+                <p>
+                 If the underlying database supports duplicate data items, and if the
+                 key already exists in the database and a duplicate sort function has
+                 been specified, the inserted data item is added in its sorted
+                 location. If the key already exists in the database, and no duplicate
+                 sort function has been specified, the inserted data item is added as
+                 the last of the data items for that key.
+            </p>
+              </li>
+              <li>
+                <p><a id="put_DB_NODUPDATA"></a>
+                  <code class="literal">DB_NODUPDATA</code>
+            </p>
+                <p>
+                 In the case of the Btree and Hash access methods, insert the specified
+                 key/data pair into the database, unless a key/data pair comparing
+                 equally to it already exists in the database.  If a matching key/data
+                 pair already exists in the database, 
+                 <a class="xref" href="dbcput.html#dbcput_DB_KEYEXIST" title="DB_KEYEXIST">DB_KEYEXIST</a>  is
+                 returned. The DB_NODUPDATA flag may only be specified if the
+                 underlying database has been configured to support sorted duplicate
+                 data items.
+            </p>
+                <p>
+                 The DB_NODUPDATA flag may not be specified to the Queue or Recno
+                 access methods.
+            </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1656780"></a>key</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The key <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a>  operated on.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1656785"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DBcursor-&gt;put()</code> <span>
+            <span>
+                 method may fail and return one of the following non-zero errors:
+            </span>
+            
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="dbcput_DB_KEYEXIST"></a>DB_KEYEXIST</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                             An attempt was made to insert a duplicate key
+                             into a database not configured for duplicate
+                             data.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1656686"></a>DB_FOREIGN_CONFLICT</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A <a class="link" href="dbassociate_foreign.html" title="DB-&gt;associate_foreign()">foreign key constraint violation</a> 
+                has occurred. This can be caused by one of two things:
+            </p>
+          <div class="orderedlist">
+            <ol type="1">
+              <li>
+                <p>
+                            An attempt was made to add a record to a
+                            constrained database, and the key used for that
+                            record does not exist in the foreign key
+                            database.
+                        </p>
+              </li>
+              <li>
+                <p>
+                            <a class="link" href="dbassociate_foreign.html#associate_foreign_DB_FOREIGN_ABORT">DB_FOREIGN_ABORT</a> 
+                            was declared for a foreign key database, and then
+                            subsequently a record was deleted from the
+                            foreign key database without first removing it
+                            from the constrained secondary database.
+                        </p>
+              </li>
+            </ol>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1656892"></a>DB_LOCK_DEADLOCK</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A transactional database environment operation was selected to resolve
+                a deadlock.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1656425"></a>DB_LOCK_NOTGRANTED</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A Berkeley DB Concurrent Data Store database environment configured
+                for lock timeouts was unable to grant a lock in the allowed time.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1656327"></a> DB_REP_HANDLE_DEAD</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                When a client synchronizes with the master, it is possible for committed
+                transactions to be rolled back. This invalidates all  the database and cursor
+                handles opened in the replication environment. Once this occurs, an attempt to use
+                such a handle will 
+                
+                return <code class="literal">DB_REP_HANDLE_DEAD</code>.
+                The application will need to discard the handle and open a new one in order to
+                continue processing.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1656484"></a>DB_REP_LOCKOUT</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                The operation was blocked by client/master synchronization.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1656475"></a>EACCES</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                An attempt was made to modify a read-only database.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1656534"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If the DB_AFTER, DB_BEFORE or DB_CURRENT flags were specified and the
+                          cursor has not been initialized; the DB_AFTER or DB_BEFORE flags were
+                          specified and a duplicate sort function has been specified; the
+                          DB_CURRENT flag was specified, a duplicate sort function has been
+                          specified, and the data item of the referenced key/data pair does not
+                          compare equally to the <span class="bold"><strong>data</strong></span>
+                          parameter; the DB_AFTER or DB_BEFORE flags were specified, and the
+                          underlying access method is Queue; an attempt was made to add a record
+                          to a fixed-length database that was too large to fit; an attempt was
+                          made to add a record to a secondary index; or if an invalid flag value
+                          or parameter was specified.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1656841"></a>EPERM</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+               Write attempted on read-only cursor when the
+               <a class="link" href="envopen.html#envopen_DB_INIT_CDB">DB_INIT_CDB</a>
+               flag was specified to <a class="xref" href="envopen.html" title="DB_ENV-&gt;open()">DB_ENV-&gt;open()</a>. 
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1656583"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="dbc.html" title="Chapter 3.  The DBcursor Handle">DBcursor</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1656506"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="dbc.html#dbclist" title="Database Cursors and Related Methods">Database Cursors and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbcget_priority.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="dbc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbcset_priority.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DBcursor-&gt;get_priority() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DBcursor-&gt;set_priority()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

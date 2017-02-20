@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>db_stat</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="utilities.html" title="Appendix 1.  Berkeley DB Command Line Utilities" />
+    <link rel="prev" href="db_sql.html" title="db_sql" />
+    <link rel="next" href="db_upgrade.html" title="db_upgrade" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">db_stat</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="db_sql.html">Prev</a> </td>
+          <th width="60%" align="center">Appendix 1. 
+                Berkeley DB Command Line Utilities
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="db_upgrade.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="db_stat"></a>db_stat</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">db_stat -d file [-fN] [-h home] [-P password] [-s database]
+
+db_stat [-cEelmNrtVxZ] [-C Aclop] [-h home] [-L A] [-M Ah] [-R A] 
+        [-P password]  </pre>
+      <p>
+         The <span class="command"><strong>db_stat</strong></span> utility displays statistics for Berkeley DB environments.
+    </p>
+      <p>
+        The options are as follows:
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                  <span class="bold"><strong>-C</strong></span>
+            </p>
+            <p>
+                Display detailed information about the locking subsystem.  
+            </p>
+            <div class="itemizedlist">
+              <ul type="circle">
+                <li>
+                  <p>
+                        <span class="bold"><strong>A</strong></span>
+                    </p>
+                  <p>
+                        Display all information.
+                    </p>
+                </li>
+                <li>
+                  <p>
+                        <span class="bold"><strong>c</strong></span>
+                    </p>
+                  <p>
+                        Display lock conflict matrix.
+                    </p>
+                </li>
+                <li>
+                  <p>
+                        <span class="bold"><strong>l</strong></span>
+                    </p>
+                  <p>
+                        Display lockers within hash chains.
+                    </p>
+                </li>
+                <li>
+                  <p>
+                        <span class="bold"><strong>o</strong></span>
+                    </p>
+                  <p>
+                        Display lock objects within hash chains.
+                    </p>
+                </li>
+                <li>
+                  <p>
+                        <span class="bold"><strong>p</strong></span>
+                    </p>
+                  <p>
+                        Display locking subsystem parameters.
+                    </p>
+                </li>
+              </ul>
+            </div>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-c</strong></span>
+            </p>
+            <p>
+                 Display locking subsystem statistics, as described in the
+                     <a class="xref" href="lockstat.html" title="DB_ENV-&gt;lock_stat()">DB_ENV-&gt;lock_stat()</a> method.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-d</strong></span>
+            </p>
+            <p>
+                Display database statistics for the specified file, as described in the
+                <a class="xref" href="dbstat.html" title="DB-&gt;stat()">DB-&gt;stat()</a> method.
+            </p>
+            <p>
+                 If the database contains multiple databases and the <span class="bold"><strong>-s</strong></span> flag is not specified, the statistics are
+                 for the internal database that describes the other databases the file
+                 contains, and not for the file as a whole.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-E</strong></span>
+            </p>
+            <p>
+                Display detailed information about the database environment.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-e</strong></span>
+            </p>
+            <p>
+                 Display information about the database environment, including all
+                 configured subsystems of the database environment.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-f</strong></span>
+            </p>
+            <p>
+                 Display only those database statistics that can be acquired without
+                 traversing the database.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-h</strong></span>
+            </p>
+            <p>
+                 Specify a home directory for the database environment; by default, the
+                 current working directory is used.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-l</strong></span>
+            </p>
+            <p>
+                Display logging subsystem statistics, as described in the
+                <a class="xref" href="logstat.html" title="DB_ENV-&gt;log_stat()">DB_ENV-&gt;log_stat()</a>
+                method.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-L</strong></span>
+            </p>
+            <p>
+                Display all logging subsystem statistics.
+            </p>
+            <div class="itemizedlist">
+              <ul type="circle">
+                <li>
+                  <p>
+                      <span class="bold"><strong>A</strong></span>
+                    </p>
+                  <p>
+                        Display all information.
+                    </p>
+                </li>
+              </ul>
+            </div>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-M</strong></span>
+            </p>
+            <p>
+                Display detailed information about the cache.
+            </p>
+            <div class="itemizedlist">
+              <ul type="circle">
+                <li>
+                  <p>
+                      <span class="bold"><strong>A</strong></span>
+                    </p>
+                  <p>
+                        Display all information.
+                    </p>
+                </li>
+                <li>
+                  <p>
+                         <span class="bold"><strong>h</strong></span>
+                    </p>
+                  <p>
+                        Display buffers within hash chains.
+                    </p>
+                </li>
+              </ul>
+            </div>
+          </li>
+          <li>
+            <p>
+                  <span class="bold"><strong>-m</strong></span>
+            </p>
+            <p>
+                Display cache statistics, as described in the
+                <a class="xref" href="mempstat.html" title="DB_ENV-&gt;memp_stat()">DB_ENV-&gt;memp_stat()</a>
+                method.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-N</strong></span>
+            </p>
+            <p>
+                 Do not acquire shared region mutexes while running.  Other problems,
+                 such as potentially fatal errors in Berkeley DB, will be ignored as
+                 well. This option is intended only for debugging errors, and should
+                 not be used under any other circumstances.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-P</strong></span>
+            </p>
+            <p>
+                 Specify an environment password.  Although Berkeley DB utilities
+                 overwrite password strings as soon as possible, be aware there may be
+                 a window of vulnerability on systems where unprivileged users can see
+                 command-line arguments or where utilities are not able to overwrite
+                 the memory containing the command-line arguments.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-R</strong></span>
+            </p>
+            <p>
+                Display detailed information about the replication subsystem.
+            </p>
+            <div class="itemizedlist">
+              <ul type="circle">
+                <li>
+                  <p>
+                          <span class="bold"><strong>A</strong></span>
+                    </p>
+                  <p>
+                        Display all information.
+                    </p>
+                </li>
+              </ul>
+            </div>
+          </li>
+          <li>
+            <p>
+                  <span class="bold"><strong>-r</strong></span>
+            </p>
+            <p>
+                 Display replication statistics, as described in 
+                 in the <a class="xref" href="repstat.html" title="DB_ENV-&gt;rep_stat()">DB_ENV-&gt;rep_stat()</a>
+                 method.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-s</strong></span>
+            </p>
+            <p>
+                 Display statistics for the specified database contained in the file
+                 specified with the <span class="bold"><strong>-d</strong></span> flag.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-t</strong></span>
+            </p>
+            <p>
+                Display transaction subsystem statistics, as described in the
+                <a class="xref" href="txnstat.html" title="DB_ENV-&gt;txn_stat()">DB_ENV-&gt;txn_stat()</a>
+                method.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-V</strong></span>
+            </p>
+            <p>
+                 Write the library version number to the standard output, and exit.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-x</strong></span>
+            </p>
+            <p>
+                Display mutex subsystem statistics, as described in the
+                <a class="xref" href="mutexstat.html" title="DB_ENV-&gt;mutex_stat()">DB_ENV-&gt;mutex_stat()</a>
+                method.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-Z</strong></span>
+            </p>
+            <p>
+                 Reset the statistics after reporting them; valid only with the
+                 <span class="bold"><strong>-C</strong></span>, <span class="bold"><strong>-c</strong></span>, <span class="bold"><strong>-E</strong></span>,
+                 <span class="bold"><strong>-e</strong></span>, <span class="bold"><strong>-L</strong></span>, <span class="bold"><strong>-l</strong></span>,
+                 <span class="bold"><strong>-M</strong></span>, <span class="bold"><strong>-m</strong></span>, <span class="bold"><strong>-R</strong></span>,
+                 <span class="bold"><strong>-r</strong></span>, and <span class="bold"><strong>-t</strong></span> options.
+            </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+         Values normally displayed in quantities of bytes are displayed as a
+         combination of gigabytes (GB), megabytes (MB), kilobytes (KB), and
+         bytes (B).  Otherwise, values smaller than 10 million are displayed
+         without any special notation, and values larger than 10 million are
+         displayed as a number followed by "M".
+    </p>
+      <p>
+         The <span class="command"><strong>db_stat</strong></span> utility may be used with a Berkeley DB environment (as
+         described for the <span class="bold"><strong>-h</strong></span> option, the
+         environment variable <span class="bold"><strong>DB_HOME</strong></span>, or
+         because the utility was run in a directory containing a Berkeley DB
+         environment).  In order to avoid environment corruption when using a
+         Berkeley DB environment, <span class="command"><strong>db_stat</strong></span> should always be given the chance to
+         detach from the environment and exit gracefully.  To cause <span class="command"><strong>db_stat</strong></span> to
+         release all environment resources and exit cleanly, send it an
+         interrupt signal (SIGINT).
+    </p>
+      <p>
+         The <span class="command"><strong>db_stat</strong></span> utility exits 0 on success, and &gt;0 if an error occurs.
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1716201"></a>Environment Variables</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1716782"></a>DB_HOME</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If the <span class="bold"><strong>-h</strong></span> option is not specified and
+                          the environment variable DB_HOME is set, it is used as the path of the
+                          database home, as described in the
+                          <a class="xref" href="envopen.html" title="DB_ENV-&gt;open()">DB_ENV-&gt;open()</a>
+                          method.
+                     </p>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="db_sql.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="utilities.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="db_upgrade.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">db_sql </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> db_upgrade</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

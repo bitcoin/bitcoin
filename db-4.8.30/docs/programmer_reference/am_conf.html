@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 2.  Access Method Configuration</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="prev" href="intro_products.html" title="The Berkeley DB products" />
+    <link rel="next" href="am_conf_select.html" title="Selecting an access method" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 2. 
+        Access Method Configuration
+        </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="intro_products.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="am_conf_select.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="am_conf"></a>Chapter 2. 
+        Access Method Configuration
+        </h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="am_conf.html#am_conf_intro">What are the available access methods?</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="am_conf.html#id1588967">Btree</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="am_conf.html#id1587613">Hash</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="am_conf.html#id1588266">Queue</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="am_conf.html#id1589081">Recno</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <span class="sect1">
+              <a href="am_conf_select.html">Selecting an access method</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="am_conf_select.html#id1589084">Hash or Btree?</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="am_conf_select.html#id1589088">Queue or Recno?</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <span class="sect1">
+              <a href="am_conf_logrec.html">Logical record numbers</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="general_am_conf.html">General access method configuration</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="general_am_conf.html#am_conf_pagesize">Selecting a page size</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="general_am_conf.html#am_conf_cachesize">Selecting a cache size</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="general_am_conf.html#am_conf_byteorder">Selecting a byte order</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="general_am_conf.html#am_conf_dup">Duplicate data items</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="general_am_conf.html#am_conf_malloc">Non-local memory allocation</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <span class="sect1">
+              <a href="bt_conf.html">Btree access method specific configuration</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="bt_conf.html#am_conf_bt_compare">Btree comparison</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="bt_conf.html#am_conf_bt_prefix">Btree prefix comparison</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="bt_conf.html#am_conf_bt_minkey">Minimum keys per page</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="bt_conf.html#am_conf_bt_recnum">Retrieving Btree records by logical record number</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="bt_conf.html#am_conf_bt_compress">Compression</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <span class="sect1">
+              <a href="hash_conf.html">Hash access method specific configuration</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="hash_conf.html#am_conf_h_ffactor">Page fill factor</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="hash_conf.html#am_conf_h_hash">Specifying a database hash</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="hash_conf.html#am_conf_h_nelem">Hash table size</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <span class="sect1">
+              <a href="rq_conf.html">Queue and Recno access method specific configuration</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="rq_conf.html#am_conf_recno">Managing record-based databases</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="rq_conf.html#am_conf_extentsize">Selecting a Queue extent size</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="rq_conf.html#am_conf_re_source">Flat-text backing files</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="rq_conf.html#am_conf_renumber">Logically renumbering records</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+        </dl>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="am_conf_intro"></a>What are the available access methods?</h2>
+            </div>
+          </div>
+        </div>
+        <div class="toc">
+          <dl>
+            <dt>
+              <span class="sect2">
+                <a href="am_conf.html#id1588967">Btree</a>
+              </span>
+            </dt>
+            <dt>
+              <span class="sect2">
+                <a href="am_conf.html#id1587613">Hash</a>
+              </span>
+            </dt>
+            <dt>
+              <span class="sect2">
+                <a href="am_conf.html#id1588266">Queue</a>
+              </span>
+            </dt>
+            <dt>
+              <span class="sect2">
+                <a href="am_conf.html#id1589081">Recno</a>
+              </span>
+            </dt>
+          </dl>
+        </div>
+        <p>Berkeley DB currently offers four access methods: Btree, Hash, Queue and Recno.</p>
+        <div class="sect2" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title"><a id="id1588967"></a>Btree</h3>
+              </div>
+            </div>
+          </div>
+          <p>The Btree access method is an implementation of a sorted, balanced tree
+structure.  Searches, insertions, and deletions in the tree all take O(log
+base_b N) time, where base_b is the average number of keys per page, and
+N is the total number of keys stored.  Often, inserting ordered data into
+Btree implementations results in pages that are only half-full.  Berkeley DB
+makes ordered (or inverse ordered) insertion the best case, resulting in
+nearly full-page space utilization.</p>
+        </div>
+        <div class="sect2" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title"><a id="id1587613"></a>Hash</h3>
+              </div>
+            </div>
+          </div>
+          <p>The Hash access method data structure is an implementation of Extended
+Linear Hashing, as described in "Linear Hashing: A New Tool for File and
+Table Addressing", Witold Litwin, <span class="emphasis"><em>Proceedings of the 6th
+International Conference on Very Large Databases (VLDB)</em></span>, 1980.</p>
+        </div>
+        <div class="sect2" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title"><a id="id1588266"></a>Queue</h3>
+              </div>
+            </div>
+          </div>
+          <p>The Queue access method stores fixed-length records with logical record
+numbers as keys.  It is designed for fast inserts at the tail and has a
+special cursor consume operation that deletes and returns a record from
+the head of the queue.  The Queue access method uses record level locking.</p>
+        </div>
+        <div class="sect2" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title"><a id="id1589081"></a>Recno</h3>
+              </div>
+            </div>
+          </div>
+          <p>The Recno access method stores both fixed and variable-length records with
+logical record numbers as keys, optionally backed by a flat text (byte
+stream) file.</p>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="intro_products.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="am_conf_select.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">The Berkeley DB products </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Selecting an access method</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

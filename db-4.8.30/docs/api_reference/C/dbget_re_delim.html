@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB-&gt;get_re_delim()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="db.html" title="Chapter 2.  The DB Handle" />
+    <link rel="prev" href="dbget_q_extentsize.html" title="DB-&gt;get_q_extentsize()" />
+    <link rel="next" href="dbget_re_len.html" title="DB-&gt;get_re_len()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB-&gt;get_re_delim()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbget_q_extentsize.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+                The DB Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbget_re_len.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dbget_re_delim"></a>DB-&gt;get_re_delim()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB-&gt;get_re_delim(DB *db, int *delimp);  </pre>
+      <p>
+        The <code class="methodname">DB-&gt;get_re_delim()</code> method returns the delimiting byte, which
+        is used to mark the end of a record in the backing source file for
+        the Recno access method. This value is set using the 
+        <a class="xref" href="dbset_re_delim.html" title="DB-&gt;set_re_delim()">DB-&gt;set_re_delim()</a>
+        method.
+    </p>
+      <p>
+         The <code class="methodname">DB-&gt;get_re_delim()</code> method may be
+         called only after the database has been opened.
+    </p>
+      <p>
+         The <code class="methodname">DB-&gt;get_re_delim()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1638163"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1637846"></a>delimp</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <code class="methodname">DB-&gt;get_re_delim()</code> method returns  the delimiting byte in
+                          <span class="bold"><strong>delimp</strong></span>. If this method is called on a
+                          handle that has not yet been opened, then the default delimiting byte is
+                          returned. See <a class="xref" href="dbset_re_delim.html" title="DB-&gt;set_re_delim()">DB-&gt;set_re_delim()</a>
+                          for details.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1637742"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="db.html" title="Chapter 2.  The DB Handle">DB</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1637941"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="db.html#dblist" title="Database and Related Methods">Database and Related Methods</a>, 
+                     <a class="xref" href="dbset_re_delim.html" title="DB-&gt;set_re_delim()">DB-&gt;set_re_delim()</a>
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbget_q_extentsize.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="db.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbget_re_len.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB-&gt;get_q_extentsize() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB-&gt;get_re_len()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

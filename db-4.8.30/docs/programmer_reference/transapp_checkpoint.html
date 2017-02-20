@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Checkpoints</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="transapp.html" title="Chapter 11.  Berkeley DB Transactional Data Store Applications" />
+    <link rel="prev" href="transapp_deadlock.html" title="Deadlock detection" />
+    <link rel="next" href="transapp_archival.html" title="Database and log file archival" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Checkpoints</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="transapp_deadlock.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 11. 
+        Berkeley DB Transactional Data Store Applications
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="transapp_archival.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="transapp_checkpoint"></a>Checkpoints</h2>
+          </div>
+        </div>
+      </div>
+      <p>The second component of the infrastructure is performing checkpoints of
+the log files.  Performing checkpoints is necessary for two reasons.</p>
+      <p>First, you may be able to remove Berkeley DB log files from your database
+environment after a checkpoint.  Change records are written into the log
+files when databases are modified, but the actual changes to the
+database are not necessarily written to disk.  When a checkpoint is
+performed, changes to the database are written into the backing database
+file.  Once the database pages are written, log files can be archived
+and removed from the database environment because they will never be
+needed for anything other than catastrophic failure.  (Log files which
+are involved in active transactions may not be removed, and there must
+always be at least one log file in the database environment.)</p>
+      <p>The second reason to perform checkpoints is because checkpoint frequency
+is inversely proportional to the amount of time it takes to run database
+recovery after a system or application failure.  This is because
+recovery after failure has to redo or undo changes only since the last
+checkpoint, as changes before the checkpoint have all been flushed to
+the databases.</p>
+      <p>
+    Berkeley DB provides the <a href="../api_reference/C/db_checkpoint.html" class="olink">db_checkpoint utility</a>, which can be used to perform
+    checkpoints.  Alternatively, applications can write their own
+    checkpoint thread using the underlying <a href="../api_reference/C/txncheckpoint.html" class="olink">DB_ENV-&gt;txn_checkpoint()</a> function.  The
+    following code fragment checkpoints the database environment every 60
+    seconds:
+</p>
+      <pre class="programlisting">int
+main(int argc, char *argv)
+{
+    extern int optind;
+    DB *db_cats, *db_color, *db_fruit;
+    DB_ENV *dbenv;
+    pthread_t ptid;
+    int ch;
+
+    while ((ch = getopt(argc, argv, "")) != EOF)
+        switch (ch) {
+        case '?':
+        default:
+            usage();
+        }
+    argc -= optind;
+    argv += optind;
+
+    env_dir_create();
+    env_open(&amp;dbenv);
+
+<span class="bold"><strong> /* Start a checkpoint thread. */
+    if ((errno = pthread_create(
+        &amp;ptid, NULL, checkpoint_thread, (void *)dbenv)) != 0) {
+        fprintf(stderr,
+            "txnapp: failed spawning checkpoint thread: %s\n",
+            strerror(errno));
+        exit (1);
+    }</strong></span>
+
+    /* Open database: Key is fruit class; Data is specific type. */
+    db_open(dbenv, &amp;db_fruit, "fruit", 0);
+
+    /* Open database: Key is a color; Data is an integer. */
+    db_open(dbenv, &amp;db_color, "color", 0);
+
+    /*
+     * Open database:
+     *  Key is a name; Data is: company name, cat breeds.
+     */
+    db_open(dbenv, &amp;db_cats, "cats", 1);
+
+    add_fruit(dbenv, db_fruit, "apple", "yellow delicious");
+
+    add_color(dbenv, db_color, "blue", 0);
+    add_color(dbenv, db_color, "blue", 3);
+
+    add_cat(dbenv, db_cats,
+        "Amy Adams",
+        "Oracle",
+        "abyssinian",
+        "bengal",
+        "chartreaux",
+        NULL);
+
+    return (0);
+}
+
+<span class="bold"><strong>void *
+checkpoint_thread(void *arg)
+{
+    DB_ENV *dbenv;
+    int ret;
+
+    dbenv = arg;
+    dbenv-&gt;errx(dbenv, "Checkpoint thread: %lu", (u_long)pthread_self());
+
+    /* Checkpoint once a minute. */
+    for (;; sleep(60))
+        if ((ret = dbenv-&gt;txn_checkpoint(dbenv, 0, 0, 0)) != 0) {
+            dbenv-&gt;err(dbenv, ret, "checkpoint thread");
+            exit (1);
+        }
+
+    /* NOTREACHED */
+}</strong></span></pre>
+      <p>Because checkpoints can be quite expensive, choosing how often to
+perform a checkpoint is a common tuning parameter for Berkeley DB
+applications.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="transapp_deadlock.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="transapp.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="transapp_archival.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Deadlock detection </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Database and log file archival</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

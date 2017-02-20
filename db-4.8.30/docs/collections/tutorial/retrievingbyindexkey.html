@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Retrieving Items by Index Key</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Collections Tutorial" />
+    <link rel="up" href="UsingSecondaries.html" title="Chapter 3.  Using Secondary Indices" />
+    <link rel="prev" href="indexedcollections.html" title="Creating Indexed Collections" />
+    <link rel="next" href="Entity.html" title="Chapter 4.  Using Entity Classes" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">
+        Retrieving Items by Index Key
+    </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="indexedcollections.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. 
+        Using Secondary Indices
+    </th>
+          <td width="20%" align="right"> <a accesskey="n" href="Entity.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="retrievingbyindexkey"></a>
+        Retrieving Items by Index Key
+    </h2>
+          </div>
+        </div>
+      </div>
+      <p>
+    Retrieving information via database index keys can be
+    accomplished using the standard Java collections API, using a
+    collection created from a 
+    
+    <a class="ulink" href="../../java/com/sleepycat/db/SecondaryDatabase.html" target="_top">SecondaryDatabase</a>
+    
+    rather than a 
+    
+    <span>
+        <a class="ulink" href="../../java/com/sleepycat/db/Database.html" target="_top">Database</a>.
+    </span>
+    However, the standard Java API does not support <span class="emphasis"><em>duplicate keys</em></span>: more
+    than one element in a collection having the same key. All three
+    indices created in the prior section have duplicate keys because of
+    the nature of the city, part number and supplier number index keys.
+    More than one supplier may be in the same city, and more than one
+    shipment may have the same part number or supplier number. This
+    section describes how to use extended methods for stored
+    collections to return all values for a given key.
+</p>
+      <p>
+    Using the standard Java collections API, the 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Map.html#get" target="_top">Map.get</a>
+    
+    method for a stored collection with duplicate keys will return only
+    the first value for a given key. To obtain all values for a given
+    key, the 
+    <a class="ulink" href="../../java/com/sleepycat/collections/StoredMap.html#duplicates(java.lang.Object)" target="_top">StoredMap.duplicates</a>
+    
+    method may be called. This returns a 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Collection.html" target="_top">Collection</a>
+    
+    of values for the given key. If duplicate keys are not allowed, the
+    returned collection will have at most one value. If the key is not
+    present in the map, an empty collection is returned.
+</p>
+      <p>
+    The <code class="classname">Sample</code> class is extended to retrieve duplicates for
+    specific index keys that are present in the database.
+</p>
+      <a id="index_sampleviewsprintdatabase"></a>
+      <pre class="programlisting">import java.util.Iterator;
+...
+public class Sample
+{
+    ...
+    private SampleViews views;
+    ...
+    private class PrintDatabase implements TransactionWorker
+    {
+        public void doWork()
+            throws Exception
+        {
+            printEntries("Parts",
+                          views.getPartEntrySet().iterator());
+            printEntries("Suppliers",
+                          views.getSupplierEntrySet().iterator());
+<strong class="userinput"><code>            printValues("Suppliers for City Paris",
+                         views.getSupplierByCityMap().duplicates(
+                                            "Paris").iterator());</code></strong>
+            printEntries("Shipments",
+                          views.getShipmentEntrySet().iterator());
+<strong class="userinput"><code>            printValues("Shipments for Part P1",
+                         views.getShipmentByPartMap().duplicates(
+                                            new PartKey("P1")).iterator());
+            printValues("Shipments for Supplier S1",
+                         views.getShipmentBySupplierMap().duplicates(
+                                            new
+                                            SupplierKey("S1")).iterator());</code></strong>
+        }
+    }
+
+<strong class="userinput"><code>    private void printValues(String label, Iterator iterator)
+    {
+        System.out.println("\n--- " + label + " ---");
+        while (iterator.hasNext())
+        {
+                System.out.println(iterator.next().toString());
+        }
+     } </code></strong>
+    ...
+} </pre>
+      <p>
+    The 
+    <a class="ulink" href="../../java/com/sleepycat/collections/StoredMap.html#duplicates(java.lang.Object)" target="_top">StoredMap.duplicates</a>
+    
+    method is called passing the desired key. The returned value is a
+    standard Java 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Collection.html" target="_top">Collection</a>
+    
+    containing the values for the specified key. A standard Java
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Iterator.html" target="_top">Iterator</a>
+    
+    is then obtained for this collection and all values returned by
+    that iterator are printed.
+</p>
+      <p>
+    Another technique for retrieving duplicates is to use the
+    collection returned by 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Map.html#entrySet" target="_top">Map.entrySet</a>.
+    When duplicate keys are present, a 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Map.Entry.html" target="_top">Map.Entry</a>
+    
+    object will be present in this collection for each duplicate. This
+    collection can then be iterated or a subset can be created from it,
+    all using the standard Java collection API.
+</p>
+      <p>
+    Note that we did not discuss how duplicates keys can be
+    explicitly added or removed in a collection. For index keys, the
+    addition and deletion of duplicate keys happens automatically when
+    records containing the index key are added, updated, or
+    removed.
+</p>
+      <p>
+    While not shown in the example program, it is also possible to
+    create a store with duplicate keys in the same way as an index with
+    duplicate keys — by calling
+    <code class="methodname">DatabaseConfig.setSortedDuplicates()</code> method. In that case,
+    calling 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Map.html#put" target="_top">Map.put</a>
+    
+    will add duplicate keys. To remove all duplicate keys, call
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Map.html#remove" target="_top">Map.remove</a>.
+    To remove a specific duplicate key, call 
+    <a class="ulink" href="../../java/com/sleepycat/collections/StoredMap.html#duplicates(java.lang.Object)" target="_top">StoredMap.duplicates</a>
+    
+    and then call 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Collection.html#remove" target="_top">Collection.remove</a>
+    
+    using the returned collection. Duplicate
+    values may also be added to this collection using 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Collection.html#add" target="_top"> Collection.add</a>.
+</p>
+      <p>
+    The output of the example program is shown below.
+</p>
+      <pre class="programlisting">Adding Suppliers
+Adding Parts
+Adding Shipments
+
+--- Parts ---
+PartKey: number=P1
+PartData: name=Nut color=Red weight=[12.0 grams] city=London
+PartKey: number=P2
+PartData: name=Bolt color=Green weight=[17.0 grams] city=Paris
+PartKey: number=P3
+PartData: name=Screw color=Blue weight=[17.0 grams] city=Rome
+PartKey: number=P4
+PartData: name=Screw color=Red weight=[14.0 grams] city=London
+PartKey: number=P5
+PartData: name=Cam color=Blue weight=[12.0 grams] city=Paris
+PartKey: number=P6
+PartData: name=Cog color=Red weight=[19.0 grams] city=London
+
+--- Suppliers ---
+SupplierKey: number=S1
+SupplierData: name=Smith status=20 city=London
+SupplierKey: number=S2
+SupplierData: name=Jones status=10 city=Paris
+SupplierKey: number=S3
+SupplierData: name=Blake status=30 city=Paris
+SupplierKey: number=S4
+SupplierData: name=Clark status=20 city=London
+SupplierKey: number=S5
+SupplierData: name=Adams status=30 city=Athens
+
+<strong class="userinput"><code>--- Suppliers for City Paris ---
+SupplierData: name=Jones status=10 city=Paris
+SupplierData: name=Blake status=30 city=Paris</code></strong>
+
+--- Shipments ---
+ShipmentKey: supplier=S1 part=P1
+ShipmentData: quantity=300
+ShipmentKey: supplier=S2 part=P1
+ShipmentData: quantity=300
+ShipmentKey: supplier=S1 part=P2
+ShipmentData: quantity=200
+ShipmentKey: supplier=S2 part=P2
+ShipmentData: quantity=400
+ShipmentKey: supplier=S3 part=P2
+ShipmentData: quantity=200
+ShipmentKey: supplier=S4 part=P2
+ShipmentData: quantity=200
+ShipmentKey: supplier=S1 part=P3
+ShipmentData: quantity=400
+ShipmentKey: supplier=S1 part=P4
+ShipmentData: quantity=200
+ShipmentKey: supplier=S4 part=P4
+ShipmentData: quantity=300
+ShipmentKey: supplier=S1 part=P5
+ShipmentData: quantity=100
+ShipmentKey: supplier=S4 part=P5
+ShipmentData: quantity=400
+ShipmentKey: supplier=S1 part=P6
+ShipmentData: quantity=100 <strong class="userinput"><code>
+
+--- Shipments for Part P1 ---
+ShipmentData: quantity=300
+ShipmentData: quantity=300
+
+--- Shipments for Supplier S1 ---
+ShipmentData: quantity=300
+ShipmentData: quantity=200
+ShipmentData: quantity=400
+ShipmentData: quantity=200
+ShipmentData: quantity=100
+ShipmentData: quantity=100</code></strong> </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="indexedcollections.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="UsingSecondaries.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="Entity.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+        Creating Indexed Collections
+     </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 4. 
+        Using Entity Classes    
+    </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

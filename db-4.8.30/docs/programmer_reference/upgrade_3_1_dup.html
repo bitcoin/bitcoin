@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 3.1: identical duplicate data items</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_3_1_toc.html" title="Chapter 34. Upgrading Berkeley DB 3.0 applications to Berkeley DB 3.1" />
+    <link rel="prev" href="upgrade_3_1_put.html" title="Release 3.1: DB-&gt;put" />
+    <link rel="next" href="upgrade_3_1_btstat.html" title="Release 3.1: DB-&gt;stat" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 3.1: identical duplicate data items</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_3_1_put.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 34. Upgrading Berkeley DB 3.0 applications to Berkeley DB 3.1</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_3_1_btstat.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_3_1_dup"></a>Release 3.1: identical duplicate data items</h2>
+          </div>
+        </div>
+      </div>
+      <p>In previous releases of Berkeley DB, it was not an error to store identical
+duplicate data items, or, for those that just like the way it sounds,
+duplicate duplicates.  However, there were implementation bugs where
+storing duplicate duplicates could cause database corruption.</p>
+      <p>In this release, applications may store identical duplicate data items
+as long as the data items are unsorted.  It is an error to attempt to
+store identical duplicate data items when duplicates are being stored
+in a sorted order. This restriction is expected to be lifted in a future
+release.  See <a class="xref" href="general_am_conf.html#am_conf_dup" title="Duplicate data items">Duplicate data items</a>
+for more information.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_3_1_put.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_3_1_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_3_1_btstat.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 3.1: DB-&gt;put </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 3.1: DB-&gt;stat</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB_ENV-&gt;rep_sync()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="rep.html" title="Chapter 10.  Replication Methods" />
+    <link rel="prev" href="repstat_print.html" title="DB_ENV-&gt;rep_stat_print()" />
+    <link rel="next" href="repmgrremote_site.html" title="DB_ENV-&gt;repmgr_add_remote_site()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB_ENV-&gt;rep_sync()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="repstat_print.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 10. 
+                Replication Methods
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="repmgrremote_site.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="repsync"></a>DB_ENV-&gt;rep_sync()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB_ENV-&gt;rep_sync(DB_ENV *env, u_int32_t flags);  </pre>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;rep_sync()</code> method forces master synchronization to begin
+         for this client.  This method is the other half of setting the 
+         <a class="link" href="repconfig.html#config_DB_REP_CONF_DELAYCLIENT">DB_REP_CONF_DELAYCLIENT</a> 
+         flag via the <a class="xref" href="repconfig.html" title="DB_ENV-&gt;rep_set_config()">DB_ENV-&gt;rep_set_config()</a> 
+         method.
+    </p>
+      <p>
+         If an application has configured delayed master synchronization, the
+         application must synchronize explicitly (otherwise the client will
+         remain out-of-date and will ignore all database changes forwarded from
+         the replication group master).  The <code class="methodname">DB_ENV-&gt;rep_sync()</code> method may be
+         called any time after the client application learns that the new
+         master has been established (by receiving a 
+         <a class="link" href="envevent_notify.html#event_notify_DB_EVENT_REP_NEWMASTER">DB_EVENT_REP_NEWMASTER</a> 
+         event notification).
+    </p>
+      <p>
+        Before calling this method, the enclosing database environment must
+        already have been opened by calling the 
+        <a class="xref" href="envopen.html" title="DB_ENV-&gt;open()">DB_ENV-&gt;open()</a> method and must
+        already have been configured to send replication messages by
+        calling the <a class="xref" href="reptransport.html" title="DB_ENV-&gt;rep_set_transport()">DB_ENV-&gt;rep_set_transport()</a> 
+        method.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;rep_sync()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1702239"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1702262"></a>flags</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>flags</strong></span> parameter is currently
+                          unused, and must be set to 0.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1702433"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+             The <code class="methodname">DB_ENV-&gt;rep_sync()</code> <span>
+            <span>
+                 method may fail and return one of the following non-zero errors:
+            </span>
+            
+        </span>
+         </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1702246"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+If the database environment was not already configured to communicate
+with a replication group by a call to
+<a class="xref" href="reptransport.html" title="DB_ENV-&gt;rep_set_transport()">DB_ENV-&gt;rep_set_transport()</a>;
+the database environment was not already opened; 
+                 or if an invalid flag value or parameter was specified.
+             </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1702259"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1702328"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="rep.html#replist" title="Replication and Related Methods">Replication and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="repstat_print.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="rep.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="repmgrremote_site.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB_ENV-&gt;rep_stat_print() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_ENV-&gt;repmgr_add_remote_site()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>QNX</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="build_unix.html" title="Chapter 27.  Building Berkeley DB for UNIX/POSIX" />
+    <link rel="prev" href="build_unix_osf1.html" title="OSF/1" />
+    <link rel="next" href="build_unix_sco.html" title="SCO" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">QNX</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="build_unix_osf1.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 27. 
+        Building Berkeley DB for UNIX/POSIX
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="build_unix_sco.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="build_unix_qnx"></a>QNX</h2>
+          </div>
+        </div>
+      </div>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <span class="bold">
+              <strong>To what versions of QNX has DB been ported?</strong>
+            </span>
+            <p>Berkeley DB has been ported to the QNX Neutrino technology which is commonly
+referred to as QNX RTP (Real-Time Platform).  Berkeley DB has not been
+ported to earlier versions of QNX, such as QNX 4.25.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>Building Berkeley DB shared libraries fails.</strong>
+            </span>
+            <p>The <code class="filename">/bin/sh</code> utility distributed with some QNX releases drops
+core when running the GNU libtool script (which is used to build Berkeley DB
+shared libraries).  There are two workarounds for this problem: First,
+only build static libraries.  You can disable building shared libraries
+by specifying the  configuration flag when
+configuring Berkeley DB.</p>
+            <p>Second, build Berkeley DB using an alternate shell.  QNX distributions include
+an accessories disk with additional tools.  One of the included tools
+is the GNU bash shell, which is able to run the libtool script.  To
+build Berkeley DB using an alternate shell, move <code class="filename">/bin/sh</code> aside, link
+or copy the alternate shell into that location, configure, build and
+install Berkeley DB, and then replace the original shell utility.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>Are there any QNX filesystem issues?</strong>
+            </span>
+            <p>Berkeley DB generates temporary files for use in transactionally
+protected file system operations.  Due to the filename length limit of
+48 characters in the QNX filesystem, applications that are using
+transactions should specify a database name that is at most 43 characters.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>What are the implications of QNX's requirement to use
+<code class="literal">shm_open</code>(2) in order to use <code class="literal">mmap</code>(2)?</strong>
+            </span>
+            <p>QNX requires that files mapped with <code class="literal">mmap</code>(2) be opened using
+<code class="literal">shm_open</code>(2).  There are other places in addition to the
+environment shared memory regions, where Berkeley DB tries to memory map files
+if it can.</p>
+            <p>The memory pool subsystem normally attempts to use <code class="literal">mmap</code>(2)
+even when using private memory, as indicated by the <a href="../api_reference/C/envopen.html#open_DB_PRIVATE" class="olink">DB_PRIVATE</a> flag
+to <a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a>.  In the case of QNX, if an application is
+using private memory, Berkeley DB will not attempt to map the memory and will
+instead use the local cache.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>What are the implications of QNX's mutex implementation using
+microkernel resources?</strong>
+            </span>
+            <p>On QNX, the primitives implementing mutexes consume system resources.
+Therefore, if an application unexpectedly fails, those resources could
+leak.  Berkeley DB solves this problem by always allocating mutexes in the
+persistent shared memory regions.  Then, if an application fails,
+running recovery or explicitly removing the database environment by
+calling the <a href="../api_reference/C/envremove.html" class="olink">DB_ENV-&gt;remove()</a> method will allow Berkeley DB to release those
+previously held mutex resources.  If an application specifies the
+<a href="../api_reference/C/envopen.html#open_DB_PRIVATE" class="olink">DB_PRIVATE</a> flag (choosing not to use persistent shared memory),
+and then fails, mutexes allocated in that private memory may leak their
+underlying system resources.  Therefore, the <a href="../api_reference/C/envopen.html#open_DB_PRIVATE" class="olink">DB_PRIVATE</a> flag
+should be used with caution on QNX.</p>
+          </li>
+        </ol>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="build_unix_osf1.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="build_unix.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="build_unix_sco.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">OSF/1 </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> SCO</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

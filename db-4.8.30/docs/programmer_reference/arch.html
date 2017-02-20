@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 8.  Berkeley DB Architecture</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="prev" href="stl_known_issues.html" title="Dbstl known issues" />
+    <link rel="next" href="arch_progmodel.html" title="Programming model" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 8. 
+        Berkeley DB Architecture
+        </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="stl_known_issues.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="arch_progmodel.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="arch"></a>Chapter 8. 
+        Berkeley DB Architecture
+        </h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="arch.html#arch_bigpic">The big picture</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="arch_progmodel.html">Programming model</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="arch_apis.html">Programmatic APIs</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="arch_apis.html#id1603628">C</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="arch_apis.html#id1603668">C++</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="arch_apis.html#id1603511">STL</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="arch_apis.html#id1603399">Java</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="arch_apis.html#id1603369">Dbm/Ndbm, Hsearch</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <span class="sect1">
+              <a href="arch_script.html">Scripting languages</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="arch_script.html#id1603486">Perl</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="arch_script.html#id1603736">PHP</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="arch_script.html#id1603909">Tcl</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <span class="sect1">
+              <a href="arch_utilities.html">Supporting utilities</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="arch_bigpic"></a>The big picture</h2>
+            </div>
+          </div>
+        </div>
+        <p>The previous chapters in this Reference Guide have described
+applications that use the Berkeley DB access methods for fast data storage
+and retrieval.  The applications described in the following chapters
+are similar in nature to the access method applications, but they are
+also threaded and/or recoverable in the face of application or system
+failure.</p>
+        <p>Application code that uses only the Berkeley DB access methods might appear
+as follows:</p>
+        <pre class="programlisting">switch (ret = dbp-&gt;/put(dbp, NULL, &amp;key, &amp;data, 0)) {
+case 0:
+    printf("db: %s: key stored.\n", (char *)key.data);
+    break;
+default:
+    dbp-&gt;/err(dbp, ret, "dbp-&gt;/put");
+    exit (1);
+}</pre>
+        <p>The underlying Berkeley DB architecture that supports this is</p>
+        <div class="mediaobject">
+          <img src="arch_smallpic.gif" />
+        </div>
+        <p>As you can see from this diagram, the application makes calls into the
+access methods, and the access methods use the underlying shared memory
+buffer cache to hold recently used file pages in main memory.</p>
+        <p>When applications require recoverability, their calls to the Access
+Methods must be wrapped in calls to the transaction subsystem.  The
+application must inform Berkeley DB where to begin and end transactions, and
+must be prepared for the possibility that an operation may fail at any
+particular time, causing the transaction to abort.</p>
+        <p>An example of transaction-protected code might appear as follows:</p>
+        <pre class="programlisting">for (fail = 0;;) {
+    /* Begin the transaction. */
+    if ((ret = dbenv-&gt;/txn_begin(dbenv, NULL, &amp;tid, 0)) != 0) {
+        dbenv-&gt;/err(dbenv, ret, "dbenv-&gt;/txn_begin");
+        exit (1);
+    }
+
+    /* Store the key. */
+    switch (ret = dbp-&gt;/put(dbp, tid, &amp;key, &amp;data, 0)) {
+    case 0:
+        /* Success: commit the change. */
+        printf("db: %s: key stored.\n", (char *)key.data);
+        if ((ret = tid-&gt;/commit(tid, 0)) != 0) {
+            dbenv-&gt;/err(dbenv, ret, "DB_TXN-&gt;/commit");
+            exit (1);
+        }
+        return (0);
+    case DB_LOCK_DEADLOCK:
+    default:
+        /* Failure: retry the operation. */
+        if ((t_ret = tid-&gt;/abort(tid)) != 0) {
+            dbenv-&gt;/err(dbenv, t_ret, "DB_TXN-&gt;/abort");
+            exit (1);
+        }
+        if (fail++ == MAXIMUM_RETRY)
+            return (ret);
+        continue;
+    }
+}</pre>
+        <p>In this example, the same operation is being done as before; however,
+it is wrapped in transaction calls.  The transaction is started with
+<a href="../api_reference/C/txnbegin.html" class="olink">DB_ENV-&gt;txn_begin()</a> and finished with <a href="../api_reference/C/txncommit.html" class="olink">DB_TXN-&gt;commit()</a>.  If the
+operation fails due to a deadlock, the transaction is aborted using
+<a href="../api_reference/C/txnabort.html" class="olink">DB_TXN-&gt;abort()</a>, after which the operation may be retried.</p>
+        <p>There are actually five major subsystems in Berkeley DB, as follows:</p>
+        <div class="variablelist">
+          <dl>
+            <dt>
+              <span class="term">Access Methods</span>
+            </dt>
+            <dd>The access methods subsystem provides general-purpose support for
+creating and accessing database files formatted as Btrees, Hashed files,
+and Fixed- and Variable-length records.  These modules are useful in
+the absence of transactions for applications that need fast formatted
+file support.  See <a href="../api_reference/C/dbopen.html" class="olink">DB-&gt;open()</a> and <a href="../api_reference/C/dbcursor.html" class="olink">DB-&gt;cursor()</a> for more
+information.  These functions were already discussed in detail in the
+previous chapters.</dd>
+            <dt>
+              <span class="term">Memory Pool</span>
+            </dt>
+            <dd>The Memory Pool subsystem is the general-purpose shared memory buffer pool
+used by Berkeley DB.  This is the shared memory cache that allows multiple
+processes and threads within processes to share access to databases.  This
+module is useful outside of the Berkeley DB package for processes that require
+portable, page-oriented, cached, shared file access.</dd>
+            <dt>
+              <span class="term">Transaction</span>
+            </dt>
+            <dd>The Transaction subsystem allows a group of database changes to be
+treated as an atomic unit so that either all of the changes are done,
+or none of the changes are done.  The transaction subsystem implements
+the Berkeley DB transaction model.  This module is useful outside of the Berkeley DB
+package for processes that want to transaction-protect their own data
+modifications.</dd>
+            <dt>
+              <span class="term">Locking</span>
+            </dt>
+            <dd>The Locking subsystem is the general-purpose lock manager used by Berkeley DB.
+This module is useful outside of the Berkeley DB package for processes that
+require a portable, fast, configurable lock manager.</dd>
+            <dt>
+              <span class="term">Logging</span>
+            </dt>
+            <dd>The Logging subsystem is the write-ahead logging used to support the
+Berkeley DB transaction model.  It is largely specific to the Berkeley DB package,
+and unlikely to be useful elsewhere except as a supporting module for
+the Berkeley DB transaction subsystem.</dd>
+          </dl>
+        </div>
+        <p>Here is a more complete picture of the Berkeley DB library:</p>
+        <div class="mediaobject">
+          <img src="arch_bigpic.gif" />
+        </div>
+        <p>In this model, the application makes calls to the access methods and to
+the Transaction subsystem.  The access methods and Transaction subsystems
+in turn make calls into the Memory Pool, Locking and Logging subsystems
+on behalf of the application.</p>
+        <p>The underlying subsystems can be used independently by applications.
+For example, the Memory Pool subsystem can be used apart from the rest
+of Berkeley DB by applications simply wanting a shared memory buffer pool, or
+the Locking subsystem may be called directly by applications that are
+doing their own locking outside of Berkeley DB.  However, this usage is not
+common, and most applications will either use only the access methods
+subsystem, or the access methods subsystem wrapped in calls to the Berkeley DB
+transaction interfaces.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="stl_known_issues.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="arch_progmodel.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Dbstl known issues </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Programming model</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Foreign key indexes</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="am.html" title="Chapter 3.  Access Method Operations" />
+    <link rel="prev" href="am_second.html" title="Secondary indexes" />
+    <link rel="next" href="am_cursor.html" title="Cursor operations" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Foreign key indexes</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="am_second.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. 
+        Access Method Operations
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="am_cursor.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="am_foreign"></a>Foreign key indexes</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+    Foreign keys are used to ensure a level of consistency between
+    two different databases in terms of the keys that the databases use.  
+    In a foreign key relationship, one database is the
+    <span class="emphasis"><em>constrained</em></span> database. This database is actually a
+    secondary database which is associated with a primary database. The
+    other database in this relationship is the
+    <span class="emphasis"><em>foreign key</em></span> database. Once this relationship has
+    been established between a constrained database and a foreign key
+    database, then:
+</p>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <p>
+            Key/data items cannot be added to the
+            constrained database unless that same key
+            already exists in the foreign key
+            database.
+        </p>
+          </li>
+          <li>
+            <p>
+            A key/data pair cannot be deleted from the foreign
+            key database unless some action is also taken to
+            keep the constrained database consistent with
+            the foreign key database.
+        </p>
+          </li>
+        </ol>
+      </div>
+      <p>
+    Because the constrained database is a secondary database, by ensuring
+    it's consistency with a foreign key database you are actually ensuring
+    that a primary database (the one to which the secondary database is
+    associated) is consistent with the foreign key database.
+</p>
+      <p>
+    Deletions of keys in the foreign key database affect the constrained database
+    in one of three ways, as specified by the application:
+</p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+  <code class="literal">Abort</code>
+ </p>
+            <p>
+  The deletion of a record from the foreign database will not proceed if that key
+  exists in the constrained primary database.  Transactions must be used to prevent
+  the aborted delete from corrupting either of the databases.
+ </p>
+          </li>
+          <li>
+            <p>
+  <code class="literal">Cascade</code>
+ </p>
+            <p>
+     The deletion of a record from the foreign database will also cause any records
+     in the constrained primary database that use that key to also be
+     automatically deleted.
+ </p>
+          </li>
+          <li>
+            <p>
+  <code class="literal">Nullify</code>
+ </p>
+            <p>
+  The deletion of a record from the foreign database will cause a user specified
+  callback function to be called, in order to alter or nullify any records
+  using that key in the constrained primary database.
+ </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+    Note that it is possible to delete a key from the constrained database,
+    but not from the foreign key database. For this reason, if you want the
+    keys used in both databases to be 100% accurate, then you will have to
+    write code to ensure that when a key is removed from the constrained
+    database, it is also removed from the foreign key database.
+</p>
+      <p>
+    As an example of how foreign key indexes might be used, consider a database
+    of customer information and a database of order information.  A typical
+    customer database would use a customer ID as the key and those keys
+    would also appear in the order database.  To ensure an order is not
+    booked for a non-existent customer, the customer database can be
+    associated with the order database as a foreign index.  
+</p>
+      <p>
+    In order to do this, you create a secondary index of the order
+    database, which uses customer IDs as the key for its key/data pairs.
+    This secondary index is, then, the constrained database. But because
+    the secondary index is constrained, so too is the order database
+    because the contents of the secondary index are programmatically tied
+    to the contents of the order database.
+</p>
+      <p>
+    The customer database, then, is the foreign key database. It is
+    associated to the order database's secondary index using the 
+    <a href="../api_reference/C/dbassociate_foreign.html" class="olink">DB-&gt;associate_foreign()</a> method.  In this way,
+    an order cannot be added to the order database unless the customer ID
+    already exists in the customer database.
+</p>
+      <p>
+    Note that this relationship can also be configured to delete any
+    outstanding orders for a customer when that customer is deleted from
+    the customer database.
+</p>
+      <p>In SQL, this would be done by executing something like the following:</p>
+      <pre class="programlisting">CREATE TABLE customers(cust_id CHAR(4) NOT NULL,
+       lastname CHAR(15), firstname CHAR(15), PRIMARY KEY(cust_id));
+CREATE TABLE orders(order_id CHAR(4) NOT NULL, order_num int NOT NULL,
+       cust_id CHAR(4), PRIMARY KEY (order_id),
+       FOREIGN KEY (cust_id) REFERENCES customers(cust_id) 
+       ON DELETE CASCADE);
+</pre>
+      <p>In Berkeley DB, this would work as follows:</p>
+      <pre class="programlisting">struct customer {
+       char cust_id[4];
+       char last_name[15];
+       char first_name[15];
+};
+struct order {
+       char order_id[4];
+       int order_number;
+       char cust_id[4];
+};
+
+void
+foreign()
+{
+       DB *dbp, *sdbp, *fdbp;
+       int ret;
+
+       /* Open/create order database */
+       if ((ret = db_create(&amp;dbp, dbenv, 0)) != 0)
+               handle_error(ret);
+       if ((ret = dbp-&gt;open(dbp, NULL,
+           "orders.db", NULL, DB_BTREE, DB_CREATE, 0600)) != 0)
+               handle_error(ret);
+
+       /*
+        * Open/create secondary index on customer id.  Note that it
+        * supports duplicates because a customer may have multiple
+        * orders.
+        */
+       if ((ret = db_create(&amp;sdbp, dbenv, 0)) != 0)
+               handle_error(ret);
+       if ((ret = sdbp-&gt;set_flags(sdbp, DB_DUP | DB_DUPSORT)) != 0)
+               handle_error(ret);
+       if ((ret = sdbp-&gt;open(sdbp, NULL, "orders_cust_ids.db",
+           NULL, DB_BTREE, DB_CREATE, 0600)) != 0)
+               handle_error(ret);
+
+       /* Associate the secondary with the primary. */
+       if ((ret = dbp-&gt;associate(dbp, NULL, sdbp, getcustid, 0)) != 0)
+               handle_error(ret);
+
+       /* Open/create customer database */
+       if ((ret = db_create(&amp;fdbp, dbenv, 0)) != 0)
+               handle_error(ret);
+       if ((ret = fdbp-&gt;open(fdbp, NULL,
+           "customers.db", NULL, DB_BTREE, DB_CREATE, 0600)) != 0)
+               handle_error(ret);
+
+       /* Associate the foreign with the secondary. */
+       if ((ret = fdbp-&gt;associate_foreign(
+           fdbp, sdbp, NULL, DB_FOREIGN_CASCADE)) != 0)
+               handle_error(ret);
+
+}
+
+/*
+* getcustid -- extracts a secondary key (the customer id) from a primary
+*     key/data pair
+*/
+int
+getname(secondary, pkey, pdata, skey)
+       DB *secondary;
+       const DBT *pkey, *pdata;
+       DBT *skey;
+{
+       /*
+        * Since the secondary key is a simple structure member of the
+        * record, we don't have to do anything fancy to return it.  If
+        * we have composite keys that need to be constructed from the
+        * record, rather than simply pointing into it, then the user's
+        * function might need to allocate space and copy data.  In
+        * this case, the DB_DBT_APPMALLOC flag should be set in the
+        * secondary key DBT.
+        */
+       memset(skey, 0, sizeof(DBT));
+       skey-&gt;data = ((struct order *)pdata-&gt;data)-&gt;cust_id;
+       skey-&gt;size = 4;
+       return (0);
+}</pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="am_second.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="am.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="am_cursor.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Secondary indexes </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Cursor operations</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

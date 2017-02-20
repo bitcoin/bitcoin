@@ -1,0 +1,482 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 2.  The Db Handle</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="prev" href="introduction.html" title="Chapter 1. Introduction to Berkeley DB APIs" />
+    <link rel="next" href="dbassociate.html" title="Db::associate()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 2. 
+                The Db Handle
+        </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="introduction.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbassociate.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="db"></a>Chapter 2. 
+                The Db Handle
+        </h2>
+          </div>
+        </div>
+      </div>
+      <p>
+                The Db is the handle for a single Berkeley DB database. A Berkeley DB database
+                provides a mechanism for organizing key-data pairs of information. From the
+                perspective of some database systems, a Berkeley DB database could be thought of as
+                a single table within a larger database.
+        </p>
+      <p>
+                You create a Db handle using the <a class="xref" href="dbcreate.html" title="Db">Db</a>
+                
+                <span>constructor.</span> 
+                For most database activities, you must then open the handle using the 
+                <a class="xref" href="dbopen.html" title="Db::open()">Db::open()</a>
+                method. When you are done with them, handles must be closed using the
+                <a class="xref" href="dbclose.html" title="Db::close()">Db::close()</a> method.
+        </p>
+      <p>
+            Alternatively, you can create a Db and then rename, remove or verify the database
+            without performing an open. See <a class="xref" href="dbrename.html" title="Db::rename()">Db::rename()</a>,
+            <a class="xref" href="dbremove.html" title="Db::remove()">Db::remove()</a> or 
+            <a class="xref" href="dbverify.html" title="Db::verify()">Db::verify()</a> for information on these
+            activities.
+        </p>
+      <p>
+            It is possible to create databases such that they are organized within a
+            <span class="emphasis"><em>database environment</em></span>. Environments are optional for simple Berkeley
+            DB applications that do not use transactions, recovery, replication or any other
+            advanced features. For simple Berkeley DB applications, environments still offer some
+            advantages. For example, they provide some organizational
+            benefits on-disk (all databases are located on disk relative to the environment). Also,
+            if you are using multiple databases, then environments allow your databases to share a
+            common in-memory cache, which makes for more efficient usage of your hardware's
+            resources. 
+        </p>
+      <p>
+            See <a class="link" href="env.html" title="Chapter 5.  The DbEnv Handle">DbEnv</a> for information on using database
+            environments.
+        </p>
+      <p>
+            You specify the underlying organization of the data in the database (e.g. BTree, Hash,
+            Queue, and Recno) when you open the database. When you create a database,
+            you are free to specify any of the available database types. On subsequent opens,
+            you must either specify the access method used when you first opened the database, or
+            you can specify <code class="literal">DB_UNKNOWN</code> in order to have this information
+            retrieved for you. See the <a class="xref" href="dbopen.html" title="Db::open()">Db::open()</a>
+            method for information on specifying database types.
+        </p>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="dblist"></a>Database and Related Methods</h2>
+            </div>
+          </div>
+        </div>
+        <div class="navtable">
+          <table border="1" width="80%">
+            <thead>
+              <tr>
+                <th>Database Operations</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <a class="xref" href="dbassociate.html" title="Db::associate()">Db::associate()</a>
+                </td>
+                <td>Associate a secondary index</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbassociate_foreign.html" title="Db::associate_foreign()">Db::associate_foreign()</a>
+                </td>
+                <td>Associate a foreign index</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbclose.html" title="Db::close()">Db::close()</a>
+                </td>
+                <td>Close a database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbcreate.html" title="Db">Db</a>
+                </td>
+                <td>Create a database handle</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbcompact.html" title="Db::compact()">Db::compact()</a>
+                </td>
+                <td>Compact a database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbdel.html" title="Db::del()">Db::del()</a>
+                </td>
+                <td>Delete items from a database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dberr.html" title="Db::err()">Db::err()</a>
+                </td>
+                <td>Error message</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbexists.html" title="Db::exists()">Db::exists()</a>
+                </td>
+                <td>Return if an item appears in a database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbfd.html" title="Db::fd()">Db::fd()</a>
+                </td>
+                <td>Return a file descriptor from a database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbget.html" title="Db::get()">Db::get()</a>
+                </td>
+                <td>Get items from a database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbget_byteswapped.html" title="Db::get_byteswapped()">Db::get_byteswapped()</a>
+                </td>
+                <td>Return if the underlying database is in host order</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbget_dbname.html" title="Db::get_dbname()">Db::get_dbname()</a>
+                </td>
+                <td>Return the file and database name</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbget_multiple.html" title="Db::get_multiple()">Db::get_multiple()</a>
+                </td>
+                <td>Return if the database handle references multiple databases</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbget_open_flags.html" title="Db::get_open_flags()">Db::get_open_flags()</a>
+                </td>
+                <td>Returns the flags specified to Db::open</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbget_type.html" title="Db::get_type()">Db::get_type()</a>
+                </td>
+                <td>Return the database type</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbjoin.html" title="Db::join()">Db::join()</a>
+                </td>
+                <td>Perform a database join on cursors</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbkey_range.html" title="Db::key_range()">Db::key_range()</a>
+                </td>
+                <td>Return estimate of key location</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbopen.html" title="Db::open()">Db::open()</a>
+                </td>
+                <td>Open a database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbput.html" title="Db::put()">Db::put()</a>
+                </td>
+                <td>Store items into a database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbremove.html" title="Db::remove()">Db::remove()</a>
+                </td>
+                <td>Remove a database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbrename.html" title="Db::rename()">Db::rename()</a>
+                </td>
+                <td>Rename a database</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="dbset_priority.html" title="Db::set_priority()">Db::set_priority()</a>, <a class="xref" href="dbget_priority.html" title="Db::get_priority()">Db::get_priority()</a></td>
+                <td>Set/get cache page priority</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbstat.html" title="Db::stat()">Db::stat()</a>
+                </td>
+                <td>Database statistics</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbstat_print.html" title="Db::stat_print()">Db::stat_print()</a>
+                </td>
+                <td>Display database statistics</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbsync.html" title="Db::sync()">Db::sync()</a>
+                </td>
+                <td>Flush a database to stable storage</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbtruncate.html" title="Db::truncate()">Db::truncate()</a>
+                </td>
+                <td>Empty a database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbupgrade.html" title="Db::upgrade()">Db::upgrade()</a>
+                </td>
+                <td>Upgrade a database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbverify.html" title="Db::verify()">Db::verify()</a>
+                </td>
+                <td>Verify/salvage a database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbcursor.html" title="Db::cursor()">Db::cursor()</a>
+                </td>
+                <td>Create a cursor handle</td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <span class="bold">
+                    <strong>Database Configuration</strong>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbset_alloc.html" title="Db::set_alloc()">Db::set_alloc()</a>
+                </td>
+                <td>Set local space allocation functions</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="dbset_cachesize.html" title="Db::set_cachesize()">Db::set_cachesize()</a>, <a class="xref" href="dbget_cachesize.html" title="Db::get_cachesize()">Db::get_cachesize()</a></td>
+                <td>Set/get the database cache size</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="dbset_create_dir.html" title="Db::set_create_dir()">Db::set_create_dir()</a>, <a class="xref" href="dbget_create_dir.html" title="Db::get_create_dir()">Db::get_create_dir()</a></td>
+                <td>Set/get the directory in which a database is placed</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbset_dup_compare.html" title="Db::set_dup_compare()">Db::set_dup_compare()</a>
+                </td>
+                <td>Set a duplicate comparison function</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="dbset_encrypt.html" title="Db::set_encrypt()">Db::set_encrypt()</a>, <a class="xref" href="dbget_encrypt_flags.html" title="Db::get_encrypt_flags()">Db::get_encrypt_flags()</a></td>
+                <td>Set/get the database cryptographic key</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbset_errcall.html" title="Db::set_errcall()">Db::set_errcall()</a>
+                </td>
+                <td>Set error message callback</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="dbset_errfile.html" title="Db::set_errfile()">Db::set_errfile()</a>, <a class="xref" href="dbget_errfile.html" title="Db::get_errfile()">Db::get_errfile()</a></td>
+                <td>Set/get error message FILE</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbset_error_stream.html" title="Db::set_error_stream()">Db::set_error_stream()</a>
+                </td>
+                <td>Set C++ ostream used for error messages</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="dbset_errpfx.html" title="Db::set_errpfx()">Db::set_errpfx()</a>, <a class="xref" href="dbget_errpfx.html" title="Db::get_errpfx()">Db::get_errpfx()</a></td>
+                <td>Set/get error message prefix</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbset_feedback.html" title="Db::set_feedback()">Db::set_feedback()</a>
+                </td>
+                <td>Set feedback callback</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="dbset_flags.html" title="Db::set_flags()">Db::set_flags()</a>, <a class="xref" href="dbget_flags.html" title="Db::get_flags()">Db::get_flags()</a></td>
+                <td>Set/get general database configuration</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="dbset_lorder.html" title="Db::set_lorder()">Db::set_lorder()</a>, <a class="xref" href="dbget_lorder.html" title="Db::get_lorder()">Db::get_lorder()</a></td>
+                <td>Set/get the database byte order</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbset_message_stream.html" title="Db::set_message_stream()">Db::set_message_stream()</a>
+                </td>
+                <td>Set C++ ostream used for informational messages</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbset_msgcall.html" title="Db::set_msgcall()">Db::set_msgcall()</a>
+                </td>
+                <td>Set informational message callback</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="dbset_msgfile.html" title="Db::set_msgfile()">Db::set_msgfile()</a>, <a class="xref" href="dbget_msgfile.html" title="Db::get_msgfile()">Db::get_msgfile()</a></td>
+                <td>Set/get informational message FILE</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="dbset_pagesize.html" title="Db::set_pagesize()">Db::set_pagesize()</a>, <a class="xref" href="dbget_pagesize.html" title="Db::get_pagesize()">Db::get_pagesize()</a></td>
+                <td>Set/get the underlying database page size</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbset_partition.html" title="Db::set_partition()">Db::set_partition()</a>
+                </td>
+                <td>Set database partitioning</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="dbset_partition_dirs.html" title="Db::set_partition_dirs()">Db::set_partition_dirs()</a>, <a class="xref" href="dbget_partition_dirs.html" title="Db::get_partition_dirs()">Db::get_partition_dirs()</a></td>
+                <td>Set/get the directories used for database partitions</td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <span class="bold">
+                    <strong>Btree/Recno Configuration</strong>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbset_append_recno.html" title="Db::set_append_recno()">Db::set_append_recno()</a>
+                </td>
+                <td>Set record append callback</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbset_bt_compare.html" title="Db::set_bt_compare()">Db::set_bt_compare()</a>
+                </td>
+                <td>Set a Btree comparison function</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbset_bt_compress.html" title="Db::set_bt_compress()">Db::set_bt_compress()</a>
+                </td>
+                <td>Set Btree compression functions</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="dbset_bt_minkey.html" title="Db::set_bt_minkey()">Db::set_bt_minkey()</a>, <a class="xref" href="dbget_bt_minkey.html" title="Db::get_bt_minkey()">Db::get_bt_minkey()</a></td>
+                <td>Set/get the minimum number of keys per Btree page</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbset_bt_prefix.html" title="Db::set_bt_prefix()">Db::set_bt_prefix()</a>
+                </td>
+                <td>Set a Btree prefix comparison function</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="dbset_re_delim.html" title="Db::set_re_delim()">Db::set_re_delim()</a>, <a class="xref" href="dbget_re_delim.html" title="Db::get_re_delim()">Db::get_re_delim()</a></td>
+                <td>Set/get the variable-length record delimiter</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="dbset_re_len.html" title="Db::set_re_len()">Db::set_re_len()</a>, <a class="xref" href="dbget_re_len.html" title="Db::get_re_len()">Db::get_re_len()</a></td>
+                <td>Set/get the fixed-length record length</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="dbset_re_pad.html" title="Db::set_re_pad()">Db::set_re_pad()</a>, <a class="xref" href="dbget_re_pad.html" title="Db::get_re_pad()">Db::get_re_pad()</a></td>
+                <td>Set/get the fixed-length record pad byte</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="dbset_re_source.html" title="Db::set_re_source()">Db::set_re_source()</a>, <a class="xref" href="dbget_re_source.html" title="Db::get_re_source()">Db::get_re_source()</a></td>
+                <td>Set/get the backing Recno text file</td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <span class="bold">
+                    <strong>Hash Configuration</strong>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbset_h_compare.html" title="Db::set_h_compare()">Db::set_h_compare()</a>
+                </td>
+                <td>Set a Hash comparison function</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="dbset_h_ffactor.html" title="Db::set_h_ffactor()">Db::set_h_ffactor()</a>, <a class="xref" href="dbget_h_ffactor.html" title="Db::get_h_ffactor()">Db::get_h_ffactor()</a></td>
+                <td>Set/get the Hash table density</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbset_h_hash.html" title="Db::set_h_hash()">Db::set_h_hash()</a>
+                </td>
+                <td>Set a hashing function</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="dbset_h_nelem.html" title="Db::set_h_nelem()">Db::set_h_nelem()</a>, <a class="xref" href="dbget_h_nelem.html" title="Db::get_h_nelem()">Db::get_h_nelem()</a></td>
+                <td>Set/get the Hash table size</td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <span class="bold">
+                    <strong>Queue Configuration</strong>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="dbset_q_extentsize.html" title="Db::set_q_extentsize()">Db::set_q_extentsize()</a>, <a class="xref" href="dbget_q_extentsize.html" title="Db::get_q_extentsize()">Db::get_q_extentsize()</a></td>
+                <td>Set/get Queue database extent size</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="introduction.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbassociate.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 1. Introduction to Berkeley DB APIs </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Db::associate()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

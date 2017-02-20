@@ -1,0 +1,12 @@
+
+/* DO NOT EDIT: automatically built by dist/s_include. */
+#ifndef	_DB_EXT_185_DEF_IN_
+#define	_DB_EXT_185_DEF_IN_
+
+#ifdef _DB185_INT_H_
+#define	__db185_open __db185_open@DB_VERSION_UNIQUE_NAME@
+#else
+#define	__db185_open __db185_open@DB_VERSION_UNIQUE_NAME@
+#endif
+
+#endif /* !_DB_EXT_185_DEF_IN_ */

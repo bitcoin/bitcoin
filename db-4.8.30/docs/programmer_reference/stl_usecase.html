@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Dbstl typical use cases</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="stl.html" title="Chapter 7. Standard Template Library API" />
+    <link rel="prev" href="stl.html" title="Chapter 7. Standard Template Library API" />
+    <link rel="next" href="stl_examples.html" title="Dbstl examples" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Dbstl typical use cases</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="stl.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 7. Standard Template Library API</th>
+          <td width="20%" align="right"> <a accesskey="n" href="stl_examples.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="stl_usecase"></a>Dbstl typical use cases</h2></div></div></div>
+Among others, the following are some typical use cases where dbstl would
+be prefered over C++ STL:
+ 
+<div class="itemizedlist"><ul type="disc"><li><p>
+Working with a large amount of data, more than can reside in memory.
+Using C++ STL would force a number of page swaps, which will degrade
+performance.  When using dbstl, data is stored in a database and Berkeley
+DB ensures the needed data is in memory, so that the overall performance
+of the machine is not slowed down. 
+</p></li><li><p>
+Familiar Interface.  dbstl provides a familiar interface to Berkeley DB,
+hiding the marshalling and unmashalling details and automatically
+managing Berkeley DB structures and objects.
+</p></li><li><p>
+Transaction semantics.  dbstl provides the ACID properties (or a subset of
+the ACID properties) in addition to supporting all of the STL
+functionality.
+</p></li><li><p>
+Concurrent access.  Few (if any) existing C++ STL implementations support
+reading/writing to the same container concurrently, dbstl does.
+</p></li><li><p>
+Object persistence.  dbstl allows your application to store objects in a
+database, and use the objects across different runs of your application. 
+dbstl is capable of storing complicated objects which are not located in
+a contiguous chunk of memory, with some user configurations.
+</p></li></ul></div></div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="stl.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="stl.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="stl_examples.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 7. Standard Template Library API </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Dbstl examples</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

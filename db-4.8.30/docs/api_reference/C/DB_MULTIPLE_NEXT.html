@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB_MULTIPLE_NEXT</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="dbt.html" title="Chapter 4.  The DBT Handle" />
+    <link rel="prev" href="DB_MULTIPLE_INIT.html" title="DB_MULTIPLE_INIT" />
+    <link rel="next" href="DB_MULTIPLE_KEY_NEXT.html" title="DB_MULTIPLE_KEY_NEXT" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB_MULTIPLE_NEXT</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="DB_MULTIPLE_INIT.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 4. 
+                The DBT Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="DB_MULTIPLE_KEY_NEXT.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="DB_MULTIPLE_NEXT"></a>DB_MULTIPLE_NEXT</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+DB_MULTIPLE_NEXT(void *pointer, DBT *data, void *retdata, 
+    size_t retdlen); </pre>
+      <p>
+        If either of the 
+        <a class="link" href="dbcget.html#dbcget_DB_MULTIPLE">DB_MULTIPLE</a>
+        or
+        <a class="link" href="dbcget.html#dbcget_DB_MULTIPLE_KEY">DB_MULTIPLE_KEY</a>
+        flags were specified to the <a class="xref" href="dbget.html" title="DB-&gt;get()">DB-&gt;get()</a> or 
+        <a class="xref" href="dbcget.html" title="DBcursor-&gt;get()">DBcursor-&gt;get()</a> methods, the data 
+        <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a> returned by those interfaces will 
+        refer to a buffer that is filled with data. Access to that data is through the 
+        DB_MULTIPLE_* macros.
+    </p>
+      <p>
+        Returns the next <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a> in the bulk
+        retrieval set.
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1657540"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1658358"></a>pointer</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                        The <span class="bold"><strong>pointer</strong></span> parameter is a variable 
+                        that must have been initialized by a call to 
+                        <a class="xref" href="DB_MULTIPLE_INIT.html" title="DB_MULTIPLE_INIT">DB_MULTIPLE_INIT</a>.
+                     </p>
+          <p>
+                         This parameter is set to NULL if there are no more key/data pairs in
+                         the returned set.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1658446"></a>data</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                        The <span class="bold"><strong>data</strong></span> parameter is a 
+                        <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a> structure returned from a
+                        successful call to <a class="xref" href="dbget.html" title="DB-&gt;get()">DB-&gt;get()</a> or
+                        <a class="xref" href="dbcget.html" title="DBcursor-&gt;get()">DBcursor-&gt;get()</a> for which he 
+                        <a class="link" href="dbcget.html#dbcget_DB_MULTIPLE">DB_MULTIPLE</a>
+                        flag was specified.
+                     </p>
+          <p>
+                         The <span class="bold"><strong>data</strong></span> parameter must have been initialized by 
+                         a call to <a class="xref" href="DB_MULTIPLE_INIT.html" title="DB_MULTIPLE_INIT">DB_MULTIPLE_INIT</a>.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1658509"></a>retdata</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                        The <span class="bold"><strong>retdata</strong></span> is set
+                        to the next data element in the returned set.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1657694"></a>retdlen</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                        The <span class="bold"><strong>retdlen</strong></span> parameter is set to
+                        the length, in bytes, of that data element. When used with the Queue and
+                        Recno access methods, <span class="bold"><strong>retdata</strong></span> parameter
+                        will be set to NULL for deleted records. 
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1658454"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1658294"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="dbt.html#dbtlist" title="DBT and Bulk Operations">DBT and Bulk Operations</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="DB_MULTIPLE_INIT.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="dbt.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="DB_MULTIPLE_KEY_NEXT.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB_MULTIPLE_INIT </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_MULTIPLE_KEY_NEXT</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

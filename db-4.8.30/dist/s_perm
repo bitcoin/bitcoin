@@ -1,0 +1,63 @@
+#!/bin/sh -
+#	$Id$
+
+d=..
+echo 'Updating Berkeley DB source tree permissions...'
+
+run()
+{
+	#echo "	$1 ($2)"
+	if [ -f "$d/$1" ]; then
+		chmod "$2" "$d/$1"
+	else
+		echo "$d/$1: no such file or directory"
+		exit 1
+	fi
+}
+
+run build_windows/include.tcl 664
+run dist/config.guess 555
+run dist/config.sub 555
+run dist/configure 555
+run dist/install-sh 555
+run dist/s_all 555
+run dist/s_apiflags 555
+run dist/s_brew 555
+run dist/s_brew_dsp 555
+run dist/s_brew_posix 555
+run dist/s_config 555
+run dist/s_crypto 555
+run dist/s_cscope 555
+run dist/s_include 555
+run dist/s_java 555
+run dist/s_java_const 555
+run dist/s_java_stat 555
+run dist/s_java_swig 555
+run dist/s_javadoc_merge 555
+run dist/s_je2db 555
+run dist/s_message 555
+run dist/s_perm 555
+run dist/s_readme 555
+run dist/s_recover 555
+run dist/s_rpc 555
+run dist/s_s60 555
+run dist/s_s60_mmp 555
+run dist/s_s60_posix 555
+run dist/s_sig 555
+run dist/s_symlink 555
+run dist/s_tags 555
+run dist/s_test 555
+run dist/s_vxworks 555
+run dist/s_windows 555
+run dist/s_windows_dsp 555
+run dist/s_winmsi 555
+run dist/vx_buildcd 555
+run mod_db4/configure 555
+run perl/BerkeleyDB/dbinfo 555
+run perl/BerkeleyDB/mkpod 555
+
+for i in `cd $d && find build_vxworks \
+    -name '*.wsp' -o -name '*.cdf' -o -name '*.wpj'`; do
+	#echo "	$i (775)"
+	chmod 775 $d/$i
+done

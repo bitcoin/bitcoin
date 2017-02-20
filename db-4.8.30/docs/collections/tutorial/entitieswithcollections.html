@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Using Entities with Collections</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Collections Tutorial" />
+    <link rel="up" href="Entity.html" title="Chapter 4.  Using Entity Classes" />
+    <link rel="prev" href="collectionswithentities.html" title="Creating Collections with Entity Bindings" />
+    <link rel="next" href="Tuple.html" title="Chapter 5.  Using Tuples" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">
+        Using Entities with Collections
+    </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="collectionswithentities.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 4. 
+        Using Entity Classes    
+    </th>
+          <td width="20%" align="right"> <a accesskey="n" href="Tuple.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="entitieswithcollections"></a>
+        Using Entities with Collections
+    </h2>
+          </div>
+        </div>
+      </div>
+      <p>
+    In this example entity objects, rather than key and value
+    objects, are used for adding and enumerating the records in a
+    collection. Because fewer classes and objects are involved, adding
+    and enumerating is done more conveniently and more simply than in
+    the prior examples.
+</p>
+      <p>
+    For adding and iterating entities, the collection of entities
+    returned by 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Map.html#values" target="_top">Map.values</a>
+    
+    is used. In general, when using an entity binding, all Java
+    collection methods that are passed or returned a value object will
+    be passed or returned an entity object instead.
+</p>
+      <p>
+    The <code class="classname">Sample</code> class has been changed in this example to add
+    objects using the 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Set.html#add" target="_top">Set.add</a>
+    
+    method rather than the 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Map.html#put" target="_top">Map.put</a>
+    
+    method that was used in the prior examples. Entity objects are
+    constructed and passed to 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Set.html#add" target="_top">Set.add</a>.
+</p>
+      <a id="entity_addsuppliers"></a>
+      <pre class="programlisting">import java.util.Set;
+...
+public class Sample
+{
+    ...
+    private void addSuppliers()
+    {
+<strong class="userinput"><code>        Set suppliers = views.getSupplierSet();
+        if (suppliers.isEmpty())
+        {
+            System.out.println("Adding Suppliers");
+            suppliers.add(new Supplier("S1", "Smith", 20, "London"));
+            suppliers.add(new Supplier("S2", "Jones", 10, "Paris"));
+            suppliers.add(new Supplier("S3", "Blake", 30, "Paris"));
+            suppliers.add(new Supplier("S4", "Clark", 20, "London"));
+            suppliers.add(new Supplier("S5", "Adams", 30, "Athens"));
+        }</code></strong>
+    }
+
+    private void addParts()
+    {
+<strong class="userinput"><code>        Set parts = views.getPartSet();
+        if (parts.isEmpty())
+        {
+            System.out.println("Adding Parts");
+            parts.add(new Part("P1", "Nut", "Red",
+                      new Weight(12.0, Weight.GRAMS), "London"));
+            parts.add(new Part("P2", "Bolt", "Green",
+                      new Weight(17.0, Weight.GRAMS), "Paris"));
+            parts.add(new Part("P3", "Screw", "Blue",
+                      new Weight(17.0, Weight.GRAMS), "Rome"));
+            parts.add(new Part("P4", "Screw", "Red",
+                      new Weight(14.0, Weight.GRAMS), "London"));
+            parts.add(new Part("P5", "Cam", "Blue",
+                      new Weight(12.0, Weight.GRAMS), "Paris"));
+            parts.add(new Part("P6", "Cog", "Red",
+                      new Weight(19.0, Weight.GRAMS), "London"));
+        }</code></strong>
+    }
+
+    private void addShipments()
+    {
+<strong class="userinput"><code>        Set shipments = views.getShipmentSet();
+        if (shipments.isEmpty())
+        {
+            System.out.println("Adding Shipments");
+            shipments.add(new Shipment("P1", "S1", 300));
+            shipments.add(new Shipment("P2", "S1", 200));
+            shipments.add(new Shipment("P3", "S1", 400));
+            shipments.add(new Shipment("P4", "S1", 200));
+            shipments.add(new Shipment("P5", "S1", 100));
+            shipments.add(new Shipment("P6", "S1", 100));
+            shipments.add(new Shipment("P1", "S2", 300));
+            shipments.add(new Shipment("P2", "S2", 400));
+            shipments.add(new Shipment("P2", "S3", 200));
+            shipments.add(new Shipment("P2", "S4", 200));
+            shipments.add(new Shipment("P4", "S4", 300));
+            shipments.add(new Shipment("P5", "S4", 400));
+        }</code></strong>
+    } </pre>
+      <p>
+    Instead of printing the key/value pairs by iterating over the
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Map.html#entrySet" target="_top">Map.entrySet</a>
+    
+    as done in the prior example, this example
+    iterates over the entities in the 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Map.html#values" target="_top">Map.values</a>
+    
+    collection.
+</p>
+      <a id="entity_printdatabase"></a>
+      <pre class="programlisting">import java.util.Iterator;
+import java.util.Set;
+...
+public class Sample
+{
+    ...
+    private class PrintDatabase implements TransactionWorker
+    {
+        public void doWork()
+            throws Exception
+        {
+<strong class="userinput"><code>            printValues("Parts",
+                         views.getPartSet().iterator());
+            printValues("Suppliers",
+                         views.getSupplierSet().iterator());</code></strong>
+            printValues("Suppliers for City Paris",
+                         views.getSupplierByCityMap().duplicates(
+                                            "Paris").iterator());
+<strong class="userinput"><code>            printValues("Shipments",
+                         views.getShipmentSet().iterator());</code></strong>
+            printValues("Shipments for Part P1",
+                         views.getShipmentByPartMap().duplicates(
+                                            new PartKey("P1")).iterator());
+            printValues("Shipments for Supplier S1",
+                         views.getShipmentBySupplierMap().duplicates(
+                                            new SupplierKey("S1")).iterator());
+        }
+    }
+    ...
+} </pre>
+      <p>
+    The output of the example program is shown below.
+</p>
+      <pre class="programlisting">Adding Suppliers
+Adding Parts
+Adding Shipments
+
+--- Parts ---
+Part: number=P1 name=Nut color=Red weight=[12.0 grams] city=London
+Part: number=P2 name=Bolt color=Green weight=[17.0 grams] city=Paris
+Part: number=P3 name=Screw color=Blue weight=[17.0 grams] city=Rome
+Part: number=P4 name=Screw color=Red weight=[14.0 grams] city=London
+Part: number=P5 name=Cam color=Blue weight=[12.0 grams] city=Paris
+Part: number=P6 name=Cog color=Red weight=[19.0 grams] city=London
+
+--- Suppliers ---
+Supplier: number=S1 name=Smith status=20 city=London
+Supplier: number=S2 name=Jones status=10 city=Paris
+Supplier: number=S3 name=Blake status=30 city=Paris
+Supplier: number=S4 name=Clark status=20 city=London
+Supplier: number=S5 name=Adams status=30 city=Athens
+
+--- Suppliers for City Paris ---
+Supplier: number=S2 name=Jones status=10 city=Paris
+Supplier: number=S3 name=Blake status=30 city=Paris
+
+--- Shipments ---
+Shipment: part=P1 supplier=S1 quantity=300
+Shipment: part=P1 supplier=S2 quantity=300
+Shipment: part=P2 supplier=S1 quantity=200
+Shipment: part=P2 supplier=S2 quantity=400
+Shipment: part=P2 supplier=S3 quantity=200
+Shipment: part=P2 supplier=S4 quantity=200
+Shipment: part=P3 supplier=S1 quantity=400
+Shipment: part=P4 supplier=S1 quantity=200
+Shipment: part=P4 supplier=S4 quantity=300
+Shipment: part=P5 supplier=S1 quantity=100
+Shipment: part=P5 supplier=S4 quantity=400
+Shipment: part=P6 supplier=S1 quantity=100
+
+--- Shipments for Part P1 ---
+Shipment: part=P1 supplier=S1 quantity=300
+Shipment: part=P1 supplier=S2 quantity=300
+
+--- Shipments for Supplier S1 ---
+Shipment: part=P1 supplier=S1 quantity=300
+Shipment: part=P2 supplier=S1 quantity=200
+Shipment: part=P3 supplier=S1 quantity=400
+Shipment: part=P4 supplier=S1 quantity=200
+Shipment: part=P5 supplier=S1 quantity=100
+Shipment: part=P6 supplier=S1 quantity=100 </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="collectionswithentities.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="Entity.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="Tuple.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+        Creating Collections with Entity Bindings
+     </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 5. 
+        Using Tuples
+    </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

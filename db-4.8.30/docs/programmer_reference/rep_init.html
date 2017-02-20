@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Initializing a new site</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="rep.html" title="Chapter 12.  Berkeley DB Replication" />
+    <link rel="prev" href="rep_mastersync.html" title="Synchronizing with a master" />
+    <link rel="next" href="rep_bulk.html" title="Bulk transfer" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Initializing a new site</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="rep_mastersync.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 12. 
+        Berkeley DB Replication
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="rep_bulk.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="rep_init"></a>Initializing a new site</h2>
+          </div>
+        </div>
+      </div>
+      <p>By default, adding a new site to a replication group only requires the
+client to join.  Berkeley DB will automatically perform internal
+initialization from the master to the client, bringing the client into
+sync with the master.</p>
+      <p>
+    However, depending on the network and infrastructure, it can be
+    advantageous in a few instances to use a "hot backup" to initialize a
+    client into a replication group.  Clients not wanting to automatically
+    perform internal initialization should call the <a href="../api_reference/C/repconfig.html" class="olink">DB_ENV-&gt;rep_set_config()</a> method with
+    the <a href="../api_reference/C/repconfig.html#config_DB_REP_CONF_NOAUTOINIT" class="olink">DB_REP_CONF_NOAUTOINIT</a> flag.  This configuration flag causes Berkeley DB to
+    return <a href="../api_reference/C/repmessage.html#repmsg_DB_REP_JOIN_FAILURE" class="olink">DB_REP_JOIN_FAILURE</a> to the application's <a href="../api_reference/C/repmessage.html" class="olink">DB_ENV-&gt;rep_process_message()</a> method instead of
+    performing internal initialization.
+
+</p>
+      <p>To use a hot backup to initialize a client into a replication group,
+perform the following steps:</p>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>Do an archival backup of the master's environment, as described in
+<a class="xref" href="transapp_archival.html" title="Database and log file archival">Database and log file archival</a>.  The backup can either be a conventional backup or a hot
+backup.</li>
+          <li>Copy the archival backup into a clean environment directory on the
+client.</li>
+          <li>Run catastrophic recovery on the client's new environment, as described
+in <a class="xref" href="transapp_recovery.html" title="Recovery procedures">Recovery procedures</a>.</li>
+          <li>Reconfigure and reopen the environment as a client member of the
+replication group.</li>
+        </ol>
+      </div>
+      <p>If copying the backup to the client takes a long time relative to the
+frequency with which log files are reclaimed using the
+<a href="../api_reference/C/db_archive.html" class="olink">db_archive utility</a> or the <a href="../api_reference/C/logarchive.html" class="olink">DB_ENV-&gt;log_archive()</a> method, it may be
+necessary to suppress log reclamation until the newly restarted client
+has "caught up" and applied all log records generated during its
+downtime.</p>
+      <p>As with any Berkeley DB application, the database environment must be in a
+consistent state at application startup.  This is most easily assured
+by running recovery at startup time in one thread or process; it is
+harmless to do this on both clients and masters even when not strictly
+necessary.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="rep_mastersync.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="rep.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="rep_bulk.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Synchronizing with a master </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Bulk transfer</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

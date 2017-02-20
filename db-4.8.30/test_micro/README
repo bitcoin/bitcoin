@@ -1,0 +1,84 @@
+# $Id$
+
+A simple framework for core Berkeley DB micro-benchmarks, intended for
+two purposes: to certify a port of Berkeley DB to a new platform, and
+to provide micro-benchmark information between different Berkeley DB
+releases.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+To run the tests:
+
+1. Unpack and build the Berkeley DB releases you want to run against.
+(Note that test_micro is only known to work on release 4.0 and later.)
+
+2. Run the tests:
+
+	% sh test_micro
+
+   By default, tests are run for all of the Berkeley DB builds found in
+   the current working directory.  A build is identified by its
+   top-level name, and is expected to be of the form:
+
+	   db-<major>.<minor>.<patch>
+
+   and the fact the Berkeley DB library has been built in the standard
+   location in that directory tree (for example, "build_unix/libdb.a".
+   Directories with other names and directories without a library will
+   be ignored.
+
+   You can run a subset of the tests using command-line arguments:
+
+	% sh test_micro 3			# Run test 3
+	% sh test_micro 3-5			# Run tests 3-5
+	% sh test_micro 3-			# Run test 3 to the maximum test
+	% sh test_micro -3			# Run tests 1-3
+
+   You can run on a subset of the releases using the MAJOR and MINOR
+   environment variables:
+
+	% env MAJOR=4 MINOR=2 sh test_micro	# Run on 4.2.XX
+						# Run on 4.1.XX and 4.2.XX
+	% env MAJOR=4 MINOR='[12]' sh test_micro
+
+3. If you want to generate the micro-benchmark output build the HTML
+   page after the run:
+
+	% sh report
+
+   The output of the tests and the web page are created in the directory
+   RUN.hostname (for example, "RUN.abyssinian").  The tests are numeric
+   filenames in that directory (for example, "1", "2", "36").  The web
+   page output is in the file "hostname.html".
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+To run different test configurations:
+
+1. Modify the configuration files in the configs/ directory to run the
+   tests you want to run.  The configuration file configs/run.std is the
+   tests that are run by the test_micro shell script.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+To add a new test program:
+
+1. Add a new file to the SOURCE directory, and build it as part of
+   building the test_micro program.   This will require changes to
+   the test_micro shell script, as well as the standard build rules
+   for all of the Berkeley DB systems, found in the dist/ directory.
+
+   The file must output the following line on stdout:
+
+	# title
+	major.minor.patch<tab>operations/second
+
+   For example:
+
+	# 10000 Btree database open/close pairs
+	3.0.55  29600.69
+	3.1.17  30438.25
+
+2. Modify the file test_micro/test_micro.c to exec your new command
+   (this should only require changing the cmdlist structure at the top
+   of that file).
+
+3. Modify the test_micro configuration files in the configs/ directory
+   to run your new command.

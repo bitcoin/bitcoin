@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 3.0: additional C++ changes</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_3_0_toc.html" title="Chapter 33. Upgrading Berkeley DB 2.X applications to Berkeley DB 3.0" />
+    <link rel="prev" href="upgrade_3_0_db_cxx.html" title="Release 3.0: the Db class for C++ and Java" />
+    <link rel="next" href="upgrade_3_0_java.html" title="Release 3.0: additional Java changes" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 3.0: additional C++ changes</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_3_0_db_cxx.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 33. Upgrading Berkeley DB 2.X applications to Berkeley DB 3.0</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_3_0_java.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_3_0_cxx"></a>Release 3.0: additional C++ changes</h2>
+          </div>
+        </div>
+      </div>
+      <p>The Db::set_error_model method is gone.  The way to change the C++ API to
+return errors rather than throw exceptions is via a flag on the DbEnv or
+Db constructor.  For example:</p>
+      <pre class="programlisting">int dberr;
+DbEnv *dbenv = new DbEnv(DB_CXX_NO_EXCEPTIONS);</pre>
+      <p>creates an environment that will never throw exceptions, and method
+returns should be checked instead.</p>
+      <p>There are a number of smaller changes to the API that bring the C, C++
+and Java APIs much closer in terms of functionality and usage.  Please
+refer to the pages for upgrading C applications for further details.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_3_0_db_cxx.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_3_0_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_3_0_java.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 3.0: the Db class for C++ and Java </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 3.0: additional Java changes</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

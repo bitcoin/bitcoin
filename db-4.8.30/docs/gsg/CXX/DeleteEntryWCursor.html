@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Deleting Records Using Cursors</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="Cursors.html" title="Chapter 4. Using Cursors" />
+    <link rel="prev" href="PutEntryWCursor.html" title="Putting Records Using Cursors" />
+    <link rel="next" href="ReplacingEntryWCursor.html" title="Replacing Records Using Cursors" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Deleting Records Using Cursors</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="PutEntryWCursor.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 4. Using Cursors</th>
+          <td width="20%" align="right"> <a accesskey="n" href="ReplacingEntryWCursor.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="DeleteEntryWCursor"></a>Deleting Records Using Cursors</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+
+        To delete a record using a cursor, simply position the cursor to the
+        record that you want to delete and then call 
+        
+        
+        
+        <span>
+            
+            <span><code class="methodname">Dbc::del()</code>.</span>
+            
+        </span>
+    </p>
+      <p>For example:</p>
+      <a id="cxx_cursor8"></a>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+#include &lt;string.h&gt;
+
+...
+
+char *key1str = "My first string";
+Db my_database(NULL, 0);
+Dbc *cursorp;
+
+try {
+    // Database open omitted 
+
+    // Get the cursor
+    my_database.cursor(NULL, &amp;cursorp, 0);
+
+    // Set up our DBTs
+    Dbt key(key1str, strlen(key1str) + 1);
+    Dbt data;
+
+    // Iterate over the database, deleting each record in turn. 
+    int ret;
+    while ((ret = cursorp-&gt;get(&amp;key, &amp;data, 
+                                  DB_SET)) == 0) {
+        cursorp-&gt;del(0);
+    }
+
+} catch(DbException &amp;e) {
+    my_database.err(e.get_errno(), "Error!");
+} catch(std::exception &amp;e) {
+    my_database.errx("Error! %s", e.what());
+}
+
+// Cursors must be closed
+if (cursorp != NULL)
+    cursorp-&gt;close(); 
+
+my_database.close(0);</pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="PutEntryWCursor.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="Cursors.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="ReplacingEntryWCursor.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Putting Records Using Cursors </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Replacing Records Using Cursors</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Environment Properties</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="Env.html" title="Chapter 2. Database Environments" />
+    <link rel="prev" href="EnvClose.html" title="Closing Database Environments" />
+    <link rel="next" href="dpl.html" title="Part I. Programming with the Direct Persistence Layer" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Environment Properties</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="EnvClose.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. Database Environments</th>
+          <td width="20%" align="right"> <a accesskey="n" href="dpl.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="EnvProps"></a>Environment Properties</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="EnvProps.html#envconfig">The EnvironmentConfig Class</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="EnvProps.html#envhandleconfig">EnvironmentMutableConfig</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>You set properties for the <code class="classname">Environment</code> using
+    the <code class="classname">EnvironmentConfig</code> class. You can also set properties for a specific
+    <code class="classname">Environment</code> instance using <code class="classname">EnvironmentMutableConfig</code>.
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="envconfig"></a>The EnvironmentConfig Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+    The <code class="classname">EnvironmentConfig</code> class makes a
+    large number of fields and methods available to you.  Describing all of these
+    tuning parameters is beyond the scope of this manual. However, there are a
+    few properties that you are likely to want to set. They are described
+    here.</p>
+        <p>Note that for each of the properties that you can commonly set, there is a
+    corresponding getter method. Also, you can always retrieve the
+    <code class="classname">EnvironmentConfig</code> object used by your environment
+    using the <code class="methodname">Environment.getConfig()</code> method.
+    </p>
+        <p>
+        You set environment configuration parameters using the following methods on the 
+        <code class="classname">EnvironmentConfig</code> class:
+    </p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+                <code class="methodname">EnvironmentConfig.setAllowCreate()</code>
+              </p>
+              <p>If <code class="literal">true</code>, the database environment is created
+        when it is opened. If <code class="literal">false</code>, environment open fails if the environment
+        does not exist. This property has no meaning if the database
+        environment already exists. Default is <code class="literal">false</code>.</p>
+            </li>
+            <li>
+              <p>
+                <code class="methodname">EnvironmentConfig.setReadOnly()</code>
+              </p>
+              <p>If <code class="literal">true</code>, then all databases opened in this
+        environment must be opened as read-only. If you are writing a
+        multi-process application, then all but one of your processes must set
+        this value to <code class="literal">true</code>. Default is <code class="literal">false</code>.</p>
+            </li>
+            <li>
+              <p>
+                <code class="methodname">EnvironmentConfig.setTransactional()</code>
+              </p>
+              <p>If <code class="literal">true</code>, configures the database environment
+        to support transactions. Default is <code class="literal">false</code>.</p>
+            </li>
+          </ul>
+        </div>
+        <p>For example:</p>
+        <pre class="programlisting">package db.gettingStarted;
+
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.Environment;
+import com.sleepycat.db.EnvironmentConfig;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+     
+...
+
+Environment myDatabaseEnvironment = null;
+try {
+    EnvironmentConfig envConfig = new EnvironmentConfig();
+    envConfig.setAllowCreate(true);
+    envConfig.setTransactional(true);
+    myDatabaseEnvironment = 
+        new Environment(new File("/export/dbEnv"), envConfig);
+} catch (DatabaseException dbe) {
+   System.err.println(dbe.toString());
+   System.exit(1);
+} catch (FileNotFoundException fnfe) {
+    System.err.println(fnfe.toString());
+    System.exit(-1);
+} </pre>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="envhandleconfig"></a>EnvironmentMutableConfig</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+        <code class="classname">EnvironmentMutableConfig</code> manages properties that can be reset after the
+        <code class="classname">Environment</code> object has been constructed. In addition, <code class="classname">EnvironmentConfig</code>
+        extends <code class="classname">EnvironmentMutableConfig</code>, so you can set these mutable properties at
+        <code class="classname">Environment</code> construction time if necessary.
+        </p>
+        <p>
+            The <code class="classname">EnvironmentMutableConfig</code> class allows you to set the following
+            properties:
+        </p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+                    <code class="literal">setCachePercent()</code>
+                </p>
+              <p>
+                    Determines the percentage of JVM memory available to the DB cache.
+                    See <a class="xref" href="cachesize.html" title="Selecting the Cache Size">Selecting the Cache Size</a> 
+                    for more information.
+                </p>
+            </li>
+            <li>
+              <p>
+                    <code class="literal">setCacheSize()</code>
+                </p>
+              <p>
+                    Determines the total amount of memory available to the database cache.
+                    See <a class="xref" href="cachesize.html" title="Selecting the Cache Size">Selecting the Cache Size</a> 
+                    for more information.
+                </p>
+            </li>
+            <li>
+              <p>
+                    <code class="literal">setTxnNoSync()</code>
+                </p>
+              <p>
+                    Determines whether change records created due to a transaction commit are written to the backing
+                    log files on disk. A value of <code class="literal">true</code> causes
+                    the data to not be flushed to
+                    disk.  See the 
+                     
+                    <em class="citetitle">Getting Started with Transaction Processing for Java</em> 
+                    guide for more information.
+                </p>
+            </li>
+            <li>
+              <p>
+                    <code class="literal">setTxnWriteNoSync()</code>
+                </p>
+              <p>
+                    Determines whether logs are flushed on transaction commit (the logs are still written, however). 
+                    By setting this value to <code class="literal">true</code>, you potentially gain better performance than if
+                    you flush the logs on commit, but you do so by losing some of your transaction durability guarantees.
+                    See the 
+                     
+                    <em class="citetitle">Getting Started with Transaction Processing for Java</em> 
+                    guide for more information.
+                </p>
+            </li>
+          </ul>
+        </div>
+        <p>
+        There is also a corresponding getter method (<code class="methodname">getTxnNoSync()</code>).
+        Moreover, you can always retrieve your environment's 
+        <code class="classname">EnvironmentMutableConfig</code> object by
+        using the <code class="methodname">Environment.getMutableConfig()</code> method.
+     </p>
+        <p>
+            For example:
+     </p>
+        <pre class="programlisting">package db.gettingStarted;
+
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.Environment;
+import com.sleepycat.db.EnvironmentMutableConfig;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+
+
+...
+
+try {
+    Environment myEnv = new Environment(new File("/export/dbEnv"), null);
+    EnvironmentMutableConfig envMutableConfig = 
+        new EnvironmentMutableConfig();
+    envMutableConfig.setTxnNoSync(true);
+    myEnv.setMutableConfig(envMutableConfig); 
+} catch (DatabaseException dbe) {
+    // Exception handling goes here
+} catch (FileNotFoundException fnfe) {
+    // Exception handling goes here
+}</pre>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="EnvClose.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="Env.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dpl.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Closing Database Environments </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Part I. Programming with the Direct Persistence Layer</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

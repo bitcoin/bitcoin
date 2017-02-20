@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Tutorial Introduction</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Collections Tutorial" />
+    <link rel="up" href="intro.html" title="Chapter 1.  Introduction" />
+    <link rel="prev" href="developing.html" title="Developing a DB Collections Application" />
+    <link rel="next" href="BasicProgram.html" title="Chapter 2.  The Basic Program" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Tutorial Introduction</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="developing.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 1. 
+        Introduction
+    </th>
+          <td width="20%" align="right"> <a accesskey="n" href="BasicProgram.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="tutorialintroduction"></a>Tutorial Introduction</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+    Most of the remainder of this document illustrates the use of the
+    DB Java Collections API by presenting a tutorial that describes usage of the API.
+    This tutorial builds a shipment database, a familiar example from classic
+    database texts.
+</p>
+      <p>
+        The examples illustrate the following concepts of the DB Java Collections API:
+</p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+            Object-to-data <span class="emphasis"><em>bindings</em></span>
+        </p>
+          </li>
+          <li>
+            <p>
+            The database <span class="emphasis"><em>environment</em></span>
+        </p>
+          </li>
+          <li>
+            <p>
+            <span class="emphasis"><em>Databases</em></span> that contain key/value records
+        </p>
+          </li>
+          <li>
+            <p>
+            <span class="emphasis"><em>Secondary index</em></span> databases that contain index keys
+        </p>
+          </li>
+          <li>
+            <p>
+            Java <span class="emphasis"><em>collections</em></span> for accessing databases and
+            indices
+        </p>
+          </li>
+          <li>
+            <p>
+            <span class="emphasis"><em>Transactions</em></span> used to commit or undo database
+            changes
+        </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+    The examples build on each other, but at the same time the
+    source code for each example stands alone.
+</p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+            <a class="xref" href="BasicProgram.html" title="Chapter 2.  The Basic Program">
+        The Basic Program
+    </a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a class="xref" href="UsingSecondaries.html" title="Chapter 3.  Using Secondary Indices">
+        Using Secondary Indices
+    </a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a class="xref" href="Entity.html" title="Chapter 4.  Using Entity Classes">
+        Using Entity Classes    
+    </a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a class="xref" href="Tuple.html" title="Chapter 5.  Using Tuples">
+        Using Tuples
+    </a>
+        </p>
+          </li>
+          <li>
+            <p>
+            <a class="xref" href="SerializableEntity.html" title="Chapter 6.  Using Serializable Entities">
+        Using Serializable Entities
+    </a>
+        </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+    The shipment database consists of three database stores: the
+    part store, the supplier store, and the shipment store. Each store
+    contains a number of records, and each record consists of a key and
+    a value.
+</p>
+      <div class="informaltable">
+        <table border="1" width="80%">
+          <colgroup>
+            <col />
+            <col />
+            <col />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Store</th>
+              <th>Key</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Part</td>
+              <td>Part Number</td>
+              <td>Name, Color, Weight, City</td>
+            </tr>
+            <tr>
+              <td>Supplier</td>
+              <td>Supplier Number</td>
+              <td>Name, Status, City</td>
+            </tr>
+            <tr>
+              <td>Shipment</td>
+              <td>Part Number, Supplier Number</td>
+              <td>Quantity</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+    In the example programs, Java classes containing the fields
+    above are defined for the key and value of each store:
+    <code class="classname">PartKey</code>, 
+    <code class="classname">PartData</code>, 
+    <code class="classname">SupplierKey</code>,
+    <code class="classname">SupplierData</code>, 
+    <code class="classname">ShipmentKey</code> and <code class="classname">ShipmentData</code>. In
+    addition, because the Part's Weight field is itself composed of two
+    fields — the weight value and the unit of measure — it is
+    represented by a separate <code class="classname">Weight</code> class. These classes will
+    be defined in the first example program.
+</p>
+      <p>
+    In general the DB Java Collections API uses bindings to
+    describe how Java objects are stored. A binding defines the stored
+    data syntax and the mapping between a Java object and the stored
+    data. The example programs show how to create different types of
+    bindings, and explains the characteristics of each type.
+</p>
+      <p>
+    The following tables show the record values that are used in
+    all the example programs in the tutorial.
+    <span>
+    
+    </span>
+</p>
+      <div class="informaltable">
+        <table border="1" width="80%">
+          <colgroup>
+            <col />
+            <col />
+            <col />
+            <col />
+            <col />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Number</th>
+              <th>Name</th>
+              <th>Color</th>
+              <th>Weight</th>
+              <th>City</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>P1</td>
+              <td>Nut</td>
+              <td>Red</td>
+              <td>12.0 grams</td>
+              <td>London</td>
+            </tr>
+            <tr>
+              <td>P2</td>
+              <td>Bolt</td>
+              <td>Green</td>
+              <td>17.0 grams</td>
+              <td>Paris</td>
+            </tr>
+            <tr>
+              <td>P3</td>
+              <td>Screw</td>
+              <td>Blue</td>
+              <td>17.0 grams</td>
+              <td>Rome</td>
+            </tr>
+            <tr>
+              <td>P4</td>
+              <td>Screw</td>
+              <td>Red</td>
+              <td>14.0 grams</td>
+              <td>London</td>
+            </tr>
+            <tr>
+              <td>P5</td>
+              <td>Cam</td>
+              <td>Blue</td>
+              <td>12.0 grams</td>
+              <td>Paris</td>
+            </tr>
+            <tr>
+              <td>P6</td>
+              <td>Cog</td>
+              <td>Red</td>
+              <td>19.0 grams</td>
+              <td>London</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="informaltable">
+        <table border="1" width="80%">
+          <colgroup>
+            <col />
+            <col />
+            <col />
+            <col />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Number</th>
+              <th>Name</th>
+              <th>Status</th>
+              <th>City</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>S1</td>
+              <td>Smith</td>
+              <td>20</td>
+              <td>London</td>
+            </tr>
+            <tr>
+              <td>S2</td>
+              <td>Jones</td>
+              <td>10</td>
+              <td>Paris</td>
+            </tr>
+            <tr>
+              <td>S3</td>
+              <td>Blake</td>
+              <td>30</td>
+              <td>Paris</td>
+            </tr>
+            <tr>
+              <td>S4</td>
+              <td>Clark</td>
+              <td>20</td>
+              <td>London</td>
+            </tr>
+            <tr>
+              <td>S5</td>
+              <td>Adams</td>
+              <td>30</td>
+              <td>Athens</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="informaltable">
+        <table border="1" width="80%">
+          <colgroup>
+            <col />
+            <col />
+            <col />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Part Number</th>
+              <th>Supplier Number</th>
+              <th>Quantity</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>P1</td>
+              <td>S1</td>
+              <td>300</td>
+            </tr>
+            <tr>
+              <td>P1</td>
+              <td>S2</td>
+              <td>300</td>
+            </tr>
+            <tr>
+              <td>P2</td>
+              <td>S1</td>
+              <td>200</td>
+            </tr>
+            <tr>
+              <td>P2</td>
+              <td>S2</td>
+              <td>400</td>
+            </tr>
+            <tr>
+              <td>P2</td>
+              <td>S3</td>
+              <td>200</td>
+            </tr>
+            <tr>
+              <td>P2</td>
+              <td>S4</td>
+              <td>200</td>
+            </tr>
+            <tr>
+              <td>P3</td>
+              <td>S1</td>
+              <td>400</td>
+            </tr>
+            <tr>
+              <td>P4</td>
+              <td>S1</td>
+              <td>200</td>
+            </tr>
+            <tr>
+              <td>P4</td>
+              <td>S4</td>
+              <td>300</td>
+            </tr>
+            <tr>
+              <td>P5</td>
+              <td>S1</td>
+              <td>100</td>
+            </tr>
+            <tr>
+              <td>P5</td>
+              <td>S4</td>
+              <td>400</td>
+            </tr>
+            <tr>
+              <td>P6</td>
+              <td>S1</td>
+              <td>100</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="developing.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="intro.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="BasicProgram.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Developing a DB Collections Application </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 2. 
+        The Basic Program
+    </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

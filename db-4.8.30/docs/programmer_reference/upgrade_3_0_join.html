@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 3.0: DB-&gt;join</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_3_0_toc.html" title="Chapter 33. Upgrading Berkeley DB 2.X applications to Berkeley DB 3.0" />
+    <link rel="prev" href="upgrade_3_0_dbinfo.html" title="Release 3.0: the DBINFO structure" />
+    <link rel="next" href="upgrade_3_0_stat.html" title="Release 3.0: DB-&gt;stat" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 3.0: DB-&gt;join</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_3_0_dbinfo.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 33. Upgrading Berkeley DB 2.X applications to Berkeley DB 3.0</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_3_0_stat.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_3_0_join"></a>Release 3.0: DB-&gt;join</h2>
+          </div>
+        </div>
+      </div>
+      <p>Historically, the last two arguments to the <a href="../api_reference/C/dbjoin.html" class="olink">DB-&gt;join()</a> method were a
+flags value followed by a reference to a memory location to store the
+returned cursor object.  In the Berkeley DB 3.0 release, the order of those
+two arguments has been swapped for consistency with other Berkeley DB
+interfaces.</p>
+      <p>The application should be searched for any occurrences of <a href="../api_reference/C/dbjoin.html" class="olink">DB-&gt;join()</a>.
+For each of these, the order of the last two arguments should be swapped.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_3_0_dbinfo.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_3_0_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_3_0_stat.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 3.0: the DBINFO structure </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 3.0: DB-&gt;stat</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

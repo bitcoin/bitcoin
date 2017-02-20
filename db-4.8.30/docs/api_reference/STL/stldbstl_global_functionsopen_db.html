@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>open_db</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ Standard Template Library API Reference" />
+    <link rel="up" href="dbstl_global_functions.html" title="Chapter 1.  Dbstl Global Public Functions" />
+    <link rel="prev" href="stldbstl_global_functionsregister_db_env.html" title="register_db_env" />
+    <link rel="next" href="stldbstl_global_functionsopen_env.html" title="open_env" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">
+open_db
+</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="stldbstl_global_functionsregister_db_env.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 1. 
+ Dbstl Global Public Functions  </th>
+          <td width="20%" align="right"> <a accesskey="n" href="stldbstl_global_functionsopen_env.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="stldbstl_global_functionsopen_db"></a>
+open_db
+</h2>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="func_details"></a>
+Function Details</h3>
+            </div>
+          </div>
+        </div>
+        <pre class="programlisting">
+ Db* open_db(DbEnv *penv, const char *filename, DBTYPE dbtype,
+    u_int32_t oflags, u_int32_t set_flags, int mode=0644, DbTxn *txn=NULL,
+    u_int32_t cflags=0,
+    const char *dbname=NULL)
+ </pre>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage"></div>
+          <p>Helper function to open a database and register it into dbstl for the calling thread. </p>
+          <p>Users still need to register it in any other thread using it if it is shared by multiple threads, via <a class="link" href="stldbstl_global_functionsregister_db.html" title="register_db">register_db()</a>
+ function. Users don't need to delete or free the memory of the returned object, dbstl will take care of that. When you don't use <a class="link" href="stldbstl_global_functionsopen_db.html" title="open_db">dbstl::open_db()</a>
+ but explicitly call DB C++ API to open a database, you must new the Db object, rather than create it on stack, and you must delete the Db object by yourself. </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1542946"></a>
+Parameters</h4>
+              </div>
+            </div>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1542748"></a>
+ penv </h5>
+                </div>
+              </div>
+            </div>
+            <p>The environment to open the database from. </p>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1543077"></a>
+ txn </h5>
+                </div>
+              </div>
+            </div>
+            <p>The transaction to open the database from, passed to Db::open. </p>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1542870"></a>
+ dbtype </h5>
+                </div>
+              </div>
+            </div>
+            <p>The database type, passed to Db::open. </p>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1542746"></a>
+ oflags </h5>
+                </div>
+              </div>
+            </div>
+            <p>The database open flags, passed to Db::open. </p>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1543072"></a>
+ filename </h5>
+                </div>
+              </div>
+            </div>
+            <p>The database file name, passed to Db::open. </p>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1543151"></a>
+ mode </h5>
+                </div>
+              </div>
+            </div>
+            <p>The database open mode, passed to Db::open. </p>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1542621"></a>
+ cflags </h5>
+                </div>
+              </div>
+            </div>
+            <p>The create flags passed to Db class constructor. </p>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1543074"></a>
+ dbname </h5>
+                </div>
+              </div>
+            </div>
+            <p>The database name, passed to Db::open. </p>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1542783"></a>
+ set_flags </h5>
+                </div>
+              </div>
+            </div>
+            <p>The flags to be set to the created database handle. </p>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1543148"></a>
+Return Value</h4>
+              </div>
+            </div>
+          </div>
+          <p>The opened database handle. </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1543107"></a>
+See Also</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+    </p>
+          <p><a class="link" href="stldbstl_global_functionsregister_db.html" title="register_db">register_db(Db *)</a>
+; </p>
+          <p>open_db_env; </p>
+          <p>   </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1542747"></a>
+Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+  <a class="link" href="dbstl_global_functions.html" title="Chapter 1.  Dbstl Global Public Functions">
+  dbstl_global_functions</a>
+     </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="stldbstl_global_functionsregister_db_env.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="dbstl_global_functions.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="stldbstl_global_functionsopen_env.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+register_db_env
+ </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+open_env
+</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

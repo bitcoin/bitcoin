@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 3.3: DB-&gt;set_malloc, DB-&gt;set_realloc</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_3_3_toc.html" title="Chapter 36. Upgrading Berkeley DB 3.2 applications to Berkeley DB 3.3" />
+    <link rel="prev" href="upgrade_3_3_getswap.html" title="Release 3.3: DB-&gt;get_byteswapped" />
+    <link rel="next" href="upgrade_3_3_conflict.html" title="Release 3.3: DB_LOCK_CONFLICT" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 3.3: DB-&gt;set_malloc, DB-&gt;set_realloc</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_3_3_getswap.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 36. Upgrading Berkeley DB 3.2 applications to Berkeley DB 3.3</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_3_3_conflict.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_3_3_alloc"></a>Release 3.3: DB-&gt;set_malloc, DB-&gt;set_realloc</h2>
+          </div>
+        </div>
+      </div>
+      <p>There are two new methods in the Berkeley DB 3.3 release:
+<a href="../api_reference/C/envset_alloc.html" class="olink">DB_ENV-&gt;set_alloc()</a>.  These functions
+allow applications to specify a set of allocation functions for the
+Berkeley DB library to use when allocating memory to be owned by the
+application and when freeing memory that was originally allocated by the
+application.</p>
+      <p>The new methods affect or replace the following historic methods:</p>
+      <div class="variablelist">
+        <dl>
+          <dt>
+            <span class="term">DB-&gt;set_malloc</span>
+          </dt>
+          <dd>The DB-&gt;set_malloc method has been replaced in its entirety.
+Applications using this method should replace the call with a call
+to <a href="../api_reference/C/dbset_alloc.html" class="olink">DB-&gt;set_alloc()</a>.</dd>
+          <dt>
+            <span class="term">DB-&gt;set_realloc</span>
+          </dt>
+          <dd>The DB-&gt;set_realloc method has been replaced in its entirety.
+Applications using this method should replace the call with a call
+to <a href="../api_reference/C/dbset_alloc.html" class="olink">DB-&gt;set_alloc()</a>.</dd>
+          <dt>
+            <span class="term"><a href="../api_reference/C/dbstat.html" class="olink">DB-&gt;stat()</a> method</span>
+          </dt>
+          <dd> has
+been replaced.  Applications using this method should do as follows:
+if the argument is NULL, it should simply be removed.  If non-NULL,
+it should be replaced with a call to <a href="../api_reference/C/dbset_alloc.html" class="olink">DB-&gt;set_alloc()</a>.</dd>
+          <dt>
+            <span class="term">lock_stat</span>
+          </dt>
+          <dd>The historic <span class="bold"><strong>db_malloc</strong></span> argument to the lock_stat function has
+been replaced.  Applications using this function should do as follows:
+if the argument is NULL, it should simply be removed.  If
+non-NULL, it should be replaced with a call to <a href="../api_reference/C/envset_alloc.html" class="olink">DB_ENV-&gt;set_alloc()</a>.</dd>
+          <dt>
+            <span class="term">log_archive</span>
+          </dt>
+          <dd>The historic <span class="bold"><strong>db_malloc</strong></span> argument to the log_archive function has
+been replaced.  Applications using this function should do as follows:
+if the argument is NULL, it should simply be removed.  If non-NULL,
+it should be replaced with a call to <a href="../api_reference/C/envset_alloc.html" class="olink">DB_ENV-&gt;set_alloc()</a>.</dd>
+          <dt>
+            <span class="term">log_stat</span>
+          </dt>
+          <dd>The historic <span class="bold"><strong>db_malloc</strong></span> argument to the log_stat function has
+been replaced.  Applications using this function should do as follows:
+if the argument is NULL, it should simply be removed.  If non-NULL,
+it should be replaced with a call to <a href="../api_reference/C/envset_alloc.html" class="olink">DB_ENV-&gt;set_alloc()</a>.</dd>
+          <dt>
+            <span class="term">memp_stat</span>
+          </dt>
+          <dd>The historic <span class="bold"><strong>db_malloc</strong></span> argument to the memp_stat function has
+been replaced.  Applications using this function should do as follows:
+if the argument is NULL, it should simply be removed.  If non-NULL,
+it should be replaced with a call to <a href="../api_reference/C/envset_alloc.html" class="olink">DB_ENV-&gt;set_alloc()</a>.</dd>
+          <dt>
+            <span class="term">txn_stat</span>
+          </dt>
+          <dd>The historic <span class="bold"><strong>db_malloc</strong></span> argument to the txn_stat function has
+been replaced.  Applications using this function should do as follows:
+if the argument is NULL, it should simply be removed.  If non-NULL,
+it should be replaced with a call to <a href="../api_reference/C/envset_alloc.html" class="olink">DB_ENV-&gt;set_alloc()</a>.</dd>
+        </dl>
+      </div>
+      <p>One potential incompatibility for historic applications is that the
+allocation functions for a database environment must now be set before
+the environment is opened.  Historically, Berkeley DB applications could open
+the environment first, and subsequently call the DB-&gt;set_malloc
+and DB-&gt;set_realloc methods; that use is no longer supported.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_3_3_getswap.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_3_3_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_3_3_conflict.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 3.3: DB-&gt;get_byteswapped </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 3.3: DB_LOCK_CONFLICT</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

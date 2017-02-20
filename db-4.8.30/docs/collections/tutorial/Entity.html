@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 4.  Using Entity Classes</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Collections Tutorial" />
+    <link rel="up" href="index.html" title="Berkeley DB Collections Tutorial" />
+    <link rel="prev" href="retrievingbyindexkey.html" title="Retrieving Items by Index Key" />
+    <link rel="next" href="creatingentitybindings.html" title="Creating Entity Bindings" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 4. 
+        Using Entity Classes    
+    </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="retrievingbyindexkey.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="creatingentitybindings.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="Entity"></a>Chapter 4. 
+        Using Entity Classes    
+    </h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="Entity.html#definingentityclasses">
+        Defining Entity Classes
+    </a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="creatingentitybindings.html">
+        Creating Entity Bindings
+    </a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="collectionswithentities.html">
+        Creating Collections with Entity Bindings
+    </a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="entitieswithcollections.html">
+        Using Entities with Collections
+    </a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+    In the prior examples, the keys and values of each store were
+    represented using separate classes. For example, a <code class="classname">PartKey</code>
+    and a <code class="classname">PartData</code> class were used. Many times it is desirable
+    to have a single class representing both the key and the value, for
+    example, a <code class="classname">Part</code> class.
+</p>
+      <p>
+    Such a combined key and value class is called an <span class="emphasis"><em>entity
+    class</em></span> and is used along with an <span class="emphasis"><em>entity binding</em></span>. Entity
+    bindings combine a key and a value into an entity when reading a
+    record from a collection, and split an entity into a key and a
+    value when writing a record to a collection. Entity bindings are
+    used in place of value bindings, and entity objects are used with
+    collections in place of value objects.
+</p>
+      <p>
+    Some reasons for using entities are:
+</p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+            When the key is a property of an entity object representing the
+            record as a whole, the object's identity and concept are often
+            clearer than with key and value objects that are disjoint.
+        </p>
+          </li>
+          <li>
+            <p>
+            A single entity object per record is often more convenient to
+            use than two objects.
+        </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+    Of course, instead of using an entity binding, you could simply
+    create the entity yourself after reading the key and value from a
+    collection, and split the entity into a key and value yourself
+    before writing it to a collection. But this would detract from the
+    convenience of the using the Java collections API. It is convenient
+    to obtain a <code class="classname">Part</code> object directly from 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Map.html#get" target="_top">Map.get</a>
+    
+    and to add a <code class="classname">Part</code> object using 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Set.html#add" target="_top">Set.add</a>.
+    Collections having entity bindings can be used naturally without
+    combining and splitting objects each time a collection method is
+    called; however, an entity binding class must be defined by the
+    application.
+</p>
+      <p>
+    In addition to showing how to use entity bindings, this example
+    illustrates a key feature of all bindings: Bindings are independent
+    of database storage parameters and formats. Compare this example to
+    the prior Index example and you'll see that the <code class="classname">Sample</code> and
+    <code class="classname">SampleViews</code> classes have been changed to use entity
+    bindings, but the <code class="classname">SampleDatabase</code> class was not changed at
+    all. In fact, the Entity program and the Index program can be used
+    interchangeably to access the same physical database files. This
+    demonstrates that bindings are only a "view" onto the physical
+    stored data.
+</p>
+      <p>
+    <code class="classname">Warning:</code> When using multiple bindings for the same
+    database, it is the application's responsibility to ensure that the
+    same format is used for all bindings. For example, a serial binding
+    and a tuple binding cannot be used to access the same records.
+</p>
+      <p>
+    The complete source of the final version of the example program
+    is included in the Berkeley DB distribution.
+</p>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="definingentityclasses"></a>
+        Defining Entity Classes
+    </h2>
+            </div>
+          </div>
+        </div>
+        <p>
+    As described in the prior section, <span class="emphasis"><em>entity classes</em></span> are
+    combined key/value classes that are managed by entity bindings. In
+    this example the <code class="classname">Part</code>, <code class="classname">Supplier</code> and <code class="classname">Shipment</code>
+    classes are entity classes. These classes contain fields that are a
+    union of the fields of the key and value classes that were defined
+    earlier for each store.
+</p>
+        <p>
+    In general, entity classes may be defined in any way desired by
+    the application. The entity binding, which is also defined by the
+    application, is responsible for mapping between key/value objects
+    and entity objects.
+</p>
+        <p>
+    The <code class="classname">Part</code>, <code class="classname">Supplier</code> and <code class="classname">Shipment</code> 
+    entity classes are
+    defined below.
+</p>
+        <p>
+    An important difference between the entity classes defined here
+    and the key and value classes defined earlier is that the entity
+    classes are not serializable (do not implement the 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/io/Serializable.html" target="_top">Serializable</a>
+    
+    interface). This is because the entity classes are not directly
+    stored. The entity binding decomposes an entity object into key and
+    value objects, and only the key and value objects are serialized
+    for storage.
+</p>
+        <p>
+    One advantage of using entities can already be seen in the
+    <code class="methodname">toString()</code> method of the classes below. These return debugging
+    output for the combined key and value, and will be used later to
+    create a listing of the database that is more readable than in the
+    prior examples.
+</p>
+        <a id="entity_part"></a>
+        <pre class="programlisting"><strong class="userinput"><code>public class Part
+{
+    private String number;
+    private String name;
+    private String color;
+    private Weight weight;
+    private String city;
+
+    public Part(String number, String name, String color, Weight weight,
+                String city)
+    {
+        this.number = number;
+        this.name = name;
+        this.color = color;
+        this.weight = weight;
+        this.city = city;
+    }
+
+    public final String getNumber()
+    {
+        return number;
+    }
+
+    public final String getName()
+    {
+        return name;
+    }
+
+    public final String getColor()
+    {
+        return color;
+    }
+
+    public final Weight getWeight()
+    {
+        return weight;
+    }
+
+    public final String getCity()
+    {
+        return city;
+    }
+
+    public String toString()
+    {
+        return "Part: number=" + number +
+               " name=" + name +
+               " color=" + color +
+               " weight=" + weight +
+               " city=" + city + '.';
+    }
+}</code></strong> </pre>
+        <a id="entity_supplier"></a>
+        <pre class="programlisting"><strong class="userinput"><code>public class Supplier
+{
+    private String number;
+    private String name;
+    private int status;
+    private String city;
+
+    public Supplier(String number, String name, int status, String city)
+    {
+        this.number = number;
+        this.name = name;
+        this.status = status;
+        this.city = city;
+    }
+
+    public final String getNumber()
+    {
+        return number;
+    }
+
+    public final String getName()
+    {
+        return name;
+    }
+
+    public final int getStatus()
+    {
+        return status;
+    }
+
+    public final String getCity()
+    {
+        return city;
+    }
+
+    public String toString()
+    {
+        return "Supplier: number=" + number +
+               " name=" + name +
+               " status=" + status +
+               " city=" + city + '.';
+    }
+} </code></strong> </pre>
+        <a id="entity_shipment"></a>
+        <pre class="programlisting"><strong class="userinput"><code>public class Shipment
+{
+    private String partNumber;
+    private String supplierNumber;
+    private int quantity;
+
+    public Shipment(String partNumber, String supplierNumber, int quantity)
+    {
+        this.partNumber = partNumber;
+        this.supplierNumber = supplierNumber;
+        this.quantity = quantity;
+    }
+
+    public final String getPartNumber()
+    {
+        return partNumber;
+    }
+
+    public final String getSupplierNumber()
+    {
+        return supplierNumber;
+    }
+
+    public final int getQuantity()
+    {
+        return quantity;
+    }
+
+    public String toString()
+    {
+        return "Shipment: part=" + partNumber +
+                " supplier=" + supplierNumber +
+                " quantity=" + quantity + '.';
+    }
+} </code></strong> </pre>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="retrievingbyindexkey.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="creatingentitybindings.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+        Retrieving Items by Index Key
+     </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+        Creating Entity Bindings
+    </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Architecture independent FAQ</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="build_unix.html" title="Chapter 27.  Building Berkeley DB for UNIX/POSIX" />
+    <link rel="prev" href="build_unix_test.html" title="Running the test suite under UNIX" />
+    <link rel="next" href="build_unix_aix.html" title="AIX" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Architecture independent FAQ</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="build_unix_test.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 27. 
+        Building Berkeley DB for UNIX/POSIX
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="build_unix_aix.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="build_unix_notes"></a>Architecture independent FAQ</h2>
+          </div>
+        </div>
+      </div>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <span class="bold">
+              <strong>I have gcc installed, but configure fails to find it.</strong>
+            </span>
+            <p>Berkeley DB defaults to using the native C compiler if none is specified.
+That is usually "cc", but some platforms require a different compiler
+to build multithreaded code.  To configure Berkeley DB to build with gcc, run
+configure as follows:</p>
+            <pre class="programlisting">env CC=gcc ../dist/configure ...</pre>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>When compiling with gcc, I get unreferenced symbols; for example
+the following:
+<pre class="programlisting">symbol __muldi3: referenced symbol not found
+symbol __cmpdi2: referenced symbol not found</pre></strong>
+            </span>
+            <p>Berkeley DB often uses 64-bit integral types on systems supporting large
+files, and gcc performs operations on those types by calling library
+functions.  These unreferenced symbol errors are usually caused by
+linking an application by calling "ld" rather than by calling "gcc":
+gcc will link in libgcc.a and will resolve the symbols.  If that does
+not help, another possible workaround is to reconfigure Berkeley DB using the
+<a class="link" href="build_unix_conf.html#build_unix_conf.--disable-largefile">--disable-largefile</a> configuration option and then rebuild.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>My C++ program traps during a failure in a DB call on my
+gcc-based system.</strong>
+            </span>
+            <p>We believe there are some severe bugs in the implementation of
+exceptions for some gcc compilers.  Exceptions require some interaction
+between compiler, assembler, and runtime libraries.  We're not sure
+exactly what is at fault, but one failing combination is gcc 2.7.2.3
+running on SuSE Linux 6.0.  The problem on this system can be seen with
+a rather simple test case of an exception thrown from a shared library
+and caught in the main program.</p>
+            <p>A variation of this problem seems to occur on AIX, although we believe it
+does not necessarily involve shared libraries on that platform.</p>
+            <p>If you see a trap that occurs when an exception might be thrown by the
+Berkeley DB runtime, we suggest that you use static libraries instead of
+shared libraries.  See the documentation for configuration.  If this
+doesn't work and you have a choice of compilers, try using a more recent
+gcc- or a non-gcc based compiler to build Berkeley DB.</p>
+            <p>Finally, you can disable the use of exceptions in the C++ runtime for
+Berkeley DB by using the <a href="../api_reference/CXX/envcreate.html#env_DB_CXX_NO_EXCEPTIONS" class="olink">DB_CXX_NO_EXCEPTIONS</a> flag with the <a href="../api_reference/CXX/env.html" class="olink">DbEnv</a> or <a href="../api_reference/CXX/db.html" class="olink">Db</a> constructors.  When this flag is on, all C++ methods fail by returning an error code rather than throwing an exception.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>I get unexpected results and database corruption when running threaded programs.</strong>
+            </span>
+            <p>
+              <span class="bold">
+                <strong>I get error messages that mutex (for example, pthread_mutex_XXX or mutex_XXX) functions are undefined when linking applications with Berkeley DB.</strong>
+              </span>
+            </p>
+            <p>On some architectures, the Berkeley DB library uses the ISO POSIX standard pthreads and UNIX International (UI) threads interfaces for underlying mutex support; for example, Solaris and HP-UX.  You can specify compilers or compiler flags, or link with the appropriate thread library when loading your application to resolve the undefined references:</p>
+            <pre class="programlisting">cc ... -lpthread ...
+cc ... -lthread ...
+xlc_r ...
+cc ... -mt ...</pre>
+            <p>See the appropriate architecture-specific Reference Guide pages for more
+information.</p>
+            <p>On systems where more than one type of mutex is available, it may be
+necessary for applications to use the same threads package from which
+Berkeley DB draws its mutexes.  For example, if Berkeley DB was built to use the
+POSIX pthreads mutex calls for mutex support, the application may need
+to be written to use the POSIX pthreads interfaces for its threading
+model.  This is only conjecture at this time, and although we know of
+no systems that actually have this requirement, it's not unlikely that
+some exist.</p>
+            <p>In a few cases, Berkeley DB can be configured to use specific underlying mutex
+interfaces.  You can use the <a class="link" href="build_unix_conf.html#build_unix_conf.--enable-posixmutexes">--enable-posixmutexes</a> and
+<a class="link" href="build_unix_conf.html#build_unix_conf.--enable-uimutexes">--enable-uimutexes</a> configuration options to specify the POSIX and Unix
+International (UI) threads packages.  This should not, however, be
+necessary in most cases.</p>
+            <p>In some cases, it is vitally important to make sure that you load the
+correct library.  For example, on Solaris systems, there are POSIX
+pthread interfaces in the C library, so applications can link Berkeley DB
+using only C library and not see any undefined symbols.  However, the
+C library POSIX pthread mutex support is insufficient for Berkeley DB, and
+Berkeley DB cannot detect that fact.  Similar errors can arise when
+applications (for example, tclsh) use dlopen to dynamically load Berkeley DB
+as a library.</p>
+            <p>If you are seeing problems in this area after you confirm that you're
+linking with the correct libraries, there are two other things you can
+try.  First, if your platform supports interlibrary dependencies, we
+recommend that you change the Berkeley DB Makefile to specify the appropriate
+threads library when creating the Berkeley DB shared library, as an
+interlibrary dependency.  Second, if your application is using dlopen
+to dynamically load Berkeley DB, specify the appropriate thread library on
+the link line when you load the application itself.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>I get core dumps when running programs that fork children.</strong>
+            </span>
+            <p>Berkeley DB handles should not be shared across process forks, each forked
+child should acquire its own Berkeley DB handles.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>I get reports of uninitialized memory reads and writes when
+running software analysis tools (for example, Rational Software Corp.'s
+Purify tool).</strong>
+            </span>
+            <p>For performance reasons, Berkeley DB does not write the unused portions of
+database pages or fill in unused structure fields.  To turn off these
+errors when running software analysis tools, build with the
+<a class="link" href="build_unix_conf.html#build_unix_conf.--enable-umrw">--enable-umrw</a>
+configuration option.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>Berkeley DB programs or the test suite fail unexpectedly.</strong>
+            </span>
+            <p>The Berkeley DB architecture does not support placing the shared memory
+regions on remote filesystems -- for example, the Network File System
+(NFS) or the Andrew File System (AFS).  For this reason, the shared
+memory regions (normally located in the database home directory) must
+reside on a local filesystem.  See <a class="xref" href="env_region.html" title="Shared memory regions">Shared memory regions</a> for more information.</p>
+            <p>With respect to running the test suite, always check to make sure that
+TESTDIR is not on a remote mounted filesystem.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>The <a href="../api_reference/C/db_dump.html" class="olink">db_dump utility</a> fails to build.</strong>
+            </span>
+            <p>The <a href="../api_reference/C/db_dump.html" class="olink">db_dump185 utility</a> is the utility that supports the conversion of Berkeley DB 1.85 and earlier databases to current database formats.  If the build errors look something like the following, it means the db.h include file being loaded is not a Berkeley DB 1.85 version include file:</p>
+            <pre class="programlisting">db_dump185.c: In function `main':
+db_dump185.c:210: warning: assignment makes pointer from integer without a cast
+db_dump185.c:212: warning: assignment makes pointer from integer without a cast
+db_dump185.c:227: structure has no member named `seq'
+db_dump185.c:227: `R_NEXT' undeclared (first use in this function)</pre>
+            <p>If the build errors look something like the following, it means that
+the Berkeley DB 1.85 code was not found in the standard libraries:</p>
+            <pre class="programlisting">cc -o db_dump185 db_dump185.o
+ld:
+Unresolved:
+dbopen</pre>
+            <p>To build the <a href="../api_reference/C/db_dump.html" class="olink">db_dump185 utility</a>, the Berkeley DB version 1.85 code must already
+been built and available on the system.  If the Berkeley DB 1.85 header file
+is not found in a standard place, or if the library is not part of the
+standard libraries used for loading, you will need to edit your
+Makefile, and change the following lines:</p>
+            <pre class="programlisting">DB185INC=
+DB185LIB=</pre>
+            <p>So that the system Berkeley DB 1.85 header file and library are found; for
+example:</p>
+            <pre class="programlisting">DB185INC=/usr/local/include
+DB185LIB=-ldb185</pre>
+          </li>
+        </ol>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="build_unix_test.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="build_unix.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="build_unix_aix.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Running the test suite under UNIX </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> AIX</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

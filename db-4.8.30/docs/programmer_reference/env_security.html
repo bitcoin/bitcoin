@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Security</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="env.html" title="Chapter 9.  The Berkeley DB Environment" />
+    <link rel="prev" href="env_region.html" title="Shared memory regions" />
+    <link rel="next" href="env_encrypt.html" title="Encryption" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Security</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="env_region.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 9. 
+        The Berkeley DB Environment
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="env_encrypt.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="env_security"></a>Security</h2>
+          </div>
+        </div>
+      </div>
+      <p>The following are security issues that should be considered when writing
+Berkeley DB applications:</p>
+      <div class="variablelist">
+        <dl>
+          <dt>
+            <span class="term">Database environment permissions</span>
+          </dt>
+          <dd>The directory used as the Berkeley DB database environment should have its
+permissions set to ensure that files in the environment are not accessible
+to users without appropriate permissions.  Applications that add to the
+user's permissions (for example, UNIX setuid or setgid applications),
+must be carefully checked to not permit illegal use of those permissions
+such as general file access in the environment directory.</dd>
+          <dt>
+            <span class="term">Environment variables</span>
+          </dt>
+          <dd>Setting the <a href="../api_reference/C/envopen.html#envopen_DB_USE_ENVIRON" class="olink">DB_USE_ENVIRON</a> 
+and <a href="../api_reference/C/envopen.html#envopen_DB_USE_ENVIRON_ROOT" class="olink">DB_USE_ENVIRON_ROOT</a> flags
+and allowing the use of environment variables during file naming can be
+dangerous.  Setting those flags in Berkeley DB applications with additional
+permissions (for example, UNIX setuid or setgid applications) could
+potentially allow users to read and write databases to which they would
+not normally have access.</dd>
+          <dt>
+            <span class="term">File permissions</span>
+          </dt>
+          <dd>By default, Berkeley DB always creates files readable and writable by the owner
+and the group (that is, S_IRUSR, S_IWUSR, S_IRGRP and S_IWGRP; or octal mode
+0660 on historic UNIX systems).  The group ownership of created files is
+based on the system and directory defaults, and is not further specified
+by Berkeley DB.</dd>
+          <dt>
+            <span class="term">Temporary backing files</span>
+          </dt>
+          <dd>If an unnamed database is created and the cache is too small to hold
+the database in memory, Berkeley DB will create a temporary physical file to
+enable it to page the database to disk as needed.  In this case,
+environment variables such as <span class="bold"><strong>TMPDIR</strong></span> may be used to specify
+the location of that temporary file.  Although temporary backing files
+are created readable and writable by the owner only (S_IRUSR and
+S_IWUSR, or octal mode 0600 on historic UNIX systems), some filesystems
+may not sufficiently protect temporary files created in random
+directories from improper access.  To be absolutely safe, applications
+storing sensitive data in unnamed databases should use the
+<a href="../api_reference/C/envset_tmp_dir.html" class="olink">DB_ENV-&gt;set_tmp_dir()</a> method to specify a temporary directory with
+known permissions.</dd>
+          <dt>
+            <span class="term">Tcl API</span>
+          </dt>
+          <dd>The Berkeley DB Tcl API does not attempt to avoid evaluating input as Tcl
+commands.  For this reason, it may be dangerous to pass unreviewed user
+input through the Berkeley DB Tcl API, as the input may subsequently be
+evaluated as a Tcl command.  Additionally, the Berkeley DB Tcl API
+initialization routine resets process' effective user and group IDs to
+the real user and group IDs, to minimize the effectiveness of a Tcl
+injection attack.</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="env_region.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="env.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="env_encrypt.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Shared memory regions </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Encryption</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

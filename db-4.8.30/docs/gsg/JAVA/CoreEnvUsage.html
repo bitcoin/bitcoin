@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Managing Databases in Environments</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="DB.html" title="Chapter 7. Databases" />
+    <link rel="prev" href="dbErrorReporting.html" title="Error Reporting Functions" />
+    <link rel="next" href="CoreJavaUsage.html" title="Database Example" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Managing Databases in Environments</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbErrorReporting.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 7. Databases</th>
+          <td width="20%" align="right"> <a accesskey="n" href="CoreJavaUsage.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="CoreEnvUsage"></a>Managing Databases in Environments</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+            In 
+            
+            <span>
+            <a class="xref" href="Env.html" title="Chapter 2. Database Environments">Database Environments</a>, 
+            </span>
+            
+            we introduced
+        environments. While environments are not used in the example built in this book,
+        they are so commonly used for a wide class of DB applications that it is 
+        necessary to show their basic usage, if only from a completeness perspective.
+    </p>
+      <p>
+        To use an environment, you must first
+            
+        open it. At open time, you must identify the directory in 
+        which it resides. This directory must exist prior to the open attempt. 
+        You can also identify open properties, such as whether the environment can be
+        created if it does not already exist.
+    </p>
+      <p>
+        You will also need to initialize the in-memory cache when you open your environment.
+    </p>
+      <p>
+        For example, to 
+            <span>create an environment handle and</span>
+        open an environment:
+    </p>
+      <a id="java_env1"></a>
+      <pre class="programlisting">package db.GettingStarted;
+
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.Environment;
+import com.sleepycat.db.EnvironmentConfig;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+
+...
+
+Environment myEnv = null;
+File envHome = new File("/export1/testEnv");
+try {
+    EnvironmentConfig envConf = new EnvironmentConfig();
+    envConf.setAllowCreate(true);         // If the environment does not
+                                          // exist, create it.
+    envConf.setInitializeCache(true);     // Initialize the in-memory
+                                          // cache.
+
+    myEnv = new Environment(envHome, envConf);
+} catch (DatabaseException de) {
+    // Exception handling goes here
+} catch (FileNotFoundException fnfe) {
+    // Exception handling goes here
+} </pre>
+      <p>
+        Once an environment is opened, you can open databases in it. Note that by default databases
+        are stored in the environment's home directory, or relative to that directory if you
+        provide any sort of a path in the database's file name:
+    </p>
+      <a id="java_env2"></a>
+      <pre class="programlisting">package db.GettingStarted;
+
+<strong class="userinput"><code>import com.sleepycat.db.Database;
+import com.sleepycat.db.DatabaseConfig;
+import com.sleepycat.db.DatabaseType;</code></strong>
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.Environment;
+import com.sleepycat.db.EnvironmentConfig;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+
+...
+
+Environment myEnv = null;
+Database myDb = null;
+File envHome = new File("/export1/testEnv");
+String dbFileName = new String("mydb.db", "UTF-8");
+
+try {
+    EnvironmentConfig envConf = new EnvironmentConfig();
+    envConf.setAllowCreate(true);
+    DatabaseConfig dbConfig = new DatabaseConfig();
+    <strong class="userinput"><code>dbConfig.setAllowCreate(true);
+    dbConfig.setType(DatabaseType.BTREE);</code></strong>
+
+    myEnv = new Environment(envHome, envConf);
+    <strong class="userinput"><code>myDb = myEnv.openDatabase(null, dbFileName, null, dbConfig);</code></strong>
+} catch (DatabaseException de) {
+    // Exception handling goes here
+} catch (FileNotFoundException fnfe) {
+    // Exception handling goes here
+} </pre>
+      <p>
+        When you are done with an environment, you must close it. Before you close an environment,
+        make sure you close any opened databases.
+    </p>
+      <a id="java_env3"></a>
+      <pre class="programlisting">finally {
+    try {
+        if (myDb != null) {
+            myDb.close();
+        }
+
+        if (myEnv != null) {
+            myEnv.close();
+        }
+    } catch (DatabaseException de) {
+        // Exception handling goes here
+    }
+} </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbErrorReporting.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="DB.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="CoreJavaUsage.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Error Reporting Functions </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Database Example</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

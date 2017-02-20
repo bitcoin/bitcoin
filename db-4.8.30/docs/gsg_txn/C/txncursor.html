@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Transactional Cursors</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB Transaction Processing" />
+    <link rel="up" href="usingtxns.html" title="Chapter 3. Transaction Basics" />
+    <link rel="prev" href="nestedtxn.html" title="Nested Transactions" />
+    <link rel="next" href="txnindices.html" title="Secondary Indices with Transaction Applications" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Transactional Cursors</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="nestedtxn.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. Transaction Basics</th>
+          <td width="20%" align="right"> <a accesskey="n" href="txnindices.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="txncursor"></a>Transactional Cursors</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+            You can transaction-protect your cursor operations by
+            specifying a transaction handle at the time that you create
+            your cursor.  Beyond that, you do not ever
+            provide a transaction handle directly to a cursor method.
+        </p>
+      <p>
+            Note that if you transaction-protect a cursor, then you must
+            make sure that the cursor is closed before you either commit or
+            abort the transaction. For example:
+        </p>
+      <pre class="programlisting">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+#include "db.h"
+
+int
+main(void)
+{
+    DBT key, data;
+    DBC *cursorp;
+    DB_TXN *txn = NULL;
+    int ret, c_ret;
+    char *replacementString = "new string";
+
+    ...
+    /* environment and db handle creation omitted */
+    ...
+
+    /* Get the txn handle */
+    txn = NULL;
+    ret = envp-&gt;txn_begin(envp, NULL, &amp;txn, 0);
+    if (ret != 0) {
+        envp-&gt;err(envp, ret, "Transaction begin failed.");
+        goto err;
+    }
+
+    /* Get the cursor, supply the txn handle at that time */
+    ret = dbp-&gt;cursor(dbp, txn, &amp;cursorp, 0);
+    if (ret != 0) {
+        envp-&gt;err(envp, ret, "Cursor open failed.");
+        txn-&gt;abort(txn);
+        goto err;
+    }
+
+    /* 
+     * Now use the cursor. Note that we do not supply any txn handles to these
+     * methods.
+     */
+    /* Prepare the DBTs */
+    memset(&amp;key, 0, sizeof(DBT));
+    memset(&amp;data, 0, sizeof(DBT));
+    while (cursor-&gt;get(&amp;key, &amp;data, DB_NEXT) == 0) {
+        data-&gt;data = (void *)replacementString;
+        data-&gt;size = (strlen(replacementString) + 1) * sizeof(char);
+        c_ret = cursor-&gt;put(cursor, &amp;key, &amp;data, DB_CURRENT);
+        if (c_ret != 0) {
+            /* abort the transaction and goto error */ 
+            envp-&gt;err(envp, ret, "Cursor put failed.");
+            cursorp-&gt;close(cursorp);
+            cursorp = NULL;
+            txn-&gt;abort(txn);
+            goto err;
+        }
+    }
+
+    /* 
+     * Commit the transaction. Note that the transaction handle
+     * can no longer be used.
+     */ 
+    ret = cursorp-&gt;close(cursorp);
+    if (ret != 0) {
+        envp-&gt;err(envp, ret, "Cursor close failed.");
+        txn-&gt;abort(txn);
+        goto err;
+    }
+    ret = txn-&gt;commit(txn, 0);
+    if (ret != 0) {
+        envp-&gt;err(envp, ret, "Transaction commit failed.");
+        goto err;
+    }
+
+err:
+    /* Close the cursor (if the handle is not NULL)
+     * and perform whatever other cleanup is required */
+
+    /* Close the database */
+
+    /* Close the environment */
+
+    ...
+
+    if (c_ret != 0)
+        ret = c_ret;
+    
+    return (ret == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
+} </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="nestedtxn.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="usingtxns.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="txnindices.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Nested Transactions </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Secondary Indices with Transaction Applications</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

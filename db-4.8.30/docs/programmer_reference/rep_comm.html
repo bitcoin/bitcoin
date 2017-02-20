@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Building the communications infrastructure</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="rep.html" title="Chapter 12.  Berkeley DB Replication" />
+    <link rel="prev" href="rep_base_meth.html" title="Base API Methods" />
+    <link rel="next" href="rep_newsite.html" title="Connecting to a new site" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Building the communications infrastructure</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="rep_base_meth.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 12. 
+        Berkeley DB Replication
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="rep_newsite.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="rep_comm"></a>Building the communications infrastructure</h2>
+          </div>
+        </div>
+      </div>
+      <p>Replication Manager provides a built-in communications
+infrastructure.</p>
+      <p>Base API applications must provide
+their own communications infrastructure, which is typically written with one
+or more threads of control looping on one or more communication
+channels, receiving and sending messages.  These threads accept messages
+from remote environments for the local database environment, and accept
+messages from the local environment for remote environments.  Messages
+from remote environments are passed to the local database environment
+using the <a href="../api_reference/C/repmessage.html" class="olink">DB_ENV-&gt;rep_process_message()</a> method.  Messages from the local environment are
+passed to the application for transmission using the callback function
+specified to the <a href="../api_reference/C/reptransport.html" class="olink">DB_ENV-&gt;rep_set_transport()</a> method.</p>
+      <p>Processes establish communication channels by calling the
+<a href="../api_reference/C/reptransport.html" class="olink">DB_ENV-&gt;rep_set_transport()</a> method, regardless of whether they are running in
+client or server environments.  This method specifies the <span class="bold"><strong>send</strong></span>
+function, a callback function used by Berkeley DB for sending messages to
+other database environments in the replication group.  The <span class="bold"><strong>send</strong></span>
+function takes an environment ID and two opaque data objects. It is the
+responsibility of the <span class="bold"><strong>send</strong></span> function to transmit the information
+in the two data objects to the database environment corresponding to the
+ID, with the receiving application then calling the <a href="../api_reference/C/repmessage.html" class="olink">DB_ENV-&gt;rep_process_message()</a> method
+to process the message.</p>
+      <p>The details of the transport mechanism are left entirely to the
+application; the only requirement is that the data buffer and size of
+each of the control and rec <a href="../api_reference/C/dbt.html" class="olink">DBT</a>s passed to the <span class="bold"><strong>send</strong></span>
+function on the sending site be faithfully copied and delivered to the
+receiving site by means of a call to <a href="../api_reference/C/repmessage.html" class="olink">DB_ENV-&gt;rep_process_message()</a> with
+corresponding arguments.  Messages that are broadcast (whether by
+broadcast media or when directed by setting the
+<a href="../api_reference/C/reptransport.html" class="olink">DB_ENV-&gt;rep_set_transport()</a> method's envid parameter DB_EID_BROADCAST), should
+not be processed by the message sender.  In all cases, the application's
+transport media or software must ensure that <a href="../api_reference/C/repmessage.html" class="olink">DB_ENV-&gt;rep_process_message()</a> is
+never called with a message intended for a different database
+environment or a broadcast message sent from the same environment on
+which <a href="../api_reference/C/repmessage.html" class="olink">DB_ENV-&gt;rep_process_message()</a> will be called.
+The <a href="../api_reference/C/repmessage.html" class="olink">DB_ENV-&gt;rep_process_message()</a> method is
+free-threaded; it is safe to deliver any number of messages
+simultaneously, and from any arbitrary thread or process in the Berkeley DB
+environment.</p>
+      <p>There are a number of informational returns from the
+<a href="../api_reference/C/repmessage.html" class="olink">DB_ENV-&gt;rep_process_message()</a> method:</p>
+      <div class="variablelist">
+        <dl>
+          <dt>
+            <span class="term">
+              <a href="../api_reference/C/repmessage.html#repmsg_DB_REP_DUPMASTER" class="olink">DB_REP_DUPMASTER</a>
+            </span>
+          </dt>
+          <dd>
+            <p>
+                When <a href="../api_reference/C/repmessage.html" class="olink">DB_ENV-&gt;rep_process_message()</a> returns <a href="../api_reference/C/repmessage.html#repmsg_DB_REP_DUPMASTER" class="olink">DB_REP_DUPMASTER</a>, it means that
+                another database environment in the replication group also
+                believes itself to be the master.  The application should
+                complete all active transactions, close all open database
+                handles, reconfigure itself as a client using the
+                <a href="../api_reference/C/repstart.html" class="olink">DB_ENV-&gt;rep_start()</a> method, and then call for an election by calling
+                the <a href="../api_reference/C/repelect.html" class="olink">DB_ENV-&gt;rep_elect()</a> method.
+            </p>
+          </dd>
+          <dt>
+            <span class="term">
+              <a href="../api_reference/C/repmessage.html#repmsg_DB_REP_HOLDELECTION" class="olink">DB_REP_HOLDELECTION</a>
+            </span>
+          </dt>
+          <dd>
+            <p>
+            When <a href="../api_reference/C/repmessage.html" class="olink">DB_ENV-&gt;rep_process_message()</a> returns <a href="../api_reference/C/repmessage.html#repmsg_DB_REP_HOLDELECTION" class="olink">DB_REP_HOLDELECTION</a>, it means that
+            another database environment in the replication group has
+            called for an election.  The application should call the
+            <a href="../api_reference/C/repelect.html" class="olink">DB_ENV-&gt;rep_elect()</a> method.
+        </p>
+          </dd>
+          <dt>
+            <span class="term">
+              <a href="../api_reference/C/repmessage.html#repmsg_DB_REP_IGNORE" class="olink">DB_REP_IGNORE</a>
+            </span>
+          </dt>
+          <dd>
+            <p>
+            When <a href="../api_reference/C/repmessage.html" class="olink">DB_ENV-&gt;rep_process_message()</a> returns <a href="../api_reference/C/repmessage.html#repmsg_DB_REP_IGNORE" class="olink">DB_REP_IGNORE</a>, it means that this
+            message cannot be processed.  This is normally an indication
+            that this message is irrelevant to the current replication
+            state, such as a message from an old generation that arrived
+            late.
+        </p>
+          </dd>
+          <dt>
+            <span class="term">
+              <a href="../api_reference/C/repmessage.html#repmsg_DB_REP_ISPERM" class="olink">DB_REP_ISPERM</a>
+            </span>
+          </dt>
+          <dd>
+            <p>
+            When <a href="../api_reference/C/repmessage.html" class="olink">DB_ENV-&gt;rep_process_message()</a> returns <a href="../api_reference/C/repmessage.html#repmsg_DB_REP_ISPERM" class="olink">DB_REP_ISPERM</a>, it means a permanent
+            record, perhaps a message previously returned as
+            <a href="../api_reference/C/repmessage.html#repmsg_DB_REP_NOTPERM" class="olink">DB_REP_NOTPERM</a>, was successfully written to disk.  This
+            record may have filled a gap in the log record that allowed
+            additional records to be written.  The <span class="bold"><strong>ret_lsnp</strong></span> contains the maximum LSN of
+            the permanent records written.
+        </p>
+          </dd>
+          <dt>
+            <span class="term">
+              <a href="../api_reference/C/repmessage.html#repmsg_DB_REP_NEWSITE" class="olink">DB_REP_NEWSITE</a>
+            </span>
+          </dt>
+          <dd>
+            <p>
+            When <a href="../api_reference/C/repmessage.html" class="olink">DB_ENV-&gt;rep_process_message()</a> returns <a href="../api_reference/C/repmessage.html#repmsg_DB_REP_NEWSITE" class="olink">DB_REP_NEWSITE</a>, it means that a
+            message from a previously unknown member of the replication
+            group has been received.  The application should reconfigure
+            itself as necessary so it is able to send messages to this
+            site.
+        </p>
+          </dd>
+          <dt>
+            <span class="term">
+              <a href="../api_reference/C/repmessage.html#repmsg_DB_REP_NOTPERM" class="olink">DB_REP_NOTPERM</a>
+            </span>
+          </dt>
+          <dd>
+            <p>
+            When <a href="../api_reference/C/repmessage.html" class="olink">DB_ENV-&gt;rep_process_message()</a> returns <a href="../api_reference/C/repmessage.html#repmsg_DB_REP_NOTPERM" class="olink">DB_REP_NOTPERM</a>, it means a message
+            marked as <a href="../api_reference/C/reptransport.html#transport_DB_REP_PERMANENT" class="olink">DB_REP_PERMANENT</a> was processed successfully but was not
+            written to disk.  This is normally an indication that one or
+            more messages, which should have arrived before this message,
+            have not yet arrived.  This operation will be written to disk
+            when the missing messages arrive.  The <span class="bold"><strong>ret_lsnp</strong></span> argument will contain the
+            LSN of this record.  The application should take whatever
+            action is deemed necessary to retain its recoverability
+            characteristics.
+        </p>
+          </dd>
+        </dl>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="rep_base_meth.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="rep.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="rep_newsite.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Base API Methods </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Connecting to a new site</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 31.  Upgrading from previous versions of Berkeley DB</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="prev" href="build_vxworks_faq.html" title="VxWorks FAQ" />
+    <link rel="next" href="upgrade_process.html" title="Upgrading Berkeley DB installations" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 31. 
+        Upgrading from previous versions of Berkeley DB
+        </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="build_vxworks_faq.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_process.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="upgrade"></a>Chapter 31. 
+        Upgrading from previous versions of Berkeley DB
+        </h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="upgrade.html#upgrade_version">Library version information</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="upgrade_process.html">Upgrading Berkeley DB installations</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="upgrade_version"></a>Library version information</h2>
+            </div>
+          </div>
+        </div>
+        <p>Each release of the Berkeley DB library has a major version number, a minor
+version number, and a patch number.</p>
+        <p>The major version number changes only when major portions of the Berkeley DB
+functionality have been changed.  In this case, it may be necessary to
+significantly modify applications in order to upgrade them to use the new
+version of the library.</p>
+        <p>The minor version number changes when Berkeley DB interfaces have changed,
+and the new release is not entirely backward-compatible with previous
+releases.  To upgrade applications to the new version, they must be
+recompiled and potentially, minor modifications made (for example, the
+order of arguments to a function might have changed).</p>
+        <p>The patch number changes on each release.  If only the patch number has
+changed in a release, applications do not need to be recompiled, and
+they can be upgraded to the new version by installing the new version
+of a shared library or by relinking the application to the new version
+of a static library.</p>
+        <p>Internal Berkeley DB interfaces may change at any time and during any release,
+without warning. This means that the library must be entirely recompiled
+and reinstalled when upgrading to new releases of the library because
+there is no guarantee that modules from the current version of the
+library will interact correctly with modules from a previous release.</p>
+        <p>To retrieve the Berkeley DB version information, applications should use the
+<a href="../api_reference/C/envversion.html" class="olink">DB_ENV-&gt;version()</a> function.  In addition to the previous
+information, the <a href="../api_reference/C/envversion.html" class="olink">DB_ENV-&gt;version()</a> function returns a string
+encapsulating the version information, suitable for display to a user.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="build_vxworks_faq.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_process.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">VxWorks FAQ </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Upgrading Berkeley DB installations</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

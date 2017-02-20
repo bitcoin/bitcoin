@@ -1,0 +1,40 @@
+#!/bin/sh -
+#	$Id$
+
+sh s_perm		# permissions.
+sh s_readme		# distribution README file.
+
+sh s_config		# autoconf.
+sh s_apiflags		# API flags.
+sh s_rpc		# RPC files.
+sh s_sig		# Structure signature.
+sh s_recover		# logging/recovery files.
+sh s_message		# replication and repmgr message files.
+
+#############################################################
+# The following order is important, s_include must run after
+# the other source files have been created.
+#############################################################
+sh s_include		# standard include files.
+
+sh s_java		# Java support.
+sh s_test		# Test suite support.
+#sh s_tags		# Tags files.
+
+#############################################################
+# We only build the Cscope file for releases, it's too big to
+# commit into the CVS tree.
+#############################################################
+#sh s_cscope		# Cscope files.
+
+#############################################################
+# Create the build environments last, they use files created
+# by previous steps.
+#############################################################
+sh s_brew		# BREW support.
+sh s_brew_dsp		# BREW support: build environment.
+sh s_s60		# S60 support.
+sh s_s60_mmp		# S60 support: build environment.
+sh s_vxworks		# VxWorks support.
+sh s_windows		# Windows support.
+sh s_windows_dsp	# Windows support: build environment.

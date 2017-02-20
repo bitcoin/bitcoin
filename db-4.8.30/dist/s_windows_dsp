@@ -1,0 +1,276 @@
+#!/bin/bash -
+#	$Id$
+#
+# Build Windows .dsp files.
+# Build Windows Mobile .dsp and .vcproj files
+# Build Windows .vcproj files.
+
+. RELEASE
+
+SRCFILES=srcfiles.in
+
+create_dsp()
+{
+    projname="$1"       # name of the .dsp file
+    match="$2"          # the string used to egrep the $sources file
+    sources="$3"        # a modified version of $SRCFILES to facilitate matches
+    dsptemplate="$4"    # overall template file for the .dsp
+    extra_cppflags="$5" # extra flags to send to compiler
+    release_libs="$6"   # libraries to link against in Release builds
+    debug_libs="$7"     # libraries to link against in Debug builds
+    lib_suffix="$8"     # the library name is libdb@lib_suffix@@VERSION@
+    proj_type="$9"	# the project type dsp or vcp
+    proj_guid="${10}"	# The project guid for VS2005 projects
+
+    # Set the default project type to be "dsp"
+    if [ ! "$proj_type" ] ; then
+	    proj_type=dsp
+    fi
+
+			# template file for the src file fragments
+    srctemplate="$BUILDDIR/srcfile_$proj_type.src"
+    rsrctemplate="$BUILDDIR/rsrcfile_$proj_type.src"
+    dspoutput=$BUILDDIR/$projname.$proj_type
+
+    postbuild=$dspoutput.postbuild
+    if [ ! -f $postbuild ] ; then
+	    postbuild=/dev/null
+    fi
+
+    rm -f $dspoutput.insert
+    for srcpath in `egrep "$match" $sources | sed -e 's/[ 	].*//'`
+    do
+        # take the path name and break it up, converting / to \\.
+        # so many backslashes needed because of shell quoting and
+        # sed quoting -- we'll end up with two backslashes for every
+        # forward slash, but we need that when feeding that to the
+        # later sed command.
+        set - `echo $srcpath | sed -e 's;\(.*\)/;../\\1 ;' \
+            -e "s;$BUILDDIR;.;" \
+            -e 's;/;\\\\\\\\;g'`
+	srcdir="$1"
+	srcfile="$2"
+	if [ "${srcfile##*.}" = "rc" -a "$proj_type" = "vcproj" ] ; then
+		inptemplate=$rsrctemplate
+	else
+		inptemplate=$srctemplate
+	fi
+
+        sed -e "s/@srcdir@/$srcdir/g" \
+            -e "s/@srcfile@/$srcfile/g" \
+            < $inptemplate >> $dspoutput.insert
+    done
+    sed -e "/@SOURCE_FILES@/r$dspoutput.insert" \
+        -e "/@SOURCE_FILES@/d" \
+        -e "/@POST_BUILD@/r$postbuild" \
+        -e "/@POST_BUILD@/d" \
+        -e "s/@project_name@/$projname/g" \
+        -e "s,@extra_cppflags@,$extra_cppflags,g" \
+        -e "s,@release_libs@,$release_libs,g" \
+        -e "s,@debug_libs@,$debug_libs,g" \
+        -e "s,@lib_suffix@,$lib_suffix,g" \
+        -e "s/@DB_VERSION_MAJOR@/$DB_VERSION_MAJOR/g" \
+        -e "s/@DB_VERSION_MINOR@/$DB_VERSION_MINOR/g" \
+        -e "s/@PROJ_GUID@/$proj_guid/g" \
+      < $dsptemplate > $dspoutput.new
+
+    # We run this script on Windows (under Cygwin).  Fix up the line-endings
+    # for the temporary files.  We don't test the platform, just run unix2dos
+    # if the command exists, ignoring any not-found error message.
+    (unix2dos.exe $dspoutput.new) >/dev/null 2>&1
+
+    # Set the file mode to 644 because the VC++ IDE needs a writeable file
+    # in our development environment.
+    cmp $dspoutput.new $dspoutput > /dev/null 2>&1 ||
+	(echo "Building $dspoutput" && rm -f $dspoutput &&
+	    cp $dspoutput.new $dspoutput && chmod 664 $dspoutput)
+    rm -f $dspoutput.insert $dspoutput.new
+}
+
+TMPA=/tmp/swindsp$$a
+trap "rm -f $TMPA; exit 1" 1 2 3 15
+
+# create a copy of the srcfiles with comments and empty lines removed.
+# add a space at the end of each list of modules so that each module
+# can be unambiguously matched e.g. ' dynamic '
+sed -e "s/#.*$//" \
+    -e "/^[ 	]*$/d" \
+    -e "s/[ 	][ 	]*/ /" \
+    -e "s/[ 	]*$//" \
+    -e "/[	 ]/!d" \
+    -e "s/$/ /" < $SRCFILES > $TMPA
+
+# get a list of all modules mentioned
+#
+MODULES="`sed -e 's/^[^	 ]* //' < $TMPA | tr ' ' '\012' | sort | uniq`"
+
+for module in $MODULES
+do
+    case "$module" in
+    dynamic )
+	BUILDDIR=../build_windows
+        create_dsp db_dll " $module " $TMPA $BUILDDIR/dynamic_dsp.src \
+            '' 'ws2_32.lib' 'ws2_32.lib'
+        ;;
+    small )
+	BUILDDIR=../build_windows
+        create_dsp db_small " $module " $TMPA $BUILDDIR/static_dsp.src \
+            '/D "HAVE_SMALLBUILD"' '' '' _small
+        ;;
+    static )
+	BUILDDIR=../build_windows
+        create_dsp db_static " $module " $TMPA $BUILDDIR/static_dsp.src
+        ;;
+    ce)
+	BUILDDIR=../build_wince
+        create_dsp db_static " $module " $TMPA \
+	    ../build_wince/static_vcp.src '' '' '' '' vcp
+	# Build VS2005 projects.
+	# The GUID passed in must match that in the .sln workspace.
+	# It would be ideal to grab the GUID from there if this
+	# project is already included there.
+        create_dsp db_static " $module " $TMPA \
+	    ../build_wince/static_vcproj.src '' '' '' '' vcproj \
+	    "4AB4958F-8DD0-49B5-8C02-014B5637C59A"
+        ;;
+    ce_small)
+	BUILDDIR=../build_wince
+        create_dsp db_small " $module " $TMPA  \
+            ../build_wince/static_vcp.src '/D "HAVE_SMALLBUILD"' \
+	    '' '' _small vcp
+	# Build VS2005 projects.
+	# The GUID passed in must match that in the .sln workspace.
+	# It would be ideal to grab the GUID from there if this
+	# project is already included there.
+        create_dsp db_small " $module " $TMPA  \
+            ../build_wince/static_vcproj.src 'HAVE_SMALLBUILD' \
+	    '' '' _small vcproj "6A2849DA-8F7C-4B50-BDAE-AE7752EF8213"
+        ;;
+    java )
+        BUILDDIR=../build_windows
+        create_dsp db_java " $module " $TMPA $BUILDDIR/dynamic_dsp.src '' \
+            'libdb@DB_VERSION_MAJOR@@DB_VERSION_MINOR@.lib' \
+            'libdb@DB_VERSION_MAJOR@@DB_VERSION_MINOR@d.lib' _java
+        ;;
+    tcl )
+        BUILDDIR=../build_windows
+        create_dsp db_tcl " $module " $TMPA $BUILDDIR/dynamic_dsp.src \
+            '/D "DB_TCL_SUPPORT"' \
+            'libdb@DB_VERSION_MAJOR@@DB_VERSION_MINOR@.lib tcl84.lib' \
+            'libdb@DB_VERSION_MAJOR@@DB_VERSION_MINOR@d.lib tcl84g.lib' _tcl
+        ;;
+    testutil )
+	BUILDDIR=../build_windows
+        create_dsp db_test " $module " $TMPA $BUILDDIR/app_dsp.src \
+	    '' '/out:"Win32\\Release\\dbkill.exe"' '/out:"Win32\\Debug\\dbkill.exe"'
+        ;;
+    app=* )
+	BUILDDIR=../build_windows
+        appname=`echo $module | sed -e 's/^app=//'`
+        case "$appname" in
+        ex_rep_base )
+            libs='ws2_32.lib'
+            ;;
+        * )
+            libs=''
+            ;;
+        esac
+	# Split into Windows CE and Win32/64 project creation.
+	case "$appname" in
+	wce_tpcb )
+		BUILDDIR=../build_wince
+		create_dsp $appname " $module " $TMPA \
+		    ../build_wince/app_vcp.src '/D "__NO_SYSTEM_INCLUDES"' \
+		    '' '' '' vcp
+		# The GUID passed in must match that in the .sln workspace.
+		# It would be ideal to grab the GUID from there if this
+		# project is already included there.
+		create_dsp $appname " $module " $TMPA \
+		    ../build_wince/app_vcproj.src '__NO_SYSTEM_INCLUDES' \
+		    '' '' '' vcproj "F2CE670A-ABAE-414A-9A17-8079AB58613F"
+		BUILDDIR=../build_windows
+	        ;;
+	* )
+        	create_dsp $appname " $module " $TMPA $BUILDDIR/app_dsp.src \
+        	    '' $libs $libs
+		;;
+	esac
+	;;
+    brew|s60|vx|vxsmall|vx6 )
+        ;;
+    * )
+        echo \
+    "s_windows_dsp: module name $module in $SRCFILES is unknown type"
+        ;;
+    esac
+done
+
+rm -f $TMPA
+
+#
+# Drive construction of Visual Studio (version 7.1) projects 
+# files, using an xquery script (genproject.template),an input XML
+# document, and a file containing a list of project names.
+#
+
+# Source the Berkeley DB release version numbers.
+cd win_projects
+
+# project name list
+PROJECTS=db.projects
+
+# xquery script template, called genproject.template in DBXML tree.
+TEMPLATE=genproject.template
+
+# temporary script, post-sed-replacement
+TEMP_SCRIPT=genproject.script
+
+# xml document input template, called dbxml.template.xml in DBXML tree.
+CONFIG_INPUT=projects.template.xml
+
+# temporary xml document, post-sed-replacement, called dbxml.projects in DBXML
+CONFIG_OUTPUT=projects.xml
+
+# location for output project files
+PROJECT_OUTPUT_DIR=../../build_windows
+
+# substitute some variables in the XML document template
+sed -e "s/@DB_VERSION_MAJOR@/$DB_VERSION_MAJOR/g" \
+    -e "s/@DB_VERSION_MINOR@/$DB_VERSION_MINOR/g" \
+    < $CONFIG_INPUT > $CONFIG_OUTPUT
+
+echo "Building Visual Studio project files -- "
+echo "   output only for modified projects (this can take a while)"
+
+# for each project, substitute 2 variables in the XQuery script, then run it
+for v in VC8
+do
+    if [ $v = "VC7.1" ]; then
+	VERSION="7.10"
+    else
+	VERSION="8.00"
+    fi
+
+    echo "Building for Visual Studio version $VERSION"
+
+    for i in `cat $PROJECTS`
+    do
+	sed -e "s!@PROJECT_NAME@!$i!g" -e "s!@PROJECT_INPUT@!$CONFIG_OUTPUT!g" -e "s!@VISUAL_STUDIO_VERSION@!$VERSION!g" < $TEMPLATE > $TEMP_SCRIPT
+	TMP=$PROJECT_OUTPUT_DIR/$i.tmp.vcproj
+	if [ $v = "VC7.1" ]; then
+	    TARG=$PROJECT_OUTPUT_DIR/${i}_vs71.vcproj
+	else
+	    TARG=$PROJECT_OUTPUT_DIR/${i}.vcproj
+	fi
+	xqilla -o $TMP $TEMP_SCRIPT
+	rm -f $TEMP_SCRIPT
+	cmp $TMP $TARG > /dev/null 2>&1 ||
+	(echo "Building $TARG" && rm -f $TARG &&
+	    cp $TMP $TARG && chmod 664 $TARG)
+	rm -f $TMP
+    done
+done
+
+# Cleanup.
+rm -f $CONFIG_OUTPUT
+cd ..

@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Database Example</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="DB.html" title="Chapter 7. Databases" />
+    <link rel="prev" href="CoreEnvUsage.html" title="Managing Databases in Environments" />
+    <link rel="next" href="DBEntry.html" title="Chapter 8. Database Records" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Database Example</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="CoreEnvUsage.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 7. Databases</th>
+          <td width="20%" align="right"> <a accesskey="n" href="DBEntry.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="CoreJavaUsage"></a>Database Example</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+        Throughout this book we will build a couple of applications that load
+        and retrieve inventory data from DB databases. While we are not yet ready to
+        begin reading from or writing to our databases, we can at least create
+        the class that we will use to manage our databases.
+    </p>
+      <p>
+        Note that subsequent examples in this book will build on this code to
+        perform the more interesting work of writing to and reading from the
+        databases. 
+    </p>
+      <p>
+        Note that you can find the complete implementation of these functions
+        in:
+    </p>
+      <pre class="programlisting"><span class="emphasis"><em>DB_INSTALL</em></span>/examples_java/db/GettingStarted</pre>
+      <p>
+        where <code class="literal"><span class="emphasis"><em>DB_INSTALL</em></span></code> is the location where you
+        placed your DB distribution.  
+    </p>
+      <div class="example">
+        <a id="MyDb"></a>
+        <p class="title">
+          <b>Example 7.1 MyDbs Class</b>
+        </p>
+        <div class="example-contents">
+          <p>
+            To manage our database open and close activities, we encapsulate them
+            in the <code class="classname">MyDbs</code> class. There are several good reasons
+            to do this, the most important being that we can ensure our databases are
+            closed by putting that activity in the <code class="classname">MyDbs</code>
+            class destructor.
+        </p>
+          <p>
+            To begin, we import some needed classes:
+        </p>
+          <a id="java_db12"></a>
+          <pre class="programlisting">// File: MyDbs.java
+package db.GettingStarted;
+
+import com.sleepycat.db.Database;
+import com.sleepycat.db.DatabaseConfig;
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.DatabaseType;
+
+import java.io.FileNotFoundException; </pre>
+          <p>
+    And then we write our class declaration and provided some necessary private data members:
+</p>
+          <a id="java_db13"></a>
+          <pre class="programlisting">public class MyDbs {
+
+    // The databases that our application uses
+    private Database vendorDb = null;
+    private Database inventoryDb = null;
+
+    private String vendordb = "VendorDB.db";
+    private String inventorydb = "InventoryDB.db";
+
+    // Our constructor does nothing
+    public MyDbs() {} </pre>
+          <p>
+    Next we need a <code class="methodname">setup()</code> method. This is where
+    we configure and open our databases.
+</p>
+          <a id="java_db14"></a>
+          <pre class="programlisting">    // The setup() method opens all our databases
+    // for us.
+    public void setup(String databasesHome)
+        throws DatabaseException {
+
+        DatabaseConfig myDbConfig = new DatabaseConfig();
+
+        myDbConfig.setErrorStream(System.err);
+        myDbConfig.setErrorPrefix("MyDbs");
+        myDbConfig.setType(DatabaseType.BTREE);
+        myDbConfig.setAllowCreate(true);
+
+        // Now open, or create and open, our databases
+        // Open the vendors and inventory databases
+        try {
+            vendordb = databasesHome + "/" + vendordb;
+            vendorDb = new Database(vendordb,
+                                    null,
+                                    myDbConfig);
+
+            inventorydb = databasesHome + "/" + inventorydb;
+            inventoryDb = new Database(inventorydb,
+                                        null,
+                                        myDbConfig);
+        } catch(FileNotFoundException fnfe) {
+            System.err.println("MyDbs: " + fnfe.toString());
+            System.exit(-1);
+        }
+    } </pre>
+          <p>
+    Finally, we provide some getter methods, and our <code class="methodname">close()</code> method.
+</p>
+          <a id="java_db15"></a>
+          <pre class="programlisting">   // getter methods
+    public Database getVendorDB() {
+        return vendorDb;
+    }
+
+    public Database getInventoryDB() {
+        return inventoryDb;
+    }
+
+    // Close the databases
+    public void close() {
+        try {
+            if (vendorDb != null) {
+                vendorDb.close();
+            }
+
+            if (inventoryDb != null) {
+                inventoryDb.close();
+            }
+        } catch(DatabaseException dbe) {
+            System.err.println("Error closing MyDbs: " +
+                                dbe.toString());
+            System.exit(-1);
+        }
+    }
+} </pre>
+        </div>
+      </div>
+      <br class="example-break" />
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="CoreEnvUsage.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="DB.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="DBEntry.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Managing Databases in Environments </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 8. Database Records</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

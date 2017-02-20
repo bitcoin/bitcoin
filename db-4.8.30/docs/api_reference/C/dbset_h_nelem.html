@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB-&gt;set_h_nelem()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="db.html" title="Chapter 2.  The DB Handle" />
+    <link rel="prev" href="dbset_h_hash.html" title="DB-&gt;set_h_hash()" />
+    <link rel="next" href="dbset_lorder.html" title="DB-&gt;set_lorder()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB-&gt;set_h_nelem()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbset_h_hash.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+                The DB Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbset_lorder.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dbset_h_nelem"></a>DB-&gt;set_h_nelem()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB-&gt;set_h_nelem(DB *db, u_int32_t h_nelem);  </pre>
+      <p>
+        Set an estimate of the final size of the hash table.
+    </p>
+      <p>
+         In order for the estimate to be used when creating the database, the
+         <a class="xref" href="dbset_h_ffactor.html" title="DB-&gt;set_h_ffactor()">DB-&gt;set_h_ffactor()</a> 
+         method must also be called.  If the estimate or fill factor are not
+         set or are set too low, hash tables will still expand gracefully as
+         keys are entered, although a slight performance degradation may be
+         noticed.
+    </p>
+      <p>
+         The <code class="methodname">DB-&gt;set_h_nelem()</code> method configures a database, not only
+         operations performed using the specified <a class="link" href="db.html" title="Chapter 2.  The DB Handle">DB</a>  
+         handle.
+    </p>
+      <p>
+         The <code class="methodname">DB-&gt;set_h_nelem()</code> method may not be called after the 
+         <a class="xref" href="dbopen.html" title="DB-&gt;open()">DB-&gt;open()</a>  method is called. If
+         the database already exists when <a class="xref" href="dbopen.html" title="DB-&gt;open()">DB-&gt;open()</a>  
+         is called, the information specified to <code class="methodname">DB-&gt;set_h_nelem()</code> will be ignored.
+    </p>
+      <p>
+         The <code class="methodname">DB-&gt;set_h_nelem()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1647962"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1648072"></a>h_nelem</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>h_nelem</strong></span> parameter is an estimate
+                          of the final size of the hash table.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1648190"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DB-&gt;set_h_nelem()</code> <span>
+            <span>
+                 method may fail and return one of the following non-zero errors:
+            </span>
+            
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1647979"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                If the method was called after <a class="xref" href="dbopen.html" title="DB-&gt;open()">DB-&gt;open()</a> 
+                was called; or if an invalid flag value or parameter was specified.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1648066"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="db.html" title="Chapter 2.  The DB Handle">DB</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1648084"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="db.html#dblist" title="Database and Related Methods">Database and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbset_h_hash.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="db.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbset_lorder.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB-&gt;set_h_hash() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB-&gt;set_lorder()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

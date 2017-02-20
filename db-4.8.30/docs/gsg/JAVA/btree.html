@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>BTree Configuration</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="dbconfig.html" title="Chapter 11. Database Configuration" />
+    <link rel="prev" href="cachesize.html" title="Selecting the Cache Size" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">BTree Configuration</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="cachesize.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 11. Database Configuration</th>
+          <td width="20%" align="right"> </td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="btree"></a>BTree Configuration</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="btree.html#duplicateRecords">Allowing Duplicate Records</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="btree.html#comparators">Setting Comparison Functions</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+        In going through the previous chapters in this book, you may notice that
+        we touch on some topics that are specific to BTree, but we do not cover
+        those topics in any real detail. In this section, we will discuss
+        configuration issues that are unique to BTree.
+    </p>
+      <p>
+        Specifically, in this section we describe:      
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                Allowing duplicate records.
+            </p>
+          </li>
+          <li>
+            <p>
+                Setting comparator callbacks.
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="duplicateRecords"></a>Allowing Duplicate Records</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+            BTree databases can contain duplicate records. One record is
+            considered to be a duplicate of another when both records use keys
+            that compare as equal to one another.
+        </p>
+        <p>
+            By default, keys are compared using a lexicographical comparison,
+            with shorter keys collating higher than longer keys.
+            You can override this default using the
+                
+                
+                <code class="methodname">DatabaseConfig.setBtreeComparator()</code>
+            method. See the next section for details.
+        </p>
+        <p>
+            By default, DB databases do not allow duplicate records. As a
+            result, any attempt to write a record that uses a key equal to a
+            previously existing record results in the previously existing record
+            being overwritten by the new record.
+        </p>
+        <p>
+            Allowing duplicate records is useful if you have a database that
+            contains records keyed by a commonly occurring piece of information.
+            It is frequently necessary to allow duplicate records for secondary
+            databases.
+         </p>
+        <p>
+            For example, suppose your primary database contained records related
+            to automobiles. You might in this case want to be able to find all
+            the automobiles in the database that are of a particular color, so
+            you would index on the color of the automobile. However, for any
+            given color there will probably be multiple automobiles. Since the
+            index is the secondary key, this means that multiple secondary
+            database records will share the same key, and so the secondary
+            database must support duplicate records.
+        </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="sorteddups"></a>Sorted Duplicates</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                Duplicate records can be stored in sorted or unsorted order. 
+                You can cause DB to automatically sort your duplicate
+                records by 
+                
+                <span> 
+                    setting <code class="methodname">DatabaseConfig.setSortedDuplicates()</code>
+                    to <code class="literal">true</code>. Note that this property must be
+                    set prior to database creation time and it cannot be changed
+                    afterwards.
+                </span>
+            </p>
+          <p>
+                If sorted duplicates are supported, then the 
+                
+                <span>
+                    <code class="classname">java.util.Comparator</code> implementation
+                    identified to
+                    <code class="methodname">DatabaseConfig.setDuplicateComparator()</code>
+                </span>
+                is used to determine the location of the duplicate record in its
+                duplicate set. If no such function is provided, then the default
+                lexicographical comparison is used.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="nosorteddups"></a>Unsorted Duplicates</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                For performance reasons, BTrees should always contain sorted
+                records. (BTrees containing unsorted entries must potentially 
+                spend a great deal more time locating an entry than does a BTree
+                that contains sorted entries).  That said, DB provides support 
+                for suppressing automatic sorting of duplicate records because it may be that
+                your application is inserting records that are already in a
+                sorted order.
+            </p>
+          <p>
+                That is, if the database is configured to support unsorted
+                duplicates, then the assumption is that your application
+                will manually perform the sorting. In this event,
+                expect to pay a significant performance penalty. Any time you
+                place records into the database in a sort order not know to
+                DB, you will pay a performance penalty
+            </p>
+          <p>
+                That said, this is how DB behaves when inserting records
+                into a database that supports non-sorted duplicates:
+            </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p>
+                    If your application simply adds a duplicate record using 
+                        
+                        
+                        <span><code class="methodname">Database.put()</code>,</span>
+                    then the record is inserted at the end of its sorted duplicate set.
+                </p>
+              </li>
+              <li>
+                <p>
+                    If a cursor is used to put the duplicate record to the database,
+                    then the new record is placed in the duplicate set according to the
+                    actual method used to perform the put. The relevant methods
+                    are:
+                </p>
+                <div class="itemizedlist">
+                  <ul type="circle">
+                    <li>
+                      <p>
+                            
+                            <code class="methodname">Cursor.putAfter()</code>
+                        </p>
+                      <p>
+                        The data
+                        
+                        is placed into the database
+                        as a duplicate record. The key used for this operation is
+                        the key used for the record to which the cursor currently
+                        refers. Any key provided on the call 
+                        
+                        
+
+                        is therefore ignored.
+                        </p>
+                      <p>
+                            The duplicate record is inserted into the database
+                            immediately after the cursor's current position in the
+                            database.
+                        </p>
+                    </li>
+                    <li>
+                      <p>
+                            
+                            <code class="methodname">Cursor.putBefore()</code>
+                        </p>
+                      <p>
+                            Behaves the same as 
+                                
+                                <code class="methodname">Cursor.putAfter()</code>
+                            except that the new record is inserted immediately before 
+                            the cursor's current location in the database.
+                        </p>
+                    </li>
+                    <li>
+                      <p>
+                            
+                            <code class="methodname">Cursor.putKeyFirst()</code>
+                        </p>
+                      <p>
+                            If the key 
+                            
+                            already exists in the
+                            database, and the database is configured to use duplicates
+                            without sorting, then the new record is inserted as the first entry
+                            in the appropriate duplicates list.
+                        </p>
+                    </li>
+                    <li>
+                      <p>
+                            
+                            <code class="methodname">Cursor.putKeyLast()</code>
+                        </p>
+                      <p>
+                            Behaves identically to
+                                
+                                <code class="methodname">Cursor.putKeyFirst()</code>
+                            except that the new duplicate record is inserted as the last
+                            record in the duplicates list.
+                        </p>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="specifyingDups"></a>Configuring a Database to Support Duplicates</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+            Duplicates support can only be configured
+            at database creation time. You do this by specifying the appropriate
+            
+            <span>
+                <code class="classname">DatabaseConfig</code> method
+            </span>
+            before the database is opened for the first time.
+        </p>
+          <p>
+            The 
+                
+                <span>methods</span>
+            that you can use are:
+        </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p>
+                    
+                    <code class="methodname">DatabaseConfig.setUnsortedDuplicates()</code>
+                </p>
+                <p>
+                    The database supports non-sorted duplicate records.
+                </p>
+              </li>
+              <li>
+                <p>
+                    
+                    <code class="methodname">DatabaseConfig.setSortedDuplicates()</code>
+                </p>
+                <p>
+                    The database supports sorted duplicate records.
+                </p>
+              </li>
+            </ul>
+          </div>
+          <p>
+            The following code fragment illustrates how to configure a database
+            to support sorted duplicate records:
+        </p>
+          <a id="java_btree_dupsort"></a>
+          <pre class="programlisting">package db.GettingStarted;
+
+import java.io.FileNotFoundException;
+
+import com.sleepycat.db.Database;
+import com.sleepycat.db.DatabaseConfig;
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.DatabaseType;
+
+...
+
+Database myDb = null;
+
+try {
+    // Typical configuration settings
+    DatabaseConfig myDbConfig = new DatabaseConfig();
+    myDbConfig.setType(DatabaseType.BTREE);
+    myDbConfig.setAllowCreate(true);
+
+    // Configure for sorted duplicates
+    myDbConfig.setSortedDuplicates(true);
+
+   // Open the database
+   myDb = new Database("mydb.db", null, myDbConfig);
+} catch(DatabaseException dbe) {
+    System.err.println("MyDbs: " + dbe.toString());
+    System.exit(-1);
+} catch(FileNotFoundException fnfe) {
+    System.err.println("MyDbs: " + fnfe.toString());
+    System.exit(-1);
+} </pre>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="comparators"></a>Setting Comparison Functions</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+            By default, DB uses a lexicographical comparison function where
+            shorter records collate before longer records. For the majority of
+            cases, this comparison works well and you do not need to manage
+            it in any way. 
+         </p>
+        <p>
+            However, in some situations your application's performance can
+            benefit from setting a custom comparison routine. You can do this
+            either for database keys, or for the data if your
+            database supports sorted duplicate records.
+         </p>
+        <p>
+            Some of the reasons why you may want to provide a custom sorting
+            function are:
+         </p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+                    Your database is keyed using strings and you want to provide
+                    some sort of language-sensitive ordering to that data. Doing
+                    so can help increase the locality of reference that allows
+                    your database to perform at its best.
+                </p>
+            </li>
+            <li>
+              <p>
+                    You are using a little-endian system (such as x86) and you
+                    are using integers as your database's keys. Berkeley DB
+                    stores keys as byte strings and little-endian integers
+                    do not sort well when viewed as byte strings. There are
+                    several solutions to this problem, one being to provide a
+                    custom comparison function. See
+                    <a class="ulink" href="http://www.oracle.com/technology/documentation/berkeley-db/db/ref/am_misc/faq.html" target="_top">http://www.oracle.com/technology/documentation/berkeley-db/db/ref/am_misc/faq.html</a> 
+                    for more information.
+                </p>
+            </li>
+            <li>
+              <p>
+                    You you do not want the entire key to participate in the
+                    comparison, for whatever reason.  In 
+                    this case, you may want to provide a custom comparison
+                    function so that only the relevant bytes are examined.
+                </p>
+            </li>
+          </ul>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="creatingComparisonFunctions"></a>
+                
+                <span>Creating Java Comparators</span>
+            </h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                You set a BTree's key
+                    
+                    <span>
+                        comparator
+                    </span>
+                using
+                    
+                    
+                    <span><code class="methodname">DatabaseConfig.setBtreeComparator()</code>.</span>
+                You can also set a BTree's duplicate data comparison function using
+                    
+                    
+                    <span><code class="methodname">DatabaseConfig.setDuplicateComparator()</code>.</span>
+                
+            </p>
+          <p>
+            
+            <span>
+                If
+            </span>
+            the database already exists when it is opened, the
+                    
+                    <span>
+                        comparator
+                    </span>
+            provided to these methods must be the same as
+            that historically used to create the database or corruption can
+            occur.
+         </p>
+          <p>
+      You override the default comparison function by providing a Java
+      <code class="classname">Comparator</code> class to the database.
+      The Java <code class="classname">Comparator</code> interface requires you to implement the
+      <code class="methodname">Comparator.compare()</code> method 
+      (see <a class="ulink" href="http://java.sun.com/j2se/1.4.2/docs/api/java/util/Comparator.html" target="_top">http://java.sun.com/j2se/1.4.2/docs/api/java/util/Comparator.html</a> for details). 
+      </p>
+          <p>
+        DB hands your <code class="methodname">Comparator.compare()</code> method
+        the <code class="literal">byte</code> arrays that you stored in the database. If
+        you know how your data is organized in the <code class="literal">byte</code>
+        array, then you can write a comparison routine that directly examines
+        the contents of the arrays.  Otherwise, you have to reconstruct your
+        original objects, and then perform the comparison.
+      </p>
+          <p>
+            For example, suppose you want to perform unicode lexical comparisons
+            instead of UTF-8 byte-by-byte comparisons. Then you could provide a
+            comparator that uses <code class="methodname">String.compareTo()</code>,
+            which performs a Unicode comparison of two strings (note that for
+            single-byte roman characters, Unicode comparison and UTF-8
+            byte-by-byte comparisons are identical – this is something you
+            would only want to do if you were using multibyte unicode characters
+            with DB). In this case, your comparator would look like the
+            following:
+      </p>
+          <a id="java_btree1"></a>
+          <pre class="programlisting">package db.GettingStarted;
+
+import java.util.Comparator;
+
+public class MyDataComparator implements Comparator {
+
+    public MyDataComparator() {}
+
+    public int compare(Object d1, Object d2) {
+
+        byte[] b1 = (byte[])d1;
+        byte[] b2 = (byte[])d2;
+
+        String s1 = new String(b1);
+        String s2 = new String(b2);
+        return s1.compareTo(s2);
+    }
+} </pre>
+          <p>
+        To use this comparator:
+    </p>
+          <a id="java_btree2"></a>
+          <pre class="programlisting">package db.GettingStarted;
+
+import java.io.FileNotFoundException;
+import java.util.Comparator;
+import com.sleepycat.db.Database;
+import com.sleepycat.db.DatabaseConfig;
+import com.sleepycat.db.DatabaseException;
+
+...
+
+Database myDatabase = null;
+try {
+    // Get the database configuration object
+    DatabaseConfig myDbConfig = new DatabaseConfig();
+    myDbConfig.setAllowCreate(true);
+
+    // Set the duplicate comparator class
+    MyDataComparator mdc = new MyDataComparator();
+    myDbConfig.setDuplicateComparator(mdc);
+
+    // Open the database that you will use to store your data
+    myDbConfig.setSortedDuplicates(true);
+    myDatabase = new Database("myDb", null, myDbConfig);
+} catch (DatabaseException dbe) {
+    // Exception handling goes here
+} catch (FileNotFoundException fnfe) {
+    // Exception handling goes here
+}</pre>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="cachesize.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="dbconfig.html">Up</a>
+          </td>
+          <td width="40%" align="right"> </td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Selecting the Cache Size </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

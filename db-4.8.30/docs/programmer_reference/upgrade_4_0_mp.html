@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 4.0: memp_XXX</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_4_0_toc.html" title="Chapter 37. Upgrading Berkeley DB 3.3 applications to Berkeley DB 4.0" />
+    <link rel="prev" href="upgrade_4_0_log.html" title="Release 4.0: log_XXX" />
+    <link rel="next" href="upgrade_4_0_txn.html" title="Release 4.0: txn_XXX" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 4.0: memp_XXX</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_4_0_log.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 37. Upgrading Berkeley DB 3.3 applications to Berkeley DB 4.0</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_4_0_txn.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_4_0_mp"></a>Release 4.0: memp_XXX</h2>
+          </div>
+        </div>
+      </div>
+      <p>The C API for the Berkeley DB Memory Pool subsystem was reworked in the 4.0
+release as follows:</p>
+      <div class="informaltable">
+        <table border="1" width="80%">
+          <colgroup>
+            <col />
+            <col />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Historic functional interface</th>
+              <th>Berkeley DB 4.X method</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>memp_register</td>
+              <td>
+                <a href="../api_reference/C/mempregister.html" class="olink">DB_ENV-&gt;memp_register()</a>
+              </td>
+            </tr>
+            <tr>
+              <td>memp_stat</td>
+              <td>
+                <a href="../api_reference/C/mempstat.html" class="olink">DB_ENV-&gt;memp_stat()</a>
+              </td>
+            </tr>
+            <tr>
+              <td>memp_sync</td>
+              <td>
+                <a href="../api_reference/C/mempsync.html" class="olink">DB_ENV-&gt;memp_sync()</a>
+              </td>
+            </tr>
+            <tr>
+              <td>memp_trickle</td>
+              <td>
+                <a href="../api_reference/C/memptrickle.html" class="olink">DB_ENV-&gt;memp_trickle()</a>
+              </td>
+            </tr>
+            <tr>
+              <td>memp_fopen</td>
+              <td>
+                <a href="../api_reference/C/mempfcreate.html" class="olink">DB_ENV-&gt;memp_fcreate()</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_MPOOL_FINFO: ftype</td>
+              <td>
+                <a href="../api_reference/C/mempset_ftype.html" class="olink">DB_MPOOLFILE-&gt;set_ftype()</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_MPOOL_FINFO: pgcookie</td>
+              <td>
+                <a href="../api_reference/C/mempset_pgcookie.html" class="olink">DB_MPOOLFILE-&gt;set_pgcookie()</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_MPOOL_FINFO: fileid</td>
+              <td>
+                <a href="../api_reference/C/mempset_fileid.html" class="olink">DB_MPOOLFILE-&gt;set_fileid()</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_MPOOL_FINFO: lsn_offset</td>
+              <td>
+                <a href="../api_reference/C/mempset_lsn_offset.html" class="olink">DB_MPOOLFILE-&gt;set_lsn_offset()</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_MPOOL_FINFO: clear_len</td>
+              <td>
+                <a href="../api_reference/C/mempset_clear_len.html" class="olink">DB_MPOOLFILE-&gt;set_clear_len()</a>
+              </td>
+            </tr>
+            <tr>
+              <td>memp_fopen</td>
+              <td>
+                <a href="../api_reference/C/mempfopen.html" class="olink">DB_MPOOLFILE-&gt;open()</a>
+              </td>
+            </tr>
+            <tr>
+              <td>memp_fclose</td>
+              <td>
+                <a href="../api_reference/C/mempfclose.html" class="olink">DB_MPOOLFILE-&gt;close()</a>
+              </td>
+            </tr>
+            <tr>
+              <td>memp_fput</td>
+              <td>
+                <a href="../api_reference/C/mempput.html" class="olink">DB_MPOOLFILE-&gt;put()</a>
+              </td>
+            </tr>
+            <tr>
+              <td>memp_fset</td>
+              <td>DB_MPOOLFILE-&gt;set</td>
+            </tr>
+            <tr>
+              <td>memp_fsync</td>
+              <td>
+                <a href="../api_reference/C/mempfsync.html" class="olink">DB_MPOOLFILE-&gt;sync()</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Applications calling any of the memp_register, memp_stat, memp_sync or
+memp_trickle functions should update those calls to use the enclosing
+<a href="../api_reference/C/env.html" class="olink">DB_ENV class</a> handle's method (easily done as the first argument to the
+existing call is the correct <a href="../api_reference/C/env.html" class="olink">DB_ENV class</a> handle).</p>
+      <p>In addition, the <a href="../api_reference/C/mempstat.html" class="olink">DB_ENV-&gt;memp_stat()</a> call has been changed in the 4.0
+release to take a flags argument.  To leave their historic behavior
+unchanged, applications should add a final argument of 0 to any calls
+made to <a href="../api_reference/C/mempstat.html" class="olink">DB_ENV-&gt;memp_stat()</a>.</p>
+      <p>Applications calling the memp_fopen function should update those calls
+as follows: First, acquire a <a href="../api_reference/C/memp.html" class="olink">Cache chapter</a> handle using the
+<a href="../api_reference/C/mempfcreate.html" class="olink">DB_ENV-&gt;memp_fcreate()</a> method.  Second, if the DB_MPOOL_FINFO structure
+reference passed to the memp_fopen function was non-NULL, call the
+<a href="../api_reference/C/memp.html" class="olink">Cache chapter</a> method corresponding to each initialized field in
+the DB_MPOOL_FINFO structure.  Third, call the <a href="../api_reference/C/mempfopen.html" class="olink">DB_MPOOLFILE-&gt;open()</a> method
+method to open the underlying file.  If the <a href="../api_reference/C/mempfopen.html" class="olink">DB_MPOOLFILE-&gt;open()</a> method call
+fails, then <a href="../api_reference/C/mempfclose.html" class="olink">DB_MPOOLFILE-&gt;close()</a> method must be called to destroy the allocated
+handle.</p>
+      <p>Applications calling the memp_fopen, memp_fclose, memp_fput, memp_fset,
+or memp_fsync functions should update those calls to use the enclosing
+<a href="../api_reference/C/memp.html" class="olink">Cache chapter</a> handle's method.  Again, this is easily done as the
+first argument to the existing call is the correct <a href="../api_reference/C/memp.html" class="olink">Cache chapter</a>
+handle.  With one exception, the calling conventions of the old and new
+interfaces are identical; the one exception is the <a href="../api_reference/C/mempfclose.html" class="olink">DB_MPOOLFILE-&gt;close()</a> method,
+which requires an additional flag parameter that should be set to 0.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_4_0_log.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_4_0_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_4_0_txn.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 4.0: log_XXX </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 4.0: txn_XXX</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

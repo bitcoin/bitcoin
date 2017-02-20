@@ -1,0 +1,119 @@
+#!/bin/sh
+#	$Id$
+#
+# Build the Setup SDK CD image on the VxWorks host machine.
+
+. ./RELEASE
+
+B=`pwd`
+B=$B/..
+D=$B/dist/vx_setup
+C=$D/db.CD
+Q=/export/home/sue/SetupSDK
+S=$Q/resource/mfg/setup
+W=sun4-solaris2
+
+symdoc=$D/docs/BerkeleyDB.$DB_VERSION_MAJOR.$DB_VERSION_MINOR.$DB_VERSION_PATCH
+symdb=$D/windlink/sleepycat/BerkeleyDB.$DB_VERSION_MAJOR.$DB_VERSION_MINOR.$DB_VERSION_PATCH
+rm -rf $D/docs $D/windlink
+mkdir $D/docs $D/windlink $D/windlink/sleepycat
+ln -s $B/docs $symdoc
+ln -s $B $symdb
+
+s=/tmp/__db_a
+t=/tmp/__db_b
+
+#
+# Remove the old CD directory if it is there.
+if test -d $C; then
+	echo "$C cannot exist."
+	echo "As root, execute 'rm -rf $C'"
+	echo "and then rerun the script"
+	exit 1
+fi
+
+#
+# Check for absolute pathnames in the project files.
+# That is bad, but Tornado insists on putting them in
+# whenever you add new files.
+#
+rm -f $t
+f=`find $B/build_vxworks -name \*.wpj -print`
+for i in $f; do
+	grep -l -- "$B" $i >> $t
+done
+if test -s $t; then
+	echo "The following files contain absolute pathnames."
+	echo "They must be fixed before building the CD image:"
+	cat $t
+	exit 1
+fi
+
+#
+# NOTE: We reuse the same sed script over several files.
+#
+cat <<ENDOFSEDTEXT > $s
+s/@DB_VERSION_MAJOR@/$DB_VERSION_MAJOR/g
+s/@DB_VERSION_MINOR@/$DB_VERSION_MINOR/g
+s/@DB_VERSION_PATCH@/$DB_VERSION_PATCH/g
+s#@DB_SETUP_DIR@#$D#g
+ENDOFSEDTEXT
+
+f=$D/setup.pool
+(sed -f $s $D/vx_setup.in) > $t
+    (echo "Building $f" && rm -f $f && cp $t $f)
+
+f=$D/README.TXT
+(sed -f $s $D/README.in) > $t
+    (echo "Building $f" && rm -f $f && cp $t $f)
+
+f=$D/CONFIG.TCL
+(sed -f $s $D/CONFIG.in) > $t
+    (echo "Building $f" && rm -f $f && cp $t $f)
+
+f=$D/filelist.demo
+(sed -f $s $D/vx_demofile.in) > $t
+    (echo "Building $f" && rm -f $f && cp $t $f)
+
+# Copy files into the SetupSDK area.
+(cd $D && cp README.TXT $S)
+(cd $D && cp LICENSE.TXT $S)
+(cd $D && cp CONFIG.TCL $S/RESOURCE/TCL)
+(cd $D && cp SETUP.BMP $S/RESOURCE/BITMAPS)
+
+#
+# NOTE: The contents of LIB must be on one, long, single line.
+# Even preserving it with a \ doesn't work for htmlBook.
+#
+f=../docs/LIB
+(echo "Building $f" && rm -f $f)
+cat <<ENDOFLIBTEXT >> $f
+{BerkeleyDB.$DB_VERSION_MAJOR.$DB_VERSION_MINOR.$DB_VERSION_PATCH} {Berkeley DB} {<b>BerkeleyDB.$DB_VERSION_MAJOR.$DB_VERSION_MINOR.$DB_VERSION_PATCH</b>} {<b><a href="./index.html">BerkeleyDB.$DB_VERSION_MAJOR.$DB_VERSION_MINOR.$DB_VERSION_PATCH</a></b>} {BerkeleyDB} {} {} {}
+ENDOFLIBTEXT
+
+#
+# Start generating the file list.
+f=$D/filelist.all
+
+#
+# Just put everything into the image.  But we only want to find regular
+# files; we cannot have all the directories listed too.
+#
+# NOTE:  This find is overly aggressive in getting files, particularly
+# for the 'windlink/sleepycat' files.  We actually end up with 3 sets of the
+# documentation, the "real" ones in 'docs/BerkeleyDB*', the set found
+# via 'windlink/sleepycat/Berk*/docs' and the one found via our symlink in
+# 'windlink/sleepycat/Berk*/dist/vx_setup/docs/Berk*'.
+#
+# However, we waste a little disk space so that the expression below
+# is trivial and we don't have to maintain it as new files/directories
+# are added to DB.
+#
+(cd $D && find docs/BerkeleyDB.$DB_VERSION_MAJOR.$DB_VERSION_MINOR.$DB_VERSION_PATCH/ -follow -name \* -type f -print) > $t
+(cd $D && find windlink/sleepycat/BerkeleyDB.$DB_VERSION_MAJOR.$DB_VERSION_MINOR.$DB_VERSION_PATCH/ -follow -name docs -prune -o -type f -print) >> $t
+(echo "Building $f" && rm -f $f && cp $t $f)
+#
+# Finally build the CD image!
+#
+env PATH=$Q/$W/bin:$PATH QMS_BASE=$Q WIND_HOST_TYPE=$W \
+pool mfg -d $C -v -nokey BerkeleyDB.$DB_VERSION_MAJOR.$DB_VERSION_MINOR < $D/setup.pool

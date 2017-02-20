@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB_TXN-&gt;abort()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="txn.html" title="Chapter 12.  The DB_TXN Handle" />
+    <link rel="prev" href="envset_tx_timestamp.html" title="DB_ENV-&gt;set_tx_timestamp()" />
+    <link rel="next" href="txnbegin.html" title="DB_ENV-&gt;txn_begin()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB_TXN-&gt;abort()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="envset_tx_timestamp.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 12. 
+                The DB_TXN Handle 
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="txnbegin.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="txnabort"></a>DB_TXN-&gt;abort()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB_TXN-&gt;abort(DB_TXN *tid);  </pre>
+      <p>
+         The <code class="methodname">DB_TXN-&gt;abort()</code> method causes an abnormal termination of the
+         transaction. The log is played backward, and any necessary undo
+         operations are done through the <span class="bold"><strong>tx_recover</strong></span> 
+         function specified to <a class="xref" href="envset_app_dispatch.html" title="DB_ENV-&gt;set_app_dispatch()">DB_ENV-&gt;set_app_dispatch()</a>.
+          Before <code class="methodname">DB_TXN-&gt;abort()</code> returns, any locks held by the transaction
+         will have been released.
+    </p>
+      <p>
+         In the case of nested transactions, aborting a parent transaction
+         causes all children (unresolved or not) of the parent transaction to
+         be aborted.
+    </p>
+      <p>
+         All cursors opened within the transaction must be closed before the
+         transaction is aborted.
+    </p>
+      <p>
+         After <code class="methodname">DB_TXN-&gt;abort()</code> has been called, regardless of its return, the
+         <a class="link" href="txn.html" title="Chapter 12.  The DB_TXN Handle">DB_TXN</a>  handle may not be
+         accessed again.
+    </p>
+      <p>
+         The <code class="methodname">DB_TXN-&gt;abort()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1708284"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                 <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>, <a class="link" href="txn.html" title="Chapter 12.  The DB_TXN Handle">DB_TXN</a> 
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1708368"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="txn.html#txnlist" title="Transaction Subsystem and Related Methods">Transaction Subsystem and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="envset_tx_timestamp.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="txn.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="txnbegin.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB_ENV-&gt;set_tx_timestamp() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_ENV-&gt;txn_begin()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

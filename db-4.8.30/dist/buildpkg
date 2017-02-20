@@ -1,0 +1,104 @@
+#!/bin/sh
+# $Id: $
+#
+# Build the distribution package.
+. RELEASE || exit 1
+
+# A version string can be specified on the command line (e.g., "20080219").
+# Otherwise, use the standard X.X.X format.
+VERSION=${1:-${DB_VERSION_MAJOR}.${DB_VERSION_MINOR}.${DB_VERSION_PATCH}}
+
+# Use "ustar" as the archiver
+TAR=ustar
+
+# Set root directory where we do the work, can be anywhere.
+D=`pwd`/../release
+R="$D/db-${VERSION}"
+RNC="$D/db-$VERSION.NC"
+
+# Create directory, remove any previous release tree.
+rm -rf $R $RNC
+mkdir -p $R
+
+# Copy the CVS files in the current tree to $R
+hg archive $R
+
+# Build the documentation.
+cd $R/dist && sh s_javadoc
+
+# Remove source directories we don't distribute.
+cd $R && rm -rf build_brew_x build_s60_x
+cd $R && rm -rf java/src/com/sleepycat/xa
+cd $R && rm -rf rpc_* dbinc/db_server_int.h dbinc_auto/rpc*.h
+cd $R && rm -rf test/TODO test/upgrade test/scr036 test_erlang
+cd $R && rm -rf test_perf test_purify test_repmgr
+cd $R && rm -rf test_server test_stl/ms_examples test_stl/stlport
+cd $R && rm -rf test_vxworks
+cd $R && find . -name '.hg*' | xargs rm -f
+cd $R && find . -name 'tags' | xargs rm -f
+
+# Create symbolic links and cscope output, fix permissions.
+#cd $R/dist && sh s_perm
+#cd $R/dist && sh s_cscope
+
+# Build a regular version and smoke test.
+### cd $R && rm -rf build_run && mkdir build_run
+### cd $R/build_run && ../dist/configure && make >& mklog
+### cd $R/build_run && make ex_access && echo "test" | ./ex_access
+# Check the install
+### cd $R/build_run && make prefix=`pwd`/BDB install
+
+# Build a small-footprint version and smoke test.
+### cd $R && rm -rf build_run && mkdir build_run
+### cd $R/build_run && ../dist/configure --enable-smallbuild && make >& mklog
+### cd $R/build_run && make ex_access && echo "test" | ./ex_access
+
+# Remove the build directory
+### cd $R && rm -rf build_run
+
+# Fix permissions
+cd $R && find . -type d | xargs chmod 775
+cd $R && find . -type f | xargs chmod 444
+cd $R && chmod 664 build_windows/*.dsp build_windows/*vcproj
+cd $R && chmod 664 csharp/doc/libdb_dotnet*.XML
+cd $R/dist && sh s_perm
+
+# Check for file names differing only in case.
+cd $R && find . | sort -f | uniq -ic | sed '/1 /d'
+
+# Create the crypto tar archive release.
+T="$D/db-$VERSION.tar.gz"
+cd $D && $TAR czf $T -find db-$VERSION -chown 100 -chgrp 100
+chmod 444 $T
+
+# Create the non-crypto tree.
+cd $D && mv -i db-$VERSION $RNC && $TAR xzf $T
+cd $RNC/dist && sh s_crypto
+
+cd $RNC && find . -type d | xargs chmod 775
+cd $RNC && find . -type f | xargs chmod 444
+cd $RNC && chmod 664 build_windows/*.dsp
+cd $RNC/dist && sh s_perm
+
+# Create the non-crypto tar archive release.
+T="$D/db-$VERSION.NC.tar.gz"
+cd $RNC/.. && $TAR czf $T -find db-$VERSION.NC -chown 100 -chgrp 100
+chmod 444 $T
+
+t=__tmp
+cd $R && awk '{print $0 "\r"}' < LICENSE > $t && rm -f LICENSE && cp $t LICENSE && rm -f $t
+cd $R && awk '{print $0 "\r"}' < README > $t && rm -f README && cp $t README && rm -f $t
+cd $RNC && awk '{print $0 "\r"}' < LICENSE > $t && rm -f LICENSE && cp $t LICENSE && rm -f $t
+cd $RNC && awk '{print $0 "\r"}' < README > $t && rm -f README && cp $t README && rm -f $t
+
+# Create the crypto zip archive release.
+T="$D/db-$VERSION.zip"
+cd $R/.. && rm -f $T && zip -q -r $T db-$VERSION
+chmod 444 $T
+
+# Create the non-crypto zip archive release.
+T="$D/db-$VERSION.NC.zip"
+cd $RNC/.. && rm -f $T && zip -q -r $T db-$VERSION.NC 
+chmod 444 $T
+
+rm -f $R $RNC

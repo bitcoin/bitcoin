@@ -1,0 +1,526 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>db_sql</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="utilities.html" title="Appendix 1.  Berkeley DB Command Line Utilities" />
+    <link rel="prev" href="db_recover.html" title="db_recover" />
+    <link rel="next" href="db_stat.html" title="db_stat" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">db_sql</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="db_recover.html">Prev</a> </td>
+          <th width="60%" align="center">Appendix 1. 
+                Berkeley DB Command Line Utilities
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="db_stat.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="db_sql"></a>db_sql</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">db_sql [-i &lt;ddl input file&gt;] [-o &lt;output C code file&gt;] 
+    [-h &lt;output header file&gt;] [-t &lt;test output file&gt;]  </pre>
+      <p>
+   <span class="command"><strong>Db_sql</strong></span> is a utility program that translates a
+   schema description written in a SQL Data Definition Language dialect
+   into C code that implements the schema using Berkeley DB.  It is
+   intended to provide a quick and easy means of getting started with
+   Berkeley DB for users who are already conversant with SQL.  It also
+   introduces a convenient way to express a Berkeley DB schema in a
+   format that is both external to the program that uses it and
+   compatible with relational databases.
+ </p>
+      <p>
+   The <span class="command"><strong>db_sql</strong></span> command reads DDL from an input stream,
+   and writes C code to an output stream.  With no command line options,
+   it will read from stdin and write to stdout.  A more common usage mode
+   would be to supply the DDL in a named input file (-i option).  With
+   only the -i option, <span class="command"><strong>db_sql</strong></span> will produce two files:
+   a C-language source code (.c) file and a C-language header (.h) file,
+   with names that are derived from the name of the input file.  You can
+   also control the names of these output files with the -o and -h
+   options.  Finally, the -t option will produce a simple application
+   that invokes the generated function API.  This is a C-language source
+   file that includes a main function, and serves the dual purposes of
+   providing a simple test for the generated C code, and of being an
+   example of how to use the generated API.
+ </p>
+      <p>
+   The options are as follows:
+ </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+       <span class="bold"><strong>-i</strong></span>&lt;ddl input file&gt;
+     </p>
+            <p>
+    Names the input file containing SQL DDL.
+     </p>
+          </li>
+          <li>
+            <p>
+       <span class="bold"><strong>-o</strong></span> &lt;output C code file&gt;
+     </p>
+            <p>
+    Names the output C-language source code file.
+     </p>
+          </li>
+          <li>
+            <p>
+       <span class="bold"><strong>-h</strong></span> &lt;output header file&gt;
+     </p>
+            <p>
+    Names the output C-language header file.
+     </p>
+          </li>
+          <li>
+            <p>
+       <span class="bold"><strong>-t</strong></span> &lt;test output file&gt;
+     </p>
+            <p>
+    Names the output C-langage test file.
+     </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+   The <span class="command"><strong>db_sql</strong></span> utility exits 0 on success, and &gt;0 if an error occurs.
+ </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1720398"></a>Input Syntax</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+     The input file can contain the following SQL DDL statements.
+   </p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+            <span class="bold"><strong>CREATE DATABASE</strong></span> 
+        </p>
+              <p>
+            The DDL must contain a CREATE DATABASE statement.  The syntax is simply
+            </p>
+              <pre class="programlisting">CREATE DATABASE name;</pre>
+              <p>.  The
+            name given here is used as the name of the Berkeley DB
+            environment in which the Berkeley DB databases are created.
+        </p>
+            </li>
+            <li>
+              <p>
+            <span class="bold"><strong>CREATE TABLE</strong></span>
+        </p>
+              <p>
+            Each CREATE TABLE statement produces functions to create and
+            delete a primary Berkeley DB database.  Also produced are
+            functions to perform record insertion, retrieval and deletion
+            on this database.
+        </p>
+              <p>
+            CREATE TABLE establishes the field set of records that can
+            be stored in the Berkeley DB database.  Every CREATE TABLE
+            statement must identify a primary key to be used as the
+            lookup key in the Berkeley DB database.
+        </p>
+              <p>
+            Here is an example to illustrate the syntax of CREATE TABLE that
+            is accepted by <span class="command"><strong>db_sql</strong></span>:
+        </p>
+              <p>
+      </p>
+              <pre class="programlisting">CREATE TABLE person (person_id INTEGER PRIMARY KEY,
+                        name VARCHAR(64),
+                        age INTEGER);</pre>
+              <p>
+    </p>
+              <p>
+      This results in the creation of functions to manage a database in
+      which every record is an instance of the following C language
+      data structure:
+    </p>
+              <p>
+      </p>
+              <pre class="programlisting">typedef struct _person_data {
+    int person_id;
+    char name[PERSON_DATA_NAME_LENGTH];
+    int age;
+} person_data; </pre>
+              <p>
+    </p>
+            </li>
+            <li>
+              <p>
+      <span class="bold"><strong>CREATE INDEX</strong></span> You can create
+      secondary Berkeley DB databases to be used as indexes into a
+      primary database.  For example, to make an index on the "name"
+      field of the "person" table mentioned above, the SQL DDL would
+      be:
+    </p>
+              <p>
+      </p>
+              <pre class="programlisting">CREATE INDEX name_index ON person(name);</pre>
+              <p>
+    </p>
+              <p>
+      This causes <span class="command"><strong>db_sql</strong></span> to emit functions to
+      manage creation and deletion of a secondary database called
+      "name_index," which is associated with the "person" database
+      and is set up to perform lookups on the "name" field.
+    </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1720745"></a>Hint Comments</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+     The SQL DDL input may contain comments.  Two types of comments are
+     recognized.  C-style comments begin with "/*" and end with "*/".
+     These comments may extend over multiple lines.
+   </p>
+        <p>
+     Single line comments begin with "--" and run to the end of the line.
+   </p>
+        <p>
+     If the first character of a comment is "+" then the comment is
+     interpreted as a "hint comment."  Hint comments can be used to
+     configure Berkeley DB features that cannot be represented in SQL DDL.
+   </p>
+        <p>
+     Hint comments are comma-separated lists of property assignments of the
+     form "property=value."  Hint comments apply to the SQL DDL statement
+     that immediately precedes their appearance in the input.  For example:
+   </p>
+        <p>
+     </p>
+        <pre class="programlisting">CREATE DATABASE peopledb; /*+ CACHESIZE = 16m */</pre>
+        <p>
+   </p>
+        <p>
+     This causes the generated environment creation function to set the
+     cache size to sixteen megabytes.
+   </p>
+        <p>
+     In addition to the CACHESIZE example above, there is only one other
+     hint comment that is currently recognized: After a CREATE TABLE
+     statement, you may set the database type by assigning the DBTYPE
+     property in a hint comment.  Possible values for DBTYPE are BTREE and
+     HASH.
+   </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1720591"></a>Type Mapping</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+     <span class="command"><strong>db_sql</strong></span> must map the schema expressed as SQL
+     types into C language types.  It implements the following mappings:
+   </p>
+        <p>
+     </p>
+        <pre class="programlisting">BIN     char[]
+VARBIN      char[]
+CHAR        char[]
+VARCHAR     char[]
+VARCHAR2    char[]
+BIT         char
+TINYINT     char
+SMALLINT    short
+INTEGER     int
+INT         int
+BIGINT      long
+REAL        float
+DOUBLE      double
+FLOAT       double
+DECIMAL     double
+NUMERIC     double
+NUMBER(p,s) int, long, float, or double </pre>
+        <p>
+   </p>
+        <p>
+     While BIN/VARBIN and CHAR/VARCHAR are both represented as char arrays,
+     the latter are treated as null-terminated C strings, while the former
+     are treated as binary data.
+   </p>
+        <p>
+     The Oracle type NUMBER is mapped to different C types, depending
+     on its precision and scale values.  If scale is 0, then it is
+     mapped to an integer type (long if precision is greater than 9).
+     Otherwise it is mapped to a floating point type (float if
+     precision is less than 7, otherwise double).
+   </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1720414"></a>Output</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+     Depending on the options given on the command
+     line, <span class="command"><strong>db_sql</strong></span> can produce three separate files: a .c
+     file containing function definitions that implement the generated API;
+     a .h file containing constants, data structures and prototypes of the
+     generated functions; and a second .c file that contains a sample
+     program that invokes the generated API.  The latter program is usually
+     referred to as a smoke test.
+   </p>
+        <p>
+     Given the following sample input in a file named "people.sql":
+   </p>
+        <p>
+     </p>
+        <pre class="programlisting">CREATE DATABASE peopledb;
+CREATE TABLE person (person_id INTEGER PRIMARY KEY,
+                  name VARCHAR(64),
+                  age INTEGER);
+CREATE INDEX name_index ON person(name);</pre>
+        <p>
+   </p>
+        <p>
+     The command
+   </p>
+        <p>
+     </p>
+        <pre class="programlisting">db_sql -i people.sql -t test_people.c</pre>
+        <p>
+   </p>
+        <p>
+     Will produce files named people.h, people.c, and test_people.c.
+   </p>
+        <p>
+     The file people.h will contain the information needed to use the
+     generated API.  Among other things, an examination of the generated .h
+     file will reveal:
+   </p>
+        <p>
+     </p>
+        <pre class="programlisting">#define PERSON_DATA_NAME_LENGTH 63</pre>
+        <p>
+   </p>
+        <p>
+     This is just a constant for the length of the string mapped from
+     the VARCHAR field.
+   </p>
+        <p>
+     </p>
+        <pre class="programlisting">typedef struct _person_data {
+   int   person_id;
+   char  name[PERSON_DATA_NAME_LENGTH];
+   int   age;
+} person_data; </pre>
+        <p>
+   </p>
+        <p>
+     This is the data structure that represents the record type that is
+     stored in the person database.  There's that constant being used.
+   </p>
+        <p>
+     </p>
+        <pre class="programlisting">int create_peopledb_env(DB_ENV **envpp);
+int create_person_database(DB_ENV *envp, DB **dbpp);
+int create_name_index_secondary(DB_ENV *envp, DB *primary_dbp,
+                            DB **secondary_dbpp); </pre>
+        <p>
+   </p>
+        <p>
+     These functions must be invoked to initialize the Berkeley DB
+     environment.  However, see the next bit:
+   </p>
+        <p>
+     </p>
+        <pre class="programlisting">extern DB_ENV * peopledb_envp;
+extern DB *person_dbp;
+extern DB *name_index_dbp;
+
+int initialize_peopledb_environment(); </pre>
+        <p>
+   </p>
+        <p>
+     For convenience, <span class="command"><strong>db_sql</strong></span> provides global
+     variables for the environment and database, and a single
+     initialization function that sets up the environment for you.
+     You may choose to use the globals and the single initialization
+     function, or you may declare your own DB_ENV and DB pointers,
+     and invoke the individual create_* functions yourself.
+   </p>
+        <p>
+     The word "create" in these function names might be confusing.  It means
+     "create the environment/database if it doesn't already exist;
+     otherwise open it."
+   </p>
+        <p>
+     All of the functions in the generated API return Berkeley DB error
+     codes.  If the return value is non-zero, there was an error of some
+     kind, and an explanatory message should have been printed on stderr.
+   </p>
+        <p>
+     </p>
+        <pre class="programlisting">int person_insert_struct(DB *dbp, person_data *personp);
+int person_insert_fields(DB * dbp,
+        int person_id,
+        char *name,
+        int age); </pre>
+        <p>
+   </p>
+        <p>
+     These are the functions that you'd use to store a record in the
+     database.  The first form takes a pointer to the data structure that
+     represents this record.  The second form takes each field as a
+     separate argument.
+   </p>
+        <p>
+     If two records with the same primary key value are stored, the first
+     one is lost.
+   </p>
+        <p>
+     </p>
+        <pre class="programlisting">int get_person_data(DB *dbp, int person_key, person_data *data);</pre>
+        <p>
+   </p>
+        <p>
+     This function retrieves a record from the database.  It seeks the
+     record with the supplied key, and populates the supplied structure
+     with the contents of the record.  If no matching record is found, the
+     function returns DB_NOTFOUND.
+   </p>
+        <p>
+     </p>
+        <pre class="programlisting">int delete_person_key(DB *dbp, int person_key);</pre>
+        <p>
+   </p>
+        <p>
+     This function removes the record matching the given key.
+   </p>
+        <p>
+     </p>
+        <pre class="programlisting">typedef void (*person_iteration_callback)(void *user_data, 
+                                         person_data *personp);
+
+int person_full_iteration(DB *dbp,
+    person_iteration_callback user_func,
+    void *user_data); </pre>
+        <p>
+   </p>
+        <p>
+      This function performs a complete iteration over every record in
+      the person table.  The user must provide a callback function
+      which is invoked once for every record found.  The user's
+      callback function must match the prototype provided in the
+      typedef "person_iteration_callback."  In the callback, the
+      "user_data" argument is passed unchanged from the "user_data"
+      argument given to person_full_iteration.  This is provided
+      so that the caller of person_full_iteration can communicate
+      some context information to the callback function.  The
+      "personp" argument to the callback is a pointer to the record
+      that was retrieved from the database.  Personp points to data
+      that is valid only for the duration of the callback invocation.
+   </p>
+        <p>
+     </p>
+        <pre class="programlisting">int name_index_query_iteration(DB *secondary_dbp,
+    char *name_index_key,
+    person_iteration_callback user_func,
+    void *user_data); </pre>
+        <p>
+   </p>
+        <p>
+     This function performs lookups through the secondary index
+     database.  Because duplicate keys are allowed in secondary
+     indexes, this query might return multiple instances.  This
+     function takes as an argument a pointer to a user-written
+     callback function, which must match the function prototype
+     typedef mentioned above (person_iteration_callback).  The
+     callback is invoked once for each record that matches the
+     secondary key.
+   </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1720958"></a>Test output</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+     The test output file is useful as an example of how to invoke the
+     generated API.  It will contain calls to the functions mentioned above,
+     to store a single record and retrieve it by primary key and through
+     the secondary index.
+   </p>
+        <p>
+     To compile the test, you would issue a command such as
+   </p>
+        <p>
+     </p>
+        <pre class="programlisting"> cc -I$BDB_INSTALL/include -L$BDB_INSTALL/lib -o test_people people.c \
+     test_people.c -ldb-4.8</pre>
+        <p>
+   </p>
+        <p>
+     This will produce the executable file test_people, which can be
+     run to exercise the generated API.  The program generated from
+     people.sql will create a database environment in a directory
+     named "peopledb."  This directory must be created before the
+     program is run.
+   </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="db_recover.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="utilities.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="db_stat.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">db_recover </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> db_stat</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

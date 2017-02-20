@@ -1,0 +1,38 @@
+b_workload -m 1 -w A -v -c 100000 -o -t hash
+b_workload -m 2 -w A -v -c 100000 -o -t btree
+b_workload -m 3 -w A -v -c 100000 -g 10 -d 20 -p 32768 -t hash
+b_workload -m 4 -w A -v -c 100000 -g 10 -d 20 -p 32768 -t btree
+b_workload -m 5 -w A -v -c 100000 -g 10 -d 20 -p 8192 -t hash
+b_workload -m 6 -w A -v -c 100000 -g 10 -d 20 -p 8192 -t btree
+b_workload -m 7 -w A -v -c 100000 -g 10 -d 20 -p 4096 -t hash
+b_workload -m 8 -w A -v -c 100000 -g 10 -d 20 -p 4096 -t btree
+b_workload -m 9 -w A -v -c 100000 -g 10 -d 20 -p 1024 -t hash
+b_workload -m 10 -w A -v -c 100000 -g 10 -d 20 -p 1024 -t btree
+b_workload -m 11 -w A -v -c 10000 -g 10 -d 256 -p 1024 -t hash
+b_workload -m 12 -w A -v -c 10000 -g 10 -d 256 -p 1024 -t btree
+b_workload -m 13 -w F -v -c 100000 -g 10 -d 20 -p 1024 -t hash
+b_workload -m 14 -w F -v -c 100000 -g 10 -d 20 -p 1024 -t btree
+b_workload -m 15 -w G -v -c 100000 -g 10 -d 20 -p 1024 -t hash
+b_workload -m 16 -w G -v -c 100000 -g 10 -d 20 -p 1024 -t btree
+# Run put/get(G) with different page sizes, since fill factor
+# is interesting when not deleting all of the elements.
+b_workload -m 17 -w E -v -c 100000 -g 10 -d 20 -p 32768 -t hash
+b_workload -m 18 -w E -v -c 100000 -g 10 -d 20 -p 32768 -t btree
+b_workload -m 19 -w E -v -c 100000 -g 10 -d 20 -p 8192 -t hash
+b_workload -m 20 -w E -v -c 100000 -g 10 -d 20 -p 8192 -t btree
+b_workload -m 21 -w E -v -c 100000 -g 10 -d 20 -p 4096 -t hash
+b_workload -m 22 -w E -v -c 100000 -g 10 -d 20 -p 4096 -t btree
+b_workload -m 23 -w E -v -c 100000 -g 10 -d 20 -p 1024 -t hash
+b_workload -m 24 -w E -v -c 100000 -g 10 -d 20 -p 1024 -t btree
+b_workload -m 25 -w E -v -c 10000 -g 10 -d 256 -p 1024 -t hash
+b_workload -m 26 -w E -v -c 10000 -g 10 -d 256 -p 1024 -t btree
+b_workload -m 27 -w E -v -c 100000 -g 10 -o -d 10 -p 1024 -t hash
+b_workload -m 28 -w E -v -c 100000 -g 10 -o -d 10 -p 1024 -t btree
+b_workload -m 29 -w A -v -c 10000 -g 10 -d 1024 -p 512 -t hash
+b_workload -m 30 -w A -v -c 10000 -g 10 -d 1024 -p 512 -t btree
+b_workload -m 31 -w H -v -c 1000000 -d 20 -p 8192 -t hash
+b_workload -m 32 -w H -v -c 1000000 -d 20 -p 8192 -t btree
+b_workload -m 33 -w H -v -c 1000000 -d 20 -p 512 -t hash
+b_workload -m 34 -w H -v -c 1000000 -d 20 -p 512 -t btree
+b_workload -m 35 -w H -v -c 10000000 -d 20 -p 512 -t hash
+b_workload -m 36 -w H -v -c 10000000 -d 20 -p 512 -t btree

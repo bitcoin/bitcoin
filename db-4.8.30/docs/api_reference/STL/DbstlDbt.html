@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 25.  DbstlDbt</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ Standard Template Library API Reference" />
+    <link rel="up" href="index.html" title="Berkeley DB C++ Standard Template Library API Reference" />
+    <link rel="prev" href="stlElementRef_DB_STL_value.html" title="_DB_STL_value" />
+    <link rel="next" href="stlDbstlDbtdstr_DbstlDbt.html" title="~DbstlDbt" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 25. 
+ DbstlDbt  </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="stlElementRef_DB_STL_value.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="stlDbstlDbtdstr_DbstlDbt.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="DbstlDbt"></a>Chapter 25. 
+ DbstlDbt  </h2>
+          </div>
+        </div>
+      </div>
+      <p>You can persist all bytes in a chunk of contiguous memory by constructing an <a class="link" href="DbstlDbt.html" title="Chapter 25.  DbstlDbt">DbstlDbt</a>
+ object A(use malloc to allocate the required number of bytes for A.data and copy the bytes to be stored into A.data, set other fields as necessary) and store A into a container, e.g. </p>
+      <p>db_vector&lt;DbstlDbt&gt;, this stores the bytes rather than the object A into the underlying database. The <a class="link" href="DbstlDbt.html" title="Chapter 25.  DbstlDbt">DbstlDbt</a>
+ class can help you avoid memory leaks, so it is strongly recommended that you use <a class="link" href="DbstlDbt.html" title="Chapter 25.  DbstlDbt">DbstlDbt</a>
+ rather than Dbt class.</p>
+      <p><a class="link" href="DbstlDbt.html" title="Chapter 25.  DbstlDbt">DbstlDbt</a>
+ derives from Dbt class, and it does an deep copy on copy construction and assignment --by calling malloc to allocate its own memory and then copying the bytes to it; Conversely the destructor will free the memory on destruction if the data pointer is non-NULL. The destructor assumes the memory is allocated via malloc, hence why you are required to call malloc to allocate memory in order to use <a class="link" href="DbstlDbt.html" title="Chapter 25.  DbstlDbt">DbstlDbt</a>
+.</p>
+      <p><a class="link" href="DbstlDbt.html" title="Chapter 25.  DbstlDbt">DbstlDbt</a>
+ simply inherits all methods from Dbt with no extra new methods except the constructors/destructor and assignment operator, so it is easy to use.</p>
+      <p>In practice you rarely need to use <a class="link" href="DbstlDbt.html" title="Chapter 25.  DbstlDbt">DbstlDbt</a>
+ or Dbt because dbstl enables you to store any complex objects or primitive data. Only when you need to store raw bytes, e.g. a bitmap, do you need to use <a class="link" href="DbstlDbt.html" title="Chapter 25.  DbstlDbt">DbstlDbt</a>
+.</p>
+      <p>Hence, <a class="link" href="DbstlDbt.html" title="Chapter 25.  DbstlDbt">DbstlDbt</a>
+ is the right class to use to store any object into Berkeley DB via dbstl without memory leaks.</p>
+      <p>Don't free the memory referenced by <a class="link" href="DbstlDbt.html" title="Chapter 25.  DbstlDbt">DbstlDbt</a>
+ objects, it will be freed when the <a class="link" href="DbstlDbt.html" title="Chapter 25.  DbstlDbt">DbstlDbt</a>
+ object is destructed.</p>
+      <p>Please refer to the two examples using <a class="link" href="DbstlDbt.html" title="Chapter 25.  DbstlDbt">DbstlDbt</a>
+ in TestAssoc::test_arbitrary_object_storage and TestAssoc::test_char_star_string_storage member functions, which illustrate how to correctly use <a class="link" href="DbstlDbt.html" title="Chapter 25.  DbstlDbt">DbstlDbt</a>
+ in order to store raw bytes.</p>
+      <p>This class handles the task of allocating and de-allocating memory internally. Although it can be used to store data which cannot be handled by the <a class="link" href="DbstlElemTraits.html" title="Chapter 26.  DbstlElemTraits">DbstlElemTraits</a>
+ class, in practice, it is usually more convenient to register callbacks in the <a class="link" href="DbstlElemTraits.html" title="Chapter 26.  DbstlElemTraits">DbstlElemTraits</a>
+ class for the type you are storing/retrieving using dbstl. </p>
+      <h4><a id="id1570745"></a> Public Members </h4>
+      <div class="informaltable">
+        <table border="1" width="80%">
+          <colgroup>
+            <col />
+            <col />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+<a class="xref" href="DbstlDbt.html#stlDbstlDbtDbstlDbt" title="DbstlDbt">
+DbstlDbt
+</a>
+</td>
+              <td>
+   <p>Construct an object with an existing chunk of memory of size1 bytes, refered by data1,. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stlDbstlDbtdstr_DbstlDbt.html" title="~DbstlDbt">
+~DbstlDbt
+</a>
+</td>
+              <td>
+   <p>The memory will be free'ed by the destructor. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stlDbstlDbtoperator_assign.html" title="operator=">
+operator=
+</a>
+</td>
+              <td>
+   <p>The memory will be reallocated if neccessary. </p>        </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h4><a id="id1570961"></a>
+Group</h4>
+      <p>
+<a class="xref" href="dbstl_helper_classes.html" title="Chapter 21.  Dbstl Helper Classes">
+ Dbstl Helper Classes  </a>
+</p>
+      <p>
+</p>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="stlDbstlDbtDbstlDbt"></a>
+DbstlDbt
+</h2>
+            </div>
+          </div>
+        </div>
+        <div class="sect2" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title"><a id="func_details"></a>
+Function Details</h3>
+              </div>
+            </div>
+          </div>
+          <pre class="programlisting">
+DbstlDbt(void *data1,
+    u_int32_t size1)
+ </pre>
+          <div class="sect3" lang="en" xml:lang="en">
+            <div class="titlepage"></div>
+            <p>Construct an object with an existing chunk of memory of size1 bytes, refered by data1,. </p>
+          </div>
+          <pre class="programlisting">
+DbstlDbt()
+ </pre>
+          <div class="sect3" lang="en" xml:lang="en">
+            <div class="titlepage"></div>
+          </div>
+          <pre class="programlisting">
+DbstlDbt(const DbstlDbt &amp;d)
+ </pre>
+          <div class="sect3" lang="en" xml:lang="en">
+            <div class="titlepage"></div>
+            <p>This copy constructor does a deep copy. </p>
+          </div>
+        </div>
+        <div class="sect2" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title"><a id="id1570948"></a>
+Class</h3>
+              </div>
+            </div>
+          </div>
+          <p>
+  <a class="link" href="DbstlDbt.html" title="Chapter 25.  DbstlDbt">
+  DbstlDbt</a>
+     </p>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="stlElementRef_DB_STL_value.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="stlDbstlDbtdstr_DbstlDbt.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+_DB_STL_value
+ </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+~DbstlDbt
+</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

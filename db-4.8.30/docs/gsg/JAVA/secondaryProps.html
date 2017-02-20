@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Secondary Database Properties</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="indexes.html" title="Chapter 10. Secondary Databases" />
+    <link rel="prev" href="keyCreator.html" title="Implementing Key Creators" />
+    <link rel="next" href="readSecondary.html" title="Reading Secondary Databases" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Secondary Database Properties</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="keyCreator.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 10. Secondary Databases</th>
+          <td width="20%" align="right"> <a accesskey="n" href="readSecondary.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="secondaryProps"></a>Secondary Database Properties</h2>
+          </div>
+        </div>
+      </div>
+      <p>Secondary databases accept <code class="classname">SecondaryConfig</code>
+    objects. <code class="classname">SecondaryConfig</code> is a subclass of <code class="classname">DatabaseConfig</code>,
+    so it can manage all of the same properties as does <code class="classname">DatabaseConfig</code>.
+    See <a class="xref" href="DBConfig.html" title="Database Properties">Database Properties</a> for more information.</p>
+      <p>In addition to the <code class="classname">DatabaseConfig</code> properties, 
+    <code class="classname">SecondaryConfig</code> also allows you to manage the following properties:
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+              <code class="methodname">SecondaryConfig.setAllowPopulate()</code>
+            </p>
+            <p>If true, the secondary database can be auto-populated. This means
+        that on open, if the secondary database is empty then the primary
+        database is read in its entirety and additions/modifications to the
+        secondary's records occur automatically.</p>
+          </li>
+          <li>
+            <p>
+              <code class="methodname">SecondaryConfig.setKeyCreator()</code>
+            </p>
+            <p>Identifies the key creator object to be used for secondary key
+        creation. See <a class="xref" href="keyCreator.html" title="Implementing Key Creators">Implementing Key 
+        <span>Creators</span>
+        
+        </a>
+        for more information.</p>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="keyCreator.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="indexes.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="readSecondary.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Implementing Key 
+        <span>Creators</span>
+        
+         </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Reading Secondary Databases</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

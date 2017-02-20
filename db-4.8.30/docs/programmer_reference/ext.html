@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 21.  Berkeley DB Extensions</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="prev" href="tcl_faq.html" title="Tcl FAQ" />
+    <link rel="next" href="ext_perl.html" title="Using Berkeley DB with Perl" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 21. 
+        Berkeley DB Extensions
+        </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="tcl_faq.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="ext_perl.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="ext"></a>Chapter 21. 
+        Berkeley DB Extensions
+        </h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="ext.html#ext_mod">Using Berkeley DB with Apache</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="ext_perl.html">Using Berkeley DB with Perl</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="ext_php.html">Using Berkeley DB with PHP</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="ext_mod"></a>Using Berkeley DB with Apache</h2>
+            </div>
+          </div>
+        </div>
+        <p>A mod_db4 Apache module is included in the Berkeley DB distribution, providing
+a safe framework for running Berkeley DB applications in an Apache 1.3
+environment.  Apache natively provides no interface for communication
+between threads or processes, so the mod_db4 module exists to provide
+this communication.</p>
+        <p>In general, it is dangerous to run Berkeley DB in a multiprocess system
+without some facility to coordinate database recovery between processes
+sharing the database environment after application or system failure.
+Failure to run recovery after failure can include process hangs and an
+inability to access the database environment.  The mod_db4 Apache module
+oversees the proper management of Berkeley DB database environment resources.
+Developers building applications using Berkeley DB as the storage manager
+within an Apache module should employ this technique for proper resource
+management.</p>
+        <p>Specifically, mod_db4 provides the following facilities:</p>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>New constructors for <a href="../api_reference/C/env.html" class="olink">DB_ENV</a> and <a href="../api_reference/C/db.html" class="olink">DB</a> handles, which install
+replacement open/close methods.</li>
+            <li>Transparent caching of open <a href="../api_reference/C/env.html" class="olink">DB_ENV</a> and <a href="../api_reference/C/db.html" class="olink">DB</a> handles.</li>
+            <li>Reference counting on all structures, allowing the module to detect the
+initial opening of any managed database and automatically perform recovery.</li>
+            <li>Automatic detection of unexpected failures (segfaults, or a module
+actually calling exit() and avoiding shut down phases), and automatic
+termination of all child processes with open database resources to
+attempt consistency.</li>
+          </ol>
+        </div>
+        <p>mod_db4 is designed to be used as an alternative interface to Berkeley DB.  To
+have another Apache module (for example, mod_foo) use mod_db4, do not
+link mod_foo against the Berkeley DB library.  In your mod_foo makefile, you
+should:</p>
+        <pre class="programlisting">#include "mod_db4_export.h"</pre>
+        <p>and add your Apache include directory to your CPPFLAGS.</p>
+        <p>In mod_foo, to create a mod_db4 managed <a href="../api_reference/C/env.html" class="olink">DB_ENV</a> handle, use the
+following:</p>
+        <pre class="programlisting">int mod_db4_db_env_create(DB_ENV **dbenvp, u_int32_t flags);</pre>
+        <p>which takes identical arguments to <a href="../api_reference/C/envcreate.html" class="olink">db_env_create()</a>.</p>
+        <p>To create a mod_db4 managed <a href="../api_reference/C/db.html" class="olink">DB</a> handle, use the following:</p>
+        <pre class="programlisting">int mod_db4_db_create(DB **dbp, DB_ENV *dbenv, u_int32_t flags);</pre>
+        <p>which takes identical arguments to <a href="../api_reference/C/dbcreate.html" class="olink">db_create()</a>.</p>
+        <p>Otherwise the API is completely consistent with the standard Berkeley DB
+API.</p>
+        <p>The mod_db4 module requires the Berkeley DB library be compiled with C++
+extensions and the MM library.  (The MM library provides an abstraction
+layer which allows related processes to share data easily. On systems
+where shared memory or other inter-process communication mechanisms are
+not available, the MM library emulates them using temporary files. MM
+is used in several operating systems to provide shared memory pools to
+Apache modules.)</p>
+        <p>To build this apache module, perform the following steps:</p>
+        <pre class="programlisting">% ./configure --with-apxs=[path to the apxs utility] \
+    --with-db4=[Berkeley DB library installation directory] \
+    --with-mm=[libmm installation directory]
+% make
+% make install</pre>
+        <p>Post-installation, modules can use this extension via the functions
+documented in $APACHE_INCLUDEDIR/mod_db4_export.h.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="tcl_faq.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="ext_perl.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Tcl FAQ </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Using Berkeley DB with Perl</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

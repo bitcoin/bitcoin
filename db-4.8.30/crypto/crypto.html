@@ -1,0 +1,638 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.76 [en] (X11; U; FreeBSD 4.3-RELEASE i386) [Netscape]">
+</head>
+<body>
+
+<center>
+<h1>
+&nbsp;Security Interface for Berkeley DB</h1></center>
+
+<center><i>Susan LoVerso</i>
+<br><i>Rev 1.6</i>
+<br><i>2002 Feb 26</i></center>
+
+<p>We provide an interface allowing secure access to Berkeley DB.&nbsp;&nbsp;
+Our goal is to allow users to have encrypted secure databases.&nbsp; In
+this document, the term <i>ciphering</i> means the act of encryption or
+decryption.&nbsp; They are equal but opposite actions and the same issues
+apply to both just in the opposite direction.
+<h3>
+Requirements</h3>
+The overriding requirement is to provide a simple mechanism to allow users
+to have a secure database.&nbsp; A secure database means that all of the
+pages of a database will be encrypted, and all of the log files will be
+encrypted.
+<p>Falling out from this work will be a simple mechanism to allow users
+to request that we checksum their data for additional error detection (without
+encryption/decryption).
+<p>We expect that data in process memory or stored in shared memory, potentially
+backed by disk, is not encrypted or secure.
+<h2>
+<a NAME="DB Modifications"></a>DB Method Interface Modifications</h2>
+With a logging environment, all database changes are recorded in the log
+files.&nbsp; Therefore, users requiring secure databases in such environments
+also require secure log files.
+<p>A prior thought had been to allow different passwords on the environment
+and the databases within.&nbsp; However, such a scheme, then requires that
+the password be logged in order for recovery to be able to restore the
+database.&nbsp; Therefore, any application having the password for the
+log could get the password for any databases by reading the log.&nbsp;
+So having a different password on a database does not gain any additional
+security and it makes certain things harder and more complex.&nbsp; Some
+of those more complex things include the need to handle database and env
+passwords differently since they'd need to be stored and accessed from
+different places.&nbsp; Also resolving the issue of how <i>db_checkpoint</i>
+or <i>db_sync</i>, which flush database pages to disk, would find the passwords
+of various databases without any dbps was unsolved.&nbsp; The feature didn't
+gain anything and caused significant pain.&nbsp; Therefore the decision
+is that there will be a single password protecting an environment and all
+the logs and some databases within that environment.&nbsp; We do allow
+users to have a secure environment and clear databases.&nbsp; Users that
+want secure databases within a secure environment must set a flag.
+<p>Users wishing to enable encryption on a database in a secure environment
+or enable just checksumming on their database pages will use new flags
+to <a href="../docs/api_c/db_set_flags.html">DB->set_flags()</a>.&nbsp;
+Providing ciphering over an entire environment is accomplished by adding
+a single environment method: <a href="../docs/api_c/env_set_encrypt.html">DBENV->set_encrypt()</a>.&nbsp;
+Providing encryption for a database (not part of an environment) is accomplished
+by adding a new database method: <a href="../docs/api_c/db_set_encrypt.html">DB->set_encrypt()</a>.
+<p>Both of the <i>set_encrypt</i> methods must be called before their respective
+<i>open</i> calls.&nbsp; The environment method must be before the environment
+open because we must know about security before there is any possibility
+of writing any log records out.&nbsp; The database method must be before
+the database open in order to read the root page.&nbsp; The planned interfaces
+for these methods are:
+<pre>DBENV->set_encrypt(DBENV *dbenv,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* DB_ENV structure */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; char *passwd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* Password */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; u_int32_t flags);&nbsp;&nbsp;&nbsp;&nbsp; /* Flags */</pre>
+
+<pre>DB->set_encrypt(DB *dbp,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* DB structure */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; char *passwd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* Password */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; u_int32_t flags);&nbsp;&nbsp;&nbsp;&nbsp; /* Flags */</pre>
+The flags accepted by these functions are:
+<pre>#define DB_ENCRYPT_AES&nbsp; 0x00000001&nbsp; /* Use the AES encryption algorithm */</pre>
+Passwords are NULL-terminated strings.&nbsp; NULL or zero length strings
+are illegal.&nbsp; These flags enable the checksumming and encryption using
+the particular algorithms we have chosen for this implementation.&nbsp;
+The flags are named such that there is a logical naming pattern if additional
+checksum or encryption algorithms are used. If a user gives a flag of zero,
+it will behave in a manner similar to DB_UNKNOWN. It will be illegal if
+they are creating the environment or database, as an algorithm must be
+specified. If they are joining an existing environment or opening an existing
+database, they will use whatever algorithm is in force at the time.&nbsp;
+Using DB_ENCRYPT_AES automatically implies SHA1 checksumming.
+<p>These functions will perform several initialization steps.&nbsp; We
+will allocate crypto_handle for our env handle and set up our function
+pointers.&nbsp; We will allocate space and copy the password into our env
+handle password area.&nbsp; Similar to <i>DB->set_cachesize</i>, calling
+<i>DB->set_encrypt</i>
+will actually reflect back into the local environment created by DB.
+<p>Lastly, we will add a new flag, DB_OVERWRITE, to the <a href="../docs/api_c/env_remove.html">DBENV->remove</a>
+method.&nbsp; The purpose of this flag is to force all of the memory used
+by the shared regions to be overwritten before removal.&nbsp; We will use
+<i>rm_overwrite</i>,
+a function that overwrites and syncs a file 3 times with varying bit patterns
+to really remove a file.&nbsp; Additionally, this flag will force a sync
+of the overwritten regions to disk, if the regions are backed by the file
+system.&nbsp; That way there is no residual information left in the clear
+in memory or freed disk blocks.&nbsp; Although we expect that this flag
+will be used by customers using security, primarily, its action is not
+dependent on passwords or a secure setup, and so can be used by anyone.
+<h4>
+Initialization of the Environment</h4>
+The setup of the security subsystem will be similar to replication initialization
+since it is a sort of subsystem, but it does not have its own region.&nbsp;
+When the environment handle is created via <i>db_env_create</i>, we initialize
+our <i>set_encrypt</i> method to be the RPC or local version.&nbsp; Therefore
+the <i>DB_ENV</i> structure needs a new pointer:
+<pre>&nbsp;&nbsp;&nbsp; void&nbsp;&nbsp;&nbsp; *crypto_handle;&nbsp;&nbsp; /* Security handle */</pre>
+The crypto handle will really point to a new <i>__db_cipher</i> structure
+that will contain a set of functions and a pointer to the in-memory information
+needed by the specific encryption algorithm.&nbsp; It will look like:
+<pre>typedef struct __db_cipher {
+&nbsp;&nbsp;&nbsp; int&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (*init)__P((...));&nbsp;&nbsp;&nbsp; /* Alg-specific initialization function */
+&nbsp;&nbsp;&nbsp; int&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (*encrypt)__P((...)); /* Alg-specific encryption algorithm */
+&nbsp;&nbsp;&nbsp; int&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (*decrypt)__P((...)); /* Alg-specific decryption function */
+&nbsp;&nbsp;&nbsp; void&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *data;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* Pointer to alg-specific information (AES_CIPHER) */
+&nbsp;&nbsp;&nbsp; u_int32_t flags;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* Cipher flags */
+} DB_CIPHER;</pre>
+
+<pre>#define DB_MAC_KEY&nbsp;&nbsp;&nbsp; 20&nbsp;&nbsp;&nbsp; /* Size of the MAC key */
+typedef struct __aes_cipher {
+&nbsp;&nbsp;&nbsp; keyInstance&nbsp;&nbsp;&nbsp; encrypt_ki;&nbsp;&nbsp; /* Encrypt keyInstance temp. */
+&nbsp;&nbsp;&nbsp; keyInstance&nbsp;&nbsp;&nbsp; decrypt_ki;&nbsp;&nbsp; /* Decrypt keyInstance temp. */
+&nbsp;&nbsp;&nbsp; u_int8_t&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mac_key[DB_MAC_KEY]; /* MAC key */
+&nbsp;&nbsp;&nbsp; u_int32_t&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; flags;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* AES-specific flags */
+} AES_CIPHER;</pre>
+It should be noted that none of these structures have their own mutex.&nbsp;
+We hold the environment region locked while we are creating this, but once
+this is set up, it is read-only forever.
+<p>During <a href="../docs/api_c/env_set_encrypt.html">dbenv->set_encrypt</a>,
+we set the encryption, decryption and checksumming methods to the appropriate
+functions based on the flags.&nbsp; This function will allocate us a crypto
+handle that we store in the <i>DB_ENV</i> structure just like all the
+other subsystems.&nbsp; For now, only AES ciphering functions and SHA1
+checksumming functions are supported.&nbsp; Also we will copy the password
+into the <i>DB_ENV</i> structure.&nbsp; We ultimately need to keep the
+password in the environment's shared memory region or compare this one
+against the one that is there, if we are joining an existing environment,
+but we do not have it yet because open has not yet been called.&nbsp; We
+will allocate a structure that will be used in initialization and set up
+the function pointers to point to the algorithm-specific functions.
+<p>In the&nbsp; <i>__env_open</i> path, in <i>__db_e_attach</i>, if we
+are creating the region and the <i>dbenv->passwd</i> field is set, we need
+to use the length of the password in the initial computation of the environment's
+size.&nbsp; This guarantees sufficient space for storing the password in
+shared memory.&nbsp; Then we will call a new function to initialize the
+security region, <i>__crypto_region_init</i> in <i>__env_open</i>.&nbsp;
+If we are the creator, we will allocate space in the shared region to store
+the password and copy the password into that space.&nbsp; Or, if we are
+not the creator we will compare the password stored in the dbenv with the
+one in shared memory.&nbsp;&nbsp; Additionally, we will compare the ciphering
+algorithm to the one stored in the shared region.We'll smash the dbenv
+password and free it.&nbsp; If they do not match, we return an error.&nbsp;
+If we are the creator we store the offset into the REGENV structure.&nbsp;
+Then <i>__crypto_region_init&nbsp;</i> will call the initialization function
+set up earlier based on the ciphering algorithm specified.&nbsp; For now
+we will call <i>__aes_init</i>.&nbsp; Additionally this function will allocate
+and set up the per-process state vector for this encryption's IVs.&nbsp;
+See <a href="#Generating the Initialization Vector">Generating the Initialization
+Vector</a> for a detailed description of the IV and state vector.
+<p>In the AES-specific initialization function, <i>__aes_init</i>,&nbsp;
+we will initialize it by calling
+<i>__aes_derivekeys</i> in order to fill
+in the keyInstance and mac_key fields in that structure.&nbsp; The REGENV
+structure will have one additional item
+<pre>&nbsp;&nbsp; roff_t&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; passwd_off;&nbsp;&nbsp; /* Offset of passwd */</pre>
+
+<h4>
+Initializing a Database</h4>
+During <a href="../docs/api_c/db_set_encrypt.html">db->set_encrypt</a>,
+we set the encryption, decryption and checksumming methods to the appropriate
+functions based on the flags.&nbsp; Basically, we test that we are not
+in an existing environment and we haven't called open.&nbsp; Then we just
+call through the environment handle to set the password.
+<p>Also, we will need to add a flag in the database meta-data page that
+indicates that the database is encrypted and what its algorithm is.&nbsp;
+This will be used when the meta-page is read after reopening a file. We
+need this information on the meta-page in order to detect a user opening
+a secure database without a password.&nbsp; I propose using the first unused1
+byte (renaming it too) in the meta page for this purpose.
+<p>All pages will not be encrypted for the first 64 bytes of data.&nbsp;
+Database meta-pages will be encrypted on the first 512 bytes only.&nbsp;
+All meta-page types will have an IV and checksum added within the first
+512 bytes as well as a crypto magic number.&nbsp; This will expand the
+size of the meta-page from 256 bytes to 512 bytes. The page in/out routines,
+<i>__db_pgin</i> and <i>__db_pgout</i> know the page type of the page and
+will apply the 512 bytes ciphering to meta pages.&nbsp; In <i>__db_pgout</i>,
+if we have a crypto handle in our (private) environment, we will apply
+ciphering to either the entire page, or the first 512 bytes if it is a
+meta-page.&nbsp; In <i>__db_pgin</i>, we will decrypt if the page we have
+a crypto handle.
+<p>When multiple processes share a database, all must use the same password
+as the database creator. Using an existing database requires several conditions
+to be true.&nbsp; First, if the creator of the database did not create
+with security, then opening later with security is an error.&nbsp; Second,
+if the creator did create it with security, then opening later without
+security is an error.&nbsp; Third, we need to be able to test and check
+that when another process opens a secure database that the password they
+provided is the same as the one in use by the creator.
+<p>When reading the meta-page, in <i>__db_file_setup</i>, we do not go
+through the paging functions, but directly read via <i>__os_read</i>.&nbsp;
+It is at this point that we will determine if the user is configured correctly.&nbsp;
+If the meta-page we read has an IV and checksum, they better have a crypto
+handle.&nbsp; If they have a crypto handle, then the meta-page must have
+an IV and checksum.&nbsp; If both of those are true, we test the password.&nbsp;
+We compare the unencrypted magic number to the newly-decrypted crypto magic
+number and if they are not the same, then we report that the user gave
+us a bad password.
+<p>On a mostly unrelated topic, even when we go to very large pagesizes,
+the meta information will still be within a disk sector.&nbsp; So, after
+talking it over with Keith and Margo, we determined that unencrypted meta-pages
+still will not need a checksum.
+<h3>
+Encryption and Checksum Routines</h3>
+These routines are provided to us by Adam Stubblefield at Rice University
+(astubble@rice.edu).&nbsp; The functional interfaces are:
+<pre>__aes_derivekeys(DB_ENV *dbenv,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* dbenv */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; u_int8_t *passwd,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* Password */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; size_t passwd_len,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* Length of passwd */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; u_int8_t *mac_key,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* 20 byte array to store MAC key */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; keyInstance *encrypt_key,&nbsp;&nbsp; /* Encryption key of passwd */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; keyInstance *decrypt_key);&nbsp; /* Decryption key of passwd */</pre>
+This is the only function requiring the textual user password.&nbsp; From
+the password, this function generates a key used in the checksum function,
+<i>__db_chksum</i>.&nbsp;
+It also fills in <i>keyInstance</i> structures which are then used in the
+encryption and decryption routines.&nbsp; The keyInstance structures must
+already be allocated.&nbsp; These will be stored in the AES_CIPHER structure.
+<pre>&nbsp;__db_chksum(u_int8_t *data,&nbsp;&nbsp;&nbsp; /* Data to checksum */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; size_t data_len,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* Length of data */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; u_int8_t *mac_key,&nbsp;&nbsp;&nbsp; /* 20 byte array from __db_derive_keys */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; u_int8_t *checksum);&nbsp; /* 20 byte array to store checksum */</pre>
+This function generates a checksum on the data given.&nbsp; This function
+will do double-duty for users that simply want error detection on their
+pages.&nbsp; When users are using encryption, the <i>mac_key </i>will contain
+the 20-byte key set up in <i>__aes_derivekeys</i>.&nbsp; If they just want
+checksumming, then <i>mac_key</i> will be NULL.&nbsp; According to Adam,
+we can safely use the first N-bytes of the checksum.&nbsp; So for seeding
+the generator for initialization vectors, we'll hash the time and then
+send in the first 4 bytes for the seed.&nbsp; I believe we can probably
+do the same thing for checksumming log records.&nbsp; We can only use 4
+bytes for the checksum in the non-secure case.&nbsp; So when we want to
+verify the log checksum we can compute the mac but just compare the first
+4 bytes to the one we read.&nbsp; All locations where we generate or check
+log record checksums that currently call <i>__ham_func4</i> will now call
+<i>__db_chksum</i>.&nbsp;
+I believe there are 5 such locations,
+<i>__log_put, __log_putr, __log_newfile,
+__log_rep_put
+</i>and<i> __txn_force_abort.</i>
+<pre>__aes_encrypt(DB_ENV *dbenv,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* dbenv */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; keyInstance *key,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* Password key instance from __db_derive_keys */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; u_int8_t *iv,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* Initialization vector */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; u_int8_t *data,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* Data to encrypt */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; size_t data_len);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* Length of data to encrypt - 16 byte multiple */</pre>
+This is the function to encrypt data.&nbsp; It will be called to encrypt
+pages and log records.&nbsp; The <i>key</i> instance is initialized in
+<i>__aes_derivekeys</i>.&nbsp;
+The initialization vector, <i>iv</i>, is the 16 byte random value set up
+by the Mersenne Twister pseudo-random generator.&nbsp; Lastly, we pass
+in a pointer to the <i>data</i> to encrypt and its length in <i>data_len</i>.&nbsp;
+The <i>data_len</i> must be a multiple of 16 bytes. The encryption is done
+in-place so that when the encryption code returns our encrypted data is
+in the same location as the original data.
+<pre>__aes_decrypt(DB_ENV *dbenv,&nbsp;&nbsp;&nbsp; /* dbenv */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; keyInstance *key,&nbsp; /* Password key instance from __db_derive_keys */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; u_int8_t *iv,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* Initialization vector */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; u_int8_t *data,&nbsp;&nbsp;&nbsp; /* Data to decrypt */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; size_t data_len);&nbsp; /* Length of data to decrypt - 16 byte multiple */</pre>
+This is the function to decrypt the data.&nbsp; It is exactly the same
+as the encryption function except for the action it performs.&nbsp; All
+of the args and issues are the same.&nbsp; It also decrypts in place.
+<h3>
+<a NAME="Generating the Initialization Vector"></a>Generating the Initialization
+Vector</h3>
+Internally, we need to provide a unique initialization vector (IV) of 16
+bytes every time we encrypt any data with the same password.&nbsp; For
+the IV we are planning on using mt19937, the Mersenne Twister, a random
+number generator that has a period of 2**19937-1. This package can be found
+at <a href="http://www.math.keio.ac.jp/~matumoto/emt.html">http://www.math.keio.ac.jp/~matumoto/emt.html</a>.&nbsp;
+Tests show that although it repeats a single integer every once in a while,
+that after several million iterations, it doesn't repeat any 4 integers
+that we'd be stuffing into our 16-byte IV.&nbsp; We plan on seeding this
+generator with the time (tv_sec) hashed through SHA1 when we create the
+environment.&nbsp; This package uses a global state vector that contains
+624 unsigned long integers.&nbsp; We do not allow a 16-byte IV of zero.&nbsp;
+It is simpler just to reject any 4-byte value of 0 and if we get one, just
+call the generator again and get a different number.&nbsp; We need to detect
+holes in files and if we read an IV of zero that is a simple indication
+that we need to check for an entire page of zero.&nbsp; The IVs are stored
+on the page after encryption and are not encrypted themselves so it is
+not possible for an entire encrypted page to be read as all zeroes, unless
+it was a hole in a file.&nbsp; See <a href="#Holes in Files">Holes in Files</a>
+for more details.
+<p>We will not be holding any locks when we need to generate our IV but
+we need to protect access to the state vector and the index.&nbsp; Calls
+to the MT code will come while encrypting some data in <i>__aes_encrypt.</i>&nbsp;&nbsp;
+The MT code will assume that all necessary locks are held in the caller.&nbsp;
+We will have per-process state vectors that are set up when a process begins.&nbsp;
+That way we minimize the contention and only multi-threaded processes need
+acquire locks for the IV.&nbsp; We will have the state vector in the environment
+handle in heap memory, as well as the index and there will be a mutex protecting
+it for threaded access.&nbsp; This will be added to the <i>DB_ENV</i>
+structure:
+<pre>&nbsp;&nbsp;&nbsp; DB_MUTEX&nbsp;&nbsp;&nbsp; *mt_mutexp;&nbsp;&nbsp; /* Mersenne Twister mutex */
+&nbsp;&nbsp;&nbsp; int&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *mti;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* MT index */
+&nbsp;&nbsp;&nbsp; u_long&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *mt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* MT state vector */</pre>
+This portion of the environment will be initialized at the end of _<i>_dbenv_open</i>,
+right after we initialize the other mutex for the <i>dblist</i>. When we
+allocate the space, we will generate our initial state vector. If we are
+multi-threaded we'll allocate and initialize our mutex also.
+<p>We need to make changes to the MT code to make it work in our namespace
+and&nbsp; to take&nbsp; a pointer to the location of the state vector and
+the index.&nbsp;&nbsp; There will be a wrapper function <i>__db_generate_iv</i>
+that DB will call and it will call the appropriate MT function.&nbsp; I
+am also going to change the default seed to use a hashed time instead of
+a hard coded value.&nbsp; I have looked at other implementations of the
+MT code available on the web site.&nbsp; The C++ version does a hash on
+the current time.&nbsp; I will modify our MT code to seed with the hashed
+time as well.&nbsp; That way the code to seed is contained within the MT
+code and we can just write the wrapper to get an IV.&nbsp; We will not
+be changing the core computational code of MT.
+<h2>
+DB Internal Issues</h2>
+
+<h4>
+When do we Cipher?</h4>
+All of the page ciphering is done in the <i>__db_pgin/__db_pgout</i> functions.&nbsp;
+We will encrypt after the method-specific function on page-out and decrypt
+before the method-specfic function on page-in.&nbsp; We do not hold any
+locks when entering these functions.&nbsp; We determine that we need to
+cipher based on the existence of the encryption flag in the dbp.
+<p>For ciphering log records, the encryption will be done as the first
+thing (or a new wrapper) in <i>__log_put.&nbsp; </i>See <a href="#Log Record Encryption">Log
+Record Encryption</a> for those details.
+<br>&nbsp;
+<h4>
+Page Changes</h4>
+The checksum and IV values will be stored prior to the first index of the
+page.&nbsp; We have a new P_INP macro that replaces use of inp[X] in the
+code. &nbsp;This macro takes a dbp as an argument and determines where
+our first index is based on whether we have DB_AM_CHKSUM and DB_AM_ENCRYPT
+set.&nbsp; If neither is set, then our first index is where it always was.
+&nbsp;If just checksumming is set, then we reserve a 4-byte checksum.&nbsp;
+If encryption is set, then we reserve 36 bytes for our checksum/IV as well
+as some space to get proper alignment to encrypt on a 16-byte boundary.
+<p>Since several paging macros use inp[X] in them, those macros must now
+take a dbp.&nbsp; There are a lot of changes to make all the necessary
+paging macros take a dbp, although these changes are trivial in nature.
+<p>Also, there is a new function <i>__db_chk_meta</i> to perform checksumming
+and decryption checking on meta pages specifically.&nbsp; This function
+is where we check that the database algorithm matches what the user gave
+(or if they set DB_CIPHER_ANY then we set it), and other encryption related
+testing for bad combinations of what is in the file versus what is in the
+user structures.
+<h4>
+Verification</h4>
+The verification code will also need to be updated to deal with secure
+pages.&nbsp; Basically when the verification code reads in the meta page
+it will call <i>__db_chk_meta</i> to perform any checksumming and decryption.
+<h4>
+<a NAME="Holes in Files"></a>Holes in Files</h4>
+Holes in files will be dealt with rather simply.&nbsp; We need to be able
+to distinguish reading a hole in a file from an encrypted page that happened
+to encrypt to all zero's.&nbsp; If we read a hole in a file, we do not
+want to send that empty page through the decryption routine.&nbsp; This
+can be determined simply without incurring the performance penalty of comparing
+every byte on a page on every read until we get a non-zero byte.
+<br>The __db_pgin function is only given an invalid page P_INVALID in this
+case.&nbsp;&nbsp;So, if the page type, which is always unencrypted, is
+P_INVALID, then we do not perform any checksum verification or decryption.
+<h4>
+Errors and Recovery</h4>
+Dealing with a checksum error is tricky.&nbsp; Ultimately, if a checksum
+error occurs it is extremely likely that the user must do catastrophic
+recovery.&nbsp; There is no other failure return other than&nbsp; DB_RUNRECOVERY
+for indicating that the user should run catastrophic recovery.&nbsp; We
+do not want to add a new error return for applications to check because
+a lot of applications already look for and deal with DB_RUNRECOVERY as
+an error condition and we want to fit ourselves into that application model.&nbsp;
+We already indicate to the user that when they get that error, then they
+need to run recovery.&nbsp; If recovery fails, then they need to run catastrophic
+recovery.&nbsp; We need to get ourselves to the point where users will
+run catastrophic recovery.
+<p>If we get a checksum error, then we need to log a message stating a
+checksum error occurred on page N.&nbsp; In <i>__db_pgin</i>, we can check
+if logging is on in the environment.&nbsp; If so, we want to log the message.
+<p>When the application gets the DB_RUNRECOVERY error, they'll have to
+shut down their application and run recovery.&nbsp; When the recovery encounters
+the record indicating checksum failure, then normal recovery will fail
+and the user will have to perform catastrophic recovery.&nbsp; When catastrophic
+recovery encounters that record, it will simply ignore it.
+<h4>
+<a NAME="Log Record Encryption"></a>Log Record Encryption</h4>
+Log records will be ciphered.&nbsp; It might make sense to wrap <i>__log_put</i>
+to encrypt the DBT we send down.&nbsp; The <i>__log_put </i>function is
+where the checksum is computed before acquiring the region lock.&nbsp;
+But also this function is where we call <i>__rep_send_message</i> to send
+the DBT to the replication clients.&nbsp; Therefore, we need the DBT to
+be encrypted prior to there.&nbsp; We also need it encrypted before checksumming.
+I think <i>__log_put </i>will become <i>__log_put_internal</i>, and the
+new <i>__log_put</i> will encrypt if needed and then call <i>__log_put_internal
+</i>(the
+function formerly known as <i>__log_put</i>).&nbsp; Log records are kept
+in a shared memory region buffer prior to going out to disk.&nbsp; Records
+in the buffer will be encrypted.&nbsp; No locks are held at the time we
+will need to encrypt.
+<p>On reading the log, via log cursors, the log code stores log records
+in the log buffer.&nbsp; Records in that buffer will be encrypted, so decryption
+will occur no matter whether we are returning records from the buffer or
+if we are returning log records directly from the disk. Current checksum
+checking is done in
+<i>__logc_get_int.</i>&nbsp; Decryption will be done
+after the checksum is checked.
+<p>There are currently two nasty issues with encrypted log records.&nbsp;
+The first is that <i>__txn_force_abort</i> overwrites a commit record in
+the log buffer with an abort record.&nbsp; Well, our log buffer will be
+encrypted.&nbsp; Therefore, <i>__txn_force_abort</i> is going to need to
+do encryption of its new record.&nbsp; This can be accomplished by sending
+in the dbenv handle to the function.&nbsp; It is available to us in <i>__log_flush_commit</i>
+and we can just pass it in.&nbsp; I don't like putting log encryption in
+the txn code, but the layering violation is already there.
+<p>The second issue is that the encryption code requires data that is a
+multiple of 16 bytes and log record lengths are variable.&nbsp; We will
+need to pad log records to meet the requirement.&nbsp; Since the callers
+of <i>__log_put</i> set up the given DBT it is a logical place to pad if
+necessary. We will modify the gen_rec.awk script to have all of the generated
+logging functions pad for us if we have a crypto handle. This padding will
+also expand the size of log files. Anyone calling <i>log_put</i> and using
+security from the application will have to pad on their own or it will
+return an error.
+<p>When ciphering the log file, we will need a different header than the
+current one.&nbsp; The current header only has space for a 4 byte checksum.&nbsp;
+Our secure header will need space for the 16 byte IV and 20 byte checksum.&nbsp;
+This will blow up our log files when running securely since every single
+log record header will now consume 32 additional bytes.&nbsp; I believe
+that the log header does not need to be encrypted.&nbsp; It contains an
+offset, a length and our IV and checksum.&nbsp; Our IV and checksum are
+never encrypted.&nbsp; I don't believe there to be any risk in having the
+offset and length in the clear.
+<p>I would prefer not to have two types of log headers that are incompatible
+with each other.&nbsp; It is not acceptable to increase the log headers
+of all users from 12 bytes to 44 bytes.&nbsp; Such a change would also
+make log files incompatible with earlier releases.&nbsp; Worse even, is
+that the <i>cksum</i> field of the header is in between the offset and
+len.&nbsp; It would be really convenient if we could have just made a bigger
+cksum portion without affecting the location of the other fields.&nbsp;
+Oh well.&nbsp; Most customers will not be using encryption and we won't
+make them pay the price of the expanded header.&nbsp; Keith indicates that
+the log file format is changing with the next release so I will move the
+cksum field so it can at least be overlaid.
+<p>One method around this would be to have a single internal header that
+contains all the information both mechanisms need, but when we write out
+the header we choose which pieces to write.&nbsp; By appending the security
+information to the end of the existing structure, and adding a size field,
+we can modify a few places to use the size field to write out only the
+current first 12 bytes, or the entire security header needed.
+<h4>
+Replication</h4>
+Replication clients are going to need to start all of their individual
+environment handles with the same password.&nbsp; The log records are going
+to be sent to the clients decrypted and the clients will have to encrypt
+them on their way to the client log files.&nbsp; We cannot send encrypted
+log records to clients. &nbsp;The reason is that the checksum and IV&nbsp;are
+stored in the log header and the master only sends the log record itself
+to the client. &nbsp;Therefore, the client has no way to decrypt a log
+record from the master. &nbsp;Therefore, anyone wanting to use truly secure
+replication is going to have to have a secure transport mechanism.&nbsp;
+By not encrypting records, clients can theoretically have different passwords
+and DB won't care.
+<p>On the master side we must copy the DBT sent in.&nbsp; We encrypt the
+original and send to clients the clear record.&nbsp; On the client side,
+support for encryption is added into <i>__log_rep_put</i>.
+<h4>
+Sharing the Environment</h4>
+When multiple processes join the environment, all must use the same password
+as the creator.
+<p>Joining an existing environment requires several conditions to be true.&nbsp;
+First, if the creator of the environment did not create with security,
+then joining later with security is an error.&nbsp; Second, if the creator
+did create it with security, then joining later without security is an
+error.&nbsp; Third, we need to be able to test and check that when another
+process joins a secure environment that the password they provided is the
+same as the one in use by the creator.
+<p>The first two scenarios should be fairly trivial to determine, if we
+aren't creating the environment, we can compare what is there with what
+we have.&nbsp; In the third case, the <i>__crypto_region_init</i> function
+will see that the environment region has a valid passwd_off and we'll then
+compare that password to the one we have in our dbenv handle.&nbsp; In
+any case we'll smash the dbenv handle's passwd and free that memory before
+returning whether we have a password match or not.
+<p>We need to store the passwords themselves in the region because multiple
+calls to the <i>__aes_derivekeys </i>function with the same password yields
+different keyInstance contents.&nbsp; Therefore we don't have any way to
+check passwords other than retaining and comparing the actual passwords.
+<h4>
+Other APIs</h4>
+All of the other APIs will need interface enhancements to support the new
+security methods.&nbsp; The Java and C++ interfaces will likely be done
+by Michael Cahill and Sue will implement the Tcl and RPC changes.&nbsp;
+Tcl will need the changes for testing purposes but the interface should
+be public, not test-only.&nbsp; RPC should fully support security.&nbsp;
+The biggest risk that I can see is that the client will send the password
+to the server in the clear.&nbsp; Anyone sniffing the wires or running
+tcpdump or other packet grabbing code could grab that.&nbsp; Someone really
+interested in using security over RPC probably ought to add authentication
+and other measures to the RPC server as well.
+<h4>
+<a NAME="Utilities"></a>Utilities</h4>
+All should take a -P flag to specify a password for the environment or
+password.&nbsp; Those that take an env and a database might need something
+more to distinguish between env passwds and db passwds. Here is what we
+do for each utility:
+<ul>
+<li>
+berkeley_db_svc - Needs -P after each -h specified.</li>
+
+<li>
+db_archive - Needs -P if the env is encrypted.</li>
+
+<li>
+db_checkpoint - Needs -P if the env is encrypted.</li>
+
+<li>
+db_deadlock - No changes</li>
+
+<li>
+db_dump - Needs -P if the env or database is encrypted.</li>
+
+<li>
+db_load - Needs -P if the env or database is encrypted.</li>
+
+<li>
+db_printlog - Needs -P if the env is encrypted.</li>
+
+<li>
+db_recover - Needs -P if the env is encrypted.</li>
+
+<li>
+db_stat - Needs -P if the env or database is encrypted.</li>
+
+<li>
+db_upgrade - Needs -P if the env or database is encrypted.</li>
+
+<li>
+db_verify - Needs -P if the env or database is encrypted.</li>
+</ul>
+
+<h2>
+Testing</h2>
+All testing should be able to be accomplished via Tcl.&nbsp; The following
+tests (and probably others I haven't thought of yet) should be performed:
+<ul>
+<li>
+Basic functionality - basically a test001 but encrypted without an env</li>
+
+<li>
+Basic functionality, w/ env - like the previous test but with an env.</li>
+
+<li>
+Basic functionality, multiple processes - like first test, but make sure
+others can correctly join.</li>
+
+<li>
+Basic functionality, mult. processes - like above test, but initialize/close
+environment/database first so that the next test processes are all joiners
+of an existing env, but creator no longer exists and the shared region
+must be opened.</li>
+
+<li>
+Recovery test - Run recovery over an encrypted environment.</li>
+
+<li>
+Subdb test - Run with subdbs that are encrypted.</li>
+
+<li>
+Utility test - Verify the new options to all the utilities.</li>
+
+<li>
+Error handling - Test the basic setup errors for both env's and databases
+with multiple processes.&nbsp; They are:</li>
+
+<ol>
+<li>
+Attempt to set a NULL or zero-length passwd.</li>
+
+<li>
+Create Env w/ security and attempt to create database w/ its own password.</li>
+
+<li>
+Env/DB creates with security.&nbsp; Proc2 joins without - should get an
+error.</li>
+
+<li>
+Env/DB creates without security.&nbsp; Proc2 joins with - should get an
+error.</li>
+
+<li>
+Env/DB creates with security.&nbsp; Proc2 joins with different password
+- should get an error.</li>
+
+<li>
+Env/DB creates with security.&nbsp; Closes.&nbsp; Proc2 reopens with different
+password - should get an error.</li>
+
+<li>
+Env/DB creates with security.&nbsp; Closes.&nbsp; Tcl overwrites a page
+of the database with garbage.&nbsp; Proc2 reopens with the correct password.&nbsp;
+Code should detect checksum error.</li>
+
+<li>
+Env/DB creates with security.&nbsp; Open a 2nd identical DB with a different
+password.&nbsp; Put the exact same data into both databases.&nbsp; Close.&nbsp;
+Overwrite the identical page of DB1 with the one from DB2.&nbsp; Reopen
+the database with correct DB1 password.&nbsp; Code should detect an encryption
+error on that page.</li>
+</ol>
+</ul>
+
+<h2>
+Risks</h2>
+There are several holes in this design.&nbsp; It is important to document
+them clearly.
+<p>The first is that all of the pages are stored in memory and possibly
+the file system in the clear.&nbsp; The password is stored in the shared
+data regions in the clear.&nbsp; Therefore if an attacker can read the
+process memory, they can do whatever they want.&nbsp; If the attacker can
+read system memory or swap they can access the data as well.&nbsp; Since
+everything in the shared data regions (with the exception of the buffered
+log) will be in the clear, it is important to realize that file backed
+regions will be written in the clear, including the portion of the regions
+containing passwords.&nbsp; We recommend to users that they use system
+memory instead of file backed shared memory.
+</body>
+</html>

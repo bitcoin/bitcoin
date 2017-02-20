@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Copying or moving databases</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="program.html" title="Chapter 14.  Programmer Notes" />
+    <link rel="prev" href="program_cache.html" title="Disk drive caches" />
+    <link rel="next" href="program_compatible.html" title="Compatibility with historic UNIX interfaces" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Copying or moving databases</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="program_cache.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 14. 
+        Programmer Notes
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="program_compatible.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="program_copy"></a>Copying or moving databases</h2>
+          </div>
+        </div>
+      </div>
+      <p>There are two issues with copying or moving databases: database page log
+sequence numbers (LSNs), and database file identification strings.</p>
+      <p>Because database pages contain references to the database environment
+log records (LSNs), databases cannot be copied or moved from one
+transactional database environment to another without first clearing the
+LSNs.  Note that this is not a concern for non-transactional database
+environments and applications, and can be ignored if the database is not
+being used transactionally.  Specifically, databases created and written
+non-transactionally (for example, as part of a bulk load procedure), can
+be copied or moved into a transactional database environment without
+resetting the LSNs.  The database's LSNs may be reset in one of three
+ways: the application can call the <a href="../api_reference/C/envlsn_reset.html" class="olink">DB_ENV-&gt;lsn_reset()</a> method to reset the
+LSNs in place, or a system administrator can reset the LSNs in place
+using the <span class="bold"><strong>-r</strong></span> option to the <a href="../api_reference/C/db_load.html" class="olink">db_load utility</a>, or by
+dumping and reloading the database (using the <a href="../api_reference/C/db_dump.html" class="olink">db_dump utility</a> and the <a href="../api_reference/C/db_load.html" class="olink">db_load utility</a>).</p>
+      <p>Because system file identification information (for example, filenames,
+device and inode numbers, volume and file IDs, and so on) are not
+necessarily unique or maintained across system reboots, each Berkeley DB
+database file contains a unique 20-byte file identification bytestring.
+When multiple processes or threads open the same database file in Berkeley DB,
+it is this bytestring that is used to ensure the same underlying pages
+are updated in the database environment cache, no matter which Berkeley DB
+handle is used for the operation.</p>
+      <p>The database file identification string is not a concern when moving
+databases, and databases may be moved or renamed without resetting the
+identification string.  However, when copying a database, you must
+ensure there are never two databases with the same file identification
+bytestring in the same cache at the same time.  Copying databases is
+further complicated because Berkeley DB caches do not discard cached database
+pages when database handles are closed.  Cached pages are only discarded
+when the database is removed by calling the <a href="../api_reference/C/envremove.html" class="olink">DB_ENV-&gt;remove()</a> or
+<a href="../api_reference/C/dbremove.html" class="olink">DB-&gt;remove()</a> methods.</p>
+      <p>Before physically copying a database file, first ensure that all
+modified pages have been written from the cache to the backing database
+file.  This is done using the <a href="../api_reference/C/dbsync.html" class="olink">DB-&gt;sync()</a> or <a href="../api_reference/C/dbclose.html" class="olink">DB-&gt;close()</a> methods.</p>
+      <p>Before using a copy of a database file in a database environment, you
+must ensure that all pages from any other database with the same
+bytestring have been removed from the memory pool cache.  If the
+environment in which you will open the copy of the database has pages
+from files with identical bytestrings to the copied database, there are
+a few possible solutions:</p>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>Remove the environment, either using system utilities or by calling the
+<a href="../api_reference/C/envremove.html" class="olink">DB_ENV-&gt;remove()</a> method.  Obviously, this will not allow you to access
+both the original database and the copy of the database at the same
+time.</li>
+          <li>
+    Create a new file that will have a new bytestring.  The simplest way to
+    create a new file that will have a new bytestring is to call the
+    <a href="../api_reference/C/db_dump.html" class="olink">db_dump utility</a> to dump out the contents of the database and then use the
+    <a href="../api_reference/C/db_load.html" class="olink">db_load utility</a> to load the dumped output into a new file.  This allows you
+    to access both the original and copy of the database at the same time.
+</li>
+          <li>
+    If your database is too large to be dumped and reloaded, you can copy
+    the database by other means, and then reset the bytestring in the
+    copied database to a new bytestring.  There are two ways to reset the
+    bytestring in the copy: the application can call the <a href="../api_reference/C/envfileid_reset.html" class="olink">DB_ENV-&gt;fileid_reset()</a>
+    method, or a system administrator can use the <span class="bold"><strong>-r</strong></span> option to the <a href="../api_reference/C/db_load.html" class="olink">db_load utility</a>.  This allows you
+    to access both the original and copy of the database at the same time.
+</li>
+        </ol>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="program_cache.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="program.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="program_compatible.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Disk drive caches </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Compatibility with historic UNIX interfaces</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

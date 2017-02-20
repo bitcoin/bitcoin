@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DBcursor-&gt;del()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="dbc.html" title="Chapter 3.  The DBcursor Handle" />
+    <link rel="prev" href="dbccount.html" title="DBcursor-&gt;count()" />
+    <link rel="next" href="dbcdup.html" title="DBcursor-&gt;dup()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DBcursor-&gt;del()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbccount.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. 
+                The DBcursor Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbcdup.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dbcdel"></a>DBcursor-&gt;del()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DBcursor-&gt;del(DBC *DBcursor, u_int32_t flags);  </pre>
+      <p>
+         The <code class="methodname">DBcursor-&gt;del()</code> method deletes the key/data pair to which the
+         cursor refers.
+    </p>
+      <p>
+         When called on a cursor opened on a database that has been made into a
+         secondary index using the 
+         <a class="xref" href="dbassociate.html" title="DB-&gt;associate()">DB-&gt;associate()</a>  method, the
+         <a class="xref" href="dbdel.html" title="DB-&gt;del()">DB-&gt;del()</a>  method deletes
+         the key/data pair from the primary database and all secondary indices.
+    </p>
+      <p>
+         The cursor position is unchanged after a delete, and subsequent calls
+         to cursor functions expecting the cursor to refer to an existing key
+         will fail.
+    </p>
+      <p>
+         The <code class="methodname">DBcursor-&gt;del()</code> method will return <a href="../../programmer_reference/program_errorret.html#program_errorret.DB_KEYEMPTY" class="olink">DB_KEYEMPTY</a> if
+         the element has already been deleted. The <code class="methodname">DBcursor-&gt;del()</code> 
+         <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1653866"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1654226"></a>flags</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>flags</strong></span> parameter must be set to 0
+                          or one of the following values:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="dbput_DB_CONSUME"></a>
+                  <code class="literal">DB_CONSUME</code>
+            </p>
+                <p>
+            If the database is of type DB_QUEUE then this flag may be set to force the head of the queue
+        to move to the first non-deleted item in the queue.  Normally this is only done if the
+        deleted item is exactly at the head when deleted.
+            </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1654372"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DBcursor-&gt;del()</code> <span>
+            <span>
+                 method may fail and return one of the following non-zero errors:
+            </span>
+            
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1654385"></a>DB_FOREIGN_CONFLICT</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A <a class="link" href="dbassociate_foreign.html" title="DB-&gt;associate_foreign()">foreign key constraint violation</a> 
+                has occurred. This can be caused by one of two things:
+            </p>
+          <div class="orderedlist">
+            <ol type="1">
+              <li>
+                <p>
+                            An attempt was made to add a record to a
+                            constrained database, and the key used for that
+                            record does not exist in the foreign key
+                            database.
+                        </p>
+              </li>
+              <li>
+                <p>
+                            <a class="link" href="dbassociate_foreign.html#associate_foreign_DB_FOREIGN_ABORT">DB_FOREIGN_ABORT</a> 
+                            was declared for a foreign key database, and then
+                            subsequently a record was deleted from the
+                            foreign key database without first removing it
+                            from the constrained secondary database.
+                        </p>
+              </li>
+            </ol>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1654400"></a>DB_LOCK_DEADLOCK</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A transactional database environment operation was selected to resolve
+                a deadlock.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1654264"></a>DB_LOCK_NOTGRANTED</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A Berkeley DB Concurrent Data Store database environment configured
+                for lock timeouts was unable to grant a lock in the allowed time.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1654265"></a> DB_REP_HANDLE_DEAD</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                When a client synchronizes with the master, it is possible for committed
+                transactions to be rolled back. This invalidates all  the database and cursor
+                handles opened in the replication environment. Once this occurs, an attempt to use
+                such a handle will 
+                
+                return <code class="literal">DB_REP_HANDLE_DEAD</code>.
+                The application will need to discard the handle and open a new one in order to
+                continue processing.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1654409"></a>DB_REP_LOCKOUT</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                The operation was blocked by client/master synchronization.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1654502"></a>DB_SECONDARY_BAD</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A secondary index references a nonexistent primary key.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1653232"></a>EACCES</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                An attempt was made to modify a read-only database.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1653233"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                If the cursor has not been initialized; or if an invalid flag value or parameter was specified.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1654299"></a>EPERM</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+               Write attempted on read-only cursor when the
+               <a class="link" href="envopen.html#envopen_DB_INIT_CDB">DB_INIT_CDB</a>
+               flag was specified to <a class="xref" href="envopen.html" title="DB_ENV-&gt;open()">DB_ENV-&gt;open()</a>. 
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1654300"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                 <a class="link" href="dbc.html" title="Chapter 3.  The DBcursor Handle">DBcursor</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1654281"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="dbc.html#dbclist" title="Database Cursors and Related Methods">Database Cursors and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbccount.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="dbc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbcdup.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DBcursor-&gt;count() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DBcursor-&gt;dup()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

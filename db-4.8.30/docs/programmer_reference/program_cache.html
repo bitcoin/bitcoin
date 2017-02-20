@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Disk drive caches</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="program.html" title="Chapter 14.  Programmer Notes" />
+    <link rel="prev" href="program_ram.html" title="Memory-only or Flash configurations" />
+    <link rel="next" href="program_copy.html" title="Copying or moving databases" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Disk drive caches</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="program_ram.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 14. 
+        Programmer Notes
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="program_copy.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="program_cache"></a>Disk drive caches</h2>
+          </div>
+        </div>
+      </div>
+      <p>Many disk drives contain onboard caches.  Some of these drives include
+battery-backup or other functionality that guarantees that all cached
+data will be completely written if the power fails.  These drives can
+offer substantial performance improvements over drives without caching
+support.  However, some caching drives rely on capacitors or other
+mechanisms that guarantee only that the write of the current sector
+will complete.  These drives can endanger your database and potentially
+cause corruption of your data.</p>
+      <p>To avoid losing your data, make sure the caching on your disk drives is
+properly configured so the drive will never report that data has been written
+unless the data is guaranteed to be written in the face of a power failure.
+Many times, this means that write-caching on the disk drive must
+be disabled.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="program_ram.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="program.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="program_copy.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Memory-only or Flash configurations </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Copying or moving databases</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

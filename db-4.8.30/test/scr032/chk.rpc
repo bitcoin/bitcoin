@@ -1,0 +1,82 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Check to make sure that the code samples in the documents build.
+
+r=../../rpc_server/rpc.src
+i=../../dbinc/db.in
+
+t1=__1
+t2=__2
+
+[ -d ../../dbinc ] || {
+	echo 'FAIL: cannot find source distribution directory.'
+	exit 1
+}
+
+exitv=0
+
+# $1: handle name
+# $2: handle prefix
+# $3: method file
+check()
+{
+	echo "==== Checking $1/$2..."
+
+	# Build a list of DB_ENV handle methods from the include file.
+	sed -e "/$1 PUBLIC HANDLE LIST BEGIN/,/$1 PUBLIC HANDLE LIST END/p" \
+	    -e d < $i |
+	grep '[\* ](\*[a-z]' |
+	sed -e 's/).*$//' \
+	    -e 's/.*(\*//' \
+	    -e '/^$/d' > $t1
+
+	# Build a list of handle methods from the rpc.src file.
+	egrep '^BEGIN|^LOCAL|^NOFUNC' $r |
+	awk '{print $2}' |
+	egrep "^$2_" |
+	sed -e "/^$2_create/d" \
+	    -e "s/$2_//" > $t2
+
+	if cmp -s $t1 $t2 ; then
+		:
+	else
+		echo "FAIL: $1 handle methods do not match."
+		echo "<<< dbinc/db.in >>> rpc_server/rpc.src"
+		diff $t1 $t2
+		exit 1
+	fi
+
+	if [ -z "$3" ]; then
+		return
+	fi
+
+	# Build a list of handle methods from the env/env_method.c and
+	# db/db_method.c files.
+	sed -e "/$1 PUBLIC HANDLE LIST BEGIN/,/$1 PUBLIC HANDLE LIST END/p" \
+	    -e d < "$3" |
+	sed -e '/^#ifdef.HAVE_REPLICATION_THREADS/d' \
+	    -e '/^#else.*HAVE_REPLICATION_THREADS/,/^#endif/d' \
+	    -e '/PUBLIC/d' \
+	    -e 's/ = .*//' \
+	    -e 's/^.*->//' > $t2
+
+	if cmp -s $t1 $t2 ; then
+		:
+	else
+		echo "FAIL: $1 handle methods do not match."
+		echo "<<< dbinc/db.in >>> $3"
+		diff $t1 $t2
+		exit 1
+	fi
+}
+
+# We don't check the DB handle method limits from db/db_method.c, DB handle
+# methods are set in per-access method routines, they aren't consolidated.
+check DB db
+check DBC dbc
+check DB_ENV env ../../env/env_method.c
+check DB_TXN txn
+
+exit $exitv

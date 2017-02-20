@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Selecting an access method</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="am_conf.html" title="Chapter 2.  Access Method Configuration" />
+    <link rel="prev" href="am_conf.html" title="Chapter 2.  Access Method Configuration" />
+    <link rel="next" href="am_conf_logrec.html" title="Logical record numbers" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Selecting an access method</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="am_conf.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+        Access Method Configuration
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="am_conf_logrec.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="am_conf_select"></a>Selecting an access method</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="am_conf_select.html#id1589084">Hash or Btree?</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="am_conf_select.html#id1589088">Queue or Recno?</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>The Berkeley DB access method implementation unavoidably interacts with each
+application's data set, locking requirements and data access patterns.
+For this reason, one access method may result in dramatically better
+performance for an application than another one.  Applications whose data
+could be stored using more than one access method may want to benchmark
+their performance using the different candidates.</p>
+      <p>One of the strengths of Berkeley DB is that it provides multiple access methods
+with nearly identical interfaces to the different access methods.  This
+means that it is simple to modify an application to use a different access
+method.  Applications can easily benchmark the different Berkeley DB access
+methods against each other for their particular data set and access pattern.</p>
+      <p>Most applications choose between using the Btree or Hash access methods
+or between using the Queue and Recno access methods, because each of the
+two pairs offer similar functionality.</p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1589084"></a>Hash or Btree?</h3>
+            </div>
+          </div>
+        </div>
+        <p>The Hash and Btree access methods should be used when logical record
+numbers are not the primary key used for data access.  (If logical record
+numbers are a secondary key used for data access, the Btree access method
+is a possible choice, as it supports simultaneous access by a key and a
+record number.)</p>
+        <p>Keys in Btrees are stored in sorted order and the relationship between
+them is defined by that sort order.  For this reason, the Btree access
+method should be used when there is any locality of reference among keys.
+Locality of reference means that accessing one particular key in the
+Btree implies that the application is more likely to access keys near to
+the key being accessed, where "near" is defined by the sort order.  For
+example, if keys are timestamps, and it is likely that a request for an
+8AM timestamp will be followed by a request for a 9AM timestamp, the
+Btree access method is generally the right choice.  Or, for example, if
+the keys are names, and the application will want to review all entries
+with the same last name, the Btree access method is again a good choice.</p>
+        <p>There is little difference in performance between the Hash and Btree
+access methods on small data sets, where all, or most of, the data set
+fits into the cache.  However, when a data set is large enough that
+significant numbers of data pages no longer fit into the cache, then
+the Btree locality of reference described previously becomes important
+for performance reasons.  For example, there is no locality of reference
+for the Hash access method, and so key "AAAAA" is as likely to be stored
+on the same database page with key "ZZZZZ" as with key "AAAAB".  In the
+Btree access method, because items are sorted, key "AAAAA" is far more
+likely to be near key "AAAAB" than key "ZZZZZ".  So, if the application
+exhibits locality of reference in its data requests, then the Btree page
+read into the cache to satisfy a request for key "AAAAA" is much more
+likely to be useful to satisfy subsequent requests from the application
+than the Hash page read into the cache to satisfy the same request.
+This means that for applications with locality of reference, the cache
+is generally much more effective for the Btree access method than the
+Hash access method, and the Btree access method will make many fewer
+I/O calls.</p>
+        <p>However, when a data set becomes even larger, the Hash access method can
+outperform the Btree access method.  The reason for this is that Btrees
+contain more metadata pages than Hash databases.  The data set can grow
+so large that metadata pages begin to dominate the cache for the Btree
+access method.  If this happens, the Btree can be forced to do an I/O
+for each data request because the probability that any particular data
+page is already in the cache becomes quite small.  Because the Hash access
+method has fewer metadata pages, its cache stays "hotter" longer in the
+presence of large data sets.  In addition, once the data set is so large
+that both the Btree and Hash access methods are almost certainly doing
+an I/O for each random data request, the fact that Hash does not have to
+walk several internal pages as part of a key search becomes a performance
+advantage for the Hash access method as well.</p>
+        <p>Application data access patterns strongly affect all of these behaviors,
+for example, accessing the data by walking a cursor through the database
+will greatly mitigate the large data set behavior describe above because
+each I/O into the cache will satisfy a fairly large number of subsequent
+data requests.</p>
+        <p>In the absence of information on application data and data access
+patterns, for small data sets either the Btree or Hash access methods
+will suffice.  For data sets larger than the cache, we normally recommend
+using the Btree access method.  If you have truly large data, then the
+Hash access method may be a better choice.  The <a href="../api_reference/C/db_stat.html" class="olink">db_stat utility</a>
+is a useful tool for monitoring how well your cache is performing.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1589088"></a>Queue or Recno?</h3>
+            </div>
+          </div>
+        </div>
+        <p>The Queue or Recno access methods should be used when logical record
+numbers are the primary key used for data access.  The advantage of the
+Queue access method is that it performs record level locking and for this
+reason supports significantly higher levels of concurrency than the Recno
+access method.  The advantage of the Recno access method is that it
+supports a number of additional features beyond those supported by the
+Queue access method, such as variable-length records and support for
+backing flat-text files.</p>
+        <p>Logical record numbers can be mutable or fixed: mutable, where logical
+record numbers can change as records are deleted or inserted, and fixed,
+where record numbers never change regardless of the database operation.
+It is possible to store and retrieve records based on logical record
+numbers in the Btree access method.  However, those record numbers are
+always mutable, and as records are deleted or inserted, the logical record
+number for other records in the database will change. The Queue access
+method always runs in fixed mode, and logical record numbers never change
+regardless of the database operation. The Recno access method can be
+configured to run in either mutable or fixed mode.</p>
+        <p>In addition, the Recno access method provides support for databases whose
+permanent storage is a flat text file and the database is used as a fast,
+temporary storage area while the data is being read or modified.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="am_conf.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="am_conf.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="am_conf_logrec.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 2. 
+        Access Method Configuration
+         </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Logical record numbers</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

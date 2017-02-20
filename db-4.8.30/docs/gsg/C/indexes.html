@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 5. Secondary Databases</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="prev" href="CoreCursorUsage.html" title="Cursor Example" />
+    <link rel="next" href="keyCreator.html" title="Implementing Key Extractors" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 5. Secondary Databases</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="CoreCursorUsage.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="keyCreator.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="indexes"></a>Chapter 5. Secondary Databases</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="indexes.html#CoreDbAssociate">Opening and Closing Secondary Databases</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="keyCreator.html">Implementing Key 
+        
+        <span>Extractors</span>
+        </a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="keyCreator.html#multikeys">Working with Multiple Keys</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <span class="sect1">
+              <a href="readSecondary.html">Reading Secondary Databases</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="secondaryDelete.html">Deleting Secondary Database Records</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="secondaryCursor.html">
+        
+        <span>Using Cursors with Secondary Databases</span>
+    </a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="joins.html">Database Joins</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="joins.html#joinUsage">Using Join Cursors</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <span class="sect1">
+              <a href="coreindexusage.html">Secondary Database Example</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="coreindexusage.html#edlWIndexes">Secondary Databases with example_database_load</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="coreindexusage.html#edrWIndexes">Secondary Databases with example_database_read</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+        </dl>
+      </div>
+      <p>
+    Usually you find database records by means of the record's key.  However,
+    the key that you use for your record will not always contain the
+    information required to provide you with rapid access to the data that you
+    want to retrieve. For example, suppose your 
+        
+        <span>database</span>
+    contains records related to users. The key might be a string that is some
+    unique identifier for the person, such as a user ID. Each record's data,
+    however, would likely contain a complex object containing details about
+    people such as names, addresses, phone numbers, and so forth.
+    While your application may frequently want to query a person by user
+    ID (that is, by the information stored in the key), it may also on occasion
+    want to locate people by, say, their name.
+  </p>
+      <p>
+    Rather than iterate through all of the records in your database, examining
+    each in turn for a given person's name, you create indexes based on names
+    and then just search that index for the name that you want.  You can do this
+    using secondary databases. In DB, the 
+        
+        <span>database</span> 
+    that contains your data is called a
+    <span class="emphasis"><em>primary database</em></span>. A database that provides an
+    alternative set of keys to access that data is called a <span class="emphasis"><em>secondary
+    database</em></span><span>.</span> In a secondary database, the keys are your alternative 
+    (or secondary) index, and the data corresponds to a primary record's key.
+  </p>
+      <p>
+    You create a secondary database by creating the database, opening it, and
+    then <span class="emphasis"><em>associating</em></span> the database with 
+    the <span class="emphasis"><em>primary</em></span> database (that is, the database for which
+    you are creating the index). As a part of associating
+    the secondary database to the primary, you must provide a callback that is
+    used to create the secondary database keys. Typically this callback creates
+    a key based on data found in the primary database record's key or data.
+  </p>
+      <p>
+  Once opened, DB manages secondary databases for you. Adding or deleting
+  records in your primary database causes DB to update the secondary as
+  necessary. Further, changing a record's data in the primary database may cause
+  DB to modify a record in the secondary, depending on whether the change
+  forces a modification of a key in the secondary database.
+  </p>
+      <p>
+    Note that you can not write directly to a secondary database. 
+
+    
+
+    <span>Any attempt to write to a secondary database
+    results in a non-zero status return.</span>
+    
+    To change the data referenced by a 
+        
+        <span>secondary</span>
+    record, modify the primary database instead. The exception to this rule is
+    that delete operations are allowed on the
+         
+        <span>secondary database.</span> 
+    
+    See <a class="xref" href="secondaryDelete.html" title="Deleting Secondary Database Records">Deleting Secondary Database Records</a> for more
+    information.
+  </p>
+      <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+        <h3 class="title">Note</h3>
+        <p>
+
+        Secondary database records are updated/created by DB 
+        only if the 
+            
+            <span>key creator callback function</span>
+        returns 
+             
+            <span><code class="literal">0</code>.</span> 
+        If 
+             
+            <span>a value other than <code class="literal">0</code></span>
+        is returned, then DB will not add the key to the secondary database, and 
+        in the event of a record update it will remove any existing key. 
+
+        <span>Note that the callback can use either
+        <code class="literal">DB_DONOTINDEX</code> or some error code outside of DB's
+        name space to indicate that the entry should not be indexed.</span>
+
+     </p>
+        <p>
+        See <a class="xref" href="keyCreator.html" title="Implementing Key Extractors">Implementing Key 
+        
+        <span>Extractors</span>
+        </a> for more
+            
+            <span>information.</span>
+    
+    </p>
+      </div>
+      <p>
+    When you read a record from a secondary database, DB automatically
+    returns 
+         
+        <span>the data and optionally the key</span> 
+    from the corresponding record in the primary database.
+    
+  </p>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="CoreDbAssociate"></a>Opening and Closing Secondary Databases</h2>
+            </div>
+          </div>
+        </div>
+        <p>
+        You manage secondary database opens and closes in the same way as you
+        would any normal database. The only difference is that:
+    </p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+                You must associate the secondary to a primary database using
+                    <span><code class="methodname">DB-&gt;associate()</code>.</span>
+                    
+            </p>
+            </li>
+            <li>
+              <p>
+                When closing your databases, it is a good idea to make sure you
+                close your secondaries before closing your primaries. This is
+                particularly true if your database closes are not single
+                threaded.
+            </p>
+            </li>
+          </ul>
+        </div>
+        <p>
+        When you associate a secondary to a primary database, you must provide a
+        callback that is used to generate the secondary's keys. These
+        callbacks are described in the next section.
+     </p>
+        <p>
+        For example, to open a secondary database and associate it to a primary
+        database:
+     </p>
+        <a id="c_index1"></a>
+        <pre class="programlisting">#include &lt;db.h&gt;
+
+...
+
+DB *dbp, *sdbp;    /* Primary and secondary DB handles */
+u_int32_t flags;   /* Primary database open flags */
+int ret;           /* Function return value */
+                                                                                                                                     
+/* Primary */
+ret = db_create(&amp;dbp, NULL, 0);
+if (ret != 0) {
+  /* Error handling goes here */
+}
+                                                                                                                                     
+/* Secondary */
+ret = db_create(&amp;sdbp, NULL, 0);
+if (ret != 0) {
+  /* Error handling goes here */
+}
+
+/* Usually we want to support duplicates for secondary databases */
+ret = sdbp-&gt;set_flags(sdbp, DB_DUPSORT);
+if (ret != 0) {
+  /* Error handling goes here */
+}
+
+
+/* Database open flags */
+flags = DB_CREATE;    /* If the database does not exist,
+                       * create it.*/
+
+/* open the primary database */
+ret = dbp-&gt;open(dbp,        /* DB structure pointer */
+                NULL,       /* Transaction pointer */
+                "my_db.db", /* On-disk file that holds the database. */
+                NULL,       /* Optional logical database name */
+                DB_BTREE,   /* Database access method */
+                flags,      /* Open flags */
+                0);         /* File mode (using defaults) */
+if (ret != 0) {
+  /* Error handling goes here */
+}
+
+/* open the secondary database */
+ret = sdbp-&gt;open(sdbp,          /* DB structure pointer */
+                 NULL,          /* Transaction pointer */
+                 "my_secdb.db", /* On-disk file that holds the database. */
+                 NULL,          /* Optional logical database name */
+                 DB_BTREE,      /* Database access method */
+                 flags,         /* Open flags */
+                 0);            /* File mode (using defaults) */
+if (ret != 0) {
+  /* Error handling goes here */
+}
+
+/* Now associate the secondary to the primary */
+dbp-&gt;associate(dbp,            /* Primary database */
+               NULL,           /* TXN id */
+               sdbp,           /* Secondary database */
+               get_sales_rep,  /* Callback used for key creation. Not 
+                                * defined in this example. See the next
+                                * section. */
+               0);              /* Flags */</pre>
+        <p>
+    Closing the primary and secondary databases is accomplished exactly as you
+    would for any database:
+  </p>
+        <a id="c_index2"></a>
+        <pre class="programlisting">/* Close the secondary before the primary */
+if (sdbp != NULL)
+    sdbp-&gt;close(sdbp, 0);
+if (dbp != NULL)
+    dbp-&gt;close(dbp, 0); </pre>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="CoreCursorUsage.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="keyCreator.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Cursor Example </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Implementing Key 
+        
+        <span>Extractors</span>
+        </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

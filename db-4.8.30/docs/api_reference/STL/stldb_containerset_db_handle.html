@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>set_db_handle</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ Standard Template Library API Reference" />
+    <link rel="up" href="db_container.html" title="Chapter 3.  Db_container" />
+    <link rel="prev" href="stldb_containerget_db_env_handle.html" title="get_db_env_handle" />
+    <link rel="next" href="stldb_containerset_all_flags.html" title="set_all_flags" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">
+set_db_handle
+</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="stldb_containerget_db_env_handle.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. 
+ Db_container  </th>
+          <td width="20%" align="right"> <a accesskey="n" href="stldb_containerset_all_flags.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="stldb_containerset_db_handle"></a>
+set_db_handle
+</h2>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="func_details"></a>
+Function Details</h3>
+            </div>
+          </div>
+        </div>
+        <pre class="programlisting">
+void set_db_handle(Db *dbp,
+    DbEnv *newenv=NULL)
+ </pre>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage"></div>
+          <p>Set the underlying database's handle, and optionally environment handle if the environment has also changed. </p>
+          <p>That is, users can change the container object's underlying database while the object is alive. dbstl will verify that the handles set conforms to the concrete container's requirement to Berkeley DB database/environment handles. </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1544249"></a>
+Parameters</h4>
+              </div>
+            </div>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1544733"></a>
+ dbp </h5>
+                </div>
+              </div>
+            </div>
+            <p>The database handle to set. </p>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1544728"></a>
+ newenv </h5>
+                </div>
+              </div>
+            </div>
+            <p>The database environment handle to set. </p>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1544741"></a>
+Group: Get and set functions for data members.</h3>
+            </div>
+          </div>
+        </div>
+        <p>Note that these functions are not thread safe, because all data members of <a class="link" href="db_container.html" title="Chapter 3.  Db_container">db_container</a>
+ are supposed to be set on container construction and initialization, and remain read only afterwards. </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1544811"></a>
+Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+  <a class="link" href="db_container.html" title="Chapter 3.  Db_container">
+  db_container</a>
+     </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="stldb_containerget_db_env_handle.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="db_container.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="stldb_containerset_all_flags.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+get_db_env_handle
+ </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+set_all_flags
+</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

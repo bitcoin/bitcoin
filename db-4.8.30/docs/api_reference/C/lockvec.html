@@ -1,0 +1,481 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB_ENV-&gt;lock_vec()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="lock.html" title="Chapter 6.  The DB_LOCK Handle" />
+    <link rel="prev" href="lockstat_print.html" title="DB_ENV-&gt;lock_stat_print()" />
+    <link rel="next" href="lsn.html" title="Chapter 7.  The DB_LSN Handle" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB_ENV-&gt;lock_vec()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="lockstat_print.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 6. 
+                The DB_LOCK Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="lsn.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="lockvec"></a>DB_ENV-&gt;lock_vec()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB_ENV-&gt;lock_vec(DB_ENV *env, u_int32_t locker, u_int32_t flags,
+    DB_LOCKREQ list[], int nlist, DB_LOCKREQ **elistp);  </pre>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;lock_vec()</code> method atomically obtains and releases one or
+         more locks from the lock table.  The <code class="methodname">DB_ENV-&gt;lock_vec()</code> method is
+         intended to support acquisition or trading of multiple locks under one
+         lock table semaphore, as is needed for lock coupling or in
+         multigranularity locking for lock escalation.
+    </p>
+      <p>
+         If any of the requested locks cannot be acquired, or any of the locks
+         to be released cannot be released, the operations before the failing
+         operation are guaranteed to have completed successfully, and
+         <code class="methodname">DB_ENV-&gt;lock_vec()</code> returns a non-zero value.  In addition, if
+         <span class="bold"><strong>elistp</strong></span> is not NULL, it is set to
+         point to the DB_LOCKREQ entry that was being processed when the error
+         occurred.
+    </p>
+      <p>
+         Unless otherwise specified, the <code class="methodname">DB_ENV-&gt;lock_vec()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1679321"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1678958"></a>elistp</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If an error occurs, and the <span class="bold"><strong>elistp</strong></span>
+                          parameter is non-NULL, it is set to point to the DB_LOCKREQ entry that
+                          was being processed when the error occurred.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1679335"></a>flags</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>flags</strong></span> parameter must be set to 0
+                          or the following value:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="vec_DB_LOCK_NOWAIT"></a>
+                  <code class="literal">DB_LOCK_NOWAIT</code>
+            </p>
+                <p>
+                 If a lock cannot be granted because the requested lock conflicts with
+                 an existing lock, return DB_LOCK_NOTGRANTED immediately instead of
+                 waiting for the lock to become available.  In this case, if non-NULL,
+                 <span class="bold"><strong>elistp</strong></span> identifies the request that
+                 was not granted.
+            </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1679017"></a>locker</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>locker</strong></span> parameter is an unsigned
+                          32-bit integer quantity.  It represents the entity requesting or
+                          releasing the lock.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1679509"></a>list</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>list</strong></span> array provided to
+                          <code class="methodname">DB_ENV-&gt;lock_vec()</code> is typedef'd as DB_LOCKREQ.
+                     </p>
+          <p>
+                          To ensure compatibility with future releases of Berkeley DB, all
+                          fields of the DB_LOCKREQ structure that are not explicitly set should
+                          be initialized to 0 before the first time the structure is used.  Do
+                          this by declaring the structure external or static, or by calling
+                          <span class="bold"><strong>memset</strong></span>(3).
+                     </p>
+          <p>
+                          A DB_LOCKREQ structure has at least the following fields:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="vec_op"></a>
+                 <code class="literal">lockop_t op;</code>
+            </p>
+                <p>
+                 The operation to be performed, which must be set to one of the
+                 following values:
+            </p>
+                <div class="itemizedlist">
+                  <ul type="circle">
+                    <li>
+                      <p><a id="vec_DB_LOCK_GET"></a>
+                  <code class="literal">DB_LOCK_GET</code>
+            </p>
+                      <p>
+                 Get the lock defined by the values of the <span class="bold"><strong>mode</strong></span> and <span class="bold"><strong>obj</strong></span>
+                 structure fields, for the specified 
+                 <span class="bold"><strong>locker</strong></span>.  
+                 Upon return from <code class="methodname">DB_ENV-&gt;lock_vec()</code>,
+                 if the <span class="bold"><strong>lock</strong></span> field is non-NULL, a
+                 reference to the acquired lock is stored there.  (This reference is
+                 invalidated by any call to <code class="methodname">DB_ENV-&gt;lock_vec()</code> or 
+                 <a class="xref" href="lockput.html" title="DB_ENV-&gt;lock_put()">DB_ENV-&gt;lock_put()</a>  that releases
+                 the lock.)
+            </p>
+                    </li>
+                    <li>
+                      <p><a id="vec_DB_LOCK_GET_TIMEOUT"></a>
+                  <code class="literal">DB_LOCK_GET_TIMEOUT</code>
+            </p>
+                      <p>
+                 Identical to DB_LOCK_GET except that the value in the <span class="bold"><strong>timeout</strong></span> structure field overrides any
+                 previously specified timeout value for this lock.  A value of 0 turns
+                 off any previously specified timeout.
+            </p>
+                    </li>
+                    <li>
+                      <p><a id="vec_DB_LOCK_PUT"></a>
+                  <code class="literal">DB_LOCK_PUT</code>
+            </p>
+                      <p>
+                 The lock to which the <span class="bold"><strong>lock</strong></span> structure
+                 field refers is released. The <span class="bold"><strong>locker</strong></span>
+                 parameter, and <span class="bold"><strong>mode</strong></span> and <span class="bold"><strong>obj</strong></span> fields are ignored.
+            </p>
+                    </li>
+                    <li>
+                      <p><a id="vec_DB_LOCK_PUT_ALL"></a>
+                  <code class="literal">DB_LOCK_PUT_ALL</code>
+            </p>
+                      <p>
+                 All locks held by the specified <span class="bold"><strong>locker</strong></span> are released.  The <span class="bold"><strong>lock</strong></span>, <span class="bold"><strong>mode</strong></span>,
+                 and <span class="bold"><strong>obj</strong></span> structure fields are ignored.
+                  Locks acquired in operations performed by the current call to
+                 <code class="methodname">DB_ENV-&gt;lock_vec()</code> which appear before the DB_LOCK_PUT_ALL operation
+                 are released; those acquired in operations appearing after the
+                 DB_LOCK_PUT_ALL operation are not released.
+            </p>
+                    </li>
+                    <li>
+                      <p><a id="vec_DB_LOCK_PUT_OBJ"></a>
+                  <code class="literal">DB_LOCK_PUT_OBJ</code>
+            </p>
+                      <p>
+                 All locks held on <span class="bold"><strong>obj</strong></span> are released. 
+                 The <span class="bold"><strong>locker</strong></span> parameter and the
+                 <span class="bold"><strong>lock</strong></span> and <span class="bold"><strong>mode</strong></span> structure fields are ignored.  Locks
+                 acquired in operations performed by the current call to
+                 <code class="methodname">DB_ENV-&gt;lock_vec()</code> that appear before the DB_LOCK_PUT_OBJ operation
+                 are released; those acquired in operations appearing after the
+                 DB_LOCK_PUT_OBJ operation are not released.
+            </p>
+                    </li>
+                    <li>
+                      <p><a id="vec_DB_LOCK_TIMEOUT"></a>
+                  <code class="literal">DB_LOCK_TIMEOUT</code>
+            </p>
+                      <p>
+                 Cause the specified <span class="bold"><strong>locker</strong></span> to timeout
+                 immediately.  If the database environment has not configured automatic
+                 deadlock detection, the transaction will timeout the next time
+                 deadlock detection is performed.  As transactions acquire locks on
+                 behalf of a single locker ID, timing out the locker ID associated with
+                 a transaction will time out the transaction itself.
+            </p>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li>
+                <p><a id="vec_lock"></a>
+                  <code class="literal">DB_LOCK lock;</code>
+            </p>
+                <p>
+                A lock reference.
+            </p>
+              </li>
+              <li>
+                <p><a id="vec_mode"></a>
+                  <code class="literal">const lockmode_t mode;</code>
+            </p>
+                <p>
+                 The lock mode, used as an index into the environment's lock conflict
+                 matrix. When using the default lock conflict matrix, <span class="bold"><strong>mode</strong></span> must be set to one of the following
+                 values:
+            </p>
+                <div class="itemizedlist">
+                  <ul type="circle">
+                    <li>
+                      <p><a id="vec_DB_LOCK_READ"></a>
+                  <code class="literal">DB_LOCK_READ</code>
+            </p>
+                      <p>
+                read (shared)
+            </p>
+                    </li>
+                    <li>
+                      <p><a id="vec_DB_LOCK_WRITE"></a>
+                  <code class="literal">DB_LOCK_WRITE</code>
+            </p>
+                      <p>
+                write (exclusive)
+            </p>
+                    </li>
+                    <li>
+                      <p><a id="vec_DB_LOCK_IWRITE"></a>
+                  <code class="literal">DB_LOCK_IWRITE</code>
+            </p>
+                      <p>
+                intention to write (shared)
+            </p>
+                    </li>
+                    <li>
+                      <p><a id="vec_DB_LOCK_IREAD"></a>
+                  <code class="literal">DB_LOCK_IREAD</code>
+            </p>
+                      <p>
+                intention to read (shared)
+            </p>
+                    </li>
+                    <li>
+                      <p><a id="vec_DB_LOCK_IWR"></a>
+                  <code class="literal">DB_LOCK_IWR</code>
+            </p>
+                      <p>
+                intention to read and write (shared)
+            </p>
+                    </li>
+                  </ul>
+                </div>
+                <p>
+                 See <a class="xref" href="envset_lk_conflicts.html" title="DB_ENV-&gt;set_lk_conflicts()">DB_ENV-&gt;set_lk_conflicts()</a> 
+                 and <a href="../../programmer_reference/lock_stdmode.html" class="olink">Standard Lock Modes</a>
+                 for more information on the lock conflict matrix.
+            </p>
+              </li>
+              <li>
+                <p>
+                         <span class="bold"><a id="obj"></a><strong>const DBT obj;</strong></span>
+                     </p>
+                <p>
+                         An untyped byte string that specifies the object to be locked or
+                         released.  Applications using the locking subsystem directly while
+                         also doing locking via the Berkeley DB access methods must take care
+                         not to inadvertently lock objects that happen to be equal to the
+                         unique file IDs used to lock files.  See 
+                         <a href="../../programmer_reference/lock_am_conv.html" class="olink">Access method locking 
+                             conventions</a> in the
+                         <em class="citetitle">Berkeley DB Programmer's Reference Guide</em> for more information.
+                     </p>
+              </li>
+              <li>
+                <p>
+                         <span class="bold"><strong>u_int32_t timeout;</strong></span>
+                </p>
+                <p>
+                        The lock timeout value.
+                </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1679972"></a>nlist</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>nlist</strong></span> parameter specifies the
+                          number of elements in the <span class="bold"><strong>list</strong></span> array.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1680096"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DB_ENV-&gt;lock_vec()</code> <span>
+            <span>
+                 method may fail and return one of the following non-zero errors:
+            </span>
+            
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1679525"></a>DB_LOCK_DEADLOCK</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A transactional database environment operation was selected to resolve
+                a deadlock.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1679668"></a>DB_LOCK_NOTGRANTED</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A Berkeley DB Concurrent Data Store database environment configured
+                for lock timeouts was unable to grant a lock in the allowed time.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1679658"></a>DB_LOCK_NOTGRANTED</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                The <a class="link" href="lockvec.html#vec_DB_LOCK_NOWAIT">DB_LOCK_NOWAIT</a>
+                flag or lock timers were configured and the lock could not be granted
+                before the wait-time expired.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1679396"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                An invalid flag value or parameter was specified.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1679625"></a>ENOMEM</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                The maximum number of locks has been reached.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1679316"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                    <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>, 
+                    <a class="link" href="lock.html" title="Chapter 6.  The DB_LOCK Handle">DB_LOCK</a> 
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1679348"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="lock.html#locklist" title="Locking Subsystem and Related Methods">Locking Subsystem and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="lockstat_print.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="lock.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="lsn.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB_ENV-&gt;lock_stat_print() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 7. 
+                The DB_LSN Handle
+        </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

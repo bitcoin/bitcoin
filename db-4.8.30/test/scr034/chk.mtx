@@ -1,0 +1,34 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Check to make sure __mutex_print_id knows about all of the mutex types.
+
+d=../../
+
+[ -d $d/mutex ] || {
+	echo 'FAIL: cannot find source distribution directory.'
+	exit 1
+}
+
+t1=__1
+t2=__2
+
+egrep 'case MTX_.*return' $d/mutex/mut_stat.c |
+sed -e 's/.*case //' \
+    -e 's/:.*//' |
+sort > $t1
+
+egrep '#define.MTX_' $d/dbinc/mutex.h |
+sed -e 's/#define.//' \
+    -e 's/	.*//' \
+    -e '/MTX_MAX_ENTRY/d' |
+sort > $t2
+
+cmp $t1 $t2 > /dev/null || {
+	echo "<<< mutex/mut_stat.c >>> dbinc/mutex.h"
+	diff $t1 $t2
+	exit 1
+}
+
+exit 0

@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 9. Using Cursors</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="baseapi.html" title="Part II. Programming with the Base API" />
+    <link rel="prev" href="dbtJavaUsage.html" title="Database Usage Example" />
+    <link rel="next" href="Positioning.html" title="Getting Records Using the Cursor" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 9. Using Cursors</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbtJavaUsage.html">Prev</a> </td>
+          <th width="60%" align="center">Part II. Programming with the Base API</th>
+          <td width="20%" align="right"> <a accesskey="n" href="Positioning.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="Cursors"></a>Chapter 9. Using Cursors</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="Cursors.html#openCursor">Opening and Closing Cursors</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="Positioning.html">Getting Records Using the Cursor</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="Positioning.html#cursorsearch">Searching for Records</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="Positioning.html#getdups">Working with Duplicate Records</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <span class="sect1">
+              <a href="PutEntryWCursor.html">Putting Records Using Cursors</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="DeleteEntryWCursor.html">Deleting Records Using Cursors</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="ReplacingEntryWCursor.html">Replacing Records Using Cursors</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="cursorJavaUsage.html">Cursor Example</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+    Cursors provide a mechanism by which you can iterate over the records in a
+    database. Using cursors, you can get, put, and delete database records.  If
+    a database allows duplicate records, then cursors are 
+    
+    
+
+    <span>the easiest way that you can access anything
+    other than the first record for a given key.</span>
+  </p>
+      <p>
+    This chapter introduces cursors. It explains how to open and close them, how
+    to use them to modify databases, and how to use them with duplicate records.
+  </p>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="openCursor"></a>Opening and Closing Cursors</h2>
+            </div>
+          </div>
+        </div>
+        <p>
+        To use a cursor, you must open it using the <code class="methodname">Database.openCursor()</code> 
+        method. When you open a
+        cursor, you can optionally pass it a <code class="classname">CursorConfig</code> 
+        object to set cursor properties. 
+        
+        <span>
+                The cursor properties that you can set allows you to
+                control the isolation level that the cursor will obey. See
+                the
+                <em class="citetitle">Berkeley DB Getting Started with Transaction Processing</em> guide for more
+                information.
+        </span>
+    </p>
+        <p>For example:</p>
+        <a id="java_cursor1"></a>
+        <pre class="programlisting">package db.GettingStarted;
+    
+import com.sleepycat.db.Cursor;
+import com.sleepycat.db.Database;
+import com.sleepycat.db.DatabaseException;
+
+import java.io.FileNotFoundException;
+
+...
+Database myDatabase = null;
+Cursor myCursor = null;
+
+try {
+    myDatabase = new Database("myDB", null, null);
+
+    myCursor = myDatabase.openCursor(null, null);
+} catch (FileNotFoundException fnfe) {
+    // Exception handling goes here ...
+} catch (DatabaseException dbe) {
+    // Exception handling goes here ...
+}</pre>
+        <p>
+        To close the cursor, call the <code class="methodname">Cursor.close()</code>
+        method. Note that if you close a database that has cursors open in it,
+        then it will throw an exception and close any open cursors for you. 
+        For best results, close your cursors from within a 
+        <code class="literal">finally</code> block.
+        
+    </p>
+        <a id="java_cursor2"></a>
+        <pre class="programlisting">package db.GettingStarted;
+    
+import com.sleepycat.db.Cursor;
+import com.sleepycat.db.Database;
+
+...
+try {
+    ...
+} catch ... {
+} finally {
+    try {
+        if (myCursor != null) {
+            myCursor.close();
+        }
+
+        if (myDatabase != null) {
+            myDatabase.close();
+        }
+    } catch(DatabaseException dbe) {
+        System.err.println("Error in close: " + dbe.toString());
+    }
+} </pre>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbtJavaUsage.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="baseapi.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="Positioning.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Database Usage Example </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Getting Records Using the Cursor</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

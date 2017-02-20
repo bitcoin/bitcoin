@@ -1,0 +1,186 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{4696FB1E-1E5F-40B9-BD8C-A54D3BDA00F6}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <NoStandardLibraries>false</NoStandardLibraries>
+    <AssemblyName>libdb_dotnet48</AssemblyName>
+    <RootNamespace>BerkeleyDB</RootNamespace>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <StartupObject>
+    </StartupObject>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\build_windows\AnyCPU\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>doc\libdb_dotnet48.XML</DocumentationFile>
+    <NoWarn>419</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\build_windows\AnyCPU\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <DocumentationFile>doc\libdb_dotnet48.XML</DocumentationFile>
+    <NoWarn>419</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AckPolicy.cs" />
+    <Compile Include="ActiveTransaction.cs" />
+    <Compile Include="BaseCursor.cs" />
+    <Compile Include="BTreeCursor.cs" />
+    <Compile Include="BTreeDatabase.cs" />
+    <Compile Include="BTreeDatabaseConfig.cs" />
+    <Compile Include="BTreeStats.cs" />
+    <Compile Include="ByteOrder.cs" />
+    <Compile Include="CacheInfo.cs" />
+    <Compile Include="CachePriority.cs" />
+    <Compile Include="CompactConfig.cs" />
+    <Compile Include="BaseDatabase.cs" />
+    <Compile Include="CompactData.cs" />
+    <Compile Include="MultipleKeyDatabaseEntry.cs" />
+    <Compile Include="DatabaseEntry.cs" />
+    <Compile Include="DbThreadID.cs" />
+    <Compile Include="DeadlockPolicy.cs" />
+    <Compile Include="Enums.cs" />
+    <Compile Include="ErrorCodes.cs" />
+    <Compile Include="HashStats.cs" />
+    <Compile Include="Internal\DB_LOCKREQ.cs" />
+    <Compile Include="Internal\DB_PREPLIST.cs" />
+    <Compile Include="Internal\DB_REPMGR_SITE.cs" />
+    <Compile Include="Internal\DB_SEQUENCE.cs" />
+    <Compile Include="Internal\libdb_csharp.cs" />
+    <Compile Include="Internal\libdb_csharpPINVOKE.cs" />
+    <Compile Include="Internal\StatStructs.cs" />
+    <Compile Include="LockingConfig.cs" />
+    <Compile Include="LockOperation.cs" />
+    <Compile Include="DatabaseException.cs" />
+    <Compile Include="Delegates.cs" />
+    <Compile Include="Internal\db_lockop_t.cs" />
+    <Compile Include="LockRequest.cs" />
+    <Compile Include="LockStats.cs" />
+    <Compile Include="LogConfig.cs" />
+    <Compile Include="LogStats.cs" />
+    <Compile Include="MPoolConfig.cs" />
+    <Compile Include="MPoolFileStats.cs" />
+    <Compile Include="MPoolStats.cs" />
+    <Compile Include="MultipleDatabaseEntry.cs" />
+    <Compile Include="Mutex.cs" />
+    <Compile Include="MutexConfig.cs" />
+    <Compile Include="MutexStats.cs" />
+    <Compile Include="PreparedTransaction.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QueueStats.cs" />
+    <Compile Include="RecnoStats.cs" />
+    <Compile Include="ReplicationConfig.cs" />
+    <Compile Include="ReplicationHostAddress.cs" />
+    <Compile Include="ReplicationStats.cs" />
+    <Compile Include="RepMgrSite.cs" />
+    <Compile Include="RepMgrStats.cs" />
+    <Compile Include="RepProcMsgResult.cs" />
+    <Compile Include="SecondaryBTreeDatabase.cs" />
+    <Compile Include="SecondaryHashDatabase.cs" />
+    <Compile Include="SecondaryHashDatabaseConfig.cs" />
+    <Compile Include="SecondaryQueueDatabase.cs" />
+    <Compile Include="SecondaryQueueDatabaseConfig.cs" />
+    <Compile Include="SecondaryRecnoDatabase.cs" />
+    <Compile Include="SecondaryRecnoDatabaseConfig.cs" />
+    <Compile Include="CursorConfig.cs" />
+    <Compile Include="RecnoCursor.cs" />
+    <Compile Include="HashCursor.cs" />
+    <Compile Include="Cursor.cs" />
+    <Compile Include="Database.cs" />
+    <Compile Include="DatabaseConfig.cs" />
+    <Compile Include="DatabaseEnvironment.cs" />
+    <Compile Include="DatabaseEnvironmentConfig.cs" />
+    <Compile Include="DatabaseType.cs" />
+    <Compile Include="HashDatabase.cs" />
+    <Compile Include="HashDatabaseConfig.cs" />
+    <Compile Include="Internal\DB.cs" />
+    <Compile Include="Internal\DBC.cs" />
+    <Compile Include="Internal\DbConstants.cs" />
+    <Compile Include="Internal\DBT.cs" />
+    <Compile Include="Internal\DBTYPE.cs" />
+    <Compile Include="Internal\DB_COMPACT.cs" />
+    <Compile Include="Internal\DB_ENV.cs" />
+    <Compile Include="Internal\DB_KEY_RANGE.cs" />
+    <Compile Include="Internal\DB_LOCK.cs" />
+    <Compile Include="Internal\db_lockmode_t.cs" />
+    <Compile Include="Internal\DB_LSN.cs" />
+    <Compile Include="Internal\db_recops.cs" />
+    <Compile Include="Internal\DB_TXN.cs" />
+    <Compile Include="Internal\Delegates.cs" />
+    <Compile Include="JoinCursor.cs" />
+    <Compile Include="KeyRange.cs" />
+    <Compile Include="Lock.cs" />
+    <Compile Include="LockingInfo.cs" />
+    <Compile Include="LockMode.cs" />
+    <Compile Include="LSN.cs" />
+    <Compile Include="QueueDatabase.cs" />
+    <Compile Include="QueueDatabaseConfig.cs" />
+    <Compile Include="RecnoDatabase.cs" />
+    <Compile Include="RecnoDatabaseConfig.cs" />
+    <Compile Include="SecondaryBTreeDatabaseConfig.cs" />
+    <Compile Include="SecondaryCursor.cs" />
+    <Compile Include="SecondaryDatabase.cs" />
+    <Compile Include="SecondaryDatabaseConfig.cs" />
+    <Compile Include="Sequence.cs" />
+    <Compile Include="SequenceConfig.cs" />
+    <Compile Include="SequenceStats.cs" />
+    <Compile Include="Transaction.cs" />
+    <Compile Include="TransactionConfig.cs" />
+    <Compile Include="TransactionStats.cs" />
+    <Compile Include="VerboseMessages.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 2.0 %28x86%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.0 %28x86%29</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <ProjectExtensions>
+    <VisualStudio AllowExistingFolder="true" />
+  </ProjectExtensions>
+</Project>

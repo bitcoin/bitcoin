@@ -1,0 +1,110 @@
+# $Id$
+
+Note: this only applies to locking using test-and-set and fcntl calls,
+pthreads were added after this was written.
+
+Resource locking routines: lock based on a DB_MUTEX.  All this gunk
+(including trying to make assembly code portable), is necessary because
+System V semaphores require system calls for uncontested locks and we
+don't want to make two system calls per resource lock.
+
+First, this is how it works.  The DB_MUTEX structure contains a resource
+test-and-set lock (tsl), a file offset, a pid for debugging and statistics
+information.
+
+If HAVE_MUTEX_FCNTL is NOT defined (that is, we know how to do
+test-and-sets for this compiler/architecture combination), we try and
+lock the resource tsl some number of times (based on the number of
+processors).  If we can't acquire the mutex that way, we use a system
+call to sleep for 1ms, 2ms, 4ms, etc.  (The time is bounded at 10ms for
+mutexes backing logical locks and 25 ms for data structures, just in
+case.)  Using the timer backoff means that there are two assumptions:
+that mutexes are held for brief periods (never over system calls or I/O)
+and mutexes are not hotly contested.
+
+If HAVE_MUTEX_FCNTL is defined, we use a file descriptor to do byte
+locking on a file at a specified offset.  In this case, ALL of the
+locking is done in the kernel.  Because file descriptors are allocated
+per process, we have to provide the file descriptor as part of the lock
+call.  We still have to do timer backoff because we need to be able to
+block ourselves, that is, the lock manager causes processes to wait by
+having the process acquire a mutex and then attempting to re-acquire the
+mutex.  There's no way to use kernel locking to block yourself, that is,
+if you hold a lock and attempt to re-acquire it, the attempt will
+succeed.
+
+Next, let's talk about why it doesn't work the way a reasonable person
+would think it should work.
+
+Ideally, we'd have the ability to try to lock the resource tsl, and if
+that fails, increment a counter of waiting processes, then block in the
+kernel until the tsl is released.  The process holding the resource tsl
+would see the wait counter when it went to release the resource tsl, and
+would wake any waiting processes up after releasing the lock.  This would
+actually require both another tsl (call it the mutex tsl) and
+synchronization between the call that blocks in the kernel and the actual
+resource tsl.  The mutex tsl would be used to protect accesses to the
+DB_MUTEX itself.  Locking the mutex tsl would be done by a busy loop,
+which is safe because processes would never block holding that tsl (all
+they would do is try to obtain the resource tsl and set/check the wait
+count).  The problem in this model is that the blocking call into the
+kernel requires a blocking semaphore, i.e. one whose normal state is
+locked.
+
+The only portable forms of locking under UNIX are fcntl(2) on a file
+descriptor/offset, and System V semaphores.  Neither of these locking
+methods are sufficient to solve the problem.
+
+The problem with fcntl locking is that only the process that obtained the
+lock can release it.  Remember, we want the normal state of the kernel
+semaphore to be locked.  So, if the creator of the DB_MUTEX were to
+initialize the lock to "locked", then a second process locks the resource
+tsl, and then a third process needs to block, waiting for the resource
+tsl, when the second process wants to wake up the third process, it can't
+because it's not the holder of the lock!  For the second process to be
+the holder of the lock, we would have to make a system call per
+uncontested lock, which is what we were trying to get away from in the
+first place.
+
+There are some hybrid schemes, such as signaling the holder of the lock,
+or using a different blocking offset depending on which process is
+holding the lock, but it gets complicated fairly quickly.  I'm open to
+suggestions, but I'm not holding my breath.
+
+Regardless, we use this form of locking when we don't have any other
+choice, because it doesn't have the limitations found in System V
+semaphores, and because the normal state of the kernel object in that
+case is unlocked, so the process releasing the lock is also the holder
+of the lock.
+
+The System V semaphore design has a number of other limitations that make
+it inappropriate for this task.  Namely:
+
+First, the semaphore key name space is separate from the file system name
+space (although there exist methods for using file names to create
+semaphore keys).  If we use a well-known key, there's no reason to believe
+that any particular key will not already be in use, either by another
+instance of the DB application or some other application, in which case
+the DB application will fail.  If we create a key, then we have to use a
+file system name to rendezvous and pass around the key.
+
+Second, System V semaphores traditionally have compile-time, system-wide
+limits on the number of semaphore keys that you can have.  Typically, that
+number is far too low for any practical purpose.  Since the semaphores
+permit more than a single slot per semaphore key, we could try and get
+around that limit by using multiple slots, but that means that the file
+that we're using for rendezvous is going to have to contain slot
+information as well as semaphore key information, and we're going to be
+reading/writing it on every db_mutex_t init or destroy operation.  Anyhow,
+similar compile-time, system-wide limits on the numbers of slots per
+semaphore key kick in, and you're right back where you started.
+
+My fantasy is that once POSIX.1 standard mutexes are in wide-spread use,
+we can switch to them.  My guess is that it won't happen, because the
+POSIX semaphores are only required to work for threads within a process,
+and not independent processes.
+
+Note: there are races in the statistics code, but since it's just that,
+I didn't bother fixing them.  (The fix requires a mutex tsl, so, when/if
+this code is fixed to do rational locking (see above), then change the
+statistics update code to acquire/release the mutex tsl.

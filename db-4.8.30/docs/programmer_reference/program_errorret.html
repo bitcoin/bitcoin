@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Error returns to applications</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="program.html" title="Chapter 14.  Programmer Notes" />
+    <link rel="prev" href="program.html" title="Chapter 14.  Programmer Notes" />
+    <link rel="next" href="program_environ.html" title="Environment variables" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Error returns to applications</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="program.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 14. 
+        Programmer Notes
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="program_environ.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="program_errorret"></a>Error returns to applications</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+    Except for the historic <a href="../api_reference/C/dbm.html" class="olink">dbm</a>, <a href="../api_reference/C/dbm.html" class="olink">ndbm</a> and <a href="../api_reference/C/hsearch.html" class="olink">hsearch</a> interfaces, Berkeley DB
+    does not use the global variable <code class="literal">errno</code> to return
+    error values.  The return values for all Berkeley DB functions are
+    grouped into the following three categories:
+</p>
+      <div class="variablelist">
+        <dl>
+          <dt>
+            <span class="term">0</span>
+          </dt>
+          <dd>A return value of 0 indicates that the operation was successful.</dd>
+          <dt>
+            <span class="term">&gt; 0</span>
+          </dt>
+          <dd>A return value that is greater than 0 indicates that there was a system
+error.  The <span class="bold"><strong>errno</strong></span> value returned by the system is returned by
+the function; for example, when a Berkeley DB function is unable to allocate
+memory, the return value from the function will be ENOMEM.</dd>
+          <dt>
+            <span class="term">&lt; 0</span>
+          </dt>
+          <dd>A return value that is less than 0 indicates a condition that was not
+a system failure, but was not an unqualified success, either.  For
+example, a routine to retrieve a key/data pair from the database may
+return DB_NOTFOUND when the key/data pair does not appear in
+the database; as opposed to the value of 0, which would be returned if
+the key/data pair were found in the database.
+<p>
+All values returned by Berkeley DB functions are less than 0 in order to avoid
+conflict with possible values of <span class="bold"><strong>errno</strong></span>.  Specifically, Berkeley DB
+reserves all values from -30,800 to -30,999 to itself as possible error
+values.  There are a few Berkeley DB interfaces where it is possible for an
+application function to be called by a Berkeley DB function and subsequently
+fail with an application-specific return.  Such failure returns will be
+passed back to the function that originally called a Berkeley DB interface.
+To avoid ambiguity about the cause of the error, error values separate
+from the Berkeley DB error name space should be used.</p></dd>
+        </dl>
+      </div>
+      <p>
+    Although possible error returns are specified by each individual
+    function's manual page, there are a few error returns that deserve
+    general mention:
+</p>
+      <p>
+    <span class="bold"><strong>DB_NOTFOUND and DB_KEYEMPTY</strong></span>
+</p>
+      <p>There are two special return values that are similar in meaning and that
+are returned in similar situations, and therefore might be confused:
+DB_NOTFOUND and DB_KEYEMPTY.</p>
+      <p><a id="program_errorret.DB_NOTFOUND"></a>The DB_NOTFOUND error return indicates that the requested key/data
+pair did not exist in the database or that start-of- or end-of-file has
+been reached by a cursor.</p>
+      <p><a id="program_errorret.DB_KEYEMPTY"></a>The DB_KEYEMPTY error return indicates that the requested
+key/data pair logically exists but was never explicitly created by the
+application (the Recno and Queue access methods will automatically
+create key/data pairs under some circumstances; see <a href="../api_reference/C/dbopen.html" class="olink">DB-&gt;open()</a>
+for more information), or that the requested key/data pair was deleted
+and never re-created.  In addition, the Queue access method will return
+DB_KEYEMPTY for records that were created as part of a
+transaction that was later aborted and never re-created.</p>
+      <p>
+    <span class="bold"><strong>DB_KEYEXIST</strong></span>
+</p>
+      <p><a id="program_errorret.DB_KEYEXIST"></a>
+    The DB_KEYEXIST error return indicates the <a href="../api_reference/C/dbput.html#put_DB_NOOVERWRITE" class="olink">DB_NOOVERWRITE</a> option was specified
+    when inserting a key/data pair into the database and the key already
+    exists in the database, or the <a href="../api_reference/C/dbput.html#put_DB_NODUPDATA" class="olink">DB_NODUPDATA</a> option was specified and the
+    key/data pair already exists in the data.
+</p>
+      <p>
+    <span class="bold"><strong>DB_LOCK_DEADLOCK</strong></span>
+</p>
+      <p><a id="program_errorret.DB_LOCK_DEADLOCK"></a>
+    When multiple threads of control are modifying the database, there is
+    normally the potential for deadlock. In Berkeley DB, deadlock is
+    signified by an error return from the Berkeley DB function of the value
+    DB_LOCK_DEADLOCK.  Whenever a Berkeley DB function returns
+    DB_LOCK_DEADLOCK, the enclosing transaction should be aborted.
+</p>
+      <p>
+    Any Berkeley DB function that attempts to acquire locks can potentially
+    return DB_LOCK_DEADLOCK.  Practically speaking, the safest way to deal
+    with applications that can deadlock is to anticipate a DB_LOCK_DEADLOCK
+    return from any <a href="../api_reference/C/db.html" class="olink">DB</a> or <a href="../api_reference/C/dbc.html" class="olink">DBC</a> handle method call, or any <a href="../api_reference/C/env.html" class="olink">DB_ENV</a>
+    handle method call that references a database, including the database's
+    backing physical file.
+</p>
+      <p>
+    <span class="bold"><strong>DB_LOCK_NOTGRANTED</strong></span>
+</p>
+      <p><a id="program_errorret.DB_LOCK_NOTGRANTED"></a>
+    If a lock is requested from the <a href="../api_reference/C/lockget.html" class="olink">DB_ENV-&gt;lock_get()</a> or <a href="../api_reference/C/lockvec.html" class="olink">DB_ENV-&gt;lock_vec()</a> methods with the 
+    <a href="../api_reference/C/lockvec.html#vec_DB_LOCK_NOWAIT" class="olink">DB_LOCK_NOWAIT</a> flag specified, the method will return DB_LOCK_NOTGRANTED if the lock
+    is not immediately available.
+</p>
+      <p>
+    If the <a href="../api_reference/C/envset_flags.html#envset_flags_DB_TIME_NOTGRANTED" class="olink">DB_TIME_NOTGRANTED</a> flag is specified to the <a href="../api_reference/C/envset_flags.html" class="olink">DB_ENV-&gt;set_flags()</a> method,
+    database calls timing out based on lock or transaction timeout values
+    will return DB_LOCK_NOTGRANTED instead of DB_LOCK_DEADLOCK.
+</p>
+      <p>
+    <span class="bold"><strong>DB_RUNRECOVERY</strong></span>
+</p>
+      <p><a id="program_errorret.DB_RUNRECOVERY"></a>
+    There exists a class of errors that Berkeley DB considers fatal to an
+    entire Berkeley DB environment.  An example of this type of error is a
+    corrupted database page.  The only way to recover from these failures
+    is to have all threads of control exit the Berkeley DB environment, run
+    recovery of the environment, and re-enter Berkeley DB. (It is not
+    strictly necessary that the processes exit, although that is the only
+    way to recover system resources, such as file descriptors and memory,
+    allocated by Berkeley DB.)
+</p>
+      <p>
+    When this type of error is encountered, the error value DB_RUNRECOVERY
+    is returned. This error can be returned by any Berkeley DB interface.
+    Once DB_RUNRECOVERY is returned by any interface, it will be returned
+    from all subsequent Berkeley DB calls made by any threads of control
+    participating in the environment.
+</p>
+      <p>
+    Applications can handle such fatal errors in one of two ways: first, by
+    checking for DB_RUNRECOVERY as part of their normal Berkeley DB error
+    return checking, similarly to DB_LOCK_DEADLOCK or any other error.
+    Alternatively, applications can specify a fatal-error callback function
+    using the <a href="../api_reference/C/envevent_notify.html" class="olink">DB_ENV-&gt;set_event_notify()</a> method.  Applications with no cleanup
+    processing of their own should simply exit from the callback function.
+</p>
+      <p>
+    <span class="bold"><strong>DB_SECONDARY_BAD</strong></span>
+</p>
+      <p><a id="program_error_ret.DB_SECONDARY_BAD"></a>
+    The DB_SECONDARY_BAD error is returned if a secondary index has been
+    corrupted.  This may be the result of an application operating on
+    related databases without first associating them.
+</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="program.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="program.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="program_environ.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 14. 
+        Programmer Notes
+         </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Environment variables</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

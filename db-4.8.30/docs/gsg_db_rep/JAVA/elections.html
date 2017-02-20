@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Holding Elections</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Replicated Berkeley DB Applications" />
+    <link rel="up" href="introduction.html" title="Chapter 1. Introduction" />
+    <link rel="prev" href="apioverview.html" title="The Replication APIs" />
+    <link rel="next" href="permmessages.html" title="Permanent Message Handling" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Holding Elections</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="apioverview.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 1. Introduction</th>
+          <td width="20%" align="right"> <a accesskey="n" href="permmessages.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="elections"></a>Holding Elections</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="elections.html#influencingelections">Influencing Elections</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="elections.html#winningelections">Winning Elections</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="elections.html#switchingmasters">Switching Masters</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+                    Finding a master environment is one of the fundamental activities that 
+                    every replication replica must perform. Upon startup, the
+                    underlying DB replication code will attempt to
+                    locate a master. If a master cannot be found, then the
+                    environment should initiate an election.
+            </p>
+      <p>
+                How elections are held depends upon the API that you use to
+                implement replication. For example, if you are using the
+                Replication Manager elections are held transparently without any
+                input from your application's code. In this case, 
+                DB will determine which environment is the master and which
+                are replicas.
+            </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="influencingelections"></a>Influencing Elections</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                If you want to control the election process, you can declare
+                a specific environment to be the master. Note that for the Replication Manager,
+                it is only possible to do this at application startup.
+                Should the master become unavailable during run-time for any
+                reason, an election is held. The environment that receives
+                the most number of votes, wins the election and becomes the
+                master. A machine receives a vote because it has the most
+                up-to-date log records.
+            </p>
+        <p>
+                    Because ties are possible when elections are held, 
+                    it is possible to influence which environment will win
+                    the election. How you do this depends on which API you
+                    are using. In particular, if you are writing a custom replication
+                layer, then there are a great many ways to manually influence
+                elections.
+            </p>
+        <p>
+                    One such mechanism is priorities.  When votes are cast
+                    during an election, the winner is determined first by
+                    the environment with the most up-to-date log records.
+                    But if this is a tie, the the environment's priority is
+                    considered.  So given two environments with log records
+                    that are equally recent, votes are cast for the
+                    environment with the higher priority.
+            </p>
+        <p>
+                    Therefore, if you have a machine that you prefer to
+                    become a master in the event of an election, assign it
+                    a high priority. Assuming that the election is held at
+                    a time when the preferred machine has up-to-date log
+                    records, that machine will win the election.
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="winningelections"></a>Winning Elections</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                        To win an election:
+                    </p>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>
+              <p>
+                                            There cannot currently be a
+                                            master environment.
+                                    </p>
+            </li>
+            <li>
+              <p>
+                                            The environment must have the most
+                                            recent log records. Part of
+                                            holding the election is
+                                            determining which environments have
+                                            the most recent log records.
+                                            This process happens
+                                            automatically; your code does
+                                            not need to involve itself in
+                                            this process.
+                                    </p>
+            </li>
+            <li>
+              <p>
+                                            The environment must receive the most
+                                            number of votes from the
+                                            replication environments that are
+                                            participating in the election.
+                                    </p>
+            </li>
+          </ol>
+        </div>
+        <p>
+                        If you are using the Replication Manager, then in the event of a
+                        tie vote the environment with the highest priority wins
+                        the election. If two or more environments receive the same
+                        number of votes and have the same priority, then
+                        the underlying replication code picks one of the
+                        environments to
+                        be the winner. Which winner will be picked by the
+                        replication code is unpredictable from the
+                        perspective of your application code.
+                    </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="switchingmasters"></a>Switching Masters</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                        To switch masters:
+                    </p>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>
+              <p>
+                                            Start up the environment that you want
+                                            to be master as normal. At this
+                                            time it is a replica. Make
+                                            sure this environment has a higher
+                                            priority than all the other
+                                            environments.
+                                    </p>
+            </li>
+            <li>
+              <p>
+                                            Allow the new environment to run for a
+                                            time as a replica. This allows
+                                            it to obtain the most recent
+                                            copies of the log files.
+                                    </p>
+            </li>
+            <li>
+              <p>
+                                            Shut down the current master.
+                                            This should force an election.
+                                            Because the new environment has the
+                                            highest priority, it will win
+                                            the election, provided it has
+                                            had enough time to obtain all
+                                            the log records.
+                                    </p>
+            </li>
+            <li>
+              <p>
+                                            Optionally restart the old
+                                            master environment. Because there is
+                                            currently a master environment, an
+                                            election will not be held and
+                                            the old master will now run as
+                                            a replica environment.
+                                    </p>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="apioverview.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="introduction.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="permmessages.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">The Replication APIs </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Permanent Message Handling</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

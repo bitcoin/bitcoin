@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Replacing Entity Objects</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="persist_access.html" title="Chapter 5. Saving and Retrieving Objects" />
+    <link rel="prev" href="dpl_delete.html" title="Deleting Entity Objects" />
+    <link rel="next" href="dpl_example.html" title="Chapter 6. A DPL Example" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Replacing Entity Objects</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dpl_delete.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. Saving and Retrieving Objects</th>
+          <td width="20%" align="right"> <a accesskey="n" href="dpl_example.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dpl_replace"></a>Replacing Entity Objects</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+                   To modify a stored entity object, retrieve it, update
+                   it, then put it back to the entity store:
+           </p>
+      <pre class="programlisting">
+SimpleEntityClass sec = sda.pIdx.get("keyone");
+sec.setSKey("skeyoneupdated");
+sda.pIdx.put(sec);
+</pre>
+      <p>
+                Note that because we updated a field on the object that is
+                a secondary key, this object will now be accessible by the
+                secondary key of <code class="literal">skeyoneupdated</code> instead
+                of the previous value, which was <code class="literal">skeyone</code>
+        </p>
+      <p>
+                Be aware that if you modify the object's primary key, the behavior is
+                somewhat different. In this case, you cause a new instance
+                of the object to be created in the store, instead of
+                replacing an existing instance:
+        </p>
+      <pre class="programlisting">// Results in two objects in the store.  One with a
+// primary index of "keyfive" and the other with primary index of 
+//'keyfivenew'.
+SimpleEntityClass sec = sda.pIdx.get("keyfive");
+sec.setPKey("keyfivenew");
+sda.pIdx.put(sec); </pre>
+      <p>
+                Finally, if you are iterating over a collection of objects
+                using an <code class="classname">EntityCursor</code>, you can
+                update each object in turn using
+                <code class="methodname">EntityCursor.update()</code>. Note,
+                however, that you must be iterating using a
+                <code class="classname">PrimaryIndex</code>; this operation is not
+                allowed if you are using a
+                <code class="classname">SecondaryIndex</code>.
+        </p>
+      <p>
+                For example, the following iterates over every
+                <code class="classname">SimpleEntityClass</code> object in the entity
+                store, and it changes them all so that they have a
+                secondary index of <code class="literal">updatedskey</code>:
+        </p>
+      <pre class="programlisting">EntityCursor&lt;SimpleEntityClass&gt; sec_pcursor = sda.pIdx.entities();
+for (SimpleEntityClass sec : sec_pcursor) {
+    sec.setSKey("updatedskey");
+    sec_pcursor.update(item);
+}
+sec_pcursor.close(); </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dpl_delete.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="persist_access.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dpl_example.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Deleting Entity Objects </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 6. A DPL Example</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

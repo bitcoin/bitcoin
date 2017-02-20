@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Source code layout</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="distrib.html" title="Chapter 47.  Distribution" />
+    <link rel="prev" href="distrib.html" title="Chapter 47.  Distribution" />
+    <link rel="next" href="refs.html" title="Chapter 48.  Additional References" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Source code layout</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="distrib.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 47. 
+        Distribution
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="refs.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="distrib_layout"></a>Source code layout</h2>
+          </div>
+        </div>
+      </div>
+      <div class="informaltable">
+        <table border="1" width="80%">
+          <colgroup>
+            <col />
+            <col />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Directory</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>LICENSE</td>
+              <td>Berkeley DB License</td>
+            </tr>
+            <tr>
+              <td>btree</td>
+              <td>Btree access method source code</td>
+            </tr>
+            <tr>
+              <td>build_brew</td>
+              <td>BREW build directory</td>
+            </tr>
+            <tr>
+              <td>build_s60</td>
+              <td>S60 build directory</td>
+            </tr>
+            <tr>
+              <td>build_unix</td>
+              <td>UNIX build directory</td>
+            </tr>
+            <tr>
+              <td>build_vxworks</td>
+              <td>VxWorks build directory.</td>
+            </tr>
+            <tr>
+              <td>build_wince</td>
+              <td>Windows CE build directory.</td>
+            </tr>
+            <tr>
+              <td>build_windows</td>
+              <td>Windows build directory.</td>
+            </tr>
+            <tr>
+              <td>clib</td>
+              <td>C library replacement functions</td>
+            </tr>
+            <tr>
+              <td>common</td>
+              <td>Common Berkeley DB functions</td>
+            </tr>
+            <tr>
+              <td>crypto</td>
+              <td>Cryptographic support</td>
+            </tr>
+            <tr>
+              <td>cxx</td>
+              <td>C++ API</td>
+            </tr>
+            <tr>
+              <td>db</td>
+              <td>Berkeley DB database support</td>
+            </tr>
+            <tr>
+              <td>db185</td>
+              <td>Berkeley DB version 1.85 compatibility API</td>
+            </tr>
+            <tr>
+              <td>db_archive</td>
+              <td>The db_archive utility</td>
+            </tr>
+            <tr>
+              <td>db_checkpoint</td>
+              <td>The db_checkpoint utility</td>
+            </tr>
+            <tr>
+              <td>db_deadlock</td>
+              <td>The db_deadlock utility</td>
+            </tr>
+            <tr>
+              <td>db_dump</td>
+              <td>The db_dump utility</td>
+            </tr>
+            <tr>
+              <td>db_dump185</td>
+              <td>The db_dump185 utility</td>
+            </tr>
+            <tr>
+              <td>db_hotbackup</td>
+              <td>The db_hotbackup utility</td>
+            </tr>
+            <tr>
+              <td>db_load</td>
+              <td>The db_load utility</td>
+            </tr>
+            <tr>
+              <td>db_printlog</td>
+              <td>The db_printlog debugging utility</td>
+            </tr>
+            <tr>
+              <td>db_recover</td>
+              <td>The db_recover utility</td>
+            </tr>
+            <tr>
+              <td>db_sql</td>
+              <td>The db_sql utility</td>
+            </tr>
+            <tr>
+              <td>db_stat</td>
+              <td>The db_stat utility</td>
+            </tr>
+            <tr>
+              <td>db_upgrade</td>
+              <td>The db_upgrade utility</td>
+            </tr>
+            <tr>
+              <td>db_verify</td>
+              <td>The db_verify utility</td>
+            </tr>
+            <tr>
+              <td>dbinc</td>
+              <td>C language include files</td>
+            </tr>
+            <tr>
+              <td>dbinc_auto</td>
+              <td>Automatically generated C language include files</td>
+            </tr>
+            <tr>
+              <td>dbm</td>
+              <td>The dbm/ndbm compatibility APIs</td>
+            </tr>
+            <tr>
+              <td>dbreg</td>
+              <td>Berkeley DB database handle logging support</td>
+            </tr>
+            <tr>
+              <td>dist</td>
+              <td>Berkeley DB administration/distribution tools</td>
+            </tr>
+            <tr>
+              <td>docs</td>
+              <td>Documentation</td>
+            </tr>
+            <tr>
+              <td>docs_src</td>
+              <td>API and Reference Guide documentation sources</td>
+            </tr>
+            <tr>
+              <td>env</td>
+              <td>Berkeley DB environment support</td>
+            </tr>
+            <tr>
+              <td>examples_c</td>
+              <td>C API example programs</td>
+            </tr>
+            <tr>
+              <td>examples_cxx</td>
+              <td>C++ API example programs</td>
+            </tr>
+            <tr>
+              <td>examples_java</td>
+              <td>Java API example programs</td>
+            </tr>
+            <tr>
+              <td>fileops</td>
+              <td>File object operation support</td>
+            </tr>
+            <tr>
+              <td>hash</td>
+              <td>Hash access method</td>
+            </tr>
+            <tr>
+              <td>hmac</td>
+              <td>Checksum support</td>
+            </tr>
+            <tr>
+              <td>hsearch</td>
+              <td>The hsearch compatibility API</td>
+            </tr>
+            <tr>
+              <td>java</td>
+              <td>Java API</td>
+            </tr>
+            <tr>
+              <td>libdb_java</td>
+              <td>The libdb_java shared library</td>
+            </tr>
+            <tr>
+              <td>lock</td>
+              <td>Lock manager</td>
+            </tr>
+            <tr>
+              <td>log</td>
+              <td>Log manager</td>
+            </tr>
+            <tr>
+              <td>mod_db4</td>
+              <td>Apache module support</td>
+            </tr>
+            <tr>
+              <td>mp</td>
+              <td>Shared memory buffer pool</td>
+            </tr>
+            <tr>
+              <td>mutex</td>
+              <td>Mutexes</td>
+            </tr>
+            <tr>
+              <td>os</td>
+              <td>POSIX 1003.1 operating-system specific functionality</td>
+            </tr>
+            <tr>
+              <td>os_brew</td>
+              <td>BREW operating-system specific functionality</td>
+            </tr>
+            <tr>
+              <td>os_qnx</td>
+              <td>QNX operating-system specific functionality</td>
+            </tr>
+            <tr>
+              <td>os_s60</td>
+              <td>S60 operating-system specific functionality</td>
+            </tr>
+            <tr>
+              <td>os_vxworks</td>
+              <td>VxWorks operating-system specific functionality</td>
+            </tr>
+            <tr>
+              <td>os_windows</td>
+              <td>Windows operating-system specific functionality</td>
+            </tr>
+            <tr>
+              <td>perl</td>
+              <td>DB_File and BerkeleyDB Perl modules</td>
+            </tr>
+            <tr>
+              <td>php_db4</td>
+              <td>PHP module support</td>
+            </tr>
+            <tr>
+              <td>qam</td>
+              <td>Queue access method source code</td>
+            </tr>
+            <tr>
+              <td>rep</td>
+              <td>Replication source code</td>
+            </tr>
+            <tr>
+              <td>repmgr</td>
+              <td>Replication Manager Framework source code</td>
+            </tr>
+            <tr>
+              <td>sequence</td>
+              <td>Sequence source code</td>
+            </tr>
+            <tr>
+              <td>tcl</td>
+              <td>Tcl API</td>
+            </tr>
+            <tr>
+              <td>test</td>
+              <td>Test suite</td>
+            </tr>
+            <tr>
+              <td>test_micro</td>
+              <td>Micro-benchmark test suite</td>
+            </tr>
+            <tr>
+              <td>txn</td>
+              <td>Transaction manager</td>
+            </tr>
+            <tr>
+              <td>xa</td>
+              <td>X/Open Distributed Transaction Processing XA support</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="distrib.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="distrib.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="refs.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 47. 
+        Distribution
+         </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 48. 
+        Additional References
+        </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

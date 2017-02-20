@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 3.0: DB-&gt;sync and DB-&gt;close</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_3_0_toc.html" title="Chapter 33. Upgrading Berkeley DB 2.X applications to Berkeley DB 3.0" />
+    <link rel="prev" href="upgrade_3_0_stat.html" title="Release 3.0: DB-&gt;stat" />
+    <link rel="next" href="upgrade_3_0_lock_put.html" title="Release 3.0: lock_put" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 3.0: DB-&gt;sync and DB-&gt;close</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_3_0_stat.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 33. Upgrading Berkeley DB 2.X applications to Berkeley DB 3.0</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_3_0_lock_put.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_3_0_close"></a>Release 3.0: DB-&gt;sync and DB-&gt;close</h2>
+          </div>
+        </div>
+      </div>
+      <p>In previous Berkeley DB releases, the <a href="../api_reference/C/dbclose.html" class="olink">DB-&gt;close()</a> and <a href="../api_reference/C/dbsync.html" class="olink">DB-&gt;sync()</a> methods
+discarded any return of DB_INCOMPLETE from the underlying buffer
+pool interfaces, and returned success to its caller.  (The
+DB_INCOMPLETE error will be returned if the buffer pool functions
+are unable to flush all of the database's dirty blocks from the pool.
+This often happens if another thread is reading or writing the database's
+pages in the pool.)</p>
+      <p>In the 3.X release, <a href="../api_reference/C/dbsync.html" class="olink">DB-&gt;sync()</a> and <a href="../api_reference/C/dbclose.html" class="olink">DB-&gt;close()</a> will return
+DB_INCOMPLETE to the application.  The best solution is to not
+call <a href="../api_reference/C/dbsync.html" class="olink">DB-&gt;sync()</a> with the <a href="../api_reference/C/dbclose.html#dbclose_DB_NOSYNC" class="olink">DB_NOSYNC</a> flag to the
+<a href="../api_reference/C/dbclose.html" class="olink">DB-&gt;close()</a> method when multiple threads are expected to be accessing the
+database.  Alternatively, the caller can ignore any error return of
+DB_INCOMPLETE.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_3_0_stat.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_3_0_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_3_0_lock_put.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 3.0: DB-&gt;stat </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 3.0: lock_put</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

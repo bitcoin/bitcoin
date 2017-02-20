@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Part I. Programming with the Direct Persistence Layer</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="prev" href="EnvProps.html" title="Environment Properties" />
+    <link rel="next" href="persist_first.html" title="Chapter 3. Direct Persistence Layer First Steps" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Part I. Programming with the Direct Persistence Layer</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="EnvProps.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="persist_first.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="part" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h1 class="title"><a id="dpl"></a>Part I. Programming with the Direct Persistence Layer</h1>
+          </div>
+        </div>
+      </div>
+      <div class="partintro" lang="en" xml:lang="en">
+        <div></div>
+        <p>
+                          This section discusses how to build an
+                          application using the DPL. The DPL is ideally
+                          suited for those applications that want a
+                          mechanism for storing and managing Java class
+                          objects in a DB database. Note that the DPL
+                          is best suited for applications that work with
+                          classes with a relatively static schema.
+                  </p>
+        <p>
+                        Also, the DPL requires Java 1.5.
+                  </p>
+        <p>
+                          If you want to use Java 1.4 for your DB
+                          application, or if you are porting an application
+                          from the Berkeley DB API, then you probably want
+                          to use the base API instead of the DPL. For
+                          information on using the base API, see
+                          <a class="xref" href="baseapi.html" title="Part II. Programming with the Base API">Programming with the Base API</a>.
+                  </p>
+        <div class="toc">
+          <p>
+            <b>Table of Contents</b>
+          </p>
+          <dl>
+            <dt>
+              <span class="chapter">
+                <a href="persist_first.html">3. Direct Persistence Layer First Steps</a>
+              </span>
+            </dt>
+            <dd>
+              <dl>
+                <dt>
+                  <span class="sect1">
+                    <a href="persist_first.html#entitystore">Entity Stores</a>
+                  </span>
+                </dt>
+                <dd>
+                  <dl>
+                    <dt>
+                      <span class="sect2">
+                        <a href="persist_first.html#persist-open">Opening and Closing Environments and Stores</a>
+                      </span>
+                    </dt>
+                  </dl>
+                </dd>
+                <dt>
+                  <span class="sect1">
+                    <a href="persistobject.html">Persistent Objects</a>
+                  </span>
+                </dt>
+                <dt>
+                  <span class="sect1">
+                    <a href="saveret.html">Saving a Retrieving Data</a>
+                  </span>
+                </dt>
+              </dl>
+            </dd>
+            <dt>
+              <span class="chapter">
+                <a href="persist_index.html">4. Working with Indices</a>
+              </span>
+            </dt>
+            <dd>
+              <dl>
+                <dt>
+                  <span class="sect1">
+                    <a href="persist_index.html#dplindexaccess">Accessing Indexes</a>
+                  </span>
+                </dt>
+                <dd>
+                  <dl>
+                    <dt>
+                      <span class="sect2">
+                        <a href="persist_index.html#primaryindexaccess">Accessing Primary Indices</a>
+                      </span>
+                    </dt>
+                    <dt>
+                      <span class="sect2">
+                        <a href="persist_index.html#secondaryindexaccess">Accessing Secondary Indices</a>
+                      </span>
+                    </dt>
+                  </dl>
+                </dd>
+                <dt>
+                  <span class="sect1">
+                    <a href="dplindexcreate.html">Creating Indexes</a>
+                  </span>
+                </dt>
+                <dd>
+                  <dl>
+                    <dt>
+                      <span class="sect2">
+                        <a href="dplindexcreate.html#dplprimaryidxdecl">Declaring a Primary Indexes</a>
+                      </span>
+                    </dt>
+                    <dt>
+                      <span class="sect2">
+                        <a href="dplindexcreate.html#dplsecondaryidxdecl">Declaring Secondary Indexes</a>
+                      </span>
+                    </dt>
+                    <dt>
+                      <span class="sect2">
+                        <a href="dplindexcreate.html#foreignkey">Foreign Key Constraints</a>
+                      </span>
+                    </dt>
+                  </dl>
+                </dd>
+              </dl>
+            </dd>
+            <dt>
+              <span class="chapter">
+                <a href="persist_access.html">5. Saving and Retrieving Objects</a>
+              </span>
+            </dt>
+            <dd>
+              <dl>
+                <dt>
+                  <span class="sect1">
+                    <a href="persist_access.html#simpleentity">A Simple Entity Class</a>
+                  </span>
+                </dt>
+                <dt>
+                  <span class="sect1">
+                    <a href="simpleda.html">SimpleDA.class</a>
+                  </span>
+                </dt>
+                <dt>
+                  <span class="sect1">
+                    <a href="simpleput.html">Placing Objects in an Entity Store</a>
+                  </span>
+                </dt>
+                <dt>
+                  <span class="sect1">
+                    <a href="simpleget.html">Retrieving Objects from an Entity Store</a>
+                  </span>
+                </dt>
+                <dt>
+                  <span class="sect1">
+                    <a href="getmultiple.html">Retrieving Multiple Objects</a>
+                  </span>
+                </dt>
+                <dd>
+                  <dl>
+                    <dt>
+                      <span class="sect2">
+                        <a href="getmultiple.html#dpl_cursor_initialize">Cursor Initialization</a>
+                      </span>
+                    </dt>
+                    <dt>
+                      <span class="sect2">
+                        <a href="getmultiple.html#dpl_dups">Working with Duplicate Keys</a>
+                      </span>
+                    </dt>
+                    <dt>
+                      <span class="sect2">
+                        <a href="getmultiple.html#dpl_cursor_range">Key Ranges</a>
+                      </span>
+                    </dt>
+                  </dl>
+                </dd>
+                <dt>
+                  <span class="sect1">
+                    <a href="dpl_entityjoin.html">Join Cursors</a>
+                  </span>
+                </dt>
+                <dt>
+                  <span class="sect1">
+                    <a href="dpl_delete.html">Deleting Entity Objects</a>
+                  </span>
+                </dt>
+                <dt>
+                  <span class="sect1">
+                    <a href="dpl_replace.html">Replacing Entity Objects</a>
+                  </span>
+                </dt>
+              </dl>
+            </dd>
+            <dt>
+              <span class="chapter">
+                <a href="dpl_example.html">6. A DPL Example</a>
+              </span>
+            </dt>
+            <dd>
+              <dl>
+                <dt>
+                  <span class="sect1">
+                    <a href="dpl_example.html#vendorclass">Vendor.java</a>
+                  </span>
+                </dt>
+                <dt>
+                  <span class="sect1">
+                    <a href="inventoryclass.html">Inventory.java</a>
+                  </span>
+                </dt>
+                <dt>
+                  <span class="sect1">
+                    <a href="mydbenv-persist.html">MyDbEnv</a>
+                  </span>
+                </dt>
+                <dt>
+                  <span class="sect1">
+                    <a href="dataaccessorclass.html">DataAccessor.java</a>
+                  </span>
+                </dt>
+                <dt>
+                  <span class="sect1">
+                    <a href="dpl_exampledatabaseput.html">ExampleDatabasePut.java</a>
+                  </span>
+                </dt>
+                <dt>
+                  <span class="sect1">
+                    <a href="dpl_exampleinventoryread.html">ExampleInventoryRead.java</a>
+                  </span>
+                </dt>
+              </dl>
+            </dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="EnvProps.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="persist_first.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Environment Properties </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 3. Direct Persistence Layer First Steps</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,38 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Check to make sure that the code samples in the documents build.
+
+d=../../docs_src
+
+[ -d $d ] || {
+	echo 'FAIL: cannot find source distribution directory.'
+	exit 1
+}
+[ -f ../libdb.a ] || (cd .. && make libdb.a) || {
+	echo 'FAIL: unable to find or build libdb.a'
+	exit 1
+}
+
+exitv=0
+for i in `find $d -name '*.cs' | sed '/\/ref_xml\//d'`; do
+	echo "	compiling $i"
+	sed -e 's/m4_include(\(.*\))/#include <\1>/g' \
+	    -e 's/m4_[a-z]*[(\[)]*//g' \
+	    -e 's/(\[//g' \
+	    -e '/argv/!s/])//g' \
+	    -e 's/dnl//g' \
+	    -e 's/__GT__/>/g' \
+	    -e 's/__LB__/[/g' \
+	    -e 's/__LT__/</g' \
+	    -e 's/__RB__/]/g' < $i > t.c
+	if cc -pthread -Wall -Werror -I.. t.c ../libdb.a -o t; then
+		:
+	else
+		echo "FAIL: unable to compile $i"
+		exitv=1
+	fi
+done
+
+exit $exitv

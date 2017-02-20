@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Managing Databases in Environments</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="DB.html" title="Chapter 2. Databases" />
+    <link rel="prev" href="dbErrorReporting.html" title="Error Reporting Functions" />
+    <link rel="next" href="CoreDbUsage.html" title="Database Example" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Managing Databases in Environments</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbErrorReporting.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. Databases</th>
+          <td width="20%" align="right"> <a accesskey="n" href="CoreDbUsage.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="CoreEnvUsage"></a>Managing Databases in Environments</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+            In 
+            <span>
+            <a class="xref" href="environments.html" title="Environments">Environments</a>, 
+            </span>
+            
+            
+            we introduced
+        environments. While environments are not used in the example built in this book,
+        they are so commonly used for a wide class of DB applications that it is 
+        necessary to show their basic usage, if only from a completeness perspective.
+    </p>
+      <p>
+        To use an environment, you must first
+            <span>
+                create the environment handle using <code class="classname"></code>, and then
+            </span>
+        open it. At open time, you must identify the directory in 
+        which it resides. This directory must exist prior to the open attempt. 
+        You can also identify open properties, such as whether the environment can be
+        created if it does not already exist.
+    </p>
+      <p>
+        You will also need to initialize the in-memory cache when you open your environment.
+    </p>
+      <p>
+        For example, to 
+            <span>create an environment handle and</span>
+        open an environment:
+    </p>
+      <a id="c_env1"></a>
+      <pre class="programlisting">#include &lt;db.h&gt;
+...
+DB_ENV *myEnv;            /* Env structure handle */
+DB *dbp;                  /* DB structure handle */
+u_int32_t db_flags;       /* database open flags */
+u_int32_t env_flags;      /* env open flags */
+int ret;                  /* function return value */
+
+/* 
+   Create an environment object and initialize it for error
+   reporting. 
+*/
+ret = db_env_create(&amp;myEnv, 0);
+if (ret != 0) {
+    fprintf(stderr, "Error creating env handle: %s\n", db_strerror(ret));
+    return -1;
+}
+
+/* Open the environment. */
+env_flags = DB_CREATE |    /* If the environment does not exist,
+                            * create it. */
+            DB_INIT_MPOOL; /* Initialize the in-memory cache. */
+
+ret = myEnv-&gt;open(myEnv,   /* DB_ENV ptr */
+  "/export1/testEnv",      /* env home directory */
+  env_flags,               /* Open flags */
+  0);                      /* File mode (default) */
+if (ret != 0) {
+    fprintf(stderr, "Environment open failed: %s", db_strerror(ret));
+    return -1;
+} </pre>
+      <p>
+        Once an environment is opened, you can open databases in it. Note that by default databases
+        are stored in the environment's home directory, or relative to that directory if you
+        provide any sort of a path in the database's file name:
+    </p>
+      <a id="c_env2"></a>
+      <pre class="programlisting">/* 
+ * Initialize the DB structure. Pass the pointer
+ * to the environment in which this DB is opened.
+ */
+ret = db_create(&amp;dbp, myEnv, 0);
+if (ret != 0) {
+  /* Error handling goes here */
+}
+
+/* Database open flags */
+db_flags = DB_CREATE;    /* If the database does not exist, 
+                          * create it.*/
+
+/* open the database */
+ret = dbp-&gt;open(dbp,        /* DB structure pointer */
+                NULL,       /* Transaction pointer */
+                "my_db.db", /* On-disk file that holds the database. */
+                NULL,       /* Optional logical database name */
+                DB_BTREE,   /* Database access method */
+                db_flags,   /* Open flags */
+                0);         /* File mode (using defaults) */
+if (ret != 0) {
+  /* Error handling goes here */
+}</pre>
+      <p>
+        When you are done with an environment, you must close it. Before you close an environment,
+        make sure you close any opened databases.
+    </p>
+      <a id="c_env3"></a>
+      <pre class="programlisting">/* 
+* Close the database and environment
+*/
+
+if (dbp != NULL) {
+    dbp-&gt;close(dbp, 0);
+}
+
+if (myEnv != NULL) {
+    myEnv-&gt;close(myEnv, 0);
+} </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbErrorReporting.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="DB.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="CoreDbUsage.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Error Reporting Functions </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Database Example</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

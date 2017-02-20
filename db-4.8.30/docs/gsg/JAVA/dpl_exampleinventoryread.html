@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>ExampleInventoryRead.java</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="dpl_example.html" title="Chapter 6. A DPL Example" />
+    <link rel="prev" href="dpl_exampledatabaseput.html" title="ExampleDatabasePut.java" />
+    <link rel="next" href="baseapi.html" title="Part II. Programming with the Base API" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">ExampleInventoryRead.java</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dpl_exampledatabaseput.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 6. A DPL Example</th>
+          <td width="20%" align="right"> <a accesskey="n" href="baseapi.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dpl_exampleinventoryread"></a>ExampleInventoryRead.java</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+                    <code class="classname">ExampleInventoryRead</code>
+                    retrieves
+                    inventory information from our entity store and
+                    displays it. When it displays each inventory item, it
+                    also displays the related vendor contact information.
+            </p>
+      <p>
+                    <code class="classname">ExampleInventoryRead</code>
+                    can do one of two things. If you provide no search
+                    criteria, it displays all of the inventory items in the
+                    store. If you provide an item name (using the
+                    <code class="literal">-s</code> command line switch), then just
+                    those inventory items using that name are displayed.
+            </p>
+      <p>
+                    The beginning of our example is almost identical to our
+                    <code class="classname">ExampleDatabasePut</code>
+                    example program. We
+                    repeat that example code here for the sake of
+                    completeness. For a complete walk-through of it, see
+                    the previous section (<a class="xref" href="dpl_exampledatabaseput.html" title="ExampleDatabasePut.java">ExampleDatabasePut.java</a>).
+            </p>
+      <pre class="programlisting">package persist.gettingStarted;
+
+import java.io.File;
+import java.io.IOException;
+
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.persist.EntityCursor;
+
+public class ExampleInventoryRead {
+
+    private static File myDbEnvPath =
+        new File("/tmp/JEDB");
+
+    private DataAccessor da;
+
+    // Encapsulates the database environment.
+    private static MyDbEnv myDbEnv = new MyDbEnv();
+
+    // The item to locate if the -s switch is used
+    private static String locateItem;
+
+    private static void usage() {
+        System.out.println("ExampleInventoryRead [-h &lt;env directory&gt;]" +
+                           "[-s &lt;item to locate&gt;]");
+        System.exit(-1);
+    }
+
+    public static void main(String args[]) {
+        ExampleInventoryRead eir = new ExampleInventoryRead();
+        try {
+            eir.run(args);
+        } catch (DatabaseException dbe) {
+            System.err.println("ExampleInventoryRead: " + dbe.toString());
+            dbe.printStackTrace();
+        } finally {
+            myDbEnv.close();
+        }
+        System.out.println("All done.");
+    }
+
+    private void run(String args[])
+        throws DatabaseException {
+        // Parse the arguments list
+        parseArgs(args);
+
+        myDbEnv.setup(myDbEnvPath, // path to the environment home
+                      true);       // is this environment read-only?
+
+        // Open the data accessor. This is used to retrieve
+        // persistent objects.
+        da = new DataAccessor(myDbEnv.getEntityStore());
+
+        // If a item to locate is provided on the command line,
+        // show just the inventory items using the provided name.
+        // Otherwise, show everything in the inventory.
+        if (locateItem != null) {
+            showItem();
+        } else {
+            showAllInventory();
+        }
+    } </pre>
+      <p>
+            The first method that we provide is used to show inventory
+            items related to a given inventory name. This method is called
+            only if an inventory name is passed to
+            <code class="classname">ExampleInventoryRead</code>
+            via the <code class="literal">-s</code> option. Given the sample data
+            that we provide with this example, each matching inventory name
+            will result in the display of three inventory objects.
+    </p>
+      <p>
+            To display these objects we use the
+            <code class="classname">Inventory</code> class'
+            <code class="literal">inventoryByName</code> secondary index to retrieve
+            an <code class="classname">EntityCursor</code>, and then we iterate
+            over the resulting objects using the cursor.
+    </p>
+      <p>
+            Notice that this method calls
+            <code class="methodname">displayInventoryRecord()</code>
+            to display each individual object. We show this
+            method a little later in the example.
+    </p>
+      <pre class="programlisting">    // Shows all the inventory items that exist for a given
+    // inventory name.
+    private void showItem() throws DatabaseException {
+
+        // Use the inventory name secondary key to retrieve
+        // these objects.
+        EntityCursor&lt;Inventory&gt; items =
+            da.inventoryByName.subIndex(locateItem).entities();
+        try {
+            for (Inventory item : items) {
+                displayInventoryRecord(item);
+            }
+        } finally {
+            items.close();
+        }
+    } </pre>
+      <p>
+            Next we implement <code class="methodname">showAllInventory()</code>,
+            which shows all of the <code class="classname">Inventory</code>
+            objects in the store.  To do this, we
+            obtain an <code class="classname">EntityCursor</code>
+            from the <code class="classname">Inventory</code> class'
+            primary index and, again, we iterate using that cursor. 
+     </p>
+      <pre class="programlisting">    // Displays all the inventory items in the store
+    private void showAllInventory()
+        throws DatabaseException {
+
+        // Get a cursor that will walk every
+        // inventory object in the store.
+        EntityCursor&lt;Inventory&gt; items =
+            da.inventoryBySku.entities();
+
+        try {
+            for (Inventory item : items) {
+                displayInventoryRecord(item);
+            }
+        } finally {
+            items.close();
+        }
+    } </pre>
+      <p>
+                Now we implement
+                <code class="methodname">displayInventoryRecord()</code>. This
+                uses the getter methods on the <code class="classname">Inventory</code> 
+                class to obtain the information that we want to display.
+                The only thing interesting about this method is that we
+                obtain <code class="classname">Vendor</code> objects within.
+                The vendor objects are retrieved <code class="classname">Vendor</code> 
+                objects using their primary index. We get the key
+                for the retrieval from the <code class="classname">Inventory</code>
+                object that we are displaying at the time.
+            </p>
+      <pre class="programlisting">    private void displayInventoryRecord(Inventory theInventory)
+            throws DatabaseException {
+
+            System.out.println(theInventory.getSku() + ":");
+            System.out.println("\t " + theInventory.getItemName());
+            System.out.println("\t " + theInventory.getCategory());
+            System.out.println("\t " + theInventory.getVendor());
+            System.out.println("\t\tNumber in stock: " +
+                theInventory.getVendorInventory());
+            System.out.println("\t\tPrice per unit:  " +
+                theInventory.getVendorPrice());
+            System.out.println("\t\tContact: ");
+
+            Vendor theVendor =
+                    da.vendorByName.get(theInventory.getVendor());
+            assert theVendor != null;
+
+            System.out.println("\t\t " + theVendor.getAddress());
+            System.out.println("\t\t " + theVendor.getCity() + ", " +
+                theVendor.getState() + " " + theVendor.getZipcode());
+            System.out.println("\t\t Business Phone: " +
+                theVendor.getBusinessPhoneNumber());
+            System.out.println("\t\t Sales Rep: " +
+                                theVendor.getRepName());
+            System.out.println("\t\t            " +
+                theVendor.getRepPhoneNumber());
+    } </pre>
+      <p>
+                The last remaining parts of the example are used to parse
+                the command line. This is not very
+                interesting for our purposes here, but we show it anyway
+                for the sake of completeness.
+        </p>
+      <pre class="programlisting">    protected ExampleInventoryRead() {}
+
+    private static void parseArgs(String args[]) {
+        for(int i = 0; i &lt; args.length; ++i) {
+            if (args[i].startsWith("-")) {
+                switch(args[i].charAt(1)) {
+                    case 'h':
+                        myDbEnvPath = new File(args[++i]);
+                    break;
+                    case 's':
+                        locateItem = args[++i];
+                    break;
+                    default:
+                        usage();
+                }
+            }
+        }
+    }
+} </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dpl_exampledatabaseput.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="dpl_example.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="baseapi.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">ExampleDatabasePut.java </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Part II. Programming with the Base API</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

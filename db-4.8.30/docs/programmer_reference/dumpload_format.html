@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Dump output formats</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="dumpload.html" title="Chapter 22.  Dumping and Reloading Databases" />
+    <link rel="prev" href="dumpload.html" title="Chapter 22.  Dumping and Reloading Databases" />
+    <link rel="next" href="dumpload_text.html" title="Loading text into databases" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Dump output formats</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dumpload.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 22. 
+        Dumping and Reloading Databases
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dumpload_text.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dumpload_format"></a>Dump output formats</h2>
+          </div>
+        </div>
+      </div>
+      <p>There are two output formats used by the <a href="../api_reference/C/db_dump.html" class="olink">db_dump utility</a> and <a href="../api_reference/C/db_dump.html" class="olink">db_dump185 utility</a>.</p>
+      <p>In both output formats, the first few lines of the output contain header
+information describing the underlying access method, filesystem page size,
+and other bookkeeping information.</p>
+      <p>The header information starts with a single line, VERSION=N, where N is
+the version number of the dump output format.</p>
+      <p>The header information is then output in name=value pairs, where name may be any of the keywords listed in the <a href="../api_reference/C/db_load.html" class="olink">db_load utility</a> manual page, and value will be its value.  Although this header information can be manually edited before the database is reloaded, there is rarely any reason to do so because all of this information can also be specified or overridden by command-line arguments to the <a href="../api_reference/C/db_load.html" class="olink">db_load utility</a>.</p>
+      <p>The header information ends with single line HEADER=END.</p>
+      <p>Following the header information are the key/data pairs from the
+database.  If the database being dumped is a Btree or Hash database, or
+if the <span class="bold"><strong>-k</strong></span> option was specified, the output will be paired lines
+of text where the first line of the pair is the key item, and the second
+line of the pair is its corresponding data item.  If the database being
+dumped is a Queue or Recno database, and the <span class="bold"><strong>-k</strong></span> option was not
+specified, the output will be lines of text where each line is the next
+data item for the database.  Each of these lines is preceded by a single
+space.</p>
+      <p>If the <span class="bold"><strong>-p</strong></span> option was specified to the <a href="../api_reference/C/db_dump.html" class="olink">db_dump utility</a> or
+    <a href="../api_reference/C/db_dump.html" class="olink">db_dump185 utility</a>, the key/data lines will consist of single characters representing any characters
+    from the database that are <span class="emphasis"><em>printing characters</em></span> and backslash
+    (<span class="bold"><strong>\</strong></span>) escaped characters for any that were not.  Backslash
+    characters appearing in the output mean one of two things: if the backslash character precedes
+    another backslash character, it means that a literal backslash character occurred in the key or
+    data item.  If the backslash character precedes any other character, the next two characters
+    must be interpreted as hexadecimal specification of a single character; for example, <span class="bold"><strong>\0a</strong></span> is a newline character in the ASCII character set.</p>
+      <p>Although some care should be exercised, it is perfectly reasonable to use standard text editors and tools to edit databases dumped using the <span class="bold"><strong>-p</strong></span> option before reloading them using the <a href="../api_reference/C/db_load.html" class="olink">db_load utility</a>.</p>
+      <p>Note that the definition of a printing character may vary from system to
+system, so database representations created using the <span class="bold"><strong>-p</strong></span>
+option may be less portable than those created without it.</p>
+      <p>If the <span class="bold"><strong>-p</strong></span> option in not specified to <a href="../api_reference/C/db_dump.html" class="olink">db_dump utility</a> or <a href="../api_reference/C/db_dump.html" class="olink">db_dump185 utility</a>, each output
+    line will consist of paired hexadecimal values; for example, the line <span class="bold"><strong>726f6f74</strong></span> is the string <span class="bold"><strong>root</strong></span> in the
+    ASCII character set.</p>
+      <p>In all output formats, the key and data items are ended by a single line
+DATA=END.</p>
+      <p>Where multiple databases have been dumped from a file, the overall output
+will repeat; that is, a new set of headers and a new set of data items.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dumpload.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="dumpload.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dumpload_text.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 22. 
+        Dumping and Reloading Databases
+         </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Loading text into databases</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

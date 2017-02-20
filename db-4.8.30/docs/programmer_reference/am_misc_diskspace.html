@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Disk space requirements</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="am_misc.html" title="Chapter 4.  Access Method Wrapup" />
+    <link rel="prev" href="am_misc_dbsizes.html" title="Database limits" />
+    <link rel="next" href="am_misc_db_sql.html" title="Specifying a Berkeley DB schema using SQL DDL" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Disk space requirements</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="am_misc_dbsizes.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 4. 
+        Access Method Wrapup
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="am_misc_db_sql.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="am_misc_diskspace"></a>Disk space requirements</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="am_misc_diskspace.html#id1597294">Btree</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="am_misc_diskspace.html#id1597385">Hash</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>It is possible to estimate the total database size based on the size of
+the data.  The following calculations are an estimate of how many bytes
+you will need to hold a set of data and then how many pages it will take
+to actually store it on disk.</p>
+      <p>Space freed by deleting key/data pairs from a Btree or Hash database is
+never returned to the filesystem, although it is reused where possible.
+This means that the Btree and Hash databases are grow-only.  If enough
+keys are deleted from a database that shrinking the underlying file is
+desirable, you should create a new database and copy the records from
+the old one into it.</p>
+      <p>These are rough estimates at best. For example, they do not take into
+account overflow records, filesystem metadata information, large sets
+of duplicate data items (where the key is only stored once), or
+real-life situations where the sizes of key and data items are wildly
+variable, and the page-fill factor changes over time.</p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1597294"></a>Btree</h3>
+            </div>
+          </div>
+        </div>
+        <p>The formulas for the Btree access method are as follows:</p>
+        <pre class="programlisting">useful-bytes-per-page = (page-size - page-overhead) * page-fill-factor
+<p></p>
+bytes-of-data = n-records *
+    (bytes-per-entry + page-overhead-for-two-entries)
+<p></p>
+n-pages-of-data = bytes-of-data / useful-bytes-per-page
+<p></p>
+total-bytes-on-disk = n-pages-of-data * page-size
+</pre>
+        <p>The <span class="bold"><strong>useful-bytes-per-page</strong></span> is a measure of the bytes on each page
+that will actually hold the application data.  It is computed as the total
+number of bytes on the page that are available to hold application data,
+corrected by the percentage of the page that is likely to contain data.
+The reason for this correction is that the percentage of a page that
+contains application data can vary from close to 50% after a page split
+to almost 100% if the entries in the database were inserted in sorted
+order.  Obviously, the <span class="bold"><strong>page-fill-factor</strong></span> can drastically alter
+the amount of disk space required to hold any particular data set.  The
+page-fill factor of any existing database can be displayed using the
+<a href="../api_reference/C/db_stat.html" class="olink">db_stat utility</a>.</p>
+        <p>The page-overhead for Btree databases is 26 bytes.  As an example, using
+an 8K page size, with an 85% page-fill factor, there are 6941 bytes of
+useful space on each page:</p>
+        <pre class="programlisting">6941 = (8192 - 26) * .85</pre>
+        <p>The total <span class="bold"><strong>bytes-of-data</strong></span> is an easy calculation: It is the
+number of key or data items plus the overhead required to store each
+item on a page.  The overhead to store a key or data item on a Btree
+page is 5 bytes.  So, it would take 1560000000 bytes, or roughly 1.34GB
+of total data to store 60,000,000 key/data pairs, assuming each key or
+data item was 8 bytes long:</p>
+        <pre class="programlisting">1560000000 = 60000000 * ((8 + 5) * 2)</pre>
+        <p>The total pages of data, <span class="bold"><strong>n-pages-of-data</strong></span>, is the
+<span class="bold"><strong>bytes-of-data</strong></span> divided by the <span class="bold"><strong>useful-bytes-per-page</strong></span>.  In
+the example, there are 224751 pages of data.</p>
+        <pre class="programlisting">224751 = 1560000000 / 6941</pre>
+        <p>The total bytes of disk space for the database is <span class="bold"><strong>n-pages-of-data</strong></span>
+multiplied by the <span class="bold"><strong>page-size</strong></span>.  In the example, the result is
+1841160192 bytes, or roughly 1.71GB.</p>
+        <pre class="programlisting">1841160192 = 224751 * 8192</pre>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1597385"></a>Hash</h3>
+            </div>
+          </div>
+        </div>
+        <p>The formulas for the Hash access method are as follows:</p>
+        <pre class="programlisting">useful-bytes-per-page = (page-size - page-overhead)
+<p></p>
+bytes-of-data = n-records *
+    (bytes-per-entry + page-overhead-for-two-entries)
+<p></p>
+n-pages-of-data = bytes-of-data / useful-bytes-per-page
+<p></p>
+total-bytes-on-disk = n-pages-of-data * page-size
+</pre>
+        <p>The <span class="bold"><strong>useful-bytes-per-page</strong></span> is a measure of the bytes on each page
+that will actually hold the application data.  It is computed as the total
+number of bytes on the page that are available to hold application data.
+If the application has explicitly set a page-fill factor, pages will
+not necessarily be kept full.  For databases with a preset fill factor,
+see the calculation below.  The page-overhead for Hash databases is 26
+bytes and the page-overhead-for-two-entries is 6 bytes.</p>
+        <p>As an example, using an 8K page size, there are 8166 bytes of useful space
+on each page:</p>
+        <pre class="programlisting">8166 = (8192 - 26)</pre>
+        <p>The total <span class="bold"><strong>bytes-of-data</strong></span> is an easy calculation: it is the number
+of key/data pairs plus the overhead required to store each pair on a page.
+In this case that's 6 bytes per pair.  So, assuming 60,000,000 key/data
+pairs, each of which is 8 bytes long, there are 1320000000 bytes, or
+roughly 1.23GB of total data:</p>
+        <pre class="programlisting">1320000000 = 60000000 * (16 + 6)</pre>
+        <p>The total pages of data, <span class="bold"><strong>n-pages-of-data</strong></span>, is the
+<span class="bold"><strong>bytes-of-data</strong></span> divided by the <span class="bold"><strong>useful-bytes-per-page</strong></span>.  In
+this example, there are 161646 pages of data.</p>
+        <pre class="programlisting">161646 = 1320000000 / 8166</pre>
+        <p>The total bytes of disk space for the database is <span class="bold"><strong>n-pages-of-data</strong></span>
+multiplied by the <span class="bold"><strong>page-size</strong></span>.  In the example, the result is
+1324204032 bytes, or roughly 1.23GB.</p>
+        <pre class="programlisting">1324204032 = 161646 * 8192</pre>
+        <p>Now, let's assume that the application specified a fill factor explicitly.
+The fill factor indicates the target number of items to place on a single
+page (a fill factor might reduce the utilization of each page, but it can
+be useful in avoiding splits and preventing buckets from becoming too
+large).  Using our estimates above, each item is 22 bytes (16 + 6), and
+there are 8166 useful bytes on a page (8192 - 26).  That means that, on
+average, you can fit 371 pairs per page.</p>
+        <pre class="programlisting">371 = 8166 / 22</pre>
+        <p>However, let's assume that the application designer knows that although
+most items are 8 bytes, they can sometimes be as large as 10, and it's
+very important to avoid overflowing buckets and splitting.  Then, the
+application might specify a fill factor of 314.</p>
+        <pre class="programlisting">314 = 8166 / 26</pre>
+        <p>With a fill factor of 314, then the formula for computing database size
+is</p>
+        <pre class="programlisting">n-pages-of-data = npairs / pairs-per-page</pre>
+        <p>or 191082.</p>
+        <pre class="programlisting">191082 = 60000000 / 314</pre>
+        <p>At 191082 pages, the total database size would be 1565343744, or 1.46GB.</p>
+        <pre class="programlisting">1565343744 = 191082 * 8192</pre>
+        <p>There are a few additional caveats with respect to Hash databases.  This
+discussion assumes that the hash function does a good job of evenly
+distributing keys among hash buckets.  If the function does not do this,
+you may find your table growing significantly larger than you expected.
+Secondly, in order to provide support for Hash databases coexisting with
+other databases in a single file, pages within a Hash database are
+allocated in power-of-two chunks.  That means that a Hash database with 65
+buckets will take up as much space as a Hash database with 128 buckets;
+each time the Hash database grows beyond its current power-of-two number
+of buckets, it allocates space for the next power-of-two buckets.  This
+space may be sparsely allocated in the file system, but the files will
+appear to be their full size.  Finally, because of this need for
+contiguous allocation, overflow pages and duplicate pages can be allocated
+only at specific points in the file, and this too can lead to sparse hash
+tables.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="am_misc_dbsizes.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="am_misc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="am_misc_db_sql.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Database limits </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Specifying a Berkeley DB schema using SQL DDL</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

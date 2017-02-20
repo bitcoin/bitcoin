@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Configuring Berkeley DB</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="build_unix.html" title="Chapter 27.  Building Berkeley DB for UNIX/POSIX" />
+    <link rel="prev" href="build_unix.html" title="Chapter 27.  Building Berkeley DB for UNIX/POSIX" />
+    <link rel="next" href="build_unix_small.html" title="Building a small memory footprint library" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Configuring Berkeley DB</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="build_unix.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 27. 
+        Building Berkeley DB for UNIX/POSIX
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="build_unix_small.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="build_unix_conf"></a>Configuring Berkeley DB</h2>
+          </div>
+        </div>
+      </div>
+      <p>There are several arguments you can specify when configuring Berkeley DB.
+Although only the Berkeley DB-specific ones are described here, most of the
+standard GNU autoconf arguments are available and supported.  To see a
+complete list of possible arguments, specify the --help flag to the
+configure program.</p>
+      <p>The Berkeley DB specific arguments are as follows:</p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p><a id="build_unix_conf.--disable-largefile"></a>
+            <span class="bold"><strong>--disable-largefile</strong></span>
+        </p>
+            <p>
+            Some systems, notably versions of HP/UX and Solaris, require
+            special compile-time options in order to create files larger
+            than 2^32 bytes.  These options are automatically enabled when
+            Berkeley DB is compiled.  For this reason, binaries built on
+            current versions of these systems may not run on earlier
+            versions of the system because the library and system calls
+            necessary for large files are not available.  To disable
+            building with these compile-time options, enter
+            --disable-largefile as an argument to configure.
+        </p>
+          </li>
+          <li>
+            <p>
+            <span class="bold"><strong>--disable-shared, --disable-static</strong></span>
+        </p>
+            <p>
+            On systems supporting shared libraries, Berkeley DB builds both
+            static and shared libraries by default.  (Shared libraries are
+            built using 
+            <a class="ulink" href="http://www.gnu.org/software/libtool/libtool.html" target="_top">
+            the GNU Project's Libtool</a> distribution, which supports
+            shared library builds on many (although not all) systems.)  To
+            not build shared libraries, configure using the
+            --disable-shared argument.  To not build static libraries,
+            configure using the --disable-static argument.
+        </p>
+          </li>
+          <li>
+            <p>
+            <span class="bold"><strong>--enable-compat185</strong></span>
+        </p>
+            <p>
+            To compile or load Berkeley DB 1.85 applications against this
+            release of the Berkeley DB library, enter --enable-compat185 as
+            an argument to configure.  This will include Berkeley DB 1.85
+            API compatibility code in the library.
+        </p>
+          </li>
+          <li>
+            <p>
+            <span class="bold"><strong>--enable-cxx</strong></span>
+        </p>
+            <p>
+            To build the Berkeley DB C++ API, enter --enable-cxx as an
+            argument to configure.
+        </p>
+          </li>
+          <li>
+            <p><a id="build_unix_conf.--enable-debug"></a>
+            <span class="bold"><strong>--enable-debug</strong></span>
+        </p>
+            <p>
+            To build Berkeley DB with <span class="bold"><strong>-g</strong></span>
+            as a compiler flag and with <span class="bold"><strong>DEBUG</strong></span> #defined during compilation,
+            enter --enable-debug as an argument to configure.  This will
+            create a Berkeley DB library and utilities with debugging
+            symbols, as well as load various routines that can be called
+            from a debugger to display pages, cursor queues, and so forth.
+            If installed, the utilities will not be stripped.  This
+            argument should not be specified when configuring to build
+            production binaries.
+        </p>
+          </li>
+          <li>
+            <p><a id="build_unix_conf.--enable-debug_rop"></a>
+            <span class="bold"><strong>--enable-debug_rop</strong></span>
+        </p>
+            <p>
+        To build Berkeley DB to output log records for read operations,
+        enter --enable-debug_rop as an argument to configure.  This
+        argument should not be specified when configuring to build
+        production binaries.
+        </p>
+          </li>
+          <li>
+            <p><a id="build_unix_conf.--enable-debug_wop"></a>
+            <span class="bold"><strong>--enable-debug_wop</strong></span>
+        </p>
+            <p>
+            To build Berkeley DB to output log records for write
+            operations, enter --enable-debug_wop as an argument to
+            configure.  This argument should not be specified when
+            configuring to build production binaries.
+        </p>
+          </li>
+          <li>
+            <p><a id="build_unix_conf.--enable-diagnostic"></a>
+            <span class="bold"><strong>--enable-diagnostic</strong></span>
+        </p>
+            <p>
+
+            To build Berkeley DB with run-time debugging checks, enter
+            --enable-diagnostic as an argument to configure.  This causes a
+            number of additional checks to be performed when Berkeley DB is
+            running, and also causes some failures to trigger process abort
+            rather than returning errors to the application.  Applications
+            built using this argument should not share database
+            environments with applications built without this argument.
+            This argument should not be specified when configuring to build
+            production binaries.
+        </p>
+          </li>
+          <li>
+            <p>
+            <span class="bold"><strong>--enable-dump185</strong></span>
+        </p>
+            <p>
+            To convert Berkeley DB 1.85 (or earlier) databases to this
+            release of Berkeley DB, enter --enable-dump185 as an argument
+            to configure.  This will build the <a href="../api_reference/C/db_dump.html" class="olink">db_dump185 utility</a>, which can dump
+            Berkeley DB 1.85 and 1.86 databases in a format readable by the
+            Berkeley DB <a href="../api_reference/C/db_load.html" class="olink">db_load utility</a>.
+        </p>
+            <p>
+            The system libraries with which you are loading the
+            <a href="../api_reference/C/db_dump.html" class="olink">db_dump185 utility</a> must already contain the Berkeley DB 1.85 library
+            routines for this to work because the Berkeley DB distribution
+            does not include them.  If you are using a non-standard library
+            for the Berkeley DB 1.85 library routines, you will have to
+            change the Makefile that the configuration step creates to load
+            the <a href="../api_reference/C/db_dump.html" class="olink">db_dump185 utility</a> with that library.
+        </p>
+          </li>
+          <li>
+            <p><a id="build_unix_conf.--enable-java"></a>
+            <span class="bold"><strong>--enable-java</strong></span>
+        </p>
+            <p>
+            To build the Berkeley DB Java API, enter --enable-java as an
+            argument to configure. To build Java, you must also build with
+            shared libraries.  Before configuring, you must set your PATH
+            environment variable to include javac.  Note that it is not
+            sufficient to include a symbolic link to javac in your PATH
+            because the configuration process uses the location of javac to
+            determine the location of the Java include files (for example,
+            jni.h). On some systems, additional include directories may be
+            needed to process jni.h; see <a class="xref" href="build_unix_flags.html" title="Changing compile or load options">Changing compile or load options</a> for more information.
+        </p>
+          </li>
+          <li>
+            <p><a id="build_unix_conf.--enable-posixmutexes"></a>
+            <span class="bold"><strong>--enable-posixmutexes</strong></span>
+        </p>
+            <p>
+            To force Berkeley DB to use the POSIX pthread mutex interfaces
+            for underlying mutex support, enter --enable-posixmutexes as an
+            argument to configure.  This is rarely necessary: POSIX mutexes
+            will be selected automatically on systems where they are the
+            preferred implementation.
+        </p>
+            <p>
+            The --enable-posixmutexes configuration argument is normally
+            used in two ways: First, when there are multiple mutex
+            implementations available and the POSIX mutex implementation is
+            not the preferred one (for example, on Solaris where the LWP
+            mutexes are used by default).  Second, by default the Berkeley
+            DB library will only select the POSIX mutex implementation if
+            it supports mutexes shared between multiple processes, as
+            described for the pthread_condattr_setpshared and
+            pthread_mutexattr_setpshared interfaces.  The
+            --enable-posixmutexes configuration argument can be used to
+            force the selection of POSIX mutexes in this case, which can
+            improve application performance significantly when the
+            alternative mutex implementation is a non-blocking one (for
+            example test-and-set assembly instructions).  However,
+            configuring to use POSIX mutexes when the implementation does
+            not have inter-process support will only allow the creation of
+            private database environments, that is, environments where the
+            <a href="../api_reference/C/envopen.html#open_DB_PRIVATE" class="olink">DB_PRIVATE</a> flag is specified to the <a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a> method.
+        </p>
+            <p>
+            Specifying the --enable-posixmutexes configuration argument may require
+            that applications and Berkeley DB be linked with the -lpthread library.
+        </p>
+          </li>
+          <li>
+            <p><a id="build_unix_conf.--enable-pthread_api"></a>
+            <span class="bold"><strong>--enable-pthread_api</strong></span>
+        </p>
+            <p>
+            To configure Berkeley DB for a POSIX pthreads application (with
+            the exception that POSIX pthread mutexes may not be selected as
+            the underlying mutex implementation for the build), enter
+            --enable-pthread_api as an argument to configure.  The build
+            will include the Berkeley DB replication manager interfaces and
+            will use the POSIX standard pthread_self and pthread_yield
+            functions to identify threads of control and yield the
+            processor.  The --enable-pthread_api argument requires POSIX
+            pthread support already be installed on your system.
+        </p>
+            <p>
+            Specifying the --enable-pthread_api configuration argument may
+            require that applications and Berkeley DB be linked with the
+            -lpthread library.
+        </p>
+          </li>
+          <li>
+            <p>
+            <span class="bold"><strong>--enable-smallbuild</strong></span>
+        </p>
+            <p>
+            To build a small memory footprint version of the Berkeley DB
+            library, enter --enable-smallbuild as an argument to configure.
+            The --enable-smallbuild argument is equivalent to individually
+            specifying --disable-cryptography, --disable-hash,
+            --disable-queue, --disable-replication, --disable-statistics
+            and --disable-verify, turning off cryptography support, the
+            Hash and Queue access methods, database environment replication
+            support and database verification support.  See 
+            <a class="xref" href="build_unix_small.html" title="Building a small memory footprint library">Building a small memory footprint library</a> 
+            for more information.
+        </p>
+          </li>
+          <li>
+            <p>
+            <span class="bold"><strong>--enable-stl</strong></span>
+        </p>
+            <p>
+            To build the Berkeley DB C++ STL API, enter --enable-stl as an
+            argument to configure. Setting this argument implies that --enable-cxx is set,
+        and the Berkeley DB C++ API will be built too. 
+    
+        </p>
+            <p>
+        There will be a libdb_stl-X.X.a and libdb_stl-X.X.so
+        built, which are the static and shared library you should link your application with in order to
+        make use of Berkeley DB via its STL API. 
+        
+        </p>
+            <p>
+       If your compiler is not ISO C++ compliant, the configure may fail with this argument
+       specified because the STL API requires standard C++ template features. In this case,
+       you will need a standard C++ compiler. So far gcc is the best choice, we have tested and found
+       that gcc-3.4.4 and all its newer versions can build the Berkeley DB C++ STL API successfully.
+    </p>
+            <p>
+And you need to include the STL API header files in your application code.
+If you are using the Berkeley DB source tree, the header files are in &lt;Berkeley DB Source Root &gt;/stl directory; 
+If you 
+are using the installed version, these header files are in &lt; Berkeley DB Installed Directory&gt;/include, as well as the 
+db.h and db_cxx.h header files.
+</p>
+          </li>
+          <li>
+            <p>
+            <span class="bold"><strong>--enable-tcl</strong></span>
+        </p>
+            <p>
+            To build the Berkeley DB Tcl API, enter --enable-tcl as an
+            argument to configure.  This configuration argument expects to
+            find Tcl's tclConfig.sh file in the
+            <code class="filename">/usr/local/lib</code> directory.  See the
+            --with-tcl argument for instructions on specifying a
+            non-standard location for the Tcl installation.  See <a class="xref" href="tcl.html#tcl_intro" title="Loading Berkeley DB with Tcl">Loading Berkeley DB with Tcl</a> for
+            information on sites from which you can download Tcl and which
+            Tcl versions are compatible with Berkeley DB.  To build Tcl,
+            you must also build with shared libraries.
+        </p>
+          </li>
+          <li>
+            <p><a id="build_unix_conf.--enable-test"></a>
+            <span class="bold"><strong>--enable-test</strong></span>
+        </p>
+            <p>
+            To build the Berkeley DB test suite, enter --enable-test as an
+            argument to configure.  To run the Berkeley DB test suite, you
+            must also build the Tcl API.  This argument should not be
+            specified when configuring to build production binaries.
+        </p>
+          </li>
+          <li>
+            <p><a id="build_unix_conf.--enable-uimutexes"></a>
+            <span class="bold"><strong>--enable-uimutexes</strong></span>
+        </p>
+            <p>
+            To force Berkeley DB to use the UNIX International (UI) mutex
+            interfaces for underlying mutex support, enter
+            --enable-uimutexes as an argument to configure.  This is rarely
+            necessary: UI mutexes will be selected automatically on systems
+            where they are the preferred implementation.
+        </p>
+            <p>
+            The --enable-uimutexes configuration argument is normally used
+            when there are multiple mutex implementations available and the
+            UI mutex implementation is not the preferred one (for example,
+            on Solaris where the LWP mutexes are used by default).
+        </p>
+            <p>
+            Specifying the --enable-uimutexes configuration argument may
+            require that applications and Berkeley DB be linked with the
+            -lthread library.
+        </p>
+          </li>
+          <li>
+            <p><a id="build_unix_conf.--enable-umrw"></a>
+            <span class="bold"><strong>--enable-umrw</strong></span>
+        </p>
+            <p>
+            Rational Software's Purify product and other run-time tools
+            complain about uninitialized reads/writes of structure fields
+            whose only purpose is padding, as well as when heap memory that
+            was never initialized is written to disk.  Specify the
+            --enable-umrw argument during configuration to mask these
+            errors.  This argument should not be specified when configuring
+            to build production binaries.
+        </p>
+          </li>
+          <li>
+            <p><a id="build_unix_conf.--with-mutex"></a>
+            <span class="bold"><strong>--with-mutex=MUTEX</strong></span>
+        </p>
+            <p>
+            To force Berkeley DB to use a specific mutex implementation,
+            configure with --with-mutex=MUTEX, where MUTEX is the mutex
+            implementation you want.  For example,
+            --with-mutex=x86/gcc-assembly will configure Berkeley DB to use
+            the x86 GNU gcc compiler based test-and-set assembly mutexes.
+            This is rarely necessary and should be done only when the
+            default configuration selects the wrong mutex implementation.
+            A list of available mutex implementations can be found in the
+            distribution file <code class="filename">dist/aclocal/mutex.m4</code>.
+        </p>
+          </li>
+          <li>
+            <p>
+            <span class="bold"><strong>--with-tcl=DIR</strong></span>
+        </p>
+            <p>
+            To build the Berkeley DB Tcl API, enter --with-tcl=DIR,
+            replacing DIR with the directory in which the Tcl tclConfig.sh
+            file may be found.  See <a class="xref" href="tcl.html#tcl_intro" title="Loading Berkeley DB with Tcl">Loading Berkeley DB with Tcl</a> for information on sites from
+            which you can download Tcl and which Tcl versions are
+            compatible with Berkeley DB.  To build Tcl, you must also build
+            with shared libraries.
+        </p>
+          </li>
+          <li>
+            <p><a id="build_unix_conf.--with-uniquename=NAME"></a>
+            <span class="bold"><strong>--with-uniquename=NAME</strong></span>
+        </p>
+            <p>
+            To build Berkeley DB with unique symbol names (in order to
+            avoid conflicts with other application modules or libraries),
+            enter --with-uniquename=NAME, replacing NAME with a string that
+            to be appended to every Berkeley DB symbol.  If "=NAME" is not
+            specified, a default value of "_MAJORMINOR" is used, where
+            MAJORMINOR is the major and minor release numbers of the
+            Berkeley DB release.  See <a class="xref" href="install_multiple.html" title="Building with multiple versions of Berkeley DB">Building with multiple versions of Berkeley DB</a> for more information.
+        </p>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="build_unix.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="build_unix.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="build_unix_small.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 27. 
+        Building Berkeley DB for UNIX/POSIX
+         </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Building a small memory footprint library</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

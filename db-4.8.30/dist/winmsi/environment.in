@@ -1,0 +1,23 @@
+# $Id$
+# Lists environment variables needed to install particular
+# features in Windows.  Feature names must be
+# listed in features.in .  The meaning of each line is:
+# if a given FEATURE is selected, add to the environment VARIABLE
+# the given VALUE (relative to the root of the tree).
+# Options may be +first or +last to put it at the beginning or end
+# of the variable.  The items are processed in the order given here,
+# so an entry with +first will no longer be first if another line
+# with +first follows it.
+
+# Note: columns below must be separated by tabs.
+
+# feature	variable		value			options
+
+DCoreAPI	PATH			/bin\\debug		+first
+CoreAPI		PATH			/bin			+first
+
+# The debug versions go last, they are preferred if they are installed.
+JavaEx		CLASSPATH		/jar\\dbexamples.jar	+last
+JavaAPI		CLASSPATH		/jar\\db.jar		+last
+DJavaEx		CLASSPATH		/jar\\debug\\dbexamples.jar	+last
+DJavaAPI	CLASSPATH		/jar\\debug\\db.jar	+last

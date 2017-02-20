@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Environment infrastructure</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="transapp.html" title="Chapter 11.  Berkeley DB Transactional Data Store Applications" />
+    <link rel="prev" href="transapp_nested.html" title="Nested transactions" />
+    <link rel="next" href="transapp_deadlock.html" title="Deadlock detection" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Environment infrastructure</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="transapp_nested.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 11. 
+        Berkeley DB Transactional Data Store Applications
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="transapp_deadlock.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="transapp_admin"></a>Environment infrastructure</h2>
+          </div>
+        </div>
+      </div>
+      <p>When building transactional applications, it is usually necessary to
+build an administrative infrastructure around the database environment.
+There are five components to this infrastructure, and each is
+supported by the Berkeley DB package in two different ways: a standalone
+utility and one or more library interfaces.</p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>Deadlock detection: <a href="../api_reference/C/db_deadlock.html" class="olink">db_deadlock utility</a>, <a href="../api_reference/C/lockdetect.html" class="olink">DB_ENV-&gt;lock_detect()</a>, <a href="../api_reference/C/envset_lk_detect.html" class="olink">DB_ENV-&gt;set_lk_detect()</a></li>
+          <li>Checkpoints: the <a href="../api_reference/C/db_checkpoint.html" class="olink">db_checkpoint utility</a>, <a href="../api_reference/C/txncheckpoint.html" class="olink">DB_ENV-&gt;txn_checkpoint()</a></li>
+          <li>Database and log file archival: the <a href="../api_reference/C/db_archive.html" class="olink">db_archive utility</a>, <a href="../api_reference/C/logarchive.html" class="olink">DB_ENV-&gt;log_archive()</a></li>
+          <li>Log file removal: <a href="../api_reference/C/db_archive.html" class="olink">db_archive utility</a>, <a href="../api_reference/C/logarchive.html" class="olink">DB_ENV-&gt;log_archive()</a></li>
+          <li>Recovery procedures: <a href="../api_reference/C/db_recover.html" class="olink">db_recover utility</a>, <a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a></li>
+        </ul>
+      </div>
+      <p>When writing multithreaded server applications and/or applications
+intended for download from the Web, it is usually simpler to create
+local threads that are responsible for administration of the database
+environment as scheduling is often simpler in a single-process model,
+and only a single binary need be installed and run.  However, the
+supplied utilities can be generally useful tools even when the
+application is responsible for doing its own administration because
+applications rarely offer external interfaces to database
+administration.  The utilities are required when programming to a Berkeley DB
+scripting interface because the scripting APIs do not always offer
+interfaces to the administrative functionality.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="transapp_nested.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="transapp.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="transapp_deadlock.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Nested transactions </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Deadlock detection</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

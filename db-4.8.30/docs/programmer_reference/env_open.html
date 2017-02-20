@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Opening databases within the environment</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="env.html" title="Chapter 9.  The Berkeley DB Environment" />
+    <link rel="prev" href="env_create.html" title="Creating a database environment" />
+    <link rel="next" href="env_error.html" title="Error support" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Opening databases within the environment</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="env_create.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 9. 
+        The Berkeley DB Environment
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="env_error.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="env_open"></a>Opening databases within the environment</h2>
+          </div>
+        </div>
+      </div>
+      <p>Once the environment has been created, database handles may be created
+and then opened within the environment.  This is done by calling the
+<a href="../api_reference/C/dbcreate.html" class="olink">db_create()</a> function and specifying the appropriate environment
+as an argument.</p>
+      <p>File naming, database operations, and error handling will all be done as
+specified for the environment.  For example, if the <a href="../api_reference/C/envopen.html#envopen_DB_INIT_LOCK" class="olink">DB_INIT_LOCK</a>
+or <a href="../api_reference/C/envopen.html#envopen_DB_INIT_CDB" class="olink">DB_INIT_CDB</a> flags were specified when the environment was
+created or joined, database operations will automatically perform all
+necessary locking operations for the application.</p>
+      <p>The following is a simple example of opening two databases within a
+database environment:</p>
+      <pre class="programlisting">  DB_ENV *dbenv;
+    DB *dbp1, *dbp2;
+    int ret;
+
+    dbenv = NULL;
+    dbp1 = dbp2 = NULL;
+
+    /*
+     * Create an environment and initialize it for additional error
+     * reporting.
+     */
+    if ((ret = db_env_create(&amp;dbenv, 0)) != 0) {
+        fprintf(errfp, "%s: %s\n", progname, db_strerror(ret));
+        return (ret);
+    }
+
+    dbenv-&gt;set_errfile(dbenv, errfp);
+    dbenv-&gt;set_errpfx(dbenv, progname);
+
+    /* Open an environment with just a memory pool. */
+    if ((ret =
+        dbenv-&gt;open(dbenv, home, DB_CREATE | DB_INIT_MPOOL, 0)) != 0) {
+        dbenv-&gt;err(dbenv, ret, "environment open: %s", home);
+        goto err;
+    }
+
+    /* Open database #1. */
+    if ((ret = db_create(&amp;dbp1, dbenv, 0)) != 0) {
+        dbenv-&gt;err(dbenv, ret, "database create");
+        goto err;
+    }
+    if ((ret = dbp1-&gt;open(dbp1,
+        NULL, DATABASE1, NULL, DB_BTREE, DB_CREATE, 0664)) != 0) {
+        dbenv-&gt;err(dbenv, ret, "DB-&gt;open: %s", DATABASE1);
+        goto err;
+    }
+
+    /* Open database #2. */
+    if ((ret = db_create(&amp;dbp2, dbenv, 0)) != 0) {
+        dbenv-&gt;err(dbenv, ret, "database create");
+        goto err;
+    }
+    if ((ret = dbp2-&gt;open(dbp2,
+        NULL, DATABASE2, NULL, DB_HASH, DB_CREATE, 0664)) != 0) {
+        dbenv-&gt;err(dbenv, ret, "DB-&gt;open: %s", DATABASE2);
+        goto err;
+    }
+
+    return (0);
+
+err:    if (dbp2 != NULL)
+        (void)dbp2-&gt;close(dbp2, 0);
+    if (dbp1 != NULL)
+        (void)dbp2-&gt;close(dbp1, 0);
+    (void)dbenv-&gt;close(dbenv, 0);
+    return (1);
+}</pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="env_create.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="env.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="env_error.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Creating a database environment </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Error support</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

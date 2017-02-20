@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB-&gt;exists()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="db.html" title="Chapter 2.  The DB Handle" />
+    <link rel="prev" href="dberr.html" title="DB-&gt;err()" />
+    <link rel="next" href="dbfd.html" title="DB-&gt;fd()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB-&gt;exists()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dberr.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+                The DB Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbfd.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dbexists"></a>DB-&gt;exists()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB-&gt;exists(DB *db, DB_TXN *txnid, DBT *key, u_int32_t flags);  </pre>
+      <p>
+         The <code class="methodname">DB-&gt;exists()</code> method returns whether the specified key appears in the
+         database.
+    </p>
+      <p>
+         The <code class="methodname">DB-&gt;exists()</code> method will return <a href="../../programmer_reference/program_errorret.html#program_errorret.DB_NOTFOUND" class="olink">DB_NOTFOUND</a> if the specified key
+         is not in the database. The <code class="methodname">DB-&gt;exists()</code> method will return
+         <a href="../../programmer_reference/program_errorret.html#program_errorret.DB_KEYEMPTY" class="olink">DB_KEYEMPTY</a> if the database
+         is a Queue or Recno database and the specified key exists, but was never explicitly created
+         by the application or was later deleted. 
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1634166"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1634245"></a>flags</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                The <span class="bold"><strong>flags</strong></span> parameter must be set to zero or
+                by bitwise inclusively <span class="bold"><strong>OR</strong></span>'ing together one
+                or more of the following values:
+            </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="exists_DB_READ_COMMITTED"></a>
+                    <code class="literal">DB_READ_COMMITTED</code>
+                </p>
+                <p>
+                    Configure a transactional read operation to have degree 2 isolation
+                    (the read is not repeatable).
+                </p>
+              </li>
+              <li>
+                <p><a id="exists_DB_READ_UNCOMMITTED"></a>
+                    <code class="literal">DB_READ_UNCOMMITTED</code>
+                </p>
+                <p>
+                    Configure a transactional read operation to have degree 1 isolation,
+                    reading modified but not yet committed data.  Silently ignored if the
+                    <a class="link" href="dbopen.html#dbopen_DB_READ_UNCOMMITTED">DB_READ_UNCOMMITTED</a> 
+                    flag was not specified when the underlying database was opened.
+                </p>
+              </li>
+              <li>
+                <p><a id="exists_DB_RMW"></a>
+                    <code class="literal">DB_RMW</code>
+                </p>
+                <p>
+                    Acquire write locks instead of read locks when doing the read, if locking is
+                    configured.  Setting this flag can eliminate deadlock during a read-modify-write
+                    cycle by acquiring the write lock during the read part of the cycle so that
+                    another thread of control acquiring a read lock for the same item, in its own
+                    read-modify-write cycle, will not result in deadlock.
+                </p>
+                <p>
+                    Because the <code class="methodname">DB-&gt;exists()</code> method will not hold locks
+                    across Berkeley DB calls in non-transactional operations, the 
+                    <a class="link" href="dbcget.html#dbcget_DB_RMW">DB_RMW</a>  flag to the
+                    <code class="methodname">DB-&gt;exists()</code> call is meaningful only in the presence
+                    of transactions.
+                </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1634337"></a>key</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                The key <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a>  operated on.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1634420"></a>txnid</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                If the operation is part of an application-specified transaction, the <span class="bold"><strong>txnid</strong></span> parameter is a transaction handle returned from
+                <a class="xref" href="txnbegin.html" title="DB_ENV-&gt;txn_begin()">DB_ENV-&gt;txn_begin()</a>; if the operation is part of a
+                Berkeley DB Concurrent Data Store group, the <span class="bold"><strong>txnid</strong></span>
+                parameter is a handle returned from 
+                <a class="xref" href="envcdsgroup_begin.html" title="DB_ENV-&gt;cdsgroup_begin()">DB_ENV-&gt;cdsgroup_begin()</a>; otherwise NULL.  
+                If no transaction handle is specified, but the
+                operation occurs in a transactional database, the operation will be
+                implicitly transaction protected.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1634561"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+            <a class="link" href="db.html" title="Chapter 2.  The DB Handle">DB</a>  
+        </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1634410"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+            <a class="xref" href="db.html#dblist" title="Database and Related Methods">Database and Related Methods</a> 
+        </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dberr.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="db.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbfd.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB-&gt;err() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB-&gt;fd()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

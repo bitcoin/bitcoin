@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Using Transactions</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Collections Tutorial" />
+    <link rel="up" href="BasicProgram.html" title="Chapter 2.  The Basic Program" />
+    <link rel="prev" href="implementingmain.html" title="Implementing the Main Program" />
+    <link rel="next" href="addingdatabaseitems.html" title="Adding Database Items" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">
+        Using Transactions
+    </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="implementingmain.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+        The Basic Program
+    </th>
+          <td width="20%" align="right"> <a accesskey="n" href="addingdatabaseitems.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="usingtransactions"></a>
+        Using Transactions
+    </h2>
+          </div>
+        </div>
+      </div>
+      <p>
+    DB transactional applications have standard
+    transactional characteristics: recoverability, atomicity and
+    integrity (this is sometimes also referred to generically as <span class="emphasis"><em>ACID
+    properties</em></span>). The DB Java Collections API provides these
+    transactional capabilities using a <span class="emphasis"><em>transaction-per-thread</em></span>
+    model. Once a transaction is begun, it is implicitly associated
+    with the current thread until it is committed or aborted. This
+    model is used for the following reasons.
+</p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+            The transaction-per-thread model is commonly used in other Java
+            APIs such as J2EE.
+        </p>
+          </li>
+          <li>
+            <p>
+            Since the Java collections API is used for data access, there
+            is no way to pass a transaction object to methods such
+            as 
+            <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Map.html#put" target="_top">Map.put</a>.
+        </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+    The DB Java Collections API provides two transaction APIs. The
+    lower-level API is the 
+    <a class="ulink" href="../../java/com/sleepycat/collections/CurrentTransaction.html" target="_top">CurrentTransaction</a>
+    
+    class. It provides a way to get the transaction for the current
+    thread, and to begin, commit and abort transactions. It also
+    provides access to the Berkeley DB core API 
+    
+    <a class="ulink" href="../../java/com/sleepycat/db/Transaction.html" target="_top">Transaction</a>
+    
+    object. With 
+    <a class="ulink" href="../../java/com/sleepycat/collections/CurrentTransaction.html" target="_top">CurrentTransaction</a>,
+    just as in the 
+        
+        <span>com.sleepycat.db</span>
+    API, the application is responsible
+    for beginning, committing and aborting transactions, and for
+    handling deadlock exceptions and retrying operations. This API may
+    be needed for some applications, but it is not used in the
+    example.
+</p>
+      <p>
+    The example uses the higher-level 
+    <a class="ulink" href="../../java/com/sleepycat/collections/TransactionRunner.html" target="_top">TransactionRunner</a>
+    
+    and 
+    <a class="ulink" href="../../java/com/sleepycat/collections/TransactionWorker.html" target="_top">TransactionWorker</a>
+    
+    APIs, which are build on top of 
+    <a class="ulink" href="../../java/com/sleepycat/collections/CurrentTransaction.html" target="_top">CurrentTransaction</a>.
+    <code class="methodname">TransactionRunner.run()</code> automatically begins a transaction and
+    then calls the <code class="methodname">TransactionWorker.doWork()</code> method, which is
+    implemented by the application.
+</p>
+      <p>
+    The <code class="methodname">TransactionRunner.run()</code> method automatically detects
+    deadlock exceptions and performs retries by repeatedly calling the
+    <code class="methodname">TransactionWorker.doWork()</code> method until the operation succeeds
+    or the maximum retry count is reached. If the maximum retry count
+    is reached or if another exception (other than 
+    
+    <span>
+        <a class="ulink" href="../../java/com/sleepycat/db/DeadlockException.html" target="_top">DeadlockException</a>)
+    </span>
+    is thrown by <code class="methodname">TransactionWorker.doWork()</code>, then the transaction
+    will be automatically aborted. Otherwise, the transaction will be
+    automatically committed.
+</p>
+      <p>
+    Using this high-level API, if <code class="methodname">TransactionRunner.run()</code>
+    throws an exception, the application can assume that the operation
+    failed and the transaction was aborted; otherwise, when an
+    exception is not thrown, the application can assume the operation
+    succeeded and the transaction was committed.
+</p>
+      <p>
+    The <code class="methodname">Sample.run()</code> method creates a <code class="classname">TransactionRunner</code>
+    object and calls its <code class="methodname">run()</code> method.
+</p>
+      <a id="cb_sample1"></a>
+      <pre class="programlisting"><strong class="userinput"><code>import com.sleepycat.collections.TransactionRunner;
+import com.sleepycat.collections.TransactionWorker;</code></strong>
+...
+public class Sample
+{
+    private SampleDatabase db;
+    ...
+<strong class="userinput"><code>    private void run()
+        throws Exception
+    {
+        TransactionRunner runner = new TransactionRunner(db.getEnvironment());
+        runner.run(new PopulateDatabase());
+        runner.run(new PrintDatabase());
+    }
+    ...
+    private class PopulateDatabase implements TransactionWorker
+    {
+        public void doWork()
+            throws Exception
+        {
+        }
+    }
+
+    private class PrintDatabase implements TransactionWorker
+    {
+        public void doWork()
+            throws Exception
+        {
+        }
+    }</code></strong>
+} </pre>
+      <p>
+    The <code class="methodname">run()</code> method is called by <code class="methodname">main()</code> and was outlined
+    in the previous section. It first creates a
+    <code class="classname">TransactionRunner</code>, passing the database environment to its
+    constructor.
+</p>
+      <p>
+    It then calls <code class="methodname">TransactionRunner.run()</code> to execute two
+    transactions, passing instances of the application-defined
+    <code class="classname">PopulateDatabase</code> and
+    <code class="classname">PrintDatabase</code> nested classes.
+    These classes implement the <code class="methodname">TransactionWorker.doWork()</code> method
+    and will be fully described in the next two sections.
+</p>
+      <p>
+    For each call to <code class="methodname">TransactionRunner.run()</code>, a separate
+    transaction will be performed. The use of two transactions in the
+    example — one for populating the database and another for printing
+    its contents — is arbitrary. A real-life application should be
+    designed to create transactions for each group of operations that
+    should have ACID properties, while also
+    taking into account the impact of transactions on performance.
+</p>
+      <p>
+    The advantage of using <code class="classname">TransactionRunner</code> is that deadlock
+    retries and transaction begin, commit and abort are handled
+    automatically. However, a <code class="classname">TransactionWorker</code> class must be
+    implemented for each type of transaction. If desired, anonymous
+    inner classes can be used to implement the <code class="classname">TransactionWorker</code>
+    interface.
+</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="implementingmain.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="BasicProgram.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="addingdatabaseitems.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+        Implementing the Main Program
+     </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+        Adding Database Items
+    </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

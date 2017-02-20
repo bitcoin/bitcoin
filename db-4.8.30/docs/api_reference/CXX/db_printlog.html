@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>db_printlog</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="utilities.html" title="Appendix 1.  Berkeley DB Command Line Utilities" />
+    <link rel="prev" href="db_load.html" title="db_load" />
+    <link rel="next" href="db_recover.html" title="db_recover" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">db_printlog</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="db_load.html">Prev</a> </td>
+          <th width="60%" align="center">Appendix 1. 
+                Berkeley DB Command Line Utilities
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="db_recover.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="db_printlog"></a>db_printlog</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">db_printlog [-NrV] [-b start-LSN] [-e stop-LSN] [-h home] [-P password]  </pre>
+      <p>
+         The <span class="command"><strong>db_printlog</strong></span> utility is a debugging utility that dumps Berkeley DB
+         log files in a human-readable format.
+    </p>
+      <p>
+        The options are as follows:
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                  <span class="bold"><strong>-b</strong></span>
+            </p>
+            <p>
+                 Display log records starting at log sequence number (LSN) <span class="bold"><strong>start-LSN</strong></span>; <span class="bold"><strong>start-LSN</strong></span> is specified as a file number,
+                 followed by a slash (/) character, followed by an offset number, with
+                 no intervening whitespace.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-e</strong></span>
+            </p>
+            <p>
+                 Stop displaying log records at log sequence number (LSN) <span class="bold"><strong>stop-LSN</strong></span>; <span class="bold"><strong>stop-LSN</strong></span> is specified as a file number,
+                 followed by a slash (/) character, followed by an offset number, with
+                 no intervening whitespace.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-h</strong></span>
+            </p>
+            <p>
+                 Specify a home directory for the database environment; by default, the
+                 current working directory is used.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-N</strong></span>
+            </p>
+            <p>
+                 Do not acquire shared region mutexes while running.  Other problems,
+                 such as potentially fatal errors in Berkeley DB, will be ignored as
+                 well. This option is intended only for debugging errors, and should
+                 not be used under any other circumstances.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-P</strong></span>
+            </p>
+            <p>
+                 Specify an environment password.  Although Berkeley DB utilities
+                 overwrite password strings as soon as possible, be aware there may be
+                 a window of vulnerability on systems where unprivileged users can see
+                 command-line arguments or where utilities are not able to overwrite
+                 the memory containing the command-line arguments.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-r</strong></span>
+            </p>
+            <p>
+                Read the log files in reverse order.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-V</strong></span>
+            </p>
+            <p>
+                 Write the library version number to the standard output, and exit.
+            </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+         For more information on the <span class="command"><strong>db_printlog</strong></span> output and using it to debug
+         applications, see <a href="../../programmer_reference/debug_printlog.html" class="olink">Reviewing Berkeley DB log files</a>.
+    </p>
+      <p>
+         The <span class="command"><strong>db_printlog</strong></span> utility uses a Berkeley DB environment (as described
+         for the <span class="bold"><strong>-h</strong></span> option, the environment
+         variable <span class="bold"><strong>DB_HOME</strong></span>, or because the
+         utility was run in a directory containing a Berkeley DB environment). 
+         In order to avoid environment corruption when using a Berkeley DB
+         environment, <span class="command"><strong>db_printlog</strong></span> should always be given the chance to detach
+         from the environment and exit gracefully.  To cause <span class="command"><strong>db_printlog</strong></span> to
+         release all environment resources and exit cleanly, send it an
+         interrupt signal (SIGINT).
+    </p>
+      <p>
+         The <span class="command"><strong>db_printlog</strong></span> utility exits 0 on success, and &gt;0 if an error
+         occurs.
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1719693"></a>Environment Variables</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1719920"></a>DB_HOME</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If the <span class="bold"><strong>-h</strong></span> option is not specified and
+                          the environment variable DB_HOME is set, it is used as the path of the
+                          database home, as described in the
+                          <a class="xref" href="envopen.html" title="DbEnv::open()">DbEnv::open()</a>
+                          method.
+                     </p>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="db_load.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="utilities.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="db_recover.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">db_load </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> db_recover</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

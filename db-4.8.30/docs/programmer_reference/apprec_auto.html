@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Automatically generated functions</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="apprec.html" title="Chapter 13.  Application Specific Logging and Recovery" />
+    <link rel="prev" href="apprec_def.html" title="Defining application-specific log records" />
+    <link rel="next" href="apprec_config.html" title="Application configuration" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Automatically generated functions</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="apprec_def.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 13. 
+        Application Specific Logging and Recovery
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="apprec_config.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="apprec_auto"></a>Automatically generated functions</h2>
+          </div>
+        </div>
+      </div>
+      <p>The XXX.src file is processed using the gen_rec.awk script included in
+the dist directory of the Berkeley DB distribution.  This is an awk script
+that is executed from with the following command line:</p>
+      <pre class="programlisting">awk -f gen_rec.awk \
+    -v source_file=<span class="emphasis"><em>C_FILE</em></span> \
+    -v header_file=<span class="emphasis"><em>H_FILE</em></span> \
+    -v print_file=<span class="emphasis"><em>P_FILE</em></span> \
+    -v template_file=<span class="emphasis"><em>TMP_FILE</em></span> &lt; XXX.src</pre>
+      <p>where <span class="emphasis"><em>C_FILE</em></span> is the name of the file into which to place the
+automatically generated C code, <span class="emphasis"><em>H_FILE</em></span> is the name of the
+file into which to place the automatically generated data structures
+and declarations, <span class="emphasis"><em>P_FILE</em></span> is the name of the file into which to
+place the automatically generated C code that prints log records,
+and <span class="emphasis"><em>TMP_FILE</em></span> is the name of the file into
+which to place a template for the recovery routines.</p>
+      <p>Because the gen_rec.awk script uses sources files located relative to
+the Berkeley DB dist directory, it must be run from the dist directory.  For
+example, in building the Berkeley DB logging and recovery routines for
+ex_apprec, the following script is used to rebuild the automatically
+generated files:</p>
+      <pre class="programlisting">E=../examples_c/ex_apprec
+<p></p>
+cd ../../dist
+awk -f gen_rec.awk \
+    -v source_file=$E/ex_apprec_auto.c \
+    -v header_file=$E/ex_apprec_auto.h \
+    -v print_file=$E/ex_apprec_autop.c \
+    -v template_file=$E/ex_apprec_template &lt; $E/ex_apprec.src</pre>
+      <p>For each log record description found in the XXX.src file, the following
+structure declarations and #defines will be created in the file
+<span class="emphasis"><em>header_file</em></span>:</p>
+      <pre class="programlisting">#define DB_PREFIX_RECORD_TYPE        /* Integer ID number */
+
+typedef struct _PREFIX_RECORD_TYPE_args {
+    /*
+     * These three fields are generated for every record.
+     */
+    u_int32_t type;      /* Record type used for dispatch. */
+
+    /*
+     * Transaction handle that identifies the transaction on whose
+     * behalf the record is being logged.
+     */
+    DB_TXN *txnid;
+
+    /*
+     * The log sequence number returned by the previous call to log_put
+     * for this transaction.
+     */
+    DB_LSN *prev_lsn;
+
+    /*
+     * The rest of the structure contains one field for each of
+     * the entries in the record statement.
+     */
+};</pre>
+      <p>Thus, the auto-generated ex_apprec_mkdir_args structure looks as follows:</p>
+      <pre class="programlisting">typedef struct _ex_apprec_mkdir_args {
+    u_int32_t type;
+    DB_TXN *txnid;
+    DB_LSN prev_lsn;
+    DBT dirname;
+} ex_apprec_mkdir_args;</pre>
+      <p>The template_file will contain a template for a recovery function.  The
+recovery function is called on each record read from the log during
+system recovery, transaction abort, or the application of log records
+on a replication client, and is expected to redo or undo the operations
+described by that record.  The details of the recovery function will be
+specific to the record being logged and need to be written manually, but
+the template provides a good starting point.  (See ex_apprec_template
+and ex_apprec_rec.c for an example of both the template produced and the
+resulting recovery function.)</p>
+      <p>The template file should be copied to a source file in the application
+(but not the automatically generated source_file, as that will get
+overwritten each time gen_rec.awk is run) and fully developed there.
+The recovery function takes the following parameters:</p>
+      <div class="blockquote">
+        <blockquote class="blockquote">
+          <div class="variablelist">
+            <dl>
+              <dt>
+                <span class="term">dbenv</span>
+              </dt>
+              <dd>The environment in which recovery is running.</dd>
+              <dt>
+                <span class="term">rec</span>
+              </dt>
+              <dd>The record being recovered.</dd>
+              <dt>
+                <span class="term">lsn</span>
+              </dt>
+              <dd>The log sequence number of the record being recovered.  The
+prev_lsn field, automatically included in every auto-generated log
+record, should be returned through this argument.  The prev_lsn field
+is used to chain log records together to allow transaction aborts;
+because the recovery function is the only place that a log record gets
+parsed, the responsibility for returning this value lies with the
+recovery function writer.</dd>
+              <dt>
+                <span class="term">op</span>
+              </dt>
+              <dd>A parameter of type db_recops, which indicates what operation is being
+run (<a href="../api_reference/C/envset_app_dispatch.html#set_app_dispatch_DB_TXN_ABORT" class="olink">DB_TXN_ABORT</a>, <a href="../api_reference/C/envset_app_dispatch.html#set_app_dispatch_DB_TXN_APPLY" class="olink">DB_TXN_APPLY</a>, <a href="../api_reference/C/envset_app_dispatch.html#set_app_dispatch_DB_TXN_BACKWARD_ROLL" class="olink">DB_TXN_BACKWARD_ROLL</a>, 
+<a href="../api_reference/C/envset_app_dispatch.html#set_app_dispatch_DB_TXN_FORWARD_ROLL" class="olink">DB_TXN_FORWARD_ROLL</a> or <a href="../api_reference/C/envset_app_dispatch.html#set_app_dispatch_DB_TXN_PRINT" class="olink">DB_TXN_PRINT</a>).
+</dd>
+            </dl>
+          </div>
+        </blockquote>
+      </div>
+      <p>In addition to the header_file and template_file, a source_file is
+created, containing a log, read, recovery, and print function for each
+record type.</p>
+      <p>The log function marshalls the parameters into a buffer, and calls
+<a href="../api_reference/C/logput.html" class="olink">DB_ENV-&gt;log_put()</a> on that buffer returning 0 on success and non-zero on
+failure.  The log function takes the following parameters:</p>
+      <div class="blockquote">
+        <blockquote class="blockquote">
+          <div class="variablelist">
+            <dl>
+              <dt>
+                <span class="term">dbenv</span>
+              </dt>
+              <dd>The environment in which recovery is running.</dd>
+              <dt>
+                <span class="term">txnid</span>
+              </dt>
+              <dd>The transaction identifier for the transaction handle returned by
+<a href="../api_reference/C/txnbegin.html" class="olink">DB_ENV-&gt;txn_begin()</a>.</dd>
+              <dt>
+                <span class="term">lsnp</span>
+              </dt>
+              <dd>A pointer to storage for a log sequence number into which the log
+sequence number of the new log record will be returned.</dd>
+              <dt>
+                <span class="term">syncflag</span>
+              </dt>
+              <dd>A flag indicating whether the record must be written synchronously.
+Valid values are 0 and <a href="../api_reference/C/logput.html#put_DB_FLUSH" class="olink">DB_FLUSH</a>.</dd>
+              <dt>
+                <span class="term">args</span>
+              </dt>
+              <dd>The remaining parameters to the log message are the fields described
+in the XXX.src file, in order.</dd>
+            </dl>
+          </div>
+        </blockquote>
+      </div>
+      <p>The read function takes a buffer and unmarshalls its contents into a
+structure of the appropriate type.  It returns 0 on success and non-zero
+on error.  After the fields of the structure have been used, the pointer
+returned from the read function should be freed.  The read function
+takes the following parameters:</p>
+      <div class="blockquote">
+        <blockquote class="blockquote">
+          <div class="variablelist">
+            <dl>
+              <dt>
+                <span class="term">dbenv</span>
+              </dt>
+              <dd>The environment in which recovery is running.</dd>
+              <dt>
+                <span class="term">recbuf</span>
+              </dt>
+              <dd>A buffer.</dd>
+              <dt>
+                <span class="term">argp</span>
+              </dt>
+              <dd>A pointer to a structure of the appropriate type.</dd>
+            </dl>
+          </div>
+        </blockquote>
+      </div>
+      <p>The print function displays the contents of the record.  The print
+function takes the same parameters as the recovery function described
+previously.  Although some of the parameters are unused by the print
+function, taking the same parameters  allows a single dispatch loop to
+dispatch to a variety of functions.  The print function takes the
+following parameters:</p>
+      <div class="blockquote">
+        <blockquote class="blockquote">
+          <div class="variablelist">
+            <dl>
+              <dt>
+                <span class="term">dbenv</span>
+              </dt>
+              <dd>The environment in which recovery is running.</dd>
+              <dt>
+                <span class="term">rec</span>
+              </dt>
+              <dd>The record being recovered.</dd>
+              <dt>
+                <span class="term">lsn</span>
+              </dt>
+              <dd>The log sequence number of the record being recovered.</dd>
+              <dt>
+                <span class="term">op</span>
+              </dt>
+              <dd>Unused.</dd>
+            </dl>
+          </div>
+        </blockquote>
+      </div>
+      <p>Finally, the source file will contain a function (named XXX_init_print,
+where XXX is replaced by the prefix) which should be added to the
+initialization part of the standalone <a href="../api_reference/C/db_printlog.html" class="olink">db_printlog utility</a> code
+so that utility can be used to display application-specific log records.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="apprec_def.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="apprec.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="apprec_config.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Defining application-specific log records </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Application configuration</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

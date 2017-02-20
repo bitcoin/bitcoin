@@ -1,0 +1,328 @@
+/*-
+ * See the file LICENSE for redistribution information.
+ *
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
+ *
+ * $Id$
+ */
+
+DBPRIVATE
+PREFIX	__db
+
+INCLUDE #include "db_int.h"
+INCLUDE #include "dbinc/crypto.h"
+INCLUDE #include "dbinc/db_page.h"
+INCLUDE #include "dbinc/db_dispatch.h"
+INCLUDE #include "dbinc/db_am.h"
+INCLUDE #include "dbinc/log.h"
+INCLUDE #include "dbinc/txn.h"
+INCLUDE
+
+/*
+ * addrem -- Add or remove an entry from a duplicate page.
+ *
+ * opcode:	identifies if this is an add or delete.
+ * fileid:	file identifier of the file being modified.
+ * pgno:	duplicate page number.
+ * indx:	location at which to insert or delete.
+ * nbytes:	number of bytes added/removed to/from the page.
+ * hdr:		header for the data item.
+ * dbt:		data that is deleted or is to be added.
+ * pagelsn:	former lsn of the page.
+ *
+ * If the hdr was NULL then, the dbt is a regular B_KEYDATA.
+ * If the dbt was NULL then the hdr is a complete item to be
+ * pasted on the page.
+ */
+BEGIN addrem		42	41
+ARG	opcode		u_int32_t	lu
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+ARG	indx		u_int32_t	lu
+ARG	nbytes		u_int32_t	lu
+DBT	hdr		DBT		s
+DBT	dbt		DBT		s
+POINTER	pagelsn		DB_LSN *	lu
+END
+
+/*
+ * big -- Handles addition and deletion of big key/data items.
+ *
+ * opcode:	identifies get/put.
+ * fileid:	file identifier of the file being modified.
+ * pgno:	page onto which data is being added/removed.
+ * prev_pgno:	the page before the one we are logging.
+ * next_pgno:	the page after the one we are logging.
+ * dbt:		data being written onto the page.
+ * pagelsn:	former lsn of the orig_page.
+ * prevlsn:	former lsn of the prev_pgno.
+ * nextlsn:	former lsn of the next_pgno. This is not currently used, but
+ *		may be used later if we actually do overwrites of big key/
+ *		data items in place.
+ */
+BEGIN big		42	43
+ARG	opcode		u_int32_t	lu
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+ARG	prev_pgno	db_pgno_t	lu
+ARG	next_pgno	db_pgno_t	lu
+DBT	dbt		DBT		s
+POINTER	pagelsn		DB_LSN *	lu
+POINTER	prevlsn		DB_LSN *	lu
+POINTER	nextlsn		DB_LSN *	lu
+END
+
+/*
+ * ovref -- Handles increment/decrement of overflow page reference count.
+ *
+ * fileid:	identifies the file being modified.
+ * pgno:	page number whose ref count is being incremented/decremented.
+ * adjust:	the adjustment being made.
+ * lsn:		the page's original lsn.
+ */
+BEGIN ovref		42	44
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+ARG	adjust		int32_t		ld
+POINTER	lsn		DB_LSN *	lu
+END
+
+/*
+ * relink -- Handles relinking around a page.
+ *
+ * opcode:	indicates if this is an addpage or delete page
+ * pgno:	the page being changed.
+ * lsn		the page's original lsn.
+ * prev:	the previous page.
+ * lsn_prev:	the previous page's original lsn.
+ * next:	the next page.
+ * lsn_next:	the previous page's original lsn.
+ */
+BEGIN_COMPAT relink		42	45
+ARG	opcode		u_int32_t	lu
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+POINTER	lsn		DB_LSN *	lu
+ARG	prev		db_pgno_t	lu
+POINTER	lsn_prev	DB_LSN *	lu
+ARG	next		db_pgno_t	lu
+POINTER	lsn_next	DB_LSN *	lu
+END
+
+/*
+ * Debug -- log an operation upon entering an access method.
+ * op:		Operation (cursor, c_close, c_get, c_put, c_del,
+ *		get, put, delete).
+ * fileid:	identifies the file being acted upon.
+ * key:		key paramater
+ * data:	data parameter
+ * flags:	flags parameter
+ */
+BEGIN debug		42	47
+DBT	op		DBT		s
+ARG	fileid		int32_t		ld
+DBT	key		DBT		s
+DBT	data		DBT		s
+ARG	arg_flags	u_int32_t	lu
+END
+
+/*
+ * noop -- do nothing, but get an LSN.
+ */
+BEGIN noop		42	48
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+POINTER	prevlsn		DB_LSN *	lu
+END
+
+/*
+ * pg_alloc: used to record allocating a new page.
+ *
+ * meta_lsn:	the original lsn of the page reference by meta_pgno.
+ * meta_pgno	the page pointing at the allocated page in the free list.
+ *			If the list is unsorted this is the metadata page.
+ * page_lsn:	the allocated page's original lsn.
+ * pgno:	the page allocated.
+ * ptype:	the type of the page allocated.
+ * next:	the next page on the free list.
+ * last_pgno:	the last page in the file after this op (4.3+).
+ */
+BEGIN_COMPAT pg_alloc	42	49
+DB	fileid		int32_t		ld
+POINTER	meta_lsn	DB_LSN *	lu
+ARG	meta_pgno	db_pgno_t	lu
+POINTER	page_lsn	DB_LSN *	lu
+ARG	pgno		db_pgno_t	lu
+ARG	ptype		u_int32_t	lu
+ARG	next		db_pgno_t	lu
+END
+
+BEGIN pg_alloc	43	49
+DB	fileid		int32_t		ld
+POINTER	meta_lsn	DB_LSN *	lu
+ARG	meta_pgno	db_pgno_t	lu
+POINTER	page_lsn	DB_LSN *	lu
+ARG	pgno		db_pgno_t	lu
+ARG	ptype		u_int32_t	lu
+ARG	next		db_pgno_t	lu
+ARG	last_pgno	db_pgno_t	lu
+END
+
+/*
+ * pg_free: used to record freeing a page.
+ *	If we are maintaining a sorted free list (during compact) meta_pgno
+ * will be non-zero and refer to the page that preceeds the one we are freeing
+ * in the free list.  Meta_lsn will then be the lsn of that page.
+ *
+ * pgno:	the page being freed.
+ * meta_lsn:	the meta-data page's original lsn.
+ * meta_pgno:	the meta-data page number.
+ * header:	the header from the free'd page.
+ * next:	the previous next pointer on the metadata page.
+ * last_pgno:	the last page in the file before this op (4.3+).
+ */
+BEGIN_COMPAT pg_free		42	50
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+POINTER	meta_lsn	DB_LSN *	lu
+ARG	meta_pgno	db_pgno_t	lu
+PGDBT	header		DBT		s
+ARG	next		db_pgno_t	lu
+END
+
+BEGIN pg_free		43	50
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+POINTER	meta_lsn	DB_LSN *	lu
+ARG	meta_pgno	db_pgno_t	lu
+PGDBT	header		DBT		s
+ARG	next		db_pgno_t	lu
+ARG	last_pgno	db_pgno_t	lu
+END
+
+/*
+ * cksum --
+ *	This log record is written when we're unable to checksum a page,
+ *	before returning DB_RUNRECOVERY.  This log record causes normal
+ *	recovery to itself return DB_RUNRECOVERY, as only catastrophic
+ *	recovery can fix things.
+ */
+BEGIN cksum		42	51
+END
+
+/*
+ * pg_freedata: used to record freeing a page with data on it.
+ *
+ * pgno:	the page being freed.
+ * meta_lsn:	the meta-data page's original lsn.
+ * meta_pgno:	the meta-data page number.
+ * header:	the header and index entries from the free'd page.
+ * data:	the data from the free'd page.
+ * next:	the previous next pointer on the metadata page.
+ * last_pgno:	the last page in the file before this op (4.3+).
+ */
+BEGIN_COMPAT pg_freedata		42	52
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+POINTER	meta_lsn	DB_LSN *	lu
+ARG	meta_pgno	db_pgno_t	lu
+PGDBT	header		DBT		s
+ARG	next		db_pgno_t	lu
+PGDDBT	data		DBT		s
+END
+
+BEGIN pg_freedata		43	52
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+POINTER	meta_lsn	DB_LSN *	lu
+ARG	meta_pgno	db_pgno_t	lu
+PGDBT	header		DBT		s
+ARG	next		db_pgno_t	lu
+ARG	last_pgno	db_pgno_t	lu
+PGDDBT	data		DBT		s
+END
+
+/*
+ * pg_prepare: used to record an aborted page in a prepared transaction.
+ *
+ * pgno:	the page being freed.
+ */
+X BEGIN pg_prepare		42	53
+X DB	fileid		int32_t		ld
+X ARG	pgno		db_pgno_t	lu
+X END
+
+/*
+ * pg_new: used to record a new page put on the free list.
+ *
+ * pgno:	the page being freed.
+ * meta_lsn:	the meta-data page's original lsn.
+ * meta_pgno:	the meta-data page number.
+ * header:	the header from the free'd page.
+ * next:	the previous next pointer on the metadata page.
+ */
+X BEGIN pg_new		42	54
+X DB	fileid		int32_t		ld
+X ARG	pgno		db_pgno_t	lu
+X POINTER	meta_lsn	DB_LSN *	lu
+X ARG	meta_pgno	db_pgno_t	lu
+X PGDBT	header		DBT		s
+X ARG	next		db_pgno_t	lu
+X END
+
+/*
+ * pg_init: used to reinitialize a page during truncate.
+ *
+ * pgno:	the page being initialized.
+ * header:	the header from the page.
+ * data:	data that used to be on the page.
+ */
+BEGIN pg_init		43	60
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+PGDBT	header		DBT		s
+PGDDBT	data		DBT		s
+END
+
+/*
+ * pg_sort: sort the free list
+ *
+ * meta:	meta page number
+ * meta_lsn:	lsn on meta page.
+ * last_free:	page number of new last free page.
+ * last_lsn;	lsn of last free page.
+ * last_pgno:	current last page number.
+ * list:	list of pages and lsns to sort.
+ */
+BEGIN_COMPAT pg_sort		44	61
+DB	fileid		int32_t		ld
+ARG	meta		db_pgno_t	lu
+POINTER	meta_lsn	DB_LSN *	lu
+ARG	last_free	db_pgno_t	lu
+POINTER	last_lsn	DB_LSN *	lu
+ARG	last_pgno	db_pgno_t	lu
+DBT	list		DBT		s
+END
+
+
+/*
+ * pg_truc: truncate the free list
+ *
+ * meta:	meta page number
+ * meta_lsn:	lsn on meta page.
+ * last_free:	page number of new last free page.
+ * last_lsn;	lsn of last free page.
+ * last_pgno:	current last page number.
+ * list:	list of pages and lsns on free list.
+ */
+BEGIN pg_trunc		49	66
+DB	fileid		int32_t		ld
+ARG	meta		db_pgno_t	lu
+POINTER	meta_lsn	DB_LSN *	lu
+ARG	last_free	db_pgno_t	lu
+POINTER	last_lsn	DB_LSN *	lu
+ARG	next_free	db_pgno_t	lu
+ARG	last_pgno	db_pgno_t	lu
+DBT	list		DBT		s
+END
+

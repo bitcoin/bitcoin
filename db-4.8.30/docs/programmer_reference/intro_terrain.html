@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Mapping the terrain: theory and practice</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="intro.html" title="Chapter 1.  Introduction" />
+    <link rel="prev" href="intro.html" title="Chapter 1.  Introduction" />
+    <link rel="next" href="intro_dbis.html" title="What is Berkeley DB?" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Mapping the terrain: theory and practice</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="intro.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 1. 
+        Introduction
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="intro_dbis.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="intro_terrain"></a>Mapping the terrain: theory and practice</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="intro_terrain.html#id1587624">Data access and data management</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="intro_terrain.html#id1588173">Relational databases</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="intro_terrain.html#id1587840">Object-oriented databases</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="intro_terrain.html#id1587985">Network databases</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="intro_terrain.html#id1587654">Clients and servers</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>The first step in selecting a database system is figuring out what the
+choices are. Decades of research and real-world deployment have produced
+countless systems. We need to organize them somehow to reduce the number
+of options.</p>
+      <p>One obvious way to group systems is to use the common labels that
+vendors apply to them. The buzzwords here include "network,"
+"relational," "object-oriented," and "embedded," with some
+cross-fertilization like "object-relational" and "embedded network".
+Understanding the buzzwords is important. Each has some grounding in
+theory, but has also evolved into a practical label for categorizing
+systems that work in a certain way.</p>
+      <p>All database systems, regardless of the buzzwords that apply to them,
+provide a few common services.  All of them store data, for example.
+We'll begin by exploring the common services that all systems provide,
+and then examine the differences among the different kinds of systems.</p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1587624"></a>Data access and data management</h3>
+            </div>
+          </div>
+        </div>
+        <p>Fundamentally, database systems provide two services.</p>
+        <p>The first service is <span class="emphasis"><em>data access</em></span>. Data access means adding
+new data to the database (inserting), finding data of interest
+(searching), changing data already stored (updating), and removing data
+from the database (deleting). All databases provide these services. How
+they work varies from category to category, and depends on the record
+structure that the database supports.</p>
+        <p>Each record in a database is a collection of values. For example, the
+record for a Web site customer might include a name, email address,
+shipping address, and payment information. Records are usually stored
+in tables.  Each table holds records of the same kind. For example, the
+<span class="bold"><strong>customer</strong></span> table at an e-commerce Web site might store the
+customer records for every person who shopped at the site. Often,
+database records have a different structure from the structures or
+instances supported by the programming language in which an application
+is written. As a result, working with records can mean:</p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>using database operations like searches and updates on records; and</li>
+            <li>converting between programming language structures and database record
+types in the application.</li>
+          </ul>
+        </div>
+        <p>The second service is <span class="emphasis"><em>data management</em></span>. Data management is
+more complicated than data access. Providing good data management
+services is the hard part of building a database system.  When you
+choose a database system to use in an application you build, making sure
+it supports the data management services you need is critical.</p>
+        <p>Data management services include allowing multiple users to work on the
+database simultaneously (concurrency), allowing multiple records to be
+changed instantaneously (transactions), and surviving application and
+system crashes (recovery). Different database systems offer different
+data management services.  Data management services are entirely
+independent of the data access services listed above. For example,
+nothing about relational database theory requires that the system
+support transactions, but most commercial relational systems do.</p>
+        <p>Concurrency means that multiple users can operate on the database at
+the same time. Support for concurrency ranges from none (single-user
+access only) to complete (many readers and writers working
+simultaneously).</p>
+        <p>Transactions permit users to make multiple changes appear at once.  For
+example, a transfer of funds between bank accounts needs to be a
+transaction because the balance in one account is reduced and the
+balance in the other increases. If the reduction happened before the
+increase, than a poorly-timed system crash could leave the customer
+poorer; if the bank used the opposite order, then the same system crash
+could make the customer richer. Obviously, both the customer and the
+bank are best served if both operations happen at the same instant.</p>
+        <p>Transactions have well-defined properties in database systems. They are
+<span class="emphasis"><em>atomic</em></span>, so that the changes happen all at once or not at all.
+They are <span class="emphasis"><em>consistent</em></span>, so that the database is in a legal state
+when the transaction begins and when it ends. They are typically
+<span class="emphasis"><em>isolated</em></span>, which means that any other users in the database
+cannot interfere with them while they are in progress. And they are
+<span class="emphasis"><em>durable</em></span>, so that if the system or application crashes after
+a transaction finishes, the changes are not lost. Together, the
+properties of <span class="emphasis"><em>atomicity</em></span>, <span class="emphasis"><em>consistency</em></span>,
+<span class="emphasis"><em>isolation</em></span>, and <span class="emphasis"><em>durability</em></span> are known as the ACID
+properties.</p>
+        <p>As is the case for concurrency, support for transactions varies among
+databases. Some offer atomicity without making guarantees about
+durability.  Some ignore isolatability, especially in single-user
+systems; there's no need to isolate other users from the effects of
+changes when there are no other users.</p>
+        <p>Another important data management service is recovery. Strictly
+speaking, recovery is a procedure that the system carries out when it
+starts up. The purpose of recovery is to guarantee that the database is
+complete and usable. This is most important after a system or
+application crash, when the database may have been damaged. The recovery
+process guarantees that the internal structure of the database is good.
+Recovery usually means that any completed transactions are checked, and
+any lost changes are reapplied to the database.  At the end of the
+recovery process, applications can use the database as if there had been
+no interruption in service.</p>
+        <p>Finally, there are a number of data management services that permit
+copying of data. For example, most database systems are able to import
+data from other sources, and to export it for use elsewhere.  Also, most
+systems provide some way to back up databases and to restore in the
+event of a system failure that damages the database. Many commercial
+systems allow <span class="emphasis"><em>hot backups</em></span>, so that users can back up
+databases while they are in use. Many applications must run without
+interruption, and cannot be shut down for backups.</p>
+        <p>A particular database system may provide other data management services.
+Some provide browsers that show database structure and contents. Some
+include tools that enforce data integrity rules, such as the rule that
+no employee can have a negative salary.  These data management services
+are not common to all systems, however. Concurrency, recovery, and
+transactions are the data management services that most database vendors
+support.</p>
+        <p>Deciding what kind of database to use means understanding the data
+access and data management services that your application needs.  Berkeley DB
+is an embedded database that supports fairly simple data access with a
+rich set of data management services. To highlight its strengths and
+weaknesses, we can compare it to other database system categories.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1588173"></a>Relational databases</h3>
+            </div>
+          </div>
+        </div>
+        <p>Relational databases are probably the best-known database variant,
+because of the success of companies like Oracle. Relational databases
+are based on the mathematical field of set theory.  The term "relation"
+is really just a synonym for "set" -- a relation is just a set of
+records or, in our terminology, a table. One of the main innovations in
+early relational systems was to insulate the programmer from the
+physical organization of the database. Rather than walking through
+arrays of records or traversing pointers, programmers make statements
+about tables in a high-level language, and the system executes those
+statements.</p>
+        <p>Relational databases operate on <span class="emphasis"><em>tuples</em></span>, or records, composed
+of values of several different data types, including integers, character
+strings, and others. Operations include searching for records whose
+values satisfy some criteria, updating records, and so on.</p>
+        <p>Virtually all relational databases use the Structured Query Language,
+or SQL. This language permits people and computer programs to work with
+the database by writing simple statements. The database engine reads
+those statements and determines how to satisfy them on the tables in
+the database.</p>
+        <p>SQL is the main practical advantage of relational database systems.
+Rather than writing a computer program to find records of interest, the
+relational system user can just type a query in a simple syntax, and
+let the engine do the work. This gives users enormous flexibility; they
+do not need to decide in advance what kind of searches they want to do,
+and they do not need expensive programmers to find the data they need.
+Learning SQL requires some effort, but it's much simpler than a
+full-blown high-level programming language for most purposes. And there
+are a lot of programmers who have already learned SQL.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1587840"></a>Object-oriented databases</h3>
+            </div>
+          </div>
+        </div>
+        <p>Object-oriented databases are less common than relational systems, but
+are still fairly widespread. Most object-oriented databases were
+originally conceived as persistent storage systems closely wedded to
+particular high-level programming languages like C++. With the spread
+of Java, most now support more than one programming language, but
+object-oriented database systems fundamentally provide the same class
+and method abstractions as do object-oriented programming languages.</p>
+        <p>Many object-oriented systems allow applications to operate on objects
+uniformly, whether they are in memory or on disk. These systems create
+the illusion that all objects are in memory all the time.  The advantage
+to object-oriented programmers who simply want object storage and
+retrieval is clear. They need never be aware of whether an object is in
+memory or not.  The application simply uses objects, and the database
+system moves them between disk and memory transparently.  All of the
+operations on an object, and all its behavior, are determined by the
+programming language.</p>
+        <p>Object-oriented databases aren't nearly as widely deployed as relational
+systems. In order to attract developers who understand relational
+systems, many of the object-oriented systems have added support for
+query languages very much like SQL. In practice, though, object-oriented
+databases are mostly used for persistent storage of objects in C++ and
+Java programs.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1587985"></a>Network databases</h3>
+            </div>
+          </div>
+        </div>
+        <p>The "network model" is a fairly old technique for managing and
+navigating application data. Network databases are designed to make
+pointer traversal very fast. Every record stored in a network database
+is allowed to contain pointers to other records. These pointers are
+generally physical addresses, so fetching the record to which it refers
+just means reading it from disk by its disk address.</p>
+        <p>Network database systems generally permit records to contain integers,
+floating point numbers, and character strings, as well as references to
+other records. An application can search for records of interest. After
+retrieving a record, the application can fetch any record to which it
+refers, quickly.</p>
+        <p>Pointer traversal is fast because most network systems use physical disk
+addresses as pointers. When the application wants to fetch a record,
+the database system uses the address to fetch exactly the right string
+of bytes from the disk. This requires only a single disk access in all
+cases. Other systems, by contrast, often must do more than one disk read
+to find a particular record.</p>
+        <p>The key advantage of the network model is also its main drawback. The
+fact that pointer traversal is so fast means that applications that do
+it will run well. On the other hand, storing pointers all over the
+database makes it very hard to reorganize the database. In effect, once
+you store a pointer to a record, it is difficult to move that record
+elsewhere.  Some network databases handle this by leaving forwarding
+pointers behind, but this defeats the speed advantage of doing a single
+disk access in the first place. Other network databases find, and fix,
+all the pointers to a record when it moves, but this makes
+reorganization very expensive. Reorganization is often necessary in
+databases, since adding and deleting records over time will consume
+space that cannot be reclaimed without reorganizing. Without periodic
+reorganization to compact network databases, they can end up with a
+considerable amount of wasted space.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1587654"></a>Clients and servers</h3>
+            </div>
+          </div>
+        </div>
+        <p>Database vendors have two choices for system architecture. They can
+build a server to which remote clients connect, and do all the database
+management inside the server. Alternatively, they can provide a module
+that links directly into the application, and does all database
+management locally.  In either case, the application developer needs
+some way of communicating with the database (generally, an Application
+Programming Interface (API) that does work in the process or that
+communicates with a server to get work done).</p>
+        <p>Almost all commercial database products are implemented as servers, and
+applications connect to them as clients. Servers have several features
+that make them attractive.</p>
+        <p>First, because all of the data is managed by a separate process, and
+possibly on a separate machine, it's easy to isolate the database server
+from bugs and crashes in the application.</p>
+        <p>Second, because some database products (particularly relational engines)
+are quite large, splitting them off as separate server processes keeps
+applications small, which uses less disk space and memory. Relational
+engines include code to parse SQL statements, to analyze them and
+produce plans for execution, to optimize the plans, and to execute
+them.</p>
+        <p>Finally, by storing all the data in one place and managing it with a
+single server, it's easier for organizations to back up, protect, and
+set policies on their databases. The enterprise databases for large
+companies often have several full-time administrators caring for them,
+making certain that applications run quickly, granting and denying
+access to users, and making backups.</p>
+        <p>However, centralized administration can be a disadvantage in some cases.
+In particular, if a programmer wants to build an application that uses
+a database for storage of important information, then shipping and
+supporting the application is much harder. The end user needs to install
+and administer a separate database server, and the programmer must
+support not just one product, but two. Adding a server process to the
+application creates new opportunity for installation mistakes and
+run-time problems.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="intro.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="intro.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="intro_dbis.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 1. 
+        Introduction
+         </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> What is Berkeley DB?</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

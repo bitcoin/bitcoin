@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Queue and Recno access method specific configuration</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="am_conf.html" title="Chapter 2.  Access Method Configuration" />
+    <link rel="prev" href="hash_conf.html" title="Hash access method specific configuration" />
+    <link rel="next" href="am.html" title="Chapter 3.  Access Method Operations" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Queue and Recno access method specific configuration</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="hash_conf.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+        Access Method Configuration
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="am.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="rq_conf"></a>Queue and Recno access method specific configuration</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="rq_conf.html#am_conf_recno">Managing record-based databases</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="rq_conf.html#am_conf_extentsize">Selecting a Queue extent size</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="rq_conf.html#am_conf_re_source">Flat-text backing files</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="rq_conf.html#am_conf_renumber">Logically renumbering records</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+    There are a series of configuration tasks which you can perform when
+    using the Queue and Recno access methods.  They are described in the following sections.
+</p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="am_conf_recno"></a>Managing record-based databases</h3>
+            </div>
+          </div>
+        </div>
+        <p>When using fixed- or variable-length record-based databases, particularly
+with flat-text backing files, there are several items that the user can
+control.  The Recno access method can be used to store either variable-
+or fixed-length data items.  By default, the Recno access method stores
+variable-length data items.  The Queue access method can only store
+fixed-length data items.</p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1591165"></a>Record Delimiters</h4>
+              </div>
+            </div>
+          </div>
+          <p>When using the Recno access method to store variable-length records,
+records read from any backing source file are separated by a specific
+byte value which marks the end of one record and the beginning of the
+next.  This delimiting value is ignored except when reading records from
+a backing source file, that is, records may be stored into the database
+that include the delimiter byte.  However, if such records are written
+out to the backing source file and the backing source file is
+subsequently read into a database, the records will be split where
+delimiting bytes were found.</p>
+          <p>For example, UNIX text files can usually be interpreted as a sequence of
+variable-length records separated by ASCII newline characters.  This byte
+value (ASCII 0x0a) is the default delimiter.  Applications may specify a
+different delimiting byte using the <a href="../api_reference/C/dbset_re_delim.html" class="olink">DB-&gt;set_re_delim()</a> method.  If no
+backing source file is being used, there is no reason to set the
+delimiting byte value.</p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1590878"></a>Record Length</h4>
+              </div>
+            </div>
+          </div>
+          <p>When using the Recno or Queue access methods to store fixed-length
+records, the record length must be specified.  Since the Queue access
+method always uses fixed-length records, the user must always set the
+record length prior to creating the database.  Setting the record length
+is what causes the Recno access method to store fixed-length, not
+variable-length, records.</p>
+          <p>The length of the records is specified by calling the
+<a href="../api_reference/C/dbset_re_len.html" class="olink">DB-&gt;set_re_len()</a> method.  The default length of the records is 0 bytes.
+Any record read from a backing source file or otherwise stored in the
+database that is shorter than the declared length will automatically be
+padded as described for the <a href="../api_reference/C/dbset_re_pad.html" class="olink">DB-&gt;set_re_pad()</a> method.  Any record stored
+that is longer than the declared length results in an error.  For
+further information on backing source files, see
+<a class="xref" href="rq_conf.html#am_conf_re_source" title="Flat-text backing files">Flat-text backing files</a>.</p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1591461"></a>Record Padding Byte Value</h4>
+              </div>
+            </div>
+          </div>
+          <p>When storing fixed-length records in a Queue or Recno database, a pad
+character may be specified by calling the <a href="../api_reference/C/dbset_re_pad.html" class="olink">DB-&gt;set_re_pad()</a> method.  Any
+record read from the backing source file or otherwise stored in the
+database that is shorter than the expected length will automatically be
+padded with this byte value.  If fixed-length records are specified but
+no pad value is specified, a space character (0x20 in the ASCII
+character set) will be used.  For further information on backing source
+files, see <a class="xref" href="rq_conf.html#am_conf_re_source" title="Flat-text backing files">Flat-text backing files</a>.</p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="am_conf_extentsize"></a>Selecting a Queue extent size</h3>
+            </div>
+          </div>
+        </div>
+        <p>In Queue databases, records are allocated sequentially and directly
+mapped to an offset within the file storage for the database.  As
+records are deleted from the Queue, pages will become empty and will
+not be reused in normal queue operations.  To facilitate the reclamation
+of disk space a Queue may be partitioned into extents.  Each extent is
+kept in a separate physical file.</p>
+        <p>Extent files are automatically created as needed and marked for deletion
+when the head of the queue moves off the extent.  The extent will not
+be deleted until all processes close the extent.  In addition, Berkeley DB
+caches a small number of extents that have been recently used; this may
+delay when an extent will be deleted. The number of extents left open
+depends on queue activity.</p>
+        <p>The extent size specifies the number of pages that make up each extent.
+By default, if no extent size is specified, the Queue resides in a
+single file and disk space is not reclaimed.  In choosing an extent size
+there is a tradeoff between the amount of disk space used and the
+overhead of creating and deleting files.  If the extent size is too
+small, the system will pay a performance penalty, creating and deleting
+files frequently.  In addition, if the active part of the queue spans
+many files, all those files will need to be open at the same time,
+consuming system and process file resources.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="am_conf_re_source"></a>Flat-text backing files</h3>
+            </div>
+          </div>
+        </div>
+        <p>It is possible to back any Recno database (either fixed or variable
+length) with a flat-text source file.  This provides fast read (and
+potentially write) access to databases that are normally created and
+stored as flat-text files.  The backing source file may be specified by
+calling the <a href="../api_reference/C/dbset_re_source.html" class="olink">DB-&gt;set_re_source()</a> method.</p>
+        <p>The backing source file will be read to initialize the database.  In the
+case of variable length records, the records are assumed to be separated
+as described for the <a href="../api_reference/C/dbset_re_delim.html" class="olink">DB-&gt;set_re_delim()</a> method.  For example, standard
+UNIX byte stream files can be interpreted as a sequence of variable
+length records separated by ASCII newline characters.  This is the
+default.</p>
+        <p>When cached data would normally be written back to the underlying
+database file (for example, when the <a href="../api_reference/C/dbclose.html" class="olink">DB-&gt;close()</a> or
+<a href="../api_reference/C/dbsync.html" class="olink">DB-&gt;sync()</a> methods are called), the in-memory copy of the database will
+be written back to the backing source file.</p>
+        <p>The backing source file must already exist (but may be zero-length) when
+<a href="../api_reference/C/dbopen.html" class="olink">DB-&gt;open()</a> is called.  By default, the backing source file is read
+lazily, that is, records are not read from the backing source file until
+they are requested by the application. If multiple processes (not
+threads) are accessing a Recno database concurrently and either
+inserting or deleting records, the backing source file must be read in
+its entirety before more than a single process accesses the database,
+and only that process should specify the backing source file as part of
+the <a href="../api_reference/C/dbopen.html" class="olink">DB-&gt;open()</a> call.  This can be accomplished by calling the
+<a href="../api_reference/C/dbset_flags.html" class="olink">DB-&gt;set_flags()</a> method with the <a href="../api_reference/C/dbset_flags.html#dbset_flags_DB_SNAPSHOT" class="olink">DB_SNAPSHOT</a> flag.</p>
+        <p>Reading and writing the backing source file cannot be transactionally
+protected because it involves filesystem operations that are not part of
+the Berkeley DB transaction methodology. For this reason, if a temporary
+database is used to hold the records (a NULL was specified as the file
+argument to <a href="../api_reference/C/dbopen.html" class="olink">DB-&gt;open()</a>), <span class="bold"><strong>it is possible to lose the
+contents of the backing source file if the system crashes at the right
+instant</strong></span>. If a permanent file is used to hold the database (a filename
+was specified as the file argument to <a href="../api_reference/C/dbopen.html" class="olink">DB-&gt;open()</a>), normal database
+recovery on that file can be used to prevent information loss.  It is
+still possible that the contents of the backing source file itself will
+be corrupted or lost if the system crashes.</p>
+        <p>For all of the above reasons, the backing source file is generally used
+to specify databases that are read-only for Berkeley DB applications, and that
+are either generated on the fly by software tools, or modified using a
+different mechanism such as a text editor.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="am_conf_renumber"></a>Logically renumbering records</h3>
+            </div>
+          </div>
+        </div>
+        <p>Records stored in the Queue and Recno access methods are accessed by
+logical record number.  In all cases in Btree databases, and optionally
+in Recno databases (see the <a href="../api_reference/C/dbset_flags.html" class="olink">DB-&gt;set_flags()</a> method and the
+<a href="../api_reference/C/dbset_flags.html#dbset_flags_DB_RENUMBER" class="olink">DB_RENUMBER</a> flag for more information), record numbers are
+mutable.  This means that the record numbers may change as records are
+added to and deleted from the database.  The deletion of record number
+4 causes any records numbered 5 and higher to be renumbered downward by
+1;  the addition of a new record after record number 4 causes any
+records numbered 5 and higher to be renumbered upward by 1.  In all
+cases in Queue databases, and by default in Recno databases, record
+numbers are not mutable, and the addition or deletion of records to the
+database will not cause already-existing record numbers to change.  For
+this reason, new records cannot be inserted between already-existing
+records in databases with immutable record numbers.</p>
+        <p>Cursors pointing into a Btree database or a Recno database with mutable
+record numbers maintain a reference to a specific record, rather than
+a record number, that is, the record they reference does not change as
+other records are added or deleted.  For example, if a database contains
+three records with the record numbers 1, 2, and 3, and the data items
+"A", "B", and "C", respectively, the deletion of record number 2 ("B")
+will cause the record "C" to be renumbered downward to record number 2.
+A cursor positioned at record number 3 ("C") will be adjusted and
+continue to point to "C" after the deletion.  Similarly, a cursor
+previously referring to the now deleted record number 2 will be
+positioned between the new record numbers 1 and 2, and an insertion
+using that cursor will appear between those records.   In this manner
+records can be added and deleted to a database without disrupting the
+sequential traversal of the database by a cursor.</p>
+        <p>Only cursors created using a single <a href="../api_reference/C/db.html" class="olink">DB</a> handle can adjust each
+other's position in this way, however.  If multiple <a href="../api_reference/C/db.html" class="olink">DB</a> handles
+have a renumbering Recno database open simultaneously (as when multiple
+processes share a single database environment), a record referred to by
+one cursor could change underfoot if a cursor created using another
+<a href="../api_reference/C/db.html" class="olink">DB</a> handle inserts or deletes records into the database.  For
+this reason, applications using Recno databases with mutable record
+numbers will usually make all accesses to the database using a single
+<a href="../api_reference/C/db.html" class="olink">DB</a> handle and cursors created from that handle, or will
+otherwise single-thread access to the database, for example, by using
+the Berkeley DB Concurrent Data Store product.</p>
+        <p>In any Queue or Recno databases, creating new records will cause the
+creation of multiple records if the record number being created is more
+than one greater than the largest record currently in the database. For
+example, creating record number 28, when record 25 was previously the
+last record in the database, will implicitly create records 26 and 27
+as well as 28.  All first, last, next and previous cursor operations
+will automatically skip over these implicitly created records.  So, if
+record number 5 is the only record the application has created,
+implicitly creating records 1 through 4, the <a href="../api_reference/C/dbcget.html" class="olink">DBC-&gt;get()</a> method with the
+<a href="../api_reference/C/dbcget.html#dbcget_DB_FIRST" class="olink">DB_FIRST</a> flag will return record number 5, not record number 1.
+Attempts to explicitly retrieve implicitly created records by their
+record number will result in a special error return,
+<a class="link" href="program_errorret.html#program_errorret.DB_KEYEMPTY">DB_KEYEMPTY</a>.</p>
+        <p>In any Berkeley DB database, attempting to retrieve a deleted record, using
+a cursor positioned on the record, results in a special error return,
+<a class="link" href="program_errorret.html#program_errorret.DB_KEYEMPTY">DB_KEYEMPTY</a>.  In addition, when using Queue databases or Recno
+databases with immutable record numbers, attempting to retrieve a deleted
+record by its record number will also result in the <a class="link" href="program_errorret.html#program_errorret.DB_KEYEMPTY">DB_KEYEMPTY</a>
+return.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="hash_conf.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="am_conf.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="am.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Hash access method specific configuration </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 3. 
+        Access Method Operations
+        </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

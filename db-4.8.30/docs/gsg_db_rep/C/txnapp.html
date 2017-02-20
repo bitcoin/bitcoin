@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 2. Transactional Application</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Replicated Berkeley DB Applications" />
+    <link rel="up" href="index.html" title="Getting Started with Replicated Berkeley DB Applications" />
+    <link rel="prev" href="permmessages.html" title="Permanent Message Handling" />
+    <link rel="next" href="simpleprogramlisting.html" title="Program Listing" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 2. Transactional Application</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="permmessages.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="simpleprogramlisting.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="txnapp"></a>Chapter 2. Transactional Application</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="txnapp.html#appoverview">Application Overview</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="simpleprogramlisting.html">Program Listing</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="simpleprogramlisting.html#main_c">Function: main()</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="simpleprogramlisting.html#create_env_c">Function: create_env()</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="simpleprogramlisting.html#env_init_c">Function: env_init()</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="simpleprogramlisting.html#doloop_c">Function: doloop()</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="simpleprogramlisting.html#printstocks_c">
+                            <span>Function: print_stocks()</span>
+                            
+                            
+                    </a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+        </dl>
+      </div>
+      <p>
+        In this chapter, we build a simple transaction-protected DB
+        application. Throughout the remainder of this book, we will add
+        replication to this example. We do this to underscore the concepts
+        that we are presenting in this book; the first being that you
+        should start with a working transactional program and then add
+        replication to it.
+    </p>
+      <p>
+        Note that this book assumes you already know how to write a
+        transaction-protected DB application, so we will not be
+        covering those concepts in this book. To learn how to write a
+        transaction-protected application, see the 
+        <em class="citetitle">Berkeley DB Getting Started with Transaction Processing</em> guide.
+    </p>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="appoverview"></a>Application Overview</h2>
+            </div>
+          </div>
+        </div>
+        <p>
+                Our application maintains a stock market quotes database.
+                This database contains records whose key is the stock
+                market symbol and whose data is the stock's price.
+            </p>
+        <p>
+                The application operates by presenting you with a command
+                line prompt. You then enter the stock symbol and its value,
+                separated by a space. The application takes this
+                information and writes it to the database. 
+            </p>
+        <p>
+                    To see the contents of the database, simply press
+                    <code class="literal">return</code> at the command prompt.
+            </p>
+        <p>
+                To quit the application, type 'quit' or 'exit' at the
+                command prompt.
+            </p>
+        <p>
+                For example, the following illustrates the application's
+                usage. In it, we use entirely fictitious stock market
+                symbols and price values.
+            </p>
+        <pre class="programlisting">&gt; ./ex_rep_gsg_simple -h env_home_dir
+QUOTESERVER&gt; stock1 88
+QUOTESERVER&gt; stock2 .08
+QUOTESERVER&gt; 
+        Symbol  Price
+        ======  =====
+        stock1  88
+        stock2 .08
+
+QUOTESERVER&gt; stock1 88.9
+QUOTESERVER&gt; 
+        Symbol  Price
+        ======  =====
+        stock1  88.9
+        stock2  .08
+
+QUOTESERVER&gt; quit 
+&gt;</pre>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="permmessages.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="simpleprogramlisting.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Permanent Message Handling </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Program Listing</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

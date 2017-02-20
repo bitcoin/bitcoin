@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 8.  The DbLsn Handle</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="prev" href="lockvec.html" title="DbEnv::lock_vec()" />
+    <link rel="next" href="envget_lg_bsize.html" title="DbEnv::get_lg_bsize()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 8. 
+                The DbLsn Handle
+        </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="lockvec.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="envget_lg_bsize.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="lsn"></a>Chapter 8. 
+                The DbLsn Handle
+        </h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+
+class DbLsn : public DB_LSN { ... }; </pre>
+      <p>
+        The <code class="classname">DbLsn</code> object is a <span class="emphasis"><em>log sequence number</em></span>
+        which specifies a unique location in a log file. A <code class="classname">DbLsn</code>
+        consists of two unsigned 32-bit integers -- one specifies the log file number, and the other
+        specifies an offset in the log file.
+    </p>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="loglist"></a>Logging Subsystem and Related Methods</h2>
+            </div>
+          </div>
+        </div>
+        <div class="navtable">
+          <table border="1" width="80%">
+            <thead>
+              <tr>
+                <th>Logging Subsystem and Related Methods</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <a class="xref" href="logarchive.html" title="DbEnv::log_archive()">DbEnv::log_archive()</a>
+                </td>
+                <td>List log and database files</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="logfile.html" title="DbEnv::log_file()">DbEnv::log_file()</a>
+                </td>
+                <td>Map Log Sequence Numbers to log files</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="logflush.html" title="DbEnv::log_flush()">DbEnv::log_flush()</a>
+                </td>
+                <td>Flush log records</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="logprintf.html" title="DbEnv::log_printf()">DbEnv::log_printf()</a>
+                </td>
+                <td>Append informational message to the log</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="logput.html" title="DbEnv::log_put()">DbEnv::log_put()</a>
+                </td>
+                <td>Write a log record</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="logstat.html" title="DbEnv::log_stat()">DbEnv::log_stat()</a>
+                </td>
+                <td>Return log subsystem statistics</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="logstat_print.html" title="DbEnv::log_stat_print()">DbEnv::log_stat_print()</a>
+                </td>
+                <td>Print log subsystem statistics</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="logcompare.html" title="DbEnv::log_compare()">DbEnv::log_compare()</a>
+                </td>
+                <td>Compare two Log Sequence Numbers</td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <span class="bold">
+                    <strong>Logging Subsystem Cursors</strong>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="logcursor.html" title="DbEnv::log_cursor()">DbEnv::log_cursor()</a>
+                </td>
+                <td>Create a log cursor handle</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="logc.html" title="The DbLogc Handle">
+                The DbLogc Handle
+        </a>
+                </td>
+                <td>A log cursor handle</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="logcclose.html" title="DbLogc::close()">DbLogc::close()</a>
+                </td>
+                <td>Close a log cursor</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="logcget.html" title="DbLogc::get()">DbLogc::get()</a>
+                </td>
+                <td>Retrieve a log record</td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <span class="bold">
+                    <strong>Logging Subsystem Configuration</strong>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="envlog_set_config.html" title="DbEnv::log_set_config()">DbEnv::log_set_config()</a>, <a class="xref" href="envlog_get_config.html" title="DbEnv::log_get_config()">DbEnv::log_get_config()</a></td>
+                <td>Configure the logging subsystem</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="envset_lg_bsize.html" title="DbEnv::set_lg_bsize()">DbEnv::set_lg_bsize()</a>, <a class="xref" href="envget_lg_bsize.html" title="DbEnv::get_lg_bsize()">DbEnv::get_lg_bsize()</a></td>
+                <td>Set/get log buffer size</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="envset_lg_dir.html" title="DbEnv::set_lg_dir()">DbEnv::set_lg_dir()</a>, <a class="xref" href="envget_lg_dir.html" title="DbEnv::get_lg_dir()">DbEnv::get_lg_dir()</a></td>
+                <td>Set/get the environment logging directory</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="envset_lg_filemode.html" title="DbEnv::set_lg_filemode()">DbEnv::set_lg_filemode()</a>, <a class="xref" href="envget_lg_filemode.html" title="DbEnv::get_lg_filemode()">DbEnv::get_lg_filemode()</a></td>
+                <td>Set/get log file mode</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="envset_lg_max.html" title="DbEnv::set_lg_max()">DbEnv::set_lg_max()</a>, <a class="xref" href="envget_lg_max.html" title="DbEnv::get_lg_max()">DbEnv::get_lg_max()</a></td>
+                <td>Set/get log file size</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="envset_lg_regionmax.html" title="DbEnv::set_lg_regionmax()">DbEnv::set_lg_regionmax()</a>, <a class="xref" href="envget_lg_regionmax.html" title="DbEnv::get_lg_regionmax()">DbEnv::get_lg_regionmax()</a></td>
+                <td>Set/get logging region size</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="lockvec.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="envget_lg_bsize.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DbEnv::lock_vec() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DbEnv::get_lg_bsize()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

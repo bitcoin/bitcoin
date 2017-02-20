@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Db</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="db.html" title="Chapter 2.  The Db Handle" />
+    <link rel="prev" href="dbclose.html" title="Db::close()" />
+    <link rel="next" href="dbcompact.html" title="Db::compact()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Db</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbclose.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+                The Db Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbcompact.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dbcreate"></a>Db</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+
+class Db { 
+public: 
+        Db(DbEnv *dbenv, u_int32_t flags); 
+        ~Db();
+
+         DB *Db::get_DB(); 
+         const DB *Db::get_const_DB() const; 
+         static Db *Db::get_Db(DB *db); 
+         static const Db *Db::get_const_Db(const DB *db); 
+         ... 
+}; </pre>
+      <p>
+        The Db handle is the handle for a Berkeley DB database, which may or may not be part of a
+        database environment.
+    </p>
+      <p>
+        Db handles are free-threaded if the 
+        <a class="link" href="envopen.html#envopen_DB_THREAD">DB_THREAD</a> flag is specified to 
+        the <a class="xref" href="dbopen.html" title="Db::open()">Db::open()</a> method when the database is opened or 
+        if the database environment in which the database is opened is free-threaded. The handle 
+        should not be closed while any other handle that refers to the database is in use; for 
+        example, database handles must not be closed while cursor handles into the database remain 
+        open, or transactions that include operations on the database have not yet been committed 
+        or aborted.  Once the <a class="xref" href="dbclose.html" title="Db::close()">Db::close()</a>, 
+        <a class="xref" href="dbremove.html" title="Db::remove()">Db::remove()</a>, 
+        <a class="xref" href="dbrename.html" title="Db::rename()">Db::rename()</a>, or
+        <a class="xref" href="dbverify.html" title="Db::verify()">Db::verify()</a> 
+        methods are called, the handle may not be accessed again, regardless of the method's return.
+    </p>
+      <p>
+        The constructor creates a <a class="link" href="db.html" title="Chapter 2.  The Db Handle">Db</a> object that is the
+        handle for a Berkeley DB database. The constructor allocates memory internally; calling
+        the <a class="xref" href="dbclose.html" title="Db::close()">Db::close()</a>,
+        <a class="xref" href="dbremove.html" title="Db::remove()">Db::remove()</a>, or
+        <a class="xref" href="dbrename.html" title="Db::rename()">Db::rename()</a>
+        methods will free that memory.        
+    </p>
+      <p>
+        Note that destroying the <a class="link" href="db.html" title="Chapter 2.  The Db Handle">Db</a>
+        object is synonomous with calling <code class="literal">Db::close(0)</code>.
+    </p>
+      <p>
+        Each <code class="methodname">Db</code> object has an associated <code class="methodname">DB</code>
+        struct, which is used by the underlying implementation of Berkeley DB and its C-language
+        API. The <code class="methodname">Db::get_DB()</code>  method returns a pointer to this struct.
+        Given a <code class="methodname">const Db</code> object,
+        <code class="methodname">Db::get_const_DB()</code> returns a const pointer to the same struct.
+    </p>
+      <p>
+        Given a <code class="literal">DB</code> struct, the <code class="methodname">Db::get_Db()</code> method 
+        returns the corresponding <code class="classname">Db</code> object, if there is
+        one. If the <code class="literal">DB</code> object was not associated with a 
+        <code class="classname">Db</code> (that is, it was not returned from a call
+        to the <code class="methodname">Db::get_DB()</code> method), then the result of 
+        <code class="methodname">Db::get_Db()</code> is undefined. Given a 
+        <code class="literal">const DB struct</code>,
+        <code class="methodname">Db::get_const_Db()</code> returns the associated 
+        <code class="literal">const Db</code>object, if there is one.
+    </p>
+      <p>
+        These methods may be useful for Berkeley DB applications including both C and C++
+        language software. It should not be necessary to use these calls in a purely C++
+        application.
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1631976"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1632068"></a>dbenv</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                 
+                <span>If no <span class="bold"><strong>dbenv</strong></span> value is specified,</span> 
+                the database is standalone; that is, it is not part of any Berkeley DB
+                environment.
+            </p>
+          <p>
+                
+                <span>
+                    If a <span class="bold"><strong>dbenv</strong></span> value is specified,
+                </span>
+                the database is created within the specified Berkeley DB environment. 
+                The database access methods automatically make calls to the other
+                subsystems in Berkeley DB, based on the enclosing environment.  For
+                example, if the environment has been configured to use locking, the
+                access methods will automatically acquire the correct locks when
+                reading and writing pages of the database.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1631995"></a>flags</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                  The <span class="bold"><strong>flags</strong></span> parameter is currently
+                  unused, and must be set to 0.
+             </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p>
+                                <code class="literal">DB_CXX_NO_EXCEPTION</code>
+                            </p>
+                <p>
+                                The Berkeley DB C++ API supports two different error behaviors. By
+                                default, whenever an error occurs, an exception is thrown that
+                                encapsulates the error information. This generally allows for
+                                cleaner logic for transaction processing because a try block can
+                                surround a single transaction. However, if this flag is
+                                specified, exceptions are not thrown; instead, each individual
+                                function returns an error code. 
+                            </p>
+                <p>
+                                If a <span class="bold"><strong>dbenv</strong></span> value is specified,
+                                this flag is ignored, and the error behavior of the specified
+                                environment is used instead.
+                            </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1631996"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+            <a class="link" href="db.html" title="Chapter 2.  The Db Handle">Db</a>
+        </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1632066"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+            <a class="xref" href="db.html#dblist" title="Database and Related Methods">Database and Related Methods</a> 
+        </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbclose.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="db.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbcompact.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Db::close() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Db::compact()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

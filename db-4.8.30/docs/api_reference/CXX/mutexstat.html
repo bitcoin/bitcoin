@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DbEnv::mutex_stat()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="mutex.html" title="Chapter 10.  Mutex Methods" />
+    <link rel="prev" href="mutexset_tas_spins.html" title="DbEnv::mutex_set_tas_spins()" />
+    <link rel="next" href="mutexstat_print.html" title="DbEnv::mutex_stat_print()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DbEnv::mutex_stat()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="mutexset_tas_spins.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 10. 
+                Mutex Methods 
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="mutexstat_print.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="mutexstat"></a>DbEnv::mutex_stat()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+
+int
+DbEnv::mutex_stat(DB_MUTEX_STAT **statp, u_int32_t flags); </pre>
+      <p>
+         The <code class="methodname">DbEnv::mutex_stat()</code> method returns the mutex subsystem
+         statistics.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::mutex_stat()</code> method creates a statistical structure of
+         type <code class="literal">DB_MUTEX_STAT</code> and copies a pointer to it into a user-specified
+         memory location.
+    </p>
+      <p>
+         Statistical structures are stored in allocated memory.  If
+         application-specific allocation routines have been declared (see
+         <a class="xref" href="envset_alloc.html" title="DbEnv::set_alloc()">DbEnv::set_alloc()</a> 
+         for more information), they are used to allocate the memory;
+         otherwise, the standard C library <span class="bold"><strong>malloc</strong></span>(3) is used.  The caller is responsible
+         for deallocating the memory.  To deallocate the memory, free the
+         memory reference; references inside the returned memory need not be
+         individually freed.
+    </p>
+      <p>
+         The following <code class="literal">DB_MUTEX_STAT</code> fields will be filled in:
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                          <span class="bold"><strong>u_int32_t st_mutex_align;</strong></span>
+                </p>
+            <p>
+                        The mutex alignment, in bytes.
+                </p>
+          </li>
+          <li>
+            <p>
+                        <span class="bold"><strong>u_int32_t st_mutex_tas_spins;</strong></span>
+                </p>
+            <p>
+                         The number of times test-and-set mutexes will spin without blocking.
+                </p>
+          </li>
+          <li>
+            <p>
+                         <span class="bold"><strong>int st_mutex_cnt;</strong></span>
+                </p>
+            <p>
+                        The total number of mutexes configured.
+                </p>
+          </li>
+          <li>
+            <p>
+                         <span class="bold"><strong>u_int32_t st_mutex_free;</strong></span>
+                </p>
+            <p>
+                        The number of mutexes currently available.
+                </p>
+          </li>
+          <li>
+            <p>
+                         <span class="bold"><strong>u_int32_t st_mutex_inuse;</strong></span>
+                </p>
+            <p>
+                        The number of mutexes currently in use.
+                </p>
+          </li>
+          <li>
+            <p>
+                         <span class="bold"><strong>u_int32_t st_mutex_inuse_max;</strong></span>
+                </p>
+            <p>
+                        The maximum number of mutexes ever in use.
+                </p>
+          </li>
+          <li>
+            <p>
+                         <span class="bold"><strong>roff_t st_regsize;</strong></span>
+                </p>
+            <p>
+                        The size of the mutex region, in bytes.
+                </p>
+          </li>
+          <li>
+            <p>
+                         <span class="bold"><strong>uintmax_t st_region_wait;</strong></span>
+                </p>
+            <p>
+                         The number of times that a thread of control was forced to wait before
+                         obtaining the mutex region mutex.
+                </p>
+          </li>
+          <li>
+            <p>
+                         <span class="bold"><strong>uintmax_t st_region_nowait;</strong></span>
+                </p>
+            <p>
+                         The number of times that a thread of control was able to obtain the
+                         mutex region mutex without waiting.
+                </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+              The <code class="methodname">DbEnv::mutex_stat()</code> method may not be called before the 
+              <a class="xref" href="envopen.html" title="DbEnv::open()">DbEnv::open()</a>  method is called.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::mutex_stat()</code> <span>
+            
+            <span>
+                method either returns a non-zero error value or throws an
+                exception that encapsulates a non-zero error value on
+                failure, and returns 0 on success.
+            </span>
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1700000"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1700081"></a>flags</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>flags</strong></span> parameter must be set to 0
+                          or the following value:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p>
+                  <code class="literal">DB_STAT_CLEAR</code>
+            </p>
+                <p>
+                Reset statistics after returning their values.
+            </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1700176"></a>statp</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>statp</strong></span> parameter references memory
+                          into which a pointer to the allocated statistics structure is copied.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1700313"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DbEnv::mutex_stat()</code> <span>
+            
+            <span>
+                method may fail and throw a <a class="link" href="dbexception.html" title="Chapter 6. The DbException Class">DbException</a> 
+                exception, encapsulating one of the following non-zero errors, or return one
+                of the following non-zero errors:
+            </span>
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1700240"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                An invalid flag value or parameter was specified.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1699883"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="env.html" title="Chapter 5.  The DbEnv Handle">DbEnv</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1699855"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="mutex.html#mutexlist" title="Mutex Methods">Mutex Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="mutexset_tas_spins.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="mutex.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="mutexstat_print.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DbEnv::mutex_set_tas_spins() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DbEnv::mutex_stat_print()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

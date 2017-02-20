@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 3.0: EAGAIN</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_3_0_toc.html" title="Chapter 33. Upgrading Berkeley DB 2.X applications to Berkeley DB 3.0" />
+    <link rel="prev" href="upgrade_3_0_lock_notheld.html" title="Release 3.0: DB_LOCK_NOTHELD" />
+    <link rel="next" href="upgrade_3_0_eacces.html" title="Release 3.0: EACCES" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 3.0: EAGAIN</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_3_0_lock_notheld.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 33. Upgrading Berkeley DB 2.X applications to Berkeley DB 3.0</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_3_0_eacces.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_3_0_eagain"></a>Release 3.0: EAGAIN</h2>
+          </div>
+        </div>
+      </div>
+      <p>Historically, the Berkeley DB interfaces have returned the POSIX error value
+EAGAIN to indicate a deadlock.  This has been removed from the Berkeley DB 3.0
+release in order to make it possible for applications to distinguish
+between EAGAIN errors returned by the system and returns from Berkeley DB
+indicating deadlock.</p>
+      <p>The application should be searched for any occurrences of EAGAIN. For
+each of these, any that are checking for a deadlock return from Berkeley DB
+should be changed to check for the DB_LOCK_DEADLOCK return value.</p>
+      <p>If, for any reason, this is a difficult change for the application to
+make, the <code class="filename">include/db.src</code> distribution file should be modified to
+translate all returns of DB_LOCK_DEADLOCK to EAGAIN.  Search for the
+string EAGAIN in that file, there is a comment that describes how to make
+the change.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_3_0_lock_notheld.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_3_0_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_3_0_eacces.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 3.0: DB_LOCK_NOTHELD </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 3.0: EACCES</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB-&gt;set_priority()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="db.html" title="Chapter 2.  The DB Handle" />
+    <link rel="prev" href="dbset_partition_dirs.html" title="DB-&gt;set_partition_dirs()" />
+    <link rel="next" href="dbset_q_extentsize.html" title="DB-&gt;set_q_extentsize()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB-&gt;set_priority()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbset_partition_dirs.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+                The DB Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbset_q_extentsize.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dbset_priority"></a>DB-&gt;set_priority()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB-&gt;set_priority(DB *db, DB_CACHE_PRIORITY priority);  </pre>
+      <p>
+            Set the cache priority for pages referenced by the 
+            <a class="link" href="db.html" title="Chapter 2.  The DB Handle">DB</a>  handle.
+    </p>
+      <p>
+         The priority of a page biases the replacement algorithm to be more or
+         less likely to discard a page when space is needed in the buffer pool.
+         The bias is temporary, and pages will eventually be discarded if they
+         are not referenced again.  The <code class="methodname">DB-&gt;set_priority()</code> method is only
+         advisory, and does not guarantee pages will be treated in a specific
+         way.
+    </p>
+      <p>
+         The <code class="methodname">DB-&gt;set_priority()</code> method may be called at any time during the
+         life of the application.
+    </p>
+      <p>
+         The <code class="methodname">DB-&gt;set_priority()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1649442"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1649128"></a>priority</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>priority</strong></span> parameter must be set to
+                          one of the following values:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="set_priority_DB_PRIORITY_VERY_LOW"></a>
+                  <code class="literal">DB_PRIORITY_VERY_LOW</code>
+            </p>
+                <p>
+                 The lowest priority: pages are the most likely to be discarded.
+            </p>
+              </li>
+              <li>
+                <p><a id="set_priority_DB_PRIORITY_LOW"></a>
+                  <code class="literal">DB_PRIORITY_LOW</code>
+            </p>
+                <p>
+                The next lowest priority.
+            </p>
+              </li>
+              <li>
+                <p><a id="set_priority_DB_PRIORITY_DEFAULT"></a>
+                  <code class="literal">DB_PRIORITY_DEFAULT</code>
+            </p>
+                <p>
+                The default priority.
+            </p>
+              </li>
+              <li>
+                <p><a id="set_priority_DB_PRIORITY_HIGH"></a>
+                  <code class="literal">DB_PRIORITY_HIGH</code>
+            </p>
+                <p>
+                The next highest priority.
+            </p>
+              </li>
+              <li>
+                <p><a id="set_priority_DB_PRIORITY_VERY_HIGH"></a>
+                  <code class="literal">DB_PRIORITY_VERY_HIGH</code>
+            </p>
+                <p>
+                 The highest priority: pages are the least likely to be discarded.
+            </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1649530"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="db.html" title="Chapter 2.  The DB Handle">DB</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1649438"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="db.html#dblist" title="Database and Related Methods">Database and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbset_partition_dirs.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="db.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbset_q_extentsize.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB-&gt;set_partition_dirs() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB-&gt;set_q_extentsize()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

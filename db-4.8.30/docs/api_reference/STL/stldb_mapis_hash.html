@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>is_hash</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ Standard Template Library API Reference" />
+    <link rel="up" href="db_map.html" title="Chapter 5.  Db_map" />
+    <link rel="prev" href="stldb_maprend.html" title="rend" />
+    <link rel="next" href="stldb_mapbucket_count.html" title="bucket_count" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">
+is_hash
+</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="stldb_maprend.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. 
+ Db_map  </th>
+          <td width="20%" align="right"> <a accesskey="n" href="stldb_mapbucket_count.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="stldb_mapis_hash"></a>
+is_hash
+</h2>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="func_details"></a>
+Function Details</h3>
+            </div>
+          </div>
+        </div>
+        <pre class="programlisting">
+bool is_hash() const
+ </pre>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage"></div>
+          <p>Get container category. </p>
+          <p>Determines whether this container object is a std::map&lt;&gt; equivalent(when returns false) or that of hash_map&lt;&gt; class(when returns true). This method is not in stl, but it may be called by users because some operations are not supported by both type(map/hash_map) of containers, you need to call this function to distinguish the two types. dbstl will not stop you from calling the wrong methods of this class. </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1551269"></a>
+Return Value</h4>
+              </div>
+            </div>
+          </div>
+          <p>Returns true if this container is a hash container based on a Berkeley DB hash database; returns false if it is based on a Berkeley DB btree database. </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1551514"></a>
+Group: Metadata Functions</h3>
+            </div>
+          </div>
+        </div>
+        <p>These functions return metadata about the container. </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1551751"></a>
+Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+  <a class="link" href="db_map.html" title="Chapter 5.  Db_map">
+  db_map</a>
+     </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="stldb_maprend.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="db_map.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="stldb_mapbucket_count.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+rend
+ </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+bucket_count
+</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

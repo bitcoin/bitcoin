@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB_ENV-&gt;set_msgcall()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="env.html" title="Chapter 5.  The DB_ENV Handle" />
+    <link rel="prev" href="envset_isalive.html" title="DB_ENV-&gt;set_isalive()" />
+    <link rel="next" href="envset_msgfile.html" title="DB_ENV-&gt;set_msgfile()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB_ENV-&gt;set_msgcall()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="envset_isalive.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. 
+                The DB_ENV Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="envset_msgfile.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="envset_msgcall"></a>DB_ENV-&gt;set_msgcall()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+void
+DB_ENV-&gt;set_msgcall(DB_ENV *dbenv,
+    void (*db_msgcall_fcn)(const DB_ENV *dbenv, const char *msg));  </pre>
+      <p>
+         There are interfaces in the Berkeley DB library which either directly
+         output informational messages or statistical information, or configure
+         the library to output such messages when performing other operations,
+         for example, <a class="xref" href="envset_verbose.html" title="DB_ENV-&gt;set_verbose()">DB_ENV-&gt;set_verbose()</a>  and
+         <a class="xref" href="envstat.html" title="DB_ENV-&gt;stat_print()">DB_ENV-&gt;stat_print()</a>.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;set_msgcall()</code> and 
+         <a class="xref" href="dbset_msgcall.html" title="DB-&gt;set_msgcall()">DB-&gt;set_msgcall()</a>
+         methods are used to pass these messages to the application, and Berkeley DB will call
+         <span class="bold"><strong>db_msgcall_fcn</strong></span> with each message.  It
+         is up to the <span class="bold"><strong>db_msgcall_fcn</strong></span> function
+         to display the message in an appropriate manner.
+    </p>
+      <p>
+         Setting <span class="bold"><strong>db_msgcall_fcn</strong></span> to NULL
+         unconfigures the callback interface.
+    </p>
+      <p>
+         Alternatively, you can use the
+            
+         <a class="xref" href="dbset_msgfile.html" title="DB-&gt;set_msgfile()">DB-&gt;set_msgfile()</a>  or
+         <a class="xref" href="envset_msgfile.html" title="DB_ENV-&gt;set_msgfile()">DB-&gt;set_msgfile()</a>
+         methods to display the messages via a C library FILE *.
+         
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;set_msgcall()</code> method configures operations performed
+         using the specified <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  handle, not all
+         operations performed on the underlying database environment.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;set_msgcall()</code> method may be called at any time during the
+         life of the application.
+    </p>
+      <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+        <h3 class="title">Note</h3>
+        <p>
+                    Berkeley DB is not re-entrant. Callback functions should not attempt to make library calls (for
+                    example, to release locks or close open handles). Re-entering Berkeley DB is not guaranteed to work
+                    correctly, and the results are undefined.
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1671357"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1671144"></a>db_msgcall_fcn</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>db_msgcall_fcn</strong></span> parameter is the
+                          application-specified message reporting function.  The function takes
+                          two parameters:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p>
+                <code class="literal">dbenv</code>
+            </p>
+                <p>
+                 The <span class="bold"><strong>dbenv</strong></span> parameter is the enclosing
+                 database environment.
+            </p>
+              </li>
+              <li>
+                <p>
+                <code class="literal">msg</code>
+            </p>
+                <p>
+                 The <span class="bold"><strong>msg</strong></span> parameter is the message
+                 string.
+            </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1671532"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1671106"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="env.html#envlist" title="Database Environments and Related Methods">Database Environments and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="envset_isalive.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="env.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="envset_msgfile.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB_ENV-&gt;set_isalive() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_ENV-&gt;set_msgfile()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 20.  Berkeley DB Extensions: Tcl</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="prev" href="sequence.html" title="Chapter 19.  Sequences" />
+    <link rel="next" href="tcl_using.html" title="Using Berkeley DB with Tcl" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 20. 
+        Berkeley DB Extensions: Tcl
+        </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="sequence.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="tcl_using.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="tcl"></a>Chapter 20. 
+        Berkeley DB Extensions: Tcl
+        </h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="tcl.html#tcl_intro">Loading Berkeley DB with Tcl</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="tcl.html#id1625703">Installing as a Tcl Package</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="tcl.html#id1625472">Loading Berkeley DB with Tcl</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <span class="sect1">
+              <a href="tcl_using.html">Using Berkeley DB with Tcl</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="tcl_program.html">Tcl API programming notes</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="tcl_error.html">Tcl error handling</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="tcl_faq.html">Tcl FAQ</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="tcl_intro"></a>Loading Berkeley DB with Tcl</h2>
+            </div>
+          </div>
+        </div>
+        <div class="toc">
+          <dl>
+            <dt>
+              <span class="sect2">
+                <a href="tcl.html#id1625703">Installing as a Tcl Package</a>
+              </span>
+            </dt>
+            <dt>
+              <span class="sect2">
+                <a href="tcl.html#id1625472">Loading Berkeley DB with Tcl</a>
+              </span>
+            </dt>
+          </dl>
+        </div>
+        <p>Berkeley DB includes a dynamically loadable Tcl API, which requires that
+Tcl/Tk 8.4 or later already be installed on your system.  You can
+download a copy of Tcl from the <a class="ulink" href="http://www.tcl.tk" target="_top">Tcl
+Developer Xchange</a> Web site.</p>
+        <p>This document assumes that you already configured Berkeley DB for Tcl
+support, and you have built and installed everything where you want it
+to be.  If you have not done so, see
+<a class="xref" href="build_unix_conf.html" title="Configuring Berkeley DB">Configuring Berkeley DB</a> or
+<a class="xref" href="build_win_tcl.html" title="Building the Tcl API">Building the Tcl API</a> for more
+information.</p>
+        <div class="sect2" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title"><a id="id1625703"></a>Installing as a Tcl Package</h3>
+              </div>
+            </div>
+          </div>
+          <p>Once enabled, the Berkeley DB shared library for Tcl is automatically installed
+as part of the standard installation process.  However, if you want to be
+able to dynamically load it as a Tcl package into your script, there are
+several steps that must be performed:</p>
+          <div class="orderedlist">
+            <ol type="1">
+              <li>Run the Tcl shell in the install directory.</li>
+              <li>Append this directory to your auto_path variable.</li>
+              <li>Run the pkg_mkIndex proc, giving the name of the Berkeley DB Tcl library.</li>
+            </ol>
+          </div>
+          <p>For example:</p>
+          <pre class="programlisting"># tclsh8.4
+% lappend auto_path /usr/local/BerkeleyDB.4.8/lib
+% pkg_mkIndex /usr/local/BerkeleyDB.4.8/lib libdb_tcl-4.8.so</pre>
+          <p>Note that your Tcl and Berkeley DB version numbers may differ from the
+example, and so your tclsh and library names may be different.</p>
+        </div>
+        <div class="sect2" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title"><a id="id1625472"></a>Loading Berkeley DB with Tcl</h3>
+              </div>
+            </div>
+          </div>
+          <p>The Berkeley DB package may be loaded into the user's interactive Tcl script
+(or wish session) via the <span class="bold"><strong>load</strong></span> command. For example:</p>
+          <pre class="programlisting">load /usr/local/BerkeleyDB.4.8/lib/libdb_tcl-4.8.so</pre>
+          <p>Note that your Berkeley DB version numbers may differ from the example, and so
+the library name may be different.</p>
+          <p>If you installed your library to run as a Tcl package, Tcl application
+scripts should use the <span class="bold"><strong>package</strong></span> command to indicate to the Tcl
+interpreter that it needs the Berkeley DB package and where to find it. For
+example:</p>
+          <pre class="programlisting">lappend auto_path "/usr/local/BerkeleyDB.4.8/lib"
+package require Db_tcl</pre>
+          <p>No matter which way the library gets loaded, it creates a command named
+<span class="bold"><strong>berkdb</strong></span>.  All the Berkeley DB functionality is accessed via this
+command and additional commands it creates on behalf of the application.
+A simple test to determine whether everything is loaded and ready is to
+display the library version, as follows:</p>
+          <pre class="programlisting">berkdb version -string</pre>
+          <p>This should return you the Berkeley DB version in a string format.</p>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="sequence.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="tcl_using.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 19. 
+        Sequences
+         </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Using Berkeley DB with Tcl</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+// $Id$
+//
+// Windows configuration file for Berkeley DB extension for PHP
+// NOTE: this does not build with mod_db4.  Instructions are for a Release build.
+// 1.  If the library name below (e.g. libdb46.lib) does not match the 
+//     current version, replace it with the correct name.
+// 2.  replace <path_to_lib> with the path to a built, release version of libdbXX.lib
+//     e.g. C:/Programs/db-4.6.21/build_windows/Release
+// 3.  replace <path_to_build_windows> with the path to a directory containing db.h,
+//     e.g. C:/Programs/db-4.6.21/build_windows
+// 4.  Instructions for building PHP from source must be used to build this module.  See
+//     http://us2.php.net/install.windows.building
+//
+//     When using buildconf.js to generating the configure.js script, be sure to add
+//     --add-modules-dir=<path-to-db-4.6.x>
+//     This module can then be enabled/built using the following options to configure.js:
+//     	    --enable-db4=yes (build into php.exe)  or 
+// 	    --enable-db4=shared (built as php_db4.dll extension module)
+//
+ARG_ENABLE("db4","Berkeley DB support","no,shared");
+if (PHP_DB4 != "no") {
+	EXTENSION("db4", "db4.cpp", null, "", "php_db4.dll");
+	CHECK_LIB("libdb46.lib", "db4", "<path_to_lib>;");
+	CHECK_HEADER_ADD_INCLUDE("db.h", "CFLAGS_DB4", "<path_to_build_windows>;../db4;");
+	ADD_FLAG("CFLAGS_DB4", "/EHsc");
+}

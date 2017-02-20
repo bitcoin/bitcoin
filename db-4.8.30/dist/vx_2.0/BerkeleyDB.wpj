@@ -1,0 +1,251 @@
+Document file - DO NOT EDIT
+
+<BEGIN> BUILD_PENTIUM_debug_BUILDRULE
+BerkeleyDB20.out
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_AR
+ar386
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_ARCHIVE
+$(PRJ_DIR)/PENTIUMgnu/BerkeleyDB20_sim.a
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_AS
+cc386
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_CC
+cc386
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_CFLAGS
+-g \
+	-mpentium \
+	-ansi \
+	-nostdinc \
+	-DRW_MULTI_THREAD \
+	-D_REENTRANT \
+	-fvolatile \
+	-nostdlib \
+	-fno-builtin \
+	-fno-defer-pop \
+	-I. \
+	-I$(WIND_BASE)/target/h \
+	-DCPU=PENTIUM \
+	-O0 \
+	-I$(PRJ_DIR) \
+	-I$(PRJ_DIR)/.. \
+	-DDIAGNOSTIC \
+	-DDEBUG
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_CFLAGS_AS
+-g \
+	-mpentium \
+	-ansi \
+	-nostdinc \
+	-fvolatile \
+	-nostdlib \
+	-fno-builtin \
+	-fno-defer-pop \
+	-P \
+	-x \
+	assembler-with-cpp \
+	-I. \
+	-I$(WIND_BASE)/target/h \
+	-DCPU=PENTIUM
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_CPP
+cc386 -E -P -xc
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_LD
+ld386
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_LDFLAGS
+-X -N
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_LD_PARTIAL_FLAGS
+-X -r
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_NM
+nm386 -g
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_OPTION_DEFINE_MACRO
+-D
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_OPTION_INCLUDE_DIR
+-I
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_POST_BUILD_RULE
+
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_PRJ_LIBS
+
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_SIZE
+size386
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_RO_DEPEND_PATH
+{$(WIND_BASE)/target/h/} \
+	{$(WIND_BASE)/target/src/} \
+	{$(WIND_BASE)/target/config/}
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_TC
+::tc_PENTIUMgnu
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_BUILDRULE
+BerkeleyDB20.out
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_AR
+ar386
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_ARCHIVE
+$(PRJ_DIR)/PENTIUMgnu/BerkeleyDB20_sim.a
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_AS
+cc386
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_CC
+cc386
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_CFLAGS
+-mpentium \
+	-ansi \
+	-nostdinc \
+	-DRW_MULTI_THREAD \
+	-D_REENTRANT \
+	-fvolatile \
+	-nostdlib \
+	-fno-builtin \
+	-fno-defer-pop \
+	-I. \
+	-I$(WIND_BASE)/target/h \
+	-DCPU=PENTIUM \
+	-O2 \
+	-I$(PRJ_DIR) \
+	-I$(PRJ_DIR)/..
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_CFLAGS_AS
+-g \
+	-mpentium \
+	-ansi \
+	-nostdinc \
+	-fvolatile \
+	-nostdlib \
+	-fno-builtin \
+	-fno-defer-pop \
+	-P \
+	-x \
+	assembler-with-cpp \
+	-I. \
+	-I$(WIND_BASE)/target/h \
+	-DCPU=PENTIUM
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_CPP
+cc386 -E -P -xc
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_LD
+ld386
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_LDDEPS
+
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_LDFLAGS
+-X -N
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_LD_PARTIAL_FLAGS
+-X -r
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_NM
+nm386 -g
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_OPTION_DEFINE_MACRO
+-D
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_OPTION_INCLUDE_DIR
+-I
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_POST_BUILD_RULE
+
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_PRJ_LIBS
+
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_SIZE
+size386
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_RO_DEPEND_PATH
+{$(WIND_BASE)/target/h/} \
+	{$(WIND_BASE)/target/src/} \
+	{$(WIND_BASE)/target/config/}
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_TC
+::tc_PENTIUMgnu
+<END>
+
+<BEGIN> BUILD_RULE_BerkeleyDB20.out
+
+<END>
+
+<BEGIN> BUILD_RULE_BerkeleyDB20_sim.out
+
+<END>
+
+<BEGIN> BUILD_RULE_archive
+
+<END>
+
+<BEGIN> BUILD_RULE_objects
+
+<END>
+
+<BEGIN> BUILD__CURRENT
+PENTIUM_debug
+<END>
+
+<BEGIN> BUILD__LIST
+PENTIUM_release PENTIUM_debug
+<END>
+
+<BEGIN> CORE_INFO_TYPE
+::prj_vxApp
+<END>
+
+<BEGIN> CORE_INFO_VERSION
+2.0
+<END>
+

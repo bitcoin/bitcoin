@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Closing Databases</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="DB.html" title="Chapter 2. Databases" />
+    <link rel="prev" href="DB.html" title="Chapter 2. Databases" />
+    <link rel="next" href="DBOpenFlags.html" title="Database Open Flags" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Closing Databases</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="DB.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. Databases</th>
+          <td width="20%" align="right"> <a accesskey="n" href="DBOpenFlags.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="coredbclose"></a>Closing Databases</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+        Once you are done using the database, you must close it. You use the
+        
+        <code class="methodname">Db::close()</code>
+        method to do this.
+    </p>
+      <p>
+        Closing a database causes it to become unusable until it is opened
+        again. Note that you should make sure that any open cursors are closed
+        before closing your database.  Active cursors during a database
+        close can cause unexpected results, especially if any of those cursors are
+        writing to the database. You should always make sure that all your
+        database accesses have completed before closing your database.
+    </p>
+      <p>
+        Cursors are described in <a class="xref" href="Cursors.html" title="Chapter 4. Using Cursors">Using Cursors</a> later in this manual.
+    </p>
+      <p>
+        Be aware that when you close the last open handle 
+        for a database, then by default its cache is flushed to disk.
+        This means that any information that has
+        been modified in the cache is guaranteed to be written to disk when the
+        last handle is closed. You can manually perform this operation using
+        the 
+        
+        <code class="methodname">Db::sync()</code>
+        
+        method, but for normal shutdown operations it is not necessary.
+        For more information about syncing your cache, see 
+        <a class="xref" href="usingDbt.html#datapersist" title="Data Persistence">Data Persistence</a>.
+     </p>
+      <p>The following code fragment illustrates a database close:</p>
+      <a id="cxx_db2"></a>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+
+...
+
+Db db(NULL, 0);
+
+ // Database open and access operations happen here.
+
+try {
+    // Close the database
+    db.close(0);
+// DbException is not subclassed from std::exception, so
+// need to catch both of these.
+} catch(DbException &amp;e) {
+    // Error handling code goes here    
+} catch(std::exception &amp;e) {
+    // Error handling code goes here
+} </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="DB.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="DB.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="DBOpenFlags.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 2. Databases </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Database Open Flags</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

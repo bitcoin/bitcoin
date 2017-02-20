@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 39. Upgrading Berkeley DB 4.1 applications to Berkeley DB 4.2</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="prev" href="changelog_4_1_25.html" title="Berkeley DB 4.1.25 Change Log" />
+    <link rel="next" href="upgrade_4_2_java.html" title="Release 4.2: Java" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 39. Upgrading Berkeley DB 4.1 applications to Berkeley DB 4.2</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="changelog_4_1_25.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_4_2_java.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="upgrade_4_2_toc"></a>Chapter 39. Upgrading Berkeley DB 4.1 applications to Berkeley DB 4.2</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="upgrade_4_2_toc.html#upgrade_4_2_intro">Release 4.2: Introduction</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="upgrade_4_2_java.html">Release 4.2: Java</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="upgrade_4_2_queue.html">Release 4.2: Queue access method</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="upgrade_4_2_cksum.html">Release 4.2: DB_CHKSUM_SHA1</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="upgrade_4_2_client.html">Release 4.2: DB_CLIENT</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="upgrade_4_2_del.html">Release 4.2: DB-&gt;del</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="upgrade_4_2_priority.html">Release 4.2: DB-&gt;set_cache_priority</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="upgrade_4_2_verify.html">Release 4.2: DB-&gt;verify</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="upgrade_4_2_lockng.html">Release 4.2: DB_LOCK_NOTGRANTED</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="upgrade_4_2_repinit.html">Release 4.2: Replication</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="upgrade_4_2_repinit.html#id1646262">Replication initialization</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="upgrade_4_2_repinit.html#id1645833">Database methods and replication clients</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="upgrade_4_2_repinit.html#id1645834">DB_ENV-&gt;rep_process_message()</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <span class="sect1">
+              <a href="upgrade_4_2_nosync.html">Release 4.2: Client replication environments</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="upgrade_4_2_tcl.html">Release 4.2: Tcl API</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="upgrade_4_2_disk.html">Release 4.2: Upgrade Requirements</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="changelog_4_2_52.html">Berkeley DB 4.2.52 Change Log</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1646610">Database or Log File On-Disk Format Changes:</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1646656">New Features:</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1646731">Database Environment Changes:</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1646751">Concurrent Data Store Changes:</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1646626">General Access Method Changes:</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1646406">Btree Access Method Changes:</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1645991">Hash Access Method Changes:</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1647101">Queue Access Method Changes:</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1647211">Recno Access Method Changes:</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1647303">C++-specific API Changes:</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1647330">Java-specific API Changes:</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1647288">Tcl-specific API Changes:</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1647498">RPC-specific Client/Server Changes:</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1647524">Replication Changes:</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1646909">XA Resource Manager Changes:</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1647806">Locking Subsystem Changes:</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1646843">Logging Subsystem Changes:</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1646648">Memory Pool Subsystem Changes:</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1646789">Transaction Subsystem Changes:</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1646898">Utility Changes:</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="changelog_4_2_52.html#id1646438">Configuration, Documentation, Portability and Build Changes:</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+        </dl>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="upgrade_4_2_intro"></a>Release 4.2: Introduction</h2>
+            </div>
+          </div>
+        </div>
+        <p>The following pages describe how to upgrade applications coded against
+the Berkeley DB 4.1 release interfaces to the Berkeley DB 4.2 release interfaces.
+This information does not describe how to upgrade Berkeley DB 1.85 release
+applications.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="changelog_4_1_25.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_4_2_java.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Berkeley DB 4.1.25 Change Log </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 4.2: Java</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

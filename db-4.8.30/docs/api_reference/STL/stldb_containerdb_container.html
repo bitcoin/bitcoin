@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>db_container</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ Standard Template Library API Reference" />
+    <link rel="up" href="db_container.html" title="Chapter 3.  Db_container" />
+    <link rel="prev" href="stldb_containerset_cursor_open_flags.html" title="set_cursor_open_flags" />
+    <link rel="next" href="stldb_containerdstr_db_container.html" title="~db_container" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">
+db_container
+</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="stldb_containerset_cursor_open_flags.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. 
+ Db_container  </th>
+          <td width="20%" align="right"> <a accesskey="n" href="stldb_containerdstr_db_container.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="stldb_containerdb_container"></a>
+db_container
+</h2>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="func_details"></a>
+Function Details</h3>
+            </div>
+          </div>
+        </div>
+        <pre class="programlisting">
+db_container()
+ </pre>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage"></div>
+          <p>Default constructor. </p>
+        </div>
+        <pre class="programlisting">
+db_container(const db_container &amp;dbctnr)
+ </pre>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage"></div>
+          <p>Copy constructor. </p>
+          <p>The new container will be backed by another database within the same environment unless dbctnr's backing database is in its own internal private environment. The name of the database is coined based on current time and thread id and some random number. If this is still causing naming clashes, you can set a suffix number via "set_global_dbfile_suffix_number" function; And following db file will suffix this number in the file name for additional randomness. And the suffix will be incremented after each such use. You can change the file name via DbEnv::rename. If dbctnr is using an anonymous database, the newly constructed container will also use an anonymous one. </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1545076"></a>
+Parameters</h4>
+              </div>
+            </div>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1545301"></a>
+ dbctnr </h5>
+                </div>
+              </div>
+            </div>
+            <p>The container to initialize this container. </p>
+          </div>
+        </div>
+        <pre class="programlisting">
+db_container(Db *dbp,
+    DbEnv *envp)
+ </pre>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage"></div>
+          <p>This constructor is not directly called by the user, but invoked by constructors of concrete container classes. </p>
+          <p>The statement about the parameters applies to constructors of all container classes. </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1545299"></a>
+Parameters</h4>
+              </div>
+            </div>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1545360"></a>
+ dbp </h5>
+                </div>
+              </div>
+            </div>
+            <p>Database handle. dbp is supposed to be opened inside envp. Each dbstl container is backed by a Berkeley DB database, so dbstl will create an internal anonymous database if dbp is NULL. </p>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1545249"></a>
+ envp </h5>
+                </div>
+              </div>
+            </div>
+            <p>Environment handle. And envp can also be NULL, meaning the dbp handle may be created in its internal private environment. </p>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1545101"></a>
+Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+  <a class="link" href="db_container.html" title="Chapter 3.  Db_container">
+  db_container</a>
+     </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="stldb_containerset_cursor_open_flags.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="db_container.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="stldb_containerdstr_db_container.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+set_cursor_open_flags
+ </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+~db_container
+</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

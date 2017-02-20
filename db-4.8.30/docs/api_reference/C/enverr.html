@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB_ENV-&gt;err()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="env.html" title="Chapter 5.  The DB_ENV Handle" />
+    <link rel="prev" href="envdbrename.html" title="DB_ENV-&gt;dbrename()" />
+    <link rel="next" href="envfailchk.html" title="DB_ENV-&gt;failchk()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB_ENV-&gt;err()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="envdbrename.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. 
+                The DB_ENV Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="envfailchk.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="enverr"></a>DB_ENV-&gt;err()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+void
+DB_ENV-&gt;err(DB_ENV *dbenv, int error, const char *fmt, ...); 
+
+void
+DB_ENV-&gt;errx(DB_ENV *dbenv, const char *fmt, ...);  </pre>
+      <p>
+        The <code class="methodname">DB_ENV-&gt;err()</code>, <code class="methodname">DB_ENV-&gt;errx,()</code>,         
+        <a class="xref" href="dberr.html" title="DB-&gt;err()">DB-&gt;err()</a>  and 
+       <code class="methodname">DB-&gt;errx()</code> methods provide
+       error-messaging functionality for applications written using the
+       Berkeley DB library.
+    </p>
+      <p>
+         The <a class="xref" href="dberr.html" title="DB-&gt;err()">DB-&gt;err()</a>  and
+         <a class="xref" href="enverr.html" title="DB_ENV-&gt;err()">DB_ENV-&gt;err()</a>
+         methods constructs an error message consisting of the
+         following elements:
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                         <span class="bold"><strong>An optional prefix string</strong></span> 
+                </p>
+            <p>
+                        If no error callback function has been set using the 
+                        <a class="xref" href="envset_errcall.html" title="DB_ENV-&gt;set_errcall()">DB_ENV-&gt;set_errcall()</a> 
+                        method, any prefix string specified using the 
+                        <a class="xref" href="envset_errpfx.html" title="DB_ENV-&gt;set_errpfx()">DB_ENV-&gt;set_errpfx()</a> 
+                        method, followed by two separating characters: a colon and a
+                        &lt;space&gt; character.
+                </p>
+          </li>
+          <li>
+            <p>
+                         <span class="bold"><strong>An optional printf-style message</strong></span>
+                </p>
+            <p>
+                         The supplied message <span class="bold"><strong>fmt</strong></span>, if
+                         non-NULL, in which the ANSI C X3.159-1989 (ANSI C) printf function
+                         specifies how subsequent parameters are converted for output.
+                </p>
+          </li>
+          <li>
+            <p>
+                         <span class="bold"><strong>A separator</strong></span>
+                </p>
+            <p>
+                         Two separating characters: a colon and a &lt;space&gt; character.
+                </p>
+          </li>
+          <li>
+            <p>
+                         <span class="bold"><strong>A standard error string</strong></span>
+                </p>
+            <p>
+                        The standard system or Berkeley DB library error string associated
+                         with the <span class="bold"><strong>error</strong></span> value, as returned by
+                         the <a class="xref" href="envstrerror.html" title="db_strerror">db_strerror</a> 
+                         method.
+                </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+        This constructed error message is then handled as follows:
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                        If an error callback function has been set (see
+                        <a class="xref" href="dbset_errcall.html" title="DB-&gt;set_errcall()">DB-&gt;set_errcall()</a>  and
+                        <a class="xref" href="envset_errcall.html" title="DB_ENV-&gt;set_errcall()">DB_ENV-&gt;set_errcall()</a>),
+                        that function is called with two parameters: any prefix string
+                        specified (see <a class="xref" href="dbset_errpfx.html" title="DB-&gt;set_errpfx()">DB-&gt;set_errpfx()</a>
+                        and <a class="xref" href="envset_errpfx.html" title="DB_ENV-&gt;set_errpfx()">DB_ENV-&gt;set_errpfx()</a>) and
+                        the error message.
+                    </p>
+          </li>
+          <li>
+            <p>
+                        If a C library FILE * has been set (see
+                        <a class="xref" href="dbset_errfile.html" title="DB-&gt;set_errfile()">DB-&gt;set_errfile()</a>  and
+                        <a class="xref" href="envset_errfile.html" title="DB_ENV-&gt;set_errfile()">DB_ENV-&gt;set_errfile()</a>),
+                        the error message is written to that output stream.
+                    </p>
+          </li>
+          <li>
+            <p>
+                        If none of these output options have been configured, the error message
+                        is written to stderr, the standard error output stream.
+                    </p>
+          </li>
+        </ul>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1662152"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1662191"></a>error</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>error</strong></span> parameter is the error
+                          value for which the <code class="methodname">DB_ENV-&gt;err()</code>  and  
+                          <a class="xref" href="dberr.html" title="DB-&gt;err()">DB-&gt;err()</a>  methods will display a
+                          explanatory string.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1662192"></a>fmt</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>fmt</strong></span> parameter is an optional
+                          printf-style message to display.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1662007"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1662005"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="env.html#envlist" title="Database Environments and Related Methods">Database Environments and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="envdbrename.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="env.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="envfailchk.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB_ENV-&gt;dbrename() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_ENV-&gt;failchk()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DbMpoolFile::set_lsn_offset()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="memp.html" title="Chapter 9.  The DbMpoolFile Handle" />
+    <link rel="prev" href="mempset_ftype.html" title="DbMpoolFile::set_ftype()" />
+    <link rel="next" href="mempset_maxsize.html" title="DbMpoolFile::set_maxsize()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DbMpoolFile::set_lsn_offset()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="mempset_ftype.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 9. 
+              The  DbMpoolFile Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="mempset_maxsize.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="mempset_lsn_offset"></a>DbMpoolFile::set_lsn_offset()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+
+int DbMpoolFile::set_lsn_offset(int32_t lsn_offset); </pre>
+      <p>
+         The <code class="methodname">DbMpoolFile::set_lsn_offset()</code> method specifies the zero-based
+         byte offset of a log sequence number  
+         (<a class="link" href="lsn.html" title="Chapter 8.  The DbLsn Handle">DbLsn</a>) on the file's pages, for
+         the purposes of page-flushing as part of transaction checkpoint.  (See
+         the <a class="xref" href="mempsync.html" title="DbEnv::memp_sync()">DbEnv::memp_sync()</a> 
+         documentation for more information.)
+    </p>
+      <p>
+         The <code class="methodname">DbMpoolFile::set_lsn_offset()</code> method configures a file in the
+         cache, not only operations performed using the specified 
+         <a class="link" href="memp.html" title="Chapter 9.  The DbMpoolFile Handle">DbMpoolFile</a>  handle.
+    </p>
+      <p>
+         The <code class="methodname">DbMpoolFile::set_lsn_offset()</code> method may not be called after the
+         <a class="xref" href="mempfopen.html" title="DbMpoolFile::open()">DbMpoolFile::open()</a> 
+         method is called. If the file is already open in the cache when
+         <a class="xref" href="mempfopen.html" title="DbMpoolFile::open()">DbMpoolFile::open()</a>  is
+         called, the information specified to <code class="methodname">DbMpoolFile::set_lsn_offset()</code>
+         must be consistent with the existing file or an error will be returned.
+    </p>
+      <p>
+         The <code class="methodname">DbMpoolFile::set_lsn_offset()</code> <span>
+            
+            <span>
+                method either returns a non-zero error value or throws an
+                exception that encapsulates a non-zero error value on
+                failure, and returns 0 on success.
+            </span>
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1697065"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1697056"></a>lsn_offset</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>lsn_offset</strong></span> parameter is the
+                          zero-based byte offset of the log sequence number on the file's pages.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1697399"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                 <a class="link" href="env.html" title="Chapter 5.  The DbEnv Handle">DbEnv</a>, <a class="link" href="memp.html" title="Chapter 9.  The DbMpoolFile Handle">DbMpoolFile</a> 
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1697251"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="memp.html#memplist" title="Memory Pools and Related Methods">Memory Pools and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="mempset_ftype.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="memp.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="mempset_maxsize.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DbMpoolFile::set_ftype() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DbMpoolFile::set_maxsize()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

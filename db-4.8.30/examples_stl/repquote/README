@@ -1,0 +1,17 @@
+# $Id$
+
+This is the directory for the replication example program.
+
+The example is a toy stock quote server. It uses the replication manager to
+make use of DB replication, and uses STL API to acces the database.
+
+
+StlRepQuoteExample.cpp	
+		Contains code to implement the basic functions of the
+                application, and code necessary to configure the 
+                application to use Replication Manager.
+
+StlRepConfigInfo.h
+StlRepConfigInfo.cpp
+		Contains code to manage user configurations to this program,
+		including those to the DB replication manager.

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Tcl FAQ</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="tcl.html" title="Chapter 20.  Berkeley DB Extensions: Tcl" />
+    <link rel="prev" href="tcl_error.html" title="Tcl error handling" />
+    <link rel="next" href="ext.html" title="Chapter 21.  Berkeley DB Extensions" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Tcl FAQ</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="tcl_error.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 20. 
+        Berkeley DB Extensions: Tcl
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="ext.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="tcl_faq"></a>Tcl FAQ</h2>
+          </div>
+        </div>
+      </div>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <span class="bold">
+              <strong>I have several versions of Tcl installed. How do I configure
+Berkeley DB to use a particular version?</strong>
+            </span>
+            <p>To compile the Tcl interface with a particular version of Tcl, use the
+--with-tcl option to specify the Tcl installation directory that
+contains the tclConfig.sh file.  See
+<a class="xref" href="build_unix_flags.html" title="Changing compile or load options">Changing compile or load options</a> for more information.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>Berkeley DB was configured using --enable-tcl or --with-tcl and fails
+to build.</strong>
+            </span>
+            <p>The Berkeley DB Tcl interface requires Tcl version 8.4 or greater.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>Berkeley DB was configured using --enable-tcl or --with-tcl and fails
+to build.</strong>
+            </span>
+            <p>If the Tcl installation was moved after it was configured and installed,
+try reconfiguring and reinstalling Tcl.</p>
+            <p>Also, some systems do not search for shared libraries by default, or do
+not search for shared libraries named the way the Tcl installation names
+them, or are searching for a different kind of library than those in
+your Tcl installation.  For example, Linux systems often require linking
+"libtcl.a" to "libtcl#.#.a", whereas AIX systems often require adding the
+"-brtl" flag to the linker.  A simpler solution that almost always works
+on all systems is to create a link from "libtcl.#.#.a" or "libtcl.so"
+(or whatever you happen to have) to "libtcl.a" and reconfigure.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>Loading the Berkeley DB library into Tcl on AIX causes a core dump.</strong>
+            </span>
+            <p>In some versions of Tcl, the "tclConfig.sh" autoconfiguration script
+created by the Tcl installation does not work properly under AIX, and
+you may have to modify values in the tclConfig.sh file to in order to
+load the Berkeley DB library into Tcl.  Specifically, the TCL_LIB_SPEC
+variable should contain sufficient linker flags to find and link against
+the installed libtcl library.  In some circumstances, the tclConfig.sh
+file built by Tcl does not.</p>
+          </li>
+        </ol>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="tcl_error.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="tcl.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="ext.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Tcl error handling </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 21. 
+        Berkeley DB Extensions
+        </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,154 @@
+/*-
+ * Copyright (c) 2002,2009 Oracle.  All rights reserved.
+ *
+ */
+package db;
+
+import com.sleepycat.db.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.io.PrintStream;
+
+class SecondaryExample
+{
+	private static final String progname = "SecondaryExample";
+	private static final String DATABASE_HOME = "TESTDIR";
+
+	public static void main(String[] args)
+	{
+		try {
+			SecondaryExample app = new SecondaryExample();
+			app.run();
+		} catch(Exception e) {
+			System.err.println(progname + ": " + e);
+			e.printStackTrace(System.err);
+			System.exit(1);
+		}
+	}
+
+	void run() throws DbException, FileNotFoundException
+	{
+		DbEnv dbenv = new DbEnv(0);
+
+		/* Open the environment. */
+		dbenv.open(DATABASE_HOME,
+		    Db.DB_CREATE | Db.DB_INIT_LOCK | Db.DB_INIT_LOG |
+		    Db.DB_INIT_MPOOL | Db.DB_INIT_TXN, 0);
+
+		try {
+			run_app(dbenv);
+		} finally {
+			dbenv.close(0);
+		}
+	}
+
+	private void run_app(DbEnv dbenv)
+		throws DbException, FileNotFoundException
+	{
+		Db dbp, sdbp;
+		Dbt key, pkey, skey, data;
+		StudentRecord srec;
+
+		/* Open/create primary */
+		dbp = new Db(dbenv, 0);
+		dbp.open(null, "students.db", null, Db.DB_BTREE, Db.DB_CREATE,
+		    0600);
+
+		/*
+		 * Open/create secondary.  Note that it supports duplicate data
+		 * items, since last names might not be unique.
+		 */
+		sdbp = new Db(dbenv, 0);
+		sdbp.set_flags(Db.DB_DUP | Db.DB_DUPSORT);
+		sdbp.open(null, "lastname.db", null, Db.DB_BTREE, Db.DB_CREATE,
+		    0600);
+
+		try {
+			/* Associate the secondary with the primary. */
+			dbp.associate(sdbp, new GetName(), 0);
+
+			/* Add a new record */
+			key = new Dbt();
+			key.set_data("WC42".getBytes());
+			key.set_size(4);
+			srec = new StudentRecord();
+			srec.student_id = "WC42";
+			srec.last_name = "Churchill      ";
+			srec.first_name = "Winston        ";
+			data = new Dbt();
+			srec.encode(data);
+
+			System.out.println("Adding a record with primary key " +
+			    new String(key.get_data()) + " and secondary key " +
+			    srec.last_name);
+			dbp.put(null, key, data, 0);
+
+			/* Now do a lookup */
+			skey = new Dbt();
+			pkey = new Dbt();
+			data = new Dbt();
+			skey.set_data("Churchill      ".getBytes());
+			skey.set_size(15);
+			System.out.println("Searching with secondary key " +
+			    new String(skey.get_data()));
+			sdbp.pget(null, skey, pkey, data, 0);
+
+			System.out.println("Found a record with primary key " +
+			    new String(pkey.get_data()));
+		} finally {
+			dbp.close(0);
+			sdbp.close(0);
+		}
+	}
+
+	/*
+	 * getname -- extracts a secondary key (the last name) from a primary
+	 * 	key/data pair
+	 */
+	class GetName implements DbSecondaryKeyCreate {
+		public int secondary_key_create(Db secondary,
+		    Dbt pkey, Dbt pdata, Dbt skey) {
+ 			StudentRecord srec = new StudentRecord();
+			srec.decode(pdata);
+
+			// Make a fixed-length array of last_name
+			byte[] last_name_data = srec.last_name.getBytes();
+			byte[] last_name_raw = new byte[15];
+			System.arraycopy(last_name_data, 0, last_name_raw, 0,
+			    last_name_data.length);
+
+			skey.set_data(last_name_raw);
+			skey.set_size(last_name_raw.length);
+			return (0);
+		}
+	}
+
+	class StudentRecord
+	{
+		String student_id;	// assumed to be 4 bytes long
+		String last_name;	// assumed to be 15 bytes long
+		String first_name;	// assumed to be 15 bytes long
+
+		void decode(Dbt dbt) {
+			byte[] data = dbt.get_data();
+			student_id = new String(data, 0, 4);
+			last_name = new String(data, 4, 15);
+			first_name = new String(data, 19, 15);
+		}
+
+		void encode(Dbt dbt) {
+			byte[] data = new byte[34];
+			System.arraycopy(student_id.getBytes(), 0, data, 0, 4);
+			byte[] last_name_raw = last_name.getBytes();
+			System.arraycopy(last_name_raw, 0, data, 4,
+			    last_name_raw.length);
+			byte[] first_name_raw = first_name.getBytes();
+			System.arraycopy(first_name_raw, 0, data, 19,
+			    first_name_raw.length);
+			dbt.set_data(data);
+			dbt.set_size(data.length);
+		}
+	}
+}

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 3.1: DB_ENV-&gt;open, DB_ENV-&gt;remove</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_3_1_toc.html" title="Chapter 34. Upgrading Berkeley DB 3.0 applications to Berkeley DB 3.1" />
+    <link rel="prev" href="upgrade_3_1_toc.html" title="Chapter 34. Upgrading Berkeley DB 3.0 applications to Berkeley DB 3.1" />
+    <link rel="next" href="upgrade_3_1_set_tx_recover.html" title="Release 3.1: DB_ENV-&gt;set_tx_recover" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 3.1: DB_ENV-&gt;open, DB_ENV-&gt;remove</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_3_1_toc.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 34. Upgrading Berkeley DB 3.0 applications to Berkeley DB 3.1</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_3_1_set_tx_recover.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_3_1_config"></a>Release 3.1: DB_ENV-&gt;open, DB_ENV-&gt;remove</h2>
+          </div>
+        </div>
+      </div>
+      <p>In the Berkeley DB 3.1 release, the <span class="bold"><strong>config</strong></span> argument to the
+<a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a> and <a href="../api_reference/C/envremove.html" class="olink">DB_ENV-&gt;remove()</a> methods has been removed,
+replaced by additional methods on the <a href="../api_reference/C/env.html" class="olink">DB_ENV</a> handle.  If your
+application calls <a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a> or <a href="../api_reference/C/envremove.html" class="olink">DB_ENV-&gt;remove()</a> with a NULL
+<span class="bold"><strong>config</strong></span> argument, find those functions and remove the config
+argument from the call.  If your application has non-NULL <span class="bold"><strong>config</strong></span>
+argument, the strings values in that argument are replaced with calls to
+<a href="../api_reference/C/env.html" class="olink">DB_ENV</a> methods as follows:</p>
+      <div class="informaltable">
+        <table border="1" width="80%">
+          <colgroup>
+            <col />
+            <col />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Previous config string</th>
+              <th>Berkeley DB 3.1 version method</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>DB_DATA_DIR</td>
+              <td>
+                <a href="../api_reference/C/envset_data_dir.html" class="olink">DB_ENV-&gt;set_data_dir()</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_LOG_DIR</td>
+              <td>
+                <a href="../api_reference/C/envset_lg_dir.html" class="olink">DB_ENV-&gt;set_lg_dir()</a>
+              </td>
+            </tr>
+            <tr>
+              <td>DB_TMP_DIR</td>
+              <td>
+                <a href="../api_reference/C/envset_tmp_dir.html" class="olink">DB_ENV-&gt;set_tmp_dir()</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_3_1_toc.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_3_1_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_3_1_set_tx_recover.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 34. Upgrading Berkeley DB 3.0 applications to Berkeley DB 3.1 </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 3.1: DB_ENV-&gt;set_tx_recover</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Removing the Redundant Value Classes</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Collections Tutorial" />
+    <link rel="up" href="SerializableEntity.html" title="Chapter 6.  Using Serializable Entities" />
+    <link rel="prev" href="transientfieldsinbinding.html" title="Using Transient Fields in an Entity Binding" />
+    <link rel="next" href="Summary.html" title="Chapter 7.  Summary" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">
+        Removing the Redundant Value Classes
+    </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="transientfieldsinbinding.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 6. 
+        Using Serializable Entities
+    </th>
+          <td width="20%" align="right"> <a accesskey="n" href="Summary.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="removingredundantvalueclasses"></a>
+        Removing the Redundant Value Classes
+    </h2>
+          </div>
+        </div>
+      </div>
+      <p>
+    The <code class="classname">PartData</code>, <code class="classname">SupplierData</code> and <code class="classname">ShipmentData</code>
+    classes have been removed in this example, and the <code class="classname">Part</code>,
+    <code class="classname">Supplier</code> and <code class="classname">Shipment</code> entity classes are used in
+    their place.
+</p>
+      <p>
+    The serial formats are created with the entity classes.
+</p>
+      <a id="sentity_sampledatabase"></a>
+      <pre class="programlisting">public class SampleDatabase
+{
+    ...
+    public SampleDatabase(String homeDirectory)
+        throws DatabaseException, FileNotFoundException
+    {
+        ...
+        secConfig.setKeyCreator(new SupplierByCityKeyCreator(javaCatalog,
+                                                             <strong class="userinput"><code>Supplier</code></strong>.class));
+        ...
+        secConfig.setKeyCreator(new ShipmentByPartKeyCreator(javaCatalog,
+                                                             <strong class="userinput"><code>Shipment</code></strong>.class));
+        ...
+        secConfig.setKeyCreator(new ShipmentBySupplierKeyCreator(javaCatalog,
+                                                             <strong class="userinput"><code>Shipment</code></strong>.class));
+        ...
+    }
+} </pre>
+      <p>
+    The index key creator uses the entity class as well.
+</p>
+      <a id="sentity_supplierbycitykeycreator"></a>
+      <pre class="programlisting">public class SampleDatabase
+{
+    ...
+
+    private static class SupplierByCityKeyCreator
+        extends TupleSerialKeyCreator
+    {
+        private SupplierByCityKeyCreator(ClassCatalog catalog,
+                                         Class valueClass)
+        {
+            super(catalog, valueClass);
+        }
+
+        public boolean createSecondaryKey(TupleInput primaryKeyInput,
+                                          Object valueInput,
+                                          TupleOutput indexKeyOutput)
+        {
+            <strong class="userinput"><code>Supplier</code></strong> supplier = (<strong class="userinput"><code>Supplier</code></strong>) valueInput;
+            String city = supplier.getCity();
+            if (city != null) {
+                indexKeyOutput.writeString(supplier.getCity());
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+} </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="transientfieldsinbinding.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="SerializableEntity.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="Summary.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+        Using Transient Fields in an Entity Binding
+     </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 7. 
+        Summary
+    </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

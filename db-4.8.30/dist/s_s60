@@ -1,0 +1,118 @@
+#!/bin/sh -
+#	$Id$
+#
+# Build the S60 files.
+
+msgc="/* DO NOT EDIT: automatically built by dist/s_s60. */"
+
+. RELEASE
+
+s=/tmp/__db_a
+t=/tmp/__db_b
+
+trap 'rm -f $s $t ; exit 0' 0
+trap 'rm -f $s $t ; exit 1' 1 2 3 13 15
+
+# Build the S60 db.h.
+cat <<ENDOFSEDTEXT > $s
+/@inttypes_h_decl@/d
+/@stdint_h_decl@/d
+s/@stddef_h_decl@/#include <stddef.h>/
+/@unistd_h_decl@/d
+s/@thread_h_decl@/#include <pthread.h>/
+/@u_int8_decl@/d
+/@int16_decl@/d
+/@u_int16_decl@/d
+/@int32_decl@/d
+/@u_int32_decl@/d
+/@int64_decl@/d
+/@u_int64_decl@/d
+/@u_char_decl@/d
+/@u_int_decl@/d
+/@u_long_decl@/d
+/@u_short_decl@/d
+s/@uintmax_t_decl@/typedef unsigned long uintmax_t;/
+/@uintptr_t_decl@/d
+/@FILE_t_decl@/d
+/@off_t_decl@/d
+/@pid_t_decl@/d
+/@size_t_decl@/d
+/@ssize_t_decl@/d
+/@time_t_decl@/d
+s/@db_seq_decl@/typedef int32_t db_seq_t;/
+s/@db_threadid_t_decl@/typedef pthread_t db_threadid_t;/
+s/@DB_VERSION_MAJOR@/$DB_VERSION_MAJOR/
+s/@DB_VERSION_MINOR@/$DB_VERSION_MINOR/
+s/@DB_VERSION_PATCH@/$DB_VERSION_PATCH/
+s/@DB_VERSION_STRING@/"$DB_VERSION_STRING"/
+s/@DB_VERSION_UNIQUE_NAME@//
+s/@DB_CONST@//
+s/@DB_PROTO1@/#undef __P/
+s/@DB_PROTO2@/#define	__P(protos)	protos/
+/@platform_header@/d
+/@platform_footer@/d
+ENDOFSEDTEXT
+(echo "$msgc" &&
+    sed -f $s ../dbinc/db.in &&
+    cat ../dbinc_auto/api_flags.in &&
+    cat ../dbinc_auto/ext_prot.in) > $t
+test `egrep '@.*@' $t` && {
+	egrep '@.*@' $t
+	echo 'Unexpanded autoconf variables found in S60 db.h.'
+	exit 1
+}
+f=../build_s60/db.h
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+
+# Build the S60 db_int.h.
+cat <<ENDOFSEDTEXT > $s
+s/@PATH_SEPARATOR@/\\\\\\\\\/:/
+s/@db_int_def@//
+ENDOFSEDTEXT
+(echo "$msgc" && sed -f $s ../dbinc/db_int.in) > $t
+test `egrep '@.*@' $t` && {
+	egrep '@.*@' $t
+	echo 'Unexpanded autoconf variables found in S60 db_int.h.'
+	exit 1
+}
+f=../build_s60/db_int.h
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+
+# Build the S60 db_config.h
+# We don't fail, but we complain if the s60_config.in file isn't up-to-date.
+check_config()
+{
+	egrep '^#undef' config.hin | awk '{print $2}' | sort > $s
+	(egrep '#undef' $1 | awk '{print $3}'
+	 egrep '^#define' $1 | awk '{print $2}') | sort > $t
+	cmp $s $t > /dev/null || {
+		echo "config.hin and $1 differ"
+		echo "<<< config.hin >>> $1"
+		diff $s $t
+	}
+}
+check_config s60/s60_config.in
+f=../build_s60/db_config.h
+(echo "$msgc" &&
+    sed "s/__EDIT_DB_VERSION__/$DB_VERSION/" s60/s60_config.in) > $t
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+
+# Build the S60 clib_port.h.
+cat <<ENDOFSEDTEXT > $s
+/@INT64_FMT@/d
+/@UINT64_FMT@/d
+ENDOFSEDTEXT
+sed -f $s clib_port.in > $t
+test `egrep '@.*@' $t` && {
+	egrep '@.*@' $t
+	echo 'Unexpanded autoconf variables found in S60 clib_port.h.'
+	exit 1
+}
+f=../build_s60/clib_port.h
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+
+exit 0

@@ -1,0 +1,38 @@
+#!/bin/sh -
+#	$Id$
+#
+# Build the automatically generated RPC files
+
+echo "Building RPC client/server files..."
+
+. ./RELEASE
+
+t=/tmp/__db_a
+trap 'rm -f $t ; exit 0' 0
+trap 'rm -f $t ; exit 1' 1 2 3 13 15
+
+client_file=../rpc_client/gen_client.c
+ctmpl_file=./template/gen_client_ret
+server_file=../rpc_server/c/gen_db_server.c
+stmpl_file=./template/db_server_proc
+xdr_file=../rpc_server/db_server.x
+
+rm -f $client_file $ctmpl_file $server_file $stmpl_file $xdr_file
+
+#
+# Generate client/server/XDR code
+#
+gidsize=\
+`awk '/^#define/ { if ($2 == "DB_GID_SIZE") { print $3 }}' ../dbinc/db.in`
+
+awk -f gen_rpc.awk \
+    -v client_file=$client_file \
+    -v ctmpl_file=$ctmpl_file \
+    -v major=$DB_VERSION_MAJOR \
+    -v minor=$DB_VERSION_MINOR \
+    -v server_file=$server_file \
+    -v stmpl_file=$stmpl_file \
+    -v xdr_file=$xdr_file \
+    -v gidsize=$gidsize < ../rpc_server/rpc.src
+
+chmod 444 $client_file $server_file

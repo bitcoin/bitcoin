@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Handling Exceptions</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Collections Tutorial" />
+    <link rel="up" href="BasicProgram.html" title="Chapter 2.  The Basic Program" />
+    <link rel="prev" href="retrievingdatabaseitems.html" title="Retrieving Database Items" />
+    <link rel="next" href="UsingSecondaries.html" title="Chapter 3.  Using Secondary Indices" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">
+        Handling Exceptions
+    </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="retrievingdatabaseitems.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+        The Basic Program
+    </th>
+          <td width="20%" align="right"> <a accesskey="n" href="UsingSecondaries.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="handlingexceptions"></a>
+        Handling Exceptions
+    </h2>
+          </div>
+        </div>
+      </div>
+      <p>
+    Exception handling was illustrated previously in
+            <a class="xref" href="implementingmain.html" title="Implementing the Main Program">
+        Implementing the Main Program
+    </a>
+    and 
+            <a class="xref" href="usingtransactions.html" title="Using Transactions">
+        Using Transactions
+    </a>
+    exception handling in a DB Java Collections API application in
+    more detail.
+</p>
+      <p>
+    There are two exceptions that must be treated specially:
+    
+    <a class="ulink" href="../../java/com/sleepycat/db/RunRecoveryException.html" target="_top">RunRecoveryException</a>
+    
+    and 
+    
+    <span>
+        <a class="ulink" href="../../java/com/sleepycat/db/DeadlockException.html" target="_top">DeadlockException</a>.
+    </span>
+</p>
+      <p>
+    
+    <a class="ulink" href="../../java/com/sleepycat/db/RunRecoveryException.html" target="_top">RunRecoveryException</a>
+    
+    is thrown when the only solution is to shut down the application
+    and run recovery. All applications must catch this exception and
+    follow the recovery procedure.
+</p>
+      <p>
+    When 
+    
+    <a class="ulink" href="../../java/com/sleepycat/db/DeadlockException.html" target="_top">DeadlockException</a>
+    
+    is thrown, the application should normally retry the operation. If
+    a deadlock continues to occur for some maximum number of retries,
+    the application should give up and try again later or take other
+    corrective actions. The DB Java Collections API provides two APIs
+    for transaction execution.
+</p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+            When using the 
+            <a class="ulink" href="../../java/com/sleepycat/collections/CurrentTransaction.html" target="_top">CurrentTransaction</a>
+            
+            class directly, the application must catch 
+            
+            <a class="ulink" href="../../java/com/sleepycat/db/DeadlockException.html" target="_top">DeadlockException</a>
+            
+            and follow the procedure described previously.
+        </p>
+          </li>
+          <li>
+            <p>
+            When using the 
+            <a class="ulink" href="../../java/com/sleepycat/collections/TransactionRunner.html" target="_top">TransactionRunner</a>
+            
+            class, retries are performed automatically and the application need
+            only handle the case where the maximum number of retries has been
+            reached. In that case, 
+            <a class="ulink" href="../../java/com/sleepycat/collections/TransactionRunner.html#run(com.sleepycat.collections.TransactionWorker)" target="_top">TransactionRunner.run</a>
+            
+            will throw 
+            
+            <span>
+                <a class="ulink" href="../../java/com/sleepycat/db/DeadlockException.html" target="_top">DeadlockException</a>.
+            </span>
+        </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+    When using the 
+    <a class="ulink" href="../../java/com/sleepycat/collections/TransactionRunner.html" target="_top">TransactionRunner</a>
+    
+    class there are two other considerations.
+</p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+            First, if the application-defined
+            <a class="ulink" href="../../java/com/sleepycat/collections/TransactionWorker.html#doWork()" target="_top">TransactionWorker.doWork</a>
+            
+            method throws an exception the
+            transaction will automatically be aborted, and otherwise the
+            transaction will automatically be committed. Applications should
+            design their transaction processing with this in mind.
+        </p>
+          </li>
+          <li>
+            <p>
+            Second, please be aware that 
+            <a class="ulink" href="../../java/com/sleepycat/collections/TransactionRunner.html#run(com.sleepycat.collections.TransactionWorker)" target="_top">TransactionRunner.run</a>
+            
+            unwraps exceptions in order to discover whether a nested exception is a 
+            
+            <span>
+                <a class="ulink" href="../../java/com/sleepycat/db/DeadlockException.html" target="_top">DeadlockException</a>.
+            </span>
+            This is particularly important since all Berkeley DB exceptions
+            that occur while calling a stored collection method are wrapped
+            with a 
+            <a class="ulink" href="../../java/com/sleepycat/util/RuntimeExceptionWrapper.html" target="_top">RuntimeExceptionWrapper</a>.
+            This wrapping is necessary because Berkeley DB exceptions are
+            checked exceptions, and the Java collections API does not allow
+            such exceptions to be thrown.
+        </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+    When calling 
+    <a class="ulink" href="../../java/com/sleepycat/collections/TransactionRunner.html#run(com.sleepycat.collections.TransactionWorker)" target="_top">TransactionRunner.run</a>,
+    the unwrapped (nested) exception will be unwrapped and thrown
+    automatically. If you are not using 
+    <a class="ulink" href="../../java/com/sleepycat/collections/TransactionRunner.html" target="_top">TransactionRunner</a>
+    
+    or if you are handling exceptions directly for some other reason,
+    use the 
+    <a class="ulink" href="../../java/com/sleepycat/util/ExceptionUnwrapper.html#unwrap(java.lang.Exception)" target="_top">ExceptionUnwrapper.unwrap</a>
+    
+    method to get the nested exception. For example, this can be used
+    to discover that an exception is a 
+    
+    <a class="ulink" href="../../java/com/sleepycat/db/RunRecoveryException.html" target="_top">RunRecoveryException</a>
+    
+    as shown below.
+</p>
+      <a id="cb_java_manageexceptions"></a>
+      <pre class="programlisting"><strong class="userinput"><code>import com.sleepycat.db.RunRecoveryException;
+import com.sleepycat.util.ExceptionUnwrapper;
+...
+    catch (Exception e)
+    {
+        e = ExceptionUnwrapper.unwrap(e);
+        if (e instanceof RunRecoveryException)
+        {
+            // follow recovery procedure
+        }
+    }</code></strong> </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="retrievingdatabaseitems.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="BasicProgram.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="UsingSecondaries.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+        Retrieving Database Items
+     </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 3. 
+        Using Secondary Indices
+    </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

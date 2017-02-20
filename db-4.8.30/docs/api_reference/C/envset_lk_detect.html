@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB_ENV-&gt;set_lk_detect()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="lock.html" title="Chapter 6.  The DB_LOCK Handle" />
+    <link rel="prev" href="envset_lk_conflicts.html" title="DB_ENV-&gt;set_lk_conflicts()" />
+    <link rel="next" href="envset_lk_max_lockers.html" title="DB_ENV-&gt;set_lk_max_lockers()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB_ENV-&gt;set_lk_detect()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="envset_lk_conflicts.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 6. 
+                The DB_LOCK Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="envset_lk_max_lockers.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="envset_lk_detect"></a>DB_ENV-&gt;set_lk_detect()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB_ENV-&gt;set_lk_detect(DB_ENV *dbenv, u_int32_t detect);  </pre>
+      <p>
+         Set if the deadlock detector is to be run whenever a lock conflict
+         occurs, and specify what lock request(s) should be rejected.  As
+         transactions acquire locks on behalf of a single locker ID, rejecting
+         a lock request associated with a transaction normally requires the
+         transaction be aborted.
+    </p>
+      <p>
+         The database environment's deadlock detector configuration may also be
+         configured using the environment's <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a> file.  The
+         syntax of the entry in that file is a single line with the string
+         "set_lk_detect", one or more whitespace characters, and the method
+         <span class="bold"><strong>detect</strong></span> parameter as a string; for
+         example, "set_lk_detect DB_LOCK_OLDEST". Because the <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a> file is
+         read when the database environment is opened, it will silently
+         overrule configuration done before that time.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;set_lk_detect()</code> method configures a database environment,
+         not only operations performed using the specified <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  
+         handle.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;set_lk_detect()</code> method may be called at any time during
+         the life of the application.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;set_lk_detect()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1675359"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1675532"></a>detect</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>detect</strong></span> parameter configures the
+                          deadlock detector.  The specified value must be one of the following
+                          list:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="set_lk_detect_DB_LOCK_DEFAULT"></a>
+                  <code class="literal">DB_LOCK_DEFAULT</code>
+            </p>
+                <p>
+                 Use whatever lock policy was specified when the database environment
+                 was created.  If no lock policy has yet been specified, set the lock
+                 policy to DB_LOCK_RANDOM.
+            </p>
+              </li>
+              <li>
+                <p><a id="set_lk_detect_DB_LOCK_EXPIRE"></a>
+                  <code class="literal">DB_LOCK_EXPIRE</code>
+            </p>
+                <p>
+                 Reject lock requests which have timed out.  No other deadlock
+                 detection is performed.
+            </p>
+              </li>
+              <li>
+                <p><a id="set_lk_detect_DB_LOCK_MAXLOCKS"></a>
+                  <code class="literal">DB_LOCK_MAXLOCKS</code>
+            </p>
+                <p>
+                 Reject the lock request for the locker ID with the most locks.
+            </p>
+              </li>
+              <li>
+                <p><a id="set_lk_detect_DB_LOCK_MAXWRITE"></a>
+                  <code class="literal">DB_LOCK_MAXWRITE</code>
+            </p>
+                <p>
+                 Reject the lock request for the locker ID with the most write locks.
+            </p>
+              </li>
+              <li>
+                <p><a id="set_lk_detect_DB_LOCK_MINLOCKS"></a>
+                  <code class="literal">DB_LOCK_MINLOCKS</code>
+            </p>
+                <p>
+                 Reject the lock request for the locker ID with the fewest locks.
+            </p>
+              </li>
+              <li>
+                <p><a id="set_lk_detect_DB_LOCK_MINWRITE"></a>
+                  <code class="literal">DB_LOCK_MINWRITE</code>
+            </p>
+                <p>
+                 Reject the lock request for the locker ID with the fewest write locks.
+            </p>
+              </li>
+              <li>
+                <p><a id="set_lk_detect_DB_LOCK_OLDEST"></a>
+                  <code class="literal">DB_LOCK_OLDEST</code>
+            </p>
+                <p>
+                 Reject the lock request for the locker ID with the oldest lock.
+            </p>
+              </li>
+              <li>
+                <p><a id="set_lk_detect_DB_LOCK_RANDOM"></a>
+                  <code class="literal">DB_LOCK_RANDOM</code>
+            </p>
+                <p>
+                Reject the lock request for a random locker ID.
+            </p>
+              </li>
+              <li>
+                <p><a id="set_lk_detect_DB_LOCK_YOUNGEST"></a>
+                  <code class="literal">DB_LOCK_YOUNGEST</code>
+            </p>
+                <p>
+                 Reject the lock request for the locker ID with the youngest lock.
+            </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1675723"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DB_ENV-&gt;set_lk_detect()</code> <span>
+            <span>
+                 method may fail and return one of the following non-zero errors:
+            </span>
+            
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1675912"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                An invalid flag value or parameter was specified.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1675958"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                    <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>, 
+                    <a class="link" href="lock.html" title="Chapter 6.  The DB_LOCK Handle">DB_LOCK</a> 
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1675530"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="lock.html#locklist" title="Locking Subsystem and Related Methods">Locking Subsystem and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="envset_lk_conflicts.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="lock.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="envset_lk_max_lockers.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB_ENV-&gt;set_lk_conflicts() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_ENV-&gt;set_lk_max_lockers()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

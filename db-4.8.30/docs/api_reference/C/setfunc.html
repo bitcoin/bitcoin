@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Appendix 3.  Berkeley DB Application Space Static Functions</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="prev" href="hsearch.html" title="hsearch" />
+    <link rel="next" href="db_env_set_func_close.html" title="db_env_set_func_close" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Appendix 3. 
+                Berkeley DB Application Space Static Functions
+        </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="hsearch.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="db_env_set_func_close.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="appendix" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="setfunc"></a>Appendix 3. 
+                Berkeley DB Application Space Static Functions
+        </h2>
+          </div>
+        </div>
+      </div>
+      <p>
+            This appendix describes functionality that existed on the DB_ENV handle 
+            in releases prior to Berkeley DB 3.1. In 3.1, this functionality was moved to 
+            as series of static functions, as in this appendix.
+        </p>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="setfunclist"></a>Static Functions</h2>
+            </div>
+          </div>
+        </div>
+        <div class="navtable">
+          <table border="1" width="80%">
+            <thead>
+              <tr>
+                <th>Static Function</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_close.html" title="db_env_set_func_close">db_env_set_func_close</a>
+                </td>
+                <td>Replace Berkeley DB calls to close() with the identified function.</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_dirfree.html" title="db_env_set_func_dirfree">db_env_set_func_dirfree</a>
+                </td>
+                <td>Specify function used to free memory obtained due to a directory walk.</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_dirlist.html" title="db_env_set_func_dirlist">db_env_set_func_dirlist</a>
+                </td>
+                <td>Specify function used to free memory obtained due to a directory list.</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_exists.html" title="db_env_set_func_exists">db_env_set_func_exists</a>
+                </td>
+                <td>Specify function used to determine whether a file exists.</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_file_map.html" title="db_env_set_func_file_map">db_env_set_func_file_map</a>
+                </td>
+                <td>Specify function used to map a file into memory.</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_free.html" title="db_env_set_func_free">db_env_set_func_free</a>
+                </td>
+                <td>Specify function used to free memory.</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_fsync.html" title="db_env_set_func_fsync">db_env_set_func_fsync</a>
+                </td>
+                <td>Specify function used to sync a file to disk.</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_ftruncate.html" title="db_env_set_func_ftruncate">db_env_set_func_ftruncate</a>
+                </td>
+                <td>Specify function used to truncate a file.</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_ioinfo.html" title="db_env_set_func_ioinfo">db_env_set_func_ioinfo</a>
+                </td>
+                <td>Specify function used to determine file characteristics.</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_malloc.html" title="db_env_set_func_malloc">db_env_set_func_malloc</a>
+                </td>
+                <td>Specify function used to allocate memory.</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_open.html" title="db_env_set_func_open">db_env_set_func_open</a>
+                </td>
+                <td>Specify function used to open a file.</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_pread.html" title="db_env_set_func_pread">db_env_set_func_pread</a>
+                </td>
+                <td>Specify function used to read data from an object.</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_pwrite.html" title="db_env_set_func_pwrite">db_env_set_func_pwrite</a>
+                </td>
+                <td>Specify function used to write data to an object.</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_read.html" title="db_env_set_func_read">db_env_set_func_read</a>
+                </td>
+                <td>Specify function used to read data from an object.</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_realloc.html" title="db_env_set_func_realloc">db_env_set_func_realloc</a>
+                </td>
+                <td>Specify function used to change the size of memory pointed to by a pointer.</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_region_map.html" title="db_env_set_func_region_map">db_env_set_func_region_map</a>
+                </td>
+                <td>Specify function used to created shared memory regions.</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_rename.html" title="db_env_set_func_rename">db_env_set_func_rename</a>
+                </td>
+                <td>Specify function used to change the name of a file.</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_seek.html" title="db_env_set_func_seek">db_env_set_func_seek</a>
+                </td>
+                <td>Specify function used to specify a location in a file.</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_unlink.html" title="db_env_set_func_unlink">db_env_set_func_unlink</a>
+                </td>
+                <td>Specify function used to delete a file.</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_write.html" title="db_env_set_func_write">db_env_set_func_write</a>
+                </td>
+                <td>Specify function used to write data to an object.</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_env_set_func_yield.html" title="db_env_set_func_yield">db_env_set_func_yield</a>
+                </td>
+                <td>Specify function used to yield the processor to another thread of control.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="hsearch.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="db_env_set_func_close.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">hsearch </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> db_env_set_func_close</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

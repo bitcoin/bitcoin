@@ -1,0 +1,57 @@
+
+  * Proper documentation.
+
+  * address or document the "close all cursors if you encounter an error"
+
+  * Change the $BerkeleyDB::Error to store the info in the db object,
+    if possible.
+
+  * $BerkeleyDB::db_version is documented. &db_version isn't.
+
+  * migrate perl code into the .xs file where necessary
+
+  * convert as many of the DB examples files to BerkeleyDB format.
+
+  * add a method to the DB object to allow access to the environment (if there
+    actually is one).
+
+
+Possibles
+
+  * use '~' magic to store the inner data.
+
+  * for the get stuff zap the value to undef if it doesn't find the
+    key. This may be more intuitive for those folks who are used with
+    the $hash{key} interface.
+
+  * Text interface? This can be done as via Recno
+
+  * allow recno to allow base offset for arrays to be either 0 or 1.
+
+  * when duplicate keys are enabled, allow db_put($key, [$val1, $val2,...]) 
+
+
+2.x -> 3.x Upgrade
+==================
+
+Environment Verbose
+Env->open mode
+DB cache size extra parameter
+DB->open subdatabases	Done
+An empty environment causes DB->open to fail
+where is __db.001 coming from? db_remove seems to create it. Bug in 3.0.55
+Change db_strerror for 0 to ""? Done
+Queue	Done
+db_stat for Hash & Queue	Done
+No TxnMgr
+DB->remove
+ENV->remove
+ENV->set_verbose
+upgrade
+
+    $env = BerkeleyDB::Env::Create
+    $env = create BerkeleyDB::Env
+    $status = $env->open()
+
+    $db = BerkeleyDB::Hash::Create
+    $status = $db->open()

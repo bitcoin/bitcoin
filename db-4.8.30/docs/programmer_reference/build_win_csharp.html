@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Building the C# API</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="build_win.html" title="Chapter 28.  Building Berkeley DB for Windows" />
+    <link rel="prev" href="build_win_java.html" title="Building the Java API" />
+    <link rel="next" href="build_win_tcl.html" title="Building the Tcl API" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Building the C# API</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="build_win_java.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 28. 
+        Building Berkeley DB for Windows
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="build_win_tcl.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="build_win_csharp"></a>Building the C# API</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="build_win_csharp.html#id1632526">Building C# with Visual Studio 2005</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+    The C# support is built by a separate Visual Studio solution,
+    <code class="filename">build_windows\BDB_dotnet.sln</code>, and requires version
+    2.0 (or higher) of the .NET platform.
+</p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1632526"></a>Building C# with Visual Studio 2005</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+        By default, the solution will build the native libraries, the
+        managed assembly and all example programs.  The NUnit tests need to
+        be built explicitly because of their dependence upon the NUnit
+        assembly.  The native libraries will be placed in one of the
+        following subdirectories, depending upon the chosen configuration:
+    </p>
+        <table class="simplelist" border="0" summary="Simple list">
+          <tr>
+            <td>
+              <code class="filename">build_windows\Win32\Debug</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code class="filename">build_windows\Win32\Release</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code class="filename">build_windows\x64\Debug</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code class="filename">build_windows\x64\Release</code>
+            </td>
+          </tr>
+        </table>
+        <p>
+    The managed assembly and all C# example programs will be placed in one of
+    the following subdirectories, depending upon the chosen configuration:
+</p>
+        <table class="simplelist" border="0" summary="Simple list">
+          <tr>
+            <td>
+              <code class="filename">build_windows\AnyCPU\Debug</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code class="filename">build_windows\AnyCPU\Release</code>
+            </td>
+          </tr>
+        </table>
+        <p>
+    The native libraries need to be locatable by the .NET platform, meaning
+    they must be copied into an application's directory, the Windows or
+    System directory, or their location must be added to the PATH
+    environment variable.  The example programs demonstrate how to
+    programmatically edit the PATH variable.
+</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="build_win_java.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="build_win.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="build_win_tcl.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Building the Java API </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Building the Tcl API</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Creating Indexed Collections</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Collections Tutorial" />
+    <link rel="up" href="UsingSecondaries.html" title="Chapter 3.  Using Secondary Indices" />
+    <link rel="prev" href="openingforeignkeys.html" title="More Secondary Key Indices" />
+    <link rel="next" href="retrievingbyindexkey.html" title="Retrieving Items by Index Key" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">
+        Creating Indexed Collections
+    </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="openingforeignkeys.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. 
+        Using Secondary Indices
+    </th>
+          <td width="20%" align="right"> <a accesskey="n" href="retrievingbyindexkey.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="indexedcollections"></a>
+        Creating Indexed Collections
+    </h2>
+          </div>
+        </div>
+      </div>
+      <p>
+    In the prior Basic example, bindings and Java collections were
+    created for accessing databases via their primary keys. In this
+    example, bindings and collections are added for accessing the same
+    databases via their index keys. As in the prior example, serial
+    bindings and the Java 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Map.html" target="_top">Map</a>
+    
+    class are used.
+</p>
+      <p>
+    When a map is created from a 
+    
+    <span>
+        <a class="ulink" href="../../java/com/sleepycat/db/SecondaryDatabase.html" target="_top">SecondaryDatabase</a>,
+    </span>
+    the keys of the map will be the index keys. However, the values of
+    the map will be the values of the primary database associated with
+    the index. This is how index keys can be used to access the values
+    in a primary database.
+</p>
+      <p>
+    For example, the Supplier's City field is an index key that can
+    be used to access the Supplier database. When a map is created
+    using the <code class="methodname">supplierByCityDb()</code> method, the key to the map will be the
+    City field, a 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/lang/String.html" target="_top">String</a>
+    
+    object. When 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Map.html#get" target="_top">Map.get</a>
+    
+    is called passing the City as the key parameter, a
+    <code class="classname">SupplierData</code>
+    object will be returned.
+</p>
+      <p>
+    The <code class="classname">SampleViews</code> class is extended to create an index key
+    binding for the Supplier's City field and three Java maps based on
+    the three indices created in the prior section.
+</p>
+      <a id="index_sampleviews"></a>
+      <pre class="programlisting">import com.sleepycat.bind.EntryBinding;
+import com.sleepycat.bind.serial.SerialBinding;
+import com.sleepycat.collections.StoredEntrySet;
+import com.sleepycat.collections.StoredMap;
+...
+
+public class SampleViews
+{
+    ...
+<strong class="userinput"><code>    private StoredMap supplierByCityMap;
+    private StoredMap shipmentByPartMap;
+    private StoredMap shipmentBySupplierMap;</code></strong>
+    ...
+
+    public SampleViews(SampleDatabase db)
+    {
+        ClassCatalog catalog = db.getClassCatalog();
+        ...
+<strong class="userinput"><code>        EntryBinding cityKeyBinding =
+            new SerialBinding(catalog, String.class);
+        ...
+        supplierByCityMap =
+            new StoredMap(db.getSupplierByCityDatabase(),
+                          cityKeyBinding, supplierValueBinding, true);
+        shipmentByPartMap =
+            new StoredMap(db.getShipmentByPartDatabase(),
+                          partKeyBinding, shipmentValueBinding, true);
+        shipmentBySupplierMap =
+            new StoredMap(db.getShipmentBySupplierDatabase(),
+                          supplierKeyBinding, shipmentValueBinding, true); </code></strong>
+    ...
+    }
+} </pre>
+      <p>
+    In general, the indexed maps are created here in the same way as
+    the unindexed maps were created in the Basic example. The
+    differences are:
+</p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+            The first parameter of the 
+            <a class="ulink" href="../../java/com/sleepycat/collections/StoredMap.html" target="_top">StoredMap</a>
+            
+            constructor is a 
+            
+            <a class="ulink" href="../../java/com/sleepycat/db/SecondaryDatabase.html" target="_top">SecondaryDatabase</a>
+            
+            rather than a 
+            
+            <span>
+                <a class="ulink" href="../../java/com/sleepycat/db/Database.html" target="_top">Database</a>.
+            </span>
+        </p>
+          </li>
+          <li>
+            <p>
+            The second parameter is the index key binding rather than the
+            primary key binding.
+        </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+    For the <code class="literal">supplierByCityMap</code>, the <code class="literal">cityKeyBinding</code> must
+    first be created. This binding was not created in the Basic example
+    because the City field is not a primary key.
+</p>
+      <p>
+    Like the bindings created earlier for keys and values, the
+    <code class="literal">cityKeyBinding</code> is a 
+    <a class="ulink" href="../../java/com/sleepycat/bind/serial/SerialBinding.html" target="_top">SerialBinding</a>.
+    Unlike the bindings created earlier, it is an example of creating a
+    binding for a built-in Java class, 
+    <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/lang/String.html" target="_top">String</a>,
+    instead of an application-defined class. Any serializable class may
+    be used.
+</p>
+      <p>
+    For the <code class="literal">shipmentByPartMap</code> and
+    <code class="literal">shipmentBySupplierMap</code>, the <code class="literal">partKeyBinding</code> and
+    <code class="literal">supplierKeyBinding</code> are used. These were created in the Basic
+    example and used as the primary key bindings for the <code class="literal">partMap</code>
+    and <code class="literal">supplierMap</code>.
+</p>
+      <p>
+    The value bindings — <code class="literal">supplierValueBinding</code> and
+    <code class="literal">shipmentValueBinding</code> — were also created in the Basic
+    example.
+</p>
+      <p>
+    This illustrates that bindings and formats may and should be
+    reused where appropriate for creating maps and other
+    collections.
+</p>
+      <p>
+    The following getter methods return the stored maps for use by
+    other classes in the example program. Convenience methods for
+    returning entry sets are also included.
+</p>
+      <a id="index_sampleviewsgetters"></a>
+      <pre class="programlisting">public class SampleViews
+{
+    ...
+<strong class="userinput"><code>    public final StoredMap getShipmentByPartMap()
+    {
+        return shipmentByPartMap;
+    }
+
+    public final StoredMap getShipmentBySupplierMap()
+    {
+        return shipmentBySupplierMap;
+    }
+
+    public final StoredMap getSupplierByCityMap()
+    {
+        return supplierByCityMap;
+    }
+
+    public final StoredEntrySet getShipmentByPartEntrySet()
+    {
+        return (StoredEntrySet) shipmentByPartMap.entrySet();
+    }
+
+    public final StoredEntrySet getShipmentBySupplierEntrySet()
+    {
+        return (StoredEntrySet) shipmentBySupplierMap.entrySet();
+    }
+
+    public final StoredEntrySet getSupplierByCityEntrySet()
+    {
+        return (StoredEntrySet) supplierByCityMap.entrySet();
+    }</code></strong>
+    ...
+} </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="openingforeignkeys.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="UsingSecondaries.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="retrievingbyindexkey.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+        
+        <span>More Secondary Key Indices</span>
+     </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+        Retrieving Items by Index Key
+    </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

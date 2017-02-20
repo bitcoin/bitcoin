@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Java programming notes</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="java.html" title="Chapter 5.  Java API" />
+    <link rel="prev" href="java_compat.html" title="Compatibility" />
+    <link rel="next" href="java_faq.html" title="Java FAQ" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Java programming notes</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="java_compat.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. 
+        Java API
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="java_faq.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="java_program"></a>Java programming notes</h2>
+          </div>
+        </div>
+      </div>
+      <p>Although the Java API parallels the Berkeley DB C++/C interface in many ways,
+it differs where the Java language requires.  For example, the handle
+method names are camel-cased and conform to Java naming patterns.  (The
+C++/C method names are currently provided, but are deprecated.)</p>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>The Java runtime does not automatically close Berkeley DB objects on
+finalization.  There are several reasons for this.  One is that
+finalization is generally run only when garbage collection occurs, and
+there is no guarantee that this occurs at all, even on exit.  Allowing
+specific Berkeley DB actions to occur in ways that cannot be replicated seems
+wrong.  Second, finalization of objects may happen in an arbitrary
+order, so we would have to do extra bookkeeping to make sure that
+everything was closed in the proper order.  The best word of advice is
+to always do a close() for any matching open() call.  Specifically, the
+Berkeley DB package requires that you explicitly call close on each individual
+<a class="ulink" href="../java/com/sleepycat/db/Database.html" target="_top">Database</a> and
+<a class="ulink" href="../java/com/sleepycat/db/Cursor.html" target="_top">Cursor</a> object that you opened.  Your database
+activity may not be synchronized to disk unless you do so.</li>
+          <li>Some methods in the Java API have no return type, and throw a
+<a class="ulink" href="../java/com/sleepycat/db/DatabaseException.html" target="_top">DatabaseException</a> when an severe error
+arises.  There are some notable methods that do have a return value, and
+can also throw an exception.  The "get" methods in
+<a class="ulink" href="../java/com/sleepycat/db/Database.html" target="_top">Database</a> and
+<a class="ulink" href="../java/com/sleepycat/db/Cursor.html" target="_top">Cursor</a> both return 0 when a get
+succeeds, <a class="link" href="program_errorret.html#program_errorret.DB_NOTFOUND">DB_NOTFOUND</a> when the key is not found, and throw an
+error when there is a severe error.  This approach allows the programmer
+to check for typical data-driven errors by watching return values
+without special casing exceptions.
+<p>An object of type <a class="ulink" href="../java/com/sleepycat/db/MemoryException.html" target="_top">MemoryException</a> is
+thrown when a Dbt is too small to hold the corresponding key or data item.</p><p>An object of type <a class="ulink" href="../java/com/sleepycat/db/DeadlockException.html" target="_top">DeadlockException</a> is
+thrown when a deadlock would occur.</p><p>An object of type <a class="ulink" href="../java/com/sleepycat/db/RunRecoveryException.html" target="_top">RunRecoveryException</a>, a
+subclass of <a class="ulink" href="../java/com/sleepycat/db/DatabaseException.html" target="_top">DatabaseException</a>, is thrown when
+there is an error that requires a recovery of the database using <a href="../api_reference/C/db_recover.html" class="olink">db_recover utility</a>.</p><p>An object of type <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/lang/IllegalArgumentException.html" target="_top">IllegalArgumentException</a>
+a standard Java Language exception, is thrown when there is an error in
+method arguments.</p><p>An object of type <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/lang/OutOfMemoryError.html" target="_top">OutOfMemoryError</a> is thrown
+when the system cannot provide enough memory to complete the operation
+(the ENOMEM system error on UNIX).</p></li>
+          <li>If there are embedded nulls in the <span class="bold"><strong>curslist</strong></span> argument for
+<a class="ulink" href="../java/com/sleepycat/db/Database.html#join(com.sleepycat.db.Cursor[], com.sleepycat.db.JoinConfig)" target="_top">Database.join(com.sleepycat.db.Cursor[], com.sleepycat.db.JoinConfig)</a>,
+they will be treated as the end of the list of cursors, even if you
+may have allocated a longer array.  Fill in all the cursors in your
+array unless you intend to cut it short.</li>
+          <li>If you are using custom class loaders in your application, make sure
+that the Berkeley DB classes are loaded by the system class loader, not a
+custom class loader. This is due to a JVM bug that can cause an access
+violation during finalization (see the bug 4238486 in Sun Microsystem's
+Java Bug Database).</li>
+        </ol>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="java_compat.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="java.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="java_faq.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Compatibility </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Java FAQ</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

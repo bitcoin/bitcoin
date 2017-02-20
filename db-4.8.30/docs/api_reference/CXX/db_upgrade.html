@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>db_upgrade</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="utilities.html" title="Appendix 1.  Berkeley DB Command Line Utilities" />
+    <link rel="prev" href="db_stat.html" title="db_stat" />
+    <link rel="next" href="db_verify.html" title="db_verify" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">db_upgrade</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="db_stat.html">Prev</a> </td>
+          <th width="60%" align="center">Appendix 1. 
+                Berkeley DB Command Line Utilities
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="db_verify.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="db_upgrade"></a>db_upgrade</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">db_upgrade [-NsVv] [-h home] [-P password] file ...  </pre>
+      <p>
+         The <span class="command"><strong>db_upgrade</strong></span> utility upgrades the Berkeley DB version of one or more
+         files and the databases they contain to the current release version.
+    </p>
+      <p>
+        The options are as follows:
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+              <span class="bold"><strong>-h</strong></span>
+            </p>
+            <p>
+                 Specify a home directory for the database environment; by default, the
+                 current working directory is used.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-N</strong></span>
+            </p>
+            <p>
+                 Do not acquire shared region mutexes while running.  Other problems,
+                 such as potentially fatal errors in Berkeley DB, will be ignored as
+                 well. This option is intended only for debugging errors, and should
+                 not be used under any other circumstances.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-P</strong></span>
+            </p>
+            <p>
+                 Specify an environment password.  Although Berkeley DB utilities
+                 overwrite password strings as soon as possible, be aware there may be
+                 a window of vulnerability on systems where unprivileged users can see
+                 command-line arguments or where utilities are not able to overwrite
+                 the memory containing the command-line arguments.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-s</strong></span>
+            </p>
+            <p>
+                 This flag is only meaningful when upgrading databases from releases
+                 before the Berkeley DB 3.1 release.     
+             </p>
+            <p>
+                 As part of the upgrade from the Berkeley DB 3.0 release to the 3.1
+                 release, the on-disk format of duplicate data items changed. To
+                 correctly upgrade the format requires that applications specify
+                 whether duplicate data items in the database are sorted or not.
+                 Specifying the <span class="bold"><strong>-s</strong></span> flag means that the
+                 duplicates are sorted; otherwise, they are assumed to be unsorted. 
+                 Incorrectly specifying the value of this flag may lead to database
+                 corruption.
+            </p>
+            <p>
+                 Because the <span class="command"><strong>db_upgrade</strong></span> utility upgrades a physical file (including all
+                 the databases it contains), it is not possible to use <span class="command"><strong>db_upgrade</strong></span> to
+                 upgrade files where some of the databases it includes have sorted
+                 duplicate data items, and some of the databases it includes have
+                 unsorted duplicate data items. If the file does not have more than a
+                 single database, if the databases do not support duplicate data items,
+                 or if all the databases that support duplicate data items support the
+                 same style of duplicates (either sorted or unsorted), <span class="command"><strong>db_upgrade</strong></span> will
+                 work correctly as long as the <span class="bold"><strong>-s</strong></span> flag
+                 is correctly specified. Otherwise, the file cannot be upgraded using
+                 <span class="command"><strong>db_upgrade</strong></span>, and must be upgraded manually using the 
+                 <a class="xref" href="db_dump.html" title="db_dump">db_dump</a> and
+                 <a class="xref" href="db_load.html" title="db_load">db_load</a> utilities.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-V</strong></span>
+            </p>
+            <p>
+                 Write the library version number to the standard output, and exit.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-v</strong></span>
+            </p>
+            <p>
+                 Run in verbose mode, displaying a message for each successful upgrade.
+            </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+         <span class="bold"><strong>It is important to realize that Berkeley DB
+         database upgrades are done in place, and so are potentially
+         destructive.</strong></span> This means that if the system crashes during
+         the upgrade procedure, or if the upgrade procedure runs out of disk
+         space, the databases may be left in an inconsistent and unrecoverable
+         state.  See <a href="../../programmer_reference/am_upgrade.html" class="olink">Upgrading databases</a> for more information.
+    </p>
+      <p>
+         The <span class="command"><strong>db_upgrade</strong></span> utility may be used with a Berkeley DB environment (as
+         described for the <span class="bold"><strong>-h</strong></span> option, the
+         environment variable <span class="bold"><strong>DB_HOME</strong></span>, or
+         because the utility was run in a directory containing a Berkeley DB
+         environment).  In order to avoid environment corruption when using a
+         Berkeley DB environment, <span class="command"><strong>db_upgrade</strong></span> should always be given the chance
+         to detach from the environment and exit gracefully.  To cause
+         <span class="command"><strong>db_upgrade</strong></span> to release all environment resources and exit cleanly, send
+         it an interrupt signal (SIGINT).
+    </p>
+      <p>
+         The <span class="command"><strong>db_upgrade</strong></span> utility exits 0 on success, and &gt;0 if an error
+         occurs.
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1721912"></a>Environment Variables</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1721922"></a>DB_HOME</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If the <span class="bold"><strong>-h</strong></span> option is not specified and
+                          the environment variable DB_HOME is set, it is used as the path of the
+                          database home, as described in the
+                          <a class="xref" href="envopen.html" title="DbEnv::open()">DbEnv::open()</a>
+                          method.
+                     </p>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="db_stat.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="utilities.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="db_verify.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">db_stat </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> db_verify</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

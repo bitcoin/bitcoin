@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Creating Tuple-Serial Entity Bindings</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Collections Tutorial" />
+    <link rel="up" href="Tuple.html" title="Chapter 5.  Using Tuples" />
+    <link rel="prev" href="tuplekeybindings.html" title="Creating Tuple Key Bindings" />
+    <link rel="next" href="sortedcollections.html" title="Using Sorted Collections" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">
+Creating Tuple-Serial Entity Bindings
+</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="tuplekeybindings.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. 
+        Using Tuples
+    </th>
+          <td width="20%" align="right"> <a accesskey="n" href="sortedcollections.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="tuple-serialentitybindings"></a>
+Creating Tuple-Serial Entity Bindings
+</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+In the prior example serial keys and serial values were used,
+and the 
+<a class="ulink" href="../../java/com/sleepycat/bind/serial/SerialSerialBinding.html" target="_top">SerialSerialBinding</a>
+
+base class was used for entity bindings. In this example, tuple
+keys and serial values are used and therefore the 
+<a class="ulink" href="../../java/com/sleepycat/bind/serial/TupleSerialBinding.html" target="_top">TupleSerialBinding</a>
+
+base class is used for entity bindings.
+</p>
+      <p>
+As with any entity binding, a key and value is converted to an
+entity in the 
+<a class="ulink" href="../../java/com/sleepycat/bind/serial/TupleSerialBinding.html#entryToObject(com.sleepycat.bind.tuple.TupleInput,%20java.lang.Object)" target="_top">TupleSerialBinding.entryToObject</a>
+
+method, and from an entity to
+a key and value in the 
+<a class="ulink" href="../../java/com/sleepycat/bind/serial/TupleSerialBinding.html#objectToKey(java.lang.Object,%20com.sleepycat.db.DatabaseEntry)" target="_top">TupleSerialBinding.objectToKey</a>
+
+and 
+<a class="ulink" href="../../java/com/sleepycat/bind/serial/TupleSerialBinding.html#objectToData(java.lang.Object)" target="_top">TupleSerialBinding.objectToData</a>
+
+methods. But since keys are
+stored as tuples, not as serialized objects, key fields are read
+and written using the 
+<a class="ulink" href="../../java/com/sleepycat/bind/tuple/TupleInput.html" target="_top">TupleInput</a>
+
+and 
+<a class="ulink" href="../../java/com/sleepycat/bind/tuple/TupleOutput.html" target="_top">TupleOutput</a>
+
+parameters.
+</p>
+      <p>
+The <code class="classname">SampleViews</code> class contains the modified entity
+binding classes that were defined in the prior example:
+<code class="classname">PartBinding</code>, <code class="classname">SupplierBinding</code> and
+<code class="classname">ShipmentBinding</code>.
+</p>
+      <a id="tuple_partbinding"></a>
+      <pre class="programlisting"><strong class="userinput"><code>import com.sleepycat.bind.serial.TupleSerialBinding;
+import com.sleepycat.bind.tuple.TupleInput;
+import com.sleepycat.bind.tuple.TupleOutput;
+...</code></strong>
+public class SampleViews
+{
+    ...
+    private static class PartBinding extends <strong class="userinput"><code>TupleSerialBinding</code></strong> 
+    {
+        private PartBinding(ClassCatalog classCatalog, <strong class="userinput"><code>Class dataClass</code></strong>)
+        {
+            super(classCatalog, dataClass);
+        }
+        public Object entryToObject(<strong class="userinput"><code>TupleInput</code></strong> keyInput, Object dataInput)
+        {
+<strong class="userinput"><code>            String number = keyInput.readString();</code></strong>
+            PartData data = (PartData) dataInput;
+            return new Part(<strong class="userinput"><code>number</code></strong>, data.getName(), data.getColor(),
+                            data.getWeight(), data.getCity());
+        }
+        public void objectToKey(Object object, TupleOutput output)
+        {
+            Part part = (Part) object;
+<strong class="userinput"><code>            output.writeString(part.getNumber());</code></strong>
+        }
+        public Object objectToData(Object object)
+        {
+            Part part = (Part) object;
+            return new PartData(part.getName(), part.getColor(),
+                                 part.getWeight(), part.getCity());
+        }
+    }
+    ...
+    private static class SupplierBinding extends <strong class="userinput"><code>TupleSerialBinding</code></strong>
+    {
+        private SupplierBinding(ClassCatalog classCatalog, <strong class="userinput"><code>Class dataClass</code></strong>)
+        {
+            super(classCatalog, dataClass);
+        }
+        public Object entryToObject(<strong class="userinput"><code>TupleInput</code></strong> keyInput, Object dataInput)
+        {
+<strong class="userinput"><code>            String number = keyInput.readString();</code></strong>
+            SupplierData data = (SupplierData) dataInput;
+            return new Supplier(<strong class="userinput"><code>number</code></strong>, data.getName(),
+                                data.getStatus(), data.getCity());
+        }
+        public void objectToKey(Object object, TupleOutput output)
+        {
+            Supplier supplier = (Supplier) object;
+<strong class="userinput"><code>            output.writeString(supplier.getNumber());</code></strong>
+        }
+        public Object objectToData(Object object)
+        {
+            Supplier supplier = (Supplier) object;
+            return new SupplierData(supplier.getName(), supplier.getStatus(),
+                                     supplier.getCity());
+        }
+    }
+    ...
+    private static class ShipmentBinding extends <strong class="userinput"><code>TupleSerialBinding</code></strong>
+    {
+        private ShipmentBinding(ClassCatalog classCatalog, <strong class="userinput"><code>Class dataClass</code></strong>)
+        {
+            super(classCatalog, dataClass);
+        }
+        public Object entryToObject(<strong class="userinput"><code>TupleInput</code></strong> keyInput, Object dataInput)
+        {
+<strong class="userinput"><code>            String partNumber = keyInput.readString();
+            String supplierNumber = keyInput.readString();</code></strong>
+            ShipmentData data = (ShipmentData) dataInput;
+            return new Shipment(<strong class="userinput"><code>partNumber, supplierNumber</code></strong>,
+                                data.getQuantity());
+        }
+        public void objectToKey(Object object, TupleOutput output)
+        {
+            Shipment shipment = (Shipment) object;
+<strong class="userinput"><code>            output.writeString(shipment.getPartNumber());
+            output.writeString(shipment.getSupplierNumber());</code></strong>
+        }
+        public Object objectToData(Object object)
+        {
+            Shipment shipment = (Shipment) object;
+            return new ShipmentData(shipment.getQuantity());
+        }
+    }
+    ...
+} </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="tuplekeybindings.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="Tuple.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="sortedcollections.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+        Creating Tuple Key Bindings
+     </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+        Using Sorted Collections
+    </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

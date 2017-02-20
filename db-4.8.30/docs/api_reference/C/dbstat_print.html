@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB-&gt;stat_print()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="db.html" title="Chapter 2.  The DB Handle" />
+    <link rel="prev" href="dbstat.html" title="DB-&gt;stat()" />
+    <link rel="next" href="dbsync.html" title="DB-&gt;sync()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB-&gt;stat_print()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbstat.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+                The DB Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbsync.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dbstat_print"></a>DB-&gt;stat_print()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB-&gt;stat_print(DB *db, u_int32_t flags);  </pre>
+      <p>
+         The <code class="methodname">DB-&gt;stat_print()</code> method displays the database statistical
+         information, as described for the <code class="methodname">DB-&gt;stat()</code> method. The information
+         is printed to a specified output channel (see the 
+         <a class="xref" href="envset_msgfile.html" title="DB_ENV-&gt;set_msgfile()">DB_ENV-&gt;set_msgfile()</a> 
+         method for more information), or passed to an application callback
+         function (see the 
+         <a class="xref" href="envset_msgcall.html" title="DB_ENV-&gt;set_msgcall()">DB_ENV-&gt;set_msgcall()</a> 
+         method for more information).
+    </p>
+      <p>
+             The <code class="methodname">DB-&gt;stat_print()</code> method may not be called before the 
+             <a class="xref" href="dbopen.html" title="DB-&gt;open()">DB-&gt;open()</a>  method is called.
+    </p>
+      <p>
+         The <code class="methodname">DB-&gt;stat_print()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1651820"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1651533"></a>flags</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>flags</strong></span> parameter must be set to 0
+                          or by bitwise inclusively <span class="bold"><strong>OR</strong></span>'ing
+                          together one or more of the following values:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="stat_print_DB_FAST_STAT"></a>
+                  <code class="literal">DB_FAST_STAT</code>
+            </p>
+                <p>
+                 Return only the values which do not require traversal of the database.
+                 Among other things, this flag makes it possible for applications to
+                 request key and record counts without incurring the performance
+                 penalty of traversing the entire database.
+            </p>
+              </li>
+              <li>
+                <p><a id="stat_print_DB_STAT_ALL"></a>
+                  <code class="literal">DB_STAT_ALL</code>
+            </p>
+                <p>
+                Display all available information.
+            </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1652129"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="db.html" title="Chapter 2.  The DB Handle">DB</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1651678"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="db.html#dblist" title="Database and Related Methods">Database and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbstat.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="db.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbsync.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB-&gt;stat() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB-&gt;sync()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

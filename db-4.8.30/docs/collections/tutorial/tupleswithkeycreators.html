@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Using Tuples with Key Creators</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Collections Tutorial" />
+    <link rel="up" href="Tuple.html" title="Chapter 5.  Using Tuples" />
+    <link rel="prev" href="Tuple.html" title="Chapter 5.  Using Tuples" />
+    <link rel="next" href="tuplekeybindings.html" title="Creating Tuple Key Bindings" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">
+        Using Tuples with Key Creators
+    </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="Tuple.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. 
+        Using Tuples
+    </th>
+          <td width="20%" align="right"> <a accesskey="n" href="tuplekeybindings.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="tupleswithkeycreators"></a>
+        Using Tuples with Key Creators
+    </h2>
+          </div>
+        </div>
+      </div>
+      <p>
+    Key creators were used in prior examples to extract index keys
+    from value objects. The keys were returned as deserialized key
+    objects, since the serial format was used for keys. In this
+    example, the tuple format is used for keys and the key creators
+    return keys by writing information to a tuple. The differences
+    between this example and the prior example are:
+</p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+            The 
+            <a class="ulink" href="../../java/com/sleepycat/bind/serial/TupleSerialKeyCreator.html" target="_top">TupleSerialKeyCreator</a>
+            
+            base class is used instead of the 
+            <a class="ulink" href="../../java/com/sleepycat/bind/serial/SerialSerialKeyCreator.html" target="_top">SerialSerialKeyCreator</a>
+            
+            base class.
+        </p>
+          </li>
+          <li>
+            <p>
+            For all key input and output parameters, the 
+            <a class="ulink" href="../../java/com/sleepycat/bind/tuple/TupleInput.html" target="_top">TupleInput</a>
+            
+            and 
+            <a class="ulink" href="../../java/com/sleepycat/bind/tuple/TupleOutput.html" target="_top">TupleOutput</a>
+            
+            classes are used instead of 
+            <a class="ulink" href="http://java.sun.com/j2se/1.5.0/docs/api/java/lang/Object.html" target="_top">Object</a>
+            
+            (representing a deserialized object).
+        </p>
+          </li>
+          <li>
+            <p>
+            Instead of returning a key output object, these methods call
+            tuple write methods such as 
+            <a class="ulink" href="../../java/com/sleepycat/bind/tuple/TupleOutput.html#writeString(java.lang.String)" target="_top">TupleOutput.writeString</a>.
+        </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+    In addition to writing key tuples, the
+    <code class="classname">ShipmentByPartKeyCreator</code> and
+    <code class="classname">ShipmentBySupplierKeyCreator</code> classes also read the key tuple
+    of the primary key. This is because they extract the index key from
+    fields in the Shipment's primary key. Instead of calling getter
+    methods on the <code class="classname">ShipmentKey</code> object, as in prior examples,
+    these methods call 
+    <a class="ulink" href="../../java/com/sleepycat/bind/tuple/TupleInput.html#readString()" target="_top">TupleInput.readString</a>.
+    The <code class="classname">ShipmentKey</code> consists of two string fields that are read
+    in sequence.
+</p>
+      <p>
+    The modified key creators are shown below:
+    <code class="classname">SupplierByCityKeyCreator</code>, 
+    <code class="classname">ShipmentByPartKeyCreator</code>
+    and <code class="classname">ShipmentBySupplierKeyCreator</code>.
+</p>
+      <a id="tuple_SupplierByCityKeyCreator"></a>
+      <pre class="programlisting"><strong class="userinput"><code>import com.sleepycat.bind.serial.TupleSerialKeyCreator;
+import com.sleepycat.bind.tuple.TupleInput;
+import com.sleepycat.bind.tuple.TupleOutput;
+...</code></strong>
+public class SampleDatabase
+{
+    ...
+    private static class SupplierByCityKeyCreator
+<strong class="userinput"><code>        extends TupleSerialKeyCreator</code></strong>
+    {
+        private SupplierByCityKeyCreator(StoredClassCatalog catalog,
+                                         <strong class="userinput"><code>Class valueClass</code></strong>)
+        {
+            super(catalog, valueClass);
+        }
+
+<strong class="userinput"><code>        public boolean createSecondaryKey(TupleInput primaryKeyInput,
+                                          Object valueInput,
+                                          TupleOutput indexKeyOutput)
+        {
+            SupplierData supplierData = (SupplierData) valueInput;
+            String city = supplierData.getCity();
+            if (city != null) {
+                indexKeyOutput.writeString(supplierData.getCity());
+                return true;
+            } else {
+                return false;
+            }
+        }</code></strong>
+    }
+
+    private static class ShipmentByPartKeyCreator
+        <strong class="userinput"><code>extends TupleSerialKeyCreator</code></strong>
+    {
+        private ShipmentByPartKeyCreator(StoredClassCatalog catalog,
+                                         <strong class="userinput"><code>Class valueClass</code></strong>)
+        {
+            super(catalog, valueClass);
+        }
+
+        <strong class="userinput"><code>public boolean createSecondaryKey(TupleInput primaryKeyInput,
+                                          Object valueInput,
+                                          TupleOutput indexKeyOutput)
+        {
+            String partNumber = primaryKeyInput.readString();
+            // don't bother reading the supplierNumber
+            indexKeyOutput.writeString(partNumber);
+            return true;
+        }</code></strong>
+    }
+
+    private static class ShipmentBySupplierKeyCreator
+        <strong class="userinput"><code>extends TupleSerialKeyCreator</code></strong>
+    {
+        private ShipmentBySupplierKeyCreator(StoredClassCatalog catalog,
+                                             <strong class="userinput"><code>Class valueClass</code></strong>)
+        {
+            super(catalog, valueClass);
+        }
+
+        <strong class="userinput"><code>public boolean createSecondaryKey(TupleInput primaryKeyInput,
+                                          Object valueInput,
+                                          TupleOutput indexKeyOutput)
+        {
+            primaryKeyInput.readString(); // skip the partNumber
+            String supplierNumber = primaryKeyInput.readString();
+            indexKeyOutput.writeString(supplierNumber);
+            return true;
+        }</code></strong>
+    }
+    ...
+}
+    </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="Tuple.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="Tuple.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="tuplekeybindings.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 5. 
+        Using Tuples
+     </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+        Creating Tuple Key Bindings
+    </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+# Script to rebuild automatically generated files for ex_apprec.
+
+E=../examples_c/ex_apprec
+
+cd ../../dist
+awk -f gen_rec.awk \
+    -v source_file=$E/ex_apprec_auto.c \
+    -v header_file=$E/ex_apprec_auto.h \
+    -v print_file=$E/ex_apprec_autop.c \
+    -v template_file=$E/ex_apprec_template < $E/ex_apprec.src

@@ -1,0 +1,138 @@
+/*-
+ * See the file LICENSE for redistribution information.
+ *
+ * Copyright (c) 2001-2009 Oracle.  All rights reserved.
+ *
+ * $Id$
+ */
+
+DBPRIVATE
+PREFIX	__fop
+
+INCLUDE #include "db_int.h"
+INCLUDE #include "dbinc/crypto.h"
+INCLUDE #include "dbinc/db_page.h"
+INCLUDE #include "dbinc/db_am.h"
+INCLUDE #include "dbinc/log.h"
+INCLUDE #include "dbinc/txn.h"
+INCLUDE #include "dbinc/fop.h"
+INCLUDE
+
+/*
+ * create -- create a file system object.
+ *
+ * name: name in the file system
+ * appname: indicates if the name needs to go through __db_appname
+ * mode: file system mode
+ */
+BEGIN_COMPAT create		42	143
+DBT	name		DBT		s
+ARG	appname		u_int32_t	lu
+ARG	mode		u_int32_t	o
+END
+
+BEGIN create		48	143
+DBT	name		DBT		s
+DBT	dirname		DBT		s
+ARG	appname		u_int32_t	lu
+ARG	mode		u_int32_t	o
+END
+
+/*
+ * remove -- remove a file system object.
+ *
+ * name: name in the file system
+ * appname: indicates if the name needs to go through __db_appname
+ */
+BEGIN remove		42	144
+DBT	name		DBT		s
+DBT	fid		DBT		s
+ARG	appname		u_int32_t	lu
+END
+
+/*
+ * write: log the writing of data into an object.
+ *
+ * name: file containing the page.
+ * appname: indicates if the name needs to go through __db_appname
+ * pgsize: page size.
+ * pageno: page number in the file.
+ * offset: offset on the page.
+ * page: the actual meta-data page.
+ * flag: non-0 indicates that this is a tempfile, so we needn't undo
+ *	these modifications (we'll toss the file).
+ */
+BEGIN_COMPAT write	42	145
+DBT	name		DBT		s
+ARG	appname		u_int32_t	lu
+ARG	pgsize		u_int32_t	lu
+ARG	pageno		db_pgno_t	lu
+ARG	offset		u_int32_t	lu
+DBT	page		DBT		s
+ARG	flag		u_int32_t	lu
+END
+
+BEGIN write	48	145
+DBT	name		DBT		s
+DBT	dirname		DBT		s
+ARG	appname		u_int32_t	lu
+ARG	pgsize		u_int32_t	lu
+ARG	pageno		db_pgno_t	lu
+ARG	offset		u_int32_t	lu
+DBT	page		DBT		s
+ARG	flag		u_int32_t	lu
+END
+
+/*
+ * rename: move a file from one name to another.
+ * The appname value indicates if this is a path name that should be used
+ * directly (i.e., no interpretation) or if it is a pathname that should
+ * be interpreted via calls to __db_appname.  The fileid is the 20-byte
+ * DB fileid of the file being renamed.  We need to check it on recovery
+ * so that we don't inadvertently overwrite good files.
+ *
+ * There are two variants of this log record: one that must be both done
+ * and undone and one that is not undone (used for renaming tmp files, see
+ * SR #15119)
+ *
+ * These two record types use the same structure, read, and print functions,
+ * but have different recovery functions.
+ */
+BEGIN_COMPAT rename	42	146
+DUPLICATE rename_noundo	46	150
+DBT	oldname		DBT		s
+DBT	newname		DBT		s
+DBT	fileid		DBT		s
+ARG	appname		u_int32_t	lu
+END
+
+BEGIN rename	48	146
+DUPLICATE rename_noundo	46	150
+DBT	oldname		DBT		s
+DBT	newname		DBT		s
+DBT	dirname		DBT		s
+DBT	fileid		DBT		s
+ARG	appname		u_int32_t	lu
+END
+
+/*
+ * File removal record.  This is a DB-level log record that indicates
+ * we've just completed some form of file removal.  The purpose of this
+ * log record is to logically identify the particular instance of the
+ * named file so that during recovery, in deciding if we should roll-forward
+ * a remove or a rename, we can make sure that we don't roll one forward and
+ * delete or overwrite the wrong file.
+ * real_fid:	The 20-byte unique file identifier of the original file being
+ *		removed.
+ * tmp_fid:	The unique fid of the tmp file that is removed.
+ * name:	The pre- __db_appname name of the file
+ * child:	The transaction that removed or renamed the file.
+ */
+ */
+BEGIN file_remove	42	141
+DBT	real_fid	DBT	s
+DBT	tmp_fid		DBT	s
+DBT	name		DBT	s
+ARG	appname		u_int32_t	lu
+ARG	child		u_int32_t	lx
+END

@@ -1,0 +1,22 @@
+This directory contains a sql source file called sample.sql.  To use
+db_sql to translate this schema into C code implementing a Berkeley DB
+storage layer, issue the following command:
+
+  db_sql -i sample.sql -t sample_test.c
+
+This will produce three files: sample.h, sample.c, and sample_test.c.
+
+The generated program includes, in sample_test.c, a main function to
+exercise the new storage layer.  To build the program, compile the two
+.c source files and link them together with the Berkeley DB runtime
+library.  On Unix, this command would typically be somethin like:
+
+cc -g -I$BDB_INSTALL/include -L$BDB_INSTALL/lib -o sample sample.c sample_test.c -ldb-4.8 -lpthread
+
+On Windows, you could use Visual Studio to create a project containing
+these files.
+
+Once the program is built, you can run it with no arguments.  The
+program generated from sample.sql will create a database environment
+in a directory named "numismatics."  This directory must be created
+before the program is run.

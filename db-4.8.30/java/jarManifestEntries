@@ -1,0 +1,2 @@
+Premain-Class: com.sleepycat.persist.model.ClassEnhancer
+

@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>What Berkeley DB is not</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="intro.html" title="Chapter 1.  Introduction" />
+    <link rel="prev" href="intro_dbis.html" title="What is Berkeley DB?" />
+    <link rel="next" href="intro_need.html" title="Do you need Berkeley DB?" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">What Berkeley DB is not</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="intro_dbis.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 1. 
+        Introduction
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="intro_need.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="intro_dbisnot"></a>What Berkeley DB is not</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="intro_dbisnot.html#id1588016">Not a relational database</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="intro_dbisnot.html#id1588614">Not an object-oriented database</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="intro_dbisnot.html#id1588460">Not a network database</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="intro_dbisnot.html#id1587683">Not a database server</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>In contrast to most other database systems, Berkeley DB provides relatively
+simple data access services.</p>
+      <p>Records in Berkeley DB are (<span class="emphasis"><em>key</em></span>, <span class="emphasis"><em>value</em></span>) pairs. Berkeley DB
+supports only a few logical operations on records. They are:</p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>Insert a record in a table.</li>
+          <li>Delete a record from a table.</li>
+          <li>Find a record in a table by looking up its key.</li>
+          <li>Update a record that has already been found.</li>
+        </ul>
+      </div>
+      <p>Notice that Berkeley DB never operates on the value part of a record.
+Values are simply payload, to be
+stored with keys and reliably delivered back to the application on
+demand.</p>
+      <p>Both keys and values can be arbitrary byte strings, either fixed-length
+or variable-length. As a result, programmers can put native programming
+language data structures into the database without converting them to
+a foreign record format first. Storage and retrieval are very simple,
+but the application needs to know what the structure of a key and a
+value is in advance. It cannot ask Berkeley DB, because Berkeley DB doesn't know.</p>
+      <p>This is an important feature of Berkeley DB, and one worth considering more
+carefully.  On the one hand, Berkeley DB cannot provide the programmer with
+any information on the contents or structure of the values that it
+stores.  The application must understand the keys and values that it
+uses.  On the other hand, there is literally no limit to the data types
+that can be store in a Berkeley DB database. The application never needs to
+convert its own program data into the data types that Berkeley DB supports.
+Berkeley DB is able to operate on any data type the application uses, no
+matter how complex.</p>
+      <p>Because both keys and values can be up to four gigabytes in length, a
+single record can store images, audio streams, or other large data
+values.  Large values are not treated specially in Berkeley DB. They are
+simply broken into page-sized chunks, and reassembled on demand when
+the application needs them. Unlike some other database systems, Berkeley DB
+offers no special support for binary large objects (BLOBs).</p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1588016"></a>Not a relational database</h3>
+            </div>
+          </div>
+        </div>
+        <p>Berkeley DB is not a relational database.</p>
+        <p>First, Berkeley DB does not support SQL queries. All access to data is through
+the Berkeley DB API. Developers must learn a new set of interfaces in order
+to work with Berkeley DB. Although the interfaces are fairly simple, they are
+non-standard.</p>
+        <p>SQL support is a double-edged sword. One big advantage of relational
+databases is that they allow users to write simple declarative queries
+in a high-level language. The database system knows everything about
+the data and can carry out the command. This means that it's simple to
+search for data in new ways, and to ask new questions of the database.
+No programming is required.</p>
+        <p>On the other hand, if a programmer can predict in advance how an
+application will access data, then writing a low-level program to get
+and store records can be faster. It eliminates the overhead of query
+parsing, optimization, and execution. The programmer must understand
+the data representation, and must write the code to do the work, but
+once that's done, the application can be very fast.</p>
+        <p>Second, Berkeley DB has no notion of <span class="emphasis"><em>schema</em></span> and data types in
+the way that relational systems do. Schema is the structure of records
+in tables, and the relationships among the tables in the database. For
+example, in a relational system the programmer can create a record from
+a fixed menu of data types. Because the record types are declared to
+the system, the relational engine can reach inside records and examine
+individual values in them. In addition, programmers can use SQL to
+declare relationships among tables, and to create indices on tables.
+Relational engines usually maintain these relationships and indices
+automatically.</p>
+        <p>In Berkeley DB, the key and value in a record are opaque to Berkeley DB. They may
+have a rich internal structure, but the library is unaware of it. As a
+result, Berkeley DB cannot decompose the value part of a record into its
+constituent parts, and cannot use those parts to find values of
+interest. Only the application, which knows the data structure, can do
+that.  Berkeley DB does support indices on tables and automatically maintain
+those indices as their associated tables are modified.</p>
+        <p>Berkeley DB is not a relational system. Relational database systems are
+semantically rich and offer high-level database access. Compared to such
+systems, Berkeley DB is a high-performance, transactional library for record
+storage. It's possible to build a relational system on top of Berkeley DB. In
+fact, the popular MySQL relational system uses Berkeley DB for
+transaction-protected table management, and takes care of all the SQL
+parsing and execution. It uses Berkeley DB for the storage level, and provides
+the semantics and access tools.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1588614"></a>Not an object-oriented database</h3>
+            </div>
+          </div>
+        </div>
+        <p>Object-oriented databases are designed for very tight integration with
+object-oriented programming languages. Berkeley DB is written entirely in the
+C programming language. It includes language bindings for C++, Java,
+and other languages, but the library has no information about the
+objects created in any object-oriented application. Berkeley DB never makes
+method calls on any application object. It has no idea what methods are
+defined on user objects, and cannot see the public or private members
+of any instance.  The key and value part of all records are opaque to
+Berkeley DB.</p>
+        <p>Berkeley DB cannot automatically page in objects as they are accessed, as some
+object-oriented databases do. The object-oriented application programmer
+must decide what records are required, and must fetch them by making
+method calls on Berkeley DB objects.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1588460"></a>Not a network database</h3>
+            </div>
+          </div>
+        </div>
+        <p>Berkeley DB does not support network-style navigation among records, as
+network databases do. Records in a Berkeley DB table may move around over
+time, as new records are added to the table and old ones are deleted.
+Berkeley DB is able to do fast searches for records based on keys, but there
+is no way to create a persistent physical pointer to a record.
+Applications can only refer to records by key, not by address.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1587683"></a>Not a database server</h3>
+            </div>
+          </div>
+        </div>
+        <p>Berkeley DB is not a standalone database server. It is a library, and runs in
+the address space of the application that uses it. If more than one
+application links in Berkeley DB, then all can use the same database at the
+same time; the library handles coordination among the applications, and
+guarantees that they do not interfere with one another.</p>
+        <p>It is possible to build a server application that uses Berkeley DB for data
+management. For example, many commercial and open source Lightweight
+Directory Access Protocol (LDAP) servers use Berkeley DB for record storage.
+LDAP clients connect to these servers over the network. Individual
+servers make calls through the Berkeley DB API to find records and return them
+to clients. On its own, however, Berkeley DB is not a server.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="intro_dbis.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="intro.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="intro_need.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">What is Berkeley DB? </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Do you need Berkeley DB?</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

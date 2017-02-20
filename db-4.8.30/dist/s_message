@@ -1,0 +1,31 @@
+#!/bin/sh -
+#	$Id$
+#
+# Build the automatically generated rep & repmgr message files.
+
+header=/tmp/__db_a
+source=/tmp/__db_b
+
+trap 'rm -f /tmp/__db_[ab]; exit 1' 1 2 3 13 15
+trap 'rm -f /tmp/__db_[ab]; exit 0' 0
+
+DIR="rep repmgr"
+
+# Build DB's message marshaling/unmarshaling routines.
+for i in $DIR; do
+	for f in ../$i/*.src; do
+		subsystem=`basename $f .src`
+		awk -f gen_msg.awk \
+		    -v header_file=$header \
+		    -v source_file=$source < $f
+
+		f=../dbinc_auto/${subsystem}_auto.h
+		cmp $header $f > /dev/null 2>&1 ||
+		    (echo "Building $f" &&
+		    rm -f $f && cp $header $f && chmod 444 $f)
+		f=../$i/${subsystem}_auto.c
+		cmp $source $f > /dev/null 2>&1 ||
+		    (echo "Building $f" &&
+		    rm -f $f && cp $source $f && chmod 444 $f)
+	done
+done

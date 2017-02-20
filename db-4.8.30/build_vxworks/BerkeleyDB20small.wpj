@@ -1,0 +1,3639 @@
+Document file - DO NOT EDIT
+
+<BEGIN> BUILD_PENTIUM_debug_BUILDRULE
+BerkeleyDB20small.out
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_AR
+ar386
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_ARCHIVE
+$(PRJ_DIR)/PENTIUMgnu/BerkeleyDB20small_sim.a
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_AS
+cc386
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_CC
+cc386
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_CFLAGS
+-g \
+	-mpentium \
+	-ansi \
+	-nostdinc \
+	-DRW_MULTI_THREAD \
+	-D_REENTRANT \
+	-fvolatile \
+	-nostdlib \
+	-fno-builtin \
+	-fno-defer-pop \
+	-I. \
+	-I$(WIND_BASE)/target/h \
+	-DCPU=PENTIUM \
+	-O0 \
+	-I$(PRJ_DIR) \
+	-I$(PRJ_DIR)/.. \
+	-DDIAGNOSTIC \
+	-DDEBUG
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_CFLAGS_AS
+-g \
+	-mpentium \
+	-ansi \
+	-nostdinc \
+	-fvolatile \
+	-nostdlib \
+	-fno-builtin \
+	-fno-defer-pop \
+	-P \
+	-x \
+	assembler-with-cpp \
+	-I. \
+	-I$(WIND_BASE)/target/h \
+	-DCPU=PENTIUM
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_CPP
+cc386 -E -P -xc
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_LD
+ld386
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_LDFLAGS
+-X -N
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_LD_PARTIAL_FLAGS
+-X -r
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_NM
+nm386 -g
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_OPTION_DEFINE_MACRO
+-D
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_OPTION_INCLUDE_DIR
+-I
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_POST_BUILD_RULE
+
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_PRJ_LIBS
+
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_SIZE
+size386
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_RO_DEPEND_PATH
+{$(WIND_BASE)/target/h/} \
+	{$(WIND_BASE)/target/src/} \
+	{$(WIND_BASE)/target/config/}
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_TC
+::tc_PENTIUMgnu
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_BUILDRULE
+BerkeleyDB20small.out
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_AR
+ar386
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_ARCHIVE
+$(PRJ_DIR)/PENTIUMgnu/BerkeleyDB20small_sim.a
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_AS
+cc386
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_CC
+cc386
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_CFLAGS
+-mpentium \
+	-ansi \
+	-nostdinc \
+	-DRW_MULTI_THREAD \
+	-D_REENTRANT \
+	-fvolatile \
+	-nostdlib \
+	-fno-builtin \
+	-fno-defer-pop \
+	-I. \
+	-I$(WIND_BASE)/target/h \
+	-DCPU=PENTIUM \
+	-O2 \
+	-I$(PRJ_DIR) \
+	-I$(PRJ_DIR)/..
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_CFLAGS_AS
+-g \
+	-mpentium \
+	-ansi \
+	-nostdinc \
+	-fvolatile \
+	-nostdlib \
+	-fno-builtin \
+	-fno-defer-pop \
+	-P \
+	-x \
+	assembler-with-cpp \
+	-I. \
+	-I$(WIND_BASE)/target/h \
+	-DCPU=PENTIUM
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_CPP
+cc386 -E -P -xc
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_LD
+ld386
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_LDDEPS
+
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_LDFLAGS
+-X -N
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_LD_PARTIAL_FLAGS
+-X -r
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_NM
+nm386 -g
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_OPTION_DEFINE_MACRO
+-D
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_OPTION_INCLUDE_DIR
+-I
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_POST_BUILD_RULE
+
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_PRJ_LIBS
+
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_SIZE
+size386
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_RO_DEPEND_PATH
+{$(WIND_BASE)/target/h/} \
+	{$(WIND_BASE)/target/src/} \
+	{$(WIND_BASE)/target/config/}
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_TC
+::tc_PENTIUMgnu
+<END>
+
+<BEGIN> BUILD_RULE_BerkeleyDB20small.out
+
+<END>
+
+<BEGIN> BUILD_RULE_BerkeleyDB20small_sim.out
+
+<END>
+
+<BEGIN> BUILD_RULE_archive
+
+<END>
+
+<BEGIN> BUILD_RULE_objects
+
+<END>
+
+<BEGIN> BUILD__CURRENT
+PENTIUM_debug
+<END>
+
+<BEGIN> BUILD__LIST
+PENTIUM_release PENTIUM_debug
+<END>
+
+<BEGIN> CORE_INFO_TYPE
+::prj_vxApp
+<END>
+
+<BEGIN> CORE_INFO_VERSION
+2.0
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_compact.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_compact.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_compact.c_objects
+bt_compact.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_compact.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_compare.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_compare.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_compare.c_objects
+bt_compare.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_compare.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_compress.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_compress.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_compress.c_objects
+bt_compress.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_compress.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_conv.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_conv.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_conv.c_objects
+bt_conv.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_conv.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_curadj.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_curadj.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_curadj.c_objects
+bt_curadj.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_curadj.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_cursor.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_cursor.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_cursor.c_objects
+bt_cursor.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_cursor.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_delete.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_delete.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_delete.c_objects
+bt_delete.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_delete.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_method.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_method.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_method.c_objects
+bt_method.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_method.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_open.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_open.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_open.c_objects
+bt_open.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_open.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_put.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_put.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_put.c_objects
+bt_put.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_put.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_rec.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_rec.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_rec.c_objects
+bt_rec.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_rec.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_reclaim.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_reclaim.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_reclaim.c_objects
+bt_reclaim.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_reclaim.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_recno.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_recno.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_recno.c_objects
+bt_recno.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_recno.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_rsearch.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_rsearch.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_rsearch.c_objects
+bt_rsearch.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_rsearch.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_search.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_search.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_search.c_objects
+bt_search.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_search.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_split.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_split.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_split.c_objects
+bt_split.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_split.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_stat.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_stat.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_stat.c_objects
+bt_stat.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_stat.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_upgrade.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_upgrade.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_upgrade.c_objects
+bt_upgrade.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/bt_upgrade.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/btree_auto.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/btree_auto.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/btree_auto.c_objects
+btree_auto.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../btree/btree_auto.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../clib/getopt.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../clib/getopt.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../clib/getopt.c_objects
+getopt.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../clib/getopt.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../clib/snprintf.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../clib/snprintf.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../clib/snprintf.c_objects
+snprintf.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../clib/snprintf.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../clib/strcasecmp.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../clib/strcasecmp.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../clib/strcasecmp.c_objects
+strcasecmp.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../clib/strcasecmp.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../clib/strdup.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../clib/strdup.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../clib/strdup.c_objects
+strdup.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../clib/strdup.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../clib/strsep.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../clib/strsep.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../clib/strsep.c_objects
+strsep.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../clib/strsep.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/crypto_stub.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/crypto_stub.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/crypto_stub.c_objects
+crypto_stub.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/crypto_stub.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_byteorder.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_byteorder.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_byteorder.c_objects
+db_byteorder.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_byteorder.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_compint.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_compint.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_compint.c_objects
+db_compint.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_compint.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_err.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_err.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_err.c_objects
+db_err.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_err.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_getlong.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_getlong.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_getlong.c_objects
+db_getlong.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_getlong.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_idspace.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_idspace.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_idspace.c_objects
+db_idspace.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_idspace.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_log2.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_log2.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_log2.c_objects
+db_log2.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_log2.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_shash.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_shash.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_shash.c_objects
+db_shash.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/db_shash.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/dbt.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/dbt.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/dbt.c_objects
+dbt.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/dbt.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/mkpath.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/mkpath.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/mkpath.c_objects
+mkpath.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/mkpath.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/os_method.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/os_method.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/os_method.c_objects
+os_method.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/os_method.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/util_arg.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/util_arg.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/util_arg.c_objects
+util_arg.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/util_arg.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/util_cache.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/util_cache.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/util_cache.c_objects
+util_cache.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/util_cache.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/util_log.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/util_log.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/util_log.c_objects
+util_log.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/util_log.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/util_sig.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/util_sig.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/util_sig.c_objects
+util_sig.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/util_sig.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/zerofill.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/zerofill.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/zerofill.c_objects
+zerofill.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../common/zerofill.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/crdel_auto.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/crdel_auto.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/crdel_auto.c_objects
+crdel_auto.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/crdel_auto.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/crdel_rec.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/crdel_rec.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/crdel_rec.c_objects
+crdel_rec.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/crdel_rec.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db.c_objects
+db.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_am.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_am.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_am.c_objects
+db_am.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_am.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_auto.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_auto.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_auto.c_objects
+db_auto.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_auto.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_cam.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_cam.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_cam.c_objects
+db_cam.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_cam.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_cds.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_cds.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_cds.c_objects
+db_cds.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_cds.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_conv.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_conv.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_conv.c_objects
+db_conv.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_conv.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_dispatch.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_dispatch.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_dispatch.c_objects
+db_dispatch.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_dispatch.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_dup.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_dup.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_dup.c_objects
+db_dup.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_dup.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_iface.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_iface.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_iface.c_objects
+db_iface.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_iface.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_join.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_join.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_join.c_objects
+db_join.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_join.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_meta.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_meta.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_meta.c_objects
+db_meta.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_meta.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_method.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_method.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_method.c_objects
+db_method.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_method.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_open.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_open.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_open.c_objects
+db_open.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_open.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_overflow.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_overflow.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_overflow.c_objects
+db_overflow.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_overflow.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_pr.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_pr.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_pr.c_objects
+db_pr.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_pr.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_rec.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_rec.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_rec.c_objects
+db_rec.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_rec.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_reclaim.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_reclaim.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_reclaim.c_objects
+db_reclaim.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_reclaim.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_remove.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_remove.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_remove.c_objects
+db_remove.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_remove.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_rename.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_rename.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_rename.c_objects
+db_rename.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_rename.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_ret.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_ret.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_ret.c_objects
+db_ret.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_ret.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_setid.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_setid.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_setid.c_objects
+db_setid.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_setid.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_setlsn.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_setlsn.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_setlsn.c_objects
+db_setlsn.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_setlsn.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_sort_multiple.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_sort_multiple.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_sort_multiple.c_objects
+db_sort_multiple.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_sort_multiple.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_stati.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_stati.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_stati.c_objects
+db_stati.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_stati.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_truncate.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_truncate.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_truncate.c_objects
+db_truncate.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_truncate.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_upg.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_upg.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_upg.c_objects
+db_upg.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_upg.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_upg_opd.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_upg_opd.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_upg_opd.c_objects
+db_upg_opd.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_upg_opd.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_vrfy_stub.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_vrfy_stub.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_vrfy_stub.c_objects
+db_vrfy_stub.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../db/db_vrfy_stub.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../dbreg/dbreg.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../dbreg/dbreg.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../dbreg/dbreg.c_objects
+dbreg.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../dbreg/dbreg.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../dbreg/dbreg_auto.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../dbreg/dbreg_auto.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../dbreg/dbreg_auto.c_objects
+dbreg_auto.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../dbreg/dbreg_auto.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../dbreg/dbreg_rec.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../dbreg/dbreg_rec.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../dbreg/dbreg_rec.c_objects
+dbreg_rec.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../dbreg/dbreg_rec.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../dbreg/dbreg_stat.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../dbreg/dbreg_stat.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../dbreg/dbreg_stat.c_objects
+dbreg_stat.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../dbreg/dbreg_stat.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../dbreg/dbreg_util.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../dbreg/dbreg_util.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../dbreg/dbreg_util.c_objects
+dbreg_util.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../dbreg/dbreg_util.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_alloc.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_alloc.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_alloc.c_objects
+env_alloc.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_alloc.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_config.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_config.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_config.c_objects
+env_config.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_config.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_failchk.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_failchk.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_failchk.c_objects
+env_failchk.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_failchk.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_file.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_file.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_file.c_objects
+env_file.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_file.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_globals.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_globals.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_globals.c_objects
+env_globals.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_globals.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_method.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_method.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_method.c_objects
+env_method.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_method.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_name.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_name.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_name.c_objects
+env_name.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_name.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_open.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_open.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_open.c_objects
+env_open.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_open.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_recover.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_recover.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_recover.c_objects
+env_recover.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_recover.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_region.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_region.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_region.c_objects
+env_region.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_region.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_register.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_register.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_register.c_objects
+env_register.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_register.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_sig.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_sig.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_sig.c_objects
+env_sig.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_sig.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_stat.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_stat.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_stat.c_objects
+env_stat.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../env/env_stat.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../fileops/fileops_auto.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../fileops/fileops_auto.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../fileops/fileops_auto.c_objects
+fileops_auto.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../fileops/fileops_auto.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../fileops/fop_basic.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../fileops/fop_basic.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../fileops/fop_basic.c_objects
+fop_basic.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../fileops/fop_basic.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../fileops/fop_rec.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../fileops/fop_rec.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../fileops/fop_rec.c_objects
+fop_rec.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../fileops/fop_rec.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../fileops/fop_util.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../fileops/fop_util.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../fileops/fop_util.c_objects
+fop_util.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../fileops/fop_util.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../hash/hash_func.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../hash/hash_func.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../hash/hash_func.c_objects
+hash_func.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../hash/hash_func.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../hash/hash_stub.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../hash/hash_stub.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../hash/hash_stub.c_objects
+hash_stub.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../hash/hash_stub.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../hmac/hmac.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../hmac/hmac.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../hmac/hmac.c_objects
+hmac.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../hmac/hmac.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../hmac/sha1.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../hmac/sha1.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../hmac/sha1.c_objects
+sha1.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../hmac/sha1.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock.c_objects
+lock.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_deadlock.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_deadlock.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_deadlock.c_objects
+lock_deadlock.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_deadlock.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_failchk.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_failchk.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_failchk.c_objects
+lock_failchk.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_failchk.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_id.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_id.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_id.c_objects
+lock_id.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_id.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_list.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_list.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_list.c_objects
+lock_list.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_list.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_method.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_method.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_method.c_objects
+lock_method.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_method.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_region.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_region.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_region.c_objects
+lock_region.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_region.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_stat.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_stat.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_stat.c_objects
+lock_stat.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_stat.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_timer.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_timer.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_timer.c_objects
+lock_timer.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_timer.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_util.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_util.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_util.c_objects
+lock_util.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../lock/lock_util.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log.c_objects
+log.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_archive.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_archive.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_archive.c_objects
+log_archive.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_archive.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_compare.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_compare.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_compare.c_objects
+log_compare.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_compare.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_debug.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_debug.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_debug.c_objects
+log_debug.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_debug.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_get.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_get.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_get.c_objects
+log_get.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_get.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_method.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_method.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_method.c_objects
+log_method.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_method.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_put.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_put.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_put.c_objects
+log_put.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_put.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_stat.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_stat.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_stat.c_objects
+log_stat.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../log/log_stat.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_alloc.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_alloc.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_alloc.c_objects
+mp_alloc.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_alloc.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_bh.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_bh.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_bh.c_objects
+mp_bh.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_bh.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_fget.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_fget.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_fget.c_objects
+mp_fget.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_fget.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_fmethod.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_fmethod.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_fmethod.c_objects
+mp_fmethod.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_fmethod.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_fopen.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_fopen.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_fopen.c_objects
+mp_fopen.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_fopen.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_fput.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_fput.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_fput.c_objects
+mp_fput.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_fput.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_fset.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_fset.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_fset.c_objects
+mp_fset.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_fset.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_method.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_method.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_method.c_objects
+mp_method.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_method.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_mvcc.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_mvcc.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_mvcc.c_objects
+mp_mvcc.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_mvcc.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_region.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_region.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_region.c_objects
+mp_region.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_region.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_register.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_register.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_register.c_objects
+mp_register.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_register.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_resize.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_resize.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_resize.c_objects
+mp_resize.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_resize.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_stat.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_stat.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_stat.c_objects
+mp_stat.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_stat.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_sync.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_sync.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_sync.c_objects
+mp_sync.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_sync.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_trickle.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_trickle.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_trickle.c_objects
+mp_trickle.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mp/mp_trickle.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_alloc.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_alloc.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_alloc.c_objects
+mut_alloc.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_alloc.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_failchk.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_failchk.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_failchk.c_objects
+mut_failchk.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_failchk.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_method.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_method.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_method.c_objects
+mut_method.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_method.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_region.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_region.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_region.c_objects
+mut_region.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_region.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_stat.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_stat.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_stat.c_objects
+mut_stat.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_stat.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_tas.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_tas.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_tas.c_objects
+mut_tas.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../mutex/mut_tas.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_abort.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_abort.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_abort.c_objects
+os_abort.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_abort.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_alloc.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_alloc.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_alloc.c_objects
+os_alloc.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_alloc.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_clock.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_clock.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_clock.c_objects
+os_clock.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_clock.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_cpu.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_cpu.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_cpu.c_objects
+os_cpu.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_cpu.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_ctime.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_ctime.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_ctime.c_objects
+os_ctime.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_ctime.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_dir.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_dir.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_dir.c_objects
+os_dir.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_dir.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_errno.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_errno.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_errno.c_objects
+os_errno.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_errno.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_fid.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_fid.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_fid.c_objects
+os_fid.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_fid.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_flock.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_flock.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_flock.c_objects
+os_flock.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_flock.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_fsync.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_fsync.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_fsync.c_objects
+os_fsync.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_fsync.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_getenv.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_getenv.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_getenv.c_objects
+os_getenv.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_getenv.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_handle.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_handle.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_handle.c_objects
+os_handle.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_handle.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_mkdir.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_mkdir.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_mkdir.c_objects
+os_mkdir.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_mkdir.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_open.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_open.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_open.c_objects
+os_open.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_open.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_pid.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_pid.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_pid.c_objects
+os_pid.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_pid.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_rename.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_rename.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_rename.c_objects
+os_rename.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_rename.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_root.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_root.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_root.c_objects
+os_root.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_root.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_rw.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_rw.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_rw.c_objects
+os_rw.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_rw.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_seek.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_seek.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_seek.c_objects
+os_seek.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_seek.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_stack.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_stack.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_stack.c_objects
+os_stack.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_stack.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_stat.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_stat.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_stat.c_objects
+os_stat.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_stat.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_tmpdir.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_tmpdir.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_tmpdir.c_objects
+os_tmpdir.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_tmpdir.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_truncate.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_truncate.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_truncate.c_objects
+os_truncate.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_truncate.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_uid.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_uid.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_uid.c_objects
+os_uid.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_uid.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_unlink.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_unlink.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_unlink.c_objects
+os_unlink.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os/os_unlink.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os_vxworks/os_vx_abs.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os_vxworks/os_vx_abs.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os_vxworks/os_vx_abs.c_objects
+os_vx_abs.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os_vxworks/os_vx_abs.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os_vxworks/os_vx_config.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os_vxworks/os_vx_config.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os_vxworks/os_vx_config.c_objects
+os_vx_config.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os_vxworks/os_vx_config.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os_vxworks/os_vx_map.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os_vxworks/os_vx_map.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os_vxworks/os_vx_map.c_objects
+os_vx_map.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os_vxworks/os_vx_map.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os_vxworks/os_vx_rpath.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os_vxworks/os_vx_rpath.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os_vxworks/os_vx_rpath.c_objects
+os_vx_rpath.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os_vxworks/os_vx_rpath.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os_vxworks/os_vx_yield.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os_vxworks/os_vx_yield.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os_vxworks/os_vx_yield.c_objects
+os_vx_yield.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../os_vxworks/os_vx_yield.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../qam/qam_stub.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../qam/qam_stub.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../qam/qam_stub.c_objects
+qam_stub.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../qam/qam_stub.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../rep/rep_stub.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../rep/rep_stub.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../rep/rep_stub.c_objects
+rep_stub.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../rep/rep_stub.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../repmgr/repmgr_stub.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../repmgr/repmgr_stub.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../repmgr/repmgr_stub.c_objects
+repmgr_stub.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../repmgr/repmgr_stub.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn.c_objects
+txn.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_auto.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_auto.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_auto.c_objects
+txn_auto.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_auto.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_chkpt.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_chkpt.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_chkpt.c_objects
+txn_chkpt.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_chkpt.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_failchk.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_failchk.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_failchk.c_objects
+txn_failchk.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_failchk.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_method.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_method.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_method.c_objects
+txn_method.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_method.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_rec.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_rec.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_rec.c_objects
+txn_rec.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_rec.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_recover.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_recover.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_recover.c_objects
+txn_recover.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_recover.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_region.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_region.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_region.c_objects
+txn_region.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_region.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_stat.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_stat.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_stat.c_objects
+txn_stat.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_stat.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_util.c_dependDone
+TRUE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_util.c_dependencies
+$(PRJ_DIR)/db_config.h \
+	$(PRJ_DIR)/db_int.h \
+	$(PRJ_DIR)/db.h
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_util.c_objects
+txn_util.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../txn/txn_util.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> PROJECT_FILES
+$(PRJ_DIR)/../btree/bt_compact.c \
+	$(PRJ_DIR)/../btree/bt_compare.c \
+	$(PRJ_DIR)/../btree/bt_compress.c \
+	$(PRJ_DIR)/../btree/bt_conv.c \
+	$(PRJ_DIR)/../btree/bt_curadj.c \
+	$(PRJ_DIR)/../btree/bt_cursor.c \
+	$(PRJ_DIR)/../btree/bt_delete.c \
+	$(PRJ_DIR)/../btree/bt_method.c \
+	$(PRJ_DIR)/../btree/bt_open.c \
+	$(PRJ_DIR)/../btree/bt_put.c \
+	$(PRJ_DIR)/../btree/bt_rec.c \
+	$(PRJ_DIR)/../btree/bt_reclaim.c \
+	$(PRJ_DIR)/../btree/bt_recno.c \
+	$(PRJ_DIR)/../btree/bt_rsearch.c \
+	$(PRJ_DIR)/../btree/bt_search.c \
+	$(PRJ_DIR)/../btree/bt_split.c \
+	$(PRJ_DIR)/../btree/bt_stat.c \
+	$(PRJ_DIR)/../btree/bt_upgrade.c \
+	$(PRJ_DIR)/../btree/btree_auto.c \
+	$(PRJ_DIR)/../clib/getopt.c \
+	$(PRJ_DIR)/../clib/snprintf.c \
+	$(PRJ_DIR)/../clib/strcasecmp.c \
+	$(PRJ_DIR)/../clib/strdup.c \
+	$(PRJ_DIR)/../clib/strsep.c \
+	$(PRJ_DIR)/../common/crypto_stub.c \
+	$(PRJ_DIR)/../common/db_byteorder.c \
+	$(PRJ_DIR)/../common/db_compint.c \
+	$(PRJ_DIR)/../common/db_err.c \
+	$(PRJ_DIR)/../common/db_getlong.c \
+	$(PRJ_DIR)/../common/db_idspace.c \
+	$(PRJ_DIR)/../common/db_log2.c \
+	$(PRJ_DIR)/../common/db_shash.c \
+	$(PRJ_DIR)/../common/dbt.c \
+	$(PRJ_DIR)/../common/mkpath.c \
+	$(PRJ_DIR)/../common/os_method.c \
+	$(PRJ_DIR)/../common/util_arg.c \
+	$(PRJ_DIR)/../common/util_cache.c \
+	$(PRJ_DIR)/../common/util_log.c \
+	$(PRJ_DIR)/../common/util_sig.c \
+	$(PRJ_DIR)/../common/zerofill.c \
+	$(PRJ_DIR)/../db/crdel_auto.c \
+	$(PRJ_DIR)/../db/crdel_rec.c \
+	$(PRJ_DIR)/../db/db.c \
+	$(PRJ_DIR)/../db/db_am.c \
+	$(PRJ_DIR)/../db/db_auto.c \
+	$(PRJ_DIR)/../db/db_cam.c \
+	$(PRJ_DIR)/../db/db_cds.c \
+	$(PRJ_DIR)/../db/db_conv.c \
+	$(PRJ_DIR)/../db/db_dispatch.c \
+	$(PRJ_DIR)/../db/db_dup.c \
+	$(PRJ_DIR)/../db/db_iface.c \
+	$(PRJ_DIR)/../db/db_join.c \
+	$(PRJ_DIR)/../db/db_meta.c \
+	$(PRJ_DIR)/../db/db_method.c \
+	$(PRJ_DIR)/../db/db_open.c \
+	$(PRJ_DIR)/../db/db_overflow.c \
+	$(PRJ_DIR)/../db/db_pr.c \
+	$(PRJ_DIR)/../db/db_rec.c \
+	$(PRJ_DIR)/../db/db_reclaim.c \
+	$(PRJ_DIR)/../db/db_remove.c \
+	$(PRJ_DIR)/../db/db_rename.c \
+	$(PRJ_DIR)/../db/db_ret.c \
+	$(PRJ_DIR)/../db/db_setid.c \
+	$(PRJ_DIR)/../db/db_setlsn.c \
+	$(PRJ_DIR)/../db/db_sort_multiple.c \
+	$(PRJ_DIR)/../db/db_stati.c \
+	$(PRJ_DIR)/../db/db_truncate.c \
+	$(PRJ_DIR)/../db/db_upg.c \
+	$(PRJ_DIR)/../db/db_upg_opd.c \
+	$(PRJ_DIR)/../db/db_vrfy_stub.c \
+	$(PRJ_DIR)/../dbreg/dbreg.c \
+	$(PRJ_DIR)/../dbreg/dbreg_auto.c \
+	$(PRJ_DIR)/../dbreg/dbreg_rec.c \
+	$(PRJ_DIR)/../dbreg/dbreg_stat.c \
+	$(PRJ_DIR)/../dbreg/dbreg_util.c \
+	$(PRJ_DIR)/../env/env_alloc.c \
+	$(PRJ_DIR)/../env/env_config.c \
+	$(PRJ_DIR)/../env/env_failchk.c \
+	$(PRJ_DIR)/../env/env_file.c \
+	$(PRJ_DIR)/../env/env_globals.c \
+	$(PRJ_DIR)/../env/env_method.c \
+	$(PRJ_DIR)/../env/env_name.c \
+	$(PRJ_DIR)/../env/env_open.c \
+	$(PRJ_DIR)/../env/env_recover.c \
+	$(PRJ_DIR)/../env/env_region.c \
+	$(PRJ_DIR)/../env/env_register.c \
+	$(PRJ_DIR)/../env/env_sig.c \
+	$(PRJ_DIR)/../env/env_stat.c \
+	$(PRJ_DIR)/../fileops/fileops_auto.c \
+	$(PRJ_DIR)/../fileops/fop_basic.c \
+	$(PRJ_DIR)/../fileops/fop_rec.c \
+	$(PRJ_DIR)/../fileops/fop_util.c \
+	$(PRJ_DIR)/../hash/hash_func.c \
+	$(PRJ_DIR)/../hash/hash_stub.c \
+	$(PRJ_DIR)/../hmac/hmac.c \
+	$(PRJ_DIR)/../hmac/sha1.c \
+	$(PRJ_DIR)/../lock/lock.c \
+	$(PRJ_DIR)/../lock/lock_deadlock.c \
+	$(PRJ_DIR)/../lock/lock_failchk.c \
+	$(PRJ_DIR)/../lock/lock_id.c \
+	$(PRJ_DIR)/../lock/lock_list.c \
+	$(PRJ_DIR)/../lock/lock_method.c \
+	$(PRJ_DIR)/../lock/lock_region.c \
+	$(PRJ_DIR)/../lock/lock_stat.c \
+	$(PRJ_DIR)/../lock/lock_timer.c \
+	$(PRJ_DIR)/../lock/lock_util.c \
+	$(PRJ_DIR)/../log/log.c \
+	$(PRJ_DIR)/../log/log_archive.c \
+	$(PRJ_DIR)/../log/log_compare.c \
+	$(PRJ_DIR)/../log/log_debug.c \
+	$(PRJ_DIR)/../log/log_get.c \
+	$(PRJ_DIR)/../log/log_method.c \
+	$(PRJ_DIR)/../log/log_put.c \
+	$(PRJ_DIR)/../log/log_stat.c \
+	$(PRJ_DIR)/../mp/mp_alloc.c \
+	$(PRJ_DIR)/../mp/mp_bh.c \
+	$(PRJ_DIR)/../mp/mp_fget.c \
+	$(PRJ_DIR)/../mp/mp_fmethod.c \
+	$(PRJ_DIR)/../mp/mp_fopen.c \
+	$(PRJ_DIR)/../mp/mp_fput.c \
+	$(PRJ_DIR)/../mp/mp_fset.c \
+	$(PRJ_DIR)/../mp/mp_method.c \
+	$(PRJ_DIR)/../mp/mp_mvcc.c \
+	$(PRJ_DIR)/../mp/mp_region.c \
+	$(PRJ_DIR)/../mp/mp_register.c \
+	$(PRJ_DIR)/../mp/mp_resize.c \
+	$(PRJ_DIR)/../mp/mp_stat.c \
+	$(PRJ_DIR)/../mp/mp_sync.c \
+	$(PRJ_DIR)/../mp/mp_trickle.c \
+	$(PRJ_DIR)/../mutex/mut_alloc.c \
+	$(PRJ_DIR)/../mutex/mut_failchk.c \
+	$(PRJ_DIR)/../mutex/mut_method.c \
+	$(PRJ_DIR)/../mutex/mut_region.c \
+	$(PRJ_DIR)/../mutex/mut_stat.c \
+	$(PRJ_DIR)/../mutex/mut_tas.c \
+	$(PRJ_DIR)/../os/os_abort.c \
+	$(PRJ_DIR)/../os/os_alloc.c \
+	$(PRJ_DIR)/../os/os_clock.c \
+	$(PRJ_DIR)/../os/os_cpu.c \
+	$(PRJ_DIR)/../os/os_ctime.c \
+	$(PRJ_DIR)/../os/os_dir.c \
+	$(PRJ_DIR)/../os/os_errno.c \
+	$(PRJ_DIR)/../os/os_fid.c \
+	$(PRJ_DIR)/../os/os_flock.c \
+	$(PRJ_DIR)/../os/os_fsync.c \
+	$(PRJ_DIR)/../os/os_getenv.c \
+	$(PRJ_DIR)/../os/os_handle.c \
+	$(PRJ_DIR)/../os/os_mkdir.c \
+	$(PRJ_DIR)/../os/os_open.c \
+	$(PRJ_DIR)/../os/os_pid.c \
+	$(PRJ_DIR)/../os/os_rename.c \
+	$(PRJ_DIR)/../os/os_root.c \
+	$(PRJ_DIR)/../os/os_rw.c \
+	$(PRJ_DIR)/../os/os_seek.c \
+	$(PRJ_DIR)/../os/os_stack.c \
+	$(PRJ_DIR)/../os/os_stat.c \
+	$(PRJ_DIR)/../os/os_tmpdir.c \
+	$(PRJ_DIR)/../os/os_truncate.c \
+	$(PRJ_DIR)/../os/os_uid.c \
+	$(PRJ_DIR)/../os/os_unlink.c \
+	$(PRJ_DIR)/../os_vxworks/os_vx_abs.c \
+	$(PRJ_DIR)/../os_vxworks/os_vx_config.c \
+	$(PRJ_DIR)/../os_vxworks/os_vx_map.c \
+	$(PRJ_DIR)/../os_vxworks/os_vx_rpath.c \
+	$(PRJ_DIR)/../os_vxworks/os_vx_yield.c \
+	$(PRJ_DIR)/../qam/qam_stub.c \
+	$(PRJ_DIR)/../rep/rep_stub.c \
+	$(PRJ_DIR)/../repmgr/repmgr_stub.c \
+	$(PRJ_DIR)/../txn/txn.c \
+	$(PRJ_DIR)/../txn/txn_auto.c \
+	$(PRJ_DIR)/../txn/txn_chkpt.c \
+	$(PRJ_DIR)/../txn/txn_failchk.c \
+	$(PRJ_DIR)/../txn/txn_method.c \
+	$(PRJ_DIR)/../txn/txn_rec.c \
+	$(PRJ_DIR)/../txn/txn_recover.c \
+	$(PRJ_DIR)/../txn/txn_region.c \
+	$(PRJ_DIR)/../txn/txn_stat.c \
+	$(PRJ_DIR)/../txn/txn_util.c
+<END>
+
+<BEGIN> userComments
+BerkeleyDB
+<END>

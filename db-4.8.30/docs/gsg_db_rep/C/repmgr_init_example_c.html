@@ -1,0 +1,386 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Adding the Replication Manager to ex_rep_gsg_simple</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Replicated Berkeley DB Applications" />
+    <link rel="up" href="repapp.html" title="Chapter 3. The DB Replication Manager" />
+    <link rel="prev" href="repapp.html" title="Chapter 3. The DB Replication Manager" />
+    <link rel="next" href="fwrkpermmessage.html" title="Permanent Message Handling" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Adding the Replication Manager to
+                    <span>ex_rep_gsg_simple</span>
+                    
+                    
+            </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="repapp.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. The DB Replication Manager</th>
+          <td width="20%" align="right"> <a accesskey="n" href="fwrkpermmessage.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="repmgr_init_example_c"></a>Adding the Replication Manager to
+                    <span>ex_rep_gsg_simple</span>
+                    
+                    
+            </h2>
+          </div>
+        </div>
+      </div>
+      <p>
+                    We now use the methods described above to add partial
+                    support to the 
+                    <span>ex_rep_gsg_simple</span>
+                    
+                    
+                    example that we presented in 
+                    <a class="xref" href="txnapp.html" title="Chapter 2. Transactional Application">Transactional Application</a>.
+                    That is, in this section we will:
+            </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                                    Enhance our command line options to
+                                    accept information of interest to a
+                                    replicated application.
+                            </p>
+          </li>
+          <li>
+            <p>
+                                    Configure our environment handle to use
+                                    replication and the Replication Manager.
+                            </p>
+          </li>
+          <li>
+            <p>
+                                    Minimally configure the Replication Manager.
+                            </p>
+          </li>
+          <li>
+            <p>
+                                    Start replication.
+                            </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+                Note that when we are done with this section, we will be
+                only partially ready to run the application. Some critical
+                pieces will be missing; specifically, we will not yet be
+                handling the differences between a master and a
+                replica. (We do that in the next chapter).
+            </p>
+      <p>
+                Also, note that in the following code fragments, additions
+                and changes to the code are marked in <strong class="userinput"><code>bold</code></strong>.
+            </p>
+      <p>
+                    To begin, we copy the 
+                    <span>ex_rep_gsg_simple</span>
+                    
+                    code to a new file called
+                    <code class="literal">ex_rep_gsg_repmgr.c</code>.
+
+                    <span>
+                    We then make the corresponding change to the program name.
+                    </span>
+
+                    
+            </p>
+      <pre class="programlisting">/*
+ <strong class="userinput"><code>* File: ex_rep_gsg_repmgr.c</code></strong>
+ */
+
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#ifndef _WIN32
+#include &lt;unistd.h&gt;
+#endif
+
+#include &lt;db.h&gt;
+
+#ifdef _WIN32
+extern int getopt(int, char * const *, const char *);
+#endif
+
+#define CACHESIZE   (10 * 1024 * 1024)
+#define DATABASE    "quote.db"
+
+const char *progname = <strong class="userinput"><code>"ex_rep_gsg_repmgr";</code></strong>
+
+int create_env(const char *, DB_ENV **);
+int env_init(DB_ENV *, const char *);
+int doloop (DB_ENV *);
+int print_stocks(DBC *); </pre>
+      <p>
+        Next we update our usage function. The application will continue to
+        accept the <code class="literal">-h</code> parameter so that we can identify
+        the environment home directory used by this application. However,
+        we also add the 
+</p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                    <code class="literal">-l</code> parameter which allows us to
+                    identify the host and port used by this application to
+                    listen for replication messages.
+                </p>
+          </li>
+          <li>
+            <p>
+                        <code class="literal">-r</code> parameter which allows us to
+                        specify other replicas.
+                </p>
+          </li>
+          <li>
+            <p>
+                        <code class="literal">-n</code> parameter which allows us to
+                        identify the number of sites in this replication
+                        group.
+                </p>
+          </li>
+          <li>
+            <p>
+                    <code class="literal">-p</code> option, which is used to identify
+                    this replica's priority (recall that the priority is
+                    used as a tie breaker for elections)
+                </p>
+          </li>
+        </ul>
+      </div>
+      <pre class="programlisting">/* Usage function */
+static void
+usage()
+{
+  fprintf(stderr, "usage: %s ", progname);
+  fprintf(stderr, "-h home <strong class="userinput"><code>-l host:port -n nsites</code></strong>\n");
+  <strong class="userinput"><code>fprintf(stderr, "\t\t[-r host:port][-p priority]\n");
+  fprintf(stderr, "where:\n");
+  fprintf(stderr, "\t-h identifies the environment home directory ");
+  fprintf(stderr, "(required).\n");
+  fprintf(stderr, "\t-l identifies the host and port used by this ");
+  fprintf(stderr, "site (required).\n");
+  fprintf(stderr, "\t-n identifies the number of sites in this ");
+  fprintf(stderr, "replication group (required).\n");
+  fprintf(stderr, "\t-r identifies another site participating in ");
+  fprintf(stderr, "this replication group\n");
+  fprintf(stderr, "\t-p identifies the election priority used by ");
+  fprintf(stderr, "this replica.\n");</code></strong>
+  exit(EXIT_FAILURE);
+} </pre>
+      <p>
+        Now we can begin working on our <code class="literal">main()</code> function.
+        We begin by adding a couple of variables that we will use to
+        collect TCP/IP host and port information. 
+
+
+        <span>
+        We also declare a couple
+        of flags that we use to make sure some required information is
+        provided to this application. 
+        </span>
+</p>
+      <pre class="programlisting">int
+main(int argc, char *argv[])
+{
+    extern char *optarg;
+    DB_ENV *dbenv;
+    const char *home;
+    char ch, <strong class="userinput"><code>*host, *portstr</code></strong>;
+    int ret, <strong class="userinput"><code>local_is_set, totalsites</code></strong>;
+    <strong class="userinput"><code>u_int32_t port</code></strong>;
+
+    dbenv = NULL;
+
+    ret = <strong class="userinput"><code>local_is_set = totalsites = </code></strong>0;
+    home = NULL; </pre>
+      <p>
+        At this time we can create our environment handle and configure it
+        exactly as we did for <code class="literal">simple_txn</code>.  
+        The only thing that we will do differently here is that we will set a priority,
+        arbitrarily picked to be 100, so that we can be sure the environment has
+        a priority other than 0 (the default value). This ensures that the
+        environment can become a master via an election.
+</p>
+      <pre class="programlisting">    if ((ret = create_env(progname, &amp;dbenv)) != 0)
+            goto err;
+
+    /* Default priority is 100 */
+    <strong class="userinput"><code>dbenv-&gt;rep_set_priority(dbenv, 100);</code></strong>   </pre>
+      <p>
+        Now we collect our command line arguments. As we do so, we will
+        configure host and port information as required, and we will
+        configure the application's election priority if necessary.
+</p>
+      <pre class="programlisting">    /* Collect the command line options */
+    while ((ch = getopt(argc, argv, "h:<strong class="userinput"><code>l:n:p:r:</code></strong>")) != EOF)
+        switch (ch) {
+        case 'h':
+            home = optarg;
+            break;
+        <strong class="userinput"><code>/* Set the host and port used by this environment */
+        case 'l':
+            host = strtok(optarg, ":");
+            if ((portstr = strtok(NULL, ":")) == NULL) {
+                fprintf(stderr, "Bad host specification.\n");
+                goto err;
+            }
+            port = (unsigned short)atoi(portstr);
+            if (dbenv-&gt;repmgr_set_local_site(dbenv, host, port, 0) 
+                                                              != 0) {
+                fprintf(stderr,
+                    "Could not set local address %s.\n", host);
+                goto err;
+            }
+            local_is_set = 1;
+            break;
+        /* Set the number of sites in this replication group */
+        case 'n':
+            totalsites = atoi(optarg);
+            if ((ret = dbenv-&gt;rep_set_nsites(dbenv, totalsites)) 
+              != 0)
+                dbenv-&gt;err(dbenv, ret, "set_nsites");
+            break;
+        /* Set this replica's election priority */
+        case 'p':
+            dbenv-&gt;rep_set_priority(dbenv, atoi(optarg));
+            break;
+        /* Identify another site in the replication group */
+        case 'r':
+            host = strtok(optarg, ":");
+            if ((portstr = strtok(NULL, ":")) == NULL) {
+                fprintf(stderr, "Bad host specification.\n");
+                goto err;
+            }
+            port = (unsigned short)atoi(portstr);
+            if (dbenv-&gt;repmgr_add_remote_site(dbenv, host, port, 
+                                                 NULL, 0) != 0) {
+                fprintf(stderr,
+                    "Could not add site %s.\n", host);
+                goto err;
+            }
+            break;</code></strong>
+        case '?':
+        default:
+            usage();
+        }
+
+    /* Error check command line. */
+    if (home == NULL <strong class="userinput"><code>|| !local_is_set || !totalsites</code></strong>)
+        usage(); </pre>
+      <p>
+            Having done that, we can call <code class="function">env_init()</code>, which we use to 
+        open our environment handle. Note that this function changes
+        slightly for this update (see below).
+    </p>
+      <pre class="programlisting">    if ((ret = env_init(dbenv, home)) != 0)
+        goto err; </pre>
+      <p>
+        Finally, we start replication before we go into the 
+        <code class="function">doloop()</code> function (where we perform all our
+        database access). 
+</p>
+      <pre class="programlisting">
+    <strong class="userinput"><code>if ((ret = dbenv-&gt;repmgr_start(dbenv, 3, DB_REP_ELECTION)) != 0)
+        goto err; </code></strong>
+
+    if ((ret = doloop(dbenv)) != 0) {
+        dbenv-&gt;err(dbenv, ret, "Application failed");
+        goto err;
+    }
+
+err: if (dbenv != NULL)
+        (void)dbenv-&gt;close(dbenv, 0);
+
+    return (ret);
+} </pre>
+      <p>
+            <span>Beyond that, the rest of our application remains the same for
+            now, with the exception of the <code class="function">env_init()</code>
+            function, which we use to actually open our environment handle.
+            The flags </span>
+
+            
+
+            
+
+            we use to open the environment are slightly different for a
+            replicated application than they are for a non-replicated
+            application. Namely, replication requires the
+            <span>
+            <code class="literal">DB_INIT_REP</code> flag. 
+            </span>
+
+            
+    </p>
+      <p>
+            Also, because we are using the Replication Manager, we must prepare
+            our environment for threaded usage. For this reason, we also
+            need the <code class="literal">DB_THREAD</code> flag.
+    </p>
+      <pre class="programlisting">int
+env_init(DB_ENV *dbenv, const char *home)
+{
+    u_int32_t flags;
+    int ret;
+
+    (void)dbenv-&gt;set_cachesize(dbenv, 0, CACHESIZE, 0);
+    (void)dbenv-&gt;set_flags(dbenv, DB_TXN_NOSYNC, 1);
+
+    flags = DB_CREATE | 
+            DB_INIT_LOCK | 
+            DB_INIT_LOG | 
+            DB_INIT_MPOOL |
+            <strong class="userinput"><code>DB_INIT_REP |</code></strong>
+            DB_INIT_TXN | 
+            DB_RECOVER <strong class="userinput"><code>|
+            DB_THREAD;</code></strong>
+    if ((ret = dbenv-&gt;open(dbenv, home, flags, 0)) != 0)
+        dbenv-&gt;err(dbenv, ret, "can't open environment");
+    return (ret);
+}</pre>
+      <p>
+        This completes our replication updates for the moment. We are not as
+        yet ready to actually run this program; there remains a few
+        critical pieces left to add to it. However, the work that we
+        performed in this section represents a solid foundation for the
+        remainder of our replication work.
+    </p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="repapp.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="repapp.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="fwrkpermmessage.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 3. The DB Replication Manager </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Permanent Message Handling</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

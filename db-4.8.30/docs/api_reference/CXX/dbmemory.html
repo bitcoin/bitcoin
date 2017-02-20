@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DbMemoryException</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="dbexception.html" title="Chapter 6. The DbException Class" />
+    <link rel="prev" href="dblocknotgranted.html" title="DbLockNotGrantedException" />
+    <link rel="next" href="dbrephandledead.html" title="DbRepHandleDeadException" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DbMemoryException</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dblocknotgranted.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 6. The DbException Class</th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbrephandledead.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dbmemory"></a>DbMemoryException</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+
+class DbMemoryException : public DbException {
+public:
+    Dbt *get_dbt() const;
+}; </pre>
+      <p>
+            This information describes the <code class="classname">DbMemoryException</code> class and how 
+            it is used by the various Berkeley DB classes.
+    </p>
+      <p>
+            A <code class="classname">DbMemoryException</code> is thrown when there is insufficient memory to
+            complete an operation, and there is the possibility of recovering. An example is during a
+            <a class="xref" href="dbget.html" title="Db::get()">Db::get()</a> or 
+            <a class="xref" href="dbcget.html" title="Dbc::get()">Dbc::get()</a> operation with the 
+            <a class="link" href="dbt.html" title="Chapter 4.  The Dbt Handle">Dbt</a> flags set to 
+            <a class="link" href="dbt.html#dbt_DB_DBT_USERMEM">DB_DBT_USERMEM</a>.
+    </p>
+      <p>
+            The <a class="link" href="dbexception.html" title="Chapter 6. The DbException Class">DbException</a> errno value is set to
+            <code class="literal">DB_BUFFER_SMALL</code> or <code class="literal">ENOMEM</code>.
+    </p>
+      <p>
+            The <code class="methodname">get_dbt()</code> method returns the 
+            <a class="link" href="dbt.html" title="Chapter 4.  The Dbt Handle">Dbt</a> with insufficient memory to complete the
+            operation, causing the <code class="classname">DbMemoryException</code> to be thrown.
+            The <a class="link" href="dbt.html" title="Chapter 4.  The Dbt Handle">Dbt</a> pointer may or may not refer to valid
+            memory, depending on whether the <a class="link" href="dbt.html" title="Chapter 4.  The Dbt Handle">Dbt</a>
+            used in the call to the failed Berkeley DB method is still in scope and has not been
+            deleted.
+    </p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dblocknotgranted.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="dbexception.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbrephandledead.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DbLockNotGrantedException </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DbRepHandleDeadException</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

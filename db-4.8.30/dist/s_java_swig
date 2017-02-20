@@ -1,0 +1,73 @@
+#!/bin/sh -
+#       $Id$
+#
+# Run SWIG to generate the Java APIs
+
+t=/tmp/__db_a
+trap 'rm -f $t ; exit 0' 0
+trap 'rm -f $t ; exit 1' 1 2 3 13 15
+
+SWIG=swig
+SWIG_DIR=../libdb_java
+SWIG_FILE=$SWIG_DIR/db.i
+PACKAGE="com.sleepycat.db.internal"
+
+die() {
+	echo "$@" >&2
+	exit 1
+}
+
+[ -f $SWIG_FILE ] || die "Must be run from the dist directory"
+
+for api in java ; do
+	echo "Building $api API"
+
+	swig_args=""
+	case $api in
+	java)
+		swig_args="-nodefaultctor -nodefaultdtor -package $PACKAGE $args"
+		;;
+	esac
+
+	$SWIG -Wall -$api $swig_args -I$SWIG_DIR \
+	    -o ../libdb_$api/db_${api}_wrap.c $SWIG_FILE || exit $?
+done
+
+# Skip Java sources if run with "-n"
+if [ "x$1" = "x-n" ] ; then
+	rm -f $SWIG_DIR/*.java
+	exit 0
+fi
+
+# Fixups for Java
+JAVA_SRCTOP=../java/src
+JAVA_PKGDIR=com/sleepycat/db/internal
+JAVA_SRCDIR=$JAVA_SRCTOP/$JAVA_PKGDIR
+
+# SWIG 1.3.18 puts the Java files in the same directory as the native code.
+cd $SWIG_DIR
+[ -f Db.java ] || exit 1
+
+for f in *.java ; do
+	case $f in
+		SWIGTYPE*)
+			die "Interface contains unresolved types: $f"
+	esac
+	rm -f $JAVA_SRCDIR/$f
+	perl -p $SWIG_DIR/java-post.pl < $f > $JAVA_SRCDIR/$f || exit $?
+	rm -f $f
+done
+
+# db_config.h must be the first #include, move it to the top of the file.
+(
+      echo '#include "db_config.h"'
+      sed '/#include "db_config.h"/d' < db_java_wrap.c
+) > $t && cp $t db_java_wrap.c
+
+# The following might become redundant with newer swig versions.
+# builds usually already define _CRT_SECURE_NO_DEPRECATE
+(
+      sed -e '/# define _CRT_SECURE_NO_DEPRECATE/i\
+# undef _CRT_SECURE_NO_DEPRECATE' < db_java_wrap.c
+) > $t && cp $t db_java_wrap.c
+

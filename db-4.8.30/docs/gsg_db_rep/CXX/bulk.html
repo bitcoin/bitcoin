@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Bulk Transfers</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Replicated Berkeley DB Applications" />
+    <link rel="up" href="addfeatures.html" title="Chapter 5. Additional Features" />
+    <link rel="prev" href="c2ctransfer.html" title="Client to Client Transfer" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Bulk Transfers</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="c2ctransfer.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. Additional Features</th>
+          <td width="20%" align="right"> </td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="bulk"></a>Bulk Transfers</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+                    By default, messages are sent from the master to replicas as they are generated.
+                    This can degrade replication performance because the various participating
+                    environments must handle a fair amount of network I/O activity.
+            </p>
+      <p>
+                    You can alleviate this problem by configuring your master environment for bulk
+                    transfers. Bulk transfers simply cause replication messages to accumulate in a
+                    buffer until a triggering event occurs. When this event occurs, the entire
+                    contents of the buffer is sent to the replica, thereby eliminating excessive
+                    network I/O.
+            </p>
+      <p>
+                    Note that if you are using replica to replica transfers, then you might want any
+                    replica that can service replication requests to also be configured for bulk
+                    transfers.
+            </p>
+      <p>
+                    The events that result in a bulk transfer of replication messages to a replica
+                    will differ depending on if the transmitting environment is a master or a
+                    replica.
+            </p>
+      <p>
+                    If the servicing environment is a master environment, then bulk transfer
+                    occurs when:
+            </p>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <p>
+                                    Bulk transfers are configured for the master environment, and
+                            </p>
+          </li>
+          <li>
+            <p>
+                                    the message buffer is full or
+                            </p>
+          </li>
+          <li>
+            <p>
+                                    a permanent record (for example, a transaction commit or a
+                                    checkpoint record) is placed in the buffer for the replica.
+                            </p>
+          </li>
+        </ol>
+      </div>
+      <p>
+                    If the servicing environment is a replica environment (that is, replica to replica
+                    transfers are in use), then a bulk transfer occurs when:
+            </p>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <p>
+                                    Bulk transfers are configured for the transmitting replica, and
+                            </p>
+          </li>
+          <li>
+            <p>
+                                 the message buffer is full or
+                            </p>
+          </li>
+          <li>
+            <p>
+                                    the replica servicing the request is able to completely satisfy
+                                    the request with the contents of the message buffer. 
+                            </p>
+          </li>
+        </ol>
+      </div>
+      <p>
+                    To configure bulk transfers, specify
+
+                    <span>
+                        <code class="literal">DB_REP_CONF_BULK</code> to
+                            
+                            <code class="methodname">DbEnv::rep_set_config()</code>
+                        and then specify <code class="literal">1</code> to the <code class="literal">onoff</code>
+                        parameter. (Specify <code class="literal">0</code> to turn the feature off.)
+                    </span>
+                    
+            </p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="c2ctransfer.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="addfeatures.html">Up</a>
+          </td>
+          <td width="40%" align="right"> </td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Client to Client Transfer </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

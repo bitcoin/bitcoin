@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB_ENV-&gt;set_app_dispatch()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="env.html" title="Chapter 5.  The DB_ENV Handle" />
+    <link rel="prev" href="envset_alloc.html" title="DB_ENV-&gt;set_alloc()" />
+    <link rel="next" href="envset_data_dir.html" title="DB_ENV-&gt;set_data_dir()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB_ENV-&gt;set_app_dispatch()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="envset_alloc.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. 
+                The DB_ENV Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="envset_data_dir.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="envset_app_dispatch"></a>DB_ENV-&gt;set_app_dispatch()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB_ENV-&gt;set_app_dispatch(DB_ENV *dbenv,
+    int (*tx_recover)(DB_ENV *dbenv,
+    DBT *log_rec, DB_LSN *lsn, db_recops op));  </pre>
+      <p>
+         Declare a function to be called during transaction abort and recovery
+         to process application-specific log records.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;set_app_dispatch()</code> method configures operations performed
+         using the specified <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  handle, not all
+         operations performed on the underlying database environment.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;set_app_dispatch()</code> method may not be called after the
+         <a class="xref" href="envopen.html" title="DB_ENV-&gt;open()">DB_ENV-&gt;open()</a>  method is
+         called. If the database environment already exists when 
+         <a class="xref" href="envopen.html" title="DB_ENV-&gt;open()">DB_ENV-&gt;open()</a>  is called, the
+         information specified to <code class="methodname">DB_ENV-&gt;set_app_dispatch()</code> must be
+         consistent with the existing environment or corruption can occur.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;set_app_dispatch()</code> method returns a non-zero error value
+         on failure and 0 on success.
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1666877"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1666931"></a>tx_recover</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>tx_recover</strong></span> parameter is the
+                          application's abort and recovery function.  The function takes four
+                          parameters:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p>
+                                <code class="literal">dbenv</code>
+                            </p>
+                <p>
+                                 The <span class="bold"><strong>dbenv</strong></span> parameter is the enclosing
+                                 database environment handle.
+                            </p>
+              </li>
+              <li>
+                <p>
+                                <code class="literal">log_rec</code>
+                            </p>
+                <p>
+                                 The <span class="bold"><strong>log_rec</strong></span> parameter is a log
+                                 record.
+                            </p>
+              </li>
+              <li>
+                <p>
+                                <code class="literal">lsn</code>
+                            </p>
+                <p>
+                                 The <span class="bold"><strong>lsn</strong></span> parameter is a log sequence
+                                 number.
+                            </p>
+              </li>
+              <li>
+                <p>
+                                <code class="literal">op</code>
+                            </p>
+                <p>
+                                 The <span class="bold"><strong>op</strong></span> parameter is one of the
+                                 following values:
+                            </p>
+                <div class="itemizedlist">
+                  <ul type="circle">
+                    <li>
+                      <p><a id="set_app_dispatch_DB_TXN_BACKWARD_ROLL"></a>
+                                          <code class="literal">DB_TXN_BACKWARD_ROLL</code>
+                                     </p>
+                      <p>
+                                         The log is being read backward to determine which transactions have
+                                         been committed and to abort those operations that were not; undo the
+                                         operation described by the log record.
+                                    </p>
+                    </li>
+                    <li>
+                      <p><a id="set_app_dispatch_DB_TXN_FORWARD_ROLL"></a>
+                                          <code class="literal">DB_TXN_FORWARD_ROLL</code>
+                                    </p>
+                      <p>
+                                         The log is being played forward; redo the operation described by the
+                                         log record.
+                                    </p>
+                    </li>
+                    <li>
+                      <p><a id="set_app_dispatch_DB_TXN_ABORT"></a>
+                                          <code class="literal">DB_TXN_ABORT</code>
+                                    </p>
+                      <p>
+                                         The log is being read backward during a transaction abort; undo the
+                                         operation described by the log record.
+                                    </p>
+                    </li>
+                    <li>
+                      <p><a id="set_app_dispatch_DB_TXN_APPLY"></a>
+                                          <code class="literal">DB_TXN_APPLY</code>
+                                    </p>
+                      <p>
+                                         The log is being applied on a replica site; redo the operation
+                                         described by the log record.
+                                    </p>
+                    </li>
+                    <li>
+                      <p><a id="set_app_dispatch_DB_TXN_PRINT"></a>
+                                          <code class="literal">DB_TXN_PRINT</code>
+                                    </p>
+                      <p>
+                                         The log is being printed for debugging purposes; print the contents of
+                                         this log record in the desired format.
+                                    </p>
+                    </li>
+                  </ul>
+                </div>
+                <p>
+                                 The DB_TXN_FORWARD_ROLL and DB_TXN_APPLY operations frequently imply
+                                 the same actions, redoing changes that appear in the log record,
+                                 although if a recovery function is to be used on a replication client
+                                 where reads may be taking place concurrently with the processing of
+                                 incoming messages, DB_TXN_APPLY operations should also perform
+                                 appropriate locking.  The macro DB_REDO(op) checks that the operation
+                                 is one of DB_TXN_FORWARD_ROLL or DB_TXN_APPLY, and should be used in
+                                 the recovery code to refer to the conditions under which operations
+                                 should be redone. Similarly, the macro DB_UNDO(op) checks if the
+                                 operation is one of DB_TXN_BACKWARD_ROLL or DB_TXN_ABORT.
+                            </p>
+              </li>
+            </ul>
+          </div>
+          <p>
+                    The function must return 0 on success and either <span class="bold"><strong>errno</strong></span> 
+                    or a value outside of the Berkeley DB error name space on failure.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1667211"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DB_ENV-&gt;set_app_dispatch()</code> <span>
+            <span>
+                 method may fail and return one of the following non-zero errors:
+            </span>
+            
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1667206"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                If the method was called after <a class="xref" href="envopen.html" title="DB_ENV-&gt;open()">DB_ENV-&gt;open()</a> 
+                was called; or if an invalid flag value or parameter was specified.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1667055"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                 <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>, <a class="link" href="txn.html" title="Chapter 12.  The DB_TXN Handle">DB_TXN</a> 
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1666928"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="txn.html#txnlist" title="Transaction Subsystem and Related Methods">Transaction Subsystem and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="envset_alloc.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="env.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="envset_data_dir.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB_ENV-&gt;set_alloc() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_ENV-&gt;set_data_dir()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

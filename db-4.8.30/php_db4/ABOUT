@@ -1,0 +1,72 @@
+This is a PHP 4 wrapper for DB-4.2.  It can either either link 
+directly against libdb-4.2, which is necessary for running in
+a non Apache/mod_php4 environemnt), or against mod_db4, 
+which provides additional safeties when running under Apache/mod_php4.
+
+*** A note about pthreads ***
+The db4 c++ library by default tries to link against libpthread on some
+systems (notably Linux).  If your PHP install is not linked against
+libpthread, you will need to disable pthread support in db4.  This can
+be done by compiling db4 with the flag  --with-mutex=x86/gcc-assembly.
+PHP can itself be forced to link against libpthread either by manually
+editing its build files (which some distributions do), or by building it with
+--with-experimental-zts.
+
+
+This extension provides the following classes, which mirror the standard
+db4 C++ API.
+
+class Db4Env {
+	function Db4Env($flags = 0) {}
+	function close($flags = 0) {}   // force a close
+	function dbremove($txn, $filename, $database = null, $flags = 0) {}
+	function dbrename($txn, $file, $database, $new_database, $flags = 0) {}
+	function open($home, 
+                      $flags = DB_CREATE  | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN,
+	              $mode = 0666) {}
+	function remove($home, $flags = 0) {}
+	function set_data_dir($directory) {}
+	function txn_begin($parent_txn = null, $flags = 0) {}
+	function txn_checkpoint($kbytes, $minutes, $flags = 0) {}
+}
+
+class Db4 {
+	function Db4($dbenv = null) {} // create a new Db4 object using the optional DbEnv
+	function open($txn = null, $file = null, $database = null, $flags = DB_CREATE, $mode = 0) {}
+	function close() {}  // force a close
+	function del($key, $txn = null) {}
+	function get($key, $txn = null, $flags = 0) {}
+	function pget($key, &$pkey, $txn = null, $flags = 0) {}
+	function get_type() {} // returns the stringified database type name
+	function stat($txn = null, $flags = 0) {} // returns statistics as an associative array
+	function join($cursor_list, $flags = 0) {}
+	function sync() {}
+	function truncate($txn = null, $flags = 0) {}
+	function cursor($txn = null, flags = 0) {}
+}
+
+class Db4Txn {
+	function abort() {}
+	function commit() {}
+	function discard() P{
+	function id() {}
+	function set_timeout($timeout, $flags = 0) {}
+}
+
+class Db4Cursor {
+	function close() {}
+	function count() {}
+	function del() {}
+	function dup($flags = 0) {}
+	function get($key, $flags = 0) {}
+	function pget($key, &$primary_key, $flags = 0) {}
+	function put($key, $data, $flags = 0) {}
+}
+
+The db4 extension attempts to be 'smart' for you by:
+o Automatically making operations auto-commit, when they
+must be transactional to even possibly succeed and you
+neglect a Db4Txn object.
+o Performing reference and dependency checking to insure
+that all resources are closed in the correct order.
+o Attempting intelligent default values for flags.

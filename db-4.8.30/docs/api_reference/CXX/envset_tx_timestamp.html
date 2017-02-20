@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DbEnv::set_tx_timestamp()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="txn.html" title="Chapter 13.  The DbTxn Handle" />
+    <link rel="prev" href="envset_tx_max.html" title="DbEnv::set_tx_max()" />
+    <link rel="next" href="txnabort.html" title="DbTxn::abort()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DbEnv::set_tx_timestamp()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="envset_tx_max.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 13. 
+                The DbTxn Handle 
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="txnabort.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="envset_tx_timestamp"></a>DbEnv::set_tx_timestamp()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+
+int
+DbEnv::set_tx_timestamp(time_t *timestamp); </pre>
+      <p>
+         Recover to the time specified by <span class="bold"><strong>timestamp</strong></span> rather than to the most current
+         possible date.
+    </p>
+      <p>
+         Once a database environment has been upgraded to a new version of
+         Berkeley DB involving a log format change (see <a href="../../programmer_reference/upgrade_process.html" class="olink">Upgrading Berkeley DB installations</a>), it is no longer possible to recover to a
+         specific time before that upgrade.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::set_tx_timestamp()</code> method configures operations performed
+         using the specified <a class="link" href="env.html" title="Chapter 5.  The DbEnv Handle">DbEnv</a>  handle, not all
+         operations performed on the underlying database environment.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::set_tx_timestamp()</code> method may not be called after the
+         <a class="xref" href="envopen.html" title="DbEnv::open()">DbEnv::open()</a>  method is
+         called.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::set_tx_timestamp()</code> <span>
+            
+            <span>
+                method either returns a non-zero error value or throws an
+                exception that encapsulates a non-zero error value on
+                failure, and returns 0 on success.
+            </span>
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1713046"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1713269"></a>timestamp</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>timestamp</strong></span> parameter references
+                          the memory location where the recovery timestamp is located.          
+                     </p>
+          <p>
+                          The <span class="bold"><strong>timestamp</strong></span> parameter should be the
+                          number of seconds since 0 hours, 0 minutes, 0 seconds, January 1,
+                          1970, Coordinated Universal Time; that is, the Epoch.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1713249"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DbEnv::set_tx_timestamp()</code> <span>
+            
+            <span>
+                method may fail and throw a <a class="link" href="dbexception.html" title="Chapter 6. The DbException Class">DbException</a> 
+                exception, encapsulating one of the following non-zero errors, or return one
+                of the following non-zero errors:
+            </span>
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1713058"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                              If it is not possible to recover to the specified time using the log
+                              files currently present in the environment; or if an invalid flag
+                              value or parameter was specified.
+                         </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1713313"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                    <a class="link" href="env.html" title="Chapter 5.  The DbEnv Handle">DbEnv</a>, 
+                    <a class="link" href="txn.html" title="Chapter 13.  The DbTxn Handle">DbTxn</a> 
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1712840"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="txn.html#txnlist" title="Transaction Subsystem and Related Methods">Transaction Subsystem and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="envset_tx_max.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="txn.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="txnabort.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DbEnv::set_tx_max() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DbTxn::abort()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

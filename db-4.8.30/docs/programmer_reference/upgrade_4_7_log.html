@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 4.7: Log configuration</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_4_7_toc.html" title="Chapter 44. Upgrading Berkeley DB 4.6 applications to Berkeley DB 4.7" />
+    <link rel="prev" href="upgrade_4_7_interdir.html" title="Release 4.7: DB_ENV-&gt;set_intermediate_dir" />
+    <link rel="next" href="upgrade_4_7_disk.html" title="Release 4.7: Upgrade Requirements" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 4.7: Log configuration</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_4_7_interdir.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 44. Upgrading Berkeley DB 4.6 applications to Berkeley DB 4.7</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_4_7_disk.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_4_7_log"></a>Release 4.7: Log configuration</h2>
+          </div>
+        </div>
+      </div>
+      <p>In the Berkeley DB 4.7 release, the logging subsystem is configured using the
+<a href="../api_reference/C/envlog_set_config.html" class="olink">DB_ENV-&gt;log_set_config()</a> method instead of the previously used
+<a href="../api_reference/C/envset_flags.html" class="olink">DB_ENV-&gt;set_flags()</a> method.</p>
+      <p>The <a href="../api_reference/C/envset_flags.html" class="olink">DB_ENV-&gt;set_flags()</a> method no longer accepts the flags DB_DIRECT_LOG,
+DB_DSYNC_LOG, DB_LOG_INMEMORY or DB_LOG_AUTOREMOVE.  Applications should
+be modified to use the equivalent flags accepted by the
+<a href="../api_reference/C/envlog_set_config.html" class="olink">DB_ENV-&gt;log_set_config()</a> method.</p>
+      <div class="informaltable">
+        <table border="1" width="80%">
+          <colgroup>
+            <col />
+            <col />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Previous <a href="../api_reference/C/envset_flags.html" class="olink">DB_ENV-&gt;set_flags()</a> flag</th>
+              <th>Replacement <a href="../api_reference/C/envlog_set_config.html" class="olink">DB_ENV-&gt;log_set_config()</a> flag</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>DB_DIRECT_LOG</td>
+              <td>DB_LOG_DIRECT</td>
+            </tr>
+            <tr>
+              <td>DB_DSYNC_LOG</td>
+              <td>DB_LOG_DSYNC</td>
+            </tr>
+            <tr>
+              <td>DB_LOG_INMEMORY</td>
+              <td>DB_LOG_IN_MEMORY</td>
+            </tr>
+            <tr>
+              <td>DB_LOG_AUTOREMOVE</td>
+              <td>DB_LOG_AUTO_REMOVE</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_4_7_interdir.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_4_7_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_4_7_disk.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 4.7: DB_ENV-&gt;set_intermediate_dir </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 4.7: Upgrade Requirements</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DbEnv::set_message_stream()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="env.html" title="Chapter 5.  The DbEnv Handle" />
+    <link rel="prev" href="envset_isalive.html" title="DbEnv::set_isalive()" />
+    <link rel="next" href="envset_msgcall.html" title="DbEnv::set_msgcall()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DbEnv::set_message_stream()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="envset_isalive.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. 
+                The DbEnv Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="envset_msgcall.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="envset_message_stream"></a>DbEnv::set_message_stream()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+
+void DbEnv::set_message_stream(class ostream*); </pre>
+      <p>
+            There are interfaces in the Berkeley DB library which either
+            directly output informational messages or statistical
+            information, or configure the library to output such messages
+            when performing other operations. For example, the
+            <a class="xref" href="envset_verbose.html" title="DbEnv::set_verbose()">DbEnv::set_verbose()</a>
+            and
+            <a class="xref" href="envstat.html" title="DbEnv::stat_print()">DbEnv::stat_print()</a>
+            methods.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::set_message_stream()</code> and
+         <a class="xref" href="dbset_message_stream.html" title="Db::set_message_stream()">Db::set_message_stream()</a>  
+         methods are used to display these messages for the application. In this case, 
+         the message will include a trailing <code class="literal">&lt;newline&gt;</code> character.
+    </p>
+      <p>
+            Setting <span class="bold"><strong>stream</strong></span> to NULL unconfigures the interface.
+    </p>
+      <p>
+            Alternatively, you can use the
+            <a class="xref" href="envset_msgfile.html" title="DbEnv::set_msgfile()">DbEnv::set_msgfile()</a> or
+            <a class="xref" href="dbset_msgfile.html" title="Db::set_msgfile()">Db::set_msgfile()</a> methods
+            to display the additional information via a C Library <code class="literal">FILE *</code>,
+            or the <a class="xref" href="envset_msgcall.html" title="DbEnv::set_msgcall()">DbEnv::set_msgcall()</a> 
+            and <a class="xref" href="dbset_msgcall.html" title="Db::set_msgcall()">Db::set_msgcall()</a>
+            methods to capture the additional error information in a way that does not use either
+            output streams or C Library <code class="literal">FILE *</code>'s.
+            You should not mix these approaches.
+    </p>
+      <p>
+            The <code class="methodname">DbEnv::set_message_stream()</code> method configures 
+            operations performed using the specified <a class="link" href="env.html" title="Chapter 5.  The DbEnv Handle">DbEnv</a>
+            handle, not all operations performed on the underlying database environment.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::set_message_stream()</code> method may be called at any time during the
+         life of the application.
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1673634"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1673822"></a>stream</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                             The <span class="bold"><strong>stream</strong></span> parameter is the
+                             application-specified output stream to be used for additional message
+                             information.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1674058"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="env.html" title="Chapter 5.  The DbEnv Handle">DbEnv</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1673983"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="env.html#envlist" title="Database Environments and Related Methods">Database Environments and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="envset_isalive.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="env.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="envset_msgcall.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DbEnv::set_isalive() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DbEnv::set_msgcall()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

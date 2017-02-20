@@ -1,0 +1,30 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Check to make sure we haven't forgotten to add any Java files to the list
+# of source files in the Makefile.
+
+d=../..
+
+[ -f $d/LICENSE ] || {
+	echo 'FAIL: cannot find source distribution directory.'
+	exit 1
+}
+
+f=$d/dist/Makefile.in
+
+t1=__1
+t2=__2
+
+find $d/java $d/examples_java -name \*.java -print |
+    sed -e 's/^.*\///' | sort -u > $t1
+tr ' \t' '\n' < $f | sed -e '/\.java$/!d' -e 's/^.*\///' | sort -u > $t2
+
+cmp $t1 $t2 > /dev/null || {
+	echo "<<< java source files >>> Makefile"
+	diff $t1 $t2
+	exit 1
+}
+
+exit 0

@@ -1,0 +1,472 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>db_load</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="utilities.html" title="Appendix 1.  Berkeley DB Command Line Utilities" />
+    <link rel="prev" href="db_hotbackup.html" title="db_hotbackup" />
+    <link rel="next" href="db_printlog.html" title="db_printlog" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">db_load</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="db_hotbackup.html">Prev</a> </td>
+          <th width="60%" align="center">Appendix 1. 
+                Berkeley DB Command Line Utilities
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="db_printlog.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="db_load"></a>db_load</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">db_load [-nTV] [-c name=value] [-f file]
+    [-h home] [-P password] [-t btree | hash | queue | recno] file
+
+db_load [-r lsn | fileid] [-h home] [-P password] file  </pre>
+      <p>
+         The <span class="command"><strong>db_load</strong></span> utility reads from the standard input and loads it into
+         the database <span class="bold"><strong>file</strong></span>.  The database
+         <span class="bold"><strong>file</strong></span> is created if it does not
+         already exist.
+    </p>
+      <p>
+         The input to <span class="command"><strong>db_load</strong></span> must be in the output format specified by the
+         <a class="xref" href="db_dump.html" title="db_dump">db_dump</a> utility,
+         utilities, or as specified for the <span class="bold"><strong>-T</strong></span>
+         below.
+    </p>
+      <p>
+        The options are as follows:
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+              <span class="bold"><strong>-c</strong></span>
+            </p>
+            <p>
+                 Specify configuration options ignoring any value they may have based
+                 on the input.  The command-line format is <span class="bold"><strong>name=value</strong></span>.  See the Supported Keywords section
+                 below for a list of keywords supported by the <span class="bold"><strong>-c</strong></span> option.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-f</strong></span>
+            </p>
+            <p>
+                 Read from the specified <span class="bold"><strong>input</strong></span> file
+                 instead of from the standard input.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-h</strong></span>
+            </p>
+            <p>
+                Specify a home directory for the database environment.     
+            </p>
+            <p>
+                 If a home directory is specified, the database environment is opened
+                 using the 
+                 <a class="link" href="envopen.html#envopen_DB_INIT_LOCK">DB_INIT_LOCK</a>,
+                 <a class="link" href="envopen.html#envopen_DB_INIT_LOG">DB_INIT_LOG</a>,
+                 <a class="link" href="envopen.html#envopen_DB_INIT_MPOOL">DB_INIT_MPOOL</a>,
+                 <a class="link" href="envopen.html#envopen_DB_INIT_TXN">DB_INIT_TXN</a>, and
+                 <a class="link" href="envopen.html#envopen_DB_USE_ENVIRON">DB_USE_ENVIRON</a>
+                 flags to <a class="xref" href="envopen.html" title="DbEnv::open()">DbEnv::open()</a>
+                 (This means that <span class="command"><strong>db_load</strong></span> can be used to load data into databases while
+                 they are in use by other processes.) If the 
+                 <a class="xref" href="envopen.html" title="DbEnv::open()">DbEnv::open()</a> call fails, or if
+                 no home directory is specified, the database is still updated, but the
+                 environment is ignored; for example, no locking is done.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-n</strong></span>
+            </p>
+            <p>
+                 Do not overwrite existing keys in the database when loading into an
+                 already existing database.  If a key/data pair cannot be loaded into
+                 the database for this reason, a warning message is displayed on the
+                 standard error output, and the key/data pair are skipped.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-P</strong></span>
+            </p>
+            <p>
+                 Specify an environment password.  Although Berkeley DB utilities
+                 overwrite password strings as soon as possible, be aware there may be
+                 a window of vulnerability on systems where unprivileged users can see
+                 command-line arguments or where utilities are not able to overwrite
+                 the memory containing the command-line arguments.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-r</strong></span>
+            </p>
+            <p>
+                 Reset the database's file ID or log sequence numbers (LSNs).    
+            </p>
+            <p>
+                 All database pages in transactional environments contain references to
+                 the environment's log records.  In order to copy a database into a
+                 different database environment, database page references to the old
+                 environment's log records must be reset, otherwise data corruption can
+                 occur when the database is modified in the new environment.  The
+                 <span class="bold"><strong>-r</strong></span> <span class="bold"><strong>lsn</strong></span> option resets a database's log sequence
+                 numbers.
+            </p>
+            <p>
+                 All databases contain an ID string used to identify the database in
+                 the database environment cache.  If a database is copied, and used in
+                 the same environment as another file with the same ID string,
+                 corruption can occur.  The <span class="bold"><strong>-r</strong></span>
+                 <span class="bold"><strong>fileid</strong></span>  option resets a database's
+                 file ID to a new value.
+            </p>
+            <p>
+                 <span class="bold"><strong>In both cases, the physical file specified by
+                 the <span class="bold"><strong>file</strong></span> argument is modified
+                 in-place.</strong></span>
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-T</strong></span>
+            </p>
+            <p>
+                 The <span class="bold"><strong>-T</strong></span> option allows non-Berkeley DB
+                 applications to easily load text files into databases.     
+             </p>
+            <p>
+                 If the database to be created is of type Btree or Hash, or the keyword
+                 <span class="bold"><strong>keys</strong></span> is specified as set, the input
+                 must be paired lines of text, where the first line of the pair is the
+                 key item, and the second line of the pair is its corresponding data
+                 item.  If the database to be created is of type Queue or Recno and the
+                 keyword <span class="bold"><strong>keys</strong></span> is not set, the input
+                 must be lines of text, where each line is a new data item for the
+                 database.
+            </p>
+            <p>
+                 A simple escape mechanism, where newline and backslash (\) characters
+                 are special, is applied to the text input.  Newline characters are
+                 interpreted as record separators.  Backslash characters in the text
+                 will be interpreted in one of two ways: If the backslash character
+                 precedes another backslash character, the pair will be interpreted as
+                 a literal backslash.  If the backslash character precedes any other
+                 character, the two characters following the backslash will be
+                 interpreted as a hexadecimal specification of a single character; for
+                 example, \0a is a newline character in the ASCII character set.
+            </p>
+            <p>
+                 For this reason, any backslash or newline characters that naturally
+                 occur in the text input must be escaped to avoid misinterpretation by
+                 <span class="command"><strong>db_load</strong></span>.
+            </p>
+            <p>
+                 If the <span class="bold"><strong>-T</strong></span> option is specified, the
+                 underlying access method type must be specified using the <span class="bold"><strong>-t</strong></span> option.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-t</strong></span>
+            </p>
+            <p>
+                 Specify the underlying access method.  If no <span class="bold"><strong>-t</strong></span> option is specified, the database will be
+                 loaded into a database of the same type as was dumped; for example, a
+                 Hash database will be created if a Hash database was dumped.    
+            </p>
+            <p>
+                 Btree and Hash databases may be converted from one to the other. 
+                 Queue and Recno databases may be converted from one to the other.  If
+                 the <span class="bold"><strong>-k</strong></span> option was specified on the
+                 call to <a class="xref" href="db_dump.html" title="db_dump">db_dump</a> then
+                 Queue and Recno databases may be converted to Btree or Hash, with the
+                 key being the integer record number.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-V</strong></span>
+            </p>
+            <p>
+                 Write the library version number to the standard output, and exit.
+            </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+         The <span class="command"><strong>db_load</strong></span> utility may be used with a Berkeley DB environment (as
+         described for the <span class="bold"><strong>-h</strong></span> option, the
+         environment variable <span class="bold"><strong>DB_HOME</strong></span>, or
+         because the utility was run in a directory containing a Berkeley DB
+         environment).  In order to avoid environment corruption when using a
+         Berkeley DB environment, <span class="command"><strong>db_load</strong></span> should always be given the chance to
+         detach from the environment and exit gracefully.  To cause <span class="command"><strong>db_load</strong></span> to
+         release all environment resources and exit cleanly, send it an
+         interrupt signal (SIGINT).
+    </p>
+      <p>
+         The <span class="command"><strong>db_load</strong></span> utility exits 0 on success, 1 if one or more key/data
+         pairs were not loaded into the database because the key already
+         existed, and &gt;1 if an error occurs.
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1718840"></a>Examples</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+             The <span class="command"><strong>db_load</strong></span> utility can be used to load text files into databases. For
+             example, the following command loads the standard UNIX
+             <span class="emphasis"><em>/etc/passwd</em></span> file into a database, with the login
+             name as the key item and the entire password entry as the data item:
+        </p>
+        <pre class="programlisting">  awk -F: '{print $1; print $0}' &lt; /etc/passwd |    
+         sed 's/\\/\\\\/g' | db_load -T -t hash passwd.db  </pre>
+        <p>
+             Note that backslash characters naturally occurring in the text are
+             escaped to avoid interpretation as escape characters by 
+             <span class="command"><strong>db_load</strong></span>.
+         </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1718897"></a>Environment Variables</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1719359"></a>DB_HOME</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If the <span class="bold"><strong>-h</strong></span> option is not specified and
+                          the environment variable DB_HOME is set, it is used as the path of the
+                          database home, as described in the
+                          <a class="xref" href="envopen.html" title="DbEnv::open()">DbEnv::open()</a> method.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1719360"></a>Supported Keywords</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+            The following keywords are supported for the <span class="bold"><strong>-c</strong></span> command-line 
+            option to the <span class="command"><strong>db_load</strong></span> utility. See the
+            <a class="xref" href="envopen.html" title="DbEnv::open()">DbEnv::open()</a> method
+            for further discussion of these keywords and what values should be
+            specified.
+        </p>
+        <p>
+            The parenthetical listing specifies how the value part of the <span class="bold"><strong>name=value</strong></span> pair is interpreted. Items listed as (boolean)
+            expect value to be <span class="bold"><strong>1</strong></span> (set) or <span class="bold"><strong>0</strong></span> (unset). Items listed as (number) convert value to a
+            number. Items listed as (string) use the string value without modification.
+        </p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+                    <span class="bold"><strong>bt_minkey (number)</strong></span>
+                </p>
+              <p>
+                    The minimum number of keys per page.
+                </p>
+            </li>
+            <li>
+              <p>
+                    <span class="bold"><strong>chksum (boolean)</strong></span>
+                </p>
+              <p>
+                    Enable page checksums.
+                </p>
+            </li>
+            <li>
+              <p>
+                    <span class="bold"><strong>database (string)</strong></span>
+                </p>
+              <p>
+                    The database to load.
+                </p>
+            </li>
+            <li>
+              <p>
+                    <span class="bold"><strong>db_lorder (number)</strong></span>
+                </p>
+              <p>
+                    The byte order for integers in the stored database metadata.  
+                    For big endian systems, the order should be 4,321 while
+                    for little endian systems is should be 1,234.
+                </p>
+            </li>
+            <li>
+              <p>
+                    <span class="bold"><strong>db_pagesize (number)</strong></span>
+                </p>
+              <p>
+                    The size of database pages, in bytes.
+                </p>
+            </li>
+            <li>
+              <p>
+                    <span class="bold"><strong>duplicates (boolean)</strong></span>
+                </p>
+              <p>
+                    The value of the 
+                    <a class="link" href="dbset_flags.html#dbset_flags_DB_DUP">DB_DUP</a>
+                    flag.
+                </p>
+            </li>
+            <li>
+              <p>
+                    <span class="bold"><strong>dupsort (boolean)</strong></span>
+                </p>
+              <p>
+                    The value of the 
+                    <a class="link" href="dbset_flags.html#dbset_flags_DB_DUPSORT">DB_DUPSORT</a>
+                    flag.
+                </p>
+            </li>
+            <li>
+              <p>
+                    <span class="bold"><strong>extentsize (number)</strong></span>
+                </p>
+              <p>
+                    The size of database extents, in pages, for Queue databases configured to use
+                    extents.
+                </p>
+            </li>
+            <li>
+              <p>
+                    <span class="bold"><strong>h_ffactor (number)</strong></span>
+                </p>
+              <p>
+                    The density within the Hash database.
+                </p>
+            </li>
+            <li>
+              <p>
+                    <span class="bold"><strong>h_nelem (number)</strong></span>
+                </p>
+              <p>
+                    The size of the Hash database.
+                </p>
+            </li>
+            <li>
+              <p>
+                    <span class="bold"><strong>keys (boolean)</strong></span>
+                </p>
+              <p>
+                    Specify whether keys are present for Queue or Recno databases.
+                </p>
+            </li>
+            <li>
+              <p>
+                    <span class="bold"><strong>re_len (number)</strong></span>
+                </p>
+              <p>
+                    Specify the length for fixed-length records. This
+                    number represents different things, depending on the
+                    access method the database is using. See the
+                    <a class="xref" href="dbset_re_len.html" title="Db::set_re_len()">Db::set_re_len()</a>
+                    method for details on what this number represents.
+                </p>
+            </li>
+            <li>
+              <p>
+                    <span class="bold"><strong>re_pad (string)</strong></span>
+                </p>
+              <p>
+                    Specify the fixed-length record pad character.
+                </p>
+            </li>
+            <li>
+              <p>
+                    <span class="bold"><strong>recnum (boolean)</strong></span>
+                </p>
+              <p>
+                    The value of the 
+                    <a class="link" href="dbset_flags.html#dbset_flags_DB_RECNUM">DB_RECNUM</a>
+                    flag.
+                </p>
+            </li>
+            <li>
+              <p>
+                    <span class="bold"><strong>renumber (boolean)</strong></span>
+                </p>
+              <p>
+                    The value of the 
+                    <a class="link" href="dbset_flags.html#dbset_flags_DB_RECNUM">DB_RENUMBER</a>
+                    flag.
+                </p>
+            </li>
+            <li>
+              <p>
+                    <span class="bold"><strong>subdatabase (string)</strong></span>
+                </p>
+              <p>
+                    The subdatabase to load.
+                </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="db_hotbackup.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="utilities.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="db_printlog.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">db_hotbackup </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> db_printlog</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

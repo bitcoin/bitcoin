@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>db_set_base_iterator</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ Standard Template Library API Reference" />
+    <link rel="up" href="db_set_base_iterator.html" title="Chapter 18.  Db_set_base_iterator" />
+    <link rel="prev" href="db_set_base_iterator.html" title="Chapter 18.  Db_set_base_iterator" />
+    <link rel="next" href="stldb_set_base_iteratoroperator_incr.html" title="operator++" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">
+db_set_base_iterator
+</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="db_set_base_iterator.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 18. 
+ Db_set_base_iterator  </th>
+          <td width="20%" align="right"> <a accesskey="n" href="stldb_set_base_iteratoroperator_incr.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="stldb_set_base_iteratordb_set_base_iterator"></a>
+db_set_base_iterator
+</h2>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="func_details"></a>
+Function Details</h3>
+            </div>
+          </div>
+        </div>
+        <pre class="programlisting">
+db_set_base_iterator(db_container *powner, u_int32_t b_bulk_retrieval=0,
+    bool brmw=false, bool directdbget=true,
+    bool b_read_only=false)
+ </pre>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage"></div>
+          <p>Constructor. </p>
+          <p></p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1565591"></a>
+Parameters</h4>
+              </div>
+            </div>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1565452"></a>
+ b_bulk_retrieval </h5>
+                </div>
+              </div>
+            </div>
+            <p>The bulk read buffer size. 0 means bulk read disabled. </p>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1565433"></a>
+ brmw </h5>
+                </div>
+              </div>
+            </div>
+            <p>Whether set DB_RMW flag in underlying cursor. </p>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1565424"></a>
+ powner </h5>
+                </div>
+              </div>
+            </div>
+            <p>The container which creates this iterator. </p>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1565411"></a>
+ directdbget </h5>
+                </div>
+              </div>
+            </div>
+            <p>Whether do direct database get rather than using key/data values cached in the iterator whenever read. </p>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1565412"></a>
+ b_read_only </h5>
+                </div>
+              </div>
+            </div>
+            <p>Whether open a read only cursor. Only effective when using Berkeley DB Concurrent Data Store. </p>
+          </div>
+        </div>
+        <pre class="programlisting">
+db_set_base_iterator()
+ </pre>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage"></div>
+          <p>Default constructor, dose not create the cursor for now. </p>
+        </div>
+        <pre class="programlisting">
+db_set_base_iterator(const db_set_base_iterator &amp;s)
+ </pre>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage"></div>
+          <p>Copy constructor. </p>
+          <p></p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1565323"></a>
+Parameters</h4>
+              </div>
+            </div>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1565453"></a>
+ s </h5>
+                </div>
+              </div>
+            </div>
+            <p>The other iterator of the same type to initialize this. </p>
+          </div>
+        </div>
+        <pre class="programlisting">
+db_set_base_iterator(const base &amp;bo)
+ </pre>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage"></div>
+          <p>Base copy constructor. </p>
+          <p></p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1565644"></a>
+Parameters</h4>
+              </div>
+            </div>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1565716"></a>
+ bo </h5>
+                </div>
+              </div>
+            </div>
+            <p>Initialize from a base class iterator. </p>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1565311"></a>
+Group: Constructors and destructor</h3>
+            </div>
+          </div>
+        </div>
+        <p>Do not use these constructors to create iterators, but call db_set::begin() const or db_multiset::begin() const to create valid iterators. </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1565592"></a>
+Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+  <a class="link" href="db_set_base_iterator.html" title="Chapter 18.  Db_set_base_iterator">
+  db_set_base_iterator</a>
+     </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="db_set_base_iterator.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="db_set_base_iterator.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="stldb_set_base_iteratoroperator_incr.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 18. 
+ Db_set_base_iterator   </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+operator++
+</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

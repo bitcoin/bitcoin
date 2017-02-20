@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Multi-threaded and Multi-process Applications</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB Transaction Processing" />
+    <link rel="up" href="introduction.html" title="Chapter 1. Introduction" />
+    <link rel="prev" href="apireq.html" title="Application Requirements" />
+    <link rel="next" href="recovery-intro.html" title="Recoverability" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Multi-threaded 
+        <span>and Multi-process</span>
+        Applications</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="apireq.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 1. Introduction</th>
+          <td width="20%" align="right"> <a accesskey="n" href="recovery-intro.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="multithread-intro"></a>Multi-threaded 
+        <span>and Multi-process</span>
+        Applications</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+            DB is designed to support multi-threaded  <span>and
+            multi-process</span> applications, but their usage means
+            you must pay careful attention to issues of concurrency.
+            Transactions help your application's concurrency by providing various levels of
+            isolation for your threads of control. In addition, DB
+            provides mechanisms that allow you to detect and respond to
+            deadlocks. 
+        </p>
+      <p>
+            <span class="emphasis"><em>Isolation</em></span> means that database modifications made by
+            one transaction will not normally be seen by readers from another
+            transaction until the first commits its changes.  Different threads 
+            use different transaction handles, so
+            this mechanism is normally used to provide isolation between
+            database operations performed by different threads.
+        </p>
+      <p>
+            Note that DB supports different isolation levels. For example,
+            you can configure your application to see uncommitted reads, which means
+            that one transaction can see data that has been modified but not yet
+            committed by another transaction. Doing this might mean your
+            transaction reads data "dirtied" by another transaction, 
+            but which subsequently might change before that
+            other transaction commits its changes.
+            On the other hand, lowering your isolation
+            requirements means that your application can experience
+            improved throughput due to reduced lock contention.
+        </p>
+      <p>
+            For more information on concurrency, on managing isolation
+            levels, and on deadlock detection, see <a class="xref" href="txnconcurrency.html" title="Chapter 4. Concurrency">Concurrency</a>.
+        </p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="apireq.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="introduction.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="recovery-intro.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Application Requirements </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Recoverability</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

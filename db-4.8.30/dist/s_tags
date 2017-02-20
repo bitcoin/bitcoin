@@ -1,0 +1,66 @@
+#!/bin/sh -
+#	$Id$
+#
+# Build tags files.
+
+files=`echo ../dbinc/*.h \
+	../dbinc/*.in \
+	../btree/*.[ch] \
+	../clib/*.[ch] \
+	../common/*.[ch] \
+	../crypto/*.[ch] \
+	../crypto/mersenne/*.[ch] \
+	../crypto/rijndael/*.[ch] \
+	../db/*.[ch] \
+	../db185/*.[ch] \
+	../dbm/*.[ch] \
+	../dbreg/*.[ch] \
+	../env/*.[ch] \
+	../fileops/*.[ch] \
+	../hash/*.[ch] \
+	../hmac/*.[ch] \
+	../hsearch/*.[ch] \
+	../lock/*.[ch] \
+	../log/*.[ch] \
+	../mp/*.[ch] \
+	../mutex/*.[ch] \
+	../os/*.[ch] \
+	../os_qnx/*.[ch] \
+	../qam/*.[ch] \
+	../rep/*.[ch] \
+	../repmgr/*.[ch] \
+	../rpc_client/*.[ch] \
+	../rpc_server/c/*.[ch] \
+	../sequence/*.[ch] \
+	../tcl/*.[ch] \
+	../txn/*.[ch] \
+	../cxx/*.cpp \
+	../libdb_java/*.[ch] | sed 's/[^ ]*stub.c//g'`
+
+f=tags
+echo "Building $f"
+rm -f $f
+
+# Figure out what flags this ctags accepts.
+flags=""
+if ctags -d ../db/db.c 2>/dev/null; then
+	flags="-d $flags"
+fi
+if ctags -t ../db/db.c 2>/dev/null; then
+	flags="-t $flags"
+fi
+if ctags -w ../db/db.c 2>/dev/null; then
+	flags="-w $flags"
+fi
+
+ctags $flags $files 2>/dev/null
+chmod 444 $f
+
+for i in test_perf test_repmgr test_server; do
+	test -d ../$i || continue
+
+	f=../$i/tags
+	echo "Building $f"
+	(cd ../$i && ctags $flags *.[ch] 2>/dev/null)
+	chmod 444 $f
+done

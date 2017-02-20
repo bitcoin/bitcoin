@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB-&gt;del()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="db.html" title="Chapter 2.  The DB Handle" />
+    <link rel="prev" href="dbcompact.html" title="DB-&gt;compact()" />
+    <link rel="next" href="dberr.html" title="DB-&gt;err()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB-&gt;del()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbcompact.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+                The DB Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dberr.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dbdel"></a>DB-&gt;del()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB-&gt;del(DB *db, DB_TXN *txnid, DBT *key, u_int32_t flags);  </pre>
+      <p>
+         The <code class="methodname">DB-&gt;del()</code> method removes key/data pairs from the database.  The
+         key/data pair associated with the specified <span class="bold"><strong>key</strong></span> is discarded from the database.  In the
+         presence of duplicate key values, all records associated with the
+         designated key will be discarded.
+    </p>
+      <p>
+         When called on a database that has been made into a secondary index
+         using the <a class="xref" href="dbassociate.html" title="DB-&gt;associate()">DB-&gt;associate()</a>  method, the
+         <code class="methodname">DB-&gt;del()</code> method deletes the key/data pair from the primary database
+         and all secondary indices.
+    </p>
+      <p>
+         The <code class="methodname">DB-&gt;del()</code> method will return <a href="../../programmer_reference/program_errorret.html#program_errorret.DB_NOTFOUND" class="olink">DB_NOTFOUND</a> if the specified key
+         is not in the database. The <code class="methodname">DB-&gt;del()</code> method will return <a href="../../programmer_reference/program_errorret.html#program_errorret.DB_KEYEMPTY" class="olink">DB_KEYEMPTY</a> if the database is a
+         Queue or Recno database and the specified key exists, but was never explicitly created by
+         the application or was later deleted. Unless otherwise specified, the
+         <code class="methodname">DB-&gt;del()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1632636"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1633401"></a>flags</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>flags</strong></span> parameter must be set to 0
+                          or one of the following values:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="dbput_DB_CONSUME"></a>
+                  <code class="literal">DB_CONSUME</code>
+            </p>
+                <p>
+            If the database is of type DB_QUEUE then this flag may be set to force the head of the queue
+        to move to the first non-deleted item in the queue.  Normally this is only done if the
+        deleted item is exactly at the head when deleted.
+            </p>
+              </li>
+              <li>
+                <p><a id="del_DB_MULTIPLE"></a>
+                  <code class="literal">DB_MULTIPLE</code>
+            </p>
+                <p>
+                Delete multiple data items using keys from the buffer to which the 
+                <span class="bold"><strong>key</strong></span> parameter refers.
+            </p>
+                <p>
+                To delete records in bulk by key with the btree or hash access methods, construct a
+                bulk buffer in the <span class="bold"><strong>key</strong></span> 
+                <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a> using 
+                <a class="xref" href="DB_MULTIPLE_WRITE_INIT.html" title="DB_MULTIPLE_WRITE_INIT">DB_MULTIPLE_WRITE_INIT</a> and 
+                <a class="xref" href="DB_MULTIPLE_WRITE_NEXT.html" title="DB_MULTIPLE_WRITE_NEXT">DB_MULTIPLE_WRITE_NEXT</a>.  To
+                delete records in bulk by record number, construct the 
+                <span class="bold"><strong>key</strong></span> <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a> using 
+                <a class="xref" href="DB_MULTIPLE_RECNO_WRITE_INIT.html" title="DB_MULTIPLE_RECNO_WRITE_INIT">DB_MULTIPLE_RECNO_WRITE_INIT</a> and 
+                <a class="xref" href="DB_MULTIPLE_RECNO_WRITE_NEXT.html" title="DB_MULTIPLE_RECNO_WRITE_NEXT">DB_MULTIPLE_RECNO_WRITE_NEXT</a> 
+                with a data size of zero.
+            </p>
+                <p>
+                A successful bulk delete operation is logically equivalent to a loop through each
+                key/data pair, performing a <a class="xref" href="dbdel.html" title="DB-&gt;del()">DB-&gt;del()</a> for each one.
+            </p>
+                <p>
+                See the <a class="xref" href="dbt.html#dbtlist" title="DBT and Bulk Operations">DBT and Bulk Operations</a> for more information on
+                working with bulk updates.
+            </p>
+                <p>
+                The <code class="literal">DB_MULTIPLE</code> flag may only be used alone.
+            </p>
+              </li>
+              <li>
+                <p><a id="del_DB_MULTIPLE_KEY"></a>
+                  <code class="literal">DB_MULTIPLE_KEY</code>
+            </p>
+                <p>
+                Delete multiple data items using keys and data from the buffer to which the 
+                <span class="bold"><strong>key</strong></span> parameter refers.
+            </p>
+                <p>
+                To delete records in bulk with the btree or hash access methods, construct a bulk
+                buffer in the <span class="bold"><strong>key</strong></span> 
+                <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a> using 
+                <a class="xref" href="DB_MULTIPLE_WRITE_INIT.html" title="DB_MULTIPLE_WRITE_INIT">DB_MULTIPLE_WRITE_INIT</a> and 
+                <a class="xref" href="DB_MULTIPLE_KEY_WRITE_NEXT.html" title="DB_MULTIPLE_KEY_WRITE_NEXT">DB_MULTIPLE_KEY_WRITE_NEXT</a>.  
+                To delete records in bulk with the recno or hash access methods, construct
+                a bulk buffer in the <span class="bold"><strong>key</strong></span> 
+                <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a> using 
+                <a class="xref" href="DB_MULTIPLE_RECNO_WRITE_INIT.html" title="DB_MULTIPLE_RECNO_WRITE_INIT">DB_MULTIPLE_RECNO_WRITE_INIT</a> 
+                and <a class="xref" href="DB_MULTIPLE_RECNO_WRITE_NEXT.html" title="DB_MULTIPLE_RECNO_WRITE_NEXT">DB_MULTIPLE_RECNO_WRITE_NEXT</a>.
+            </p>
+                <p>
+                See the <a class="xref" href="dbt.html#dbtlist" title="DBT and Bulk Operations">DBT and Bulk Operations</a> for more information on
+                working with bulk updates.
+            </p>
+                <p>
+                The <code class="literal">DB_MULTIPLE_KEY</code> flag may only be used alone.
+            </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1633548"></a>key</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                The key <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a>  operated on.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1633772"></a>txnid</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                If the operation is part of an application-specified transaction, the
+                <span class="bold"><strong>txnid</strong></span> parameter is a transaction
+                handle returned from <a class="xref" href="txnbegin.html" title="DB_ENV-&gt;txn_begin()">DB_ENV-&gt;txn_begin()</a>; 
+                if the operation is part of a Berkeley DB Concurrent Data Store group, the
+                <span class="bold"><strong>txnid</strong></span> parameter is a handle returned
+                from <a class="xref" href="envcdsgroup_begin.html" title="DB_ENV-&gt;cdsgroup_begin()">DB_ENV-&gt;cdsgroup_begin()</a>;
+                otherwise NULL. If no transaction handle is specified, but the
+                operation occurs in a transactional database, the operation will be
+                implicitly transaction protected.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1633398"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+            The <code class="methodname">DB-&gt;del()</code> <span>
+            <span>
+                 method may fail and return one of the following non-zero errors:
+            </span>
+            
+        </span>
+        </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1633662"></a>DB_FOREIGN_CONFLICT</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A <a class="link" href="dbassociate_foreign.html" title="DB-&gt;associate_foreign()">foreign key constraint violation</a> 
+                has occurred. This can be caused by one of two things:
+            </p>
+          <div class="orderedlist">
+            <ol type="1">
+              <li>
+                <p>
+                            An attempt was made to add a record to a
+                            constrained database, and the key used for that
+                            record does not exist in the foreign key
+                            database.
+                        </p>
+              </li>
+              <li>
+                <p>
+                            <a class="link" href="dbassociate_foreign.html#associate_foreign_DB_FOREIGN_ABORT">DB_FOREIGN_ABORT</a> 
+                            was declared for a foreign key database, and then
+                            subsequently a record was deleted from the
+                            foreign key database without first removing it
+                            from the constrained secondary database.
+                        </p>
+              </li>
+            </ol>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1633801"></a>DB_LOCK_DEADLOCK</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A transactional database environment operation was selected to resolve
+                a deadlock.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1633512"></a>DB_LOCK_NOTGRANTED</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A Berkeley DB Concurrent Data Store database environment configured
+                for lock timeouts was unable to grant a lock in the allowed time.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1634013"></a> DB_REP_HANDLE_DEAD</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                When a client synchronizes with the master, it is possible for committed
+                transactions to be rolled back. This invalidates all  the database and cursor
+                handles opened in the replication environment. Once this occurs, an attempt to use
+                such a handle will 
+                
+                return <code class="literal">DB_REP_HANDLE_DEAD</code>.
+                The application will need to discard the handle and open a new one in order to
+                continue processing.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1633743"></a>DB_REP_LOCKOUT</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                The operation was blocked by client/master synchronization.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1633540"></a>DB_SECONDARY_BAD</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A secondary index references a nonexistent primary key.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1633536"></a>EACCES</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                An attempt was made to modify a read-only database.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1633560"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                An invalid flag value or parameter was specified.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1633193"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+            <a class="link" href="db.html" title="Chapter 2.  The DB Handle">DB</a>  
+        </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1633555"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+            <a class="xref" href="db.html#dblist" title="Database and Related Methods">Database and Related Methods</a> 
+        </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbcompact.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="db.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dberr.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB-&gt;compact() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB-&gt;err()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

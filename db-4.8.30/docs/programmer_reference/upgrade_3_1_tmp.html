@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 3.1: DB_TMP_DIR</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_3_1_toc.html" title="Chapter 34. Upgrading Berkeley DB 3.0 applications to Berkeley DB 3.1" />
+    <link rel="prev" href="upgrade_3_1_tcl.html" title="Release 3.1: Tcl API" />
+    <link rel="next" href="upgrade_3_1_logalloc.html" title="Release 3.1: log file pre-allocation" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 3.1: DB_TMP_DIR</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_3_1_tcl.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 34. Upgrading Berkeley DB 3.0 applications to Berkeley DB 3.1</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_3_1_logalloc.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_3_1_tmp"></a>Release 3.1: DB_TMP_DIR</h2>
+          </div>
+        </div>
+      </div>
+      <p>This change only affects Win/32 applications that create in-memory
+databases.</p>
+      <p>On Win/32 platforms an additional test has been added when searching for
+the appropriate directory in which to create the temporary files that are
+used to back in-memory databases.  Berkeley DB now uses any return value from
+the GetTempPath interface as the temporary file directory name before
+resorting to the static list of compiled-in pathnames.</p>
+      <p>If the system registry does not return the same directory as Berkeley DB has
+been using previously, this change could cause temporary backing files to
+move to a new directory when applications are upgraded to the 3.1 release.
+In extreme cases, this could create (or fix) security problems if the file
+protection modes for the system registry directory are different from
+those on the directory previously used by Berkeley DB.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_3_1_tcl.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_3_1_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_3_1_logalloc.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 3.1: Tcl API </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 3.1: log file pre-allocation</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 1.  Berkeley DB Tcl APIs</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB TCL API Reference" />
+    <link rel="up" href="index.html" title="Berkeley DB TCL API Reference" />
+    <link rel="prev" href="preface.html" title="Preface" />
+    <link rel="next" href="db_close.html" title="db close" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 1. 
+                Berkeley DB Tcl APIs
+        </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="preface.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="db_close.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="tclapi"></a>Chapter 1. 
+                Berkeley DB Tcl APIs
+        </h2>
+          </div>
+        </div>
+      </div>
+      <p>
+                This book documents the Tcl APIs that are available for
+                working with Berkeley DB databases. This book assumes you
+                have some familiarity with Berkeley DB.
+        </p>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="tcllist"></a>Tcl Methods</h2>
+            </div>
+          </div>
+        </div>
+        <div class="navtable">
+          <table border="1" width="80%">
+            <thead>
+              <tr>
+                <th>Database Methods</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <a class="xref" href="db_close.html" title="db close"><span class="emphasis"><em>db</em></span> close</a>
+                </td>
+                <td>Close a database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_count.html" title="db count"><span class="emphasis"><em>db</em></span> count</a>
+                </td>
+                <td>Return a count of the key's data items</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_del.html" title="db del"><span class="emphasis"><em>db</em></span> del</a>
+                </td>
+                <td>Delete items from the database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_get.html" title="db get"><span class="emphasis"><em>db</em></span> get</a>
+                </td>
+                <td>Get items from a database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_get_join.html" title="db get_join"><span class="emphasis"><em>db</em></span> get_join</a>
+                </td>
+                <td>Get items from a database join</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_get_type.html" title="db get_type"><span class="emphasis"><em>db</em></span> get_type</a>
+                </td>
+                <td>Return the database type</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_is_byteswapped.html" title="db is_byteswapped"><span class="emphasis"><em>db</em></span> is_byteswapped</a>
+                </td>
+                <td>Return if the underlying database is in host order</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_open.html" title="berkdb open">berkdb open</a>
+                </td>
+                <td>Create and open a database handle</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_put.html" title="db put"><span class="emphasis"><em>db</em></span> put</a>
+                </td>
+                <td>Store items into a database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_remove.html" title="berkdb dbremove">berkdb dbremove</a>
+                </td>
+                <td>Remove a database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_rename.html" title="berkdb dbrename">berkdb dbrename</a>
+                </td>
+                <td>Rename a database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_stat.html" title="db stat"><span class="emphasis"><em>db</em></span> stat</a>
+                </td>
+                <td>Return database statistics</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_sync.html" title="db sync"><span class="emphasis"><em>db</em></span> sync</a>
+                </td>
+                <td>Flush a database to stable storage</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_truncate.html" title="db truncate"><span class="emphasis"><em>db</em></span> truncate</a>
+                </td>
+                <td>Truncate a database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="version.html" title="berkdb version">berkdb version</a>
+                </td>
+                <td>Return version information</td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <span class="bold">
+                    <strong>Cursor Methods</strong>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_cursor.html" title="db cursor"><span class="emphasis"><em>db</em></span> cursor</a>
+                </td>
+                <td>Open a cursor in the database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="db_join.html" title="db join"><span class="emphasis"><em>db</em></span> join</a>
+                </td>
+                <td>Perform a database join on cursors</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbc_close.html" title="dbc close"><span class="emphasis"><em>dbc</em></span> close</a>
+                </td>
+                <td>Close a cursor</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbc_del.html" title="dbc del"><span class="emphasis"><em>dbc</em></span> del</a>
+                </td>
+                <td>Delete by cursor</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbc_dup.html" title="dbc dup"><span class="emphasis"><em>dbc</em></span> dup</a>
+                </td>
+                <td>Duplicate a cursor</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbc_get.html" title="dbc get"><span class="emphasis"><em>dbc</em></span> get</a>
+                </td>
+                <td>Retrieve by cursor</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbc_put.html" title="dbc put"><span class="emphasis"><em>dbc</em></span> put</a>
+                </td>
+                <td>Store by cursor</td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <span class="bold">
+                    <strong>Environment Methods</strong>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="env_close.html" title="env close"><span class="emphasis"><em>env</em></span> close</a>
+                </td>
+                <td>Close an environment</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="env_dbremove.html" title="env dbremove"><span class="emphasis"><em>env</em></span> dbremove</a>
+                </td>
+                <td>Remove an environment</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="env_dbrename.html" title="env dbrename"><span class="emphasis"><em>env</em></span> dbrename</a>
+                </td>
+                <td>Rename a database</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="env_open.html" title="berkdb env">berkdb env</a>
+                </td>
+                <td>Create and open an environment handle</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="env_remove.html" title="berkdb envremove">berkdb envremove</a>
+                </td>
+                <td>Remove an environment handle</td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <span class="bold">
+                    <strong>Transaction Methods</strong>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="txn.html" title="env txn"><span class="emphasis"><em>env</em></span> txn</a>
+                </td>
+                <td>Begin a transaction</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="txn_abort.html" title="txn abort"><span class="emphasis"><em>txn</em></span> abort</a>
+                </td>
+                <td>Abort a transaction</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="txn_checkpoint.html" title="env txn_checkpoint"><span class="emphasis"><em>env</em></span> txn_checkpoint</a>
+                </td>
+                <td>Checkpoint the environment</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="txn_commit.html" title="txn commit"><span class="emphasis"><em>txn</em></span> commit</a>
+                </td>
+                <td>Commit a transaction</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="preface.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="db_close.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Preface </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> <span class="emphasis"><em>db</em></span> close</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 4.4: DB_JOINENV</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_4_4_toc.html" title="Chapter 41. Upgrading Berkeley DB 4.3 applications to Berkeley DB 4.4" />
+    <link rel="prev" href="upgrade_4_4_isolation.html" title="Release 4.4: DB_DEGREE_2, DB_DIRTY_READ" />
+    <link rel="next" href="upgrade_4_4_mutex.html" title="Release 4.4: mutexes" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 4.4: DB_JOINENV</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_4_4_isolation.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 41. Upgrading Berkeley DB 4.3 applications to Berkeley DB 4.4</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_4_4_mutex.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_4_4_joinenv"></a>Release 4.4: DB_JOINENV</h2>
+          </div>
+        </div>
+      </div>
+      <p>The semantics of joining existing Berkeley DB database environments has changed
+in the 4.4 release.  Previously:</p>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>Applications joining existing environments, but not configuring some of
+the subsystems configured in the environment when it was created, would
+not be configured for those subsystems.</li>
+          <li>Applications joining existing environments, but configuring additional
+subsystems in addition to the subsystems configured in the environment
+when it was created, would cause additional subsystems to be configured
+in the database environment.</li>
+        </ol>
+      </div>
+      <p>In the 4.4 release, the semantics have been simplified to make it easier
+to write robust applications.  In the 4.4 release:</p>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>Applications joining existing environments, but not configuring some of
+the subsystems configured in the environment when it was created, will
+now automatically be configured for all of the subsystems configured in
+the environment.</li>
+          <li>Applications joining existing environments, but configuring additional
+subsystems in addition to the subsystems configured in the environment
+when it was created, will fail, as no additional subsystems can be
+configured for a database environment after it is created.</li>
+        </ol>
+      </div>
+      <p>In other words, the choice of subsystems initialized for a Berkeley DB
+database environment is specified by the thread of control initially
+creating the environment.  Any subsequent thread of control joining the
+environment will automatically be configured to use the same subsystems
+as were created in the environment (unless the thread of control
+requests a subsystem not available in the environment, which will fail).
+Applications joining an environment, able to adapt to whatever
+subsystems have been configured in the environment, should open the
+environment without specifying any subsystem flags.  Applications
+joining an environment, requiring specific subsystems from their
+environments, should open the environment specifying those specific
+subsystem flags.</p>
+      <p>The DB_JOINENV flag has been changed to have no effect in the Berkeley DB 4.4
+release.  Applications should require no changes, although uses of the
+DB_JOINENV flag may be removed.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_4_4_isolation.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_4_4_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_4_4_mutex.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 4.4: DB_DEGREE_2, DB_DIRTY_READ </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 4.4: mutexes</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

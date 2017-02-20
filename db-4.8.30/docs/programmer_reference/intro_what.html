@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>What other services does Berkeley DB provide?</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="intro.html" title="Chapter 1.  Introduction" />
+    <link rel="prev" href="intro_need.html" title="Do you need Berkeley DB?" />
+    <link rel="next" href="intro_distrib.html" title="What does the Berkeley DB distribution include?" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">What other services does Berkeley DB provide?</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="intro_need.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 1. 
+        Introduction
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="intro_distrib.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="intro_what"></a>What other services does Berkeley DB provide?</h2>
+          </div>
+        </div>
+      </div>
+      <p>Berkeley DB also provides core database services to developers.  These
+services include:</p>
+      <div class="variablelist">
+        <dl>
+          <dt>
+            <span class="term">Page cache management:</span>
+          </dt>
+          <dd>The page cache provides fast access to a cache of database pages,
+handling the I/O associated with the cache to ensure that dirty pages
+are written back to the file system and that new pages are allocated on
+demand.  Applications may use the Berkeley DB shared memory buffer manager to
+serve their own files and pages.</dd>
+          <dt>
+            <span class="term">Transactions and logging:</span>
+          </dt>
+          <dd>The transaction and logging systems provide recoverability and atomicity
+for multiple database operations. The transaction system uses two-phase
+locking and write-ahead logging protocols to ensure that database
+operations may be undone or redone in the case of application or system
+failure.  Applications may use Berkeley DB transaction and logging subsystems
+to protect their own data structures and operations from application or
+system failure.</dd>
+          <dt>
+            <span class="term">Locking:</span>
+          </dt>
+          <dd>The locking system provides multiple reader or single writer access to
+objects.  The Berkeley DB access methods use the locking system to acquire
+the right to read or write database pages.  Applications may use the
+Berkeley DB locking subsystem to support their own locking needs.</dd>
+        </dl>
+      </div>
+      <p>By combining the page cache, transaction, locking, and logging systems,
+Berkeley DB provides the same services found in much larger, more complex and
+more expensive database systems.  Berkeley DB supports multiple simultaneous
+readers and writers and guarantees that all changes are recoverable, even
+in the case of a catastrophic hardware failure during a database update.</p>
+      <p>Developers may select some or all of the core database services for any
+access method or database.  Therefore, it is possible to choose the
+appropriate storage structure and the right degrees of concurrency and
+recoverability for any application.  In addition, some of the subsystems
+(for example, the Locking subsystem) can be called separately from the
+Berkeley DB access method.  As a result, developers can integrate non-database
+objects into their transactional applications using Berkeley DB.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="intro_need.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="intro.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="intro_distrib.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Do you need Berkeley DB? </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> What does the Berkeley DB distribution include?</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

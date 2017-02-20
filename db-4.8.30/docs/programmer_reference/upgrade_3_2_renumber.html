@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 3.2: Logically renumbering records</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_3_2_toc.html" title="Chapter 35. Upgrading Berkeley DB 3.1 applications to Berkeley DB 3.2" />
+    <link rel="prev" href="upgrade_3_2_callback.html" title="Release 3.2: DB callback functions, app_private field" />
+    <link rel="next" href="upgrade_3_2_incomplete.html" title="Release 3.2: DB_INCOMPLETE" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 3.2: Logically renumbering records</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_3_2_callback.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 35. Upgrading Berkeley DB 3.1 applications to Berkeley DB 3.2</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_3_2_incomplete.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_3_2_renumber"></a>Release 3.2: Logically renumbering records</h2>
+          </div>
+        </div>
+      </div>
+      <p>In the Berkeley DB 3.2 release, cursor adjustment semantics changed for Recno
+databases with mutable record numbers.  Before the 3.2 release, cursors
+were adjusted to point to the previous or next record at the time the
+record to which the cursor referred was deleted.  This could lead to
+unexpected behaviors.  For example, two cursors referring to sequential
+records that were both deleted would lose their relationship to each
+other and would refer to the same position in the database instead of
+their original sequential relationship.  There were also command
+sequences that would have unexpected results.  For example, DB_AFTER
+and DB_BEFORE cursor put operations, using a cursor previously used to
+delete an item, would perform the put relative to the cursor's adjusted
+position and not its original position.</p>
+      <p>In the Berkeley DB 3.2 release, cursors maintain their position in the tree
+regardless of deletion operations using the cursor.  Applications that
+perform database operations, using cursors previously used to delete
+entries in Recno databases with mutable record numbers, should be
+evaluated to ensure that the new semantics do not cause application
+failure.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_3_2_callback.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_3_2_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_3_2_incomplete.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 3.2: DB callback functions, app_private field </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 3.2: DB_INCOMPLETE</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

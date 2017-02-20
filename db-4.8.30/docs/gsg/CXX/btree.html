@@ -1,0 +1,554 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>BTree Configuration</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="dbconfig.html" title="Chapter 6. Database Configuration" />
+    <link rel="prev" href="cachesize.html" title="Selecting the Cache Size" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">BTree Configuration</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="cachesize.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 6. Database Configuration</th>
+          <td width="20%" align="right"> </td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="btree"></a>BTree Configuration</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="btree.html#duplicateRecords">Allowing Duplicate Records</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="btree.html#comparators">Setting Comparison Functions</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+        In going through the previous chapters in this book, you may notice that
+        we touch on some topics that are specific to BTree, but we do not cover
+        those topics in any real detail. In this section, we will discuss
+        configuration issues that are unique to BTree.
+    </p>
+      <p>
+        Specifically, in this section we describe:      
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                Allowing duplicate records.
+            </p>
+          </li>
+          <li>
+            <p>
+                Setting comparator callbacks.
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="duplicateRecords"></a>Allowing Duplicate Records</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+            BTree databases can contain duplicate records. One record is
+            considered to be a duplicate of another when both records use keys
+            that compare as equal to one another.
+        </p>
+        <p>
+            By default, keys are compared using a lexicographical comparison,
+            with shorter keys collating higher than longer keys.
+            You can override this default using the
+                
+                <code class="methodname">Db::set_bt_compare()</code>
+                
+            method. See the next section for details.
+        </p>
+        <p>
+            By default, DB databases do not allow duplicate records. As a
+            result, any attempt to write a record that uses a key equal to a
+            previously existing record results in the previously existing record
+            being overwritten by the new record.
+        </p>
+        <p>
+            Allowing duplicate records is useful if you have a database that
+            contains records keyed by a commonly occurring piece of information.
+            It is frequently necessary to allow duplicate records for secondary
+            databases.
+         </p>
+        <p>
+            For example, suppose your primary database contained records related
+            to automobiles. You might in this case want to be able to find all
+            the automobiles in the database that are of a particular color, so
+            you would index on the color of the automobile. However, for any
+            given color there will probably be multiple automobiles. Since the
+            index is the secondary key, this means that multiple secondary
+            database records will share the same key, and so the secondary
+            database must support duplicate records.
+        </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="sorteddups"></a>Sorted Duplicates</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                Duplicate records can be stored in sorted or unsorted order. 
+                You can cause DB to automatically sort your duplicate
+                records by 
+                <span> 
+                    specifying the <code class="literal">DB_DUPSORT</code> flag at
+                    database creation time.
+                </span>
+                
+            </p>
+          <p>
+                If sorted duplicates are supported, then the 
+                <span>
+                    sorting function specified on 
+                    
+                    <code class="methodname">Db::set_dup_compare()</code>
+                </span>
+                
+                is used to determine the location of the duplicate record in its
+                duplicate set. If no such function is provided, then the default
+                lexicographical comparison is used.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="nosorteddups"></a>Unsorted Duplicates</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                For performance reasons, BTrees should always contain sorted
+                records. (BTrees containing unsorted entries must potentially 
+                spend a great deal more time locating an entry than does a BTree
+                that contains sorted entries).  That said, DB provides support 
+                for suppressing automatic sorting of duplicate records because it may be that
+                your application is inserting records that are already in a
+                sorted order.
+            </p>
+          <p>
+                That is, if the database is configured to support unsorted
+                duplicates, then the assumption is that your application
+                will manually perform the sorting. In this event,
+                expect to pay a significant performance penalty. Any time you
+                place records into the database in a sort order not know to
+                DB, you will pay a performance penalty
+            </p>
+          <p>
+                That said, this is how DB behaves when inserting records
+                into a database that supports non-sorted duplicates:
+            </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p>
+                    If your application simply adds a duplicate record using 
+                        
+                        <span><code class="methodname">Db::put()</code>,</span>
+                        
+                    then the record is inserted at the end of its sorted duplicate set.
+                </p>
+              </li>
+              <li>
+                <p>
+                    If a cursor is used to put the duplicate record to the database,
+                    then the new record is placed in the duplicate set according to the
+                    flags that are provided on the 
+                        
+                        <code class="methodname">Dbc::put()</code>
+                    method. The relevant flags are:
+                </p>
+                <div class="itemizedlist">
+                  <ul type="circle">
+                    <li>
+                      <p>
+                            <code class="literal">DB_AFTER</code>
+                            
+                        </p>
+                      <p>
+                        The data
+                        <span>
+                            provided on the call to
+                            
+                            <code class="methodname">Dbc::put()</code>
+                        </span>
+                        is placed into the database
+                        as a duplicate record. The key used for this operation is
+                        the key used for the record to which the cursor currently
+                        refers. Any key provided on the call 
+                        
+                        <span>
+                        to
+                            
+                            <code class="methodname">Dbc::put()</code>
+                        </span>
+
+                        is therefore ignored.
+                        </p>
+                      <p>
+                            The duplicate record is inserted into the database
+                            immediately after the cursor's current position in the
+                            database.
+                        </p>
+                      <p>
+                            This flag is ignored if sorted duplicates are supported for
+                            the database.
+                        </p>
+                    </li>
+                    <li>
+                      <p>
+                            <code class="literal">DB_BEFORE</code>
+                            
+                        </p>
+                      <p>
+                            Behaves the same as 
+                                <code class="literal">DB_AFTER</code>
+                                
+                            except that the new record is inserted immediately before 
+                            the cursor's current location in the database.
+                        </p>
+                    </li>
+                    <li>
+                      <p>
+                            <code class="literal">DB_KEYFIRST</code>
+                            
+                        </p>
+                      <p>
+                            If the key 
+                            <span>
+                                provided on the call to
+                                
+                                <code class="methodname">Dbc::put()</code>
+                            </span>
+                            already exists in the
+                            database, and the database is configured to use duplicates
+                            without sorting, then the new record is inserted as the first entry
+                            in the appropriate duplicates list.
+                        </p>
+                    </li>
+                    <li>
+                      <p>
+                            <code class="literal">DB_KEYLAST</code>
+                            
+                        </p>
+                      <p>
+                            Behaves identically to
+                                <code class="literal">DB_KEYFIRST</code>
+                                
+                            except that the new duplicate record is inserted as the last
+                            record in the duplicates list.
+                        </p>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="specifyingDups"></a>Configuring a Database to Support Duplicates</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+            Duplicates support can only be configured
+            at database creation time. You do this by specifying the appropriate
+            <span>
+                flags to
+                
+                <code class="methodname">Db::set_flags()</code>
+            </span>
+            
+            before the database is opened for the first time.
+        </p>
+          <p>
+            The 
+                <span>flags</span>
+                
+            that you can use are:
+        </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p>
+                    <code class="literal">DB_DUP</code>
+                    
+                </p>
+                <p>
+                    The database supports non-sorted duplicate records.
+                </p>
+              </li>
+              <li>
+                <p>
+                    <code class="literal">DB_DUPSORT</code>
+                    
+                </p>
+                <p>
+                    The database supports sorted duplicate records.
+                </p>
+              </li>
+            </ul>
+          </div>
+          <p>
+            The following code fragment illustrates how to configure a database
+            to support sorted duplicate records:
+        </p>
+          <a id="cxx_btree_dupsort"></a>
+          <pre class="programlisting">#include &lt;db_cxx.h&gt;
+...
+
+Db db(NULL, 0);
+const char *file_name = "myd.db";
+
+try {
+    // Configure the database for sorted duplicates
+    db.set_flags(DB_DUPSORT);
+
+    // Now open the database
+    db.open(NULL,       // Txn pointer
+            file_name,  // File name
+            NULL,       // Logical db name (unneeded)
+            DB_BTREE,   // Database type (using btree)
+            DB_CREATE,  // Open flags
+            0);         // File mode. Using defaults
+} catch(DbException &amp;e) {
+    db.err(e.get_errno(), "Database '%s' open failed.", file_name);
+} catch(std::exception &amp;e) {
+    db.errx("Error opening database: %s : %s\n", file_name, e.what());
+} 
+
+...
+
+try {
+    db.close(0);
+} catch(DbException &amp;e) {
+    db.err(e.get_errno(), "Database '%s' close failed.", file_name);
+} catch(std::exception &amp;e) {
+    db.errx("Error closing database: %s : %s\n", file_name, e.what());
+} 
+
+</pre>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="comparators"></a>Setting Comparison Functions</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+            By default, DB uses a lexicographical comparison function where
+            shorter records collate before longer records. For the majority of
+            cases, this comparison works well and you do not need to manage
+            it in any way. 
+         </p>
+        <p>
+            However, in some situations your application's performance can
+            benefit from setting a custom comparison routine. You can do this
+            either for database keys, or for the data if your
+            database supports sorted duplicate records.
+         </p>
+        <p>
+            Some of the reasons why you may want to provide a custom sorting
+            function are:
+         </p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+                    Your database is keyed using strings and you want to provide
+                    some sort of language-sensitive ordering to that data. Doing
+                    so can help increase the locality of reference that allows
+                    your database to perform at its best.
+                </p>
+            </li>
+            <li>
+              <p>
+                    You are using a little-endian system (such as x86) and you
+                    are using integers as your database's keys. Berkeley DB
+                    stores keys as byte strings and little-endian integers
+                    do not sort well when viewed as byte strings. There are
+                    several solutions to this problem, one being to provide a
+                    custom comparison function. See
+                    <a class="ulink" href="http://www.oracle.com/technology/documentation/berkeley-db/db/ref/am_misc/faq.html" target="_top">http://www.oracle.com/technology/documentation/berkeley-db/db/ref/am_misc/faq.html</a> 
+                    for more information.
+                </p>
+            </li>
+            <li>
+              <p>
+                    You you do not want the entire key to participate in the
+                    comparison, for whatever reason.  In 
+                    this case, you may want to provide a custom comparison
+                    function so that only the relevant bytes are examined.
+                </p>
+            </li>
+          </ul>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="creatingComparisonFunctions"></a>
+                <span>Creating Comparison Functions</span>
+                
+            </h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                You set a BTree's key
+                    <span>
+                        comparison function 
+                    </span>
+                    
+                using
+                    
+                    <span><code class="methodname">Db::set_bt_compare()</code>.</span>
+                    
+                You can also set a BTree's duplicate data comparison function using
+                    
+                    <span><code class="methodname">Db::set_dup_compare()</code>.</span>
+                    
+                
+            </p>
+          <p>
+            <span>
+            You cannot use these methods after the database has been opened.
+            Also, if 
+            </span>
+            
+            the database already exists when it is opened, the
+                    <span>
+                        function 
+                    </span>
+                    
+            provided to these methods must be the same as
+            that historically used to create the database or corruption can
+            occur.
+         </p>
+          <p>
+                The value that you provide to the <code class="methodname">set_bt_compare()</code> method 
+                is a pointer to a function that has the following signature:
+            </p>
+          <pre class="programlisting">int (*function)(Db *db, const Dbt *key1, const Dbt *key2)</pre>
+          <p>
+                This function must return an integer value less than, equal to,
+                or greater than 0. If key1 is considered to be greater than
+                key2, then the function must return a value that is greater than
+                0. If the two are equal, then the function must return 0, and if
+                the first key is less than the second then the function must return
+                a negative value.
+            </p>
+          <p>
+                The function that you provide to <code class="methodname">set_dup_compare()</code> 
+                works in exactly the same way, except that the 
+                 
+                <code class="literal">Dbt</code> 
+                parameters hold record data items instead of keys.
+            </p>
+          <p>
+                For example, an example routine that is used to sort integer
+                keys in the database is:
+                
+            </p>
+          <a id="cxx_btree1"></a>
+          <pre class="programlisting">int
+compare_int(Db *dbp, const Dbt *a, const Dbt *b)
+{
+    int ai, bi;
+
+    // Returns: 
+    // &lt; 0 if a &lt; b 
+    // = 0 if a = b 
+    // &gt; 0 if a &gt; b 
+    memcpy(&amp;ai, a-&gt;get_data(), sizeof(int)); 
+    memcpy(&amp;bi, b-&gt;get_data(), sizeof(int)); 
+    return (ai - bi); 
+} </pre>
+          <p>
+            Note that the data must first be copied into memory that is
+            appropriately aligned, as Berkeley DB does not guarantee any kind of
+            alignment of the underlying data, including for comparison routines.
+            When writing comparison routines, remember that databases created on
+            machines of different architectures may have different integer byte
+            orders, for which your code may need to compensate.
+         </p>
+          <p>
+            To cause DB to use this comparison function:
+         </p>
+          <a id="cxx_btree2"></a>
+          <pre class="programlisting">#include &lt;db_cxx.h&gt;
+#include &lt;string.h&gt;
+
+...
+                                                                                                                                      
+Db db(NULL, 0);
+
+// Set up the btree comparison function for this database
+db.set_bt_compare(compare_int);
+
+// Database open call follows sometime after this.</pre>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="cachesize.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="dbconfig.html">Up</a>
+          </td>
+          <td width="40%" align="right"> </td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Selecting the Cache Size </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

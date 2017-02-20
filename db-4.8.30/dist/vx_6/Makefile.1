@@ -1,0 +1,113 @@
+# Wind River Workbench generated Makefile.
+# Do not edit!!!
+#
+# The file ".wrmakefile" is the template used by the Wind River Workbench to
+# generate the makefiles of this project. Add user-specific build targets and
+# make rules only(!) in this project's ".wrmakefile" file. These will then be
+# automatically dumped into the makefiles.
+
+WIND_HOME := $(subst \,/,$(WIND_HOME))
+WIND_BASE := $(subst \,/,$(WIND_BASE))
+WIND_USR := $(subst \,/,$(WIND_USR))
+BDB_ROOT := D:/Bdb_Source/db
+BDB_OBJECT_DIR := obj
+
+all : pre_build main_all post_build
+
+_clean ::
+	@echo "make: removing targets and objects of `pwd`"
+
+TRACE=0
+TRACEON=$(TRACE:0=@)
+TRACE_FLAG=$(TRACEON:1=)
+
+MAKEFILE := Makefile
+
+FLEXIBLE_BUILD := 1
+
+BUILD_SPEC = SIMNTdiab
+DEBUG_MODE = 1
+ifeq ($(DEBUG_MODE),1)
+MODE_DIR := Debug
+else
+MODE_DIR := NonDebug
+endif
+OBJ_DIR := .
+
+
+
+#Global Build Macros
+PROJECT_TYPE = DKM
+DEFINES =
+EXPAND_DBG = 0
+
+
+#BuildSpec specific Build Macros
+VX_CPU_FAMILY = simpc
+CPU = SIMNT
+TOOL_FAMILY = diab
+TOOL = diabS
+TOOL_PATH =
+CC_ARCH_SPEC = -tX86LH:vxworks65
+LIBPATH =
+LIBS = -lstlstd
+
+IDE_INCLUDES = -I$(WIND_BASE)/target/h -I$(WIND_BASE)/vxworks-6.5/target/h -I$(WIND_BASE)/diab/5.5.1.0/include/ -I$(BDB_ROOT)/ -I$(BDB_ROOT)/build_vxworks -I$(BDB_ROOT)/dbinc -I$(BDB_ROOT)/dbinc_auto -I$(WIND_BASE)/target/h/wrn/coreip -I$(WIND_BASE)/vxworks-6.5/target/h/wrn/coreip
+
+
+
+#BuildTool flags
+ifeq ($(DEBUG_MODE),1)
+DEBUGFLAGS_C-Compiler = -g
+DEBUGFLAGS_C++-Compiler = -g
+DEBUGFLAGS_Linker = -g
+DEBUGFLAGS_Partial-Image-Linker =
+DEBUGFLAGS_Librarian =
+DEBUGFLAGS_Assembler = -g
+else
+DEBUGFLAGS_C-Compiler = -XO -Xsize-opt
+DEBUGFLAGS_C++-Compiler = -XO -Xsize-opt
+DEBUGFLAGS_Linker = -XO -Xsize-opt
+DEBUGFLAGS_Partial-Image-Linker =
+DEBUGFLAGS_Librarian =
+DEBUGFLAGS_Assembler = -XO -Xsize-opt
+endif
+
+
+#Project Targets
+PROJECT_TARGETS = bdbvxw/$(MODE_DIR)/bdbvxw.out
+
+
+#Rules
+
+# bdbvxw
+ifeq ($(DEBUG_MODE),1)
+bdbvxw/$(MODE_DIR)/% : DEBUGFLAGS_C-Compiler = -g
+bdbvxw/$(MODE_DIR)/% : DEBUGFLAGS_C++-Compiler = -g
+bdbvxw/$(MODE_DIR)/% : DEBUGFLAGS_Linker = -g
+bdbvxw/$(MODE_DIR)/% : DEBUGFLAGS_Partial-Image-Linker =
+bdbvxw/$(MODE_DIR)/% : DEBUGFLAGS_Librarian =
+bdbvxw/$(MODE_DIR)/% : DEBUGFLAGS_Assembler = -g
+else
+bdbvxw/$(MODE_DIR)/% : DEBUGFLAGS_C-Compiler = -XO -Xsize-opt
+bdbvxw/$(MODE_DIR)/% : DEBUGFLAGS_C++-Compiler = -XO -Xsize-opt
+bdbvxw/$(MODE_DIR)/% : DEBUGFLAGS_Linker = -XO -Xsize-opt
+bdbvxw/$(MODE_DIR)/% : DEBUGFLAGS_Partial-Image-Linker =
+bdbvxw/$(MODE_DIR)/% : DEBUGFLAGS_Librarian =
+bdbvxw/$(MODE_DIR)/% : DEBUGFLAGS_Assembler = -XO -Xsize-opt
+endif
+bdbvxw/$(MODE_DIR)/% : IDE_INCLUDES = -I$(WIND_BASE)/target/h -I$(WIND_BASE)/vxworks-6.5/target/h -I$(WIND_BASE)/target/h -I$(WIND_BASE)/diab/5.5.1.0/include/ -I$(BDB_ROOT)/ -I$(BDB_ROOT)/build_vxworks -I$(BDB_ROOT)/dbinc -I$(BDB_ROOT)/dbinc_auto -I$(WIND_BASE)/target/h/wrn/coreip -I$(WIND_BASE)/vxworks-6.5/target/h/wrn/coreip
+bdbvxw/$(MODE_DIR)/% : PROJECT_TYPE = DKM
+bdbvxw/$(MODE_DIR)/% : DEFINES =
+bdbvxw/$(MODE_DIR)/% : EXPAND_DBG = 0
+bdbvxw/$(MODE_DIR)/% : VX_CPU_FAMILY = simpc
+bdbvxw/$(MODE_DIR)/% : CPU = SIMNT
+bdbvxw/$(MODE_DIR)/% : TOOL_FAMILY = diab
+bdbvxw/$(MODE_DIR)/% : TOOL = diab
+bdbvxw/$(MODE_DIR)/% : TOOL_PATH =
+bdbvxw/$(MODE_DIR)/% : CC_ARCH_SPEC = -tX86LH:vxworks65
+
+bdbvxw/$(MODE_DIR)/% : LIBPATH =
+
+bdbvxw/$(MODE_DIR)/% : LIBS =   -lstlstd
+bdbvxw/$(MODE_DIR)/% : OBJ_DIR := bdbvxw/$(MODE_DIR)

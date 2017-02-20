@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Partitioning databases</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="am.html" title="Chapter 3.  Access Method Operations" />
+    <link rel="prev" href="am_opensub.html" title="Opening multiple databases in a single file" />
+    <link rel="next" href="am_get.html" title="Retrieving records" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Partitioning databases</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="am_opensub.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. 
+        Access Method Operations
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="am_get.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="am_partition"></a>Partitioning databases</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="am_partition.html#am_partition_keys">Specifying partition keys</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="am_partition.html#am_partition_function">Partitioning callback</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="am_partition.html#partition_file_placement">Placing partition files</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+    You can improve concurrency on your database reads and writes by
+    splitting access to a single database into multiple databases. This
+    helps to avoid contention for internal database pages, as well as
+    allowing you to spread your databases across multiple disks,
+    which can help to improve disk I/O.
+</p>
+      <p>
+    While you can manually do this by creating and using more than one
+    database for your data, DB is capable of partitioning your
+    database for you. When you use DB's built-in database partitioning
+    feature, your access to your data is performed in exactly the same way
+    as if you were only using one database; all the work of knowing which
+    database to use to access a particular record is handled for you under
+    the hood.
+</p>
+      <p>
+    Only the BTree and Hash access methods are supported for partitioned
+    databases.
+</p>
+      <p>
+    You indicate that you want your database to be partitioned by calling 
+    <a href="../api_reference/C/dbset_partition.html" class="olink">DB-&gt;set_partition()</a> before opening your database the first time. You can 
+    indicate the directory in which each partition is contained using the
+    <a href="../api_reference/C/dbset_partition_dirs.html" class="olink">DB-&gt;set_partition_dirs()</a> method.
+</p>
+      <p>
+    Once you have partitioned a database, you cannot change your
+    partitioning scheme.
+</p>
+      <p>
+    There are two ways to indicate what key/data pairs should go on which
+    partition. The first is by specifying an array of <a href="../api_reference/C/dbt.html" class="olink">DBT</a>s that indicate
+    the minimum key value for a given partition. The second is by providing
+    a callback that returns the number of the partition on which a specified 
+    key is placed.
+</p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="am_partition_keys"></a>Specifying partition keys</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+            For simple cases, you can partition your database by providing
+            an array of <a href="../api_reference/C/dbt.html" class="olink">DBT</a>s, each element of which provides the minimum
+            key value to be placed on a partition. There must be one fewer
+            elements in this array than you have partitions. The first
+            element of the array indicates the minimum key value for the
+            second partition in your database. Key values that are less
+            than the first key value provided in this array are placed on
+            the first partition (partition 0).
+        </p>
+        <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+          <h3 class="title">Note</h3>
+          <p>
+                You can use partition keys only if you are using the Btree
+                access method.
+            </p>
+        </div>
+        <p>
+            For example, suppose you had a database of fruit, and you want
+            three partitions for your database. Then you need a <a href="../api_reference/C/dbt.html" class="olink">DBT</a> array
+            of size two. The first element in this array indicates the
+            minimum keys that should be placed on partition 1. The second
+            element in this array indicates the minimum key value placed on
+            partition 2. Keys that compare less than the first <a href="../api_reference/C/dbt.html" class="olink">DBT</a> in the
+            array are placed on partition 0.
+        </p>
+        <p>
+            All comparisons are performed according to the lexicographic
+            comparison used by your platform.
+        </p>
+        <p>
+            For example, suppose you want all fruits whose names begin
+            with:
+        </p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+                    'a' - 'f' to go on partition 0
+                </p>
+            </li>
+            <li>
+              <p>
+                    'g' - 'p' to go on partition 1
+                </p>
+            </li>
+            <li>
+              <p>
+                    'q' - 'z' to go on partition 2.
+                </p>
+            </li>
+          </ul>
+        </div>
+        <p>
+            Then you would accomplish this with the following code
+            fragment:
+        </p>
+        <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+          <h3 class="title">Note</h3>
+          <p>
+                The <a href="../api_reference/C/dbset_partition.html" class="olink">DB-&gt;set_partition()</a> partition callback parameter must
+                be <code class="literal">NULL</code> if you are using an array of
+                <a href="../api_reference/C/dbt.html" class="olink">DBT</a>s to partition your database.
+            </p>
+        </div>
+        <pre class="programlisting">    DB *dbp = NULL;
+    DB_ENV *envp = NULL;
+    DBT partKeys[2];
+    u_int32_t db_flags;
+    const char *file_name = "mydb.db";
+    int ret;
+
+...
+    
+    /* Skipping environment open to shorten this example */
+...
+
+    /* Initialize the DB handle */
+    ret = db_create(&amp;dbp, envp, 0);
+    if (ret != 0) {
+        fprintf(stderr, "%s\n", db_strerror(ret));
+        return (EXIT_FAILURE);
+    }
+
+    /* Setup the partition keys */
+     memset(&amp;partKeys[0], 0, sizeof(DBT));
+     partKeys[0].data = "g";
+     partKeys[0].size = sizeof("g") - 1;
+
+     memset(&amp;partKeys[1], 0, sizeof(DBT));
+     partKeys[1].data = "q";
+     partKeys[1].size = sizeof("q") - 1;
+
+     dbp-&gt;set_partition(dbp, 3, partKeys, NULL);
+
+    /* Now open the database */
+    db_flags = DB_CREATE;       /* Allow database creation */
+
+    ret = dbp-&gt;open(dbp,        /* Pointer to the database */
+                    NULL,       /* Txn pointer */
+                    file_name,  /* File name */
+                    NULL,       /* Logical db name */
+                    DB_BTREE,   /* Database type (using btree) */
+                    db_flags,   /* Open flags */
+                    0);         /* File mode. Using defaults */
+    if (ret != 0) {
+        dbp-&gt;err(dbp, ret, "Database '%s' open failed",
+            file_name);
+        return (EXIT_FAILURE);
+    } </pre>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="am_partition_function"></a>Partitioning callback</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+            In some cases, a simple lexicographical comparison of key data
+            will not sufficiently support a partitioning scheme. For
+            those situations, you should write a partitioning function.
+            This function accepts a pointer to the <a href="../api_reference/C/db.html" class="olink">DB</a> and the <a href="../api_reference/C/dbt.html" class="olink">DBT</a>, and
+            it returns the number of the partition on which the key
+            belongs.
+        </p>
+        <p>
+            Note that <a href="../api_reference/C/db.html" class="olink">DB</a> actually places the key on the partition
+            calculated by:
+        </p>
+        <pre class="programlisting">returned_partition modulo number_of_partitions</pre>
+        <p>
+            Also, remember that if you use a partitioning function when you
+            create your database, then you must use the same partitioning
+            function every time you open that database in the future.
+        </p>
+        <p>
+            The following code fragment illustrates a partition callback:
+        </p>
+        <pre class="programlisting">u_int32_t db_partition_fn(DB *db, DBT *key) {
+    char *key_data;
+    u_int32_t ret_number;
+    /* Obtain your key data, unpacking it as necessary
+     * Here, we do the very simple thing just for illustrative purposes.
+     */
+
+    key_data = (char *)key-&gt;data;
+
+    /* Here you would perform whatever comparison you require to determine
+     * what partition the key belongs on. If you return either 0 or the
+     * number of partitions in the database, the key is placed in the first
+     * database partition. Else, it is placed on:
+     *
+     *       returned_number mod number_of_partitions
+     */
+
+    ret_number = 0;
+
+    return ret_number;
+} </pre>
+        <p>
+        You then cause your partition callback to be used by providing it
+        to the <a href="../api_reference/C/dbset_partition.html" class="olink">DB-&gt;set_partition()</a> method, as illustrated by the following
+        code fragment.
+    </p>
+        <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+          <h3 class="title">Note</h3>
+          <p>
+                The <a href="../api_reference/C/dbset_partition.html" class="olink">DB-&gt;set_partition()</a> <a href="../api_reference/C/dbt.html" class="olink">DBT</a> array parameter  must
+                be <code class="literal">NULL</code> if you are using a partition
+                call back to partition your database.
+            </p>
+        </div>
+        <pre class="programlisting">    DB *dbp = NULL;
+    DB_ENV *envp = NULL;
+    u_int32_t db_flags;
+    const char *file_name = "mydb.db";
+    int ret;
+
+...
+    
+    /* Skipping environment open to shorten this example */
+...
+
+    /* Initialize the DB handle */
+    ret = db_create(&amp;dbp, envp, 0);
+    if (ret != 0) {
+        fprintf(stderr, "%s\n", db_strerror(ret));
+        return (EXIT_FAILURE);
+    }
+
+     dbp-&gt;set_partition(dbp, 3, NULL, db_partition_fn);
+
+    /* Now open the database */
+    db_flags = DB_CREATE;       /* Allow database creation */
+
+    ret = dbp-&gt;open(dbp,        /* Pointer to the database */
+                    NULL,       /* Txn pointer */
+                    file_name,  /* File name */
+                    NULL,       /* Logical db name */
+                    DB_BTREE,   /* Database type (using btree) */
+                    db_flags,   /* Open flags */
+                    0);         /* File mode. Using defaults */
+    if (ret != 0) {
+        dbp-&gt;err(dbp, ret, "Database '%s' open failed",
+            file_name);
+        return (EXIT_FAILURE);
+    } </pre>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="partition_file_placement"></a>Placing partition files</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+            When you partition a database, a database file is created on
+            disk in the same way as if you were not partitioning the
+            database. That is, this file uses the name you provide to the
+            <a href="../api_reference/C/dbopen.html" class="olink">DB-&gt;open()</a> <code class="literal">file</code> parameter.
+        </p>
+        <p>
+            However, DB then also creates a series of database files on
+            disk, one for each partition that you want to use. These
+            partition files share the same name as the database file name,
+            but are also number sequentially. So if you create a database
+            named <code class="filename">mydb.db</code>, and you create 3 partitions
+            for it, then you will see the following database files on disk:
+        </p>
+        <pre class="programlisting">            mydb.db
+            __dbp.mydb.db.000
+            __dbp.mydb.db.001
+            __dbp.mydb.db.002 </pre>
+        <p>
+            All of the database's contents go into the numbered database
+            files. You can cause these files to be placed in different
+            directories (and, hence, different disk partitions or even
+            disks) by using the <a href="../api_reference/C/dbset_partition_dirs.html" class="olink">DB-&gt;set_partition_dirs()</a> method.
+        </p>
+        <p>
+            <a href="../api_reference/C/dbset_partition_dirs.html" class="olink">DB-&gt;set_partition_dirs()</a> takes a NULL-terminated array of
+            strings, each one of which should represent an existing
+            filesystem directory. 
+        </p>
+        <p>
+            If you are using an environment, the directories specified
+            using <a href="../api_reference/C/dbset_partition_dirs.html" class="olink">DB-&gt;set_partition_dirs()</a> must also be included in the
+            environment list specified by <a href="../api_reference/C/envadd_data_dir.html" class="olink">DB_ENV-&gt;add_data_dir()</a>. 
+        </p>
+        <p>
+            If you are not using an environment, then the the directories
+            specified to <a href="../api_reference/C/dbset_partition_dirs.html" class="olink">DB-&gt;set_partition_dirs()</a> can be either complete
+            paths to currently existing directories, or paths relative to
+            the application's current working directory.
+        </p>
+        <p>
+            Ideally, you will provide <a href="../api_reference/C/dbset_partition_dirs.html" class="olink">DB-&gt;set_partition_dirs()</a> with an array
+            that is the same size as the number of partitions you are
+            creating for your database. Partition files are then placed
+            according to the order that directories are contained in the
+            array; partition 0 is placed in directory_array[0], partition 1
+            in directory_array[1], and so forth. However, if you provide an
+            array of directories that is smaller than the number of
+            database partitions, then the directories are used on a
+            round-robin fashion.
+        </p>
+        <p>
+            You must call <a href="../api_reference/C/dbset_partition_dirs.html" class="olink">DB-&gt;set_partition_dirs()</a> before you create your
+            database, and before you open your database each time
+            thereafter. The array provided to <a href="../api_reference/C/dbset_partition_dirs.html" class="olink">DB-&gt;set_partition_dirs()</a> must not
+            change after the database has been created.
+        </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="am_opensub.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="am.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="am_get.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Opening multiple databases in a single file </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Retrieving records</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

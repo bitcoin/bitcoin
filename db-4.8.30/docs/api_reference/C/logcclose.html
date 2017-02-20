@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB_LOGC-&gt;close()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="lsn.html" title="Chapter 7.  The DB_LSN Handle" />
+    <link rel="prev" href="logc.html" title="The DB_LOGC Handle" />
+    <link rel="next" href="logcget.html" title="DB_LOGC-&gt;get()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB_LOGC-&gt;close()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="logc.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 7. 
+                The DB_LSN Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="logcget.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="logcclose"></a>DB_LOGC-&gt;close()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB_LOGC-&gt;close(DB_LOGC *cursor, u_int32_t flags);  </pre>
+      <p>
+         The <code class="methodname">DB_LOGC-&gt;close()</code> method discards the log cursor.  After
+         <code class="methodname">DB_LOGC-&gt;close()</code> has been called, regardless of its return, the
+         cursor handle may not be used again.
+    </p>
+      <p>
+         The <code class="methodname">DB_LOGC-&gt;close()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1684569"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1684575"></a>flags</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>flags</strong></span> parameter is currently
+                          unused, and must be set to 0.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1684721"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DB_LOGC-&gt;close()</code> <span>
+            <span>
+                 method may fail and return one of the following non-zero errors:
+            </span>
+            
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1684645"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                If the cursor is already closed; or if an invalid flag value or parameter was specified.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1684402"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                    <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>, 
+                    <a class="link" href="logc.html" title="The DB_LOGC Handle">DB_LOGC</a>, 
+                    <a class="link" href="lsn.html" title="Chapter 7.  The DB_LSN Handle">DB_LSN</a> 
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1684570"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="lsn.html#loglist" title="Logging Subsystem and Related Methods">Logging Subsystem and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="logc.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="lsn.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="logcget.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+                The DB_LOGC Handle
+         </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_LOGC-&gt;get()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

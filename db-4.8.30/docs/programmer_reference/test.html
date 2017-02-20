@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 46.  Test Suite</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="prev" href="changelog_4_8.html" title="Berkeley DB 4.8.30 Change Log" />
+    <link rel="next" href="test_faq.html" title="Test suite FAQ" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 46. 
+        Test Suite
+        </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="changelog_4_8.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="test_faq.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="test"></a>Chapter 46. 
+        Test Suite
+        </h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="test.html#test_run">Running the test suite</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="test_faq.html">Test suite FAQ</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="test_run"></a>Running the test suite</h2>
+            </div>
+          </div>
+        </div>
+        <p>Once you have started tclsh and have loaded the test.tcl source file
+(see <a class="xref" href="build_unix_test.html" title="Running the test suite under UNIX">Running the test suite under UNIX</a> and 
+<a class="xref" href="build_win_test.html" title="Running the test suite under Windows">Running the test suite under Windows</a> for more information), 
+you are ready to run the test
+suite.  At the tclsh prompt, to run the standard test suite, enter the
+following:</p>
+        <pre class="programlisting">% run_std</pre>
+        <p>A more exhaustive version of the test suite runs all the tests several
+more times, testing encryption, replication, and different page sizes.
+After you have a clean run for run_std, you may choose to run this
+lengthier set of tests.  At the tclsh prompt, enter:</p>
+        <pre class="programlisting">% run_all</pre>
+        <p>Running the standard tests can take from several hours to a few days to
+complete, depending on your hardware, and running all the tests will
+take at least twice as long.  For this reason, the output from these
+commands are redirected to a file in the current directory named
+<code class="filename">ALL.OUT</code>.  Periodically, a line will be written to the standard
+output, indicating what test is being run.  When the test suite has
+finished, a final message will be written indicating the test suite has
+completed successfully or that it has failed.  If the run failed, you
+should review the <code class="filename">ALL.OUT</code> file to determine which tests failed.
+Errors will appear in that file as output lines, beginning with the
+string "FAIL".</p>
+        <p>Tests are run in the directory <code class="filename">TESTDIR</code>, by default.  However,
+the test files are often large, and you should use a filesystem with at
+least several hundred megabytes of free space.  To use a different
+directory for the test directory, edit the file include.tcl in your
+build directory, and change the following line to a more appropriate
+value for your system:</p>
+        <pre class="programlisting">set testdir ./TESTDIR</pre>
+        <p>For example, you might change it to the following:</p>
+        <pre class="programlisting">set testdir /var/tmp/db.test</pre>
+        <p>Alternatively, you can create a symbolic link named TESTDIR in your
+build directory to an appropriate location for running the tests.
+Regardless of where you run the tests, the TESTDIR directory should be
+on a local filesystem.  Using a remote filesystem (for example, an NFS
+mounted filesystem) will almost certainly cause spurious test
+failures.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="changelog_4_8.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="test_faq.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Berkeley DB 4.8.30 Change Log </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Test suite FAQ</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,34 @@
+#!/bin/sh -
+#
+# $Id$
+
+d=../..
+
+t1=__1
+
+# Check for DB_RUNRECOVERY being specified instead of a call to env_panic.
+egrep DB_RUNRECOVERY $d/*/*.c |
+    sed -e '/__env_panic(.*, DB_RUNRECOVERY)/d' \
+	-e '/\/php_db4\//d' \
+	-e '/case DB_RUNRECOVERY:/d' \
+	-e '/db_dispatch.c:.*if (ret == DB_RUNRECOVERY/d' \
+	-e '/db_err.c:/d' \
+	-e '/env_open.c:.*ret = DB_RUNRECOVERY;/d' \
+	-e '/os_errno.c:.*evalue == DB_RUNRECOVERY/d' \
+        -e '/mut_fcntl.c:.*return (DB_RUNRECOVERY);/d' \
+        -e '/mut_pthread.c:.*return (DB_RUNRECOVERY);/d' \
+        -e '/mut_tas.c:.*return (DB_RUNRECOVERY);/d' \
+        -e '/mut_tas.c:.*Possibly DB_RUNRECOVERY if/d' \
+        -e '/mut_win32.c:.*return (DB_RUNRECOVERY);/d' \
+        -e '/mut_win32.c:.*ret = DB_RUNRECOVERY;/d' \
+	-e '/rep_backup.c:.*Panic the env and return DB_RUNRECOVERY/d' \
+	-e '/txn.c:.* \* DB_RUNRECOVERY and we need to/d' \
+	-e '/txn.c:.*returned DB_RUNRECOVERY and we need to/d' \
+	> $t1
+[ -s $t1 ] && {
+	echo "DB_RUNRECOVERY used; should be a call to env_panic."
+	cat $t1
+	exit 1
+}
+
+exit 0

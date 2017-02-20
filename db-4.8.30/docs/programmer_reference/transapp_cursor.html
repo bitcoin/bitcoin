@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Transactional cursors</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="transapp.html" title="Chapter 11.  Berkeley DB Transactional Data Store Applications" />
+    <link rel="prev" href="transapp_read.html" title="Degrees of isolation" />
+    <link rel="next" href="transapp_nested.html" title="Nested transactions" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Transactional cursors</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="transapp_read.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 11. 
+        Berkeley DB Transactional Data Store Applications
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="transapp_nested.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="transapp_cursor"></a>Transactional cursors</h2>
+          </div>
+        </div>
+      </div>
+      <p>Berkeley DB cursors may be used inside a transaction, exactly as any other
+<a href="../api_reference/C/db.html" class="olink">DB</a> method.  The enclosing transaction ID must be specified when
+the cursor is created, but it does not then need to be further specified
+on operations performed using the cursor.  One important point to
+remember is that a cursor <span class="bold"><strong>must be closed</strong></span> before the enclosing
+transaction is committed or aborted.</p>
+      <p>The following code fragment uses a cursor to store a new key in the cats
+database with four associated data items.  The key is a name.  The data
+items are a company name and a list of the breeds of cat owned.  Each
+of the data entries is stored as a duplicate data item.  In this
+example, transactions are necessary to ensure that either all or none
+of the data items appear in case of system or application failure.</p>
+      <pre class="programlisting">int
+main(int argc, char *argv)
+{
+    extern int optind;
+    DB *db_cats, *db_color, *db_fruit;
+    DB_ENV *dbenv;
+    int ch;
+
+    while ((ch = getopt(argc, argv, "")) != EOF)
+        switch (ch) {
+        case '?':
+        default:
+            usage();
+        }
+    argc -= optind;
+    argv += optind;
+
+    env_dir_create();
+    env_open(&amp;dbenv);
+
+    /* Open database: Key is fruit class; Data is specific type. */
+    db_open(dbenv, &amp;db_fruit, "fruit", 0);
+
+    /* Open database: Key is a color; Data is an integer. */
+    db_open(dbenv, &amp;db_color, "color", 0);
+
+    /*
+     * Open database:
+     *  Key is a name; Data is: company name, cat breeds.
+     */
+    db_open(dbenv, &amp;db_cats, "cats", 1);
+
+    add_fruit(dbenv, db_fruit, "apple", "yellow delicious");
+
+    add_color(dbenv, db_color, "blue", 0);
+    add_color(dbenv, db_color, "blue", 3);
+
+<span class="bold"><strong> add_cat(dbenv, db_cats,
+        "Amy Adams",
+        "Oracle",
+        "abyssinian",
+        "bengal",
+        "chartreaux",
+        NULL);</strong></span>
+
+    return (0);
+}
+
+<span class="bold"><strong>int
+add_cat(DB_ENV *dbenv, DB *db, char *name, ...)
+{
+    va_list ap;
+    DBC *dbc;
+    DBT key, data;
+    DB_TXN *tid;
+    int fail, ret, t_ret;
+    char *s;
+
+    /* Initialization. */
+    fail = 0;
+
+    memset(&amp;key, 0, sizeof(key));
+    memset(&amp;data, 0, sizeof(data));
+    key.data = name;
+    key.size = strlen(name);
+
+retry:  /* Begin the transaction. */
+    if ((ret = dbenv-&gt;txn_begin(dbenv, NULL, &amp;tid, 0)) != 0) {
+        dbenv-&gt;err(dbenv, ret, "DB_ENV-&gt;txn_begin");
+        exit (1);
+    }
+
+    /* Delete any previously existing item. */
+    switch (ret = db-&gt;del(db, tid, &amp;key, 0)) {
+    case 0:
+    case DB_NOTFOUND:
+        break;
+    case DB_LOCK_DEADLOCK:
+    default:
+        /* Retry the operation. */
+        if ((t_ret = tid-&gt;abort(tid)) != 0) {
+            dbenv-&gt;err(dbenv, t_ret, "DB_TXN-&gt;abort");
+            exit (1);
+        }
+        if (fail++ == MAXIMUM_RETRY)
+            return (ret);
+        goto retry;
+    }
+
+    /* Create a cursor. */
+    if ((ret = db-&gt;cursor(db, tid, &amp;dbc, 0)) != 0) {
+        dbenv-&gt;err(dbenv, ret, "db-&gt;cursor");
+        exit (1);
+    }
+
+    /* Append the items, in order. */
+    va_start(ap, name);
+    while ((s = va_arg(ap, char *)) != NULL) {
+        data.data = s;
+        data.size = strlen(s);
+        switch (ret = dbc-&gt;c_put(dbc, &amp;key, &amp;data, DB_KEYLAST)) {
+        case 0:
+            break;
+        case DB_LOCK_DEADLOCK:
+        default:
+            va_end(ap);
+
+            /* Retry the operation. */
+            if ((t_ret = dbc-&gt;c_close(dbc)) != 0) {
+                dbenv-&gt;err(
+                    dbenv, t_ret, "dbc-&gt;c_close");
+                exit (1);
+            }
+            if ((t_ret = tid-&gt;abort(tid)) != 0) {
+                dbenv-&gt;err(dbenv, t_ret, "DB_TXN-&gt;abort");
+                exit (1);
+            }
+            if (fail++ == MAXIMUM_RETRY)
+                return (ret);
+            goto retry;
+        }
+    }
+    va_end(ap);
+
+    /* Success: commit the change. */
+    if ((ret = dbc-&gt;c_close(dbc)) != 0) {
+        dbenv-&gt;err(dbenv, ret, "dbc-&gt;c_close");
+        exit (1);
+    }
+    if ((ret = tid-&gt;commit(tid, 0)) != 0) {
+        dbenv-&gt;err(dbenv, ret, "DB_TXN-&gt;commit");
+        exit (1);
+    }
+    return (0);
+}</strong></span></pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="transapp_read.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="transapp.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="transapp_nested.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Degrees of isolation </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Nested transactions</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

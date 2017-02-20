@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Isolation</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="transapp.html" title="Chapter 11.  Berkeley DB Transactional Data Store Applications" />
+    <link rel="prev" href="transapp_atomicity.html" title="Atomicity" />
+    <link rel="next" href="transapp_read.html" title="Degrees of isolation" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Isolation</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="transapp_atomicity.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 11. 
+        Berkeley DB Transactional Data Store Applications
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="transapp_read.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="transapp_inc"></a>Isolation</h2>
+          </div>
+        </div>
+      </div>
+      <p>The third reason listed for using transactions was <span class="emphasis"><em>isolation</em></span>.
+Consider an application suite in which multiple threads of control
+(multiple processes or threads in one or more processes) are changing
+the values associated with a key in one or more databases.  Specifically,
+they are taking the current value, incrementing it, and then storing it
+back into the database.</p>
+      <p>Such an application requires isolation.  Because we want to change a value
+in the database, we must make sure that after we read it, no other thread
+of control modifies it.  For example, assume that both thread #1 and
+thread #2 are doing similar operations in the database, where thread #1
+is incrementing records by 3, and thread #2 is incrementing records by
+5.  We want to increment the record by a total of 8.  If the operations
+interleave in the right (well, wrong) order, that is not what will
+happen:</p>
+      <pre class="programlisting">thread #1  <span class="bold"><strong>read</strong></span> record: the value is 2
+thread #2  <span class="bold"><strong>read</strong></span> record: the value is 2
+thread #2  <span class="bold"><strong>write</strong></span> record + 5 back into the database (new value 7)
+thread #1  <span class="bold"><strong>write</strong></span> record + 3 back into the database (new value 5)</pre>
+      <p>As you can see, instead of incrementing the record by a total of 8,
+we've incremented it only by 3 because thread #1 overwrote thread #2's
+change.  By wrapping the operations in transactions, we ensure that this
+cannot happen.  In a transaction, when the first thread reads the
+record, locks are acquired that will not be released until the
+transaction finishes, guaranteeing that all writers
+will block, waiting for the first thread's transaction to complete (or
+to be aborted).</p>
+      <p>Here is an example function that does transaction-protected increments
+on database records to ensure isolation:</p>
+      <pre class="programlisting">int
+main(int argc, char *argv)
+{
+    extern int optind;
+    DB *db_cats, *db_color, *db_fruit;
+    DB_ENV *dbenv;
+    int ch;
+
+    while ((ch = getopt(argc, argv, "")) != EOF)
+        switch (ch) {
+        case '?':
+        default:
+            usage();
+        }
+    argc -= optind;
+    argv += optind;
+
+    env_dir_create();
+    env_open(&amp;dbenv);
+
+    /* Open database: Key is fruit class; Data is specific type. */
+    db_open(dbenv, &amp;db_fruit, "fruit", 0);
+
+    /* Open database: Key is a color; Data is an integer. */
+    db_open(dbenv, &amp;db_color, "color", 0);
+
+    /*
+     * Open database:
+     *  Key is a name; Data is: company name, cat breeds.
+     */
+    db_open(dbenv, &amp;db_cats, "cats", 1);
+
+    add_fruit(dbenv, db_fruit, "apple", "yellow delicious");
+
+<span class="bold"><strong> add_color(dbenv, db_color, "blue", 0);
+    add_color(dbenv, db_color, "blue", 3);</strong></span>
+
+    return (0);
+}
+
+<span class="bold"><strong>int
+add_color(DB_ENV *dbenv, DB *dbp, char *color, int increment)
+{
+    DBT key, data;
+    DB_TXN *tid;
+    int fail, original, ret, t_ret;
+    char buf64;
+
+    /* Initialization. */
+    memset(&amp;key, 0, sizeof(key));
+    key.data = color;
+    key.size = strlen(color);
+    memset(&amp;data, 0, sizeof(data));
+    data.flags = DB_DBT_MALLOC;
+
+    for (fail = 0;;) {
+        /* Begin the transaction. */
+        if ((ret = dbenv-&gt;txn_begin(dbenv, NULL, &amp;tid, 0)) != 0) {
+            dbenv-&gt;err(dbenv, ret, "DB_ENV-&gt;txn_begin");
+            exit (1);
+        }
+
+        /*
+         * Get the key.  If it exists, we increment the value.  If it
+         * doesn't exist, we create it.
+         */
+        switch (ret = dbp-&gt;get(dbp, tid, &amp;key, &amp;data, DB_RMW)) {
+        case 0:
+            original = atoi(data.data);
+            break;
+        case DB_LOCK_DEADLOCK:
+        default:
+            /* Retry the operation. */
+            if ((t_ret = tid-&gt;abort(tid)) != 0) {
+                dbenv-&gt;err(dbenv, t_ret, "DB_TXN-&gt;abort");
+                exit (1);
+            }
+            if (fail++ == MAXIMUM_RETRY)
+                return (ret);
+            continue;
+        case DB_NOTFOUND:
+            original = 0;
+            break;
+        }
+        if (data.data != NULL)
+            free(data.data);
+
+        /* Create the new data item. */
+        (void)snprintf(buf, sizeof(buf), "%d", original + increment);
+        data.data = buf;
+        data.size = strlen(buf) + 1;
+
+        /* Store the new value. */
+        switch (ret = dbp-&gt;put(dbp, tid, &amp;key, &amp;data, 0)) {
+        case 0:
+            /* Success: commit the change. */
+            if ((ret = tid-&gt;commit(tid, 0)) != 0) {
+                dbenv-&gt;err(dbenv, ret, "DB_TXN-&gt;commit");
+                exit (1);
+            }
+            return (0);
+        case DB_LOCK_DEADLOCK:
+        default:
+            /* Retry the operation. */
+            if ((t_ret = tid-&gt;abort(tid)) != 0) {
+                dbenv-&gt;err(dbenv, t_ret, "DB_TXN-&gt;abort");
+                exit (1);
+            }
+            if (fail++ == MAXIMUM_RETRY)
+                return (ret);
+            break;
+        }
+    }
+}</strong></span></pre>
+      <p>The <a href="../api_reference/C/dbcget.html#dbcget_DB_RMW" class="olink">DB_RMW</a> flag in the <a href="../api_reference/C/dbget.html" class="olink">DB-&gt;get()</a> call specifies a write lock
+should be acquired on the key/data pair, instead of the more obvious read
+lock.  We do this because the application expects to write the key/data
+pair in a subsequent operation, and the transaction is much more likely to
+deadlock if we first obtain a read lock and subsequently a write lock, than
+if we obtain the write lock initially.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="transapp_atomicity.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="transapp.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="transapp_read.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Atomicity </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Degrees of isolation</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 4.5: DB-&gt;set_isalive</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_4_5_toc.html" title="Chapter 42. Upgrading Berkeley DB 4.4 applications to Berkeley DB 4.5" />
+    <link rel="prev" href="upgrade_4_5_deprecate.html" title="Release 4.5: deprecated interfaces" />
+    <link rel="next" href="upgrade_4_5_elect.html" title="Release 4.5: DB_ENV-&gt;rep_elect" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 4.5: DB-&gt;set_isalive</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_4_5_deprecate.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 42. Upgrading Berkeley DB 4.4 applications to Berkeley DB 4.5</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_4_5_elect.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_4_5_alive"></a>Release 4.5: DB-&gt;set_isalive</h2>
+          </div>
+        </div>
+      </div>
+      <p>In previous releases, the function specified to the
+<a href="../api_reference/C/envset_isalive.html" class="olink">DB_ENV-&gt;set_isalive()</a> method did not take a flags parameter.  In the Berkeley DB
+4.5 release, an additional flags argument has been added:
+<a href="../api_reference/C/envset_isalive.html#isalive_DB_MUTEX_PROCESS_ONLY" class="olink">DB_MUTEX_PROCESS_ONLY</a>.</p>
+      <p>Applications configuring an is-alive function should add a flags
+argument to the function, and change the function to ignore any thread
+ID and return the status of just the process, when the
+<a href="../api_reference/C/envset_isalive.html#isalive_DB_MUTEX_PROCESS_ONLY" class="olink">DB_MUTEX_PROCESS_ONLY</a> flag is specified.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_4_5_deprecate.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_4_5_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_4_5_elect.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 4.5: deprecated interfaces </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 4.5: DB_ENV-&gt;rep_elect</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

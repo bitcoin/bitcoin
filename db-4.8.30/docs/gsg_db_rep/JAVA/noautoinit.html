@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Stop Auto-Initialization</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Replicated Berkeley DB Applications" />
+    <link rel="up" href="addfeatures.html" title="Chapter 5. Additional Features" />
+    <link rel="prev" href="manageblock.html" title="Managing Blocking Operations" />
+    <link rel="next" href="c2ctransfer.html" title="Client to Client Transfer" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Stop Auto-Initialization</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="manageblock.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. Additional Features</th>
+          <td width="20%" align="right"> <a accesskey="n" href="c2ctransfer.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="noautoinit"></a>Stop Auto-Initialization</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+                    As stated in the previous section, when a replication
+                    replica is synchronizing with its master, it will block
+                    DB operations at some points during this process
+                    until the synchronization is completed. You can turn
+                    off this behavior (see <a class="xref" href="manageblock.html" title="Managing Blocking Operations">Managing Blocking Operations</a>), but for replicas
+                    that have been out of touch from their master for a
+                    very long time, this may not be enough.
+
+            </p>
+      <p>
+                    If a replica has been out of touch from its master long enough, it may find that
+                    it is not possible to perform synchronization. When this happens, by default the
+                    master and replica internally decide to completely re-initialize the replica.
+                    This re-initialization involves discarding the replica's current database(s) and
+                    transferring new ones to it from the master. Depending on the size of the master's
+                    databases, this can take a long time, during which time the replica will be
+                    completely non-responsive when it comes to performing database operations.
+            </p>
+      <p>
+                It is possible that there is a time of the day when it is better to perform a replica
+                re-initialization. Or, you simply might want to decide to bring the replica up to
+                speed by restoring its databases using a hot-backup taken from the master. Either
+                way, you can decide to prevent automatic-initialization of your replica. To do this
+                specify
+                    
+                    <span>
+                            <code class="literal">ReplicationConfig.NOAUTOINIT</code> and
+                            <code class="literal">true</code> to
+                        <code class="methodname">Environment.setReplicationConfig()</code>.
+                        To turn off this feature, specify 
+                        <code class="literal">false</code> for the 
+                        <code class="literal">ReplicationConfig.NOAUTOINIT</code> field.
+                    </span>
+            </p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="manageblock.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="addfeatures.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="c2ctransfer.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Managing Blocking Operations </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Client to Client Transfer</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

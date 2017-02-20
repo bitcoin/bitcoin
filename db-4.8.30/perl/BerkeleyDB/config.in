@@ -1,0 +1,45 @@
+# Filename:	config.in
+#
+# written by Paul Marquess <Paul.Marquess@btinternet.com>
+
+# 1. Where is the file db.h?
+#
+#    Change the path below to point to the directory where db.h is
+#    installed on your system.
+
+#INCLUDE	= /usr/local/include
+#INCLUDE	= ../..
+INCLUDE	= /usr/local/BerkeleyDB/include
+
+# 2. Where is libdb?
+#
+#    Change the path below to point to the directory where libdb is
+#    installed on your system.
+
+#LIB	= /usr/local/lib
+#LIB	= ../..
+LIB	= /usr/local/BerkeleyDB/lib
+
+# 3. Is the library called libdb?
+#
+#    If you have copies of both 1.x and 2.x Berkeley DB installed on
+#    your system it can sometimes be tricky to make sure you are using
+#    the correct one. Renaming one (or creating a symbolic link) to
+#    include the version number of the library can help.
+#
+#    For example, if you have Berkeley DB 2.6.4  you could rename the
+#    Berkeley DB library from libdb.a to libdb-2.6.4.a  and change the
+#    DBNAME line below to look like this:
+#
+#        DBNAME = -ldb-2.6.4 
+#
+#    Note: If you are building this module with Win32, -llibdb will be
+#    used by default.
+#
+#    If you have changed the name of the library, uncomment the line
+#    below (by removing the leading #) and edit the line to use the name
+#    you have picked.
+
+#DBNAME = -ldb-3.0
+
+# end of file config.in

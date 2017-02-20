@@ -1,0 +1,15 @@
+# Begin Custom Build - Compiling java files using javac
+ProjDir=.
+
+"force_compilation.txt" : "$(INTDIR)"
+	echo compiling Berkeley DB classes
+	mkdir "$(INTDIR)\classes"
+	javac -g -d "$(INTDIR)\classes" -classpath "$(INTDIR)\classes" ..\java\src\com\sleepycat\db\*.java ..\java\src\com\sleepycat\db\internal\*.java ..\java\src\com\sleepycat\asm\*.java ..\java\src\com\sleepycat\bind\*.java ..\java\src\com\sleepycat\bind\serial\*.java ..\java\src\com\sleepycat\bind\tuple\*.java ..\java\src\com\sleepycat\collections\*.java ..\java\src\com\sleepycat\compat\*.java ..\java\src\com\sleepycat\persist\*.java ..\java\src\com\sleepycat\persist\evolve\*.java ..\java\src\com\sleepycat\persist\impl\*.java ..\java\src\com\sleepycat\persist\model\*.java ..\java\src\com\sleepycat\persist\raw\*.java ..\java\src\com\sleepycat\util\*.java ..\java\src\com\sleepycat\util\keyrange\*.java
+	echo compiling examples
+	mkdir "$(INTDIR)\classes.ex"
+	javac -g -d "$(INTDIR)\classes.ex" -classpath "$(INTDIR)\classes;$(INTDIR)\classes.ex" ..\examples_java\src\db\*.java ..\examples_java\src\db\GettingStarted\*.java ..\examples_java\src\db\repquote\*.java ..\examples_java\src\collections\access\*.java ..\examples_java\src\collections\hello\*.java ..\examples_java\src\collections\ship\basic\*.java ..\examples_java\src\collections\ship\entity\*.java ..\examples_java\src\collections\ship\tuple\*.java ..\examples_java\src\collections\ship\sentity\*.java ..\examples_java\src\collections\ship\marshal\*.java ..\examples_java\src\collections\ship\factory\*.java ..\examples_java\src\persist\*.java ..\examples_java\src\persist\gettingStarted\*.java ..\examples_java\src\persist\txn\*.java
+	echo creating jar files
+	jar cf "$(OUTDIR)/db.jar" -C "$(INTDIR)\classes" .
+	jar cf "$(OUTDIR)/dbexamples.jar" -C "$(INTDIR)\classes.ex" .
+	echo Java build finished
+# End Custom Build

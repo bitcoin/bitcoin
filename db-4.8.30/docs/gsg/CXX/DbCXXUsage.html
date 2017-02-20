@@ -1,0 +1,538 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Database Usage Example</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="DBEntry.html" title="Chapter 3. Database Records" />
+    <link rel="prev" href="usingDbt.html" title="Reading and Writing Database Records" />
+    <link rel="next" href="Cursors.html" title="Chapter 4. Using Cursors" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Database Usage Example</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="usingDbt.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. Database Records</th>
+          <td width="20%" align="right"> <a accesskey="n" href="Cursors.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="DbCXXUsage"></a>Database Usage Example</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+        In <a class="xref" href="CoreDbCXXUsage.html" title="Database Example">Database Example</a> we created 
+        a class that opens and closes a database for us.
+        We now make use of that class to load inventory data into
+        two databases that we will use for our inventory system.
+    </p>
+      <p>
+        Again, remember that you can find the complete implementation for these functions
+        in:
+    </p>
+      <pre class="programlisting"><span class="emphasis"><em>DB_INSTALL</em></span>/examples_cxx/getting_started</pre>
+      <p>
+        where <code class="literal"><span class="emphasis"><em>DB_INSTALL</em></span></code> is the location where you
+        placed your DB distribution.
+    </p>
+      <div class="example">
+        <a id="VENDORCXXStruct"></a>
+        <p class="title">
+          <b>Example 3.1 VENDOR Structure</b>
+        </p>
+        <div class="example-contents">
+          <p>
+            We want to store data related to an inventory system. There are two
+            types of information that we want to manage: inventory data and related
+            vendor contact information. To manage this information, we could
+            have created a structure for each type of data, but to illustrate
+            storing mixed data without a structure we refrain from creating one
+            for the inventory data.
+        </p>
+          <p>
+            We now show the definition of the VENDOR structure.
+            Note that the VENDOR structure uses fixed-length fields. 
+            This is not necessary and in fact could
+            represent a waste of resources if the number of vendors stored in
+            our database scales to very large numbers. However, for simplicity we use
+            fixed-length fields anyway, especially 
+            given that our sample data contains so few vendor records.
+        </p>
+          <a id="cxx_dbt10"></a>
+          <pre class="programlisting">// File: gettingStartedCommon.hpp
+#define MAXFIELD 20
+typedef struct vendor {
+    char name[MAXFIELD];             // Vendor name
+    char street[MAXFIELD];           // Street name and number
+    char city[MAXFIELD];             // City
+    char state[3];                   // Two-digit US state code
+    char zipcode[6];                 // US zipcode
+    char phone_number[13];           // Vendor phone number
+    char sales_rep[MAXFIELD];        // Name of sales representative
+    char sales_rep_phone[MAXFIELD];  // Sales rep's phone number
+} VENDOR;</pre>
+        </div>
+      </div>
+      <br class="example-break" />
+      <div class="example">
+        <a id="InventoryData"></a>
+        <p class="title">
+          <b>Example 3.2 InventoryData Class</b>
+        </p>
+        <div class="example-contents">
+          <p>
+            In order to manage our actual inventory data, we create a class that
+            encapsulates the data that we want to store for each inventory
+            record. Beyond simple data encapsulation, this class is also capable
+            of marshaling the inventory data into a single contiguous buffer
+            for the purposes of storing in that data in a DB database.
+        </p>
+          <p>
+            We also provide two constructors for this class. The default
+            constructor simply initializes all our data members for us. A second
+            constructor is also provided that is capable of populating our data
+            members from a <code class="literal">void *</code>. This second constructor is
+            not really needed until the next chapter where we show how to read
+            data from the databases, but we include it here for the purpose of
+            completeness anyway.
+        </p>
+          <p>
+            To simplify things a bit, we include the entire implementation for this
+            class in <code class="filename">gettingStartedCommon.hpp</code> along with
+            our <code class="literal">VENDOR</code> structure definition.
+        </p>
+          <p>
+            To begin, we create the public getter and setter methods that we
+            use with our class' private members. We also show the implementation
+            of the method that we use to initialize all our private members.
+        </p>
+          <a id="cxx_dbt11"></a>
+          <pre class="programlisting">class InventoryData
+{
+public:
+    inline void setPrice(double price) {price_ = price;}
+    inline void setQuantity(long quantity) {quantity_ = quantity;}
+    inline void setCategory(std::string &amp;category) {category_ = category;}
+    inline void setName(std::string &amp;name) {name_ = name;}
+    inline void setVendor(std::string &amp;vendor) {vendor_ = vendor;}
+    inline void setSKU(std::string &amp;sku) {sku_ = sku;}
+                                                                                                                                    
+    inline double&amp; getPrice() {return(price_);}
+    inline long&amp; getQuantity() {return(quantity_);}
+    inline std::string&amp; getCategory() {return(category_);}
+    inline std::string&amp; getName() {return(name_);}
+    inline std::string&amp; getVendor() {return(vendor_);}
+    inline std::string&amp; getSKU() {return(sku_);}
+                                                                                                                                    
+    // Initialize our data members
+    void clear()
+    {
+        price_ = 0.0;
+        quantity_ = 0;
+        category_.clear();
+        name_.clear();
+        vendor_.clear();
+        sku_.clear();
+    } </pre>
+          <p>
+        Next we implement our constructors. The default constructor simply calls
+        the <code class="methodname">clear()</code>. The second constructor takes a
+        <code class="literal">void *</code> as an argument, which it then uses to
+        initialize the data members. Note, again, that we will not actually use
+        this second constructor in this chapter, but we show it here just to be
+        complete anyway.
+    </p>
+          <a id="cxx_dbt12"></a>
+          <pre class="programlisting">    // Default constructor
+    InventoryData() { clear(); }
+                                                                                                                                    
+    // Constructor from a void *
+    // For use with the data returned from a bdb get
+    InventoryData(void *buffer)
+    {
+        char *buf = (char *)buffer;
+                                                                                                                                    
+        price_ = *((double *)buf);
+        bufLen_ = sizeof(double);
+                                                                                                                                    
+        quantity_ = *((long *)(buf + bufLen_));
+        bufLen_ += sizeof(long);
+                                                                                                                                    
+        name_ = buf + bufLen_;
+        bufLen_ += name_.size() + 1;
+                                                                                                                                    
+        sku_ = buf + bufLen_;
+        bufLen_ += sku_.size() + 1;
+                                                                                                                                    
+        category_ = buf + bufLen_;
+        bufLen_ += category_.size() + 1;
+                                                                                                                                    
+        vendor_ = buf + bufLen_;
+        bufLen_ += vendor_.size() + 1;
+    } </pre>
+          <p>
+        Next we provide a couple of methods for returning the class' buffer and
+        the size of the buffer. These are used for actually storing the class'
+        data in a DB database.
+    </p>
+          <a id="cxx_dbt13"></a>
+          <pre class="programlisting">    // Marshalls this classes data members into a single
+    // contiguous memory location for the purpose of storing
+    // the data in a database.
+    char *
+    getBuffer()
+    {
+        // Zero out the buffer
+        memset(databuf_, 0, 500);
+        // Now pack the data into a single contiguous memory location for
+        // storage.
+        bufLen_ = 0;
+        int dataLen = 0;
+                                                                                                                                    
+        dataLen = sizeof(double);
+        memcpy(databuf_, &amp;price_, dataLen);
+        bufLen_ += dataLen;
+                                                                                                                                    
+        dataLen = sizeof(long);
+        memcpy(databuf_ + bufLen_, &amp;quantity_, dataLen);
+        bufLen_ += dataLen;
+                                                                                                                                    
+        packString(databuf_, name_);
+        packString(databuf_, sku_);
+        packString(databuf_, category_);
+        packString(databuf_, vendor_);
+                                                                                                                                    
+        return (databuf_);
+    }
+                                                                                                                                    
+    // Returns the size of the buffer. Used for storing
+    // the buffer in a database.
+    inline int getBufferSize() { return (bufLen_); } </pre>
+          <p>
+        Our last public method is a utility method that we use to get the class
+        to show itself.
+    </p>
+          <a id="cxx_dbt14"></a>
+          <pre class="programlisting">     // Utility function used to show the contents of this class
+    void
+    show() {
+        std::cout &lt;&lt; "\nName:         " &lt;&lt; name_ &lt;&lt; std::endl;
+        std::cout &lt;&lt; "    SKU:        " &lt;&lt; sku_ &lt;&lt; std::endl;
+        std::cout &lt;&lt; "    Price:      " &lt;&lt; price_ &lt;&lt; std::endl;
+        std::cout &lt;&lt; "    Quantity:   " &lt;&lt; quantity_ &lt;&lt; std::endl;
+        std::cout &lt;&lt; "    Category:   " &lt;&lt; category_ &lt;&lt; std::endl;
+        std::cout &lt;&lt; "    Vendor:     " &lt;&lt; vendor_ &lt;&lt; std::endl;
+    } </pre>
+          <p>
+        Finally, we provide a private method that is used to help us pack data
+        into our buffer, and we declare our private data members.
+    </p>
+          <a id="cxx_dbt15"></a>
+          <pre class="programlisting">private:
+
+    // Utility function that appends a char * to the end of
+    // the buffer.
+    void
+    packString(char *buffer, std::string &amp;theString)
+    {
+        int string_size = theString.size() + 1;
+        memcpy(buffer+bufLen_, theString.c_str(), string_size);
+        bufLen_ += string_size;
+    }
+
+    // Data members
+    std::string category_, name_, vendor_, sku_;
+    double price_;
+    long quantity_;
+    int bufLen_;
+    char databuf_[500];
+}; </pre>
+        </div>
+      </div>
+      <br class="example-break" />
+      <div class="example">
+        <a id="exampledbload-cxx"></a>
+        <p class="title">
+          <b>Example 3.3 example_database_load</b>
+        </p>
+        <div class="example-contents">
+          <p>
+            Our initial sample application loads database information from
+            several flat files. To save space, we won't show all the details of
+            this example program. However, as always you can find the complete
+            implementation for this program here:
+        </p>
+          <pre class="programlisting"><span class="emphasis"><em>DB_INSTALL</em></span>/examples_cxx/getting_started</pre>
+          <p>
+        where <code class="literal"><span class="emphasis"><em>DB_INSTALL</em></span></code> is the location where you
+        placed your DB distribution.
+    </p>
+          <p>
+        We begin with the normal include directives and forward declarations:
+    </p>
+          <a id="cxx_dbt16"></a>
+          <pre class="programlisting">// File: example_database_load.cpp
+#include &lt;iostream&gt;
+#include &lt;fstream&gt;
+#include &lt;cstdlib&gt;
+                                                                                                                                    
+#include "MyDb.hpp"
+#include "gettingStartedCommon.hpp" 
+
+// Forward declarations
+void loadVendorDB(MyDb&amp;, std::string&amp;);
+void loadInventoryDB(MyDb&amp;, std::string&amp;);
+</pre>
+          <p>
+       Next we begin our <code class="function">main()</code> function with the variable
+       declarations and command line parsing that is normal for most command
+       line applications:  
+    </p>
+          <a id="cxx_dbt17"></a>
+          <pre class="programlisting">// Loads the contents of vendors.txt and inventory.txt into
+// Berkeley DB databases. 
+int
+main(int argc, char *argv[])
+{
+    // Initialize the path to the database files
+    std::string basename("./");
+    std::string databaseHome("./");
+                                                                                                                                    
+    // Database names
+    std::string vDbName("vendordb.db");
+    std::string iDbName("inventorydb.db");
+
+    // Parse the command line arguments here and determine 
+    // the location of the flat text files containing the 
+    // inventory data here. This step is omitted for clarity.
+
+    //  Identify the full name for our input files, which should
+    //  also include some path information.
+    std::string inventoryFile = basename + "inventory.txt";
+    std::string vendorFile = basename + "vendors.txt";
+                                                                                                                                    
+    try
+    {
+        // Open all databases.
+        MyDb inventoryDB(databaseHome, iDbName);
+        MyDb vendorDB(databaseHome, vDbName);
+                                                                                                                                    
+        // Load the vendor database
+        loadVendorDB(vendorDB, vendorFile);
+
+        // Load the inventory database
+        loadInventoryDB(inventoryDB, inventoryFile);
+    } catch(DbException &amp;e) {
+        std::cerr &lt;&lt; "Error loading databases. " &lt;&lt; std::endl;
+        std::cerr &lt;&lt; e.what() &lt;&lt; std::endl;
+        return(e.get_errno());
+    } catch(std::exception &amp;e) {
+        std::cerr &lt;&lt; "Error loading databases. " &lt;&lt; std::endl;
+        std::cerr &lt;&lt; e.what() &lt;&lt; std::endl;
+        return(-1);
+    }
+                                                                                                                                    
+    return(0);
+} // End main </pre>
+          <p>
+        Note that we do not explicitly close our databases here. This is because
+        the databases are encapsulated in <code class="classname">MyDb</code> class
+        objects, and those objects are on the stack. When they go out of scope,
+        their destructors will cause the database close to occur.
+    </p>
+          <p>
+        Notice that there is not a lot to this function because we have pushed
+        off all the database activity to other places.
+    </p>
+          <p>
+        Next we show the implementation of
+        <code class="function">loadVendorDB()</code>. We load this data by
+        scanning (line by line) the contents of the
+        <code class="filename">vendors.txt</code> file into a VENDOR structure. Once we have a
+        line scanned into the structure, we can store that structure into our
+        vendors database. 
+     </p>
+          <p>
+        Note that we use the vendor's name as the key here. In doing so, we
+        assume that the vendor's name is unique in our database. If it was not,
+        we would either have to select a different key, or architect our
+        application such that it could cope with multiple vendor records with
+        the same name.
+     </p>
+          <a id="cxx_dbt18"></a>
+          <pre class="programlisting">// Loads the contents of the vendors.txt file into a database
+void
+loadVendorDB(MyDb &amp;vendorDB, std::string &amp;vendorFile)
+{
+    std::ifstream inFile(vendorFile.c_str(), std::ios::in);
+    if ( !inFile )
+    {
+        std::cerr &lt;&lt; "Could not open file '" &lt;&lt; vendorFile
+                  &lt;&lt; "'. Giving up." &lt;&lt; std::endl;
+        throw std::exception();
+    }
+                                                                                                                                    
+    VENDOR my_vendor;
+    while (!inFile.eof())
+    {
+        std::string stringBuf;
+        std::getline(inFile, stringBuf);
+        memset(&amp;my_vendor, 0, sizeof(VENDOR));
+                                                                                                                                    
+        // Scan the line into the structure.
+        // Convenient, but not particularly safe.
+        // In a real program, there would be a lot more
+        // defensive code here.
+        sscanf(stringBuf.c_str(),
+          "%20[^#]#%20[^#]#%20[^#]#%3[^#]#%6[^#]#%13[^#]#%20[^#]#%20[^\n]",
+          my_vendor.name, my_vendor.street,
+          my_vendor.city, my_vendor.state,
+          my_vendor.zipcode, my_vendor.phone_number,
+          my_vendor.sales_rep, my_vendor.sales_rep_phone);
+                                                                                                                                    
+        Dbt key(my_vendor.name, strlen(my_vendor.name) + 1);
+        Dbt data(&amp;my_vendor, sizeof(VENDOR));
+                                                                                                                                    
+        vendorDB.getDb().put(NULL, &amp;key, &amp;data, 0);
+    }
+    inFile.close();
+} </pre>
+          <p>
+        Finally, we need to write the
+        <code class="function">loadInventoryDB()</code> function. To load the inventory information, 
+        we read in each line of the inventory.txt file, obtain each field from
+        it, then we load this data into an <code class="classname">InventoryData</code>
+        instance. 
+     </p>
+          <p>
+        To help us obtain the various fields from each line of input,
+        we also create a simple helper function that locates the position of the
+        first a field delimiter (a pound (#) sign) from a line of input.
+     </p>
+          <p>
+        Note that we could have simply decided to store our inventory data in a
+        structure very much like the VENDOR structure that we use above.
+        However, by storing this data in the
+        <code class="classname">InventoryData</code> class, which identifies the size of
+        the data that it contains, 
+        we can use the smallest amount of space possible for the data that we
+        are storing.  The result is that our cache can be smaller than it might
+        otherwise be and our database will take less space on disk than if we used
+        a structure with fixed-length fields.
+    </p>
+          <p>
+        For a trivial dataset such as what we use for these examples, these
+        resource savings are negligible. But if we were storing hundreds of
+        millions of records, then the cost savings may become significant.
+    </p>
+          <a id="cxx_dbt19"></a>
+          <pre class="programlisting">// Used to locate the first pound sign (a field delimiter)
+// in the input string.
+int
+getNextPound(std::string &amp;theString, std::string &amp;substring)
+{
+    int pos = theString.find("#");
+    substring.assign(theString, 0, pos);
+    theString.assign(theString, pos + 1, theString.size());
+    return (pos);
+}
+                                                                                                                                    
+                                                                                                                                    
+// Loads the contents of the inventory.txt file into a database
+void
+loadInventoryDB(MyDb &amp;inventoryDB, std::string &amp;inventoryFile)
+{
+    InventoryData inventoryData;
+    std::string substring;
+    int nextPound;
+                                                                                                                                    
+    std::ifstream inFile(inventoryFile.c_str(), std::ios::in);
+    if (!inFile)
+    {
+        std::cerr &lt;&lt; "Could not open file '" &lt;&lt; inventoryFile
+                  &lt;&lt; "'. Giving up." &lt;&lt; std::endl;
+        throw std::exception();
+    }
+                                                                                                                                    
+    while (!inFile.eof())
+    {
+        inventoryData.clear();
+        std::string stringBuf;
+        std::getline(inFile, stringBuf);
+                                                                                                                                    
+        // Now parse the line
+        if (!stringBuf.empty())
+        {
+            nextPound = getNextPound(stringBuf, substring);
+            inventoryData.setName(substring);
+                                                                                                                                    
+            nextPound = getNextPound(stringBuf, substring);
+            inventoryData.setSKU(substring);
+                                                                                                                                    
+            nextPound = getNextPound(stringBuf, substring);
+            inventoryData.setPrice(strtod(substring.c_str(), 0));
+                                                                                                                                    
+            nextPound = getNextPound(stringBuf, substring);
+            inventoryData.setQuantity(strtol(substring.c_str(), 0, 10));
+                                                                                                                                    
+            nextPound = getNextPound(stringBuf, substring);
+            inventoryData.setCategory(substring);
+                                                                                                                                    
+            nextPound = getNextPound(stringBuf, substring);
+            inventoryData.setVendor(substring);
+                                                                                                                                    
+            void *buff = (void *)inventoryData.getSKU().c_str();
+            int size = inventoryData.getSKU().size()+1;
+            Dbt key(buff, size);
+                                                                                                                                    
+            buff = inventoryData.getBuffer();
+            size = inventoryData.getBufferSize();
+            Dbt data(buff, size);
+                                                                                                                                    
+            inventoryDB.getDb().put(NULL, &amp;key, &amp;data, 0);
+        }
+    }
+    inFile.close();
+} </pre>
+          <p>
+        In the next chapter we provide an example that shows how to read
+        the inventory and vendor databases.
+    </p>
+        </div>
+      </div>
+      <br class="example-break" />
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="usingDbt.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="DBEntry.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="Cursors.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Reading and Writing Database Records </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 4. Using Cursors</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

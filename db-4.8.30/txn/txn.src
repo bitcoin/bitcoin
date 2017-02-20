@@ -1,0 +1,121 @@
+/*-
+ * See the file LICENSE for redistribution information.
+ *
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
+ *
+ * $Id$
+ */
+
+DBPRIVATE
+PREFIX	__txn
+
+INCLUDE #include "db_int.h"
+INCLUDE #include "dbinc/crypto.h"
+INCLUDE #include "dbinc/db_page.h"
+INCLUDE #include "dbinc/db_dispatch.h"
+INCLUDE #include "dbinc/db_am.h"
+INCLUDE #include "dbinc/lock.h"
+INCLUDE #include "dbinc/log.h"
+INCLUDE #include "dbinc/txn.h"
+INCLUDE
+
+/*
+ * This is the standard log operation for commit.
+ * Note that we are using an int32_t for the timestamp.  This means that
+ * in 2039 we will need to deprecate this log record and create one that
+ * either changes the Epoch or has a 64-bit offset.
+ * NOTE: The opcode MUST be the first argument in these records, because
+ * the force_abort code overwrites it with an ABORT should the write to
+ * the log fail.
+ * envid:
+ *	Environment ID of this operation (4.4+).
+ */
+BEGIN_COMPAT regop		42	10
+ARG	opcode		u_int32_t	lu
+TIME	timestamp	int32_t		ld
+LOCKS	locks		DBT		s
+END
+
+BEGIN regop		44	10
+ARG	opcode		u_int32_t	lu
+TIME	timestamp	int32_t		ld
+ARG	envid		u_int32_t	lu
+LOCKS	locks		DBT		s
+END
+
+/*
+ * This is the checkpoint record.  It contains the lsn that the checkpoint
+ * guarantees and a pointer to the last checkpoint so we can walk backwards
+ * by checkpoint.
+ *
+ * ckp_lsn:
+ *	The lsn in the log of the most recent point at which all begun
+ *	transactions have been aborted.  This is the point for which
+ *	the checkpoint is relevant.
+ * last_ckp:
+ *	The previous checkpoint.
+ * timestamp:
+ *	See comment in commit about timestamps.
+ * envid:
+ *	Environment ID of this checkpoint (4.3+).
+ * rep_gen:
+ *	Persistent replication generation number (4.2-4.5 only).
+ *	Renamed to 'spare' in 4.6.
+ */
+BEGIN_COMPAT ckp		42	11
+POINTER	ckp_lsn		DB_LSN *	lu
+POINTER	last_ckp	DB_LSN *	lu
+TIME	timestamp	int32_t		ld
+ARG	rep_gen		u_int32_t	lu
+END
+
+BEGIN ckp		43	11
+POINTER	ckp_lsn		DB_LSN *	lu
+POINTER	last_ckp	DB_LSN *	lu
+TIME	timestamp	int32_t		ld
+ARG	envid		u_int32_t	lu
+ARG	spare		u_int32_t	lu
+END
+
+/*
+ * This is the (new) log operation for a child commit.  It is
+ * logged as a record in the PARENT.  The child field contains
+ * the transaction ID of the child committing and the c_lsn is
+ * the last LSN of the child's log trail.
+ */
+BEGIN child		42	12
+ARG	child	u_int32_t	lx
+POINTER	c_lsn	DB_LSN *	lu
+END
+
+
+/*
+ * This is the standard log operation for prepare.
+ * NOTE: The opcode MUST be the first argument in these records, because
+ * the force_abort code overwrites it with an ABORT should the write to
+ * the log fail.
+ */
+BEGIN_COMPAT xa_regop		42	13
+ARG	opcode		u_int32_t	lu
+DBT	xid		DBT		s
+ARG	formatID	int32_t		ld
+ARG	gtrid		u_int32_t	lu
+ARG	bqual		u_int32_t	lu
+POINTER	begin_lsn	DB_LSN *	lu
+LOCKS	locks		DBT		s
+END
+
+BEGIN prepare		48		13
+ARG	opcode		u_int32_t	lu
+DBT	gid		DBT	s
+POINTER	begin_lsn	DB_LSN *	lu
+LOCKS	locks		DBT		s
+END
+
+/*
+ * Log the fact that we are recycling txnids.
+ */
+BEGIN recycle		42	14
+ARG	min		u_int32_t	lu
+ARG	max		u_int32_t	lu
+END

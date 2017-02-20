@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Access method FAQ</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="am_misc.html" title="Chapter 4.  Access Method Wrapup" />
+    <link rel="prev" href="am_misc_tune.html" title="Access method tuning" />
+    <link rel="next" href="java.html" title="Chapter 5.  Java API" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Access method FAQ</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="am_misc_tune.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 4. 
+        Access Method Wrapup
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="java.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="am_misc_faq"></a>Access method FAQ</h2>
+          </div>
+        </div>
+      </div>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <span class="bold">
+              <strong>Is a Berkeley DB database the same as a "table"?</strong>
+            </span>
+            <p>Yes; "tables" are databases, "rows" are key/data pairs, and "columns"
+are application-encapsulated fields within a data item (to which Berkeley DB
+does not directly provide access).</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>I'm getting an error return in my application, but I can't
+figure out what the library is complaining about.</strong>
+            </span>
+            <p>See <a href="../api_reference/C/envset_errcall.html" class="olink">DB_ENV-&gt;set_errcall()</a>, <a href="../api_reference/C/envset_errfile.html" class="olink">DB_ENV-&gt;set_errfile()</a> and
+<a href="../api_reference/C/dbset_errfile.html" class="olink">DB-&gt;set_errfile()</a> for ways to get additional information about
+error returns from Berkeley DB.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>Are Berkeley DB databases portable between architectures with
+different integer sizes and different byte orders ?</strong>
+            </span>
+            <p>Yes.  Specifically, databases can be moved between 32- and 64-bit
+machines, as well as between little- and big-endian machines.  See
+<a class="xref" href="general_am_conf.html#am_conf_byteorder" title="Selecting a byte order">Selecting a byte order</a> for
+more information.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>I'm seeing database corruption when creating multiple databases
+in a single physical file.</strong>
+            </span>
+            <p>This problem is usually the result of <a href="../api_reference/C/db.html" class="olink">DB</a> handles not sharing an
+underlying database environment.  See <a class="xref" href="am_opensub.html" title="Opening multiple databases in a single file">Opening multiple databases in a single file</a> for more information.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>I'm using integers as keys for a Btree database, and even
+though the key/data pairs are entered in sorted order, the page-fill
+factor is low.</strong>
+            </span>
+            <p>This is usually the result of using integer keys on little-endian
+architectures such as the x86.  Berkeley DB sorts keys as byte strings, and
+little-endian integers don't sort well when viewed as byte strings.
+For example, take the numbers 254 through 257.  Their byte patterns on
+a little-endian system are:</p>
+            <pre class="programlisting">254 fe 0 0 0
+255 ff 0 0 0
+256  0 1 0 0
+257  1 1 0 0</pre>
+            <p>If you treat them as strings, then they sort badly:</p>
+            <pre class="programlisting">256
+257
+254
+255</pre>
+            <p>On a big-endian system, their byte patterns are:</p>
+            <pre class="programlisting">254 0 0 0 fe
+255 0 0 0 ff
+256 0 0 1 0
+257 0 0 1 1</pre>
+            <p>and so, if you treat them as strings they sort nicely.  Which means, if
+you use steadily increasing integers as keys on a big-endian system
+Berkeley DB behaves well and you get compact trees, but on a little-endian
+system Berkeley DB produces much less compact trees.  To avoid this problem,
+you may want to convert the keys to flat text or big-endian
+representations, or provide your own
+<a class="xref" href="bt_conf.html#am_conf_bt_compare" title="Btree comparison">Btree comparison</a></p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>Is there any way to avoid double buffering in the Berkeley DB system?</strong>
+            </span>
+            <p>While you cannot avoid double buffering entirely, there are a few things
+you can do to address this issue:</p>
+            <p>First, the Berkeley DB cache size can be explicitly set.  Rather than allocate
+additional space in the Berkeley DB cache to cover unexpectedly heavy load or
+large table sizes, double buffering may suggest you size the cache to
+function well under normal conditions, and then depend on the file
+buffer cache to cover abnormal conditions.  Obviously, this is a
+trade-off, as Berkeley DB may not then perform as well as usual under abnormal
+conditions.</p>
+            <p>Second, depending on the underlying operating system you're using, you
+may be able to alter the amount of physical memory devoted to the
+system's file buffer cache.  Altering this type of resource
+configuration may require appropriate privileges, or even operating
+system reboots and/or rebuilds, on some systems.</p>
+            <p>Third, changing the size of the Berkeley DB environment regions can change
+the amount of space the operating system makes available for the file
+buffer cache, and it's often worth considering exactly how the operating
+system is dividing up its available memory.  Further, moving the Berkeley DB
+database environment regions from filesystem backed memory into system
+memory (or heap memory), can often make additional system memory
+available for the file buffer cache, especially on systems without a
+unified buffer cache and VM system.</p>
+            <p>Finally, for operating systems that allow buffering to be turned off,
+specifying the <a href="../api_reference/C/envset_flags.html#set_flags_DB_DIRECT_DB" class="olink">DB_DIRECT_DB</a> and <a href="../api_reference/C/envlog_get_config.html#log_set_config_DB_LOG_DIRECT" class="olink">DB_LOG_DIRECT</a> flags
+will attempt to do so.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>I'm seeing database corruption when I run out of disk space.</strong>
+            </span>
+            <p>Berkeley DB can continue to run when when out-of-disk-space errors occur, but
+it requires the application to be transaction protected.  Applications
+which do not enclose update operations in transactions cannot recover
+from out-of-disk-space errors, and the result of running out of disk
+space may be database corruption.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>How can I associate application information with a <a href="../api_reference/C/db.html" class="olink">DB</a>
+or <a href="../api_reference/C/env.html" class="olink">DB_ENV</a> handle?</strong>
+            </span>
+            <p>In the C API, the <a href="../api_reference/C/db.html" class="olink">DB</a> and <a href="../api_reference/C/env.html" class="olink">DB_ENV</a> structures each contain
+an "app_private" field intended to be used to reference
+application-specific information.  See the <a href="../api_reference/C/dbcreate.html" class="olink">db_create()</a> and
+<a href="../api_reference/C/envcreate.html" class="olink">db_env_create()</a> documentation for more information.</p>
+            <p>In the C++ or Java APIs, the easiest way to associate
+application-specific data with a handle is to subclass the <a href="../api_reference/CXX/db.html" class="olink">Db</a>
+or <a href="../api_reference/CXX/env.html" class="olink">DbEnv</a>, for example subclassing <a href="../api_reference/CXX/db.html" class="olink">Db</a> to get MyDb.
+Objects of type MyDb will still have the Berkeley DB API methods available on
+them, and you can put any extra data or methods you want into the MyDb
+class.  If you are using "callback" APIs that take <a href="../api_reference/CXX/db.html" class="olink">Db</a> or
+<a href="../api_reference/CXX/env.html" class="olink">DbEnv</a> arguments (for example, <a href="../api_reference/C/dbset_bt_compare.html" class="olink">DB-&gt;set_bt_compare()</a>)
+these will always be called with the <a href="../api_reference/CXX/db.html" class="olink">Db</a> or <a href="../api_reference/CXX/env.html" class="olink">DbEnv</a>
+objects you create.  So if you always use MyDb objects, you will be able
+to take the first argument to the callback function and cast it to a
+MyDb (in C++, cast it to (MyDb*)).  That will allow you to access your
+data members or methods.</p>
+          </li>
+        </ol>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="am_misc_tune.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="am_misc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="java.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Access method tuning </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 5. 
+        Java API
+        </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

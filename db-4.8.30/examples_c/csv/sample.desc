@@ -1,0 +1,10 @@
+# $Id$
+
+version 1 {
+	LastName	string
+	FirstName	string
+	BirthDate
+	Color		string index
+	Fruit		string index
+	Age		unsigned_long index
+}

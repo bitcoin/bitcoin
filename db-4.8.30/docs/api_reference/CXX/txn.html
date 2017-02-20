@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 13.  The DbTxn Handle</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="prev" href="seqstat_print.html" title="DbSequence::stat_print()" />
+    <link rel="next" href="dbget_transactional.html" title="Db::get_transactional()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 13. 
+                The DbTxn Handle 
+        </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="seqstat_print.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbget_transactional.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="txn"></a>Chapter 13. 
+                The DbTxn Handle 
+        </h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+
+class DbTxn {
+public:
+    DB_TXN *DbTxn::get_DB_TXN();
+    const DB_TXN *DbTxn::get_const_DB_TXN() const;
+    static DbTxn *DbTxn::get_DbTxn(DB_TXN *txn);
+    static const DbTxn *DbTxn::get_const_DbTxn(const DB_TXN *txn);
+    ...
+
+}; </pre>
+      <p>
+            The <code class="classname">DbTxn</code> object is the handle for a transaction. Methods of
+            the <code class="classname">DbTxn</code> handle are used to configure, abort and commit the
+            transaction. <code class="classname">DbTxn</code> handles are provided to 
+            <a class="link" href="db.html" title="Chapter 2.  The Db Handle">Db</a> methods in order
+            to transactionally protect those database operations.
+        </p>
+      <p>
+            <code class="classname">DbTxn</code> handles are not free-threaded; transactions handles
+            may be used by multiple threads, but only serially, that is, the application must
+            serialize access to the <code class="classname">DbTxn</code> handle. Once the 
+            <a class="xref" href="txnabort.html" title="DbTxn::abort()">DbTxn::abort()</a> or 
+            <a class="xref" href="txncommit.html" title="DbTxn::commit()">DbTxn::commit()</a> methods are called, the handle
+            may not be accessed again, regardless of the method's return. In addition, parent
+            transactions may not issue any Berkeley DB operations while they have active child
+            transactions (child transactions that have not yet been committed or aborted) except for
+            <a class="xref" href="txnbegin.html" title="DbEnv::txn_begin()">DbEnv::txn_begin()</a>, 
+            <a class="xref" href="txnabort.html" title="DbTxn::abort()">DbTxn::abort()</a> and 
+            <a class="xref" href="txncommit.html" title="DbTxn::commit()">DbTxn::commit()</a>.
+        </p>
+      <p>
+            Each <code class="classname">DbTxn</code> object has an associated
+            <code class="literal">DB_TXN</code> struct, which is used by the underlying
+            implementation of Berkeley DB and its 
+            
+            <span>C++ language</span>
+            API. The <code class="methodname">DbTxn::get_DB_TXN()</code> method
+            returns a pointer to this struct. Given a const <code class="literal">DbTxn</code> object, 
+            <code class="methodname">txnMget_const_DB_TXN()</code>
+            returns a const pointer to the same struct.
+        </p>
+      <p>
+            Given a <code class="literal">DB_TXN</code> struct, the <code class="methodname">DbTxn::get_DbTxn()</code>
+            method returns the corresponding <code class="classname">DbTxn</code> object, if there is
+            one. If the <code class="literal">DB_TXN</code> object was not associated with a
+            <code class="classname">DbTxn</code> (that is, it was not returned from a call to
+            <code class="methodname">DbTxn::get_DB_TXN()</code>), then the result of
+            <code class="methodname">DbTxn::get_DbTxn</code> is undefined. Given a const
+            <code class="literal">DB_TXN</code> struct, <code class="methodname">DbTxn::get_const_DbTxn()</code>
+            returns the associated const <code class="literal">DbTxn</code> object, if there is one.
+        </p>
+      <p>
+            These methods may be useful for Berkeley DB applications including both C and C++
+            language software. It should not be necessary to use these calls in a purely C++
+            application.
+        </p>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="txnlist"></a>Transaction Subsystem and Related Methods</h2>
+            </div>
+          </div>
+        </div>
+        <div class="navtable">
+          <table border="1" width="80%">
+            <thead>
+              <tr>
+                <th>Transaction Subsystem and Related Methods</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <a class="xref" href="txncheckpoint.html" title="DbEnv::txn_checkpoint()">DbEnv::txn_checkpoint()</a>
+                </td>
+                <td>Checkpoint the transaction subsystem</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="txnrecover.html" title="DbEnv::txn_recover()">DbEnv::txn_recover()</a>
+                </td>
+                <td>Distributed transaction recovery</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="txnset_timeout.html" title="DbTxn::set_timeout()">DbTxn::set_timeout()</a>
+                </td>
+                <td>Set transaction timeout</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="txnstat.html" title="DbEnv::txn_stat()">DbEnv::txn_stat()</a>
+                </td>
+                <td>Return transaction subsystem statistics</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="txnstat_print.html" title="DbEnv::txn_stat_print()">DbEnv::txn_stat_print()</a>
+                </td>
+                <td>Print transaction subsystem statistics</td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <span class="bold">
+                    <strong>Transaction Subsystem Configuration</strong>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="envset_timeout.html" title="DbEnv::set_timeout()">DbEnv::set_timeout()</a>, <a class="xref" href="envget_timeout.html" title="DbEnv::get_timeout()">DbEnv::get_timeout()</a></td>
+                <td>Set/get lock and transaction timeout</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="dbget_transactional.html" title="Db::get_transactional()">Db::get_transactional()</a>
+                </td>
+                <td>Does the Db have transaction support</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="envcdsgroup_begin.html" title="DbEnv::cdsgroup_begin()">DbEnv::cdsgroup_begin()</a>
+                </td>
+                <td>Get a locker ID in Berkeley DB Concurrent Data Store</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="envset_tx_max.html" title="DbEnv::set_tx_max()">DbEnv::set_tx_max()</a>, <a class="xref" href="envget_tx_max.html" title="DbEnv::get_tx_max()">DbEnv::get_tx_max()</a></td>
+                <td>Set/get maximum number of transactions</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="envset_tx_timestamp.html" title="DbEnv::set_tx_timestamp()">DbEnv::set_tx_timestamp()</a>, <a class="xref" href="envget_tx_timestamp.html" title="DbEnv::get_tx_timestamp()">DbEnv::get_tx_timestamp()</a></td>
+                <td>Set/get recovery timestamp</td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <span class="bold">
+                    <strong>Transaction Operations</strong>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="txnabort.html" title="DbTxn::abort()">DbTxn::abort()</a>
+                </td>
+                <td>Abort a transaction</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="txnbegin.html" title="DbEnv::txn_begin()">DbEnv::txn_begin()</a>
+                </td>
+                <td>Begin a transaction</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="txncommit.html" title="DbTxn::commit()">DbTxn::commit()</a>
+                </td>
+                <td>Commit a transaction</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="txndiscard.html" title="DbTxn::discard()">DbTxn::discard()</a>
+                </td>
+                <td>Discard a prepared but not resolved transaction handle</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="txnid.html" title="DbTxn::id()">DbTxn::id()</a>
+                </td>
+                <td>Return a transaction's ID</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="txnprepare.html" title="DbTxn::prepare()">DbTxn::prepare()</a>
+                </td>
+                <td>Prepare a transaction for commit</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="txnset_name.html" title="DbTxn::set_name()">DbTxn::set_name()</a>, <a class="xref" href="txnget_name.html" title="DbTxn::get_name()">DbTxn::get_name()</a></td>
+                <td>Associate a string with a transaction</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="seqstat_print.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbget_transactional.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DbSequence::stat_print() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Db::get_transactional()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

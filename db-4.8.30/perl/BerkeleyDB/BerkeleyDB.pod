@@ -1,0 +1,2488 @@
+=head1 NAME
+
+BerkeleyDB - Perl extension for Berkeley DB version 2, 3 or 4
+
+=head1 SYNOPSIS
+
+  use BerkeleyDB;
+
+  $env = new BerkeleyDB::Env [OPTIONS] ;
+
+  $db  = tie %hash, 'BerkeleyDB::Hash', [OPTIONS] ;
+  $db  = new BerkeleyDB::Hash [OPTIONS] ;
+
+  $db  = tie %hash, 'BerkeleyDB::Btree', [OPTIONS] ;
+  $db  = new BerkeleyDB::Btree [OPTIONS] ;
+
+  $db  = tie @array, 'BerkeleyDB::Recno', [OPTIONS] ;
+  $db  = new BerkeleyDB::Recno [OPTIONS] ;
+
+  $db  = tie @array, 'BerkeleyDB::Queue', [OPTIONS] ;
+  $db  = new BerkeleyDB::Queue [OPTIONS] ;
+
+  $db  = new BerkeleyDB::Unknown [OPTIONS] ;
+
+  $status = BerkeleyDB::db_remove [OPTIONS]
+  $status = BerkeleyDB::db_rename [OPTIONS]
+  $status = BerkeleyDB::db_verify [OPTIONS]
+
+  $hash{$key} = $value ;
+  $value = $hash{$key} ;
+  each %hash ;
+  keys %hash ;
+  values %hash ;
+
+  $status = $db->db_get()
+  $status = $db->db_put() ;
+  $status = $db->db_del() ;
+  $status = $db->db_sync() ;
+  $status = $db->db_close() ;
+  $status = $db->db_pget()
+  $hash_ref = $db->db_stat() ;
+  $status = $db->db_key_range();
+  $type = $db->type() ;
+  $status = $db->status() ;
+  $boolean = $db->byteswapped() ;
+  $status = $db->truncate($count) ;
+  $status = $db->compact($start, $stop, $c_data, $flags, $end);
+
+  $bool = $env->cds_enabled();
+  $bool = $db->cds_enabled();
+  $lock = $db->cds_lock();
+  $lock->cds_unlock();
+  
+  ($flag, $old_offset, $old_length) = $db->partial_set($offset, $length) ;
+  ($flag, $old_offset, $old_length) = $db->partial_clear() ;
+
+  $cursor = $db->db_cursor([$flags]) ;
+  $newcursor = $cursor->c_dup([$flags]);
+  $status = $cursor->c_get() ;
+  $status = $cursor->c_put() ;
+  $status = $cursor->c_del() ;
+  $status = $cursor->c_count() ;
+  $status = $cursor->c_pget() ;
+  $status = $cursor->status() ;
+  $status = $cursor->c_close() ;
+
+  $cursor = $db->db_join() ;
+  $status = $cursor->c_get() ;
+  $status = $cursor->c_close() ;
+
+  $status = $env->txn_checkpoint()
+  $hash_ref = $env->txn_stat()
+  $status = $env->setmutexlocks()
+  $status = $env->set_flags()
+  $status = $env->set_timeout()
+  $status = $env->lsn_reset()
+
+  $txn = $env->txn_begin() ;
+  $db->Txn($txn);
+  $txn->Txn($db1, $db2,...);
+  $status = $txn->txn_prepare()
+  $status = $txn->txn_commit()
+  $status = $txn->txn_abort()
+  $status = $txn->txn_id()
+  $status = $txn->txn_discard()
+  $status = $txn->set_timeout()
+
+  $status = $env->set_lg_dir();
+  $status = $env->set_lg_bsize();
+  $status = $env->set_lg_max();
+
+  $status = $env->set_data_dir() ;
+  $status = $env->set_tmp_dir() ;
+  $status = $env->set_verbose() ;
+  $db_env_ptr = $env->DB_ENV() ;
+
+  $BerkeleyDB::Error
+  $BerkeleyDB::db_version
+
+  # DBM Filters
+  $old_filter = $db->filter_store_key  ( sub { ... } ) ;
+  $old_filter = $db->filter_store_value( sub { ... } ) ;
+  $old_filter = $db->filter_fetch_key  ( sub { ... } ) ;
+  $old_filter = $db->filter_fetch_value( sub { ... } ) ;
+
+  # deprecated, but supported
+  $txn_mgr = $env->TxnMgr();
+  $status = $txn_mgr->txn_checkpoint()
+  $hash_ref = $txn_mgr->txn_stat()
+  $txn = $txn_mgr->txn_begin() ;
+
+=head1 DESCRIPTION
+
+B<NOTE: This document is still under construction. Expect it to be
+incomplete in places.>
+
+This Perl module provides an interface to most of the functionality
+available in Berkeley DB versions 2, 3 and 4. In general it is safe to assume
+that the interface provided here to be identical to the Berkeley DB
+interface. The main changes have been to make the Berkeley DB API work
+in a Perl way. Note that if you are using Berkeley DB 2.x, the new
+features available in Berkeley DB 3.x or DB 4.x are not available via
+this module.
+
+The reader is expected to be familiar with the Berkeley DB
+documentation. Where the interface provided here is identical to the
+Berkeley DB library and the... TODO
+
+The B<db_appinit>, B<db_cursor>, B<db_open> and B<db_txn> man pages are
+particularly relevant.
+
+The interface to Berkeley DB is implemented with a number of Perl
+classes.
+
+=head1 The BerkeleyDB::Env Class
+
+The B<BerkeleyDB::Env> class provides an interface to the Berkeley DB
+function B<db_appinit> in Berkeley DB 2.x or B<db_env_create> and
+B<DBENV-E<gt>open> in Berkeley DB 3.x/4.x. Its purpose is to initialise a
+number of sub-systems that can then be used in a consistent way in all
+the databases you make use of in the environment.
+
+If you don't intend using transactions, locking or logging, then you
+shouldn't need to make use of B<BerkeleyDB::Env>.
+
+Note that an environment consists of a number of files that Berkeley DB
+manages behind the scenes for you. When you first use an environment, it
+needs to be explicitly created. This is done by including C<DB_CREATE>
+with the C<Flags> parameter, described below.
+
+=head2 Synopsis
+
+    $env = new BerkeleyDB::Env
+             [ -Home         => $path, ]
+             [ -Server       => $name, ]
+             [ -CacheSize    => $number, ]
+             [ -Config       => { name => value, name => value }, ]
+             [ -ErrFile      => filename, ]
+             [ -MsgFile      => filename, ]
+             [ -ErrPrefix    => "string", ]
+             [ -Flags        => number, ]
+             [ -SetFlags     => bitmask, ]
+             [ -LockDetect   => number, ]
+             [ -SharedMemKey => number, ]
+             [ -Verbose      => boolean, ]
+             [ -Encrypt      => { Password => "string",
+	                          Flags    => number }, ]
+
+All the parameters to the BerkeleyDB::Env constructor are optional.
+
+=over 5
+
+=item -Home
+
+If present, this parameter should point to an existing directory. Any
+files that I<aren't> specified with an absolute path in the sub-systems
+that are initialised by the BerkeleyDB::Env class will be assumed to
+live in the B<Home> directory.
+
+For example, in the code fragment below the database "fred.db" will be
+opened in the directory "/home/databases" because it was specified as a
+relative path, but "joe.db" will be opened in "/other" because it was
+part of an absolute path.
+
+    $env = new BerkeleyDB::Env
+             -Home         => "/home/databases"
+    ...
+
+    $db1 = new BerkeleyDB::Hash
+	     -Filename => "fred.db",
+	     -Env => $env
+    ...
+
+    $db2 = new BerkeleyDB::Hash
+	     -Filename => "/other/joe.db",
+	     -Env => $env
+    ...
+
+=item -Server
+
+If present, this parameter should be the hostname of a server that is running
+the Berkeley DB RPC server. All databases will be accessed via the RPC server.
+
+=item -Encrypt
+
+If present, this parameter will enable encryption of  all data before
+it is written to the database. This parameters must be given a hash
+reference. The format is shown below.
+
+    -Encrypt => { -Password => "abc", Flags => DB_ENCRYPT_AES }
+
+Valid values for the Flags are 0 or C<DB_ENCRYPT_AES>.
+
+This option requires Berkeley DB 4.1 or better.
+
+=item -Cachesize
+
+If present, this parameter sets the size of the environments shared memory
+buffer pool.
+
+=item -SharedMemKey
+
+If present, this parameter sets the base segment ID for the shared memory
+region used by Berkeley DB. 
+
+This option requires Berkeley DB 3.1 or better.
+
+Use C<$env-E<gt>get_shm_key($id)> to find out the base segment ID used
+once the environment is open.
+
+=item -ThreadCount
+
+If present, this parameter declares the approximate number of threads that
+will be used in the database environment. This parameter is only necessary
+when the $env->failchk method will be used. It does not actually set the
+maximum number of threads but rather is used to determine memory sizing.
+
+This option requires Berkeley DB 4.4 or better. It is only supported on
+Unix/Linux.
+
+=item -Config
+
+This is a variation on the C<-Home> parameter, but it allows finer
+control of where specific types of files will be stored.
+
+The parameter expects a reference to a hash. Valid keys are:
+B<DB_DATA_DIR>, B<DB_LOG_DIR> and B<DB_TMP_DIR>
+
+The code below shows an example of how it can be used.
+
+    $env = new BerkeleyDB::Env
+             -Config => { DB_DATA_DIR => "/home/databases",
+                          DB_LOG_DIR  => "/home/logs",
+                          DB_TMP_DIR  => "/home/tmp"
+                        }
+    ...
+
+=item -ErrFile
+
+Expects a filename or filenhandle. Any errors generated internally by
+Berkeley DB will be logged to this file. A useful debug setting is to
+open environments with either
+
+    -ErrFile => *STDOUT
+
+or 
+
+    -ErrFile => *STDERR
+
+=item -ErrPrefix
+
+Allows a prefix to be added to the error messages before they are sent
+to B<-ErrFile>.
+
+=item -Flags
+
+The B<Flags> parameter specifies both which sub-systems to initialise,
+as well as a number of environment-wide options.
+See the Berkeley DB documentation for more details of these options.
+
+Any of the following can be specified by OR'ing them:
+
+B<DB_CREATE>
+
+If any of the files specified do not already exist, create them.
+
+B<DB_INIT_CDB>
+
+Initialise the Concurrent Access Methods  
+
+B<DB_INIT_LOCK>
+
+Initialise the Locking sub-system.
+
+B<DB_INIT_LOG>
+
+Initialise the Logging sub-system.
+
+B<DB_INIT_MPOOL>
+
+Initialise the ...
+
+B<DB_INIT_TXN>
+
+Initialise the ...
+
+B<DB_MPOOL_PRIVATE>
+
+Initialise the ...
+
+B<DB_INIT_MPOOL> is also specified.
+
+Initialise the ...
+
+B<DB_NOMMAP>
+
+Initialise the ...
+
+B<DB_RECOVER>
+
+
+
+B<DB_RECOVER_FATAL>
+
+B<DB_THREAD>
+
+B<DB_TXN_NOSYNC>
+
+B<DB_USE_ENVIRON>
+
+B<DB_USE_ENVIRON_ROOT>
+
+=item -SetFlags
+
+Calls ENV->set_flags with the supplied bitmask. Use this when you need to make
+use of DB_ENV->set_flags before DB_ENV->open is called.
+
+Only valid when Berkeley DB 3.x or better is used.
+
+=item -LockDetect
+
+Specifies what to do when a lock conflict occurs. The value should be one of
+
+B<DB_LOCK_DEFAULT> 
+
+B<DB_LOCK_OLDEST>
+
+B<DB_LOCK_RANDOM>
+
+B<DB_LOCK_YOUNGEST>
+
+=item -Verbose
+
+Add extra debugging information to the messages sent to B<-ErrFile>.
+
+=back
+
+=head2 Methods
+
+The environment class has the following methods:
+
+=over 5
+
+=item $env->errPrefix("string") ;
+
+This method is identical to the B<-ErrPrefix> flag. It allows the
+error prefix string to be changed dynamically.
+
+=item $env->set_flags(bitmask, 1|0);
+
+=item $txn = $env->TxnMgr()
+
+Constructor for creating a B<TxnMgr> object.
+See L<"TRANSACTIONS"> for more details of using transactions.
+
+This method is deprecated. Access the transaction methods using the B<txn_>
+methods below from the environment object directly.
+
+=item $env->txn_begin()
+
+TODO
+
+=item $env->txn_stat()
+
+TODO
+
+=item $env->txn_checkpoint()
+
+TODO
+
+=item $env->status()
+
+Returns the status of the last BerkeleyDB::Env method.
+
+
+=item $env->DB_ENV()
+
+Returns a pointer to the underlying DB_ENV data structure that Berkeley
+DB uses.
+
+=item $env->get_shm_key($id)
+
+Writes the base segment ID for the shared memory region used by the
+Berkeley DB environment into C<$id>. Returns 0 on success.
+
+This option requires Berkeley DB 4.2 or better.
+
+Use the C<-SharedMemKey> option when opening the environemt to set the
+base segment ID.
+
+=item $env->set_isalive()
+
+Set the callback that determines if the thread of control, identified by
+the pid and tid arguments, is still running.  This method should only be
+used in combination with $env->failchk.
+
+This option requires Berkeley DB 4.4 or better.
+
+=item $env->failchk($flags)
+
+The $env->failchk method checks for threads of control (either a true
+thread or a process) that have exited while manipulating Berkeley DB
+library data structures, while holding a logical database lock, or with an
+unresolved transaction (that is, a transaction that was never aborted or
+committed).
+
+If $env->failchk determines a thread of control exited while holding
+database read locks, it will release those locks. If $env->failchk
+determines a thread of control exited with an unresolved transaction, the
+transaction will be aborted.
+
+Applications calling the $env->failchk method must have already called the
+$env->set_isalive method, on the same DB environement, and must have
+configured their database environment using the -ThreadCount flag. The
+ThreadCount flag cannot be used on an environment that wasn't previously
+initialized with it.
+
+This option requires Berkeley DB 4.4 or better.
+
+=item $env->stat_print
+
+Prints statistical information. 
+
+If the C<MsgFile> option is specified the output will be sent to the
+file. Otherwise output is sent to standard output.
+
+This option requires Berkeley DB 4.3 or better.
+
+=item $env->lock_stat_print
+
+Prints locking subsystem statistics.
+
+If the C<MsgFile> option is specified the output will be sent to the
+file. Otherwise output is sent to standard output.
+
+This option requires Berkeley DB 4.3 or better.
+
+=item $env->mutex_stat_print
+
+Prints mutex subsystem statistics.
+
+If the C<MsgFile> option is specified the output will be sent to the
+file. Otherwise output is sent to standard output.
+
+This option requires Berkeley DB 4.4 or better.
+
+
+=item $env->set_timeout($timeout, $flags)
+
+=item $env->status()
+
+Returns the status of the last BerkeleyDB::Env method.
+
+=back
+
+=head2 Examples
+
+TODO.
+
+=head1 Global Classes
+
+  $status = BerkeleyDB::db_remove [OPTIONS]
+  $status = BerkeleyDB::db_rename [OPTIONS]
+  $status = BerkeleyDB::db_verify [OPTIONS]
+
+=head1 THE DATABASE CLASSES
+
+B<BerkeleyDB> supports the following database formats:
+
+=over 5
+
+=item B<BerkeleyDB::Hash>
+
+This database type allows arbitrary key/value pairs to be stored in data
+files. This is equivalent to the functionality provided by other
+hashing packages like DBM, NDBM, ODBM, GDBM, and SDBM. Remember though,
+the files created using B<BerkeleyDB::Hash> are not compatible with any
+of the other packages mentioned.
+
+A default hashing algorithm, which will be adequate for most applications,
+is built into BerkeleyDB. If you do need to use your own hashing algorithm
+it is possible to write your own in Perl and have B<BerkeleyDB> use
+it instead.
+
+=item B<BerkeleyDB::Btree>
+
+The Btree format allows arbitrary key/value pairs to be stored in a
+B+tree.
+
+As with the B<BerkeleyDB::Hash> format, it is possible to provide a
+user defined Perl routine to perform the comparison of keys. By default,
+though, the keys are stored in lexical order.
+
+=item B<BerkeleyDB::Recno>
+
+TODO.
+
+
+=item B<BerkeleyDB::Queue>
+
+TODO.
+
+=item B<BerkeleyDB::Unknown>
+
+This isn't a database format at all. It is used when you want to open an
+existing Berkeley DB database without having to know what type is it. 
+
+=back
+
+
+Each of the database formats described above is accessed via a
+corresponding B<BerkeleyDB> class. These will be described in turn in
+the next sections.
+
+=head1 BerkeleyDB::Hash
+
+Equivalent to calling B<db_open> with type B<DB_HASH> in Berkeley DB 2.x and
+calling B<db_create> followed by B<DB-E<gt>open> with type B<DB_HASH> in
+Berkeley DB 3.x or greater. 
+
+Two forms of constructor are supported:
+
+    $db = new BerkeleyDB::Hash
+                [ -Filename      => "filename", ]
+                [ -Subname       => "sub-database name", ]
+                [ -Flags         => flags,]
+                [ -Property      => flags,]
+                [ -Mode          => number,]
+                [ -Cachesize     => number,]
+                [ -Lorder        => number,]
+                [ -Pagesize      => number,]
+                [ -Env           => $env,]
+                [ -Txn           => $txn,]
+                [ -Encrypt       => { Password => "string",
+	                              Flags    => number }, ],
+                # BerkeleyDB::Hash specific
+                [ -Ffactor       => number,]
+                [ -Nelem         => number,]
+                [ -Hash          => code reference,]
+                [ -DupCompare    => code reference,]
+
+and this
+
+    [$db =] tie %hash, 'BerkeleyDB::Hash', 
+                [ -Filename      => "filename", ]
+                [ -Subname       => "sub-database name", ]
+                [ -Flags         => flags,]
+                [ -Property      => flags,]
+                [ -Mode          => number,]
+                [ -Cachesize     => number,]
+                [ -Lorder        => number,]
+                [ -Pagesize      => number,]
+                [ -Env           => $env,]
+                [ -Txn           => $txn,]
+                [ -Encrypt       => { Password => "string",
+	                              Flags    => number }, ],
+                # BerkeleyDB::Hash specific
+                [ -Ffactor       => number,]
+                [ -Nelem         => number,]
+                [ -Hash          => code reference,]
+                [ -DupCompare    => code reference,]
+
+
+When the "tie" interface is used, reading from and writing to the database
+is achieved via the tied hash. In this case the database operates like
+a Perl associative array that happens to be stored on disk.
+
+In addition to the high-level tied hash interface, it is possible to
+make use of the underlying methods provided by Berkeley DB
+
+=head2 Options
+
+In addition to the standard set of options (see L<COMMON OPTIONS>)
+B<BerkeleyDB::Hash> supports these options:
+
+=over 5
+
+=item -Property
+
+Used to specify extra flags when opening a database. The following
+flags may be specified by bitwise OR'ing together one or more of the
+following values:
+
+B<DB_DUP>
+
+When creating a new database, this flag enables the storing of duplicate
+keys in the database. If B<DB_DUPSORT> is not specified as well, the
+duplicates are stored in the order they are created in the database.
+
+B<DB_DUPSORT>
+
+Enables the sorting of duplicate keys in the database. Ignored if
+B<DB_DUP> isn't also specified.
+
+=item -Ffactor
+
+=item -Nelem
+
+See the Berkeley DB documentation for details of these options.
+
+=item -Hash
+
+Allows you to provide a user defined hash function. If not specified, 
+a default hash function is used. Here is a template for a user-defined
+hash function
+
+    sub hash
+    {
+        my ($data) = shift ;
+        ...
+        # return the hash value for $data
+	return $hash ;
+    }
+
+    tie %h, "BerkeleyDB::Hash", 
+        -Filename => $filename, 
+    	-Hash     => \&hash,
+	...
+
+See L<""> for an example.
+
+=item -DupCompare
+
+Used in conjunction with the B<DB_DUPOSRT> flag. 
+
+    sub compare
+    {
+	my ($key, $key2) = @_ ;
+        ...
+        # return  0 if $key1 eq $key2
+        #        -1 if $key1 lt $key2
+        #         1 if $key1 gt $key2
+        return (-1 , 0 or 1) ;
+    }
+
+    tie %h, "BerkeleyDB::Hash", 
+        -Filename   => $filename, 
+	-Property   => DB_DUP|DB_DUPSORT,
+    	-DupCompare => \&compare,
+	...
+
+=back
+
+
+=head2 Methods
+
+B<BerkeleyDB::Hash> only supports the standard database methods.
+See L<COMMON DATABASE METHODS>.
+
+=head2 A Simple Tied Hash Example
+
+    use strict ;
+    use BerkeleyDB ;
+    use vars qw( %h $k $v ) ;
+
+    my $filename = "fruit" ;
+    unlink $filename ;
+    tie %h, "BerkeleyDB::Hash",
+                -Filename => $filename,
+		-Flags    => DB_CREATE
+        or die "Cannot open file $filename: $! $BerkeleyDB::Error\n" ;
+
+    # Add a few key/value pairs to the file
+    $h{"apple"} = "red" ;
+    $h{"orange"} = "orange" ;
+    $h{"banana"} = "yellow" ;
+    $h{"tomato"} = "red" ;
+
+    # Check for existence of a key
+    print "Banana Exists\n\n" if $h{"banana"} ;
+
+    # Delete a key/value pair.
+    delete $h{"apple"} ;
+
+    # print the contents of the file
+    while (($k, $v) = each %h)
+      { print "$k -> $v\n" }
+
+    untie %h ;
+
+here is the output:
+
+    Banana Exists
+    
+    orange -> orange
+    tomato -> red
+    banana -> yellow
+
+Note that the like ordinary associative arrays, the order of the keys
+retrieved from a Hash database are in an apparently random order.
+
+=head2 Another Simple Hash Example
+
+Do the same as the previous example but not using tie.
+
+    use strict ;
+    use BerkeleyDB ;
+
+    my $filename = "fruit" ;
+    unlink $filename ;
+    my $db = new BerkeleyDB::Hash
+                -Filename => $filename,
+		-Flags    => DB_CREATE
+        or die "Cannot open file $filename: $! $BerkeleyDB::Error\n" ;
+
+    # Add a few key/value pairs to the file
+    $db->db_put("apple", "red") ;
+    $db->db_put("orange", "orange") ;
+    $db->db_put("banana", "yellow") ;
+    $db->db_put("tomato", "red") ;
+
+    # Check for existence of a key
+    print "Banana Exists\n\n" if $db->db_get("banana", $v) == 0;
+
+    # Delete a key/value pair.
+    $db->db_del("apple") ;
+
+    # print the contents of the file
+    my ($k, $v) = ("", "") ;
+    my $cursor = $db->db_cursor() ;
+    while ($cursor->c_get($k, $v, DB_NEXT) == 0)
+      { print "$k -> $v\n" }
+
+    undef $cursor ;
+    undef $db ;
+
+=head2 Duplicate keys
+
+The code below is a variation on the examples above. This time the hash has
+been inverted. The key this time is colour and the value is the fruit name.
+The B<DB_DUP> flag has been specified to allow duplicates.
+
+    use strict ;
+    use BerkeleyDB ;
+
+    my $filename = "fruit" ;
+    unlink $filename ;
+    my $db = new BerkeleyDB::Hash
+                -Filename => $filename,
+		-Flags    => DB_CREATE,
+		-Property  => DB_DUP
+        or die "Cannot open file $filename: $! $BerkeleyDB::Error\n" ;
+
+    # Add a few key/value pairs to the file
+    $db->db_put("red", "apple") ;
+    $db->db_put("orange", "orange") ;
+    $db->db_put("green", "banana") ;
+    $db->db_put("yellow", "banana") ;
+    $db->db_put("red", "tomato") ;
+    $db->db_put("green", "apple") ;
+
+    # print the contents of the file
+    my ($k, $v) = ("", "") ;
+    my $cursor = $db->db_cursor() ;
+    while ($cursor->c_get($k, $v, DB_NEXT) == 0)
+      { print "$k -> $v\n" }
+
+    undef $cursor ;
+    undef $db ;
+
+here is the output:
+
+    orange -> orange
+    yellow -> banana
+    red -> apple
+    red -> tomato
+    green -> banana
+    green -> apple
+
+=head2 Sorting Duplicate Keys
+
+In the previous example, when there were duplicate keys, the values are
+sorted in the order they are stored in. The code below is
+identical to the previous example except the B<DB_DUPSORT> flag is
+specified.
+
+    use strict ;
+    use BerkeleyDB ;
+
+    my $filename = "fruit" ;
+    unlink $filename ;
+    my $db = new BerkeleyDB::Hash
+                -Filename => $filename,
+		-Flags    => DB_CREATE,
+		-Property  => DB_DUP | DB_DUPSORT
+        or die "Cannot open file $filename: $! $BerkeleyDB::Error\n" ;
+
+    # Add a few key/value pairs to the file
+    $db->db_put("red", "apple") ;
+    $db->db_put("orange", "orange") ;
+    $db->db_put("green", "banana") ;
+    $db->db_put("yellow", "banana") ;
+    $db->db_put("red", "tomato") ;
+    $db->db_put("green", "apple") ;
+
+    # print the contents of the file
+    my ($k, $v) = ("", "") ;
+    my $cursor = $db->db_cursor() ;
+    while ($cursor->c_get($k, $v, DB_NEXT) == 0)
+      { print "$k -> $v\n" }
+
+    undef $cursor ;
+    undef $db ;
+
+Notice that in the output below the duplicate values are sorted.
+
+    orange -> orange
+    yellow -> banana
+    red -> apple
+    red -> tomato
+    green -> apple
+    green -> banana
+
+=head2 Custom Sorting Duplicate Keys
+
+Another variation 
+
+TODO
+
+=head2 Changing the hash
+
+TODO
+
+=head2 Using db_stat
+
+TODO
+
+=head1 BerkeleyDB::Btree
+
+Equivalent to calling B<db_open> with type B<DB_BTREE> in Berkeley DB 2.x and
+calling B<db_create> followed by B<DB-E<gt>open> with type B<DB_BTREE> in
+Berkeley DB 3.x or greater. 
+
+Two forms of constructor are supported:
+
+
+    $db = new BerkeleyDB::Btree
+                [ -Filename      => "filename", ]
+                [ -Subname       => "sub-database name", ]
+                [ -Flags         => flags,]
+                [ -Property      => flags,]
+                [ -Mode          => number,]
+                [ -Cachesize     => number,]
+                [ -Lorder        => number,]
+                [ -Pagesize      => number,]
+                [ -Env           => $env,]
+                [ -Txn           => $txn,]
+                [ -Encrypt       => { Password => "string",
+	                              Flags    => number }, ],
+                # BerkeleyDB::Btree specific
+                [ -Minkey        => number,]
+                [ -Compare       => code reference,]
+                [ -DupCompare    => code reference,]
+                [ -Prefix        => code reference,]
+
+and this
+
+    [$db =] tie %hash, 'BerkeleyDB::Btree', 
+                [ -Filename      => "filename", ]
+                [ -Subname       => "sub-database name", ]
+                [ -Flags         => flags,]
+                [ -Property      => flags,]
+                [ -Mode          => number,]
+                [ -Cachesize     => number,]
+                [ -Lorder        => number,]
+                [ -Pagesize      => number,]
+                [ -Env           => $env,]
+                [ -Txn           => $txn,]
+                [ -Encrypt       => { Password => "string",
+	                              Flags    => number }, ],
+                # BerkeleyDB::Btree specific
+                [ -Minkey        => number,]
+                [ -Compare       => code reference,]
+                [ -DupCompare    => code reference,]
+                [ -Prefix        => code reference,]
+
+=head2 Options
+
+In addition to the standard set of options (see L<COMMON OPTIONS>)
+B<BerkeleyDB::Btree> supports these options:
+
+=over 5
+
+=item -Property
+
+Used to specify extra flags when opening a database. The following
+flags may be specified by bitwise OR'ing together one or more of the
+following values:
+
+B<DB_DUP>
+
+When creating a new database, this flag enables the storing of duplicate
+keys in the database. If B<DB_DUPSORT> is not specified as well, the
+duplicates are stored in the order they are created in the database.
+
+B<DB_DUPSORT>
+
+Enables the sorting of duplicate keys in the database. Ignored if
+B<DB_DUP> isn't also specified.
+
+=item Minkey
+
+TODO
+
+=item Compare
+
+Allow you to override the default sort order used in the database. See
+L<"Changing the sort order"> for an example.
+
+    sub compare
+    {
+	my ($key, $key2) = @_ ;
+        ...
+        # return  0 if $key1 eq $key2
+        #        -1 if $key1 lt $key2
+        #         1 if $key1 gt $key2
+        return (-1 , 0 or 1) ;
+    }
+
+    tie %h, "BerkeleyDB::Hash", 
+        -Filename   => $filename, 
+    	-Compare    => \&compare,
+	...
+
+=item Prefix
+
+    sub prefix
+    {
+	my ($key, $key2) = @_ ;
+        ...
+        # return number of bytes of $key2 which are 
+        # necessary to determine that it is greater than $key1
+        return $bytes ;
+    }
+
+    tie %h, "BerkeleyDB::Hash", 
+        -Filename   => $filename, 
+    	-Prefix     => \&prefix,
+	...
+=item DupCompare
+
+    sub compare
+    {
+	my ($key, $key2) = @_ ;
+        ...
+        # return  0 if $key1 eq $key2
+        #        -1 if $key1 lt $key2
+        #         1 if $key1 gt $key2
+        return (-1 , 0 or 1) ;
+    }
+
+    tie %h, "BerkeleyDB::Hash", 
+        -Filename   => $filename, 
+    	-DupCompare => \&compare,
+	...
+
+=item set_bt_compress
+
+Enabled compression of the btree data. The callback interface is not
+supported at present. Need Berkeley DB 4.8 or better.
+
+=back
+
+=head2 Methods
+
+B<BerkeleyDB::Btree> supports the following database methods.
+See also L<COMMON DATABASE METHODS>.
+
+All the methods below return 0 to indicate success.
+
+=over 5
+
+=item $status = $db->db_key_range($key, $less, $equal, $greater [, $flags])
+
+Given a key, C<$key>, this method returns the proportion of keys less than 
+C<$key> in C<$less>, the proportion equal to C<$key> in C<$equal> and the
+proportion greater than C<$key> in C<$greater>.
+
+The proportion is returned as a double in the range 0.0 to 1.0.
+
+=back
+
+=head2 A Simple Btree Example
+
+The code below is a simple example of using a btree database.
+
+    use strict ;
+    use BerkeleyDB ;
+
+    my $filename = "tree" ;
+    unlink $filename ;
+    my %h ;
+    tie %h, 'BerkeleyDB::Btree',
+    		-Filename   => $filename,
+	        -Flags      => DB_CREATE
+      or die "Cannot open $filename: $! $BerkeleyDB::Error\n" ;
+
+    # Add a key/value pair to the file
+    $h{'Wall'} = 'Larry' ;
+    $h{'Smith'} = 'John' ;
+    $h{'mouse'} = 'mickey' ;
+    $h{'duck'}  = 'donald' ;
+
+    # Delete
+    delete $h{"duck"} ;
+
+    # Cycle through the keys printing them in order.
+    # Note it is not necessary to sort the keys as
+    # the btree will have kept them in order automatically.
+    foreach (keys %h)
+      { print "$_\n" }
+
+    untie %h ;
+
+Here is the output from the code above. The keys have been sorted using
+Berkeley DB's default sorting algorithm.
+
+    Smith
+    Wall
+    mouse
+
+
+=head2 Changing the sort order
+
+It is possible to supply your own sorting algorithm if the one that Berkeley
+DB used isn't suitable. The code below is identical to the previous example
+except for the case insensitive compare function.
+
+    use strict ;
+    use BerkeleyDB ;
+
+    my $filename = "tree" ;
+    unlink $filename ;
+    my %h ;
+    tie %h, 'BerkeleyDB::Btree',
+    		-Filename   => $filename,
+	        -Flags      => DB_CREATE,
+		-Compare    => sub { lc $_[0] cmp lc $_[1] }
+      or die "Cannot open $filename: $!\n" ;
+
+    # Add a key/value pair to the file
+    $h{'Wall'} = 'Larry' ;
+    $h{'Smith'} = 'John' ;
+    $h{'mouse'} = 'mickey' ;
+    $h{'duck'}  = 'donald' ;
+
+    # Delete
+    delete $h{"duck"} ;
+
+    # Cycle through the keys printing them in order.
+    # Note it is not necessary to sort the keys as
+    # the btree will have kept them in order automatically.
+    foreach (keys %h)
+      { print "$_\n" }
+
+    untie %h ;
+
+Here is the output from the code above.
+
+    mouse
+    Smith
+    Wall
+
+There are a few point to bear in mind if you want to change the
+ordering in a BTREE database:
+
+=over 5
+
+=item 1.
+
+The new compare function must be specified when you create the database.
+
+=item 2.
+
+You cannot change the ordering once the database has been created. Thus
+you must use the same compare function every time you access the
+database.
+
+=back 
+
+=head2 Using db_stat
+
+TODO
+
+=head1 BerkeleyDB::Recno
+
+Equivalent to calling B<db_open> with type B<DB_RECNO> in Berkeley DB 2.x and
+calling B<db_create> followed by B<DB-E<gt>open> with type B<DB_RECNO> in
+Berkeley DB 3.x or greater. 
+
+Two forms of constructor are supported:
+
+    $db = new BerkeleyDB::Recno
+                [ -Filename      => "filename", ]
+                [ -Subname       => "sub-database name", ]
+                [ -Flags         => flags,]
+                [ -Property      => flags,]
+                [ -Mode          => number,]
+                [ -Cachesize     => number,]
+                [ -Lorder        => number,]
+                [ -Pagesize      => number,]
+                [ -Env           => $env,]
+                [ -Txn           => $txn,]
+                [ -Encrypt       => { Password => "string",
+	                              Flags    => number }, ],
+                # BerkeleyDB::Recno specific
+                [ -Delim           => byte,]
+                [ -Len             => number,]
+                [ -Pad             => byte,]
+                [ -Source          => filename,]
+
+and this
+
+    [$db =] tie @arry, 'BerkeleyDB::Recno', 
+                [ -Filename      => "filename", ]
+                [ -Subname       => "sub-database name", ]
+                [ -Flags         => flags,]
+                [ -Property      => flags,]
+                [ -Mode          => number,]
+                [ -Cachesize     => number,]
+                [ -Lorder        => number,]
+                [ -Pagesize      => number,]
+                [ -Env           => $env,]
+                [ -Txn           => $txn,]
+                [ -Encrypt       => { Password => "string",
+	                              Flags    => number }, ],
+                # BerkeleyDB::Recno specific
+                [ -Delim           => byte,]
+                [ -Len             => number,]
+                [ -Pad             => byte,]
+                [ -Source          => filename,]
+
+=head2 A Recno Example
+
+Here is a simple example that uses RECNO (if you are using a version 
+of Perl earlier than 5.004_57 this example won't work -- see 
+L<Extra RECNO Methods> for a workaround).
+
+    use strict ;
+    use BerkeleyDB ;
+
+    my $filename = "text" ;
+    unlink $filename ;
+
+    my @h ;
+    tie @h, 'BerkeleyDB::Recno',
+    		-Filename   => $filename,
+	        -Flags      => DB_CREATE,
+		-Property   => DB_RENUMBER
+      or die "Cannot open $filename: $!\n" ;
+
+    # Add a few key/value pairs to the file
+    $h[0] = "orange" ;
+    $h[1] = "blue" ;
+    $h[2] = "yellow" ;
+
+    push @h, "green", "black" ;
+
+    my $elements = scalar @h ;
+    print "The array contains $elements entries\n" ;
+
+    my $last = pop @h ;
+    print "popped $last\n" ;
+
+    unshift @h, "white" ;
+    my $first = shift @h ;
+    print "shifted $first\n" ;
+
+    # Check for existence of a key
+    print "Element 1 Exists with value $h[1]\n" if $h[1] ;
+
+    untie @h ;
+
+Here is the output from the script:
+
+    The array contains 5 entries
+    popped black
+    shifted white
+    Element 1 Exists with value blue
+    The last element is green
+    The 2nd last element is yellow
+
+=head1 BerkeleyDB::Queue
+
+Equivalent to calling B<db_create> followed by B<DB-E<gt>open> with
+type B<DB_QUEUE> in Berkeley DB 3.x or greater. This database format
+isn't available if you use Berkeley DB 2.x.
+
+Two forms of constructor are supported:
+
+    $db = new BerkeleyDB::Queue
+                [ -Filename      => "filename", ]
+                [ -Subname       => "sub-database name", ]
+                [ -Flags         => flags,]
+                [ -Property      => flags,]
+                [ -Mode          => number,]
+                [ -Cachesize     => number,]
+                [ -Lorder        => number,]
+                [ -Pagesize      => number,]
+                [ -Env           => $env,]
+                [ -Txn           => $txn,]
+                [ -Encrypt       => { Password => "string",
+	                              Flags    => number }, ],
+                # BerkeleyDB::Queue specific
+                [ -Len             => number,]
+                [ -Pad             => byte,]
+                [ -ExtentSize    => number, ]
+
+and this
+
+    [$db =] tie @arry, 'BerkeleyDB::Queue', 
+                [ -Filename      => "filename", ]
+                [ -Subname       => "sub-database name", ]
+                [ -Flags         => flags,]
+                [ -Property      => flags,]
+                [ -Mode          => number,]
+                [ -Cachesize     => number,]
+                [ -Lorder        => number,]
+                [ -Pagesize      => number,]
+                [ -Env           => $env,]
+                [ -Txn           => $txn,]
+                [ -Encrypt       => { Password => "string",
+	                              Flags    => number }, ],
+                # BerkeleyDB::Queue specific
+                [ -Len             => number,]
+                [ -Pad             => byte,]
+
+
+=head1 BerkeleyDB::Unknown
+
+This class is used to open an existing database. 
+
+Equivalent to calling B<db_open> with type B<DB_UNKNOWN> in Berkeley DB 2.x and
+calling B<db_create> followed by B<DB-E<gt>open> with type B<DB_UNKNOWN> in
+Berkeley DB 3.x or greater. 
+
+The constructor looks like this:
+
+    $db = new BerkeleyDB::Unknown
+                [ -Filename      => "filename", ]
+                [ -Subname       => "sub-database name", ]
+                [ -Flags         => flags,]
+                [ -Property      => flags,]
+                [ -Mode          => number,]
+                [ -Cachesize     => number,]
+                [ -Lorder        => number,]
+                [ -Pagesize      => number,]
+                [ -Env           => $env,]
+                [ -Txn           => $txn,]
+                [ -Encrypt       => { Password => "string",
+	                              Flags    => number }, ],
+
+
+=head2 An example 
+
+=head1 COMMON OPTIONS
+
+All database access class constructors support the common set of
+options defined below. All are optional.
+
+=over 5
+
+=item -Filename
+
+The database filename. If no filename is specified, a temporary file will
+be created and removed once the program terminates.
+
+=item -Subname
+
+Specifies the name of the sub-database to open.
+This option is only valid if you are using Berkeley DB 3.x or greater.
+
+=item -Flags
+
+Specify how the database will be opened/created. The valid flags are:
+
+B<DB_CREATE>
+
+Create any underlying files, as necessary. If the files do not already
+exist and the B<DB_CREATE> flag is not specified, the call will fail.
+
+B<DB_NOMMAP>
+
+Not supported by BerkeleyDB.
+
+B<DB_RDONLY>
+
+Opens the database in read-only mode.
+
+B<DB_THREAD>
+
+Not supported by BerkeleyDB.
+
+B<DB_TRUNCATE>
+
+If the database file already exists, remove all the data before
+opening it.
+
+=item -Mode
+
+Determines the file protection when the database is created. Defaults
+to 0666.
+
+=item -Cachesize
+
+=item -Lorder
+
+=item -Pagesize
+
+=item -Env
+
+When working under a Berkeley DB environment, this parameter
+
+Defaults to no environment.
+
+=item -Encrypt
+
+If present, this parameter will enable encryption of  all data before
+it is written to the database. This parameters must be given a hash
+reference. The format is shown below.
+
+    -Encrypt => { -Password => "abc", Flags => DB_ENCRYPT_AES }
+
+Valid values for the Flags are 0 or C<DB_ENCRYPT_AES>.
+
+This option requires Berkeley DB 4.1 or better.
+
+=item -Txn
+
+TODO.
+
+=back
+
+=head1 COMMON DATABASE METHODS
+
+All the database interfaces support the common set of methods defined
+below.
+
+All the methods below return 0 to indicate success.
+
+=head2 $status = $db->db_get($key, $value [, $flags])
+
+Given a key (C<$key>) this method reads the value associated with it
+from the database. If it exists, the value read from the database is
+returned in the C<$value> parameter.
+
+The B<$flags> parameter is optional. If present, it must be set to B<one>
+of the following values:
+
+=over 5
+
+=item B<DB_GET_BOTH>
+
+When the B<DB_GET_BOTH> flag is specified, B<db_get> checks for the
+existence of B<both> the C<$key> B<and> C<$value> in the database.
+
+=item B<DB_SET_RECNO>
+
+TODO.
+
+=back
+
+In addition, the following value may be set by bitwise OR'ing it into
+the B<$flags> parameter:
+
+=over 5
+
+=item B<DB_RMW>
+
+TODO
+
+=back
+
+The variant C<db_pget> allows you to query a secondary database:
+
+	$status = $sdb->db_pget($skey, $pkey, $value);
+
+using the key C<$skey> in the secondary db to lookup C<$pkey> and C<$value>
+from the primary db.
+
+
+=head2 $status = $db->db_put($key, $value [, $flags])
+
+Stores a key/value pair in the database.
+
+The B<$flags> parameter is optional. If present it must be set to B<one>
+of the following values:
+
+=over 5
+
+=item B<DB_APPEND>
+
+This flag is only applicable when accessing a B<BerkeleyDB::Recno>
+database.
+
+TODO.
+
+
+=item B<DB_NOOVERWRITE>
+
+If this flag is specified and C<$key> already exists in the database,
+the call to B<db_put> will return B<DB_KEYEXIST>.
+
+=back
+
+=head2 $status = $db->db_del($key [, $flags])
+
+Deletes a key/value pair in the database associated with C<$key>.
+If duplicate keys are enabled in the database, B<db_del> will delete
+B<all> key/value pairs with key C<$key>.
+
+The B<$flags> parameter is optional and is currently unused.
+
+=head2 $status = $env->stat_print([$flags])
+
+Prints statistical information. 
+
+If the C<MsgFile> option is specified the output will be sent to the
+file. Otherwise output is sent to standard output.
+
+This option requires Berkeley DB 4.3 or better.
+
+=head2 $status = $db->db_sync()
+
+If any parts of the database are in memory, write them to the database.
+
+=head2 $cursor = $db->db_cursor([$flags])
+
+Creates a cursor object. This is used to access the contents of the
+database sequentially. See L<CURSORS> for details of the methods
+available when working with cursors.
+
+The B<$flags> parameter is optional. If present it must be set to B<one>
+of the following values:
+
+=over 5
+
+=item B<DB_RMW>
+
+TODO.
+
+=back
+
+=head2 ($flag, $old_offset, $old_length) = $db->partial_set($offset, $length) ;
+
+TODO
+
+=head2 ($flag, $old_offset, $old_length) = $db->partial_clear() ;
+
+TODO
+
+=head2 $db->byteswapped()
+
+TODO
+
+=head2 $db->type()
+
+Returns the type of the database. The possible return code are B<DB_HASH>
+for a B<BerkeleyDB::Hash> database, B<DB_BTREE> for a B<BerkeleyDB::Btree>
+database and B<DB_RECNO> for a B<BerkeleyDB::Recno> database. This method
+is typically used when a database has been opened with
+B<BerkeleyDB::Unknown>.
+
+=head2   $bool = $env->cds_enabled();
+
+Returns true if the Berkeley DB environment C<$env> has been opened on
+CDS mode.
+
+=head2   $bool = $db->cds_enabled();
+
+Returns true if the database C<$db> has been opened on CDS mode.
+
+=head2 $lock = $db->cds_lock();
+
+Creates a CDS write lock object C<$lock>.
+
+It is a fatal error to attempt to create a cds_lock if the Berkeley DB
+environment has not been opened in CDS mode.
+
+=head2 $lock->cds_unlock();
+
+Removes a CDS lock. The destruction of the CDS lock object automatically
+calls this method.
+
+Note that if multiple CDS lock objects are created, the underlying write
+lock will not be released until all CDS lock objects are either explictly
+unlocked with this method, or the CDS lock objects have been destroyed.
+
+=head2 $ref = $db->db_stat()
+
+Returns a reference to an associative array containing information about
+the database. The keys of the associative array correspond directly to the
+names of the fields defined in the Berkeley DB documentation. For example,
+in the DB documentation, the field B<bt_version> stores the version of the
+Btree database. Assuming you called B<db_stat> on a Btree database the
+equivalent field would be accessed as follows:
+
+    $version = $ref->{'bt_version'} ;
+
+If you are using Berkeley DB 3.x or better, this method will work will
+all database formats. When DB 2.x is used, it only works with
+B<BerkeleyDB::Btree>.
+
+=head2 $status = $db->status()
+
+Returns the status of the last C<$db> method called.
+
+=head2 $status = $db->truncate($count)
+
+Truncates the datatabase and returns the number or records deleted
+in C<$count>.
+
+=head2  $status = $db->compact($start, $stop, $c_data, $flags, $end);
+
+Compacts the database C<$db>. 
+
+All the parameters are optional - if only want to make use of some of them,
+use C<undef> for those you don't want.  Trailing unusused parameters can be
+omitted. For example, if you only want to use the C<$c_data> parameter to
+set the C<compact_fillpercent>, write you code like this
+
+    my %hash;
+    $hash{compact_fillpercent} = 50;
+    $db->compact(undef, undef, \%hash);
+
+The parameters operate identically to the C equivalent of this method.
+The C<$c_data> needs a bit of explanation - it must be a hash reference.
+The values of the following keys can be set before calling C<compact> and
+will affect the operation of the compaction.
+
+=over 5
+
+=item * compact_fillpercent
+
+=item * compact_timeout
+    
+=back
+
+The following keys, along with associated values, will be created in the
+hash reference if the C<compact> operation was successful.
+
+=over 5
+
+=item * compact_deadlock
+
+=item * compact_levels
+
+=item * compact_pages_free
+
+=item * compact_pages_examine
+
+=item * compact_pages_truncated
+
+=back
+
+You need to be running Berkeley DB 4.4 or better if you want to make use of
+C<compact>.
+
+=head2  $status = $db->associate($secondary, \&key_callback)
+
+Associate C<$db> with the secondary DB C<$secondary>
+
+New key/value pairs inserted to the database will be passed to the callback
+which must set its third argument to the secondary key to allow lookup. If
+an array reference is set multiple keys secondary keys will be associated
+with the primary database entry.
+
+Data may be retrieved fro the secondary database using C<db_pget> to also
+obtain the primary key.
+
+Secondary databased are maintained automatically.
+
+=head2  $status = $db->associate_foreign($secondary, callback, $flags)
+
+Associate a foreign key database C<$db> with the secondary DB
+C<$secondary>.
+
+The second parameter must be a reference to a sub or C<undef>. 
+
+The C<$flags> parameter must be either C<DB_FOREIGN_CASCADE>, 
+C<DB_FOREIGN_ABORT> or C<DB_FOREIGN_NULLIFY>. 
+
+When the flags parameter is C<DB_FOREIGN_NULLIFY> the second parameter is a
+reference to a sub of the form
+
+    sub foreign_cb
+    {
+        my $key = \$_[0];
+        my $value = \$_[1];
+        my $foreignkey = \$_[2];
+        my $changed = \$_[3] ;
+
+        # for ... set $$value and set $$changed to 1
+
+        return 0;
+    }
+
+    $foreign_db->associate_foreign($secondary, \&foreign_cb, DB_FOREIGN_NULLIFY);
+
+=head1 CURSORS
+
+A cursor is used whenever you want to access the contents of a database
+in sequential order.
+A cursor object is created with the C<db_cursor>
+
+A cursor object has the following methods available:
+
+=head2 $newcursor = $cursor->c_dup($flags)
+
+Creates a duplicate of C<$cursor>. This method needs Berkeley DB 3.0.x or better.
+
+The C<$flags> parameter is optional and can take the following value:
+
+=over 5
+
+=item DB_POSITION
+
+When present this flag will position the new cursor at the same place as the
+existing cursor.
+
+=back
+
+=head2 $status = $cursor->c_get($key, $value, $flags)
+
+Reads a key/value pair from the database, returning the data in C<$key>
+and C<$value>. The key/value pair actually read is controlled by the
+C<$flags> parameter, which can take B<one> of the following values:
+
+=over 5
+
+=item B<DB_FIRST>
+
+Set the cursor to point to the first key/value pair in the
+database. Return the key/value pair in C<$key> and C<$value>.
+
+=item B<DB_LAST>
+
+Set the cursor to point to the last key/value pair in the database. Return
+the key/value pair in C<$key> and C<$value>.
+
+=item B<DB_NEXT>
+
+If the cursor is already pointing to a key/value pair, it will be
+incremented to point to the next key/value pair and return its contents.
+
+If the cursor isn't initialised, B<DB_NEXT> works just like B<DB_FIRST>.
+
+If the cursor is already positioned at the last key/value pair, B<c_get>
+will return B<DB_NOTFOUND>.
+
+=item B<DB_NEXT_DUP>
+
+This flag is only valid when duplicate keys have been enabled in
+a database.
+If the cursor is already pointing to a key/value pair and the key of
+the next key/value pair is identical, the cursor will be incremented to
+point to it and their contents returned.
+
+=item B<DB_PREV>
+
+If the cursor is already pointing to a key/value pair, it will be
+decremented to point to the previous key/value pair and return its
+contents.
+
+If the cursor isn't initialised, B<DB_PREV> works just like B<DB_LAST>.
+
+If the cursor is already positioned at the first key/value pair, B<c_get>
+will return B<DB_NOTFOUND>.
+
+=item B<DB_CURRENT>
+
+If the cursor has been set to point to a key/value pair, return their
+contents.
+If the key/value pair referenced by the cursor has been deleted, B<c_get>
+will return B<DB_KEYEMPTY>.
+
+=item B<DB_SET>
+
+Set the cursor to point to the key/value pair referenced by B<$key>
+and return the value in B<$value>.
+
+=item B<DB_SET_RANGE>
+
+This flag is a variation on the B<DB_SET> flag. As well as returning
+the value, it also returns the key, via B<$key>.
+When used with a B<BerkeleyDB::Btree> database the key matched by B<c_get>
+will be the shortest key (in length) which is greater than or equal to
+the key supplied, via B<$key>. This allows partial key searches.
+See ??? for an example of how to use this flag.
+
+=item B<DB_GET_BOTH>
+
+Another variation on B<DB_SET>. This one returns both the key and
+the value.
+
+=item B<DB_SET_RECNO>
+
+TODO.
+
+=item B<DB_GET_RECNO>
+
+TODO.
+
+=back
+
+In addition, the following value may be set by bitwise OR'ing it into
+the B<$flags> parameter:
+
+=over 5
+
+=item B<DB_RMW>
+
+TODO.
+
+=back
+
+=head2  $status = $cursor->c_put($key, $value, $flags)
+
+Stores the key/value pair in the database. The position that the data is
+stored in the database is controlled by the C<$flags> parameter, which
+must take B<one> of the following values:
+
+=over 5
+
+=item B<DB_AFTER>
+
+When used with a Btree or Hash database, a duplicate of the key referenced
+by the current cursor position will be created and the contents of
+B<$value> will be associated with it - B<$key> is ignored.
+The new key/value pair will be stored immediately after the current
+cursor position.
+Obviously the database has to have been opened with B<DB_DUP>.
+
+When used with a Recno ... TODO
+
+
+=item B<DB_BEFORE>
+
+When used with a Btree or Hash database, a duplicate of the key referenced
+by the current cursor position will be created and the contents of
+B<$value> will be associated with it - B<$key> is ignored.
+The new key/value pair will be stored immediately before the current
+cursor position.
+Obviously the database has to have been opened with B<DB_DUP>.
+
+When used with a Recno ... TODO
+
+=item B<DB_CURRENT>
+
+If the cursor has been initialised, replace the value of the key/value
+pair stored in the database with the contents of B<$value>.
+
+=item B<DB_KEYFIRST>
+
+Only valid with a Btree or Hash database. This flag is only really
+used when duplicates are enabled in the database and sorted duplicates
+haven't been specified.
+In this case the key/value pair will be inserted as the first entry in
+the duplicates for the particular key.
+
+=item B<DB_KEYLAST>
+
+Only valid with a Btree or Hash database. This flag is only really
+used when duplicates are enabled in the database and sorted duplicates
+haven't been specified.
+In this case the key/value pair will be inserted as the last entry in
+the duplicates for the particular key.
+
+=back
+
+=head2  $status = $cursor->c_del([$flags])
+
+This method deletes the key/value pair associated with the current cursor
+position. The cursor position will not be changed by this operation, so
+any subsequent cursor operation must first initialise the cursor to
+point to a valid key/value pair.
+
+If the key/value pair associated with the cursor have already been
+deleted, B<c_del> will return B<DB_KEYEMPTY>.
+
+The B<$flags> parameter is not used at present.
+
+=head2 $status = $cursor->c_count($cnt [, $flags])
+
+Stores the number of duplicates at the current cursor position in B<$cnt>.
+
+The B<$flags> parameter is not used at present. This method needs 
+Berkeley DB 3.1 or better.
+
+=head2  $status = $cursor->status()
+
+Returns the status of the last cursor method as a dual type.
+
+=head2  $status = $cursor->c_pget() ;
+
+See C<db_pget>
+
+=head2  $status = $cursor->c_close()
+
+Closes the cursor B<$cursor>.
+
+=head2 Cursor Examples
+
+TODO
+
+Iterating from first to last, then in reverse.
+
+examples of each of the flags.
+
+=head1 JOIN
+
+Join support for BerkeleyDB is in progress. Watch this space.
+
+TODO
+
+=head1 TRANSACTIONS
+
+Transactions are created using the C<txn_begin> method on L<BerkeleyDB::Env>:
+
+	my $txn = $env->txn_begin;
+
+If this is a nested transaction, supply the parent transaction as an
+argument:
+
+	my $child_txn = $env->txn_begin($parent_txn);
+
+Then in order to work with the transaction, you must set it as the current
+transaction on the database handles you want to work with:
+
+	$db->Txn($txn);
+
+Or for multiple handles:
+
+	$txn->Txn(@handles);
+
+The current transaction is given by BerkeleyDB each time to the various BDB
+operations. In the C api it is required explicitly as an argument to every
+operation.
+
+To commit a transaction call the C<commit> method on it:
+
+	$txn->commit;
+
+and to roll back call abort:
+
+	$txn->abort
+
+After committing or aborting a child transaction you need to set the active
+transaction again using C<Txn>.
+
+
+=head1 Berkeley DB Concurrent Data Store (CDS)
+
+The Berkeley DB I<Concurrent Data Store> (CDS) is a lightweight locking
+mechanism that is useful in scenarios where transactions are overkill. 
+
+=head2 What is CDS?
+
+The Berkeley DB CDS interface is a simple lightweight locking mechanism
+that allows safe concurrent access to Berkeley DB databases. Your
+application can have multiple reader and write processes, but Berkeley DB
+will arrange it so that only one process can have a write lock against the
+database at a time, i.e. multiple processes can read from a database
+concurrently, but all write processes will be serialised.
+
+=head2 Should I use it?
+
+Whilst this simple locking model is perfectly adequate for some
+applications, it will be too restrictive for others. Before deciding on
+using CDS mode, you need to be sure that it is suitable for the expected
+behaviour of your application.
+
+The key features of this model are 
+
+=over 5
+
+=item *
+
+All writes operations are serialised.
+
+=item *
+
+A write operation will block until all reads have finished.
+
+=back
+
+There are a few of the attributes of your application that you need to be
+aware of before choosing to use CDS.
+
+Firstly, if you application needs either recoverability or transaction
+support, then CDS will not be suitable.
+
+Next what is the ratio of read operation to write operations will your
+application have?
+
+If it is carrying out mostly read operations, and very few writes, then CDS
+may be appropriate.
+
+What is the expected throughput of reads/writes in your application?
+
+If you application does 90% writes and 10% reads, but on average you only
+have a transaction every 5 seconds, then the fact that all writes are
+serialised will not matter, because there will hardly ever be multiple
+writes processes blocking.
+
+In summary CDS mode may be appropriate for your application if it performs
+mostly reads and very few writes or there is a low throughput.  Also, if
+you do not need to be able to roll back a series of database operations if
+an error occurs, then CDS is ok.
+
+If any of these is not the case you will need to use Berkeley DB
+transactions. That is outside the scope of this document.
+
+=head2 Locking Used
+
+Berkeley DB implements CDS mode using two kinds of lock behind the scenes -
+namely read locks and write locks. A read lock allows multiple processes to
+access the database for reading at the same time. A write lock will only
+get access to the database when there are no read or write locks active.
+The write lock will block until the process holding the lock releases it.
+
+Multiple processes with read locks can all access the database at the same
+time as long as no process has a write lock. A process with a write lock
+can only access the database if there are no other active read or write
+locks.
+
+The majority of the time the Berkeley DB CDS mode will handle all locking
+without your application having to do anything. There are a couple of
+exceptions you need to be aware of though - these will be discussed in
+L<Safely Updating Records> and L<Implicit Cursors> below.
+
+A Berkeley DB Cursor (created with C<< $db->db_cursor >>) will by hold a
+lock on the database until it is either explicitly closed or destroyed.
+This means the lock has the potential to be long lived. 
+
+By default Berkeley DB cursors create a read lock, but it is possible to
+create a cursor that holds a write lock, thus
+
+    $cursor = $db->db_cursor(DB_WRITECURSOR);
+
+
+Whilst either a read or write cursor is active, it will block any other
+processes that wants to write to the database. 
+
+To avoid blocking problems, only keep cursors open as long as they are
+needed. The same is true when you use the C<cursor> method or the
+C<cds_lock> method.
+
+For full information on CDS see the "Berkeley DB Concurrent Data Store
+applications" section in the Berkeley DB Reference Guide.
+
+
+=head2 Opening a database for CDS
+
+Here is the typical signature that is used when opening a database in CDS
+mode.
+
+    use BerkeleyDB ;
+
+    my $env = new BerkeleyDB::Env
+                  -Home   => "./home" ,
+                  -Flags  => DB_CREATE| DB_INIT_CDB | DB_INIT_MPOOL
+        or die "cannot open environment: $BerkeleyDB::Error\n";
+
+    my $db  = new BerkeleyDB::Hash
+                -Filename       => 'test1.db',
+                -Flags          => DB_CREATE,
+                -Env            => $env
+        or die "cannot open database: $BerkeleyDB::Error\n";
+
+or this, if you use the tied interface
+
+    tie %hash, "BerkeleyDB::Hash",
+                -Filename       => 'test2.db',
+                -Flags          => DB_CREATE,
+                -Env            => $env
+        or die "cannot open database: $BerkeleyDB::Error\n";
+
+The first thing to note is that you B<MUST> always use a Berkeley DB
+environment if you want to use locking with Berkeley DB.
+
+Remember, that apart from the actual database files you explicitly create
+yourself, Berkeley DB will create a few behind the scenes to handle locking
+- they usually have names like "__db.001". It is therefore a good idea to
+use the C<-Home> option, unless you are happy for all these files to be
+written in the current directory.
+
+Next, remember to include the C<DB_CREATE> flag when opening the
+environment for the first time. A common mistake is to forget to add this
+option and then wonder why the application doesn't work.
+
+Finally, it is vital that all processes that are going to access the
+database files use the same Berkeley DB environment.
+
+
+=head2 Safely Updating a Record
+
+One of the main gotchas when using CDS is if you want to update a record in
+a database, i.e. you want to retrieve a record from a database, modify it
+in some way and put it back in the database.
+
+For example, say you are writing a web application and you want to keep a
+record of the number of times your site is accessed in a Berkeley DB
+database. So your code will have a line of code like this (assume, of
+course, that C<%hash> has been tied to a Berkeley DB database):
+
+    $hash{Counter} ++ ;
+
+That may look innocent enough, but there is a race condition lurking in
+there. If I rewrite the line of code using the low-level Berkeley DB API,
+which is what will actually be executed, the race condition may be more
+apparent:
+
+    $db->db_get("Counter", $value);
+    ++ $value ;
+    $db->db_put("Counter", $value);
+
+Consider what happens behind the scenes when you execute the commands
+above.  Firstly, the existing value for the key "Counter" is fetched from
+the database using C<db_get>. A read lock will be used for this part of the
+update.  The value is then incremented, and the new value is written back
+to the database using C<db_put>. This time a write lock will be used. 
+
+Here's the problem - there is nothing to stop two (or more) processes
+executing the read part at the same time. Remember multiple processes can
+hold a read lock on the database at the same time. So both will fetch the
+same value, let's say 7, from the database. Both increment the value to 8
+and attempt to write it to the database. Berkeley DB will ensure that only
+one of the processes gets a write lock, while the other will be blocked. So
+the process that happened to get the write lock will store the value 8 to
+the database and release the write lock. Now the other process will be
+unblocked, and it too will write the value 8 to the database. The result,
+in this example, is we have missed a hit in the counter.
+
+To deal with this kind of scenario, you need to make the update atomic. A
+convenience method, called C<cds_lock>, is supplied with the BerkeleyDB
+module for this purpose. Using C<cds_lock>, the counter update code can now
+be rewritten thus:
+
+    my $lk = $dbh->cds_lock() ; 
+    $hash{Counter} ++ ;
+    $lk->cds_unlock;
+
+or this, where scoping is used to limit the lifetime of the lock object
+
+    {
+        my $lk = $dbh->cds_lock() ;
+        $hash{Counter} ++ ;
+    }
+
+Similarly, C<cds_lock> can be used with the native Berkeley DB API 
+
+    my $lk = $dbh->cds_lock() ;
+    $db->db_get("Counter", $value);
+    ++ $value ;
+    $db->db_put("Counter", $value);
+    $lk->unlock;
+
+
+The C<cds_lock> method will ensure that the current process has exclusive
+access to the database until the lock is either explicitly released, via
+the C<< $lk->cds_unlock() >> or by the lock object being destroyed.
+
+If you are interested, all that C<cds_lock> does is open a "write" cursor.
+This has the useful side-effect of holding a write-lock on the database
+until the cursor is deleted. This is how you create a write-cursor
+
+    $cursor = $db->db_cursor(DB_WRITECURSOR);
+
+If you have instantiated multiple C<cds_lock> objects for one database
+within a single process, that process will hold a write-lock on the
+database until I<ALL> C<cds_lock> objects have been destroyed.
+
+As with all write-cursors, you should try to limit the scope of the
+C<cds_lock> to as short a time as possible. Remember the complete database
+will be locked to other process whilst the write lock is in place.
+
+=head2 Cannot write with a read cursor while a write cursor is active
+
+This issue is easier to demonstrate with an example, so consider the code
+below. The intention of the code is to increment the values of all the
+elements in a database by one.
+
+    # Assume $db is a database opened in a CDS environment.
+
+    # Create a write-lock
+    my $lock = $db->db_cursor(DB_WRITECURSOR);
+    # or 
+    # my $lock = $db->cds_lock();
+
+    
+    my $cursor = $db->db_cursor();
+
+    # Now loop through the database, and increment
+    # each value using c_put.
+    while ($cursor->c_get($key, $value, DB_NEXT) == 0) 
+    {
+         $cursor->c_put($key, $value+1, DB_CURRENT) == 0
+             or die "$BerkeleyDB::Error\n";
+    }
+
+
+When this code is run, it will fail on the C<c_put> line with this error
+
+    Write attempted on read-only cursor
+
+The read cursor has automatically disallowed a write operation to prevent a
+deadlock.
+
+
+So the rule is -- you B<CANNOT> carry out a write operation using a
+read-only cursor (i.e. you cannot use C<c_put> or C<c_del>) whilst another
+write-cursor is already active. 
+
+The workaround for this issue is to just use C<db_put> instead of C<c_put>,
+like this
+
+    # Assume $db is a database opened in a CDS environment.
+
+    # Create a write-lock
+    my $lock = $db->db_cursor(DB_WRITECURSOR);
+    # or 
+    # my $lock = $db->cds_lock();
+
+    
+    my $cursor = $db->db_cursor();
+
+    # Now loop through the database, and increment
+    # each value using c_put.
+    while ($cursor->c_get($key, $value, DB_NEXT) == 0) 
+    {
+         $db->db_put($key, $value+1) == 0
+             or die "$BerkeleyDB::Error\n";
+    }
+
+
+
+=head2 Implicit Cursors
+
+All Berkeley DB cursors will hold either a read lock or a write lock on the
+database for the existence of the cursor. In order to prevent blocking of
+other processes you need to make sure that they are not long lived.
+
+There are a number of instances where the Perl interface to Berkeley DB
+will create a cursor behind the scenes without you being aware of it. Most
+of these are very short-lived and will not affect the running of your
+script, but there are a few notable exceptions.
+
+Consider this snippet of code
+
+    while (my ($k, $v) = each %hash)
+    {
+        # do something
+    }
+
+
+To implement the "each" functionality, a read cursor will be created behind
+the scenes to allow you to iterate through the tied hash, C<%hash>. While
+that cursor is still active, a read lock will obviously be held against the
+database. If your application has any other writing processes, these will
+be blocked until the read cursor is closed. That won't happen until the
+loop terminates.
+
+To avoid blocking problems, only keep cursors open as long as they are
+needed. The same is true when you use the C<cursor> method or the
+C<cds_lock> method.
+
+
+The locking behaviour of the C<values> or C<keys> functions, shown below,
+is subtly different.
+
+    foreach my $k (keys %hash)
+    {
+        # do something
+    }
+
+    foreach my $v (values %hash)
+    {
+        # do something
+    }
+
+
+Just as in the C<each> function, a read cursor will be created to iterate
+over the database in both of these cases. Where C<keys> and C<values>
+differ is the place where the cursor carries out the iteration through the
+database. Whilst C<each> carried out a single iteration every time it was
+invoked, the C<keys> and C<values> functions will iterate through the
+entire database in one go -- the complete database will be read into memory
+before the first iteration of the loop.
+
+Apart from the fact that a read lock will be held for the amount of time
+required to iterate through the database, the use of C<keys> and C<values>
+is B<not> recommended because it will result in the complete database being
+read into memory.
+
+
+=head2 Avoiding Deadlock with multiple databases
+
+If your CDS application uses multiple database files, and you need to write
+to more than one of them, you need to be careful you don't create a
+deadlock.
+
+For example, say you have two databases, D1 and D2, and two processes, P1
+and P2. Assume you want to write a record to each database. If P1 writes
+the records to the databases in the order D1, D2 while process P2 writes
+the records in the order D2, D1, there is the potential for a deadlock to
+occur.
+
+This scenario can be avoided by either always acquiring the write locks in
+exactly the same order in your application code, or by using the
+C<DB_CDB_ALLDB> flag when opening the environment. This flag will make a
+write-lock apply to all the databases in the environment.
+
+Add example here
+
+=head1 DBM Filters
+
+A DBM Filter is a piece of code that is be used when you I<always>
+want to make the same transformation to all keys and/or values in a DBM
+database. All of the database classes (BerkeleyDB::Hash,
+BerkeleyDB::Btree and BerkeleyDB::Recno) support DBM Filters.
+
+There are four methods associated with DBM Filters. All work
+identically, and each is used to install (or uninstall) a single DBM
+Filter. Each expects a single parameter, namely a reference to a sub.
+The only difference between them is the place that the filter is
+installed.
+
+To summarise:
+
+=over 5
+
+=item B<filter_store_key>
+
+If a filter has been installed with this method, it will be invoked
+every time you write a key to a DBM database.
+
+=item B<filter_store_value>
+
+If a filter has been installed with this method, it will be invoked
+every time you write a value to a DBM database.
+
+
+=item B<filter_fetch_key>
+
+If a filter has been installed with this method, it will be invoked
+every time you read a key from a DBM database.
+
+=item B<filter_fetch_value>
+
+If a filter has been installed with this method, it will be invoked
+every time you read a value from a DBM database.
+
+=back
+
+You can use any combination of the methods, from none, to all four.
+
+All filter methods return the existing filter, if present, or C<undef>
+in not.
+
+To delete a filter pass C<undef> to it.
+
+=head2 The Filter
+
+When each filter is called by Perl, a local copy of C<$_> will contain
+the key or value to be filtered. Filtering is achieved by modifying
+the contents of C<$_>. The return code from the filter is ignored.
+
+=head2 An Example -- the NULL termination problem.
+
+Consider the following scenario. You have a DBM database that you need
+to share with a third-party C application. The C application assumes
+that I<all> keys and values are NULL terminated. Unfortunately when
+Perl writes to DBM databases it doesn't use NULL termination, so your
+Perl application will have to manage NULL termination itself. When you
+write to the database you will have to use something like this:
+
+    $hash{"$key\0"} = "$value\0" ;
+
+Similarly the NULL needs to be taken into account when you are considering
+the length of existing keys/values.
+
+It would be much better if you could ignore the NULL terminations issue
+in the main application code and have a mechanism that automatically
+added the terminating NULL to all keys and values whenever you write to
+the database and have them removed when you read from the database. As I'm
+sure you have already guessed, this is a problem that DBM Filters can
+fix very easily.
+
+    use strict ;
+    use BerkeleyDB ;
+
+    my %hash ;
+    my $filename = "filt.db" ;
+    unlink $filename ;
+
+    my $db = tie %hash, 'BerkeleyDB::Hash',
+    		-Filename   => $filename,
+	        -Flags      => DB_CREATE
+      or die "Cannot open $filename: $!\n" ;
+
+    # Install DBM Filters
+    $db->filter_fetch_key  ( sub { s/\0$//    } ) ;
+    $db->filter_store_key  ( sub { $_ .= "\0" } ) ;
+    $db->filter_fetch_value( sub { s/\0$//    } ) ;
+    $db->filter_store_value( sub { $_ .= "\0" } ) ;
+
+    $hash{"abc"} = "def" ;
+    my $a = $hash{"ABC"} ;
+    # ...
+    undef $db ;
+    untie %hash ;
+
+Hopefully the contents of each of the filters should be
+self-explanatory. Both "fetch" filters remove the terminating NULL,
+and both "store" filters add a terminating NULL.
+
+
+=head2 Another Example -- Key is a C int.
+
+Here is another real-life example. By default, whenever Perl writes to
+a DBM database it always writes the key and value as strings. So when
+you use this:
+
+    $hash{12345} = "something" ;
+
+the key 12345 will get stored in the DBM database as the 5 byte string
+"12345". If you actually want the key to be stored in the DBM database
+as a C int, you will have to use C<pack> when writing, and C<unpack>
+when reading.
+
+Here is a DBM Filter that does it:
+
+    use strict ;
+    use BerkeleyDB ;
+    my %hash ;
+    my $filename = "filt.db" ;
+    unlink $filename ;
+
+
+    my $db = tie %hash, 'BerkeleyDB::Btree',
+    		-Filename   => $filename,
+	        -Flags      => DB_CREATE
+      or die "Cannot open $filename: $!\n" ;
+
+    $db->filter_fetch_key  ( sub { $_ = unpack("i", $_) } ) ;
+    $db->filter_store_key  ( sub { $_ = pack ("i", $_) } ) ;
+    $hash{123} = "def" ;
+    # ...
+    undef $db ;
+    untie %hash ;
+
+This time only two filters have been used -- we only need to manipulate
+the contents of the key, so it wasn't necessary to install any value
+filters.
+
+=head1 Using BerkeleyDB with MLDBM
+
+Both BerkeleyDB::Hash and BerkeleyDB::Btree can be used with the MLDBM
+module. The code fragment below shows how to open associate MLDBM with
+BerkeleyDB::Btree. To use BerkeleyDB::Hash just replace
+BerkeleyDB::Btree with BerkeleyDB::Hash.
+
+    use strict ;
+    use BerkeleyDB ;
+    use MLDBM qw(BerkeleyDB::Btree) ;
+    use Data::Dumper;
+ 
+    my $filename = 'testmldbm' ;
+    my %o ;
+     
+    unlink $filename ;
+    tie %o, 'MLDBM', -Filename => $filename,
+                     -Flags    => DB_CREATE
+                    or die "Cannot open database '$filename: $!\n";
+ 
+See the MLDBM documentation for information on how to use the module
+and for details of its limitations.
+
+=head1 EXAMPLES
+
+TODO.
+
+=head1 HINTS & TIPS
+
+=head2 Sharing Databases With C Applications
+
+There is no technical reason why a Berkeley DB database cannot be
+shared by both a Perl and a C application.
+
+The vast majority of problems that are reported in this area boil down
+to the fact that C strings are NULL terminated, whilst Perl strings
+are not. See L<An Example -- the NULL termination problem.> in the DBM
+FILTERS section for a generic way to work around this problem.
+
+
+=head2 The untie Gotcha
+
+TODO
+
+=head1 COMMON QUESTIONS
+
+This section attempts to answer some of the more common questions that
+I get asked.
+
+
+=head2 Relationship with DB_File
+
+Before Berkeley DB 2.x was written there was only one Perl module that
+interfaced to Berkeley DB. That module is called B<DB_File>. Although
+B<DB_File> can be build with Berkeley DB 1.x, 2.x, 3.x or 4.x, it only
+provides an interface to the functionality available in Berkeley DB
+1.x. That means that it doesn't support transactions, locking or any of
+the other new features available in DB 2.x or better.
+
+=head2 How do I store Perl data structures with BerkeleyDB?
+
+See L<Using BerkeleyDB with MLDBM>.
+
+=head1 HISTORY
+
+See the Changes file.
+
+=head1 AVAILABILITY
+
+The most recent version of B<BerkeleyDB> can always be found
+on CPAN (see L<perlmod/CPAN> for details), in the directory
+F<modules/by-module/BerkeleyDB>.
+
+The official web site for Berkeley DB is F<http://www.oracle.com/technology/products/berkeley-db/db/index.html>.
+
+=head1 COPYRIGHT
+
+Copyright (c) 1997-2004 Paul Marquess. All rights reserved. This program
+is free software; you can redistribute it and/or modify it under the
+same terms as Perl itself.
+
+Although B<BerkeleyDB> is covered by the Perl license, the library it
+makes use of, namely Berkeley DB, is not. Berkeley DB has its own
+copyright and its own license. Please take the time to read it.
+
+Here are few words taken from the Berkeley DB FAQ (at
+F<http://www.oracle.com/technology/products/berkeley-db/db/index.html>) regarding the license:
+
+    Do I have to license DB to use it in Perl scripts?
+
+    No. The Berkeley DB license requires that software that uses
+    Berkeley DB be freely redistributable. In the case of Perl, that
+    software is Perl, and not your scripts. Any Perl scripts that you
+    write are your property, including scripts that make use of Berkeley
+    DB. Neither the Perl license nor the Berkeley DB license
+    place any restriction on what you may do with them.
+
+If you are in any doubt about the license situation, contact either the
+Berkeley DB authors or the author of BerkeleyDB.
+See L<"AUTHOR"> for details.
+
+
+=head1 AUTHOR
+
+Paul Marquess E<lt>pmqs@cpan.orgE<gt>.
+
+
+=head1 SEE ALSO
+
+perl(1), DB_File, Berkeley DB.
+
+=cut

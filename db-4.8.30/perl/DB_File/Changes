@@ -1,0 +1,549 @@
+
+
+1.820 28 March 2009
+
+   * remove MAN3PODS from Makefile.PL to match core.
+
+1.819 18 February 2009
+
+   * t/db-recno.t fails if run in a path that contains spaces
+     [rt.cpan.org #43288]
+
+1.818 21 January 2009
+
+   * Updated Makefile.PL for Strawberry Perl. 
+     Patch suggested by David Golden.
+
+   * Remove IRIX notes from README. The page referenced doesn't exist
+     anymore.
+
+1.817 27 March 2008
+
+   * Updated dbinfo
+
+   * Applied core patch 32299 - Re-apply change #30562
+
+   * Applied core patch 32208
+
+   * Applied core patch 32884 - use MM->parse_version() in Makefile.PL
+
+   * Applied core patch 32883 -  Silence new warning grep in void context warning
+
+   * Applied core patch 32704 to remove use of PL_na in typemap
+
+   * Applied core patch 30562 to fix a build issue on OSF
+
+1.816 28 October 2007
+
+   * Clarified the warning about building with a different version of
+     Berkeley DB that is used at runtime.
+
+   * Also made the boot version check less strict.
+     [rt.cpan.org #30013]
+
+1.815 4 February 2007
+
+   * A few casting cleanups for building with C++ from Steve Peters.
+
+   * Fixed problem with recno which happened if you changed directory after
+     opening the database. Problem reported by Andrew Pam.
+
+
+1.814 11 November 2005
+
+   * Fix from Dominic Dunlop to tidy up an OS-X specific warning in
+     db-btree.t.
+
+   * Silenced a warning about $DB_File::Error only being used once.
+     Issue spotted by Dominic Dunlop.
+
+1.813 31st October 2005
+
+   * Updates for Berkeley DB 4.4
+
+1.812 9th October 2005
+
+   * Added libscan to Makefile.PL
+
+   * Fixed test failing under windows
+
+1.811 12th March 2005
+
+   * Fixed DBM filter bug in seq
+
+1.810 7th August 2004
+
+   * Fixed db-hash.t for Cygwin
+
+   * Added substr tests to db-hast.t
+
+   * Documented AIX build problem in README.
+
+1.809 20th June 2004
+
+   * Merged core patch 22258
+
+   * Merged core patch 22741
+
+   * Fixed core bug 30237. 
+     Using substr to pass parameters to the low-level Berkeley DB interface
+     causes problems with Perl 5.8.1 or better.
+     typemap fix supplied by Marcus Holland-Moritz.
+
+1.808 22nd December 2003
+
+   * Added extra DBM Filter tests.
+
+   * Fixed a memory leak in ParseOpenInfo, which whould occur if the
+     opening of the database failed. Leak spotted by Adrian Enache.
+
+1.807 1st November 2003
+
+   * Fixed minor typos on pod documetation - reported by Jeremy Mates &
+     Mark Jason Dominus.
+
+   * dbinfo updated to report when a database is encrypted.
+
+1.806 22nd October 2002
+
+   * Fixed problem when trying to build with a multi-threaded perl.
+
+   * Tidied up the recursion detetion code.
+
+   * merged core patch 17844 - missing dTHX declarations.
+
+   * merged core patch 17838 
+
+1.805 1st September 2002
+
+   * Added support to allow DB_File to build with Berkeley DB 4.1.X
+
+   * Tightened up the test harness to test that calls to untie don't generate
+     the "untie attempted while %d inner references still exist" warning.
+
+   * added code to guard against calling the callbacks (compare,hash & prefix) 
+     recursively.
+
+   * pasing undef for the flags and/or mode when opening a database could cause
+     a "Use of uninitialized value in subroutine entry" warning. Now silenced.
+
+   * DBM filter code beefed up to cope with read-only $_.
+
+1.804 2nd June 2002
+
+   * Perl core patch 14939 added a new warning to "splice". This broke the
+     db-recno test harness. Fixed.
+
+   * merged core patches 16502 & 16540.
+
+1.803 1st March 2002
+
+   * Fixed a problem with db-btree.t where it complained about an "our"
+     variable redeclaation.
+
+   * FETCH, STORE & DELETE don't map the flags parameter into the
+     equivalent Berkeley DB function anymore.
+
+1.802 6th January 2002
+
+   * The message about some test failing in db-recno.t had the wrong test
+     numbers. Fixed.
+
+   * merged core patch 13942.
+
+1.801 26th November 2001
+
+   * Fixed typo in Makefile.PL
+
+   * Added "clean" attribute to Makefile.PL
+ 
+1.800 23rd November 2001
+
+   * use pport.h for perl backward compatability code.
+
+   * use new  ExtUtils::Constant module to generate XS constants.
+
+   * upgrade Makefile.PL upgrade/downgrade code to toggle "our" with
+     "use vars"
+
+1.79 22nd October 2001
+
+   * Added a "local $SIG{__DIE__}" inside the eval that checks for
+     the presence of XSLoader s suggested by Andrew Hryckowin.
+
+   * merged core patch 12277.
+
+   * Changed NEXTKEY to not initialise the input key. It isn't used anyway.
+
+1.79 22nd October 2001
+
+   * Fixed test harness for cygwin
+
+1.78 30th July 2001
+
+   * the test in Makefile.PL for AIX used -plthreads. Should have been
+     -lpthreads
+
+   * merged Core patches 
+        10372, 10335, 10372, 10534, 10549, 10643, 11051, 11194, 11432
+
+   * added documentation patch regarding duplicate keys from Andrew Johnson
+
+
+1.77 26th April 2001
+
+   * AIX is reported to need -lpthreads, so Makefile.PL now checks for
+     AIX and adds it to the link options.
+
+   * Minor documentation updates.
+
+   * Merged Core patch 9176
+
+   * Added a patch from Edward Avis that adds support for splice with
+     recno databases.
+
+   * Modified Makefile.PL to only enable the warnings pragma if using perl
+     5.6.1 or better.    
+
+1.76 15th January 2001
+
+   * Added instructions for using LD_PRELOAD to get Berkeley DB 2.x to work
+     with DB_File on Linux. Thanks to Norbert Bollow for sending details of
+     this approach.
+
+
+1.75 17th December 2000
+
+   * Fixed perl core patch 7703
+
+   * Added suppport to allow DB_File to be built with Berkeley DB 3.2 --
+     btree_compare, btree_prefix and hash_cb needed to be changed.
+
+   * Updated dbinfo to support Berkeley DB 3.2 file format changes.
+
+
+1.74 10th December 2000
+
+   * A "close" call in DB_File.xs needed parenthesised to stop win32 from
+     thinking it was one of its macros.
+
+   * Updated dbinfo to support Berkeley DB 3.1 file format changes.
+
+   * DB_File.pm & the test hasness now use the warnings pragma (when
+     available).
+
+   * Included Perl core patch 7703 -- size argument for hash_cb is different
+     for Berkeley DB 3.x
+
+   * Included Perl core patch 7801 -- Give __getBerkeleyDBInfo the ANSI C
+     treatment.
+
+   * @a = () produced the warning 'Argument "" isn't numeric in entersub'
+     This has been fixed. Thanks to Edward Avis for spotting this bug.
+
+   * Added note about building under Linux. Included patches.
+
+   * Included Perl core patch 8068 -- fix for bug 20001013.009 
+     When run with warnings enabled "$hash{XX} = undef " produced an
+     "Uninitialized value" warning. This has been fixed.
+
+1.73 31st May 2000
+
+   * Added support in version.c for building with threaded Perl.
+
+   * Berkeley DB 3.1 has reenabled support for null keys. The test
+     harness has been updated to reflect this.
+
+1.72 16th January 2000
+
+   * Added hints/sco.pl
+
+   * The module will now use XSLoader when it is available. When it
+     isn't it will use DynaLoader.
+
+   * The locking section in DB_File.pm has been discredited. Many thanks
+     to David Harris for spotting the underlying problem, contributing
+     the updates to the documentation and writing DB_File::Lock (available
+     on CPAN).
+
+1.71 7th September 1999
+
+   * Fixed a bug that prevented 1.70 from compiling under win32
+
+   * Updated to support Berkeley DB 3.x
+
+   * Updated dbinfo for Berkeley DB 3.x file formats.
+
+1.70 4th August 1999
+
+   * Initialise $DB_File::db_ver and $DB_File::db_version with
+     GV_ADD|GV_ADDMULT -- bug spotted by Nick Ing-Simmons.
+
+   * Added a BOOT check to test for equivalent versions of db.h &
+     libdb.a/so.
+
+1.69 3rd August 1999
+
+   * fixed a bug in push -- DB_APPEND wasn't working properly.
+
+   * Fixed the R_SETCURSOR bug introduced in 1.68
+
+   * Added a new Perl variable $DB_File::db_ver
+   
+1.68 22nd July 1999
+
+   * Merged changes from 5.005_58 
+
+   * Fixed a bug in R_IBEFORE & R_IAFTER procesing in Berkeley DB
+     2 databases.
+
+   * Added some of the examples in the POD into the test harness.
+
+1.67 6th June 1999
+
+   * Added DBM Filter documentation to DB_File.pm
+
+   * Fixed DBM Filter code to work with 5.004
+
+   * A few instances of newSVpvn were used in 1.66. This isn't available in
+     Perl 5.004_04 or earlier. Replaced with newSVpv.
+
+1.66 15th March 1999
+
+   * Added DBM Filter code
+
+1.65 6th March 1999
+
+   * Fixed a bug in the recno PUSH logic.
+   * The BOOT version check now needs 2.3.4 when using Berkeley DB version 2
+
+1.64 21st February 1999
+
+   * Tidied the 1.x to 2.x flag mapping code.
+   * Added a patch from Mark Kettenis <kettenis@wins.uva.nl> to fix a flag
+     mapping problem with O_RDONLY on the Hurd
+   * Updated the message that db-recno.t prints when tests 51, 53 or 55 fail.
+
+1.63 19th December 1998
+
+   * Fix to allow DB 2.6.x to build with DB_File
+   * Documentation updated to use push,pop etc in the RECNO example &
+     to include the find_dup & del_dup methods.
+
+1.62 30th November 1998
+
+   Added hints/dynixptx.pl.
+   Fixed typemap -- 1.61 used PL_na instead of na
+
+1.61 19th November 1998
+
+   Added a note to README about how to build Berkeley DB 2.x when
+   using HP-UX.
+   Minor modifications to get the module to build with DB 2.5.x
+   Fixed a typo in the definition of O_RDONLY, courtesy of Mark Kettenis.
+
+1.60
+   Changed the test to check for full tied array support
+
+1.59
+   Updated the license section.
+
+   Berkeley DB 2.4.10 disallows zero length keys. Tests 32 & 42 in
+   db-btree.t and test 27 in db-hash.t failed because of this change.
+   Those tests have been zapped.
+
+   Added dbinfo to the distribution.
+
+1.58
+   Tied Array support was enhanced in Perl 5.004_57. DB_File now
+   supports PUSH,POP,SHIFT,UNSHIFT & STORESIZE.
+
+   Fixed a problem with the use of sv_setpvn. When the size is
+   specified as 0, it does a strlen on the data.  This was ok for DB
+   1.x, but isn't for DB 2.x.
+
+1.57
+   If Perl has been compiled with Threads support,the symbol op will be
+   defined. This clashes with a field name in db.h, so it needs to be
+   #undef'ed before db.h is included.
+
+1.56
+   Documented the Solaris 2.5 mutex bug
+
+1.55
+   Merged 1.16 changes.
+
+1.54
+
+   Fixed a small bug in the test harness when run under win32
+   The emulation of fd when useing DB 2.x was busted.
+
+1.53
+
+   Added DB_RENUMBER to flags for recno.
+
+1.52
+
+   Patch from Nick Ing-Simmons now allows DB_File to build on NT.
+   Merged 1.15 patch.
+
+1.51
+
+    Fixed the test harness so that it doesn't expect DB_File to have
+    been installed by the main Perl build.
+
+
+    Fixed a bug in mapping 1.x O_RDONLY flag to 2.x DB_RDONLY equivalent
+
+1.50
+
+    DB_File can now build with either DB 1.x or 2.x, but not both at
+    the same time.
+
+1.16
+
+   A harmless looking tab was causing Makefile.PL to fail on AIX 3.2.5
+
+    Small fix for the AIX strict C compiler XLC which doesn't like
+    __attribute__ being defined via proto.h and redefined via db.h. Fix
+    courtesy of Jarkko Hietaniemi.
+
+1.15
+
+    Patch from Gisle Aas <gisle@aas.no> to suppress "use of undefined
+    value" warning with db_get and db_seq.
+
+    Patch from Gisle Aas <gisle@aas.no> to make DB_File export only the
+    O_* constants from Fcntl.
+
+    Removed the DESTROY method from the DB_File::HASHINFO module.
+
+    Previously DB_File hard-wired the class name of any object that it
+    created to "DB_File". This makes sub-classing difficult. Now
+    DB_File creats objects in the namespace of the package it has been
+    inherited into.
+
+
+1.14
+
+    Made it illegal to tie an associative array to a RECNO database and
+    an ordinary array to a HASH or BTREE database.
+
+1.13
+
+    Minor changes to DB_FIle.xs and DB_File.pm
+
+1.12
+
+    Documented the incompatibility with version 2 of Berkeley DB.
+
+1.11
+
+    Documented the untie gotcha.
+
+1.10
+
+    Fixed fd method so that it still returns -1 for in-memory files
+    when db 1.86 is used.
+
+1.09
+
+    Minor bug fix in DB_File::HASHINFO, DB_File::RECNOINFO and
+    DB_File::BTREEINFO.
+
+    Changed default mode to 0666.
+
+1.08
+
+    Documented operation of bval.
+
+1.07
+
+    Fixed bug with RECNO, where bval wasn't defaulting to "\n".
+
+1.06
+
+    Minor namespace cleanup: Localized PrintBtree.
+
+1.05
+
+    Made all scripts in the documentation strict and -w clean.
+
+    Added logic to DB_File.xs to allow the module to be built after
+    Perl is installed.
+
+1.04
+
+    Minor documentation changes.
+
+    Fixed a bug in hash_cb. Patches supplied by Dave Hammen,
+    <hammen@gothamcity.jsc.nasa.govt>.
+
+    Fixed a bug with the constructors for DB_File::HASHINFO,
+    DB_File::BTREEINFO and DB_File::RECNOINFO. Also tidied up the
+    constructors to make them -w clean.
+
+    Reworked part of the test harness to be more locale friendly.
+
+1.03
+
+    Documentation update.
+
+    DB_File now imports the constants (O_RDWR, O_CREAT etc.) from Fcntl
+    automatically.
+
+    The standard hash function exists is now supported.
+
+    Modified the behavior of get_dup. When it returns an associative
+    array, the value is the count of the number of matching BTREE
+    values.
+
+1.02
+
+    Merged OS/2 specific code into DB_File.xs
+
+    Removed some redundant code in DB_File.xs.
+
+    Documentation update.
+
+    Allow negative subscripts with RECNO interface.
+
+    Changed the default flags from O_RDWR to O_CREAT|O_RDWR.
+
+    The example code which showed how to lock a database needed a call
+    to sync added. Without it the resultant database file was empty.
+
+    Added get_dup method.
+
+1.01
+
+    Fixed a core dump problem with SunOS.
+
+    The return value from TIEHASH wasn't set to NULL when dbopen
+    returned an error.
+
+1.0
+
+    DB_File has been in use for over a year. To reflect that, the
+    version number has been incremented to 1.0.
+
+    Added complete support for multiple concurrent callbacks.
+
+    Using the push method on an empty list didn't work properly. This
+    has been fixed.
+
+0.3
+
+    Added prototype support for multiple btree compare callbacks.
+
+0.2
+
+    When DB_File is opening a database file it no longer terminates the
+    process if dbopen returned an error. This allows file protection
+    errors to be caught at run time. Thanks to Judith Grass
+    <grass@cybercash.com> for spotting the bug.
+
+0.1
+
+    First Release.
+

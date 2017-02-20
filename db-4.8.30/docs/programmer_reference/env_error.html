@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Error support</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="env.html" title="Chapter 9.  The Berkeley DB Environment" />
+    <link rel="prev" href="env_open.html" title="Opening databases within the environment" />
+    <link rel="next" href="env_db_config.html" title="DB_CONFIG configuration file" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Error support</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="env_open.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 9. 
+        The Berkeley DB Environment
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="env_db_config.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="env_error"></a>Error support</h2>
+          </div>
+        </div>
+      </div>
+      <p>Berkeley DB offers programmatic support for displaying error return values.
+The <a href="../api_reference/C/envstrerror.html" class="olink">db_strerror()</a> function returns a pointer to the error
+message corresponding to any Berkeley DB error return.  This is similar to the
+ANSI C strerror interface, but can handle both system error returns and
+Berkeley DB-specific return values.</p>
+      <p>For example:</p>
+      <pre class="programlisting">int ret;
+if ((ret = dbenv-&gt;set_cachesize(dbenv, 0, 32 * 1024, 1)) != 0) {
+    fprintf(stderr, "set_cachesize failed: %s\n", db_strerror(ret));
+    return (1);
+}</pre>
+      <p>There are also two additional error methods: <a href="../api_reference/C/enverr.html" class="olink">DB_ENV-&gt;err()</a> and
+<code class="methodname">DB_ENV-&gt;errx()</code>.  These methods work like the ANSI C printf function,
+taking a printf-style format string and argument list, and writing a
+message constructed from the format string and arguments.</p>
+      <p>The <a href="../api_reference/C/enverr.html" class="olink">DB_ENV-&gt;err()</a> function appends the standard error string to the
+constructed message; the <code class="methodname">DB_ENV-&gt;errx()</code> function does not.</p>
+      <p>Error messages can be configured always to include a prefix (for
+example, the program name) using the <a href="../api_reference/C/envset_errpfx.html" class="olink">DB_ENV-&gt;set_errpfx()</a> method.</p>
+      <p>These functions provide simpler ways of displaying Berkeley DB error messages:</p>
+      <pre class="programlisting">int ret;
+dbenv-&gt;set_errpfx(dbenv, program_name);
+if ((ret = dbenv-&gt;open(dbenv, home,
+    DB_CREATE | DB_INIT_LOG | DB_INIT_TXN | DB_USE_ENVIRON, 0))
+    != 0) {
+    dbenv-&gt;err(dbenv, ret, "open: %s", home);
+    dbenv-&gt;errx(dbenv,
+        "contact your system administrator: session ID was %d",
+        session_id);
+    return (1);
+}</pre>
+      <p>For example, if the program was called "my_app", and it tried to open
+an environment home directory in "/tmp/home" and the open call returned
+a permission error, the error messages shown would look like this:</p>
+      <pre class="programlisting">my_app: open: /tmp/home: Permission denied.
+my_app: contact your system administrator: session ID was 2</pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="env_open.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="env.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="env_db_config.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Opening databases within the environment </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_CONFIG configuration file</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

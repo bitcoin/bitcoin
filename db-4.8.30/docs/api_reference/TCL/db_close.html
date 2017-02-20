@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>db close</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB TCL API Reference" />
+    <link rel="up" href="tclapi.html" title="Chapter 1.  Berkeley DB Tcl APIs" />
+    <link rel="prev" href="tclapi.html" title="Chapter 1.  Berkeley DB Tcl APIs" />
+    <link rel="next" href="db_count.html" title="db count" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center"><span class="emphasis"><em>db</em></span> close</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="tclapi.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 1. 
+                Berkeley DB Tcl APIs
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="db_count.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="db_close"></a><span class="emphasis"><em>db</em></span> close</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">db close
+    [-nosync]  </pre>
+      <p>
+         The <span class="emphasis"><em>db</em></span> <span class="bold"><strong>close</strong></span>
+         command flushes any cached database information to disk, closes any
+         open cursors, frees any allocated resources, and closes any underlying
+         files.  Because key/data pairs are cached in memory, failing to sync
+         the file with the <span class="emphasis"><em>db</em></span> <span class="bold"><strong>close</strong></span> or <span class="emphasis"><em>db</em></span> <span class="bold"><strong>sync</strong></span> command may result in inconsistent or lost
+         information.
+    </p>
+      <p>
+        The options are as follows:
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                 <span class="bold"><strong>-nosync</strong></span> 
+            </p>
+            <p>
+                 Do not flush cached information to disk.     
+             </p>
+            <p>
+                 The <code class="literal">-nosync</code> flag is a dangerous option. It should only be set if the
+                 application is doing logging (with transactions) so that the database
+                 is recoverable after a system or application crash, or if the database
+                 is always generated from scratch after any system or application
+                 crash.
+            </p>
+            <p>
+                 It is important to understand that flushing cached information to disk
+                 only minimizes the window of opportunity for corrupted data.  Although
+                 unlikely, it is possible for database corruption to happen if a system
+                 or application crash occurs while writing data to the database. To
+                 ensure that database corruption never occurs, applications must either
+                 use transactions and logging with automatic recovery, use logging and
+                 application-specific recovery, or edit a copy of the database; and
+                 after all applications using the database have successfully called
+                 <span class="emphasis"><em>db</em></span> <span class="bold"><strong>close</strong></span>,
+                 atomically replace the original database with the updated copy.
+            </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+         After <span class="emphasis"><em>db</em></span> <span class="bold"><strong>close</strong></span>
+         has been called, regardless of its return, the DB handle may not be
+         accessed again.
+    </p>
+      <p>
+         The <span class="emphasis"><em>db</em></span> <span class="bold"><strong>close</strong></span>
+         command returns 0 on success, and in the case of error, a Tcl error is
+         thrown.
+    </p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="tclapi.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="tclapi.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="db_count.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 1. 
+                Berkeley DB Tcl APIs
+         </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> <span class="emphasis"><em>db</em></span> count</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

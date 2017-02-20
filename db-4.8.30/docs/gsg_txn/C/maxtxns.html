@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Configuring the Transaction Subsystem</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB Transaction Processing" />
+    <link rel="up" href="usingtxns.html" title="Chapter 3. Transaction Basics" />
+    <link rel="prev" href="txnindices.html" title="Secondary Indices with Transaction Applications" />
+    <link rel="next" href="txnconcurrency.html" title="Chapter 4. Concurrency" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Configuring the Transaction Subsystem</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="txnindices.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. Transaction Basics</th>
+          <td width="20%" align="right"> <a accesskey="n" href="txnconcurrency.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="maxtxns"></a>Configuring the Transaction Subsystem</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+            Most of the configuration activities that you need to perform
+            for your transactional DB application will involve the
+            locking and logging subsystems. See 
+            <a class="xref" href="txnconcurrency.html" title="Chapter 4. Concurrency">Concurrency</a>
+            and
+            <a class="xref" href="filemanagement.html" title="Chapter 5. Managing DB Files">Managing DB Files</a>
+            for details.
+        </p>
+      <p>
+            However, there are a couple of things that you can do to
+            configure your transaction subsystem directly. These things
+            are:
+        </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <span>
+                <p>
+                    
+                    <span>
+                        Configure 
+                    </span>
+                        
+                    the maximum number of simultaneous
+                    transactions needed by your application. 
+                    In general, you should not need to do this unless you
+                    use deeply nested transactions or you have many threads all
+                    of which have active transactions. In addition, you may
+                    need to configure a higher maximum number of transactions if you
+                    are using snapshot isolation. See
+                    <a class="xref" href="isolation.html#sisolation_maxtxn" title="Snapshot Isolation Transactional Requirements">Snapshot Isolation Transactional Requirements</a>
+                    for details.
+                </p>
+                <p>
+                    By default, your application can support 20 active
+                    transactions. 
+                </p>
+                <p>
+                    You can set the maximum number of simultaneous
+                    transactions supported by your application using
+                    <span>
+                        the
+                        <code class="methodname">DB_ENV-&gt;set_tx_max()</code>
+                        
+                        method. Note that this method must be called
+                        before the environment has been opened.
+                    </span>
+                    
+                </p>
+                <p>
+                    If your application has exceeded this maximum value,
+                    then any attempt to begin a new transaction will fail.
+                </p>
+                <p>
+                    This value can also be set using the
+                    <code class="literal">DB_CONFIG</code> file's
+                    <code class="literal">set_tx_max</code> parameter. Remember that
+                    the <code class="literal">DB_CONFIG</code> must reside in your
+                    environment home directory.
+                </p>
+</span>
+          </li>
+          <li>
+            <span>
+                  <p>
+                    <span>
+                    Configure the timeout value for your transactions. 
+                    </span>
+                    
+                    
+                    This value represents the longest period of time a
+                    transaction can be active. Note, however, that
+                    transaction timeouts are checked only when DB
+                    examines its lock tables for blocked locks
+                    (see <a class="xref" href="blocking_deadlocks.html" title="Locks, Blocks, and Deadlocks">Locks, Blocks, and Deadlocks</a>
+                    for more information). Therefore, a transaction's timeout can
+                    have expired, but the application will not be notified until DB 
+                    has a reason to examine its lock tables.
+                </p>
+                <p>
+                    Be aware that some transactions may be
+                    inappropriately timed out before the transaction has a
+                    chance to complete. You should therefore use this
+                    mechanism only if you know your application
+                    might have unacceptably long transactions and
+                    you want to make sure your application will
+                    not stall during their execution.
+                    (This might happen if, for example, your
+                    transaction blocks or requests too much
+                    data.)
+                </p>
+                <p>
+                    Note that by default transaction timeouts are set to 0 seconds, which means that they never time
+                    out.
+                </p>
+                <p>
+                    To set the maximum timeout value for your transactions,
+                    use  the
+                            <span><code class="methodname">DB_ENV-&gt;set_timeout()</code></span>
+                            
+                            
+                        method. This method configures the entire
+                        environment; not just the handle used to set the
+                        configuration. Further, this value may
+                        be set at any time during the application's
+                        lifetime. 
+                </p>
+                <p>
+                    This value can also be set using the
+                    <code class="literal">DB_CONFIG</code> file's
+                    <code class="literal">set_txn_timeout</code> parameter.
+                </p> 
+                
+</span>
+          </li>
+        </ul>
+      </div>
+      <p>
+            For example:
+        </p>
+      <pre class="programlisting">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+#include "db.h"
+
+int
+main(void)
+{
+    int ret, ret_c;
+    u_int32_t db_flags, env_flags;
+    DB *dbp;
+    DB_ENV *envp;
+    DB_TXN *txn;
+    const char *db_home_dir = "/tmp/myEnvironment";
+    const char *file_name = "mydb.db";
+    
+    envp = NULL;
+
+    /* Open the environment */
+    ret = db_env_create(&amp;envp, 0);
+    if (ret != 0) {
+        fprintf(stderr, "Error creating environment handle: %s\n",
+            db_strerror(ret));
+        return (EXIT_FAILURE);
+    }
+                                                                                                                                  
+    env_flags = DB_CREATE     |  /* If the environment does not
+                                  * exist, create it. */
+                DB_INIT_LOCK  |  /* Initialize locking */
+                DB_INIT_LOG   |  /* Initialize logging */
+                DB_INIT_MPOOL |  /* Initialize the cache */
+                DB_THREAD     |  /* Free-thread the env handle. */
+                DB_INIT_TXN;     /* Initialize transactions */
+
+    /*
+     * Configure a maximum transaction timeout of 1 second.
+     */
+    ret = envp-&gt;set_timeout(envp, DB_SET_TXN_TIMEOUT, 1000000);
+    if (ret != 0) {
+        fprintf(stderr, "Error setting txn timeout: %s\n",
+            db_strerror(ret));
+        goto err;
+    }
+
+    /*
+     * Configure 40 maximum transactions.
+     */
+    ret = envp-&gt;set_tx_max(envp, 40);
+    if (ret != 0) {
+        fprintf(stderr, "Error setting max txns: %s\n",
+            db_strerror(ret));
+        goto err;
+    }
+
+    ret = envp-&gt;open(envp, db_home_dir, env_flags, 0);
+    if (ret != 0) {
+        fprintf(stderr, "Error opening environment: %s\n",
+            db_strerror(ret));
+        goto err;
+    }
+
+    /* 
+     * From here, you open your databases, proceed with your 
+     * database operations, and respond to deadlocks as 
+     * is normal (omitted for brevity).
+     */
+     ...  </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="txnindices.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="usingtxns.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="txnconcurrency.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Secondary Indices with Transaction Applications </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 4. Concurrency</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

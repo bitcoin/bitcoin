@@ -1,0 +1,55 @@
+#!/bin/sh
+#
+# $Id: $
+#
+# Bump the Berkeley DB version
+
+P=`pwd`
+R=`dirname $P`
+progname="$0"
+VERSION="$1"
+assembly="../csharp/Properties/AssemblyInfo.cs"
+t=/tmp/__assembly
+
+# Sanity check
+if [ ! -f $R/dist/RELEASE ] ; then
+	echo "$progname must be run in the dist directory of a Berkeley DB tree"
+	exit 1
+fi
+
+OIFS="$IFS"
+IFS=.
+set -- $VERSION
+
+if [ $# != 3 ] ; then
+	echo "Usage: $progname X.X.X -- sets the Berkeley DB version to X.X.X"
+	exit 1
+fi
+MAJOR="$1" MINOR="$2" PATCH="$3"
+
+IFS="$OFS"
+
+# Update the change log patch number -- there's 1 location to update in
+# the change log "table of contents", and 2 in the Change Log itself.
+#cd $R/docs_src/ref/changelog && vi toc.so ${MAJOR}.${MINOR}.html
+
+# Update the release number.
+cd $R/dist &&\
+    (echo "/^DB_VERSION_MAJOR/s/=.*/=$MAJOR/" &&\
+     echo "/^DB_VERSION_MINOR/s/=.*/=$MINOR/" &&\
+     echo "/^DB_VERSION_PATCH/s/=.*/=$PATCH/" &&\
+     echo w &&\
+     echo q) | ed RELEASE > /dev/null
+VERSION=`sh -c '. RELEASE; echo $DB_VERSION'`
+echo "Berkeley DB release $VERSION."
+
+# Build auto-generated files.
+cd $R/dist && sh s_all
+
+# Update the CSharp assembly information
+sed -e "s:AssemblyVersion(\"[0-9]*\.[0-9]*\.[0-9]*\"):AssemblyVersion(\"$MAJOR\.$MINOR\.$PATCH\"):" < $assembly > $t
+cmp $t $assembly > /dev/null 2>&1 ||
+    (rm -f $assembly && cp $t $assembly && rm -f $t && chmod 444 $assembly)
+
+# Commit all of the changes.
+echo "Now run 'hg commit && hg tag db-$MAJOR.$MINOR.$PATCH && hg push'"

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Database Open Flags</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="DB.html" title="Chapter 2. Databases" />
+    <link rel="prev" href="coredbclose.html" title="Closing Databases" />
+    <link rel="next" href="CoreDBAdmin.html" title="Administrative Methods" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Database Open Flags</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="coredbclose.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. Databases</th>
+          <td width="20%" align="right"> <a accesskey="n" href="CoreDBAdmin.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="DBOpenFlags"></a>Database Open Flags</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+        The following are the flags that you may want to use at database open time.  
+        Note that this list is not exhaustive — it includes only those flags likely 
+        to be of interest for introductory, single-threaded
+        database applications. For a complete list of the flags available to you, see the 
+        <em class="citetitle">Berkeley DB C API guide.</em>
+        
+    </p>
+      <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+        <h3 class="title">Note</h3>
+        <p>
+        To specify more than one flag on the call to 
+        <span><code class="methodname">DB-&gt;open()</code>,</span>
+        
+        you must bitwise inclusively OR them together:
+    </p>
+        <a id="c_db3"></a>
+        <pre class="programlisting">u_int32_t open_flags = DB_CREATE | DB_EXCL;</pre>
+      </div>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                <code class="literal">DB_CREATE</code>
+            </p>
+            <p>
+                If the database does not currently exist, create it. By default, the database open 
+                fails if the database does not already exist.
+            </p>
+          </li>
+          <li>
+            <p>
+                <code class="literal">DB_EXCL</code>
+            </p>
+            <p>
+                Exclusive database creation. Causes the database open to fail if the database 
+                already exists.  This flag is only meaningful when used with 
+                <code class="literal">DB_CREATE</code>.
+            </p>
+          </li>
+          <li>
+            <p>
+                <code class="literal">DB_RDONLY</code>
+            </p>
+            <p>
+                Open the database for read operations only. Causes any subsequent database write 
+                operations to fail.
+            </p>
+          </li>
+          <li>
+            <p>
+                <code class="literal">DB_TRUNCATE</code>
+            </p>
+            <p>
+                Physically truncate (empty) the on-disk file that contains the database. 
+                Causes DB to delete all databases physically contained in that file.
+            </p>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="coredbclose.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="DB.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="CoreDBAdmin.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Closing Databases </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Administrative Methods</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

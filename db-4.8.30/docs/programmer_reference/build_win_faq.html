@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Windows FAQ</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="build_win.html" title="Chapter 28.  Building Berkeley DB for Windows" />
+    <link rel="prev" href="build_win_notes.html" title="Windows notes" />
+    <link rel="next" href="build_wince.html" title="Chapter 29.  Building Berkeley DB for Windows CE" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Windows FAQ</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="build_win_notes.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 28. 
+        Building Berkeley DB for Windows
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="build_wince.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="build_win_faq"></a>Windows FAQ</h2>
+          </div>
+        </div>
+      </div>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <span class="bold">
+              <strong>Why do I have db_load.dll - where is db_load.exe?</strong>
+            </span>
+            <p>Microsoft Visual C++ .NET has some bugs related to converting project
+files from VC++ 6.0 format and incorrectly converts the db_load project.
+For more information, see <a class="ulink" href="http://support.microsoft.com/default.aspx?scid=KB;EN-US;Q321274" target="_top">Microsoft's article about this bug</a>.</p>
+            <p>The workaround is simply to switch the <span class="bold"><strong>db_load</strong></span> project back to
+generating an EXE after converting to VC++ .NET.  To do this, right
+click on db_load -&gt; Properties and change "Configuration Type" from
+"Dynamic Library (.dll)" to "Application (.exe)".</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>My Win* C/C++ application crashes in the Berkeley DB library when Berkeley DB calls
+fprintf (or some other standard C library function).</strong>
+            </span>
+            <p>You should be using the "Debug Multithreaded DLL" compiler option in
+your application when you link with the
+build_windows\Debug\libdb48d.lib library (this .lib file
+is actually a stub for libdb48d.DLL). To check this
+setting in Visual C++, choose the <span class="emphasis"><em>Project/Settings</em></span> menu
+item and select <span class="emphasis"><em>Code Generation</em></span> under the tab marked
+<span class="emphasis"><em>C/C++</em></span>; and see the box marked <span class="emphasis"><em>Use runtime
+library</em></span>.  This should be set to <span class="emphasis"><em>Debug Multithreaded DLL</em></span>.
+If your application is linked against the static library,
+build_windows\Debug\libdb48sd.lib; then, you will want
+to set <span class="emphasis"><em>Use runtime library</em></span> to <span class="emphasis"><em>Debug Multithreaded</em></span>.</p>
+            <p>Setting this option incorrectly can cause multiple versions of the
+standard libraries to be linked into your application (one on behalf
+of your application, and one on behalf of the Berkeley DB library).  That
+violates assumptions made by these libraries, and traps can result.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>Why are the build options for DB_DLL marked as "Use MFC in a Shared DLL"?
+Does Berkeley DB use MFC?</strong>
+            </span>
+            <p>Berkeley DB does not use MFC at all.  It does however, call malloc and free
+and other facilities provided by the Microsoft C runtime library.  We
+found in our work that many applications and libraries are built
+assuming MFC, and specifying this for Berkeley DB solves various
+interoperation issues, and guarantees that the right runtime libraries
+are selected.  Note that because we do not use MFC facilities, the MFC
+library DLL is not marked as a dependency for libdb.dll, but the
+appropriate Microsoft C runtime is.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>How can I build Berkeley DB for <a class="ulink" href="http://www.mingw.org" target="_top">MinGW</a>?</strong>
+            </span>
+            <p>Follow the instructions in <a class="xref" href="build_unix.html#build_unix_intro" title="Building for UNIX/POSIX">Building for UNIX/POSIX</a>, and specify the --enable-mingw option to the
+configuration script.  This configuration option currently only builds
+static versions of the library, it does not yet build a DLL version of
+the library, and file sizes are limited to 2GB (2^32 bytes.)</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>How can I build a Berkeley DB for Windows 98/ME?</strong>
+            </span>
+            <p>
+        Windows 98/ME is no longer supported by Berkeley DB. The following is
+        therefore only of interest to historical users of Berkeley DB.
+    </p>
+            <p>
+        By default on Windows, Berkeley DB supports internationalized
+        filenames by treating all directory paths and filenames passed to
+        Berkeley DB methods as UTF-8 encoded strings.  All paths are
+        internally converted to wide character strings and passed to the
+        wide character variants of Windows system calls.
+    </p>
+            <p>
+        This allows applications to create and open databases with names
+        that cannot be represented with ASCII names while maintaining
+        compatibility with applications that work purely with ASCII paths.
+    </p>
+            <p>
+        Windows 98 and ME do not support Unicode paths directly.  To build for
+        those versions of Windows, either:
+    </p>
+            <div class="itemizedlist">
+              <ul type="disc">
+                <li>
+                  <p>
+                    Follow the instructions at
+                    <a class="ulink" href="http://msdn.microsoft.com/goglobal/bb688166.aspx" target="_top">Microsoft's web site</a>.
+            </p>
+                </li>
+                <li>
+                  <p>Open the workspace or solution file with Visual Studio. Then 
+open the Project properties/settings section for the project you need to build 
+(at least db_dll). In the <span class="emphasis"><em>C/C++-&gt;Preprocessor-&gt;Preprocessor 
+Definitions</em></span> section, remove <span class="emphasis"><em>_UNICODE</em></span> and 
+<span class="emphasis"><em>UNICODE</em></span> entries. Add in an entry of 
+<span class="emphasis"><em>_MBCS</em></span>. Build the project as normal.</p>
+                </li>
+              </ul>
+            </div>
+            <p>The ASCII builds will also work on Windows NT/2K/XP and 2003, but will
+not translate paths to wide character strings.</p>
+          </li>
+        </ol>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="build_win_notes.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="build_win.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="build_wince.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Windows notes </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 29. 
+        Building Berkeley DB for Windows CE
+        </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

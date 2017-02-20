@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>The Replication APIs</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Replicated Berkeley DB Applications" />
+    <link rel="up" href="introduction.html" title="Chapter 1. Introduction" />
+    <link rel="prev" href="repadvantage.html" title="Replication Benefits" />
+    <link rel="next" href="elections.html" title="Holding Elections" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">The Replication APIs</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="repadvantage.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 1. Introduction</th>
+          <td width="20%" align="right"> <a accesskey="n" href="elections.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="apioverview"></a>The Replication APIs</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="apioverview.html#repframeworkoverview">Replication Manager Overview</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="apioverview.html#repapioverview">Replication Base API Overview</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+                There are two ways that you can choose to implement
+                replication in your transactional application. The first,
+                and preferred, mechanism is to use the pre-packaged
+                Replication Manager that comes with the
+                DB distribution. This framework should be sufficient
+                for most customers.
+            </p>
+      <p>
+                If for some reason the Replication Manager
+                does not meet your application's technical requirements,
+                you will have to use the Replication Base APIs available
+                through the Berkeley DB  library to write your own custom
+                replication framework. 
+            </p>
+      <p>
+                Both of these approaches are described in slightly greater
+                detail in this section. The bulk of the chapters later in
+                this book are dedicated to these two replication
+                implementation mechanisms. 
+            </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="repframeworkoverview"></a>Replication Manager Overview</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                    DB's pre-packaged Replication Manager exists
+                    as a layer on top of the DB library. The Replication Manager is a
+                    multi-threaded implementation that allows you to easily add
+                    replication to your existing transactional application.
+                    <span>
+                    You access and manage the Replication Manager using methods that are
+                    available off the 
+                        <code class="classname">DB_ENV</code>
+                        
+                    class.
+                    </span>
+                    
+                </p>
+        <p>
+                    The Replication Manager:
+                </p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+                            Provides a multi-threaded communications layer
+                            using pthreads (on Unix-style systems and
+                            similar derivatives such as Mac OS X), or
+                            Windows threads on Microsoft Windows systems.
+                        </p>
+            </li>
+            <li>
+              <p>
+                                Uses TCP/IP sockets. Network traffic is
+                                handled via threads that handle inbound and
+                                outbound messages.  However, each
+                               process uses a single socket
+                               that is shared using <code class="function">select()</code>.
+                        </p>
+              <p>
+                                Note that for this reason, the Replication Manager is
+                                limited to a maximum of 60 replicas (on
+                                Windows) and approximately 1000 replicas (on
+                                Unix and related systems), depending on how
+                                your system is configured.
+                        </p>
+            </li>
+            <li>
+              <p>
+                                    Requires that only one instance of the
+                                    environment handle be used.
+                            </p>
+            </li>
+            <li>
+              <p>
+                            Upon application startup, a master can be
+                            selected either manually or via elections.
+                            After startup time, however, during the course of 
+                            normal operations it is possible for the
+                            replication group to need to locate a new master (due
+                            to network or other hardware related problems,
+                            for example) and in this scenario elections are 
+                            always used to select the new master.
+                        </p>
+            </li>
+          </ul>
+        </div>
+        <p>
+                    If your application has technical requirements that do
+                    not conform to the implementation provided by the
+                    Replication Manager, you must write implement replication
+                    using the DB Replication Base APIs. See
+                    the next section for introductory details.
+                </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="repapioverview"></a>Replication Base API Overview</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                    The Replication Base API is a series of Berkeley DB library
+                    classes and methods that you can use to build your own
+                    replication infrastructure. You should use the
+                    Base API only if the Replication Manager does not meet your
+                    application's technical requirements.
+                </p>
+        <p>
+                    To make use of the Base API, you must write your
+                    own networking code. This frees you from the technical
+                    constraints imposed by the Replication Manager. For example, by
+                    writing your own framework, you can:
+                </p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+                                        Use a threading package other than
+                                        pthreads (Unix) or Windows threads
+                                        (Microsoft Windows). This might be interesting
+                                        to you if you are using a platform
+                                        whose preferred threading package
+                                        is something other than (for
+                                        example) pthreads, such as is the case for 
+                                        Sun Microsystem's Solaris operating systems.
+                                </p>
+            </li>
+            <li>
+              <p>
+                                        Implement your own sockets. The
+                                        Replication Manager uses TCP/IP sockets. While
+                                        this should be acceptable for the
+                                        majority of applications, sometimes
+                                        UDP or even raw sockets might be
+                                        desired.
+                                </p>
+            </li>
+          </ul>
+        </div>
+        <p>
+                        For information on writing a replicated application
+                        using the Berkeley DB Replication Base APIs, see the
+                        <em class="citetitle">Berkeley DB Programmer's Reference Guide</em>.
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="repadvantage.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="introduction.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="elections.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Replication Benefits </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Holding Elections</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

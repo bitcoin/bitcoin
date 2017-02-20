@@ -1,0 +1,71 @@
+#!/bin/sh -
+#	$Id$
+#
+# Build the automatically generated logging/recovery files.
+
+header=/tmp/__db_a
+loglist=/tmp/__db_b
+print=/tmp/__db_c
+source=/tmp/__db_d
+template=/tmp/__db_e
+tmp=/tmp/__db_f
+
+trap 'rm -f /tmp/__db_[abcdef]; exit 1' 1 2 3 13 15
+trap 'rm -f /tmp/__db_[abcdef]; exit 0' 0
+
+DIR="db dbreg btree fileops hash qam txn"
+
+# Check to make sure we haven't duplicated a log record entry, and build
+# the list of log record types that the test suite uses.
+for i in $DIR; do
+	for f in ../$i/*.src; do
+		# Grab the PREFIX;  there should only be one per file, and
+		# so it's okay to just take the first.
+		grep '^PREFIX' $f | sed q
+		egrep '^BEGIN[	 ]|^IGNORED[	 ]|^DEPRECATED[	 ]' $f |
+		    awk '{print $1 "\t" $2 "\t" $3 "\t" $4}'
+	done
+done > $loglist
+grep -v '^PREFIX' $loglist |
+    awk '{print $2 "\t" $3 "\t" $4}' | sort -n -k 3 | uniq -d -f 1 > $tmp
+[ -s $tmp ] && {
+	echo "DUPLICATE LOG VALUES:"
+	cat $tmp
+	rm -f $tmp
+	exit 1
+}
+f=../test/logtrack.list
+cmp $loglist $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $loglist $f && chmod 444 $f)
+
+# Build DB's recovery routines.
+for i in $DIR; do
+	for f in ../$i/*.src; do
+		subsystem=`basename $f .src`
+		awk -f gen_rec.awk \
+		    -v header_file=$header \
+		    -v print_file=$print\
+		    -v source_file=$source \
+		    -v template_file=$template < $f
+
+		f=../dbinc_auto/${subsystem}_auto.h
+		cmp $header $f > /dev/null 2>&1 ||
+		    (echo "Building $f" &&
+		    rm -f $f && cp $header $f && chmod 444 $f)
+		f=../$i/${subsystem}_auto.c
+		cmp $source $f > /dev/null 2>&1 ||
+		    (echo "Building $f" &&
+		    rm -f $f && cp $source $f && chmod 444 $f)
+		f=../$i/${subsystem}_autop.c
+		cmp $print $f > /dev/null 2>&1 ||
+		    (echo "Building $f" &&
+		    rm -f $f && cp $print $f && chmod 444 $f)
+		f=template/rec_${subsystem}
+		cmp $template $f > /dev/null 2>&1 ||
+		    (echo "Building $f" &&
+		    rm -f $f && cp $template $f && chmod 444 $f)
+	done
+done
+
+# Build the example application's recovery routines.
+(cd ../examples_c/ex_apprec && sh auto_rebuild)

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>berkdb envremove</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB TCL API Reference" />
+    <link rel="up" href="tclapi.html" title="Chapter 1.  Berkeley DB Tcl APIs" />
+    <link rel="prev" href="env_open.html" title="berkdb env" />
+    <link rel="next" href="txn.html" title="env txn" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">berkdb envremove</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="env_open.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 1. 
+                Berkeley DB Tcl APIs
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="txn.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="env_remove"></a>berkdb envremove</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">berkdb envremove
+    [-data_dir directory]
+    [-force]
+    [-home directory]
+    [-log_dir directory]
+    [-tmp_dir directory]
+    [-use_environ]
+    [-use_environ_root]  </pre>
+      <p>
+        Remove a Berkeley DB environment.
+    </p>
+      <p>
+        The options are as follows:
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                 <span class="bold"><strong>-data_dir dirname</strong></span> 
+            </p>
+            <p>
+                 Specify the environment's data directory, as described in 
+                 <a href="../../programmer_reference/env_naming.html" class="olink">Berkeley DB File Naming</a>
+                 in the <em class="citetitle">Berkeley DB Programmer's Reference Guide</em>.
+            </p>
+          </li>
+          <li>
+            <p>
+                  <span class="bold"><strong>-force</strong></span> 
+            </p>
+            <p>
+                 If there are processes that have called <span class="bold"><strong>berkdb
+                 env</strong></span> without calling <span class="emphasis"><em>env</em></span> <span class="bold"><strong>close</strong></span> (that is, there are processes currently
+                 using the environment), <span class="bold"><strong>berkdb
+                 envremove</strong></span> will fail without further action, unless the
+                 <span class="bold"><strong>-force</strong></span> flag is set, in which case
+                 <span class="bold"><strong>berkdb envremove</strong></span> will attempt to
+                 remove the environment regardless of any processes still using it.
+            </p>
+          </li>
+          <li>
+            <p>
+                  <span class="bold"><strong>-home directory</strong></span> 
+            </p>
+            <p>
+                 The <span class="bold"><strong>-home</strong></span> argument is described in
+                 <a href="../../programmer_reference/env_naming.html" class="olink">Berkeley DB File Naming</a>
+                 in the <em class="citetitle">Berkeley DB Programmer's Reference Guide</em>.
+            </p>
+          </li>
+          <li>
+            <p>
+                  <span class="bold"><strong>-log_dir dirname</strong></span> 
+            </p>
+            <p>
+                 Specify the environment's log directory, as described in 
+                 <a href="../../programmer_reference/env_naming.html" class="olink">Berkeley DB File Naming</a>
+                 in the <em class="citetitle">Berkeley DB Programmer's Reference Guide</em>.
+            </p>
+          </li>
+          <li>
+            <p>
+                  <span class="bold"><strong>-tmp_dir dirname</strong></span> 
+            </p>
+            <p>
+                 Specify the environment's tmp directory, as described in 
+                 <a href="../../programmer_reference/env_naming.html" class="olink">Berkeley DB File Naming</a>
+                 in the <em class="citetitle">Berkeley DB Programmer's Reference Guide</em>.
+            </p>
+          </li>
+          <li>
+            <p>
+                  <span class="bold"><strong>-use_environ</strong></span> 
+            </p>
+            <p>
+                 The Berkeley DB process' environment may be permitted to specify
+                 information to be used when naming files; see 
+                 <a href="../../programmer_reference/env_naming.html" class="olink">Berkeley DB File Naming</a>
+                 in the <em class="citetitle">Berkeley DB Programmer's Reference Guide</em>.
+                 Because permitting users to specify which files are used can create security
+                 problems, environment information will be used in file naming for all
+                 users only if the <span class="bold"><strong>-use_environ</strong></span> flag
+                 is set.
+            </p>
+          </li>
+          <li>
+            <p>
+                  <span class="bold"><strong>-use_environ_root</strong></span> 
+            </p>
+            <p>
+                 The Berkeley DB process' environment may be permitted to specify
+                 information to be used when naming files; see 
+                 <a href="../../programmer_reference/env_naming.html" class="olink">Berkeley DB File Naming</a>
+                 in the <em class="citetitle">Berkeley DB Programmer's Reference Guide</em>.
+                 As permitting users to specify which files are used can create security
+                 problems, if the <span class="bold"><strong>-use_environ_root</strong></span>
+                 flag is set, environment information will be used for file naming only
+                 for users with appropriate permissions (for example, users with a
+                 user-ID of 0 on IEEE/ANSI Std 1003.1 (POSIX) systems).
+            </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+         The <span class="bold"><strong>berkdb envremove</strong></span> command returns
+         0 on success, and in the case of error, a Tcl error is thrown.
+    </p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="env_open.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="tclapi.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="txn.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">berkdb env </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> <span class="emphasis"><em>env</em></span> txn</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

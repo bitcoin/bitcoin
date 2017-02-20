@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 8.  The DB_MPOOLFILE Handle</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="prev" href="logcompare.html" title="log_compare" />
+    <link rel="next" href="dbget_mpf.html" title="DB-&gt;get_mpf()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 8. 
+              The  DB_MPOOLFILE Handle
+        </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="logcompare.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbget_mpf.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="memp"></a>Chapter 8. 
+              The  DB_MPOOLFILE Handle
+        </h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+typedef struct __db_mpoolfile DB_MPOOLFILE;  </pre>
+      <p>
+            The memory pool interfaces for the Berkeley DB database environment are methods of the
+            <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a> handle. The 
+            <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a> memory pool methods and the
+            <code class="classname">DB_MPOOLFILE</code> class provide general-purpose, page-oriented buffer
+            management of files. Although designed to work with the other 
+            <a class="link" href="db.html" title="Chapter 2.  The DB Handle">DB</a>classes, they are also useful for more general
+            purposes. The memory pools are referred to in this document as simply
+            <span class="emphasis"><em>the cache</em></span>.
+    </p>
+      <p>
+            The cache may be shared between processes. The cache is usually filled by pages from one or
+            more files. Pages in the cache are replaced in LRU (least-recently-used) order, with each
+            new page replacing the page that has been unused the longest. Pages retrieved from the
+            cache using <a class="xref" href="mempfget.html" title="DB_MPOOLFILE-&gt;get()">DB_MPOOLFILE-&gt;get()</a> are
+            <span class="emphasis"><em>pinned</em></span> in the cache until they are returned to the control of the
+            cache using the <a class="xref" href="mempput.html" title="DB_MPOOLFILE-&gt;put()">DB_MPOOLFILE-&gt;put()</a> method.
+    </p>
+      <p>
+            The <code class="classname">DB_MPOOLFILE</code> object is the handle for a file in the 
+            cache. The handle is not free-threaded. Once the 
+            <a class="xref" href="mempfclose.html" title="DB_MPOOLFILE-&gt;close()">DB_MPOOLFILE-&gt;close()</a> method is called, the handle
+            may not be accessed again, regardless of that method's return.
+    </p>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="memplist"></a>Memory Pools and Related Methods</h2>
+            </div>
+          </div>
+        </div>
+        <div class="navtable">
+          <table border="1" width="80%">
+            <thead>
+              <tr>
+                <th>Memory Pools and Related Methods</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <a class="xref" href="dbget_mpf.html" title="DB-&gt;get_mpf()">DB-&gt;get_mpf()</a>
+                </td>
+                <td>Return the DB_MPOOLFILE for a DB</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="mempstat.html" title="DB_ENV-&gt;memp_stat()">DB_ENV-&gt;memp_stat()</a>
+                </td>
+                <td>Return cache statistics</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="mempstat_print.html" title="DB_ENV-&gt;memp_stat_print()">DB_ENV-&gt;memp_stat_print()</a>
+                </td>
+                <td>Print cache statistics</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="mempsync.html" title="DB_ENV-&gt;memp_sync()">DB_ENV-&gt;memp_sync()</a>
+                </td>
+                <td>Flush all pages from the cache</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="memptrickle.html" title="DB_ENV-&gt;memp_trickle()">DB_ENV-&gt;memp_trickle()</a>
+                </td>
+                <td>Flush some pages from the cache</td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <span class="bold">
+                    <strong>Memory Pool Configuration</strong>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="mempregister.html" title="DB_ENV-&gt;memp_register()">DB_ENV-&gt;memp_register()</a>
+                </td>
+                <td>Register a custom file type</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="envset_cache_max.html" title="DB_ENV-&gt;set_cache_max()">DB_ENV-&gt;set_cache_max()</a>, <a class="xref" href="envget_cache_max.html" title="DB_ENV-&gt;get_cache_max()">DB_ENV-&gt;get_cache_max()</a></td>
+                <td>Set/get the maximum cache size</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="envset_cachesize.html" title="DB_ENV-&gt;set_cachesize()">DB_ENV-&gt;set_cachesize()</a>, <a class="xref" href="envget_cachesize.html" title="DB_ENV-&gt;get_cachesize()">DB_ENV-&gt;get_cachesize()</a></td>
+                <td>Set/get the environment cache size</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="mempset_mp_max_openfd.html" title="DB_ENV-&gt;set_mp_max_openfd()">DB_ENV-&gt;set_mp_max_openfd()</a>, <a class="xref" href="mempget_mp_max_openfd.html" title="DB_ENV-&gt;get_mp_max_openfd()">DB_ENV-&gt;get_mp_max_openfd()</a></td>
+                <td>Set/get the maximum number of open file descriptors</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="mempset_mp_max_write.html" title="DB_ENV-&gt;set_mp_max_write()">DB_ENV-&gt;set_mp_max_write()</a>, <a class="xref" href="mempget_mp_max_write.html" title="DB_ENV-&gt;get_mp_max_write()">DB_ENV-&gt;get_mp_max_write()</a></td>
+                <td>Set/get the maximum number of sequential disk writes</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="envset_mp_mmapsize.html" title="DB_ENV-&gt;set_mp_mmapsize()">DB_ENV-&gt;set_mp_mmapsize()</a>, <a class="xref" href="envget_mp_mmapsize.html" title="DB_ENV-&gt;get_mp_mmapsize()">DB_ENV-&gt;get_mp_mmapsize()</a></td>
+                <td>Set/get maximum file size to memory map when opened read-only</td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <span class="bold">
+                    <strong>Memory Pool Files</strong>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="mempfcreate.html" title="DB_ENV-&gt;memp_fcreate()">DB_ENV-&gt;memp_fcreate()</a>
+                </td>
+                <td>Create a memory pool file handle</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="mempfclose.html" title="DB_MPOOLFILE-&gt;close()">DB_MPOOLFILE-&gt;close()</a>
+                </td>
+                <td>Close a file in the cache</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="mempfget.html" title="DB_MPOOLFILE-&gt;get()">DB_MPOOLFILE-&gt;get()</a>
+                </td>
+                <td>Get page from a file in the cache</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="mempfopen.html" title="DB_MPOOLFILE-&gt;open()">DB_MPOOLFILE-&gt;open()</a>
+                </td>
+                <td>Open a file in the cache</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="mempput.html" title="DB_MPOOLFILE-&gt;put()">DB_MPOOLFILE-&gt;put()</a>
+                </td>
+                <td>Return a page to the cache</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="mempfsync.html" title="DB_MPOOLFILE-&gt;sync()">DB_MPOOLFILE-&gt;sync()</a>
+                </td>
+                <td>Flush pages from a file from the cache</td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <span class="bold">
+                    <strong>Memory Pool File Configuration</strong>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="mempset_clear_len.html" title="DB_MPOOLFILE-&gt;set_clear_len()">DB_MPOOLFILE-&gt;set_clear_len()</a>, <a class="xref" href="mempget_clear_len.html" title="DB_MPOOLFILE-&gt;get_clear_len()">DB_MPOOLFILE-&gt;get_clear_len()</a></td>
+                <td>Set/get number of bytes to clear when creating a new page</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="mempset_fileid.html" title="DB_MPOOLFILE-&gt;set_fileid()">DB_MPOOLFILE-&gt;set_fileid()</a>, <a class="xref" href="mempget_fileid.html" title="DB_MPOOLFILE-&gt;get_fileid()">DB_MPOOLFILE-&gt;get_fileid()</a></td>
+                <td>Set/get file unique identifier</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="mempset_flags.html" title="DB_MPOOLFILE-&gt;set_flags()">DB_MPOOLFILE-&gt;set_flags()</a>, <a class="xref" href="mempget_flags.html" title="DB_MPOOLFILE-&gt;get_flags()">DB_MPOOLFILE-&gt;get_flags()</a></td>
+                <td>Set/get file options</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="mempset_ftype.html" title="DB_MPOOLFILE-&gt;set_ftype()">DB_MPOOLFILE-&gt;set_ftype()</a>, <a class="xref" href="mempget_ftype.html" title="DB_MPOOLFILE-&gt;get_ftype()">DB_MPOOLFILE-&gt;get_ftype()</a></td>
+                <td>Set/get file type</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="mempset_lsn_offset.html" title="DB_MPOOLFILE-&gt;set_lsn_offset()">DB_MPOOLFILE-&gt;set_lsn_offset()</a>, <a class="xref" href="mempget_lsn_offset.html" title="DB_MPOOLFILE-&gt;get_lsn_offset()">DB_MPOOLFILE-&gt;get_lsn_offset()</a></td>
+                <td>Set/get file log-sequence-number offset</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="mempset_maxsize.html" title="DB_MPOOLFILE-&gt;set_maxsize()">DB_MPOOLFILE-&gt;set_maxsize()</a>, <a class="xref" href="mempget_maxsize.html" title="DB_MPOOLFILE-&gt;get_maxsize()">DB_MPOOLFILE-&gt;get_maxsize()</a></td>
+                <td>Set/get maximum file size</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="mempset_pgcookie.html" title="DB_MPOOLFILE-&gt;set_pgcookie()">DB_MPOOLFILE-&gt;set_pgcookie()</a>, <a class="xref" href="mempget_pgcookie.html" title="DB_MPOOLFILE-&gt;get_pgcookie()">DB_MPOOLFILE-&gt;get_pgcookie()</a></td>
+                <td>Set/get file cookie for pgin/pgout</td>
+              </tr>
+              <tr>
+                <td><a class="xref" href="mempset_priority.html" title="DB_MPOOLFILE-&gt;set_priority()">DB_MPOOLFILE-&gt;set_priority()</a>, <a class="xref" href="mempget_priority.html" title="DB_MPOOLFILE-&gt;get_priority()">DB_MPOOLFILE-&gt;get_priority()</a></td>
+                <td>Set/get cache file priority</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="logcompare.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbget_mpf.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">log_compare </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB-&gt;get_mpf()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

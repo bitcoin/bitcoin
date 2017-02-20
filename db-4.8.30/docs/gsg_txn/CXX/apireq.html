@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Application Requirements</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB Transaction Processing" />
+    <link rel="up" href="introduction.html" title="Chapter 1. Introduction" />
+    <link rel="prev" href="sysfailure.html" title="A Note on System Failure" />
+    <link rel="next" href="multithread-intro.html" title="Multi-threaded and Multi-process Applications" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Application Requirements</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="sysfailure.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 1. Introduction</th>
+          <td width="20%" align="right"> <a accesskey="n" href="multithread-intro.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="apireq"></a>Application Requirements</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+            In order to use transactions, your application has certain
+            requirements beyond what is required of non-transactional protected
+            applications.  They are:
+        </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                    Environments.
+                </p>
+            <p>
+                    Environments are optional for non-transactional
+                    applications, but they are required for transactional
+                    applications.
+                </p>
+            <p>
+                    Environment usage is described in detail in 
+                    <a class="xref" href="usingtxns.html" title="Chapter 3. Transaction Basics">Transaction Basics</a>.
+                </p>
+          </li>
+          <li>
+            <p>
+                    Transaction subsystem.
+                </p>
+            <p>
+                    In order to use transactions, you must explicitly
+                    enable the transactional subsystem for your
+                    application, and this must be done at the time that
+                    your environment is first created. 
+                </p>
+          </li>
+          <li>
+            <p>
+                    Logging subsystem.
+                </p>
+            <p>
+                    The logging subsystem is required for recovery purposes, but
+                    its usage also means your application may require a
+                    little more administrative effort than it does when logging
+                    is not in use. See <a class="xref" href="filemanagement.html" title="Chapter 5. Managing DB Files">Managing DB Files</a> for more information.
+                </p>
+          </li>
+          <li>
+            <p>
+                    
+                    <span>DbTxn</span>
+                    
+                    
+                    handles.
+                </p>
+            <p>
+                    In order to obtain the atomicity guarantee offered by
+                    the transactional subsystem (that is, combine multiple
+                    operations in a single unit of work), your application must use
+                    transaction handles.  These handles are obtained from your 
+                    
+                    <span>DbEnv</span>
+                    
+                    
+                    objects. They should normally be short-lived, and their usage is 
+                    reasonably simple. To complete a transaction and save
+                    the work it performed, you 
+                    call its <code class="methodname">commit()</code> method. To
+                    complete a transaction and discard its work, you call its
+                    <code class="methodname">abort()</code> method.
+                </p>
+            <p>
+                    In addition, it is possible to use auto commit if you want
+                    to transactional protect a single write operation. Auto
+                    commit allows a transaction to be used without 
+                    obtaining an explicit transaction handle. See 
+                    <a class="xref" href="autocommit.html" title="Auto Commit">Auto Commit</a>
+                    for information on how to use auto commit.
+                </p>
+          </li>
+          <li>
+            <p>
+                    Database open requirements.
+                </p>
+            <p>
+
+                    <span>In addition to using 
+                    environments and initializing the
+                    correct subsystems, your</span>
+                    
+
+                    application must transaction protect the database
+
+                    opens<span>,
+                    and any secondary index associations,</span> 
+
+                    if subsequent operations on the databases are to be transaction
+                    protected. The database open and secondary index
+                    association are commonly transaction protected using
+                    auto commit.
+                </p>
+          </li>
+          <li>
+            <p>
+                    Deadlock detection.
+                </p>
+            <p>
+                    Typically transactional applications use multiple
+                    threads of control when accessing the database. 
+                    Any time multiple threads are used on a single resource,
+                    the potential for lock contention arises. In turn, lock
+                    contention can lead to deadlocks. See
+                    <a class="xref" href="blocking_deadlocks.html" title="Locks, Blocks, and Deadlocks">Locks, Blocks, and Deadlocks</a>
+                    for more information.
+                </p>
+            <p>
+                    Therefore, transactional applications must frequently
+                    include code for detecting and responding to deadlocks.
+                    Note that this requirement is not
+                    <span class="emphasis"><em>specific</em></span> to transactions
+                    – you can certainly write concurrent
+                    non-transactional DB applications. Further, not
+                    every transactional application uses concurrency and
+                    so not every transactional application must
+                    manage deadlocks. Still, deadlock management is so
+                    frequently a characteristic of transactional
+                    applications that we discuss it in this
+                    book. See <a class="xref" href="txnconcurrency.html" title="Chapter 4. Concurrency">Concurrency</a>
+                    for more information.
+                </p>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="sysfailure.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="introduction.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="multithread-intro.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">A Note on System Failure </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Multi-threaded 
+        <span>and Multi-process</span>
+        Applications</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

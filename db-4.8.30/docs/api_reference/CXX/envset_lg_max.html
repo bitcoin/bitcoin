@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DbEnv::set_lg_max()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="lsn.html" title="Chapter 8.  The DbLsn Handle" />
+    <link rel="prev" href="envset_lg_filemode.html" title="DbEnv::set_lg_filemode()" />
+    <link rel="next" href="envset_lg_regionmax.html" title="DbEnv::set_lg_regionmax()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DbEnv::set_lg_max()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="envset_lg_filemode.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 8. 
+                The DbLsn Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="envset_lg_regionmax.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="envset_lg_max"></a>DbEnv::set_lg_max()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+
+int
+DbEnv::set_lg_max(u_int32_t lg_max); </pre>
+      <p>
+         Set the maximum size of a single file in the log, in bytes.  Because
+         <a class="link" href="lsn.html" title="Chapter 8.  The DbLsn Handle">DbLsn</a>  file offsets are
+         unsigned four-byte values, the set value may not be larger than the
+         maximum unsigned four-byte value.
+    </p>
+      <p>
+         When the logging subsystem is configured for on-disk logging, the
+         default size of a log file is 10MB.
+    </p>
+      <p>
+         When the logging subsystem is configured for in-memory logging, the
+         default size of a log file is 256KB.  In addition, the configured log
+         buffer size must be larger than the log file size.  (The logging
+         subsystem divides memory configured for in-memory log records into
+         "files", as database environments configured for in-memory log records
+         may exchange log records with other members of a replication group,
+         and those members may be configured to store log records on-disk.) 
+         When choosing log buffer and file sizes for in-memory logs,
+         applications should ensure the in-memory log buffer size is large
+         enough that no transaction will ever span the entire buffer, and avoid
+         a state where the in-memory buffer is full and no space can be freed
+         because a transaction that started in the first log "file" is still
+         active.
+    </p>
+      <p>
+         See <a href="../../programmer_reference/log_limits.html" class="olink">Log File Limits</a> for
+         more information.
+    </p>
+      <p>
+         The database environment's log file size may also be configured using
+         the environment's <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a> file.  The
+         syntax of the entry in that file is a single line with the string
+         "set_lg_max", one or more whitespace characters, and the size in
+         bytes. Because the <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a> file is
+         read when the database environment is opened, it will silently
+         overrule configuration done before that time.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::set_lg_max()</code> method configures a database environment,
+         not only operations performed using the specified 
+         <a class="link" href="env.html" title="Chapter 5.  The DbEnv Handle">DbEnv</a>  handle.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::set_lg_max()</code> method may be called at any time during the
+         life of the application.
+    </p>
+      <p>
+         If no size is specified by the application, the size last specified
+         for the database region will be used, or if no database region
+         previously existed, the default will be used.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::set_lg_max()</code> <span>
+            
+            <span>
+                method either returns a non-zero error value or throws an
+                exception that encapsulates a non-zero error value on
+                failure, and returns 0 on success.
+            </span>
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1688241"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1688213"></a>lg_max</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>lg_max</strong></span> parameter is the size of a
+                          single log file, in bytes.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1688242"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DbEnv::set_lg_max()</code> <span>
+            
+            <span>
+                method may fail and throw a <a class="link" href="dbexception.html" title="Chapter 6. The DbException Class">DbException</a> 
+                exception, encapsulating one of the following non-zero errors, or return one
+                of the following non-zero errors:
+            </span>
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1688434"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                              If the size of the log file is less than four
+                              times the size of the in-memory log buffer;
+                              the specified log file size was too large; or
+                              if an invalid flag value or parameter was
+                              specified.
+                         </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1688450"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                    <a class="link" href="env.html" title="Chapter 5.  The DbEnv Handle">DbEnv</a>, 
+                    <a class="link" href="logc.html" title="The DbLogc Handle">DbLogc</a>, 
+                    <a class="link" href="lsn.html" title="Chapter 8.  The DbLsn Handle">DbLsn</a> 
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1688467"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="lsn.html#loglist" title="Logging Subsystem and Related Methods">Logging Subsystem and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="envset_lg_filemode.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="lsn.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="envset_lg_regionmax.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DbEnv::set_lg_filemode() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DbEnv::set_lg_regionmax()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

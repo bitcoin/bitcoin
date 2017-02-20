@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 26.  Building Berkeley DB for S60</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="prev" href="ch25s02.html" title="Building a BREW applet for the physical device" />
+    <link rel="next" href="ch26s02.html" title="Building Berkeley DB Library for the Device" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 26. 
+        Building Berkeley DB for S60
+        </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="ch25s02.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="ch26s02.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="build_s60"></a>Chapter 26. 
+        Building Berkeley DB for S60
+        </h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="build_s60.html#id1628304">Building Berkeley DB for the S60 Emulator</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="ch26s02.html">Building Berkeley DB Library for the Device</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="ch26s03.html">Building a S60 application with the Berkeley DB library</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="build_s60_notes.html">S60 notes</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>This page has general instructions for building the Berkeley DB library and
+applications for the S60 platform.</p>
+      <p>Building Berkeley DB for S60 requires S60 SDK version 3 or above with
+Symbian V9.1 or above; the 3rd Edition FP1 SDK is recommended.</p>
+      <p>The NOKIA OpenC plugin should be installed on both emulator and device.</p>
+      <p>CodeWarrior IDE for S60 V3.1 is recommended.</p>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="id1628304"></a>Building Berkeley DB for the S60 Emulator</h2>
+            </div>
+          </div>
+        </div>
+        <p>The <code class="filename">build_s60</code> directory in the Berkeley DB distribution contains
+a <code class="filename">bdb_s60.mmp</code> project file, which can be imported to
+CodeWarrior or Carbide, etc.  This project file can be used to build the
+Berkeley DB library for the S60 platform.</p>
+        <p>The steps for building the Berkeley DB library for the S60 emulator are
+as follows:</p>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>Install the S60 SDK and OpenC library.</li>
+            <li>In CodeWarrior, select <span class="emphasis"><em>File -&gt; Import project from .mmp file</em></span>.</li>
+            <li>Select an SDK to use with this project: <span class="emphasis"><em>nokia -&gt;S60 S60_3rd_FP1</em></span>.</li>
+            <li>Click to browse for MMP file selection.  Look in the
+<code class="filename">build_s60</code> directory for Workspaces and select
+<span class="emphasis"><em>bdb_s60.mmp</em></span>.</li>
+            <li>Click Next.</li>
+            <li>Click Finish.</li>
+            <li>Select build target to WINSCW UDEB, to build, press F7.</li>
+          </ol>
+        </div>
+        <p>The build will create the file <code class="filename">bdb_s60.lib</code>, which is
+installed into <code class="filename">$EPOCROOT/epoc32/ release/winscw/udeb</code>, which can
+be linked by Berkeley DB applications for the emulator.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="ch25s02.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="ch26s02.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Building a BREW applet for the physical device </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Building Berkeley DB Library for the Device</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

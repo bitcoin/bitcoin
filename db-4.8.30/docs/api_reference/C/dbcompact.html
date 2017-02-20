@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB-&gt;compact()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="db.html" title="Chapter 2.  The DB Handle" />
+    <link rel="prev" href="dbcreate.html" title="db_create" />
+    <link rel="next" href="dbdel.html" title="DB-&gt;del()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB-&gt;compact()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbcreate.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+                The DB Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbdel.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dbcompact"></a>DB-&gt;compact()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB-&gt;compact(DB *db, DB_TXN *txnid,
+    DBT *start, DBT *stop, DB_COMPACT *c_data, u_int32_t flags, DBT *end);  </pre>
+      <p>
+         The <code class="methodname">DB-&gt;compact()</code> method compacts Btree and Recno access method
+         databases, and optionally returns unused Btree, Hash or Recno database
+         pages to the underlying filesystem.
+    </p>
+      <p>
+         The <code class="methodname">DB-&gt;compact()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1632862"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1632429"></a>txnid</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If the operation is part of an application-specified transaction, the
+                          <span class="bold"><strong>txnid</strong></span> parameter is a transaction
+                          handle returned from <a class="xref" href="txnbegin.html" title="DB_ENV-&gt;txn_begin()">DB_ENV-&gt;txn_begin()</a>; 
+                          if the operation is part of a Berkeley DB Concurrent Data Store group, the
+                          <span class="bold"><strong>txnid</strong></span> parameter is a handle returned
+                          from <a class="xref" href="envcdsgroup_begin.html" title="DB_ENV-&gt;cdsgroup_begin()">DB_ENV-&gt;cdsgroup_begin()</a>;
+                          otherwise NULL.
+                      </p>
+          <p>
+                          If a transaction handle is supplied to this method, then the operation is
+                          performed using that transaction. In this event, large sections of the
+                          tree may be locked during the course of the transaction.
+                      </p>
+          <p>
+                          If no transaction handle is specified, but the operation occurs
+                          in a transactional database, the operation will be implicitly
+                          transaction protected using multiple transactions.  These transactions
+                          will be periodically committed to avoid locking large sections of the
+                          tree.  Any deadlocks encountered cause the compaction operation to
+                          be retried from the point of the last transaction commit.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1632702"></a>start</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If non-NULL, the <span class="bold"><strong>start</strong></span> parameter is
+                          the starting point for compaction in a Btree or Recno database. 
+                          Compaction will start at the smallest key greater than or equal to the
+                          specified key.  If NULL, compaction will start at the beginning of the
+                          database.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1632903"></a>stop</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If non-NULL, the <span class="bold"><strong>stop</strong></span> parameter is
+                          the stopping point for compaction in a Btree or Recno database. 
+                          Compaction will stop at the page with the smallest key greater than
+                          the specified key.  If NULL, compaction will stop at the end of the
+                          database.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1632651"></a>c_data</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                         
+                     </p>
+          <p>
+                          If non-NULL, the <span class="bold"><strong>c_data</strong></span> parameter
+                          contains additional compaction configuration parameters, and returns
+                          compaction operation statistics, in a structure of type DB_COMPACT.
+                     </p>
+          <p>
+                          The following input configuration fields are available from the
+                          DB_COMPACT structure:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p>
+                                <code class="literal">int compact_fillpercent;</code>
+                            </p>
+                <p>
+                                If non-zero, this provides the goal for filling pages, specified as a percentage
+                                between 1 and 100.  Any page in a Btree or Recno databases not at or
+                                above this percentage full will be considered for compaction.  The
+                                default behavior is to consider every page for compaction, regardless
+                                of its page fill percentage.
+                            </p>
+              </li>
+              <li>
+                <p>
+                                <code class="literal">int compact_pages;</code>
+                            </p>
+                <p>
+                                If non-zero, the call will return after the
+                specified number of pages have been freed, or
+                no more pages can be freed.
+                            </p>
+              </li>
+              <li>
+                <p>
+                                <code class="literal">db_timeout_t compact_timeout;</code>
+                            </p>
+                <p>
+                                If non-zero, and no <span class="bold"><strong>txnid</strong></span> parameter
+                                was specified, this parameter identifies the lock timeout used for implicit transactions, in
+                                microseconds.
+                            </p>
+              </li>
+            </ul>
+          </div>
+          <p>
+                        The following output statistics fields are available from the
+                        <code class="literal">DB_COMPACT</code> structure:
+                    </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p>
+                                <code class="literal">u_int32_t compact_deadlock;</code>
+                            </p>
+                <p>
+                                An output statistics parameter: if no <span class="bold"><strong>txnid</strong></span> parameter was specified, the number of
+                                deadlocks which occurred.
+                            </p>
+              </li>
+              <li>
+                <p>
+                                <code class="literal">u_int32_t compact_pages_examine;</code>
+                            </p>
+                <p>
+                                An output statistics parameter: the number of database pages reviewed
+                                during the compaction phase.
+                            </p>
+              </li>
+              <li>
+                <p>
+                              <code class="literal">u_int32_t compact_pages_free;</code>
+                          </p>
+                <p>
+                               An output statistics parameter: the number of database pages freed
+                               during the compaction phase.
+                          </p>
+              </li>
+              <li>
+                <p>
+                              <code class="literal">u_int32_t compact_levels;</code>
+                          </p>
+                <p>
+                               An output statistics parameter: the number of levels removed from the
+                               Btree or Recno database during the compaction phase.
+                          </p>
+              </li>
+              <li>
+                <p>
+                              <code class="literal">u_int32_t compact_pages_truncated;</code>
+                          </p>
+                <p>
+                               An output statistics parameter: the number of database pages returned
+                               to the filesystem.
+                          </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1632483"></a>flags</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>flags</strong></span> parameter must be set to 0
+                          or one of the following values:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="compact_DB_FREELIST_ONLY"></a>
+                                 <code class="literal">DB_FREELIST_ONLY</code>
+                           </p>
+                <p>
+                                Do no page compaction, only returning pages to the filesystem that are
+                                already free and at the end of the file.  This flag must be set if the
+                                database is a Hash access method database.
+                           </p>
+              </li>
+              <li>
+                <p><a id="compact_DB_FREE_SPACE"></a>
+                                 <code class="literal">DB_FREE_SPACE</code>
+                           </p>
+                <p>
+                                Return pages to the filesystem when possible. If this flag is not
+                                specified, pages emptied as a result of compaction will be placed on
+                                the free list for re-use, but never returned to the filesystem.
+                           </p>
+                <p>
+                                Note that only pages at the end of a file can be returned to the
+                                filesystem.  Because of the one-pass nature of the compaction
+                                algorithm, any unemptied page near the end of the file inhibits
+                                returning pages to the file system.  A repeated call to the
+                                <code class="methodname">DB-&gt;compact()</code> method with a low <span class="bold"><strong>compact_fillpercent</strong></span> may be used to return pages
+                                in this case.
+                           </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1633063"></a>end</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If non-NULL, the <span class="bold"><strong>end</strong></span> parameter will
+                          be filled in with the database key marking the end of the compaction
+                          operation in a Btree or Recno database.  This is generally the first
+                          key of the page where the operation stopped.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1633231"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DB-&gt;compact()</code> <span>
+            <span>
+                 method may fail and return one of the following non-zero errors:
+            </span>
+            
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1632714"></a>DB_LOCK_DEADLOCK</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A transactional database environment operation was selected to resolve
+                a deadlock.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1633322"></a>DB_LOCK_NOTGRANTED</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A Berkeley DB Concurrent Data Store database environment configured
+                for lock timeouts was unable to grant a lock in the allowed time.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1633040"></a> DB_REP_HANDLE_DEAD</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                When a client synchronizes with the master, it is possible for committed
+                transactions to be rolled back. This invalidates all  the database and cursor
+                handles opened in the replication environment. Once this occurs, an attempt to use
+                such a handle will 
+                
+                return <code class="literal">DB_REP_HANDLE_DEAD</code>.
+                The application will need to discard the handle and open a new one in order to
+                continue processing.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1633331"></a>DB_REP_LOCKOUT</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                The operation was blocked by client/master synchronization.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1632885"></a>EACCES</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                An attempt was made to modify a read-only database.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1633333"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                An invalid flag value or parameter was specified.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1633048"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="db.html" title="Chapter 2.  The DB Handle">DB</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1632779"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="db.html#dblist" title="Database and Related Methods">Database and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbcreate.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="db.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbdel.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">db_create </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB-&gt;del()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

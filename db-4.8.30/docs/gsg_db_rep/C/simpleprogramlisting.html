@@ -1,0 +1,576 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Program Listing</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Replicated Berkeley DB Applications" />
+    <link rel="up" href="txnapp.html" title="Chapter 2. Transactional Application" />
+    <link rel="prev" href="txnapp.html" title="Chapter 2. Transactional Application" />
+    <link rel="next" href="repapp.html" title="Chapter 3. The DB Replication Manager" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Program Listing</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="txnapp.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. Transactional Application</th>
+          <td width="20%" align="right"> <a accesskey="n" href="repapp.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="simpleprogramlisting"></a>Program Listing</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="simpleprogramlisting.html#main_c">Function: main()</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="simpleprogramlisting.html#create_env_c">Function: create_env()</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="simpleprogramlisting.html#env_init_c">Function: env_init()</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="simpleprogramlisting.html#doloop_c">Function: doloop()</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="simpleprogramlisting.html#printstocks_c">
+                            <span>Function: print_stocks()</span>
+                            
+                            
+                    </a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+                Our example program is a fairly simple transactional
+                application. At this early stage of its development, the
+                application contains no hint that it must be network-aware
+                so the only command line argument that it takes is one that
+                allows us to specify the environment home directory.
+                (Eventually, we will specify things like host names and
+                ports from the command line).
+            </p>
+      <p>
+                Note that the application performs all writes under the
+                protection of a transaction; however, multiple database
+                operations are not performed per transaction. Consequently,
+                we simplify things a bit by using autocommit for our 
+                database writes.
+            </p>
+      <p>
+                Also, this application is single-threaded. It is possible
+                to write a multi-threaded or multi-process application that 
+                performs replication. That said, the concepts described in
+                this book are applicable to both single threaded and
+                multi-threaded applications so nothing
+                is gained by multi-threading this application other than
+                distracting complexity. This manual
+                does, however, identify where care must be taken when
+                performing replication with a non-single threaded
+                application.
+            </p>
+      <p>
+                Finally, remember that transaction processing is not described in
+                this manual. Rather, see the 
+                <em class="citetitle">Berkeley DB Getting Started with Transaction Processing</em> guide for details on 
+                that topic.
+            </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="main_c"></a>Function: main()</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                        Our program begins with the usual assortment of
+                        include statements. 
+                    </p>
+        <pre class="programlisting">/*
+ * File: ex_rep_gsg_simple.c
+ */
+
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#ifndef _WIN32
+#include &lt;unistd.h&gt;
+#endif
+
+#include &lt;db.h&gt; 
+
+#ifdef _WIN32
+extern int getopt(int, char * const *, const char *);
+#endif  </pre>
+        <p>
+                We then define a few values. One is the size of our cache,
+                which we keep deliberately small for this example, and the
+                other is the name of our database. We also provide a global
+                variable that is the name of our program; this is used for
+                error reporting later on.
+            </p>
+        <pre class="programlisting">#define CACHESIZE   (10 * 1024 * 1024)
+#define DATABASE    "quote.db"
+
+const char *progname = "ex_rep_gsg_simple";  </pre>
+        <p>
+                Then we perform a couple of forward declarations. The first
+                of these, <code class="function">create_env()</code> and
+                <code class="function">env_init()</code> are used to open
+                and initialize our environment.
+             </p>
+        <p>
+                     Next we declare
+                <code class="function">doloop()</code>, which is the function that we use to 
+                add data to the database and then display its contents. This is
+                essentially a big <code class="literal">do</code> loop, hence the
+                function's name. 
+            </p>
+        <p>
+                Finally, we have <code class="function">print_stocks</code>, which is 
+                used to display a database record once it has been retrieved from the
+                database.
+            </p>
+        <pre class="programlisting">int create_env(const char *, DB_ENV **);
+int env_init(DB_ENV *, const char *);
+int doloop (DB_ENV *);
+int print_stocks(DBC *);  </pre>
+        <p>
+                Next we need our <code class="function">usage()</code> function,
+                which is fairly trivial at this point:
+            </p>
+        <pre class="programlisting">/* Usage function */
+static void
+usage()
+{
+    fprintf(stderr, "usage: %s ", progname);
+    fprintf(stderr, "-h home\n");
+    exit(EXIT_FAILURE);
+}  </pre>
+        <p>
+            That completed, we can jump into our application's
+            <code class="function">main()</code> function. If you are familiar with
+            DB transactional applications, you will not find any
+            surprises here. We begin by declaring and initializing the
+            usual set of variables:
+        </p>
+        <pre class="programlisting">int
+main(int argc, char *argv[])
+{
+    extern char *optarg;
+    DB_ENV *dbenv;
+    const char *home;
+    char ch;
+    int ret;
+
+    dbenv = NULL;
+
+    ret = 0;
+    home = NULL;  </pre>
+        <p>
+        Now we create and configure our environment handle. 
+        We do this with our <code class="function">create_env()</code> function, which we will 
+        show a little later in this example.
+
+    </p>
+        <pre class="programlisting">    if ((ret = create_env(progname, &amp;dbenv)) != 0)
+            goto err; </pre>
+        <p>
+            Then we parse the command line arguments:
+        </p>
+        <pre class="programlisting">    while ((ch = getopt(argc, argv, "h:")) != EOF)
+        switch (ch) {
+        case 'h':
+            home = optarg;
+            break;
+        case '?':
+        default:
+            usage();
+        }
+
+    /* Error check command line. */
+    if (home == NULL)
+        usage();  </pre>
+        <p>
+            Now we can open our environment. We do this with our
+            <code class="function">env_init()</code> function which we will describe
+            a little later in this chapter.
+    </p>
+        <pre class="programlisting">    if ((ret = env_init(dbenv, home)) != 0)
+            goto err; </pre>
+        <p>
+        Now that we have opened the environment, we can call our
+        <code class="function">doloop()</code> function. This function performs the basic
+        database interaction. Notice that we have not yet opened any databases. In
+        a traditional transactional application we would probably open the
+        databases before calling our our main data processing function.
+        However, the eventual replicated application will want to handle
+        database open and close in the main processing loop, so in a nod to what this
+        application will eventually become we do a slightly unusual thing
+        here.
+    </p>
+        <pre class="programlisting">    if ((ret = doloop(dbenv)) != 0) {
+        dbenv-&gt;err(dbenv, ret, "Application failed");
+        goto err;
+    }  </pre>
+        <p>
+        Finally, we provide our application shutdown code. Note, again,
+        that in a traditional transactional application all databases would
+        also be closed here. But, again, due to the way this application
+        will eventually behave, we cause the database close to occur in the 
+        <code class="function">doloop()</code> function.
+    </p>
+        <pre class="programlisting">err: if (dbenv != NULL)
+        (void)dbenv-&gt;close(dbenv, 0);
+
+    return (ret);
+}  </pre>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="create_env_c"></a>Function: create_env()</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                        Having written our <code class="function">main()</code>
+                        function, we now implement the first of our utility
+                        functions that we use to manage our environments.
+                        This function exists only to make our code easier
+                        to manage, and all it does is create an environment
+                        handle for us.
+                    </p>
+        <pre class="programlisting">int
+create_env(const char *progname, DB_ENV **dbenvp)
+{
+    DB_ENV *dbenv;
+    int ret;
+
+    if ((ret = db_env_create(&amp;dbenv, 0)) != 0) {
+        fprintf(stderr, "can't create env handle: %s\n",
+            db_strerror(ret));
+        return (ret);
+    }
+
+    dbenv-&gt;set_errfile(dbenv, stderr);
+    dbenv-&gt;set_errpfx(dbenv, progname);
+
+    *dbenvp = dbenv;
+    return (0);
+}  </pre>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="env_init_c"></a>Function: env_init()</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                        Having written the function that initializes an
+                        environment handle, we now implement the function
+                        that opens the handle. Again, there should be no
+                        surprises here for anyone familiar with DB
+                        applications. The open flags that we use are those
+                        normally used for a transactional application.
+                </p>
+        <pre class="programlisting">int
+env_init(DB_ENV *dbenv, const char *home)
+{
+    u_int32_t flags;
+    int ret;
+
+    (void)dbenv-&gt;set_cachesize(dbenv, 0, CACHESIZE, 0);
+    (void)dbenv-&gt;set_flags(dbenv, DB_TXN_NOSYNC, 1);
+
+    flags = DB_CREATE | 
+            DB_INIT_LOCK | 
+            DB_INIT_LOG | 
+            DB_INIT_MPOOL |
+            DB_INIT_TXN | 
+            DB_RECOVER;
+    if ((ret = dbenv-&gt;open(dbenv, home, flags, 0)) != 0)
+        dbenv-&gt;err(dbenv, ret, "can't open environment");
+    return (ret);
+}  </pre>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="doloop_c"></a>Function: doloop()</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                        Having written our <code class="function">main()</code>
+                        function and utility functions, we now implement 
+                        our application's
+                        primary data processing function. This
+                        function provides a command prompt at which the
+                        user can enter a stock ticker value and a price for
+                        that value. This information is then entered to the
+                        database.
+                    </p>
+        <p>
+                            To display the database, simply enter
+                            <code class="literal">return</code> at the prompt.
+                    </p>
+        <p>
+                        To begin, we declare a database pointer,
+                        several <code class="classname">DBT</code> variables, and
+                        the usual assortment of variables used for buffers
+                        and return codes. We also initialize all of this.
+                    </p>
+        <pre class="programlisting">#define BUFSIZE 1024
+int
+doloop(DB_ENV *dbenv)
+{
+    DB *dbp;
+    DBT key, data;
+    char buf[BUFSIZE], *rbuf;
+    int ret;
+    u_int32_t db_flags;
+
+    dbp = NULL;
+    memset(&amp;key, 0, sizeof(key));
+    memset(&amp;data, 0, sizeof(data));
+    ret = 0;  </pre>
+        <p>
+                    Next, we begin the loop and we immediately open our
+                    database if it has not already been opened. Notice that
+                    we specify autocommit when we open the database. In
+                    this case, autocommit is important because we will only
+                    ever write to our database using it. There is no need
+                    for explicit transaction handles and commit/abort code
+                    in this application, because we are not combining
+                    multiple database operations together under a single
+                    transaction.
+                </p>
+        <p>
+                    Autocommit is described in greater detail in the 
+                    <em class="citetitle">Berkeley DB Getting Started with Transaction Processing</em> guide.
+                </p>
+        <pre class="programlisting">    for (;;) {
+
+        if (dbp == NULL) {
+            if ((ret = db_create(&amp;dbp, dbenv, 0)) != 0)
+                return (ret);
+
+            db_flags = DB_AUTO_COMMIT | DB_CREATE;
+
+            if ((ret = dbp-&gt;open(dbp, NULL, DATABASE,
+                NULL, DB_BTREE, db_flags, 0)) != 0) {
+                dbenv-&gt;err(dbenv, ret, "DB-&gt;open");
+                goto err;
+            }
+        }  </pre>
+        <p>
+            Now we implement our command prompt. This is a simple and not
+            very robust implementation of a command prompt.
+            If the user enters the keywords <code class="literal">exit</code>
+            or <code class="literal">quit</code>, the loop is exited and the
+            application ends. If the user enters nothing and instead simply
+            presses <code class="literal">return</code>, the entire contents of the
+            database is displayed. We use our
+            <code class="function">print_stocks()</code> function to display the
+            database. (That implementation is shown next in this chapter.)
+        </p>
+        <p>
+           Notice that very little error checking is performed on the data
+           entered at this prompt.  If the user fails to enter at least one 
+            space in the value string, a simple help message is printed and
+            the prompt is returned to the user. That is the only error
+            checking performed here. In a real-world application,
+            at a minimum the application would probably check to ensure
+            that the price was in fact an integer or float value. 
+            However, in order to keep this example code as simple as
+            possible, we refrain from implementing a thorough user interface.
+        </p>
+        <pre class="programlisting">        printf("QUOTESERVER &gt; ");
+        fflush(stdout);
+
+        if (fgets(buf, sizeof(buf), stdin) == NULL)
+            break;
+        if (strtok(&amp;buf[0], " \t\n") == NULL) {
+            switch ((ret = print_stocks(dbp))) {
+            case 0:
+                continue;
+            default:
+                dbp-&gt;err(dbp, ret, "Error traversing data");
+                goto err;
+            }
+        }
+        rbuf = strtok(NULL, " \t\n");
+        if (rbuf == NULL || rbuf[0] == '\0') {
+            if (strncmp(buf, "exit", 4) == 0 ||
+                strncmp(buf, "quit", 4) == 0)
+                break;
+            dbenv-&gt;errx(dbenv, "Format: TICKER VALUE");
+            continue;
+        }  </pre>
+        <p>
+                Now we assign data to the <code class="classname">DBT</code>s that
+                we will use to write the new information to the database.
+            </p>
+        <pre class="programlisting">        key.data = buf;
+        key.size = (u_int32_t)strlen(buf);
+
+        data.data = rbuf;
+        data.size = (u_int32_t)strlen(rbuf);  </pre>
+        <p>
+                Having done that, we can write the new information to the
+                database. Remember that this application uses autocommit,
+                so no explicit transaction management is required. Also,
+                the database is not configured for duplicate records, so
+                the data portion of a record is overwritten if the provided
+                key already exists in the database. However, in this case
+                DB returns <code class="literal">DB_KEYEXIST</code> — which
+                we ignore.
+            </p>
+        <pre class="programlisting">        if ((ret = dbp-&gt;put(dbp, NULL, &amp;key, &amp;data, 0)) != 0)
+        {
+            dbp-&gt;err(dbp, ret, "DB-&gt;put");
+            if (ret != DB_KEYEXIST)
+                goto err;
+        } 
+    }  </pre>
+        <p>
+            Finally, we close our database before returning from the
+            function.
+        </p>
+        <pre class="programlisting">err:    if (dbp != NULL)
+        (void)dbp-&gt;close(dbp, DB_NOSYNC);
+
+    return (ret);
+}  </pre>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="printstocks_c"></a>
+                            <span>Function: print_stocks()</span>
+                            
+                            
+                    </h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                        The <code class="function">print_stocks()</code> 
+                          
+                        <span>function</span>
+                        
+                        simply takes a database handle, opens a cursor, and uses 
+                        it to display all the information it finds in a database.
+                        This is trivial cursor operation that should hold
+                        no surprises for you. We simply provide it here for
+                        the sake of completeness.
+                    </p>
+        <p>
+                        If you are unfamiliar with basic cursor operations,
+                        please see the <em class="citetitle">Getting Started with Berkeley DB</em>
+                        guide.
+                    </p>
+        <pre class="programlisting">/* Displays all stock quote information in the database. */
+int
+print_stocks(DB *dbp)
+{
+    DBC *dbc;
+    DBT key, data;
+#define MAXKEYSIZE  10
+#define MAXDATASIZE 20
+    char keybuf[MAXKEYSIZE + 1], databuf[MAXDATASIZE + 1];
+    int ret, t_ret;
+    u_int32_t keysize, datasize;
+
+    if ((ret = dbp-&gt;cursor(dbp, NULL, &amp;dbc, 0)) != 0) {
+        dbp-&gt;err(dbp, ret, "can't open cursor");
+        return (ret);
+    }
+
+    memset(&amp;key, 0, sizeof(key));
+    memset(&amp;data, 0, sizeof(data));
+
+    printf("\tSymbol\tPrice\n");
+    printf("\t======\t=====\n");
+
+    for (ret = dbc-&gt;get(dbc, &amp;key, &amp;data, DB_FIRST);
+        ret == 0;
+        ret = dbc-&gt;get(dbc, &amp;key, &amp;data, DB_NEXT)) {
+        keysize = key.size &gt; MAXKEYSIZE ? MAXKEYSIZE : key.size;
+        memcpy(keybuf, key.data, keysize);
+        keybuf[keysize] = '\0';
+
+        datasize = data.size &gt;= MAXDATASIZE ? MAXDATASIZE : data.size;
+        memcpy(databuf, data.data, datasize);
+        databuf[datasize] = '\0';
+
+        printf("\t%s\t%s\n", keybuf, databuf);
+    }
+    printf("\n");
+    fflush(stdout);
+
+    if ((t_ret = dbc-&gt;close(dbc)) != 0 &amp;&amp; ret == 0)
+        ret = t_ret;
+
+    switch (ret) {
+    case 0:
+    case DB_NOTFOUND:
+        return (0);
+    default:
+        return (ret);
+    }
+}  </pre>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="txnapp.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="txnapp.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="repapp.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 2. Transactional Application </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 3. The DB Replication Manager</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

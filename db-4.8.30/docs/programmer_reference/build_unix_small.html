@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Building a small memory footprint library</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="build_unix.html" title="Chapter 27.  Building Berkeley DB for UNIX/POSIX" />
+    <link rel="prev" href="build_unix_conf.html" title="Configuring Berkeley DB" />
+    <link rel="next" href="build_unix_flags.html" title="Changing compile or load options" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Building a small memory footprint library</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="build_unix_conf.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 27. 
+        Building Berkeley DB for UNIX/POSIX
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="build_unix_flags.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="build_unix_small"></a>Building a small memory footprint library</h2>
+          </div>
+        </div>
+      </div>
+      <p>There are a set of configuration options to assist you in building a
+small memory footprint library.  These configuration options turn off
+specific functionality in the Berkeley DB library, reducing the code size.
+These configuration options include:</p>
+      <div class="variablelist">
+        <dl>
+          <dt>
+            <span class="term"></span>
+          </dt>
+          <dd>To build Berkeley DB without support for cryptography, enter
+--disable-cryptography as an argument to configure.</dd>
+          <dt>
+            <span class="term"></span>
+          </dt>
+          <dd>To build Berkeley DB without support for the Hash access method, enter
+--disable-hash as an argument to configure.</dd>
+          <dt>
+            <span class="term"></span>
+          </dt>
+          <dd>To build Berkeley DB without support for the Queue access method, enter
+--disable-queue as an argument to configure.</dd>
+          <dt>
+            <span class="term"></span>
+          </dt>
+          <dd>To build Berkeley DB without support for the database environment replication,
+enter --disable-replication as an argument to configure.</dd>
+          <dt>
+            <span class="term"></span>
+          </dt>
+          <dd>To build Berkeley DB without support for the statistics interfaces, enter
+--disable-statistics as an argument to configure.</dd>
+          <dt>
+            <span class="term"></span>
+          </dt>
+          <dd>To build Berkeley DB without support for database verification, enter
+--disable-verify as an argument to configure.</dd>
+          <dt>
+            <span class="term"></span>
+          </dt>
+          <dd>Equivalent to individually specifying --disable-cryptography,
+--disable-hash, --disable-queue, --disable-replication,
+--disable-statistics and --disable-verify.  In addition, when compiling
+building with the GNU gcc compiler, the --enable-smallbuild option uses
+the -Os compiler build flag instead of the default -O3.</dd>
+        </dl>
+      </div>
+      <p>The following configuration options will increase the size of the Berkeley DB
+library dramatically and are only useful when debugging applications:</p>
+      <div class="variablelist">
+        <dl>
+          <dt>
+            <span class="term">
+              <a class="link" href="build_unix_conf.html#build_unix_conf.--enable-debug">--enable-debug</a>
+            </span>
+          </dt>
+          <dd>Build Berkeley DB with symbols for debugging.</dd>
+          <dt>
+            <span class="term">
+              <a class="link" href="build_unix_conf.html#build_unix_conf.--enable-debug_rop">--enable-debug_rop</a>
+            </span>
+          </dt>
+          <dd>Build Berkeley DB with read-operation logging.</dd>
+          <dt>
+            <span class="term">
+              <a class="link" href="build_unix_conf.html#build_unix_conf.--enable-debug_wop">--enable-debug_wop</a>
+            </span>
+          </dt>
+          <dd>Build Berkeley DB with write-operation logging.</dd>
+          <dt>
+            <span class="term">
+              <a class="link" href="build_unix_conf.html#build_unix_conf.--enable-diagnostic">--enable-diagnostic</a>
+            </span>
+          </dt>
+          <dd>Build Berkeley DB with run-time debugging checks.</dd>
+        </dl>
+      </div>
+      <p>In addition, static libraries are usually smaller than shared libraries.
+By default Berkeley DB will build both shared and static libraries.  To build
+only a static library, configure Berkeley DB with the
+<a class="xref" href="build_unix_conf.html" title="Configuring Berkeley DB">Configuring Berkeley DB</a> option.</p>
+      <p>The size of the Berkeley DB library varies depending on the compiler, machine
+architecture, and configuration options.  As an estimate, production
+Berkeley DB libraries built with GNU gcc version 3.X compilers have footprints
+in the range of 400KB to 1.2MB on 32-bit x86 architectures, and in the
+range of 500KB to 1.4MB on 64-bit x86 architectures.</p>
+      <p>For assistance in further reducing the size of the Berkeley DB library, or in
+building small memory footprint libraries on other systems, please
+contact Berkeley DB support.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="build_unix_conf.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="build_unix.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="build_unix_flags.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Configuring Berkeley DB </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Changing compile or load options</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

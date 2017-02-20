@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+    <title>Database Properties</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.62.4" />
+    <link rel="home" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="DB.html" title="Chapter 2. Databases" />
+    <link rel="previous" href="coredbclose.html" title="Closing Databases" />
+    <link rel="next" href="DBAdmin.html" title="Administrative Methods" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Database Properties</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="coredbclose.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. Databases</th>
+          <td width="20%" align="right"> <a accesskey="n" href="DBAdmin.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="db_config"></a>Database Properties</h2>
+          </div>
+        </div>
+        <div></div>
+      </div>
+      <p>You can set database properties using the <tt class="classname">DatabaseConfig</tt>
+    class. For each of the properties that you can set, there is a
+    corresponding getter method. Also, you can always retrieve the
+    <tt class="classname">DatabaseConfig</tt> object used by your database using
+    the <tt class="methodname">Database.getConfig()</tt> method.</p>
+      <p>
+        There are a large number of properties that you can set using this
+        class (see the javadoc for a complete listing). From the perspective of
+        this manual, some of the more interesting properties are:
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+              <tt class="methodname">DatabaseConfig.setAllowCreate()</tt>
+            </p>
+            <p>If <tt class="literal">true</tt>, the database is created when it is
+        opened. If false, the database open fails if the database does not
+        exist. This property has no meaning if the database currently exists.
+        Default is <tt class="literal">false</tt>.</p>
+          </li>
+          <li>
+            <p>
+              <tt class="methodname">DatabaseConfig.setBtreeComparator()</tt>
+            </p>
+            <p>Sets the class that is used to compare the keys found on two
+        database records. This class is used to determine the sort order for
+        two records in the database. For more information, see 
+        
+        <span><a href="btree.html#comparators">Setting Comparison Functions</a>.</span>
+        </p>
+          </li>
+          <li>
+            <p>
+              <tt class="methodname">DatabaseConfig.setDuplicateComparator()</tt>
+            </p>
+            <p>
+            Sets the class that is used to compare two duplicate records in
+            the database.  For more information, see 
+            
+            <span><a href="btree.html#comparators">Setting Comparison Functions</a>.</span>
+        </p>
+          </li>
+          <li>
+            <p>
+              <tt class="methodname">DatabaseConfig.setSortedDuplicates()</tt>
+            </p>
+            <p>If <tt class="literal">true</tt>, duplicate records are allowed in the
+        database.  If this value is <tt class="literal">false</tt>, then putting a duplicate record into the database
+        results in the replacement of the old record with the new record.
+        Note that this property can be set only at database creation time. Default is <tt class="literal">false</tt>. 
+        </p>
+          </li>
+          <li>
+            <p>
+              <tt class="methodname">DatabaseConfig.setExclusiveCreate()</tt>
+            </p>
+            <p>If <tt class="literal">true</tt>, the database open fails if the
+        database currently exists. That is, the open must result in the
+        creation of a new database. Default is <tt class="literal">false</tt>.</p>
+          </li>
+          <li>
+            <p>
+              <tt class="methodname">DatabaseConfig.setReadOnly()</tt>
+            </p>
+            <p>If true, the database is opened for read activities only.
+        Default is <tt class="literal">false</tt>.</p>
+          </li>
+          <li>
+            <p>
+              <tt class="methodname">DatabaseConfig.setTruncate()</tt>
+            </p>
+            <p>If true, the database is truncated; that is, it is emptied of all
+        content.
+        </p>
+          </li>
+          <li>
+            <p>
+              <tt class="methodname">DatabaseConfig.setType()</tt>
+            </p>
+            <p>Identifies the type of database that you want to create. This
+        manual will exclusively use <tt class="literal">DatabaseType.BTREE</tt>. 
+        </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+        In addition to these, there are also methods that allow you to
+        control the IO stream used for error reporting purposes. 
+        These are described later in this manual.
+    </p>
+      <p>For example:</p>
+      <a id="java_db3"></a>
+      <pre class="programlisting">package com.sleepycat.examples.db.GettingStarted;
+
+import com.sleepycat.db.Database;
+import com.sleepycat.db.DatabaseConfig;
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.DatabaseType;
+
+import java.io.FileNotFoundException;
+
+...
+Database myDatabase = null;
+try {
+    DatabaseConfig dbConfig = new DatabaseConfig();
+    dbConfig.setAllowCreate(true);
+    dbConfig.setSortedDuplicates(true);
+    dbConfig.setType(DatabaseType.BTREE);
+    myDatabase = new Database("sampleDatabase.db",
+                              null,
+                              dbConfig); 
+} catch (DatabaseException dbe) {
+    // Exception handling goes here.
+} catch (FileNotFoundException fnfe) {
+    // Exception handling goes here
+}</pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="coredbclose.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="DB.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="DBAdmin.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Closing Databases </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Administrative Methods</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

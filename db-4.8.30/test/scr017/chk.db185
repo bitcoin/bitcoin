@@ -1,0 +1,34 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Check to make sure we can run DB 1.85 code.
+
+[ -f ../libdb.a ] || (cd .. && make libdb.a) || {
+	echo 'FAIL: unable to find or build libdb.a'
+	exit 1
+}
+
+# set -enable-compat185 when configure to get proper h files.
+# if compile on linux blade server, add -pthread on cc
+CINC=-I..
+[ `uname` = "Linux" ] && CINC="$CINC -pthread"
+
+if cc -g -Wall $CINC t.c ../libdb.a -o t; then
+	:
+else
+	echo "FAIL: unable to compile test program t.c"
+	exit 1
+fi
+
+if ./t; then
+	:
+else
+	echo "FAIL: test program failed"
+	exit 1
+fi
+
+# Clean up so the next test doesn't get confused.
+rm -rf *
+
+exit 0

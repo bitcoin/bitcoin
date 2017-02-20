@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Database upgrade</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="am.html" title="Chapter 3.  Access Method Operations" />
+    <link rel="prev" href="am_truncate.html" title="Database truncation" />
+    <link rel="next" href="am_verify.html" title="Database verification and salvage" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Database upgrade</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="am_truncate.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. 
+        Access Method Operations
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="am_verify.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="am_upgrade"></a>Database upgrade</h2>
+          </div>
+        </div>
+      </div>
+      <p>When upgrading to a new release of Berkeley DB, it may be necessary to upgrade
+the on-disk format of already-created database files.  <span class="bold"><strong>Berkeley DB
+database upgrades are done in place, and so are potentially
+destructive.</strong></span>  This means that if the system crashes during the upgrade
+procedure, or if the upgrade procedure runs out of disk space, the
+databases may be left in an inconsistent and unrecoverable state.  To
+guard against failure, the procedures outlined in
+<a class="xref" href="upgrade_process.html" title="Upgrading Berkeley DB installations">Upgrading Berkeley DB installations</a>
+should be carefully followed.  If you are not performing catastrophic
+archival as part of your application upgrade process, you should at
+least copy your database to archival media, verify that your archival
+media is error-free and readable, and that copies of your backups are
+stored offsite!</p>
+      <p>The actual database upgrade is done using the <a href="../api_reference/C/dbupgrade.html" class="olink">DB-&gt;upgrade()</a>
+method, or by dumping the database using the old version of the Berkeley DB
+software and reloading it using the current version.</p>
+      <p>After an upgrade, Berkeley DB applications must be recompiled to use the new
+Berkeley DB library before they can access an upgraded database.
+<span class="bold"><strong>There is no guarantee that applications compiled against
+previous releases of Berkeley DB will work correctly with an upgraded database
+format.  Nor is there any guarantee that applications compiled against
+newer releases of Berkeley DB will work correctly with the previous database
+format.</strong></span> We do guarantee that any archived database may be upgraded
+using a current Berkeley DB software release and the <a href="../api_reference/C/dbupgrade.html" class="olink">DB-&gt;upgrade()</a>
+method, and there is no need to step-wise upgrade the database using
+intermediate releases of Berkeley DB.  Sites should consider archiving
+appropriate copies of their application or application sources if they
+may need to access archived databases without first upgrading them.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="am_truncate.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="am.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="am_verify.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Database truncation </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Database verification and salvage</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

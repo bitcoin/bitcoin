@@ -1,0 +1,34 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Check to make sure all of the error values have corresponding error
+# message strings in db_strerror().
+
+# Top-level directory.
+d=../..
+
+# Path names are from a top-level directory.
+[ -f $d/README ] || {
+	echo 'FAIL: cannot find source distribution directory.'
+	exit 1
+}
+
+t1=__tmp1
+t2=__tmp2
+
+egrep -- "define.*DB_.*-309" $d/dbinc/db.in | awk '{print $2}' > $t1
+sed -e '/^db_strerror/,/^}/{' \
+    -e '/	case DB_/{' \
+    -e 's/:.*//' \
+    -e 's/.* //' \
+    -e p \
+    -e '}' \
+    -e '}' \
+    -e d \
+    < $d/common/db_err.c > $t2
+
+cmp $t1 $t2 > /dev/null ||
+(echo "<<< db.h >>> db_strerror" && diff $t1 $t2 && exit 1)
+
+exit 0

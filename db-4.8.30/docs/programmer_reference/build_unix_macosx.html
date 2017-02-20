@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Mac OS X</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="build_unix.html" title="Chapter 27.  Building Berkeley DB for UNIX/POSIX" />
+    <link rel="prev" href="build_unix_linux.html" title="Linux" />
+    <link rel="next" href="build_unix_osf1.html" title="OSF/1" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Mac OS X</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="build_unix_linux.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 27. 
+        Building Berkeley DB for UNIX/POSIX
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="build_unix_osf1.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="build_unix_macosx"></a>Mac OS X</h2>
+          </div>
+        </div>
+      </div>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <span class="bold">
+              <strong>When trying to link multiple Berkeley DB language interfaces (for
+example, Tcl, C++, Java, Python) into a single process, I get "multiple
+definitions" errors from dyld.</strong>
+            </span>
+            <p>To fix this problem, set the environment variable MACOSX_DEPLOYMENT_TARGET
+to 10.3 (or your current version of OS X), and reconfigure and rebuild
+Berkeley DB from scratch.  See the OS X ld(1) and dyld(1) man pages for information
+about how OS X handles symbol namespaces, as well as undefined and
+multiply-defined symbols.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>When trying to use system-backed shared memory on OS X I see
+failures about "too many open files".</strong>
+            </span>
+            <p>The default number of shared memory segments on OS X is too low.  To fix
+this problem, edit the file /etc/rc, changing the kern.sysv.shmmax and
+kern.sysv.shmseg values as follows:</p>
+            <pre class="programlisting">*** /etc/rc.orig        Fri Dec 19 09:34:09 2003
+--- /etc/rc     Fri Dec 19 09:33:53 2003
+***************
+*** 84,93 ****
+   # System tuning
+   sysctl -w kern.maxvnodes=$(echo $(sysctl -n hw.physmem) '33554432 /
+512 * 1024 +p'|dc)
+! sysctl -w kern.sysv.shmmax=4194304
+   sysctl -w kern.sysv.shmmin=1
+   sysctl -w kern.sysv.shmmni=32
+! sysctl -w kern.sysv.shmseg=8
+   sysctl -w kern.sysv.shmall=1024
+   if [ -f /etc/sysctl-macosxserver.conf ]; then
+         awk '{ if (!-1 &amp;&amp; -1) print $1 }' &lt; 
+/etc/sysctl-macosxserver.conf | while read
+--- 84,93 ----
+   # System tuning
+   sysctl -w kern.maxvnodes=$(echo $(sysctl -n hw.physmem) '33554432 /
+512 * 1024 +p'|dc)
+! sysctl -w kern.sysv.shmmax=134217728
+   sysctl -w kern.sysv.shmmin=1
+   sysctl -w kern.sysv.shmmni=32
+! sysctl -w kern.sysv.shmseg=32
+   sysctl -w kern.sysv.shmall=1024
+   if [ -f /etc/sysctl-macosxserver.conf ]; then
+         awk '{ if (!-1 &amp;&amp; -1) print $1 }' &lt;
+ /etc/sysctl-macosxserver.conf | while read</pre>
+            <p>and then reboot the system.</p>
+          </li>
+        </ol>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="build_unix_linux.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="build_unix.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="build_unix_osf1.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Linux </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> OSF/1</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

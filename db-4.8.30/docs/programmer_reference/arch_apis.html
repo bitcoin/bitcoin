@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Programmatic APIs</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="arch.html" title="Chapter 8.  Berkeley DB Architecture" />
+    <link rel="prev" href="arch_progmodel.html" title="Programming model" />
+    <link rel="next" href="arch_script.html" title="Scripting languages" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Programmatic APIs</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="arch_progmodel.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 8. 
+        Berkeley DB Architecture
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="arch_script.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="arch_apis"></a>Programmatic APIs</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="arch_apis.html#id1603628">C</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="arch_apis.html#id1603668">C++</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="arch_apis.html#id1603511">STL</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="arch_apis.html#id1603399">Java</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="arch_apis.html#id1603369">Dbm/Ndbm, Hsearch</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>The Berkeley DB subsystems can be accessed through interfaces from multiple
+languages.  Applications can use Berkeley DB via C, C++ or Java, as well as a
+variety of scripting languages such as Perl, Python, Ruby or Tcl.
+Environments can be shared among applications written by using any of
+these interfaces.  For example, you might have a local server written
+in C or C++, a script for an administrator written in Perl or Tcl, and
+a Web-based user interface written in Java -- all sharing a single
+database environment.</p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1603628"></a>C</h3>
+            </div>
+          </div>
+        </div>
+        <p>The Berkeley DB library is written entirely in ANSI C.  C applications use a
+single include file:</p>
+        <pre class="programlisting">#include &lt;db.h&gt;</pre>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1603668"></a>C++</h3>
+            </div>
+          </div>
+        </div>
+        <p>The C++ classes provide a thin wrapper around the C API, with the major
+advantages being improved encapsulation and an optional exception
+mechanism for errors.  C++ applications use a single include file:</p>
+        <pre class="programlisting">#include &lt;db_cxx.h&gt;</pre>
+        <p>The classes and methods are named in a fashion that directly corresponds
+to structures and functions in the C interface.  Likewise, arguments to
+methods appear in the same order as the C interface, except to remove the
+explicit <span class="bold"><strong>this</strong></span> pointer.  The #defines used for flags are identical
+between the C and C++ interfaces.</p>
+        <p>As a rule, each C++ object has exactly one structure from the underlying
+C API associated with it.  The C structure is allocated with each
+constructor call and deallocated with each destructor call.  Thus, the
+rules the user needs to follow in allocating and deallocating structures
+are the same between the C and C++ interfaces.</p>
+        <p>To ensure portability to many platforms, both new and old, Berkeley DB makes
+as few assumptions as possible about the C++ compiler and library.  For
+example, it does not expect STL, templates, or namespaces to be
+available.  The newest C++ feature used is exceptions, which are used
+liberally to transmit error information.  Even the use of exceptions
+can be disabled at runtime.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1603511"></a>STL</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+dbstl is an C++ STL style API for Berkeley DB, based on the C++ API above. With it, you can store data/objects of any type into 
+or retrieve them from Berkeley DB databases as if you are using C++ STL containers. The full functionality 
+of Berkeley DB can still be utilized via dbstl with little performance overhead, e.g. you can use all transaction and/or replication functionality of Berkeley DB.
+
+</p>
+        <p>
+dbstl container/iterator class templates reside in header files dbstl_vector.h, dbstl_map.h and dbstl_set.h.
+
+Among them, dbstl_vector.h contains dbstl::db_vector and its iterators;
+dbstl_map.h contains dbstl::db_map, dbstl::db_multimap and their iterators; dbstl_set.h contains dbstl::db_set and dbstl::db_multiset and their iterators. You should
+include needed header file(s) to use the container/iterator. Note that we don't use the file name with no extention --- To use dbstl::db_vector, you should do this:
+</p>
+        <pre class="programlisting">#include "dbstl_vector.h"</pre>
+        <p>
+rather than this:
+</p>
+        <pre class="programlisting">#include "dbstl_vector"</pre>
+        <p>
+And these header files reside in "stl" directory inside Berkeley DB source root directory. If you have installed
+Berkeley DB, they are also available in the "include" directory in the directory where Berkeley DB is installed.
+</p>
+        <p>
+Apart from the above three header files, you may also need to include db_exception.h and db_utility.h files. The db_exception.h file contains all exception classes of dbstl, which
+integrate seamlessly with Berkeley DB C++ API exceptions and C++ standard exception classes in std namespace. And the db_utility.h file contains the DbstlElemTraits which helps you
+to store complex objects. These five header files are all that you need to include in order to make use of dbstl.
+</p>
+        <p>
+All symbols of dbstl, including classes, class templates, global functions, etc, reside in the namespace "dbstl", so in order to use them, you may also want to do this:
+</p>
+        <pre class="programlisting">using namespace dbstl;</pre>
+        <p>
+The dbstl library is always at the same place where Berkeley DB library is located, you will need to build it and link with it to use dbstl.
+</p>
+        <p>
+While making use of dbstl, you will probably want to create environment or databases directly, or set/get configurations to Berkeley DB environment or databases, etc. You are allowed to do so via Berkeley DB C/C++ API.
+</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1603399"></a>Java</h3>
+            </div>
+          </div>
+        </div>
+        <p>The Java classes provide a layer around the C API that is almost identical
+to the C++ layer.  The classes and methods are, for the most part
+identical to the C++ layer.  Berkeley DB constants and #defines are represented as
+"static final int" values.  Error conditions are communicated as Java
+exceptions.</p>
+        <p>As in C++, each Java object has exactly one structure from the underlying
+C API associated with it.  The Java structure is allocated with each
+constructor or open call, but is deallocated only by the Java garbage
+collector.  Because the timing of garbage collection is not predictable,
+applications should take care to do a close when finished with any object
+that has a close method.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1603369"></a>Dbm/Ndbm, Hsearch</h3>
+            </div>
+          </div>
+        </div>
+        <p>Berkeley DB supports the standard UNIX <a href="../api_reference/C/dbm.html" class="olink">dbm</a> and <a href="../api_reference/C/hsearch.html" class="olink">hsearch</a> interfaces.  After including a new header file and recompiling, programs will run orders of magnitude faster, and underlying databases can grow as large as necessary.  Also, historic <a href="../api_reference/C/dbm.html" class="olink">dbm</a> applications can fail once some number of entries are inserted into the database, in which the number depends on the effectiveness of the internal hashing function on the particular data set.  This is not a problem with Berkeley DB.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="arch_progmodel.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="arch.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="arch_script.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Programming model </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Scripting languages</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,36 @@
+#!/bin/sh -
+#	$Id$
+#
+# Build BREW .dsp files.
+
+. RELEASE
+
+SRCFILES=srcfiles.in
+
+s=/tmp/__db_a
+t=/tmp/__db_b
+
+trap 'rm -f $s $t; exit 0' 0
+trap 'rm -f $s $t; exit 1' 1 2 3 13 15
+
+# Build the bdb_s60.mmp file.
+mmp()
+{
+
+	(cat s60/s60.mmp.1;
+	echo;
+	grep -w s60 $SRCFILES | awk '{print $1}' |
+	sed -e 's/^/SOURCE		..\\/' \
+	    -e 's/\//\\/g' |
+	sort;
+	echo;
+	cat s60/s60.mmp.2) > $t
+
+	f=../build_s60/bdb_s60.mmp
+	cmp $t $f > /dev/null 2>&1 ||
+	    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+}
+
+mmp
+
+exit 0

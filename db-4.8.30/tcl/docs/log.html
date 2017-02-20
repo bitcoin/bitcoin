@@ -1,0 +1,123 @@
+<!--Copyright 1999-2009 Oracle.  All rights reserved.-->
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.08 [en] (X11; I; FreeBSD 3.3-RELEASE i386) [Netscape]">
+</HEAD>
+<BODY>
+
+<H2>
+<A NAME="Logging Commands"></A>Logging Commands</H2>
+Logging commands work from the environment handle to control the use of
+the log files.&nbsp; Log files are opened when the environment is opened
+and closed when the environment is closed.&nbsp; In all of the commands
+in the logging subsystem that take or return a log sequence number, it
+is of the form:
+<BR><B>{<I>fileid offset</I>}</B>
+<BR>where the <B><I>fileid</I></B> is an identifier of the log file, as
+returned from the <A HREF="#> <env> log_get">log_get</A> call.
+<P><B>> &lt;env> log_archive [-arch_abs] [-arch_data] [-arch_log]</B>
+<P>This command returns&nbsp; a list of log files that are no longer in
+use.&nbsp; It is a direct call to the <A HREF="../../docs/api_c/log_archive.html">log_archive</A>
+function. The arguments are:
+<UL>
+<LI>
+<B>-arch_abs </B>selects DB_ARCH_ABS to return all pathnames as absolute
+pathnames</LI>
+
+<LI>
+<B>-arch_data </B>selects DB_ARCH_DATA to return a list of database files</LI>
+
+<LI>
+<B>-arch_log </B>selects DB_ARCH_LOG to return a list of log files</LI>
+</UL>
+
+<HR WIDTH="100%">
+<BR><B>> &lt;env> log_compare <I>lsn1 lsn2</I></B>
+<P>This command compares two log sequence numbers, given as <B><I>lsn1</I></B>
+and <B><I>lsn2</I></B>.&nbsp; It is a direct call to the <A HREF="../../docs/api_c/log_compare.html">log_compare</A>
+function.&nbsp; It will return a -1, 0, 1 to indicate if <B><I>lsn1</I></B>
+is less than, equal to or greater than <B><I>lsn2</I></B> respectively.
+<BR>
+<HR WIDTH="100%">
+<BR><B>> &lt;env> log_file <I>lsn</I></B>
+<P>This command returns&nbsp; the file name associated with the given <B><I>lsn</I></B>.&nbsp;
+It is a direct call to the <A HREF="../../docs/api_c/log_file.html">log_file</A>
+function.
+<BR>
+<HR WIDTH="100%">
+<BR><B>> &lt;env> log_flush [<I>lsn</I>]</B>
+<P>This command&nbsp; flushes the log up to the specified <B><I>lsn</I></B>
+or flushes all records if none is given&nbsp; It is a direct call to the
+<A HREF="../../docs/api_c/log_flush.html">log_flush</A>
+function.&nbsp; It returns either a 0 (for success), a DB error message
+or it throws a Tcl error with a system message.
+<BR>
+<HR WIDTH="100%">
+<BR><A NAME="<env> log_get"></A><B>> &lt;env> log_get<I> </I>[-checkpoint]
+[-current] [-first] [-last] [-next] [-prev] [-set <I>lsn</I>]</B>
+<P>This command retrieves a record from the log according to the <B><I>lsn</I></B>
+given and returns it and the data.&nbsp; It is a direct call to the <A HREF="../../docs/api_c/log_get.html">log_get</A>
+function.&nbsp; It is a way of implementing a manner of log iteration similar
+to <A HREF="../../docs/api_tcl/db_cursor.html">cursors</A>.&nbsp;&nbsp;
+The information we return is similar to database information.&nbsp; We
+return a list where the first item is the LSN (which is a list itself)
+and the second item is the data.&nbsp; So it looks like, fully expanded,
+<B>{{<I>fileid</I>
+<I>offset</I>}
+<I>data</I>}.</B>&nbsp;
+In the case where DB_NOTFOUND is returned, we return an empty list <B>{}</B>.&nbsp;
+All other errors return a Tcl error.&nbsp; The arguments are:
+<UL>
+<LI>
+<B>-checkpoint </B>selects the DB_CHECKPOINT flag to return the LSN/data
+pair of the last record written through <A HREF="#> <env> log_put">log_put</A>
+with DB_CHECKPOINT specified</LI>
+
+<LI>
+<B>-current</B> selects the DB_CURRENT flag to return the current record</LI>
+
+<LI>
+<B>-first</B> selects the DB_FIRST flag to return the first record in the
+log.</LI>
+
+<LI>
+<B>-last </B>selects the DB_LAST flag to return the last record in the
+log.</LI>
+
+<LI>
+<B>-next</B> selects the DB_NEXT flag to return the next record in the
+log.</LI>
+
+<LI>
+<B>-prev </B>selects the DB_PREV flag to return the&nbsp; previous record
+in the log.</LI>
+
+<LI>
+<B>-set</B> selects the DB_SET flag to return the record specified by the
+given <B><I>lsn</I></B></LI>
+</UL>
+
+<HR WIDTH="100%">
+<BR><A NAME="> <env> log_put"></A><B>> &lt;env> log_put<I> </I>[-checkpoint]
+[-flush] <I>record</I></B>
+<P>This command stores a <B><I>record</I></B> into the log and returns
+the LSN of the log record.&nbsp; It is a direct call to the <A HREF="../../docs/api_c/log_put.html">log_put</A>
+function.&nbsp; It returns either an LSN or it throws a Tcl error with
+a system message.&nbsp;<B> </B>The arguments are:
+<UL>
+<LI>
+<B>-checkpoint </B>selects the DB_CHECKPOINT flag</LI>
+
+<LI>
+<B>-flush </B>selects the DB_FLUSH flag to flush the log to disk.</LI>
+</UL>
+
+<HR WIDTH="100%">
+<BR><B>> &lt;env> log_stat</B>
+<P>This command returns&nbsp; the statistics associated with the logging
+subsystem.&nbsp; It is a direct call to the <A HREF="../../docs/api_c/log_stat.html">log_stat</A>
+function.&nbsp; It returns a list of name/value pairs of the DB_LOG_STAT
+structure.
+</BODY>
+</HTML>

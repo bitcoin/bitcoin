@@ -1,0 +1,176 @@
+//Microsoft eMbedded Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "newres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_WCE_TPCB            ICON    DISCARDABLE     "wce_tpcb.ICO"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#include ""newres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MAINDIALOG DIALOG DISCARDABLE  0, 0, 138, 182
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Berkeley DB TPCB"
+FONT 8, "System"
+BEGIN
+    PUSHBUTTON      "Initialize",IDC_INIT_BUTTON,8,77,50,14
+    PUSHBUTTON      "Advanced...",IDC_ADV_BUTTON,78,76,50,14
+    PUSHBUTTON      "Run...",IDC_RUN_BUTTON,77,94,50,14
+    CONTROL         "Medium",IDC_MEDIUM_RADIO,"Button",BS_AUTORADIOBUTTON,51,
+                    45,40,10
+    CONTROL         "Large",IDC_LARGE_RADIO,"Button",BS_AUTORADIOBUTTON,95,
+                    45,32,10
+    CONTROL         "Small",IDC_SMALL_RADIO,"Button",BS_AUTORADIOBUTTON,14,
+                    45,32,10
+    LTEXT           "Home Dir:",IDC_STATIC,7,62,32,8
+    EDITTEXT        IDC_HOME_EDIT,39,59,89,14,ES_AUTOHSCROLL
+    GROUPBOX        "Benchmark data volume",IDC_STATIC,7,35,123,22
+    LTEXT           "# txns:",IDC_STATIC,8,96,25,8
+    EDITTEXT        IDC_TXN_EDIT,33,94,40,14,ES_AUTOHSCROLL
+    GROUPBOX        "",IDC_STATIC,7,88,123,23
+    PUSHBUTTON      "Exit",IDC_EXIT_BUTTON,43,115,50,14
+    CONTROL         113,IDC_STATIC,"Static",SS_BITMAP,40,7,15,13
+END
+
+IDD_ADVANCEDDIALOG DIALOG DISCARDABLE  0, 0, 147, 162
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Advanced options"
+FONT 8, "System"
+BEGIN
+    CONTROL         "Disable fast mode",IDC_FASTMODE_CHECK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,14,73,10
+    CONTROL         "Enable verbose mode",IDC_VERBOSE_CHECK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,27,85,10
+    LTEXT           "Random seed:",IDC_RANDOM_STATIC,7,44,47,8
+    EDITTEXT        IDC_RANDOM_EDIT,59,42,40,14,ES_AUTOHSCROLL
+    LTEXT           "Cache size (kb):",IDC_CACHE_STATIC,7,67,52,8
+    EDITTEXT        IDC_CACHE_EDIT,59,64,40,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Done",IDC_DONE_BUTTON,7,90,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE
+BEGIN
+    IDD_MAINDIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 130
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 175
+    END
+
+    IDD_ADVANCEDDIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 140
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 155
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDC_WCE_TPCB ACCELERATORS DISCARDABLE
+BEGIN
+    "/",            IDM_HELP_ABOUT,         ASCII,  ALT, NOINVERT
+    VK_F4,          IDM_FILE_EXIT,          VIRTKEY, ALT, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_ORACLE_BITMAP       BITMAP  DISCARDABLE     "oracle_bdb.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APP_TITLE           "wce_tpcb"
+    IDC_WCE_TPCB            "WCE_TPCB"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

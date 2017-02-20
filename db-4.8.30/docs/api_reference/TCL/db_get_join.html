@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>db get_join</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB TCL API Reference" />
+    <link rel="up" href="tclapi.html" title="Chapter 1.  Berkeley DB Tcl APIs" />
+    <link rel="prev" href="db_get.html" title="db get" />
+    <link rel="next" href="db_get_type.html" title="db get_type" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center"><span class="emphasis"><em>db</em></span> get_join</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="db_get.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 1. 
+                Berkeley DB Tcl APIs
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="db_get_type.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="db_get_join"></a><span class="emphasis"><em>db</em></span> get_join</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">db get_join
+    [-txn txnid]
+    {<span class="emphasis"><em>db</em></span> key}
+    {<span class="emphasis"><em>db</em></span> key}
+    ... </pre>
+      <p>
+         The <span class="emphasis"><em>db</em></span> <span class="bold"><strong>get_join</strong></span>
+         command performs the cursor operations required to join the specified
+         keys and returns a list of joined {key data} pairs. 
+         See <a href="../../programmer_reference/am_cursor.html#am_join" class="olink">Equality Join</a>
+         in the <em class="citetitle">Berkeley DB Programmer's Reference Guide</em>  for more
+         information on the underlying requirements for joining.
+    </p>
+      <p>
+        The options are as follows:
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                 <span class="bold"><strong>-txn txnid</strong></span> 
+            </p>
+            <p>
+                 If the operation is part of an application-specified transaction, the
+                 <span class="bold"><strong>txnid</strong></span> parameter is a transaction
+                 handle returned from <span class="emphasis"><em>env</em></span> <span class="bold"><strong>txn</strong></span>.  If no transaction handle is specified,
+                 but the operation occurs in a transactional database, the operation
+                 will be implicitly transaction protected.
+            </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+        In the case of error, a Tcl error is thrown.
+    </p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="db_get.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="tclapi.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="db_get_type.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top"><span class="emphasis"><em>db</em></span> get </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> <span class="emphasis"><em>db</em></span> get_type</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

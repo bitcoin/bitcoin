@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 2.  Dbstl Container Classes</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ Standard Template Library API Reference" />
+    <link rel="up" href="index.html" title="Berkeley DB C++ Standard Template Library API Reference" />
+    <link rel="prev" href="stldbstl_global_functionsclose_db_cursors.html" title="close_db_cursors" />
+    <link rel="next" href="db_container.html" title="Chapter 3.  Db_container" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 2. 
+ Dbstl Container Classes  </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="stldbstl_global_functionsclose_db_cursors.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="db_container.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="dbstl_containers"></a>Chapter 2. 
+ Dbstl Container Classes  </h2>
+          </div>
+        </div>
+      </div>
+      <p>A dbstl container is very much like a C++ STL container. </p>
+      <p>It stores a collection of data items, or key/data pairs. Each container is backed by a Berkeley DB database created in an explicit database environment or an internal private environment; And the database itself can be created explicitly with all kinds of configurations, or by dbstl internally. For each type of container, some specific type of database and/or configurations must be used or specified to the database and its environment. dbstl will check the database and environment conform to the requirement. When users don't have a chance to specify a container's backing database and environment, like in copy constructors, dbstl will create proper databases and/or environment for it. There are two helper functions to make it easier to create/open an environment or database, they are <a class="link" href="stldbstl_global_functionsopen_db.html" title="open_db">dbstl::open_db()</a>
+ and <a class="link" href="stldbstl_global_functionsopen_env.html" title="open_env">dbstl::open_env()</a>
+; </p>
+      <h4><a id="id1541063"></a>
+See Also
+</h4>
+      <p> </p>
+      <p><a class="link" href="stldbstl_global_functionsopen_db.html" title="open_db">dbstl::open_db()</a>
+ <a class="link" href="stldbstl_global_functionsopen_env.html" title="open_env">dbstl::open_env()</a>
+ <a class="link" href="db_vector.html" title="Chapter 4.  Db_vector">db_vector</a>
+ <a class="link" href="db_map.html" title="Chapter 5.  Db_map">db_map</a>
+ <a class="link" href="db_multimap.html" title="Chapter 6.  Db_multimap">db_multimap</a>
+ <a class="link" href="db_set.html" title="Chapter 7.  Db_set">db_set</a>
+ <a class="link" href="db_multiset.html" title="Chapter 8.  Db_multiset">db_multiset</a>
+ </p>
+      <h4><a id="id1543847"></a> Public Members </h4>
+      <div class="informaltable">
+        <table border="1" width="80%">
+          <colgroup>
+            <col />
+            <col />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+<a class="link" href="db_container.html" title="Chapter 3.  Db_container">
+db_container</a>
+</td>
+              <td>
+db_container</td>
+            </tr>
+            <tr>
+              <td>
+<a class="link" href="db_map.html" title="Chapter 5.  Db_map">
+db_map</a>
+</td>
+              <td>
+db_map</td>
+            </tr>
+            <tr>
+              <td>
+<a class="link" href="db_multimap.html" title="Chapter 6.  Db_multimap">
+db_multimap</a>
+</td>
+              <td>
+db_multimap</td>
+            </tr>
+            <tr>
+              <td>
+<a class="link" href="db_set.html" title="Chapter 7.  Db_set">
+db_set</a>
+</td>
+              <td>
+db_set</td>
+            </tr>
+            <tr>
+              <td>
+<a class="link" href="db_multiset.html" title="Chapter 8.  Db_multiset">
+db_multiset</a>
+</td>
+              <td>
+db_multiset</td>
+            </tr>
+            <tr>
+              <td>
+<a class="link" href="db_vector.html" title="Chapter 4.  Db_vector">
+db_vector</a>
+</td>
+              <td>
+db_vector</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h4><a id="id1543838"></a>
+Group</h4>
+      <p>
+None</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="stldbstl_global_functionsclose_db_cursors.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="db_container.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+close_db_cursors
+ </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 3. 
+ Db_container  </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

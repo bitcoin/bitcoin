@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Retrieving records</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="am.html" title="Chapter 3.  Access Method Operations" />
+    <link rel="prev" href="am_partition.html" title="Partitioning databases" />
+    <link rel="next" href="am_put.html" title="Storing records" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Retrieving records</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="am_partition.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. 
+        Access Method Operations
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="am_put.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="am_get"></a>Retrieving records</h2>
+          </div>
+        </div>
+      </div>
+      <p>The <a href="../api_reference/C/dbget.html" class="olink">DB-&gt;get()</a> method retrieves records from the database.  In general,
+<a href="../api_reference/C/dbget.html" class="olink">DB-&gt;get()</a> takes a key and returns the associated data from the
+database.</p>
+      <p>There are a few flags that you can set to customize retrieval:</p>
+      <div class="variablelist">
+        <dl>
+          <dt>
+            <span class="term">
+              <a href="../api_reference/C/dbget.html#get_DB_GET_BOTH" class="olink">DB_GET_BOTH</a>
+            </span>
+          </dt>
+          <dd>Search for a matching key and data item, that is, only return success
+if both the key and the data items match those stored in the database.</dd>
+          <dt>
+            <span class="term">
+              <a href="../api_reference/C/dbcget.html#dbcget_DB_RMW" class="olink">DB_RMW</a>
+            </span>
+          </dt>
+          <dd>Read-modify-write: acquire write locks instead of read locks during
+retrieval. This can enhance performance in threaded applications by
+reducing the chance of deadlock.</dd>
+          <dt>
+            <span class="term">
+              <a href="../api_reference/C/dbget.html#dbget_DB_SET_RECNO" class="olink">DB_SET_RECNO</a>
+            </span>
+          </dt>
+          <dd>If the underlying database is a Btree, and was configured so that it
+is possible to search it by logical record number, retrieve a specific
+record.</dd>
+        </dl>
+      </div>
+      <p>If the database has been configured to support duplicate records,
+<a href="../api_reference/C/dbget.html" class="olink">DB-&gt;get()</a> will always return the first data item in the duplicate
+set.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="am_partition.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="am.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="am_put.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Partitioning databases </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Storing records</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DBcursor-&gt;close()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="dbc.html" title="Chapter 3.  The DBcursor Handle" />
+    <link rel="prev" href="dbcursor.html" title="DB-&gt;cursor()" />
+    <link rel="next" href="dbccmp.html" title="DBcursor-&gt;cmp()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DBcursor-&gt;close()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbcursor.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. 
+                The DBcursor Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbccmp.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dbcclose"></a>DBcursor-&gt;close()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DBcursor-&gt;close(DBC *DBcursor);  </pre>
+      <p>
+        The <code class="methodname">DBcursor-&gt;close()</code> method discards the cursor.
+    </p>
+      <p>
+         It is possible for the <code class="methodname">DBcursor-&gt;close()</code> method to return <a href="../../programmer_reference/program_errorret.html#program_errorret.DB_LOCK_DEADLOCK" class="olink">DB_LOCK_DEADLOCK</a>,
+         signaling that any enclosing transaction should be aborted.  If the
+         application is already intending to abort the transaction, this error
+         should be ignored, and the application should proceed.
+    </p>
+      <p>
+         After <code class="methodname">DBcursor-&gt;close()</code> has been called, regardless of its return,
+         the cursor handle may not be used again.
+    </p>
+      <p>
+         The <code class="methodname">DBcursor-&gt;close()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1653472"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+         The <code class="methodname">DBcursor-&gt;close()</code> <span>
+            <span>
+                 method may fail and return one of the following non-zero errors:
+            </span>
+            
+        </span>
+    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1653326"></a>DB_LOCK_DEADLOCK</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A transactional database environment operation was selected to resolve
+                a deadlock.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1653800"></a>DB_LOCK_NOTGRANTED</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A Berkeley DB Concurrent Data Store database environment configured
+                for lock timeouts was unable to grant a lock in the allowed time.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1653773"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                If the cursor is already closed; or if an invalid flag value or parameter was specified.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1653774"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="link" href="dbc.html" title="Chapter 3.  The DBcursor Handle">DBcursor</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1653325"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="dbc.html#dbclist" title="Database Cursors and Related Methods">Database Cursors and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbcursor.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="dbc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbccmp.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB-&gt;cursor() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DBcursor-&gt;cmp()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

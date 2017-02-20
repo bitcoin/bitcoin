@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 6. C# API</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="prev" href="java_faq.html" title="Java FAQ" />
+    <link rel="next" href="stl.html" title="Chapter 7. Standard Template Library API" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 6. C# API</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="java_faq.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="stl.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="csharp"></a>Chapter 6. C# API</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="csharp.html#csharp_compat">Compatibility</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+    A separate 
+    <a class="link" href="build_win_csharp.html" title="Building the C# API">Visual Studio solution</a> 
+    is provided to build the Berkeley DB C# classes,
+    the examples and the native support library.
+</p>
+      <p>
+    The C# API requires version 2.0 of the .NET framework and expects that
+    it has already been installed on your system.  For the sake of
+    discussion, we assume that the Berkeley DB source is in a directory
+    called db-<span class="emphasis"><em>VERSION</em></span>; for example, you downloaded a
+    Berkeley DB archive, and you did not change the top-level directory
+    name.  The files related to C# are in four subdirectories of
+    db-<span class="emphasis"><em>VERSION</em></span>: csharp (the C# source files),
+    libdb_csharp (the C++ files that provide the "glue" between C# and
+    Berkeley DB,) examples_csharp (containing all example code) and
+    test\scr037 (containing NUnit tests for the API).
+</p>
+      <p>
+    Building the C# API produces a managed assembly
+    <code class="filename">libdb_dotnet<span class="emphasis"><em>VERSION</em></span>.dll</code>,
+    containing the API, and two native libraries:
+    <code class="filename">libdb_csharp<span class="emphasis"><em>VERSION</em></span>.dll</code> and
+    <code class="filename">libdb<span class="emphasis"><em>VERSION</em></span>.dll</code>.  (For all
+    three files, <span class="emphasis"><em>VERSION</em></span> is [MAJOR][MINOR], i.e. for
+    version 4.8 the managed assembly is
+    <code class="filename">libdb_dotnet48.dll</code>.)  Following the existing
+    convention, native libraries are placed in either
+    <code class="filename">db-<span class="emphasis"><em>VERSION</em></span>\build_windows\Win32</code>or
+    <code class="filename">db-<span class="emphasis"><em>VERSION</em></span>\build_windows\x64</code>,
+    depending upon the platform being targeted.  In all cases, the managed
+    assembly will be placed in
+    <code class="filename">db-<span class="emphasis"><em>VERSION</em></span>\build_windows\AnyCPU</code>.
+</p>
+      <p>
+    Because the C# API uses P/Invoke, for your application to use Berkeley
+    DB successfully, the .NET framework needs to be able to locate the
+    native libaries.  This means the native libraries need to either be
+    copied to your application's directory, the Windows or System
+    directory, or the location of the libraries needs to be added to the
+    <code class="literal">PATH</code> environment variable.  See the MSDN
+    documentation of the DllImport attribute and Dynamic-Link Library
+    Search Order for further information.
+</p>
+      <p>
+    If you get the following exception when you run, the .NET platform probably
+    is unable to locate the native libraries:
+</p>
+      <pre class="programlisting">System.TypeInitializationException</pre>
+      <p>
+    To ensure that everything is running correctly, you may want to try a
+    simple test from the example programs in the 
+    <code class="filename">db-<span class="emphasis"><em>VERSION</em></span>\examples_csharp</code>
+    directory.
+</p>
+      <p>
+    For example, the ex_access sample program will prompt for text input
+    lines, which are then stored in a Btree database named
+    <code class="filename">access.db</code>.  It is designed to be run from either
+    the
+    <code class="filename">db-<span class="emphasis"><em>VERSION</em></span>\build_windows\Debug</code>
+    or
+    <code class="filename">db-<span class="emphasis"><em>VERSION</em></span>\build_windows\Release</code>
+    directory.  Try giving it a few lines of input text and then a blank
+    line.  Before it exits, you should see a list of the lines you entered
+    display with data items.  This is a simple check to make sure the
+    fundamental configuration is working correctly.
+</p>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="csharp_compat"></a>Compatibility</h2>
+            </div>
+          </div>
+        </div>
+        <p>
+    The Berkeley DB C# API has been tested with the Microsoft .NET Platform
+    (version 2.0) on Windows.
+</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="java_faq.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="stl.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Java FAQ </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 7. Standard Template Library API</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

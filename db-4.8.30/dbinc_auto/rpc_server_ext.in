@@ -1,0 +1,174 @@
+/* DO NOT EDIT: automatically built by dist/s_include. */
+#ifndef	_rpc_server_ext_h_
+#define	_rpc_server_ext_h_
+#if defined(__cplusplus)
+extern "C" {
+#endif
+#define	__env_cachesize_proc __env_cachesize_proc@DB_VERSION_UNIQUE_NAME@
+void __env_cachesize_proc __P((long, u_int32_t, u_int32_t, u_int32_t, __env_cachesize_reply *));
+#define	__env_close_proc __env_close_proc@DB_VERSION_UNIQUE_NAME@
+void __env_close_proc __P((long, u_int32_t, __env_close_reply *));
+#define	__env_create_proc __env_create_proc@DB_VERSION_UNIQUE_NAME@
+void __env_create_proc __P((u_int32_t, __env_create_reply *));
+#define	__env_flags_proc __env_flags_proc@DB_VERSION_UNIQUE_NAME@
+void __env_flags_proc __P((long, u_int32_t, u_int32_t, __env_flags_reply *));
+#define	__env_open_proc __env_open_proc@DB_VERSION_UNIQUE_NAME@
+void __env_open_proc __P((long, char *, u_int32_t, u_int32_t, __env_open_reply *));
+#define	__env_remove_proc __env_remove_proc@DB_VERSION_UNIQUE_NAME@
+void __env_remove_proc __P((long, char *, u_int32_t, __env_remove_reply *));
+#define	__txn_abort_proc __txn_abort_proc@DB_VERSION_UNIQUE_NAME@
+void __txn_abort_proc __P((long, __txn_abort_reply *));
+#define	__txn_begin_proc __txn_begin_proc@DB_VERSION_UNIQUE_NAME@
+void __txn_begin_proc __P((long, long, u_int32_t, __txn_begin_reply *));
+#define	__txn_commit_proc __txn_commit_proc@DB_VERSION_UNIQUE_NAME@
+void __txn_commit_proc __P((long, u_int32_t, __txn_commit_reply *));
+#define	__txn_discard_proc __txn_discard_proc@DB_VERSION_UNIQUE_NAME@
+void __txn_discard_proc __P((long, u_int32_t, __txn_discard_reply *));
+#define	__txn_prepare_proc __txn_prepare_proc@DB_VERSION_UNIQUE_NAME@
+void __txn_prepare_proc __P((long, u_int8_t *, __txn_prepare_reply *));
+#define	__txn_recover_proc __txn_recover_proc@DB_VERSION_UNIQUE_NAME@
+void __txn_recover_proc __P((long, u_int32_t, u_int32_t, __txn_recover_reply *, int *));
+#define	__db_bt_maxkey_proc __db_bt_maxkey_proc@DB_VERSION_UNIQUE_NAME@
+void __db_bt_maxkey_proc __P((long, u_int32_t, __db_bt_maxkey_reply *));
+#define	__db_associate_proc __db_associate_proc@DB_VERSION_UNIQUE_NAME@
+void __db_associate_proc __P((long, long, u_int32_t, __db_associate_reply *));
+#define	__db_bt_minkey_proc __db_bt_minkey_proc@DB_VERSION_UNIQUE_NAME@
+void __db_bt_minkey_proc __P((long, u_int32_t, __db_bt_minkey_reply *));
+#define	__db_close_proc __db_close_proc@DB_VERSION_UNIQUE_NAME@
+void __db_close_proc __P((long, long, u_int32_t, __db_close_reply *));
+#define	__db_create_proc __db_create_proc@DB_VERSION_UNIQUE_NAME@
+void __db_create_proc __P((long, u_int32_t, __db_create_reply *));
+#define	__db_del_proc __db_del_proc@DB_VERSION_UNIQUE_NAME@
+void __db_del_proc __P((long, long, u_int32_t, u_int32_t, u_int32_t, u_int32_t, void *, u_int32_t, u_int32_t, __db_del_reply *));
+#define	__db_extentsize_proc __db_extentsize_proc@DB_VERSION_UNIQUE_NAME@
+void __db_extentsize_proc __P((long, u_int32_t, __db_extentsize_reply *));
+#define	__db_flags_proc __db_flags_proc@DB_VERSION_UNIQUE_NAME@
+void __db_flags_proc __P((long, u_int32_t, __db_flags_reply *));
+#define	__db_get_proc __db_get_proc@DB_VERSION_UNIQUE_NAME@
+void __db_get_proc __P((long, long, u_int32_t, u_int32_t, u_int32_t, u_int32_t, void *, u_int32_t, u_int32_t, u_int32_t, u_int32_t, u_int32_t, void *, u_int32_t, u_int32_t, __db_get_reply *, int *));
+#define	__db_h_ffactor_proc __db_h_ffactor_proc@DB_VERSION_UNIQUE_NAME@
+void __db_h_ffactor_proc __P((long, u_int32_t, __db_h_ffactor_reply *));
+#define	__db_h_nelem_proc __db_h_nelem_proc@DB_VERSION_UNIQUE_NAME@
+void __db_h_nelem_proc __P((long, u_int32_t, __db_h_nelem_reply *));
+#define	__db_key_range_proc __db_key_range_proc@DB_VERSION_UNIQUE_NAME@
+void __db_key_range_proc __P((long, long, u_int32_t, u_int32_t, u_int32_t, u_int32_t, void *, u_int32_t, u_int32_t, __db_key_range_reply *));
+#define	__db_lorder_proc __db_lorder_proc@DB_VERSION_UNIQUE_NAME@
+void __db_lorder_proc __P((long, u_int32_t, __db_lorder_reply *));
+#define	__db_open_proc __db_open_proc@DB_VERSION_UNIQUE_NAME@
+void __db_open_proc __P((long, long, char *, char *, u_int32_t, u_int32_t, u_int32_t, __db_open_reply *));
+#define	__db_pagesize_proc __db_pagesize_proc@DB_VERSION_UNIQUE_NAME@
+void __db_pagesize_proc __P((long, u_int32_t, __db_pagesize_reply *));
+#define	__db_pget_proc __db_pget_proc@DB_VERSION_UNIQUE_NAME@
+void __db_pget_proc __P((long, long, u_int32_t, u_int32_t, u_int32_t, u_int32_t, void *, u_int32_t, u_int32_t, u_int32_t, u_int32_t, u_int32_t, void *, u_int32_t, u_int32_t, u_int32_t, u_int32_t, u_int32_t, void *, u_int32_t, u_int32_t, __db_pget_reply *, int *));
+#define	__db_put_proc __db_put_proc@DB_VERSION_UNIQUE_NAME@
+void __db_put_proc __P((long, long, u_int32_t, u_int32_t, u_int32_t, u_int32_t, void *, u_int32_t, u_int32_t, u_int32_t, u_int32_t, u_int32_t, void *, u_int32_t, u_int32_t, __db_put_reply *, int *));
+#define	__db_re_delim_proc __db_re_delim_proc@DB_VERSION_UNIQUE_NAME@
+void __db_re_delim_proc __P((long, u_int32_t, __db_re_delim_reply *));
+#define	__db_re_len_proc __db_re_len_proc@DB_VERSION_UNIQUE_NAME@
+void __db_re_len_proc __P((long, u_int32_t, __db_re_len_reply *));
+#define	__db_re_pad_proc __db_re_pad_proc@DB_VERSION_UNIQUE_NAME@
+void __db_re_pad_proc __P((long, u_int32_t, __db_re_pad_reply *));
+#define	__db_remove_proc __db_remove_proc@DB_VERSION_UNIQUE_NAME@
+void __db_remove_proc __P((long, long, char *, char *, u_int32_t, __db_remove_reply *));
+#define	__db_rename_proc __db_rename_proc@DB_VERSION_UNIQUE_NAME@
+void __db_rename_proc __P((long, long, char *, char *, char *, u_int32_t, __db_rename_reply *));
+#define	__db_stat_proc __db_stat_proc@DB_VERSION_UNIQUE_NAME@
+void __db_stat_proc __P((long, u_int32_t, __db_stat_reply *, int *));
+#define	__db_sync_proc __db_sync_proc@DB_VERSION_UNIQUE_NAME@
+void __db_sync_proc __P((long, u_int32_t, __db_sync_reply *));
+#define	__db_truncate_proc __db_truncate_proc@DB_VERSION_UNIQUE_NAME@
+void __db_truncate_proc __P((long, long, u_int32_t, __db_truncate_reply *));
+#define	__db_cursor_proc __db_cursor_proc@DB_VERSION_UNIQUE_NAME@
+void __db_cursor_proc __P((long, long, u_int32_t, __db_cursor_reply *));
+#define	__db_join_proc __db_join_proc@DB_VERSION_UNIQUE_NAME@
+void __db_join_proc __P((long, u_int32_t *, u_int32_t, u_int32_t, __db_join_reply *));
+#define	__dbc_close_proc __dbc_close_proc@DB_VERSION_UNIQUE_NAME@
+void __dbc_close_proc __P((long, __dbc_close_reply *));
+#define	__dbc_count_proc __dbc_count_proc@DB_VERSION_UNIQUE_NAME@
+void __dbc_count_proc __P((long, u_int32_t, __dbc_count_reply *));
+#define	__dbc_del_proc __dbc_del_proc@DB_VERSION_UNIQUE_NAME@
+void __dbc_del_proc __P((long, u_int32_t, __dbc_del_reply *));
+#define	__dbc_dup_proc __dbc_dup_proc@DB_VERSION_UNIQUE_NAME@
+void __dbc_dup_proc __P((long, u_int32_t, __dbc_dup_reply *));
+#define	__dbc_get_proc __dbc_get_proc@DB_VERSION_UNIQUE_NAME@
+void __dbc_get_proc __P((long, u_int32_t, u_int32_t, u_int32_t, u_int32_t, void *, u_int32_t, u_int32_t, u_int32_t, u_int32_t, u_int32_t, void *, u_int32_t, u_int32_t, __dbc_get_reply *, int *));
+#define	__dbc_pget_proc __dbc_pget_proc@DB_VERSION_UNIQUE_NAME@
+void __dbc_pget_proc __P((long, u_int32_t, u_int32_t, u_int32_t, u_int32_t, void *, u_int32_t, u_int32_t, u_int32_t, u_int32_t, u_int32_t, void *, u_int32_t, u_int32_t, u_int32_t, u_int32_t, u_int32_t, void *, u_int32_t, u_int32_t, __dbc_pget_reply *, int *));
+#define	__dbc_put_proc __dbc_put_proc@DB_VERSION_UNIQUE_NAME@
+void __dbc_put_proc __P((long, u_int32_t, u_int32_t, u_int32_t, u_int32_t, void *, u_int32_t, u_int32_t, u_int32_t, u_int32_t, u_int32_t, void *, u_int32_t, u_int32_t, __dbc_put_reply *, int *));
+#define	__dbsrv_settimeout __dbsrv_settimeout@DB_VERSION_UNIQUE_NAME@
+void __dbsrv_settimeout __P((ct_entry *, u_int32_t));
+#define	__dbsrv_timeout __dbsrv_timeout@DB_VERSION_UNIQUE_NAME@
+void __dbsrv_timeout __P((int));
+#define	__dbclear_ctp __dbclear_ctp@DB_VERSION_UNIQUE_NAME@
+void __dbclear_ctp __P((ct_entry *));
+#define	__dbdel_ctp __dbdel_ctp@DB_VERSION_UNIQUE_NAME@
+void __dbdel_ctp __P((ct_entry *));
+#define	new_ct_ent new_ct_ent@DB_VERSION_UNIQUE_NAME@
+ct_entry *new_ct_ent __P((int *));
+#define	get_tableent get_tableent@DB_VERSION_UNIQUE_NAME@
+ct_entry *get_tableent __P((long));
+#define	__dbsrv_sharedb __dbsrv_sharedb@DB_VERSION_UNIQUE_NAME@
+ct_entry *__dbsrv_sharedb __P((ct_entry *, const char *, const char *, DBTYPE, u_int32_t));
+#define	__dbsrv_shareenv __dbsrv_shareenv@DB_VERSION_UNIQUE_NAME@
+ct_entry *__dbsrv_shareenv __P((ct_entry *, home_entry *, u_int32_t));
+#define	__dbsrv_active __dbsrv_active@DB_VERSION_UNIQUE_NAME@
+void __dbsrv_active __P((ct_entry *));
+#define	__db_close_int __db_close_int@DB_VERSION_UNIQUE_NAME@
+int __db_close_int __P((long, DB_TXN *, u_int32_t));
+#define	__dbc_close_int __dbc_close_int@DB_VERSION_UNIQUE_NAME@
+int __dbc_close_int __P((ct_entry *));
+#define	__dbenv_close_int __dbenv_close_int@DB_VERSION_UNIQUE_NAME@
+int __dbenv_close_int __P((long, u_int32_t, int));
+#define	get_home get_home@DB_VERSION_UNIQUE_NAME@
+home_entry *get_home __P((char *));
+__env_cachesize_reply *__db_env_cachesize_4001  __P((__env_cachesize_msg *));
+__env_close_reply *__db_env_close_4001 __P((__env_close_msg *));
+__env_create_reply *__db_env_create_4001 __P((__env_create_msg *));
+__env_flags_reply *__db_env_flags_4001 __P((__env_flags_msg *));
+__env_open_reply *__db_env_open_4001 __P((__env_open_msg *));
+__env_remove_reply *__db_env_remove_4001 __P((__env_remove_msg *));
+__txn_abort_reply *__db_txn_abort_4001 __P((__txn_abort_msg *));
+__txn_begin_reply *__db_txn_begin_4001 __P((__txn_begin_msg *));
+__txn_commit_reply *__db_txn_commit_4001 __P((__txn_commit_msg *));
+__txn_discard_reply *__db_txn_discard_4001  __P((__txn_discard_msg *));
+__txn_prepare_reply *__db_txn_prepare_4001  __P((__txn_prepare_msg *));
+__txn_recover_reply *__db_txn_recover_4001  __P((__txn_recover_msg *));
+__db_associate_reply *__db_db_associate_4001  __P((__db_associate_msg *));
+__db_bt_maxkey_reply *__db_db_bt_maxkey_4001  __P((__db_bt_maxkey_msg *));
+__db_bt_minkey_reply *__db_db_bt_minkey_4001  __P((__db_bt_minkey_msg *));
+__db_close_reply *__db_db_close_4001 __P((__db_close_msg *));
+__db_create_reply *__db_db_create_4001 __P((__db_create_msg *));
+__db_del_reply *__db_db_del_4001 __P((__db_del_msg *));
+__db_extentsize_reply *__db_db_extentsize_4001  __P((__db_extentsize_msg *));
+__db_flags_reply *__db_db_flags_4001 __P((__db_flags_msg *));
+__db_get_reply *__db_db_get_4001 __P((__db_get_msg *));
+__db_h_ffactor_reply *__db_db_h_ffactor_4001  __P((__db_h_ffactor_msg *));
+__db_h_nelem_reply *__db_db_h_nelem_4001 __P((__db_h_nelem_msg *));
+__db_key_range_reply *__db_db_key_range_4001  __P((__db_key_range_msg *));
+__db_lorder_reply *__db_db_lorder_4001 __P((__db_lorder_msg *));
+__db_open_reply *__db_db_open_4001 __P((__db_open_msg *));
+__db_pagesize_reply *__db_db_pagesize_4001  __P((__db_pagesize_msg *));
+__db_pget_reply *__db_db_pget_4001 __P((__db_pget_msg *));
+__db_put_reply *__db_db_put_4001 __P((__db_put_msg *));
+__db_re_delim_reply *__db_db_re_delim_4001  __P((__db_re_delim_msg *));
+__db_re_len_reply *__db_db_re_len_4001 __P((__db_re_len_msg *));
+__db_re_pad_reply *__db_db_re_pad_4001 __P((__db_re_pad_msg *));
+__db_remove_reply *__db_db_remove_4001 __P((__db_remove_msg *));
+__db_rename_reply *__db_db_rename_4001 __P((__db_rename_msg *));
+__db_stat_reply *__db_db_stat_4001 __P((__db_stat_msg *));
+__db_sync_reply *__db_db_sync_4001 __P((__db_sync_msg *));
+__db_truncate_reply *__db_db_truncate_4001  __P((__db_truncate_msg *));
+__db_cursor_reply *__db_db_cursor_4001 __P((__db_cursor_msg *));
+__db_join_reply *__db_db_join_4001 __P((__db_join_msg *));
+__dbc_close_reply *__db_dbc_close_4001 __P((__dbc_close_msg *));
+__dbc_count_reply *__db_dbc_count_4001 __P((__dbc_count_msg *));
+__dbc_del_reply *__db_dbc_del_4001 __P((__dbc_del_msg *));
+__dbc_dup_reply *__db_dbc_dup_4001 __P((__dbc_dup_msg *));
+__dbc_get_reply *__db_dbc_get_4001 __P((__dbc_get_msg *));
+__dbc_pget_reply *__db_dbc_pget_4001 __P((__dbc_pget_msg *));
+__dbc_put_reply *__db_dbc_put_4001 __P((__dbc_put_msg *));
+#if defined(__cplusplus)
+}
+#endif
+#endif /* _rpc_server_ext_h_ */

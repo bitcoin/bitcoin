@@ -1,0 +1,123 @@
+b_curalloc -c 1000000
+
+b_curwalk -c 100 -d 1000 -Ss -t btree -w 100
+b_curwalk -c 100 -d 1000 -Ss -t hash -w 100
+b_curwalk -c 100 -d 1000 -p -t btree -w 100
+b_curwalk -c 100 -d 1000 -p -t hash -w 100
+b_curwalk -c 100 -d 1000 -pSs -t btree -w 100
+b_curwalk -c 100 -d 1000 -pSs -t hash -w 100
+b_curwalk -c 100 -d 1000 -ps -t btree -w 100
+b_curwalk -c 100 -d 1000 -ps -t hash -w 100
+b_curwalk -c 100 -d 1000 -s -t btree -w 100
+b_curwalk -c 100 -d 1000 -s -t hash -w 100
+b_curwalk -c 100 -d 1000 -t btree -w 100
+b_curwalk -c 100 -d 1000 -t hash -w 100
+b_curwalk -c 10000 -d 10 -s -t btree -w 100
+b_curwalk -c 10000 -d 10 -s -t hash -w 100
+b_curwalk -c 10000 -d 10 -t btree -w 100
+b_curwalk -c 10000 -d 10 -t hash -w 100
+b_curwalk -c 100000 -p -t btree -w 100
+b_curwalk -c 100000 -p -t hash -w 100
+b_curwalk -c 100000 -p -t queue -w 100
+b_curwalk -c 100000 -p -t recno -w 100
+b_curwalk -c 100000 -t btree -w 100
+b_curwalk -c 100000 -t hash -w 100
+b_curwalk -c 100000 -t queue -w 100
+b_curwalk -c 100000 -t recno -w 100
+
+b_del -c 100000 -t btree
+b_del -c 100000 -t hash
+b_del -c 100000 -t queue
+b_del -c 100000 -t recno
+b_del -w -c 100000 -t btree
+b_del -w -c 100000 -t hash
+b_del -w -c 100000 -t queue
+b_del -w -c 100000 -t recno
+
+b_get -c 1000000 -t btree
+b_get -c 1000000 -t hash
+b_get -c 1000000 -t queue
+b_get -c 1000000 -t recno
+
+b_inmem -d 32 -k 8 -o 100000 -P 32768 bulk
+b_inmem -d 32 -k 8 -o 100000 -P 32768 txn-sync
+b_inmem -d 32 -k 8 -o 1000000 -P 32768 read
+b_inmem -d 32 -k 8 -o 1000000 -P 32768 txn-nosync
+b_inmem -d 32 -k 8 -o 1000000 -P 32768 txn-read
+b_inmem -d 32 -k 8 -o 1000000 -P 32768 txn-write
+b_inmem -d 32 -k 8 -o 1000000 -P 32768 txn-write-nosync
+b_inmem -d 32 -k 8 -o 1000000 -P 32768 write
+
+b_load -c 100000 -t hash
+b_load -c 1000000 -t btree
+b_load -c 1000000 -t queue
+b_load -c 1000000 -t recno
+b_load -d -c 1000000 -t btree
+b_load -d -c 1000000 -t hash
+
+b_open -c 10000 -d -t btree
+b_open -c 10000 -d -t hash
+b_open -c 10000 -d -t queue
+b_open -c 10000 -d -t recno
+b_open -c 10000 -f -t btree
+b_open -c 10000 -f -t hash
+b_open -c 10000 -f -t queue
+b_open -c 10000 -f -t recno
+b_open -c 10000 -fd -t btree
+b_open -c 10000 -fd -t hash
+b_open -c 10000 -fd -t recno
+b_open -c 10000 -t btree
+b_open -c 10000 -t hash
+b_open -c 10000 -t queue
+b_open -c 10000 -t recno
+
+b_put -c 100000 -d 204800 -t btree
+b_put -c 100000 -d 204800 -t hash
+b_put -c 100000 -d 204800 -t recno
+b_put -c 1000000 -s 10 -t btree
+b_put -c 1000000 -s 10 -t hash
+b_put -c 1000000 -s 10 -t queue
+b_put -c 1000000 -s 10 -t recno
+b_put -c 1000000 -t btree
+b_put -c 1000000 -t hash
+b_put -c 1000000 -t queue
+b_put -c 1000000 -t recno
+
+b_recover -c 1000000
+
+b_txn -a -c 1000000
+b_txn -c 1000000
+
+b_txn_write -a -c 100000
+b_txn_write -ar -c 100000
+b_txn_write -c 10000
+b_txn_write -r -c 10000
+b_txn_write -rw -c 100000
+b_txn_write -w -c 100000
+
+b_workload -w A -c 100000 -g 10 -d 20 -p 1024 -t btree
+b_workload -w A -c 100000 -g 10 -d 20 -p 1024 -t hash
+b_workload -w A -c 100000 -g 10 -d 20 -p 32768 -t btree
+b_workload -w A -c 100000 -g 10 -d 20 -p 32768 -t hash
+b_workload -w A -c 100000 -g 10 -d 20 -p 4096 -t btree
+b_workload -w A -c 100000 -g 10 -d 20 -p 4096 -t hash
+b_workload -w A -c 100000 -g 10 -d 20 -p 8192 -t btree
+b_workload -w A -c 100000 -g 10 -d 20 -p 8192 -t hash
+b_workload -w A -c 100000 -g 10 -d 256 -p 1024 -t btree
+b_workload -w A -c 100000 -g 10 -d 256 -p 1024 -t hash
+b_workload -w A -c 100000 -o -t btree
+b_workload -w A -c 100000 -o -t hash
+b_workload -w E -c 100000 -g 10 -d 20 -p 1024 -t btree
+b_workload -w E -c 100000 -g 10 -d 20 -p 1024 -t hash
+b_workload -w F -c 100000 -g 10 -d 20 -p 1024 -t btree
+b_workload -w F -c 100000 -g 10 -d 20 -p 1024 -t hash
+b_workload -w G -c 100000 -g 10 -d 20 -p 1024 -t btree
+b_workload -w G -c 100000 -g 10 -d 20 -p 1024 -t hash
+b_workload -w H -c 10000000 -d 20 -p 1024 -t hash
+
+b_latch -c 100000000
+b_latch -c 100000000 -n 1
+b_latch -c 100000000 -n 2
+b_latch -c 100000000 -n 4
+b_latch -c 100000000 -n 8
+b_latch -c 100000000 -n 64

@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB_ENV-&gt;set_errcall()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="env.html" title="Chapter 5.  The DB_ENV Handle" />
+    <link rel="prev" href="envevent_notify.html" title="DB_ENV-&gt;set_event_notify()" />
+    <link rel="next" href="envset_errfile.html" title="DB_ENV-&gt;set_errfile()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB_ENV-&gt;set_errcall()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="envevent_notify.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. 
+                The DB_ENV Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="envset_errfile.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="envset_errcall"></a>DB_ENV-&gt;set_errcall()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+void
+DB_ENV-&gt;set_errcall(DB_ENV *dbenv, void (*db_errcall_fcn)
+    (const DB_ENV *dbenv, const char *errpfx, const char *msg));  </pre>
+      <p>
+        When an error occurs in the Berkeley DB library,
+        <span>
+                a Berkeley DB error
+        </span>
+         
+         or an error return value is returned by the interface.  In some cases,
+         however, the <span class="bold"><strong>errno</strong></span> value may be
+         insufficient to completely describe the cause of the error, especially
+         during initial application debugging.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;set_errcall()</code> and 
+         <a class="xref" href="envset_errcall.html" title="DB_ENV-&gt;set_errcall()">DB_ENV-&gt;set_errcall()</a>  methods
+         are used to enhance the mechanism for reporting error messages to the
+         application. In some cases, when an error occurs, Berkeley DB will
+         call <span class="bold"><strong>db_errcall_fcn</strong></span> with additional
+         error information.  It is up to the <span class="bold"><strong>db_errcall_fcn</strong></span> function to display the error
+         message in an appropriate manner.
+    </p>
+      <p>
+         Setting <span class="bold"><strong>db_errcall_fcn</strong></span> to NULL
+         unconfigures the callback interface.
+    </p>
+      <p>
+         Alternatively, you can use the
+            
+
+         <a class="xref" href="dbset_errfile.html" title="DB-&gt;set_errfile()">DB-&gt;set_errfile()</a>  or
+         <a class="xref" href="envset_errfile.html" title="DB_ENV-&gt;set_errfile()">DB-&gt;set_errfile()</a>
+         methods to display the additional information via a C library <code class="literal">FILE *</code>.
+         
+    </p>
+      <p>
+         This error-logging enhancement does not slow performance or
+         significantly increase application size, and may be run during normal
+         operation as well as during application debugging.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;set_errcall()</code> method configures operations performed
+         using the specified <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  handle, not all
+         operations performed on the underlying database environment.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;set_errcall()</code> method may be called at any time during the
+         life of the application.
+    </p>
+      <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+        <h3 class="title">Note</h3>
+        <p>
+            Berkeley DB is not re-entrant. Callback functions should not attempt to make library
+            calls (for example, to release locks or close open handles). Re-entering Berkeley DB is
+            not guaranteed to work correctly, and the results are undefined.
+        </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1668499"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1667909"></a>db_errcall_fcn</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>db_errcall_fcn</strong></span> parameter is the
+                          application-specified error reporting function.  The function takes
+                          three parameters:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p>
+                 <code class="literal">dbenv</code>
+            </p>
+                <p>
+                 The <span class="bold"><strong>dbenv</strong></span> parameter is the enclosing
+                 database environment.
+            </p>
+              </li>
+              <li>
+                <p>
+                <code class="literal">errpfx</code>
+            </p>
+                <p>
+                 The <span class="bold"><strong>errpfx</strong></span> parameter is the prefix
+                 string (as previously set by 
+                 <a class="xref" href="dbset_errpfx.html" title="DB-&gt;set_errpfx()">DB-&gt;set_errpfx()</a>  or 
+                 <a class="xref" href="envset_errpfx.html" title="DB_ENV-&gt;set_errpfx()">DB_ENV-&gt;set_errpfx()</a>).
+            </p>
+              </li>
+              <li>
+                <p>
+                <code class="literal">msg</code>
+            </p>
+                <p>
+                 The <span class="bold"><strong>msg</strong></span> parameter is the error
+                 message string.
+            </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1668816"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1667960"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="env.html#envlist" title="Database Environments and Related Methods">Database Environments and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="envevent_notify.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="env.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="envset_errfile.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB_ENV-&gt;set_event_notify() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_ENV-&gt;set_errfile()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

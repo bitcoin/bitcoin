@@ -1,0 +1,10 @@
+#!/bin/sh
+
+BDB_DIR="../../build_unix"
+rm -rf ./numismatics
+
+$BDB_DIR/db_sql -i data/all_data_types.sql -o sample.c -v sample_verify.c
+cc -g -I$BDB_DIR -L$BDB_DIR/.libs -o sample sample.c sample_verify.c $BDB_DIR/libdb.a -lpthread
+mkdir numismatics
+LD_LIBRARY_PATH=$BDB_DIR/.libs ./sample
+

@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>db_checkpoint</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="utilities.html" title="Appendix 1.  Berkeley DB Command Line Utilities" />
+    <link rel="prev" href="db_archive.html" title="db_archive" />
+    <link rel="next" href="db_deadlock.html" title="db_deadlock" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">db_checkpoint</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="db_archive.html">Prev</a> </td>
+          <th width="60%" align="center">Appendix 1. 
+                Berkeley DB Command Line Utilities
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="db_deadlock.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="db_checkpoint"></a>db_checkpoint</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">db_checkpoint [-1Vv] [-h home]
+    [-k kbytes] [-L file] [-P password] [-p min]  </pre>
+      <p>
+         The <span class="command"><strong>db_checkpoint</strong></span> utility is a daemon process that monitors the
+         database log, and periodically calls 
+         <a class="xref" href="txncheckpoint.html" title="DbEnv::txn_checkpoint()">DbEnv::txn_checkpoint()</a>
+         to checkpoint it.
+    </p>
+      <p>
+        The options are as follows:
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+              <span class="bold"><strong>-1</strong></span>
+            </p>
+            <p>
+                 Force a single checkpoint of the log (regardless of whether or not
+                 there has been activity since the last checkpoint), and then exit.    
+            </p>
+            <p>
+                 When the <span class="bold"><strong>-1</strong></span> flag is specified, the
+                 <span class="command"><strong>db_checkpoint</strong></span> utility will checkpoint the log even if unable to find
+                 an existing database environment.  This functionality is useful when
+                 upgrading database environments from one version of Berkeley DB to
+                 another.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-h</strong></span>
+            </p>
+            <p>
+                 Specify a home directory for the database environment; by default, the
+                 current working directory is used.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-k</strong></span>
+            </p>
+            <p>
+                 Checkpoint the database at least as often as every <span class="bold"><strong>kbytes</strong></span> of log file are written.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-L</strong></span>
+            </p>
+            <p>
+                 Log the execution of the <span class="command"><strong>db_checkpoint</strong></span> utility to the specified file
+                 in the following format, where <span class="emphasis"><em>###</em></span> is the process
+                 ID, and the date is the time the utility was started.
+             </p>
+            <pre class="programlisting"> db_checkpoint: ### Wed Jun 15 01:23:45 EDT 1995 </pre>
+            <p>    
+                 This file will be removed if the <span class="command"><strong>db_checkpoint</strong></span>
+                 utility exits gracefully.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-P</strong></span>
+            </p>
+            <p>
+                Specify an environment password.  Although Berkeley DB utilities overwrite password
+                strings as soon as possible, be aware there may be a window of vulnerability on
+                systems where unprivileged users can see command-line arguments or where utilities
+                are not able to overwrite the memory containing the command-line arguments.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-p</strong></span>
+            </p>
+            <p>
+                 Checkpoint the database at least every <span class="bold"><strong>min</strong></span> minutes
+                 if there has been any activity since the last checkpoint.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-V</strong></span>
+            </p>
+            <p>
+                 Write the library version number to the standard output, and exit.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-v</strong></span>
+            </p>
+            <p>
+                 Write the time of each checkpoint attempt to the standard output.
+            </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+         At least one of the <span class="bold"><strong>-1</strong></span>, <span class="bold"><strong>-k</strong></span>, and <span class="bold"><strong>-p</strong></span>
+         options must be specified.
+    </p>
+      <p>
+         The <span class="command"><strong>db_checkpoint</strong></span> utility uses a Berkeley DB environment (as described
+         for the <span class="bold"><strong>-h</strong></span> option, the environment
+         variable <span class="bold"><strong>DB_HOME</strong></span>, or because the
+         utility was run in a directory containing a Berkeley DB environment). 
+         In order to avoid environment corruption when using a Berkeley DB
+         environment, <span class="command"><strong>db_checkpoint</strong></span> should always be given the chance to detach
+         from the environment and exit gracefully.  To cause <span class="command"><strong>db_checkpoint</strong></span> to
+         release all environment resources and exit cleanly, send it an
+         interrupt signal (SIGINT).
+    </p>
+      <p>
+         The <span class="command"><strong>db_checkpoint</strong></span> utility does not attempt to create the Berkeley DB
+         shared memory regions if they do not already exist.  The application
+         that creates the region should be started first, and once the region
+         is created, the <span class="command"><strong>db_checkpoint</strong></span> utility should be started.
+    </p>
+      <p>
+         The <span class="command"><strong>db_checkpoint</strong></span> utility exits 0 on success, and &gt;0 if an error
+         occurs.
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1716885"></a>Environment Variables</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1717074"></a>DB_HOME</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If the <span class="bold"><strong>-h</strong></span> option is not specified and
+                          the environment variable DB_HOME is set, it is used as the path of the
+                          database home, as described in the 
+                          <a class="xref" href="envopen.html" title="DbEnv::open()">DbEnv::open()</a> method.
+                     </p>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="db_archive.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="utilities.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="db_deadlock.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">db_archive </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> db_deadlock</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

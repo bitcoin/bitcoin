@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB_MPOOLFILE-&gt;get_priority()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="memp.html" title="Chapter 8.  The DB_MPOOLFILE Handle" />
+    <link rel="prev" href="mempget_pgcookie.html" title="DB_MPOOLFILE-&gt;get_pgcookie()" />
+    <link rel="next" href="mempset_clear_len.html" title="DB_MPOOLFILE-&gt;set_clear_len()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB_MPOOLFILE-&gt;get_priority()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="mempget_pgcookie.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 8. 
+              The  DB_MPOOLFILE Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="mempset_clear_len.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="mempget_priority"></a>DB_MPOOLFILE-&gt;get_priority()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB_MPOOLFILE-&gt;get_priority(DB_MPOOLFILE *mpf, DB_CACHE_PRIORITY *priorityp);  </pre>
+      <p>
+
+         The <code class="methodname">DB_MPOOLFILE-&gt;get_priority()</code> method returns the cache priority for
+         the file referenced by the <a class="link" href="memp.html" title="Chapter 8.  The DB_MPOOLFILE Handle">DB_MPOOLFILE</a>
+         handle.  The priority of a page biases the replacement algorithm to be
+         more or less likely to discard a page when space is needed in the
+         cache. This value is set using the 
+         <a class="xref" href="mempset_priority.html" title="DB_MPOOLFILE-&gt;set_priority()">DB_MPOOLFILE-&gt;set_priority()</a>
+         method.
+    </p>
+      <p>
+         The <code class="methodname">DB_MPOOLFILE-&gt;get_priority()</code> method may be called at any time
+         during the life of the application.
+    </p>
+      <p>
+         The <code class="methodname">DB_MPOOLFILE-&gt;get_priority()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1691575"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1691514"></a>priorityp</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <code class="methodname">DB_MPOOLFILE-&gt;get_priority()</code> method returns a reference to the
+                          cache priority for the file referenced by the 
+                          <a class="link" href="memp.html" title="Chapter 8.  The DB_MPOOLFILE Handle">DB_MPOOLFILE</a>  handle in
+                          <span class="bold"><strong>priorityp</strong></span>.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1691501"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                 <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>, <a class="link" href="memp.html" title="Chapter 8.  The DB_MPOOLFILE Handle">DB_MPOOLFILE</a> 
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1691649"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="memp.html#memplist" title="Memory Pools and Related Methods">Memory Pools and Related Methods</a>, 
+                     <a class="xref" href="mempset_priority.html" title="DB_MPOOLFILE-&gt;set_priority()">DB_MPOOLFILE-&gt;set_priority()</a>
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="mempget_pgcookie.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="memp.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="mempset_clear_len.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB_MPOOLFILE-&gt;get_pgcookie() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_MPOOLFILE-&gt;set_clear_len()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

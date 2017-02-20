@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Removing Log Files</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB Transaction Processing" />
+    <link rel="up" href="filemanagement.html" title="Chapter 5. Managing DB Files" />
+    <link rel="prev" href="hotfailover.html" title="Using Hot Failovers" />
+    <link rel="next" href="logconfig.html" title="Configuring the Logging Subsystem" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Removing Log Files</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="hotfailover.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. Managing DB Files</th>
+          <td width="20%" align="right"> <a accesskey="n" href="logconfig.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="logfileremoval"></a>Removing Log Files</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+            By default DB does not delete log files for you. For this reason,
+            DB's log files will eventually grow to consume an
+            unnecessarily large amount of disk space. To guard against
+            this, you should periodically take administrative action to
+            remove log files that are no longer in use by your application.
+        </p>
+      <p>
+            You can remove a log file if all of the following are true:
+        </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                    the log file is not involved in an active transaction.
+                </p>
+          </li>
+          <li>
+            <p>
+                    a checkpoint has been performed
+                    <span class="emphasis"><em>after</em></span> the log file was
+                    created.
+                </p>
+          </li>
+          <li>
+            <p>
+                    the log file is not the only log file in the
+                    environment.
+                </p>
+          </li>
+          <li>
+            <p>
+                    the log file that you want to remove has already been
+                    included in an offline or hot backup.
+                    Failure to observe this last condition can cause your 
+                    backups to be unusable.
+                </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+            DB provides several mechanisms to remove log files that
+            meet all but the last criteria (DB has no way to know which
+            log files have already been included in a backup). The
+            following mechanisms make it easy to remove unneeded log files,
+            but can result in an unusable backup if the log files are not first 
+            saved to your archive location. All of the following
+            mechanisms automatically delete unneeded log files for you:
+        </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                    Run the <span class="command"><strong>db_archive</strong></span> command line
+                    utility with the <code class="literal">-d</code> option. 
+                </p>
+          </li>
+          <li>
+            <p>
+                    From within your application, call the
+                        
+                        <span>
+                            <code class="methodname">Environment.removeOldLogFiles()</code>
+                            method.
+                        </span>
+                </p>
+          </li>
+          <li>
+            <p>
+                      
+                        <span>
+                            Specify <code class="literal">true</code> to the
+                            <code class="methodname">EnvironmentConfig.setLogAutoRemove()</code>
+                            method. Note that setting this property affects
+                            all environment handles opened against the
+                            environment; not just the handle used to set
+                            the property.
+                        </span>
+                </p>
+            <p>
+                    Note that unlike the other log removal mechanisms
+                    identified here, this method actually causes log files
+                    to be removed on an on-going basis as they become
+                    unnecessary. This is extremely desirable behavior if
+                    what you want is to use the absolute minimum amount of
+                    disk space possible for your application. This
+                    mechanism <span class="emphasis"><em>will</em></span> leave you with
+                    the log files that are required to run normal recovery.
+                    However, it is highly likely that this mechanism will
+                    prevent you from running catastrophic recovery.
+                </p>
+            <p>
+                    Do NOT use this mechanism if you want to be able to
+                    perform catastrophic recovery, or if you want to be
+                    able to maintain a hot backup.
+                </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+            In order to safely remove log files and still be able to
+            perform catastrophic recovery, use the
+            <span class="command"><strong>db_archive</strong></span> command line utility as follows:
+        </p>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <p>
+                    Run either a normal or hot backup as described in
+                    <a class="xref" href="backuprestore.html" title="Backup Procedures">Backup Procedures</a>. Make
+                    sure that all of this data is safely stored to your
+                    backup media before continuing.
+                </p>
+          </li>
+          <li>
+            <p>
+                    If you have not already done so, perform a checkpoint.
+                    See <a class="xref" href="filemanagement.html#checkpoints" title="Checkpoints">Checkpoints</a>
+                    for more information.
+                </p>
+          </li>
+          <li>
+            <p>
+                    If you are maintaining a hot backup, perform the hot
+                    backup procedure as described in
+                    <a class="xref" href="hotfailover.html" title="Using Hot Failovers">Using Hot Failovers</a>.
+                </p>
+          </li>
+          <li>
+            <p>
+                    Run the <span class="command"><strong>db_archive</strong></span> command line
+                    utility with the <code class="literal">-d</code> option against
+                    your production environment. 
+                </p>
+          </li>
+          <li>
+            <p>
+                    Run the <span class="command"><strong>db_archive</strong></span> command line
+                    utility with the <code class="literal">-d</code> option against
+                    your failover environment, if you are maintaining one.
+                </p>
+          </li>
+        </ol>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="hotfailover.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="filemanagement.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="logconfig.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Using Hot Failovers </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Configuring the Logging Subsystem</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

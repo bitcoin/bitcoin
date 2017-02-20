@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>HP-UX</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="build_unix.html" title="Chapter 27.  Building Berkeley DB for UNIX/POSIX" />
+    <link rel="prev" href="build_unix_freebsd.html" title="FreeBSD" />
+    <link rel="next" href="build_unix_irix.html" title="IRIX" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">HP-UX</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="build_unix_freebsd.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 27. 
+        Building Berkeley DB for UNIX/POSIX
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="build_unix_irix.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="build_unix_hpux"></a>HP-UX</h2>
+          </div>
+        </div>
+      </div>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <span class="bold">
+              <strong>I can't specify the <a href="../api_reference/C/envopen.html#envopen_DB_SYSTEM_MEM" class="olink">DB_SYSTEM_MEM</a> flag to <a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a>.</strong>
+            </span>
+            <p>The <code class="literal">shmget</code>(2) interfaces are not always used on HP-UX, even
+though they exist, because anonymous memory allocated using <code class="literal">shmget</code>(2)
+cannot be used to store the standard HP-UX msemaphore semaphores.  For
+this reason, it may not be possible to specify the <a href="../api_reference/C/envopen.html#envopen_DB_SYSTEM_MEM" class="olink">DB_SYSTEM_MEM</a>
+flag on some versions of HP-UX.  (We have seen this problem only on HP-UX
+10.XX, so the simplest workaround may be to upgrade your HP-UX release.)</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>I can't specify both the <a href="../api_reference/C/envopen.html#open_DB_PRIVATE" class="olink">DB_PRIVATE</a> and <a href="../api_reference/C/dbopen.html#open_DB_THREAD" class="olink">DB_THREAD</a> 
+flags to <a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a>.</strong>
+            </span>
+            <p>It is not possible to store the standard HP-UX msemaphore semaphores in
+memory returned by <code class="literal">malloc</code>(3) in some versions of HP-UX.  For
+this reason, it may not be possible to specify both the
+<a href="../api_reference/C/envopen.html#open_DB_PRIVATE" class="olink">DB_PRIVATE</a> and <a href="../api_reference/C/dbopen.html#open_DB_THREAD" class="olink">DB_THREAD</a> flags on some versions of
+HP-UX.  (We have seen this problem only on some older HP-UX platforms, so the simplest
+workaround may be to upgrade your HP-UX release.)</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>I can't compile and run multithreaded applications.</strong>
+            </span>
+            <p>Special compile-time flags are required when compiling threaded
+applications on HP-UX.  If you are compiling a threaded application, you
+must compile with the _REENTRANT flag:</p>
+            <pre class="programlisting">cc -D_REENTRANT ...</pre>
+            <p>The Berkeley DB library will automatically build with the correct options.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>An ENOMEM error is returned from <a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a> or <a href="../api_reference/C/envremove.html" class="olink">DB_ENV-&gt;remove()</a>.</strong>
+            </span>
+            <p>Due to the constraints of the PA-RISC memory architecture, HP-UX does not
+allow a process to map a file into its address space multiple times.
+For this reason, each Berkeley DB environment may be opened only once by a
+process on HP-UX; that is, calls to <a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a> will fail if the
+specified Berkeley DB environment has been opened and not subsequently closed.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>When compiling with gcc, I see the following error:
+<pre class="programlisting">#error "Large Files (ILP32) not supported in strict ANSI mode."</pre></strong>
+            </span>
+            <p>We believe this is an error in the HP-UX include files, but we don't
+really understand it.  The only workaround we have found is to add
+-D__STDC_EXT__ to the C preprocessor defines as part of compilation.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>When using the Tcl or Perl APIs (including running the test
+suite), I see the error "Can't shl_load() a library containing Thread
+Local Storage".</strong>
+            </span>
+            <p>This problem happens when HP-UX has been configured to use pthread mutex
+locking, and an attempt is made to call Berkeley DB using the Tcl or Perl APIs.
+We have never found any way to fix this problem as part of the Berkeley DB
+build process.  To work around the problem, rebuild tclsh or Perl, and
+modify its build process to explicitly link it against the HP-UX pthread
+library (currently /usr/lib/libpthread.a).</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>When running an executable that has been dynamically linked
+against the Berkeley DB library, I see the error "Can't find path for shared
+library" even though I correctly set the SHLIB_PATH environment variable.</strong>
+            </span>
+            <p>By default, some versions of HP-UX ignore the dynamic library search
+path specified by the SHLIB_PATH environment variable.  To work around
+this, specify the "+s" flag to ld when linking, or run the following
+command on the executable that is not working:</p>
+            <pre class="programlisting">chatr +s enable -l /full/path/to/libdb-3.2.sl ...</pre>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>When building for an IA64 processor, I see
+either bus errors or compiler warnings about converting between unaligned
+types (#4232). How can I resolve them?</strong>
+            </span>
+            <p>Berkeley DB requires that data types containing members with different 
+sizes be aligned in a consistent way. The HP-UX compiler does not provide 
+this alignment property by default.</p>
+            <p>The compiler can be made to generate adequately aligned data by passing
+the +u1 option to the compiler. See the HP documentation about the 
+<a class="ulink" href="http://docs.hp.com/en/10946/options.htm#opt+u" target="_top">+u1 flag</a>
+for more information.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>I see errors about "open64" when building Berkeley DB applications.</strong>
+            </span>
+            <p>System include files (most commonly fcntl.h) in some releases of AIX,
+HP-UX and Solaris redefine "open" when large-file support is enabled for
+applications.  This causes problems when compiling applications because
+"open" is a method in the Berkeley DB APIs.  To work around this problem:
+</p>
+            <div class="orderedlist">
+              <ol type="a">
+                <li>Avoid including the problematical system include files in source code
+files which also include Berkeley DB include files and call into the Berkeley DB
+API.</li>
+                <li>Before building Berkeley DB, modify the generated include file db.h to itself
+include the problematical system include files.</li>
+                <li>Turn off Berkeley DB large-file support by specifying the
+<a class="link" href="build_unix_conf.html#build_unix_conf.--disable-largefile">--disable-largefile</a> configuration option and rebuilding.</li>
+              </ol>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="build_unix_freebsd.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="build_unix.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="build_unix_irix.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">FreeBSD </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> IRIX</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

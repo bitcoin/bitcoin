@@ -1,0 +1,414 @@
+Document file - DO NOT EDIT
+
+<BEGIN> BUILD_PENTIUMgnu_BUILDRULE
+test_micro20.out
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_AR
+ar386
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_ARCHIVE
+$(PRJ_DIR)/PENTIUMgnu/test_micro20.a
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_AS
+cc386
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_CC
+cc386
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_CFLAGS
+-g \
+	-mpentium \
+	-ansi \
+	-nostdinc \
+	-DRW_MULTI_THREAD \
+	-D_REENTRANT \
+	-fvolatile \
+	-nostdlib \
+	-fno-builtin \
+	-fno-defer-pop \
+	-I$(PRJ_DIR)/.. \
+	-I$(PRJ_DIR)/../.. \
+	-I$(WIND_BASE)/target/h \
+	-DCPU=PENTIUM
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_CFLAGS_AS
+-g \
+	-mpentium \
+	-ansi \
+	-nostdinc \
+	-fvolatile \
+	-nostdlib \
+	-fno-builtin \
+	-fno-defer-pop \
+	-P \
+	-x \
+	assembler-with-cpp \
+	-I$(WIND_BASE)/target/h \
+	-DCPU=PENTIUM
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_CPP
+cc386 -E -P -xc
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_LD
+ld386
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_LDDEPS
+
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_LDFLAGS
+-X -N
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_LD_PARTIAL_FLAGS
+-X -r
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_NM
+nm386 -g
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_OPTION_DEFINE_MACRO
+-D
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_OPTION_INCLUDE_DIR
+-I
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_POST_BUILD_RULE
+
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_PRJ_LIBS
+
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_SIZE
+size386
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_RO_DEPEND_PATH
+{$(WIND_BASE)/target/h/} \
+	{$(WIND_BASE)/target/src/} \
+	{$(WIND_BASE)/target/config/}
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_TC
+::tc_PENTIUMgnu
+<END>
+
+<BEGIN> BUILD_RULE_archive
+
+<END>
+
+<BEGIN> BUILD_RULE_test_micro20.out
+
+<END>
+
+<BEGIN> BUILD_RULE_objects
+
+<END>
+
+<BEGIN> BUILD__CURRENT
+PENTIUMgnu
+<END>
+
+<BEGIN> BUILD__LIST
+PENTIUMgnu
+<END>
+
+<BEGIN> CORE_INFO_TYPE
+::prj_vxApp
+<END>
+
+<BEGIN> CORE_INFO_VERSION
+2.0
+<END>
+<BEGIN> FILE_$(PRJ_DIR)/../../common/util_arg.c_dependDone
+FALSE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../common/util_arg.c_dependencies
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../common/util_arg.c_objects
+util_arg.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../common/util_arg.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_curalloc.c_dependDone
+FALSE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_curalloc.c_dependencies
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_curalloc.c_objects
+b_curalloc.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_curalloc.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_curwalk.c_dependDone
+FALSE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_curwalk.c_dependencies
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_curwalk.c_objects
+b_curwalk.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_curwalk.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_del.c_dependDone
+FALSE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_del.c_dependencies
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_del.c_objects
+b_del.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_del.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_get.c_dependDone
+FALSE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_get.c_dependencies
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_get.c_objects
+b_get.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_get.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_inmem.c_dependDone
+FALSE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_inmem.c_dependencies
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_inmem.c_objects
+b_inmem.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_inmem.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_latch.c_dependDone
+FALSE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_latch.c_dependencies
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_latch.c_objects
+b_latch.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_latch.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_load.c_dependDone
+FALSE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_load.c_dependencies
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_load.c_objects
+b_load.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_load.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_open.c_dependDone
+FALSE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_open.c_dependencies
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_open.c_objects
+b_open.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_open.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_put.c_dependDone
+FALSE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_put.c_dependencies
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_put.c_objects
+b_put.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_put.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_recover.c_dependDone
+FALSE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_recover.c_dependencies
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_recover.c_objects
+b_recover.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_recover.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_txn.c_dependDone
+FALSE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_txn.c_dependencies
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_txn.c_objects
+b_txn.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_txn.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_txn_write.c_dependDone
+FALSE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_txn_write.c_dependencies
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_txn_write.c_objects
+b_txn_write.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_txn_write.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_uname.c_dependDone
+FALSE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_uname.c_dependencies
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_uname.c_objects
+b_uname.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_uname.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_util.c_dependDone
+FALSE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_util.c_dependencies
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_util.c_objects
+b_util.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_util.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_workload.c_dependDone
+FALSE
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_workload.c_dependencies
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_workload.c_objects
+b_workload.o
+<END>
+
+<BEGIN> FILE_$(PRJ_DIR)/../../test_micro/source/b_workload.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> FILE_test_micro.c_dependDone
+FALSE
+<END>
+
+<BEGIN> FILE_test_micro.c_dependencies
+<END>
+
+<BEGIN> FILE_test_micro.c_objects
+test_micro.o
+<END>
+
+<BEGIN> FILE_test_micro.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> PROJECT_FILES
+$(PRJ_DIR)/../../common/util_arg.c \
+$(PRJ_DIR)/../../test_micro/source/b_curalloc.c \
+$(PRJ_DIR)/../../test_micro/source/b_curwalk.c \
+$(PRJ_DIR)/../../test_micro/source/b_del.c \
+$(PRJ_DIR)/../../test_micro/source/b_get.c \
+$(PRJ_DIR)/../../test_micro/source/b_inmem.c \
+$(PRJ_DIR)/../../test_micro/source/b_latch.c \
+$(PRJ_DIR)/../../test_micro/source/b_load.c \
+$(PRJ_DIR)/../../test_micro/source/b_open.c \
+$(PRJ_DIR)/../../test_micro/source/b_put.c \
+$(PRJ_DIR)/../../test_micro/source/b_recover.c \
+$(PRJ_DIR)/../../test_micro/source/b_txn.c \
+$(PRJ_DIR)/../../test_micro/source/b_txn_write.c \
+$(PRJ_DIR)/../../test_micro/source/b_uname.c \
+$(PRJ_DIR)/../../test_micro/source/b_util.c \
+$(PRJ_DIR)/../../test_micro/source/b_workload.c \
+$(PRJ_DIR)/test_micro.c
+<END>
+
+<BEGIN> userComments
+test_micro
+<END>

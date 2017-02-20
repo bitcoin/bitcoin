@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Replacing Records Using Cursors</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="Cursors.html" title="Chapter 4. Using Cursors" />
+    <link rel="prev" href="DeleteEntryWCursor.html" title="Deleting Records Using Cursors" />
+    <link rel="next" href="CoreCursorUsage.html" title="Cursor Example" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Replacing Records Using Cursors</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="DeleteEntryWCursor.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 4. Using Cursors</th>
+          <td width="20%" align="right"> <a accesskey="n" href="CoreCursorUsage.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="ReplacingEntryWCursor"></a>Replacing Records Using Cursors</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+        You replace the data for a database record by using
+        
+
+        
+
+        <span>
+            <code class="methodname">DBC-&gt;put()</code>
+            
+            with the <code class="literal">DB_CURRENT</code> flag.
+        </span>
+            
+    </p>
+      <a id="c_cursor9"></a>
+      <pre class="programlisting">#include &lt;db.h&gt;
+#include &lt;string.h&gt;
+
+...
+
+DB *dbp;
+DBC *cursorp;
+DBT key, data;
+char *key1str = "My first string";
+char *replacement_data = "replace me";
+int ret;
+
+/* Initialize our DBTs. */
+memset(&amp;key, 0, sizeof(DBT));
+memset(&amp;data, 0, sizeof(DBT));
+
+/* Set up our DBTs */
+key.data = key1str;
+key.size = strlen(key1str) + 1;
+
+/* Database open omitted */
+
+/* Get the cursor */
+dbp-&gt;cursor(dbp, NULL, &amp;cursorp, 0);
+
+/* Position the cursor */
+ret = cursorp-&gt;get(cursorp, &amp;key, &amp;data, DB_SET);
+if (ret == 0) {
+    data.data = replacement_data;
+    data.size = strlen(replacement_data) + 1;
+    cursorp-&gt;put(cursorp, &amp;key, &amp;data, DB_CURRENT);
+}
+
+/* Cursors must be closed */
+if (cursorp != NULL) 
+    cursorp-&gt;close(cursorp); 
+
+if (dbp != NULL)
+    dbp-&gt;close(dbp, 0);</pre>
+      <p>
+        Note that you cannot change a record's key using this method; the key
+        parameter is always ignored when you replace a record.
+    </p>
+      <p>
+        When replacing the data portion of a record, if you are replacing a
+        record that is a member of a sorted duplicates set, then the replacement
+        will be successful only if the new record sorts identically to the old
+        record. This means that if you are replacing a record that is a member
+        of a sorted duplicates set, and if you are using the default
+        lexicographic sort, then the replacement will fail due to violating the
+        sort order. However, if you
+        provide a custom sort routine that, for example, sorts based on just a
+        few bytes out of the data item, then potentially you can perform
+        a direct replacement and still not violate the restrictions described
+        here.
+    </p>
+      <p>
+            <span>Under these circumstances, if</span>
+            
+        you want to replace the data contained by a duplicate record, 
+            <span>
+                and you are not using a custom sort routine, then
+            </span>
+        delete the record and create a new record with the desired key and data.
+    </p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="DeleteEntryWCursor.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="Cursors.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="CoreCursorUsage.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Deleting Records Using Cursors </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Cursor Example</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

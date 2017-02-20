@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Db::put()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="db.html" title="Chapter 2.  The Db Handle" />
+    <link rel="prev" href="dbopen.html" title="Db::open()" />
+    <link rel="next" href="dbremove.html" title="Db::remove()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Db::put()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbopen.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+                The Db Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbremove.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dbput"></a>Db::put()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+ 
+int
+Db::put(DbTxn *txnid, Dbt *key, Dbt *data, u_int32_t flags);</pre>
+      <p>
+         The <code class="methodname">Db::put()</code> method stores key/data pairs in the database.  The
+         default behavior of the <code class="methodname">Db::put()</code> function is to enter the new
+         key/data pair, replacing any previously existing key if duplicates are
+         disallowed, or adding a duplicate data item if duplicates are allowed.
+          If the database supports duplicates, the <code class="methodname">Db::put()</code> method adds the
+         new data value at the end of the duplicate set.  If the database
+         supports sorted duplicates, the new data value is inserted at the
+         correct sorted location.
+    </p>
+      <p>
+         Unless otherwise specified, the <code class="methodname">Db::put()</code> <span>
+            
+            <span>
+                method either returns a non-zero error value or throws an
+                exception that encapsulates a non-zero error value on
+                failure, and returns 0 on success.
+            </span>
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1640671"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1640979"></a>flags</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>flags</strong></span> parameter must be set to 0
+                          or one of the following values:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="dbput_DB_APPEND"></a>
+                  <code class="literal">DB_APPEND</code>
+            </p>
+                <p>
+                 Append the key/data pair to the end of the database.  For the
+                 DB_APPEND flag to be specified, the underlying database must be a
+                 Queue or Recno database.  The record number allocated to the record is
+                 returned in the specified <span class="bold"><strong>key</strong></span>.
+            </p>
+                <p>
+                 There is a minor behavioral difference between the Recno
+                 and Queue access methods for the DB_APPEND flag.  If a
+                 transaction enclosing a
+                 <code class="methodname">Db::put()</code> operation with the
+                 DB_APPEND flag aborts, the record number may be
+                 reallocated in a subsequent <code class="literal">DB_APPEND</code>
+                 operation if you are using the Recno access method, but it
+                 will not be reallocated if you are using the Queue access
+                 method.
+            </p>
+              </li>
+              <li>
+                <p><a id="put_DB_NODUPDATA"></a>
+                  <code class="literal">DB_NODUPDATA</code>
+            </p>
+                <p>
+                 In the case of the Btree and Hash access methods, enter the new
+                 key/data pair only if it does not already appear in the database.
+            </p>
+                <p>
+                 The DB_NODUPDATA flag may only be specified if the underlying database
+                 has been configured to support sorted duplicates.  The DB_NODUPDATA
+                 flag may not be specified to the Queue or Recno access methods.
+            </p>
+                <p>
+                 The <code class="methodname">Db::put()</code> method will return 
+                 <a class="xref" href="dbcput.html#dbcput_DB_KEYEXIST" title="DB_KEYEXIST">DB_KEYEXIST</a>
+                 if DB_NODUPDATA is set and the key/data pair already appears in the
+                 database.
+            </p>
+              </li>
+              <li>
+                <p><a id="put_DB_NOOVERWRITE"></a>
+                  <code class="literal">DB_NOOVERWRITE</code>
+            </p>
+                <p>
+                 Enter the new key/data pair only if the key does not already appear in
+                 the database.  The <code class="methodname">Db::put()</code> method call with the DB_NOOVERWRITE flag
+                 set will fail if the key already exists in the database, even if the
+                 database supports duplicates.
+            </p>
+                <p>
+                 The <code class="methodname">Db::put()</code> method will return 
+                 <a class="xref" href="dbcput.html#dbcput_DB_KEYEXIST" title="DB_KEYEXIST">DB_KEYEXIST</a>  
+                 if DB_NOOVERWRITE is set and the key already appears in the database.
+            </p>
+                <p>
+
+                This enforcement of uniqueness of keys applies only to the primary key.  The
+                behavior of insertions into secondary databases is not affected by the
+                DB_NOOVERWRITE flag.  In particular, the insertion of a record that would result in
+                the creation of a duplicate key in a secondary database that allows duplicates would
+                not be prevented by the use of this flag.
+            </p>
+              </li>
+              <li>
+                <p><a id="put_DB_MULTIPLE"></a>
+                  <code class="literal">DB_MULTIPLE</code>
+            </p>
+                <p>
+                Put multiple data items using keys from the buffer to which the <span class="bold"><strong>key</strong></span> parameter refers and data values from the buffer to
+                which the <span class="bold"><strong>data</strong></span> parameter refers.
+            </p>
+                <p>
+                To put records in bulk with the btree or hash access methods, construct bulk buffers
+                in the <span class="bold"><strong>key</strong></span> and 
+                <span class="bold"><strong>data</strong></span> <a class="link" href="dbt.html" title="Chapter 4.  The Dbt Handle">Dbt</a> using 
+                <a class="xref" href="dbmultipledatabuilder.html" title="DbMultipleDataBuilder">DbMultipleDataBuilder</a>.  To
+                put records in bulk with the recno or queue access methods, construct bulk buffers
+                in the <span class="bold"><strong>data</strong></span> <a class="link" href="dbt.html" title="Chapter 4.  The Dbt Handle">Dbt</a>
+                as before, but construct the <span class="bold"><strong>key</strong></span> 
+                <a class="link" href="dbt.html" title="Chapter 4.  The Dbt Handle">Dbt</a> using 
+                <a class="xref" href="dbmultiplerecnodatabuilder.html" title="DbMultipleRecnoDataBuilder">DbMultipleRecnoDataBuilder</a> 
+                with a data size of zero.
+            </p>
+                <p>
+                A successful bulk operation is logically equivalent to a loop through each key/data
+                pair, performing a <a class="xref" href="dbput.html" title="Db::put()">Db::put()</a> for each one.
+            </p>
+                <p>
+                See <a class="xref" href="dbt.html#dbtlist" title="DBT and Bulk Operations">DBT and Bulk Operations</a> for more information on
+                working with bulk updates.
+            </p>
+                <p>
+                The <code class="literal">DB_MULTIPLE</code> flag may only be used alone, or with the
+                <code class="literal">DB_OVERWRITE_DUP</code> option.
+            </p>
+              </li>
+              <li>
+                <p><a id="put_DB_MULTIPLE_KEY"></a>
+                  <code class="literal">DB_MULTIPLE_KEY</code>
+            </p>
+                <p>
+                Put multiple data items using keys and data from the buffer to which the 
+                <span class="bold"><strong>key</strong></span> parameter refers.
+            </p>
+                <p>
+                To put records in bulk with the btree or hash access methods, construct a bulk
+                buffer in the <span class="bold"><strong>key</strong></span> 
+                <a class="link" href="dbt.html" title="Chapter 4.  The Dbt Handle">Dbt</a> using 
+                <a class="xref" href="dbmultiplekeydatabuilder.html" title="DbMultipleKeyDataBuilder">DbMultipleKeyDataBuilder</a>.  
+                To put records in bulk with the recno or queue access methods, construct a bulk
+                buffer in the <span class="bold"><strong>key</strong></span> 
+                <a class="link" href="dbt.html" title="Chapter 4.  The Dbt Handle">Dbt</a> using 
+                <a class="xref" href="dbmultiplerecnodatabuilder.html" title="DbMultipleRecnoDataBuilder">DbMultipleRecnoDataBuilder</a>.
+            </p>
+                <p>
+                See <a class="xref" href="dbt.html#dbtlist" title="DBT and Bulk Operations">DBT and Bulk Operations</a> for more information on
+                working with bulk updates.
+            </p>
+                <p>
+                The <code class="literal">DB_MULTIPLE_KEY</code> flag may only be used alone, or with the
+                <code class="literal">DB_OVERWRITE_DUP</code> option.
+            </p>
+              </li>
+              <li>
+                <p><a id="put_DB_OVERWRITE_DUP"></a>
+                     <code class="literal">DB_OVERWRITE_DUP</code>
+                 </p>
+                <p>
+                     Ignore duplicate records when overwriting records in a database configured for
+                     sorted duplicates.
+                 </p>
+                <p>
+                     Normally, if a database is configured for sorted duplicates, an attempt to
+                     put a record that compares identically to a record already existing in the
+                     database will fail. Using this flag causes the put to silently proceed, without
+                     failure.
+                 </p>
+                <p>
+                     This flag is extremely useful when performing bulk puts (using the
+                     <code class="literal">DB_MULTIPLE</code> or <code class="literal">DB_MULTIPLE_KEY</code> flags). 
+                     Depending on the number of records you are writing to the database with a bulk
+                     put, you may not want the operation to fail in the event that a
+                     duplicate record is encountered. Using this flag along with the
+                     <code class="literal">DB_MULTIPLE</code> or <code class="literal">DB_MULTIPLE_KEY</code> flags
+                     allows the bulk put to complete, even if a duplicate record is encountered.
+
+                 </p>
+                <p>
+                     This flag is also useful if you are using a custom comparison function that compares only
+                     part of the data portion of a record. In this case, two records can compare
+                     equally when, in fact, they are not equal. This flag allows the put to
+                     complete, even if your custom comparison routine claims the two records are
+                     equal.
+                 </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1641306"></a>data</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The data <a class="link" href="dbt.html" title="Chapter 4.  The Dbt Handle">Dbt</a>  operated on.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1641050"></a>key</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The key <a class="link" href="dbt.html" title="Chapter 4.  The Dbt Handle">Dbt</a>  operated on.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1641464"></a>txnid</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If the operation is part of an application-specified transaction, the
+                          <span class="bold"><strong>txnid</strong></span> parameter is a transaction
+                          handle returned from <a class="xref" href="txnbegin.html" title="DbEnv::txn_begin()">DbEnv::txn_begin()</a>; if the
+                          operation is part of a Berkeley DB Concurrent Data Store group, the
+                          <span class="bold"><strong>txnid</strong></span> parameter is a handle returned
+                          from <a class="xref" href="envcdsgroup_begin.html" title="DbEnv::cdsgroup_begin()">DbEnv::cdsgroup_begin()</a>;
+                          otherwise NULL. If no transaction handle is specified, but the
+                          operation occurs in a transactional database, the operation will be
+                          implicitly transaction protected.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1641532"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">Db::put()</code> <span>
+            
+            <span>
+                method may fail and throw a <a class="link" href="dbexception.html" title="Chapter 6. The DbException Class">DbException</a> 
+                exception, encapsulating one of the following non-zero errors, or return one
+                of the following non-zero errors:
+            </span>
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1641275"></a>DB_FOREIGN_CONFLICT</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A <a class="link" href="dbassociate_foreign.html" title="Db::associate_foreign()">foreign key constraint violation</a> 
+                has occurred. This can be caused by one of two things:
+            </p>
+          <div class="orderedlist">
+            <ol type="1">
+              <li>
+                <p>
+                            An attempt was made to add a record to a
+                            constrained database, and the key used for that
+                            record does not exist in the foreign key
+                            database.
+                        </p>
+              </li>
+              <li>
+                <p>
+                            <a class="link" href="dbassociate_foreign.html#associate_foreign_DB_FOREIGN_ABORT">DB_FOREIGN_ABORT</a> 
+                            was declared for a foreign key database, and then
+                            subsequently a record was deleted from the
+                            foreign key database without first removing it
+                            from the constrained secondary database.
+                        </p>
+              </li>
+            </ol>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1640951"></a><span>DbDeadlockException or </span>DB_LOCK_DEADLOCK</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A transactional database environment operation was selected to resolve
+                a deadlock.
+            </p>
+          <p>
+                <a class="xref" href="dbdeadlock.html" title="DbDeadlockException">DbDeadlockException</a> is thrown if
+                your Berkeley DB API is configured to throw exceptions.
+                Otherwise, <code class="literal">DB_LOCK_DEADLOCK</code> is returned.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1641727"></a><span>DbLockNotGrantedException or </span>DB_LOCK_NOTGRANTED</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A Berkeley DB Concurrent Data Store database environment configured
+                for lock timeouts was unable to grant a lock in the allowed time.
+            </p>
+          <p>
+                <a class="xref" href="dblocknotgranted.html" title="DbLockNotGrantedException">DbLockNotGrantedException</a> is thrown if
+                your Berkeley DB API is configured to throw exceptions.
+                Otherwise, <code class="literal">DB_LOCK_NOTGRANTED</code> is returned.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1640646"></a><span>DbRepHandleDeadException or</span> DB_REP_HANDLE_DEAD</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                When a client synchronizes with the master, it is possible for committed
+                transactions to be rolled back. This invalidates all  the database and cursor
+                handles opened in the replication environment. Once this occurs, an attempt to use
+                such a handle will 
+                <span>
+                    throw a <a class="xref" href="dbrephandledead.html" title="DbRepHandleDeadException">DbRepHandleDeadException</a> (if
+                    your application is configured to throw exceptions), or 
+                </span>
+                return <code class="literal">DB_REP_HANDLE_DEAD</code>.
+                The application will need to discard the handle and open a new one in order to
+                continue processing.
+            </p>
+        </div>
+        <a id="dbput_DB_REP_LOCKOUT"></a>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1641683"></a><span>DbDeadlockException or </span>DB_REP_LOCKOUT</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                The operation was blocked by client/master synchronization.
+            </p>
+          <p>
+                <a class="xref" href="dbdeadlock.html" title="DbDeadlockException">DbDeadlockException</a> is thrown if
+                your Berkeley DB API is configured to throw exceptions.
+                Otherwise, <code class="literal">DB_REP_LOCKOUT</code> is returned.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1641697"></a>EACCES</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                An attempt was made to modify a read-only database.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1641771"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If a record number of 0 was specified; an attempt was made to add a
+                          record to a fixed-length database that was too large to fit; an
+                          attempt was made to do a partial put; an attempt was made to add a
+                          record to a secondary index; or if an invalid flag value or parameter
+                          was specified.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1641578"></a>ENOSPC</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                A btree exceeded the maximum btree depth (255).
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1641164"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                    <a class="link" href="db.html" title="Chapter 2.  The Db Handle">Db</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1641154"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="db.html#dblist" title="Database and Related Methods">Database and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbopen.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="db.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbremove.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Db::open() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Db::remove()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

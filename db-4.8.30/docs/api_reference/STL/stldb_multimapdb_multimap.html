@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>db_multimap</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ Standard Template Library API Reference" />
+    <link rel="up" href="db_multimap.html" title="Chapter 6.  Db_multimap" />
+    <link rel="prev" href="stldb_multimapupper_bound.html" title="upper_bound" />
+    <link rel="next" href="stldb_multimapdstr_db_multimap.html" title="~db_multimap" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">
+db_multimap
+</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="stldb_multimapupper_bound.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 6. 
+ Db_multimap  </th>
+          <td width="20%" align="right"> <a accesskey="n" href="stldb_multimapdstr_db_multimap.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="stldb_multimapdb_multimap"></a>
+db_multimap
+</h2>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="func_details"></a>
+Function Details</h3>
+            </div>
+          </div>
+        </div>
+        <pre class="programlisting">
+db_multimap(Db *dbp=NULL,
+    DbEnv *envp=NULL)
+ </pre>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage"></div>
+          <p>Constructor. </p>
+          <p>See class detail for handle requirement. </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1554396"></a>
+Parameters</h4>
+              </div>
+            </div>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1554576"></a>
+ dbp </h5>
+                </div>
+              </div>
+            </div>
+            <p>The database handle. </p>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1554757"></a>
+ envp </h5>
+                </div>
+              </div>
+            </div>
+            <p>The database environment handle. </p>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1554433"></a>
+See Also</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+    </p>
+          <p><a class="link" href="db_map.html#stldb_mapdb_map" title="db_map">db_map::db_map(Db*, DbEnv*)</a>
+ <a class="link" href="stldb_vectordb_vector.html" title="db_vector">db_vector::db_vector(Db*, DbEnv*)</a>
+ </p>
+          <p>   </p>
+        </div>
+        <pre class="programlisting">
+db_multimap(Db *dbp, DbEnv *envp, InputIterator first,
+    InputIterator last)
+ </pre>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage"></div>
+          <p>Iteration constructor. </p>
+          <p>Iterates between first and last, setting a copy of each of the sequence of elements as the content of the container object. This function supports auto-commit. See class detail for handle requirement. </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1554633"></a>
+Parameters</h4>
+              </div>
+            </div>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1554710"></a>
+ dbp </h5>
+                </div>
+              </div>
+            </div>
+            <p>The database handle. </p>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1554270"></a>
+ envp </h5>
+                </div>
+              </div>
+            </div>
+            <p>The database environment handle. </p>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1554836"></a>
+ last </h5>
+                </div>
+              </div>
+            </div>
+            <p>The open boundary of the range. </p>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1553801"></a>
+ first </h5>
+                </div>
+              </div>
+            </div>
+            <p>The closed boundary of the range. </p>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1554634"></a>
+See Also</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+    </p>
+          <p><a class="link" href="db_map.html#stldb_mapdb_map" title="db_map">db_map::db_map(Db*, DbEnv*, InputIterator, InputIterator)</a>
+ <a class="link" href="stldb_vectordb_vector.html" title="db_vector">db_vector::db_vector(Db*, DbEnv*)</a>
+ </p>
+          <p>   </p>
+        </div>
+        <pre class="programlisting">
+db_multimap(const self &amp;x)
+ </pre>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage"></div>
+          <p>Copy constructor. </p>
+          <p>Create an database and insert all key/data pairs in x into this container. x's data members are not copied. This function supports auto-commit. </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1553802"></a>
+Parameters</h4>
+              </div>
+            </div>
+          </div>
+          <div class="sect4" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h5 class="title"><a id="id1554915"></a>
+ x </h5>
+                </div>
+              </div>
+            </div>
+            <p>The other container to initialize this container. </p>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1554774"></a>
+See Also</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+    </p>
+          <p><a class="link" href="stldb_containerdb_container.html" title="db_container">db_container(const db_container&amp;)</a>
+ <a class="link" href="db_map.html#stldb_mapdb_map" title="db_map">db_map(const db_map&amp;)</a>
+ </p>
+          <p>   </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1554571"></a>
+Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+  <a class="link" href="db_multimap.html" title="Chapter 6.  Db_multimap">
+  db_multimap</a>
+     </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="stldb_multimapupper_bound.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="db_multimap.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="stldb_multimapdstr_db_multimap.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+upper_bound
+ </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+~db_multimap
+</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

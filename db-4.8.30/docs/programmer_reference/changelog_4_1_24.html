@@ -1,0 +1,599 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Berkeley DB 4.1.24 and 4.1.25 Change Log</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_4_1_toc.html" title="Chapter 38. Upgrading Berkeley DB 4.0 applications to Berkeley DB 4.1" />
+    <link rel="prev" href="upgrade_4_1_disk.html" title="Release 4.1: Upgrade Requirements" />
+    <link rel="next" href="changelog_4_1_25.html" title="Berkeley DB 4.1.25 Change Log" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Berkeley DB 4.1.24 and 4.1.25 Change Log</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_4_1_disk.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 38. Upgrading Berkeley DB 4.0 applications to Berkeley DB 4.1</th>
+          <td width="20%" align="right"> <a accesskey="n" href="changelog_4_1_25.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="changelog_4_1_24"></a>Berkeley DB 4.1.24 and 4.1.25 Change Log</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="changelog_4_1_24.html#id1644629">Database or Log File On-Disk Format Changes:</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="changelog_4_1_24.html#id1644836">Major New Features:</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="changelog_4_1_24.html#id1644904">General Environment Changes:</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="changelog_4_1_24.html#id1644855">General Access Method Changes:</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="changelog_4_1_24.html#id1644784">Btree Access Method Changes:</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="changelog_4_1_24.html#id1644972">Hash Access Method Changes:</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="changelog_4_1_24.html#id1644843">Queue Access Method Changes:</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="changelog_4_1_24.html#id1645145">Recno Access Method Changes:</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="changelog_4_1_24.html#id1644937">C++-specific API Changes:</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="changelog_4_1_24.html#id1645113">Java-specific API Changes:</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="changelog_4_1_24.html#id1645010">Tcl-specific API Changes:</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="changelog_4_1_24.html#id1645118">RPC-specific Client/Server Changes:</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="changelog_4_1_24.html#id1644918">Replication Changes:</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="changelog_4_1_24.html#id1645252">XA Resource Manager Changes:</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="changelog_4_1_24.html#id1644636">Locking Subsystem Changes:</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="changelog_4_1_24.html#id1645257">Logging Subsystem Changes:</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="changelog_4_1_24.html#id1644505">Memory Pool Subsystem Changes:</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="changelog_4_1_24.html#id1645296">Transaction Subsystem Changes:</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="changelog_4_1_24.html#id1645215">Utility Changes:</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="changelog_4_1_24.html#id1645190">Configuration, Documentation, Portability and Build Changes:</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1644629"></a>Database or Log File On-Disk Format Changes:</h3>
+            </div>
+          </div>
+        </div>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>All of the access method database formats changed in the Berkeley
+DB 4.1 release (Btree/Recno: version 8 to version 9, Hash:  version 7
+to version 8, and Queue: version 3 to version 4). <span class="emphasis"><em>The format changes
+are entirely backward-compatible, and no database upgrades are
+needed.</em></span></li>
+          </ol>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1644836"></a>Major New Features:</h3>
+            </div>
+          </div>
+        </div>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>Berkeley DB now includes support for database encryption using the AES encryption standard. [#1797]</li>
+            <li>Berkeley DB now includes support for database page checksums to
+    allow detection of database corruption during I/O. [#1797]</li>
+            <li>The shared memory buffer pool code base was substantially reworked
+    in the 4.1 release to improve concurrent throughput. [#4655]</li>
+          </ol>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1644904"></a>General Environment Changes:</h3>
+            </div>
+          </div>
+        </div>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>Allow applications to specify transaction handles to the
+DB-&gt;open method call, so database creation can be grouped
+with other Berkeley DB calls in a single transaction. [#4257]</li>
+            <li>Add the DB_ENV-&gt;remove and DB_ENV-&gt;rename method calls that support
+    transactional protection of database removal and renaming. [#4257]</li>
+            <li>Add the DB_ENV-&gt;set_flags flags DB_DIRECT_DB and DB_DIRECT_LOG,
+    which disable the system's buffer cache where possible. [#4526]</li>
+            <li>Unlock the pthread mutex if pthread_cond_wait() returns an error. [#4872]</li>
+            <li>Fix a memory leak caused by running recovery. [#4913]</li>
+            <li>Fix a bug in which closing an environment with open database
+    handles could result in application crashes. [#4991]</li>
+            <li>Fix a bug where DB_CONFIG files were ignored if the database
+    environment defaulted to the application's current working directory. [#5265]</li>
+            <li>Fix a bug where transaction abort or commit could fail to destroy
+    the handle. [#5633]</li>
+            <li>Fix a set of bugs where the Berkeley DB API could return DB_RUNRECOVERY
+without panic-ing the database environment itself or calling the application's
+panic-callback function. [#5743]</li>
+            <li>Fix a bug in where DB=&gt;rename and DB-&gt;remove method calls
+    could leak a transaction and its locks. [#5824]</li>
+            <li>Fix a bug where recovery feedback could return values greater than
+    100. [#6193]</li>
+            <li>Fix a bug where a page allocated by a transaction, eventually aborted
+because of application or system failure, could appear twice in the free
+list, if catastrophic recovery was performed.  [#6222]</li>
+            <li>Add a new flag, DB_AUTO_COMMIT, that wraps all database modification
+    operations inside a transaction, to the DB_ENV-&gt;set_flags method. [#6395]</li>
+            <li>Fix a bug where recovery could fail when upgrading between releases.
+    [#6372]</li>
+            <li>Fix a recovery bug where pages that were repeatedly freed and
+    allocated could be lost. [#6479] [#6501]</li>
+            <li>Change DB_CONFIG reading to handle non-&lt;newline&gt; terminated
+    last line. [#6490]</li>
+          </ol>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1644855"></a>General Access Method Changes:</h3>
+            </div>
+          </div>
+        </div>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>Allow applications to specify transaction handles to the DB-&gt;associate method call, so secondary index creation can be grouped with other Berkeley DB calls in a single transaction. [#4185]</li>
+            <li>Add a new flag, DB_AUTO_COMMIT, that wraps single database
+operations inside a transaction.  This flag is supported by the
+DB-&gt;del, DB-&gt;open, DB-&gt;put, DB-&gt;truncate,DB_ENV-&gt;remove,
+and DB_ENV-&gt;rename methods. [#4257]</li>
+            <li>The DB_EXCL DB-&gt;open method flag has been enhanced to
+    work on subdatabases. [#4257]</li>
+            <li>Fix a bug in which a DB-&gt;put(DB_APPEND) could result in leaked
+    memory or a corruption in the returned record number. [#5002]</li>
+            <li>Fix a bug in the database salvage code that could
+    leave pages pinned in the cache. [#5037]</li>
+            <li>Add a flag to the DB-&gt;verify method to output salvaged
+    key/data pairs in printable characters. [#5037]</li>
+            <li>Fix a bug in which DB-&gt;verify() might continue and report extraneous
+    database corruption after a fatal error. [#5131]</li>
+            <li>Fix a bug where calling the DB-&gt;stat method before the DB-&gt;open
+    method could drop core. [#5190]</li>
+            <li>Fix a bug in which a DB-&gt;get, DBcursor-&gt;c_get, or
+DBcursor-&gt;c_pget on a secondary index, in the Concurrent Data Store
+product, could result in a deadlock. [#5192]</li>
+            <li>Fix a bug in which DB-&gt;verify() could correctly report errors but
+    still return success. [#5297]</li>
+            <li>Add support for the DB-&gt;set_cache_priority interface, that allows
+applications to set the underlying cache priority for their database
+files.  [#5375]</li>
+            <li>Fix a bug where calling DBcursor-&gt;c_pget with a database that is
+    not a secondary index would drop core. [#5391]</li>
+            <li>Fix a bug where a bug in the DB-&gt;truncate method could cause recovery
+    to fail. [#5679]</li>
+            <li>Fix a bug where DB_GET_RECNO would fail if specified to a secondary
+    index. [#5811]</li>
+            <li>Fix a bug where building a secondary index  for an existing primary
+    database could fail in Concurrent Data Store environments. [#5811]</li>
+            <li>Fix a bug where the DB-&gt;rename method could fail, causing a
+    problem during recovery. [#5893]</li>
+            <li>Fix a bug in which a DB-&gt;get or DB-&gt;pget call on a secondary
+index could fail when done with a handle shared among multiple threads.
+[#5899]</li>
+            <li>Fix a bug in which a DB-&gt;put operation on a database with
+off-page duplicates could leak a duplicate cursor, thereby preventing
+transactions being able to commit. [#5936]</li>
+            <li>Fix a bug where overflow page reference counts were not properly
+    maintained when databases were truncated. [#6168]</li>
+            <li>Fix a bug where the bulk get APIs could allocate large amounts of
+    heap memory.  [#6439] [#6520]</li>
+          </ol>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1644784"></a>Btree Access Method Changes:</h3>
+            </div>
+          </div>
+        </div>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>Fix a bug that prevented loads of sorted data, with duplicates at the end of the tree, from creating compact trees.  [#4926]</li>
+            <li>No longer return a copy of the key if the DB_GET_BOTH or DB_GET_BOTH_RANGE flags are specified. [#4470]</li>
+            <li>Fix a bug where the fast-search code could hold an unlocked reference
+    to a page, which could lead to recovery failure.  [#5518]</li>
+            <li>Fix a bug where some cursor operations on a database, for which the
+bt_minkey size had been specified, could fail to use the correct overflow
+key/data item size. [#6183]</li>
+            <li>Fix a bug where the recovery of an aborted transaction that did a
+    reverse Btree split might leave a page in an inconsistent state. [#6393]</li>
+          </ol>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1644972"></a>Hash Access Method Changes:</h3>
+            </div>
+          </div>
+        </div>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>Fix bugs that could cause hash recovery to drop core. [#4978]</li>
+            <li>Use access method flags instead of interface flags to check for read-only access to a hash database with an application-specified hash function. [#5121]</li>
+            <li>Fix a bug where a hash database allocation of a new set of buckets may be improperly recovered by catastrophic recovery if the transaction is split across log files and the beginning segment of the transaction is not included in the set of logs to be recovered. [#5942]</li>
+            <li>Fix a bug where aborting particular hash allocations could lead to a database on which the verifier would loop infinitely. [#5966]</li>
+            <li>Fix a bug where a memory allocation failure could result in a system hang. [#5988]</li>
+            <li>Remove nelem from the Hash access method statistics (the value was incorrect once items had been added or removed from the database). [#6101]</li>
+            <li>Fix a bug where a page allocated by an aborted transaction might not be placed on the free list by recovery, if the file holding the page was created as part of recovery, and a later page was part of a hash bucket allocation. [#6184]</li>
+            <li>Fix a bug where allocated pages could be improperly recovered on systems that require explicit zero-ing of filesystem pages. [#6534]</li>
+          </ol>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1644843"></a>Queue Access Method Changes:</h3>
+            </div>
+          </div>
+        </div>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>No longer return a copy of the key if the DB_SET_RANGE flag is specified. [#4470]</li>
+            <li>Fix a bug where DBcursor-&gt;c_get (with DB_MULTIPLE or DB_MULTIPLE_KEY specified) could fail on a Queue database if the record numbers had wrapped.  [#6397]</li>
+          </ol>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1645145"></a>Recno Access Method Changes:</h3>
+            </div>
+          </div>
+        </div>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>No longer return a copy of the key if the DB_GET_BOTH or DB_GET_BOTH_RANGE flags are specified. [#4470]</li>
+            <li>Fix a bug where non-transactional locking applications could leak locks when modifying Recno databases. [#5766]</li>
+            <li>Fix a bug where DBcursor-&gt;c_get with the DB_GET_RECNO flag would panic the environment if the cursor was uninitialized. [#5935]</li>
+            <li>Fix a bug where deleting pages from a three-level Recno tree could cause the database environment to panic. [#6232]</li>
+          </ol>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1644937"></a>C++-specific API Changes:</h3>
+            </div>
+          </div>
+        </div>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>C++ DbLock::put is replaced by DbEnv::lock_put to match the C and Java API change in Release 4.0. [#5170]</li>
+            <li>Declared destructors and methods within Db and DbEnv classes to be virtual, making subclassing safer. [#5264]</li>
+            <li>Fixed a bug where Dbt objects with no flags set would not be filled with data by some operations. [#5706]</li>
+            <li>Added DbDeadlockException, DbRunRecoveryException, and DbLockNotGrantedException classes to C++, and throw them accordingly.  [#6134]</li>
+            <li>Added C++ methods to support remaining conversions between C++ classes and C structs where appropriate.  In particular, DbTxn/DB_TXN conversions and DbMpoolFile/DB_MPOOLFILE were added. [#6278]</li>
+            <li>Fix a bug in DbEnv::~DbEnv() that could cause memory corruption if a DbEnv was deleted without being closed. [#6342]</li>
+            <li>Reordered C++ class declarations to avoid a GCC g++ warning about function inlining.  [#6406]</li>
+            <li>Fix a bug in the DbEnv destructor that could cause memory corruption when an environment was destroyed without closing first. [#6342]</li>
+            <li>Change DbEnv and Db destructor behavior to close the handle if it was not already closed. [#6342]</li>
+          </ol>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1645113"></a>Java-specific API Changes:</h3>
+            </div>
+          </div>
+        </div>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>Added check for system property "sleepycat.Berkeley DB.libfile" that can be used to specify a complete pathname for the JNI shared library.  This is needed as a workaround on Mac OS X, where libtool cannot currently create a library with a .jnilib extension which is what the current JDK expects by default. [#5664]</li>
+            <li>Fixed handling of JVM out of memory conditions, when some JNI methods return NULL.  When the JVM runs out of memory, calls should consistently fail with OutOfMemoryErrors. [#5995]</li>
+            <li>Added Dbt.get_object and Dbt.set_object convenience routines to the Java API to make using serialization easier. [#6113]</li>
+            <li>Fixed a bug that prevented Java's Db.set_feedback from working, fixed document for Java's Db.set_feedback, some callback methods were misnamed. [#6137]</li>
+            <li>Fix a NullPointerException in Db.finalize() if the database had been closed. [#6504]</li>
+            <li>Marked DbEnv constructor with "throws DbException". [#6342]</li>
+          </ol>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id1645010"></a>Tcl-specific API Changes:</h3></div></div></div>
+
+None.
+</div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1645118"></a>RPC-specific Client/Server Changes:</h3>
+            </div>
+          </div>
+        </div>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>Fix a bug where Db and DbEnv handles were not thread-safe. [#6102]</li>
+          </ol>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1644918"></a>Replication Changes:</h3>
+            </div>
+          </div>
+        </div>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>A large number of replication bugs were fixed in this release.  The replication support is now believed to be production quality.</li>
+            <li>Add the DB_ENV-&gt;set_rep_limit interface, allowing applications to limit the data sent in response to a single DB_ENV-&gt;rep_process_message call. [#5999]</li>
+            <li>Add the DB_ENV-&gt;set_rep_stat interface, returning information from the replication subsystem [#5919]</li>
+          </ol>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1645252"></a>XA Resource Manager Changes:</h3>
+            </div>
+          </div>
+        </div>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>Added support for multithreaded XA.  Environments can now have multiple XA transactions active.  db_env_xa_attach() can be used to get a DB_TXN that corresponds to the XA transaction in the current thread.  [#5049]</li>
+            <li>Added a com.sleepycat.Berkeley DB.xa package that implements J2EE support for XA.  This includes new DbXAResource, DbXid classes that implement the XAResource and Xid interfaces. [#5049]</li>
+            <li>Fix a bug where aborting a prepared transaction after recovery may fail. [#6383]</li>
+            <li>Fix a bug where recovery might fail if a prepared transaction had previously extended the size of a file and then was aborted. [#6387]</li>
+            <li>Fix a bug where if the commit of a prepared transaction fails the transaction would be aborted. [#6389]</li>
+          </ol>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1644636"></a>Locking Subsystem Changes:</h3>
+            </div>
+          </div>
+        </div>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>Fix a bug where lock counts were incorrect if a lock request returned DB_LOCK_NOTGRANTED or an error occurred. [#4923]</li>
+            <li>Fix a bug where lock downgrades were counted as releases, so the lock release statistics could be wrong. [#5762]</li>
+            <li>Fix a bug where the lock and transaction timeout values could not be reset by threads of control joining Berkeley DB database environments. [#5996]</li>
+            <li>Fix a bug where applications using lock and/or transaction timeouts could hit a race condition that would lead to a segmentation fault. [#6061]</li>
+          </ol>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1645257"></a>Logging Subsystem Changes:</h3>
+            </div>
+          </div>
+        </div>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>DB_ENV-&gt;log_register and DB_ENV-&gt;log_unregister have been removed from the interface. [#0046]</li>
+            <li>Fix a bug where creating a database environment with a nonexistent logging directory could drop core. [#5833]</li>
+            <li>Add support allowing applications to change the log file size in existing database environments. [#4875]</li>
+            <li>Fix a bug where a write error on a log record spanning a buffer could cause transaction abort to fail and the database environment to panic.  [#5830]</li>
+          </ol>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1644505"></a>Memory Pool Subsystem Changes:</h3>
+            </div>
+          </div>
+        </div>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>The DB_INCOMPLETE error has been removed, as cache flushing can no longer return without completing. [#4655]</li>
+            <li>Fix a bug where Berkeley DB might refuse to open a file if the open was attempted while another thread was writing a large buffer. [#4885]</li>
+            <li>Prefer clean buffers to dirty buffers when selecting a buffer for eviction. [#4934]</li>
+            <li>Fix a bug where transaction checkpoint might miss flushing a buffer to disk. [#5033]</li>
+            <li>Fix a bug where Berkeley DB applications could run out of file descriptors. [#5535]</li>
+            <li>Fix bugs where Berkeley DB could self-deadlock on systems requiring mutex resource reclamation after application failure.  [#5722] [#6523]</li>
+          </ol>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1645296"></a>Transaction Subsystem Changes:</h3>
+            </div>
+          </div>
+        </div>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>Go back only one checkpoint, not two, when performing normal recovery. [#4284]</li>
+            <li>Fix a bug where an abort of a transaction could fail if there was no disk space for the log. [#5740]</li>
+            <li>Fix a bug where the checkpoint log-sequence-number could reference a nonexistent log record. [#5789]</li>
+            <li>Fix a bug where subtransactions which allocated pages from the filesystem and subsequently aborted could cause other pages allocated by sibling transactions to not be freed if the parent transaction then aborted. [#5903]</li>
+            <li>Fix a bug where transactions doing multiple updates to a queue database which spanned a checkpoint could be improperly handled by recovery. [#5898]</li>
+          </ol>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1645215"></a>Utility Changes:</h3>
+            </div>
+          </div>
+        </div>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>Fix a bug where the -p option could not be specified with the -R or -r options. [#5037]</li>
+            <li>The utilities were modified to correctly size their private caches in order to handle databases with large page sizes. [#5055]</li>
+            <li>Fix a bug in which utilities run with the -N option would fail to ignore the environment's panic flag. [#5082]</li>
+            <li>Fix a bug where invalid log records could cause db_printlog to drop core. [#5173]</li>
+            <li>Add a new option to the db_verify utility to support verification of files that include databases having non-standard sorting or hash functions. [#5237]</li>
+          </ol>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1645190"></a>Configuration, Documentation, Portability and Build Changes:</h3>
+            </div>
+          </div>
+        </div>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>Replace test-and-set mutexes on Windows with a new mutex implementation that signals an event to wake blocked threads. [#4413]</li>
+            <li>Support configuration of POSIX pthread mutexes on systems where the pthread mutexes do not support inter-process locks. [#4942]</li>
+            <li>Add mutex support for the ARM architecture using the gcc compiler. [#5018]</li>
+            <li>On Windows NT/2000/XP, switched to atomic seek-and-read/write operations to improve performance of concurrent reads [#0654].</li>
+            <li>Support cross-compilation using the GNU compiler tool chain. [#4558]</li>
+            <li>Fix a bug where libraries were always installed read-only. [#5096]</li>
+            <li>Fix a bug where temporary files on VxWorks could fail. [#5160]</li>
+            <li>Fix a bug where Berkeley DB did not install correctly if the system cp utility did not support the -f option. [#5111]</li>
+            <li>Correct the documentation for the Queue access method statistics field qs_cur_recno to be the "Next available record number". [#5190]</li>
+            <li>Fix a bug where file rename could fail on Windows/9X. [#5223]</li>
+            <li>Removed support for Microsoft Visual Studio 5.0 [#5231]</li>
+            <li>Switched to using HANDLEs for all I/O operations on Windows to overcome a hard limit of 2048 open file descriptors in Microsoft's C runtime library. [#5249]</li>
+            <li>Fix a bug where Berkeley DB error message routines could drop core on the PowerPC and UltraSPARC architectures. [#5331]</li>
+            <li>Rename OSTREAMCLASS to __DB_OSTREAMCLASS in db_cxx.h to avoid stepping on application name space. [#5402]</li>
+            <li>Support Linux on the S/390 architecture. [#5608]</li>
+            <li>Work around a bug in Solaris where the pthread_cond_wait call could return because a signal was delivered to the application. [#5640]</li>
+            <li>Fix build line for loadable libraries to include -module to support Mac OS X. [#5664]</li>
+            <li>Fix a bug in the PPC mutex support for the Mac OS X system. [#5781]</li>
+            <li>Added support for Java on Mac OS X.  A workaround on the Java command line is currently necessary; it is documented. [#5664]</li>
+            <li>Added support for Tcl on Mac OS X. [#5664]</li>
+            <li>Update Windows build instructions to cover Visual C++ .NET. [#5684]</li>
+            <li>AIX configuration changes for building on AIX 4.3.3 and 5 with both standard and Visual Age compilers. [#5779]</li>
+            <li>Add a new UNIX configuration argument, --with-mutex=MUTEX, to allow applications to select a mutex implementation. [#6040]</li>
+            <li>Changed libtool and configure so we can now correctly build and install Tcl and Java loadable shared libraries that work on Mac OS X.  [#6117]</li>
+            <li>Fix mutex alignment problems on historic HP-UX releases that could make multiprocess applications fail. [#6250]</li>
+            <li>Installed static .a archives on Mac OS X need to be built with the ranlib -c option so linked applications will not see undefined __db_jump errors. [#6215]</li>
+            <li>Upgrade pthread and mmap support in the uClibc library to support Berkeley DB.  [#6268]</li>
+            <li>Fixed error in determining include directories during configuration for --enable-java.  The error can cause compilation errors on certain systems with newer versions of gcc. [#6445]</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_4_1_disk.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_4_1_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="changelog_4_1_25.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 4.1: Upgrade Requirements </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Berkeley DB 4.1.25 Change Log</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

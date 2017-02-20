@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DbEnv::set_thread_count()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="env.html" title="Chapter 5.  The DbEnv Handle" />
+    <link rel="prev" href="envset_shm_key.html" title="DbEnv::set_shm_key()" />
+    <link rel="next" href="envset_thread_id.html" title="DbEnv::set_thread_id()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DbEnv::set_thread_count()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="envset_shm_key.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. 
+                The DbEnv Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="envset_thread_id.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="envset_thread_count"></a>DbEnv::set_thread_count()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+
+int
+DbEnv::set_thread_count(u_int32_t count); </pre>
+      <p>
+         Declare an approximate number of threads in the database environment.
+         The <code class="methodname">DbEnv::set_thread_count()</code> method must be called prior to opening
+         the database environment if the 
+         <a class="xref" href="envfailchk.html" title="DbEnv::failchk()">DbEnv::failchk()</a>  method will
+         be used.  The <code class="methodname">DbEnv::set_thread_count()</code> method does not set the
+         maximum number of threads but is used to determine memory sizing and
+         the thread control block reclamation policy.
+    </p>
+      <p>
+         If a process has not configured an <span class="bold"><strong>is_alive</strong></span> function from the 
+         <a class="xref" href="envset_isalive.html" title="DbEnv::set_isalive()">DbEnv::set_isalive()</a> 
+         method, and then attempts to join a database environment configured
+         for failure checking with the <a class="xref" href="envfailchk.html" title="DbEnv::failchk()">DbEnv::failchk()</a>, 
+         <a class="xref" href="envset_thread_id.html" title="DbEnv::set_thread_id()">DbEnv::set_thread_id()</a>,
+         <a class="xref" href="envset_isalive.html" title="DbEnv::set_isalive()">DbEnv::set_isalive()</a>  and
+         <code class="methodname">DbEnv::set_thread_count()</code> methods, the program may be unable to
+         allocate a thread control block and fail to join the environment.
+         <span class="bold"><strong>This is true of the standalone Berkeley DB
+         utility programs.</strong></span> To avoid problems when using the
+         standalone Berkeley DB utility programs with environments configured
+         for failure checking, incorporate the utility's functionality directly
+         in the application, or call the 
+         <a class="xref" href="envfailchk.html" title="DbEnv::failchk()">DbEnv::failchk()</a>  method
+         before running the utility.
+    </p>
+      <p>
+         The database environment's thread count may also be configured using
+         the environment's <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a> file.  The
+         syntax of the entry in that file is a single line with the string
+         "set_thread_count", one or more whitespace characters, and the thread
+         count. Because the <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a> file is
+         read when the database environment is opened, it will silently
+         overrule configuration done before that time.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::set_thread_count()</code> method configures operations performed
+         using the specified <a class="link" href="env.html" title="Chapter 5.  The DbEnv Handle">DbEnv</a>  handle, not all
+         operations performed on the underlying database environment.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::set_thread_count()</code> method may not be called after the
+         <a class="xref" href="envopen.html" title="DbEnv::open()">DbEnv::open()</a>  method is
+         called.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::set_thread_count()</code> <span>
+            
+            <span>
+                method either returns a non-zero error value or throws an
+                exception that encapsulates a non-zero error value on
+                failure, and returns 0 on success.
+            </span>
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1674565"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1674818"></a>count</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>count</strong></span> parameter is an approximate
+                          thread count for the database environment.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1674967"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DbEnv::set_thread_count()</code> <span>
+            
+            <span>
+                method may fail and throw a <a class="link" href="dbexception.html" title="Chapter 6. The DbException Class">DbException</a> 
+                exception, encapsulating one of the following non-zero errors, or return one
+                of the following non-zero errors:
+            </span>
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1674981"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                If the method was called after <a class="xref" href="envopen.html" title="DbEnv::open()">DbEnv::open()</a> 
+                was called; or if an invalid flag value or parameter was specified.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1674982"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="env.html" title="Chapter 5.  The DbEnv Handle">DbEnv</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1675050"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="env.html#envlist" title="Database Environments and Related Methods">Database Environments and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="envset_shm_key.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="env.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="envset_thread_id.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DbEnv::set_shm_key() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DbEnv::set_thread_id()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

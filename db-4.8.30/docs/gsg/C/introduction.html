@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 1. Introduction to Berkeley DB</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="prev" href="preface.html" title="Preface" />
+    <link rel="next" href="concepts.html" title="Berkeley DB Concepts" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 1. Introduction to Berkeley DB </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="preface.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="concepts.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="introduction"></a>Chapter 1. Introduction to Berkeley DB </h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="introduction.html#aboutthismanual">About This Manual</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="concepts.html">Berkeley DB Concepts</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="accessmethods.html">Access Methods</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="accessmethods.html#selectAM">Selecting Access Methods</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="accessmethods.html#BTreeVSHash">Choosing between BTree and Hash</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="accessmethods.html#QueueVSRecno">Choosing between Queue and Recno</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <span class="sect1">
+              <a href="databaseLimits.html">Database Limits and Portability</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="environments.html">Environments</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="returns.html">Error Returns</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="gettingit.html">Getting and Using DB </a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+    Welcome to Berkeley DB (DB).  DB is a general-purpose embedded
+    database engine that is capable of providing a wealth of data management services.
+    It is designed from the ground up for high-throughput applications requiring
+    in-process, bullet-proof management of mission-critical data. DB can
+    gracefully scale from managing a few bytes to terabytes of data. For the most
+    part, DB is limited only by your system's available physical resources.
+  </p>
+      <p>
+         You use DB through a series of programming APIs which give you the
+          ability to read and write your data, manage your database(s), and
+          perform other more advanced activities such as managing
+          transactions. 
+            
+  </p>
+      <p>
+    Because DB is an embedded database engine, it is extremely fast. You compile
+    and link it into your application in the same way as you would any
+    third-party library. This means that DB runs in the same process space
+    as does your application, allowing you to avoid the high cost of
+    interprocess communications incurred by stand-alone database servers.
+  </p>
+      <p>
+    To further improve performance, DB offers an in-memory cache designed to
+    provide rapid access to your most frequently used data. Once configured,
+    cache usage is transparent. It requires very little attention on the part
+    of the application developer.
+  </p>
+      <p>
+    Beyond raw speed, DB is also extremely configurable. It provides several
+    different ways of organizing your data in its databases. Known as
+    <span class="emphasis"><em>access methods</em></span>, each such data organization mechanism
+    provides different characteristics that are appropriate for different data
+    management profiles. (Note that this manual focuses almost entirely on the
+    BTree access method as this is the access method used by the vast majority
+    of DB applications).
+  </p>
+      <p>
+    To further improve its configurability, DB offers many different
+    subsystems, each of which can be used to extend DB's capabilities. For
+    example, many applications require write-protection of their data so
+    as to ensure that data is never left in an inconsistent state for any
+    reason (such as software bugs or hardware failures). For those
+    applications, a transaction subsystem can be enabled and used to
+    transactional-protect database writes.
+  </p>
+      <p>
+    The list of operating systems on which DB is available is too long to
+    detail here. Suffice to say that it is available on all major commercial
+    operating systems, as well as on many embedded platforms.
+  </p>
+      <p>
+    Finally, DB is available in a wealth of programming languages.
+    DB is officially supported in C, C++, and Java, but the library is also
+    available in many other languages, especially scripting languages such as
+    Perl and Python. 
+  </p>
+      <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+        <h3 class="title">Note</h3>
+        <p>
+        Before going any further, it is important to mention that DB is not
+        a relational database (although you could use it to build a relational 
+        database). Out of the box, DB does not provide higher-level features
+        such as triggers, or a high-level query language such as SQL. 
+        Instead, DB provides just those minimal
+        APIs required to store and retrieve your data as
+        efficiently as possible.
+   </p>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="aboutthismanual"></a>About This Manual</h2>
+            </div>
+          </div>
+        </div>
+        <p>
+        This manual introduces DB. As such, this book does not examine
+        intermediate or advanced features such as threaded library usage or
+        transactional usage. Instead, this manual provides a step-by-step
+        introduction to DB's basic concepts and library usage. 
+    </p>
+        <p>
+        Specifically, this manual introduces DB environments, databases,
+        database records, and storage and retrieval of database records. This
+        book also introduces cursors and their usage, and it describes
+        secondary databases. 
+    </p>
+        <p>
+        For the most part, this manual focuses on the BTree access method. A
+        chapter is given at the end of this manual that describes some of the
+        concepts involving BTree usage, such as duplicate record management and comparison
+        routines.
+    </p>
+        <p>
+        Examples are given throughout this book that are designed to illustrate
+        API usage.  At the end of each 
+        <span>chapter,</span> 
+         
+        a complete example is given that
+        is designed to reinforce the concepts covered in that 
+        <span>chapter.</span> 
+         
+        In addition to being presented in this book, these final programs are also 
+        available in the DB software distribution. You can find them in
+     </p>
+        <pre class="programlisting"><span class="emphasis"><em>DB_INSTALL</em></span>/examples_c/getting_started</pre>
+        <p>
+         where <code class="literal"><span class="emphasis"><em>DB_INSTALL</em></span></code> is the
+         location where you placed your DB distribution.
+     </p>
+        <p> 
+        This book uses the C programming languages for its examples.
+        Note that versions of this book exist for the C++ and Java languages as
+        well.  
+    </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="preface.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="concepts.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Preface </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Berkeley DB Concepts</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

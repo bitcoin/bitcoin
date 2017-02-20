@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB-&gt;set_alloc()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="db.html" title="Chapter 2.  The DB Handle" />
+    <link rel="prev" href="dbrename.html" title="DB-&gt;rename()" />
+    <link rel="next" href="dbset_append_recno.html" title="DB-&gt;set_append_recno()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB-&gt;set_alloc()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbrename.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+                The DB Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbset_append_recno.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dbset_alloc"></a>DB-&gt;set_alloc()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB-&gt;set_alloc(DB *db,
+    void *(*app_malloc)(size_t),
+    void *(*app_realloc)(void *, size_t),
+    void (*app_free)(void *));  </pre>
+      <p>
+         Set the allocation functions used by the 
+         <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  and 
+         <a class="link" href="db.html" title="Chapter 2.  The DB Handle">DB</a>  methods to allocate or free
+         memory owned by the application.
+    </p>
+      <p>
+         There are a number of interfaces in Berkeley DB where memory is
+         allocated by the library and then given to the application.  For
+         example, the <a class="link" href="dbt.html#dbt_DB_DBT_MALLOC">DB_DBT_MALLOC</a> 
+         flag, when specified in the <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a> 
+         object, will cause the <a class="link" href="db.html" title="Chapter 2.  The DB Handle">DB</a>  methods to allocate and
+         reallocate memory which then becomes the responsibility of the calling
+         application.  (See <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a> 
+         for more information.)  Other examples are the Berkeley DB interfaces
+         which return statistical information to the application: 
+         <a class="xref" href="dbstat.html" title="DB-&gt;stat()">DB-&gt;stat()</a>, 
+         <a class="xref" href="lockstat.html" title="DB_ENV-&gt;lock_stat()">DB_ENV-&gt;lock_stat()</a>, 
+         <a class="xref" href="logarchive.html" title="DB_ENV-&gt;log_archive()">DB_ENV-&gt;log_archive()</a>, 
+         <a class="xref" href="logstat.html" title="DB_ENV-&gt;log_stat()">DB_ENV-&gt;log_stat()</a>, 
+         <a class="xref" href="mempstat.html" title="DB_ENV-&gt;memp_stat()">DB_ENV-&gt;memp_stat()</a>, 
+         and <a class="xref" href="txnstat.html" title="DB_ENV-&gt;txn_stat()">DB_ENV-&gt;txn_stat()</a>.  There is
+         one method in Berkeley DB where memory is allocated by the application
+         and then given to the library: <a class="xref" href="dbassociate.html" title="DB-&gt;associate()">DB-&gt;associate()</a>.
+    </p>
+      <p>
+         On systems in which there may be multiple library versions of the
+         standard allocation routines (notably Windows NT), transferring memory
+         between the library and the application will fail because the Berkeley
+         DB library allocates memory from a different heap than the application
+         uses to free it.  To avoid this problem, the 
+         <a class="xref" href="envset_alloc.html" title="DB_ENV-&gt;set_alloc()">DB_ENV-&gt;set_alloc()</a>  and
+         <code class="methodname">DB-&gt;set_alloc()</code> methods can be used to pass Berkeley DB references to
+         the application's allocation routines.
+    </p>
+      <p>
+         It is not an error to specify only one or two of the possible
+         allocation function parameters to these interfaces; however, in that
+         case the specified interfaces must be compatible with the standard
+         library interfaces, as they will be used together.  The functions
+         specified must match the calling conventions of the ANSI C X3.159-1989
+         (ANSI C) library routines of the same name.
+    </p>
+      <p>
+         Because databases opened within Berkeley DB environments use the
+         allocation interfaces specified to the environment, it is an error to
+         attempt to set those interfaces in a database created within an
+         environment.
+    </p>
+      <p>
+             The <code class="methodname">DB-&gt;set_alloc()</code> method may not be called after the 
+             <a class="xref" href="dbopen.html" title="DB-&gt;open()">DB-&gt;open()</a>  method is called.
+    </p>
+      <p>
+         The <code class="methodname">DB-&gt;set_alloc()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1642285"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+            The <code class="methodname">DB-&gt;set_alloc()</code> <span>
+            <span>
+                 method may fail and return one of the following non-zero errors:
+            </span>
+            
+        </span>
+        </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1642418"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                        If called in a database environment, or called after 
+                        <a class="xref" href="dbopen.html" title="DB-&gt;open()">DB-&gt;open()</a>  was called; or if an
+                         invalid flag value or parameter was specified.
+                </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1642429"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="db.html" title="Chapter 2.  The DB Handle">DB</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1642326"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="db.html#dblist" title="Database and Related Methods">Database and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbrename.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="db.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbset_append_recno.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB-&gt;rename() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB-&gt;set_append_recno()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

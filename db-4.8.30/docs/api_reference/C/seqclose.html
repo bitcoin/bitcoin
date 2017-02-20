@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB_SEQUENCE-&gt;close()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="seq.html" title="Chapter 11.  The DB_SEQUENCE Handle" />
+    <link rel="prev" href="seqcreate.html" title="db_sequence_create" />
+    <link rel="next" href="seqget.html" title="DB_SEQUENCE-&gt;get()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB_SEQUENCE-&gt;close()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="seqcreate.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 11. 
+                The DB_SEQUENCE Handle 
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="seqget.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="seqclose"></a>DB_SEQUENCE-&gt;close()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB_SEQUENCE-&gt;close(DB_SEQUENCE *seq, u_int32_t flags);  </pre>
+      <p>
+         The <code class="methodname">DB_SEQUENCE-&gt;close()</code> method closes the sequence handle.  Any
+         unused cached values are lost.
+    </p>
+      <p>
+         The <a class="link" href="seq.html" title="Chapter 11.  The DB_SEQUENCE Handle">DB_SEQUENCE</a>  handle
+         may not be accessed again after <code class="methodname">DB_SEQUENCE-&gt;close()</code> is called,
+         regardless of its return.
+    </p>
+      <p>
+         The <code class="methodname">DB_SEQUENCE-&gt;close()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1704459"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1704667"></a>flags</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>flags</strong></span> parameter is currently
+                          unused, and must be set to 0.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1704460"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DB_SEQUENCE-&gt;close()</code> method <span>
+            <span>
+                 method may fail and return one of the following non-zero errors:
+            </span>
+            
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1704381"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                An invalid flag value or parameter was specified.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1704382"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                 <a class="link" href="seq.html" title="Chapter 11.  The DB_SEQUENCE Handle">DB_SEQUENCE</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1704802"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="seq.html#seqlist" title="Sequences and Related Methods">Sequences and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="seqcreate.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="seq.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="seqget.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">db_sequence_create </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_SEQUENCE-&gt;get()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

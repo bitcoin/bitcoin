@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>db_hotbackup</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="utilities.html" title="Appendix 1.  Berkeley DB Command Line Utilities" />
+    <link rel="prev" href="db_dump.html" title="db_dump" />
+    <link rel="next" href="db_load.html" title="db_load" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">db_hotbackup</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="db_dump.html">Prev</a> </td>
+          <th width="60%" align="center">Appendix 1. 
+                Berkeley DB Command Line Utilities
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="db_load.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="db_hotbackup"></a>db_hotbackup</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">db_hotbackup [-cDuVv] [-d data_dir ...] [-h home] 
+        [-l log_dir] [-P password] -b backup_dir  </pre>
+      <p>
+         The <span class="command"><strong>db_hotbackup</strong></span> utility creates "hot backup" or "hot failover"
+         snapshots of Berkeley DB database environments.
+    </p>
+      <p>
+        The <span class="command"><strong>db_hotbackup</strong></span> utility performs the following steps:
+    </p>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <p>
+                 If the <span class="bold"><strong>-c</strong></span> option is specified,
+                 checkpoint the source home database environment, and remove any
+                 unnecessary log files.     
+            </p>
+          </li>
+          <li>
+            <p>
+                If the target directory for the backup does not exist, it is created
+                with mode read-write-execute for the owner.     
+            </p>
+            <p>
+                 If the target directory for the backup does exist and the <span class="bold"><strong>-u</strong></span> option was specified, all log files in the
+                 target directory are removed; if the <span class="bold"><strong>-u</strong></span> option was not specified, all files in the
+                 target directory are removed.
+            </p>
+          </li>
+          <li>
+            <p>
+                 If the <span class="bold"><strong>-u</strong></span> option was not specified,
+                 copy application-specific files found in the database environment home
+                 directory, and any directories specified using the <span class="bold"><strong>-d</strong></span> option, into the target directory for the
+                 backup.
+            </p>
+          </li>
+          <li>
+            <p>
+                 Copy all log files found in the directory specified by the <span class="bold"><strong>-l</strong></span> option (or in the database environment home
+                 directory, if no <span class="bold"><strong>-l</strong></span> option was
+                 specified), into the target directory for the backup.
+            </p>
+          </li>
+          <li>
+            <p>
+                 Perform catastrophic recovery in the target directory for the backup. 
+            </p>
+          </li>
+          <li>
+            <p>
+                 Remove any unnecessary log files from the target directory for the
+                 backup. 
+            </p>
+          </li>
+        </ol>
+      </div>
+      <p>
+         The <span class="command"><strong>db_hotbackup</strong></span> utility does not resolve pending transactions that
+         are in the prepared state.  Applications that use 
+         <a class="xref" href="txnprepare.html" title="DB_TXN-&gt;prepare()">DB_TXN-&gt;prepare()</a> must specify 
+         <a class="link" href="envopen.html#envopen_DB_RECOVER_FATAL">DB_RECOVER_FATAL</a>
+         when opening the environment, and run 
+         <a class="xref" href="txnrecover.html" title="DB_ENV-&gt;txn_recover()">DB_ENV-&gt;txn_recover()</a> to
+         resolve any pending transactions, when failing over to the backup.
+    </p>
+      <p>
+        The options are as follows:
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+              <span class="bold"><strong>-b</strong></span>
+            </p>
+            <p>
+                Specify the target directory for the backup.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-c</strong></span>
+            </p>
+            <p>
+                 Before performing the backup, checkpoint the source database
+                 environment and remove any log files that are no longer required in
+                 that environment. <span class="bold"><strong>To avoid making catastrophic
+                 recovery impossible, log file removal must be integrated with log file
+                 archival.</strong></span>
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-D</strong></span>
+            </p>
+            <p>
+                 Use the data and log directories listed in a <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a>
+                 configuration file in the source directory.  This option has four
+                 effects:     
+            </p>
+            <div class="itemizedlist">
+              <ul type="circle">
+                <li>
+                  <p>
+                         The specified data and log directories will be created relative to the
+                         target directory, with mode read-write-execute owner, if they do not
+                         already exist.
+                    </p>
+                </li>
+                <li>
+                  <p>
+                         In step #3 above, all files in any source data directories specified
+                         in the <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a> file will
+                         be copied to the target data directories.
+                    </p>
+                </li>
+                <li>
+                  <p>
+                         In step #4 above, log files will be copied from any log directory
+                         specified in the <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a> file,
+                         instead of from the default locations.
+                    </p>
+                </li>
+                <li>
+                  <p>
+                         The <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a>
+                         configuration file will be copied from the source directory to the
+                         target directory, and subsequently used for configuration if recovery
+                         is run in the target directory.
+                    </p>
+                </li>
+              </ul>
+            </div>
+            <p>
+                 Care should be taken with the <span class="bold"><strong>-D</strong></span>
+                 option where data and log directories are named relative to the source
+                 directory but are not subdirectories (that is, the name includes the
+                 element "..") Specifically, the constructed target directory names
+                 must be meaningful and distinct from the source directory names,
+                 otherwise running recovery in the target directory might corrupt the
+                 source data files.
+            </p>
+            <p>
+                 <span class="bold"><strong>It is an error to use absolute pathnames for
+                 data or log directories in this mode, as the <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a>
+                 configuration file copied into the target directory would then point
+                 at the source directories and running recovery would corrupt the
+                 source data files.</strong></span>
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-d</strong></span>
+            </p>
+            <p>
+                 Specify one or more directories that contain data files to be copied
+                 to the target directory.     
+            </p>
+            <p>
+                 <span class="bold"><strong>As all database files are copied into a single
+                 target directory, files named the same, stored in different source
+                 directories, would overwrite each other when copied to the target
+                 directory.</strong></span>
+            </p>
+            <p>
+                 Please note the database environment recovery log references database
+                 files as they are named by the application program.  <span class="bold"><strong>If the application uses absolute or relative pathnames to
+                 name database files, (rather than filenames and the 
+                 <a class="xref" href="envset_data_dir.html" title="DB_ENV-&gt;set_data_dir()">DB_ENV-&gt;set_data_dir()</a>
+                 method or the <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a>
+                 configuration file to specify filenames), running recovery in the
+                 target directory may not properly find the copies of the files or
+                 might even find the source files, potentially resulting in
+                 corruption.</strong></span>
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-h</strong></span>
+            </p>
+            <p>
+                 Specify the source directory for the backup. That is, the database
+                 environment home directory.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-l</strong></span>
+            </p>
+            <p>
+                 Specify a source directory that contains log files; if none is
+                 specified, the database environment home directory will be searched
+                 for log files.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-P</strong></span>
+            </p>
+            <p>
+                 Specify an environment password.  Although Berkeley DB utilities
+                 overwrite password strings as soon as possible, be aware there may be
+                 a window of vulnerability on systems where unprivileged users can see
+                 command-line arguments or where utilities are not able to overwrite
+                 the memory containing the command-line arguments.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-u</strong></span>
+            </p>
+            <p>
+                 Update a pre-existing hot backup snapshot by copying in new log files.
+                 If the <span class="bold"><strong>-u</strong></span> option is specified, no
+                 databases will be copied into the target directory.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-V</strong></span>
+            </p>
+            <p>
+                 Write the library version number to the standard output, and exit.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-v</strong></span>
+            </p>
+            <p>
+                Run in verbose mode, listing operations as they are done.
+            </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+         The <span class="command"><strong>db_hotbackup</strong></span> utility uses a Berkeley DB environment (as described
+         for the <span class="bold"><strong>-h</strong></span> option, the environment
+         variable <span class="bold"><strong>DB_HOME</strong></span>, or because the
+         utility was run in a directory containing a Berkeley DB environment). 
+         In order to avoid environment corruption when using a Berkeley DB
+         environment, <span class="command"><strong>db_hotbackup</strong></span> should always be given the chance to detach
+         from the environment and exit gracefully.  To cause <span class="command"><strong>db_hotbackup</strong></span> to
+         release all environment resources and exit cleanly, send it an
+         interrupt signal (SIGINT).
+    </p>
+      <p>
+         The <span class="command"><strong>db_hotbackup</strong></span> utility exits 0 on success, and &gt;0 if an error
+         occurs.
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1713330"></a>Environment Variables</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1713971"></a>DB_HOME</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If the <span class="bold"><strong>-h</strong></span> option is not specified and
+                          the environment variable DB_HOME is set, it is used as the path of the
+                          database home, as described in the
+                          <a class="xref" href="envopen.html" title="DB_ENV-&gt;open()">DB_ENV-&gt;open()</a> method.
+                     </p>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="db_dump.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="utilities.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="db_load.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">db_dump </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> db_load</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

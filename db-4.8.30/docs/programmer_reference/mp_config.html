@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Configuring the memory pool</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="mp.html" title="Chapter 17.  The Memory Pool Subsystem" />
+    <link rel="prev" href="mp.html" title="Chapter 17.  The Memory Pool Subsystem" />
+    <link rel="next" href="txn.html" title="Chapter 18.  The Transaction Subsystem" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Configuring the memory pool</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="mp.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 17. 
+        The Memory Pool Subsystem
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="txn.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="mp_config"></a>Configuring the memory pool</h2>
+          </div>
+        </div>
+      </div>
+      <p>There are two issues to consider when configuring the memory pool.</p>
+      <p>The first issue, the most important tuning parameter for Berkeley DB
+applications, is the size of the memory pool.  There are two ways to
+specify the pool size.  First, calling the <a href="../api_reference/C/envset_cachesize.html" class="olink">DB_ENV-&gt;set_cachesize()</a> method
+specifies the pool size for all of the applications sharing the Berkeley DB
+environment.  Second, the <a href="../api_reference/C/dbset_cachesize.html" class="olink">DB-&gt;set_cachesize()</a> method only specifies a
+pool size for the specific database.  Note: It is meaningless to call
+<a href="../api_reference/C/dbset_cachesize.html" class="olink">DB-&gt;set_cachesize()</a> for a database opened inside of a Berkeley DB
+environment because the environment pool size will override any pool
+size specified for a single database.  For information on tuning the
+Berkeley DB cache size, see 
+<a class="xref" href="general_am_conf.html#am_conf_cachesize" title="Selecting a cache size">Selecting a cache size</a>.</p>
+      <p>The second memory pool configuration issue is the maximum size an
+underlying file can be and still be mapped into the process address
+space (instead of reading the file's pages into the cache).  Mapping
+files into the process address space can result in better performance
+because available virtual memory is often much larger than the local
+cache, and page faults are faster than page copying on many systems.
+However, in the presence of limited virtual memory, it can cause
+resource starvation; and in the presence of large databases, it can
+result in immense process sizes.  In addition, because of the
+requirements of the Berkeley DB transactional implementation, only read-only
+files can be mapped into process memory.</p>
+      <p>To specify that no files are to be mapped into the process address
+space, specify the <a href="../api_reference/C/dbopen.html#open_DB_NOMMAP" class="olink">DB_NOMMAP</a> flag to the
+<a href="../api_reference/C/envset_flags.html" class="olink">DB_ENV-&gt;set_flags()</a> method.  To specify that any individual file should
+not be mapped into the process address space, specify the
+<a href="../api_reference/C/dbopen.html#open_DB_NOMMAP" class="olink">DB_NOMMAP</a> flag to the <a href="../api_reference/C/mempfopen.html" class="olink">DB_MPOOLFILE-&gt;open()</a> interface.  To limit
+the size of files mapped into the process address space, use the
+<a href="../api_reference/C/envset_mp_mmapsize.html" class="olink">DB_ENV-&gt;set_mp_mmapsize()</a> method.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="mp.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="mp.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="txn.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 17. 
+        The Memory Pool Subsystem
+         </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 18. 
+        The Transaction Subsystem
+        </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

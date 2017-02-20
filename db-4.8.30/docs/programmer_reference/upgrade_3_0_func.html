@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 3.0: function arguments</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_3_0_toc.html" title="Chapter 33. Upgrading Berkeley DB 2.X applications to Berkeley DB 3.0" />
+    <link rel="prev" href="upgrade_3_0_envopen.html" title="Release 3.0: environment open/close/unlink" />
+    <link rel="next" href="upgrade_3_0_dbenv.html" title="Release 3.0: the DB_ENV structure" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 3.0: function arguments</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_3_0_envopen.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 33. Upgrading Berkeley DB 2.X applications to Berkeley DB 3.0</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_3_0_dbenv.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_3_0_func"></a>Release 3.0: function arguments</h2>
+          </div>
+        </div>
+      </div>
+      <p>In Berkeley DB 3.0, there are no longer separate structures that represent
+each subsystem (for example, DB_LOCKTAB or DB_TXNMGR), and an overall
+<a href="../api_reference/C/env.html" class="olink">DB_ENV</a> environment structure.  Instead there is only the
+<a href="../api_reference/C/env.html" class="olink">DB_ENV</a> references
+should be passed around by your application instead of passing around
+DB_LOCKTAB or DB_TXNMGR references.</p>
+      <p>Each of the following functions:</p>
+      <pre class="programlisting">lock_detect
+lock_get
+lock_id
+lock_put
+lock_stat
+lock_vec</pre>
+      <p>should have its first argument, a reference to the DB_LOCKTAB structure,
+replaced with a reference to the enclosing <a href="../api_reference/C/env.html" class="olink">DB_ENV</a> structure.  For
+example, the following line of code from a Berkeley DB 2.X application:</p>
+      <pre class="programlisting">DB_LOCKTAB *lt;
+DB_LOCK lock;
+
+ret = lock_put(lt, lock);</pre>
+      <p>should now be written as follows:</p>
+      <pre class="programlisting">DB_ENV *dbenv;
+DB_LOCK *lock;
+
+ret = lock_put(dbenv, lock);</pre>
+      <p>Similarly, all of the functions:</p>
+      <pre class="programlisting">log_archive
+log_compare
+log_file
+log_flush
+log_get
+log_put
+log_register
+log_stat
+log_unregister</pre>
+      <p>should have their DB_LOG argument replaced with a reference to a
+<a href="../api_reference/C/env.html" class="olink">DB_ENV</a> structure, and the functions:</p>
+      <pre class="programlisting">memp_fopen
+memp_register
+memp_stat
+memp_sync
+memp_trickle</pre>
+      <p>should have their DB_MPOOL argument replaced with a reference to a
+<a href="../api_reference/C/env.html" class="olink">DB_ENV</a> structure.</p>
+      <p>You should remove all references to DB_LOCKTAB, DB_LOG, DB_MPOOL, and
+DB_TXNMGR structures from your application, they are no longer useful
+in any way.  In fact, a simple way to identify all of the places that
+need to be upgraded is to remove all such structures and variables
+they declare, and then compile.  You will see a warning message from
+your compiler in each case that needs to be upgraded.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_3_0_envopen.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_3_0_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_3_0_dbenv.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 3.0: environment open/close/unlink </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 3.0: the DB_ENV structure</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

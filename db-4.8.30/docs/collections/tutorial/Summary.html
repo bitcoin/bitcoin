@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 7.  Summary</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Collections Tutorial" />
+    <link rel="up" href="index.html" title="Berkeley DB Collections Tutorial" />
+    <link rel="prev" href="removingredundantvalueclasses.html" title="Removing the Redundant Value Classes" />
+    <link rel="next" href="collectionOverview.html" title="Appendix 1.  API Notes and Details" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 7. 
+        Summary
+    </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="removingredundantvalueclasses.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="collectionOverview.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="Summary"></a>Chapter 7. 
+        Summary
+    </h2>
+          </div>
+        </div>
+      </div>
+      <p>
+    In summary, the DB Java Collections API tutorial has
+    demonstrated how to create different types of bindings, as well as
+    how to use the basic facilities of the DB Java Collections API:
+    the environment, databases, secondary indices, collections, and
+    transactions. The final approach illustrated by the last example
+    program, Serializable Entity, uses tuple keys and serial entity
+    values. Hopefully it is clear that any type of object-to-data
+    binding may be implemented by an application and used along with
+    standard Java collections.
+</p>
+      <p>
+    The following table summarizes the differences between the
+    examples in the tutorial.
+</p>
+      <div class="informaltable">
+        <table border="1" width="80%">
+          <colgroup>
+            <col />
+            <col />
+            <col />
+            <col />
+            <col />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Example</th>
+              <th>Key</th>
+              <th>Value</th>
+              <th>Entity</th>
+              <th>Comments</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <a class="xref" href="BasicProgram.html" title="Chapter 2.  The Basic Program">
+        The Basic Program
+    </a>
+              </td>
+              <td>Serial</td>
+              <td>Serial</td>
+              <td>No</td>
+              <td>The shipment program</td>
+            </tr>
+            <tr>
+              <td>
+                <a class="xref" href="UsingSecondaries.html" title="Chapter 3.  Using Secondary Indices">
+        Using Secondary Indices
+    </a>
+              </td>
+              <td>Serial</td>
+              <td>Serial</td>
+              <td>No</td>
+              <td>Secondary indices</td>
+            </tr>
+            <tr>
+              <td>
+                <a class="xref" href="Entity.html" title="Chapter 4.  Using Entity Classes">
+        Using Entity Classes    
+    </a>
+              </td>
+              <td>Serial</td>
+              <td>Serial</td>
+              <td>Yes</td>
+              <td>Combining the key and value in a single object</td>
+            </tr>
+            <tr>
+              <td>
+                <a class="xref" href="Tuple.html" title="Chapter 5.  Using Tuples">
+        Using Tuples
+    </a>
+              </td>
+              <td>Tuple</td>
+              <td>Serial</td>
+              <td>Yes</td>
+              <td>Compact ordered keys</td>
+            </tr>
+            <tr>
+              <td>
+                <a class="xref" href="SerializableEntity.html" title="Chapter 6.  Using Serializable Entities">
+        Using Serializable Entities
+    </a>
+              </td>
+              <td>Tuple</td>
+              <td>Serial</td>
+              <td>Yes</td>
+              <td>One serializable class for entities and values</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+    Having completed this tutorial, you may want to explore  how other types of
+    bindings can be implemented. The bindings shown in this tutorial
+    are all <span class="emphasis"><em>external bindings</em></span>, meaning that the data classes
+    themselves contain none of the binding implementation. It is also
+    possible to implement <span class="emphasis"><em>internal bindings</em></span>, where the data
+    classes implement the binding.
+</p>
+      <p>
+    Internal bindings are called <span class="emphasis"><em>marshalled bindings</em></span> in the
+    DB Java Collections API, and in this model each data class
+    implements a marshalling interface. A single external binding class
+    that understands the marshalling interface is used to call the
+    internal bindings of each data object, and therefore the overall
+    model and API is unchanged. To learn about marshalled bindings, see
+    the 
+    
+
+    <span class="pdf;html">
+    <code class="literal">marshal</code> and <code class="literal">factory</code> examples that
+    came with your DB distribution (you can find them in 
+    
+    <code class="filename">&lt;INSTALL_DIR&gt;/examples_java/src/com/sleepycat/examples/collections/ship</code>
+    where <code class="literal">&lt;INSTALL_DIR&gt;</code> is the location where you
+    unpacked your DB distribution).
+    </span>
+    
+    These examples continue building on
+    the example programs used in the tutorial. The Marshal program is
+    the next program following the Serializable Entity program, and the
+    Factory program follows the Marshal program. The source code
+    comments in these examples explain their differences.
+</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="removingredundantvalueclasses.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="collectionOverview.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">
+        Removing the Redundant Value Classes
+     </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Appendix 1. 
+        API Notes and Details
+    </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

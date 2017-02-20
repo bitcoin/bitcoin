@@ -1,0 +1,599 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 3. Transaction Basics</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB Transaction Processing" />
+    <link rel="up" href="index.html" title="Getting Started with Berkeley DB Transaction Processing" />
+    <link rel="prev" href="envopen.html" title="Opening a Transactional Environment and Database" />
+    <link rel="next" href="abortresults.html" title="Aborting a Transaction" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 3. Transaction Basics</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="envopen.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="abortresults.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="usingtxns"></a>Chapter 3. Transaction Basics</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="usingtxns.html#commitresults">Committing a Transaction</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="usingtxns.html#nodurabletxn">Non-Durable Transactions</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <span class="sect1">
+              <a href="abortresults.html">Aborting a Transaction</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="autocommit.html">Auto Commit</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="nestedtxn.html">Nested Transactions</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="txncursor.html">Transactional Cursors</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="txnindices.html">Secondary Indices with Transaction Applications</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="maxtxns.html">Configuring the Transaction Subsystem</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+        Once you have enabled transactions for your environment and your databases,
+        you can use them to protect your database operations. You do this by
+        acquiring a transaction handle and then using that handle for any
+        database operation that you want to participate in that transaction.
+     </p>
+      <p>
+        You obtain a transaction handle using the
+        <span><code class="methodname">DB_ENV-&gt;txn_begin()</code> method.</span>
+        
+        
+        
+        
+     </p>
+      <p>
+        Once you have completed all of the operations that you want to include
+        in the transaction, you must commit the transaction using the 
+        <span><code class="methodname">DB_TXN-&gt;commit()</code> method.</span>
+        
+        
+        
+        
+        
+    </p>
+      <p>
+        If, for any reason, you want to abandon the transaction, you abort
+        it using 
+        <span><code class="methodname">DB_TXN-&gt;abort()</code>.</span>
+        
+        
+        
+        
+
+        
+    </p>
+      <p>
+        Any transaction handle that has been committed or aborted can no longer
+        be used by your application.
+    </p>
+      <p>
+        Finally, you must make sure that all transaction handles are either
+        committed or aborted before closing your databases and environment.
+    </p>
+      <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+        <h3 class="title">Note</h3>
+        <p>
+            If you only want to transaction protect a single database write operation, you can use auto commit to 
+            perform the transaction administration. When you use auto commit, you do not need an explicit transaction
+            handle. See <a class="xref" href="autocommit.html" title="Auto Commit">Auto Commit</a> for more information.
+        </p>
+      </div>
+      <p>
+        For example, the following example opens a transactional-enabled environment and
+        database, obtains a transaction handle, and then performs a write
+        operation under its protection. In the event of any failure in the
+        write operation, the transaction is aborted and the database is left in a
+        state as if no operations had ever been attempted in the first place.
+    </p>
+      <pre class="programlisting">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+#include "db.h"
+
+int
+main(void)
+{
+    int ret, ret_c;
+    u_int32_t db_flags, env_flags;
+    DB *dbp;
+    DB_ENV *envp;
+    DBT key, data;
+    DB_TXN *txn;
+    const char *db_home_dir = "/tmp/myEnvironment";
+    const char *file_name = "mydb.db";
+    const char *keystr ="thekey";
+    const char *datastr = "thedata";
+    
+    dbp = NULL;
+    envp = NULL;
+
+    /* Open the environment */
+    ret = db_env_create(&amp;envp, 0);
+    if (ret != 0) {
+        fprintf(stderr, "Error creating environment handle: %s\n",
+            db_strerror(ret));
+        return (EXIT_FAILURE);
+    }
+                                                                                                                                  
+    env_flags = DB_CREATE |    /* Create the environment if it does 
+                                * not already exist. */
+                DB_INIT_TXN  | /* Initialize transactions */
+                DB_INIT_LOCK | /* Initialize locking. */
+                DB_INIT_LOG  | /* Initialize logging */
+                DB_INIT_MPOOL; /* Initialize the in-memory cache. */
+
+    ret = envp-&gt;open(envp, db_home_dir, env_flags, 0);
+    if (ret != 0) {
+        fprintf(stderr, "Error opening environment: %s\n",
+            db_strerror(ret));
+        goto err;
+    }
+
+    /* Initialize the DB handle */
+    ret = db_create(&amp;dbp, envp, 0);
+    if (ret != 0) {
+        envp-&gt;err(envp, ret, "Database creation failed");
+        goto err;
+    }
+
+    db_flags = DB_CREATE | DB_AUTO_COMMIT;
+    /* 
+     * Open the database. Note that we are using auto commit for the open, 
+     * so the database is able to support transactions.
+     */
+    ret = dbp-&gt;open(dbp,        /* Pointer to the database */
+                    NULL,       /* Txn pointer */
+                    file_name,  /* File name */
+                    NULL,       /* Logical db name */
+                    DB_BTREE,   /* Database type (using btree) */
+                    db_flags,   /* Open flags */
+                    0);         /* File mode. Using defaults */
+    if (ret != 0) {
+        envp-&gt;err(envp, ret, "Database '%s' open failed",
+            file_name);
+        goto err;
+    }
+
+    /* Prepare the DBTs */
+    memset(&amp;key, 0, sizeof(DBT));
+    memset(&amp;data, 0, sizeof(DBT));
+
+    key.data = &amp;keystr;
+    key.size = strlen(keystr) + 1;
+    data.data = &amp;datastr;
+    data.size = strlen(datastr) + 1;
+
+    /* Get the txn handle */
+    txn = NULL;
+    ret = envp-&gt;txn_begin(envp, NULL, &amp;txn, 0);
+    if (ret != 0) {
+        envp-&gt;err(envp, ret, "Transaction begin failed.");
+        goto err;
+    }
+
+    /*
+     * Perform the database write. If this fails, abort the transaction.
+     */
+    ret = dbp-&gt;put(dbp, txn, &amp;key, &amp;data, 0);
+    if (ret != 0) {
+        envp-&gt;err(envp, ret, "Database put failed.");
+        txn-&gt;abort(txn);
+        goto err;
+    }
+
+    /* 
+     * Commit the transaction. Note that the transaction handle
+     * can no longer be used.
+     */ 
+    ret = txn-&gt;commit(txn, 0);
+    if (ret != 0) {
+        envp-&gt;err(envp, ret, "Transaction commit failed.");
+        goto err;
+    }
+
+err:
+    /* Close the database */
+    if (dbp != NULL) {
+        ret_c = dbp-&gt;close(dbp, 0);
+        if (ret_c != 0) {
+            envp-&gt;err(envp, ret_c, "Database close failed.");
+            ret = ret_c
+        }
+    }
+
+
+    /* Close the environment */
+    if (envp != NULL) {
+        ret_c = envp-&gt;close(envp, 0);
+        if (ret_c != 0) {
+            fprintf(stderr, "environment close failed: %s\n",
+                db_strerror(ret_c));
+            ret = ret_c;
+        }
+    }
+
+    return (ret == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
+} </pre>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="commitresults"></a>Committing a Transaction</h2>
+            </div>
+          </div>
+        </div>
+        <div class="toc">
+          <dl>
+            <dt>
+              <span class="sect2">
+                <a href="usingtxns.html#nodurabletxn">Non-Durable Transactions</a>
+              </span>
+            </dt>
+          </dl>
+        </div>
+        <p>
+            In order to fully understand what is happening when you commit
+            a transaction, you must first understand a little about what
+            DB is doing with 
+            
+            <span>
+            the logging subsystem. 
+            </span>
+
+            
+
+            Logging causes all database  write operations to be identified in
+
+            <span>logs, and by default these
+            logs are backed by files on disk.  These logs are used to restore your databases 
+            
+            </span>
+
+            
+                    
+            in the event of a system or application failure, so by performing
+            logging, DB ensures the integrity of your data. 
+        </p>
+        <p>
+            Moreover, DB performs <span class="emphasis"><em>write-ahead</em></span>
+            logging. This means that information is written to the logs
+            <span class="emphasis"><em>before</em></span> the actual database 
+            
+            is changed.
+            This means that all write activity performed under the
+            protection of the transaction is noted in the log before
+            the transaction is committed. Be aware, however, that database
+            maintains logs in-memory. If you are backing your logs on
+            disk, the log information will eventually be written to the log
+            files, but while the transaction is on-going the log data may be
+            held only in memory.
+        </p>
+        <p>
+            When you commit a transaction, the following occurs:
+        </p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+                    A commit record is written to the log. This
+                    indicates that the modifications made by the
+                    transaction are now permanent. By default, this write is performed synchronously to disk so the
+                    commit record arrives in the log files before any other actions are taken.
+                </p>
+            </li>
+            <li>
+              <p>
+                    Any log information held in memory is (by default)
+                    synchronously written to disk. Note that this requirement can be
+                    relaxed, depending on the type of commit you perform.
+                    See <a class="xref" href="usingtxns.html#nodurabletxn" title="Non-Durable Transactions">Non-Durable Transactions</a> for
+                    more information. 
+                    <span>Also, if you are
+                    maintaining your logs entirely in-memory, then this
+                    step will of course not be taken. To configure your
+                    logging system for in-memory usage, see
+                    <a class="xref" href="logconfig.html#inmemorylogging" title="Configuring In-Memory Logging">Configuring In-Memory Logging</a>.
+                    </span>
+                </p>
+            </li>
+            <li>
+              <p>
+                    All locks held by the transaction are released. This means
+                    that read operations performed by other transactions or
+                    threads of control can now see the modifications without
+                    resorting to uncommitted reads (see <a class="xref" href="isolation.html#dirtyreads" title="Reading Uncommitted Data">Reading Uncommitted Data</a> for more information).
+                </p>
+            </li>
+          </ul>
+        </div>
+        <p>
+            To commit a transaction, you simply call
+            <span><code class="methodname">DB_TXN-&gt;commit()</code>.</span>
+            
+            
+            
+            
+        </p>
+        <p>
+            Notice that committing a transaction does not necessarily cause data
+            modified in your memory cache to be written to the files
+            backing your databases on disk. Dirtied database pages are written
+            for a number of reasons, but a transactional
+            commit is not one of them. The following are the things that can cause a dirtied
+            database page to be written to the backing database file:
+        </p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+                    Checkpoints.
+                </p>
+              <p>
+                    Checkpoints cause all dirtied pages currently existing
+                    in the cache to be written to disk, and a checkpoint
+                    record is then written to the logs.  You can run checkpoints
+                    explicitly. For more information on checkpoints,
+                    see <a class="xref" href="filemanagement.html#checkpoints" title="Checkpoints">Checkpoints</a>.
+                </p>
+            </li>
+            <li>
+              <p>
+                    Cache is full.
+                </p>
+              <p>
+                    If the in-memory cache fills up, then dirtied pages
+                    might be written to disk in order to free up space for other
+                    pages that your application needs to use. Note that if
+                    dirtied pages are written to the database files, then
+                    any log records that describe how those pages were 
+                    dirtied are written to disk before the database 
+                    pages are written.
+                </p>
+            </li>
+          </ul>
+        </div>
+        <p>
+            Be aware that because your transaction commit caused database
+            
+            modifications recorded in your logs to be forced to disk, your modifications
+            are by default "persistent" in that they can be recovered in the event of
+            an application or system failure. However, recovery time is
+            gated by how much data has been modified since the last
+            checkpoint, so for applications that perform a lot of writes,
+            you may want to run a checkpoint with some frequency.
+        </p>
+        <p>
+                Note that once you have committed a transaction, the transaction
+                handle that you used for the transaction is no longer valid. To
+                perform database activities under the control of a new
+                transaction, you must obtain a fresh transaction handle.
+              </p>
+        <div class="sect2" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title"><a id="nodurabletxn"></a>Non-Durable Transactions</h3>
+              </div>
+            </div>
+          </div>
+          <p>
+                As previously noted, by default transaction commits are
+                durable because they cause the modifications performed
+                under the transaction to be synchronously recorded in 
+                your on-disk log files.  However, it is possible to use 
+                non-durable transactions.
+            </p>
+          <p>
+                You may want non-durable transactions for performance
+                reasons. For example, you might be using transactions
+                simply for the isolation guarantee. 
+                
+                <span>
+                In this case, you might
+                not want a durability guarantee and so you may want to
+                prevent the disk I/O that normally accompanies a
+                transaction commit.
+                </span>
+                
+            </p>
+          <p>
+                There are several ways to remove the durability guarantee
+                for your transactions:
+            </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p>
+                        Specify          
+                            <span>
+                                <code class="literal">DB_TXN_NOSYNC</code> using the
+                                <code class="methodname">DB_ENV-&gt;set_flags()</code>
+                                
+                            method. 
+                            </span>
+                            
+                         This causes DB to not synchronously force any
+                            <span>
+                                log 
+                            </span>
+                         data to disk upon transaction commit. 
+                         
+                         <span>
+                            That is, the modifications are held entirely
+                            in the in-memory cache and the logging
+                            information is not forced to the filesystem for
+                            long-term storage.
+                         </span>
+
+                         Note, however, that the 
+                            <span>
+                                logging 
+                            </span>
+                         data will eventually make it to the filesystem (assuming no
+                         application or OS crashes) as a part of DB's
+                         management of its logging buffers and/or cache.
+                         </p>
+                <p>
+                            This form of a commit provides a weak durability
+                            guarantee because data loss can occur due to
+                            an application 
+                            or OS crash.
+                    </p>
+                <p>
+                        This behavior is specified on a per-environment
+                        handle basis.  In order for your application to exhibit consistent
+                        behavior, you need to specify this 
+                            <span>flag</span>
+                            
+                        for all of the environment handles used in your application.
+                    </p>
+                <p>
+                        You can achieve this behavior on a transaction by transaction basis by
+                            <span>
+                                specifying <code class="literal">DB_TXN_NOSYNC</code> to the
+                                    <code class="methodname">DB_TXN-&gt;commit()</code>
+                                    
+                                    
+                                method.
+                            </span>
+
+                            
+
+                    </p>
+              </li>
+              <li>
+                <p>
+                        Specify
+                        <span>
+                            <code class="literal">DB_TXN_WRITE_NOSYNC</code> using the
+                                <code class="methodname">DB_ENV-&gt;set_flags()</code>
+                                
+                            method. 
+                            </span>
+
+                            
+
+                            This causes 
+                            <span>
+                                logging 
+                            </span>
+                            data to be synchronously
+                            written to the OS's file system buffers upon
+                            transaction commit. The data will eventually be
+                            written to disk, but this occurs when the
+                            operating system chooses to schedule the
+                            activity; the transaction commit can complete
+                            successfully before this disk I/O is performed
+                            by the OS.
+                       </p>
+                <p>
+                                This  form of commit protects you against application
+                                 crashes, but not against OS
+                                crashes.  This method offers less room for the possibility of data loss than does
+                                <span><code class="literal">DB_TXN_NOSYNC</code>.</span>
+                                
+                    </p>
+                <p>
+                        This behavior is specified on a per-environment
+                        handle basis.  In order for your application to exhibit consistent
+                        behavior, you need to specify this 
+                            <span>flag</span>
+                            
+                        for all of the environment handles used in your application.
+                    </p>
+              </li>
+              <li>
+                <p>
+                        Maintain your logs entirely in-memory. In this
+                        case, your logs are never written to disk. The
+                        result is that you lose all durability guarantees.
+                        See 
+                        <a class="xref" href="logconfig.html#inmemorylogging" title="Configuring In-Memory Logging">Configuring In-Memory Logging</a>
+                        for more information.
+                    </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="envopen.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="abortresults.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Opening a Transactional Environment and
+            <span>Database</span>
+            
+            
+         </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Aborting a Transaction</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

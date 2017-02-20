@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB_MPOOLFILE-&gt;set_pgcookie()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="memp.html" title="Chapter 8.  The DB_MPOOLFILE Handle" />
+    <link rel="prev" href="mempset_maxsize.html" title="DB_MPOOLFILE-&gt;set_maxsize()" />
+    <link rel="next" href="mempset_priority.html" title="DB_MPOOLFILE-&gt;set_priority()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB_MPOOLFILE-&gt;set_pgcookie()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="mempset_maxsize.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 8. 
+              The  DB_MPOOLFILE Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="mempset_priority.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="mempset_pgcookie"></a>DB_MPOOLFILE-&gt;set_pgcookie()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB_MPOOLFILE-&gt;set_pgcookie(DB_MPOOLFILE *mpf, DBT *pgcookie);  </pre>
+      <p>
+         The <code class="methodname">DB_MPOOLFILE-&gt;set_pgcookie()</code> method specifies a byte string that
+         is provided to the functions registered to do input or output
+         processing of the file's pages as they are read from or written to,
+         the backing filesystem store.  (See the 
+         <a class="xref" href="mempregister.html" title="DB_ENV-&gt;memp_register()">DB_ENV-&gt;memp_register()</a> 
+         documentation for more information.)
+    </p>
+      <p>
+         The <code class="methodname">DB_MPOOLFILE-&gt;set_pgcookie()</code> method configures a file in the
+         cache, not only operations performed using the specified 
+         <a class="link" href="memp.html" title="Chapter 8.  The DB_MPOOLFILE Handle">DB_MPOOLFILE</a>  handle.
+    </p>
+      <p>
+         The <code class="methodname">DB_MPOOLFILE-&gt;set_pgcookie()</code> method may not be called after the
+         <a class="xref" href="mempfopen.html" title="DB_MPOOLFILE-&gt;open()">DB_MPOOLFILE-&gt;open()</a> 
+         method is called. If the file is already open in the cache when
+         <a class="xref" href="mempfopen.html" title="DB_MPOOLFILE-&gt;open()">DB_MPOOLFILE-&gt;open()</a>  is
+         called, the information specified to <code class="methodname">DB_MPOOLFILE-&gt;set_pgcookie()</code>
+         will replace the existing information.
+    </p>
+      <p>
+         The <code class="methodname">DB_MPOOLFILE-&gt;set_pgcookie()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1692894"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1692794"></a>pgcookie</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>pgcookie</strong></span> parameter is a byte
+                          string provided to the functions registered to do input or output
+                          processing of the file's pages.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1693092"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                 <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>, <a class="link" href="memp.html" title="Chapter 8.  The DB_MPOOLFILE Handle">DB_MPOOLFILE</a> 
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1692902"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="memp.html#memplist" title="Memory Pools and Related Methods">Memory Pools and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="mempset_maxsize.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="memp.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="mempset_priority.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB_MPOOLFILE-&gt;set_maxsize() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_MPOOLFILE-&gt;set_priority()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

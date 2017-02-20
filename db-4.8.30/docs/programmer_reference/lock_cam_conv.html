@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Berkeley DB Concurrent Data Store locking conventions</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="lock.html" title="Chapter 15.  The Locking Subsystem" />
+    <link rel="prev" href="lock_twopl.html" title="Locking with transactions: two-phase locking" />
+    <link rel="next" href="lock_am_conv.html" title="Berkeley DB Transactional Data Store locking conventions" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Berkeley DB Concurrent Data Store locking conventions</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="lock_twopl.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 15. 
+        The Locking Subsystem
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="lock_am_conv.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="lock_cam_conv"></a>Berkeley DB Concurrent Data Store locking conventions</h2>
+          </div>
+        </div>
+      </div>
+      <p>The Berkeley DB Concurrent Data Store product has a simple set of conventions for locking.  It
+provides multiple-reader/single-writer semantics, but not per-page
+locking or transaction recoverability.  As such, it does its locking
+entirely in the Berkeley DB interface layer.</p>
+      <p>The object it locks is the file, identified by its unique file number.
+The locking matrix is not one of the two standard lock modes, instead,
+we use a four-lock set, consisting of the following:</p>
+      <div class="variablelist">
+        <dl>
+          <dt>
+            <span class="term">DB_LOCK_NG</span>
+          </dt>
+          <dd>not granted (always 0)</dd>
+          <dt>
+            <span class="term">DB_LOCK_READ</span>
+          </dt>
+          <dd>read (shared)</dd>
+          <dt>
+            <span class="term">DB_LOCK_WRITE</span>
+          </dt>
+          <dd>write (exclusive)</dd>
+          <dt>
+            <span class="term">DB_LOCK_IWRITE</span>
+          </dt>
+          <dd>intention-to-write (shared with NG and READ, but conflicts with WRITE and IWRITE)</dd>
+        </dl>
+      </div>
+      <p>The IWRITE lock is used for cursors that will be used for updating
+(IWRITE locks are implicitly obtained for write operations through the
+Berkeley DB handles, for example, <a href="../api_reference/C/dbput.html" class="olink">DB-&gt;put()</a> or <a href="../api_reference/C/dbdel.html" class="olink">DB-&gt;del()</a>).  While
+the cursor is reading, the IWRITE lock is held; but as soon as the
+cursor is about to modify the database, the IWRITE is upgraded to a
+WRITE lock.  This upgrade blocks until all readers have exited the
+database.  Because only one IWRITE lock is allowed at any one time, no
+two cursors can ever try to upgrade to a WRITE lock at the same time,
+and therefore deadlocks are prevented, which is essential because Berkeley DB Concurrent Data Store
+does not include deadlock detection and recovery.</p>
+      <p>Applications that need to lock compatibly with Berkeley DB Concurrent Data Store must obey the
+following rules:</p>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>Use only lock modes DB_LOCK_NG, DB_LOCK_READ, DB_LOCK_WRITE,
+DB_LOCK_IWRITE.</li>
+          <li>Never attempt to acquire a WRITE lock on an object that is
+already locked with a READ lock.</li>
+        </ol>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="lock_twopl.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="lock.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="lock_am_conv.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Locking with transactions: two-phase locking </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Berkeley DB Transactional Data Store locking conventions</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

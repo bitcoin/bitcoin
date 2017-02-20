@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>db_verify</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="utilities.html" title="Appendix 1.  Berkeley DB Command Line Utilities" />
+    <link rel="prev" href="db_upgrade.html" title="db_upgrade" />
+    <link rel="next" href="historic.html" title="Appendix 2.  Historic Interfaces" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">db_verify</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="db_upgrade.html">Prev</a> </td>
+          <th width="60%" align="center">Appendix 1. 
+                Berkeley DB Command Line Utilities
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="historic.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="db_verify"></a>db_verify</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">db_verify [-NoqV] [-h home] [-P password] file ...  </pre>
+      <p>
+         The <span class="command"><strong>db_verify</strong></span> utility verifies the structure of one or more files and
+         the databases they contain.
+    </p>
+      <p>
+        The options are as follows:
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+              <span class="bold"><strong>-h</strong></span>
+            </p>
+            <p>
+                 Specify a home directory for the database environment; by default, the
+                 current working directory is used.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-o</strong></span>
+            </p>
+            <p>
+                 Skip the database checks for btree and duplicate sort order and for
+                 hashing.
+             </p>
+            <p>
+                 If the file being verified contains databases with non-default
+                 comparison or hashing configurations, calling the <span class="command"><strong>db_verify</strong></span> utility
+                 without the <span class="bold"><strong>-o</strong></span> flag will usually
+                 return failure.  The <span class="bold"><strong>-o</strong></span> flag causes
+                 <span class="command"><strong>db_verify</strong></span> to ignore database sort or hash ordering and allows
+                 <span class="command"><strong>db_verify</strong></span> to be used on these files. To fully verify these files,
+                 verify them explicitly using the <a class="xref" href="dbverify.html" title="DB-&gt;verify()">DB-&gt;verify()</a>
+                 method, after configuring the correct comparison or hashing functions.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-N</strong></span>
+            </p>
+            <p>
+                 Do not acquire shared region mutexes while running.  Other problems,
+                 such as potentially fatal errors in Berkeley DB, will be ignored as
+                 well. This option is intended only for debugging errors, and should
+                 not be used under any other circumstances.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-P</strong></span>
+            </p>
+            <p>
+                 Specify an environment password.  Although Berkeley DB utilities
+                 overwrite password strings as soon as possible, be aware there may be
+                 a window of vulnerability on systems where unprivileged users can see
+                 command-line arguments or where utilities are not able to overwrite
+                 the memory containing the command-line arguments.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-q</strong></span>
+            </p>
+            <p>
+                 Suppress the printing of any error descriptions, simply exit success
+                 or failure.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-V</strong></span>
+            </p>
+            <p>
+                 Write the library version number to the standard output, and exit.
+            </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+         <span class="bold"><strong>The <span class="command"><strong>db_verify</strong></span> utility does not perform any
+         locking, even in Berkeley DB environments that are configured with a
+         locking subsystem.  As such, it should only be used on files that are
+         not being modified by another thread of control.</strong></span>
+    </p>
+      <p>
+         The <span class="command"><strong>db_verify</strong></span> utility may be used with a Berkeley DB environment (as
+         described for the <span class="bold"><strong>-h</strong></span> option, the
+         environment variable <span class="bold"><strong>DB_HOME</strong></span>, or
+         because the utility was run in a directory containing a Berkeley DB
+         environment).  In order to avoid environment corruption when using a
+         Berkeley DB environment, <span class="command"><strong>db_verify</strong></span> should always be given the chance
+         to detach from the environment and exit gracefully.  To cause
+         <span class="command"><strong>db_verify</strong></span> to release all environment resources and exit cleanly, send
+         it an interrupt signal (SIGINT).
+    </p>
+      <p>
+         The <span class="command"><strong>db_verify</strong></span> utility exits 0 on success, and &gt;0 if an error
+         occurs.
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1716524"></a>Environment Variables</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1717330"></a>DB_HOME</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If the <span class="bold"><strong>-h</strong></span> option is not specified and
+                          the environment variable DB_HOME is set, it is used as the path of the
+                          database home, as described in the
+                          <a class="xref" href="envopen.html" title="DB_ENV-&gt;open()">DB_ENV-&gt;open()</a>
+                          method.
+                     </p>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="db_upgrade.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="utilities.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="historic.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">db_upgrade </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Appendix 2. 
+                Historic Interfaces
+        </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Deleting Secondary Database Records</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="indexes.html" title="Chapter 5. Secondary Databases" />
+    <link rel="prev" href="readSecondary.html" title="Reading Secondary Databases" />
+    <link rel="next" href="secondaryCursor.html" title="Using Cursors with Secondary Databases" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Deleting Secondary Database Records</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="readSecondary.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. Secondary Databases</th>
+          <td width="20%" align="right"> <a accesskey="n" href="secondaryCursor.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="secondaryDelete"></a>Deleting Secondary Database Records</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+        In general, you 
+             
+            <span>will</span> 
+        not modify a secondary database directly. In
+        order to modify a secondary database, you should modify the primary
+        database and simply allow DB to manage the secondary modifications for you.
+    </p>
+      <p>
+        However, as a convenience, you can delete 
+            
+            <span>secondary database</span>
+        records directly. Doing so causes the associated primary key/data pair to be deleted.
+        This in turn causes DB to delete all 
+            
+            <span>secondary database</span>
+        records that reference the primary record.
+    </p>
+      <p>
+        You can use the 
+            
+            <code class="methodname">DB-&gt;del()</code>
+            
+        method to delete a secondary database record. 
+        
+        
+
+        <span>Note that if your
+            <span>secondary database</span> 
+             
+        contains duplicate records, then deleting a record from the set of
+        duplicates causes all of the duplicates to be deleted as well.
+        </span>
+
+    </p>
+      <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+        <h3 class="title">Note</h3>
+        <p>
+      
+      <span>
+        You can delete a secondary database record using the previously
+        described mechanism
+      </span>
+      only if the primary database is opened for write access.
+      </p>
+      </div>
+      <p>For example:</p>
+      <a id="c_index7"></a>
+      <pre class="programlisting">#include &lt;db.h&gt;
+#include &lt;string.h&gt;
+                                                                                                                                     
+...
+                                                                                                                                     
+DB *dbp, *sdbp;    /* Primary and secondary DB handles */
+DBT key;           /* DBTs used for the delete */
+int ret;           /* Function return value */
+char *search_name = "John Doe"; /* Name to delete */
+
+/* Primary */
+ret = db_create(&amp;dbp, NULL, 0);
+if (ret != 0) {
+  /* Error handling goes here */
+}
+                                                                                                                                     
+/* Secondary */
+ret = db_create(&amp;sdbp, NULL, 0);
+if (ret != 0) {
+  /* Error handling goes here */
+}
+
+/* Usually we want to support duplicates for secondary databases */
+ret = sdbp-&gt;set_flags(sdbp, DB_DUPSORT);
+if (ret != 0) {
+  /* Error handling goes here */
+}
+
+/* open the primary database */
+ret = dbp-&gt;open(dbp,        /* DB structure pointer */
+                NULL,       /* Transaction pointer */
+                "my_db.db", /* On-disk file that holds the database.
+                             * Required. */
+                NULL,       /* Optional logical database name */
+                DB_BTREE,   /* Database access method */
+                0,          /* Open flags */
+                0);         /* File mode (using defaults) */
+if (ret != 0) {
+  /* Error handling goes here */
+}
+
+/* open the secondary database */
+ret = sdbp-&gt;open(sdbp,          /* DB structure pointer */
+                 NULL,          /* Transaction pointer */
+                 "my_secdb.db", /* On-disk file that holds the database.
+                                 * Required. */
+                 NULL,          /* Optional logical database name */
+                 DB_BTREE,      /* Database access method */
+                 0,             /* Open flags */
+                 0);            /* File mode (using defaults) */
+if (ret != 0) {
+  /* Error handling goes here */
+}
+
+/* Now associate the secondary to the primary */
+dbp-&gt;associate(dbp,            /* Primary database */
+               NULL,           /* TXN id */
+               sdbp,           /* Secondary database */
+               get_sales_rep,  /* Callback used for key creation. */
+               0);             /* Flags */
+
+/*
+ * Zero out the DBT before using it.
+ */
+memset(&amp;key, 0, sizeof(DBT));
+
+key.data = search_name;
+key.size = strlen(search_name) + 1;
+
+/* Now delete the secondary record. This causes the associated primary
+ * record to be deleted. If any other secondary databases have secondary
+ * records referring to the deleted primary record, then those secondary
+ * records are also deleted.
+ */
+ sdbp-&gt;del(sdbp, NULL, &amp;key, 0); </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="readSecondary.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="indexes.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="secondaryCursor.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Reading Secondary Databases </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+        
+        <span>Using Cursors with Secondary Databases</span>
+    </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

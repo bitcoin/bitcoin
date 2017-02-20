@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Saving a Retrieving Data</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="persist_first.html" title="Chapter 3. Direct Persistence Layer First Steps" />
+    <link rel="prev" href="persistobject.html" title="Persistent Objects" />
+    <link rel="next" href="persist_index.html" title="Chapter 4. Working with Indices" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Saving a Retrieving Data</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="persistobject.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. Direct Persistence Layer First Steps</th>
+          <td width="20%" align="right"> <a accesskey="n" href="persist_index.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="saveret"></a>Saving a Retrieving Data</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+                  All data stored using the DPL has one primary index and
+                  zero or more secondary indices associated with it.
+                  (Sometimes these are referred to as the primary and
+                  secondary <span class="emphasis"><em>keys</em></span>.) So to store data under the DPL, you must:
+          </p>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <p>
+                                  Declare a class to be an entity class.
+                          </p>
+          </li>
+          <li>
+            <p>
+                                  Identify the features on the class which
+                                  represent indexed material.
+                          </p>
+          </li>
+          <li>
+            <p>
+                                  Retrieve the store's primary index for a
+                                  given class using the
+                                  <code class="methodname">EntityStore.getPrimaryIndex()</code>
+                                  method.
+                          </p>
+          </li>
+          <li>
+            <p>
+                                  Put class objects to the store using the
+                                  <code class="methodname">PrimaryIndex.put()</code>
+                                  method.
+                          </p>
+          </li>
+        </ol>
+      </div>
+      <p>
+                  In order to retrieve an object from the store, you use
+                  the index that is most convenient for your purpose. This
+                  may be the primary index, or it may be some other
+                  secondary index that you declared on your entity class.
+          </p>
+      <p>
+                  You obtain a primary index in the same was as when you
+                  put the object to the store: using
+                  <code class="methodname">EntityStore.getPrimaryIndex()</code>.
+                  You can get a secondary index for the store using the
+                  <code class="methodname">EntityStore.getSecondaryIndex()</code>
+                  method. Note that
+                  <code class="methodname">getSecondaryIndex()</code> requires you
+                  to provide a <code class="classname">PrimaryIndex</code> class
+                  instance when you call it, so a class's primary index is
+                  always required when retrieving objects from an entity
+                  store.
+          </p>
+      <p>
+                  Usually all of the activity surrounding saving and
+                  retrieving data is organized within a class or classes
+                  specialized to that purpose. We describe the construction
+                  of these data accessor classes in <a class="xref" href="simpleda.html" title="SimpleDA.class">SimpleDA.class</a>. But before you perform
+                  any entity store activity, you need to understand
+                  indexes. We therefore describe them in the next chapter.
+          </p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="persistobject.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="persist_first.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="persist_index.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Persistent Objects </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 4. Working with Indices</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

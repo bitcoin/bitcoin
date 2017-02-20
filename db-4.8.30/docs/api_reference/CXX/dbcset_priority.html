@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Dbc::set_priority()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="dbc.html" title="Chapter 3.  The Dbc Handle" />
+    <link rel="prev" href="dbcput.html" title="Dbc::put()" />
+    <link rel="next" href="dbt.html" title="Chapter 4.  The Dbt Handle" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Dbc::set_priority()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbcput.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. 
+                The Dbc Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbt.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dbcset_priority"></a>Dbc::set_priority()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+
+int
+Dbc::set_priority(DB_CACHE_PRIORITY priority); </pre>
+      <p>
+            Set the cache priority for pages referenced by the 
+            <a class="link" href="dbc.html" title="Chapter 3.  The Dbc Handle">Dbc</a>  handle.
+    </p>
+      <p>
+         The priority of a page biases the replacement algorithm to be more or
+         less likely to discard a page when space is needed in the buffer pool.
+         The bias is temporary, and pages will eventually be discarded if they
+         are not referenced again.  The <code class="methodname">Dbc::set_priority()</code> method is
+         only advisory, and does not guarantee pages will be treated in a
+         specific way.
+    </p>
+      <p>
+         The <code class="methodname">Dbc::set_priority()</code> method may be called at any time during
+         the life of the application.
+    </p>
+      <p>
+         The <code class="methodname">Dbc::set_priority()</code> <span>
+            
+            <span>
+                method either returns a non-zero error value or throws an
+                exception that encapsulates a non-zero error value on
+                failure, and returns 0 on success.
+            </span>
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1658434"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1658667"></a>priority</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>priority</strong></span> parameter must be set to
+                          one of the following values:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="set_priority_DB_PRIORITY_VERY_LOW"></a>
+                  <code class="literal">DB_PRIORITY_VERY_LOW</code>
+            </p>
+                <p>
+                 The lowest priority: pages are the most likely to be discarded.
+            </p>
+              </li>
+              <li>
+                <p><a id="set_priority_DB_PRIORITY_LOW"></a>
+                  <code class="literal">DB_PRIORITY_LOW</code>
+            </p>
+                <p>
+                The next lowest priority.
+            </p>
+              </li>
+              <li>
+                <p><a id="set_priority_DB_PRIORITY_DEFAULT"></a>
+                  <code class="literal">DB_PRIORITY_DEFAULT</code>
+            </p>
+                <p>
+                The default priority.
+            </p>
+              </li>
+              <li>
+                <p><a id="set_priority_DB_PRIORITY_HIGH"></a>
+                  <code class="literal">DB_PRIORITY_HIGH</code>
+            </p>
+                <p>
+                The next highest priority.
+            </p>
+              </li>
+              <li>
+                <p><a id="set_priority_DB_PRIORITY_VERY_HIGH"></a>
+                  <code class="literal">DB_PRIORITY_VERY_HIGH</code>
+            </p>
+                <p>
+                 The highest priority: pages are the least likely to be discarded.
+            </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1658899"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="dbc.html" title="Chapter 3.  The Dbc Handle">Dbc</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1658658"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="dbc.html#dbclist" title="Database Cursors and Related Methods">Database Cursors and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbcput.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="dbc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbt.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Dbc::put() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 4. 
+                The Dbt Handle
+        </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

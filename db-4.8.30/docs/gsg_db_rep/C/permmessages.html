@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Permanent Message Handling</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Replicated Berkeley DB Applications" />
+    <link rel="up" href="introduction.html" title="Chapter 1. Introduction" />
+    <link rel="prev" href="elections.html" title="Holding Elections" />
+    <link rel="next" href="txnapp.html" title="Chapter 2. Transactional Application" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Permanent Message Handling</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="elections.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 1. Introduction</th>
+          <td width="20%" align="right"> <a accesskey="n" href="txnapp.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="permmessages"></a>Permanent Message Handling</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="permmessages.html#permmessagenot">When Not to Manage
+                            Permanent Messages</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="permmessages.html#permmanage">Managing Permanent Messages</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="permmessages.html#permimplement">Implementing Permanent
+                    Message Handling</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+                Messages received by a replica may be marked with 
+                special flag that indicates the message is permanent. 
+                Custom replicated applications will receive notification of
+                this flag via the <code class="literal">DB_REP_ISPERM</code> return value
+                from the 
+                    <code class="methodname">DB_ENV-&gt;rep_process_message()</code>
+                    
+                method.
+                
+                There is no hard requirement that a replication application look for, or
+                respond to, this return code. However, because robust replicated
+                applications typically do manage permanent messages, we introduce 
+                the concept here. 
+            </p>
+      <p>
+                    A message is marked as being permanent if the message
+                    affects transactional integrity. For example,
+                    transaction commit messages are an example of a message
+                    that is marked permanent. What the application does
+                    about the permanent message is driven by the durability
+                    guarantees required by the application.
+            </p>
+      <p>
+                    For example, consider what the Replication Manager does when it
+                    has permanent message handling turned on and a
+                    transactional commit record is sent to the replicas.
+                    First, the replicas must transactional-commit the data
+                    modifications identified by the message. And then, upon
+                    a successful commit, the Replication Manager sends the master a
+                    message acknowledgment.
+            </p>
+      <p>
+                    For the master (again, using the Replication Manager), things are a little more complicated than
+                simple message acknowledgment.  Usually in a replicated
+                application, the master commits transactions
+                asynchronously; that is, the commit operation does not
+                block waiting for log data to be flushed to disk before
+                returning. So when a master is managing permanent
+                messages, it typically blocks the committing thread
+                immediately before <code class="methodname">commit()</code>
+                returns. The thread then waits for acknowledgments from
+                its replicas. If it receives enough acknowledgments, it
+                continues to operate as normal. 
+            </p>
+      <p>
+                If the master does not
+                receive message acknowledgments — or, more likely, it does not receive
+                <span class="emphasis"><em>enough</em></span> acknowledgments — the
+                committing thread flushes its log data to disk and then
+                continues operations as normal. The master application can
+                do this because replicas that fail to handle a message, for
+                whatever reason, will eventually catch up to the master. So
+                by flushing the transaction logs to disk, the master is
+                ensuring that the data modifications have made it to
+                stable storage in one location (its own hard drive).
+            </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="permmessagenot"></a>When Not to Manage
+                            Permanent Messages</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                            There are two reasons why you might
+                            choose to not implement permanent messages.
+                            In part, these go to why you are using
+                            replication in the first place.
+                    </p>
+        <p>
+                        One class of applications uses replication so that
+                        the application can improve transaction
+                        through-put. Essentially, the application chooses a
+                        reduced transactional durability guarantee so as to
+                        avoid the overhead forced by the disk I/O required
+                        to flush transaction logs to disk. However, the
+                        application can then regain that durability
+                        guarantee to a certain degree by replicating the
+                        commit to some number of replicas.
+                    </p>
+        <p>
+                        Using replication to improve an application's
+                        transactional commit guarantee is called
+                        <span class="emphasis"><em>replicating to the network.</em></span>
+                    </p>
+        <p>
+                        In extreme cases where performance is of critical
+                        importance to the application, the master might
+                        choose to both use asynchronous commits
+                        <span class="emphasis"><em>and</em></span> decide not to wait for
+                        message acknowledgments. In this case the master
+                        is simply broadcasting its commit activities to its
+                        replicas without waiting for any sort of a reply. An
+                        application like this might also choose to use
+                        something other than TCP/IP for its network
+                        communications since that protocol involves a fair
+                        amount of packet acknowledgment all on its own. Of
+                        course, this sort of an application should also be
+                        very sure about the reliability of both its network and
+                        the machines that are hosting its replicas.
+                    </p>
+        <p>
+                            At the other extreme, there is a
+                            class of applications that use replication
+                            purely to improve read performance. This sort
+                            of application might choose to use synchronous
+                            commits on the master because write
+                            performance there is not of critical
+                            performance. In any case, this kind of an
+                            application might not care to know whether its
+                            replicas have received and successfully handled
+                            permanent messages because the primary storage
+                            location is assumed to be on the master, not
+                            the replicas.
+                    </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="permmanage"></a>Managing Permanent Messages</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                            With the exception of a rare breed of
+                            replicated applications, most masters need some
+                            view as to whether commits are occurring on
+                            replicas as expected. At a minimum, this is because
+                            masters will not flush their log buffers unless
+                            they have reason to expect that permanent
+                            messages have not been committed on the
+                            replicas. 
+                    </p>
+        <p>
+                        That said, it is important to remember that
+                        managing permanent messages involves a fair amount
+                        of network traffic. The messages must be sent to
+                        the replicas and the replicas must acknowledge
+                        them. This represents a performance overhead
+                        that can be worsened by congested networks or
+                        outright outages.
+                    </p>
+        <p>
+                        Therefore, when managing permanent messages, you
+                        must first decide on how many of your replicas must
+                        send acknowledgments before your master decides
+                        that all is well and it can continue normal
+                        operations. When making this decision, you could
+                        decide that <span class="emphasis"><em>all</em></span> replicas must
+                        send acknowledgments. But unless you have only one
+                        or two replicas, or you are replicating over a very
+                        fast and reliable network, this policy could prove
+                        very harmful to your application's performance.
+                    </p>
+        <p>
+                        Therefore, a common strategy is to wait for an
+                        acknowledgment from a simple majority of replicas.
+                        This ensures that commit activity has occurred on
+                        enough machines that you can be reliably certain
+                        that data writes are preserved across your network.
+                    </p>
+        <p>
+                        Remember that replicas that do not acknowledge a
+                        permanent message are not necessarily unable to
+                        perform the commit; it might be that network
+                        problems have simply resulted in a delay at the
+                        replica. In any case, the underlying DB
+                        replication code is written such that a replica that
+                        falls behind the master will eventually take action
+                        to catch up.
+                    </p>
+        <p>
+                            Depending on your application, it may be
+                            possible for you to code your permanent message
+                            handling such that acknowledgment must come
+                            from only one or two replicas. This is a
+                            particularly attractive strategy if you are
+                            closely managing which machines are eligible to
+                            become masters. Assuming that you have one or
+                            two machines designated to be a master in the
+                            event that the current master goes down, you
+                            may only want to receive acknowledgments from
+                            those specific machines.
+                    </p>
+        <p>
+                        Finally, beyond simple message acknowledgment, you
+                        also need to implement an acknowledgment timeout
+                        for your application. This timeout value is simply
+                        meant to ensure that your master does not hang
+                        indefinitely waiting for responses that will never
+                        come because a machine or router is down.
+                    </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="permimplement"></a>Implementing Permanent
+                    Message Handling</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                            How you implement permanent message handling
+                            depends on which API you are using to implement
+                            replication. If you are using the Replication Manager, then
+                            permanent message handling is configured using
+                            policies that you specify to the framework. In
+                            this case, you can configure your application
+                            to:
+                   </p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+                                    Ignore permanent messages (the master
+                                    does not wait for acknowledgments). 
+                                   </p>
+            </li>
+            <li>
+              <p>
+                                           Require acknowledgments from a
+                                           quorum. A quorum is reached when
+                                           acknowledgments are received from the
+                                           minimum number of electable
+                                           peers needed to ensure that
+                                           the record remains durable if
+                                           an election is held. 
+                                   </p>
+              <p>
+                                       An <span class="emphasis"><em>electable peer</em></span> is any other
+                                       site that potentially can be elected master.
+                                   </p>
+              <p>
+                                           The goal here is to be
+                                           absolutely sure the record is
+                                           durable. The master wants to
+                                           hear from enough electable
+                                           peer that they have
+                                           committed the record so that if
+                                           an election is held, the master
+                                           knows the record will exist even
+                                           if a new master is selected.
+                                   </p>
+              <p>
+                                           This is the default policy.
+                                   </p>
+            </li>
+            <li>
+              <p>
+                                     Require an acknowledgment from at least one replica. 
+                                   </p>
+            </li>
+            <li>
+              <p>
+                                           Require acknowledgments from
+                                           all replicas.
+                                   </p>
+            </li>
+            <li>
+              <p>
+                                      Require an acknowledgment from at least one electable peer.
+                                   </p>
+            </li>
+            <li>
+              <p>
+                                           Require acknowledgments from all electable peers.
+                                   </p>
+            </li>
+          </ul>
+        </div>
+        <p>
+                        Note that the Replication Manager simply flushes its transaction
+                        logs and moves on if a permanent message is not
+                        sufficiently acknowledged.
+                   </p>
+        <p>
+                        For details on permanent message handling with the
+                        Replication Manager, see <a class="xref" href="fwrkpermmessage.html" title="Permanent Message Handling">Permanent Message Handling</a>.
+                   </p>
+        <p>
+                        If these policies are not sufficient for your
+                        needs, or if you want your application to take more
+                        corrective action than simply flushing log buffers
+                        in the event of an unsuccessful commit, then you
+                        must use implement replication using the Base APIs.
+                   </p>
+        <p>
+                        When using the Base APIs, messages are
+                        sent from the master to its replica using a
+                        <code class="function">send()</code> callback that you
+                        implement.  Note, however, that DB's replication 
+                        code automatically sets the permanent 
+                        flag for you where appropriate. 
+                   </p>
+        <p>
+                        If the <code class="function">send()</code> callback returns with a
+                        non-zero status, DB flushes the transaction log 
+                        buffers for you. Therefore, you must cause your
+                        <code class="function">send()</code> callback to block waiting
+                        for acknowledgments from your replicas. 
+                        As a part of implementing the
+                        <code class="function">send()</code> callback, you implement
+                        your permanent message handling policies. This
+                        means that you identify how many replicas must
+                        acknowledge the message before the callback can
+                        return <code class="literal">0</code>.  You must also
+                        implement the acknowledgment timeout, if any.
+                   </p>
+        <p>
+                        Further, message acknowledgments are sent from the
+                        replicas to the master using a communications
+                        channel that you implement (the replication code
+                        does not provide a channel for acknowledgments).
+                        So implementing permanent messages means that when
+                        you write your replication communications channel,
+                        you must also write it in such a way as to also
+                        handle permanent message acknowledgments.
+                   </p>
+        <p>
+                        For more information on implementing permanent
+                        message handling using a custom replication layer,
+                        see the <em class="citetitle">Berkeley DB Programmer's Reference Guide</em>.
+                   </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="elections.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="introduction.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="txnapp.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Holding Elections </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 2. Transactional Application</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

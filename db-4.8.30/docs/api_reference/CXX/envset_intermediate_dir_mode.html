@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DbEnv::set_intermediate_dir_mode()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="env.html" title="Chapter 5.  The DbEnv Handle" />
+    <link rel="prev" href="envset_flags.html" title="DbEnv::set_flags()" />
+    <link rel="next" href="envset_isalive.html" title="DbEnv::set_isalive()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DbEnv::set_intermediate_dir_mode()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="envset_flags.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. 
+                The DbEnv Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="envset_isalive.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="envset_intermediate_dir_mode"></a>DbEnv::set_intermediate_dir_mode()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+
+int
+DbEnv::set_intermediate_dir_mode(u_int32_t mode); </pre>
+      <p>
+         By default, Berkeley DB does not create intermediate directories
+         needed for recovery, that is, if the file <span class="bold"><strong>/a/b/c/mydatabase</strong></span> is being recovered, and the
+         directory path <span class="bold"><strong>b/c</strong></span> does not exist,
+         recovery will fail.   This default behavior is because Berkeley DB
+         does not know what permissions are appropriate for intermediate
+         directory creation, and creating the directory might result in a
+         security problem.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::set_intermediate_dir_mode()</code> method causes Berkeley DB to
+         create any intermediate directories needed during recovery, using the
+         specified permissions.
+    </p>
+      <p>
+         On UNIX systems or in IEEE/ANSI Std 1003.1 (POSIX) environments,
+         created directories are owned by the process owner; the group
+         ownership of created directories is based on the system and directory
+         defaults, and is not further specified by Berkeley DB.
+    </p>
+      <p>
+         The database environment's intermediate directory permissions may also
+         be configured using the environment's <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a> file.  The
+         syntax of the entry in that file is a single line with the string
+         "set_intermediate_dir_mode", one or more whitespace characters, and
+         the directory permissions. Because the <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a> file is
+         read when the database environment is opened, it will silently
+         overrule configuration done before that time.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::set_intermediate_dir_mode()</code> method configures operations
+         performed using the specified 
+         <a class="link" href="env.html" title="Chapter 5.  The DbEnv Handle">DbEnv</a>  handle, not all
+         operations performed on the underlying database environment.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::set_intermediate_dir_mode()</code> method may not be called
+         after the <a class="xref" href="envopen.html" title="DbEnv::open()">DbEnv::open()</a> 
+         method is called.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::set_intermediate_dir_mode()</code> <span>
+            
+            <span>
+                method either returns a non-zero error value or throws an
+                exception that encapsulates a non-zero error value on
+                failure, and returns 0 on success.
+            </span>
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1673294"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1673324"></a>mode</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>mode</strong></span> parameter specifies the
+                          directory permissions.
+                     </p>
+          <p>
+                          Directory permissions are interpreted as a string of nine characters,
+                          using the character set <span class="bold"><strong>r</strong></span> (read),
+                          <span class="bold"><strong>w</strong></span> (write), <span class="bold"><strong>x</strong></span> (execute or search), and <span class="bold"><strong>-</strong></span> (none).  The first character is the read
+                          permissions for the directory owner (set to either <span class="bold"><strong>r</strong></span> or <span class="bold"><strong>-</strong></span>). The
+                          second character is the write permissions for the directory owner (set
+                          to either <span class="bold"><strong>w</strong></span> or <span class="bold"><strong>-</strong></span>). The third character is the execute
+                          permissions for the directory owner (set to either <span class="bold"><strong>x</strong></span> or <span class="bold"><strong>-</strong></span>).
+                     </p>
+          <p>
+                          Similarly, the second set of three characters are the read, write and
+                          execute/search permissions for the directory group, and the third set
+                          of three characters are the read, write and execute/search permissions
+                          for all others.  For example, the string <span class="bold"><strong>rwx------</strong></span> would configure read, write and
+                          execute/search access for the owner only.  The string <span class="bold"><strong>rwxrwx---</strong></span> would configure read, write and
+                          execute/search access for both the owner and the group.  The string
+                          <span class="bold"><strong>rwxr-----</strong></span> would configure read, write
+                          and execute/search access for the directory owner and read-only access
+                          for the directory group.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1673316"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DbEnv::set_intermediate_dir_mode()</code>
+                         <span>
+            
+            <span>
+                method may fail and throw a <a class="link" href="dbexception.html" title="Chapter 6. The DbException Class">DbException</a> 
+                exception, encapsulating one of the following non-zero errors, or return one
+                of the following non-zero errors:
+            </span>
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1673395"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                If the method was called after <a class="xref" href="envopen.html" title="DbEnv::open()">DbEnv::open()</a> 
+                was called; or if an invalid flag value or parameter was specified.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1673361"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="env.html" title="Chapter 5.  The DbEnv Handle">DbEnv</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1673403"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="env.html#envlist" title="Database Environments and Related Methods">Database Environments and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="envset_flags.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="env.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="envset_isalive.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DbEnv::set_flags() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DbEnv::set_isalive()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

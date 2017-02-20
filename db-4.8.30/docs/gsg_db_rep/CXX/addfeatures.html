@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 5. Additional Features</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Replicated Berkeley DB Applications" />
+    <link rel="up" href="index.html" title="Getting Started with Replicated Berkeley DB Applications" />
+    <link rel="prev" href="exampledoloop.html" title="Example Processing Loop" />
+    <link rel="next" href="manageblock.html" title="Managing Blocking Operations" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 5. Additional Features</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="exampledoloop.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="manageblock.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="addfeatures"></a>Chapter 5. Additional Features</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="addfeatures.html#delayedsync">Delayed Synchronization</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="manageblock.html">Managing Blocking Operations</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="noautoinit.html">Stop Auto-Initialization</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="c2ctransfer.html">Client to Client Transfer</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="c2ctransfer.html#fmwrkpeerserver">Identifying Peers</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <span class="sect1">
+              <a href="bulk.html">Bulk Transfers</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+            Beyond the basic functionality that we have discussed so far in
+            this book, there are several replication features that you
+            should understand. These are all optional to use, but provide
+            useful functionality under the right circumstances.
+    </p>
+      <p>
+            These additional features are:
+    </p>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <p>
+                            <a class="xref" href="addfeatures.html#delayedsync" title="Delayed Synchronization">Delayed Synchronization</a>
+                    </p>
+          </li>
+          <li>
+            <p>
+                            <a class="xref" href="manageblock.html" title="Managing Blocking Operations">Managing Blocking Operations</a>
+                    </p>
+          </li>
+          <li>
+            <p>
+                            <a class="xref" href="noautoinit.html" title="Stop Auto-Initialization">Stop Auto-Initialization</a>
+                    </p>
+          </li>
+          <li>
+            <p>
+                            <a class="xref" href="c2ctransfer.html" title="Client to Client Transfer">Client to Client Transfer</a>
+                    </p>
+          </li>
+          <li>
+            <p>
+                            <a class="xref" href="bulk.html" title="Bulk Transfers">Bulk Transfers</a>
+                    </p>
+          </li>
+        </ol>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="delayedsync"></a>Delayed Synchronization</h2>
+            </div>
+          </div>
+        </div>
+        <p>
+                When a replication group has a new master, all replicas must
+                synchronize with that master. This means they must ensure
+                that the contents of their local database(s) are identical
+                to that contained by the new master.
+        </p>
+        <p>
+                This synchronization process can result in quite a lot of
+                network activity. It can also put a large strain on the
+                master server, especially if is part of a large
+                replication group or if there is somehow a large difference between
+                the master's database(s) and the contents of its replicas. 
+        </p>
+        <p>
+                It is therefore possible to delay synchronization for any
+                replica that discovers it has a new master. You would do
+                this so as to give the master time to synchronize other
+                replicas before proceeding with the delayed replicas.
+        </p>
+        <p>
+                To delay synchronization of a replica environment, you
+                specify 
+                    <span>
+                        <code class="literal">DB_REP_CONF_DELAYCLIENT</code> to
+                            
+                            <code class="methodname">DbEnv::rep_set_config()</code>
+                        and then specify <code class="literal">1</code> to the <code class="literal">onoff</code>
+                        parameter. (Specify <code class="literal">0</code> to turn the feature off.)
+                    </span>
+                    
+        </p>
+        <p>
+                If you use delayed synchronization, then you must manually
+                synchronize the replica at some future time. Until you do this, the replica is out of
+                sync with the master, and it will ignore all database changes forwarded to it from 
+                the master. 
+        </p>
+        <p>
+                You synchronize a delayed replica by calling
+                    
+                    <code class="methodname">DbEnv::rep_sync()</code>
+                    
+                on the replica that has been delayed.
+        </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="exampledoloop.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="manageblock.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Example Processing Loop </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Managing Blocking Operations</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

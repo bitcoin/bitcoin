@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>General access method configuration</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="am_conf.html" title="Chapter 2.  Access Method Configuration" />
+    <link rel="prev" href="am_conf_logrec.html" title="Logical record numbers" />
+    <link rel="next" href="bt_conf.html" title="Btree access method specific configuration" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">General access method configuration</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="am_conf_logrec.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+        Access Method Configuration
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="bt_conf.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="general_am_conf"></a>General access method configuration</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="general_am_conf.html#am_conf_pagesize">Selecting a page size</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="general_am_conf.html#am_conf_cachesize">Selecting a cache size</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="general_am_conf.html#am_conf_byteorder">Selecting a byte order</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="general_am_conf.html#am_conf_dup">Duplicate data items</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="general_am_conf.html#am_conf_malloc">Non-local memory allocation</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+    There are a series of configuration tasks which are common to all
+    access methods. They are described in the following sections.
+</p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="am_conf_pagesize"></a>Selecting a page size</h3>
+            </div>
+          </div>
+        </div>
+        <p>The size of the pages used in the underlying database can be specified by
+calling the <a href="../api_reference/C/dbset_pagesize.html" class="olink">DB-&gt;set_pagesize()</a> method.  The minimum page size is 512 bytes
+and the maximum page size is 64K bytes, and must be a power of two.  If
+no page size is specified by the application, a page size is selected
+based on the underlying filesystem I/O block size.  (A page size selected
+in this way has a lower limit of 512 bytes and an upper limit of 16K
+bytes.)</p>
+        <p>There are several issues to consider when selecting a pagesize: overflow
+record sizes, locking, I/O efficiency, and recoverability.</p>
+        <p>First, the page size implicitly sets the size of an overflow record.
+Overflow records are key or data items that are too large to fit on a
+normal database page because of their size, and are therefore stored in
+overflow pages.  Overflow pages are pages that exist outside of the normal
+database structure.  For this reason, there is often a significant
+performance penalty associated with retrieving or modifying overflow
+records.  Selecting a page size that is too small, and which forces the
+creation of large numbers of overflow pages, can seriously impact the
+performance of an application.</p>
+        <p>Second, in the Btree, Hash and Recno access methods, the finest-grained
+lock that Berkeley DB acquires is for a page.  (The Queue access method
+generally acquires record-level locks rather than page-level locks.)
+Selecting a page size that is too large, and which causes threads or
+processes to wait because other threads of control are accessing or
+modifying records on the same page, can impact the performance of your
+application.</p>
+        <p>Third, the page size specifies the granularity of I/O from the database
+to the operating system.  Berkeley DB will give a page-sized unit of bytes to
+the operating system to be scheduled for reading/writing from/to the
+disk.  For many operating systems, there is an internal <span class="bold"><strong>block
+size</strong></span> which is used as the granularity of I/O from the operating system
+to the disk.  Generally, it will be more efficient for Berkeley DB to write
+filesystem-sized blocks to the operating system and for the operating
+system to write those same blocks to the disk.</p>
+        <p>Selecting a database page size smaller than the filesystem block size
+may cause the operating system to coalesce or otherwise manipulate Berkeley DB
+pages and can impact the performance of your application.  When the page
+size is smaller than the filesystem block size and a page written by
+Berkeley DB is not found in the operating system's cache, the operating system
+may be forced to read a block from the disk, copy the page into the
+block it read, and then write out the block to disk, rather than simply
+writing the page to disk.  Additionally, as the operating system is
+reading more data into its buffer cache than is strictly necessary to
+satisfy each Berkeley DB request for a page, the operating system buffer cache
+may be wasting memory.</p>
+        <p>Alternatively, selecting a page size larger than the filesystem block
+size may cause the operating system to read more data than necessary.
+On some systems, reading filesystem blocks sequentially may cause the
+operating system to begin performing read-ahead.  If requesting a single
+database page implies reading enough filesystem blocks to satisfy the
+operating system's criteria for read-ahead, the operating system may do
+more I/O than is required.</p>
+        <p>Fourth, when using the Berkeley DB Transactional Data Store product, the page size may affect the errors
+from which your database can recover  See
+<a class="xref" href="transapp_reclimit.html" title="Berkeley DB recoverability">Berkeley DB recoverability</a> for more
+information.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="am_conf_cachesize"></a>Selecting a cache size</h3>
+            </div>
+          </div>
+        </div>
+        <p>The size of the cache used for the underlying database can be specified
+by calling the <a href="../api_reference/C/dbset_cachesize.html" class="olink">DB-&gt;set_cachesize()</a> method.
+Choosing a cache size is, unfortunately, an art.  Your cache must be at
+least large enough for your working set plus some overlap for unexpected
+situations.</p>
+        <p>When using the Btree access method, you must have a cache big enough for
+the minimum working set for a single access.  This will include a root
+page, one or more internal pages (depending on the depth of your tree),
+and a leaf page.  If your cache is any smaller than that, each new page
+will force out the least-recently-used page, and Berkeley DB will re-read the
+root page of the tree anew on each database request.</p>
+        <p>If your keys are of moderate size (a few tens of bytes) and your pages
+are on the order of 4KB to 8KB, most Btree applications will be only
+three levels.  For example, using 20 byte keys with 20 bytes of data
+associated with each key, a 8KB page can hold roughly 400 keys (or 200
+key/data pairs), so a fully populated three-level Btree will hold 32
+million key/data pairs, and a tree with only a 50% page-fill factor will
+still hold 16 million key/data pairs.  We rarely expect trees to exceed
+five levels, although Berkeley DB will support trees up to 255 levels.</p>
+        <p>The rule-of-thumb is that cache is good, and more cache is better.
+Generally, applications benefit from increasing the cache size up to a
+point, at which the performance will stop improving as the cache size
+increases.  When this point is reached, one of two things have happened:
+either the cache is large enough that the application is almost never
+having to retrieve information from disk, or, your application is doing
+truly random accesses, and therefore increasing size of the cache doesn't
+significantly increase the odds of finding the next requested information
+in the cache.  The latter is fairly rare -- almost all applications show
+some form of locality of reference.</p>
+        <p>That said, it is important not to increase your cache size beyond the
+capabilities of your system, as that will result in reduced performance.
+Under many operating systems, tying down enough virtual memory will cause
+your memory and potentially your program to be swapped.  This is
+especially likely on systems without unified OS buffer caches and virtual
+memory spaces, as the buffer cache was allocated at boot time and so
+cannot be adjusted based on application requests for large amounts of
+virtual memory.</p>
+        <p>For example, even if accesses are truly random within a Btree, your
+access pattern will favor internal pages to leaf pages, so your cache
+should be large enough to hold all internal pages.  In the steady state,
+this requires at most one I/O per operation to retrieve the appropriate
+leaf page.</p>
+        <p>You can use the <a href="../api_reference/C/db_stat.html" class="olink">db_stat utility</a> to monitor the effectiveness of
+your cache.  The following output is excerpted from the output of that
+utility's <span class="bold"><strong>-m</strong></span> option:</p>
+        <pre class="programlisting">prompt: db_stat -m
+131072  Cache size (128K).
+4273    Requested pages found in the cache (97%).
+134     Requested pages not found in the cache.
+18      Pages created in the cache.
+116     Pages read into the cache.
+93      Pages written from the cache to the backing file.
+5       Clean pages forced from the cache.
+13      Dirty pages forced from the cache.
+0       Dirty buffers written by trickle-sync thread.
+130     Current clean buffer count.
+4       Current dirty buffer count.
+</pre>
+        <p>The statistics for this cache say that there have been 4,273 requests of
+the cache, and only 116 of those requests required an I/O from disk.  This
+means that the cache is working well, yielding a 97% cache hit rate.  The
+<a href="../api_reference/C/db_stat.html" class="olink">db_stat utility</a> will present these statistics both for the cache
+as a whole and for each file within the cache separately.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="am_conf_byteorder"></a>Selecting a byte order</h3>
+            </div>
+          </div>
+        </div>
+        <p>Database files created by Berkeley DB can be created in either little- or
+big-endian formats.  The byte order used for the underlying database
+is specified by calling the <a href="../api_reference/C/dbset_lorder.html" class="olink">DB-&gt;set_lorder()</a> method.  If no order
+is selected, the native format of the machine on which the database is
+created will be used.</p>
+        <p>Berkeley DB databases are architecture independent, and any format database can
+be used on a machine with a different native format.  In this case, as
+each page that is read into or written from the cache must be converted
+to or from the host format, and databases with non-native formats will
+incur a performance penalty for the run-time conversion.</p>
+        <p>
+          <span class="bold">
+            <strong>It is important to note that the Berkeley DB access methods do no data
+conversion for application specified data.  Key/data pairs written on a
+little-endian format architecture will be returned to the application
+exactly as they were written when retrieved on a big-endian format
+architecture.</strong>
+          </span>
+        </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="am_conf_dup"></a>Duplicate data items</h3>
+            </div>
+          </div>
+        </div>
+        <p>The Btree and Hash access methods support the creation of multiple data
+items for a single key item.  By default, multiple data items are not
+permitted, and each database store operation will overwrite any previous
+data item for that key.  To configure Berkeley DB for duplicate data items,
+call the <a href="../api_reference/C/dbset_flags.html" class="olink">DB-&gt;set_flags()</a> method with the <a href="../api_reference/C/dbset_flags.html#dbset_flags_DB_DUP" class="olink">DB_DUP</a> flag.  Only one
+copy of the key will be stored for each set of duplicate data items.
+If the Btree access method comparison routine returns that two keys
+compare equally, it is undefined which of the two keys will be stored
+and returned from future database operations.</p>
+        <p>By default, Berkeley DB stores duplicates in the order in which they were added,
+that is, each new duplicate data item will be stored after any already
+existing data items.  This default behavior can be overridden by using
+the <a href="../api_reference/C/dbcput.html" class="olink">DBC-&gt;put()</a> method and one of the <a href="../api_reference/C/dbcput.html#put_DB_AFTER" class="olink">DB_AFTER</a>, <a href="../api_reference/C/dbcput.html#put_DB_BEFORE" class="olink">DB_BEFORE</a>, <a href="../api_reference/C/dbcput.html#put_DB_KEYFIRST" class="olink">DB_KEYFIRST</a> or <a href="../api_reference/C/dbcput.html#put_DB_KEYLAST" class="olink">DB_KEYLAST</a> flags.
+Alternatively, Berkeley DB may be configured to sort duplicate data items.</p>
+        <p>When stepping through the database sequentially, duplicate data items will
+be returned individually, as a key/data pair, where the key item only
+changes after the last duplicate data item has been returned.  For this
+reason, duplicate data items cannot be accessed using the
+<a href="../api_reference/C/dbget.html" class="olink">DB-&gt;get()</a> method, as it always returns the first of the duplicate data
+items.  Duplicate data items should be retrieved using a Berkeley DB cursor
+interface such as the <a href="../api_reference/C/dbcget.html" class="olink">DBC-&gt;get()</a> method.</p>
+        <p>There is a flag that permits applications to request the following data
+item only if it <span class="bold"><strong>is</strong></span> a duplicate data item of the current entry,
+see <a href="../api_reference/C/dbcget.html#dbcget_DB_NEXT_DUP" class="olink">DB_NEXT_DUP</a> for more information.  There is a flag that
+permits applications to request the following data item only if it
+<span class="bold"><strong>is not</strong></span> a duplicate data item of the current entry, see
+<a href="../api_reference/C/dbcget.html#dbcget_DB_NEXT_NODUP" class="olink">DB_NEXT_NODUP</a> and <a href="../api_reference/C/dbcget.html#dbcget_DB_PREV_NODUP" class="olink">DB_PREV_NODUP</a> for more information.</p>
+        <p>It is also possible to maintain duplicate records in sorted order.  Sorting
+duplicates will significantly increase performance when searching them
+and performing equality joins, common operations when using secondary
+indices.  To configure Berkeley DB to sort duplicate data items, the application
+must call the <a href="../api_reference/C/dbset_flags.html" class="olink">DB-&gt;set_flags()</a> method with the <a href="../api_reference/C/dbset_flags.html#dbset_flags_DB_DUPSORT" class="olink">DB_DUPSORT</a> flag (in
+addition to the <a href="../api_reference/C/dbset_flags.html#dbset_flags_DB_DUP" class="olink">DB_DUP</a> flag).  In addition, a custom comparison
+function may be specified using the <a href="../api_reference/C/dbset_dup_compare.html" class="olink">DB-&gt;set_dup_compare()</a> method.  If the
+<a href="../api_reference/C/dbset_flags.html#dbset_flags_DB_DUPSORT" class="olink">DB_DUPSORT</a> flag is given, but no comparison routine is specified,
+then Berkeley DB defaults to the same lexicographical sorting used for Btree
+keys, with shorter items collating before longer items.</p>
+        <p>If the duplicate data items are unsorted, applications may store identical
+duplicate data items, or, for those that just like the way it sounds,
+<span class="emphasis"><em>duplicate duplicates</em></span>.</p>
+        <p><span class="bold"><strong>In this release it is an error to attempt to store identical
+duplicate data items when duplicates are being stored in a sorted order.</strong></span>
+This restriction is expected to be lifted in a future release.  There
+is a flag that permits applications to disallow storing duplicate data
+items when the database has been configured for sorted duplicates, see
+<a href="../api_reference/C/dbput.html#put_DB_NODUPDATA" class="olink">DB_NODUPDATA</a> for more information.  Applications not wanting to
+permit duplicate duplicates in databases configured for sorted
+duplicates should begin using the <a href="../api_reference/C/dbput.html#put_DB_NODUPDATA" class="olink">DB_NODUPDATA</a> flag immediately.</p>
+        <p>For further information on how searching and insertion behaves in the
+presence of duplicates (sorted or not), see the <a href="../api_reference/C/dbget.html" class="olink">DB-&gt;get()</a> <a href="../api_reference/C/dbput.html" class="olink">DB-&gt;put()</a>, <a href="../api_reference/C/dbcget.html" class="olink">DBC-&gt;get()</a> and
+<a href="../api_reference/C/dbcput.html" class="olink">DBC-&gt;put()</a> documentation.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="am_conf_malloc"></a>Non-local memory allocation</h3>
+            </div>
+          </div>
+        </div>
+        <p>Berkeley DB allocates memory for returning key/data pairs and statistical
+information which becomes the responsibility of the application.
+There are also interfaces where an application will allocate memory
+which becomes the responsibility of Berkeley DB.</p>
+        <p>On systems in which there may be multiple library versions of the
+standard allocation routines (notably Windows NT), transferring memory
+between the library and the application will fail because the Berkeley DB
+library allocates memory from a different heap than the application
+uses to free it, or vice versa.  To avoid this problem, the
+<a href="../api_reference/C/envset_alloc.html" class="olink">DB_ENV-&gt;set_alloc()</a> and <a href="../api_reference/C/dbset_alloc.html" class="olink">DB-&gt;set_alloc()</a> methods can be used to
+give Berkeley DB references to the application's allocation routines.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="am_conf_logrec.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="am_conf.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="bt_conf.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Logical record numbers </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Btree access method specific configuration</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

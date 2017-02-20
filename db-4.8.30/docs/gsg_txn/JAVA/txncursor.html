@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Transactional Cursors</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB Transaction Processing" />
+    <link rel="up" href="usingtxns.html" title="Chapter 3. Transaction Basics" />
+    <link rel="prev" href="nestedtxn.html" title="Nested Transactions" />
+    <link rel="next" href="txnindices.html" title="Secondary Indices with Transaction Applications" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Transactional Cursors</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="nestedtxn.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. Transaction Basics</th>
+          <td width="20%" align="right"> <a accesskey="n" href="txnindices.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="txncursor"></a>Transactional Cursors</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="txncursor.html#dplcursors">Using Transactional DPL Cursors</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+            You can transaction-protect your cursor operations by
+            specifying a transaction handle at the time that you create
+            your cursor.  Beyond that, you do not ever
+            provide a transaction handle directly to a cursor method.
+        </p>
+      <p>
+            Note that if you transaction-protect a cursor, then you must
+            make sure that the cursor is closed before you either commit or
+            abort the transaction. For example:
+        </p>
+      <pre class="programlisting">package db.txn;
+
+import com.sleepycat.db.Cursor;
+import com.sleepycat.db.Database;
+import com.sleepycat.db.DatabaseConfig;
+import com.sleepycat.db.DatabaseEntry;
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.Environment;
+import com.sleepycat.db.EnvironmentConfig;
+import com.sleepycat.db.LockMode;
+import com.sleepycat.db.OperationStatus;
+import com.sleepycat.db.Transaction;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+
+...
+
+Database myDatabase = null;
+Environment myEnv = null;
+try {
+
+    // Database and environment opens omitted
+
+    String replacementData = "new data";
+
+    Transaction txn = myEnv.beginTransaction(null, null);
+    Cursor cursor = null;
+    try {
+        // Use the transaction handle here
+        cursor = db.openCursor(txn, null);
+        DatabaseEntry key, data;
+        
+        DatabaseEntry key, data;
+        while(cursor.getNext(key, data, LockMode.DEFAULT) ==
+           OperationStatus.SUCCESS) {
+            
+            data.setData(replacementData.getBytes("UTF-8"));
+            // No transaction handle is used on the cursor read or write
+            // methods.
+            cursor.putCurrent(data);
+        }
+        
+        cursor.close();
+        cursor = null;
+        txn.commit();
+        txn = null;
+    } catch (Exception e) {
+        if (cursor != null) {
+            cursor.close();
+        }
+        if (txn != null) {
+            txn.abort();
+            txn = null;
+        }
+    }
+
+} catch (DatabaseException de) {
+    // Exception handling goes here
+} </pre>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="dplcursors"></a>Using Transactional DPL Cursors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+            When using the DPL, you create the cursor using the entity
+            class's primary or secondary index (see the
+            
+            <em class="citetitle">Getting Started with Berkeley DB for Java</em>
+            guide for details). At the time that you create the cursor, you
+            pass a transaction handle to the <code class="methodname">entities()</code>
+            method, and this causes all subsequent operations performed
+            using that cursor to be performed within the scope of the
+            transaction.
+        </p>
+        <p>
+                Note that if you are using a transaction-enabled store,
+                then you must provide a transaction handle when you open
+                your cursor.
+        </p>
+        <p>
+                For example:
+        </p>
+        <pre class="programlisting">package persist.txn;
+
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.Environment;
+import com.sleepycat.db.EnvironmentConfig;
+import com.sleepycat.db.Transaction;
+
+import com.sleepycat.persist.EntityCursor;
+import com.sleepycat.persist.EntityStore;
+import com.sleepycat.persist.PrimaryIndex;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+
+...
+
+Environment myEnv = null;
+EntityStore store = null;
+
+...
+
+
+    // Store and environment open omitted, as is the DataAccessor
+    // instantiation.
+
+...
+
+    Transaction txn = myEnv.beginTransaction(null, null);
+    PrimaryIndex&lt;String,Inventory&gt; pi =
+        store.getPrimaryIndex(String.class, Inventory.class);
+    EntityCursor&lt;Inventory&gt; pi_cursor = pi.entities(txn, null);
+
+    try {
+        for (Inventory ii : pi_cursor) {
+            // do something with each object "ii"
+            // A transactional handle is not required for any write operations.
+            // All operations performed using this cursor will be done within
+            // the scope of the transaction, txn.
+        }
+        pi_cursor.close();
+        pi_cursor = null;
+        txn.commit();
+        txn = null;
+    // Always make sure the cursor is closed when we are done with it.
+    } catch (Exception e) {
+        if (pi_cursor != null) {
+            pi_cursor.close();
+        }
+        if (txn != null) {
+            txn.abort();
+            txn = null;
+        }
+    } </pre>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="nestedtxn.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="usingtxns.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="txnindices.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Nested Transactions </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Secondary Indices with Transaction Applications</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

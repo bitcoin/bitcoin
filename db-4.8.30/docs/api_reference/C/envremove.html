@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB_ENV-&gt;remove()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="env.html" title="Chapter 5.  The DB_ENV Handle" />
+    <link rel="prev" href="envopen.html" title="DB_ENV-&gt;open()" />
+    <link rel="next" href="envset_alloc.html" title="DB_ENV-&gt;set_alloc()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB_ENV-&gt;remove()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="envopen.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. 
+                The DB_ENV Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="envset_alloc.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="envremove"></a>DB_ENV-&gt;remove()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB_ENV-&gt;remove(DB_ENV *dbenv, char *db_home, u_int32_t flags);  </pre>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;remove()</code> method destroys a Berkeley DB environment if it
+         is not currently in use.  The environment regions, including any
+         backing files, are removed.  Any log or database files and the
+         environment directory are not removed.
+    </p>
+      <p>
+         If there are processes that have called 
+         <a class="xref" href="envopen.html" title="DB_ENV-&gt;open()">DB_ENV-&gt;open()</a>  without calling
+         <a class="xref" href="envclose.html" title="DB_ENV-&gt;close()">DB_ENV-&gt;close()</a>  (that
+         is, there are processes currently using the environment),
+         <code class="methodname">DB_ENV-&gt;remove()</code> will fail without further action unless the 
+         <a class="link" href="envremove.html#envremove_DB_FORCE">DB_FORCE</a>  flag is set,
+         in which case <code class="methodname">DB_ENV-&gt;remove()</code> will attempt to remove the
+         environment, regardless of any processes still using it.
+    </p>
+      <p>
+         The result of attempting to forcibly destroy the environment when it
+         is in use is unspecified.  Processes using an environment often
+         maintain open file descriptors for shared regions within it.  On UNIX
+         systems, the environment removal will usually succeed, and processes
+         that have already joined the region will continue to run in that
+         region without change. However, processes attempting to join the
+         environment will either fail or create new regions.  On other systems
+         in which the <span class="bold"><strong>unlink</strong></span>(2) system call
+         will fail if any process has an open file descriptor for the file (for
+         example Windows/NT), the region removal will fail.
+    </p>
+      <p>
+         Calling <code class="methodname">DB_ENV-&gt;remove()</code> should not be necessary for most
+         applications because the Berkeley DB environment is cleaned up as part
+         of normal database recovery procedures. However, applications may want
+         to call <code class="methodname">DB_ENV-&gt;remove()</code> as part of application shut down to free up
+         system resources.  For example, if the 
+         <a class="link" href="envopen.html#envopen_DB_SYSTEM_MEM">DB_SYSTEM_MEM</a>  flag
+         was specified to <a class="xref" href="envopen.html" title="DB_ENV-&gt;open()">DB_ENV-&gt;open()</a>, 
+         it may be useful to call <code class="methodname">DB_ENV-&gt;remove()</code> in order to release system shared memory
+         segments that have been allocated. Or, on architectures in which
+         mutexes require allocation of underlying system resources, it may be
+         useful to call <code class="methodname">DB_ENV-&gt;remove()</code> in order to release those resources. 
+         Alternatively, if recovery is not required because no database state
+         is maintained across failures, and no system resources need to be
+         released, it is possible to clean up an environment by simply removing
+         all the Berkeley DB files in the database environment's directories.
+    </p>
+      <p>
+         In multithreaded applications, only a single thread may call the
+         <code class="methodname">DB_ENV-&gt;remove()</code> method.
+     </p>
+      <p>
+         A <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  handle that has
+         already been used to open an environment should not be used to call
+         the <code class="methodname">DB_ENV-&gt;remove()</code> method; a new <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  
+         handle should be created for that purpose.
+    </p>
+      <p>
+         After <code class="methodname">DB_ENV-&gt;remove()</code> has been called, regardless of its return, the
+         Berkeley DB environment handle may not be accessed again.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;remove()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1666271"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1666365"></a>db_home</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>db_home</strong></span> parameter names the
+                          database environment to be removed.
+                     </p>
+          <p>
+                         When using a Unicode build on Windows (the default), the <span class="bold"><strong>db_home</strong></span> argument will be interpreted as a UTF-8
+                         string, which is equivalent to ASCII for Latin characters.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1666466"></a>flags</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                        The <span class="bold"><strong>flags</strong></span> parameter must be set to 0 or by
+                        bitwise inclusively <span class="bold"><strong>OR</strong></span>'ing together one or more of the 
+                        following values:
+                </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="envremove_DB_FORCE"></a>
+                                    <code class="literal">DB_FORCE</code>
+                                </p>
+                <p>
+                                        If set, the environment is removed, regardless of any
+                                        processes that may still using it, and no locks are acquired during this
+                                        process. (Generally, this flag is specified only when applications were
+                                        unable to shut down cleanly, and there is a risk that an application may have
+                                        died holding a Berkeley DB lock.)
+                                </p>
+              </li>
+              <li>
+                <p><a id="envremove_DB_USE_ENVIRON"></a>
+                                         <code class="literal">DB_USE_ENVIRON</code>
+                                </p>
+                <p>
+                                        The Berkeley DB process' environment may be permitted to specify information to
+                                        be used when naming files; see 
+                                        <a href="../../programmer_reference/env_naming.html" class="olink">Berkeley DB File Naming</a>. 
+                                        Because permitting users to specify which files are used can create security 
+                                        problems, environment information will be used in file naming for all users 
+                                        only if the <code class="literal">DB_USE_ENVIRON</code> flag is set.
+                                </p>
+              </li>
+              <li>
+                <p><a id="envremove_DB_USE_ENVIRON_ROOT"></a>
+                                         <code class="literal">DB_USE_ENVIRON_ROOT</code>
+                                </p>
+                <p>
+                                        The Berkeley DB process' environment may be permitted to specify information to
+                                        be used when naming files; see 
+                                        <a href="../../programmer_reference/env_naming.html" class="olink">Berkeley DB File Naming</a>. 
+                                        Because permitting users to specify which files are used can create security 
+                                        problems, if the <code class="literal">DB_USE_ENVIRON_ROOT</code> flag is set, environment 
+                                        information will be used in file naming only for users with appropriate
+                                        permissions (for example, users with a user-ID of 0 on <code class="literal">UNIX</code>
+                                        systems).
+                                </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1666645"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DB_ENV-&gt;remove()</code> <span>
+            <span>
+                 method may fail and return one of the following non-zero errors:
+            </span>
+            
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1666517"></a>EBUSY</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The shared memory region was in use and the force flag was not set.
+                        </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1666357"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1666401"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="env.html#envlist" title="Database Environments and Related Methods">Database Environments and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="envopen.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="env.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="envset_alloc.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB_ENV-&gt;open() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_ENV-&gt;set_alloc()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

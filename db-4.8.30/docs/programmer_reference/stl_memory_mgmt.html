@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Dbstl memory management</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="stl.html" title="Chapter 7. Standard Template Library API" />
+    <link rel="prev" href="stl_efficienct_use.html" title="Using dbstl efficiently" />
+    <link rel="next" href="stl_misc.html" title="Dbstl miscellaneous notes" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Dbstl memory management</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="stl_efficienct_use.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 7. Standard Template Library API</th>
+          <td width="20%" align="right"> <a accesskey="n" href="stl_misc.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="stl_memory_mgmt"></a>Dbstl memory management</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="stl_memory_mgmt.html#id1602244">Freeing memory</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="stl_memory_mgmt.html#id1602395">Type specific notes</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1602244"></a>Freeing memory</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+        When using dbstl, make sure memory allocated in the heap is
+        released after use.  The rules for this are:
+    </p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+            dbstl will free/delete any memory allocated by dbstl itself.
+        </p>
+            </li>
+            <li>
+              <p>
+            You are responsible for freeing/deleting any memory allocated by your code outside of dbstl. 
+        </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1602395"></a>Type specific notes</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1602915"></a>DbEnv/Db</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+        When you open a <code class="classname">DbEnv</code> or <code class="classname">Db</code> object using
+        <code class="methodname">dbstl::open_env()</code> or <code class="methodname">dbstl::open_db()</code>, you
+        do not need to delete that object. However, if you new'd that object and then opened it
+        without using the <code class="methodname">dbstl::open_env()</code> or
+        <code class="methodname">dbstl::open_db()</code> methods, you are responsible for deleting the
+        object.
+    </p>
+          <p>
+        Note that you must <code class="literal">new</code> the <code class="classname">Db</code> or
+        <code class="classname">DbEnv</code> object, which allocates it on the heap. You can not allocate it
+        on the stack. If you do, the order of destruction is uncontrollable, which makes dbstl
+        unable to work properly.
+    </p>
+          <p>
+        You can call <code class="function">dbstl_exit()</code> before the process exits, to release any
+        memory allocated by dbstl that has to live during the entire process lifetime. Releasing the
+        memory explicitly will not make much difference, because the process is about to exit and so
+        all memory allocated on the heap is going to be returned to the operating system anyway. The
+        only real difference is that your memory leak checker will not report false memory leaks.
+    </p>
+          <p>
+        <code class="function">dbstl_exit()</code> releases any memory allocated by dbstl on the heap.  It
+        also performs other required shutdown operations, such as closing any databases and
+        environments registered to dbstl and shared across the process.
+    </p>
+          <p>
+        If you are calling the <code class="function">dbstl_exit()</code> function, and your
+        <code class="classname">DbEnv</code> or <code class="classname">Db</code> objects are new'd by your code,
+        the <code class="function">dbstl_exit()</code> function should be called before deleting the
+        <code class="classname">DbEnv</code> or <code class="classname">Db</code> objects, because they need to be
+        closed before being deleted.  Alternatively, you can call the
+        <code class="methodname">dbstl::close_env()</code> or <code class="methodname">dbstl::close_db()</code>
+        functions before deleting the <code class="classname">DbEnv</code> or <code class="classname">Db</code>
+        objects in order to explicitly close the databases or environments. If you do this, 
+        can then delete these objects, and then call <code class="function">dbstl_exit()</code>.
+    </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1602901"></a>DbstlDbt</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+        Only when you are storing raw bytes (such as a bitmap) do you have to
+        store and retrieve data by using the <code class="classname">DbstlDbt</code> helper class. Although you
+        also can do so simply by using the Berkeley DB <code class="classname">Dbt</code> class, the 
+        <code class="classname">DbstlDbt</code> class offers more convenient memory management behavior.
+    </p>
+          <p>
+        When you are storing <code class="classname">DbstlDbt</code> objects (such as
+        <code class="classname">db_vector&lt;DbstlDbt&gt;</code>), you <span class="emphasis"><em>must</em></span> allocate
+        heap memory explicitly using the <code class="function">malloc()</code> function for the
+        <code class="classname">DbstlDbt</code> object to reference, but you do not need to free the memory
+        – it is automatically freed by the <code class="classname">DbstlDbt</code> object that owns it
+        by calling the standard C library <code class="function">free()</code> function.
+    </p>
+          <p>
+        However, because dbstl supports storing any type of object or primitive data, it is rare
+        that you would have to store data using <code class="classname">DbstlDbt</code> objects while using
+        dbstl.  Examples of storing <code class="classname">DbstlDbt</code> objects can be found in the
+        <code class="methodname">TestAssoc::test_arbitrary_object_storage()</code> and
+        <code class="methodname">TestAssoc::test_char_star_string_storage()</code> functions, which are
+        available in the dbstl test suite.
+    </p>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="stl_efficienct_use.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="stl.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="stl_misc.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Using dbstl efficiently </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Dbstl miscellaneous notes</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

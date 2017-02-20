@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Placing Objects in an Entity Store</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="persist_access.html" title="Chapter 5. Saving and Retrieving Objects" />
+    <link rel="prev" href="simpleda.html" title="SimpleDA.class" />
+    <link rel="next" href="simpleget.html" title="Retrieving Objects from an Entity Store" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Placing Objects in an Entity Store</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="simpleda.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. Saving and Retrieving Objects</th>
+          <td width="20%" align="right"> <a accesskey="n" href="simpleget.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="simpleput"></a>Placing Objects in an Entity Store</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+                    In order to place an object in a DPL entity store,
+                    you must:
+            </p>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <p>
+                                    Open the environment and store.
+                            </p>
+          </li>
+          <li>
+            <p>
+                                    Instantiate the object.
+                            </p>
+          </li>
+          <li>
+            <p>
+                                    Put the object to the store using the
+                                    <code class="methodname">put()</code> method
+                                    for the object's primary index.
+                            </p>
+          </li>
+        </ol>
+      </div>
+      <p>
+                    The following example uses the <code class="classname">SimpleDA</code>
+                    class that we show in <a class="xref" href="simpleda.html" title="SimpleDA.class">SimpleDA.class</a> to put a
+                    <code class="classname">SimpleEntityClass</code> object (see
+                    <a class="xref" href="persist_access.html#simpleentity" title="A Simple Entity Class">A Simple Entity Class</a>) to the
+                    entity store.
+            </p>
+      <p>
+                To begin, we import the Java classes that our example
+                needs. We also instantiate the private data members that we
+                require.
+           </p>
+      <pre class="programlisting">package persist.gettingStarted;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.Environment;
+import com.sleepycat.db.EnvironmentConfig;
+
+import com.sleepycat.persist.EntityStore;
+import com.sleepycat.persist.StoreConfig; 
+
+public class SimpleStorePut {
+
+    private static File envHome = new File("./JEDB");
+
+    private Environment envmnt;
+    private EntityStore store;
+    private SimpleDA sda; </pre>
+      <p>
+            Next we create a method that simply opens our database
+            environment and entity store for us. 
+    </p>
+      <pre class="programlisting">   // The setup() method opens the environment and store
+    // for us.
+    public void setup()
+        throws DatabaseException {
+
+        EnvironmentConfig envConfig = new EnvironmentConfig();
+        StoreConfig storeConfig = new StoreConfig();
+
+        envConfig.setAllowCreate(true);
+        storeConfig.setAllowCreate(true);
+
+        try {
+            // Open the environment and entity store
+            envmnt = new Environment(envHome, envConfig);
+            store = new EntityStore(envmnt, "EntityStore", storeConfig);
+        } catch (FileNotFoundException fnfe) {
+            System.err.println("setup(): " + fnfe.toString());
+            System.exit(-1);
+        }
+    } </pre>
+      <p>
+            We also need a method to close our environment and store.
+    </p>
+      <pre class="programlisting">    // Close our environment and store.
+    public void shutdown()
+        throws DatabaseException {
+
+        store.close();
+        envmnt.close();
+    } </pre>
+      <p>
+            Now we need to create a method to actually write objects to our
+            store. This method creates a <code class="classname">SimpleDA</code>
+            object (see <a class="xref" href="simpleda.html" title="SimpleDA.class">SimpleDA.class</a> that we
+            will use to access our indexes. Then we instantiate a serious
+            of <code class="classname">SimpleEntityClass</code> (see <a class="xref" href="persist_access.html#simpleentity" title="A Simple Entity Class">A Simple Entity Class</a>) 
+            instances that we
+            will place in our store. Finally, we use our primary index
+            (obtained from the <code class="classname">SimpleDA</code> class
+            instance) to actually place these objects in our store.
+    </p>
+      <p>
+            In <a class="xref" href="simpleget.html" title="Retrieving Objects from an Entity Store">Retrieving Objects from an Entity Store</a>
+            we show a class that is used to retrieve these objects.
+    </p>
+      <pre class="programlisting">    // Populate the entity store
+    private void run()
+        throws DatabaseException {
+
+        setup();
+
+        // Open the data accessor. This is used to store
+        // persistent objects.
+        sda = new SimpleDA(store);
+
+        // Instantiate and store some entity classes
+        SimpleEntityClass sec1 = new SimpleEntityClass();
+        SimpleEntityClass sec2 = new SimpleEntityClass();
+        SimpleEntityClass sec3 = new SimpleEntityClass();
+        SimpleEntityClass sec4 = new SimpleEntityClass();
+        SimpleEntityClass sec5 = new SimpleEntityClass();
+
+        sec1.setPKey("keyone");
+        sec1.setSKey("skeyone");
+
+        sec2.setPKey("keytwo");
+        sec2.setSKey("skeyone");
+
+        sec3.setPKey("keythree");
+        sec3.setSKey("skeytwo");
+
+        sec4.setPKey("keyfour");
+        sec4.setSKey("skeythree");
+
+        sec5.setPKey("keyfive");
+        sec5.setSKey("skeyfour");
+
+        sda.pIdx.put(sec1);
+        sda.pIdx.put(sec2);
+        sda.pIdx.put(sec3);
+        sda.pIdx.put(sec4);
+        sda.pIdx.put(sec5);
+
+        shutdown();
+    } </pre>
+      <p>
+            Finally, to complete our class, we need a
+            <code class="methodname">main()</code> method, which simply calls our
+            <code class="methodname">run()</code> method.
+    </p>
+      <pre class="programlisting">    // main
+    public static void main(String args[]) {
+        SimpleStorePut ssp = new SimpleStorePut();
+        try {
+            ssp.run();
+        } catch (DatabaseException dbe) {
+            System.err.println("SimpleStorePut: " + dbe.toString());
+            dbe.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("Exception: " + e.toString());
+            e.printStackTrace();
+        }
+        System.out.println("All done.");
+    }
+
+} </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="simpleda.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="persist_access.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="simpleget.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">SimpleDA.class </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Retrieving Objects from an Entity Store</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

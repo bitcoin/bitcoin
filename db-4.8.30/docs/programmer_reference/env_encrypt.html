@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Encryption</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="env.html" title="Chapter 9.  The Berkeley DB Environment" />
+    <link rel="prev" href="env_security.html" title="Security" />
+    <link rel="next" href="env_remote.html" title="Remote filesystems" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Encryption</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="env_security.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 9. 
+        The Berkeley DB Environment
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="env_remote.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="env_encrypt"></a>Encryption</h2>
+          </div>
+        </div>
+      </div>
+      <p>Berkeley DB optionally supports encryption using the Rijndael/AES (also known
+as the Advanced Encryption Standard and Federal Information Processing
+Standard (FIPS) 197) algorithm for encryption or decryption.  The
+algorithm is configured to use a 128-bit key.  Berkeley DB uses a 16-byte
+initialization vector generated using the Mersenne Twister.  All
+encrypted information is additionally checksummed using the SHA1 Secure
+Hash Algorithm, using a 160-bit message digest.</p>
+      <p>The encryption support provided with Berkeley DB is intended to protect
+applications from an attacker obtaining physical access to the media on
+which a Berkeley DB database is stored, or an attacker compromising a system
+on which Berkeley DB is running but who is unable to read system or process
+memory on that system.
+<span class="bold"><strong>The encryption support provided with Berkeley DB will not protect applications
+from attackers able to read system memory on the system where Berkeley DB is
+running.</strong></span></p>
+      <p>Encryption is not the default for created databases, even in database
+environments configured for encryption.  In addition to configuring for
+encryption by calling the <a href="../api_reference/C/envset_encrypt.html" class="olink">DB_ENV-&gt;set_encrypt()</a> or
+<a href="../api_reference/C/dbset_encrypt.html" class="olink">DB-&gt;set_encrypt()</a> methods, applications must specify the
+<a href="../api_reference/C/dbset_flags.html#dbset_flags_DB_ENCRYPT" class="olink">DB_ENCRYPT</a> flag before creating the database in order for the
+database to be encrypted.  Further, databases cannot be converted to an
+encrypted format after they have been created without dumping and
+re-creating them.  Finally, encrypted databases cannot be read
+on systems with a different endianness than the system that created
+the encrypted database.</p>
+      <p>Each encrypted database environment (including all its encrypted
+databases) is encrypted using a single password and a single algorithm.
+Applications wanting to provide a finer granularity of database access
+must either use multiple database environments or implement additional
+access controls outside of Berkeley DB.</p>
+      <p>The only encrypted parts of a database environment are its databases
+and its log files. Specifically, the <a class="xref" href="env_region.html" title="Shared memory regions">Shared memory regions</a> supporting the database environment are not
+encrypted.  For this reason, it may be possible for an attacker to read
+some or all of an encrypted database by reading the on-disk files that
+back these shared memory regions.  To prevent such attacks, applications
+may want to use in-memory filesystem support (on systems that support
+it), or the <a href="../api_reference/C/envopen.html#open_DB_PRIVATE" class="olink">DB_PRIVATE</a> or <a href="../api_reference/C/envopen.html#envopen_DB_SYSTEM_MEM" class="olink">DB_SYSTEM_MEM</a> flags to the
+<a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a> method, to place the shared memory regions in memory that
+is never written to a disk.  As some systems page system memory to a
+backing disk, it is important to consider the specific operating system
+running on the machine as well.  Finally, when backing database
+environment shared regions with the filesystem, Berkeley DB can be configured
+to overwrite the shared regions before removing them by specifying the
+<a href="../api_reference/C/envset_flags.html#set_flags_DB_OVERWRITE" class="olink">DB_OVERWRITE</a> flag.  This option is only effective in the
+presence of fixed-block filesystems, journaling or logging filesystems
+will require operating system support and probably modification of the
+Berkeley DB sources.</p>
+      <p>While all user data is encrypted, parts of the databases and log files
+in an encrypted environment are maintained in an unencrypted state.
+Specifically, log record headers are not encrypted, only the actual log
+records.  Additionally, database internal page header fields are not
+encrypted.  These page header fields includes information such as the
+page's <a href="../api_reference/C/lsn.html" class="olink">DB_LSN</a> number and position in the database's sort
+order.</p>
+      <p>Log records distributed by a replication master to replicated clients are
+transmitted to the clients in unencrypted form.  If encryption is
+desired in a replicated application, the use of a secure transport
+is strongly suggested.</p>
+      <p>We gratefully acknowledge:</p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>Vincent Rijmen, Antoon Bosselaers and Paulo Barreto for writing the
+Rijndael/AES code used in Berkeley DB.</li>
+          <li>Steve Reid and James H. Brown for writing the SHA1 checksum code used
+in Berkeley DB.</li>
+          <li>Makoto Matsumoto and Takuji Nishimura for writing the Mersenne Twister
+code used in Berkeley DB.</li>
+          <li>Adam Stubblefield for integrating the Rijndael/AES, SHA1 checksum and
+Mersenne Twister code into Berkeley DB.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="env_security.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="env.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="env_remote.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Security </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Remote filesystems</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

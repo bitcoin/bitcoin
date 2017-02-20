@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Berkeley DB Transactional Data Store locking conventions</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="lock.html" title="Chapter 15.  The Locking Subsystem" />
+    <link rel="prev" href="lock_cam_conv.html" title="Berkeley DB Concurrent Data Store locking conventions" />
+    <link rel="next" href="lock_nondb.html" title="Locking and non-Berkeley DB applications" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Berkeley DB Transactional Data Store locking conventions</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="lock_cam_conv.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 15. 
+        The Locking Subsystem
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="lock_nondb.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="lock_am_conv"></a>Berkeley DB Transactional Data Store locking conventions</h2>
+          </div>
+        </div>
+      </div>
+      <p>All Berkeley DB access methods follow the same conventions for locking
+database objects.  Applications that do their own locking and also do
+locking via the access methods must be careful to adhere to these
+conventions.</p>
+      <p>Whenever a Berkeley DB database is opened, the <a href="../api_reference/C/db.html" class="olink">DB</a> handle is assigned
+a unique locker ID.  Unless transactions are specified, that ID is used
+as the locker for all calls that the Berkeley DB methods make to the lock
+subsystem.  In order to lock a file,  pages in the file, or records in
+the file, we must create a unique ID that can be used as the object to
+be locked in calls to the lock manager.  Under normal operation, that
+object is a 28-byte value created by the concatenation of a unique file
+identifier, a page or record number, and an object type (page or record).</p>
+      <p>In a transaction-protected environment, database create and delete
+operations are recoverable and single-threaded.  This single-threading
+is achieved using a single lock for the entire environment that must be
+acquired before beginning a create or delete operation.  In this case,
+the object on which Berkeley DB will lock is a 4-byte unsigned integer with
+a value of 0.</p>
+      <p>If applications are using the lock subsystem directly while they are
+also using locking via the access methods, they must take care not to
+inadvertently lock objects that happen to be equal to the unique file
+IDs used to lock files.  This is most easily accomplished by using a
+lock object with a length different from the values used by Berkeley DB.</p>
+      <p>All the access methods other than Queue use standard read/write locks
+in a simple multiple-reader/single writer page-locking scheme.  An
+operation that returns data (for example, <a href="../api_reference/C/dbget.html" class="olink">DB-&gt;get()</a> or 
+<a href="../api_reference/C/dbcget.html" class="olink">DBC-&gt;get()</a>) obtains a read lock on all the pages accessed while
+locating the requested record.   When an update operation is requested
+(for example, <a href="../api_reference/C/dbput.html" class="olink">DB-&gt;put()</a> or <a href="../api_reference/C/dbcdel.html" class="olink">DBC-&gt;del()</a>), the page containing
+the updated (or new) data is write-locked.  As read-modify-write cycles
+are quite common and are deadlock-prone under normal circumstances, the
+Berkeley DB interfaces allow the application to specify the <a href="../api_reference/C/dbcget.html#dbcget_DB_RMW" class="olink">DB_RMW</a>
+flag, which causes operations to immediately obtain a write lock, even
+though they are only reading the data.  Although this may reduce
+concurrency somewhat, it reduces the probability of deadlock.  In the
+presence of transactions, page locks are held until transaction commit.</p>
+      <p>The Queue access method does not hold long-term page locks.  Instead,
+page locks are held only long enough to locate records or to change
+metadata on a page, and record locks are held for the appropriate
+duration.  In the presence of transactions, record locks are held until
+transaction commit.  For Berkeley DB operations, record locks are held until
+operation completion; for <a href="../api_reference/C/dbc.html" class="olink">DBC</a> operations, record locks are held
+until subsequent records are returned or the cursor is closed.</p>
+      <p>Under non-transaction operations, the access methods do not normally
+hold locks across calls to the Berkeley DB interfaces.  The one exception to
+this rule is when cursors are used.  Because cursors maintain a position
+in a file, they must hold locks across calls; in fact, they will hold
+a lock until the cursor is closed.</p>
+      <p>In this mode, the assignment of locker IDs to <a href="../api_reference/C/db.html" class="olink">DB</a> and cursor
+handles is complicated.  If the <a href="../api_reference/C/dbopen.html#open_DB_THREAD" class="olink">DB_THREAD</a> option was specified
+when the <a href="../api_reference/C/db.html" class="olink">DB</a> handle was opened, each use of <a href="../api_reference/C/db.html" class="olink">DB</a> has its
+own unique locker ID, and each cursor is assigned its own unique locker
+ID when it is created, so <a href="../api_reference/C/db.html" class="olink">DB</a> handle and cursor operations can
+all conflict with one another.  (This is because when  Berkeley DB handles
+may be shared by multiple threads of control the Berkeley DB library cannot
+identify which operations are performed by which threads of control,
+and it must ensure that two different threads of control are not
+simultaneously modifying the same data structure.  By assigning each
+<a href="../api_reference/C/db.html" class="olink">DB</a> handle and cursor its own locker, two threads of control
+sharing a handle cannot inadvertently interfere with each other.)</p>
+      <p>This has important implications.  If a single thread of control opens
+two cursors, uses a combination of cursor and non-cursor operations, or
+begins two separate transactions, the operations are performed on behalf
+of different lockers.  Conflicts that arise between these different
+lockers may not cause actual deadlocks, but can, in fact, permanently
+block the thread of control.  For example, assume that an application
+creates a cursor and uses it to read record A.  Now, assume a second
+cursor is opened, and the application attempts to write record A using
+the second cursor.  Unfortunately, the first cursor has a read lock, so
+the second cursor cannot obtain its write lock.  However, that read lock
+is held by the same thread of control, so the read lock can never be
+released if we block waiting for the write lock.  This might appear to
+be a deadlock from the application's perspective, but Berkeley DB cannot
+identify it as such because it has no knowledge of which lockers belong
+to which threads of control.  For this reason, application designers
+are encouraged to close cursors as soon as they are done with them.</p>
+      <p>If the <a href="../api_reference/C/dbopen.html#open_DB_THREAD" class="olink">DB_THREAD</a> option was not specified when the <a href="../api_reference/C/db.html" class="olink">DB</a>
+handle was opened, all uses of the <a href="../api_reference/C/db.html" class="olink">DB</a> handle and all cursors
+created using that handle will use the same locker ID for all
+operations.  In this case, if a single thread of control opens two
+cursors or uses a combination of cursor and non-cursor operations, these
+operations are performed on behalf of the same locker, and so cannot
+deadlock or block the thread of control.</p>
+      <p>Complicated operations that require multiple cursors (or combinations
+of cursor and non-cursor operations) can be performed in two ways.
+First, they may be performed within a transaction, in which case all
+operations lock on behalf of the designated transaction.  Second, they
+may be performed using a local <a href="../api_reference/C/db.html" class="olink">DB</a> handle, although, as
+<a href="../api_reference/C/dbopen.html" class="olink">DB-&gt;open()</a> operations are relatively slow, this may not be a good
+idea.  Finally, the <a href="../api_reference/C/dbcdup.html" class="olink">DBC-&gt;dup()</a> function duplicates a cursor, using
+the same locker ID as the originating cursor.  There is no way to
+achieve this duplication functionality through the <a href="../api_reference/C/db.html" class="olink">DB</a> handle
+calls, but any <a href="../api_reference/C/db.html" class="olink">DB</a> call can be implemented by one or more calls
+through a cursor.</p>
+      <p>When the access methods use transactions, many of these problems disappear.
+The transaction ID is used as the locker ID for all operations performed
+on behalf of the transaction.  This means that the application may open
+multiple cursors on behalf of the same transaction and these cursors will
+all share a common locker ID.  This is safe because transactions cannot
+span threads of control, so the library knows that two cursors in the same
+transaction cannot modify the database concurrently.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="lock_cam_conv.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="lock.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="lock_nondb.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Berkeley DB Concurrent Data Store locking conventions </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Locking and non-Berkeley DB applications</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

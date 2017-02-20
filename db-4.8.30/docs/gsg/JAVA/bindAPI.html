@@ -1,0 +1,778 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Using the BIND APIs</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="DBEntry.html" title="Chapter 8. Database Records" />
+    <link rel="prev" href="usingDbt.html" title="Reading and Writing Database Records" />
+    <link rel="next" href="dbtJavaUsage.html" title="Database Usage Example" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Using the BIND APIs</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="usingDbt.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 8. Database Records</th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbtJavaUsage.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="bindAPI"></a>Using the BIND APIs</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="bindAPI.html#bindPrimitive">Numerical and String Objects</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="bindAPI.html#object2dbt">Serializable Complex Objects</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="bindAPI.html#customTuple">Custom Tuple Bindings</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>Except for Java String and boolean types, efficiently moving data in
+    and out of Java byte arrays for storage in a database can be a nontrivial
+    operation. To help you with this problem, DB provides the Bind APIs. 
+    While these APIs are described in detail in the
+    
+
+    <span>
+    <em class="citetitle">Berkeley DB Collections Tutorial</em>,
+    </span>
+
+    this section provides a brief introduction to using the Bind APIs with:</p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>Single field numerical and string objects</p>
+            <p>Use this if you want to store a single numerical or string object,
+        such as <code class="classname">Long</code>, <code class="classname">Double</code>, or
+        <code class="classname">String</code>.</p>
+          </li>
+          <li>
+            <p>Complex objects that implement Java serialization.</p>
+            <p>Use this if you are storing objects that implement
+            <code class="classname">Serializable</code> and if you do not need to sort them.
+        </p>
+          </li>
+          <li>
+            <p>Non-serialized complex objects.</p>
+            <p>If you are storing objects that do not implement serialization,
+        you can create your own custom tuple bindings. Note that you should
+        use custom tuple bindings even if your objects are serializable if
+        you want to sort on that data.</p>
+          </li>
+        </ul>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="bindPrimitive"></a>Numerical and String Objects</h3>
+            </div>
+          </div>
+        </div>
+        <p>You can use the Bind APIs to store primitive data in a <code class="classname">DatabaseEntry</code>
+      object. That is, you can store a single field containing one of the following types:</p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+                <code class="classname">String</code>
+              </p>
+            </li>
+            <li>
+              <p>
+                <code class="classname">Character</code>
+              </p>
+            </li>
+            <li>
+              <p>
+                <code class="classname">Boolean</code>
+              </p>
+            </li>
+            <li>
+              <p>
+                <code class="classname">Byte</code>
+              </p>
+            </li>
+            <li>
+              <p>
+                <code class="classname">Short</code>
+              </p>
+            </li>
+            <li>
+              <p>
+                <code class="classname">Integer</code>
+              </p>
+            </li>
+            <li>
+              <p>
+                <code class="classname">Long</code>
+              </p>
+            </li>
+            <li>
+              <p>
+                <code class="classname">Float</code>
+              </p>
+            </li>
+            <li>
+              <p>
+                <code class="classname">Double</code>
+              </p>
+            </li>
+          </ul>
+        </div>
+        <p>
+          To store primitive data using the Bind APIs:
+      </p>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>
+              <p>Create an <code class="classname">EntryBinding</code> object.</p>
+              <p>When you do this, you use <code class="classname">TupleBinding.getPrimitiveBinding()</code>
+          to return an appropriate binding for the conversion.</p>
+            </li>
+            <li>
+              <p>Use the <code class="classname">EntryBinding</code> object to place
+          the numerical object on the <code class="classname">DatabaseEntry</code>.</p>
+            </li>
+          </ol>
+        </div>
+        <p>Once the data is stored in the DatabaseEntry, you can put it to
+      the database in whatever manner you wish. For example:</p>
+        <a id="java_dbt6"></a>
+        <pre class="programlisting">package db.GettingStarted;
+
+import com.sleepycat.bind.EntryBinding;
+import com.sleepycat.bind.tuple.TupleBinding;
+import com.sleepycat.db.Database;
+import com.sleepycat.db.DatabaseEntry;
+
+...
+
+Database myDatabase = null;
+// Database open omitted for clarity.
+
+// Need a key for the put.
+try {
+    String aKey = "myLong";
+    DatabaseEntry theKey = new DatabaseEntry(aKey.getBytes("UTF-8"));    
+
+    // Now build the DatabaseEntry using a TupleBinding
+    Long myLong = new Long(123456789l);
+    DatabaseEntry theData = new DatabaseEntry();
+    EntryBinding myBinding = TupleBinding.getPrimitiveBinding(Long.class);
+    myBinding.objectToEntry(myLong, theData);
+
+    // Now store it
+    myDatabase.put(null, theKey, theData);
+} catch (Exception e) {
+    // Exception handling goes here
+}</pre>
+        <p>Retrieval from the <code class="classname">DatabaseEntry</code> object is
+      performed in much the same way:</p>
+        <a id="java_dbt7"></a>
+        <pre class="programlisting">package db.GettingStarted;
+      
+import com.sleepycat.bind.EntryBinding;
+import com.sleepycat.bind.tuple.TupleBinding;
+import com.sleepycat.db.Database;
+import com.sleepycat.db.DatabaseEntry;
+import com.sleepycat.db.LockMode;
+import com.sleepycat.db.OperationStatus;
+
+...
+
+Database myDatabase = null;
+// Database open omitted for clarity
+
+try {
+    // Need a key for the get
+    String aKey = "myLong";
+    DatabaseEntry theKey = new DatabaseEntry(aKey.getBytes("UTF-8"));
+    
+    // Need a DatabaseEntry to hold the associated data.
+    DatabaseEntry theData = new DatabaseEntry();
+
+    // Bindings need only be created once for a given scope
+    EntryBinding myBinding = TupleBinding.getPrimitiveBinding(Long.class);
+
+    // Get it
+    OperationStatus retVal = myDatabase.get(null, theKey, theData, 
+                                            LockMode.DEFAULT);
+    String retKey = null;
+    if (retVal == OperationStatus.SUCCESS) {
+        // Recreate the data.
+        // Use the binding to convert the byte array contained in theData
+        // to a Long type.
+        Long theLong = (Long) myBinding.entryToObject(theData);
+        retKey = new String(theKey.getData(), "UTF-8");
+        System.out.println("For key: '" + retKey + "' found Long: '" + 
+                            theLong + "'.");
+    } else {
+        System.out.println("No record found for key '" + retKey + "'.");
+    }
+} catch (Exception e) {
+    // Exception handling goes here
+} </pre>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="object2dbt"></a>Serializable Complex Objects</h3>
+            </div>
+          </div>
+        </div>
+        <p>Frequently your application requires you to store and manage
+      objects for your record data and/or keys. You may need to do this if you
+      are caching objects created by another process. You may also want to do
+      this if you want to store multiple data values on a record. When used
+      with just primitive data, or with objects containing a single data member,
+      DB database records effectively represent a single row in a two-column table.
+      By storing a complex object in the record, you can turn each record into
+      a single row in an <span class="emphasis"><em>n</em></span>-column table, where
+      <span class="emphasis"><em>n</em></span> is the number of data members contained by the
+      stored object(s).</p>
+        <p>In order to store objects in a 
+      DB database, you must convert them to and from a <code class="literal">byte</code> array.
+      The first instinct for many Java programmers is to do this using Java
+      serialization. While this is functionally a correct solution, the result
+      is poor space-performance because this causes the class information
+      to be stored on every such database record. This information can be quite large
+      and it is redundant — the class information does not vary for serialized objects of the same type.
+      </p>
+        <p>
+        In other words, directly using serialization to place your objects into byte
+        arrays means that you will be storing a great deal of unnecessary information in
+        your database, which ultimately leads to larger databases and more expensive disk
+        I/O.
+      </p>
+        <p>The easiest way for you to solve this problem is to use the Bind
+      APIs to perform the serialization for you. Doing so causes the extra
+      object information to be saved off to a unique <code class="classname">Database</code>
+      dedicated for that purpose. This means that you do not have to duplicate
+      that information on each record in the <code class="classname">Database</code>
+      that your application is using to store its information.</p>
+        <p>
+        Note that when you use the Bind APIs to perform serialization, you still
+        receive all the benefits of serialization. You can still use arbitrarily
+        complex object graphs, and you still receive built-in class evolution
+        through the serialVersionUID (SUID) scheme. All of the Java
+        serialization rules apply without modification. For example, you can
+        implement Externalizable instead of Serializable.
+      </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="bindCaveats"></a>Usage Caveats</h4>
+              </div>
+            </div>
+          </div>
+          <p>Before using the Bind APIs to perform serialization, you may
+        want to consider writing your own custom tuple bindings. Specifically,
+        avoid serialization if:
+        </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p>
+                If you need to sort based on the objects your are storing. 
+                The sort order is meaningless for the byte arrays that you
+                obtain through serialization. Consequently, you should not use serialization for keys if you
+                care about their sort order. You should
+                also not use serialization for record data if your
+                <code class="classname">Database</code> supports duplicate records and you care about sort order.
+        </p>
+              </li>
+              <li>
+                <p>
+                You want to minimize the size of your byte arrays. Even when using the Bind APIs to perform the
+                serialization the resulting <code class="literal">byte</code> array may be larger than necessary. You can achieve
+                more compact results by building your own custom tuple binding.
+            </p>
+              </li>
+              <li>
+                <p>
+                You want to optimize for speed. In general, custom tuple bindings are faster than serialization at
+                moving data in and out of <code class="literal">byte</code> arrays.
+            </p>
+              </li>
+            </ul>
+          </div>
+          <p>
+            For information on building your own custom tuple binding, see <a class="xref" href="bindAPI.html#customTuple" title="Custom Tuple Bindings">Custom Tuple Bindings</a>.
+        </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="objectSerial"></a>Serializing Objects</h4>
+              </div>
+            </div>
+          </div>
+          <p>To store a serializable complex object using the
+        Bind APIs:</p>
+          <div class="orderedlist">
+            <ol type="1">
+              <li>
+                <p>
+                Implement java.io.Serializable in the class whose instances that
+                you want to store.
+            </p>
+              </li>
+              <li>
+                <p>Open (create) your databases. You need two. The first is the
+            database that you use to store your data. The second is used to
+            store the class information.</p>
+              </li>
+              <li>
+                <p>Instantiate a class catalog. You do this with
+            <code class="classname">com.sleepycat.bind.serial.StoredClassCatalog</code>,
+            and at that time you must provide a handle to an open database
+            that is used to store the class information.</p>
+              </li>
+              <li>
+                <p>Create an entry binding that uses <code class="methodname">com.sleepycat.bind.serial.SerialBinding</code>.</p>
+              </li>
+              <li>
+                <p>Instantiate an instance of the object that you want to
+            store, and place it in a <code class="classname">DatabaseEntry</code>
+            using the entry binding that you created in the previous step.</p>
+              </li>
+            </ol>
+          </div>
+          <p>
+            For example, suppose you want to store a long, double, and a
+            String as a record's data. Then you might create a class that
+            looks something like this:
+        </p>
+          <a id="java_dbt8"></a>
+          <pre class="programlisting">package db.GettingStarted;    
+
+import java.io.Serializable;
+
+public class MyData implements Serializable {
+    private long longData;
+    private double doubleData;
+    private String description;
+
+    MyData() {
+        longData = 0;
+        doubleData = 0.0;
+        description = null;
+    }
+
+    public void setLong(long data) {
+        longData = data;
+    }
+
+    public void setDouble(double data) {
+        doubleData = data;
+    }
+
+    public void setDescription(String data) {
+        description = data;
+    }
+
+    public long getLong() {
+        return longData;
+    }
+
+    public double getDouble() {
+        return doubleData;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+}</pre>
+          <p>You can then store instances of this class as follows:</p>
+          <a id="java_dbt9"></a>
+          <pre class="programlisting">package db.GettingStarted;
+
+import com.sleepycat.bind.EntryBinding;
+import com.sleepycat.bind.serial.StoredClassCatalog;
+import com.sleepycat.bind.serial.SerialBinding;
+import com.sleepycat.db.Database;
+import com.sleepycat.db.DatabaseConfig;
+import com.sleepycat.db.DatabaseEntry;
+import com.sleepycat.db.DatabaseType;
+...
+
+// The key data.
+String aKey = "myData";
+
+// The data data
+MyData data2Store = new MyData();
+data2Store.setLong(123456789l);
+data2Store.setDouble(1234.9876543);
+data2Store.setDescription("A test instance of this class");
+
+try {
+    // Open the database that you will use to store your data
+    DatabaseConfig myDbConfig = new DatabaseConfig();
+    myDbConfig.setAllowCreate(true);
+    myDbConfig.setSortedDuplicates(true);
+    myDbConfig.setType(DatabaseType.BTREE);
+    Database myDatabase = new Database("myDb", null, myDbConfig);
+
+    // Open the database that you use to store your class information.
+    // The db used to store class information does not require duplicates
+    // support.
+    myDbConfig.setSortedDuplicates(false);
+    Database myClassDb = new Database("classDb", null, myDbConfig); 
+
+    // Instantiate the class catalog
+    StoredClassCatalog classCatalog = new StoredClassCatalog(myClassDb);
+
+    // Create the binding
+    EntryBinding dataBinding = new SerialBinding(classCatalog, 
+                                                 MyData.class);
+
+    // Create the DatabaseEntry for the key
+    DatabaseEntry theKey = new DatabaseEntry(aKey.getBytes("UTF-8"));
+
+    // Create the DatabaseEntry for the data. Use the EntryBinding object
+    // that was just created to populate the DatabaseEntry
+    DatabaseEntry theData = new DatabaseEntry();
+    dataBinding.objectToEntry(data2Store, theData);
+
+    // Put it as normal
+    myDatabase.put(null, theKey, theData);
+    
+    // Database and environment close omitted for brevity 
+} catch (Exception e) {
+    // Exception handling goes here
+}</pre>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="objectDeserial"></a>Deserializing Objects</h4>
+              </div>
+            </div>
+          </div>
+          <p>Once an object is stored in the database, you can retrieve the
+        <code class="classname">MyData</code> objects from the retrieved
+        <code class="classname">DatabaseEntry</code> using the Bind APIs in much the
+        same way as is described above. For example:</p>
+          <a id="java_dbt10"></a>
+          <pre class="programlisting">package db.GettingStarted;
+
+import com.sleepycat.bind.EntryBinding;
+import com.sleepycat.bind.serial.StoredClassCatalog;
+import com.sleepycat.bind.serial.SerialBinding;
+import com.sleepycat.db.Database;
+import com.sleepycat.db.DatabaseConfig;
+import com.sleepycat.db.DatabaseEntry;
+import com.sleepycat.db.DatabaseType;
+import com.sleepycat.db.LockMode;
+
+...
+
+// The key data.
+String aKey = "myData";
+
+try {
+    // Open the database that stores your data
+    DatabaseConfig myDbConfig = new DatabaseConfig();
+    myDbConfig.setAllowCreate(false);
+    myDbConfig.setType(DatabaseType.BTREE);
+    Database myDatabase = new Database("myDb", null, myDbConfig);
+
+    // Open the database that stores your class information.
+    Database myClassDb = new Database("classDb", null, myDbConfig); 
+
+    // Instantiate the class catalog
+    StoredClassCatalog classCatalog = new StoredClassCatalog(myClassDb);
+
+    // Create the binding
+    EntryBinding dataBinding = new SerialBinding(classCatalog, 
+                                                 MyData.class);
+
+    // Create DatabaseEntry objects for the key and data
+    DatabaseEntry theKey = new DatabaseEntry(aKey.getBytes("UTF-8"));
+    DatabaseEntry theData = new DatabaseEntry();
+
+    // Do the get as normal
+    myDatabase.get(null, theKey, theData, LockMode.DEFAULT);
+
+    // Recreate the MyData object from the retrieved DatabaseEntry using
+    // the EntryBinding created above
+    MyData retrievedData = (MyData) dataBinding.entryToObject(theData);
+ 
+    // Database and environment close omitted for brevity
+} catch (Exception e) {
+    // Exception handling goes here
+}</pre>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="customTuple"></a>Custom Tuple Bindings</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+        If you want to store complex objects in your database, then you can use
+        tuple bindings to do this. While they are more work to write and
+        maintain than if you were to use serialization, the
+        <code class="literal">byte</code> array conversion is faster. In addition, custom
+        tuple bindings should allow you to create <code class="literal">byte</code> arrays
+        that are smaller than those created by serialization. Custom tuple
+        bindings also allow you to optimize your BTree comparisons, whereas
+        serialization does not.
+      </p>
+        <p>
+        For information on using serialization to store complex objects, see
+        <a class="xref" href="bindAPI.html#object2dbt" title="Serializable Complex Objects">Serializable Complex Objects</a>.
+      </p>
+        <p>To store complex objects using a custom tuple binding:</p>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>
+              <p>Implement the class whose instances that you want to store.
+          Note that you do not have to implement the Serializable interface.</p>
+            </li>
+            <li>
+              <p>Write a tuple binding using the <code class="classname">com.sleepycat.bind.tuple.TupleBinding</code>
+          class.</p>
+            </li>
+            <li>
+              <p>Open (create) your database. Unlike serialization, you only
+          need one.</p>
+            </li>
+            <li>
+              <p>Create an entry binding that uses the tuple binding that you
+          implemented in step 2.</p>
+            </li>
+            <li>
+              <p>Instantiate an instance of the object that you want to store,
+          and place it in a <code class="classname">DatabaseEntry</code> using the
+          entry binding that you created in the previous step.</p>
+            </li>
+          </ol>
+        </div>
+        <p>
+        For example, suppose you want to your keys to be instances of the
+        following class:
+      </p>
+        <a id="java_dbt11"></a>
+        <pre class="programlisting">package db.GettingStarted;
+
+public class MyData2 {
+    private long longData;
+    private Double doubleData;
+    private String description;
+
+    public MyData2() {
+        longData = 0;
+        doubleData = new Double(0.0);
+        description = "";
+    }
+
+    public void setLong(long data) {
+        longData = data;
+    }
+
+    public void setDouble(Double data) {
+        doubleData = data;
+    }
+
+    public void setString(String data) {
+        description = data;
+    }
+
+    public long getLong() {
+        return longData;
+    }
+
+    public Double getDouble() {
+        return doubleData;
+    }
+
+    public String getString() {
+        return description;
+    }
+} </pre>
+        <p>In this case, you need to write a tuple binding for the
+      <code class="classname">MyData2</code> class. When you do this, you must
+      implement the <code class="methodname">TupleBinding.objectToEntry()</code>
+      and <code class="methodname">TupleBinding.entryToObject()</code> abstract methods.
+      Remember the following as you implement these methods:</p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>You use <code class="methodname">TupleBinding.objectToEntry()</code> to convert
+          objects to <code class="literal">byte</code> arrays. You use
+          <code class="classname">com.sleepycat.bind.tuple.TupleOutput</code> to write
+          primitive data types to the <code class="literal">byte</code> array. Note that
+          <code class="classname">TupleOutput</code> provides methods that allows
+          you to work with numerical types (<code class="literal">long</code>,
+          <code class="literal">double</code>, <code class="literal">int</code>, and so forth) and
+          not the corresponding <code class="literal">java.lang</code> numerical
+          classes.</p>
+            </li>
+            <li>
+              <p>The order that you write data to the <code class="literal">byte</code>
+          array in <code class="methodname">TupleBinding.objectToEntry()</code> is the order that
+          it appears in the array. So given the <code class="classname">MyData2</code>
+          class as an example, if you write <code class="literal">description</code>,
+          <code class="literal">doubleData</code>, and then <code class="literal">longData</code>,
+          then the resulting byte array will contain these data elements in
+          that order. This means that your records will sort based on the
+          value of the <code class="literal">description</code> data member and then
+          the <code class="literal">doubleData</code> member, and so forth. If you
+          prefer to sort based on, say, the <code class="literal">longData</code> data
+          member, write it to the byte array first.</p>
+            </li>
+            <li>
+              <p>You use <code class="methodname">TupleBinding.entryToObject()</code> to convert
+          the <code class="literal">byte</code> array back into an instance of your
+          original class. You use <code class="classname">com.sleepycat.bind.tuple.TupleInput</code>
+          to get data from the <code class="literal">byte</code> array.</p>
+            </li>
+            <li>
+              <p>The order that you read data from the <code class="literal">byte</code>
+          array must be exactly the same as the order in which it was written.</p>
+            </li>
+          </ul>
+        </div>
+        <p>For example:</p>
+        <a id="java_dbt12"></a>
+        <pre class="programlisting">package db.GettingStarted;
+
+import com.sleepycat.bind.tuple.TupleBinding;
+import com.sleepycat.bind.tuple.TupleInput;
+import com.sleepycat.bind.tuple.TupleOutput;
+
+public class MyTupleBinding extends TupleBinding {
+
+    // Write a MyData2 object to a TupleOutput
+    public void objectToEntry(Object object, TupleOutput to) {
+
+        MyData2 myData = (MyData2)object;
+
+        // Write the data to the TupleOutput (a DatabaseEntry).
+        // Order is important. The first data written will be
+        // the first bytes used by the default comparison routines.
+        to.writeDouble(myData.getDouble().doubleValue());
+        to.writeLong(myData.getLong());
+        to.writeString(myData.getString());
+    }
+
+    // Convert a TupleInput to a MyData2 object
+    public Object entryToObject(TupleInput ti) {
+
+        // Data must be read in the same order that it was
+        // originally written.
+        Double theDouble = new Double(ti.readDouble());
+        long theLong = ti.readLong();
+        String theString = ti.readString();
+
+        MyData2 myData = new MyData2();
+        myData.setDouble(theDouble);
+        myData.setLong(theLong);
+        myData.setString(theString);
+
+        return myData;
+    }
+} </pre>
+        <p>In order to use the tuple binding, instantiate the binding and
+      then use:</p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p><code class="methodname">MyTupleBinding.objectToEntry()</code> to
+          convert a MyData2 object to a <code class="classname">DatabaseEntry</code>.</p>
+            </li>
+            <li>
+              <p><code class="methodname">MyTupleBinding.entryToObject()</code> to convert
+          a <code class="classname">DatabaseEntry</code> to a <code class="classname">MyData2</code>
+          object.</p>
+            </li>
+          </ul>
+        </div>
+        <p>For example:</p>
+        <a id="java_dbt13"></a>
+        <pre class="programlisting">package db.GettingStarted;
+
+import com.sleepycat.bind.tuple.TupleBinding;
+import com.sleepycat.db.DatabaseEntry;
+ 
+...
+
+TupleBinding keyBinding = new MyTupleBinding();
+
+MyData2 theKeyData = new MyData2();
+theKeyData.setLong(123456789l);
+theKeyData.setDouble(new Double(12345.6789));
+theKeyData.setString("My key data");
+
+DatabaseEntry myKey = new DatabaseEntry();
+
+try {
+    // Store theKeyData in the DatabaseEntry
+    keyBinding.objectToEntry(theKeyData, myKey);
+
+    ...
+    // Database put and get activity omitted for clarity
+    ...
+
+    // Retrieve the key data
+    theKeyData = (MyData2) keyBinding.entryToObject(myKey);
+} catch (Exception e) {
+    // Exception handling goes here
+}</pre>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="usingDbt.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="DBEntry.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbtJavaUsage.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Reading and Writing Database Records </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Database Usage Example</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

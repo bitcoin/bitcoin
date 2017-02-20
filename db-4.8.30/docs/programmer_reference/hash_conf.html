@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Hash access method specific configuration</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="am_conf.html" title="Chapter 2.  Access Method Configuration" />
+    <link rel="prev" href="bt_conf.html" title="Btree access method specific configuration" />
+    <link rel="next" href="rq_conf.html" title="Queue and Recno access method specific configuration" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Hash access method specific configuration</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="bt_conf.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+        Access Method Configuration
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="rq_conf.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="hash_conf"></a>Hash access method specific configuration</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="hash_conf.html#am_conf_h_ffactor">Page fill factor</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="hash_conf.html#am_conf_h_hash">Specifying a database hash</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="hash_conf.html#am_conf_h_nelem">Hash table size</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+    There are a series of configuration tasks which you can perform when
+    using the Hash access method.  They are described in the following sections.
+</p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="am_conf_h_ffactor"></a>Page fill factor</h3>
+            </div>
+          </div>
+        </div>
+        <p>The density, or page fill factor, is an approximation of the number of
+keys allowed to accumulate in any one bucket, determining when the hash
+table grows or shrinks.  If you know the average sizes of the keys and
+data in your data set, setting the fill factor can enhance performance.
+A reasonable rule to use to compute fill factor is:</p>
+        <pre class="programlisting">(pagesize - 32) / (average_key_size + average_data_size + 8)</pre>
+        <p>The desired density within the hash table can be specified by calling
+the <a href="../api_reference/C/dbset_h_ffactor.html" class="olink">DB-&gt;set_h_ffactor()</a> method.  If no density is specified, one will
+be selected dynamically as pages are filled.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="am_conf_h_hash"></a>Specifying a database hash</h3>
+            </div>
+          </div>
+        </div>
+        <p>The database hash determines in which bucket a particular key will reside.
+The goal of hashing keys is to distribute keys equally across the database
+pages, therefore it is important that the hash function work well with
+the specified keys so that the resulting bucket usage is relatively
+uniform.  A hash function that does not work well can effectively turn
+into a sequential list.</p>
+        <p>No hash performs equally well on all possible data sets.  It is possible
+that applications may find that the default hash function performs poorly
+with a particular set of keys.  The distribution resulting from the hash
+function can be checked using the <a href="../api_reference/C/db_stat.html" class="olink">db_stat utility</a>.  By comparing the
+number of hash buckets and the number of keys, one can decide if the entries
+are hashing in a well-distributed manner.</p>
+        <p>The hash function for the hash table can be specified by calling the
+<a href="../api_reference/C/dbset_h_hash.html" class="olink">DB-&gt;set_h_hash()</a> method.  If no hash function is specified, a default
+function will be used.  Any application-specified hash function must
+take a reference to a <a href="../api_reference/C/db.html" class="olink">DB</a> object, a pointer to a byte string and
+its length, as arguments and return an unsigned, 32-bit hash value.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="am_conf_h_nelem"></a>Hash table size</h3>
+            </div>
+          </div>
+        </div>
+        <p>When setting up the hash database, knowing the expected number of elements
+that will be stored in the hash table is useful.  This value can be used
+by the Hash access method implementation to more accurately construct the
+necessary number of buckets that the database will eventually require.</p>
+        <p>The anticipated number of elements in the hash table can be specified by
+calling the <a href="../api_reference/C/dbset_h_nelem.html" class="olink">DB-&gt;set_h_nelem()</a> method.  If not specified, or set too low,
+hash tables will expand gracefully as keys are entered, although a slight
+performance degradation may be noticed.  In order for the estimated number
+of elements to be a useful value to Berkeley DB, the <a href="../api_reference/C/dbset_h_ffactor.html" class="olink">DB-&gt;set_h_ffactor()</a> method
+must also be called to set the page fill factor.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="bt_conf.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="am_conf.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="rq_conf.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Btree access method specific configuration </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Queue and Recno access method specific configuration</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

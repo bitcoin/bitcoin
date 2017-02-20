@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 4. Replica versus Master Processes</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Replicated Berkeley DB Applications" />
+    <link rel="up" href="index.html" title="Getting Started with Replicated Berkeley DB Applications" />
+    <link rel="prev" href="heartbeats.html" title="Managing Heartbeats" />
+    <link rel="next" href="processingloop.html" title="Processing Loop" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 4. Replica versus Master Processes</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="heartbeats.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="processingloop.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="fwrkmasterreplica"></a>Chapter 4. Replica versus Master Processes</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="fwrkmasterreplica.html#determinestate">Determining State</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="processingloop.html">Processing Loop</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="exampledoloop.html">Example Processing Loop</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="exampledoloop.html#runningit">Running It</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+        </dl>
+      </div>
+      <p>
+                  Every environment participating in a replicated application
+                  must know whether it is a <span class="emphasis"><em>master</em></span> or
+                  <span class="emphasis"><em>replica</em></span>. The reason for this is
+                  because, simply, the master can modify the database while
+                  replicas cannot. As a result, not only will you open
+                  databases differently depended on whether the environment is
+                  running as a master, but the environment will frequently
+                  behave quite a bit differently depending on whether it
+                  thinks it is operating as the read/write interface for
+                  your database.
+          </p>
+      <p>
+                  Moreover, an environment must also be capable of
+                  gracefully switching between master and replica states.
+                  This means that the environment must be able to detect when
+                  it has switched states.
+          </p>
+      <p>
+                  Not surprisingly, a large part of your application's code
+                  will be tied up in knowing which state a given
+                  environment is in and then in the logic of how to behave depending on
+                  its state.
+          </p>
+      <p>
+                  This chapter shows you how to determine your environment's
+                  state, and it then shows you some sample code on how
+                  an application might behave depending on whether it is a
+                  master or a replica in a replicated application.
+          </p>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="determinestate"></a>Determining State</h2>
+            </div>
+          </div>
+        </div>
+        <p>
+                          In order to determine whether your code is
+                          running as a master or a replica, you implement a
+                          callback whose function it is to respond to
+                          events that happen within the DB library. 
+                          Note that these events are raised whenever the state is established. 
+                          For example, when the current environment becomes a client —
+                          including at application startup — the
+                          <code class="literal">DB_EVENT_REP_CLIENT</code> event is raised. Also, when an
+                          election is held and a replica is elected to be a master, the
+                          <code class="literal">DB_EVENT_REP_MASTER</code> event is raised on the newly elected master and the
+                          <code class="literal">DB_EVENT_REP_NEWMASTER</code> is raised on the other replicas.
+                  </p>
+        <p>
+                          Note that this callback is usable for events beyond
+                          those required for replication purposes. In this
+                          section, however, we only discuss the
+                          replication-specific events.
+                  </p>
+        <p>
+                          The callback is required to determine
+                          which event has been passed to it, and then take
+                          action depending on the event. For replication,
+                          the events that we care about are:
+                  </p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+                                          <code class="literal">DB_EVENT_REP_MASTER</code>
+                                          
+                                  </p>
+              <p>
+                                          The local environment is now a master.
+                                  </p>
+            </li>
+            <li>
+              <p>
+                                          <code class="literal">DB_EVENT_REP_CLIENT</code>
+                                          
+                                  </p>
+              <p>
+                                          The local environment is now a replica.
+                                  </p>
+            </li>
+            <li>
+              <p>
+                                          <code class="literal">DB_EVENT_REP_STARTUPDONE</code>
+                                          
+                                  </p>
+              <p>
+                                          The replica has completed startup
+                                          synchronization and is now
+                                          processing log records received
+                                          from the master.
+                                  </p>
+            </li>
+            <li>
+              <p>
+                                          <code class="literal">DB_EVENT_REP_NEWMASTER</code>
+                                          
+                                  </p>
+              <p>
+                                          An election was held and a new environment was made a
+                                          master.  However, the current environment <span class="emphasis"><em>is
+                                              not</em></span> the master. This event exists so that
+                                          you can cause your code to take some unique action in the
+                                          event that the replication groups switches masters.
+                                  </p>
+            </li>
+          </ul>
+        </div>
+        <p>
+                          Note that these events are raised whenever the
+                          state is established. That is, when the current
+                          environment becomes a replica, and that includes
+                          at application startup, the event is raised.
+                          Also, when an election is held and a replica is elected to be a
+                          master, then the event occurs.
+                  </p>
+        <p>
+                          The implementation of this callback is fairly
+                          simple. First you pass a structure to the
+                          environment handle that you can use to record the
+                          environment's state, and then you implement a switch
+                          statement within the callback that you use to
+                          record the current state, depending on the
+                          arriving event.
+                  </p>
+        <p>
+                          For example:
+                  </p>
+        <pre class="programlisting">#include &lt;db_cxx.h&gt;
+/* Forward declaration */
+void *event_callback(DbEnv *, u_int32_t, void *);
+
+...
+
+/* The structure we use to track our environment's state */
+typedef struct {
+    int is_master;
+} APP_DATA;
+
+...
+
+/*
+ * Inside our main() function, we declare an APP_DATA variable.
+ */
+APP_DATA my_app_data;
+my_app_data.is_master = 0; /* Assume we start as a replica */
+
+...
+
+/*
+ * Now we open our environment handle and set the APP_DATA structure
+ * to it's app_private member.
+ */
+DbEnv *dbenv = new DbEnv(0);
+dbenv-&gt;set_app_private(&amp;my_app_data);
+
+/* Having done that, register the callback with the
+ * Berkeley DB library
+ */
+dbenv-&gt;set_event_notify(event_callback); </pre>
+        <p>
+        That done, we still need to implement the callback itself. This
+        implementation can be fairly trivial. 
+</p>
+        <pre class="programlisting">/*
+ * A callback used to determine whether the local environment is a 
+ * replica or a master. This is called by the Replication Manager
+ * when the local environment changes state.
+ */
+void *
+event_callback(DbEnv *dbenv, u_int32_t which, void *info)
+{
+    APP_DATA *app = dbenv-&gt;get_app_private();
+
+    info = NULL;                /* Currently unused. */
+
+    switch (which) {
+    case DB_EVENT_REP_MASTER:
+        app-&gt;is_master = 1;
+        break;
+
+    case DB_EVENT_REP_CLIENT:
+        app-&gt;is_master = 0;
+        break;
+
+    case DB_EVENT_REP_STARTUPDONE: /* fallthrough */
+    case DB_EVENT_REP_NEWMASTER:
+        /* Ignore. */
+        break;
+
+    default:
+        dbenv-&gt;errx(dbenv, "ignoring event %d", which);
+    }
+} </pre>
+        <p>
+        Notice how we access the
+        <code class="literal">APP_DATA</code> information using the environment
+        handle's <code class="literal">app_private</code> data member. We also ignore
+        the <code class="literal">DB_EVENT_REP_NEWMASTER</code> and
+        <code class="literal">DB_EVENT_REP_STARTUPDONE</code> cases since these are not
+        relevant for simple replicated applications.
+</p>
+        <p>
+        Of course, this only gives us the current state of the environment. We
+        still need the code that determines what to do when the environment 
+        changes state and how to behave depending on the state (described
+        in the next section).
+</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="heartbeats.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="processingloop.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Managing Heartbeats </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Processing Loop</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 13.  Application Specific Logging and Recovery</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="prev" href="rep_ex_rq.html" title="Ex_rep_base: putting it all together" />
+    <link rel="next" href="apprec_def.html" title="Defining application-specific log records" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 13. 
+        Application Specific Logging and Recovery
+        </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="rep_ex_rq.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="apprec_def.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="apprec"></a>Chapter 13. 
+        Application Specific Logging and Recovery
+        </h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="apprec.html#apprec_intro">Introduction to application specific logging and recovery</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="apprec_def.html">Defining application-specific log records</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="apprec_auto.html">Automatically generated functions</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="apprec_config.html">Application configuration</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="apprec_intro"></a>Introduction to application specific logging and recovery</h2>
+            </div>
+          </div>
+        </div>
+        <p>It is possible to use the Locking, Logging and Transaction subsystems
+of Berkeley DB to provide transaction semantics on objects other than those
+described by the Berkeley DB access methods.  In these cases, the application
+will need application-specific logging and recovery functions.</p>
+        <p>For example, consider an application that provides transaction semantics
+on data stored in plain text files accessed using the POSIX read and
+write system calls.  The read and write operations for which transaction
+protection is desired will be bracketed by calls to the standard Berkeley DB
+transactional interfaces, <a href="../api_reference/C/txnbegin.html" class="olink">DB_ENV-&gt;txn_begin()</a> and <a href="../api_reference/C/txncommit.html" class="olink">DB_TXN-&gt;commit()</a>, and
+the transaction's locker ID will be used to acquire relevant read and
+write locks.</p>
+        <p>Before data is accessed, the application must make a call to the lock
+manager, <a href="../api_reference/C/lockget.html" class="olink">DB_ENV-&gt;lock_get()</a>, for a lock of the appropriate type (for
+example, read) on the object being locked.  The object might be a page
+in the file, a byte, a range of bytes, or some key.  It is up to the
+application to ensure that appropriate locks are acquired.  Before a
+write is performed, the application should acquire a write lock on the
+object by making an appropriate call to the lock manager,
+<a href="../api_reference/C/lockget.html" class="olink">DB_ENV-&gt;lock_get()</a>.  Then, the application should make a call to the log
+manager, via the automatically-generated log-writing function described
+as follows.  This record should contain enough information to redo the
+operation in case of failure after commit and to undo the operation in
+case of abort.</p>
+        <p>When designing applications that will use the log subsystem, it is
+important to remember that the application is responsible for providing
+any necessary structure to the log record.  For example, the application
+must understand what part of the log record is an operation code, what
+part identifies the file being modified, what part is redo information,
+and what part is undo information.</p>
+        <p>After the log message is written, the application may issue the write
+system call.  After all requests are issued, the application may call
+<a href="../api_reference/C/txncommit.html" class="olink">DB_TXN-&gt;commit()</a>. When <a href="../api_reference/C/txncommit.html" class="olink">DB_TXN-&gt;commit()</a> returns, the caller is
+guaranteed that all necessary log writes have been written to disk.</p>
+        <p>At any time before issuing a <a href="../api_reference/C/txncommit.html" class="olink">DB_TXN-&gt;commit()</a>, the application may
+call <a href="../api_reference/C/txnabort.html" class="olink">DB_TXN-&gt;abort()</a>, which will result in restoration of the database
+to a consistent pretransaction state.  (The application may specify its
+own recovery function for this purpose using the
+<a href="../api_reference/C/envset_app_dispatch.html" class="olink">DB_ENV-&gt;set_app_dispatch()</a> method.  The recovery function must be able to
+either reapply or undo the update depending on the context, for each
+different type of log record. The recovery functions must not use Berkeley DB
+methods to access data in the environment as there is no way to
+coordinate these accesses with either the aborting transaction or the
+updates done by recovery or replication.)</p>
+        <p>If the application crashes, the recovery process uses the log to restore
+the database to a consistent state.</p>
+        <p>Berkeley DB includes tools to assist in the development of application-specific
+logging and recovery.  Specifically, given a description of information
+to be logged in a family of log records, these tools will automatically
+create log-writing functions (functions that marshall their arguments
+into a single log record), log-reading functions (functions that read
+a log record and unmarshall it into a structure containing fields that
+map into the arguments written to the log), log-printing functions
+(functions that print the contents of a log record for debugging), and
+templates for recovery functions (functions that review log records
+during transaction abort or recovery).  The tools and generated code
+are C-language and POSIX-system based, but the generated code should be
+usable on any system, not just POSIX systems.</p>
+        <p>A sample application that does application-specific recovery is included
+in the Berkeley DB distribution, in the directory <code class="filename">examples_c/ex_apprec</code>.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="rep_ex_rq.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="apprec_def.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Ex_rep_base: putting it all together </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Defining application-specific log records</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

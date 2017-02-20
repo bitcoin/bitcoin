@@ -1,0 +1,481 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB-&gt;associate()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="db.html" title="Chapter 2.  The DB Handle" />
+    <link rel="prev" href="db.html" title="Chapter 2.  The DB Handle" />
+    <link rel="next" href="dbassociate_foreign.html" title="DB-&gt;associate_foreign()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB-&gt;associate()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="db.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+                The DB Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbassociate_foreign.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="dbassociate"></a>DB-&gt;associate()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB-&gt;associate(DB *primary, DB_TXN *txnid, DB *secondary,
+    int (*callback)(DB *secondary,
+    const DBT *key, const DBT *data, DBT *result), u_int32_t flags);  </pre>
+      <p>
+         The <code class="methodname">DB-&gt;associate()</code> function is used to declare one database a
+         secondary index for a primary database.  The 
+         <a class="link" href="db.html" title="Chapter 2.  The DB Handle">DB</a> handle that you call the
+         <code class="methodname">associate()</code> method from is the primary
+         database.
+     </p>
+      <p>
+         After a secondary database has been "associated" with a primary
+         database, all updates to the primary will be automatically
+         reflected in the secondary and all reads from the secondary will
+         return corresponding data from the primary.  Note that as primary
+         keys must be unique for secondary indices to work, the primary
+         database must be configured without support for duplicate data
+         items.  See 
+         <a href="../../programmer_reference/am_second.html" class="olink">Secondary Indices</a> 
+         in the <em class="citetitle">Berkeley DB Programmer's Reference Guide</em> for more information.
+    </p>
+      <p>
+         The <code class="methodname">DB-&gt;associate()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1630489"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1630915"></a>callback</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>callback</strong></span> parameter is a callback
+                          function that creates the set of secondary keys corresponding to a
+                          given primary key and data pair.
+                     </p>
+          <p>
+                          The callback parameter may be NULL if both the primary and secondary
+                          database handles were opened with the 
+                          <a class="link" href="dbopen.html#dbopen_DB_RDONLY">DB_RDONLY</a>  flag.
+                     </p>
+          <p>
+                         The callback takes four arguments:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p>
+                                <code class="literal">secondary</code>
+                            </p>
+                <p>
+                                The <span class="bold"><strong>secondary</strong></span> parameter is the
+                                database handle for the secondary.
+                            </p>
+              </li>
+              <li>
+                <p>
+                                <code class="literal">key</code>
+                            </p>
+                <p>
+                                    The <span class="bold"><strong>key</strong></span> parameter is a 
+                                    <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a>  referencing the primary key.
+                            </p>
+              </li>
+              <li>
+                <p>
+                                <code class="literal">data</code>
+                            </p>
+                <p>
+                                    The <span class="bold"><strong>data</strong></span> parameter is a 
+                                    <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a>  referencing the primary data
+                                    item.
+                            </p>
+              </li>
+              <li>
+                <p>
+                                <code class="literal">result</code>
+                            </p>
+                <p>
+                                The <span class="bold"><strong>result</strong></span> parameter is a zeroed
+                                <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a>  in which the callback
+                                function should fill in <span class="bold"><strong>data</strong></span> and
+                                <span class="bold"><strong>size</strong></span> fields that describe the
+                                secondary key or keys.
+                            </p>
+              </li>
+            </ul>
+          </div>
+          <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+            <h3 class="title">Note</h3>
+            <p>
+            Berkeley DB is not re-entrant. Callback functions should not
+            attempt to make library calls (for example, to release locks or
+            close open handles). Re-entering Berkeley DB is not guaranteed
+            to work correctly, and the results are undefined.
+        </p>
+          </div>
+          <p>
+                The result <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a> can
+                have the following flags set in its 
+                <span class="bold"><strong>flags</strong></span> field:
+            </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="associate_DB_DBT_APPMALLOC"></a>
+                                  <code class="literal">DB_DBT_APPMALLOC</code>
+                            </p>
+                <p>
+                                 If the callback function needs to allocate memory for the <span class="bold"><strong>result</strong></span> data field (rather than simply pointing
+                                 into the primary key or datum), DB_DBT_APPMALLOC should be set in the
+                                 <span class="bold"><strong>flags</strong></span> field of the 
+                                 <span class="bold"><strong>result</strong></span> 
+                                 <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a>, which indicates that
+                                 Berkeley DB should free the memory when it is done with it.
+                            </p>
+              </li>
+              <li>
+                <p><a id="associate_DB_DBT_MULTIPLE"></a>
+                                  <code class="literal">DB_DBT_MULTIPLE</code>
+                            </p>
+                <p>
+                                 To return multiple secondary keys, DB_DBT_MULTIPLE should be set in
+                                 the <span class="bold"><strong>flags</strong></span> field of the <span class="bold"><strong>result</strong></span> <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a>, 
+                                 which indicates Berkeley DB should treat the 
+                                 <span class="bold"><strong>size</strong></span> field as the
+                                 number of secondary keys (zero or more), and the <span class="bold"><strong>data</strong></span> field as a pointer to an array of that
+                                 number of <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a>s describing
+                                 the set of secondary keys.
+                            </p>
+                <p>
+                                 <span class="bold"><strong>When multiple secondary keys are returned, keys
+                                 may not be repeated</strong></span>. In other words, there must be no
+                                 repeated record numbers in the array for Recno and Queue databases,
+                                 and keys must not compare equally using the secondary database's
+                                 comparison function for Btree and Hash databases.  If keys are
+                                 repeated, operations may fail and the secondary may become
+                                 inconsistent with the primary.
+                            </p>
+                <p>
+                                 The DB_DBT_APPMALLOC flag may be set for any 
+                                 <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a>  in the array of returned
+                                 <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a>'s to indicate that
+                                 Berkeley DB should free the memory referenced by that particular
+                                 <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a>'s data field when it
+                                 is done with it.
+                            </p>
+                <p>
+                                 The DB_DBT_APPMALLOC flag may be combined with DB_DBT_MULTIPLE in the
+                                 <span class="bold"><strong>result</strong></span> 
+                                 <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a>'s <span class="bold"><strong>flag</strong></span> field to indicate that Berkeley DB should
+                                 free the array once it is done with all of the returned keys.
+                            </p>
+              </li>
+            </ul>
+          </div>
+          <p>
+                In addition, the callback can optionally return the following special value:
+            </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="associate_DB_DONOTINDEX"></a>
+                                  <code class="literal">DB_DONOTINDEX</code>
+                            </p>
+                <p>
+                                 If any key/data pair in the primary yields a null secondary key and
+                                 should be left out of the secondary index, the callback function may
+                                 optionally return DB_DONOTINDEX.  Otherwise, the callback function
+                                 should return 0 in case of success or an error outside of the Berkeley
+                                 DB name space in case of failure; the error code will be returned from
+                                 the Berkeley DB call that initiated the callback.
+                            </p>
+                <p>
+                                 If the callback function returns DB_DONOTINDEX for any key/data pairs
+                                 in the primary database, the secondary index will not contain any
+                                 reference to those key/data pairs, and such operations as cursor
+                                 iterations and range queries will reflect only the corresponding
+                                 subset of the database.  If this is not desirable, the application
+                                 should ensure that the callback function is well-defined for all
+                                 possible values and never returns DB_DONOTINDEX.
+                            </p>
+                <p>
+                                 Returning DB_DONOTINDEX is equivalent to setting DB_DBT_MULTIPLE on
+                                 the <span class="bold"><strong>result</strong></span> 
+                                 <a class="link" href="dbt.html" title="Chapter 4.  The DBT Handle">DBT</a>  and setting the <span class="bold"><strong>size</strong></span> field to zero.
+                            </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1631678"></a>flags</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>flags</strong></span> parameter must be set to 0
+                          or by bitwise inclusively <span class="bold"><strong>OR</strong></span>'ing
+                          together one or more of the following values:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="associate_DB_CREATE"></a>
+                      <code class="literal">DB_CREATE</code>
+                    </p>
+                <p>
+                         If the secondary database is empty, walk through the primary and
+                         create an index to it in the empty secondary.  This operation is
+                         potentially very expensive.
+                    </p>
+                <p>
+                        If the secondary database has been opened in an environment
+                        configured with transactions, the entire secondary index
+                        creation is performed in the context of a single transaction.
+                    </p>
+                <p>
+                         Care should be taken not to use a newly-populated secondary database
+                         in another thread of control until the <code class="methodname">DB-&gt;associate()</code> call has
+                         returned successfully in the first thread.
+                    </p>
+                <p>
+                         If transactions are not being used, care should be taken not to modify
+                         a primary database being used to populate a secondary database, in
+                         another thread of control, until the <code class="methodname">DB-&gt;associate()</code> call has
+                         returned successfully in the first thread.  If transactions are being
+                         used, Berkeley DB will perform appropriate locking and the application
+                         need not do any special operation ordering.
+                    </p>
+              </li>
+              <li>
+                <p><a id="associate_DB_IMMUTABLE_KEY"></a>
+                        <code class="literal">DB_IMMUTABLE_KEY</code>
+                    </p>
+                <p>
+                        Specifies the secondary key is immutable. 
+                    </p>
+                <p>
+                         This flag can be used to optimize updates when the secondary key in a
+                         primary record will never be changed after the primary record is
+                         inserted.  For immutable secondary keys, a best effort is made to
+                         avoid calling the secondary callback function when primary records are
+                         updated.  This optimization may reduce the overhead of update
+                         operations significantly if the callback function is expensive.
+                    </p>
+                <p>
+                         Be sure to specify this flag only if the secondary key in the primary
+                         record is never changed.  If this rule is violated, the secondary
+                         index will become corrupted, that is, it will become out of sync with
+                         the primary.
+                    </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1631257"></a>primary</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>primary</strong></span> parameter should be a
+                          database handle for the primary database that is to be indexed.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1631270"></a>secondary</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>secondary</strong></span> parameter should be an
+                          open database handle of either a newly created and empty database that
+                          is to be used to store a secondary index, or of a database that was
+                          previously associated with the same primary and contains a secondary
+                          index.  Note that it is not safe to associate as a secondary database
+                          a handle that is in use by another thread of control or has open
+                          cursors.  If the handle was opened with the 
+                          <a class="link" href="envopen.html#envopen_DB_THREAD">DB_THREAD</a>  flag it is
+                          safe to use it in multiple threads of control after the
+                          <code class="methodname">DB-&gt;associate()</code> method has returned.  Note also that either secondary
+                          keys must be unique or the secondary database must be configured with
+                          support for duplicate data items.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1631062"></a>txnid</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If the operation is part of an application-specified transaction, the
+                          <span class="bold"><strong>txnid</strong></span> parameter is a transaction
+                          handle returned from <a class="xref" href="txnbegin.html" title="DB_ENV-&gt;txn_begin()">DB_ENV-&gt;txn_begin()</a>; 
+                          if the operation is part of a Berkeley DB Concurrent Data Store group, the
+                          <span class="bold"><strong>txnid</strong></span> parameter is a handle returned
+                          from <a class="xref" href="envcdsgroup_begin.html" title="DB_ENV-&gt;cdsgroup_begin()">DB_ENV-&gt;cdsgroup_begin()</a>;
+                          otherwise NULL. If no transaction handle is specified, but the
+                          operation occurs in a transactional database, the operation will be
+                          implicitly transaction protected.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1631057"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DB-&gt;associate()</code> <span>
+            <span>
+                 method may fail and return one of the following non-zero errors:
+            </span>
+            
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1631763"></a> DB_REP_HANDLE_DEAD</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                When a client synchronizes with the master, it is possible for committed
+                transactions to be rolled back. This invalidates all  the database and cursor
+                handles opened in the replication environment. Once this occurs, an attempt to use
+                such a handle will 
+                
+                return <code class="literal">DB_REP_HANDLE_DEAD</code>.
+                The application will need to discard the handle and open a new one in order to
+                continue processing.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1631242"></a>DB_REP_LOCKOUT</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                The operation was blocked by client/master synchronization.
+            </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1631320"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If the secondary database handle has already been associated with this
+                          or another database handle; the secondary database handle is not open;
+                          the primary database has been configured to allow duplicates; or if an
+                          invalid flag value or parameter was specified.
+                        </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1630627"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="db.html" title="Chapter 2.  The DB Handle">DB</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1630946"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="db.html#dblist" title="Database and Related Methods">Database and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="db.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="db.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbassociate_foreign.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 2. 
+                The DB Handle
+         </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB-&gt;associate_foreign()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 5.  Java API</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="prev" href="am_misc_faq.html" title="Access method FAQ" />
+    <link rel="next" href="java_compat.html" title="Compatibility" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 5. 
+        Java API
+        </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="am_misc_faq.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="java_compat.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="java"></a>Chapter 5. 
+        Java API
+        </h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="java.html#java_conf">Java configuration</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="java_compat.html">Compatibility</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="java_program.html">Java programming notes</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="java_faq.html">Java FAQ</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="java_conf"></a>Java configuration</h2>
+            </div>
+          </div>
+        </div>
+        <p>Building the Berkeley DB java classes, the examples and the native support
+library is integrated into the normal build process.  See
+<a class="xref" href="build_unix_conf.html" title="Configuring Berkeley DB">Configuring Berkeley DB</a> and 
+<a class="xref" href="build_win_java.html" title="Building the Java API">Building the Java API</a>
+for more information.</p>
+        <p>We expect that you already installed the Java JDK or equivalent on your
+system.  For the sake of discussion, we assume that it is in a directory
+called db-VERSION; for example, you downloaded a Berkeley DB archive, and you
+did not change the top-level directory name.  The files related to Java
+are in three subdirectories of db-VERSION: java (the java source files),
+libdb_java (the C++ files that provide the "glue" between java and
+Berkeley DB) and examples_java (containing all examples code).  The directory
+tree looks like this:</p>
+        <pre class="programlisting">db-VERSION
+|-- java
+|   `-- src
+|       `-- com
+|           `-- sleepycat
+|               |-- bind
+|               |-- db
+|               |   `-- ...
+|               `-- util
+|-- examples_java
+|   `-- src
+|       `-- db
+|           `-- ...
+`-- libdb_java
+    `-- ...
+</pre>
+        <p>This naming conforms to the de facto standard for naming java packages.
+When the java code is built, it is placed into two jar files:
+<code class="filename">db.jar</code>, containing the db package,
+and <code class="filename">dbexamples.jar</code>, containing the examples.</p>
+        <p>For your application to use Berkeley DB successfully, you must set your
+<code class="literal">CLASSPATH</code> environment variable to include the full pathname of
+the db jar files as well as the classes in your java distribution.
+On UNIX, <code class="literal">CLASSPATH</code> is a colon-separated
+list of directories and jar files;
+on Windows, it is separated by semicolons.
+On UNIX, the jar files are put in your build directory, and when
+you do the make install step, they are copied to the lib directory
+of your installation tree.  On Windows, the jar files are placed
+in the Release or Debug subdirectory with your other objects.</p>
+        <p>The Berkeley DB Java classes are mostly implemented in native
+methods. Before you can use them, you need to make sure that the
+DLL or shared library containing the native methods can be found
+by your Java runtime.  On Windows, you should set your PATH variable
+to include:</p>
+        <pre class="programlisting">
+          <code class="filename">db-VERSION\build_windows\Release</code>
+        </pre>
+        <p>On UNIX, you should set the
+<code class="literal">LD_LIBRARY_PATH</code> environment variable or local equivalent
+to include the Berkeley DB library installation directory. Of course, the
+standard install directory may have been changed for your site; see your
+system administrator for details.</p>
+        <p>On other platforms, the path can be set on the command line as follows
+(assuming the shared library is in <code class="filename">/usr/local/BerkeleyDB/lib</code>:)</p>
+        <pre class="programlisting">% java -Djava.library.path=/usr/local/BerkeleyDB/lib ...</pre>
+        <p>Regardless, if you get the following exception when you run, you
+probably do not have the library search path configured correctly:</p>
+        <pre class="programlisting">java.lang.UnsatisfiedLinkError</pre>
+        <p>Different Java interpreters provide different error messages if the
+<code class="literal">CLASSPATH</code> value is incorrect, a typical error is the following:</p>
+        <pre class="programlisting">java.lang.NoClassDefFoundError</pre>
+        <p>To ensure that everything is running correctly, you may want to try a
+simple test from the example programs in</p>
+        <pre class="programlisting">
+          <code class="filename">db-VERSION/examples_java/src/db</code>
+        </pre>
+        <p>For example, the following sample program will prompt for text input
+lines, which are then stored in a Btree database named <code class="filename">access.db</code> in
+your current directory:</p>
+        <pre class="programlisting">% java db.AccessExample</pre>
+        <p>Try giving it a few lines of input text and then end-of-file.  Before
+it exits, you should see a list of the lines you entered display with
+data items.  This is a simple check to make sure the fundamental
+configuration is working correctly.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="am_misc_faq.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="java_compat.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Access method FAQ </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Compatibility</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

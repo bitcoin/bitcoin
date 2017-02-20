@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Selecting the Cache Size</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="dbconfig.html" title="Chapter 11. Database Configuration" />
+    <link rel="prev" href="dbconfig.html" title="Chapter 11. Database Configuration" />
+    <link rel="next" href="btree.html" title="BTree Configuration" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Selecting the Cache Size</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbconfig.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 11. Database Configuration</th>
+          <td width="20%" align="right"> <a accesskey="n" href="btree.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="cachesize"></a>Selecting the Cache Size</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+        Cache size is important to your application because if it is set to too
+        small of a value, your application's performance will suffer from too
+        much disk I/O. On the other hand, if your cache is too large, then your
+        application will use more memory than it actually needs.
+        Moreover, if your application uses too much memory, then on most
+        operating systems this can result in your application being swapped out
+        of memory, resulting in extremely poor performance.
+    </p>
+      <p>
+        You select your cache size using either
+            
+            
+            <span>
+                <code class="methodname">DatabaseConfig.setCacheSize()</code>, or 
+                <code class="methodname">EnvironmentConfig.setCacheSize()</code>,
+            </span>
+         depending on whether you are using a database environment or not. You
+         cache size must be a power of 2, but it is otherwise limited only by
+         available memory and performance considerations.
+    </p>
+      <p>
+        Selecting a cache size is something of an art, but fortunately you
+        can change it any time, so it can be easily tuned to your
+        application's changing data requirements.  The best way to
+        determine how large your cache needs to be is to put your
+        application into a production environment and watch to see how much
+        disk I/O is occurring. If your application is going to disk quite a
+        lot to retrieve database records, then you should increase the size
+        of your cache (provided that you have enough memory to do so).
+    </p>
+      <p>
+        You can use the <code class="literal">db_stat</code> command line utility with the
+        <code class="literal">-m</code> option to gauge the effectiveness of your cache.
+        In particular, the number of pages found in the cache is shown, along
+        with a percentage value. The closer to 100% that you can get, the
+        better. If this value drops too low, and you are experiencing
+        performance problems, then you should consider increasing the size of
+        your cache, assuming you have memory to support it.
+    </p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbconfig.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="dbconfig.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="btree.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 11. Database Configuration </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> BTree Configuration</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

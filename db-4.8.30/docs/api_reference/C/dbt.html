@@ -1,0 +1,488 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 4.  The DBT Handle</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="prev" href="dbcset_priority.html" title="DBcursor-&gt;set_priority()" />
+    <link rel="next" href="DB_MULTIPLE_INIT.html" title="DB_MULTIPLE_INIT" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 4. 
+                The DBT Handle
+        </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="dbcset_priority.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="DB_MULTIPLE_INIT.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="dbt"></a>Chapter 4. 
+                The DBT Handle
+        </h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+    typedef struct {
+        void *data;
+        u_int32_t size;
+        u_int32_t ulen;
+        u_int32_t dlen;
+        u_int32_t doff;
+        u_int32_t flags;
+    } DBT;
+
+ </pre>
+      <p>
+        Storage and retrieval for the <a class="link" href="db.html" title="Chapter 2.  The DB Handle">DB</a> access methods are
+        based on key/data pairs.  Both key and data items are represented by 
+        <span>
+            the DBT data structure. (The name DBT is a mnemonic for data base thang, and was used
+            because no one could think of a reasonable name that wasn't already in use somewhere
+            else.) 
+        </span>
+        
+        Key and data byte strings may refer to strings of zero length up to strings of essentially
+        unlimited length. See <a href="../../programmer_reference/am_misc_dbsizes.html" class="olink">Database limits</a> for
+        more information.
+    </p>
+      <p>
+            All fields of the DBT structure that are not explicitly set should
+            be initialized to nul bytes before the first time the structure is
+            used. Do this by declaring the structure external or static, or by
+            calling the C library routine 
+            <span class="bold"><strong>memset</strong></span>(3).
+
+    </p>
+      <p>
+        <span>
+            By default, the <span class="bold"><strong>flags</strong></span> structure element is expected to
+            be set to 0.  In this default case,
+        </span>
+        
+            
+        when the application is providing Berkeley DB a key or data item to store into the database,
+        Berkeley DB expects the <span class="bold"><strong>data</strong></span> 
+
+        <span>
+           structure element 
+        </span>
+        
+                
+        to point to a byte string of <span class="bold"><strong>size</strong></span> bytes. When returning a
+        key/data item to the application, Berkeley DB will store into the <span class="bold"><strong>data</strong></span> 
+
+        <span>
+           structure element 
+        </span>
+        
+        a pointer to a byte string of <span class="bold"><strong>size</strong></span> bytes, 
+        and the memory to which the pointer refers will be
+        allocated and managed by Berkeley DB. Note that using the default flags
+        for returned <code class="classname">DBT</code>s is only compatible with
+        single threaded usage of Berkeley DB.
+    </p>
+      <p>
+            The elements of the DBT structure are defined as follows:
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                            <span class="bold"><strong>void *data;</strong></span>
+                    </p>
+            <p>
+                            A pointer to a byte string.
+                    </p>
+          </li>
+          <li>
+            <p>
+                            <span class="bold"><strong>u_int32_t size;</strong></span>
+                    </p>
+            <p>
+                            The length of <span class="bold"><strong>data</strong></span>, in bytes.
+                    </p>
+          </li>
+          <li>
+            <p>
+                            <span class="bold"><strong>u_int32_t ulen;</strong></span>
+                    </p>
+            <p>
+                            The size of the user's buffer (to which <span class="bold"><strong>data</strong></span> refers), in bytes. This
+                            location is not written by the Berkeley DB functions.
+                    </p>
+            <p>
+                        Set the byte size of the user-specified buffer.
+                    </p>
+            <p>
+                            Note that applications can determine the length of a record by setting
+                            the <code class="literal">ulen</code> field to 0 and checking the return value in the 
+                            <span class="bold"><strong>size</strong></span> field. See
+                            the <code class="literal">DB_DBT_USERMEM</code> flag for more information.
+                    </p>
+          </li>
+          <li>
+            <p>
+                            <span class="bold"><strong>u_int32_t dlen;</strong></span>
+                    </p>
+            <p>
+                        <span>
+                            The
+                        </span>
+                        
+                            length of the partial record being read or written by the
+                            application, in bytes. See the <code class="literal">DB_DBT_PARTIAL</code> 
+                            flag for more information.
+                    </p>
+          </li>
+          <li>
+            <p>
+                            <span class="bold"><strong>u_int32_t doff;</strong></span>
+                    </p>
+            <p>
+                        <span>
+                            The 
+                        </span>
+                        
+                        offset of the partial record being read or written by the application,
+                        in bytes. See the <code class="literal">DB_DBT_PARTIAL</code> flag for more information.
+                    </p>
+          </li>
+          <li>
+            <p>
+                            <span class="bold"><strong>u_int32_t flags;</strong></span>
+                    </p>
+            <p>
+                            The <span class="bold"><strong>flags</strong></span> parameter must be set to 0 or
+                            by bitwise inclusively <span class="bold"><strong>OR</strong></span>'ing together
+                            one or more of the following values: 
+                    </p>
+            <span>
+                    <div class="itemizedlist"><ul type="circle"><li><p><a id="dbt_DB_DBT_MALLOC"></a>
+                                            <code class="literal">DB_DBT_MALLOC</code>
+                                    </p><p>
+                                            When this flag is set, Berkeley DB will allocate memory
+                                            for the returned key or data item (using 
+                                            <span class="bold"><strong>malloc</strong></span>(3), or
+                                            the user-specified malloc function), and return a
+                                            pointer to it in the 
+                                            <span class="bold"><strong>data</strong></span> field of the key or data 
+                                            <code class="literal">DBT</code>
+                                            structure. Because any allocated memory becomes the
+                                            responsibility of the calling application, the caller
+                                            must determine whether memory was allocated using the
+                                            returned value of the 
+                                            <span class="bold"><strong>data</strong></span> field.
+                                    </p><p>
+                                            It is an error to specify more than one of
+                                            <code class="literal">DB_DBT_MALLOC</code>, 
+                                            <code class="literal">DB_DBT_REALLOC</code>, and 
+                                            <code class="literal">DB_DBT_USERMEM</code>.
+                                    </p></li><li><p><a id="dbt_DB_DBT_REALLOC"></a>
+                                            <code class="literal">DB_DBT_REALLOC</code>
+                                    </p><p>
+                                            When this flag is set Berkeley DB will allocate memory
+                                            for the returned key or data item (using 
+                                            <span class="bold"><strong>realloc</strong></span>(3), or
+                                            the user-specified realloc function), and return a
+                                            pointer to it in the 
+                                            <span class="bold"><strong>data</strong></span> field of the key or data DBT
+                                            structure. Because any allocated memory becomes the
+                                            responsibility of the calling application, the caller
+                                            must determine whether memory was allocated using the
+                                            returned value of the 
+                                            <span class="bold"><strong>data</strong></span> field.
+                                    </p><p>
+                                            The difference between 
+                                            <code class="literal">DB_DBT_MALLOC</code> and 
+                                            <code class="literal">DB_DBT_REALLOC</code>
+                                            is that the latter will call 
+                                            <span class="bold"><strong>realloc</strong></span>(3) instead of
+                                            <span class="bold"><strong>malloc</strong></span>(3), 
+                                            so the allocated memory will be grown as
+                                            necessary instead of the application doing repeated
+                                            free/malloc calls.
+                                    </p><p>
+                                            It is an error to specify more than one of
+                                            <code class="literal">DB_DBT_MALLOC</code>, 
+                                            <code class="literal">DB_DBT_REALLOC</code>, and 
+                                            <code class="literal">DB_DBT_USERMEM</code>.
+                                    </p></li><li><p><a id="dbt_DB_DBT_USERMEM"></a>
+                                            <code class="literal">DB_DBT_USERMEM</code>
+                                    </p><p>
+                                            The <span class="emphasis"><em>data</em></span>
+                                            field of the key or data structure must refer
+                                            to memory that is at least 
+                                            <span class="emphasis"><em>ulen</em></span>
+                                            bytes in length. If the
+                                            length of the requested item is less than or equal to
+                                            that number of bytes, the item is copied into the memory
+                                            to which the 
+                                            <span class="emphasis"><em>data</em></span>
+                                            field refers. Otherwise, the 
+                                            <span class="emphasis"><em>size</em></span>
+                                            field is set to the length needed for the requested
+                                            item, and the error 
+                                            <code class="literal">DB_BUFFER_SMALL</code> is returned. 
+                                    </p><p>
+                                            It is an error to specify more than one of
+                                            <code class="literal">DB_DBT_MALLOC</code>, 
+                                            <code class="literal">DB_DBT_REALLOC</code>, and 
+                                            <code class="literal">DB_DBT_USERMEM</code>.
+                                    </p></li></ul></div>
+
+                            
+                            <div class="itemizedlist"><ul type="circle"><li><p><a id="dbt_DB_DBT_PARTIAL"></a>
+                                            <code class="literal">DB_DBT_PARTIAL</code>
+                                    </p><p>
+                                            Do partial retrieval or storage of an item. If the
+                                            calling application is doing a get, the 
+                                            <span class="bold"><strong>dlen</strong></span> bytes
+                                            starting 
+                                            <span class="bold"><strong>doff</strong></span> 
+                                            bytes from the beginning of the retrieved
+                                            data record are returned as if they comprised the entire
+                                            record. If any or all of the specified bytes do not
+                                            exist in the record, the get is successful, and any
+                                            existing bytes are returned.
+                                    </p><p>
+                                            For example, if the data portion of a retrieved record
+                                            was 100 bytes, and a partial retrieval was done using a
+                                            DBT having a 
+                                            <span class="bold"><strong>dlen</strong></span> 
+                                            field of 20 and a 
+                                            <span class="bold"><strong>doff</strong></span> 
+                                            field of 85,
+                                            the get call would succeed, the 
+                                            <span class="bold"><strong>data</strong></span> 
+                                            field would refer
+                                            to the last 15 bytes of the record, and the 
+                                            <span class="bold"><strong>size</strong></span> 
+                                            field would be set to 15.
+                                    </p><p>
+                                            If the calling application is doing a put, the 
+                                            <span class="bold"><strong>dlen</strong></span> 
+                                            bytes starting 
+                                            <span class="bold"><strong>doff</strong></span> 
+                                            bytes from the beginning of the
+                                            specified key's data record are replaced by the data
+                                            specified by the 
+                                            <span class="bold"><strong>data</strong></span> 
+                                            and 
+                                            <span class="bold"><strong>size</strong></span> 
+                                            structure elements. If
+                                            <span class="bold"><strong>dlen</strong></span> 
+                                            is smaller than 
+                                            <span class="bold"><strong>size</strong></span> 
+                                            the record will grow; if 
+                                            <span class="bold"><strong>dlen</strong></span> 
+                                            is larger than 
+                                            <span class="bold"><strong>size</strong></span> 
+                                            the record will shrink. If the
+                                            specified bytes do not exist, the record will be
+                                            extended using nul bytes as necessary, and the put call
+                                            will succeed.
+                                    </p><p>
+                                            It is an error to attempt a partial put using the
+                                            <a class="xref" href="dbput.html" title="DB-&gt;put()">DB-&gt;put()</a>
+                                            method in a database that supports duplicate
+                                            records. Partial puts in databases supporting duplicate
+                                            records must be done using a 
+                                            <a class="xref" href="dbcput.html" title="DBcursor-&gt;put()">DBcursor-&gt;put()</a>
+                                            method.
+                                    </p><p>
+                                            It is an error to attempt a partial put with differing
+                                            <span class="bold"><strong>dlen</strong></span> 
+                                            and
+                                            <span class="bold"><strong>size</strong></span> 
+                                            values in Queue or Recno databases with
+                                            fixed-length records.
+                                    </p><p>
+                                            For example, if the data portion of a retrieved record
+                                            was 100 bytes, and a partial put was done using a DBT
+                                            having a 
+                                            <span class="bold"><strong>dlen</strong></span> 
+                                            field of 20, a 
+                                            <span class="bold"><strong>doff</strong></span> 
+                                            field of 85, and a
+                                            <span class="bold"><strong>size</strong></span> 
+                                            field of 30, the resulting record would be 115
+                                            bytes in length, where the last 30 bytes would be those
+                                            specified by the put call.
+                                    </p></li><li><p><a id="dbt_DB_DBT_APPMALLOC"></a>
+                                            <code class="literal">DB_DBT_APPMALLOC</code>
+                                    </p><p>
+                                            After an application-supplied callback routine passed to
+                                            either 
+                                            <a class="xref" href="dbassociate.html" title="DB-&gt;associate()">DB-&gt;associate()</a>
+                                            or 
+                                            <a class="xref" href="dbset_append_recno.html" title="DB-&gt;set_append_recno()">DB-&gt;set_append_recno()</a>
+                                            is executed, the 
+                                            <span class="bold"><strong>data</strong></span> 
+                                            field of a DBT may refer to memory allocated with 
+                                            <span class="bold"><strong>malloc</strong></span>(3)
+                                            or 
+                                            <span class="bold"><strong>realloc</strong></span>(3). 
+                                            In that case,
+                                            the callback sets the 
+                                            <code class="literal">DB_DBT_APPMALLOC</code> 
+                                            flag in the DBT
+                                            so that Berkeley DB will call 
+                                            <span class="bold"><strong>free</strong></span>(3)
+                                            to deallocate the
+                                            memory when it is no longer required.
+                                    </p></li><li><p><a id="dbt_DB_DBT_MULTIPLE"></a>
+                                            <code class="literal">DB_DBT_MULTIPLE</code>
+                                    </p><p>
+                                            Set in a secondary key creation callback routine passed
+                                            to 
+                                            <a class="xref" href="dbassociate.html" title="DB-&gt;associate()">DB-&gt;associate()</a>
+                                            to indicate that multiple secondary
+                                            keys should be associated with the given primary
+                                            key/data pair. If set, the 
+                                            <span class="bold"><strong>size</strong></span>
+                                            field indicates the
+                                            number of secondary keys and the 
+                                            <span class="bold"><strong>data</strong></span>
+                                            field refers to an
+                                            array of that number of DBT structures. 
+                                    </p><p>
+                                            The <code class="literal">DB_DBT_APPMALLOC</code> flag may be set on any of the DBT
+                                            structures to indicate that their 
+                                            <span class="bold"><strong>data</strong></span> 
+                                            field needs to be
+                                            freed.
+                                    </p></li></ul></div>
+</span>
+          </li>
+        </ul>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="dbtlist"></a>DBT and Bulk Operations</h2>
+            </div>
+          </div>
+        </div>
+        <div class="navtable">
+          <table border="1" width="80%">
+            <thead>
+              <tr>
+                <th>DBT and Bulk Operations</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <a class="xref" href="DB_MULTIPLE_INIT.html" title="DB_MULTIPLE_INIT">DB_MULTIPLE_INIT</a>
+                </td>
+                <td>Initialize bulk get retrieval</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="DB_MULTIPLE_NEXT.html" title="DB_MULTIPLE_NEXT">DB_MULTIPLE_NEXT</a>
+                </td>
+                <td>Next bulk get retrieval</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="DB_MULTIPLE_KEY_NEXT.html" title="DB_MULTIPLE_KEY_NEXT">DB_MULTIPLE_KEY_NEXT</a>
+                </td>
+                <td>Next bulk get retrieval</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="DB_MULTIPLE_RECNO_NEXT.html" title="DB_MULTIPLE_RECNO_NEXT">DB_MULTIPLE_RECNO_NEXT</a>
+                </td>
+                <td>Next bulk get retrieval</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="DB_MULTIPLE_WRITE_INIT.html" title="DB_MULTIPLE_WRITE_INIT">DB_MULTIPLE_WRITE_INIT</a>
+                </td>
+                <td>Initialize a bulk buffer to hold key/data pairs</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="DB_MULTIPLE_WRITE_NEXT.html" title="DB_MULTIPLE_WRITE_NEXT">DB_MULTIPLE_WRITE_NEXT</a>
+                </td>
+                <td>Append a data item to a bulk buffer</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="DB_MULTIPLE_RESERVE_NEXT.html" title="DB_MULTIPLE_RESERVE_NEXT">DB_MULTIPLE_RESERVE_NEXT</a>
+                </td>
+                <td>Reserve space for a data item in a bulk buffer</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="DB_MULTIPLE_KEY_WRITE_NEXT.html" title="DB_MULTIPLE_KEY_WRITE_NEXT">DB_MULTIPLE_KEY_WRITE_NEXT</a>
+                </td>
+                <td>Append a key / data pair to a bulk buffer</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="DB_MULTIPLE_KEY_RESERVE_NEXT.html" title="DB_MULTIPLE_KEY_RESERVE_NEXT">DB_MULTIPLE_KEY_RESERVE_NEXT</a>
+                </td>
+                <td>Reserve space for a key / data pair in a bulk buffer</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="DB_MULTIPLE_RECNO_WRITE_INIT.html" title="DB_MULTIPLE_RECNO_WRITE_INIT">DB_MULTIPLE_RECNO_WRITE_INIT</a>
+                </td>
+                <td>Initialize a bulk buffer to hold recno/data pairs</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="DB_MULTIPLE_RECNO_WRITE_NEXT.html" title="DB_MULTIPLE_RECNO_WRITE_NEXT">DB_MULTIPLE_RECNO_WRITE_NEXT</a>
+                </td>
+                <td>Append a record number / data pair to a bulk buffer</td>
+              </tr>
+              <tr>
+                <td>
+                  <a class="xref" href="DB_MULTIPLE_RECNO_RESERVE_NEXT.html" title="DB_MULTIPLE_RECNO_RESERVE_NEXT">DB_MULTIPLE_RECNO_RESERVE_NEXT</a>
+                </td>
+                <td>Reserve space for a record number / data pair in a bulk buffer</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="dbcset_priority.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="DB_MULTIPLE_INIT.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DBcursor-&gt;set_priority() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_MULTIPLE_INIT</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

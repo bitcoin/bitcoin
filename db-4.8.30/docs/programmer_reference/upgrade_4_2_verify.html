@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 4.2: DB-&gt;verify</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_4_2_toc.html" title="Chapter 39. Upgrading Berkeley DB 4.1 applications to Berkeley DB 4.2" />
+    <link rel="prev" href="upgrade_4_2_priority.html" title="Release 4.2: DB-&gt;set_cache_priority" />
+    <link rel="next" href="upgrade_4_2_lockng.html" title="Release 4.2: DB_LOCK_NOTGRANTED" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 4.2: DB-&gt;verify</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_4_2_priority.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 39. Upgrading Berkeley DB 4.1 applications to Berkeley DB 4.2</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_4_2_lockng.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_4_2_verify"></a>Release 4.2: DB-&gt;verify</h2>
+          </div>
+        </div>
+      </div>
+      <p>In previous releases, applications calling the <a href="../api_reference/C/dbverify.html" class="olink">DB-&gt;verify()</a> method had
+to explicitly discard the <a href="../api_reference/C/db.html" class="olink">DB</a> handle by calling the
+<a href="../api_reference/C/dbclose.html" class="olink">DB-&gt;close()</a> method. Further, using the <a href="../api_reference/C/db.html" class="olink">DB</a> handle in other ways
+after calling the <a href="../api_reference/C/dbverify.html" class="olink">DB-&gt;verify()</a> method was not prohibited by the
+documentation, although such use was likely to lead to problems.</p>
+      <p>For consistency with other Berkeley DB methods, <a href="../api_reference/C/dbverify.html" class="olink">DB-&gt;verify()</a> method has been
+documented in the current release as a <a href="../api_reference/C/db.html" class="olink">DB</a> handle destructor.
+Applications using the <a href="../api_reference/C/db.html" class="olink">DB</a> handle in any way (including calling
+the <a href="../api_reference/C/dbclose.html" class="olink">DB-&gt;close()</a> method) after calling <a href="../api_reference/C/dbverify.html" class="olink">DB-&gt;verify()</a> should be
+updated to make no further use of any kind of the <a href="../api_reference/C/db.html" class="olink">DB</a> handle
+after <a href="../api_reference/C/dbverify.html" class="olink">DB-&gt;verify()</a> returns.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_4_2_priority.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_4_2_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_4_2_lockng.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 4.2: DB-&gt;set_cache_priority </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 4.2: DB_LOCK_NOTGRANTED</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

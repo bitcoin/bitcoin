@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>db_archive</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="utilities.html" title="Appendix 1.  Berkeley DB Command Line Utilities" />
+    <link rel="prev" href="utilities.html" title="Appendix 1.  Berkeley DB Command Line Utilities" />
+    <link rel="next" href="db_checkpoint.html" title="db_checkpoint" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">db_archive</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="utilities.html">Prev</a> </td>
+          <th width="60%" align="center">Appendix 1. 
+                Berkeley DB Command Line Utilities
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="db_checkpoint.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="db_archive"></a>db_archive</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">db_archive [-adlsVv] [-h home] [-P password]  </pre>
+      <p>
+        The <span class="command"><strong>db_archive</strong></span> utility writes the pathnames of log files that are no
+         longer in use (for example, no longer involved in active
+         transactions), to the standard output, one pathname per line.  These
+         log files should be written to backup media to provide for recovery in
+         the case of catastrophic failure (which also requires a snapshot of
+         the database files), but they may then be deleted from the system to
+         reclaim disk space.
+    </p>
+      <p>
+        The options are as follows:
+    </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                <span class="bold"><strong>-a</strong></span>
+            </p>
+            <p>
+                 Write all pathnames as absolute pathnames, instead of relative to the
+                 database home directory.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-d</strong></span>
+            </p>
+            <p>
+                 Remove log files that are no longer needed; no filenames are written.
+                 This automatic log file removal is likely to make catastrophic recovery
+                 impossible.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-h</strong></span>
+            </p>
+            <p>
+                 Specify a home directory for the database environment; by default, the
+                 current working directory is used.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-l</strong></span>
+            </p>
+            <p>
+                 Write out the pathnames of all the database log files, whether or not
+                 they are involved in active transactions.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-P</strong></span>
+            </p>
+            <p>
+                 Specify an environment password.  Although Berkeley DB utilities
+                 overwrite password strings as soon as possible, be aware there may be
+                 a window of vulnerability on systems where unprivileged users can see
+                 command-line arguments or where utilities are not able to overwrite
+                 the memory containing the command-line arguments.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-s</strong></span>
+            </p>
+            <p>
+                 Write the pathnames of all the database files that need to be archived
+                 in order to recover the database from catastrophic failure.  If any of
+                 the database files have not been accessed during the lifetime of the
+                 current log files, <span class="command"><strong>db_archive</strong></span> will not include them 
+                 in this output.   
+            </p>
+            <p>
+                 It is possible that some of the files to which the log refers have
+                 since been deleted from the system.  In this case, 
+                 <span class="command"><strong>db_archive</strong></span> will ignore them.  When 
+                 <a class="xref" href="db_recover.html" title="db_recover">db_recover</a>
+                 is run, any files
+                 to which the log refers that are not present during recovery are
+                 assumed to have been deleted and will not be recovered.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-V</strong></span>
+            </p>
+            <p>
+                 Write the library version number to the standard output, and exit.
+            </p>
+          </li>
+          <li>
+            <p>
+                 <span class="bold"><strong>-v</strong></span>
+            </p>
+            <p>
+                Run in verbose mode.
+            </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+         Log cursor handles (returned by the <a class="xref" href="logcursor.html" title="DbEnv::log_cursor()">DbEnv::log_cursor()</a>
+         method) may have open file
+         descriptors for log files in the database environment.  Also, the Berkeley DB interfaces to
+         the database environment logging subsystem (for example, 
+         <a class="xref" href="logput.html" title="DbEnv::log_put()">DbEnv::log_put()</a> and
+         <a class="xref" href="txnabort.html" title="DbTxn::abort()">DbTxn::abort()</a> may allocate
+         log cursors and have open file descriptors for log files as well.  On operating systems
+         where filesystem related system calls (for example, rename and unlink on Windows/NT) can
+         fail if a process has an open file descriptor for the affected file, attempting to move or
+         remove the log files listed by <span class="command"><strong>db_archive</strong></span> may fail.  All Berkeley DB
+         internal use of log cursors operates on active log files only and furthermore, is
+         short-lived in nature.  So, an application seeing such a failure should be restructured to
+         close any open log cursors it may have, and otherwise to retry the operation until it
+         succeeds.  (Although the latter is not likely to be necessary; it is hard to imagine a
+         reason to move or rename a log file in which transactions are being logged or aborted.)
+    </p>
+      <p>
+         The <span class="command"><strong>db_archive</strong></span> utility uses a Berkeley DB environment (as described
+         for the <span class="bold"><strong>-h</strong></span> option, the environment
+         variable <span class="bold"><strong>DB_HOME</strong></span>, or because the
+         utility was run in a directory containing a Berkeley DB environment). 
+         In order to avoid environment corruption when using a Berkeley DB
+         environment, <span class="command"><strong>db_archive</strong></span> should always be given the chance to detach
+         from the environment and exit gracefully.  To cause <span class="command"><strong>db_archive</strong></span> to
+         release all environment resources and exit cleanly, send it an
+         interrupt signal (SIGINT).
+    </p>
+      <p>
+         The <span class="command"><strong>db_archive</strong></span> utility exits 0 on success, and &gt;0 if an error
+         occurs.
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1716802"></a>Environment Variables</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1716736"></a>DB_HOME</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If the <span class="bold"><strong>-h</strong></span> option is not specified and
+                          the environment variable DB_HOME is set, it is used as the path of the
+                          database home, as described in the
+                          <a class="xref" href="envopen.html" title="DbEnv::open()">DbEnv::open()</a> method.
+                     </p>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="utilities.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="utilities.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="db_checkpoint.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Appendix 1. 
+                Berkeley DB Command Line Utilities
+         </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> db_checkpoint</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Defining application-specific log records</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="apprec.html" title="Chapter 13.  Application Specific Logging and Recovery" />
+    <link rel="prev" href="apprec.html" title="Chapter 13.  Application Specific Logging and Recovery" />
+    <link rel="next" href="apprec_auto.html" title="Automatically generated functions" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Defining application-specific log records</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="apprec.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 13. 
+        Application Specific Logging and Recovery
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="apprec_auto.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="apprec_def"></a>Defining application-specific log records</h2>
+          </div>
+        </div>
+      </div>
+      <p>By convention, log records are described in files named <code class="filename">XXX.src</code>, 
+where "XXX" is typically a descriptive name for a subsystem or other
+logical group of logging functions.  These files contain interface
+definition language descriptions for each type of log record that is
+used by the subsystem.</p>
+      <p>All blank lines and lines beginning with a hash ("#") character in
+the XXX.src files are ignored.</p>
+      <p>The first non-comment line in the file should begin with the keyword
+PREFIX, followed by a string that will be prepended to every generated
+function name.  Frequently, the PREFIX is either identical or similar
+to the name of the <code class="filename">XXX.src</code> file.  For example, the Berkeley DB
+application-specific recovery example uses the file
+<code class="filename">ex_apprec.src</code>, which begins with the following PREFIX line:</p>
+      <pre class="programlisting">PREFIX ex_apprec</pre>
+      <p>Following the PREFIX line are the include files required by the
+automatically generated functions.  The include files should be listed
+in order, prefixed by the keyword INCLUDE.  For example, the Berkeley DB
+application-specific recovery example lists the following include
+files:</p>
+      <pre class="programlisting">INCLUDE #include "ex_apprec.h"</pre>
+      <p>The rest of the XXX.src file consists of log record descriptions.  Each
+log record description begins with one of the following lines:</p>
+      <pre class="programlisting">BEGIN <span class="emphasis"><em>RECORD_NAME</em></span> <span class="emphasis"><em>DB_VERSION_NUMBER</em></span> <span class="emphasis"><em>RECORD_NUMBER</em></span></pre>
+      <pre class="programlisting">BEGIN_COMPAT <span class="emphasis"><em>RECORD_NAME</em></span> <span class="emphasis"><em>DB_VERSION_NUMBER</em></span> <span class="emphasis"><em>RECORD_NUMBER</em></span></pre>
+      <p>and ends with the line:</p>
+      <pre class="programlisting">END</pre>
+      <p>The <span class="emphasis"><em>BEGIN</em></span> line should be used for most record types.</p>
+      <p>The <span class="emphasis"><em>BEGIN_COMPAT</em></span> is used for log record compatibility to facilitate
+online upgrades of replication groups. Records created with this keyword will
+produce reading and printing routines, but no logging routines.  The recovery
+routines are retrieved from older releases, so no recovery templates will be
+generated for these records.</p>
+      <p>The <span class="emphasis"><em>DB_VERSION_NUMBER</em></span> variable should be replaced with the
+current major and minor version of Berkeley DB, with all punctuation removed.
+For example, Berkeley DB version 4.2 should be 42, version 4.5 should be 45.</p>
+      <p>The <span class="emphasis"><em>RECORD_NAME</em></span> variable should be replaced with a record
+name for this log record.  The <span class="emphasis"><em>RECORD_NUMBER</em></span> variable should
+be replaced with a record number.</p>
+      <p>The combination of PREFIX name and <span class="emphasis"><em>RECORD_NAME</em></span>, and the
+<span class="emphasis"><em>RECORD_NUMBER</em></span> must be unique for the application, that is,
+values for application-specific and Berkeley DB log records may not overlap.
+Further, because record numbers are stored in log files, which are
+usually portable across application and Berkeley DB releases, any change to
+the record numbers or log record format or should be handled as
+described in the <a class="xref" href="upgrade_process.html" title="Upgrading Berkeley DB installations">Upgrading Berkeley DB installations</a> section on log format changes.  The record number space
+below 10,000 is reserved for Berkeley DB itself; applications should choose
+record number values equal to or greater than 10,000.</p>
+      <p>Between the BEGIN and END keywords there should be one optional
+<span class="emphasis"><em>DUPLICATE</em></span> line and one line for each
+data item logged as part of this log record.</p>
+      <p>The <span class="emphasis"><em>DUPLICATE</em></span> line is of the form:</p>
+      <pre class="programlisting">DUPLICATE <span class="emphasis"><em>RECORD_NAME</em></span> <span class="emphasis"><em>DB_VERSION_NUMBER</em></span> <span class="emphasis"><em>RECORD_NUMBER</em></span></pre>
+      <p>The <span class="emphasis"><em>DUPLICATE</em></span> specifier should be used when creating a record
+that requires its own record number but can use the argument structure,
+reading and printing routines from another record.  In this case, we will
+create a new log record type, but use the enclosing log record type for
+the argument structure and the log reading and printing routines.</p>
+      <p>The format of lines for each data item logged is as follows:</p>
+      <pre class="programlisting">ARG | DBT | POINTER   <span class="emphasis"><em>variable_name</em></span>    <span class="emphasis"><em>variable_type</em></span>    <span class="emphasis"><em>printf_format</em></span></pre>
+      <p>The keyword ARG indicates that the argument is a simple parameter of
+the type specified. For example, a file ID might be logged as:</p>
+      <pre class="programlisting">ARG   fileID  int d</pre>
+      <p>The keyword DBT indicates that the argument is a Berkeley DB DBT structure,
+containing a length and pointer to a byte string.  The keyword POINTER
+indicates that the argument is a pointer to the data type specified (of
+course the data type, not the pointer, is what is logged).</p>
+      <p>The <span class="emphasis"><em>variable_name</em></span> is the field name within the structure that
+will be used to refer to this item.  The <span class="emphasis"><em>variable_type</em></span> is
+the C-language type of the variable, and the printf format is the
+C-language format string, without the leading percent ("%") character,
+that should be used to display the contents of the field (for example,
+"s" for string, "d" for signed integral type, "u" for unsigned integral
+type, "ld" for signed long integral type, "lu" for long unsigned
+integral type, and so on).</p>
+      <p>For example, ex_apprec.src defines a single log record type, used to
+log a directory name that has been stored in a DBT:</p>
+      <pre class="programlisting">BEGIN mkdir       10000
+DBT dirname     DBT     s
+END</pre>
+      <p>As the name suggests, this example of an application-defined log record
+will be used to log the creation of a directory.  There are many more
+examples of XXX.src files in the Berkeley DB distribution.  For example, the
+file btree/btree.src contains the definitions for the log records
+supported by the Berkeley DB Btree access method.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="apprec.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="apprec.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="apprec_auto.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 13. 
+        Application Specific Logging and Recovery
+         </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Automatically generated functions</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

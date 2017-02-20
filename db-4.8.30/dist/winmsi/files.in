@@ -1,0 +1,100 @@
+# $Id$
+# Lists files needed to install particular
+# features in Windows.  Feature names must be
+# listed in features.in .
+#
+
+# Note: columns below must be separated by tabs.
+#       ${PRODUCT_MAJMIN} is a macro for "43" (for BDB 4.3.x)
+
+# feature	source file				targdir	shortname
+
+CoreAPI		build_windows/Win32/Release/libdb${PRODUCT_MAJMIN}.dll	/bin/
+DCoreAPI	build_windows/Win32/Debug/libdb${PRODUCT_MAJMIN}d.dll	/bin/debug/
+DCoreAPI	build_windows/Win32/Debug/libdb${PRODUCT_MAJMIN}d.pdb		/bin/debug/
+CoreAPI		build_windows/Win32/Release/libdb${PRODUCT_MAJMIN}.lib	/lib/
+DCoreAPI	build_windows/Win32/Debug/libdb${PRODUCT_MAJMIN}d.lib	/lib/
+CoreAPI		build_windows/Win32/Release/msvcm${PRODUCT_MSVC_VERSION}.dll		/bin/
+DCoreAPI	build_windows/Win32/Debug/msvcm${PRODUCT_MSVC_VERSION}.dll		/bin/debug/
+CoreAPI		build_windows/Win32/Release/msvcr${PRODUCT_MSVC_VERSION}.dll		/bin/
+DCoreAPI	build_windows/Win32/Debug/msvcr${PRODUCT_MSVC_VERSION}.dll		/bin/debug/
+CoreAPI		build_windows/Win32/Release/msvcp${PRODUCT_MSVC_VERSION}.dll		/bin/
+DCoreAPI	build_windows/Win32/Debug/msvcp${PRODUCT_MSVC_VERSION}.dll		/bin/debug/
+CoreAPI		build_windows/Win32/Release/Microsoft.VC${PRODUCT_MSVC_VERSION}.CRT.manifest	/bin/
+DCoreAPI	build_windows/Win32/Debug/Microsoft.VC${PRODUCT_MSVC_VERSION}.CRT.manifest	/bin/debug/
+
+# After the build process, we create an installed_include directory
+# housing all the needed include files, for user convenience
+CoreAPI		installed_include/			/include/
+
+CoreAPI		${PRODUCT_SHARED_WINMSIDIR}/images/webicon.ico	/installutil/
+CoreAPI		${PRODUCT_STAGE}/dbvars.bat		/
+
+# C Sharp API files.
+CsharpAPI	build_windows/Win32/Release/libdb_csharp${PRODUCT_MAJMIN}.dll	/bin/	dbcn${PRODUCT_MAJMIN}.dll
+CsharpAPI	build_windows/Win32/Debug/libdb_csharp${PRODUCT_MAJMIN}d.dll	/bin/debug/	dbc${PRODUCT_MAJMIN}d.dll
+CsharpAPI	build_windows/Win32/Debug/libdb_csharp${PRODUCT_MAJMIN}d.pdb	/bin/debug/
+CsharpAPI	build_windows/AnyCPU/Release/libdb_dotnet${PRODUCT_MAJMIN}.dll	/bin/	dbc${PRODUCT_MAJMIN}.dll
+CsharpAPI	build_windows/AnyCPU/Debug/libdb_dotnet${PRODUCT_MAJMIN}.dll	/bin/debug/	dbc${PRODUCT_MAJMIN}d.dll
+CsharpAPI	build_windows/AnyCPU/Debug/libdb_dotnet${PRODUCT_MAJMIN}.pdb	/bin/debug/
+
+# We don't include the .lib files for Java, nobody needs to
+# link C/C++ against the java library
+JavaAPI		build_windows/Win32/Release/libdb_java${PRODUCT_MAJMIN}.dll	/bin/	dbj${PRODUCT_MAJMIN}.dll
+DJavaAPI 	build_windows/Win32/Debug/libdb_java${PRODUCT_MAJMIN}d.dll	/bin/debug/	dbj${PRODUCT_MAJMIN}d.dll
+DJavaAPI 	build_windows/Win32/Debug/libdb_java${PRODUCT_MAJMIN}d.pdb		/bin/debug/
+JavaAPI		build_windows/Win32/Release/db.jar		/jar/
+DJavaAPI	build_windows/Win32/Debug/db.jar		/jar/debug/
+
+JavaEx		build_windows/Win32/Release/dbexamples.jar	/jar/	dbexam~1.jar
+DJavaEx		build_windows/Win32/Debug/dbexamples.jar	/jar/debug/	dbexam~1.jar
+
+# STL API files.
+StlAPI	build_windows/Win32/Release/libdb_stl${PRODUCT_MAJMIN}.dll	/bin/	dbs${PRODUCT_MAJMIN}.dll
+StlAPI	build_windows/Win32/Debug/libdb_stl${PRODUCT_MAJMIN}d.dll	/bin/debug/	dbs${PRODUCT_MAJMIN}d.dll
+StlAPI	build_windows/Win32/Debug/libdb_stl${PRODUCT_MAJMIN}d.pdb	/bin/debug/
+
+# We don't include the .lib files for Tcl, nobody needs to
+# link C/C++ against the Tcl library
+DTclAPI		build_windows/Win32/Debug/libdb_tcl${PRODUCT_MAJMIN}d.dll	/bin/debug/	dbt${PRODUCT_MAJMIN}d.dll
+DTclAPI		build_windows/Win32/Debug/libdb_tcl${PRODUCT_MAJMIN}d.pdb		/bin/debug/
+TclAPI		build_windows/Win32/Release/libdb_tcl${PRODUCT_MAJMIN}.dll	/bin/	dbt${PRODUCT_MAJMIN}.dll
+
+PerlAPI		perl/BerkeleyDB/blib/			/lib/perl/
+
+CoreTools	build_windows/Win32/Release/db_archive.exe	/bin/	db_arc~1.exe
+CoreTools	build_windows/Win32/Release/db_checkpoint.exe	/bin/	db_che~1.exe
+CoreTools	build_windows/Win32/Release/db_deadlock.exe	/bin/	db_dea~1.exe
+CoreTools	build_windows/Win32/Release/db_dump.exe		/bin/	db_dump.exe
+CoreTools	build_windows/Win32/Release/db_hotbackup.exe	/bin/	db_hot~1.exe
+CoreTools	build_windows/Win32/Release/db_load.exe		/bin/	db_load.exe
+CoreTools	build_windows/Win32/Release/db_printlog.exe	/bin/	db_pri~1.exe
+CoreTools	build_windows/Win32/Release/db_recover.exe	/bin/	db_rec~1.exe
+CoreTools	build_windows/Win32/Release/db_sql.exe		/bin/	db_sql.exe
+CoreTools	build_windows/Win32/Release/db_stat.exe		/bin/	db_sta~1.exe
+CoreTools	build_windows/Win32/Release/db_upgrade.exe	/bin/	db_upg~1.exe
+CoreTools	build_windows/Win32/Release/db_verify.exe	/bin/	db_ver~1.exe
+
+CoreEx		build_windows/Win32/Release/ex_access.exe		/bin/	ex_acc~1.exe
+CoreEx		build_windows/Win32/Release/ex_btrec.exe		/bin/	ex_btr~1.exe
+CoreEx		build_windows/Win32/Release/ex_env.exe		/bin/	ex_env.exe
+CoreEx		build_windows/Win32/Release/ex_lock.exe		/bin/	ex_loc~1.exe
+CoreEx		build_windows/Win32/Release/ex_mpool.exe		/bin/	ex_mpo~1.exe
+CoreEx		build_windows/Win32/Release/ex_rep_base.exe	/bin/	ex_rep~1.exe
+CoreEx		build_windows/Win32/Release/ex_rep_mgr.exe	/bin/	ex_rep~2.exe
+CoreEx		build_windows/Win32/Release/ex_tpcb.exe		/bin/	ex_tpcb.exe
+
+CoreEx		build_windows/Win32/Release/excxx_access.exe	/bin/	excxx_ac.exe
+CoreEx		build_windows/Win32/Release/excxx_btrec.exe	/bin/	excxx_bt.exe
+CoreEx		build_windows/Win32/Release/excxx_env.exe		/bin/	excxx_en.exe
+CoreEx		build_windows/Win32/Release/excxx_lock.exe	/bin/	excxx_lk.exe
+CoreEx		build_windows/Win32/Release/excxx_mpool.exe	/bin/	excxx_mp.exe
+CoreEx		build_windows/Win32/Release/excxx_tpcb.exe	/bin/	excxx_tp.exe
+
+CoreEx		build_windows/Win32/Release/exstl_access.exe	/bin/	exstl_ac.exe
+CoreEx		build_windows/Win32/Release/exstl_repquote.exe	/bin/	exstl_re.exe
+CoreEx		build_windows/Win32/Release/exstl_tpcb.exe	/bin/	exstl_tp.exe
+
+Docs		${PRODUCT_STAGE}/docs/			/docs/
+
+Sources		${PRODUCT_STAGE}/Sources/		/db-${PRODUCT_VERSION}/

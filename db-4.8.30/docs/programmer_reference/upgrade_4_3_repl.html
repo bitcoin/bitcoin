@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 4.3: Replication</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_4_3_toc.html" title="Chapter 40. Upgrading Berkeley DB 4.2 applications to Berkeley DB 4.3" />
+    <link rel="prev" href="upgrade_4_3_enomem.html" title="Release 4.3: ENOMEM and DbMemoryException" />
+    <link rel="next" href="upgrade_4_3_rtc.html" title="Release 4.3: Run-time configuration" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 4.3: Replication</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_4_3_enomem.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 40. Upgrading Berkeley DB 4.2 applications to Berkeley DB 4.3</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_4_3_rtc.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_4_3_repl"></a>Release 4.3: Replication</h2>
+          </div>
+        </div>
+      </div>
+      <p>The 4.3 release removes support for logs-only replication clients.  Use
+of the DB_REP_LOGSONLY flag to the <a href="../api_reference/C/repstart.html" class="olink">DB_ENV-&gt;rep_start()</a> should be replaced
+with the <a href="../api_reference/C/repmgrstart.html#repmgrstart_DB_REP_CLIENT" class="olink">DB_REP_CLIENT</a> flag.</p>
+      <p>The 4.3 release adds two new arguments to the <a href="../api_reference/C/repelect.html" class="olink">DB_ENV-&gt;rep_elect()</a> method,
+<span class="bold"><strong>nvotes</strong></span> and <span class="bold"><strong>flags</strong></span>.  The <span class="bold"><strong>nvotes</strong></span> argument sets the
+required number of replication group members that must participate in
+an election in order for a master to be declared.  For backward
+compatibility, set the <span class="bold"><strong>nvotes</strong></span> argument to 0.  The flags argument
+is currently unused and should be set to 0.  See <a href="../api_reference/C/repelect.html" class="olink">DB_ENV-&gt;rep_elect()</a> method or
+"Replication Elections" for more information.</p>
+      <p>In the 4.3 release it is no longer necessary to do a database
+environment hot backup to initialize a replication client.  All that is
+needed now is for the client to join the replication group.  Berkeley DB will
+perform an internal backup from the master to the client automatically
+and will run recovery on the client to bring it up to date with the
+master.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_4_3_enomem.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_4_3_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_4_3_rtc.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 4.3: ENOMEM and DbMemoryException </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 4.3: Run-time configuration</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

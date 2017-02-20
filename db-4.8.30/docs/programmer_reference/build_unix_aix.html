@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>AIX</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="build_unix.html" title="Chapter 27.  Building Berkeley DB for UNIX/POSIX" />
+    <link rel="prev" href="build_unix_notes.html" title="Architecture independent FAQ" />
+    <link rel="next" href="build_unix_freebsd.html" title="FreeBSD" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">AIX</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="build_unix_notes.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 27. 
+        Building Berkeley DB for UNIX/POSIX
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="build_unix_freebsd.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="build_unix_aix"></a>AIX</h2>
+          </div>
+        </div>
+      </div>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <span class="bold">
+              <strong>I can't compile and run multithreaded applications.</strong>
+            </span>
+            <p>Special compile-time flags are required when compiling threaded
+applications on AIX.  If you are compiling a threaded application, you
+must compile with the _THREAD_SAFE flag and load with specific
+libraries; for example, "-lc_r".  Specifying the compiler name with a
+trailing "_r" usually performs the right actions for the system.</p>
+            <pre class="programlisting">xlc_r ...
+cc -D_THREAD_SAFE -lc_r ...</pre>
+            <p>The Berkeley DB library will automatically build with the correct options.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>I can't run using the <a href="../api_reference/C/envopen.html#envopen_DB_SYSTEM_MEM" class="olink">DB_SYSTEM_MEM</a> option to 
+<a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a>.</strong>
+            </span>
+            <p>AIX 4.1 allows applications to map only 10 system shared memory
+segments.  In AIX 4.3, this has been raised to 256K segments, but only
+if you set the environment variable "export EXTSHM=ON".</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>On AIX 4.3.2 (or before) I see duplicate symbol warnings when
+building the C++ shared library and when linking applications.</strong>
+            </span>
+            <p>We are aware of some duplicate symbol warnings with this platform,
+but they do not appear to affect the correct operation of applications.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>On AIX 4.3.3 I see undefined symbols for DbEnv::set_error_stream,
+Db::set_error_stream or DbEnv::verify when linking C++ applications.
+(These undefined symbols also appear when building the Berkeley DB C++ example
+applications).</strong>
+            </span>
+            <p>By default, Berkeley DB is built with _LARGE_FILES set to 1 to support the
+creation of "large" database files.  However, this also affects how
+standard classes, like iostream, are named internally.  When building
+your application, use a "-D_LARGE_FILES=1" compilation option, or insert
+"#define _LARGE_FILES 1" before any #include statements.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>I can't create database files larger than 1GB on AIX.</strong>
+            </span>
+            <p>If you're running on AIX 4.1 or earlier, try changing the source code
+for <code class="filename">os/os_open.c</code> to always specify the <span class="bold"><strong>O_LARGEFILE</strong></span>
+flag to the <code class="literal">open</code>(2) system call, and recompile Berkeley DB from
+scratch.</p>
+            <p>Also, the documentation for the IBM Visual Age compiler states that it
+does not not support the 64-bit filesystem APIs necessary for creating
+large files; the ibmcxx product must be used instead.  We have not heard
+whether the GNU gcc compiler supports the 64-bit APIs or not.</p>
+            <p>Finally, to create large files under AIX, the filesystem has to be
+configured to support large files and the system wide user hard-limit
+for file sizes has to be greater than 1GB.</p>
+          </li>
+          <li>
+            <span class="bold">
+              <strong>I see errors about "open64" when building Berkeley DB applications.</strong>
+            </span>
+            <p>System include files (most commonly fcntl.h) in some releases of AIX,
+HP-UX and Solaris redefine "open" when large-file support is enabled for
+applications.  This causes problems when compiling applications because
+"open" is a method in the Berkeley DB APIs.  To work around this problem:
+</p>
+            <div class="orderedlist">
+              <ol type="a">
+                <li>Avoid including the problematical system include files in source code
+files which also include Berkeley DB include files and call into the Berkeley DB
+API.</li>
+                <li>Before building Berkeley DB, modify the generated include file db.h to itself
+include the problematical system include files.</li>
+                <li>Turn off Berkeley DB large-file support by specifying the
+<a class="link" href="build_unix_conf.html#build_unix_conf.--disable-largefile">--disable-largefile</a> configuration option and rebuilding.</li>
+              </ol>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="build_unix_notes.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="build_unix.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="build_unix_freebsd.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Architecture independent FAQ </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> FreeBSD</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

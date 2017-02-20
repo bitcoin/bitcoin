@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Chapter 1.  Dbstl Global Public Functions</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ Standard Template Library API Reference" />
+    <link rel="up" href="index.html" title="Berkeley DB C++ Standard Template Library API Reference" />
+    <link rel="prev" href="index.html" title="Berkeley DB C++ Standard Template Library API Reference" />
+    <link rel="next" href="stldbstl_global_functionsclose_all_dbs.html" title="close_all_dbs" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Chapter 1. 
+ Dbstl Global Public Functions  </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="index.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="stldbstl_global_functionsclose_all_dbs.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="chapter" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="dbstl_global_functions"></a>Chapter 1. 
+ Dbstl Global Public Functions  </h2>
+          </div>
+        </div>
+      </div>
+      <h4><a id="id1541052"></a> Public Members </h4>
+      <div class="informaltable">
+        <table border="1" width="80%">
+          <colgroup>
+            <col />
+            <col />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+<a class="xref" href="dbstl_global_functions.html#stldbstl_global_functionsclose_db" title="close_db">
+close_db
+</a>
+</td>
+              <td>
+   <p>Close pdb regardless of reference count. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionsclose_all_dbs.html" title="close_all_dbs">
+close_all_dbs
+</a>
+</td>
+              <td>
+   <p>Close all open database handles regardless of reference count. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionsclose_db_env.html" title="close_db_env">
+close_db_env
+</a>
+</td>
+              <td>
+   <p>Close specified database environment handle regardless of reference count. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionsclose_all_db_envs.html" title="close_all_db_envs">
+close_all_db_envs
+</a>
+</td>
+              <td>
+   <p>Close all open database environment handles regardless of reference count. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionsbegin_txn.html" title="begin_txn">
+begin_txn
+</a>
+</td>
+              <td>
+   <p>Begin a new transaction from the specified environment "env". </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionscommit_txn.html" title="commit_txn">
+commit_txn
+</a>
+</td>
+              <td>
+   <p>Commit current transaction opened in the environment "env". </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionsabort_txn.html" title="abort_txn">
+abort_txn
+</a>
+</td>
+              <td>
+   <p>Abort current transaction of environment "env". </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionscurrent_txn.html" title="current_txn">
+current_txn
+</a>
+</td>
+              <td>
+   <p>Get current transaction of environment "env". </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionsset_current_txn_handle.html" title="set_current_txn_handle">
+set_current_txn_handle
+</a>
+</td>
+              <td>
+   <p>Set environment env's current transaction handle to be newtxn. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionsregister_db.html" title="register_db">
+register_db
+</a>
+</td>
+              <td>
+   <p>Register a Db handle "pdb1". </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionsregister_db_env.html" title="register_db_env">
+register_db_env
+</a>
+</td>
+              <td>
+   <p>Register a DbEnv handle env1, this handle and handles opened in it will be closed by ResourceManager
+. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionsopen_db.html" title="open_db">
+open_db
+</a>
+</td>
+              <td>
+   <p>Helper function to open a database and register it into dbstl for the calling thread. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionsopen_env.html" title="open_env">
+open_env
+</a>
+</td>
+              <td>
+   <p>Helper function to open an environment and register it into dbstl for the calling thread. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionsalloc_mutex.html" title="alloc_mutex">
+alloc_mutex
+</a>
+</td>
+              <td>
+   <p>Allocate a Berkeley DB mutex. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionslock_mutex.html" title="lock_mutex">
+lock_mutex
+</a>
+</td>
+              <td>
+   <p>Lock a mutex, wait if it is held by another thread. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionsunlock_mutex.html" title="unlock_mutex">
+unlock_mutex
+</a>
+</td>
+              <td>
+   <p>Unlock a mutex, and return immediately. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionsfree_mutex.html" title="free_mutex">
+free_mutex
+</a>
+</td>
+              <td>
+   <p>Free a mutex, and return immediately. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionsdbstl_startup.html" title="dbstl_startup">
+dbstl_startup
+</a>
+</td>
+              <td>
+   <p>If there are multiple threads within a process that make use of dbstl, then this function should be called in a single thread mutual exclusively before any use of dbstl in a process; Otherwise, you don't need to call it, but are allowed to call it anyway. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionsdbstl_exit.html" title="dbstl_exit">
+dbstl_exit
+</a>
+</td>
+              <td>
+   <p>This function releases any memory allocated in the heap by code of dbstl. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionsoperator_eq.html" title="operator==">
+operator==
+</a>
+</td>
+              <td>
+   <p>Operators to compare two Dbt objects. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionsset_global_dbfile_suffix_number.html" title="set_global_dbfile_suffix_number">
+set_global_dbfile_suffix_number
+</a>
+</td>
+              <td>
+   <p>If exisiting random temporary database name generation mechanism is still causing name clashes, users can set this global suffix number which will be append to each temporary database file name and incremented after each append, and by default it is 0. </p>        </td>
+            </tr>
+            <tr>
+              <td>
+<a class="xref" href="stldbstl_global_functionsclose_db_cursors.html" title="close_db_cursors">
+close_db_cursors
+</a>
+</td>
+              <td>
+   <p>Close cursors opened in dbp1. </p>        </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h4><a id="id1541615"></a>
+Group</h4>
+      <p>
+None</p>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="stldbstl_global_functionsclose_db"></a>
+close_db
+</h2>
+            </div>
+          </div>
+        </div>
+        <div class="sect2" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title"><a id="func_details"></a>
+Function Details</h3>
+              </div>
+            </div>
+          </div>
+          <pre class="programlisting">
+ void close_db(Db *pdb)
+ </pre>
+          <div class="sect3" lang="en" xml:lang="en">
+            <div class="titlepage"></div>
+            <p>Close pdb regardless of reference count. </p>
+            <p>You must make sure pdb is not used by others before calling this method. You can close the underlying database of a container and assign another database with right configurations to it, if the configuration is not suitable for the container, there will be an <a class="link" href="InvalidArgumentException.html" title="Chapter 39.  InvalidArgumentException">InvalidArgumentException</a>
+ type of exception thrown. You can't use the container after you called close_db and before setting another valid database handle to the container via <a class="link" href="stldb_containerset_db_handle.html" title="set_db_handle">db_container::set_db_handle()</a>
+ function. </p>
+          </div>
+          <div class="sect3" lang="en" xml:lang="en">
+            <div class="titlepage">
+              <div>
+                <div>
+                  <h4 class="title"><a id="id1541500"></a>
+Parameters</h4>
+                </div>
+              </div>
+            </div>
+            <div class="sect4" lang="en" xml:lang="en">
+              <div class="titlepage">
+                <div>
+                  <div>
+                    <h5 class="title"><a id="id1541080"></a>
+ pdb </h5>
+                  </div>
+                </div>
+              </div>
+              <p>The database handle to close. </p>
+            </div>
+          </div>
+        </div>
+        <div class="sect2" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title"><a id="id1541055"></a>
+Group: Functions to close database/environments.</h3>
+              </div>
+            </div>
+          </div>
+          <p>Normally you don't have to close any database or environment handles, they will be closed automatically.</p>
+          <p>Though you still have the following API to close them. </p>
+        </div>
+        <div class="sect2" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title"><a id="id1541607"></a>
+Class</h3>
+              </div>
+            </div>
+          </div>
+          <p>
+  <a class="link" href="dbstl_global_functions.html" title="Chapter 1.  Dbstl Global Public Functions">
+  dbstl_global_functions</a>
+     </p>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="index.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="stldbstl_global_functionsclose_all_dbs.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Berkeley DB C++ Standard Template Library API Reference </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+close_all_dbs
+</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Dbstl known issues</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="stl.html" title="Chapter 7. Standard Template Library API" />
+    <link rel="prev" href="stl_misc.html" title="Dbstl miscellaneous notes" />
+    <link rel="next" href="arch.html" title="Chapter 8.  Berkeley DB Architecture" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Dbstl known issues</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="stl_misc.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 7. Standard Template Library API</th>
+          <td width="20%" align="right"> <a accesskey="n" href="arch.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="stl_known_issues"></a>Dbstl known issues</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+    Three algorithm functions of gcc's  C++ STL test suite do not work with dbstl.  They are
+    <code class="function">find_end()</code>, <code class="function">inplace_merge()</code> and
+    <code class="function">stable_sort()</code>.
+</p>
+      <p>
+    The reason for the incompatibility of <code class="function">find_end()</code> is that it assumes the
+    data an iterator refers to is located at a shared place (owned by its container). This
+    assumption is not correct in that it is part of the C++ STL standards specification.  However,
+    this assumption can not be true for dbstl because each dbstl container iterator caches its
+    referenced value.
+</p>
+      <p>
+    Consequently, please do not use <code class="function">find_end()</code> for dbstl container iterators if
+    you are using gcc's STL library.
+</p>
+      <p>
+    The reason for the incompatibility with <code class="function">inplace_merge()</code> and
+    <code class="function">stable_sort()</code> is that their implementation in gcc requires the
+    <span class="bold"><strong>value_type</strong></span> for a container to be default constructible. This
+    requirement is not a part of the the C++ STL standard specification. Dbstl's value type
+    wrappers (such as <code class="classname">ElementHolder</code>) do not support it.
+</p>
+      <p>
+    These issues do not exist for any function available with the Microsoft Visual C++ STL library.
+</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="stl_misc.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="stl.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="arch.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Dbstl miscellaneous notes </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 8. 
+        Berkeley DB Architecture
+        </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

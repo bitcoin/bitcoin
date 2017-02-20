@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Processing Loop</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Replicated Berkeley DB Applications" />
+    <link rel="up" href="fwrkmasterreplica.html" title="Chapter 4. Replica versus Master Processes" />
+    <link rel="prev" href="fwrkmasterreplica.html" title="Chapter 4. Replica versus Master Processes" />
+    <link rel="next" href="exampledoloop.html" title="Example Processing Loop" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Processing Loop</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="fwrkmasterreplica.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 4. Replica versus Master Processes</th>
+          <td width="20%" align="right"> <a accesskey="n" href="exampledoloop.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="processingloop"></a>Processing Loop</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+                        Typically the central part of any replication application
+                        is some sort of a continuous loop that constantly
+                        checks the state of the environment (whether it is a
+                        replica or a master), opens and/or closes the
+                        databases as is necessary, and performs other useful
+                        work. A loop such as this one must of necessity
+                        take special care to know whether it is operating
+                        on a master or a replica environment because all of its
+                        activities are dependent upon that state.
+                  </p>
+      <p>
+                          The flow of activities through the loop will
+                          generally be as follows:
+                  </p>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <p>
+                                          Check whether the environment has
+                                          changed state. If it has, you
+                                          might want to reopen your
+                                          database handles, especially if
+                                          you opened your replica's
+                                          database handles as read-only. 
+                                          In this case, you might need to
+                                          reopen them as read-write.
+                                          However, if you always open your
+                                          database handles as read-write,
+                                          then it is not automatically necessary to
+                                          reopen the databases due to a
+                                          state change.  Instead, you
+                                          could check for a
+                                          <span>
+                                            <code class="literal">DB_REP_HANDLE_DEAD</code>
+                                            return code
+                                          </span>
+                                          
+
+                                          when you use your
+                                          database handle(s). If you see
+                                          this, then you need to reopen
+                                          your database handle(s). 
+                                  </p>
+          </li>
+          <li>
+            <p>
+                                          If the databases are closed,
+                                          create new database handles,
+                                          configure the handle as is
+                                          appropriate, and then open the
+                                          databases. Note that handle
+                                          configuration will be different,
+                                          depending on whether the handle
+                                          is opened as a replica or a
+                                          master. At a minimum, the master
+                                          should be opened with database
+                                          creation privileges, whereas the
+                                          replica does not need to be. You
+                                          must also open the master such
+                                          that its databases are
+                                          read-write. You
+                                          <span class="emphasis"><em>can</em></span> open
+                                          replicas with read-only
+                                          databases, so long as you are
+                                          prepared to close and then reopen
+                                          the handle in the event the
+                                          client becomes a master.
+                                  </p>
+            <p>
+                                          Also, note that if the local
+                                          environment 
+                                          is a replica, then it is possible
+                                          that databases do not currently
+                                          exist. In this case, the database
+                                          open attempts will fail. Your
+                                          code will have to take this
+                                          corner case into account
+                                          (described below).
+                                  </p>
+          </li>
+          <li>
+            <p>
+                                        Once the databases are opened,
+                                        check to see if the local
+                                        environment is a
+                                        master. If it is, do whatever it is
+                                        a master should do for your
+                                        application.
+                                  </p>
+            <p>
+                                          Remember that the code for your
+                                          master should include some way
+                                          for you to tell the master 
+                                          to exit gracefully.
+                                  </p>
+          </li>
+          <li>
+            <p>
+                                          If the local environment is not a
+                                          master, then do whatever it is
+                                          your replica environments should do.
+                                          Again, like the code for your
+                                          master environments, you should provide
+                                          a way for your replicas to exit
+                                          the processing loop gracefully.
+                                  </p>
+          </li>
+        </ol>
+      </div>
+      <p>
+                          The following code fragment illustrates
+                          these points (note that we fill out this
+                          fragment with a working example 
+                          next in this chapter):
+                  </p>
+      <pre class="programlisting">/* loop to manage replication activities */
+
+Db *dbp;
+int ret;
+APP_DATA *app_data;
+u_int32_t flags;
+
+dbp = NULL;
+ret = 0;
+
+/* 
+ * Remember that for this to work, an APP_DATA struct would have first
+ * had to been set to the environment handle's app_private data
+ * member. (dbenv is presumably declared and opened in another part of
+ * the code.)
+ */
+app_data = dbenv-&gt;get_app_private();
+
+
+/* 
+ * Infinite loop. We exit depending on how the master and replica code
+ * is written.
+ */
+for (;;) {
+    /* If dbp is not opened, we need to open it. */
+    if (dbp == 0) {
+        /* 
+         * Create the handle and then configure it. Before you open
+         * it, you have to decide what open flags to use:
+         */
+         dbp = new Db(&amp;dbenv, 0);
+
+        /*
+         * Now you can open your database handle.
+         *
+         * One thing to watch out for is a case where the databases 
+         * you are trying to open do not yet exist. This can happen 
+         * for replicas where the databases are being opened 
+         * read-only. If this happens, ENOENT is returned by the 
+         * open() call.
+         */
+         try {
+            dbp-&gt;open(NULL, DATABASE, NULL, DB_BTREE,
+                    app_data-&gt;is_master ? DB_CREATE | DB_AUTO_COMMIT :
+                    DB_AUTO_COMMIT, 0);
+         } catch(DbException dbe) {
+            if (dbe.get_errno() == ENOENT) {
+                cout &lt;&lt; "No stock db available yet - retrying." &lt;&lt; endl;
+                try {
+                    dbp-&gt;close(0);
+                } catch (DbException dbe2) {
+                    cout &lt;&lt; "Unexpected error closing after failed" &lt;&lt;
+                            " open, message: " &lt;&lt; dbe2.what() &lt;&lt; endl;
+                    dbp = NULL;
+                    goto err;
+                 }
+                 dbp = NULL;
+                 sleep(SLEEPTIME);
+                 continue;
+            } else {
+                dbenv.err(ret, "DB-&gt;open");
+                throw dbe;
+            }
+         }
+    }
+
+    /*
+     * Now that the databases have been opened, continue with general
+     * processing, depending on whether we are a master or a replica.
+     */
+     if (app_data-&gt;is_master) {
+        /* 
+         * Do master stuff here. Don't forget to include a way to
+         * gracefully exit the loop. */
+         */
+     } else {
+        /* 
+         * Do replica stuff here. As is the case with the master
+         * code, be sure to include a way to gracefully exit the
+         * loop. 
+         */
+     }
+} </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="fwrkmasterreplica.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="fwrkmasterreplica.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="exampledoloop.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 4. Replica versus Master Processes </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Example Processing Loop</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

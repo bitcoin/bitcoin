@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Environment FAQ</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="env.html" title="Chapter 9.  The Berkeley DB Environment" />
+    <link rel="prev" href="env_remote.html" title="Remote filesystems" />
+    <link rel="next" href="cam.html" title="Chapter 10.  Berkeley DB Concurrent Data Store Applications" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Environment FAQ</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="env_remote.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 9. 
+        The Berkeley DB Environment
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="cam.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="env_faq"></a>Environment FAQ</h2>
+          </div>
+        </div>
+      </div>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <p>
+            <span class="bold"><strong>I'm using multiple processes to access an Berkeley DB database
+                environment; is there any way to ensure that two processes don't run transactional
+                recovery at the same time, or that all processes have exited the database
+                environment so that recovery can be run?</strong></span> 
+        </p>
+            <p>
+            See <a class="xref" href="transapp_fail.html" title="Handling failure in Transactional Data Store applications">Handling failure in Transactional Data Store applications</a> and 
+            <a class="xref" href="transapp_app.html" title="Architecting Transactional Data Store applications">Architecting Transactional Data Store applications</a> for a full 
+            discussion of this topic.
+         </p>
+          </li>
+          <li>
+            <p>
+            <span class="bold"><strong>How can I associate application information with a <a href="../api_reference/C/db.html" class="olink">DB</a> or
+            <a href="../api_reference/C/env.html" class="olink">DB_ENV</a> handle?</strong></span> 
+        </p>
+            <p>
+            In the C API, the <a href="../api_reference/C/db.html" class="olink">DB</a> and <a href="../api_reference/C/env.html" class="olink">DB_ENV</a> structures each contain an "app_private" field intended
+            to be used to reference application-specific information.  See the <a href="../api_reference/C/dbcreate.html" class="olink">db_create()</a> and
+            <a href="../api_reference/C/envcreate.html" class="olink">db_env_create()</a> documentation for more information.
+        </p>
+            <p>
+            In the C++ or Java APIs, the easiest way to associate application-specific data with a
+            handle is to subclass the <a href="../api_reference/CXX/db.html" class="olink">Db</a> or <a href="../api_reference/CXX/env.html" class="olink">DbEnv</a>, for example subclassing
+            <a href="../api_reference/CXX/db.html" class="olink">Db</a> to get MyDb.  Objects of type MyDb will still have the Berkeley DB API
+            methods available on them, and you can put any extra data or methods you want into the
+            MyDb class.  If you are using "callback" APIs that take <a href="../api_reference/CXX/db.html" class="olink">Db</a> or
+            <a href="../api_reference/CXX/env.html" class="olink">DbEnv</a> arguments (for example, 
+            <a href="../api_reference/CXX/dbset_bt_compare.html" class="olink">Db::set_bt_compare()</a>) 
+            these will always be called with the <a href="../api_reference/CXX/db.html" class="olink">Db</a> or <a href="../api_reference/CXX/env.html" class="olink">DbEnv</a> objects you
+            create.  So if you always use MyDb objects, you will be able to take the first argument
+            to the callback function and cast it to a MyDb (in C++, cast it to (MyDb*)).  That will
+            allow you to access your data members or methods.  
+        </p>
+          </li>
+        </ol>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="env_remote.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="env.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="cam.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Remote filesystems </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 10. 
+        Berkeley DB Concurrent Data Store Applications
+        </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

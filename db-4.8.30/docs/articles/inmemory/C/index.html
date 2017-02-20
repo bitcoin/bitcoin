@@ -1,0 +1,1273 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Writing In-Memory Berkeley DB Applications</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.62.4" />
+    <link rel="home" href="index.html" title="Writing In-Memory Berkeley DB Applications" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Writing In-Memory Berkeley DB Applications</th>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="article" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h1 class="title"><a id="id387251"></a>Writing In-Memory Berkeley DB Applications</h1>
+          </div>
+          <div>
+            <div class="legalnotice">
+              <p class="legalnotice-title">
+                <b>Legal Notice</b>
+              </p>
+              <p>
+        This documentation is distributed under an open source license.
+        You may review the terms of this license at:
+        <a href="http://www.oracle.com/technology/software/products/berkeley-db/htdocs/oslicense.html" target="_top">http://www.oracle.com/technology/software/products/berkeley-db/htdocs/oslicense.html</a>
+        
+        
+    </p>
+              <p>
+            Oracle, Berkeley DB,
+            
+            
+            and
+            Sleepycat are trademarks or registered trademarks of
+            Oracle. All rights to these marks are reserved.
+            No third-party use is permitted without the
+            express prior written consent of Oracle.
+    </p>
+              <p>
+        To obtain a copy of this document's original source code, please
+        submit a request to the Oracle Technology Network forum at:
+        <a href="http://forums.oracle.com/forums/forum.jspa?forumID=271" target="_top">http://forums.oracle.com/forums/forum.jspa?forumID=271</a>
+        
+        
+    </p>
+            </div>
+          </div>
+          <div>
+            <p class="pubdate">4/12/2010</p>
+          </div>
+        </div>
+        <div></div>
+        <hr />
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="index.html#intro">Introduction</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="index.html#resources">Resources to be Managed</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="index.html#strategies">Strategies</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="index.html#dbfiles">Keeping the Database in Memory</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="index.html#env">Keeping Environments in Memory</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="index.html#cachesize">Sizing the Cache</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="index.html#dbcachesize-db">Specifying a Cache Size using the
+                                Database Handle</a>
+                </span>
+              </dt>
+              <dt>
+                <span class="sect2">
+                  <a href="index.html#dbcachesize-env">Specifying a Cache Size using the
+                                Environment Handle</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <span class="sect1">
+              <a href="index.html#mpool-nofile">Keeping Temporary Overflow Pages in Memory</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="index.html#logs">Keeping Logs in Memory</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="index.html#in-mem-rep">In-Memory Replicated Applications</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect1">
+              <a href="index.html#example_in-mem">Example In-Memory Application</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="intro"></a>Introduction</h2>
+            </div>
+          </div>
+          <div></div>
+        </div>
+        <p>
+                This document describes how to write a DB application
+                that keeps its data entirely in memory. That is, the
+                application writes no data to disk. For this reason,
+                in-memory only applications typically discard all 
+                data durability guarantees.
+        </p>
+        <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+          <h3 class="title">Note</h3>
+          <p>
+                        This document assume familiarity with the
+                        <i class="citetitle">Getting Started with Berkeley DB</i> guide. If
+                        you are using environments or transactions, then
+                        you should also have an understanding of the
+                        concepts in <i class="citetitle">Berkeley DB Getting Started with Transaction Processing</i>
+                        guide.
+                </p>
+        </div>
+        <p>
+                There are several reasons why you might want to write an
+                in-memory only DB application. For platforms on which a
+                disk drive is available to back your data, an in-memory
+                application might be desirable from a performance
+                perspective. In this case, the data that your application
+                manages might be generated during run-time and so is of no
+                interest across application startups.
+        </p>
+        <p>
+                Other platforms are disk-less. In this case, an in-memory only
+                configuration is the only possible choice. Note that this
+                document's primary focus is disk-less systems for which an
+                on-disk filesystem is not available. 
+        </p>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="resources"></a>Resources to be Managed</h2>
+            </div>
+          </div>
+          <div></div>
+        </div>
+        <p>
+                        Before continuing, it is worthwhile to briefly
+                        describe the DB resources that must be managed
+                        if you are going to configure an in-memory only
+                        DB application. These are resources that are by
+                        default persisted on disk, or backed by a
+                        filesystem on disk. Some configuration is therefore
+                        required to keep these resources in-memory only.
+                </p>
+        <p>
+                        Note that you can configure only some of these
+                        resources to be held in-memory, and allow others to
+                        be backed by disk. This might be desireable for
+                        some applications that wish to improve application
+                        performance by, for example, eliminating disk I/O
+                        for some, but not all, of these resources. However,
+                        for the purpose of this document, we assume you
+                        want to configure all of these resources to be held
+                        in memory.
+                </p>
+        <p>
+                        Managing these resources for an in-memory
+                        application is described in detail later in this
+                        article.
+                </p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+                                        Database files
+                                </p>
+              <p>
+                                        Normally, DB stores your
+                                        database data within on-disk files.
+                                        For an entirely in-memory
+                                        application, you are required to turn
+                                        off this behavior.
+                                </p>
+            </li>
+            <li>
+              <p>
+                                        Environment region files
+                                </p>
+              <p>
+                                        DB environments manage region
+                                        files for a variety of purposes.
+                                        Normally these are backed by the
+                                        filesystem, but by using the
+                                        appropriate configuration option
+                                        you can cause region files to
+                                        reside in memory only.
+                                </p>
+            </li>
+            <li>
+              <p>
+                                        Database cache
+                                </p>
+              <p>
+                                        The DB cache must be configured
+                                        large enough to hold all your data
+                                        in memory. If you do not size your
+                                        cache large enough, then DB
+                                        will attempt to write pages to
+                                        disk. In a disk-less system, this
+                                        will result in an abnormal
+                                        termination of your program.
+                                </p>
+            </li>
+            <li>
+              <p>
+                                        Logs
+                                </p>
+              <p>
+                                        DB logs describe the write activity
+                                        that has occurred in your application.
+                                        They are used for a number of purposes,
+                                        such as recovery operations for
+                                        applications that are seeking data
+                                        durability guarantees.
+                                </p>
+              <p>
+                                        For in-memory applications that do not
+                                        care about durability guarantees, logs
+                                        are still required if you want
+                                        transactional benefits other than
+                                        durability (such as isolation
+                                        and atomicity). This is because DB's
+                                        transactional subsystem requires logs,
+                                        even if you want to discard all data
+                                        durability guarantees.
+                                </p>
+              <p>
+                                        If this describes your application, you
+                                        must enable logs but configure them to
+                                        reside only within memory.
+                                </p>
+            </li>
+            <li>
+              <p>
+                                        Temporary overflow pages
+                                </p>
+              <p>
+                                        You must disallow backing temporary
+                                        database files with the
+                                        filesystem. This is mostly a
+                                        configuration option, but it is
+                                        also dependent upon sizing your
+                                        cache correctly.
+                                </p>
+            </li>
+          </ul>
+        </div>
+        <p>
+                    In addition to these, if you are writing a replicated application (see
+                    <i class="citetitle">Berkeley DB Getting Started with Replicated Applications</i> for an introduction to writing replicated
+                    applications), there is internal replication information that is normally kept
+                    on-disk.  You can cause this information to be kept in-memory if you are
+                    willing to accept some limitations in how your replicated application operates.
+                    See <a href="index.html#in-mem-rep">In-Memory Replicated Applications</a> for more information.
+                </p>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="strategies"></a>Strategies</h2>
+            </div>
+          </div>
+          <div></div>
+        </div>
+        <p>
+                        DB is an extremely flexible product that can be
+                        adapted to suit almost any data management
+                        requirements. This means that you can configure
+                        DB to operate entirely within memory, but still
+                        retain some data durability guarantees or even
+                        throw away all durability guarantees.
+                </p>
+        <p>
+                        Data durability guarantees describe how persistent
+                        your data is. That is, once you have made a change
+                        to the data stored in your database, how much of a
+                        guarantee do you require that that modification
+                        will persist (not be lost)? There are a great many
+                        options here. For the absolute best durability guarantee, you
+                        should fully transaction-protect your data and
+                        allow your data to be written to disk upon each
+                        transaction commit. Of course, this guarantee is
+                        not available for disk-less systems.
+                </p>
+        <p>
+                        At the opposite end of the spectrum, you can throw
+                        away all your data once your application is done
+                        with it (for example, at application shutdown).
+                        This is a good option if you are using DB only
+                        as a kind of caching mechanism. In this case, you
+                        obviously must either generate your data entirely
+                        during runtime, or obtain it from some remote
+                        location during application startup.
+                </p>
+        <p>
+                        There are also durability options that exist somewhere in
+                        between these two extremes. For example, disk-less
+                        systems are sometimes backed by some kind of flash
+                        memory (e.g. compact flash cards). These
+                        platforms may want to limit the number of writes 
+                        applied to the backing media because it is capable 
+                        of accepting only a limited number of writes before it must
+                        be replaced.  For this reason, you might want to 
+                        limit data writes to the flash media only during
+                        specific moments during your application's
+                        runtime; for example, only at application shutdown.
+                </p>
+        <p>
+                        Another way to obtain a data durability guarantee
+                        for in-memory configurations is to use DB
+                        replication to commit data to the network. To support this
+                        strategy, the disk-less system is required to
+                        be the master server.  The use of replication in this 
+                        way actually results
+                        in a fairly high durability guarantee for your
+                        data while providing the benefit of avoiding disk
+                        I/O on transaction commit.
+                </p>
+        <p>
+                        The point here is to be aware that a great many
+                        options are available to you when writing an
+                        in-memory only application. That said, the focus of
+                        this document is strictly disk-less systems; that
+                        is, systems that provide no means by which 
+                        data can be written to persistent media. 
+                 </p>
+        <p>
+                        For an introductory description of 
+                        DB replication, please see the 
+                        <i class="citetitle">Berkeley DB Getting Started with Replicated Applications</i> guide.
+                </p>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="dbfiles"></a>Keeping the Database in Memory</h2>
+            </div>
+          </div>
+          <div></div>
+        </div>
+        <p>
+                        Normally DB databases are backed by the
+                        filesystem. For in-memory applications, such as
+                        is required on disk-less systems, you can cause your
+                        database to only reside in-memory. That is,
+                        their contents are stored entirely within DB's
+                        cache.
+                </p>
+        <p>
+                        There are two requirements for keeping your
+                        database(s) in-memory.
+                        The first is to size your cache such that it is big
+                        enough to hold all your data in-memory. If your
+                        cache fills up, then DB will return
+                        <tt class="literal">ENOMEM</tt> on the next operation
+                        that requests additional pages in the cache. As with all errors while
+                        updating a database, the current transaction must be aborted. If the update
+                        was being done without a transaction, then the application must close its
+                        environment and database handles, reopen them, and then refresh the database
+                        from some backup data source.
+                </p>
+        <p>
+                        For information on setting the cache size, see
+                        <a href="index.html#cachesize">Sizing the Cache</a>.
+                </p>
+        <p>
+                        Beyond cache sizing, you also must tell DB not
+                        to back your database with an on-disk file. You do
+                        this by NOT providing a database file name
+                        when you open the database. Note that the database
+                        file name is different from the database name; you
+                        can name your in-memory databases even if you
+                        are not storing them in an on-disk file.
+                </p>
+        <p>
+                        For example:
+                </p>
+        <pre class="programlisting">#include "db.h"
+
+...
+
+    int ret, ret_c;
+    const char *db_name = "in_mem_db1";
+    u_int32_t db_flags;  /* For open flags */
+    DB *dbp;             /* Database handle */
+
+...
+
+   /* Initialize the DB handle */
+    ret = db_create(&amp;dbp, NULL, 0);
+    if (ret != 0) {
+        fprintf(stderr, "Error creating database handle: %s\n",
+                    db_strerror(ret));
+        goto err;
+    }
+
+    db_flags = DB_CREATE;       /* If it doesn't exist, create it */
+
+    /* 
+     * Open the database. Note that the file name is NULL. 
+     * This forces the database to be stored in the cache only.
+     * Also note that the database has a name, even though its
+     * file name is NULL.
+     */
+    ret = dbp-&gt;open(dbp,        /* Pointer to the database */
+                    NULL,       /* Txn pointer */
+                    <b class="userinput"><tt>NULL,</tt></b>       /* File name is not specified on purpose */
+                    db_name,    /* Logical db name. */
+                    DB_BTREE,   /* Database type (using btree) */
+                    db_flags,   /* Open flags */
+                    0);         /* File mode. Using defaults */
+    if (ret != 0) {
+        dbp-&gt;err(dbp, ret, "Database open failed");
+        goto err;
+    }
+
+err:
+    /* Close the database */
+    if (dbp != NULL) {
+        ret_c = dbp-&gt;close(dbp, 0);
+        if (ret_c != 0) {
+            fprintf(stderr, "%s database close failed.\n",
+                 db_strerror(ret_c));
+            ret = ret_c
+        }
+    } </pre>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="env"></a>Keeping Environments in Memory</h2>
+            </div>
+          </div>
+          <div></div>
+        </div>
+        <p>
+                        Like databases, DB environments are usually backed by the filesystem. In
+                        fact, a big part of what environments do is identify the location on disk
+                        where resources (such as log and database files) are kept.
+                </p>
+        <p>
+                        However, environments are also used for managing resources, such as
+                        obtaining new transactions, so they are useful even when building an
+                        in-memory application. Therefore, if you are going to use an environment for
+                        your in-memory DB application, you must configure it such that it does
+                        not want to use the filesystem. There are two things you need to do here.
+                </p>
+        <p>
+                        First, when you open your environment, do NOT identify a home directory. To
+                        accomplish this, you must:
+                </p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+                                        NOT provide a value for the <tt class="literal">db_home</tt>
+                                        parameter on the
+                                        <tt class="methodname">DB_ENV-&gt;open()</tt>
+                                        method.
+                                </p>
+            </li>
+            <li>
+              <p>
+                                        NOT have a DB_HOME environment variable set.
+                                </p>
+            </li>
+            <li>
+              <p>
+                                        NOT call any of the methods that affect file naming
+                                        (<tt class="methodname">DB_ENV-&gt;set_data_dir()</tt>,
+                                        <tt class="methodname">DB_ENV-&gt;set_lg_dir()</tt>, or
+                                        <tt class="methodname">DB_ENV-&gt;set_tmp_dir()</tt>).
+                                </p>
+            </li>
+          </ul>
+        </div>
+        <p>
+                        Beyond this, you must also ensure that regions are
+                        backed by heap memory
+                        instead of by the filesystem or system shared memory. You do this when you
+                        open your environment by specifying the <tt class="literal">DB_PRIVATE</tt> flag.
+                        Note that the use of <tt class="literal">DB_PRIVATE</tt> means that other processes
+                        cannot share the environment. Consequently, your in-memory only application
+                        must be a single-process, although it can be multi-threaded.
+                </p>
+        <p>
+                        For example:
+                </p>
+        <pre class="programlisting">#include "db.h"
+
+...
+
+    int ret, ret_c;
+    u_int32_t env_flags;  /* For open flags */
+    DB_ENV *envp;         /* Environment handle */
+
+...
+
+   /* Initialize the ENV handle */
+    ret = db_env_create(&amp;envp, 0);
+    if (ret != 0) {
+        fprintf(stderr, "Error creating environment handle: %s\n",
+                    db_strerror(ret));
+        goto err;
+    }
+
+   
+    /* 
+     * Environment flags. These are for a non-threaded
+     * in-memory application.
+     */
+    env_flags =
+      DB_CREATE     |  /* Create the environment if it does not exist */ 
+      DB_INIT_LOCK  |  /* Initialize the locking subsystem */
+      DB_INIT_LOG   |  /* Initialize the logging subsystem */
+      DB_INIT_TXN   |  /* Initialize the transactional subsystem. This
+                        * also turns on logging. */
+      DB_INIT_MPOOL |  /* Initialize the memory pool (in-memory cache) */
+      <b class="userinput"><tt>DB_PRIVATE    |  /* Region files are not backed by the filesystem. 
+                        * Instead, they are backed by heap memory.  */</tt></b>
+
+   /* 
+    * Now open the environment. Notice that we do not provide a location 
+    * for the environment's home directory. This is required for an 
+    * in-memory only application.
+    */
+    ret = envp-&gt;open(envp, <b class="userinput"><tt>NULL</tt></b>, env_flags, 0);
+    if (ret != 0) {
+        fprintf(stderr, "Error opening environment: %s\n",
+            db_strerror(ret));
+        goto err;
+    } 
+
+err:
+    /* Close the environment */
+    if (envp != NULL) {
+        ret_c = envp-&gt;close(envp, 0);
+        if (ret_c != 0) {
+            fprintf(stderr, "environment close failed: %s\n",
+                 db_strerror(ret_c));
+            ret = ret_c
+        }
+    }</pre>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="cachesize"></a>Sizing the Cache</h2>
+            </div>
+          </div>
+          <div></div>
+        </div>
+        <p>
+                        One of the most important considerations for an
+                        in-memory application is to ensure that your
+                        database cache is large enough. In a normal
+                        application that is not in-memory, the cache
+                        provides a mechanism by which frequently-used
+                        data can be accessed without resorting to disk I/O.
+                        For an in-memory application, the cache is the only
+                        location your data can exist so it is critical that
+                        you make the cache large enough for your data set.
+                </p>
+        <p>
+                        You specify the size of your cache at application
+                        startup. Obviously you should not specify a size
+                        that is larger than available memory. Note that the
+                        size you specify for your cache is actually a
+                        <span class="emphasis"><em>maximum</em></span> size; DB will only 
+                        use memory as required so if you specify a cache
+                        size of 1 GB but your data set is only ever 10 MB
+                        in size, then 10 MB is what DB will use.
+                </p>
+        <p>
+                        Note that if you specify a cache size less than
+                        500 MB, then the cache size is automatically
+                        increased by 25% to account for internal overhead
+                        purposes.
+                </p>
+        <p>
+                        There are two ways to specify a cache size,
+                        depending on whether you are using a database
+                        environment.
+                </p>
+        <div class="sect2" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title"><a id="dbcachesize-db"></a>Specifying a Cache Size using the
+                                Database Handle</h3>
+              </div>
+            </div>
+            <div></div>
+          </div>
+          <p>
+                                To select a cache size using the database
+                                handle, use the
+                                <tt class="methodname">DB-&gt;set_cachesize()</tt>
+                                method. Note that you cannot use this
+                                method after the database has been opened.
+                        </p>
+          <p>
+                                Also, if you are using a database environment,
+                                it is an error to use this method. See
+                                the next section for details on
+                                selecting your cache size.
+                        </p>
+          <p>
+                                The following code fragment creates a
+                                database handle, sets the cache size to
+                                10 MB and then opens the database:
+                        </p>
+          <pre class="programlisting">#include "db.h"
+
+...
+
+    int ret, ret_c;
+    const char *db_name = "in_mem_db1";
+    u_int32_t db_flags;  /* For open flags */
+    DB *dbp;             /* Database handle */
+
+...
+
+   /* Initialize the DB handle */
+    ret = db_create(&amp;dbp, NULL, 0);
+    if (ret != 0) {
+        fprintf(stderr, "Error creating database handle: %s\n",
+                    db_strerror(ret));
+        goto err;
+    }
+
+    <b class="userinput"><tt>/*************************************************************/
+    /*************************************************************/
+    /*************  Set the cache size here **********************/
+    /*************************************************************/
+    /*************************************************************/
+
+    ret = dbp-&gt;set_cachesize(dbp, 
+                             0,     /* 0 gigabytes */
+              10 * 1024 * 1024,     /* 10 megabytes */
+                            1);     /* Create 1 cache. All memory will 
+                                     * be allocated contiguously. */
+    if (ret != 0) {
+        dbp-&gt;err(dbp, ret, "Database open failed");
+        goto err;
+    }</tt></b>
+   
+
+    db_flags = DB_CREATE;       /* If it doesn't exist, create it */
+    ret = dbp-&gt;open(dbp,        /* Pointer to the database */
+                    NULL,       /* Txn pointer */
+                    NULL,       /* File name is not specified on purpose */
+                    db_name,    /* Logical db name */
+                    DB_BTREE,   /* Database type (using btree) */
+                    db_flags,   /* Open flags */
+                    0);         /* File mode. Using defaults */
+    if (ret != 0) {
+        dbp-&gt;err(dbp, ret, "Database open failed");
+        goto err;
+    }
+
+err:
+    /* Close the database */
+    if (dbp != NULL) {
+        ret_c = dbp-&gt;close(dbp, 0);
+        if (ret_c != 0) {
+            fprintf(stderr, "%s database close failed.\n",
+                 db_strerror(ret_c));
+            ret = ret_c
+        }
+    } </pre>
+        </div>
+        <div class="sect2" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title"><a id="dbcachesize-env"></a>Specifying a Cache Size using the
+                                Environment Handle</h3>
+              </div>
+            </div>
+            <div></div>
+          </div>
+          <p>
+                                To select a cache size using the
+                                environment handle, use the
+                                <tt class="methodname">ENV-&gt;set_cachesize()</tt>
+                                method. Note that you cannot use this
+                                method after the environment has been opened.
+                        </p>
+          <p>
+                                The following code fragment creates an
+                                environment handle, sets the cache size to
+                                10 MB and then opens the environment: Once
+                                opened, you can use the environment when
+                                you open your database(s). This means all
+                                your databases will use the same
+                                cache.
+                        </p>
+          <pre class="programlisting">#include "db.h"
+
+...
+
+    int ret, ret_c;
+    u_int32_t env_flags;  /* For open flags */
+    DB_ENV *envp;         /* Environment handle */
+
+...
+
+   /* Initialize the ENV handle */
+    ret = db_env_create(&amp;envp, 0);
+    if (ret != 0) {
+        fprintf(stderr, "Error creating environment handle: %s\n",
+                    db_strerror(ret));
+        goto err;
+    }
+
+    <b class="userinput"><tt>/*************************************************************/
+    /*************************************************************/
+    /*************  Set the cache size here **********************/
+    /*************************************************************/
+    /*************************************************************/
+
+    ret = 
+        envp-&gt;set_cachesize(envp, 
+                               0,    /* 0 gigabytes */
+                10 * 1024 * 1024,    /* 10 megabytes */
+                              1);    /* Create 1 cache. All memory will 
+                                      * be allocated contiguously. */
+    if (ret != 0) {
+        envp-&gt;err(envp, ret, "Environment open failed");
+        goto err;
+    }</tt></b>
+   
+    /* 
+     * Environment flags. These are for a non-threaded
+     * in-memory application.
+     */
+    env_flags =
+      DB_CREATE     |  /* Create the environment if it does not exist */ 
+      DB_INIT_LOCK  |  /* Initialize the locking subsystem */
+      DB_INIT_LOG   |  /* Initialize the logging subsystem */
+      DB_INIT_TXN   |  /* Initialize the transactional subsystem. This
+                        * also turns on logging. */
+      DB_INIT_MPOOL |  /* Initialize the memory pool (in-memory cache) */
+      DB_PRIVATE    |  /* Region files are not backed by the filesystem. 
+                        * Instead, they are backed by heap memory.  */
+
+   /* 
+    * Now open the environment. Notice that we do not provide a location 
+    * for the environment's home directory. This is required for an 
+    * in-memory only application.
+    */
+    ret = envp-&gt;open(envp, NULL, env_flags, 0);
+    if (ret != 0) {
+        fprintf(stderr, "Error opening environment: %s\n",
+            db_strerror(ret));
+        goto err;
+    } 
+
+err:
+    /* Close the environment */
+    if (envp != NULL) {
+        ret_c = envp-&gt;close(envp, 0);
+        if (ret_c != 0) {
+            fprintf(stderr, "environment close failed: %s\n",
+                 db_strerror(ret_c));
+            ret = ret_c
+        }
+    } </pre>
+        </div>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="mpool-nofile"></a>Keeping Temporary Overflow Pages in Memory</h2>
+            </div>
+          </div>
+          <div></div>
+        </div>
+        <p>
+                        Normally, when a database is opened, a temporary
+                        file is opened on-disk to back the database. This
+                        file is used if the database grows so large that it
+                        fills the entire cache. At that time, database
+                        pages that do not fit into the in-memory cache file
+                        are written temporarily to this file.
+                </p>
+        <p>
+                        For disk-less systems, you should configure your
+                        databases so that this temporary file is not
+                        created. When you do this, any attempt to create
+                        new database pages once the cache is full will
+                        fail.
+                </p>
+        <p>
+                        You configure this option on a per-database handle
+                        basis. That means you must configure this for every
+                        in-memory database that your application uses.
+                </p>
+        <p>
+                        To set this option, obtain the
+                        <tt class="literal">DB_MPOOLFILE</tt> field from you
+                        <tt class="literal">DB</tt> and then configure
+                        <tt class="literal">DB_MPOOL_NOFILE</tt> using the
+                        <tt class="methodname">DB_MPOOLFILE-&gt;set_flags()</tt>
+                        method.
+                </p>
+        <p>
+                        For example:
+                </p>
+        <pre class="programlisting">#include "db.h"
+
+...
+
+    int ret, ret_c;
+    u_int32_t env_flags;  /* For open flags */
+    DB_ENV *envp;         /* Environment handle */
+
+...
+
+    /* 
+     * Configure the cache file. This can be done
+     * at any point in the application's life once the
+     * DB handle has been created.
+     */
+    mpf = dbp-&gt;get_mpf(dbp);
+    ret = mpf-&gt;set_flags(mpf, DB_MPOOL_NOFILE, 1);
+
+    if (ret != 0) {
+        fprintf(stderr, 
+          "Attempt failed to configure for no backing of temp files: %s\n",
+                    db_strerror(ret));
+        goto err;
+    } </pre>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="logs"></a>Keeping Logs in Memory</h2>
+            </div>
+          </div>
+          <div></div>
+        </div>
+        <p>
+                    DB logs describe the write activity that has occurred in
+                    your application. For a purely in-memory application, logs
+                    should be used only if you wish to transaction-protect your
+                    database writes as logs are required by the DB
+                    transactional subsystem.
+                 </p>
+        <p>
+                    Note that transactions provide a number of guarantees. One
+                    of these is not interesting to a purely in-memory
+                    application (data durability). However, other transaction
+                    guarantees such as isolation and atomicity might be of
+                    interest to your application.
+                 </p>
+        <p>
+                        If this is the case for your application, then you must
+                        configure your logs to be kept entirely in-memory. You
+                        do this by setting a configuration option that prevents
+                        DB from writing log data to disk.
+                        Do this by setting the <tt class="literal">DB_LOG_IN_MEMORY</tt> flag using the
+                        <tt class="methodname">DB_ENV-&gt;log_set_config()</tt> method.
+                </p>
+        <p>
+                        In addition, you must configure your log buffer size so that it is capable
+                        of holding all log information that can accumulate during your longest
+                        running transaction. That is, make sure the in-memory log buffer is large
+                        enough that no transaction will ever span the entire buffer. Also, avoid a
+                        state where the in-memory buffer is full and no space can be freed because a
+                        transaction that started the first log "file" is still active.
+                </p>
+        <p>
+                        How much log buffer space is required is a function of the number of
+                        transactions you have running concurrently, how long they last, and how much
+                        write activity occurs within them. When in-memory logging is configured, the
+                        default log buffer space is 1 MB. 
+                </p>
+        <p>
+                        You set your log buffer space using the
+                        <tt class="methodname">DB_ENV-&gt;set_lg_bsize()</tt>.
+                </p>
+        <p>
+                        For example, the following code fragment configure in-memory log usage, and
+                        it configures the log buffer size to 10 MB:
+                </p>
+        <pre class="programlisting">#include "db.h"
+
+...
+
+    int ret, ret_c;
+    u_int32_t env_flags;  /* For open flags */
+    DB_ENV *envp;         /* Environment handle */
+
+...
+
+   /* Initialize the ENV handle */
+    ret = db_env_create(&amp;envp, 0);
+    if (ret != 0) {
+        fprintf(stderr, "Error creating environment handle: %s\n",
+                    db_strerror(ret));
+        goto err;
+    }
+
+    /* 
+     * Environment flags. These are for a non-threaded
+     * in-memory application.
+     */
+    env_flags =
+      DB_CREATE     |  /* Create the environment if it does not exist */ 
+      DB_INIT_LOCK  |  /* Initialize the locking subsystem */
+      DB_INIT_LOG   |  /* Initialize the logging subsystem */
+      DB_INIT_TXN   |  /* Initialize the transactional subsystem. This
+                        * also turns on logging. */
+      DB_INIT_MPOOL |  /* Initialize the memory pool (in-memory cache) */
+      DB_PRIVATE    |  /* Region files are not backed by the filesystem. 
+                        * Instead, they are backed by heap memory.  */
+
+       
+    <b class="userinput"><tt>/* Specify in-memory logging */
+    ret = envp-&gt;log_set_config(envp, DB_LOG_IN_MEMORY, 1);
+    if (ret != 0) {
+        fprintf(stderr, "Error setting log subsystem to in-memory: %s\n",
+            db_strerror(ret));
+        goto err;
+    }
+
+    /* 
+     * Specify the size of the in-memory log buffer. 
+     */
+    ret = envp-&gt;set_lg_bsize(envp, 10 * 1024 * 1024);
+    if (ret != 0) {
+        fprintf(stderr, "Error increasing the log buffer size: %s\n",
+            db_strerror(ret));
+        goto err;
+    }</tt></b>
+
+   /* 
+    * Now open the environment. Notice that we do not provide a location 
+    * for the environment's home directory. This is required for an 
+    * in-memory only application.
+    */
+    ret = envp-&gt;open(envp, NULL, env_flags, 0);
+    if (ret != 0) {
+        fprintf(stderr, "Error opening environment: %s\n",
+            db_strerror(ret));
+        goto err;
+    } 
+
+err:
+    /* Close the environment */
+    if (envp != NULL) {
+        ret_c = envp-&gt;close(envp, 0);
+        if (ret_c != 0) {
+            fprintf(stderr, "environment close failed: %s\n",
+                 db_strerror(ret_c));
+            ret = ret_c
+        }
+    } </pre>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="in-mem-rep"></a>In-Memory Replicated Applications</h2>
+            </div>
+          </div>
+          <div></div>
+        </div>
+        <p>
+                If you are unfamiliar with writing DB replicated applications, or if you are
+                simply uninterested in this topic, you can skip this section.
+            </p>
+        <p>
+                There are many internal resources used by the DB replication subsystem which are
+                by default backed by disk.  These internal resources help the DB subsystem
+                ensure election accuracy. While a complete description of these resources is beyond
+                the scope of this article, you should know that you can cause all of these resources
+                to be held entirely in-memory.  But you do so with some small chance of operational
+                errors in your replicated application.
+            </p>
+        <p>
+                If you cause a replicated application to keep its internal replication resources
+                in-memory, you run a small risk that elections will fail or be unable to complete.
+                However, calling additional elections should eventually yield a winner.
+            </p>
+        <p>
+                In addition, there is a slight possibility that the wrong site might win an
+                election, which could result in the loss of data. This can happen if you have a site
+                that is repeatedly crashing and trying to come back up. A site like this  might be
+                repeatedly sending out election information, and the repeated messages might confuse
+                other sites.  For replication applications that are not in-memory, these extra
+                messages would be ignored by other sites because they would also contain some state
+                information that allows other sites to know which election messages are relevant.
+                But strictly in-memory replicated applications cannot maintain this state
+                information, and so some other sites might become confused. The result might be that
+                the wrong site could be elected master due to the inconsistent information that is
+                available to them.
+            </p>
+        <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+          <h3 class="title">Note</h3>
+          <p>
+                    This is very much a corner case that you probably will never see in your
+                    production systems, especially if your sites are all stable and well-behaved.
+                </p>
+        </div>
+        <p>
+                If an election is won by the wrong site (site A), then some other site (site B) probably has
+                more recent log files than the winner does. But since the wrong site A won the
+                election, site B will sync with the new master. This will cause site B (and
+                therefore, your entire replication group) to lose any log files it contains that are
+                more recent than the files contained by site A.
+            </p>
+        <p>
+                Also, when running an in-memory replicated application, it is often-times desireable for
+                the master to run in-memory and the clients to commit data to disk. This helps to
+                improve write through-put on the master by avoiding disk I/O. Instead, the master
+                simply "commits to the network," and then eliminates its message ackowledgement
+                expectations so that it is no longer waiting for clients to respond to the commit.
+            </p>
+        <p>
+                If you are running a master that is configured to run with internal
+                replication resources in-memory, you should never allow that site to
+                appoint itself master again immediately after crashing or rebooting.
+                Doing so results in a slightly higher risk of your client sites
+                crashing. To determine your next master, you should either hold an
+                election or appoint a different site to be master.
+            </p>
+        <p>
+                In order to cause a replication site to run entire in-memory, do all of the things
+                described previously in this document to place all other DB resources in-memory.
+                Then, when configuring replication, specify <tt class="literal">DB_REP_CONF_INMEM</tt> to
+                the <tt class="methodname">DB_ENV-&gt;rep_set_config()</tt> method.
+            </p>
+      </div>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="example_in-mem"></a>Example In-Memory Application</h2>
+            </div>
+          </div>
+          <div></div>
+        </div>
+        <p>
+                        The following brief example illustrates how to open
+                        an application that is entirely in-memory. The
+                        application opens an environment and a single
+                        database, and does this in a way that the database
+                        is transaction-protected.
+                </p>
+        <p>
+                        Transactions can be
+                        desirable for an in-memory application even though
+                        you discard your durability guarantees, because of
+                        the other things that transactions offer such as
+                        atomicity and isolation.
+                </p>
+        <p>
+                        Notice that the example does nothing other than
+                        open and close the environment and database. DB
+                        database reads and writes work identically between
+                        in-memory-only and durable applications (that is,
+                        applications that write database application to
+                        durable storage). Consequently, there is no point
+                        in illustrating those actions here.
+                </p>
+        <pre class="programlisting">/* We assume an ANSI-compatible compiler */
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;db.h&gt;
+
+
+int
+main(void)
+{
+    /* Initialize our handles */
+    DB *dbp = NULL;
+    DB_ENV *envp = NULL;
+    DB_MPOOLFILE *mpf = NULL;
+
+    int ret, ret_t; 
+    const char *db_name = "in_mem_db1";
+    u_int32_t open_flags;
+
+    /* Create the environment */
+    ret = db_env_create(&amp;envp, 0);
+    if (ret != 0) {
+        fprintf(stderr, "Error creating environment handle: %s\n",
+            db_strerror(ret));
+        goto err;
+    }
+
+    open_flags =
+      DB_CREATE     |  /* Create the environment if it does not exist */
+      DB_INIT_LOCK  |  /* Initialize the locking subsystem */
+      DB_INIT_LOG   |  /* Initialize the logging subsystem */
+      DB_INIT_MPOOL |  /* Initialize the memory pool (in-memory cache) */
+      DB_INIT_TXN   |
+      DB_PRIVATE;      /* Region files are not backed by the filesystem. 
+                        * Instead, they are backed by heap memory.  */
+
+    /* Specify in-memory logging */
+    ret = envp-&gt;log_set_config(envp, DB_LOG_IN_MEMORY, 1);
+    if (ret != 0) {
+        fprintf(stderr, "Error setting log subsystem to in-memory: %s\n",
+            db_strerror(ret));
+        goto err;
+    }
+    /* 
+     * Specify the size of the in-memory log buffer. 
+     */
+    ret = envp-&gt;set_lg_bsize(envp, 10 * 1024 * 1024);
+    if (ret != 0) {
+        fprintf(stderr, "Error increasing the log buffer size: %s\n",
+            db_strerror(ret));
+        goto err;
+    }
+
+    /* 
+     * Specify the size of the in-memory cache. 
+     */
+    ret = envp-&gt;set_cachesize(envp, 0, 10 * 1024 * 1024, 1);
+    if (ret != 0) {
+        fprintf(stderr, "Error increasing the cache size: %s\n",
+            db_strerror(ret));
+        goto err;
+    }
+
+    /* 
+     * Now actually open the environment. Notice that the environment home
+     * directory is NULL. This is required for an in-memory only
+     * application. 
+     */
+    ret = envp-&gt;open(envp, NULL, open_flags, 0);
+    if (ret != 0) {
+        fprintf(stderr, "Error opening environment: %s\n",
+            db_strerror(ret));
+        goto err;
+    }
+
+
+   /* Initialize the DB handle */
+    ret = db_create(&amp;dbp, envp, 0);
+    if (ret != 0) {
+         envp-&gt;err(envp, ret,
+                "Attempt to create db handle failed.");
+        goto err;
+    }
+
+
+    /* 
+     * Set the database open flags. Autocommit is used because we are 
+     * transactional. 
+     */
+    open_flags = DB_CREATE | DB_AUTO_COMMIT;
+    ret = dbp-&gt;open(dbp,         /* Pointer to the database */
+             NULL,        /* Txn pointer */
+             NULL,        /* File name -- Must be NULL for inmemory! */
+             db_name,     /* Logical db name */
+             DB_BTREE,    /* Database type (using btree) */
+             open_flags,  /* Open flags */
+             0);          /* File mode. Using defaults */
+
+    if (ret != 0) {
+         envp-&gt;err(envp, ret,
+                "Attempt to open db failed.");
+        goto err;
+    }
+
+    /* Configure the cache file */
+    mpf = dbp-&gt;get_mpf(dbp);
+    ret = mpf-&gt;set_flags(mpf, DB_MPOOL_NOFILE, 1);
+
+    if (ret != 0) {
+         envp-&gt;err(envp, ret,
+            "Attempt failed to configure for no backing of temp files.");
+        goto err;
+    }
+
+err:
+    /* Close our database handle, if it was opened. */
+    if (dbp != NULL) {
+        ret_t = dbp-&gt;close(dbp, 0);
+        if (ret_t != 0) {
+            fprintf(stderr, "%s database close failed.\n",
+                db_strerror(ret_t));
+            ret = ret_t;
+        }
+    }
+
+    /* Close our environment, if it was opened. */
+    if (envp != NULL) {
+        ret_t = envp-&gt;close(envp, 0);
+        if (ret_t != 0) {
+            fprintf(stderr, "environment close failed: %s\n",
+                db_strerror(ret_t));
+                ret = ret_t;
+        }
+    }
+
+    /* Final status message and return. */
+    printf("I'm all done.\n");
+    return (ret == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
+} </pre>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+    </div>
+  </body>
+</html>

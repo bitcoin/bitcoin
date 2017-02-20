@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Opening and Closing the Database Environment</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Collections Tutorial" />
+    <link rel="up" href="BasicProgram.html" title="Chapter 2.  The Basic Program" />
+    <link rel="prev" href="BasicProgram.html" title="Chapter 2.  The Basic Program" />
+    <link rel="next" href="openclasscatalog.html" title="Opening and Closing the Class Catalog" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">
+        Opening and Closing the Database Environment
+    </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="BasicProgram.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 2. 
+        The Basic Program
+    </th>
+          <td width="20%" align="right"> <a accesskey="n" href="openclasscatalog.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="opendbenvironment"></a>
+        Opening and Closing the Database Environment
+    </h2>
+          </div>
+        </div>
+      </div>
+      <p>
+    This section of the tutorial describes how to open and close the
+    database environment. The database environment manages resources
+    (for example, memory, locks and transactions) for any number of
+    databases. A single environment instance is normally used for all
+    databases.
+</p>
+      <p>
+    The <code class="classname">SampleDatabase</code> class is used to open and close the
+    environment. It will also be used in following sections to open and
+    close the class catalog and other databases. Its constructor is
+    used to open the environment and its <code class="classname">close()</code> method is used
+    to close the environment. The skeleton for the
+    <code class="classname">SampleDatabase</code> class follows.
+</p>
+      <a id="cb_java_sampledatabase"></a>
+      <pre class="programlisting"><strong class="userinput"><code>import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.Environment;
+import com.sleepycat.db.EnvironmentConfig;
+import java.io.File;
+import java.io.FileNotFoundException;
+
+public class SampleDatabase
+{
+    private Environment env;
+
+    public SampleDatabase(String homeDirectory)
+        throws DatabaseException, FileNotFoundException
+    {
+    }
+
+    public void close()
+        throws DatabaseException
+    {
+    }
+}</code></strong> </pre>
+      <p>
+    The first thing to notice is that the Environment class is in
+    the 
+         
+        <span>com.sleepycat.db</span> 
+    package, not the com.sleepycat.collections
+    package. The 
+         
+        <span>com.sleepycat.db</span> 
+    package contains all core Berkeley DB
+    functionality. The com.sleepycat.collections package contains
+    extended functionality that is based on the Java Collections API.
+    The collections package is layered on top of the 
+        
+        <span>com.sleepycat.db</span>
+    package. Both packages are needed to create a complete application
+    based on the DB Java Collections API.
+</p>
+      <p>
+    The following statements create an 
+    
+    <a class="ulink" href="../../java/com/sleepycat/db/Environment.html" target="_top">Environment</a>
+    
+    object.
+</p>
+      <a id="cb_java_sampledatabaseconstructor"></a>
+      <pre class="programlisting">public SampleDatabase(String homeDirectory)
+        throws DatabaseException, FileNotFoundException
+    {
+<strong class="userinput"><code>        System.out.println("Opening environment in: " + homeDirectory);
+
+        EnvironmentConfig envConfig = new EnvironmentConfig();
+        envConfig.setTransactional(true);
+        envConfig.setAllowCreate(true);
+        envConfig.setInitializeCache(true);
+        envConfig.setInitializeLocking(true);
+
+        env = new Environment(new File(homeDirectory), envConfig);</code></strong>
+    } </pre>
+      <p>
+    The 
+    
+    <a class="ulink" href="../../java/com/sleepycat/db/EnvironmentConfig.html" target="_top">EnvironmentConfig</a>
+    
+    class is used to specify environment configuration parameters. The
+    first configuration option specified — <code class="methodname">setTransactional()</code> —
+    is set to true to create an environment where transactional (and
+    non-transactional) databases may be opened. While non-transactional
+    environments can also be created, the examples in this tutorial use
+    a transactional environment.
+</p>
+      <p>
+    <code class="methodname">setAllowCreate()</code> is set to true to specify
+    that the environment's files will be created if they don't already
+    exist. If this parameter is not specified, an exception will be
+    thrown if the environment does not already exist. A similar
+    parameter will be used later to cause databases to be created if
+    they don't exist.
+</p>
+      <p>
+    When an <code class="classname">Environment</code> object is constructed, a home
+    directory and the environment configuration object are specified.
+    The home directory is the location of the environment's log files
+    that store all database information.
+</p>
+      <p>
+    The following statement closes the environment. The environment
+    should always be closed when database work is completed to free
+    allocated resources and to avoid having to run recovery later.
+    Closing the environment does not automatically close databases, so
+    databases should be closed explicitly before closing the
+    environment.
+</p>
+      <a id="cb_close"></a>
+      <pre class="programlisting">    public void close()
+        throws DatabaseException
+    {
+<strong class="userinput"><code>        env.close();</code></strong>
+    } </pre>
+      <p>
+    The following getter method returns the environment for use by
+    other classes in the example program. The environment is used for
+    opening databases and running transactions.
+</p>
+      <a id="cb_getenvironment"></a>
+      <pre class="programlisting">public class SampleDatabase
+{
+    ...
+<strong class="userinput"><code>    public final Environment getEnvironment()
+    {
+        return env;
+    }</code></strong>
+    ...
+} </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="BasicProgram.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="BasicProgram.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="openclasscatalog.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 2. 
+        The Basic Program
+     </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> 
+        Opening and Closing the Class Catalog
+    </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

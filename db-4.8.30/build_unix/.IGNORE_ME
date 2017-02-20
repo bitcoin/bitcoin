@@ -1,0 +1,3 @@
+Some combinations of the gzip and tar archive exploders found
+on Linux systems ignore directories that don't have any files
+(other than symbolic links) in them.  So, here's a file.

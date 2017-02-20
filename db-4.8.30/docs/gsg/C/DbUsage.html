@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Database Usage Example</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="DBEntry.html" title="Chapter 3. Database Records" />
+    <link rel="prev" href="cstructs.html" title="Using C Structures with DB" />
+    <link rel="next" href="Cursors.html" title="Chapter 4. Using Cursors" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Database Usage Example</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="cstructs.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. Database Records</th>
+          <td width="20%" align="right"> <a accesskey="n" href="Cursors.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="DbUsage"></a>Database Usage Example</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+        In <a class="xref" href="CoreDbUsage.html" title="Database Example">Database Example</a> we created several
+        functions that will open and close the databases that we will use for
+        our inventory application. We now make use of those functions to load inventory data into
+        the two databases that we use for this application.
+    </p>
+      <p>
+        Again, remember that you can find the complete implementation for these functions
+        in:
+    </p>
+      <pre class="programlisting"><span class="emphasis"><em>DB_INSTALL</em></span>/examples_c/getting_started</pre>
+      <p>
+        where <code class="literal"><span class="emphasis"><em>DB_INSTALL</em></span></code> is the location where you
+        placed your DB distribution.
+    </p>
+      <div class="example">
+        <a id="VENDORStruct"></a>
+        <p class="title">
+          <b>Example 3.1 VENDOR Structure</b>
+        </p>
+        <div class="example-contents">
+          <p>
+            We want to store data related to an inventory system. There are two
+            types of information that we want to manage: inventory data and related
+            vendor contact information. To manage this information, we could
+            create a structure for each type of data, but to illustrate
+            storing mixed data without a structure we refrain from creating one
+            for the inventory data.
+        </p>
+          <p>
+            For the vendor data, we add the VENDOR structure to the same file as holds 
+            our STOCK_DBS structure. Note that the VENDOR structure uses
+            fixed-length fields. This is not necessary and in fact could
+            represent a waste of resources if the number of vendors stored in
+            our database scales to very large numbers. However, for simplicity we use
+            fixed-length fields anyway, especially 
+            given that our sample data contains so few vendor records.
+        </p>
+          <p>
+            Note that for the inventory data, we will store the data by
+            marshaling it into a buffer, described below.
+        </p>
+          <a id="c_dbt10"></a>
+          <pre class="programlisting">/* File: gettingstarted_common.h */
+#include &lt;db.h&gt;
+
+...
+                                                                                                                                     
+<strong class="userinput"><code>typedef struct vendor {
+    char name[MAXFIELD];             /* Vendor name */
+    char street[MAXFIELD];           /* Street name and number */
+    char city[MAXFIELD];             /* City */
+    char state[3];                   /* Two-digit US state code */
+    char zipcode[6];                 /* US zipcode */
+    char phone_number[13];           /* Vendor phone number */
+    char sales_rep[MAXFIELD];        /* Name of sales representative */
+    char sales_rep_phone[MAXFIELD];  /* Sales rep's phone number */
+} VENDOR;</code></strong> </pre>
+        </div>
+      </div>
+      <br class="example-break" />
+      <div class="example">
+        <a id="exampledbload"></a>
+        <p class="title">
+          <b>Example 3.2 example_database_load</b>
+        </p>
+        <div class="example-contents">
+          <p>
+            Our initial sample application will load database information from
+            several flat files. To save space, we won't show all the details of
+            this example program. However, as always you can find the complete
+            implementation for this program here:
+        </p>
+          <pre class="programlisting"><span class="emphasis"><em>DB_INSTALL</em></span>/examples_c/getting_started</pre>
+          <p>
+        where <code class="literal"><span class="emphasis"><em>DB_INSTALL</em></span></code> is the location where you
+        placed your DB distribution.
+    </p>
+          <p>
+        We begin with the normal include directives and forward declarations:
+    </p>
+          <a id="c_dbt11"></a>
+          <pre class="programlisting">/* example_database_load.c */
+#include "gettingstarted_common.h"
+                                                                                                                                
+                                                                                                                                
+/* Forward declarations */
+int load_vendors_database(STOCK_DBS, char *);
+int pack_string(char *, char *, int);
+int load_inventory_database(STOCK_DBS, char *); </pre>
+          <p>
+       Next we begin our <code class="function">main()</code> function with the variable
+       declarations and command line parsing that is normal for most command
+       line applications:  
+    </p>
+          <a id="c_dbt12"></a>
+          <pre class="programlisting">/*
+ * Loads the contents of vendors.txt and inventory.txt into
+ * Berkeley DB databases. 
+ */
+int
+main(int argc, char *argv[])
+{
+    STOCK_DBS my_stock;
+    int ret, size;
+    char *basename, *inventory_file, *vendor_file;
+
+    /* Initialize the STOCK_DBS struct */
+    initialize_stockdbs(&amp;my_stock);
+
+   /* 
+    * Initialize the base path. This path is used to 
+    * identify the location of the flat-text data
+    * input files.
+    */
+    basename = "./";
+
+    /* 
+     * Parse the command line arguments here and determine 
+     * the location of the flat text files containing the 
+     * inventory data here. This step is omitted for clarity.
+     */
+                                                                                                                               
+    /* 
+     * Identify the files that will hold our databases 
+     * This function uses information obtained from the
+     * command line to identify the directory in which
+     * the database files reside.
+     */
+    set_db_filenames(&amp;my_stock);
+                                                                                                                                
+    /* Find our input files */
+    size = strlen(basename) + strlen(INVENTORY_FILE) + 1;
+    inventory_file = malloc(size);
+    snprintf(inventory_file, size, "%s%s", basename, INVENTORY_FILE);
+                                                                                                                                
+    size = strlen(basename) + strlen(VENDORS_FILE) + 1;
+    vendor_file = malloc(size);
+    snprintf(vendor_file, size, "%s%s", basename, VENDORS_FILE);
+                                                                                                                                
+    /* Open all databases */
+    ret = databases_setup(&amp;my_stock, "example_database_load", stderr);
+    if (ret != 0) {
+            fprintf(stderr, "Error opening databases\n");
+            databases_close(&amp;my_stock);
+            return (ret);
+    }
+                                                                                                                                
+    ret = load_vendors_database(my_stock, vendor_file);
+    if (!ret) {
+        fprintf(stderr, "Error loading vendors database.\n");
+        databases_close(&amp;my_stock);
+        return (ret);
+    }
+    ret = load_inventory_database(my_stock, inventory_file);
+    if (!ret) {
+        fprintf(stderr, "Error loading inventory database.\n");
+        databases_close(&amp;my_stock);
+        return (ret);
+    }
+
+    /* close our environment and databases */
+    databases_close(&amp;my_stock);
+                                                                                                                                
+    printf("Done loading databases.\n");
+    return (0);
+}</pre>
+          <p>
+        Notice that there is not a lot to this function because we have pushed
+        off all the database activity to other places. In particular our
+        databases are all opened and configured in 
+        <code class="function">databases_setup()</code> which we implemented in 
+        <a class="xref" href="CoreDbUsage.html#databasesetup" title="Example 2.4 The databases_setup() Function">The databases_setup() Function</a>.
+    </p>
+          <p>
+        Next we show the implementation of
+        <code class="function">load_vendors_database()</code>. We load this data by
+        scanning (line by line) the contents of the
+        <code class="filename">vendors.txt</code> into a VENDOR structure. Once we have a
+        line scanned into the structure, we can store that structure into our
+        vendors database. 
+     </p>
+          <p>
+        Note that we use the vendor's name as the key here. In doing so, we
+        assume that the vendor's name is unique in our database. If it was not,
+        we would either have to select a different key, or architect our
+        application such that it could cope with multiple vendor records with
+        the same name.
+     </p>
+          <a id="c_dbt13"></a>
+          <pre class="programlisting">/*
+ * Loads the contents of the vendors.txt file into
+ * a database.
+ */
+int
+load_vendors_database(STOCK_DBS my_stock, char *vendor_file)
+{
+    DBT key, data;
+    FILE *ifp;
+    VENDOR my_vendor;
+    char buf[MAXLINE];
+                                                                                                                               
+    /* Open the vendor file for read access */
+    ifp = fopen(vendor_file, "r");
+    if (ifp == NULL) {
+        fprintf(stderr, "Error opening file '%s'\n", vendor_file);
+        return(-1);
+    }
+                                                                                                                               
+    /* Iterate over the vendor file */
+    while(fgets(buf, MAXLINE, ifp) != NULL) {
+        /* zero out the structure */
+        memset(&amp;my_vendor, 0, sizeof(VENDOR));
+        /* Zero out the DBTs */
+        memset(&amp;key, 0, sizeof(DBT));
+        memset(&amp;data, 0, sizeof(DBT));
+
+        /*
+         * Scan the line into the structure.
+         * Convenient, but not particularly safe.
+         * In a real program, there would be a lot more
+         * defensive code here.
+         */
+        sscanf(buf,
+          "%20[^#]#%20[^#]#%20[^#]#%3[^#]#%6[^#]#%13[^#]#%20[^#]#%20[^\n]",
+          my_vendor.name, my_vendor.street,
+          my_vendor.city, my_vendor.state,
+          my_vendor.zipcode, my_vendor.phone_number,
+          my_vendor.sales_rep, my_vendor.sales_rep_phone);
+                                                                                                                               
+        /* 
+         * Now that we have our structure we can load it 
+         * into the database. 
+         */
+                                                                                                                               
+        /* Set up the database record's key */
+        key.data = my_vendor.name;
+        key.size = strlen(my_vendor.name) + 1;
+                                                                                                                               
+        /* Set up the database record's data */
+        data.data = &amp;my_vendor;
+        data.size = sizeof(my_vendor);
+                                                                                                                               
+        /*
+         * Note that given the way we built our struct, there are extra
+         * bytes in it. Essentially we're using fixed-width fields with
+         * the unused portion of some fields padded with zeros. This
+         * is the easiest thing to do, but it does result in a bloated
+         * database. Look at load_inventory_data() for an example of how
+         * to avoid this.
+         */
+                                                                                                                               
+        /* Put the data into the database.
+         * Omitting error handling for clarity.
+         */
+        my_stock.vendor_dbp-&gt;put(my_stock.vendor_dbp, 0, &amp;key, &amp;data, 0);
+    } /* end vendors database while loop */
+                                                                                                                               
+    /* Close the vendor.txt file */
+    fclose(ifp);
+    return(0);
+} </pre>
+          <p>
+        Finally, we need to write the
+        <code class="function">load_inventory_database()</code> function. We made this function a
+        bit more complicated than is necessary by avoiding the use of a
+        structure to manage the data. Instead, we manually pack all our inventory
+        data into a single block of memory, and store that data in the
+        database.
+     </p>
+          <p>
+        While this complicates our code somewhat, this approach allows us to
+        use the smallest amount of space possible for the data that we want to
+        store. The result is that our cache can be smaller than it might
+        otherwise be and our database will take less space on disk than if we used
+        a structure with fixed-length fields.
+    </p>
+          <p>
+        For a trivial dataset such as what we use for these examples, these
+        resource savings are negligible. But if we were storing hundreds of
+        millions of records, then the cost savings may become significant.
+    </p>
+          <p>
+        Before we actually implement our inventory loading function, it is useful
+        to create a simple utility function that copies a character array into a
+        buffer at a designated offset:
+    </p>
+          <a id="c_dbt14"></a>
+          <pre class="programlisting">/*
+ * Simple little convenience function that takes a buffer, a string,
+ * and an offset and copies that string into the buffer at the
+ * appropriate location. Used to ensure that all our strings
+ * are contained in a single contiguous chunk of memory.
+ */
+int
+pack_string(char *buffer, char *string, int start_pos)
+{
+    int string_size = strlen(string) + 1;
+
+    memcpy(buffer+start_pos, string, string_size);
+                                                                                                                               
+    return(start_pos + string_size);
+} </pre>
+          <p>
+        That done, we can now load the inventory database:    
+    </p>
+          <a id="c_dbt15"></a>
+          <pre class="programlisting">/*
+ * Loads the contents of the inventory.txt file into
+ * a database.
+ */
+int
+load_inventory_database(STOCK_DBS my_stock, char *inventory_file)
+{
+    DBT key, data;
+    char buf[MAXLINE];
+    void *databuf;
+    int bufLen, dataLen;
+    FILE *ifp;
+                                                                                                                               
+    /*
+     * Rather than lining everything up nicely in a struct, we're being
+     * deliberately a bit sloppy here. This function illustrates how to
+     * store mixed data that might be obtained from various locations
+     * in your application.
+     */
+    float price;
+    int quantity;
+    char category[MAXFIELD], name[MAXFIELD];
+    char vendor[MAXFIELD], sku[MAXFIELD];
+
+    /* Load the inventory database */
+    ifp = fopen(inventory_file, "r");
+    if (ifp == NULL) {
+        fprintf(stderr, "Error opening file '%s'\n", inventory_file);
+        return(-1);
+    }
+                                                                                                                               
+    /* Get our buffer. MAXDATABUF is some suitably large number */
+    databuf = malloc(MAXDATABUF);
+
+    /* 
+     * Read the inventory.txt file line by line, saving each line off to the
+     * database as we go.
+     */
+    while(fgets(buf, MAXLINE, ifp) != NULL) {
+        /*
+         * Scan the line into the appropriate buffers and variables.
+         * Convenient, but not particularly safe. In a real
+         * program, there would be a lot more defensive code here.
+         */
+        sscanf(buf,
+          "%20[^#]#%20[^#]#%f#%i#%20[^#]#%20[^\n]",
+          name, sku, &amp;price, &amp;quantity, category, vendor);
+                                                                                                                               
+        /*
+         * Now pack it into a single contiguous memory location for
+         * storage.
+         */
+        memset(databuf, 0, MAXDATABUF);
+        bufLen = 0;
+        dataLen = 0;
+                                                                                                                               
+        /* 
+         * We first store the fixed-length elements. This makes our code to
+         * retrieve this data from the database a little bit easier.
+         */
+
+        /* First discover how long the data element is. */
+        dataLen = sizeof(float);
+        /* Then copy it to our buffer */
+        memcpy(databuf, &amp;price, dataLen);
+        /* 
+         * Then figure out how much data is actually in our buffer.
+         * We repeat this pattern for all the data we want to store.
+         */
+        bufLen += dataLen;
+                                                                                                                               
+        /* Rinse, lather, repeat. */
+        dataLen = sizeof(int);
+        memcpy(databuf + bufLen, &amp;quantity, dataLen);
+        bufLen += dataLen;
+                                                                                                                               
+        bufLen = pack_string(databuf, name, bufLen);
+        bufLen = pack_string(databuf, sku, bufLen);
+        bufLen = pack_string(databuf, category, bufLen);
+        bufLen = pack_string(databuf, vendor, bufLen);
+
+        /* 
+         * Now actually save the contents of the buffer off 
+         * to our database. 
+         */
+
+        /* Zero out the DBTs */
+        memset(&amp;key, 0, sizeof(DBT));
+        memset(&amp;data, 0, sizeof(DBT));
+                                                                                                                               
+        /* 
+         * The key is the item's SKU. This is a unique value, so we need not
+         * support duplicates for this database. 
+         */
+        key.data = sku;
+        key.size = strlen(sku) + 1;
+                                                                                                                               
+        /* The data is the information that we packed into databuf. */
+        data.data = databuf;
+        data.size = bufLen;
+                                                                                                                               
+        /* Put the data into the database */
+        my_stock.vendor_dbp-&gt;put(my_stock.inventory_dbp, 0, &amp;key, &amp;data, 0);
+    } /* end vendors database while loop */
+                                                                                                                               
+    /* Cleanup */
+    fclose(ifp);
+    if (databuf != NULL)
+        free(databuf);
+                                                                                                                               
+    return(0);
+} </pre>
+          <p>
+        In the next chapter we provide an example that shows how to read
+        the inventory and vendor databases.
+    </p>
+        </div>
+      </div>
+      <br class="example-break" />
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="cstructs.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="DBEntry.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="Cursors.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Using C Structures with DB </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 4. Using Cursors</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

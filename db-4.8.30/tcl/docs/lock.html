@@ -1,0 +1,206 @@
+<!--Copyright 1999-2009 Oracle.  All rights reserved.-->
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.75 [en] (X11; U; Linux 2.2.16-22 i686) [Netscape]">
+</head>
+<body>
+
+<h2>
+<a NAME="Locking Commands"></a>Locking Commands</h2>
+Most locking commands work with the environment handle.&nbsp; However,
+when a user gets a lock we create a new lock handle that they then use
+with in a similar manner to all the other handles to release the lock.&nbsp;
+We present the general locking functions first, and then those that manipulate
+locks.
+<p><b>> &lt;env> lock_detect [default|oldest|youngest|random]</b>
+<p>This command runs the deadlock detector.&nbsp; It directly translates
+to the <a href="../../docs/api_c/lock_detect.html">lock_detect</a> DB call.&nbsp;
+It returns either a 0 (for success), a DB error message or it throws a
+Tcl error with a system message.&nbsp; The first argument sets the policy
+for deadlock as follows:
+<ul>
+<li>
+<b>default</b> selects the DB_LOCK_DEFAULT policy for default detection
+(default if not specified)</li>
+
+<li>
+<b>oldest </b>selects DB_LOCK_OLDEST to abort the oldest locker on a deadlock</li>
+
+<li>
+<b>random</b> selects DB_LOCK_RANDOM to abort a random locker on a deadlock</li>
+
+<li>
+<b>youngest</b> selects DB_LOCK_YOUNGEST to abort the youngest locker on
+a deadlock</li>
+</ul>
+
+<hr WIDTH="100%">
+<br><b>> &lt;env> lock_stat</b>
+<p>This command returns a list of name/value pairs where the names correspond
+to the C-structure field names of DB_LOCK_STAT and the values are the data
+returned.&nbsp; This command is a direct translation of the <a href="../../docs/api_c/lock_stat.html">lock_stat</a>
+DB call.
+<hr WIDTH="100%">
+<br><a NAME="> <env> lock_id"></a><b>> &lt;env> lock_id</b>
+<p>This command returns a unique locker ID value.&nbsp; It directly translates
+to the <a href="../../docs/api_c/lock_id.html">lock_id</a> DB call.
+<br>
+<hr WIDTH="100%">
+<br><a NAME="> <env> lock_id"></a><b>> &lt;env> lock_id_free&nbsp; </b><i>locker</i>
+<p>This command frees the locker allockated by the lock_id call. It directly
+translates to the&nbsp; <a href="../../docs/api_c/lock_id.html">lock_id_free
+</a>DB
+call.
+<hr WIDTH="100%">
+<br><a NAME="> <env> lock_id"></a><b>> &lt;env> lock_id_set&nbsp; </b><i>current
+max</i>
+<p>This&nbsp; is a diagnostic command to set the locker id that will get
+allocated next and the maximum id that
+<br>will trigger the id reclaim algorithm.
+<hr WIDTH="100%">
+<br><a NAME="> <env> lock_get"></a><b>> &lt;env> lock_get [-nowait]<i>lockmode
+locker obj</i></b>
+<p>This command gets a lock. It will invoke the <a href="../../docs/api_c/lock_get.html">lock_get</a>
+function.&nbsp; After it successfully gets a handle to a lock, we bind
+it to a new Tcl command of the form <b><i>$env.lockX</i></b>, where X is
+an integer starting at&nbsp; 0 (e.g. <b>$env.lock0, $env.lock1, </b>etc).&nbsp;
+We use the <i>Tcl_CreateObjCommand()</i> to create the top level locking
+command function.&nbsp; It is through this handle that the user can release
+the lock.&nbsp; Internally, the handle we get back from DB will be stored
+as the <i>ClientData</i> portion of the new command set so that future
+locking calls will have that handle readily available.
+<p>The arguments are:
+<ul>
+<li>
+<b><i>locker</i></b> specifies the locker ID returned from the <a href="#> <env> lock_id">lock_id</a>
+command</li>
+
+<li>
+<b><i>obj</i></b> specifies an object to lock</li>
+
+<li>
+the <b><i>lock mode</i></b> is specified as one of the following:</li>
+
+<ul>
+<li>
+<b>ng </b>specifies DB_LOCK_NG for not granted (always 0)</li>
+
+<li>
+<b>read</b> specifies DB_LOCK_READ for a read (shared) lock</li>
+
+<li>
+<b>write</b> specifies DB_LOCK_WRITE for an exclusive write lock</li>
+
+<li>
+<b>iwrite </b>specifies DB_LOCK_IWRITE for intent for exclusive write lock</li>
+
+<li>
+<b>iread </b>specifies DB_LOCK_IREAD for intent for shared read lock</li>
+
+<li>
+<b>iwr </b>specifies DB_LOCK_IWR for intent for eread and write lock</li>
+</ul>
+
+<li>
+<b>-nowait</b> selects the DB_LOCK_NOWAIT to indicate that we do not want
+to wait on the lock</li>
+</ul>
+
+<hr WIDTH="100%">
+<br><b>> &lt;lock> put</b>
+<p>This command releases the lock referenced by the command.&nbsp; It is
+a direct translation of the <a href="../../docs/api_c/lock_put.html">lock_put</a>
+function.&nbsp; It returns either a 0 (for success), a DB error message
+or it throws a Tcl error with a system message.&nbsp; Additionally, since
+the handle is no longer valid, we will call
+<i>Tcl_DeleteCommand()
+</i>so
+that further uses of the handle will be dealt with properly by Tcl itself.
+<br>
+<hr WIDTH="100%">
+<br><a NAME="> <env> lock_vec"></a><b>> &lt;env> lock_vec [-nowait] <i>locker
+</i>{get|put|put_all|put_obj
+[<i>obj</i>] [<i>lockmode</i>] [<i>lock</i>]} ...</b>
+<p>This command performs a series of lock calls.&nbsp; It is a direct translation
+of the <a href="../../docs/api_c/lock_vec.html">lock_vec</a> function.&nbsp;
+This command will return a list of the return values from each operation
+specified in the argument list.&nbsp; For the 'put' operations the entry
+in the return value list is either a 0 (for success) or an error.&nbsp;
+For the 'get' operation, the entry is the lock widget handle, <b>$env.lockN</b>
+(as described above in <a href="#> <env> lock_get">&lt;env> lock_get</a>)
+or an error.&nbsp; If an error occurs, the return list will contain the
+return values for all the successful operations up the erroneous one and
+the error code for that operation.&nbsp; Subsequent operations will be
+ignored.
+<p>As for the other operations, if we are doing a 'get' we will create
+the commands and if we are doing a 'put' we will have to delete the commands.&nbsp;
+Additionally, we will have to do this after the call to the DB lock_vec
+and iterate over the results, creating and/or deleting Tcl commands.&nbsp;
+It is possible that we may return a lock widget from a get operation that
+is considered invalid, if, for instance, there was a <b>put_all</b> operation
+performed later in the vector of operations.&nbsp; The arguments are:
+<ul>
+<li>
+<b><i>locker</i></b> specifies the locker ID returned from the <a href="#> <env> lock_id">lock_id</a>
+command</li>
+
+<li>
+<b>-nowait</b> selects the DB_LOCK_NOWAIT to indicate that we do not want
+to wait on the lock</li>
+
+<li>
+the lock vectors are tuple consisting of {an operation, lock object, lock
+mode, lock handle} where what is required is based on the operation desired:</li>
+
+<ul>
+<li>
+<b>get</b> specifes DB_LOCK_GET to get a lock.&nbsp; Requires a tuple <b>{get
+<i>objmode</i>}
+</b>where
+<b><i>mode</i></b>
+is:</li>
+
+<ul>
+<li>
+<b>ng </b>specifies DB_LOCK_NG for not granted (always 0)</li>
+
+<li>
+<b>read</b> specifies DB_LOCK_READ for a read (shared) lock</li>
+
+<li>
+<b>write</b> specifies DB_LOCK_WRITE for an exclusive write lock</li>
+
+<li>
+<b>iwrite </b>specifies DB_LOCK_IWRITE for intent for exclusive write lock</li>
+
+<li>
+<b>iread </b>specifies DB_LOCK_IREAD for intent for shared read lock</li>
+
+<li>
+<b>iwr </b>specifies DB_LOCK_IWR for intent for eread and write lock</li>
+</ul>
+
+<li>
+<b>put</b> specifies DB_LOCK_PUT to release a <b><i>lock</i></b>.&nbsp;
+Requires a tuple <b>{put <i>lock}</i></b></li>
+
+<li>
+<b>put_all </b>specifies DB_LOCK_PUT_ALL to release all locks held by <b><i>locker</i></b>.&nbsp;
+Requires a tuple <b>{put_all}</b></li>
+
+<li>
+<b>put_obj</b> specifies DB_LOCK_PUT_OBJ to release all locks held by <b><i>locker</i></b>
+associated with the given <b><i>obj</i></b>.&nbsp; Requires a tuple <b>{put_obj
+<i>obj}</i></b></li>
+</ul>
+</ul>
+
+<hr WIDTH="100%">
+<br><a NAME="> <env> lock_vec"></a><b>> &lt;env> lock_timeout <i>timeout</i></b>
+<p>This command sets the lock timeout for all future locks in this environment.&nbsp;
+The timeout is in micorseconds.
+<br>&nbsp;
+<br>&nbsp;
+</body>
+</html>

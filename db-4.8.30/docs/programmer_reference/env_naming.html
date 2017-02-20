@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>File naming</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="env.html" title="Chapter 9.  The Berkeley DB Environment" />
+    <link rel="prev" href="env_db_config.html" title="DB_CONFIG configuration file" />
+    <link rel="next" href="env_region.html" title="Shared memory regions" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">File naming</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="env_db_config.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 9. 
+        The Berkeley DB Environment
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="env_region.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="env_naming"></a>File naming</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="env_naming.html#id1605342">Specifying file naming to Berkeley DB</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="env_naming.html#id1605560">Filename resolution in Berkeley DB</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="env_naming.html#id1605734">Examples</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>One of the most important tasks of the database environment is to
+structure file naming within Berkeley DB.  Cooperating applications (or
+multiple invocations of the same application) must agree on the location
+of the database environment, log files and other files used by the Berkeley DB
+subsystems, and, of course, the database files.  Although it is possible
+to specify full pathnames to all Berkeley DB methods, this is cumbersome and
+requires applications be recompiled when database files are moved.</p>
+      <p>Applications are normally expected to specify a single directory home
+for the database environment.  This can be done easily in the call to
+<a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a> by specifying a value for the <span class="bold"><strong>db_home</strong></span>
+argument.  There are more complex configurations in which it may be
+desirable to override <span class="bold"><strong>db_home</strong></span> or provide supplementary path
+information.</p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1605342"></a>Specifying file naming to Berkeley DB</h3>
+            </div>
+          </div>
+        </div>
+        <p>The following list describes the possible ways in which file naming
+information may be specified to the Berkeley DB library.  The specific
+circumstances and order in which these ways are applied are described
+in a subsequent paragraph.</p>
+        <div class="variablelist">
+          <dl>
+            <dt>
+              <span class="term">db_home</span>
+            </dt>
+            <dd>If the <span class="bold"><strong>db_home</strong></span> argument to <a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a> is non-NULL,
+its value may be used as the database home, and files named relative to
+its path.</dd>
+            <dt>
+              <span class="term">DB_HOME</span>
+            </dt>
+            <dd>
+              <p>If the DB_HOME environment variable is set when <a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a> is
+called, its value may be used as the database home, and files named
+relative to its path.</p>
+              <p>The DB_HOME environment variable is intended to permit users and system
+administrators to override application and installation defaults.  For
+example::</p>
+              <pre class="programlisting">env DB_HOME=/database/my_home application</pre>
+              <p>Application writers are encouraged to support the <span class="bold"><strong>-h</strong></span> option
+found in the supporting Berkeley DB utilities to let users specify a database
+home.</p>
+            </dd>
+            <dt>
+              <span class="term"><a href="../api_reference/C/env.html" class="olink">DB_ENV</a> methods</span>
+            </dt>
+            <dd> There are three <a href="../api_reference/C/env.html" class="olink">DB_ENV</a> methods that affect file naming.  The
+<a href="../api_reference/C/envset_data_dir.html" class="olink">DB_ENV-&gt;set_data_dir()</a> method specifies a directory to search for database
+files.  The <a href="../api_reference/C/envset_lg_dir.html" class="olink">DB_ENV-&gt;set_lg_dir()</a> method specifies a directory in which to
+create logging files.  The <a href="../api_reference/C/envset_tmp_dir.html" class="olink">DB_ENV-&gt;set_tmp_dir()</a> method specifies a
+directory in which to create backing temporary files.  These methods
+are intended to permit applications to customize a file location for a
+database.  For example, an application writer can place data files and
+log files in different directories or instantiate a new log directory
+each time the application runs.</dd>
+            <dt>
+              <span class="term">
+                <a class="link" href="env_db_config.html" title="DB_CONFIG configuration file">DB_CONFIG</a>
+              </span>
+            </dt>
+            <dd>The same information specified to the <a href="../api_reference/C/env.html" class="olink">DB_ENV</a> 
+        methods may also be specified using the <a class="link" href="env_db_config.html" title="DB_CONFIG configuration file">DB_CONFIG</a> 
+        configuration file.</dd>
+          </dl>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1605560"></a>Filename resolution in Berkeley DB</h3>
+            </div>
+          </div>
+        </div>
+        <p>The following list describes the specific circumstances and order in
+which the different ways of specifying file naming information are
+applied.  Berkeley DB filename processing proceeds sequentially through the
+following steps:</p>
+        <div class="variablelist">
+          <dl>
+            <dt>
+              <span class="term">absolute pathnames</span>
+            </dt>
+            <dd>If the filename specified to a Berkeley DB function is an <span class="emphasis"><em>absolute
+pathname</em></span>, that filename is used without modification by Berkeley DB.
+<p>On UNIX systems, an absolute pathname is defined as any pathname that
+begins with a leading slash (<span class="bold"><strong>/</strong></span>).</p><p>On Windows systems, an absolute pathname is any pathname that begins with
+a leading slash or leading backslash (<span class="bold"><strong>\</strong></span>); or any
+pathname beginning with a single alphabetic character, a colon and a
+leading slash or backslash (for example, <code class="filename">C:/tmp</code>).</p></dd>
+            <dt>
+              <span class="term"><a href="../api_reference/C/env.html" class="olink">DB_ENV</a> methods, DB_CONFIG</span>
+            </dt>
+            <dd>If a relevant configuration string (for example, set_data_dir), is
+specified either by calling a <a href="../api_reference/C/env.html" class="olink">DB_ENV</a> method or as a line in the
+<a class="link" href="env_db_config.html" title="DB_CONFIG configuration file">DB_CONFIG</a> configuration file, the value is prepended to the
+filename.  If the resulting filename is an absolute pathname, the
+filename is used without further modification by Berkeley DB.</dd>
+            <dt>
+              <span class="term">db_home</span>
+            </dt>
+            <dd>If the application specified a non-NULL <span class="bold"><strong>db_home</strong></span> argument to
+<a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a>, its value is prepended to the filename.  If the
+resulting filename is an absolute pathname, the filename is used without
+further modification by Berkeley DB.</dd>
+            <dt>
+              <span class="term">DB_HOME</span>
+            </dt>
+            <dd>If the <span class="bold"><strong>db_home</strong></span> argument is NULL, the DB_HOME environment
+variable was set, and the application has set the appropriate
+<a href="../api_reference/C/envopen.html#envopen_DB_USE_ENVIRON" class="olink">DB_USE_ENVIRON</a> or <a href="../api_reference/C/envopen.html#envopen_DB_USE_ENVIRON_ROOT" class="olink">DB_USE_ENVIRON_ROOT</a> flags, its value
+is prepended to the filename.  If the resulting filename is an absolute
+pathname, the filename is used without further modification by Berkeley DB.</dd>
+            <dt>
+              <span class="term">default</span>
+            </dt>
+            <dd>Finally, all filenames are interpreted relative to the current working
+directory of the process.</dd>
+          </dl>
+        </div>
+        <p>The common model for a Berkeley DB environment is one in which only the DB_HOME
+environment variable, or the <span class="bold"><strong>db_home</strong></span> argument is specified.  In
+this case, all data filenames are relative to that directory, and all
+files created by the Berkeley DB subsystems will be created in that directory.</p>
+        <p>The more complex model for a transaction environment might be one in
+which a database home is specified, using either the DB_HOME environment
+variable or the <span class="bold"><strong>db_home</strong></span> argument to <a href="../api_reference/C/envopen.html" class="olink">DB_ENV-&gt;open()</a>; and then
+the data directory and logging directory are set to the relative
+pathnames of directories underneath the environment home.</p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1605734"></a>Examples</h3>
+            </div>
+          </div>
+        </div>
+        <p>Store all files in the directory <code class="filename">/a/database</code>:</p>
+        <pre class="programlisting">dbenv-&gt;open(dbenv, "/a/database", flags, mode);</pre>
+        <p>Create temporary backing files in <code class="filename">/b/temporary</code>, and all other files
+in <code class="filename">/a/database</code>:</p>
+        <pre class="programlisting">dbenv-&gt;set_tmp_dir(dbenv, "/b/temporary");
+dbenv-&gt;open(dbenv, "/a/database", flags, mode);</pre>
+        <p>Store data files in <code class="filename">/a/database/datadir</code>, log files in
+<code class="filename">/a/database/logdir</code>, and all other files in the directory
+<code class="filename">/a/database</code>:</p>
+        <pre class="programlisting">dbenv-&gt;set_lg_dir(dbenv, "logdir");
+dbenv-&gt;set_data_dir(dbenv, "datadir");
+dbenv-&gt;open(dbenv, "/a/database", flags, mode);</pre>
+        <p>Store data files in <code class="filename">/a/database/data1</code> and <code class="filename">/b/data2</code>, and
+all other files in the directory <code class="filename">/a/database</code>.  Any data files
+that are created will be created in <code class="filename">/b/data2</code>, because it is
+the first data file directory specified:</p>
+        <pre class="programlisting">dbenv-&gt;set_data_dir(dbenv, "/b/data2");
+dbenv-&gt;set_data_dir(dbenv, "data1");
+dbenv-&gt;open(dbenv, "/a/database", flags, mode);</pre>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="env_db_config.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="env.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="env_region.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB_CONFIG configuration file </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Shared memory regions</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

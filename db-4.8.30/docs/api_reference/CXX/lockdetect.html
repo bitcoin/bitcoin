@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DbEnv::lock_detect()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C++ API Reference" />
+    <link rel="up" href="lock.html" title="Chapter 7.  The DbLock Handle" />
+    <link rel="prev" href="envset_lk_partitions.html" title="DbEnv::set_lk_partitions()" />
+    <link rel="next" href="lockget.html" title="DbEnv::lock_get()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DbEnv::lock_detect()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="envset_lk_partitions.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 7. 
+                The DbLock Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="lockget.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="lockdetect"></a>DbEnv::lock_detect()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db_cxx.h&gt;
+ 
+int
+DbEnv::lock_detect(u_int32_t flags, u_int32_t atype, int *rejected);</pre>
+      <p>
+         The <code class="methodname">DbEnv::lock_detect()</code> method runs one iteration of the deadlock
+         detector. The deadlock detector traverses the lock table and marks one
+         of the participating lock requesters for rejection in each deadlock it
+         finds.
+    </p>
+      <p>
+         The <code class="methodname">DbEnv::lock_detect()</code> <span>
+            
+            <span>
+                method either returns a non-zero error value or throws an
+                exception that encapsulates a non-zero error value on
+                failure, and returns 0 on success.
+            </span>
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1680797"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1680803"></a>rejected</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If the <span class="bold"><strong>rejected</strong></span> parameter is
+                          non-NULL, the memory location to which it refers will be set to the
+                          number of lock requests that were rejected.
+                     </p>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1680904"></a>atype</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>atype</strong></span> parameter specifies which
+                          lock request(s) to reject. It must be set to one of the following
+                          list:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="detect_DB_LOCK_DEFAULT"></a>
+                  <code class="literal">DB_LOCK_DEFAULT</code>
+            </p>
+                <p>
+                 Use whatever lock policy was specified when the database environment
+                 was created.  If no lock policy has yet been specified, set the lock
+                 policy to DB_LOCK_RANDOM.
+            </p>
+              </li>
+              <li>
+                <p><a id="detect_DB_LOCK_EXPIRE"></a>
+                  <code class="literal">DB_LOCK_EXPIRE</code>
+            </p>
+                <p>
+                 Reject lock requests which have timed out.  No other deadlock
+                 detection is performed.
+            </p>
+              </li>
+              <li>
+                <p><a id="detect_DB_LOCK_MAXLOCKS"></a>
+                  <code class="literal">DB_LOCK_MAXLOCKS</code>
+            </p>
+                <p>
+                 Reject the lock request for the locker ID with the most locks.
+            </p>
+              </li>
+              <li>
+                <p><a id="detect_DB_LOCK_MAXWRITE"></a>
+                  <code class="literal">DB_LOCK_MAXWRITE</code>
+            </p>
+                <p>
+                 Reject the lock request for the locker ID with the most write locks.
+            </p>
+              </li>
+              <li>
+                <p><a id="detect_DB_LOCK_MINLOCKS"></a>
+                  <code class="literal">DB_LOCK_MINLOCKS</code>
+            </p>
+                <p>
+                 Reject the lock request for the locker ID with the fewest locks.
+            </p>
+              </li>
+              <li>
+                <p><a id="detect_DB_LOCK_MINWRITE"></a>
+                  <code class="literal">DB_LOCK_MINWRITE</code>
+            </p>
+                <p>
+                 Reject the lock request for the locker ID with the fewest write locks.
+            </p>
+              </li>
+              <li>
+                <p><a id="detect_DB_LOCK_OLDEST"></a>
+                  <code class="literal">DB_LOCK_OLDEST</code>
+            </p>
+                <p>
+                 Reject the lock request for the locker ID with the oldest lock.
+            </p>
+              </li>
+              <li>
+                <p><a id="detect_DB_LOCK_RANDOM"></a>
+                  <code class="literal">DB_LOCK_RANDOM</code>
+            </p>
+                <p>
+                Reject the lock request for a random locker ID.
+            </p>
+              </li>
+              <li>
+                <p><a id="detect_DB_LOCK_YOUNGEST"></a>
+                  <code class="literal">DB_LOCK_YOUNGEST</code>
+            </p>
+                <p>
+                 Reject the lock request for the locker ID with the youngest lock.
+            </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1681357"></a>flags</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>flags</strong></span> parameter is currently
+                          unused, and must be set to 0.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1681098"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DbEnv::lock_detect()</code> <span>
+            
+            <span>
+                method may fail and throw a <a class="link" href="dbexception.html" title="Chapter 6. The DbException Class">DbException</a> 
+                exception, encapsulating one of the following non-zero errors, or return one
+                of the following non-zero errors:
+            </span>
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1681274"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                An invalid flag value or parameter was specified.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1681361"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                 <a class="link" href="env.html" title="Chapter 5.  The DbEnv Handle">DbEnv</a>, <a class="link" href="lock.html" title="Chapter 7.  The DbLock Handle">DbLock</a> 
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1680801"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="lock.html#locklist" title="Locking Subsystem and Related Methods">Locking Subsystem and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="envset_lk_partitions.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="lock.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="lockget.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DbEnv::set_lk_partitions() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DbEnv::lock_get()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

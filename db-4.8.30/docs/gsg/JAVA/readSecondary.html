@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Reading Secondary Databases</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="indexes.html" title="Chapter 10. Secondary Databases" />
+    <link rel="prev" href="secondaryProps.html" title="Secondary Database Properties" />
+    <link rel="next" href="secondaryDelete.html" title="Deleting Secondary Database Records" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Reading Secondary Databases</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="secondaryProps.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 10. Secondary Databases</th>
+          <td width="20%" align="right"> <a accesskey="n" href="secondaryDelete.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="readSecondary"></a>Reading Secondary Databases</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+        Like a primary database, you can read records from your secondary
+        database either by using the 
+            <span>
+                <code class="methodname">SecondaryDatabase.get()</code> method,
+            </span>
+            
+        or by using  
+            <span>a <code class="classname">SecondaryCursor</code>.</span> 
+             
+            
+        The main difference between reading secondary and primary databases is that when
+        you read a secondary database record, the secondary record's data is not
+        returned to you. Instead, the primary key and data corresponding to the
+        secondary key are returned to you.
+    </p>
+      <p>
+        For example, assuming your secondary database contains keys related
+         to a person's full name:
+    </p>
+      <a id="java_index6"></a>
+      <pre class="programlisting">package db.GettingStarted;
+
+import com.sleepycat.db.DatabaseEntry;
+import com.sleepycat.db.LockMode;
+import com.sleepycat.db.OperationStatus;
+import com.sleepycat.db.SecondaryDatabase;
+
+...
+SecondaryDatabase mySecondaryDatabase = null;
+try {
+    // Omitting all database opens
+    ...
+
+    String searchName = "John Doe";
+    DatabaseEntry searchKey = 
+        new DatabaseEntry(searchName.getBytes("UTF-8"));
+    DatabaseEntry primaryKey = new DatabaseEntry();
+    DatabaseEntry primaryData = new DatabaseEntry();
+
+    // Get the primary key and data for the user 'John Doe'.
+    OperationStatus retVal = mySecondaryDatabase.get(null, searchKey, 
+                                                     primaryKey, 
+                                                     primaryData, 
+                                                     LockMode.DEFAULT); 
+} catch (Exception e) {
+    // Exception handling goes here
+}</pre>
+      <p>
+        Note that, just like 
+            <span><code class="methodname">Database.get()</code>, </span>
+            
+            
+        if your secondary database supports duplicate records then
+            <code class="methodname">SecondaryDatabase.get()</code> 
+            
+        only return the first record found in a matching duplicates set. If you 
+        want to see all the records related to a specific secondary key, then use a
+            <span>
+                <code class="classname">SecondaryCursor</code> (described in <a class="xref" href="secondaryCursor.html" title="Using Secondary Cursors">
+        <span>Using Secondary Cursors</span>
+        
+    </a>).
+            </span>
+            
+     </p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="secondaryProps.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="indexes.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="secondaryDelete.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Secondary Database Properties </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Deleting Secondary Database Records</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

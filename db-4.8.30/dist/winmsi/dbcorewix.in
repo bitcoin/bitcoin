@@ -1,0 +1,196 @@
+<!-- $Id$
+ -
+ - Dbcorewix.in is the DB core WiX input file, and is used by
+ - s_winmsi to create dbcore.wxs (an input to WiX).
+ - Most everything here is pure 'WiX' syntax within XML,
+ - the exceptions are:
+ -    1) everything is pushed through the m4 preprocessor first.
+ -       this makes certain boilerplate actions in the UI tolerable.
+ -       We put all needed defines at the top of this file.
+ -    2) a very few identifiers beginning with WIX_DB_*
+ -       are predefined as m4 macros on the command line.
+ -       These are items that only the caller (s_winmsi) can know.
+ -
+ - M4 makes many things easier, but there are peculiarities.
+ - In particular, if you are using a macro with args, like
+ - TOPSTRIPE, note that *any* occurance of the characters "( ) ,"
+ - are interpreted by m4, even if they occur in an Xml comment or string.
+ - Remember this when editing this file!
+ -
+ - Beyond that, there is a lot to understand about WiX
+ - and how this file operates, to get started, look at
+ - various WiX tutorials, like:
+ -    http://www.ondotnet.com/pub/a/dotnet/2004/04/19/wix.html
+ -    http://blogs.msdn.com/robmen/archive/2004/04/05/107709.aspx
+ - Also view the lecture covered here:
+ -    http://blogs.msdn.com/robmen/archive/2004/09/23/233684.aspx
+ -
+ - Finally, understand that WiX is an XML layering above the concepts
+ - defined by the world of the MSI installer.  To really know how to do WiX,
+ - (and especially the UI), you need to understand the MSI installer.
+ - A key point is that MSI (and hence WiX) is not really procedural.
+ - MSI defines a number of tables (like Feature or CustomAction) in
+ - an internal database.  WiX merely specifies how to fill these tables,
+ - and the msiexec program merely cranks through the various tables,
+ - processing each row.  It is true that you can do procedural things
+ - via CustomActions, but to get them in order, you must specify columns
+ - in the table with things like After="SomeOtherRowId".
+ -
+ - See "About the User Interface" and subordinate documents:
+ -    http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/about_the_user_interface.asp
+-->
+
+m4_include(WIX_DB_SHARED_WINMSIDIR/dbwix.m4)   <!-- Define common macros -->
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2003/01/wi">
+
+  <!-- The ???? stuff asks WiX to create a unique GUID for us -->
+  <Product Id='????????-????-????-????-????????????'
+   Name='Berkeley DB WIX_DB_VERSION' Version='WIX_DB_VERSION.0'
+   Manufacturer='Oracle Corporation' Language='1033'>
+
+    <!-- Store files as a compressed 'cabinet' embedded in the .MSI file. -->
+    <Package Id='????????-????-????-????-????????????'
+     Keywords="Embedded Database Datastore"
+     Description='Berkeley DB WIX_DB_VERSION'
+     Comments='includes sources and binaries' InstallerVersion='200'
+     Compressed='yes' Platforms="Intel"
+     Languages="1033" SummaryCodepage="1252" />
+
+    <Media Id='1' Cabinet='dbcore.cab' EmbedCab='yes' />
+
+    COMMON_PROPERTIES()
+
+    <!-- Declare properties for environment -->
+    WIX_DB_ENV_FEATURE_PROPS()
+
+    <Condition Message=
+       "To install [ProductName], you must be running Windows 2000 or Windows XP.">
+       <![CDATA[VersionNT>=500]]></Condition>
+
+    <Condition Message=
+      "You must have administrative access to install this product.">
+      NOT Priviledged
+    </Condition>
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="DesktopFolder" Name="." SourceName="." />
+      <Directory Id="FavoritesFolder" Name="." SourceName="." />
+
+      <Directory Id="ProgramFilesFolder" Name="." SourceName=".">
+        <Directory Id="OracleFolder" Name="Oracle" LongName="Oracle">
+          <Directory Id="INSTALLDIR" Name="WIX_DB_8CHAR_VERSION"
+                   LongName="Berkeley DB WIX_DB_VERSION">
+            <Directory Id="INSTALLUTIL" Name="instutil"
+                   LongName="installutil">
+            </Directory>
+
+
+            <!-- Note: these guids must be changed when an installer
+              -  for a new release is made available.
+              -
+              -  TODO: to play by the rules of components (see
+              -  http://blogs.msdn.com/robmen/archive/2003/10/18/56497.aspx,
+              -  "Component Rules 101" by Rob Mensching),
+              -  we should devise a strategy for ALL guids (remember
+              -  many are created by s_winmsi).  This should work:
+              -
+              -  Each guid is composed of three parts, like so:
+              -     PPPPPPPP-VVVV-VVVV-HHHH-HHHHHHHHHHHH
+              -  The P part is unique to the product, e.g.
+              -  the bdb core installer might always use 9A3FE019.
+              -  The V part is the version of the product, e.g.
+              -  4.2.37 might be translated as 0402-0025   # 25 is 37 in hex
+              -  The H part is a hash value created from the directory
+              -  that houses the component.  Like if the component for
+              -  the directory "bin/Debug" hashed to 1234567890abcdef,
+              -  then the H part is 1234-567890abcdef.
+              - 
+              -  This scheme guarantees that rebuilds of the installer
+              -  over the same release tree get the same GUIDs.
+              -  But for a different release tree (which *should* get
+              -  installed in a different directory, since install
+              -  directories are named by release number), we will get
+              -  completely different GUIDs.
+              -->
+            <Component Id="RequiredFiles"
+                   Guid="13E1DF48-903B-11D9-8BDE-F66BAD1E3F3A"
+                   KeyPath="yes" SharedDllRefCount="yes"
+                   Location="either" DiskId="1">
+
+              <File Id="LICENSE.txt" Name="LICENSE.txt"
+                    src="WIX_DB_SRCDIR\LICENSE" />
+              <File Id="README.txt" Name="README.txt"
+                    src="WIX_DB_SRCDIR\README" />
+	      <Registry Id="RootDir.RegistryVal" Root="HKLM"
+                   Key="SOFTWARE\Oracle\Berkeley DB\WIX_DB_VERSION"
+                   Name="RootDirectory" Value="[INSTALLDIR]" Type="string"
+                   Action="write" />
+              <CreateFolder />
+            </Component>
+
+            COMMON_COMPONENTS()
+
+            <!-- <Directory>, <Component> generated from files.in -->
+	    WIX_DB_DIRECTORY_STRUCTURE()
+
+          </Directory>
+        </Directory>
+      </Directory>
+      <Directory Id="ProgramMenuFolder" Name="." SourceName=".">
+        <Directory Id="BerkeleyDbMenu" Name="WIX_DB_8CHAR_VERSION"
+         LongName="Berkeley DB WIX_DB_VERSION" />
+      </Directory>
+    </Directory>
+
+    <!-- <File>, <Shortcut> generated from links.in -->
+    WIX_DB_LINKS()
+
+    COMMON_FEATURES(`Berkeley DB')
+
+    <!-- ================================================================ -->
+    <UI>
+
+      <Property Id="DefaultUIFont"><![CDATA[Tahoma8]]></Property>
+      <TextStyle Id="Tahoma8" FaceName="Tahoma" Size="8" />
+
+      DIALOG_WELCOME(MainWelcomeDlg, , ShowLicenseDlg)
+      DIALOG_LICENSE(ShowLicenseDlg, MainWelcomeDlg, TargetFolderDlg,
+                     `Berkeley DB')
+      DIALOG_TARGET(TargetFolderDlg, ShowLicenseDlg, FeatureSelectionDlg)
+      DIALOG_FEATURE(FeatureSelectionDlg, TargetFolderDlg, EnvVarDlg,
+                     `Debug libraries are needed for working C/C++ examples.')
+      DIALOG_ENVIRONMENT(EnvVarDlg, FeatureSelectionDlg, ReadyToInstallDlg)
+      DIALOG_READY(ReadyToInstallDlg, EnvVarDlg, )
+
+      DIALOG_PROGRESS(ShowProgressDlg, , )
+      DIALOG_SUCCESS(InstallSuccessDlg, , , `Berkeley DB',
+                     `Oracle Technology Network Berkeley DB forum')
+
+
+      <!-- Here are extra admin dialogs -->
+      DIALOG_ADMIN_CANCEL(CancelInstallerDlg)
+      DIALOG_ADMIN_NOSPACE(OutOfSpaceDlg, FeatureSelectionDlg)
+      DIALOG_ADMIN_INTERRUPTED(InstallErrorDlg, Return)
+      DIALOG_ADMIN_INTERRUPTED(InstallCancelledDlg, Exit)
+
+
+      <!-- This sequence tells MSI what to do when (at the highest level) -->
+      <InstallUISequence>
+        <Show Dialog="InstallErrorDlg" OnExit="error" />
+        <Show Dialog="InstallCancelledDlg" OnExit="cancel" />
+        <Show Dialog="InstallSuccessDlg" OnExit="success" />
+        <Show Dialog="MainWelcomeDlg" After="CostFinalize" />
+        <Show Dialog="ShowProgressDlg" After="MainWelcomeDlg" />
+      </InstallUISequence>
+
+      COMMON_UI_TEXT()
+      <Property Id="MaxInstallSize">49 MB</Property>
+
+
+    </UI>
+
+    COMMON_EXECUTE_SEQUENCE()
+
+  </Product>
+</Wix>

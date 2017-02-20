@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Ex_rep: a replication example</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="rep.html" title="Chapter 12.  Berkeley DB Replication" />
+    <link rel="prev" href="rep_faq.html" title="Replication FAQ" />
+    <link rel="next" href="rep_ex_comm.html" title="Ex_rep_base: a TCP/IP based communication infrastructure" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Ex_rep: a replication example</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="rep_faq.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 12. 
+        Berkeley DB Replication
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="rep_ex_comm.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="rep_ex"></a>Ex_rep: a replication example</h2>
+          </div>
+        </div>
+      </div>
+      <p>Ex_rep, found in the <code class="filename">examples_c/ex_rep</code> subdirectory
+of the Berkeley DB distribution, is a simple but complete demonstration of a
+replicated application.  The application is a mock stock ticker.  The
+master accepts a stock symbol and a numerical value as input, and
+stores this information into a replicated database; either master or
+clients can display the contents of the database, given an empty input
+line.</p>
+      <p>There are two versions of the application: ex_rep_mgr uses Replication
+Manager, while ex_rep_base uses the replication Base API.  This is
+intended to demonstrate that, while the basic function of the
+application is the same in either case, the replication support
+infrastructure differs markedly.</p>
+      <p>The communication infrastructure demonstrated with ex_rep_base has the
+same dependencies on system networking and threading support as does
+the Replication Manager (see the <a class="xref" href="rep.html#rep_intro" title="Replication introduction">Replication introduction</a>).  The Makefile created by the standard UNIX
+configuration will build the ex_rep examples on most platforms.  Enter
+"make ex_rep_mgr" and/or "make ex_rep_base" to build them.</p>
+      <p>The synopsis for both programs is as follows:</p>
+      <code class="literal">ex_rep_xxx <span class="bold"><strong>-h home</strong></span> <span class="bold"><strong>-l host:port</strong></span> [<span class="bold"><strong>-MC</strong></span>] [<span class="bold"><strong>-r host:port</strong></span>] [<span class="bold"><strong>-R host:port</strong></span>] [<span class="bold"><strong>-a all|quorum</strong></span>] [<span class="bold"><strong>-b</strong></span>] [<span class="bold"><strong>-n sites</strong></span>] [<span class="bold"><strong>-p priority</strong></span>] [<span class="bold"><strong>-v</strong></span>]</code>
+      <p>
+    where "ex_rep_xxx" is either "ex_rep_mgr" or "ex_rep_base". The only
+    difference is that specifying <span class="bold"><strong>-M</strong></span> or
+    <span class="bold"><strong>-C</strong></span> is optional for ex_rep_mgr, but
+    one of these options must be specified for ex_rep_base.
+</p>
+      <p>The options apply to either version of the program except where 
+noted. They are as follows:</p>
+      <div class="variablelist">
+        <dl>
+          <dt>
+            <span class="term">
+              <span class="bold">
+                <strong>-h</strong>
+              </span>
+            </span>
+          </dt>
+          <dd>Specify a home directory for the database environment.</dd>
+          <dt>
+            <span class="term">
+              <span class="bold">
+                <strong>-l</strong>
+              </span>
+            </span>
+          </dt>
+          <dd>Listen on local host "host" at port "port" for incoming connections.</dd>
+          <dt>
+            <span class="term">
+              <span class="bold">
+                <strong>-M</strong>
+              </span>
+            </span>
+          </dt>
+          <dd>Configure this process as a master.</dd>
+          <dt>
+            <span class="term">
+              <span class="bold">
+                <strong>-C</strong>
+              </span>
+            </span>
+          </dt>
+          <dd>Configure this process as a client.</dd>
+          <dt>
+            <span class="term">
+              <span class="bold">
+                <strong>-r</strong>
+              </span>
+            </span>
+          </dt>
+          <dd>Attempt to connect to a remote member of the replication group which is
+listening on host "host" at port "port".  Members of a replication group
+should be able to find all other members of a replication group so long
+as they are in contact with at least one other member of the replication
+group.  Any number of these may be specified. </dd>
+          <dt>
+            <span class="term">
+              <span class="bold">
+                <strong>-R</strong>
+              </span>
+            </span>
+          </dt>
+          <dd>Attempt to connect as a remote peer to a remote member of the replication group which is listening on host "host" at port "port".  At most, one of these may be specified.  See <a class="xref" href="rep_mastersync.html#rep_c2c_sync" title="Client-to-client synchronization">Client-to-client synchronization</a> for more information (ex_rep_mgr only.)</dd>
+          <dt>
+            <span class="term">
+              <span class="bold">
+                <strong>-a</strong>
+              </span>
+            </span>
+          </dt>
+          <dd>Specify repmgr acknowledgement policy of all or quorum.  See <a href="../api_reference/C/repmgrset_ack_policy.html" class="olink">DB_ENV-&gt;repmgr_set_ack_policy()</a> for more information (ex_rep_mgr only.)</dd>
+          <dt>
+            <span class="term">
+              <span class="bold">
+                <strong>-b</strong>
+              </span>
+            </span>
+          </dt>
+          <dd>Indicates that bulk transfer should be used.  See <a class="xref" href="rep_bulk.html" title="Bulk transfer">Bulk transfer</a> for more information.
+</dd>
+          <dt>
+            <span class="term">
+              <span class="bold">
+                <strong>-n</strong>
+              </span>
+            </span>
+          </dt>
+          <dd>Specify the total number of sites in the replication group.</dd>
+          <dt>
+            <span class="term">
+              <span class="bold">
+                <strong>-p</strong>
+              </span>
+            </span>
+          </dt>
+          <dd>Set the election priority.  See <a class="xref" href="rep_elect.html" title="Elections">Elections</a> for more
+information.</dd>
+          <dt>
+            <span class="term">
+              <span class="bold">
+                <strong>-v</strong>
+              </span>
+            </span>
+          </dt>
+          <dd>Indicates that additional informational and debugging output should be enabled.</dd>
+        </dl>
+      </div>
+      <p>A typical ex_rep session begins with a command such as the
+following, to start a master:</p>
+      <pre class="programlisting">ex_rep_mgr -M -p 100 -n 4 -h DIR1 -l localhost:6000</pre>
+      <p>and several clients:</p>
+      <pre class="programlisting">ex_rep_mgr -C -p 50 -n 4 -h DIR2 -l localhost:6001 -r localhost:6000
+ex_rep_mgr -C -p 10 -n 4 -h DIR3 -l localhost:6002 -r localhost:6000
+ex_rep_mgr -C -p  0 -n 4 -h DIR4 -l localhost:6003 -r localhost:6000</pre>
+      <p>In this example, the client with home directory DIR4 can never become
+a master (its priority is 0).  Both of the other clients can become
+masters, but the one with home directory DIR2 is preferred.  Priorities
+are assigned by the application and should reflect the desirability of
+having particular clients take over as master in the case that the
+master fails.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="rep_faq.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="rep.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="rep_ex_comm.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Replication FAQ </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Ex_rep_base: a TCP/IP based communication infrastructure</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

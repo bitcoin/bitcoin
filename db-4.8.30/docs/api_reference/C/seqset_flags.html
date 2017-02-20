@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB_SEQUENCE-&gt;set_flags()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="seq.html" title="Chapter 11.  The DB_SEQUENCE Handle" />
+    <link rel="prev" href="seqset_cachesize.html" title="DB_SEQUENCE-&gt;set_cachesize()" />
+    <link rel="next" href="seqset_range.html" title="DB_SEQUENCE-&gt;set_range()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB_SEQUENCE-&gt;set_flags()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="seqset_cachesize.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 11. 
+                The DB_SEQUENCE Handle 
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="seqset_range.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="seqset_flags"></a>DB_SEQUENCE-&gt;set_flags()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB_SEQUENCE-&gt;set_flags(DB_SEQUENCE *seq, u_int32_t flags);  </pre>
+      <p>
+         Configure a sequence.  The flags are only effective when creating a
+         sequence.  Calling <code class="methodname">DB_SEQUENCE-&gt;set_flags()</code> is additive; there is no
+         way to clear flags.
+    </p>
+      <p>
+         The <code class="methodname">DB_SEQUENCE-&gt;set_flags()</code> method may not be called after the
+         <a class="xref" href="seqopen.html" title="DB_SEQUENCE-&gt;open()">DB_SEQUENCE-&gt;open()</a> method is called.
+    </p>
+      <p>
+         The <code class="methodname">DB_SEQUENCE-&gt;set_flags()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1706094"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1706431"></a>flags</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>flags</strong></span> parameter must be set to 0
+                          or by bitwise inclusively <span class="bold"><strong>OR</strong></span>'ing
+                          together one or more of the following values:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p>
+                  <code class="literal">DB_SEQ_DEC</code>
+            </p>
+                <p>
+                Specify that the sequence should be decremented.
+            </p>
+              </li>
+              <li>
+                <p>
+                  <code class="literal">DB_SEQ_INC</code>
+            </p>
+                <p>
+                 Specify that the sequence should be incremented.  This is the default.
+            </p>
+              </li>
+              <li>
+                <p><a id="seqset_flags_DB_SEQ_WRAP"></a>
+                  <code class="literal">DB_SEQ_WRAP</code>
+            </p>
+                <p>
+                 Specify that the sequence should wrap around when it is incremented
+                 (decremented) past the specified maximum (minimum) value.
+            </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1706095"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DB_SEQUENCE-&gt;set_flags()</code> <span>
+            <span>
+                 method may fail and return one of the following non-zero errors:
+            </span>
+            
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1706584"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                An invalid flag value or parameter was specified.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1706654"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                 <a class="link" href="seq.html" title="Chapter 11.  The DB_SEQUENCE Handle">DB_SEQUENCE</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1706585"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="seq.html#seqlist" title="Sequences and Related Methods">Sequences and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="seqset_cachesize.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="seq.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="seqset_range.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB_SEQUENCE-&gt;set_cachesize() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_SEQUENCE-&gt;set_range()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

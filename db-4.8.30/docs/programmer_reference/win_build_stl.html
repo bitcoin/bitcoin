@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Building the C++ STL API</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="build_win.html" title="Chapter 28.  Building Berkeley DB for Windows" />
+    <link rel="prev" href="win_build_cxx.html" title="Building the C++ API" />
+    <link rel="next" href="build_win_java.html" title="Building the Java API" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Building the C++ STL API</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="win_build_cxx.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 28. 
+        Building Berkeley DB for Windows
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="build_win_java.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="win_build_stl"></a>Building the C++ STL API</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+Note that MS's compilers older than that of MS Visual C++ 2005 are not supported by or tested with the STL API. The oldest MS compiler/IDE you can use to build the STL API is MS Visual C++ 2005.
+
+</p>
+      <p>
+</p>
+      <p>
+In the project list of the <code class="filename">Berkeley_DB.sln </code>
+solution, build the "db_stl" project and "db_stl_static" project to build STL API
+as a dynamic or static library respectively. And in your application, you should link this 
+library file as well as the Berkeley DB library file to your application. The STL API library file is by default always put at the
+same location as the Berkeley DB library file. 
+</p>
+      <p>
+And you need to include the STL API header files in your application code.
+If you are using the Berkeley DB source tree, the header files are in &lt;Berkeley DB Source Root &gt;/stl directory; 
+If you
+are using the pre-built installed version, these header files are in &lt; Berkeley DB Installed Directory&gt;/include, as well as the 
+db.h and db_cxx.h header files.
+</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="win_build_cxx.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="build_win.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="build_win_java.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Building the C++ API </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Building the Java API</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

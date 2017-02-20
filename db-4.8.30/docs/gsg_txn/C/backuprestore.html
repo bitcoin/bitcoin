@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Backup Procedures</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB Transaction Processing" />
+    <link rel="up" href="filemanagement.html" title="Chapter 5. Managing DB Files" />
+    <link rel="prev" href="filemanagement.html" title="Chapter 5. Managing DB Files" />
+    <link rel="next" href="recovery.html" title="Recovery Procedures" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Backup Procedures</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="filemanagement.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. Managing DB Files</th>
+          <td width="20%" align="right"> <a accesskey="n" href="recovery.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="backuprestore"></a>Backup Procedures</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="backuprestore.html#copyutilities">About Unix Copy Utilities</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="backuprestore.html#standardbackup">Offline Backups</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="backuprestore.html#hotbackup">Hot Backup</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="backuprestore.html#incrementalbackups">Incremental Backups</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+            <span class="emphasis"><em>Durability</em></span> is an important part of your
+            transactional guarantees. It means that once a transaction has been
+            successfully committed, your application will always see the results of that
+            transaction. 
+        </p>
+      <p>
+            Of course, no software algorithm can guarantee durability in the face of physical data loss.  Hard drives
+            can fail, and if you have not copied your data to locations other than your primary disk drives,
+            then you will lose data when those drives fail.  Therefore, in order to truly obtain a durability
+            guarantee, you need to ensure that any data stored on disk is backed up to secondary or alternative storage,
+            such as secondary disk drives, or offline tapes.
+        </p>
+      <p>
+            There are three different types of backups that you can
+            perform with DB databases and log files.  They are:
+        </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                    Offline backups
+                </p>
+            <p>
+                    This type of backup is perhaps the easiest to perform as it
+                    involves simply copying database and log files to an
+                    offline storage area. It also gives you a snapshot of the
+                    database at a fixed, known point in time. However, you
+                    cannot perform this type of a backup while you are performing 
+                    writes to the database.
+                </p>
+          </li>
+          <li>
+            <p>
+                    Hot backups
+                </p>
+            <p>
+                    This type of backup gives you a snapshot of your database.
+                    Since your application can be writing to the database at the time that the
+                    snapshot is being taken, you do not necessarily know what
+                    the exact state of the database is for that given snapshot.
+                </p>
+          </li>
+          <li>
+            <p>
+                    Incremental backups
+                </p>
+            <p>
+                    This type of backup refreshes a previously performed backup.
+                </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+            Once you have performed a backup, you can
+            perform <span class="emphasis"><em>catastrophic recovery</em></span> to restore
+            your databases from the backup. See
+            <a class="xref" href="recovery.html#catastrophicrecovery" title="Catastrophic Recovery">Catastrophic Recovery</a>
+            for more information.
+        </p>
+      <p>
+            Note that you can also maintain a hot failover. See
+            <a class="xref" href="hotfailover.html" title="Using Hot Failovers">Using Hot Failovers</a>
+            for more information.
+        </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="copyutilities"></a>About Unix Copy Utilities</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+
+               If you are copying database files you must copy databases atomically, 
+               in multiples of the database page size. In other words, the reads made by
+               the copy program must not be interleaved with writes by
+               other threads of control, and the copy program must read the
+               databases in multiples of the underlying database page size.
+               Generally, this is not a problem because operating systems
+               already make this guarantee and system utilities normally
+               read in power-of-2 sized chunks, which are larger than the
+               largest possible Berkeley DB database page size. 
+            </p>
+        <p>
+                On some platforms (most notably, some releases of Solaris), the copy utility (<code class="literal">cp</code>) was
+                implemented using the <code class="function">mmap()</code> system call rather than the
+                <code class="function">read()</code> system call. Because <code class="function">mmap()</code> did not make the same
+                guarantee of read atomicity as did <code class="function">read()</code>, the <code class="literal">cp</code> utility
+                could create corrupted copies of the databases. 
+            </p>
+        <p>
+                Also, some platforms have implementations of the <code class="literal">tar</code> utility that performs 10KB block
+                reads by default. Even when an output block size is specified, the utility will still not read the
+                underlying databases in multiples of the specified block size. Again, the result can be a corrupted backup.
+            </p>
+        <p>
+                To fix these problems, use the <code class="literal">dd</code> utility instead of <code class="literal">cp</code> or
+                <code class="literal">tar</code>. When you use <code class="literal">dd</code>, make sure you specify a block size that is
+                equal to, or an even multiple of, your database page size. Finally, if you plan to use a system
+                utility to copy database files, you may want to use a system call trace utility (for example, 
+                <code class="literal">ktrace</code> or <code class="literal">truss</code>) to make sure you are not using a I/O size that is
+                smaller than your database page size. You can also use these utilities to make sure the system utility is
+                not using a system call other than <code class="function">read()</code>.
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="standardbackup"></a>Offline Backups</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                To create an offline backup:
+            </p>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>
+              <p>
+                        Commit or abort all on-going transactions.
+                    </p>
+            </li>
+            <li>
+              <p>
+                        Pause all database writes.
+                    </p>
+            </li>
+            <li>
+              <p>
+                        Force a checkpoint. See 
+                            <a class="xref" href="filemanagement.html#checkpoints" title="Checkpoints">Checkpoints</a>
+                        for details.
+                    </p>
+            </li>
+            <li>
+              <p>
+                        Copy all your database files to the backup location. 
+                        <span>
+                            Note that you can simply copy all of the database
+                            files, or you can determine which database files
+                            have been written during the lifetime of the current
+                            logs. To do this, use either the
+                                <span>
+                                    <code class="methodname">DB_ENV-&gt;log_archive()</code>
+                                    
+                                    method with the <code class="literal">DB_ARCH_DATA</code>
+                                    option, 
+                                </span>
+                                
+
+                                or use the <span class="command"><strong>db_archive</strong></span>
+                                command with the <code class="literal">-s</code> option. 
+                        </span>
+                    </p>
+              <p>
+                        However, be aware that backing up just the modified databases only works if you have all of your
+                        log files. If you have been removing log files for any reason then using
+                                <span>
+                                    <code class="methodname">log_archive()</code>
+                                </span>
+                                
+
+                        can result in an
+                        unrecoverable backup because you might not be notified of a database file that was modified. 
+                    </p>
+            </li>
+            <li>
+              <p>
+                        Copy the <span class="emphasis"><em>last</em></span> log file to your backup location.
+                        Your log files are named
+                        <code class="literal">log.<span class="emphasis"><em>xxxxxxxxxx</em></span></code>,
+                        where <span class="emphasis"><em>xxxxxxxxxx</em></span> is a
+                        sequential number. The last log file is the file
+                        with the highest number.
+                    </p>
+            </li>
+          </ol>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="hotbackup"></a>Hot Backup</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                To create a hot backup, you do not have to stop database
+                operations. Transactions may be on-going and you can be writing
+                to your database at the time of the backup. However, this means
+                that you do not know exactly what the state of your database is
+                at the time of the backup.
+            </p>
+        <p>
+                You can use the <span class="command"><strong>db_hotbackup</strong></span> command line utility to create a hot backup for you. This
+                utility will (optionally) run a checkpoint and the copy all necessary files to a target directory.
+            </p>
+        <p>
+                Alternatively, you can manually create a hot backup as follows:
+            </p>
+        <div class="orderedlist">
+          <ol type="1">
+            <li>
+              <p>
+                        Copy all your database files to the backup location. 
+                        <span>
+                            Note that you can simply copy all of the database
+                            files, or you can determine which database files
+                            have been written during the lifetime of the current
+                            logs. To do this, use either the
+                                <span>
+                                    <code class="methodname">DB_ENV-&gt;log_archive()</code>
+                                    
+                                    with the <code class="literal">DB_ARCH_DATA</code>
+                                    option, 
+                                </span>
+                                
+
+                                or use the <span class="command"><strong>db_archive</strong></span>
+                                command with the <code class="literal">-s</code> option. 
+                        </span>
+                    </p>
+            </li>
+            <li>
+              <p>
+                        Copy all logs to your backup location.
+                    </p>
+            </li>
+          </ol>
+        </div>
+        <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+          <h3 class="title">Note</h3>
+          <p>
+                    It is important to copy your database files <span class="emphasis"><em>and
+                    then</em></span> your logs. In this way, 
+                    you can complete or roll back any database operations that were only partially completed 
+                    when you copied the databases. 
+                </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="incrementalbackups"></a>Incremental Backups</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                Once you have created a full backup (that is, either a
+                offline or hot backup), you can create incremental backups.  
+                To do this, simply copy all of your currently existing log
+                files to your backup location. 
+            </p>
+        <p>
+                Incremental backups do not require you to run a checkpoint
+                or to cease database write operations. 
+            </p>
+        <p>
+                When you are working with incremental backups, remember
+                that the greater the number of log files contained in 
+                your backup, the longer recovery will take.  
+                You should run full backups
+                on some interval, and then do incremental backups on a shorter interval.
+                How frequently you need to run a full backup
+                is determined by the rate at which your databases change and
+                how sensitive your application is to lengthy recoveries
+                (should one be required).
+              </p>
+        <p>
+                You can also shorten recovery time by running recovery against the backup as you take each incremental
+                backup.  Running recovery as you go means that there will be less work for DB to do if you should
+                ever need to restore your environment from the backup.
+            </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="filemanagement.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="filemanagement.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="recovery.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 5. Managing DB Files </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Recovery Procedures</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Preface</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Replicated Berkeley DB Applications" />
+    <link rel="up" href="index.html" title="Getting Started with Replicated Berkeley DB Applications" />
+    <link rel="prev" href="index.html" title="Getting Started with Replicated Berkeley DB Applications" />
+    <link rel="next" href="introduction.html" title="Chapter 1. Introduction" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Preface</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="index.html">Prev</a> </td>
+          <th width="60%" align="center"> </th>
+          <td width="20%" align="right"> <a accesskey="n" href="introduction.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="preface" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title"><a id="preface"></a>Preface</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <span class="sect1">
+              <a href="preface.html#conventions">Conventions Used in this Book</a>
+            </span>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <span class="sect2">
+                  <a href="preface.html#moreinfo">For More Information</a>
+                </span>
+              </dt>
+            </dl>
+          </dd>
+        </dl>
+      </div>
+      <p>
+        This document describes how to write replicated Berkeley DB applications for Berkeley DB version 4.8.
+        The APIs used to implement replication in your application 
+        are described here. This book describes the concepts surrounding replication, the scenarios under which you
+        might choose to use it, and the architectural requirements that a replication application has over a
+        transactional application.
+    </p>
+      <p>
+        This book is aimed at the software engineer responsible for writing a
+        replicated DB application.
+    </p>
+      <p>
+        This book assumes that you have already read and understood the
+        concepts contained in the
+        <span><em class="citetitle">Berkeley DB Getting Started with Transaction Processing</em> guide.</span>
+        
+     </p>
+      <div class="sect1" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both"><a id="conventions"></a>Conventions Used in this Book</h2>
+            </div>
+          </div>
+        </div>
+        <div class="toc">
+          <dl>
+            <dt>
+              <span class="sect2">
+                <a href="preface.html#moreinfo">For More Information</a>
+              </span>
+            </dt>
+          </dl>
+        </div>
+        <p>
+        The following typographical conventions are used within in this manual:
+    </p>
+        <p>
+        Class names are represented in <code class="classname">monospaced font</code>, as are <code class="methodname">method
+        names</code>. For example: 
+        
+        <span>"The <code class="methodname">Environment()</code>
+        constructor returns an <code class="classname">Environment</code> class object."</span>
+
+        
+    </p>
+        <p>
+        Variable or non-literal text is presented in <span class="emphasis"><em>italics</em></span>. For example: "Go to your
+        <span class="emphasis"><em>DB_INSTALL</em></span> directory."
+    </p>
+        <p>
+        Program examples are displayed in a <code class="classname">monospaced font</code> on a shaded background.
+        For example:
+    </p>
+        <pre class="programlisting">import com.sleepycat.db.DatabaseConfig;
+
+...
+
+// Allow the database to be created.
+DatabaseConfig myDbConfig = new DatabaseConfig();
+myDbConfig.setAllowCreate(true);</pre>
+        <p>
+        In some situations, programming examples are updated from one chapter to the next. When
+        this occurs, the new code is presented in <strong class="userinput"><code>monospaced bold</code></strong> font. For example:
+    </p>
+        <pre class="programlisting"><strong class="userinput"><code>import com.sleepycat.db.Database;</code></strong>
+import com.sleepycat.db.DatabaseConfig;
+
+...
+
+// Allow the database to be created.
+DatabaseConfig myDbConfig = new DatabaseConfig();
+myDbConfig.setAllowCreate(true);
+<strong class="userinput"><code>Database myDb = new Database("mydb.db", null, myDbConfig);</code></strong> </pre>
+        <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+          <h3 class="title">Note</h3>
+          <p>
+            Finally, notes of special interest are represented using a note block such
+            as this.
+        </p>
+        </div>
+        <div class="sect2" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title"><a id="moreinfo"></a>For More Information</h3>
+              </div>
+            </div>
+          </div>
+          <p>
+            Beyond this manual, you may also find the following sources of information useful when building a
+            transactional DB application:
+        </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p>
+                     
+                     
+                    <a class="ulink" href="http://www.oracle.com/technology/documentation/berkeley-db/db/gsg_txn/JAVA/index.html" target="_top">
+                         Getting Started with Transaction Processing for Java
+                    </a> 
+
+
+                     
+                     
+                </p>
+              </li>
+              <li>
+                <p>
+                     
+                     
+                    <a class="ulink" href="http://www.oracle.com/technology/documentation/berkeley-db/db/gsg/JAVA/index.html" target="_top">
+                        Getting Started with Berkeley DB for Java
+                    </a> 
+
+
+
+                     
+                     
+                </p>
+              </li>
+              <li>
+                <p>
+                    
+
+                    <a class="ulink" href="http://www.oracle.com/technology/documentation/berkeley-db/db/collections/tutorial/index.html" target="_top">
+                            Berkeley DB Collections Tutorial
+                    </a>
+                    </p>
+              </li>
+              <li>
+                <p>
+                    <a class="ulink" href="http://www.oracle.com/technology/documentation/berkeley-db/db/programmer_reference/index.html" target="_top">
+                        Berkeley DB Programmer's Reference Guide
+                    </a>
+                </p>
+              </li>
+              <li>
+                <p>
+                    <span>
+                    
+                    
+                    </span>
+
+                    
+
+                    <a class="ulink" href="http://www.oracle.com/technology/documentation/berkeley-db/db/java/index.html" target="_top">
+                        Berkeley DB Javadoc
+                    </a>
+                </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="index.html">Prev</a> </td>
+          <td width="20%" align="center"> </td>
+          <td width="40%" align="right"> <a accesskey="n" href="introduction.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Getting Started with Replicated Berkeley DB Applications </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 1. Introduction</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

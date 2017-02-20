@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Retrieving Objects from an Entity Store</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="persist_access.html" title="Chapter 5. Saving and Retrieving Objects" />
+    <link rel="prev" href="simpleput.html" title="Placing Objects in an Entity Store" />
+    <link rel="next" href="getmultiple.html" title="Retrieving Multiple Objects" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Retrieving Objects from an Entity Store</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="simpleput.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. Saving and Retrieving Objects</th>
+          <td width="20%" align="right"> <a accesskey="n" href="getmultiple.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="simpleget"></a>Retrieving Objects from an Entity Store</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+                    You retrieve objects placed in an entity store by using
+                    either the object's primary index, or the appropriate
+                    secondary index if it exists. The following application
+                    illustrates this by retrieving some of the objects that
+                    we placed in an entity store in the previous section.
+            </p>
+      <p>
+                To begin, we import the Java classes that our example
+                needs. We also instantiate the private data members that we
+                require.
+           </p>
+      <pre class="programlisting">package persist.gettingStarted;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.Environment;
+import com.sleepycat.db.EnvironmentConfig;
+
+import com.sleepycat.persist.EntityStore;
+import com.sleepycat.persist.StoreConfig;
+
+public class SimpleStoreGet {
+
+    private static File envHome = new File("./JEDB");
+
+    private Environment envmnt;
+    private EntityStore store;
+    private SimpleDA sda; </pre>
+      <p>
+            Next we create a method that simply opens our database
+            environment and entity store for us. 
+    </p>
+      <pre class="programlisting">   // The setup() method opens the environment and store
+    // for us.
+    public void setup()
+        throws DatabaseException {
+
+        EnvironmentConfig envConfig = new EnvironmentConfig();
+        StoreConfig storeConfig = new StoreConfig();
+
+        envConfig.setAllowCreate(true);
+        storeConfig.setAllowCreate(true);
+
+        try {
+            // Open the environment and entity store
+            envmnt = new Environment(envHome, envConfig);
+            store = new EntityStore(envmnt, "EntityStore", storeConfig);
+        } catch (FileNotFoundException fnfe) {
+            System.err.println("setup(): " + fnfe.toString());
+            System.exit(-1);
+        }
+    } </pre>
+      <p>
+            We also need a method to close our environment and store.
+    </p>
+      <pre class="programlisting">    // Close our environment and store.
+    public void shutdown()
+        throws DatabaseException {
+
+        store.close();
+        envmnt.close();
+    } </pre>
+      <p>
+            Now we retrieve a few objects. To do this, we instantiate a
+            <code class="classname">SimpleDA</code> (see <a class="xref" href="simpleda.html" title="SimpleDA.class">SimpleDA.class</a>) class that we use to access
+            our primary and secondary indexes. Then we retrieve objects
+            based on a primary or secondary index value. And finally, we
+            display the retrieved objects.
+     </p>
+      <pre class="programlisting">    // Retrieve some SimpleEntityClass objects from the store.
+    private void run()
+        throws DatabaseException {
+
+        setup();
+
+        // Open the data accessor. This is used to store
+        // persistent objects.
+        sda = new SimpleDA(store);
+
+        // Instantiate and store some entity classes
+        SimpleEntityClass sec1 = sda.pIdx.get("keyone");
+        SimpleEntityClass sec2 = sda.pIdx.get("keytwo");
+
+        SimpleEntityClass sec4 = sda.sIdx.get("skeythree");
+
+        System.out.println("sec1: " + sec1.getPKey());
+        System.out.println("sec2: " + sec2.getPKey());
+        System.out.println("sec4: " + sec4.getPKey());
+
+
+        shutdown();
+    } </pre>
+      <p>
+            Finally, to complete our class, we need a
+            <code class="methodname">main()</code> method, which simply calls our
+            <code class="methodname">run()</code> method.
+    </p>
+      <pre class="programlisting">    // main
+    public static void main(String args[]) {
+        SimpleStoreGet ssg = new SimpleStoreGet();
+        try {
+            ssg.run();
+        } catch (DatabaseException dbe) {
+            System.err.println("SimpleStoreGet: " + dbe.toString());
+            dbe.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("Exception: " + e.toString());
+            e.printStackTrace();
+        }
+        System.out.println("All done.");
+    }
+
+} </pre>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="simpleput.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="persist_access.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="getmultiple.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Placing Objects in an Entity Store </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Retrieving Multiple Objects</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

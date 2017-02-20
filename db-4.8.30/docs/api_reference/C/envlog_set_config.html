@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB_ENV-&gt;log_set_config()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="lsn.html" title="Chapter 7.  The DB_LSN Handle" />
+    <link rel="prev" href="logput.html" title="DB_ENV-&gt;log_put()" />
+    <link rel="next" href="logstat.html" title="DB_ENV-&gt;log_stat()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB_ENV-&gt;log_set_config()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="logput.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 7. 
+                The DB_LSN Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="logstat.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="envlog_set_config"></a>DB_ENV-&gt;log_set_config()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB_ENV-&gt;log_set_config(DB_ENV *dbenv, u_int32_t flags, int onoff);  </pre>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;log_set_config()</code> method configures the Berkeley DB
+         logging subsystem.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;log_set_config()</code> method configures a database
+         environment, not only operations performed using the specified 
+         <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  handle.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;log_set_config()</code> method may be called at any time during
+         the life of the application.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;log_set_config()</code> <span>
+            <span>
+                  method returns a non-zero error value on failure and 0 on success.
+            </span>
+            
+        </span>
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1681646"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1682316"></a>flags</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>flags</strong></span> parameter must be set by
+                          bitwise inclusively <span class="bold"><strong>OR</strong></span>'ing together
+                          one or more of the following values:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p><a id="log_set_config_DB_LOG_DIRECT"></a>
+                  <code class="literal">DB_LOG_DIRECT</code>
+            </p>
+                <p>
+                 Turn off system buffering of Berkeley DB log files to avoid double
+                 caching.
+            </p>
+                <p>
+                 Calling <code class="methodname">DB_ENV-&gt;log_set_config()</code> with the DB_LOG_DIRECT flag only
+                 affects the specified <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  handle (and any other
+                 Berkeley DB handles opened within the scope of that handle). For
+                 consistent behavior across the environment, all 
+                 <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  handles opened in the
+                 environment must either set the DB_LOG_DIRECT flag or the flag should
+                 be specified in the <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a>
+                 configuration file.
+            </p>
+                <p>
+                The <code class="literal">DB_LOG_DIRECT</code> flag may be used to configure Berkeley DB at any
+                 time during the life of the application.
+            </p>
+              </li>
+              <li>
+                <p><a id="log_set_config_DB_LOG_DSYNC"></a>
+                  <code class="literal">DB_LOG_DSYNC</code>
+            </p>
+                <p>
+                 Configure Berkeley DB to flush log writes to the backing disk before
+                 returning from the write system call, rather than flushing log writes
+                 explicitly in a separate system call, as necessary.  This is only
+                 available on some systems (for example, systems supporting the
+                 IEEE/ANSI Std 1003.1 (POSIX) standard O_DSYNC flag, or systems
+                 supporting the Windows FILE_FLAG_WRITE_THROUGH flag).  This flag may
+                 result in inaccurate file modification times and other file-level
+                 information for Berkeley DB log files.  This flag may offer a
+                 performance increase on some systems and a performance decrease on
+                 others.
+            </p>
+                <p>
+                 Calling <code class="methodname">DB_ENV-&gt;log_set_config()</code> with the DB_LOG_DSYNC flag only
+                 affects the specified <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  handle (and any other
+                 Berkeley DB handles opened within the scope of that handle). For
+                 consistent behavior across the environment, all 
+                 <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  handles opened in the
+                 environment must either set the DB_LOG_DSYNC flag or the flag should
+                 be specified in the <a href="../../programmer_reference/env_db_config.html#env_db_config.DB_CONFIG" class="olink">DB_CONFIG</a>
+                 configuration file.
+            </p>
+                <p>
+                The <code class="literal">DB_LOG_DSYNC</code> flag may be used to configure Berkeley DB at any time
+                 during the life of the application.
+            </p>
+              </li>
+              <li>
+                <p><a id="log_set_config_DB_LOG_AUTO_REMOVE"></a>
+                  <code class="literal">DB_LOG_AUTO_REMOVE</code>
+            </p>
+                <p>
+                 If set, Berkeley DB will automatically remove log files that are no
+                 longer needed.
+            </p>
+                <p>
+                 Automatic log file removal is likely to make catastrophic recovery
+                 impossible.
+            </p>
+                <p>
+                 Replication applications will rarely want to configure automatic log
+                 file removal as it increases the likelihood a master will be unable to
+                 satisfy a client's request for a recent log record.
+            </p>
+                <p>
+                Calling <code class="methodname">DB_ENV-&gt;log_set_config()</code> with the
+                <code class="literal">DB_LOG_AUTO_REMOVE</code> flag
+                 affects the database environment, including all threads of control
+                 accessing the database environment.
+            </p>
+                <p>
+                The <code class="literal">DB_LOG_AUTO_REMOVE</code> flag may be used to configure Berkeley DB at
+                 any time during the life of the application.
+            </p>
+              </li>
+              <li>
+                <p><a id="log_set_config_DB_LOG_IN_MEMORY"></a>
+                  <code class="literal">DB_LOG_IN_MEMORY</code>
+            </p>
+                <p>
+                 If set, maintain transaction logs in memory rather than on disk.  This
+                 means that transactions exhibit the ACI (atomicity, consistency, and
+                 isolation) properties, but not D (durability); that is, database
+                 integrity will be maintained, but if the application or system fails,
+                 integrity will not persist.  All database files must be verified
+                 and/or restored from a replication group master or archival backup
+                 after application or system failure.
+            </p>
+                <p>
+                 When in-memory logs are configured and no more log buffer space is
+                 available, Berkeley DB methods may return an additional error value,
+                 <code class="literal">DB_LOG_BUFFER_FULL</code>.  When
+                 choosing log buffer and file sizes for in-memory logs, applications
+                 should ensure the in-memory log buffer size is large enough that no
+                 transaction will ever span the entire buffer, and avoid a state where
+                 the in-memory buffer is full and no space can be freed because a
+                 transaction that started in the first log "file" is still active.
+            </p>
+                <p>
+                Calling <code class="methodname">DB_ENV-&gt;log_set_config()</code> with the
+                <code class="literal">DB_LOG_IN_MEMORY</code> flag
+                 affects the database environment, including all threads of control
+                 accessing the database environment.
+            </p>
+                <p>
+                The <code class="literal">DB_LOG_IN_MEMORY</code> flag may be used to configure Berkeley DB only
+                 before the <a class="xref" href="envopen.html" title="DB_ENV-&gt;open()">DB_ENV-&gt;open()</a> 
+                 method is called.
+            </p>
+              </li>
+              <li>
+                <p>
+                  <code class="literal">DB_LOG_ZERO</code>
+            </p>
+                <p>
+                 If set, zero all pages of a log file when that log file is created. 
+                 This has shown to provide greater transaction throughput in some
+                 environments. The log file will be zeroed by the thread which needs to
+                 re-create the new log file.  Other threads may not write to the log
+                 file while this is happening.
+            </p>
+                <p>
+                Calling <code class="methodname">DB_ENV-&gt;log_set_config()</code> with the
+                <code class="literal">DB_LOG_ZERO</code> flag affects only the current environment handle.
+            </p>
+                <p>
+                The <code class="literal">DB_LOG_ZERO</code> flag may be used to configure Berkeley DB at any time.
+            </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1682678"></a>onoff</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          If the <span class="bold"><strong>onoff</strong></span> parameter is zero, the
+                          specified flags are cleared; otherwise they are set.
+                     </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1682674"></a>Errors</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                         The <code class="methodname">DB_ENV-&gt;log_set_config()</code> <span>
+            <span>
+                 method may fail and return one of the following non-zero errors:
+            </span>
+            
+        </span>
+                    </p>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1682685"></a>EINVAL</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                An invalid flag value or parameter was specified.
+            </p>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1682625"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1682388"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="lsn.html#loglist" title="Logging Subsystem and Related Methods">Logging Subsystem and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="logput.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="lsn.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="logstat.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB_ENV-&gt;log_put() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_ENV-&gt;log_stat()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

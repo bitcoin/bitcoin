@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Building for VxWorks 6.x</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="build_vxworks.html" title="Chapter 30.  Building Berkeley DB for VxWorks" />
+    <link rel="prev" href="build_vxworks.html" title="Chapter 30.  Building Berkeley DB for VxWorks" />
+    <link rel="next" href="build_vxworks_notes.html" title="VxWorks notes" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Building for VxWorks 6.x</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="build_vxworks.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 30. 
+        Building Berkeley DB for VxWorks
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="build_vxworks_notes.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="build_vxworks_intro6x"></a>Building for VxWorks 6.x</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="build_vxworks_intro6x.html#id1634680">Building With Wind River Workbench using the Makefile</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1634680"></a>Building With Wind River Workbench using the Makefile</h3>
+            </div>
+          </div>
+        </div>
+        <p>In VxWorks6.x, developers use Wind River Workbench for software
+development. Two makefiles are provided in the db/build_vxworks
+directory. Use them to build Berkeley DB or Berkeley DB small build, using 
+the build chain provided with Wind River Workbench. </p>
+        <p>We assume that you have installed all necessary VxWorks6.x software 
+including the Wind River Workbench, and that you know how to use it. </p>
+        <p>Use the following steps to build Berkeley DB: </p>
+        <p>1. Setting variables in the Makefile.
+Open the Makefile and modify the BDB_ROOT variable to the path of your
+Berkeley DB source tree's root directory. You may need to set other
+variables when you build on different platforms, such as BUILD_SPEC,
+DEBUG_MODE, PROJECT_TYPE, build tool flags and BUILD_SPEC specific settings.
+Please refer to the documentation of the Workbench for a complete list of
+available values of each variable. You can also find out the list of values
+by creating a project using the Workbench. Each variable's available values 
+will be listed in the GUI window which assigns values to that
+variable. </p>
+        <p>2. Make sure "make" can be found.
+Basically you need to set the make utility's path to environment variables.
+</p>
+        <p>3. Start up the wrenv utility of the Wind River Workbench. </p>
+        <p>4. In the command console, move to the $(BDB_ROOT)/build_vxworks/ directory,
+rename the target makefile (Makefile.6x or Makefile.6x.small) to "Makefile",
+and run "make".  The make process will start and create the directory 
+"bdbvxw". It will contain all intermediate object files as well as the
+final built image "bdbvxw.out". </p>
+        <p>5. After the "bdbvxw.out" image is built, you can use command tools
+or the Workbench IDE to download and run it.</p>
+        <p>6. Test and Verification.
+There is a dbdemo and test_micro, which you can run to verify whether
+everything works fine.</p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="build_vxworks.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="build_vxworks.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="build_vxworks_notes.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 30. 
+        Building Berkeley DB for VxWorks
+         </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> VxWorks notes</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

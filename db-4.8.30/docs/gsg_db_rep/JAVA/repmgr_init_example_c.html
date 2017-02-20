@@ -1,0 +1,533 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Adding the Replication Manager to SimpleTxn</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Replicated Berkeley DB Applications" />
+    <link rel="up" href="repapp.html" title="Chapter 3. The DB Replication Manager" />
+    <link rel="prev" href="repapp.html" title="Chapter 3. The DB Replication Manager" />
+    <link rel="next" href="fwrkpermmessage.html" title="Permanent Message Handling" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Adding the Replication Manager to
+                    
+                    
+                    <span>SimpleTxn</span>
+            </th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="repapp.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 3. The DB Replication Manager</th>
+          <td width="20%" align="right"> <a accesskey="n" href="fwrkpermmessage.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="repmgr_init_example_c"></a>Adding the Replication Manager to
+                    
+                    
+                    <span>SimpleTxn</span>
+            </h2>
+          </div>
+        </div>
+      </div>
+      <p>
+                    We now use the methods described above to add partial
+                    support to the 
+                    
+                    
+                    <span>SimpleTxn</span>
+                    example that we presented in 
+                    <a class="xref" href="txnapp.html" title="Chapter 2. Transactional Application">Transactional Application</a>.
+                    That is, in this section we will:
+            </p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                                    Enhance our command line options to
+                                    accept information of interest to a
+                                    replicated application.
+                            </p>
+          </li>
+          <li>
+            <p>
+                                    Configure our environment handle to use
+                                    replication and the Replication Manager.
+                            </p>
+          </li>
+          <li>
+            <p>
+                                    Minimally configure the Replication Manager.
+                            </p>
+          </li>
+          <li>
+            <p>
+                                    Start replication.
+                            </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+                Note that when we are done with this section, we will be
+                only partially ready to run the application. Some critical
+                pieces will be missing; specifically, we will not yet be
+                handling the differences between a master and a
+                replica. (We do that in the next chapter).
+            </p>
+      <p>
+                Also, note that in the following code fragments, additions
+                and changes to the code are marked in <strong class="userinput"><code>bold</code></strong>.
+            </p>
+      <p>
+                To begin, we make some significant changes to our
+                <code class="classname">RepConfig</code> class because we will be
+                using it to maintain a lot more information that we needed
+                for our simple transactional example.
+            </p>
+      <p>
+        We begin by importing a few new
+        classes. <code class="classname">java.util.Vector</code> is used to
+        organize a list of "other host" definitions (that is, the host and
+        port information for the other replication participants known to
+        this application). We also need a couple of classes used to manage
+        individual host and port information, as well as replication
+        startup policy information.
+</p>
+      <pre class="programlisting"><strong class="userinput"><code>package db.repquote_gsg;
+
+import java.util.Vector;
+
+import com.sleepycat.db.ReplicationHostAddress;
+import com.sleepycat.db.ReplicationManagerStartPolicy;</code></strong>
+
+public class RepConfig
+{ </pre>
+      <p>
+        Next we add considerably to the constants and data members used by
+        this class. All of this is used to manage information necessary for
+        replication purposes. We also at this point change the program's
+        name, since we will be doing that to the main class in our
+        application a little later in this description.
+</p>
+      <pre class="programlisting">    // Constant values used in the RepQuote application.
+    public static final String progname = <strong class="userinput"><code>"RepQuoteExampleGSG";</code></strong>
+    public static final int CACHESIZE = 10 * 1024 * 1024;
+    <strong class="userinput"><code>public static final int SLEEPTIME = 5000;</code></strong>
+
+    // member variables containing configuration information
+    // String specifying the home directory for rep files.
+    public String home;
+    // stores an optional set of "other" hosts.
+    <strong class="userinput"><code>public Vector&lt;ReplicationHostAddress&gt; otherHosts;
+    // priority within the replication group.
+    public int priority; 
+    public ReplicationManagerStartPolicy startPolicy;
+    // The host address to listen to.
+    public ReplicationHostAddress thisHost; 
+    // Optional parameter specifying the # of sites in the 
+    // replication group.
+    public int totalSites;
+
+    // member variables used internally.
+    private int currOtherHost;
+    private boolean gotListenAddress;</code></strong></pre>
+      <p>
+        Now we update our class constructor to initialize all of these new
+        variables:
+</p>
+      <pre class="programlisting">    public RepConfig()
+    {
+        <strong class="userinput"><code>startPolicy = ReplicationManagerStartPolicy.REP_ELECTION;</code></strong>
+        home = "TESTDIR";
+        <strong class="userinput"><code>gotListenAddress = false;
+        totalSites = 0;
+        priority = 100;
+        currOtherHost = 0;
+        thisHost = new ReplicationHostAddress();
+        otherHosts = new Vector()&lt;ReplicationHostAddress&gt;;</code></strong>
+    } </pre>
+      <p>
+        Finally, we finish updating this class by providing a series of new
+        getter and setter methods. These are used primarily for setting a
+        retrieving host information of interest to our replicated
+        application:
+</p>
+      <pre class="programlisting">    public java.io.File getHome()
+    {
+        return new java.io.File(home);
+    }
+
+    <strong class="userinput"><code>public void setThisHost(String host, int port)
+    {
+        gotListenAddress = true;
+        thisHost.port = port;
+        thisHost.host = host;
+    }
+
+    public ReplicationHostAddress getThisHost()
+    {
+        if (!gotListenAddress) {
+            System.err.println("Warning: no host specified.");
+            System.err.println("Returning default.");
+        }
+        return thisHost;
+    }
+
+    public boolean gotListenAddress() {
+        return gotListenAddress;
+    }
+
+    public void addOtherHost(String host, int port, boolean peer)
+    {
+        ReplicationHostAddress newInfo = 
+            new ReplicationHostAddress(host, port, peer);
+        otherHosts.add(newInfo);
+    }
+
+    public ReplicationHostAddress getFirstOtherHost()
+    {
+        currOtherHost = 0;
+        if (otherHosts.size() == 0)
+            return null;
+        return (ReplicationHostAddress)otherHosts.get(currOtherHost);
+    }
+
+    public ReplicationHostAddress getNextOtherHost()
+    {
+        currOtherHost++;
+        if (currOtherHost &gt;= otherHosts.size())
+            return null;
+        return (ReplicationHostAddress)otherHosts.get(currOtherHost);
+    }
+
+    public ReplicationHostAddress getOtherHost(int i)
+    {
+        if (i &gt;= otherHosts.size())
+            return null;
+        return (ReplicationHostAddress)otherHosts.get(i);
+    }</code></strong>
+} </pre>
+      <p>
+        Having completed our update to the
+         
+        <code class="classname">RepConfig</code> 
+        class, we can now start making
+        changes to the main portion of our program. We begin by changing
+        the program's name. <span>(This, of course, means that we copy our 
+<code class="classname">SimpleTxn</code> code to a file named <code class="literal">RepQuoteExampleGSG.java</code>.)</span>
+</p>
+      <pre class="programlisting">package db.repquote_gsg;
+                            
+import java.io.FileNotFoundException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+<strong class="userinput"><code>import java.lang.Thread;
+import java.lang.InterruptedException;</code></strong>
+
+import com.sleepycat.db.Cursor;
+import com.sleepycat.db.Database;
+import com.sleepycat.db.DatabaseConfig;
+import com.sleepycat.db.DatabaseEntry;
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.DatabaseType;
+import com.sleepycat.db.Environment;
+import com.sleepycat.db.EnvironmentConfig;
+import com.sleepycat.db.LockMode;
+import com.sleepycat.db.OperationStatus;
+import db.repquote.RepConfig;
+
+public class <strong class="userinput"><code>RepQuoteExampleGSG</code></strong>
+{
+    private RepConfig repConfig;
+    private Environment dbenv; </pre>
+      <p>
+        Next we update our usage function. The application will continue to
+        accept the <code class="literal">-h</code> parameter so that we can identify
+        the environment home directory used by this application. However,
+        we also add the 
+</p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>
+                    <code class="literal">-l</code> parameter which allows us to
+                    identify the host and port used by this application to
+                    listen for replication messages.
+                </p>
+          </li>
+          <li>
+            <p>
+                        <code class="literal">-r</code> parameter which allows us to
+                        specify other replicas.
+                </p>
+          </li>
+          <li>
+            <p>
+                        <code class="literal">-n</code> parameter which allows us to
+                        identify the number of sites in this replication
+                        group.
+                </p>
+          </li>
+          <li>
+            <p>
+                    <code class="literal">-p</code> option, which is used to identify
+                    this replica's priority (recall that the priority is
+                    used as a tie breaker for elections)
+                </p>
+          </li>
+        </ul>
+      </div>
+      <pre class="programlisting">
+    public <strong class="userinput"><code>RepQuoteExampleGSG()</code></strong>
+        throws DatabaseException
+    {
+        repConfig = null;
+        dbenv = null;
+    }
+
+    public static void usage()
+    {
+        System.err.println("usage: " + repConfig.progname);
+        System.err.println("-h home<strong class="userinput"><code>[-r host:port][-l host:port]" +
+            "[-n nsites][-p priority]</code></strong>");
+
+        System.err.println(<strong class="userinput"><code>"\t -l host:port (required; l stands for local)\n" +
+             "\t -r host:port (optional; r stands for replica; any " +
+             "number of these may be specified)\n" +</code></strong>
+             "\t -h home directory\n" +
+             <strong class="userinput"><code>"\t -n nsites (optional; number of sites in replication " +
+             "group; defaults to 0\n" +
+             "\t    in which case we try to dynamically compute the " +
+             "number of sites in\n" +
+             "\t    the replication group)\n" +
+             "\t -p priority (optional: defaults to 100)\n");</code></strong>
+
+        System.exit(1);
+    } </pre>
+      <p>
+        Now we can begin working on our <code class="literal">main()</code> function.
+        We begin by adding a couple of variables that we will use to
+        collect TCP/IP host and port information. 
+
+
+        
+</p>
+      <pre class="programlisting">    public static void main(String[] argv)
+        throws Exception
+    {
+        RepConfig config = new RepConfig();
+        <strong class="userinput"><code>String tmpHost;
+        int tmpPort = 0;</code></strong> </pre>
+      <p>
+        Now we collect our command line arguments. As we do so, we will
+        configure host and port information as required, and we will
+        configure the application's election priority if necessary.
+</p>
+      <pre class="programlisting">        // Extract the command line parameters
+        for (int i = 0; i &lt; argv.length; i++)
+        {
+            if (argv[i].compareTo("-h") == 0) {
+                // home - a string arg.
+                i++;
+                config.home = argv[i];
+           <strong class="userinput"><code>} else if (argv[i].compareTo("-l") == 0) {
+                // "me" should be host:port
+                i++;
+                String[] words = argv[i].split(":");
+                if (words.length != 2) {
+                    System.err.println(
+                        "Invalid host specification host:port needed.");
+                    usage();
+                }
+                try {
+                    tmpPort = Integer.parseInt(words[1]);
+                } catch (NumberFormatException nfe) {
+                    System.err.println("Invalid host specification, " +
+                        "could not parse port number.");
+                    usage();
+                }
+                config.setThisHost(words[0], tmpPort);
+            } else if (argv[i].compareTo("-n") == 0) {
+                i++;
+                config.totalSites = Integer.parseInt(argv[i]);
+           } else if (argv[i].compareTo("-p") == 0) {
+                i++;
+                config.priority = Integer.parseInt(argv[i]);
+            } else if (argv[i].compareTo("-r") == 0) {
+                i++;
+                String[] words = argv[i].split(":");
+                if (words.length != 2) {
+                    System.err.println(
+                        "Invalid host specification host:port needed.");
+                    usage();
+                }
+                try {
+                    tmpPort = Integer.parseInt(words[1]);
+                } catch (NumberFormatException nfe) {
+                    System.err.println("Invalid host specification, " +
+                        "could not parse port number.");
+                    usage();
+                }
+                config.addOtherHost(words[0], tmpPort, isPeer);
+            }</code></strong> else {
+                System.err.println("Unrecognized option: " + argv[i]);
+                usage();
+            }
+        } 
+
+        // Error check command line.
+        if (<strong class="userinput"><code>(!config.gotListenAddress())</code></strong> || config.home.length() == 0)
+            usage(); </pre>
+      <p>
+        Having done that, the remainder of our <code class="function">main()</code>
+        function is left unchanged, with the exception of a few name changes required by the
+        new class name:
+</p>
+      <pre class="programlisting">        <strong class="userinput"><code>RepQuoteExampleGSG</code></strong> runner = null;
+        try {
+            runner = new <strong class="userinput"><code>RepQuoteExampleGSG();</code></strong>
+            runner.init(config);
+
+            runner.doloop();
+            runner.terminate();
+        } catch (DatabaseException dbe) {
+            System.err.println("Caught an exception during " +
+                "initialization or processing: " + dbe.toString());
+            if (runner != null)
+                runner.terminate();
+        }
+            System.exit(0);
+    } // end main     </pre>
+      <p>
+        Now we need to update our 
+            
+            <code class="methodname">RepQuoteExampleGSG.init()</code>
+        method. Our updates are at first related to configuring
+        replication. First, we need to update the method so that we can 
+        identify the local site to the environment handle (that is, the site identified by the 
+<code class="literal">-l</code> command line option):
+</p>
+      <pre class="programlisting">    public int init(RepConfig config)
+        throws DatabaseException
+    {
+        int ret = 0;
+        appConfig = config;
+        EnvironmentConfig envConfig = new EnvironmentConfig();
+        envConfig.setErrorStream(System.err);
+        envConfig.setErrorPrefix(RepConfig.progname);
+
+        <strong class="userinput"><code>envConfig.setReplicationManagerLocalSite(appConfig.getThisHost());</code></strong> </pre>
+      <p>
+    And we also add code to allow us to identify "other" sites to the environment handle (that is,
+the sites that we identify using the <code class="literal">-o</code> command line
+option). To do this, we iterate over each of the "other" sites provided to
+us using the <code class="literal">-o</code> command line option, and we add each one
+individually in turn:     
+</p>
+      <pre class="programlisting">        <strong class="userinput"><code>for (ReplicationHostAddress host = appConfig.getFirstOtherHost();
+            host != null; host = appConfig.getNextOtherHost())
+        {
+            envConfig.replicationManagerAddRemoteSite(host);
+        }</code></strong> </pre>
+      <p>
+    And then we need code to allow us to identify the total number of sites
+    in this replication group, and to set the environment's priority.
+</p>
+      <pre class="programlisting">        <strong class="userinput"><code>if (appConfig.totalSites &gt; 0)
+            envConfig.setReplicationNumSites(appConfig.totalSites);
+        envConfig.setReplicationPriority(appConfig.priority); </code></strong> </pre>
+      <p>
+            
+
+            
+
+            <span>We can now open our environment. Note that the options</span>
+
+            we use to open the environment are slightly different for a
+            replicated application than they are for a non-replicated
+            application. Namely, replication requires the
+            
+
+            <span>
+            <code class="methodname">EnvironmentConfig.setInitializeReplication()</code> option.
+            </span>
+    </p>
+      <p>
+            Also, because we are using the Replication Manager, we must prepare
+            our environment for threaded usage. For this reason, we also
+            need the <code class="literal">DB_THREAD</code> flag.
+    </p>
+      <pre class="programlisting">        envConfig.setCacheSize(RepConfig.CACHESIZE);
+        envConfig.setTxnNoSync(true);
+
+        envConfig.setAllowCreate(true);
+        envConfig.setRunRecovery(true);
+        <strong class="userinput"><code>envConfig.setInitializeReplication(true);</code></strong>
+        envConfig.setInitializeLocking(true);
+        envConfig.setInitializeLogging(true);
+        envConfig.setInitializeCache(true);
+        envConfig.setTransactional(true);
+        try {
+            dbenv = new Environment(appConfig.getHome(), envConfig);
+        } catch(FileNotFoundException e) {
+            System.err.println("FileNotFound exception: " + e.toString());
+            System.err.println(
+                "Ensure that the environment directory is pre-created.");
+            ret = 1;
+        } </pre>
+      <p>
+        Finally, we start replication before we exit this method.
+        Immediately after exiting this method, our application will go into
+        the 
+        
+        <code class="methodname">RepQuoteExampleGSG.doloop()</code>
+        method, which is where
+       the bulk of our application's work is performed. We update that
+       method in the next chapter. 
+</p>
+      <pre class="programlisting">        // start Replication Manager
+        dbenv.replicationManagerStart(3, appConfig.startPolicy);
+        return ret;
+    } </pre>
+      <p>
+        This completes our replication updates for the moment. We are not as
+        yet ready to actually run this program; there remains a few
+        critical pieces left to add to it. However, the work that we
+        performed in this section represents a solid foundation for the
+        remainder of our replication work.
+    </p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="repapp.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="repapp.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="fwrkpermmessage.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Chapter 3. The DB Replication Manager </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Permanent Message Handling</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,9 @@
+bdbvxw/$(MODE_DIR)/bdbvxw.out : $(OBJECTS_bdbvxw)
+	$(TRACE_FLAG)if [ ! -d "`dirname "$@"`" ]; then mkdir -p "`dirname "$@"`"; fi;echo "building $@";rm -f "$@";ddump -Ng $(OBJECTS_bdbvxw) $(ADDED_OBJECTS)  | tclsh $(WIND_BASE)/host/resource/hutils/tcl/munch.tcl -c pentium > $(OBJ_DIR)/ctdt.c; $(TOOL_PATH)dcc $(DEBUGFLAGS_Linker) $(CC_ARCH_SPEC) -Xdollar-in-ident -Xforce-declarations $(ADDED_CFLAGS) $(IDE_INCLUDES) $(ADDED_INCLUDES) -DCPU=$(CPU) -DTOOL_FAMILY=$(TOOL_FAMILY) -DTOOL=$(TOOL) -D_WRS_KERNEL   $(DEFINES)  -o $(OBJ_DIR)/ctdt.o -c $(OBJ_DIR)/ctdt.c; $(TOOL_PATH)dld -tX86LH:vxworks65 -X -r5 -f 0x90,1,1 -r4 -o "$@" $(OBJ_DIR)/ctdt.o $(OBJECTS_bdbvxw) $(ADDED_OBJECTS)  $(LIBPATH) $(LIBS) $(ADDED_LIBPATH) $(ADDED_LIBS) && if [ "$(EXPAND_DBG)" = "1" ]; then plink "$@";fi
+
+bdbvxw/$(MODE_DIR)/bdbvxw_compile_file : $(FILE) ;
+
+_clean :: bdbvxw/$(MODE_DIR)/bdbvxw_clean
+
+bdbvxw/$(MODE_DIR)/bdbvxw_clean :
+	$(TRACE_FLAG)if [ -d "bdbvxw" ]; then cd "bdbvxw"; rm -rf $(MODE_DIR); fi

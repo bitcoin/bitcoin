@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Retrieving Multiple Objects</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="persist_access.html" title="Chapter 5. Saving and Retrieving Objects" />
+    <link rel="prev" href="simpleget.html" title="Retrieving Objects from an Entity Store" />
+    <link rel="next" href="dpl_entityjoin.html" title="Join Cursors" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Retrieving Multiple Objects</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="simpleget.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. Saving and Retrieving Objects</th>
+          <td width="20%" align="right"> <a accesskey="n" href="dpl_entityjoin.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="getmultiple"></a>Retrieving Multiple Objects</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="getmultiple.html#dpl_cursor_initialize">Cursor Initialization</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="getmultiple.html#dpl_dups">Working with Duplicate Keys</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="getmultiple.html#dpl_cursor_range">Key Ranges</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>
+                    It is possible to iterate over every object referenced
+                    by a specific index. You may want to do this if, for
+                    example, you want to examine or modify every object
+                    accessible by a specific primary index. 
+            </p>
+      <p>
+                   In addition, some indexes result in the retrieval of multiple
+                   objects. For example, <code class="literal">MANY_TO_ONE</code>
+                   secondary indexes can result in more than one object for any given
+                   key (also known as <span class="emphasis"><em>duplicate keys</em></span>). 
+                   When this is the case, you must iterate
+                   over the resulting set of objects in order to examine
+                   each object in turn.
+           </p>
+      <p>
+                   There are two ways to iterate over a collection of
+                   objects as returned by an index. One is to use a
+                   standard Java <code class="classname">Iterator</code>, which you
+                   obtain using an <code class="classname">EntityCursor</code>,
+                   which in turn you can obtain from a <code class="classname">PrimaryIndex</code>:
+           </p>
+      <pre class="programlisting">PrimaryIndex&lt;String,SimpleEntityClass&gt; pi =
+    store.getPrimaryIndex(String.class, SimpleEntityClass.class);
+EntityCursor&lt;SimpleEntityClass&gt; pi_cursor = pi.entities();
+try {
+    Iterator&lt;SimpleEntityClass&gt; i = pi_cursor.iterator();
+    while (i.hasNext()) {
+        // Do something here
+    }
+} finally {
+    // Always close the cursor
+    pi_cursor.close();
+} </pre>
+      <p>
+                    Alternatively, you can use a Java "foreach" statement
+                    to iterate over object set:
+            </p>
+      <pre class="programlisting">PrimaryIndex&lt;String,SimpleEntityClass&gt; pi =
+    store.getPrimaryIndex(String.class, SimpleEntityClass.class);
+EntityCursor&lt;SimpleEntityClass&gt; pi_cursor = pi.entities();
+try {
+    for (SimpleEntityClass seci : pi_cursor) {
+        // do something with each object "seci"
+    }
+// Always make sure the cursor is closed when we are done with it.
+} finally {
+    sec_cursor.close();
+} </pre>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="dpl_cursor_initialize"></a>Cursor Initialization</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                            When a cursor is first opened, it is not
+                            positioned to any value; that is,
+                            it is not <span class="emphasis"><em>initialized</em></span>.
+                            Most of the <code class="classname">EntityCursor</code>
+                            methods that move a cursor will initialize it
+                            to either the first or last object, depending
+                            on whether the operation is moving the cursor
+                            forward (all <code class="literal">next...</code>
+                            methods) or backwards (all
+                            <code class="literal">prev...</code>) methods.
+                    </p>
+        <p>
+                            You can also force a cursor, whether it is
+                            initialized or not, to return the first object
+                            by calling
+                            <code class="methodname">EntityCursor.first()</code>.
+                            Similarly, you can force a return of the last
+                            object using
+                            <code class="methodname">EntityCursor.last()</code>.
+                    </p>
+        <p>
+                            Operations that do not move the cursor (such as
+                            <code class="methodname">EntityCursor.current()</code>
+                            or <code class="methodname">EntityCursor.delete()</code>
+                            will throw an 
+                            <code class="classname">IllegalStateException</code>
+                            when used on an uninitialized cursor.
+                    </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="dpl_dups"></a>Working with Duplicate Keys</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                   If you have duplicate secondary keys, you can return an
+                   <code class="classname">EntityIndex</code> class object for them
+                   using <code class="methodname">SecondaryIndex.subIndex()</code>
+                   Then, use that object's
+                   <code class="methodname">entities()</code>
+                   method to obtain an <code class="classname">EntityCursor</code>
+                   instance.
+           </p>
+        <p>
+                   For example:
+           </p>
+        <pre class="programlisting">PrimaryIndex&lt;String,SimpleEntityClass&gt; pi =
+    store.getPrimaryIndex(String.class, SimpleEntityClass.class);
+
+SecondaryIndex&lt;String,String,SimpleEntityClass&gt; si = 
+    store.getSecondaryIndex(pi, String.class, "sKey");
+
+EntityCursor&lt;SimpleEntityClass&gt; sec_cursor = 
+    si.subIndex("skeyone").entities(); 
+
+try {
+for (SimpleEntityClass seci : sec_cursor) {
+        // do something with each object "seci"
+    }
+// Always make sure the cursor is closed when we are done with it.
+} finally {
+    sec_cursor.close(); } </pre>
+        <p>
+                Note that if you are working with duplicate keys, you can
+                control how cursor iteration works by using the following
+                <code class="classname">EntityCursor</code> methods:
+        </p>
+        <div class="itemizedlist">
+          <ul type="disc">
+            <li>
+              <p>
+                                <code class="methodname">nextDup()</code>
+                        </p>
+              <p>
+                            Moves the cursor to the next object with the
+                            same key as the cursor is currently
+                            referencing. That is, this method returns the
+                            next duplicate object. If no such object
+                            exists, this method returns
+                            <code class="literal">null</code>.
+                        </p>
+            </li>
+            <li>
+              <p>
+                                <code class="methodname">prevDup()</code>
+                        </p>
+              <p>
+                            Moves the cursor to the previous object with the
+                            same key as the cursor is currently
+                            referencing. That is, this method returns the
+                            previous duplicate object in the cursor's set
+                            of objects. If no such object exists, this method returns
+                            <code class="literal">null</code>.
+                        </p>
+            </li>
+            <li>
+              <p>
+                                <code class="methodname">nextNoDup()</code>
+                        </p>
+              <p>
+                            Moves the cursor to the next object in the
+                            cursor's set that has a key which is different
+                            than the key that the cursor is currently
+                            referencing.  That is, this method skips all
+                            duplicate objects and returns the
+                            next non-duplicate object in the cursor's set
+                            of objects. If no such object exists, this method returns
+                            <code class="literal">null</code>.
+                        </p>
+            </li>
+            <li>
+              <p>
+                                <code class="methodname">prevNoDup()</code>
+                        </p>
+              <p>
+                            Moves the cursor to the previous object in the
+                            cursor's set that has a key which is different
+                            than the key that the cursor is currently
+                            referencing.  That is, this method skips all
+                            duplicate objects and returns the
+                            previous non-duplicate object in the cursor's set
+                            of objects. If no such object exists, this method returns
+                            <code class="literal">null</code>.
+                        </p>
+            </li>
+          </ul>
+        </div>
+        <p>
+                   For example:
+           </p>
+        <pre class="programlisting">PrimaryIndex&lt;String,SimpleEntityClass&gt; pi =
+    store.getPrimaryIndex(String.class, SimpleEntityClass.class);
+
+SecondaryIndex&lt;String,String,SimpleEntityClass&gt; si = 
+    store.getSecondaryIndex(pi, String.class, "sKey");
+
+EntityCursor&lt;SimpleEntityClass&gt; sec_cursor = 
+    si.subIndex("skeyone").entities(); 
+
+try {
+    SimpleEntityClass sec;
+    Iterator&lt;SimpleEntityClass&gt; i = sec_cursor.iterator();
+    while (sec = i.nextNoDup() != null) {
+        // Do something here
+    }
+// Always make sure the cursor is closed when we are done with it.
+} finally {
+    sec_cursor.close(); } </pre>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="dpl_cursor_range"></a>Key Ranges</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                        You can restrict the scope of a cursor's movement
+                        by specifying a <span class="emphasis"><em>range</em></span> when you
+                        create the cursor. The cursor can then never be
+                        positioned outside of the specified range.
+                </p>
+        <p>
+                        When specifying a range, you indicate whether a
+                        range bound is <span class="emphasis"><em>inclusive</em></span> or
+                        <span class="emphasis"><em>exclusive</em></span> by providing a
+                        boolean value for each range.
+                        <code class="literal">true</code> indicates that the provided
+                        bound is inclusive, while <code class="literal">false</code>
+                        indicates that it is exclusive.
+                </p>
+        <p>
+                        You provide this information when you call
+                        <code class="classname">PrimaryIndex.entities()</code>
+                        or
+                        <code class="classname">SecondaryIndex.entities()</code>.
+                        For example, suppose you had a class indexed by
+                        numerical information. Suppose further that you
+                        wanted to examine only those objects with indexed
+                        values of 100 - 199. Then (assuming the numerical
+                        information is the primary index), you can bound
+                        your cursor as follows:
+                </p>
+        <pre class="programlisting">
+EntityCursor&lt;SomeEntityClass&gt; cursor = 
+    primaryIndex.entities(100, true, 200, false);
+
+try {
+    for (SomeEntityClass sec : cursor {
+        // Do something here to objects ranged from 100 to 199
+    }
+// Always make sure the cursor is closed when we are done with it.
+} finally {
+    cursor.close(); } </pre>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="simpleget.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="persist_access.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dpl_entityjoin.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Retrieving Objects from an Entity Store </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Join Cursors</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Cursor Example</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="Cursors.html" title="Chapter 4. Using Cursors" />
+    <link rel="prev" href="ReplacingEntryWCursor.html" title="Replacing Records Using Cursors" />
+    <link rel="next" href="indexes.html" title="Chapter 5. Secondary Databases" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Cursor Example</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="ReplacingEntryWCursor.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 4. Using Cursors</th>
+          <td width="20%" align="right"> <a accesskey="n" href="indexes.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="CoreCursorUsage"></a>Cursor Example</h2>
+          </div>
+        </div>
+      </div>
+      <p>
+        In 
+            <a class="xref" href="DbUsage.html" title="Database Usage Example">Database Usage Example</a> 
+             
+        we wrote an
+        application that loaded two databases with
+        vendor and inventory information. In this example, we will write an
+        application to display all of the items in the inventory database. As a
+        part of showing any given inventory item, we will look up the vendor who
+        can provide the item and show the vendor's contact information.
+    </p>
+      <p>
+        Specifically, the <code class="classname">example_database_read</code>
+        application does the following:
+    </p>
+      <div class="orderedlist">
+        <ol type="1">
+          <li>
+            <p>
+            Opens the the inventory and vendor databases
+            that were created by our <code class="classname">example_database_load</code>
+            application. See 
+                <a class="xref" href="DbUsage.html#exampledbload" title="Example 3.2 example_database_load">example_database_load</a> 
+                 
+            for information on how that
+            application creates the databases and writes data to them.
+         </p>
+          </li>
+          <li>
+            <p>Obtains a cursor from the inventory database.</p>
+          </li>
+          <li>
+            <p>
+            Steps through the inventory database, displaying
+            each record as it goes.
+        </p>
+          </li>
+          <li>
+            <p>
+            Gets the name of the vendor for that inventory item from the
+            inventory record.
+        </p>
+          </li>
+          <li>
+            <p>
+            Uses the vendor name to look up the vendor record in the vendor
+            database.
+        </p>
+          </li>
+          <li>
+            <p>Displays the vendor record.</p>
+          </li>
+        </ol>
+      </div>
+      <p>
+        Remember that you can find the complete implementation of this application
+        in:
+    </p>
+      <pre class="programlisting"><span class="emphasis"><em>DB_INSTALL</em></span>/examples_c/getting_started</pre>
+      <p>
+        where <code class="literal"><span class="emphasis"><em>DB_INSTALL</em></span></code> is the location where you
+        placed your DB distribution.
+    </p>
+      <div class="example">
+        <a id="CoreEIR"></a>
+        <p class="title">
+          <b>Example 4.1 example_database_read</b>
+        </p>
+        <div class="example-contents">
+          <p>
+            To begin, we include the necessary header files and perform our
+            forward declarations.
+        </p>
+          <a id="c_cursor10"></a>
+          <pre class="programlisting">/* File: example_database_read.c */
+/* gettingstarted_common.h includes db.h for us */
+#include "gettingstarted_common.h"
+
+/* Forward declarations */
+char * show_inventory_item(void *);
+int show_all_records(STOCK_DBS *);
+int show_records(STOCK_DBS *, char *);
+int show_vendor_record(char *, DB *); </pre>
+          <p>
+        Next we write our <code class="function">main()</code> function. Note that it is
+        somewhat unnecessarily complicated here because we will be extending it
+        in the next chapter to perform inventory item lookups.
+   </p>
+          <a id="c_cursor11"></a>
+          <pre class="programlisting">/*
+ * Displays all inventory items and the associated vendor record.
+ */
+int
+main(int argc, char *argv[])
+{
+    STOCK_DBS my_stock;
+    int ret;
+
+    /* Initialize the STOCK_DBS struct */
+    initialize_stockdbs(&amp;my_stock);
+                                                                                                                                
+    /*
+     * Parse the command line arguments here and determine
+     * the location of the database files. This step is
+     * omitted for brevity.
+     */
+
+    /*
+     * Identify the files that will hold our databases
+     * This function uses information obtained from the
+     * command line to identify the directory in which
+     * the database files reside.
+     */
+    set_db_filenames(&amp;my_stock);
+                                                                                                                                
+    /* Open all databases */
+    ret = databases_setup(&amp;my_stock, "example_database_read", stderr);
+    if (ret != 0) {
+        fprintf(stderr, "Error opening databases\n");
+        databases_close(&amp;my_stock);
+        return (ret);
+    }
+                                                                                                                                
+    ret = show_all_records(&amp;my_stock);
+
+    /* close our databases */
+    databases_close(&amp;my_stock);
+    return (ret);
+} </pre>
+          <p>
+        Next we need to write the <code class="function">show_all_records()</code>
+        function. This
+        function takes a <code class="literal">STOCK_DBS</code> structure and displays all
+        of the inventory records found in the inventory database. Once it shows
+        the inventory record, it retrieves the vendor's name from that record
+        and uses it to look up and display the appropriate vendor record:
+    </p>
+          <a id="c_cursor12"></a>
+          <pre class="programlisting">int show_all_records(STOCK_DBS *my_stock)
+{
+    DBC *cursorp;
+    DBT key, data;
+    char *the_vendor;
+    int exit_value, ret;
+                                                                                                                                  
+    /* Initialize our DBTs. */
+    memset(&amp;key, 0, sizeof(DBT));
+    memset(&amp;data, 0, sizeof(DBT));
+                                                                                                                                  
+    /* Get a cursor to the itemname db */
+    my_stock-&gt;inventory_dbp-&gt;cursor(my_stock-&gt;inventory_dbp, NULL,
+      &amp;cursorp, 0);
+                                                                                                                                  
+    /*
+     * Iterate over the inventory database, from the first record
+     * to the last, displaying each in turn.
+     */
+    exit_value = 0;
+    while ((ret =
+      cursorp-&gt;get(cursorp, &amp;key, &amp;data, DB_NEXT))
+      == 0)
+    {
+        the_vendor = show_inventory_item(data.data);
+        ret = show_vendor_record(the_vendor, my_stock-&gt;vendor_dbp);
+        if (ret) {
+            exit_value = ret;
+            break;
+        }
+    }
+                                                                                                                                  
+    /* Close the cursor */
+    cursorp-&gt;close(cursorp);
+    return(exit_value);
+} </pre>
+          <p>
+        The <code class="function">show_inventory_item()</code> simply extracts the
+        inventory information from the record data and displays it. It then
+        returns the vendor's name. Note that in order to extract the inventory
+        information, we have to unpack it from the data buffer. How we do this
+        is entirely dependent on how we packed the buffer in the first
+        place. For more information, see the
+        <code class="function">load_inventory_database()</code> function implementation
+        in 
+          <span><a class="xref" href="DbUsage.html#exampledbload" title="Example 3.2 example_database_load">example_database_load</a>.</span> 
+           
+    </p>
+          <a id="c_cursor13"></a>
+          <pre class="programlisting">/*
+ * Shows an inventory item.
+ */
+char *
+show_inventory_item(void *vBuf)
+{
+    float price;
+    int buf_pos, quantity;
+    char *category, *name, *sku, *vendor_name;
+    char *buf = (char *)vBuf;
+                                                                                                                                  
+    /* Get the price.  */
+    price = *((float *)buf);
+    buf_pos = sizeof(float);
+                                                                                                                                  
+    /* Get the quantity. */
+    quantity = *((int *)(buf + buf_pos));
+    buf_pos += sizeof(int);
+                                                                                                                                  
+    /* Get the inventory item's name */
+    name = buf + buf_pos;
+    buf_pos += strlen(name) + 1;
+                                                                                                                                  
+    /* Get the inventory item's sku */
+    sku = buf + buf_pos;
+    buf_pos += strlen(sku) + 1;
+                                                                                                                                  
+    /* 
+     * Get the category (fruits, vegetables, desserts) that this 
+     * item belongs to.
+     */
+    category = buf + buf_pos;
+    buf_pos += strlen(category) + 1;
+                                                                                                                                  
+    /* Get the vendor's name */
+    vendor_name = buf + buf_pos;
+                                                                                                                                  
+    /* Display all this information */
+    printf("name: %s\n", name);
+    printf("\tSKU: %s\n", sku);
+    printf("\tCategory: %s\n", category);
+    printf("\tPrice: %.2f\n", price);
+    printf("\tQuantity: %i\n", quantity);
+    printf("\tVendor:\n");
+                                                                                                                                  
+    /* Return the vendor's name */
+    return(vendor_name);
+} </pre>
+          <p>
+        Having returned the vendor's name, we can now use it to look up and
+        display the appropriate vendor record. In this case we do not need to use a
+        cursor to display the vendor record. Using a cursor here complicates our
+        code slightly for no good gain. Instead, we simply perform a
+        <code class="function">get()</code> directly against the vendor database.
+    </p>
+          <a id="c_cursor14"></a>
+          <pre class="programlisting">/*
+ * Shows a vendor record. Each vendor record is an instance of
+ * a vendor structure. See load_vendor_database() in
+ * example_database_load for how this structure was originally
+ * put into the database.
+ */
+int
+show_vendor_record(char *vendor_name, DB *vendor_dbp)
+{
+    DBT key, data;
+    VENDOR my_vendor;
+    int ret;
+                                                                                                                                  
+    /* Zero our DBTs */
+    memset(&amp;key, 0, sizeof(DBT));
+    memset(&amp;data, 0, sizeof(DBT));
+                                                                                                                                  
+    /* Set the search key to the vendor's name */
+    key.data = vendor_name;
+    key.size = strlen(vendor_name) + 1;
+
+    /*
+     * Make sure we use the memory we set aside for the VENDOR
+     * structure rather than the memory that DB allocates.
+     * Some systems may require structures to be aligned in memory
+     * in a specific way, and DB may not get it right.
+     */
+                                                                                                                                
+    data.data = &amp;my_vendor;
+    data.ulen = sizeof(VENDOR);
+    data.flags = DB_DBT_USERMEM;
+                                                                                                                                  
+    /* Get the record */
+    ret = vendor_dbp-&gt;get(vendor_dbp, 0, &amp;key, &amp;data, 0);
+    if (ret != 0) {
+        vendor_dbp-&gt;err(vendor_dbp, ret, "Error searching for vendor: '%s'",
+          vendor_name);
+        return(ret);
+    } else {
+        printf("\t\t%s\n", my_vendor.name);
+        printf("\t\t%s\n", my_vendor.street);
+        printf("\t\t%s, %s\n", my_vendor.city, my_vendor.state);
+        printf("\t\t%s\n\n", my_vendor.zipcode);
+        printf("\t\t%s\n\n", my_vendor.phone_number);
+        printf("\t\tContact: %s\n", my_vendor.sales_rep);
+        printf("\t\t%s\n", my_vendor.sales_rep_phone);
+    }
+    return(0);
+} </pre>
+        </div>
+      </div>
+      <br class="example-break" />
+      <p>
+        That completes the implementation of
+        <code class="classname">example_database_read()</code>. In the next chapter, we
+        will extend this application to make use of a secondary database so that
+        we can query the inventory database for a specific inventory item.
+    </p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="ReplacingEntryWCursor.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="Cursors.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="indexes.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Replacing Records Using Cursors </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 5. Secondary Databases</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

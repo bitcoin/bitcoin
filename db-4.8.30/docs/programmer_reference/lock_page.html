@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Locking granularity</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="lock.html" title="Chapter 15.  The Locking Subsystem" />
+    <link rel="prev" href="lock_deaddbg.html" title="Deadlock debugging" />
+    <link rel="next" href="lock_notxn.html" title="Locking without transactions" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Locking granularity</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="lock_deaddbg.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 15. 
+        The Locking Subsystem
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="lock_notxn.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="lock_page"></a>Locking granularity</h2>
+          </div>
+        </div>
+      </div>
+      <p>With the exception of the Queue access method, the Berkeley DB access methods
+do page-level locking.  The size of pages in a database may be set when
+the database is created by calling the <a href="../api_reference/C/dbset_pagesize.html" class="olink">DB-&gt;set_pagesize()</a> method.  If
+not specified by the application, Berkeley DB selects a page size that will
+provide the best I/O performance by setting the page size equal to the
+block size of the underlying file system.  Selecting a smaller page size
+can result in increased concurrency for some applications.</p>
+      <p>In the Btree access method, Berkeley DB uses a technique called lock coupling
+to improve concurrency.  The traversal of a Btree requires reading a
+page, searching that page to determine which page to search next, and
+then repeating this process on the next page.  Once a page has been
+searched, it will never be accessed again for this operation, unless a
+page split is required.  To improve concurrency in the tree, once the
+next page to read/search has been determined, that page is locked and
+then the original page lock is released atomically (that is, without
+relinquishing control of the lock manager).  When page splits become
+necessary, write locks are reacquired.</p>
+      <p>Because the Recno access method is built upon Btree, it also uses lock
+coupling for read operations.  However, because the Recno access method
+must maintain a count of records on its internal pages, it cannot
+lock-couple during write operations.  Instead, it retains write locks
+on all internal pages during every update operation.  For this reason,
+it is not possible to have high concurrency in the Recno access method
+in the presence of write operations.</p>
+      <p>The Queue access method uses only short-term page locks.  That is, a page
+lock is released prior to requesting another page lock.  Record locks are
+used for transaction isolation.  The provides a high degree of concurrency
+for write operations.  A metadata page is used to keep track of the head
+and tail of the queue.  This page is never locked during other locking or
+I/O operations.</p>
+      <p>The Hash access method does not have such traversal issues, but it must
+always refer to its metadata while computing a hash function because it
+implements dynamic hashing.  This metadata is stored on a special page
+in the hash database.  This page must therefore be read-locked on every
+operation.  Fortunately, it needs to be write-locked only when new pages
+are allocated to the file, which happens in three cases:</p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>a hash bucket becomes full and needs to split</li>
+          <li>a key or data item is too large to fit on a normal page</li>
+          <li>the number of duplicate items for a fixed key becomes so large that they
+are moved to an auxiliary page</li>
+        </ul>
+      </div>
+      <p>In this case, the access method must obtain a write lock on the metadata
+page, thus requiring that all readers be blocked from entering the tree
+until the update completes.</p>
+      <p>Finally, when traversing duplicate data items for a key, the lock on
+the key value also acts as a lock on all duplicates of that key.
+Therefore, two conflicting threads of control cannot access the same
+duplicate set simultaneously.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="lock_deaddbg.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="lock.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="lock_notxn.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Deadlock debugging </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Locking without transactions</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

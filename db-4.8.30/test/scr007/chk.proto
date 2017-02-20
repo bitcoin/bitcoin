@@ -1,0 +1,44 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Check to make sure that prototypes are actually needed.
+
+d=../..
+
+[ -f $d/LICENSE ] || {
+	echo 'FAIL: cannot find source distribution directory.'
+	exit 1
+}
+
+t1=__1
+t2=__2
+t3=__3
+
+egrep '__P' $d/dbinc_auto/*.h |
+    sed -e 's/[	 ][	 ]*__P.*//' \
+    -e 's/^.*[	 *]//' \
+    -e '/__db_cprint/d' \
+    -e '/__db_lprint/d' \
+    -e '/__db_noop_log/d' \
+    -e '/__db_prnpage/d' \
+    -e '/__db_txnlist_print/d' \
+    -e '/__db_util_arg/d' \
+    -e '/__ham_func2/d' \
+    -e '/__ham_func3/d' \
+    -e '/_print$/d' \
+    -e '/_read$/d' > $t1
+
+find $d -name '*.in' -o -name '*.[ch]' -o -name '*.cpp' > $t2
+for i in `cat $t1`; do
+	c=$(egrep -Hlw $i $(cat $t2) | wc -l)
+	echo "$i: $c"
+done | egrep ' 1$' > $t3
+
+test -s $t3 && {
+	cat $t3
+	echo "FAIL: found unnecessary prototypes."
+	exit 1
+}
+
+exit 0

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Deadlock detection</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="lock.html" title="Chapter 15.  The Locking Subsystem" />
+    <link rel="prev" href="lock_stdmode.html" title="Standard lock modes" />
+    <link rel="next" href="lock_timeout.html" title="Deadlock detection using timers" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Deadlock detection</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="lock_stdmode.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 15. 
+        The Locking Subsystem
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="lock_timeout.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="lock_dead"></a>Deadlock detection</h2>
+          </div>
+        </div>
+      </div>
+      <p>Practically any application that uses locking may deadlock.  The
+exceptions to this rule are when all the threads of control accessing
+the database are read-only or when the Berkeley DB Concurrent Data Store product is used; the
+Berkeley DB Concurrent Data Store product guarantees deadlock-free operation at the expense of
+reduced concurrency.  While there are data access patterns that are
+deadlock free (for example, an application doing nothing but overwriting
+fixed-length records in an already existing database), they are
+extremely rare.</p>
+      <p>When a deadlock exists in the system, all the threads of control
+involved in the deadlock are, by definition, waiting on a lock.  The
+deadlock detector examines the state of the lock manager and identifies
+a deadlock, and selects one of the lock requests to reject.  (See
+<a class="xref" href="lock_config.html" title="Configuring locking">Configuring locking</a> for a
+discussion of how a participant is selected).  The <a href="../api_reference/C/lockget.html" class="olink">DB_ENV-&gt;lock_get()</a> or
+<a href="../api_reference/C/lockvec.html" class="olink">DB_ENV-&gt;lock_vec()</a> call for which the selected participant is waiting then
+returns a <a class="link" href="program_errorret.html#program_errorret.DB_LOCK_DEADLOCK">DB_LOCK_DEADLOCK</a> error.  When using the Berkeley DB access
+methods, this error return is propagated back through the Berkeley DB database
+handle method to the calling application.</p>
+      <p>The deadlock detector identifies deadlocks by looking for a cycle in
+what is commonly referred to as its "waits-for" graph.  More precisely,
+the deadlock detector reads through the lock table, and reviews each
+lock object currently locked.  Each object has lockers that currently
+hold locks on the object and possibly a list of lockers waiting for a
+lock on the object.  Each object's list of waiting lockers defines a
+partial ordering.  That is, for a particular object, every waiting
+locker comes after every holding locker because that holding locker must
+release its lock before the waiting locker can make forward progress.
+Conceptually, after each object has been examined, the partial orderings
+are topologically sorted.  If this topological sort reveals any cycles,
+the lockers forming the cycle are involved in a deadlock.  One of the
+lockers is selected for rejection.</p>
+      <p>It is possible that rejecting a single lock request involved in a
+deadlock is not enough to allow other lockers to make forward progress.
+Unfortunately, at the time a lock request is selected for rejection,
+there is not enough information available to determine whether rejecting
+that single lock request will allow forward progress or not.  Because
+most applications have few deadlocks, Berkeley DB takes the conservative
+approach, rejecting as few requests as may be necessary to resolve the
+existing deadlocks.  In particular, for each unique cycle found in the
+waits-for graph described in the previous paragraph, only one lock
+request is selected for rejection.  However, if there are multiple
+cycles, one lock request from each cycle is selected for rejection.
+Only after the enclosing transactions have received the lock request
+rejection return and aborted their transactions can it be determined
+whether it is necessary to reject additional lock requests in order to
+allow forward progress.</p>
+      <p>The <a href="../api_reference/C/db_deadlock.html" class="olink">db_deadlock utility</a> performs deadlock detection by calling
+the underlying Berkeley DB <a href="../api_reference/C/lockdetect.html" class="olink">DB_ENV-&gt;lock_detect()</a> method at regular intervals
+(<a href="../api_reference/C/lockdetect.html" class="olink">DB_ENV-&gt;lock_detect()</a> runs a single iteration of the Berkeley DB deadlock
+detector).  Alternatively, applications can create their own deadlock
+utility or thread by calling the <a href="../api_reference/C/lockdetect.html" class="olink">DB_ENV-&gt;lock_detect()</a> method directly, or by
+using the <a href="../api_reference/C/envset_lk_detect.html" class="olink">DB_ENV-&gt;set_lk_detect()</a> method to configure Berkeley DB to
+automatically run the deadlock detector whenever there is a conflict
+over a lock.  The tradeoffs between using the <a href="../api_reference/C/lockdetect.html" class="olink">DB_ENV-&gt;lock_detect()</a> and
+<a href="../api_reference/C/envset_lk_detect.html" class="olink">DB_ENV-&gt;set_lk_detect()</a> methods is that automatic deadlock detection will
+resolve deadlocks more quickly (because the deadlock detector runs
+as soon as the lock request blocks), however, automatic deadlock
+detection often runs the deadlock detector when there is no need for
+it, and for applications with large numbers of locks and/or where many
+operations block temporarily on locks but are soon able to proceed,
+automatic detection can decrease performance.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="lock_stdmode.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="lock.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="lock_timeout.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Standard lock modes </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Deadlock detection using timers</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

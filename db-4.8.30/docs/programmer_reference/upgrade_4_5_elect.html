@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Release 4.5: DB_ENV-&gt;rep_elect</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB Programmer's Reference Guide" />
+    <link rel="up" href="upgrade_4_5_toc.html" title="Chapter 42. Upgrading Berkeley DB 4.4 applications to Berkeley DB 4.5" />
+    <link rel="prev" href="upgrade_4_5_alive.html" title="Release 4.5: DB-&gt;set_isalive" />
+    <link rel="next" href="upgrade_4_5_rep_set.html" title="Release 4.5: Replication method naming" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Release 4.5: DB_ENV-&gt;rep_elect</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="upgrade_4_5_alive.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 42. Upgrading Berkeley DB 4.4 applications to Berkeley DB 4.5</th>
+          <td width="20%" align="right"> <a accesskey="n" href="upgrade_4_5_rep_set.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="upgrade_4_5_elect"></a>Release 4.5: DB_ENV-&gt;rep_elect</h2>
+          </div>
+        </div>
+      </div>
+      <p>Two of the historic arguments for the <a href="../api_reference/C/repelect.html" class="olink">DB_ENV-&gt;rep_elect()</a> method have been moved
+from the interface to separate methods in order to make them available
+within the new replication manager framework.</p>
+      <p>The <span class="bold"><strong>priority</strong></span> parameter should now be explicitly set using the
+<a href="../api_reference/C/reppriority.html" class="olink">DB_ENV-&gt;rep_set_priority()</a> method.  To upgrade existing replication applications
+to the Berkeley DB 4.5 <a href="../api_reference/C/repelect.html" class="olink">DB_ENV-&gt;rep_elect()</a> interface, it may be simplest to
+insert a call to <a href="../api_reference/C/reppriority.html" class="olink">DB_ENV-&gt;rep_set_priority()</a> immediately before the
+existing call to <a href="../api_reference/C/repelect.html" class="olink">DB_ENV-&gt;rep_elect()</a>.  Alternatively, it may make more
+sense to add a single call to <a href="../api_reference/C/reppriority.html" class="olink">DB_ENV-&gt;rep_set_priority()</a> during database
+environment configuration.</p>
+      <p>The <span class="bold"><strong>timeout</strong></span> parameter should now be explicitly set using the
+<a href="../api_reference/C/repset_timeout.html" class="olink">DB_ENV-&gt;rep_set_timeout()</a> method.  To upgrade existing replication applications
+to the Berkeley DB 4.5 <a href="../api_reference/C/repelect.html" class="olink">DB_ENV-&gt;rep_elect()</a> interface, it may be simplest to
+insert a call to <a href="../api_reference/C/repset_timeout.html" class="olink">DB_ENV-&gt;rep_set_timeout()</a> immediately before the existing
+call to <a href="../api_reference/C/repelect.html" class="olink">DB_ENV-&gt;rep_elect()</a>.  Alternatively, it may make more sense to add
+a single call to <a href="../api_reference/C/repset_timeout.html" class="olink">DB_ENV-&gt;rep_set_timeout()</a> during database environment
+configuration.</p>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="upgrade_4_5_alive.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="upgrade_4_5_toc.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="upgrade_4_5_rep_set.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Release 4.5: DB-&gt;set_isalive </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Release 4.5: Replication method naming</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

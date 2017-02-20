@@ -1,0 +1,14 @@
+# Makefile for building db_sql generated code on Windows.
+
+!include <win32.mak>
+
+bdb_dir = "../../build_windows"
+
+all: sample.exe
+
+.c.obj:
+	$(cc) $(cdebug) $(cflags) $(cvars) /I$(bdb_dir) $*.c
+
+sample.exe: sample.obj sample_verify.obj
+	$(link) $(ldebug) $(conflags) -out:sample.exe sample.obj sample_verify.obj $(conlibs) /LIBPATH:$(bdb_dir)/Win32/Debug libdb48d.lib
+

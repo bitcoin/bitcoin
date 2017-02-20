@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>DB_ENV-&gt;set_feedback()</title>
+    <link rel="stylesheet" href="apiReference.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Berkeley DB C API Reference" />
+    <link rel="up" href="env.html" title="Chapter 5.  The DB_ENV Handle" />
+    <link rel="prev" href="envset_errpfx.html" title="DB_ENV-&gt;set_errpfx()" />
+    <link rel="next" href="envset_flags.html" title="DB_ENV-&gt;set_flags()" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">DB_ENV-&gt;set_feedback()</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="envset_errpfx.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 5. 
+                The DB_ENV Handle
+        </th>
+          <td width="20%" align="right"> <a accesskey="n" href="envset_flags.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="envset_feedback"></a>DB_ENV-&gt;set_feedback()</h2>
+          </div>
+        </div>
+      </div>
+      <pre class="programlisting">#include &lt;db.h&gt;
+
+int
+DB_ENV-&gt;set_feedback(DB_ENV *dbenv,
+    void (*db_feedback_fcn)(DB_ENV *dbenv, int opcode, int percent));  </pre>
+      <p>
+         Some operations performed by the Berkeley DB library can take
+         non-trivial amounts of time.  The <code class="methodname">DB_ENV-&gt;set_feedback()</code> method can
+         be used by applications to monitor progress within these operations. 
+         When an operation is likely to take a long time, Berkeley DB will call
+         the specified callback function with progress information.
+    </p>
+      <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;">
+        <h3 class="title">Note</h3>
+        <p>
+                    Berkeley DB is not re-entrant. Callback functions should not attempt to make library calls (for
+                    example, to release locks or close open handles). Re-entering Berkeley DB is not guaranteed to work
+                    correctly, and the results are undefined.
+            </p>
+      </div>
+      <p>
+         It is up to the callback function to display this information in an
+         appropriate manner.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;set_feedback()</code> method configures operations performed
+         using the specified <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  handle.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;set_feedback()</code> method may be called at any time during
+         the life of the application.
+    </p>
+      <p>
+         The <code class="methodname">DB_ENV-&gt;set_feedback()</code> method returns a non-zero error value on
+         failure and 0 on success.
+    </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1669110"></a>Parameters</h3>
+            </div>
+          </div>
+        </div>
+        <div class="sect3" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h4 class="title"><a id="id1669034"></a>db_feedback_fcn</h4>
+              </div>
+            </div>
+          </div>
+          <p>
+                          The <span class="bold"><strong>db_feedback_fcn</strong></span> parameter is the
+                          application-specified feedback function called to report Berkeley DB
+                          operation progress.  The callback function must take three parameters:
+                     </p>
+          <div class="itemizedlist">
+            <ul type="disc">
+              <li>
+                <p>
+                     <code class="literal">dbenv</code>
+            </p>
+                <p>
+                 The <span class="bold"><strong>dbenv</strong></span> parameter is a reference to
+                 the enclosing database environment.
+            </p>
+              </li>
+              <li>
+                <p>
+                <code class="literal">opcode</code>
+            </p>
+                <p>
+                 The <span class="bold"><strong>opcode</strong></span> parameter is an operation
+                 code.  The <span class="bold"><strong>opcode</strong></span> parameter may take
+                 on any of the following values:
+            </p>
+                <div class="itemizedlist">
+                  <ul type="circle">
+                    <li>
+                      <p><a id="set_feedback_DB_RECOVER"></a>
+                                 <code class="literal">DB_RECOVER</code>
+                            </p>
+                      <p>
+                                The environment is being recovered.
+                            </p>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li>
+                <p>
+                <code class="literal">percent</code>
+            </p>
+                <p>
+                 The <span class="bold"><strong>percent</strong></span> parameter is the percent
+                 of the operation that has been completed, specified as an integer
+                 value between 0 and 100.
+            </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1669273"></a>Class</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                <a class="link" href="env.html" title="Chapter 5.  The DB_ENV Handle">DB_ENV</a>  
+            </p>
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="id1669385"></a>See Also</h3>
+            </div>
+          </div>
+        </div>
+        <p>
+                     <a class="xref" href="env.html#envlist" title="Database Environments and Related Methods">Database Environments and Related Methods</a> 
+                </p>
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="envset_errpfx.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="env.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="envset_flags.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">DB_ENV-&gt;set_errpfx() </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> DB_ENV-&gt;set_flags()</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

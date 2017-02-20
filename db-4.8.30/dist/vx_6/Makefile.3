@@ -1,0 +1,34 @@
+-include $(DEP_FILES)
+
+-include $(PRJ_ROOT_DIR)/*.makefile
+
+-include *.makefile
+
+main_all : external_build $(PROJECT_TARGETS)
+	@echo "make: built targets of `pwd`"
+
+# entry point for extending the build
+external_build ::
+	@echo ""
+
+# main entry point for pre processing prior to the build
+pre_build :: $(PRE_BUILD_STEP) generate_sources
+	@echo ""
+
+# entry point for generating sources prior to the build
+generate_sources ::
+	@echo ""
+
+# main entry point for post processing after the build
+post_build :: $(POST_BUILD_STEP) deploy_output
+	@echo ""
+
+# entry point for deploying output after the build
+deploy_output ::
+	@echo ""
+
+clean :: external_clean $(CLEAN_STEP) _clean
+
+# entry point for extending the build clean
+external_clean ::
+	@echo ""

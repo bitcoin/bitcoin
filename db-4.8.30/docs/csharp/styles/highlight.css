@@ -1,0 +1,27 @@
+.highlight-inline { color: #000066; font-size: 9pt; font-family: Consolas, "Courier New", Courier, monospace; }
+.highlight-pre { clear: both; width: 99.5%; background-color: #EFEFF7; padding: 0.4em; font-size: 9pt; font-family: Consolas, "Courier New", Courier, monospace; margin-top: 0px; margin-bottom: 1em; }
+.highlight-comment { color: #006633; }
+.highlight-literal { color: #CC0000; }
+.highlight-number { color: #009966; }
+.highlight-keyword { color: #0000FF; }
+.highlight-preprocessor { color: #996666; }
+.highlight-xml-tag { color: #AA4400 }
+.highlight-xml-bracket { color: #0000FF }
+.highlight-xml-comment { color: #008800 }
+.highlight-xml-cdata { color: #AA0088 }
+.highlight-xml-attribute-name { color: #0000FF }
+.highlight-xml-attribute-equal { color: #000000 }
+.highlight-xml-attribute-value {color: #CC0000 }
+.highlight-title { font-weight: bold; margin-top: 1em; margin-bottom: 2px; border-bottom: gray 1px solid; padding-bottom: 3px; }
+.highlight-copycode { float: right; padding-right: 10px; font-weight: normal; cursor: pointer; }
+.highlight-copycode_h { float: right; padding-right: 10px; font-weight: normal; cursor: pointer; text-decoration: underline}
+.highlight-lineno { font-size: 80%; color: black }
+.highlight-lnborder { border-right-style: solid; border-right-width: 1px; border-color: gray; padding-right: 4px; margin-right: 4px; width: 4px;}
+.highlight-spacer { padding-right: 20px; }
+.highlight-spacerShort { padding-right: 5px; }
+.highlight-collapsebox { cursor: pointer; color: black; text-align: center; border-style: solid; border-width: 1px; border-color: gray; margin-left: 2px; margin-right: 5px; }
+.highlight-collapsed { border-style: solid; border-width: 1px; border-color: gray; margin: 2px; color: gray; }
+.highlight-expanded { border-left-style: solid; border-left-width: 1px; border-color: gray; margin-left: 2px; margin-right: 10px; }
+.highlight-endblock { border-left-style: solid; border-left-width: 1px; border-bottom-style: solid; border-bottom-width: 1px; border-color: gray; margin-left: 2px; margin-right: 10px; }
+.highlight-pshell-cmdlet { color: #5A9EA5; font-weight: bold; }
+.highlight-namespace { color: #008284; }

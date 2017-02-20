@@ -1,0 +1,513 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Secondary Database Example</title>
+    <link rel="stylesheet" href="gettingStarted.css" type="text/css" />
+    <meta name="generator" content="DocBook XSL Stylesheets V1.73.2" />
+    <link rel="start" href="index.html" title="Getting Started with Berkeley DB" />
+    <link rel="up" href="indexes.html" title="Chapter 10. Secondary Databases" />
+    <link rel="prev" href="joins.html" title="Database Joins" />
+    <link rel="next" href="dbconfig.html" title="Chapter 11. Database Configuration" />
+  </head>
+  <body>
+    <div class="navheader">
+      <table width="100%" summary="Navigation header">
+        <tr>
+          <th colspan="3" align="center">Secondary Database Example</th>
+        </tr>
+        <tr>
+          <td width="20%" align="left"><a accesskey="p" href="joins.html">Prev</a> </td>
+          <th width="60%" align="center">Chapter 10. Secondary Databases</th>
+          <td width="20%" align="right"> <a accesskey="n" href="dbconfig.html">Next</a></td>
+        </tr>
+      </table>
+      <hr />
+    </div>
+    <div class="sect1" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h2 class="title" style="clear: both"><a id="javaindexusage"></a>Secondary Database Example</h2>
+          </div>
+        </div>
+      </div>
+      <div class="toc">
+        <dl>
+          <dt>
+            <span class="sect2">
+              <a href="javaindexusage.html#secondaryMyDbs">Opening Secondary Databases with MyDbs</a>
+            </span>
+          </dt>
+          <dt>
+            <span class="sect2">
+              <a href="javaindexusage.html#exampleReadJavaSecondaries">Using Secondary Databases with ExampleDatabaseRead</a>
+            </span>
+          </dt>
+        </dl>
+      </div>
+      <p>In previous chapters in this book, we built applications that load
+    and display several DB databases. In this example, we will extend those
+    examples to use secondary databases. Specifically:</p>
+      <div class="itemizedlist">
+        <ul type="disc">
+          <li>
+            <p>In <a class="xref" href="dbtJavaUsage.html#dbsStoredClass" title="Example 8.4 Stored Class Catalog Management with MyDbs">Stored Class Catalog Management with MyDbs</a> we built a
+        class that we can use to open several <code class="classname">Database</code> objects.
+        In <a class="xref" href="javaindexusage.html#secondaryMyDbs" title="Opening Secondary Databases with MyDbs">Opening Secondary Databases with MyDbs</a> we will extend 
+        that class to also open and manage a <code class="classname">SecondaryDatabase</code>.
+        </p>
+          </li>
+          <li>
+            <p>In <a class="xref" href="cursorJavaUsage.html" title="Cursor Example">Cursor Example</a> we
+        built an application to display our inventory database (and related
+        vendor information). In <a class="xref" href="javaindexusage.html#exampleReadJavaSecondaries" title="Using Secondary Databases with ExampleDatabaseRead">Using Secondary Databases with ExampleDatabaseRead</a> we will extend that application to
+        show inventory records based on the index we cause to be loaded using
+        <code class="classname">ExampleDatabaseLoad</code>.
+        </p>
+          </li>
+        </ul>
+      </div>
+      <p>
+            Before we can use a secondary database, we must implement a class to extract secondary keys for us. 
+            We use <code class="classname">ItemNameKeyCreator</code> for this purpose.
+        </p>
+      <div class="example">
+        <a id="ItemNameKeyCreator-Java"></a>
+        <p class="title">
+          <b>Example 10.1 ItemNameKeyCreator.java</b>
+        </p>
+        <div class="example-contents">
+          <p>
+        This class assumes the primary database
+        uses <code class="classname">Inventory</code> objects for the record data. The
+        <code class="classname">Inventory</code> class is described in <a class="xref" href="dbtJavaUsage.html#inventoryjava" title="Example 8.1 Inventory.java">Inventory.java</a>.</p>
+          <p>In our key creator class, we make use of a custom tuple binding
+        called <code class="classname">InventoryBinding</code>. This class is described in <a class="xref" href="dbtJavaUsage.html#InventoryJavaBinding" title="Example 8.3 InventoryBinding.java">InventoryBinding.java</a>.</p>
+          <p>You can find <code class="filename">InventoryBinding.java</code> in: </p>
+          <pre class="programlisting"><span class="emphasis"><em>DB_INSTALL</em></span>/examples_java/db/GettingStarted</pre>
+          <p>
+        where <code class="literal"><span class="emphasis"><em>DB_INSTALL</em></span></code> is the location where you
+        placed your DB distribution.
+    </p>
+          <a id="java_index11"></a>
+          <pre class="programlisting">package db.GettingStarted;
+
+import com.sleepycat.db.DatabaseEntry;
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.SecondaryDatabase;
+import com.sleepycat.db.SecondaryKeyCreator;
+import com.sleepycat.bind.tuple.TupleBinding;
+
+import java.io.IOException;
+
+public class ItemNameKeyCreator implements SecondaryKeyCreator {
+
+    private TupleBinding theBinding;
+
+    // Use the constructor to set the tuple binding
+    ItemNameKeyCreator(TupleBinding binding) {
+        theBinding = binding;
+    }
+
+    // Abstract method that we must implement
+    public boolean createSecondaryKey(SecondaryDatabase secDb,
+        DatabaseEntry keyEntry,    // From the primary
+        DatabaseEntry dataEntry,   // From the primary
+        DatabaseEntry resultEntry) // set the key data on this.
+        throws DatabaseException {
+
+        try {
+            // Convert dataEntry to an Inventory object
+            Inventory inventoryItem = 
+                (Inventory) theBinding.entryToObject(dataEntry);
+            // Get the item name and use that as the key
+            String theItem = inventoryItem.getItemName();
+            resultEntry.setData(theItem.getBytes("UTF-8"));
+        } catch (IOException willNeverOccur) {}
+
+        return true;
+    }
+} </pre>
+        </div>
+      </div>
+      <br class="example-break" />
+      <p>
+            Now that we have a key creator, we can use it to generate keys for a
+            secondary database. We will now extend <code class="classname">MyDbs</code>
+            to manage a secondary database, and to use
+            <code class="classname">ItemNameKeyCreator</code> to generate keys for that
+            secondary database.
+      </p>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="secondaryMyDbs"></a>Opening Secondary Databases with MyDbs</h3>
+            </div>
+          </div>
+        </div>
+        <p>In <a class="xref" href="dbtJavaUsage.html#dbsStoredClass" title="Example 8.4 Stored Class Catalog Management with MyDbs">Stored Class Catalog Management with MyDbs</a> we built
+      <code class="classname">MyDbs</code> as an example of a class that
+      encapsulates 
+      <code class="classname">Database</code> opens and closes. We will now extend
+      that class to manage a <code class="classname">SecondaryDatabase</code>.</p>
+        <div class="example">
+          <a id="mydbsSecondary"></a>
+          <p class="title">
+            <b>Example 10.2 SecondaryDatabase Management with MyDbs</b>
+          </p>
+          <div class="example-contents">
+            <p>
+            We start by importing two additional classes needed to support secondary databases. 
+            We also add a global variable to use as a handle for our secondary database.
+        </p>
+            <a id="java_index12"></a>
+            <pre class="programlisting">// File MyDbs.java
+package db.GettingStarted;
+                                                                                                                                       
+import java.io.FileNotFoundException;
+                                                                                                                                       
+import com.sleepycat.bind.serial.StoredClassCatalog;
+import com.sleepycat.bind.tuple.TupleBinding;
+import com.sleepycat.db.Database;
+import com.sleepycat.db.DatabaseConfig;
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.DatabaseType;
+<strong class="userinput"><code>import com.sleepycat.db.SecondaryConfig;
+import com.sleepycat.db.SecondaryDatabase;</code></strong>
+
+public class MyDbs {
+
+    // The databases that our application uses
+    private Database vendorDb = null;
+    private Database inventoryDb = null;
+    private Database classCatalogDb = null;
+    <strong class="userinput"><code>private SecondaryDatabase itemNameIndexDb = null;</code></strong>
+
+    private String vendordb = "VendorDB.db";
+    private String inventorydb = "InventoryDB.db";
+    private String classcatalogdb = "ClassCatalogDB.db";
+    <strong class="userinput"><code>private String itemnameindexdb = "ItemNameIndexDB.db";</code></strong>
+
+    // Needed for object serialization
+    private StoredClassCatalog classCatalog;
+
+    // Our constructor does nothing
+    public MyDbs() {} </pre>
+            <p>
+        Next we update the <code class="methodname">MyDbs.setup()</code> method to open the 
+        secondary database. As a part of this, we have to pass an 
+        <code class="classname">ItemNameKeyCreator</code> object on the call to open the secondary
+        database. Also, in order to instantiate <code class="classname">ItemNameKeyCreator</code>, we need an
+        <code class="classname">InventoryBinding</code> object (we described this class in 
+            <a class="xref" href="dbtJavaUsage.html#InventoryJavaBinding" title="Example 8.3 InventoryBinding.java">InventoryBinding.java</a>). 
+        We do all this work together inside of <code class="methodname">MyDbs.setup()</code>.
+    </p>
+            <a id="java_index13"></a>
+            <pre class="programlisting">    public void setup(String databasesHome)
+        throws DatabaseException {
+        DatabaseConfig myDbConfig = new DatabaseConfig();
+        <strong class="userinput"><code>SecondaryConfig mySecConfig = new SecondaryConfig();</code></strong>
+
+        myDbConfig.setErrorStream(System.err);
+        <strong class="userinput"><code>mySecConfig.setErrorStream(System.err);</code></strong>
+        myDbConfig.setErrorPrefix("MyDbs");
+        <strong class="userinput"><code>mySecConfig.setErrorPrefix("MyDbs");</code></strong>
+        myDbConfig.setType(DatabaseType.BTREE);
+        <strong class="userinput"><code>mySecConfig.setType(DatabaseType.BTREE);</code></strong>
+        myDbConfig.setAllowCreate(true);
+        <strong class="userinput"><code>mySecConfig.setAllowCreate(true);</code></strong>
+
+        // Now open, or create and open, our databases
+        // Open the vendors and inventory databases
+        try {
+            vendordb = databasesHome + "/" + vendordb;
+            vendorDb = new Database(vendordb,
+                                    null,
+                                    myDbConfig);
+
+            inventorydb = databasesHome + "/" + inventorydb;
+            inventoryDb = new Database(inventorydb,
+                                        null,
+                                        myDbConfig);
+
+            // Open the class catalog db. This is used to
+            // optimize class serialization.
+            classcatalogdb = databasesHome + "/" + classcatalogdb;
+            classCatalogDb = new Database(classcatalogdb,
+                                          null,
+                                          myDbConfig);
+        } catch(FileNotFoundException fnfe) {
+            System.err.println("MyDbs: " + fnfe.toString());
+            System.exit(-1);
+        }
+
+        // Create our class catalog
+        classCatalog = new StoredClassCatalog(classCatalogDb);
+
+        // Need a tuple binding for the Inventory class.
+        // We use the InventoryBinding class
+        // that we implemented for this purpose.
+        TupleBinding inventoryBinding = new InventoryBinding();
+
+        <strong class="userinput"><code>// Open the secondary database. We use this to create a
+        // secondary index for the inventory database
+
+        // We want to maintain an index for the inventory entries based
+        // on the item name. So, instantiate the appropriate key creator
+        // and open a secondary database.
+        ItemNameKeyCreator keyCreator =
+            new ItemNameKeyCreator(new InventoryBinding());
+
+        // Set up additional secondary properties
+        // Need to allow duplicates for our secondary database
+        mySecConfig.setSortedDuplicates(true);
+        mySecConfig.setAllowPopulate(true); // Allow autopopulate
+        mySecConfig.setKeyCreator(keyCreator);
+        // Now open it
+        try {
+            itemnameindexdb = databasesHome + "/" + itemnameindexdb;
+            itemNameIndexDb = new SecondaryDatabase(itemnameindexdb,
+                                                    null,
+                                                    inventoryDb,
+                                                    mySecConfig);
+        } catch(FileNotFoundException fnfe) {
+            System.err.println("MyDbs: " + fnfe.toString());
+            System.exit(-1);
+        }</code></strong>
+    }
+    </pre>
+            <p>
+        Next we need an additional getter method for returning the secondary database.
+    </p>
+            <a id="java_index14"></a>
+            <pre class="programlisting">    public SecondaryDatabase getNameIndexDB() {
+        return itemNameIndexDb;
+    } </pre>
+            <p>Finally, we need to update the <code class="methodname">MyDbs.close()</code>
+        method to close the new secondary database. We want to make sure that
+        the secondary is closed before the primaries. While
+        this is not necessary for this example because our
+        closes are single-threaded, it is still a good habit to adopt.</p>
+            <a id="java_index15"></a>
+            <pre class="programlisting">    public void close() {
+        try {
+            <strong class="userinput"><code>if (itemNameIndexDb != null) {
+                itemNameIndexDb.close();
+            }</code></strong>
+
+            if (vendorDb != null) {
+                vendorDb.close();
+            }
+
+            if (inventoryDb != null) {
+                inventoryDb.close();
+            }
+
+            if (classCatalogDb != null) {
+                classCatalogDb.close();
+            }
+
+        } catch(DatabaseException dbe) {
+            System.err.println("Error closing MyDbs: " +
+                                dbe.toString());
+            System.exit(-1);
+        }
+    }
+} </pre>
+            <p>That completes our update to <code class="classname">MyDbs</code>. You
+        can find the complete class implementation in:
+        </p>
+            <pre class="programlisting"><span class="emphasis"><em>DB_INSTALL</em></span>/examples_java/db/GettingStarted</pre>
+            <p>
+        where <code class="literal"><span class="emphasis"><em>DB_INSTALL</em></span></code> is the location where you
+        placed your DB distribution.
+    </p>
+          </div>
+        </div>
+        <br class="example-break" />
+      </div>
+      <div class="sect2" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h3 class="title"><a id="exampleReadJavaSecondaries"></a>Using Secondary Databases with ExampleDatabaseRead</h3>
+            </div>
+          </div>
+        </div>
+        <p>Because we performed all our secondary database configuration management in
+        <code class="classname">MyDbs</code>, we do not need to modify <code class="classname">ExampleDatabaseLoad</code> at all in
+        order to create our secondary indices. When <code class="classname">ExampleDatabaseLoad</code> calls 
+        <code class="methodname">MyDbs.setup()</code>, all of the necessary work is performed for us.
+        </p>
+        <p>
+            However, we still need to take advantage of the new secondary indices. We do this by updating 
+            <code class="classname">ExampleDatabaseRead</code> to allow us to query for an inventory record based on its name.
+            Remember that the primary key for an inventory record is the item's SKU. The item's name is contained in the 
+            <code class="classname">Inventory</code> object that is stored as each record's data in the inventory database. But
+            our new secondary index now allows us to easily query based on the item's name.
+        </p>
+        <p>
+        For this update, we modify
+        <code class="classname">ExampleDatabaseRead</code> to accept a new command line switch,
+        <code class="literal">-s</code>, whose argument is the name of an inventory item.
+        If the switch is present on the command line call to
+        <code class="classname">ExampleDatabaseRead</code>, then the application will
+        use the secondary database to look up and display all the inventory
+        records with that item name. Note that we use a <code class="classname">SecondaryCursor</code>
+        to seek to the item name key and then display all matching records.
+      </p>
+        <p>Remember that you can find <code class="filename">ExampleDatabaseRead.java</code> in: </p>
+        <pre class="programlisting"><span class="emphasis"><em>DB_INSTALL</em></span>/examples_java/db/GettingStarted</pre>
+        <p>
+        where <code class="literal"><span class="emphasis"><em>DB_INSTALL</em></span></code> is the location where you
+        placed your DB distribution.
+    </p>
+        <div class="example">
+          <a id="secondaryWithEDR"></a>
+          <p class="title">
+            <b>Example 10.3 SecondaryDatabase usage with ExampleDatabaseRead</b>
+          </p>
+          <div class="example-contents">
+            <p>
+            First we need to import an additional class in order to use the secondary cursor:
+        </p>
+            <a id="java_index16"></a>
+            <pre class="programlisting">package db.GettingStarted;
+
+import java.io.IOException;
+
+import com.sleepycat.bind.EntryBinding;
+import com.sleepycat.bind.serial.SerialBinding;
+import com.sleepycat.bind.tuple.TupleBinding;
+import com.sleepycat.db.Cursor;
+import com.sleepycat.db.DatabaseEntry;
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.LockMode;
+import com.sleepycat.db.OperationStatus;
+<strong class="userinput"><code>import com.sleepycat.db.SecondaryCursor;</code></strong> </pre>
+            <p>Next we add a single global variable:</p>
+            <a id="java_index17"></a>
+            <pre class="programlisting">    public class ExampleDatabaseRead {
+
+    private static String myDbsPath = "./";
+
+    // Encapsulates the database environment and databases.
+    private static MyDbs myDbs = new MyDbs();
+
+    private static TupleBinding inventoryBinding;
+    private static EntryBinding vendorBinding;
+
+    <strong class="userinput"><code>// The item to locate if the -s switch is used
+    private static String locateItem;</code></strong> </pre>
+            <p>Next we update <code class="methodname">ExampleDatabaseRead.run()</code> to
+        check to see if the <code class="literal">locateItem</code> global variable has a
+        value. If it does, then we show just those records related to the item
+        name passed on the <code class="literal">-s</code> switch.</p>
+            <a id="java_index18"></a>
+            <pre class="programlisting">    private void run(String args[]) 
+        throws DatabaseException {
+        // Parse the arguments list
+        parseArgs(args);
+
+        myDbs.setup(myDbsPath);
+
+        // Setup our bindings.
+        inventoryBinding = new InventoryBinding();
+        vendorBinding =
+             new SerialBinding(myDbs.getClassCatalog(),
+                               Vendor.class);
+
+            <strong class="userinput"><code>if (locateItem != null) {
+                showItem();
+            } else {</code></strong>
+                showAllInventory();
+            <strong class="userinput"><code>}</code></strong>
+    } </pre>
+            <p>
+            Finally, we need to implement <code class="methodname">ExampleDatabaseRead.showItem()</code>. 
+            This is a fairly simple method that opens a secondary cursor,
+            and then displays every primary record that is related to the secondary
+            key identified by the <code class="literal">locateItem</code> global variable.
+        </p>
+            <a id="java_index19"></a>
+            <pre class="programlisting">    private void showItem() throws DatabaseException {
+        SecondaryCursor secCursor = null;
+        try {
+            // searchKey is the key that we want to find in the
+            // secondary db.
+            DatabaseEntry searchKey =
+                new DatabaseEntry(locateItem.getBytes("UTF-8"));
+
+            // foundKey and foundData are populated from the primary
+            // entry that is associated with the secondary db key.
+            DatabaseEntry foundKey = new DatabaseEntry();
+            DatabaseEntry foundData = new DatabaseEntry();
+
+            // open a secondary cursor
+            secCursor =
+                myDbs.getNameIndexDB().openSecondaryCursor(null, null);
+
+            // Search for the secondary database entry.
+            OperationStatus retVal =
+                secCursor.getSearchKey(searchKey, foundKey,
+                    foundData, LockMode.DEFAULT);
+
+            // Display the entry, if one is found. Repeat until no more
+            // secondary duplicate entries are found
+            while(retVal == OperationStatus.SUCCESS) {
+                Inventory theInventory =
+                    (Inventory)inventoryBinding.entryToObject(foundData);
+                displayInventoryRecord(foundKey, theInventory);
+                retVal = secCursor.getNextDup(searchKey, foundKey,
+                    foundData, LockMode.DEFAULT);
+            }
+        } catch (Exception e) {
+            System.err.println("Error on inventory secondary cursor:");
+            System.err.println(e.toString());
+            e.printStackTrace();
+        } finally {
+            if (secCursor != null) {
+                secCursor.close();
+            }
+        }
+
+    }</pre>
+            <p>The only other thing left to do is to update 
+        <code class="methodname">ExampleDatabaseRead.parseArgs()</code> to support the <code class="literal">-s</code> command
+        line switch. To see how this is done, see
+        <code class="filename">ExampleDatabaseRead.java</code> in:
+        </p>
+            <pre class="programlisting"><span class="emphasis"><em>DB_INSTALL</em></span>/examples_java/db/GettingStarted</pre>
+            <p>
+        where <code class="literal"><span class="emphasis"><em>DB_INSTALL</em></span></code> is the location where you
+        placed your DB distribution.
+    </p>
+          </div>
+        </div>
+        <br class="example-break" />
+      </div>
+    </div>
+    <div class="navfooter">
+      <hr />
+      <table width="100%" summary="Navigation footer">
+        <tr>
+          <td width="40%" align="left"><a accesskey="p" href="joins.html">Prev</a> </td>
+          <td width="20%" align="center">
+            <a accesskey="u" href="indexes.html">Up</a>
+          </td>
+          <td width="40%" align="right"> <a accesskey="n" href="dbconfig.html">Next</a></td>
+        </tr>
+        <tr>
+          <td width="40%" align="left" valign="top">Database Joins </td>
+          <td width="20%" align="center">
+            <a accesskey="h" href="index.html">Home</a>
+          </td>
+          <td width="40%" align="right" valign="top"> Chapter 11. Database Configuration</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>
