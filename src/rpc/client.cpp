@@ -28,6 +28,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "stop", 0 },
     { "setmocktime", 0 },
     { "getaddednodeinfo", 0 },
+    { "setgenerate", 0 },
+    { "setgenerate", 1 },
     { "generate", 0 },
     { "generate", 1 },
     { "generatetoaddress", 0 },
@@ -162,3 +164,4 @@ UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::s
 
     return params;
 }
+
