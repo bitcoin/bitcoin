@@ -102,6 +102,7 @@ linux-coverage-build
 linux-build
 win32-build
 qa/pull-tester/tests_config.py
+qa/pull-tester/tests_config.ini
 qa/cache/*
 
 !src/leveldb*/Makefile
