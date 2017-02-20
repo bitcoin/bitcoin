@@ -1,0 +1,25 @@
+###################################################
+# EVERYTHING IN THIS FILE HEADER COPIED FROM dist/brew_makefile.in
+##################################################
+CC=		cc
+CFLAGS=         -c -g -W -Wall -Wpointer-arith -Wmissing-prototypes \
+		-I. -I.. -DDIAGNOSTIC
+
+.c.o:
+	$(CC) $(CFLAGS) $< -o $@
+
+a: t
+
+t: t.c libdb.a
+	$(CC) t.c -o t libdb.a
+
+t.c:
+	echo '#include <sys/types.h>' > $@
+	echo '#include <stdio.h>' >> $@
+	echo '#define	AEEApplet char' >> $@
+	echo '#include "db.h"' >> $@
+	echo 'int main() {' >> $@
+	echo '	DB_ENV *dbenv; db_env_create(&dbenv, 0); return (0); }' >> $@
+
+realclean distclean clean:
+	rm -f mklog t t.c tmp.c libdb.a *.o

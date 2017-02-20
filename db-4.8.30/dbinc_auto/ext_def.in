@@ -1,0 +1,60 @@
+
+/* DO NOT EDIT: automatically built by dist/s_include. */
+#ifndef	_DB_EXT_DEF_IN_
+#define	_DB_EXT_DEF_IN_
+
+#define	db_create db_create@DB_VERSION_UNIQUE_NAME@
+#define	db_strerror db_strerror@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_close db_env_set_func_close@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_dirfree db_env_set_func_dirfree@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_dirlist db_env_set_func_dirlist@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_exists db_env_set_func_exists@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_free db_env_set_func_free@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_fsync db_env_set_func_fsync@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_ftruncate db_env_set_func_ftruncate@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_ioinfo db_env_set_func_ioinfo@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_malloc db_env_set_func_malloc@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_file_map db_env_set_func_file_map@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_region_map db_env_set_func_region_map@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_pread db_env_set_func_pread@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_pwrite db_env_set_func_pwrite@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_open db_env_set_func_open@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_read db_env_set_func_read@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_realloc db_env_set_func_realloc@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_rename db_env_set_func_rename@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_seek db_env_set_func_seek@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_unlink db_env_set_func_unlink@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_write db_env_set_func_write@DB_VERSION_UNIQUE_NAME@
+#define	db_env_set_func_yield db_env_set_func_yield@DB_VERSION_UNIQUE_NAME@
+#define	db_env_create db_env_create@DB_VERSION_UNIQUE_NAME@
+#define	db_version db_version@DB_VERSION_UNIQUE_NAME@
+#define	log_compare log_compare@DB_VERSION_UNIQUE_NAME@
+#define	db_sequence_create db_sequence_create@DB_VERSION_UNIQUE_NAME@
+#if DB_DBM_HSEARCH != 0
+#define	__db_ndbm_clearerr __db_ndbm_clearerr@DB_VERSION_UNIQUE_NAME@
+#define	__db_ndbm_close __db_ndbm_close@DB_VERSION_UNIQUE_NAME@
+#define	__db_ndbm_delete __db_ndbm_delete@DB_VERSION_UNIQUE_NAME@
+#define	__db_ndbm_dirfno __db_ndbm_dirfno@DB_VERSION_UNIQUE_NAME@
+#define	__db_ndbm_error __db_ndbm_error@DB_VERSION_UNIQUE_NAME@
+#define	__db_ndbm_fetch __db_ndbm_fetch@DB_VERSION_UNIQUE_NAME@
+#define	__db_ndbm_firstkey __db_ndbm_firstkey@DB_VERSION_UNIQUE_NAME@
+#define	__db_ndbm_nextkey __db_ndbm_nextkey@DB_VERSION_UNIQUE_NAME@
+#define	__db_ndbm_open __db_ndbm_open@DB_VERSION_UNIQUE_NAME@
+#define	__db_ndbm_pagfno __db_ndbm_pagfno@DB_VERSION_UNIQUE_NAME@
+#define	__db_ndbm_rdonly __db_ndbm_rdonly@DB_VERSION_UNIQUE_NAME@
+#define	__db_ndbm_store __db_ndbm_store@DB_VERSION_UNIQUE_NAME@
+#define	__db_dbm_close __db_dbm_close@DB_VERSION_UNIQUE_NAME@
+#define	__db_dbm_delete __db_dbm_delete@DB_VERSION_UNIQUE_NAME@
+#define	__db_dbm_fetch __db_dbm_fetch@DB_VERSION_UNIQUE_NAME@
+#define	__db_dbm_firstkey __db_dbm_firstkey@DB_VERSION_UNIQUE_NAME@
+#define	__db_dbm_init __db_dbm_init@DB_VERSION_UNIQUE_NAME@
+#define	__db_dbm_nextkey __db_dbm_nextkey@DB_VERSION_UNIQUE_NAME@
+#define	__db_dbm_store __db_dbm_store@DB_VERSION_UNIQUE_NAME@
+#endif
+#if DB_DBM_HSEARCH != 0
+#define	__db_hcreate __db_hcreate@DB_VERSION_UNIQUE_NAME@
+#define	__db_hsearch __db_hsearch@DB_VERSION_UNIQUE_NAME@
+#define	__db_hdestroy __db_hdestroy@DB_VERSION_UNIQUE_NAME@
+#endif
+
+#endif /* !_DB_EXT_DEF_IN_ */

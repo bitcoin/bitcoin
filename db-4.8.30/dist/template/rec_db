@@ -1,0 +1,1047 @@
+#include "db_config.h"
+
+#include "db_int.h"
+#include "dbinc/db_page.h"
+#include "dbinc/__db.h"
+#include "dbinc/log.h"
+
+/*
+ * __db_addrem_recover --
+ *	Recovery function for addrem.
+ *
+ * PUBLIC: int __db_addrem_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__db_addrem_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__db_addrem_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__db_addrem_print);
+	REC_INTRO(__db_addrem_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+
+/*
+ * __db_big_recover --
+ *	Recovery function for big.
+ *
+ * PUBLIC: int __db_big_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__db_big_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__db_big_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__db_big_print);
+	REC_INTRO(__db_big_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+
+/*
+ * __db_ovref_recover --
+ *	Recovery function for ovref.
+ *
+ * PUBLIC: int __db_ovref_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__db_ovref_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__db_ovref_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__db_ovref_print);
+	REC_INTRO(__db_ovref_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+
+/*
+ * __db_relink_recover --
+ *	Recovery function for relink.
+ *
+ * PUBLIC: int __db_relink_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__db_relink_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__db_relink_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__db_relink_print);
+	REC_INTRO(__db_relink_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+
+/*
+ * __db_debug_recover --
+ *	Recovery function for debug.
+ *
+ * PUBLIC: int __db_debug_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__db_debug_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__db_debug_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__db_debug_print);
+	REC_INTRO(__db_debug_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+
+/*
+ * __db_noop_recover --
+ *	Recovery function for noop.
+ *
+ * PUBLIC: int __db_noop_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__db_noop_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__db_noop_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__db_noop_print);
+	REC_INTRO(__db_noop_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+
+/*
+ * __db_pg_alloc_recover --
+ *	Recovery function for pg_alloc.
+ *
+ * PUBLIC: int __db_pg_alloc_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__db_pg_alloc_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__db_pg_alloc_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__db_pg_alloc_print);
+	REC_INTRO(__db_pg_alloc_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+
+/*
+ * __db_pg_alloc_recover --
+ *	Recovery function for pg_alloc.
+ *
+ * PUBLIC: int __db_pg_alloc_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__db_pg_alloc_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__db_pg_alloc_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__db_pg_alloc_print);
+	REC_INTRO(__db_pg_alloc_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+
+/*
+ * __db_pg_free_recover --
+ *	Recovery function for pg_free.
+ *
+ * PUBLIC: int __db_pg_free_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__db_pg_free_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__db_pg_free_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__db_pg_free_print);
+	REC_INTRO(__db_pg_free_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+
+/*
+ * __db_pg_free_recover --
+ *	Recovery function for pg_free.
+ *
+ * PUBLIC: int __db_pg_free_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__db_pg_free_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__db_pg_free_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__db_pg_free_print);
+	REC_INTRO(__db_pg_free_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+
+/*
+ * __db_cksum_recover --
+ *	Recovery function for cksum.
+ *
+ * PUBLIC: int __db_cksum_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__db_cksum_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__db_cksum_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__db_cksum_print);
+	REC_INTRO(__db_cksum_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+
+/*
+ * __db_pg_freedata_recover --
+ *	Recovery function for pg_freedata.
+ *
+ * PUBLIC: int __db_pg_freedata_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__db_pg_freedata_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__db_pg_freedata_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__db_pg_freedata_print);
+	REC_INTRO(__db_pg_freedata_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+
+/*
+ * __db_pg_freedata_recover --
+ *	Recovery function for pg_freedata.
+ *
+ * PUBLIC: int __db_pg_freedata_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__db_pg_freedata_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__db_pg_freedata_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__db_pg_freedata_print);
+	REC_INTRO(__db_pg_freedata_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+
+/*
+ * __db_pg_init_recover --
+ *	Recovery function for pg_init.
+ *
+ * PUBLIC: int __db_pg_init_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__db_pg_init_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__db_pg_init_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__db_pg_init_print);
+	REC_INTRO(__db_pg_init_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+
+/*
+ * __db_pg_sort_recover --
+ *	Recovery function for pg_sort.
+ *
+ * PUBLIC: int __db_pg_sort_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__db_pg_sort_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__db_pg_sort_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__db_pg_sort_print);
+	REC_INTRO(__db_pg_sort_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+
+/*
+ * __db_pg_trunc_recover --
+ *	Recovery function for pg_trunc.
+ *
+ * PUBLIC: int __db_pg_trunc_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__db_pg_trunc_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__db_pg_trunc_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__db_pg_trunc_print);
+	REC_INTRO(__db_pg_trunc_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+

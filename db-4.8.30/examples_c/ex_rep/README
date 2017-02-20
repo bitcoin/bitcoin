@@ -1,0 +1,19 @@
+# $Id$
+
+This is the parent directory for the replication example programs.
+
+The example is a toy stock quote server.  There are two versions of
+the program: one version uses Berkeley DB's Replication Manager
+support, and the other uses the base replication API.
+
+common/		Contains code to implement the basic functions of the
+                application, to demonstrate that these are largely
+                independent of which replication API is used.
+
+mgr/            Contains the small amount of code necessary to
+                configure the application to use Replication Manager.
+
+base/           Contains the sample communications infrastructure, and
+                other replication support code, to demonstrate some of
+                the kinds of things that are necessary when using the
+                base replication API.

@@ -1,0 +1,291 @@
+/*-
+ * See the file LICENSE for redistribution information.
+ *
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
+ *
+ * $Id$
+ */
+
+DBPRIVATE
+PREFIX	__bam
+
+INCLUDE #include "db_int.h"
+INCLUDE #include "dbinc/crypto.h"
+INCLUDE #include "dbinc/db_page.h"
+INCLUDE #include "dbinc/db_am.h"
+INCLUDE #include "dbinc/btree.h"
+INCLUDE #include "dbinc/log.h"
+INCLUDE #include "dbinc/txn.h"
+INCLUDE
+
+/*
+ * BTREE-split: used to log a page split.
+ *
+ * left:	the page number for the low-order contents.
+ * llsn:	the left page's original LSN.
+ * right:	the page number for the high-order contents.
+ * rlsn:	the right page's original LSN.
+ * indx:	the number of entries that went to the left page.
+ * npgno:	the next page number
+ * nlsn:	the next page's original LSN (or 0 if no next page).
+ * pgno:	the parent page number
+ * plsn:	the parent page's original LSN.
+ * pg:		the split page's contents before the split.
+ * opflags:	SPL_NRECS: if splitting a tree that maintains a record count.
+ * pindx:	index of new record in parent page.
+ */
+BEGIN split		48	62
+DB	fileid		int32_t		ld
+ARG	left		db_pgno_t	lu
+POINTER	llsn		DB_LSN *	lu
+ARG	right		db_pgno_t	lu
+POINTER	rlsn		DB_LSN *	lu
+ARG	indx		u_int32_t	lu
+ARG	npgno		db_pgno_t	lu
+POINTER	nlsn		DB_LSN *	lu
+ARG	ppgno		db_pgno_t	lu
+POINTER	plsn		DB_LSN *	lu
+ARG	pindx		u_int32_t	lu
+PGDBT	pg		DBT		s
+DBT	pentry		DBT		s
+DBT	rentry		DBT		s
+ARG	opflags		u_int32_t	lu
+END
+
+BEGIN_COMPAT split	42	62
+DB	fileid		int32_t		ld
+ARG	left		db_pgno_t	lu
+POINTER	llsn		DB_LSN *	lu
+ARG	right		db_pgno_t	lu
+POINTER	rlsn		DB_LSN *	lu
+ARG	indx		u_int32_t	lu
+ARG	npgno		db_pgno_t	lu
+POINTER	nlsn		DB_LSN *	lu
+ARG	root_pgno	db_pgno_t	lu
+PGDBT	pg		DBT		s
+ARG	opflags		u_int32_t	lu
+END
+
+/*
+ * BTREE-rsplit: used to log a reverse-split
+ *
+ * pgno:	the page number of the page copied over the root.
+ * pgdbt:	the page being copied on the root page.
+ * root_pgno:	the root page number.
+ * nrec:	the tree's record count.
+ * rootent:	last entry on the root page.
+ * rootlsn:	the root page's original lsn.
+ */
+BEGIN rsplit		42	63
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+PGDBT	pgdbt		DBT		s
+ARG	root_pgno	db_pgno_t	lu
+ARG	nrec		db_pgno_t	lu
+DBT	rootent		DBT		s
+POINTER rootlsn		DB_LSN *	lu
+END
+
+/*
+ * BTREE-adj: used to log the adjustment of an index.
+ *
+ * pgno:	the page modified.
+ * lsn:		the page's original lsn.
+ * indx:	the index adjusted.
+ * indx_copy:	the index to copy if inserting.
+ * is_insert:	0 if a delete, 1 if an insert.
+ */
+BEGIN adj		42	55
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+POINTER	lsn		DB_LSN *	lu
+ARG	indx		u_int32_t	lu
+ARG	indx_copy	u_int32_t	lu
+ARG	is_insert	u_int32_t	lu
+END
+
+/*
+ * BTREE-cadjust: used to adjust the count change in an internal page.
+ *
+ * pgno:	the page modified.
+ * lsn:		the page's original lsn.
+ * indx:	the index to be adjusted.
+ * adjust:	the signed adjustment.
+ * opflags:	CAD_UPDATEROOT: if root page count was adjusted.
+ */
+BEGIN cadjust		42	56
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+POINTER	lsn		DB_LSN *	lu
+ARG	indx		u_int32_t	lu
+ARG	adjust		int32_t		ld
+ARG	opflags		u_int32_t	lu
+END
+
+/*
+ * BTREE-cdel: used to log the intent-to-delete of a cursor record.
+ *
+ * pgno:	the page modified.
+ * lsn:		the page's original lsn.
+ * indx:	the index to be deleted.
+ */
+BEGIN cdel		42	57
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+POINTER	lsn		DB_LSN *	lu
+ARG	indx		u_int32_t	lu
+END
+
+/*
+ * BTREE-repl: used to log the replacement of an item.
+ *
+ * pgno:	the page modified.
+ * lsn:		the page's original lsn.
+ * indx:	the index to be replaced.
+ * isdeleted:	set if the record was previously deleted.
+ * orig:	the original data.
+ * repl:	the replacement data.
+ * prefix:	the prefix of the replacement that matches the original.
+ * suffix:	the suffix of the replacement that matches the original.
+ */
+BEGIN repl		42	58
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+POINTER	lsn		DB_LSN *	lu
+ARG	indx		u_int32_t	lu
+ARG	isdeleted	u_int32_t	lu
+DBT	orig		DBT		s
+DBT	repl		DBT		s
+ARG	prefix		u_int32_t	lu
+ARG	suffix		u_int32_t	lu
+END
+
+/*
+ * BTREE-root: log the assignment of a root btree page.
+ */
+BEGIN root		42	59
+DB	fileid		int32_t		ld
+ARG	meta_pgno	db_pgno_t	lu
+ARG	root_pgno	db_pgno_t	lu
+POINTER	meta_lsn	DB_LSN *	lu
+END
+
+/*
+ * BTREE-curadj: undo cursor adjustments on txn abort.
+ *     Should only be processed during DB_TXN_ABORT.
+ * NOTE: the first_indx field gets used to hold
+ *	signed index adjustment in one case.
+ *	care should be taken if its size is changed.
+ */
+BEGIN curadj		42	64
+/* Fileid of db affected. */
+DB	fileid		int32_t		ld
+/* Which adjustment. */
+ARG	mode		db_ca_mode	ld
+/* Page entry is from. */
+ARG	from_pgno	db_pgno_t	lu
+/* Page entry  went to. */
+ARG	to_pgno		db_pgno_t	lu
+/* Left page of root split. */
+ARG	left_pgno	db_pgno_t	lu
+/* First index of dup set. Also used as adjustment. */
+ARG	first_indx	u_int32_t	lu
+/* Index entry is from. */
+ARG	from_indx	u_int32_t	lu
+/* Index where entry went. */
+ARG	to_indx		u_int32_t	lu
+END
+
+/*
+ * BTREE-rcuradj: undo cursor adjustments on txn abort in
+ *     renumbering recno trees.
+ *     Should only be processed during DB_TXN_ABORT.
+ */
+BEGIN rcuradj	42	65
+/* Fileid of db affected. */
+DB	fileid		int32_t		ld
+/* Which adjustment. */
+ARG	mode		ca_recno_arg	ld
+/* Root page number. */
+ARG	root		db_pgno_t	ld
+/* Recno of the adjustment. */
+ARG	recno		db_recno_t	ld
+/* Order number of the adjustment. */
+ARG	order		u_int32_t	lu
+END
+
+/*
+ * BTREE-relink -- Handles relinking around a deleted leaf page.
+ *
+ */
+BEGIN_COMPAT relink		43	147
+/* Fileid of db affected. */
+DB	fileid		int32_t		ld
+/* The page being removed. */
+ARG	pgno		db_pgno_t	lu
+/* The page's original lsn. */
+POINTER	lsn		DB_LSN *	lu
+/* The previous page. */
+ARG	prev		db_pgno_t	lu
+/* The previous page's original lsn. */
+POINTER	lsn_prev	DB_LSN *	lu
+/* The next page. */
+ARG	next		db_pgno_t	lu
+/* The previous page's original lsn. */
+POINTER	lsn_next	DB_LSN *	lu
+END
+
+BEGIN relink		44	147
+/* Fileid of db affected. */
+DB	fileid		int32_t		ld
+/* The page being removed. */
+ARG	pgno		db_pgno_t	lu
+/* The new page number, if any. */
+ARG	new_pgno	db_pgno_t	lu
+/* The previous page. */
+ARG	prev		db_pgno_t	lu
+/* The previous page's original lsn. */
+POINTER	lsn_prev	DB_LSN *	lu
+/* The next page. */
+ARG	next		db_pgno_t	lu
+/* The previous page's original lsn. */
+POINTER	lsn_next	DB_LSN *	lu
+END
+
+/*
+ * BTREE-merge -- Handles merging of pages during a compaction.
+ */
+BEGIN_COMPAT merge		44	148
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+POINTER	lsn		DB_LSN *	lu
+ARG	npgno		db_pgno_t	lu
+POINTER nlsn		DB_LSN *	lu
+DBT	hdr		DBT		s
+DBT	data		DBT		s
+DBT	ind		DBT		s
+END
+
+BEGIN merge		47	148
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+POINTER	lsn		DB_LSN *	lu
+ARG	npgno		db_pgno_t	lu
+POINTER nlsn		DB_LSN *	lu
+PGDBT	hdr		DBT		s
+PGDDBT	data		DBT		s
+ARG	pg_copy		int32_t		lu
+END
+
+/*
+ * BTREE-pgno -- Handles replacing a page number in the record
+ * reference on pgno by indx.
+ */
+BEGIN pgno		44	149
+DB	fileid		int32_t		ld
+ARG	pgno		db_pgno_t	lu
+POINTER	lsn		DB_LSN *	lu
+ARG	indx		u_int32_t	lu
+ARG	opgno		db_pgno_t	lu
+ARG	npgno		db_pgno_t	lu
+END

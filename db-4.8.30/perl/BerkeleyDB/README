@@ -1,0 +1,672 @@
+                                BerkeleyDB
+
+                               Version 0.39
+
+                               6th June 2009
+                              
+
+     Copyright (c) 1997-2009 Paul Marquess. All rights reserved. This
+      program is free software; you can redistribute it and/or modify
+                  it under the same terms as Perl itself.
+
+
+DESCRIPTION
+-----------
+
+BerkeleyDB is a module which allows Perl programs to make use of the
+facilities provided by Berkeley DB version 2 or greater. (Note: if
+you want to use version 1 of Berkeley DB with Perl you need the DB_File
+module).
+
+Berkeley DB is a C library which provides a consistent interface to a
+number of database formats. BerkeleyDB provides an interface to all
+four of the database types (hash, btree, queue and recno) currently
+supported by Berkeley DB.
+
+For further details see the documentation in the file BerkeleyDB.pod.
+
+PREREQUISITES
+-------------
+
+Before you can build BerkeleyDB you need to have the following
+installed on your system:
+
+    * To run the test harness for this module, you must make sure that the
+      directory where you have untarred this module is NOT a network
+      drive, e.g. NFS or AFS.
+
+    * Perl 5.00 or greater.
+
+    * Berkeley DB Version 2.6.4 or greater
+
+      The official web site for Berkeley DB is 
+
+        http://www.oracle.com/technology/products/berkeley-db/db/index.html
+
+      The latest version of Berkeley DB is always available there. It
+      is recommended that you use the most recent version available.
+
+      The one exception to this advice is where you want to use BerkeleyDB
+      to access database files created by a third-party application,
+      like Sendmail. In these cases you must build BerkeleyDB with a
+      compatible version of Berkeley DB.
+
+
+BUILDING THE MODULE
+-------------------
+
+Assuming you have met all the prerequisites, building the module should
+be relatively straightforward.
+
+Step 1 : If you are running Solaris 2.5, 2.7 or HP-UX 10 read either
+         the Solaris Notes or HP-UX Notes sections below.
+         If you are running Linux please read the Linux Notes section
+         before proceeding.
+         If you are running FreeBSD read the FreeBSD Notes section
+         below.
+
+
+Step 2 : Edit the file config.in to suit you local installation.
+         Instructions are given in the file.
+
+Step 3 : Build and test the module using this sequence of commands:
+
+             perl Makefile.PL
+             make
+             make test
+
+INSTALLATION
+------------
+
+    make install
+
+TROUBLESHOOTING
+===============
+
+Here are some of the problems that people encounter when building BerkeleyDB.
+
+Missing db.h or libdb.a
+-----------------------
+
+If you get an error like this:
+
+  cc -c -I./libraries/ -Dbool=char -DHAS_BOOL -I/usr/local/include -O2
+  -DVERSION=\"0.07\" -DXS_VERSION=\"0.07\" -fpic
+  -I/usr/local/lib/perl5/5.00503/i586-linux/CORE  BerkeleyDB.c
+  BerkeleyDB.xs:52: db.h: No such file or directory
+
+or this:
+
+  cc -c -I./libraries/2.7.5 -Dbool=char -DHAS_BOOL -I/usr/local/include -O2
+  -DVERSION=\"0.07\" -DXS_VERSION=\"0.07\" -fpic
+  -I/usr/local/lib/perl5/5.00503/i586-linux/CORE  BerkeleyDB.c
+  LD_RUN_PATH="/lib" cc -o blib/arch/auto/BerkeleyDB/BerkeleyDB.so  -shared
+  -L/usr/local/lib BerkeleyDB.o
+  -L/home/paul/perl/ext/BerkDB/BerkeleyDB/libraries -ldb
+  ld: cannot open -ldb: No such file or directory
+
+This symptom can imply:
+
+ 1. You don't have Berkeley DB installed on your system at all.
+    Solution: get & install Berkeley DB.
+
+ 2. You do have Berkeley DB installed, but it isn't in a standard place.
+    Solution: Edit config.in and set the LIB and INCLUDE variables to point
+              to the directories where libdb.a and db.h are installed.
+
+#error db.h is not for Berkeley DB at all.
+------------------------------------------
+
+If you get the error above when building this module it means that there
+is a file called "db.h" on your system that isn't the one that comes
+with Berkeley DB.
+
+Options:
+
+ 1. You don't have Berkeley DB installed on your system at all.
+    Solution: get & install Berkeley DB.
+
+ 2. Edit config.in and make sure the INCLUDE variable points to the
+    directory where the Berkeley DB file db.h is installed.
+
+ 3. If option 2 doesn't work, try tempoarily renaming the db.h file
+    that is causing the error.
+
+#error db.h is for Berkeley DB 1.x - need at least Berkeley DB 2.6.4
+--------------------------------------------------------------------
+
+The error above will occur if there is a copy of the Berkeley DB 1.x
+file db.h on your system.
+
+This error will happen when 
+
+  1. you only have Berkeley DB version 1 on your system.
+     Solution: get & install a newer version of Berkeley DB.
+
+  2. you have both version 1 and a later version of Berkeley DB
+     installed on your system. When building BerkeleyDB it attempts to
+     use the db.h for Berkeley DB version 1.
+     Solution: Edit config.in and set the LIB and INCLUDE variables
+               to point to the directories where libdb.a and db.h are
+               installed.
+
+
+#error db.h is for Berkeley DB 2.0-2.5 - need at least Berkeley DB 2.6.4
+------------------------------------------------------------------------
+
+The error above will occur if there is a copy of the the file db.h for
+Berkeley DB 2.0 to 2.5 on your system.
+
+This symptom can imply:
+
+ 1. You don't have a new enough version of Berkeley DB.
+    Solution: get & install a newer version of Berkeley DB.
+
+ 2. You have the correct version of Berkeley DB installed, but it isn't
+    in a standard place.
+    Solution: Edit config.in and set the LIB and INCLUDE variables
+              to point to the directories where libdb.a and db.h are
+              installed.
+
+Undefined Symbol: txn_stat 
+--------------------------
+
+BerkeleyDB seems to have built correctly, but you get an error like this
+when you run the test harness:
+
+  $ make test
+  PERL_DL_NONLAZY=1 /home/paul/perl/install/bin/perl5.00503
+  -Iblib/arch -Iblib/lib -I/usr/local/lib/perl5/5.00503/i586-linux
+  -I/usr/local/lib/perl5/5.00503 -e 'use Test::Harness qw(&runtests $verbose);
+  $verbose=0; runtests @ARGV;' t/*.t
+  t/btree.............Can't load 'blib/arch/auto/BerkeleyDB/BerkeleyDB.so' for
+  module BerkeleyDB: blib/arch/auto/BerkeleyDB/BerkeleyDB.so:
+  undefined symbol: txn_stat
+  at /usr/local/lib/perl5/5.00503/i586-linux/DynaLoader.pm line 169.
+  ...
+
+This error usually happens when you have both version 1 and a newer version
+of Berkeley DB installed on your system. BerkeleyDB attempts
+to build using the db.h for Berkeley DB version 2/3/4 and the version 1
+library. Unfortunately the two versions aren't compatible with each
+other. BerkeleyDB can only be built with Berkeley DB version 2, 3 or 4.
+
+Solution: Setting the LIB & INCLUDE variables in config.in to point to the
+          correct directories can sometimes be enough to fix this
+          problem. If that doesn't work the easiest way to fix the
+          problem is to either delete or temporarily rename the copies
+          of db.h and libdb.a that you don't want BerkeleyDB to use.
+
+Undefined Symbol: db_appinit 
+----------------------------
+
+BerkeleyDB seems to have built correctly, but you get an error like this
+when you run the test harness:
+
+  $ make test
+  PERL_DL_NONLAZY=1 /home/paul/perl/install/bin/perl5.00561 -Iblib/arch 
+  -Iblib/lib -I/home/paul/perl/install/5.005_61/lib/5.00561/i586-linux 
+  -I/home/paul/perl/install/5.005_61/lib/5.00561 -e 'use Test::Harness 
+  qw(&runtests $verbose); $verbose=0; runtests @ARGV;' t/*.t
+  t/btree.............Can't load 'blib/arch/auto/BerkeleyDB/BerkeleyDB.so' for 
+  module BerkeleyDB: blib/arch/auto/BerkeleyDB/BerkeleyDB.so: 
+  undefined symbol: db_appinit 
+  at /home/paul/perl/install/5.005_61/lib/5.00561/i586-linux/DynaLoader.pm 
+  ...
+
+
+This error usually happens when you have both version 2 and version
+3 of Berkeley DB installed on your system and BerkeleyDB attempts
+to build using the db.h for Berkeley DB version 2 and the version 3
+library. Unfortunately the two versions aren't compatible with each
+other. 
+
+Solution: Setting the LIB & INCLUDE variables in config.in to point to the
+          correct directories can sometimes be enough to fix this
+          problem. If that doesn't work the easiest way to fix the
+          problem is to either delete or temporarily rename the copies
+          of db.h and libdb.a that you don't want BerkeleyDB to use.
+
+Undefined Symbol: db_create
+---------------------------
+
+BerkeleyDB seems to have built correctly, but you get an error like this
+when you run the test harness:
+
+  $ make test   
+  PERL_DL_NONLAZY=1 /home/paul/perl/install/bin/perl5.00561 -Iblib/arch 
+  -Iblib/lib -I/home/paul/perl/install/5.005_61/lib/5.00561/i586-linux 
+  -I/home/paul/perl/install/5.005_61/lib/5.00561 -e 'use Test::Harness 
+  qw(&runtests $verbose); $verbose=0; runtests @ARGV;' t/*.t
+  t/btree.............Can't load 'blib/arch/auto/BerkeleyDB/BerkeleyDB.so' for 
+  module BerkeleyDB: blib/arch/auto/BerkeleyDB/BerkeleyDB.so: 
+  undefined symbol: db_create 
+  at /home/paul/perl/install/5.005_61/lib/5.00561/i586-linux/DynaLoader.pm 
+  ...
+
+This error usually happens when you have both version 2 and version
+3 of Berkeley DB installed on your system and BerkeleyDB attempts
+to build using the db.h for Berkeley DB version 3 and the version 2
+library. Unfortunately the two versions aren't compatible with each
+other. 
+
+Solution: Setting the LIB & INCLUDE variables in config.in to point to the
+          correct directories can sometimes be enough to fix this
+          problem. If that doesn't work the easiest way to fix the
+          problem is to either delete or temporarily rename the copies
+          of db.h and libdb.a that you don't want BerkeleyDB to use.
+
+
+Incompatible versions of db.h and libdb
+---------------------------------------
+
+BerkeleyDB seems to have built correctly, but you get an error like this
+when you run the test harness:
+
+  $ make test
+  PERL_DL_NONLAZY=1 /home/paul/perl/install/bin/perl5.00503
+  -Iblib/arch -Iblib/lib -I/usr/local/lib/perl5/5.00503/i586-linux
+  -I/usr/local/lib/perl5/5.00503 -e 'use Test::Harness qw(&runtests $verbose);
+  $verbose=0; runtests @ARGV;' t/*.t
+  t/btree.............
+  BerkeleyDB needs compatible versions of libdb & db.h
+          you have db.h version 2.6.4 and libdb version 2.7.5
+  BEGIN failed--compilation aborted at t/btree.t line 25.
+  dubious
+        Test returned status 255 (wstat 65280, 0xff00)
+  ...	
+
+Another variation on the theme of having two versions of Berkeley DB on
+your system. 
+
+Solution: Setting the LIB & INCLUDE variables in config.in to point to the
+          correct directories can sometimes be enough to fix this
+          problem. If that doesn't work the easiest way to fix the
+          problem is to either delete or temporarily rename the copies
+          of db.h and libdb.a that you don't want BerkeleyDB to use.
+	  If you are running Linux, please read the Linux Notes section below.
+
+
+
+Solaris build fails with "language optional software package not installed"
+---------------------------------------------------------------------------
+
+If you are trying to build this module under Solaris and you get an
+error message like this
+
+    /usr/ucb/cc: language optional software package not installed
+
+it means that Perl cannot find the C compiler on your system. The cryptic
+message is just Sun's way of telling you that you haven't bought their
+C compiler.
+
+When you build a Perl module that needs a C compiler, the Perl build
+system tries to use the same C compiler that was used to build perl
+itself. In this case your Perl binary was built with a C compiler that
+lived in /usr/ucb.
+
+To continue with building this module, you need to get a C compiler,
+or tell Perl where your C compiler is, if you already have one.
+
+Assuming you have now got a C compiler, what you do next will be dependant
+on what C compiler you have installed. If you have just installed Sun's
+C compiler, you shouldn't have to do anything. Just try rebuilding
+this module.
+
+If you have installed another C compiler, say gcc, you have to tell perl
+how to use it instead of /usr/ucb/cc.
+
+This set of options seems to work if you want to use gcc. Your mileage
+may vary.
+
+    perl Makefile.PL CC=gcc CCCDLFLAGS=-fPIC OPTIMIZE=" "
+    make test
+
+If that doesn't work for you, it's time to make changes to the Makefile
+by hand. Good luck!
+
+
+
+Solaris build fails with "gcc: unrecognized option `-KPIC'"
+-----------------------------------------------------------
+
+You are running Solaris and you get an error like this when you try to
+build this Perl module
+
+    gcc: unrecognized option `-KPIC'
+
+This symptom usually means that you are using a Perl binary that has been
+built with the Sun C compiler, but you are using gcc to build this module.
+
+When Perl builds modules that need a C compiler, it will attempt to use
+the same C compiler and command line options that was used to build perl
+itself. In this case "-KPIC" is a valid option for the Sun C compiler,
+but not for gcc. The equivalent option for gcc is "-fPIC".
+
+The solution is either:
+
+    1. Build both Perl and this module with the same C compiler, either
+       by using the Sun C compiler for both or gcc for both.
+
+    2. Try generating the Makefile for this module like this perl
+
+           perl Makefile.PL CC=gcc CCCDLFLAGS=-fPIC OPTIMIZE=" " LD=gcc
+           make test
+
+       This second option seems to work when mixing a Perl binary built
+       with the Sun C compiler and this module built with gcc. Your
+       mileage may vary.
+
+
+
+Network Drive
+-------------
+
+BerkeleyDB seems to have built correctly, but you get a series of errors
+like this when you run the test harness:
+
+
+t/btree........NOK 178Can't call method "txn_begin" on an undefined value at t/btree.t line 637.
+t/btree........dubious                                                       
+        Test returned status 11 (wstat 2816, 0xb00)
+DIED. FAILED tests 28, 178-244
+        Failed 68/244 tests, 72.13% okay
+t/db-3.0.......NOK 2Can't call method "set_mutexlocks" on an undefined value at t/db-3.0.t line 39.
+t/db-3.0.......dubious                                                       
+        Test returned status 11 (wstat 2816, 0xb00)
+DIED. FAILED tests 2-14
+        Failed 13/14 tests, 7.14% okay
+t/db-3.1.......ok                                                            
+t/db-3.2.......NOK 5Can't call method "set_flags" on an undefined value at t/db-3.2.t line 62.
+t/db-3.2.......dubious                                                       
+        Test returned status 11 (wstat 2816, 0xb00)
+DIED. FAILED tests 3, 5-6
+        Failed 3/6 tests, 50.00% okay
+t/db-3.3.......ok                  
+
+This pattern of errors happens if you have built the module in a directory
+that is network mounted (e.g. NFS ar AFS).
+
+The solution is to use a local drive. Berkeley DB doesn't support
+network drives.
+
+
+Berkeley DB library configured to support only DB_PRIVATE environments
+----------------------------------------------------------------------
+
+BerkeleyDB seems to have built correctly, but you get a series of errors
+like this when you run the test harness:
+
+  t/btree........ok 27/244
+  # : Berkeley DB library configured to support only DB_PRIVATE environments
+  t/btree........ok 177/244
+  # : Berkeley DB library configured to support only DB_PRIVATE environments
+  t/btree........NOK 178Can't call method "txn_begin" on an undefined value at t/btree.t line 638.
+  t/btree........dubious
+          Test returned status 2 (wstat 512, 0x200)
+  Scalar found where operator expected at (eval 153) line 1, near "'int'  $__val"
+        (Missing operator before   $__val?)
+  DIED. FAILED tests 28, 178-244
+          Failed 68/244 tests, 72.13% okay
+
+
+Some versions of Redhat Linux, and possibly some other Linux
+distributions, include a seriously restricted build of the
+Berkeley DB library that is incompatible with this module. See
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=91933 for an
+exhaustive discussion on the reasons for this.
+
+
+Solution:
+
+You will have to build a private copy of the Berkeley DB library and
+use it when building this Perl module.
+
+
+
+Linux Notes
+-----------
+
+Some versions of Linux (e.g. RedHat 6, SuSe 6) ship with a C library
+that has version 2.x of Berkeley DB linked into it. This makes it
+difficult to build this module with anything other than the version of
+Berkeley DB that shipped with your Linux release. If you do try to use
+a different version of Berkeley DB you will most likely get the error
+described in the "Incompatible versions of db.h and libdb" section of
+this file.
+
+To make matters worse, prior to Perl 5.6.1, the perl binary itself
+*always* included the Berkeley DB library.
+
+If you want to use a newer version of Berkeley DB with this module, the
+easiest solution is to use Perl 5.6.1 (or better) and Berkeley DB 3.x
+(or better).
+
+There are two approaches you can use to get older versions of Perl to
+work with specific versions of Berkeley DB. Both have their advantages
+and disadvantages.
+
+The first approach will only work when you want to build a version of
+Perl older than 5.6.1 along with Berkeley DB 3.x. If you want to use
+Berkeley DB 2.x, you must use the next approach. This approach involves
+rebuilding your existing version of Perl after applying an unofficial
+patch. The "patches" directory in the this module's source distribution
+contains a number of patch files. There is one patch file for every
+stable version of Perl since 5.004. Apply the appropriate patch to your
+Perl source tree before re-building and installing Perl from scratch.
+For example, assuming you are in the top-level source directory for
+Perl 5.6.0, the command below will apply the necessary patch. Remember
+to replace the path shown below with one that points to this module's
+patches directory.
+
+    patch -p1 -N </path/to/BerkeleyDB/patches/5.6.0
+
+Now rebuild & install perl. You should now have a perl binary that can
+be used to build this module. Follow the instructions in "BUILDING THE
+MODULE", remembering to set the INCLUDE and LIB variables in config.in.
+
+
+The second approach will work with Berkeley DB 2.x or better.
+Start by building Berkeley DB as a shared library. This is from
+the Berkeley DB build instructions:
+
+    Building Shared Libraries for the GNU GCC compiler
+
+    If you're using gcc and there's no better shared library example for
+    your architecture, the following shared library build procedure will
+    probably work.
+
+    Add the -fpic option to the CFLAGS value in the Makefile.
+
+    Rebuild all of your .o files. This will create a Berkeley DB library
+    that contains .o files with PIC code. To build the shared library,
+    then take the following steps in the library build directory:
+
+    % mkdir tmp
+    % cd tmp
+    % ar xv ../libdb.a
+    % gcc -shared -o libdb.so *.o
+    % mv libdb.so ..
+    % cd ..
+    % rm -rf tmp
+
+    Note, you may have to change the gcc line depending on the
+    requirements of your system.
+
+    The file libdb.so is your shared library
+
+Once you have built libdb.so, you will need to store it somewhere safe.
+
+    cp libdb.so /usr/local/BerkeleyDB/lib
+
+If you now set the LD_PRELOAD environment variable to point to this
+shared library, Perl will use it instead of the version of Berkeley DB
+that shipped with your Linux distribution.
+
+    export LD_PRELOAD=/usr/local/BerkeleyDB/lib/libdb.so
+
+Finally follow the instructions in "BUILDING THE MODULE" to build,
+test and install this module. Don't forget to set the INCLUDE and LIB
+variables in config.in.
+
+Remember, you will need to have the LD_PRELOAD variable set anytime you
+want to use Perl with Berkeley DB. Also note that if you have LD_PRELOAD
+permanently set it will affect ALL commands you execute. This may be a
+problem if you run any commands that access a database created by the
+version of Berkeley DB that shipped with your Linux distribution.
+
+
+
+Solaris 2.5 Notes
+-----------------
+
+If you are running Solaris 2.5, and you get this error when you run the
+BerkeleyDB test harness:
+
+    libc internal error: _rmutex_unlock: rmutex not held.
+
+you probably need to install a Sun patch. It has been reported that
+Sun patch 103187-25 (or later revisions) fixes this problem.
+
+To find out if you have the patch installed, the command "showrev -p"
+will display the patches that are currently installed on your system.
+
+
+Solaris 2.7 Notes
+-----------------
+
+If you are running Solaris 2.7 and all the tests in the test harness
+generate a core dump, try applying Sun patch 106980-09 (or better).
+
+To find out if you have the patch installed, the command "showrev -p"
+will display the patches that are currently installed on your system.
+
+
+HP-UX Notes
+-----------
+
+Some people running HP-UX 10 have reported getting an error like this
+when building this module with the native HP-UX compiler.
+
+    ld: (Warning) At least one PA 2.0 object file (BerkeleyDB.o) was detected.
+    The linked output may not run on a PA 1.x system.
+    ld: Invalid loader fixup for symbol "$000000A5".
+
+If this is the case for you, Berkeley DB needs to be recompiled with
+the +z or +Z option and the resulting library placed in a .sl file. The
+following steps should do the trick:
+
+  1: Configure the Berkeley DB distribution with the +z or +Z C compiler
+     flag:
+
+        env "CFLAGS=+z" ../dist/configure ...
+
+  2: Edit the Berkeley DB Makefile and change:
+
+        "libdb= libdb.a" to "libdb= libdb.sl".
+
+  3: Build and install the Berkeley DB distribution as usual.
+
+
+FreeBSD Notes
+-------------
+
+On FreeBSD 4.x through 6.x, the default db.h is for version 1. The build
+will fail with an error similar to:
+
+BerkeleyDB.xs:74: #error db.h is from Berkeley DB 1.x - need at least
+Berkeley DB 2.6.4
+
+Later versions of Berkeley DB are usually installed from ports.
+The available versions can be found by running a find(1) command:
+
+    %  find /usr/local/include -name 'db.h'
+    /usr/local/include/db3/db.h
+    /usr/local/include/db4/db.h
+    /usr/local/include/db41/db.h
+    /usr/local/include/db42/db.h
+    /usr/local/include/db43/db.h
+
+The desired version of the library must be specified on the command line or
+via the config.in file. Make sure both values point to the same version:
+
+    INCLUDE = /usr/local/include/db43
+    LIB     = /usr/local/lib/db43
+
+
+
+
+FEEDBACK
+--------
+
+General feedback/questions/bug reports can be sent to me at pmqs@cpan.org.
+
+Alternatively, if you have Usenet access, you can try the
+comp.databases.berkeley-db or comp.lang.perl.modules groups.
+
+
+How to report a problem with BerkeleyDB.
+----------------------------------------
+
+To help me help you, I need of the following information:
+
+ 1. The version of Perl and the operating system name and version you
+    are running. The complete output from running "perl -V" will tell
+    me all I need to know.  
+    If your perl does not understand the "-V" option is too old.
+    BerkeleyDB needs Perl version 5.004_04 or better.
+
+ 2. The version of BerkeleyDB you have. If you have successfully
+    installed BerkeleyDB, this one-liner will tell you:
+
+       perl -MBerkeleyDB -e 'print qq{BerkeleyDB ver $BerkeleyDB::VERSION\n}'
+
+    If you are running windows use this
+
+       perl -MBerkeleyDB -e "print qq{BerkeleyDB ver $BerkeleyDB::VERSION\n}"
+
+    If you haven't installed BerkeleyDB then search BerkeleyDB.pm for a
+    line like this:
+
+      $VERSION = "1.20" ;
+
+ 3. The version of Berkeley DB you have installed. If you have
+    successfully installed BerkeleyDB, this one-liner will tell you:
+
+        perl -MBerkeleyDB -e 'print BerkeleyDB::DB_VERSION_STRING.qq{\n}'
+
+    If you are running windows use this
+
+        perl -MBerkeleyDB -e "print BerkeleyDB::DB_VERSION_STRING.qq{\n}"
+
+    If you haven't installed BerkeleyDB then search db.h for a line
+    like this:
+
+      #define DB_VERSION_STRING
+
+ 4. If you are having problems building BerkeleyDB, send me a complete
+    log of what happened.
+
+ 5. Now the difficult one. If you think you have found a bug in
+    BerkeleyDB and you want me to fix it, you will *greatly* enhance
+    the chances of me being able to track it down by sending me a small
+    self-contained Perl script that illustrates the problem you are
+    encountering. Include a summary of what you think the problem is
+    and a log of what happens when you run the script, in case I can't
+    reproduce your problem on my system. If possible, don't have the
+    script dependent on an existing 20Meg database. If the script you
+    send me can create the database itself then that is preferred.
+
+    I realise that in some cases this is easier said than done, so if
+    you can only reproduce the problem in your existing script, then
+    you can post me that if you want. Just don't expect me to find your
+    problem in a hurry, or at all. :-)
+
+
+CHANGES
+-------
+
+See the Changes file.
+
+Paul Marquess <pmqs@cpan.org>
+

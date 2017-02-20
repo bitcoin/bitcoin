@@ -1,0 +1,69 @@
+<!--Copyright 1999-2009 Oracle.  All rights reserved.-->
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.75 [en] (X11; U; Linux 2.2.16-22 i686) [Netscape]">
+</head>
+<body>
+
+<h2>
+<a NAME="Transaction Commands"></a>Transaction Commands</h2>
+Transactions are used in a manner similar to the other subsystems.&nbsp;
+We create a handle to the transaction and&nbsp; then use it for a variety
+of operations.&nbsp; Some of the transaction commands use the environment
+instead.&nbsp; Those are presented first.&nbsp; The transaction command
+handle returned is the handle used by the various commands that can be
+transaction protected, such as <a href="../../docs/api_tcl/db_cursor.html">cursors</a>.
+<br>
+<hr WIDTH="100%">
+<p><b>> &lt;env> txn_checkpoint [-kbyte <i>kb</i>] [-min <i>min</i>]</b>
+<p>This command causes a checkpoint of the transaction region.&nbsp; It
+is a direct translation of the <a href="../../docs/api_c/txn_checkpoint.html">txn_checkpoint
+</a>function.&nbsp;
+It returns either a 0 (for success), a DB error message or it throws a
+Tcl error with a system message.&nbsp; The arguments are:
+<ul>
+<li>
+<b>-force</b>causes the checkpoint to occur regardless of inactivity
+
+<li>
+<b>-kbyte</b>causes the checkpoint to occur only if <b><i>kb</i></b> kilobytes
+of log data has been written since the last checkpoint
+
+<li>
+<b>-min</b> causes the checkpoint to occur only if <b><i>min</i></b> minutes
+have passed since the last checkpoint
+</ul>
+
+<hr WIDTH="100%">
+<br><b>> &lt;env> txn_stat</b>
+<p>This command returns transaction statistics.&nbsp; It is a direct translation
+of the <a href="../../docs/api_c/txn_stat.html">txn_stat</a> function.&nbsp;
+It will return a list of name/value pairs that correspond to the DB_TXN_STAT
+structure.
+<hr WIDTH="100%">
+<br><b>> &lt;env> txn_id_set&nbsp;</b><i> current max</i>
+<p>This is a diagnosic command that sets the next transaction id to be
+allocated and the maximum transaction
+<br>id, which is the point at which the relcaimation algorthm is triggered.
+<hr WIDTH="100%">
+<br><b>>&nbsp; &lt;txn> id</b>
+<p>This command returns the transaction id.&nbsp; It is a direct call to
+the <a href="../../docs/api_c/txn_id.html">txn_id</a> function.&nbsp; The
+typical use of this identifier is as the <b><i>locker</i></b> value for
+the <a href="lock.html">lock_get</a> and <a href="lock.html">lock_vec</a>
+calls.
+<hr WIDTH="100%">
+<br><b>> &lt;txn> prepare</b>
+<p>This command initiates a two-phase commit.&nbsp; It is a direct call
+to the <a href="../../docs/api_c/txn_prepare.html">txn_prepare</a> function.&nbsp;
+It returns either a 0 (for success), a DB error message or it throws a
+Tcl error with a system message.
+<hr WIDTH="100%"><a NAME="> <env> lock_vec"></a><b>> &lt;env> txn_timeout
+<i>timeout</i></b>
+<p>This command sets thetransaction timeout for transactions started in
+the future in this environment.&nbsp; The timeout is in micorseconds.
+<br>&nbsp;
+<br>&nbsp;
+</body>
+</html>

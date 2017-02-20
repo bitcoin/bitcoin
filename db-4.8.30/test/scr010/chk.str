@@ -1,0 +1,42 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Check spelling in quoted strings.
+
+d=../..
+
+[ -f $d/LICENSE ] || {
+	echo 'FAIL: cannot find source distribution directory.'
+	exit 1
+}
+
+t1=__t1
+
+sed -e '/^#include/d' \
+    -e '/"/!d' \
+    -e 's/^[^"]*//' \
+    -e 's/%s/ /g' \
+    -e 's/[^"]*$//' \
+    -e 's/\\[nt]/ /g' \
+    `find $d -name '*.[ch]' -o -name '*.cpp' -o -name '*.java' |
+    sed -e '/\/perl\//d' -e '/\/test_erlang\//d'` |
+spell | sort -u | comm -23 /dev/stdin spell.ok > $t1
+
+test -s $t1 && {
+	cat $t1
+	echo "FAIL: found questionable spelling in strings."
+	exit 1
+}
+
+egrep -h '/\* | \* ' \
+    `find $d -name '*.[ch]' -o -name '*.cpp' | sed -e '/\/perl\//d' -e '/\/test_erlang\//d'` |
+spell | sort -u | comm -23 /dev/stdin spell.ok | tee /tmp/f/1 > $t1
+
+test -s $t1 && {
+	cat $t1
+	echo "FAIL: found questionable spelling in comments."
+	exit 1
+}
+
+exit 0

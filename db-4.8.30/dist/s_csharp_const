@@ -1,0 +1,67 @@
+#!/bin/sh -
+#	$Id$
+#
+# Build the C# files.
+
+msgcsharp="/* DO NOT EDIT: automatically built by dist/s_csharp_const. */"
+
+. ./RELEASE
+
+t=/tmp/__csharp
+trap 'rm -f $t; exit 0' 0 1 2 3 13 15
+
+(echo "$msgcsharp" &&
+ echo &&
+ echo 'namespace BerkeleyDB.Internal {' &&
+ echo &&
+ echo '    internal class DbConstants {' &&
+
+ for i in `egrep '^DB_.*C$' pubdef.in | awk '{print $1}'`; do \
+     sed -e ':a' -e '/\\$/N;s/\\\n[	 ]*/ /;ta' \
+         ../dbinc_auto/api_flags.in ../dbinc/db.in | \
+     egrep -w "^#define[	 ]$i|^[	 ][	 ]*$i" ;
+ done |
+ sed -e "s/@DB_VERSION_MAJOR@/$DB_VERSION_MAJOR/" \
+     -e "s/@DB_VERSION_MINOR@/$DB_VERSION_MINOR/" \
+     -e "s/@DB_VERSION_PATCH@/$DB_VERSION_PATCH/" \
+     -e "s/@DB_VERSION_STRING@/\"$DB_VERSION_STRING\"/" \
+     -e 's/^#define[	 ][	 ]*//' \
+     -e 's/[()=,]/ /g' \
+     -e 's/\/\*.*$//' \
+     -e 's/^[	 ]*//' \
+     -e 's/[	 ]*$//g' \
+     -e 's/[	 ][	 ]*/ /g' \
+     -e 's/ / = /' | \
+ awk '{ print "        internal const uint " $0 ";" }' |
+ # Change negative values from uint to int
+ # Change replication timeout constants from uint to int
+ # Change replication manager ack policies to int
+ # Change the version from uint to string
+ sed -e 's/\(.*\)uint\(.*= -.*\)/\1int\2/' \
+     -e 's/uint DB_REP_ACK_TIMEOUT/int DB_REP_ACK_TIMEOUT/' \
+     -e 's/uint DB_REP_CHECKPOINT_DELAY/int DB_REP_CHECKPOINT_DELAY/' \
+     -e 's/uint DB_REP_CONNECTION_RETRY/int DB_REP_CONNECTION_RETRY/' \
+     -e 's/uint DB_REP_ELECTION_TIMEOUT/int DB_REP_ELECTION_TIMEOUT/' \
+     -e 's/uint DB_REP_ELECTION_RETRY/int DB_REP_ELECTION_RETRY/' \
+     -e 's/uint DB_REP_FULL_ELECTION_TIMEOUT/int DB_REP_FULL_ELECTION_TIMEOUT/' \
+     -e 's/uint DB_REP_HEARTBEAT_MONITOR/int DB_REP_HEARTBEAT_MONITOR/' \
+     -e 's/uint DB_REP_HEARTBEAT_SEND/int DB_REP_HEARTBEAT_SEND/' \
+     -e 's/uint DB_REP_LEASE_TIMEOUT/int DB_REP_LEASE_TIMEOUT/' \
+     -e 's/uint DB_REPMGR_ACKS_ALL/int DB_REPMGR_ACKS_ALL/' \
+     -e 's/uint DB_REPMGR_ACKS_ALL_PEERS/int DB_REPMGR_ACKS_ALL_PEERS/' \
+     -e 's/uint DB_REPMGR_ACKS_NONE/int DB_REPMGR_ACKS_NONE/' \
+     -e 's/uint DB_REPMGR_ACKS_ONE/int DB_REPMGR_ACKS_ONE/' \
+     -e 's/uint DB_REPMGR_ACKS_ONE_PEER/int DB_REPMGR_ACKS_ONE_PEER/' \
+     -e 's/uint DB_REPMGR_ACKS_QUORUM/int DB_REPMGR_ACKS_QUORUM/' \
+     -e 's/uint DB_VERSION_STRING/string DB_VERSION_STRING/' \
+     -e 's/\(.*\)uint \(DB_VERSION_[A-Z]*\)\([ =]*\)\([0-9][0-9]*\);/\1uint \2\3\4;\n\1string \2_STR\3\"\4\";/' &&
+ echo '        internal const uint DB_USERCOPY_GETDATA = 0x00000001;' && 
+ echo '        internal const uint DB_USERCOPY_SETDATA = 0x00000002;' && 
+ echo '    }' &&
+ echo '}' &&
+ echo &&
+ echo '// end of DbConstants.cs') > $t
+
+f=../csharp/Internal/DbConstants.cs
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)

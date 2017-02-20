@@ -1,0 +1,69 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Check to make sure that regression tests for C++ run.
+
+TEST_CXX_SRCDIR=../test/scr025  # must be a relative directory
+
+# All paths must be relative to a subdirectory of the build directory
+LIBS="-L.. -ldb -ldb_cxx"
+CXXFLAGS="-I.. -I../../dbinc"
+
+[ `uname` = "Linux" ] && LIBS="$LIBS -lpthread"
+
+# Test must be run from a local build directory, not from a test
+# directory.
+cd ..
+[ -f db_config.h ] || {
+	echo 'FAIL: chk.cxxtests must be run from a local build directory.'
+	exit 1
+}
+[ -f libdb.a ] || make libdb.a || {
+	echo 'FAIL: unable to build libdb.a'
+	exit 1
+}
+[ -f libdb_cxx.a ] || make libdb_cxx.a || {
+	echo 'FAIL: unable to build libdb_cxx.a'
+	exit 1
+}
+CXX=`sed -e '/^CXX=/!d' -e 's/^CXX=//' -e 's/.*mode=compile *//' Makefile`
+echo "  ====== cxx tests using $CXX"
+testnames=`cd $TEST_CXX_SRCDIR; ls *.cpp | sed -e 's/\.cpp$//'`
+
+for testname in $testnames; do
+	if grep -x $testname $TEST_CXX_SRCDIR/ignore > /dev/null; then
+		echo "    **** cxx test $testname ignored"
+		continue
+	fi
+
+	echo "    ==== cxx test $testname"
+	rm -rf TESTCXX; mkdir TESTCXX
+	cd ./TESTCXX
+	testprefix=../$TEST_CXX_SRCDIR/$testname
+
+	${CXX} ${CXXFLAGS} -o $testname $testprefix.cpp ${LIBS} > ../$testname.compileout 2>&1 || {
+		echo "FAIL: compilation of $testname failed, see ../$testname.compileout"
+		exit 1
+	}
+	rm -f ../$testname.compileout
+	infile=$testprefix.testin
+	[ -f $infile ] || infile=/dev/null
+	goodoutfile=$testprefix.testout
+	[ -f $goodoutfile ] || goodoutfile=/dev/null
+	gooderrfile=$testprefix.testerr
+	[ -f $gooderrfile ] || gooderrfile=/dev/null
+	./$testname <$infile >../$testname.out 2>../$testname.err
+	cmp ../$testname.out $goodoutfile > /dev/null || {
+		echo "FAIL: $testname output differs: see ../$testname.out, $goodoutfile"
+		exit 1
+	}
+	cmp ../$testname.err $gooderrfile > /dev/null || {
+		echo "FAIL: $testname error differs: see ../$testname.err, $gooderrfile"
+		exit 1
+	}
+	cd ..
+	rm -f $testname.err $testname.out
+done
+rm -rf TESTCXX
+exit 0

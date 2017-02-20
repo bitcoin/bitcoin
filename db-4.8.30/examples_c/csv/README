@@ -1,0 +1,408 @@
+/*-
+ * See the file LICENSE for redistribution information.
+ *
+ * Copyright (c) 2005-2009 Oracle.  All rights reserved.
+ *
+ * $Id$
+ */
+
+The "comma-separated value" (csv) directory is a suite of three programs:
+
+	csv_code:  write "helper" code on which to build applications,
+	csv_load:  import csv files into a Berkeley DB database,
+	csv_query: query databases created by csv_load.
+
+The goal is to allow programmers to easily build applications for using
+csv databases.
+
+You can build the three programs, and run a sample application in this
+directory.
+
+First, there's the sample.csv file:
+
+	Adams,Bob,01/02/03,green,apple,37
+	Carter,Denise Ann,04/05/06,blue,banana,38
+	Eidel,Frank,07/08/09,red,cherry,38
+	Grabel,Harriet,10/11/12,purple,date,40
+	Indals,Jason,01/03/05,pink,orange,32
+	Kilt,Laura,07/09/11,yellow,grape,38
+	Moreno,Nancy,02/04/06,black,strawberry,38
+	Octon,Patrick,08/10/12,magenta,kiwi,15
+
+The fields are:
+	Last name,
+	First name,
+	Birthdate,
+	Favorite color,
+	Favorite fruit,
+	Age
+
+Second, there's a "description" of that csv file in sample.desc:
+
+	version 1 {
+		LastName	string
+		FirstName	string
+		BirthDate
+		Color		string index
+		Fruit		string index
+		Age		unsigned_long index
+	}
+
+The DESCRIPTION file maps one-to-one to the fields in the csv file, and
+provides a data type for any field the application wants to use.  (If
+the application doesn't care about a field, don't specify a data type
+and the csv code will ignore it.)  The string "index" specifies there
+should be a secondary index based on the field.
+
+The "field" names in the DESCRIPTION file don't have to be the same as
+the ones in the csv file (and, as they may not have embedded spaces,
+probably won't be).
+
+To build in the sample directory, on POSIX-like systems, type "make".
+This first builds the program csv_code, which it then run, with the file
+DESCRIPTION as an input.  Running csv_code creates two additional files:
+csv_local.c and csv_local.h.  Those two files are then used as part of
+the build process for two more programs: csv_load and csv_query.
+
+You can load now load the csv file into a Berkeley DB database with the
+following command:
+
+	% ./csv_load -h TESTDIR < sample.csv
+
+The csv_load command will create a directory and four databases:
+
+	primary		primary database
+	Age		secondary index on Age field
+	Color		secondary index on Color field
+	Fruit		secondary index on Fruit field
+
+You can then query the database:
+
+	% ./csv_query -h TESTDIR
+	Query: id=2
+	Record: 2:
+		LastName: Carter
+		FirstName: Denise
+		Color: blue
+		Fruit: banana
+		Age: 38
+	Query: color==green
+	Record: 1:
+		LastName: Adams
+		FirstName: Bob
+		Color: green
+		Fruit: apple
+		Age: 37
+
+and so on.
+
+The csv_code process also creates source code modules that support
+building your own applications based on this database.  First, there
+is the local csv_local.h include file:
+
+	/*
+	 *  DO NOT EDIT: automatically built by csv_code.
+	 *
+	 * Record structure.
+	 */
+	typedef struct __DbRecord {
+		u_int32_t	 recno;		/* Record number */
+
+		/*
+		 * Management fields
+		 */
+		void		*raw;		/* Memory returned by DB */
+		char		*record;	/* Raw record */
+		size_t		 record_len;	/* Raw record length */
+
+		u_int32_t	 field_count;	/* Field count */
+		u_int32_t	 version;	/* Record version */
+
+		u_int32_t	*offset;	/* Offset table */
+
+		/*
+		 * Indexed fields
+		 */
+	#define	CSV_INDX_LASTNAME	1
+		char		*LastName;
+
+	#define	CSV_INDX_FIRSTNAME	2
+		char		*FirstName;
+
+	#define	CSV_INDX_COLOR	4
+		char		*Color;
+
+	#define	CSV_INDX_FRUIT	5
+		char		*Fruit;
+
+	#define	CSV_INDX_AGE	6
+		u_long		 Age;
+	} DbRecord;
+
+This defines the DbRecord structure that is the primary object for this
+csv file.  As you can see, the intersting fields in the csv file have
+mappings in this structure.
+
+Also, there are routines in the Dbrecord.c file your application can use
+to handle DbRecord structures.  When you retrieve a record from the
+database the DbRecord structure will be filled in based on that record.
+
+Here are the helper routines:
+
+	int
+	DbRecord_print(DbRecord *recordp, FILE *fp)
+		Display the contents of a DbRecord structure to the specified
+		output stream.
+
+	int
+	DbRecord_init(const DBT *key, DBT *data, DbRecord *recordp)
+		Fill in a DbRecord from a returned database key/data pair.
+
+	int
+	DbRecord_read(u_long key, DbRecord *recordp)
+		Read the specified record (DbRecord_init will be called
+		to fill in the DbRecord).
+
+	int
+	DbRecord_discard(DbRecord *recordp)
+		Discard the DbRecord structure (must be called after the
+		DbRecord_read function), when the application no longer
+		needs the returned DbRecord.
+
+	int
+	DbRecord_search_field_name(char *field, char *value, OPERATOR op)
+		Display the DbRecords where the field (named by field) has
+		the specified relationship to the value.  For example:
+
+		DbRecord_search_field_name("Age", "35", GT)
+
+		would search for records with a "Age" field greater than
+		35.
+
+	int
+	DbRecord_search_field_number(
+	    u_int32_t fieldno, char *value, OPERATOR op)
+		Display the DbRecords where the field (named by field)
+		has the specified relationship to the value.  The field
+		number used as an argument comes from the csv_local.h
+		file, for example, CSV_INDX_AGE is the field index for
+		the "Age" field in this csv file.  For example:
+
+		DbRecord_search_field_number(CSV_INDX_AGE, 35, GT)
+
+		would search for records with a "Age" field greater than
+		35.
+
+	Currently, the csv code only supports three types of data:
+	strings, unsigned longs and doubles.  Others can easily be
+	added.
+
+The usage of the csv_code program is as follows:
+
+	usage: csv_code [-v] [-c source-file] [-f input] [-h header-file]
+		-c	output C source code file
+		-h	output C header file
+		-f	input file
+		-v	verbose (defaults to off)
+
+	-c      A file to which to write the C language code.  By default,
+		the file "csv_local.c" is used.
+
+	-f      A file to read for a description of the fields in the
+		csv file.  By default, csv_code reads from stdin.
+
+	-h	A file to which to write the C language header structures.
+		By default, the file "csv_local.h" is used.
+
+	-v      The -v verbose flag outputs potentially useful debugging
+		information.
+
+There are two applications built on top of the code produced by
+csv_code, csv_load and csv_query.
+
+The usage of the csv_load program is as follows:
+
+	usage: csv_load [-v] [-F format] [-f csv-file] [-h home] [-V version]
+		-F	format (currently supports "excel")
+		-f      input file
+		-h      database environment home directory
+		-v      verbose (defaults to off)
+
+	-F	See "Input format" below.
+
+	-f      If an input file is specified using the -f flag, the file
+		is read and the records in the file are stored into the
+		database.  By default, csv_load reads from stdin.
+
+	-h      If a database environment home directory is specified
+		using the -h flag, that directory is used as the
+		Berkeley DB directory.  The default for -h is the
+		current working directory or the value of the DB_HOME
+		environment variable.
+
+	-V	Specify a version number for the input (the default is 1).
+
+	-v      The -v verbose flag outputs potentially useful debugging
+		information.  It can be specified twice for additional
+		information.
+
+The usage of csv_query program is as follows:
+
+	usage: csv_query [-v] [-c cmd] [-h home]
+
+	-c      A command to run, otherwise csv_query will enter
+		interactive mode and prompt for user input.
+
+	-h      If a database environment home directory is specified
+		using the -h flag, that directory is used as the
+		Berkeley DB directory.  The default for -h is the
+		current working directory or the value of the DB_HOME
+		environment variable.
+
+	-v      The -v verbose flag outputs potentially useful debugging
+		information.  It can be specified twice for additional
+		information.
+
+The query program currently supports the following commands:
+
+	?               Display help screen
+	exit            Exit program
+	fields          Display list of field names
+	help            Display help screen
+	quit            Exit program
+	version         Display database format version
+	field[op]value  Display fields by value (=, !=, <, <=, >, >=, ~, !~)
+
+The "field[op]value" command allows you to specify a field and a
+relationship to a value.  For example, you could run the query:
+
+	csv_query -c "price < 5"
+
+to list all of the records with a "price" field less than "5".
+
+Field names and all string comparisons are case-insensitive.
+
+The operators ~ and !~ do match/no-match based on the IEEE Std 1003.2
+(POSIX.2) Basic Regular Expression standard.
+
+As a special case, every database has the field "Id", which matches the
+record number of the primary key.
+
+Input format:
+	The input to the csv_load utility is a text file, containing
+	lines of comma-separated fields.
+
+	Blank lines are ignored.  All non-blank lines must be comma-separated
+	lists of fields.
+
+	By default:
+		<nul> (\000) bytes and unprintable characters are stripped,
+		input lines are <nl> (\012) separated,
+		commas cannot be escaped.
+
+	If "-F excel" is specified:
+		<nul> (\000) bytes and unprintable characters are stripped,
+		input lines are <cr> (\015) separated,
+		<nl> bytes (\012) characters are stripped from the input,
+		commas surrounded by double-quote character (") are not
+		treated as field separators.
+
+Storage format:
+	Records in the primary database are stored with a 32-bit unsigned
+	record number as the key.
+
+	Key/Data pair 0 is of the format:
+		[version]		32-bit unsigned int
+		[field count]		32-bit unsigned int
+		[raw record]		byte array
+
+	For example:
+		[1]
+		[5]
+		[field1,field2,field3,field4,field5]
+
+	All other Key/Data pairs are of the format:
+		[version]		32-bit unsigned int
+		[offset to field 1]	32-bit unsigned int
+		[offset to field 2]	32-bit unsigned int
+		[offset to field 3]	32-bit unsigned int
+		...			32-bit unsigned int
+		[offset to field N]	32-bit unsigned int
+		[offset past field N]	32-bit unsigned int
+		[raw record]		byte array
+
+	For example:
+		[1]
+		[0]
+		[2]
+		[5]
+		[9]
+		[14]
+		[19]
+		[a,ab,abc,abcd,abcde]
+		 012345678901234567890		<< byte offsets
+		 0	   1	     2
+
+	So, field 3 of the data can be directly accessed by using
+	the "offset to field 3", and the length of the field is
+	the "((offset to field 4) - (offset to field 3)) - 1".
+
+Limits:
+	The csv program stores the primary key in a 32-bit unsigned
+	value, limiting the number of records in the database.  New
+	records are inserted after the last existing record, that is,
+	new records are not inserted into gaps left by any deleted
+	records.  This will limit the total number of records stored in
+	any database.
+
+Versioning:
+	Versioning is when a database supports multiple versions of the
+	records.  This is likely to be necessary when dealing with large
+	applications and databases, as record fields change over time.
+
+	The csv application suite does not currently support versions,
+	although all of the necessary hooks are there.
+
+	The way versioning will work is as follows:
+
+	The XXX.desc file needs to support multiple version layouts.
+
+	The generated C language structure defined should be a superset
+	of all of the interesting fields from all of the version
+	layouts, regardless of which versions of the csv records those
+	fields exist in.
+
+	When the csv layer is asked for a record, the record's version
+	will provide a lookup into a separate database of field lists.
+	That is, there will be another database which has key/data pairs
+	where the key is a version number, and the data is the field
+	list.  At that point, it's relatively easy to map the fields
+	to the structure as is currently done, except that some of the
+	fields may not be filled in.
+
+	To determine if a field is filled in, in the structure, the
+	application has to have an out-of-band value to put in that
+	field during DbRecord initialization.  If that's a problem, the
+	alternative would be to add an additional field for each listed
+	field -- if the additional field is set to 1, the listed field
+	has been filled in, otherwise it hasn't.  The csv code will
+	support the notion of required fields, so in most cases the
+	application won't need to check before simply using the field,
+	it's only if a field isn't required and may be filled in that
+	the check will be necessary.
+
+TODO:
+	Csv databases are not portable between machines of different
+	byte orders.  To make them portable, all of the 32-bit unsigned
+	int fields currently written into the database should be
+	converted to a standard byte order.  This would include the
+	version number and field count in the column-map record, and the
+	version and field offsets in the other records.
+
+	Add Extended RE string matches.
+
+	Add APIs to replace the reading of a schema file, allow users to
+	fill in a DbRecord structure and do a put on it.  (Hard problem:
+	how to flag fields that aren't filled in.)
+
+	Add a second sample file, and write the actual versioning code.

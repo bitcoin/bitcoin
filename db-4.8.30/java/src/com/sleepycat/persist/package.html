@@ -1,0 +1,602 @@
+<!-- $Id$ -->
+<html>
+<body>
+The Direct Persistence Layer (DPL) adds a persistent object model to the
+Berkeley DB transactional engine.
+
+<h1>Package Specification</h1>
+
+<ul>
+<li><a href="#intro">Introduction</a></li>
+<li><a href="#model">The Entity Model</a></li>
+<li><a href="#example">A brief example</a></li>
+<li><a href="#whichAPI">Which API to use?</a></li>
+<li><a href="#java14and15">Java 1.5 dependencies</a>
+    <ul>
+    <li><a href="#genericTypes">Generic Types</a></li>
+    <li><a href="#annotations">Annotations</a></li>
+    </ul>
+</li>
+<li><a href="#bytecode">Bytecode Enhancement</a></li>
+</ul>
+
+<a name="intro"><h2>Introduction</h2></a>
+
+<p>The Direct Persistence Layer (DPL) was designed to meet the following
+requirements.</p>
+<ul>
+<li>A type safe and convenient API is provided for accessing persistent
+objects.  The use of Java generic types, although optional, is fully exploited
+to provide type safety.  For example:
+<pre class="code">
+{@literal PrimaryIndex<Long,Employer> employerById = ...;}
+long employerId = ...;
+Employer employer = employerById.get(employerId);</pre>
+</li>
+<li>All Java types are allowed to be persistent without requiring that they
+implement special interfaces.  Persistent fields may be {@code private},
+package-private (default access), {@code protected}, or {@code public}.  No
+hand-coding of bindings is required.  However, each persistent class must have
+a default constructor.  For example:
+<pre class="code">
+{@literal @Persistent}
+class Address {
+    String street;
+    String city;
+    String state;
+    int zipCode;
+    private Address() {}
+}</pre>
+</li>
+<li>Bytecode enhancement provides fully optimized bindings that do not use Java
+reflection.</li>
+<li>It is easy to define primary and secondary keys.  No external schema is
+required and Java annotations may be used for defining all metadata.
+Extensions may derive metadata from other sources.  For example, the following
+Employer class is defined as a persistent entity with a primary key field
+{@code id} and the secondary key field {@code name}:</li>
+<pre class="code">
+{@literal @Entity}
+class Employer {
+
+    {@literal @PrimaryKey(sequence="ID")}
+    long id;
+
+    {@literal @SecondaryKey(relate=ONE_TO_ONE)}
+    String name;
+
+    Address address;
+
+    private Employer() {}
+}</pre>
+<li>Interoperability with external components is supported via the Java
+collections framework.  Any primary or secondary index can be accessed using a
+standard <code>java.util</code> collection.  For example:
+<pre class="code">{@literal java.util.SortedMap<String,Employer> map = employerByName.sortedMap();}</pre>
+</li>
+<li>Class evolution is explicitly supported.  Compatible changes (adding fields
+and type widening) are performed automatically and transparently.  For example,
+without any special configuration a {@code street2} field may be added to the
+{@code Address} class and the type of the {@code zipCode} field may be changed
+from {@code int} to {@code long}:
+<pre class="code">
+{@literal @Persistent}
+class Address {
+    String street;
+    String street2;
+    String city;
+    String state;
+    long zipCode;
+    private Address() {}
+}</pre>
+Many incompatible class changes, such as renaming fields or refactoring a
+single class, can be performed using {@link
+com.sleepycat.persist.evolve.Mutations Mutations}.  Mutations are automatically
+applied lazily as data is accessed, avoiding downtime to convert large
+databases during a software upgrade.
+<p>Complex refactoring involving multiple classes may be performed using the a
+<a href="package-summary.html#storeConversion">store conversion</a>.  The DPL
+always provides access to your data via a {@code RawStore}, no matter what
+changes have been made to persistent classes.</p>
+</li>
+<br>
+<li>The performance of the Berkeley DB transactional engine is not compromised.
+Operations are internally mapped directly to the engine API, object bindings
+are lightweight, and all engine tuning parameters are available.  For example,
+a "dirty read" may be performed using an optional {@link
+com.sleepycat.db.LockMode LockMode} parameter:
+<pre class="code">Employer employer = employerByName.get(null, "Gizmo Inc", LockMode.READ_UNCOMMITTED);</pre>
+For high performance applications, {@link com.sleepycat.db.DatabaseConfig
+DatabaseConfig} parameters may be used to tune the performance of the Berkeley
+DB engine.  For example, the size of an internal Btree node can be specified
+as follows:
+<pre class="code">
+DatabaseConfig config = store.getPrimaryConfig(Employer.class);
+config.setNodeMaxEntries(64);
+store.setPrimaryConfig(config);</pre>
+</li>
+</ul>
+
+<a name="model"><h2>The Entity Model</h2></a>
+
+<p>The DPL is intended for applications that represent persistent domain
+objects using Java classes.  An <em>entity class</em> is an ordinary Java class
+that has a primary key and is stored and accessed using a primary index.  It
+may also have any number of secondary keys, and entities may be accessed by
+secondary key using a secondary index.</p>
+
+<p>An entity class may be defined with the {@link
+com.sleepycat.persist.model.Entity Entity} annotation.  For each entity class,
+its primary key may be defined using the {@link
+com.sleepycat.persist.model.PrimaryKey PrimaryKey} annotation and any number of
+secondary keys may be defined using the {@link
+com.sleepycat.persist.model.SecondaryKey SecondaryKey} annotation.</p>
+
+<p>In the following example, the {@code Person.ssn} (social security number)
+field is the primary key and the {@code Person.employerIds} field is a
+many-to-many secondary key.</p>
+<pre class="code">
+{@literal @Entity}
+class Person {
+
+    {@literal @PrimaryKey}
+    String ssn;
+
+    String name;
+    Address address;
+
+    {@literal @SecondaryKey(relate=MANY_TO_MANY, relatedEntity=Employer.class)}
+    {@literal Set<Long> employerIds = new HashSet<Long>();}
+
+    private Person() {} // For bindings
+}</pre>
+
+<p>A set of entity classes constitutes an <em>entity model</em>.  In addition
+to isolated entity classes, an entity model may contain relationships between
+entities.  Relationships may be defined using the {@link
+com.sleepycat.persist.model.SecondaryKey SecondaryKey} annotation.
+Many-to-one, one-to-many, many-to-many and one-to-one relationships are
+supported, as well as foreign key constraints.</p>
+
+<p>In the example above, a relationship between the {@code Person} and {@code
+Employer} entities is defined via the {@code Person.employerIds} field.  The
+{@code relatedEntity=Employer.class} annotation property establishes foreign
+key constraints to guarantee that every element of the {@code employerIds} set
+is a valid {@code Employer} primary key.</p>
+
+<p>For more information on the entity model, see the {@link
+com.sleepycat.persist.model.AnnotationModel AnnotationModel} and the {@link
+com.sleepycat.persist.model.Entity Entity} annotation.</p>
+
+<p>The root object in the DPL is the {@link com.sleepycat.persist.EntityStore
+EntityStore}.  An entity store manages any number of objects for each entity
+class defined in the model.  The store provides access to the primary and
+secondary indices for each entity class, for example:</p>
+
+<pre class="code">
+EntityStore store = new EntityStore(...);
+
+{@literal PrimaryIndex<String,Person> personBySsn} =
+    store.getPrimaryIndex(String.class, Person.class);</pre>
+
+<a name="example"><h2>A brief example</h2></a>
+
+<p>The following example shows how to define an entity model and how to store
+and access persistent objects.  Exception handling is omitted for brevity.</p>
+
+<pre class="code">
+import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
+
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.Environment;
+import com.sleepycat.db.EnvironmentConfig;
+import com.sleepycat.persist.EntityCursor;
+import com.sleepycat.persist.EntityIndex;
+import com.sleepycat.persist.EntityStore;
+import com.sleepycat.persist.PrimaryIndex;
+import com.sleepycat.persist.SecondaryIndex;
+import com.sleepycat.persist.StoreConfig;
+import com.sleepycat.persist.model.Entity;
+import com.sleepycat.persist.model.Persistent;
+import com.sleepycat.persist.model.PrimaryKey;
+import com.sleepycat.persist.model.SecondaryKey;
+import static com.sleepycat.persist.model.DeleteAction.NULLIFY;
+import static com.sleepycat.persist.model.Relationship.ONE_TO_ONE;
+import static com.sleepycat.persist.model.Relationship.ONE_TO_MANY;
+import static com.sleepycat.persist.model.Relationship.MANY_TO_ONE;
+import static com.sleepycat.persist.model.Relationship.MANY_TO_MANY;
+
+// An entity class.
+//
+{@literal @Entity}
+class Person {
+
+    {@literal @PrimaryKey}
+    String ssn;
+
+    String name;
+    Address address;
+
+    {@literal @SecondaryKey(relate=MANY_TO_ONE, relatedEntity=Person.class)}
+    String parentSsn;
+
+    {@literal @SecondaryKey(relate=ONE_TO_MANY)}
+    {@literal Set<String> emailAddresses = new HashSet<String>();}
+
+    {@code @SecondaryKey(relate=MANY_TO_MANY, relatedEntity=Employer.class,
+                                       onRelatedEntityDelete=NULLIFY)}
+    {@code Set<Long> employerIds = new HashSet<Long>();}
+
+    Person(String name, String ssn, String parentSsn) {
+        this.name = name;
+        this.ssn = ssn;
+        this.parentSsn = parentSsn;
+    }
+
+    private Person() {} // For bindings
+}
+
+// Another entity class.
+//
+{@literal @Entity}
+class Employer {
+
+    {@literal @PrimaryKey(sequence="ID")}
+    long id;
+
+    {@literal @SecondaryKey(relate=ONE_TO_ONE)}
+    String name;
+
+    Address address;
+
+    Employer(String name) {
+        this.name = name;
+    }
+
+    private Employer() {} // For bindings
+}
+
+// A persistent class used in other classes.
+//
+{@literal @Persistent}
+class Address {
+    String street;
+    String city;
+    String state;
+    int zipCode;
+    private Address() {} // For bindings
+}
+
+// The data accessor class for the entity model.
+//
+class PersonAccessor {
+
+    // Person accessors
+    //
+    {@literal PrimaryIndex<String,Person> personBySsn;}
+    {@literal SecondaryIndex<String,String,Person> personByParentSsn;}
+    {@literal SecondaryIndex<String,String,Person> personByEmailAddresses;}
+    {@literal SecondaryIndex<Long,String,Person> personByEmployerIds;}
+
+    // Employer accessors
+    //
+    {@literal PrimaryIndex<Long,Employer> employerById;}
+    {@literal SecondaryIndex<String,Long,Employer> employerByName;}
+
+    // Opens all primary and secondary indices.
+    //
+    public PersonAccessor(EntityStore store)
+        throws DatabaseException {
+
+        personBySsn = store.getPrimaryIndex(
+            String.class, Person.class);
+
+        personByParentSsn = store.getSecondaryIndex(
+            personBySsn, String.class, "parentSsn");
+
+        personByEmailAddresses = store.getSecondaryIndex(
+            personBySsn, String.class, "emailAddresses");
+
+        personByEmployerIds = store.getSecondaryIndex(
+            personBySsn, Long.class, "employerIds");
+
+        employerById = store.getPrimaryIndex(
+            Long.class, Employer.class);
+
+        employerByName = store.getSecondaryIndex(
+            employerById, String.class, "name"); 
+    }
+}
+
+// Open a transactional Berkeley DB engine environment.
+//
+EnvironmentConfig envConfig = new EnvironmentConfig();
+envConfig.setAllowCreate(true);
+envConfig.setTransactional(true);
+Environment env = new Environment(new File("/my/data"), envConfig);
+
+// Open a transactional entity store.
+//
+StoreConfig storeConfig = new StoreConfig();
+storeConfig.setAllowCreate(true);
+storeConfig.setTransactional(true);
+EntityStore store = new EntityStore(env, "PersonStore", storeConfig);
+
+// Initialize the data access object.
+//
+PersonAccessor dao = new PersonAccessor(store);
+
+// Add a parent and two children using the Person primary index.  Specifying a
+// non-null parentSsn adds the child Person to the sub-index of children for
+// that parent key.
+//
+dao.personBySsn.put(new Person("Bob Smith", "111-11-1111", null));
+dao.personBySsn.put(new Person("Mary Smith", "333-33-3333", "111-11-1111"));
+dao.personBySsn.put(new Person("Jack Smith", "222-22-2222", "111-11-1111"));
+
+// Print the children of a parent using a sub-index and a cursor.
+//
+{@literal EntityCursor<Person> children =}
+    dao.personByParentSsn.subIndex("111-11-1111").entities();
+try {
+    for (Person child : children) {
+        System.out.println(child.ssn + ' ' + child.name);
+    }
+} finally {
+    children.close();
+}
+
+// Get Bob by primary key using the primary index.
+//
+Person bob = dao.personBySsn.get("111-11-1111");
+assert bob != null;
+
+// Create two employers.  Their primary keys are assigned from a sequence.
+//
+Employer gizmoInc = new Employer("Gizmo Inc");
+Employer gadgetInc = new Employer("Gadget Inc");
+dao.employerById.put(gizmoInc);
+dao.employerById.put(gadgetInc);
+
+// Bob has two jobs and two email addresses.
+//
+bob.employerIds.add(gizmoInc.id);
+bob.employerIds.add(gadgetInc.id);
+bob.emailAddresses.add("bob@bob.com");
+bob.emailAddresses.add("bob@gmail.com");
+
+// Update Bob's record.
+//
+dao.personBySsn.put(bob);
+
+// Bob can now be found by both email addresses.
+//
+bob = dao.personByEmailAddresses.get("bob@bob.com");
+assert bob != null;
+bob = dao.personByEmailAddresses.get("bob@gmail.com");
+assert bob != null;
+
+// Bob can also be found as an employee of both employers.
+//
+{@literal EntityIndex<String,Person> employees;}
+employees = dao.personByEmployerIds.subIndex(gizmoInc.id);
+assert employees.contains("111-11-1111");
+employees = dao.personByEmployerIds.subIndex(gadgetInc.id);
+assert employees.contains("111-11-1111");
+
+// When an employer is deleted, the onRelatedEntityDelete=NULLIFY for the
+// employerIds key causes the deleted ID to be removed from Bob's employerIds.
+//
+dao.employerById.delete(gizmoInc.id);
+bob = dao.personBySsn.get("111-11-1111");
+assert !bob.employerIds.contains(gizmoInc.id);
+
+store.close();
+env.close();
+</pre>
+<p>The example illustrates several characteristics of the DPL:</p>
+<ul>
+<li>Persistent data and keys are defined in terms of instance fields.  For
+brevity the example does not show getter and setter methods, although these
+would normally exist to provide encapsulation.  The DPL accesses fields during
+object serialization and deserialization, rather than calling getter/setter
+methods, leaving business methods free to enforce arbitrary validation rules.
+For example: 
+<pre class="code">
+{@literal @Persistent}
+public class ConstrainedValue {
+
+    private int min;
+    private int max;
+    private int value;
+
+    private ConstrainedValue() {} // For bindings
+
+    public ConstrainedValue(int min, int max) {
+        this.min = min;
+        this.max = max;
+        value = min;
+    }
+
+    public setValue(int value) {
+        if (value &lt; min || value &gt; max) {
+            throw new IllegalArgumentException("out of range");
+        }
+        this.value = value;
+    }
+}
+</pre>
+The above {@code setValue} method would not work if it were called during
+object deserialization, since the order of setting fields is arbitrary.  The
+{@code min} and {@code max} fields may not be set before the {@code value} is
+set.
+</li>
+<br>
+<li>The example creates a transactional store and therefore all operations are
+transaction protected.  Because no explicit transactions are used, auto-commit
+is used implicitly.
+
+<p>Explicit transactions may also be used to group multiple operations in a
+single transaction, and all access methods have optional transaction
+parameters.  For example, the following two operations are performed atomically
+in a transaction:
+<pre class="code">
+Transaction txn = env.beginTransaction(null, null);
+dao.employerById.put(txn, gizmoInc);
+dao.employerById.put(txn, gadgetInc);
+txn.commit();
+</pre>
+</li>
+<li>To provide maximum performance, the DPL operations map directly to the
+Btree operations of the Berkeley DB engine.  Unlike other persistence
+approaches, keys and indices are exposed for direct access and performance
+tuning.
+<p>Queries are implemented by calling methods of the primary and secondary
+indices.  An {@link com.sleepycat.persist.EntityJoin EntityJoin} class is also
+available for performing equality joins.  For example, the following code
+queries all of Bob's children that work for Gizmo Inc:
+<pre class="code">
+{@literal EntityJoin<String,Person> join = new EntityJoin(dao.personBySsn);}
+
+join.addCondition(dao.personByParentSsn, "111-11-1111");
+join.addCondition(dao.personByEmployerIds, gizmoInc.id);
+
+{@literal ForwardCursor<Person> results = join.entities();}
+try {
+    for (Person person : results) {
+        System.out.println(person.ssn + ' ' + person.name);
+    }
+} finally {
+    results.close();
+}
+</li>
+<li>Object relationships are based on keys.  When a {@code Person} with a given
+employer ID in its {@code employerIds} set is stored, the {@code Person} object
+becomes part of the collection of employees for that employer.  This collection
+of employees is accessed using a {@link
+com.sleepycat.persist.SecondaryIndex#subIndex SecondaryIndex.subIndex} for the
+employer ID, as shown below:
+<pre class="code">
+{@literal EntityCursor<Person> employees =}
+    dao.personByEmployerIds.subIndex(gizmoInc.id).entities();
+try {
+    for (Person employee : employees) {
+        System.out.println(employee.ssn + ' ' + employee.name);
+    }
+} finally {
+    employees.close();
+}
+</pre></li>
+<li>Note that when Bob's employer is deleted in the example, the {@code Person}
+object for Bob is refetched to see the change to its {@code employerIds}.  This
+is because objects are accessed by value, not by reference.  In other words, no
+object cache or "persistence context" is maintained by the DPL.  The low level
+caching of the embedded Berkeley DB engine, combined with lightweight object
+bindings, provides maximum performance.</li>
+</ul>
+
+<a name="whichAPI"><h2>Which API to use?</h2></a>
+
+<p>The Berkeley DB engine has a {@link com.sleepycat.db Base API}, a {@link
+com.sleepycat.collections Collections API} and a {@link com.sleepycat.persist
+Direct Persistence Layer (DPL)}.  Follow these guidelines if you are not sure
+which API to use:</p>
+<ul>
+<li>When Java classes are used to represent domain objects in an application,
+the DPL is recommended.  The more domain classes, the more value there is in
+using annotations to define your schema.</li>
+<br>
+<li>When porting an application between Berkeley DB and Berkeley DB Java
+Edition, or when you've chosen not to use Java classes to represent domain
+objects, then the Base API is recommended.  You may also prefer to use this API
+if you have very few domain classes.</li>
+<br>
+<li>The Collections API is useful for interoperating with external components
+because it conforms to the standard Java Collections Framework.  It is
+therefore useful in combination with both the Base API and the DPL.  You may
+prefer this API because it provides the familiar Java Collections
+interface.</li>
+</ul>
+
+<a name="java14and15"><h2>Java 1.5 dependencies</h2></a>
+
+<p>The DPL uses two features of Java 1.5: generic types and annotations.  If
+you wish to avoid using these two Java 1.5 features, the DPL provides options
+for doing so.</p>
+
+<a name="genericTypes"><h3>Generic Types</h3></a>
+
+<p>Generic types are used to provide type safety, especially for the {@link
+com.sleepycat.persist.PrimaryIndex PrimaryIndex}, {@link
+com.sleepycat.persist.SecondaryIndex SecondaryIndex}, and {@link
+com.sleepycat.persist.EntityCursor EntityCursor} classes.  If you don't wish to
+use generic types, you can simply not declare your index and cursor objects
+using generic type parameters.  This is the same as using the Java 1.5
+Collections Framework without using generic types.</p>
+
+<a name="annotations"><h3>Annotations</h3></a>
+
+<p>If you don't wish to use annotations, you can provide another source of
+metadata by implementing an {@link com.sleepycat.persist.model.EntityModel
+EntityModel} class.  For example, naming conventions, static members, or an XML
+configuration file might be used as a source of metadata.  However, if you
+don't use annotations then you won't be able to use bytecode enhancement, which
+is described next.</p>
+
+<a name="bytecode"><h2>Bytecode Enhancement</h2></a>
+
+<p>The persistent fields of a class may be private, package-private, protected
+or public.  The DPL can access persistent fields either by bytecode enhancement
+or by reflection.</p>
+
+<p>Bytecode enhancement may be used to fully optimize binding performance and
+to avoid the use of Java reflection.  In applications that are CPU bound,
+avoiding Java reflection can have a significant performance impact.</p>
+
+<p>Bytecode enhancement may be performed either at runtime or at build time
+(offline).  When enhancement is performed at runtime, persistent classes are
+enhanced as they are loaded.  When enhancement is performed offline, class
+files are enhanced during a post-compilation step.
+Enhanced classes are used to efficiently access all fields and default
+constructors, including non-public members.</p>
+
+<p>See {@link com.sleepycat.persist.model.ClassEnhancer ClassEnhancer} for
+bytecode enhancement configuration details.</p>
+
+<p>If bytecode enhancement is not used as described above, the DPL will use
+reflection for accessing persistent fields and the default constructor.  The
+{@link java.lang.reflect.AccessibleObject#setAccessible
+AccessibleObject.setAccessible} method is called by the DPL to enable access to
+non-public fields and constructors.  If you are running under a Java security
+manager you must configure your security policy to allow the following
+permission:</p>
+
+<p>{@code permission java.lang.reflect.ReflectPermission "suppressAccessChecks";}
+
+<p>There are three cases where setting the above permission is <em>not</em>
+required:</p>
+<ol>
+<li>If you are not running under a Java Security Manager, then access to
+non-public members via reflection is not restricted.  This is the default for
+J2SE.</li>
+<br>
+<li>If all persistent fields and default constructors are {@code public} then
+they can be accessed via reflection without special permissions, even when
+running under a Java Security Manager.  However, declaring {@code public}
+instance fields is not recommended because it discourages encapsulation.</li>
+<br>
+<li>If bytecode enhancement is used as described above, then reflection will
+not be used.</li>
+</ol>
+
+<p>It is well known that executing generated code is faster than reflection.
+However, this performance difference may or may not impact a given application
+since it may be overshadowed by other factors.  Performance testing in a
+realistic usage scenario is the best way to determine the impact.  If you are
+determined to avoid the use of reflection then option 3 above is
+recommended.</p>
+
+</body>
+</html>

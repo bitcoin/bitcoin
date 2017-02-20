@@ -1,0 +1,38 @@
+/*-
+ * See the file LICENSE for redistribution information.
+ *
+ * Copyright (c) 1996-2009 Oracle.  All rights reserved.
+ *
+ * $Id$
+ */
+
+DBPRIVATE
+PREFIX	__dbreg
+
+INCLUDE #include "db_int.h"
+INCLUDE #include "dbinc/crypto.h"
+INCLUDE #include "dbinc/db_page.h"
+INCLUDE #include "dbinc/db_dispatch.h"
+INCLUDE #include "dbinc/db_am.h"
+INCLUDE #include "dbinc/log.h"
+INCLUDE #include "dbinc/txn.h"
+INCLUDE
+
+/*
+ * Used for registering name/id translations at open or close.
+ * opcode: register or unregister
+ * name: file name
+ * fileid: unique file id
+ * ftype: file type
+ * ftype: database type
+ * id: transaction id of the subtransaction that created the fs object
+ */
+BEGIN register		42	2
+ARG	opcode		u_int32_t	lu
+DBT	name		DBT		s
+DBT	uid		DBT		s
+ARG	fileid		int32_t		ld
+ARG	ftype		DBTYPE		lx
+ARG	meta_pgno	db_pgno_t	lu
+ARG	id		u_int32_t	lx
+END

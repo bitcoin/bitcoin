@@ -1,0 +1,2855 @@
+/*-
+ * See the file LICENSE for redistribution information.
+ *
+ * Copyright (c) 2000-2009 Oracle.  All rights reserved.
+ *
+ * $Id$
+ */
+package com.sleepycat.persist.test;
+
+import static com.sleepycat.persist.model.Relationship.MANY_TO_ONE;
+
+import java.math.BigInteger;
+
+import junit.framework.TestCase;
+
+import com.sleepycat.db.Environment;
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.persist.EntityStore;
+import com.sleepycat.persist.PrimaryIndex;
+import com.sleepycat.persist.SecondaryIndex;
+import com.sleepycat.persist.StoreConfig;
+import com.sleepycat.persist.evolve.Mutations;
+import com.sleepycat.persist.model.Entity;
+import com.sleepycat.persist.model.EntityModel;
+import com.sleepycat.persist.model.KeyField;
+import com.sleepycat.persist.model.Persistent;
+import com.sleepycat.persist.model.PersistentProxy;
+import com.sleepycat.persist.model.PrimaryKey;
+import com.sleepycat.persist.model.SecondaryKey;
+import com.sleepycat.persist.raw.RawStore;
+
+import static com.sleepycat.persist.model.Relationship.ONE_TO_ONE;
+
+/**
+ * Nested classes are original versions of classes of the same name in
+ * EvolveClasses.java.  See EvolveTestBase.java for the steps that are taken to
+ * add a new class (test case).
+ *
+ * @author Mark Hayes
+ */
+class EvolveClasses {
+
+    @Entity
+    static class DeletedEntity1_ClassRemoved extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int skey = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DeletedEntity1_ClassRemoved> index =
+                store.getPrimaryIndex
+                    (Integer.class, DeletedEntity1_ClassRemoved.class);
+            index.put(this);
+
+            SecondaryIndex<Integer,Integer,DeletedEntity1_ClassRemoved>
+                sindex = store.getSecondaryIndex(index, Integer.class, "skey");
+            TestCase.assertNotNull(sindex.get(88));
+        }
+
+        @Override
+        void checkUnevolvedModel(EntityModel model, Environment env) {
+            assertDbExists
+                (true, env,
+                 DeletedEntity1_ClassRemoved.class.getName());
+            assertDbExists
+                (true, env,
+                 DeletedEntity1_ClassRemoved.class.getName(), "skey");
+        }
+    }
+
+    @Entity
+    static class DeletedEntity2_ClassRemoved extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int skey = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DeletedEntity2_ClassRemoved> index =
+                store.getPrimaryIndex
+                    (Integer.class, DeletedEntity2_ClassRemoved.class);
+            index.put(this);
+
+            SecondaryIndex<Integer,Integer,DeletedEntity2_ClassRemoved>
+                sindex = store.getSecondaryIndex(index, Integer.class, "skey");
+            TestCase.assertNotNull(sindex.get(88));
+        }
+
+        @Override
+        void checkUnevolvedModel(EntityModel model, Environment env) {
+            assertDbExists
+                (true, env,
+                 DeletedEntity2_ClassRemoved.class.getName());
+            assertDbExists
+                (true, env,
+                 DeletedEntity2_ClassRemoved.class.getName(), "skey");
+        }
+    }
+
+    @Entity
+    static class DeletedEntity3_AnnotRemoved_NoMutation extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int skey = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DeletedEntity3_AnnotRemoved_NoMutation>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DeletedEntity3_AnnotRemoved_NoMutation.class);
+            index.put(this);
+
+            SecondaryIndex<Integer,Integer,
+                           DeletedEntity3_AnnotRemoved_NoMutation>
+                sindex = store.getSecondaryIndex(index, Integer.class, "skey");
+            TestCase.assertNotNull(sindex.get(88));
+        }
+
+        @Override
+        void checkUnevolvedModel(EntityModel model, Environment env) {
+            assertDbExists
+                (true, env,
+                 DeletedEntity3_AnnotRemoved_NoMutation.class.getName());
+            assertDbExists
+                (true, env,
+                 DeletedEntity3_AnnotRemoved_NoMutation.class.getName(),
+                 "skey");
+        }
+    }
+
+    @Entity
+    static class DeletedEntity4_AnnotRemoved_WithDeleter extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int skey = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DeletedEntity4_AnnotRemoved_WithDeleter>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DeletedEntity4_AnnotRemoved_WithDeleter.class);
+            index.put(this);
+
+            SecondaryIndex<Integer,Integer,
+                           DeletedEntity4_AnnotRemoved_WithDeleter>
+                sindex = store.getSecondaryIndex(index, Integer.class, "skey");
+            TestCase.assertNotNull(sindex.get(88));
+        }
+
+        @Override
+        void checkUnevolvedModel(EntityModel model, Environment env) {
+            assertDbExists
+                (true, env,
+                 DeletedEntity4_AnnotRemoved_WithDeleter.class.getName());
+            assertDbExists
+                (true, env,
+                 DeletedEntity4_AnnotRemoved_WithDeleter.class.getName(),
+                 "skey");
+        }
+    }
+
+    @Entity
+    static class DeletedEntity5_EntityToPersist_NoMutation extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int skey = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DeletedEntity5_EntityToPersist_NoMutation>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DeletedEntity5_EntityToPersist_NoMutation.class);
+            index.put(this);
+
+            SecondaryIndex<Integer,Integer,
+                           DeletedEntity5_EntityToPersist_NoMutation>
+                sindex = store.getSecondaryIndex(index, Integer.class, "skey");
+            TestCase.assertNotNull(sindex.get(88));
+        }
+
+        @Override
+        void checkUnevolvedModel(EntityModel model, Environment env) {
+            assertDbExists
+                (true, env,
+                 DeletedEntity5_EntityToPersist_NoMutation.class.getName());
+            assertDbExists
+                (true, env,
+                 DeletedEntity5_EntityToPersist_NoMutation.class.getName(),
+                 "skey");
+        }
+    }
+
+    @Entity
+    static class DeletedEntity6_EntityToPersist_WithDeleter extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int skey = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DeletedEntity6_EntityToPersist_WithDeleter>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DeletedEntity6_EntityToPersist_WithDeleter.class);
+            index.put(this);
+
+            SecondaryIndex<Integer,Integer,
+                           DeletedEntity6_EntityToPersist_WithDeleter>
+                sindex = store.getSecondaryIndex(index, Integer.class, "skey");
+            TestCase.assertNotNull(sindex.get(88));
+        }
+
+        @Override
+        void checkUnevolvedModel(EntityModel model, Environment env) {
+            assertDbExists
+                (true, env,
+                 DeletedEntity6_EntityToPersist_WithDeleter.class.getName());
+            assertDbExists
+                (true, env,
+                 DeletedEntity6_EntityToPersist_WithDeleter.class.getName(),
+                 "skey");
+        }
+    }
+
+    @Persistent
+    static class DeletedPersist1_ClassRemoved {
+
+        int f = 123;
+    }
+
+    @Entity
+    static class DeletedPersist1_ClassRemoved_NoMutation extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        DeletedPersist1_ClassRemoved embed =
+            new DeletedPersist1_ClassRemoved();
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DeletedPersist1_ClassRemoved_NoMutation>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DeletedPersist1_ClassRemoved_NoMutation.class);
+            index.put(this);
+        }
+    }
+
+    @Persistent
+    static class DeletedPersist2_ClassRemoved {
+
+        int f = 123;
+    }
+
+    @Entity
+    static class DeletedPersist2_ClassRemoved_WithDeleter extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        DeletedPersist2_ClassRemoved embed =
+            new DeletedPersist2_ClassRemoved();
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DeletedPersist2_ClassRemoved_WithDeleter>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DeletedPersist2_ClassRemoved_WithDeleter.class);
+            index.put(this);
+        }
+    }
+
+    @Persistent
+    static class DeletedPersist3_AnnotRemoved {
+
+        int f = 123;
+    }
+
+    @Entity
+    static class DeletedPersist3_AnnotRemoved_NoMutation extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        DeletedPersist3_AnnotRemoved embed =
+            new DeletedPersist3_AnnotRemoved();
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DeletedPersist3_AnnotRemoved_NoMutation>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DeletedPersist3_AnnotRemoved_NoMutation.class);
+            index.put(this);
+        }
+    }
+
+    @Persistent
+    static class DeletedPersist4_AnnotRemoved {
+
+        int f = 123;
+    }
+
+    @Entity
+    static class DeletedPersist4_AnnotRemoved_WithDeleter extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        DeletedPersist4_AnnotRemoved embed =
+            new DeletedPersist4_AnnotRemoved();
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DeletedPersist4_AnnotRemoved_WithDeleter>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DeletedPersist4_AnnotRemoved_WithDeleter.class);
+            index.put(this);
+        }
+    }
+
+    @Persistent
+    static class DeletedPersist5_PersistToEntity {
+
+        int f = 123;
+    }
+
+    @Entity
+    static class DeletedPersist5_PersistToEntity_NoMutation
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        DeletedPersist5_PersistToEntity embed =
+            new DeletedPersist5_PersistToEntity();
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DeletedPersist5_PersistToEntity_NoMutation>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DeletedPersist5_PersistToEntity_NoMutation.class);
+            index.put(this);
+        }
+    }
+
+    @Persistent
+    static class DeletedPersist6_PersistToEntity {
+
+        int f = 123;
+    }
+
+    @Entity
+    static class DeletedPersist6_PersistToEntity_WithDeleter
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        DeletedPersist6_PersistToEntity embed =
+            new DeletedPersist6_PersistToEntity();
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DeletedPersist6_PersistToEntity_WithDeleter>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DeletedPersist6_PersistToEntity_WithDeleter.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class RenamedEntity1_NewEntityName
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int skey = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,RenamedEntity1_NewEntityName>
+                index = store.getPrimaryIndex
+                    (Integer.class, RenamedEntity1_NewEntityName.class);
+            index.put(this);
+
+            SecondaryIndex<Integer,Integer,RenamedEntity1_NewEntityName>
+                sindex = store.getSecondaryIndex(index, Integer.class, "skey");
+            TestCase.assertNotNull(sindex.get(88));
+        }
+
+        @Override
+        void checkUnevolvedModel(EntityModel model, Environment env) {
+            assertDbExists
+                (true, env,
+                 RenamedEntity1_NewEntityName.class.getName());
+            assertDbExists
+                (true, env,
+                 RenamedEntity1_NewEntityName.class.getName(), "skey");
+        }
+    }
+
+    @Entity
+    static class RenamedEntity2_NewEntityName
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int skey = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,RenamedEntity2_NewEntityName>
+                index = store.getPrimaryIndex
+                    (Integer.class, RenamedEntity2_NewEntityName.class);
+            index.put(this);
+
+            SecondaryIndex<Integer,Integer,RenamedEntity2_NewEntityName>
+                sindex = store.getSecondaryIndex(index, Integer.class, "skey");
+            TestCase.assertNotNull(sindex.get(88));
+        }
+
+        @Override
+        void checkUnevolvedModel(EntityModel model, Environment env) {
+            assertDbExists
+                (true, env,
+                 RenamedEntity2_NewEntityName.class.getName());
+            assertDbExists
+                (true, env,
+                 RenamedEntity2_NewEntityName.class.getName(), "skey");
+        }
+    }
+
+    @Persistent
+    static class DeleteSuperclass1_BaseClass
+        extends EvolveCase {
+
+        int f = 123;
+    }
+
+    @Entity
+    static class DeleteSuperclass1_NoMutation
+        extends DeleteSuperclass1_BaseClass {
+
+        @PrimaryKey
+        int key = 99;
+
+        int ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DeleteSuperclass1_NoMutation>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DeleteSuperclass1_NoMutation.class);
+            index.put(this);
+        }
+    }
+
+    @Persistent
+    static class DeleteSuperclass2_BaseClass
+        extends EvolveCase {
+
+        int f = 123;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int skey = 456;
+    }
+
+    @Entity
+    static class DeleteSuperclass2_WithConverter
+        extends DeleteSuperclass2_BaseClass {
+
+        @PrimaryKey
+        int key = 99;
+
+        int ff = 88;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int skey2 = 77;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        Integer skey3 = 66;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DeleteSuperclass2_WithConverter>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DeleteSuperclass2_WithConverter.class);
+            index.put(this);
+        }
+    }
+
+    @Persistent
+    static class DeleteSuperclass3_BaseClass
+        extends EvolveCase {
+
+        int f = 123;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int skey = 456;
+    }
+
+    @Entity
+    static class DeleteSuperclass3_WithDeleter
+        extends DeleteSuperclass3_BaseClass {
+
+        @PrimaryKey
+        int key = 99;
+
+        int ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DeleteSuperclass3_WithDeleter>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DeleteSuperclass3_WithDeleter.class);
+            index.put(this);
+        }
+    }
+
+    @Persistent
+    static class DeleteSuperclass4_BaseClass
+        extends EvolveCase {
+    }
+
+    @Entity
+    static class DeleteSuperclass4_NoFields
+        extends DeleteSuperclass4_BaseClass {
+
+        @PrimaryKey
+        int key = 99;
+
+        int ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DeleteSuperclass4_NoFields>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DeleteSuperclass4_NoFields.class);
+            index.put(this);
+        }
+    }
+
+    @Persistent
+    static class DeleteSuperclass5_Embedded_Base {
+
+        int g = 456;
+    }
+
+    @Persistent
+    static class DeleteSuperclass5_Embedded
+        extends DeleteSuperclass5_Embedded_Base  {
+
+        int f = 123;
+    }
+
+    @Entity
+    static class DeleteSuperclass5_Top
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        int ff = 88;
+
+        DeleteSuperclass5_Embedded embed =
+            new DeleteSuperclass5_Embedded();
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DeleteSuperclass5_Top>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DeleteSuperclass5_Top.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class InsertSuperclass1_Between
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        int ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,InsertSuperclass1_Between>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     InsertSuperclass1_Between.class);
+            index.put(this);
+        }
+    }
+
+    @Persistent
+    static class InsertSuperclass2_Embedded {
+
+        int f = 123;
+    }
+
+    @Entity
+    static class InsertSuperclass2_Top
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        int ff = 88;
+
+        InsertSuperclass2_Embedded embed =
+            new InsertSuperclass2_Embedded();
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,InsertSuperclass2_Top>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     InsertSuperclass2_Top.class);
+            index.put(this);
+        }
+    }
+
+    /*
+    @Persistent
+    static class RenameFields1_Base
+        extends EvolveCase {
+
+        int f = 123;
+    }
+
+    @Entity
+    static class RenameFields1
+        extends RenameFields1_Base {
+
+        @PrimaryKey
+        int key = 99;
+
+        int ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,RenameFields1>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     RenameFields1.class);
+            index.put(this);
+        }
+    }
+    */
+
+    @Entity
+    static class DisallowNonKeyField_PrimitiveToObject
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        int ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowNonKeyField_PrimitiveToObject>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowNonKeyField_PrimitiveToObject.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowNonKeyField_ObjectToPrimitive
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        String ff = "88";
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowNonKeyField_ObjectToPrimitive>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowNonKeyField_ObjectToPrimitive.class);
+            index.put(this);
+        }
+    }
+
+    @Persistent
+    static class MyType {
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof MyType;
+        }
+    }
+
+    @Persistent
+    static class MySubtype extends MyType {
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof MySubtype;
+        }
+    }
+
+    @Entity
+    static class DisallowNonKeyField_ObjectToSubtype
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        MyType ff = new MyType();
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowNonKeyField_ObjectToSubtype>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowNonKeyField_ObjectToSubtype.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowNonKeyField_ObjectToUnrelatedSimple
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        Integer ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowNonKeyField_ObjectToUnrelatedSimple>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowNonKeyField_ObjectToUnrelatedSimple.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowNonKeyField_ObjectToUnrelatedOther
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        Integer ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowNonKeyField_ObjectToUnrelatedOther>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowNonKeyField_ObjectToUnrelatedOther.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowNonKeyField_byte2boolean
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        byte ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowNonKeyField_byte2boolean>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowNonKeyField_byte2boolean.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowNonKeyField_short2byte
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        short ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowNonKeyField_short2byte>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowNonKeyField_short2byte.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowNonKeyField_int2short
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        int ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowNonKeyField_int2short>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowNonKeyField_int2short.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowNonKeyField_long2int
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        long ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowNonKeyField_long2int>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowNonKeyField_long2int.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowNonKeyField_float2long
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        float ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowNonKeyField_float2long>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowNonKeyField_float2long.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowNonKeyField_double2float
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        double ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowNonKeyField_double2float>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowNonKeyField_double2float.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowNonKeyField_Byte2byte
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        Byte ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowNonKeyField_Byte2byte>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowNonKeyField_Byte2byte.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowNonKeyField_Character2char
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        Character ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowNonKeyField_Character2char>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowNonKeyField_Character2char.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowNonKeyField_Short2short
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        Short ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowNonKeyField_Short2short>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowNonKeyField_Short2short.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowNonKeyField_Integer2int
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        Integer ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowNonKeyField_Integer2int>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowNonKeyField_Integer2int.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowNonKeyField_Long2long
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        Long ff = 88L;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowNonKeyField_Long2long>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowNonKeyField_Long2long.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowNonKeyField_Float2float
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        Float ff = 88F;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowNonKeyField_Float2float>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowNonKeyField_Float2float.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowNonKeyField_Double2double
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        Double ff = 88D;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowNonKeyField_Double2double>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowNonKeyField_Double2double.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowNonKeyField_float2BigInt
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        float ff = 88F;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowNonKeyField_float2BigInt>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowNonKeyField_float2BigInt.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowNonKeyField_BigInt2long
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        BigInteger ff = BigInteger.valueOf(88);
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowNonKeyField_BigInt2long>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowNonKeyField_BigInt2long.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowSecKeyField_byte2short
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        byte ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowSecKeyField_byte2short>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowSecKeyField_byte2short.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowSecKeyField_char2int
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        char ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowSecKeyField_char2int>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowSecKeyField_char2int.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowSecKeyField_short2int
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        short ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowSecKeyField_short2int>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowSecKeyField_short2int.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowSecKeyField_int2long
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowSecKeyField_int2long>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowSecKeyField_int2long.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowSecKeyField_long2float
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        long ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowSecKeyField_long2float>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowSecKeyField_long2float.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowSecKeyField_float2double
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        float ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowSecKeyField_float2double>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowSecKeyField_float2double.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowSecKeyField_Byte2short2
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        Byte ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowSecKeyField_Byte2short2>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowSecKeyField_Byte2short2.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowSecKeyField_Character2int
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        Character ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowSecKeyField_Character2int>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowSecKeyField_Character2int.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowSecKeyField_Short2int2
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        Short ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowSecKeyField_Short2int2>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowSecKeyField_Short2int2.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowSecKeyField_Integer2long
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        Integer ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowSecKeyField_Integer2long>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowSecKeyField_Integer2long.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowSecKeyField_Long2float2
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        Long ff = 88L;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowSecKeyField_Long2float2>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowSecKeyField_Long2float2.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowSecKeyField_Float2double2
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        Float ff = 88F;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowSecKeyField_Float2double2>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowSecKeyField_Float2double2.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowSecKeyField_int2BigInt
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int ff = 88;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowSecKeyField_int2BigInt>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowSecKeyField_int2BigInt.class);
+            index.put(this);
+        }
+    }
+
+    // --
+
+    @Entity
+    static class DisallowPriKeyField_byte2short
+        extends EvolveCase {
+
+        @PrimaryKey
+        byte key = 99;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Byte,DisallowPriKeyField_byte2short>
+                index = store.getPrimaryIndex
+                    (Byte.class,
+                     DisallowPriKeyField_byte2short.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowPriKeyField_char2int
+        extends EvolveCase {
+
+        @PrimaryKey
+        char key = 99;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Character,DisallowPriKeyField_char2int>
+                index = store.getPrimaryIndex
+                    (Character.class,
+                     DisallowPriKeyField_char2int.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowPriKeyField_short2int
+        extends EvolveCase {
+
+        @PrimaryKey
+        short key = 99;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Short,DisallowPriKeyField_short2int>
+                index = store.getPrimaryIndex
+                    (Short.class,
+                     DisallowPriKeyField_short2int.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowPriKeyField_int2long
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key = 99;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowPriKeyField_int2long>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowPriKeyField_int2long.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowPriKeyField_long2float
+        extends EvolveCase {
+
+        @PrimaryKey
+        long key = 99;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Long,DisallowPriKeyField_long2float>
+                index = store.getPrimaryIndex
+                    (Long.class,
+                     DisallowPriKeyField_long2float.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowPriKeyField_float2double
+        extends EvolveCase {
+
+        @PrimaryKey
+        float key = 99;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Float,DisallowPriKeyField_float2double>
+                index = store.getPrimaryIndex
+                    (Float.class,
+                     DisallowPriKeyField_float2double.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowPriKeyField_Byte2short2
+        extends EvolveCase {
+
+        @PrimaryKey
+        Byte key = 99;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Byte,DisallowPriKeyField_Byte2short2>
+                index = store.getPrimaryIndex
+                    (Byte.class,
+                     DisallowPriKeyField_Byte2short2.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowPriKeyField_Character2int
+        extends EvolveCase {
+
+        @PrimaryKey
+        Character key = 99;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Character,DisallowPriKeyField_Character2int>
+                index = store.getPrimaryIndex
+                    (Character.class,
+                     DisallowPriKeyField_Character2int.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowPriKeyField_Short2int2
+        extends EvolveCase {
+
+        @PrimaryKey
+        Short key = 99;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Short,DisallowPriKeyField_Short2int2>
+                index = store.getPrimaryIndex
+                    (Short.class,
+                     DisallowPriKeyField_Short2int2.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowPriKeyField_Integer2long
+        extends EvolveCase {
+
+        @PrimaryKey
+        Integer key = 99;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowPriKeyField_Integer2long>
+                index = store.getPrimaryIndex
+                    (Integer.class,
+                     DisallowPriKeyField_Integer2long.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowPriKeyField_Long2float2
+        extends EvolveCase {
+
+        @PrimaryKey
+        Long key = 99L;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Long,DisallowPriKeyField_Long2float2>
+                index = store.getPrimaryIndex
+                    (Long.class,
+                     DisallowPriKeyField_Long2float2.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowPriKeyField_Float2double2
+        extends EvolveCase {
+
+        @PrimaryKey
+        Float key = 99F;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Float,DisallowPriKeyField_Float2double2>
+                index = store.getPrimaryIndex
+                    (Float.class,
+                     DisallowPriKeyField_Float2double2.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class DisallowPriKeyField_Long2BigInt
+        extends EvolveCase {
+
+        @PrimaryKey
+        Long key = 99L;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Long,DisallowPriKeyField_Long2BigInt>
+                index = store.getPrimaryIndex
+                    (Long.class,
+                     DisallowPriKeyField_Long2BigInt.class);
+            index.put(this);
+        }
+    }
+
+    @Persistent
+    static class DisallowCompositeKeyField_byte2short_Key {
+
+        @KeyField(1)
+        int f1 = 1;
+
+        @KeyField(2)
+        byte f2 = 2;
+
+        @KeyField(3)
+        String f3 = "3";
+    }
+
+    @Entity
+    static class DisallowCompositeKeyField_byte2short
+        extends EvolveCase {
+
+        @PrimaryKey
+        DisallowCompositeKeyField_byte2short_Key key = 
+            new DisallowCompositeKeyField_byte2short_Key();
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<DisallowCompositeKeyField_byte2short_Key,
+                         DisallowCompositeKeyField_byte2short>
+                index = store.getPrimaryIndex
+                    (DisallowCompositeKeyField_byte2short_Key.class,
+                     DisallowCompositeKeyField_byte2short.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class AllowPriKeyField_byte2Byte
+        extends EvolveCase {
+
+        @PrimaryKey
+        byte key = 99;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Byte,AllowPriKeyField_byte2Byte>
+                index = store.getPrimaryIndex
+                    (Byte.class, AllowPriKeyField_byte2Byte.class);
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class AllowPriKeyField_Byte2byte2
+        extends EvolveCase {
+
+        @PrimaryKey
+        Byte key = 99;
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Byte,AllowPriKeyField_Byte2byte2>
+                index = store.getPrimaryIndex
+                    (Byte.class, AllowPriKeyField_Byte2byte2.class);
+            index.put(this);
+        }
+    }
+
+    @Persistent
+    static class AllowFieldTypeChanges_Key {
+
+        AllowFieldTypeChanges_Key() {
+            this(false);
+        }
+
+        AllowFieldTypeChanges_Key(boolean init) {
+            if (init) {
+                f1 = true;
+                f2 = (byte) 2;
+                f3 = (short) 3;
+                f4 = 4;
+                f5 = 5L;
+                f6 = 6F;
+                f7 = 7D;
+                f8 = (char) 8;
+                f9 = true;
+                f10 = (byte) 10;
+                f11 = (short) 11;
+                f12 = 12;
+                f13 = 13L;
+                f14 = 14F;
+                f15 = 15D;
+                f16 = (char) 16;
+            }
+        }
+
+        @KeyField(1)
+        boolean f1;
+
+        @KeyField(2)
+        byte f2;
+
+        @KeyField(3)
+        short f3;
+
+        @KeyField(4)
+        int f4;
+
+        @KeyField(5)
+        long f5;
+
+        @KeyField(6)
+        float f6;
+
+        @KeyField(7)
+        double f7;
+
+        @KeyField(8)
+        char f8;
+
+        @KeyField(9)
+        Boolean f9;
+
+        @KeyField(10)
+        Byte f10;
+
+        @KeyField(11)
+        Short f11;
+
+        @KeyField(12)
+        Integer f12;
+
+        @KeyField(13)
+        Long f13;
+
+        @KeyField(14)
+        Float f14;
+
+        @KeyField(15)
+        Double f15;
+
+        @KeyField(16)
+        Character f16;
+    }
+
+    @Persistent
+    static class AllowFieldTypeChanges_Base
+        extends EvolveCase {
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        AllowFieldTypeChanges_Key kcomposite =
+            new AllowFieldTypeChanges_Key(true);
+
+        long f_long2Integer = 111;
+        String f_String2Long = "222";
+    }
+
+    @Entity
+    static class AllowFieldTypeChanges
+        extends AllowFieldTypeChanges_Base {
+
+        @PrimaryKey
+        int pkeyint = 99;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        boolean kboolean = true;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        byte kbyte = 77;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        short kshort = 66;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int kint = 55;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        long klong = 44;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        float kfloat = 33;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        double kdouble = 22;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        char kchar = 11;
+
+        byte f01;
+        byte f02;
+        byte f03;
+        byte f04;
+        byte f06;
+        short f07;
+        short f08;
+        short f09;
+        short f10;
+        char f11;
+        char f12;
+        char f13;
+        char f14;
+        int f15;
+        int f16;
+        int f17;
+        long f18;
+        long f19;
+        float f20;
+
+        byte f21;
+        byte f22;
+        byte f23;
+        byte f24;
+        byte f26;
+        short f27;
+        short f28;
+        short f29;
+        short f30;
+        char f31;
+        char f32;
+        char f33;
+        char f34;
+        int f35;
+        int f36;
+        int f37;
+        long f38;
+        long f39;
+        float f40;
+
+        Byte f41;
+        Byte f42;
+        Byte f43;
+        Byte f44;
+        Byte f46;
+        Short f47;
+        Short f48;
+        Short f49;
+        Short f50;
+        Character f51;
+        Character f52;
+        Character f53;
+        Character f54;
+        Integer f55;
+        Integer f56;
+        Integer f57;
+        Long f58;
+        Long f59;
+        Float f60;
+
+        byte f70;
+        short f71;
+        char f72;
+        int f73;
+        long f74;
+        Byte f75;
+        Short f76;
+        Character f77;
+        Integer f78;
+        Long f79;
+
+        long f_long2int = 333;
+        String f_String2long = "444";
+
+        private void init() {
+            f01 = (byte) 1;
+            f02 = (byte) 2;
+            f03 = (byte) 3;
+            f04 = (byte) 4;
+            f06 = (byte) 6;
+            f07 = (short) 7;
+            f08 = (short) 8;
+            f09 = (short) 9;
+            f10 = (short) 10;
+            f11 = (char) 11;
+            f12 = (char) 12;
+            f13 = (char) 13;
+            f14 = (char) 14;
+            f15 = 15;
+            f16 = 16;
+            f17 = 17;
+            f18 = (long) 18;
+            f19 = (long) 19;
+            f20 = (float) 20;
+
+            f21 = (byte) 21;
+            f22 = (byte) 22;
+            f23 = (byte) 23;
+            f24 = (byte) 24;
+            f26 = (byte) 26;
+            f27 = (short) 27;
+            f28 = (short) 28;
+            f29 = (short) 29;
+            f30 = (short) 30;
+            f31 = (char) 31;
+            f32 = (char) 32;
+            f33 = (char) 33;
+            f34 = (char) 34;
+            f35 = 35;
+            f36 = 36;
+            f37 = 37;
+            f38 = (long) 38;
+            f39 = (long) 39;
+            f40 = (float) 40;
+
+            f41 = (byte) 41;
+            f42 = (byte) 42;
+            f43 = (byte) 43;
+            f44 = (byte) 44;
+            f46 = (byte) 46;
+            f47 = (short) 47;
+            f48 = (short) 48;
+            f49 = (short) 49;
+            f50 = (short) 50;
+            f51 = (char) 51;
+            f52 = (char) 52;
+            f53 = (char) 53;
+            f54 = (char) 54;
+            f55 = 55;
+            f56 = 56;
+            f57 = 57;
+            f58 = (long) 58;
+            f59 = (long) 59;
+            f60 = (float) 60;
+
+            f70 = (byte) 70;
+            f71 = (short) 71;
+            f72 = (char) 72;
+            f73 = 73;
+            f74 = (long) 74;
+            f75 = (byte) 75;
+            f76 = (short) 76;
+            f77 = (char) 77;
+            f78 = 78;
+            f79 = (long) 79;
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,AllowFieldTypeChanges>
+                index = store.getPrimaryIndex
+                    (Integer.class, AllowFieldTypeChanges.class);
+            init();
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class ConvertFieldContent_Entity
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key;
+
+        String f1;
+        String f2;
+
+        private void init() {
+            key = 99;
+            f1 = "01234";
+            f2 = "56789";
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,ConvertFieldContent_Entity>
+                index = store.getPrimaryIndex
+                    (Integer.class, ConvertFieldContent_Entity.class);
+            init();
+            index.put(this);
+        }
+    }
+
+    @Persistent
+    static class ConvertExample1_Address {
+        String street;
+        String city;
+        String state;
+        String zipCode;
+    }
+
+    @Entity
+    static class ConvertExample1_Entity
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key;
+
+        ConvertExample1_Address embed;
+
+        private void init() {
+            key = 99;
+            embed = new ConvertExample1_Address();
+            embed.street = "street";
+            embed.city = "city";
+            embed.state = "state";
+            embed.zipCode = "12345";
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,ConvertExample1_Entity>
+                index = store.getPrimaryIndex
+                    (Integer.class, ConvertExample1_Entity.class);
+            init();
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class ConvertExample2_Person
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key;
+
+        String address;
+
+        private void init() {
+            key = 99;
+            address = "street#city#state#12345";
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,ConvertExample2_Person>
+                index = store.getPrimaryIndex
+                    (Integer.class, ConvertExample2_Person.class);
+            init();
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class ConvertExample3_Person
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key;
+
+        String street;
+        String city;
+        String state;
+        int zipCode;
+
+        private void init() {
+            key = 99;
+            street = "street";
+            city = "city";
+            state = "state";
+            zipCode = 12345;
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,ConvertExample3_Person>
+                index = store.getPrimaryIndex
+                    (Integer.class, ConvertExample3_Person.class);
+            init();
+            index.put(this);
+        }
+    }
+
+    @Persistent
+    static class ConvertExample3Reverse_Address {
+        String street;
+        String city;
+        String state;
+        int zipCode;
+    }
+
+    @Entity
+    static class ConvertExample3Reverse_Person
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key;
+
+        ConvertExample3Reverse_Address address;
+
+        private void init() {
+            key = 99;
+            address = new ConvertExample3Reverse_Address();
+            address.street = "street";
+            address.city = "city";
+            address.state = "state";
+            address.zipCode = 12345;
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,ConvertExample3Reverse_Person>
+                index = store.getPrimaryIndex
+                    (Integer.class, ConvertExample3Reverse_Person.class);
+            init();
+            index.put(this);
+        }
+    }
+
+    @Persistent
+    static class ConvertExample4_A extends ConvertExample4_B {
+        String name;
+    }
+
+    @Persistent
+    static class ConvertExample4_B {
+    }
+
+    @Entity
+    static class ConvertExample4_Entity
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key;
+
+        ConvertExample4_A embed;
+
+        private void init() {
+            key = 99;
+            embed = new ConvertExample4_A();
+            embed.name = "name";
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,ConvertExample4_Entity>
+                index = store.getPrimaryIndex
+                    (Integer.class, ConvertExample4_Entity.class);
+            init();
+            index.put(this);
+        }
+    }
+
+    @Persistent
+    static class ConvertExample5_Pet {
+        String name;
+        boolean isCatNotDog;
+        int finickyLevel;
+        double barkVolume;
+    }
+
+    @Entity
+    static class ConvertExample5_Entity
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key;
+
+        ConvertExample5_Pet cat;
+        ConvertExample5_Pet dog;
+
+        private void init() {
+            key = 99;
+            cat = new ConvertExample5_Pet();
+            cat.name = "Jeffry";
+            cat.isCatNotDog = true;
+            cat.finickyLevel = 999;
+            dog = new ConvertExample5_Pet();
+            dog.name = "Nelson";
+            dog.isCatNotDog = false;
+            dog.barkVolume = 0.01;
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,ConvertExample5_Entity>
+                index = store.getPrimaryIndex
+                    (Integer.class, ConvertExample5_Entity.class);
+            init();
+            index.put(this);
+        }
+    }
+
+    @Persistent
+    static class AllowFieldAddDelete_Embed {
+        private int f1 = 1;
+        private String f2 = "2";
+        private String f4 = "4";
+        private int f6 = 6;
+        private String f7 = "7";
+    }
+
+    @Persistent
+    static class AllowFieldAddDelete_Base
+        extends EvolveCase {
+
+        private int f1 = 1;
+        private String f2 = "2";
+        private String f4 = "4";
+        private int f6 = 6;
+        private String f7 = "7";
+    }
+
+    @Entity
+    static class AllowFieldAddDelete
+        extends AllowFieldAddDelete_Base {
+
+        @PrimaryKey
+        int key;
+
+        AllowFieldAddDelete_Embed embed;
+
+        private int f1 = 1;
+        private String f2 = "2";
+        private String f4 = "4";
+        private int f6 = 6;
+        private String f7 = "7";
+
+        private void init() {
+            key = 99;
+            embed = new AllowFieldAddDelete_Embed();
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,AllowFieldAddDelete>
+                index = store.getPrimaryIndex
+                    (Integer.class, AllowFieldAddDelete.class);
+            init();
+            index.put(this);
+        }
+    }
+
+    static class ProxiedClass {
+        int data;
+
+        ProxiedClass(int data) {
+            this.data = data;
+        }
+    }
+
+    @Persistent(proxyFor=ProxiedClass.class)
+    static class ProxiedClass_Proxy implements PersistentProxy<ProxiedClass> {
+        int data;
+
+        public void initializeProxy(ProxiedClass o) {
+            data = o.data;
+        }
+
+        public ProxiedClass convertProxy() {
+            return new ProxiedClass(data);
+        }
+    }
+
+    @Entity
+    static class ProxiedClass_Entity
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key;
+
+        ProxiedClass embed;
+
+        private void init() {
+            key = 99;
+            embed = new ProxiedClass(88);
+        }
+
+        @Override
+        void configure(EntityModel model, StoreConfig config) {
+            model.registerClass(ProxiedClass_Proxy.class);
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,ProxiedClass_Entity>
+                index = store.getPrimaryIndex
+                    (Integer.class, ProxiedClass_Entity.class);
+            init();
+            index.put(this);
+        }
+    }
+
+    @Persistent(proxyFor=StringBuffer.class)
+    static class DisallowChangeProxyFor_Proxy
+        implements PersistentProxy<StringBuffer> {
+
+        String data;
+
+        public void initializeProxy(StringBuffer o) {
+            data = o.toString();
+        }
+
+        public StringBuffer convertProxy() {
+            return new StringBuffer(data);
+        }
+    }
+
+    @Entity
+    static class DisallowChangeProxyFor
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key;
+
+        private void init() {
+            key = 99;
+        }
+
+        @Override
+        void configure(EntityModel model, StoreConfig config) {
+            model.registerClass(DisallowChangeProxyFor_Proxy.class);
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowChangeProxyFor>
+                index = store.getPrimaryIndex
+                    (Integer.class, DisallowChangeProxyFor.class);
+            init();
+            index.put(this);
+        }
+    }
+
+    @Persistent(proxyFor=StringBuffer.class)
+    static class DisallowDeleteProxyFor_Proxy
+        implements PersistentProxy<StringBuffer> {
+
+        String data;
+
+        public void initializeProxy(StringBuffer o) {
+            data = o.toString();
+        }
+
+        public StringBuffer convertProxy() {
+            return new StringBuffer(data);
+        }
+    }
+
+    @Entity
+    static class DisallowDeleteProxyFor
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key;
+
+        private void init() {
+            key = 99;
+        }
+
+        @Override
+        void configure(EntityModel model, StoreConfig config) {
+            model.registerClass(DisallowDeleteProxyFor_Proxy.class);
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowDeleteProxyFor>
+                index = store.getPrimaryIndex
+                    (Integer.class, DisallowDeleteProxyFor.class);
+            init();
+            index.put(this);
+        }
+    }
+
+    @Persistent
+    static class ArrayNameChange_Component {
+
+        int data;
+    }
+
+    @Entity
+    static class ArrayNameChange_Entity
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key;
+
+        ArrayNameChange_Component[] embed;
+        ArrayNameChange_Component embed2;
+
+        private void init() {
+            key = 99;
+            embed2 = new ArrayNameChange_Component();
+            embed2.data = 88;
+            embed = new ArrayNameChange_Component[] { embed2 };
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,ArrayNameChange_Entity>
+                index = store.getPrimaryIndex
+                    (Integer.class, ArrayNameChange_Entity.class);
+            init();
+            index.put(this);
+        }
+    }
+
+    enum AddEnumConstant_Enum {
+        A, B;
+    }
+
+    @Entity
+    static class AddEnumConstant_Entity
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key;
+
+        AddEnumConstant_Enum e1;
+        AddEnumConstant_Enum e2;
+
+        private void init() {
+            key = 99;
+            e1 = AddEnumConstant_Enum.A;
+            e2 = AddEnumConstant_Enum.B;
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,AddEnumConstant_Entity>
+                index = store.getPrimaryIndex
+                    (Integer.class, AddEnumConstant_Entity.class);
+            init();
+            index.put(this);
+        }
+    }
+
+    enum InsertEnumConstant_Enum {
+        A, B;
+    }
+
+    @Persistent
+    static class InsertEnumConstant_KeyClass
+        implements Comparable<InsertEnumConstant_KeyClass > {
+
+        @KeyField(1)
+        InsertEnumConstant_Enum key;
+
+        private InsertEnumConstant_KeyClass() {}
+
+        InsertEnumConstant_KeyClass(InsertEnumConstant_Enum key) {
+            this.key = key;
+        }
+
+        public int compareTo(InsertEnumConstant_KeyClass o) {
+            /* Use the natural order, in spite of insertions. */
+            return key.compareTo(o.key);
+        }
+    }
+
+    @Entity
+    static class InsertEnumConstant_Entity
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key;
+
+        @SecondaryKey(relate=MANY_TO_ONE)
+        InsertEnumConstant_KeyClass secKey;
+
+        InsertEnumConstant_Enum e1;
+        InsertEnumConstant_Enum e2;
+
+        private void init() {
+            key = 99;
+            secKey =
+                new InsertEnumConstant_KeyClass(InsertEnumConstant_Enum.A);
+            e1 = InsertEnumConstant_Enum.A;
+            e2 = InsertEnumConstant_Enum.B;
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,InsertEnumConstant_Entity>
+                index = store.getPrimaryIndex
+                    (Integer.class, InsertEnumConstant_Entity.class);
+            init();
+            index.put(this);
+        }
+    }
+
+    enum DeleteEnumConstant_Enum {
+        A, B, C;
+    }
+
+    @Entity
+    static class DeleteEnumConstant_NoMutation
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key;
+
+        DeleteEnumConstant_Enum e1;
+        DeleteEnumConstant_Enum e2;
+        DeleteEnumConstant_Enum e3;
+
+        private void init() {
+            key = 99;
+            e1 = DeleteEnumConstant_Enum.A;
+            e2 = DeleteEnumConstant_Enum.B;
+            e3 = DeleteEnumConstant_Enum.C;
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DeleteEnumConstant_NoMutation>
+                index = store.getPrimaryIndex
+                    (Integer.class, DeleteEnumConstant_NoMutation.class);
+            init();
+            index.put(this);
+        }
+    }
+
+    /* Disabled until support for enum deletion is added.
+    @Entity
+    static class DeleteEnumConstant_WithConverter
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key;
+
+        DeleteEnumConstant_Enum e1;
+        DeleteEnumConstant_Enum e2;
+        DeleteEnumConstant_Enum e3;
+
+        private void init() {
+            key = 99;
+            e1 = DeleteEnumConstant_Enum.A;
+            e2 = DeleteEnumConstant_Enum.B;
+            e3 = DeleteEnumConstant_Enum.C;
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DeleteEnumConstant_WithConverter>
+                index = store.getPrimaryIndex
+                    (Integer.class, DeleteEnumConstant_WithConverter.class);
+            init();
+            index.put(this);
+        }
+    }
+    */
+
+    @Entity
+    static class DisallowChangeKeyRelate
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int skey;
+
+        private void init() {
+            key = 99;
+            skey = 88;
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,DisallowChangeKeyRelate>
+                index = store.getPrimaryIndex
+                    (Integer.class, DisallowChangeKeyRelate.class);
+            init();
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class AllowChangeKeyMetadata
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key;
+
+        int aa;
+
+        int addAnnotation;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int dropField;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int dropAnnotation;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int toBeRenamedField;
+
+        int ff;
+
+        private void init() {
+            key = 99;
+            addAnnotation = 88;
+            dropField = 77;
+            dropAnnotation = 66;
+            toBeRenamedField = 44;
+            aa = 33;
+            ff = 22;
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,AllowChangeKeyMetadata>
+                index = store.getPrimaryIndex
+                    (Integer.class, AllowChangeKeyMetadata.class);
+            init();
+            index.put(this);
+        }
+    }
+
+    /** [#16253] */
+    @Persistent
+    static class AllowChangeKeyMetadataInSubclass
+        extends AllowChangeKeyMetadataEntity {
+
+        int aa;
+
+        int addAnnotation;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int dropField;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int dropAnnotation;
+
+        @SecondaryKey(relate=ONE_TO_ONE)
+        int toBeRenamedField;
+
+        int ff;
+
+        private void init() {
+            key = 99;
+            addAnnotation = 88;
+            dropField = 77;
+            dropAnnotation = 66;
+            toBeRenamedField = 44;
+            aa = 33;
+            ff = 22;
+        }
+
+        @Override
+        void configure(EntityModel model, StoreConfig config) {
+            model.registerClass(AllowChangeKeyMetadataInSubclass.class);
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,AllowChangeKeyMetadataEntity>
+                index = store.getPrimaryIndex
+                    (Integer.class, AllowChangeKeyMetadataEntity.class);
+            init();
+            index.put(this);
+        }
+    }
+
+    @Entity
+    static class AllowChangeKeyMetadataEntity
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key;
+    }
+
+    /** [#15524] */
+    @Entity
+    static class AllowAddSecondary
+        extends EvolveCase {
+
+        @PrimaryKey
+        long key;
+
+        int a;
+        int b;
+
+        private void init() {
+            key = 99;
+            a = 1;
+            b = 2;
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Long,AllowAddSecondary>
+                index = store.getPrimaryIndex
+                    (Long.class, AllowAddSecondary.class);
+            init();
+            index.put(this);
+        }
+    }
+
+    /** [#15797] */
+    @Entity
+    static class FieldAddAndConvert
+        extends EvolveCase {
+
+        @PrimaryKey
+        int key;
+
+        private int f1 = 1;
+        private int f3 = 3;
+
+        private void init() {
+            key = 99;
+        }
+
+        @Override
+        void writeObjects(EntityStore store)
+            throws DatabaseException {
+
+            PrimaryIndex<Integer,FieldAddAndConvert>
+                index = store.getPrimaryIndex
+                    (Integer.class, FieldAddAndConvert.class);
+            init();
+            index.put(this);
+        }
+    }
+}

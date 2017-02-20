@@ -1,0 +1,1197 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type"
+ content="text/html; charset=iso-8859-1">
+  <meta name="GENERATOR"
+ content="Mozilla/4.76 [en] (X11; U; FreeBSD 4.3-RELEASE i386) [Netscape]">
+  <title>Master Lease</title>
+</head>
+<body>
+<center>
+<h1>Master Leases for Berkeley DB</h1>
+</center>
+<center><i>Susan LoVerso</i> <br>
+<i>sue@sleepycat.com</i> <br>
+<i>Rev 1.1</i><br>
+<i>2007 Feb 2</i><br>
+</center>
+<p><br>
+</p>
+<h2>What are Master Leases?</h2>
+A master lease is a mechanism whereby clients grant master-ship rights
+to a site and that master, by holding lease rights can provide a&nbsp;
+guarantee of durability to a replication group for a given period of
+time.&nbsp; By granting a lease to a master,
+a&nbsp; client will not participate in an election to elect a new
+master until that granted master lease has expired.&nbsp; By holding a
+collection of granted leases, a master will be able to supply
+authoritative read requests to applications.&nbsp; By holding leases a
+read operation on a master can guarantee several things to the
+application:<br>
+<ol>
+  <li>Authoritative reads: a guarantee that the data being read by the
+application is durable and can never be rolled back.</li>
+  <li>Freshness: a guarantee that the data being read by the
+application <b>at the master</b> is
+not stale.</li>
+  <li>Master viability: a guarantee that a current master with valid
+leases will not encounter a duplicate master situation.<br>
+  </li>
+</ol>
+<h2>Requirements</h2>
+The requirements of DB to support this include:<br>
+<ul>
+  <li>After turning them on, users can choose to ignore them in reads
+or not.</li>
+  <li>We are providing read authority on the master only.&nbsp; A
+read on a client is equivalent to a read while ignoring leases.</li>
+  <li>We guarantee that data committed on a master <b>that has been
+read by an application on the
+master</b> will not be rolled back.&nbsp; Data read on a client or
+while ignoring leases <i>or data
+successfully updated/committed but not read,</i>
+may be rolled back.<br>
+  </li>
+  <li>A master will not return successfully from a read operation
+unless it holds a
+majority of leases unless leases are ignored.</li>
+  <li>Master leases will remove the possibility of a current/correct
+master being "shot down" by DUPMASTER.&nbsp; <b>NOTE: Old/Expired
+masters may discover a
+later master and return DUPMASTER to the application however.</b><br>
+  </li>
+  <li>Any send callback failure must result in premature lease
+expiration on the master.<br>
+  </li>
+  <li>Users who change the system clock during master leases void the
+guarantee and may get undefined behavior.&nbsp; We assume time always
+runs forward. <br>
+  </li>
+  <li>Clients are forbidden from participating in elections while they
+have an outstanding lease granted to another site.</li>
+  <li>Clients are forbidden from accepting a new master while they have
+an outstanding lease granted to another site.</li>
+  <li>Clients are forbidden from upgrading themselves to master while
+they have an outstanding lease granted to another site.</li>
+  <li>When asked for a lease grant explicitly by the master, the client
+cannot grant the lease to the master unless the LSN in the master's
+request has been processed by this client.<br>
+  </li>
+</ul>
+The requirements of the
+application using leases include:<br>
+<ul>
+  <li>Users must implement (Base API users on their own, RepMgr users
+via configuration) a majority (or larger) ACK policy. <br>
+  </li>
+  <li>The application must use the election mechanism to decide a master.
+It may not simply declare a site master.</li>
+  <li>The send callback must return an error if the majority ACK policy
+is not met for PERM records.</li>
+  <li>Users must set the number of sites in the group.</li>
+  <li>Using leases in a replication group is all-or-none.&nbsp;
+Therefore, if a site knows it is using leases, it can assume other
+sites are also.<br>
+  </li>
+  <li>All applications that care about read guarantees must forward or
+perform all reads on the master.&nbsp; Reading on the client means a
+read ignoring leases. </li>
+</ul>
+<p>There are some open questions
+remaining.</p>
+<ul>
+  <li>There is one major showstopper issue, see Crashing - Potential
+problem near the end of the document.&nbsp; We need a better solution
+than the one shown there (writing to disk every time a lease is
+granted). Perhaps just documenting that durability means it must be
+flushed to disk before success to avoid that situation?<br>
+  </li>
+  <li>What about db-&gt;join?&nbsp; Users can call join, but the calls
+on the join cursor to get the data would be subject to leases and
+therefore protected.&nbsp; Ok, this is not an open question.</li>
+  <li>What about other read-like operations?&nbsp; Clearly <i>
+DB-&gt;get, DB-&gt;pget, DBC-&gt;get,
+DBC-&gt;pget</i> need lease checks.&nbsp; However, other APIs use
+keys.&nbsp; <i>DB-&gt;key_range</i>
+provides an estimate only so it shouldn't need lease checks. <i>
+DB-&gt;stat</i> provides exact counts
+to <i>bt_nkeys</i> and <i>bt_ndata</i> fields.&nbsp; Are those
+fields considered authoritative that providing those values implies a
+durability guarantee and therefore <i>DB-&gt;stat</i>
+should be subject to lease verification?&nbsp; <i>DBC-&gt;count</i>
+provides a count for
+the number of data items associated with a key.&nbsp; Is this
+authoritative information? This is similar to stat - should it be
+subject to lease verification?<br>
+  </li>
+  <li>Do we require master lease checks on write operations?&nbsp; I
+think lease checks are not needed on write operations.&nbsp; It doesn't
+add correctness and adds a lot of complexity (checking leases in put,
+del, and cursors, then what about rename, remove, etc).<br>
+  </li>
+  <li>Do master leases give an iron-clad guarantee of never rolling
+back a transaction? No, but it should mean that a committed transaction
+can never be <b>read</b> on a master
+unless the lease is valid.&nbsp; A committed transaction on a master
+that has never been presented to the application may get rolled back.<br>
+  </li>
+  <li>Do we need to quarantine or prevent reads on an ex-master until
+sync-up is done?&nbsp; No.&nbsp; A master that is simply downgraded to
+client or crashes and reboots is now a client.&nbsp; Reading from that
+client is the same as saying Ignore Leases.</li>
+  <li>What about adding and removing sites while leases are
+active?&nbsp; This is SR 14778.&nbsp; A consistent <i>nsites</i> value
+is required by master
+leases.&nbsp; &nbsp; It isn't
+clear to me what a master is
+supposed to do if the value of nsites gets smaller while leases are
+active.&nbsp; Perhaps it leaves its larger table intact and simply
+checks for a smaller number of granted leases?<br>
+  </li>
+  <li>Can users turn leases off?&nbsp; No.&nbsp; There is no planned <i>turn
+leases off</i> API.</li>
+  <li>Clock skew will be a percentage.&nbsp; However, the smallest, 1%,
+is probably rather large for clock skew.&nbsp; Percentage was chosen
+for simplicity and similarity to other APIs.&nbsp; What granularity is
+appropriate here?</li>
+</ul>
+<h2>API Changes</h2>
+The API changes that are visible
+to the user are fairly minimal.&nbsp;
+There are a few API calls they need to make to configure master leases
+and then there is the API call to turn them on.&nbsp; There is also a
+new flag to existing APIs to allow read operations to ignore leases and
+return data that
+may be non-durable potentially.<br>
+<h3>Lease Timeout<br>
+</h3>
+There is a new timout the user
+must configure for leases called <b>DB_REP_LEASE_TIMEOUT</b>.&nbsp;
+This timeout will be new to
+the <i>dbenv-&gt;rep_set_timeout</i> method. The <b>DB_REP_LEASE_TIMEOUT</b>
+has no default and it is required that the user configure a timeout
+before they turn on leases (obviously, this timeout need not be set of
+leases will not be used).&nbsp; That timeout is the amount of time
+the lease is valid on the master and how long it is granted
+on the client.&nbsp; This timeout must be the same
+value on all sites (like log file size).&nbsp; The timeout used when
+refreshing leases is the <b>DB_REP_ACK_TIMEOUT</b>
+for RepMgr application.&nbsp; For Base API applications, lease
+refreshes will use the same mechanism as <b>PERM</b> messages and they
+should
+have no additional burden.&nbsp; This timeout is used for lease
+refreshment and is the amount of time a reader will wait to refresh
+leases before returning failure to the application from a read
+operation.<br>
+<br>
+This timeout will be both stored
+with its original value, and also
+converted to a <i>db_timespec</i>
+using the <b>DB_TIMEOUT_TO_TIMESPEC</b>
+macro and have the clock skew accounted for and stored in the shared
+rep structure:<br>
+<pre>db_timeout_t lease_timeout;<br>db_timespec lease_duration;<br></pre>
+NOTE:&nbsp; By sending the lease refresh during DB operations, we are
+forcing/assuming that the operation's process has a replication
+transport function set.&nbsp; That is obviously the case for write
+operations, but would it be a burden for read processes (on a
+master)?&nbsp; I think mostly not, but if we need leases for <i>
+DB-&gt;stat</i> then we need to
+document it as it is certainly possible for an application to have a
+separate or dedicated <i>stat</i>
+application or attempt to use <i>db_stat</i>
+(which will not work if leases must be checked).<br>
+<br>
+Leases should be checked after the local operation so that we don't
+have a window/boundary if we were to check leases first, get
+descheduled, the lose our lease and then perform the operation.&nbsp;
+Do the operation, then check leases before returning to the user.<br>
+<h3>Using Leases</h3>
+There is a new API that the user must call to tell the system to use
+the lease mechanism.&nbsp; The method must be called before the
+application calls <i>dbenv-&gt;rep_start</i>
+or <i>dbenv-&gt;repmgr_start</i>.
+This new
+method is:<br>
+<br>
+<pre>&nbsp;&nbsp;&nbsp; dbenv-&gt;rep_set_lease(DB_ENV *dbenv, u_int32_t clock_scale_factor, u_int32_t flags)<br>
+</pre>
+The <i>clock_scale_factor</i>
+parameter is interpreted as a percentage, greater than 100 (to transmit
+a floating point number as an integer to the API) that represents the
+maximum shkew between any two sites' clocks.&nbsp; That is, a <span
+ style="font-style: italic;">clock_scale_factor</span> of 150 suggests
+that the greatest discrepancy between clocks is that one runs 50%
+faster than the others.&nbsp; Both the
+master and client sides
+compensate for possible clock skew.&nbsp; The master uses the value to
+compensate in case the replica has a slow clock and replicas compensate
+in case they have a fast clock.&nbsp; This scaling factor will need to
+be divided by 100 on all sites to truly represent the percentage for
+adjustments made to time values.<br>
+<br>
+Assume the slowest replica's clock is a factor of <i>clock_scale_factor</i>
+slower than the
+fastest clock.&nbsp; Using that assumption, if the fastest clock goes
+from time t1 to t2 in X
+seconds, the slowest clock does it in (<i>clock_scale_factor</i> / 100)
+* X seconds.<br>
+<br>
+The <i>flags</i> parameter is not
+currently used.<br>
+<br>
+When the <i>dbenv-&gt;rep_set_lease</i>
+method is called, we will set a configuration flag indicating that
+leases are turned on:<br>
+<b>#define REP_C_LEASE &lt;value&gt;</b>.&nbsp;
+We will also record the <b>u_int32_t
+clock_skew</b> value passed in.&nbsp; The <i>rep_set_lease</i> method
+will not allow
+calls after <i>rep_start.&nbsp; </i>If
+multiple calls are made prior to calling <i>rep_start</i> then later
+calls will
+overwrite the earlier clock skew value.&nbsp; <br>
+<br>
+We need a new flag to prevent calling <i>rep_set_lease</i>
+after <i>rep_start</i>.&nbsp; The
+simplest solution would be to reject the call to
+<i>rep_set_lease&nbsp;
+</i>if<b>
+REP_F_CLIENT</b>
+or <b>REP_F_MASTER</b> is set.&nbsp;
+However that does not work in the cases where a site cleanly closes its
+environment and then opens without running recovery.&nbsp; The
+replication state will still be set.&nbsp; The prevention will be
+implemented as:<br>
+<pre>#define REP_F_START_CALLED &lt;some bit value&gt;<br></pre>
+In __rep_start, at the end:<br>
+<pre>if (ret == 0 ) {<br>   REP_SYSTEM_LOCK<br> F_SET(rep, REP_F_START_CALLED)<br>  REP_SYSTEM_UNLOCK<br>}</pre>
+In <i>__rep_env_refresh</i>, if we
+are the last reference closing the env (we already check for that):<br>
+<pre>F_CLR(rep, REP_F_START_CALLED);</pre>
+In order to avoid run-time floating point operations
+on <i>db_timespec</i> structures,
+when a site is declared as a client or master in <i>rep_start</i> we
+will pre-compute the
+lease duration based on the integer-based clock skew and the
+integer-based lease timeout.&nbsp; A master should set a replica's
+lease expiration to the <b>start time of
+the sent message +
+(lease_timeout / clock_scale_factor)</b> in case the replica has a
+slow clock.&nbsp; Replicas extend their leases to <b>received message
+time + (lease_timeout *
+clock_scale_factor)</b> in case this replica has a fast clock.&nbsp;
+Therefore, the computation will be as follows if the site is becoming a
+master:<br>
+<pre>db_timeout_t tmp;<br>tmp = (db_timeout_t)((double)rep-&gt;lease_timeout / ((double)rep-&gt;clock_skew / (double)100));<br>rep-&gt;lease_duration = DB_TIMEOUT_TO_TIMESPEC(&amp;tmp);<br></pre>
+Similarly, on a client the computation is:<br>
+<pre>tmp = (db_timeout_t)((double)rep-&gt;lease_timeout * ((double)rep-&gt;clock_skew / (double)100));<br></pre>
+When a site changes state, its lease duration will change based on
+whether it is becoming a master or client and it will be recomputed
+from the original values.&nbsp; Note that these computations, coupled
+with the fact that the lease on the master is computed based on the
+master's time that it sent the message means that leases on the master
+are more conservatively computed than on the clients.<br>
+<br>
+The <i>dbenv-&gt;rep_set_lease</i>
+method must be called after <i>dbenv-&gt;open</i>,
+similar to <i>dbenv-&gt;rep_set_config</i>.&nbsp;
+The reason is so that we can check that this is a replication
+environment and we have access to the replication shared memory region.<br>
+<h3>Read Operations<br>
+</h3>
+Authoritative read operations on the master with leases enabled will
+abide by leases by default.&nbsp; We will provide a flag that allows an
+operation on a master to ignore leases.&nbsp; <b>All read operations
+on a client imply
+ignoring leases.</b> If an application wants authoritative reads
+they must forward the read requests to the master and it is the
+application's responsibility to provide the forwarding.
+The consensus was that forcing <span style="font-weight: bold;">DB_IGNORE_LEASE</span>
+on client read operations (with leases enabled, obviously) was too
+heavy handed.&nbsp; Read operations on the client will ignore leases,
+but do no special flag checking.<br>
+<br>
+The flag will be called <b>DB_IGNORE_LEASE</b>
+and it will be a flag that can be OR'd into the DB access method and
+cursor operation values.&nbsp; It will be similar to the <b>DB_READ_UNCOMMITTED</b>
+flag.
+<br>
+</b>The methods that will
+adhere to leases are:<br>
+<ul>
+  <li><i>Db-&gt;get</i></li>
+  <li><i>Db-&gt;pget</i></li>
+  <li><i>Dbc-&gt;get</i></li>
+  <li><i>Dbc-&gt;pget</i></li>
+</ul>
+The code that will check leases for a client reading would look
+something
+like this, if we decide to become heavy-handed:<br>
+<pre>if (IS_REP_CLIENT(dbenv)) {<br>    [get to rep structure]<br>  if (FLD_ISSET(rep-&gt;config, REP_C_LEASE) &amp;&amp; !LF_ISSET(DB_IGNORE_LEASE)) {<br>     db_err("Read operations must ignore leases or go to master");<br>       ret = EINVAL;<br>       goto err;<br>   }<br>}<br></pre>
+On the master, the new code to abide by leases is more complex.&nbsp;
+After the call to perform the operation we will check the lease.&nbsp;
+In that checking code, the master will see if it has a valid
+lease.&nbsp; If so, then all is well.&nbsp; If not, it will try to
+refresh the leases.&nbsp; If that refresh attempt results in leases,
+all is well.&nbsp; If the refresh attempt does not get leases, then the
+master cannot respond to the read as an authority and we return an
+error.&nbsp; The new error is called <b>DB_REP_LEASE_EXPIRED</b>.&nbsp;
+The location of the master lease check is down after the internal call
+to read the data is successful:<br>
+<pre>if (IS_REP_MASTER(dbenv) &amp;&amp; !LF_ISSET(DB_IGNORE_LEASE)) {<br>  [get to rep structure]<br>  if (FLD_ISSET(rep-&gt;config, REP_C_LEASE) &amp;&amp;<br>       (ret = __rep_lease_check(dbenv)) != 0) {<br>        /*<br>       * We don't hold the lease.<br>      */<br>     goto err;<br>   }<br>}<br></pre>
+See below for the details of <i>__rep_lease_check</i>.<br>
+<br>
+Also note that if leases (or replication) are not configured, then <span
+ style="font-weight: bold;">DB_IGNORE_LEASE</span> is a no-op.&nbsp; It
+is ignored (and won't error) if used when leases are not in
+effect.&nbsp; The reason is so that we can generically set that flag in
+utility programs like <span style="font-style: italic;">db_dump</span>
+that walk the database with a cursor.&nbsp; Note that <span
+ style="font-style: italic;">db_dump</span> is the only utility that
+reads with a cursor.<span style="font-style: italic;"><span
+ style="font-style: italic;"></span></span><br>
+<h3><b>Nsites
+and Elections</b></h3>
+The call to <i>dbenv-&gt;rep_set_nsites</i>
+must be performed before the call to <i>dbenv-&gt;rep_start</i>
+or <i>dbenv-&gt;repmgr_start</i>.&nbsp;
+This document assumes either that <b>SR
+14778</b> gets resolved, or assumes that the value of <i>nsites</i> is
+immutable.&nbsp; The
+master and all clients need to know how many sites and leases are in
+the group.&nbsp; Clients need to know for elections.&nbsp; The master
+needs to know for the size of the lease table and to know what value a
+majority of the group is. <b>[Until
+14778 is resolved, the master lease work must assume <i>nsites</i> is
+immutable and will
+therefore enforce that this is called before <i>rep_start</i> using
+the same mechanism
+as <i>rep_set_lease</i>.]</b><br>
+<br>
+Elections and leases need to agree on the number of sites in the
+group.&nbsp; Therefore, when leases are in effect on clients, all calls
+to <i>dbenv-&gt;rep_elect</i> must
+set the <i>nsites</i> parameter to
+0.&nbsp; The <i>rep_elect</i> code
+path will return <b>EINVAL</b> if <b>REP_C_LEASE</b> is set and <i>nsites</i>
+is non-0.
+<h2>Lease Management</h2>
+<h3>Message Changes</h3>
+In order for clients to grant leases to the master a new message type
+must be added for that purpose.&nbsp; This will be the <b>REP_LEASE_GRANT</b>
+message.&nbsp;
+Granting leases will be a result of applying a <b>DB_REP_PERMANENT</b>
+record and therefore we
+do not need any additional message in order for a master to request a
+lease grant.&nbsp; The <b>REP_LEASE_GRANT</b>
+message will pass a structure as its message DBT:<br>
+<pre>struct __rep_lease_grant {<br> db_timespec msg_time;<br>#ifdef DIAGNOSTIC<br>  db_timespec expire_time;<br>#endif<br>} REP_GRANT_INFO;<br></pre>
+In the <b>REP_LEASE_GRANT</b>
+message, the client is actually giving the master several pieces of
+information.&nbsp; We only need the echoed <i>msg_time</i> in this
+structure because
+everything else is already sent.&nbsp; The client is really sending the
+master:<br>
+<ul>
+  <li>Its EID (parameter to <span style="font-style: italic;">rep_send_message</span>
+and <span style="font-style: italic;">rep_process_message</span>)<br>
+  </li>
+  <li>The PERM LSN this message acknowledged (sent in the control
+message)</li>
+  <li>Unique identifier echoed back to master (<i>msg_time</i> sent in
+message as above)</li>
+</ul>
+On the client, we always maintain the maximum PERM LSN already in <i>lp-&gt;max_perm_lsn</i>.&nbsp;
+<h3>Local State Management</h3>
+Each client must maintain a <i>db_timespec</i>
+timestamp containing the expiration of its granted lease.&nbsp; This
+field will be in the replication shared memory structure:<br>
+<pre>db_timespec grant_expire;<br></pre>
+This timestamp already takes into account the clock skew.&nbsp; All
+new fields must be initialized when the region is created. Whenever we
+grant our master lease and want to send the <b>REP_LEASE_GRANT</b>
+message, this value
+will be updated.&nbsp; It will be used in the following way:
+<pre>db_timespec mytime;<br>DB_LSN perm_lsn;<br>DBT lease_dbt;<br>REP_GRANT_INFO gi;<br><br><br>timespecclear(&amp;mytime);<br>timespecclear(&amp;newgrant);<br>memset(&amp;lease_dbt, 0, sizeof(lease_dbt));<br>memset(&amp;gi, 0, sizeof(gi));<br>__os_gettime(dbenv, &amp;mytime);<br>timespecadd(&amp;mytime, &amp;rep-&gt;lease_duration);<br>MUTEX_LOCK(rep-&gt;clientdb_mutex);<br>perm_lsn = lp-&gt;max_perm_lsn;<br>MUTEX_UNLOCK(rep-&gt;clientdb_mutex);<br>REP_SYSTEM_LOCK(dbenv);<br>if (timespeccmp(mytime, rep-&gt;grant_expire, &gt;))<br>   rep-&gt;grant_expire = mytime;<br>gi.msg_time = msg-&gt;msg_time;<br>#ifdef DIAGNOSTIC<br>gi.expire_time = rep-&gt;grant_expire;<br>#endif<br>lease_dbt.data = &amp;gi;<br>lease_dbt.size = sizeof(gi);<br>REP_SYSTEM_UNLOCK(dbenv);<br>__rep_send_message(dbenv, eid, REP_LEASE_GRANT, &amp;perm_lsn, &amp;lease_dbt, 0, 0);<br></pre>
+This updating of the lease grant will occur in the <b>PERM</b> code
+path when we have
+successfully applied the permanent record.<br>
+<h3>Maintaining Leases on the
+Master/Rep_start</h3>
+The master maintains a lease table that it checks when fulfilling a
+read request that is subject to leases.&nbsp; This table is initialized
+when a site calls<i>
+dbenv-&gt;rep_start(DB_MASTER)</i> and the site is undergoing a role
+change (i.e. a master making additional calls to <i>dbenv-&gt;rep_start(DB_MASTER)</i>
+does
+not affect an already existing table).<br>
+<br>
+When a non-master site becomes master, it must do two things related to
+leases on a role change.&nbsp; First, a client cannot upgrade to master
+while it has an outstanding lease granted to another site.&nbsp; If a
+client attempts to do so, an error, <b>EINVAL</b>,
+will be returned.&nbsp; The only way this should happen is if the
+application simply declares a site master, instead of using
+elections.&nbsp; Elections will already wait for leases to expire
+before proceeding. (See below.) 
+<br>
+<br>
+Second, once we are proceeding with becoming a master, the site must
+allocate the table it will use to maintain lease information.&nbsp;
+This table will be sized based on <i>nsites</i>
+and it will be an array of the following structure:<br>
+<pre>struct  {<br>  int eid;            /* EID of client site. */<br>   db_timespec start_time; /* Unique time ID client echoes back on grants. */<br>  db_timespec end_time;   /* Master's lease expiration time. */<br>   DB_LSN lease_lsn;   /* Durable LSN this lease applies to. */<br>    u_int32_t flags;    /* Unused for now?? */<br>} REP_LEASE_ENTRY;<br></pre>
+<h3>Granting Leases</h3>
+It is the burden of the application to make sure that all sites in the
+group
+are using leases, or none are.&nbsp; Therefore, when a client processes
+a <b>PERM</b>
+log record that arrived from the master, it will grant its lease
+automatically if that record is permanent (i.e. <b>DB_REP_ISPERM</b>
+is being returned),
+and leases are configured.&nbsp; A client will not send a
+lease grant when it is processing log records (even <b>PERM</b>
+ones) it receives from other clients that use client-to-client
+synchronization.&nbsp; The reason is that the master requires a unique
+time-of-msg ID (see below) that the client echoes back in its lease
+grant and it will not have such an ID from another client.<br>
+<br>
+The master stores a time-of-msg ID in each message and the client
+simply echoes it back to the master.&nbsp; In its lease table, it does
+keep the base
+time-of-msg for a valid lease.&nbsp; When <b>REP_LEASE_GRANT</b>
+message comes in,
+the master does a number of things:<br>
+<ol>
+  <li>Pulls the echoed timespec from the client message, into <i>msg_time</i>.<br>
+  </li>
+  <li>Finds the entry in its lease table for the client's EID.&nbsp; It
+walks the table searching for the ID.&nbsp; EIDs of <span
+ style="font-weight: bold;">DB_EID_INVALID</span> are
+illegal.&nbsp; Either the master will find the entry, or it will find
+an empty slot in the table (i.e. it is still populating the table with
+leases).</li>
+  <li>If this is a previously unknown site lease, the master
+initializes the entry by copying to the <i>eid</i>, <i>start_time, </i>and
+    <i>lease_lsn</i> fields.&nbsp; The master
+also computes the <i>end_time</i>
+based on the adjusted <i>rep-&gt;lease_duration</i>.</li>
+  <li>If this is a lease from a previously known site, the master must
+perform <i>timespeccmp(&amp;msg_time,
+&amp;table[i].start_time, &gt;)</i> and only update the <i>end_time</i>
+of the lease when this is
+a more recent message.&nbsp; If it is a more recent message, then we
+should update
+the <i>lease_lsn</i> to the LSN in
+the message.</li>
+  <li>Since lease durations are computed taking the clock skew into
+account, clients compute them based on the current time and the master
+computes it based on original sending time, for diagnostic purposes
+only, I also plan to send the client's expiration time.&nbsp; The
+client errs on the side of computing a larger lease expiration time and
+the master errs on the side of computing a smaller duration.&nbsp;
+Since both are taking the clock skew
+into account, the client's ending expiration time should never be
+smaller than
+the master's computed expiration time or their value for clock skew may
+not be correct.<br>
+  </li>
+</ol>
+Any log records (new or resent) that originate from the master and
+result in <b>DB_REP_ISPERM</b> get an
+ack.<br>
+<br>
+<h3>Refreshing Leases</h3>
+Leases get refreshed when a master receives a <b>REP_LEASE_GRANT</b>
+message from a client. There are three pieces to lease
+refreshment.&nbsp; <br>
+<h4>Lazy Lease Refreshing on Read<br>
+</h4>
+If the master discovers that leases are
+expired during the read operation, it attempts to refresh its
+collection of lease grants.&nbsp; It does this by calling a new
+function <i>__rep_lease_refresh</i>.&nbsp;
+This function is very similar to the already-existing function <i>__rep_flush</i>.&nbsp;
+Basically, to
+refresh the lease, the master simply needs to resend the last PERM
+record to the clients.&nbsp; The requirements state that when the
+application send function returns successfully from sending a PERM
+record, the majority of clients have that PERM LSN durable.&nbsp; We
+will have a new public DB error return called <b>DB_REP_LEASE_EXPIRED</b>
+that will be
+returned back to the caller if the master cannot assert its
+authority.&nbsp; The code will look something like this:<br>
+<pre>/*<br> * Use lp-&gt;max_perm_lsn on the master (currently not used on the master)<br> * to keep track of the last PERM record written through the logging system.<br> * need to initialize lp-&gt;max_perm_lsn in rep_start on role_chg.<br> */<br>call __rep_send_message on the last PERM record the master wrote, with DB_REP_PERMANENT<br>if failure<br>   expire leases<br>   return lease expired error to caller<br>else /* success */<br>  recheck lease table<br> /*<br>   * We need to recheck the lease table because the client<br>     * lease grant messages may not be processed yet, or got<br>     * lost, or racing with the application's ACK messages or<br>    * whatever. <br>    */<br> if we have a majority of valid leases<br>       return success<br>  else<br>        return lease expired error to caller <br></pre>
+<h4>Ongoing Update Refreshment<br>
+</h4>
+Second is having the master indicate to
+the client it needs to send a lease grant in response to the current
+PERM log message.&nbsp; The problem is
+that acknowledgements must contain a master-supplied message timestamp
+that the client sends back to the master.&nbsp; We need to modify the
+structure of the&nbsp; log record messages when leases are configured
+so
+that when a PERM message is sent, the master sends, and the client
+expects, the message timestamp.&nbsp; There are three fairly
+straightforward and different implementations to consider.<br>
+<ol>
+  <li>Adding the timestamp to the <b>REP_CONTROL</b>
+structure.&nbsp; If this option is chosen, then the code trivially
+sends back the timestamp in the client's reply.&nbsp; There is no
+special processing done by either side with the message contents.&nbsp;
+So, on a PERM log record, the master will send a non-zero
+timestamp.&nbsp; On a normal log record the timestamp will be zero or
+some known invalid value.&nbsp; If the client sees a non-zero
+timestamp, it sends a <b>REP_LEASE_GRANT</b>
+with the <i>lp-&gt;max_perm_lsn</i>
+after applying that log record.&nbsp; If it is zero, then the client
+does nothing different.&nbsp; The advantage is ease of code.&nbsp; The
+disadvantage is that for mixed version systems, the client is now
+dealing with different sized control structures.&nbsp; We would have to
+retain the old control structure so that during a mixed version group
+the (upgraded) clients can use, expect and send old control structures
+to the master.&nbsp; This is unfortunate, so let's consider additional
+implementations that don't require modifying the control structure.<br>
+  </li>
+  <li>Adding a new <b>REPCTL_LEASE</b>
+flag to the list of flags for the control structure, but do not change
+the control structure fields.&nbsp; When a master wants to send a
+message that needs a lease ack, it sets the flag.&nbsp; Additionally,
+instead of simply sending a log record DBT as the <i>rec</i> parameter
+for replication, we
+would send a new structure that had the timestamp first and then the
+record (similar to the bulk transfer buffer).&nbsp; The advantage of
+this is that the control structure does not change.&nbsp; Disadvantages
+include more special-cased code in the normal code path where we have
+to check the flag.&nbsp; If the flag is set we have to extract the
+timestamp value and massage the incoming data to pass on the real log
+record to <i>rep_apply</i>.&nbsp; On
+bulk transfer, we would just add the timestamp into the buffer.&nbsp;
+On normal transfers, it would incur an additional data copy on the
+master side.&nbsp; That is unfortunate.&nbsp; Additionally, if this
+record needs to be stored in the temp db, we need some way to get it
+back again later or <span style="font-style: italic;">rep_apply</span>
+would have to extract the timestamp out when it processed the record
+(either live or from the temp db).<br>
+  </li>
+  <li>Adding a different message type, such as <b>REP_LOG_ACK</b>.&nbsp;
+Similarly to <b>REP_LOG_MORE</b> this message would be a
+special-case version of a log record.&nbsp; We would extract out the
+timestamp and then handle as a normal log record.&nbsp; This
+implementation is rejected because it actually would require three new
+message types: <b>REP_LOG_ACK,
+REP_LOG_ACK_MORE, REP_BULK_LOG_ACK</b>.&nbsp; That is just too ugly
+to contemplate.</li>
+</ol>
+<b>[Slight digression:</b> it occurs
+to me while writing about #2 and #3 above, that our implementation of
+all of the *_MORE messages could really be implemented with a <b>REPCTL_MORE</b>
+flag instead of a
+separate message type.&nbsp; We should clean that up and simplify the
+messages but not part of master leases. Hmm, taking that thought
+process further, we really could get rid of the <b>REP_BULK_*</b>
+messages as well if we
+added a <b>REPCTL_BULK</b>
+flag.&nbsp; I think we should definitely do it for the *_MORE
+messages.&nbsp; I am not sure we should do it for bulk because the
+structure of the incoming data record is vastly different.]<br>
+<br>
+Of these options, I believe that modifying the control structure is the
+best alternative.&nbsp; The handling of the old structure will be very
+isolated to code dealing with old versions and is far less complicated
+than injecting the timestamp into the log record DBT and doing a data
+copy.&nbsp; Actually, I will likely combine #1 and the flag from #2
+above.&nbsp; I will have the <b>REPCTL_LEASE</b>
+flag that indicates a lease grant reply is expected and have the
+timestamp in the control structure.&nbsp;
+Also I will probably add in a spare field or two for future use in the <b>REP_CONTROL</b>
+structure.<br>
+<h4>Gap processing</h4>
+No matter which implementation we choose for ongoing lease refreshment,
+gap processing must be considered.&nbsp; The code above assumes the
+timestamps will be placed on PERM records only.&nbsp; Normal log
+records will not have a timestamp, nor a flag or anything else like
+that.&nbsp; However, any log message can fill a gap on a client and
+result in the processing of that normal log record to return <b>DB_REP_ISPERM</b>
+because later records
+were also processed.<br>
+<br>
+The current implementation should work fine in that case because when
+we store the message in the client temp db we store both the control
+DBT and the record DBT.&nbsp; Therefore, when a normal record fills a
+gap, the later PERM record, when retrieved will look just like it did
+when it arrived.&nbsp; The client will have access to the LSN, and the
+timestamp, etc.&nbsp; However, it does mean that sending the <b>REP_LEASE_GRANT</b>
+message must take
+place down in <i>__rep_apply</i>
+because that is the only place we have access to the contents of those
+stored records with the timestamps.<br>
+<br>
+There are two logical choices to consider for granting the lease when
+processing an update.&nbsp; As we process (either a live record or one
+read from the temp db after filling a gap) a PERM message, we send the <b>REP_LEASE_GRANT</b>
+message for each
+PERM record we successfully apply.&nbsp; Or, second, we keep track of
+the largest timestamp of all PERM records we've processed and at the
+end of the function after we've applied all records, we send back a
+single lease grant with the <i>max_perm_lsn</i>
+and a new <i>max_lease_timestamp</i>
+value to the master.&nbsp; The first is easier to implement, the second
+results in possibly slightly fewer messages at the expense of more
+bookkeeping on the client.<br>
+<br>
+A third, more complicated option would be to have the message timestamp
+on all records, but grants are only sent on the PERM messages.&nbsp; A
+reason to do this is that the later timestamp of a normal log record
+would be used as the timestamp sent in the reply and the master would
+get a more up to date timestamp value and a longer lease.&nbsp; <br>
+<br>
+If we change the <span style="font-weight: bold;">REP_CONTROL</span>
+structure to include the timestamp, we potentially break or at least
+need to revisit the gap processing algorithm.&nbsp; That code assumes
+that the control and record elements for the same LSN look the same
+each and every time.&nbsp; The code stores the <span
+ style="font-style: italic;">control</span> DBT as the key and the <span
+ style="font-style: italic;">rec</span> DBT as the data.&nbsp; We use a
+specialized compare function to sort based on the LSN in the control
+DBT.&nbsp; With master leases, the same record transmitted by a master
+multiple times or client for the same LSN will be different because the
+timestamp field will not be the same.&nbsp; Therefore, the client will
+end up with duplicate entries in the temp database for the same
+LSN.&nbsp; Both solutions (adding the timestamp to <span
+ style="font-weight: bold;">REP_CONTROL</span> and adding a <span
+ style="font-weight: bold;">REPCTL_LEASE</span> flag) can yield
+duplicate entries.&nbsp; The flag would cause the same record from the
+master and client to be different as well.<br>
+<h4>Handling Incoming Lease Grants<br>
+</h4>
+The third piece of lease management is handling the incoming <b>REP_LEASE_GRANT</b>
+message on the
+master.&nbsp; When this message is received, the master must do the
+following:<br>
+<pre>REP_SYSTEM_LOCK<br>msg_timestamp = cntrl-&gt;timestamp;<br>client_lease = __rep_lease_entry(dbenv, client eid)<br>if (client_lease == NULL)<br>    initial lease for this site, DB_ASSERT there is space in the table<br>  add this to the table if there is space<br>} else <br>  compare msg_timestamp with client_lease-&gt;start_time<br>  if (msg_timestamp is more recent &amp;&amp; msg_lsn &gt;= lease LSN)<br>        update entry in table<br>REP_SYSTEM_UNLOCK<br></pre>
+<h3>Expiring Leases</h3>
+Leases can expire in two ways.&nbsp; First they can expire naturally
+due to the passage of time.&nbsp; When checking leases, if the current
+time is later than the lease entry's <i>end_time</i>
+then the lease is expired.&nbsp; Second, they can be forced with a
+premature expiration when the application's transport function returns
+an error.&nbsp; In the first case, there is nothing to do, in the
+second case we need to manipulate the <i>end_time</i>
+so that all future lease checks fail.&nbsp; Since the lease <i>start_time</i>
+is guaranteed to not be in the future we will have a function <i>__rep_lease_expire</i>
+that will:<br>
+<pre>REP_SYSTEM_LOCK<br>for each entry in the lease table<br>   entry-&gt;end_time = entry-&gt;start_time;<br>REP_SYSTEM_UNLOCK<br></pre>
+Is there a potential race or problem with prematurely expiring
+leases?&nbsp; Consider an application that enforces an ALL
+acknowledgement policy for PERM records in its transport
+callback.&nbsp; There are four clients and three send the PERM ack to
+the application.&nbsp; The callback returns an error to the master DB
+code.&nbsp; The DB code will now prematurely expire its leases.&nbsp;
+However, at approximately the same time the three clients are also
+sending their <span style="font-weight: bold;">REP_LEASE_GRANT</span>
+messages to the master.&nbsp; There is a race between the master
+processing those messages and the thread handling the callback failure
+expiring the table.&nbsp; This is only an issue if the messages arrive
+after the table has been expired.<br>
+<br>
+Let's assume all three clients send their grants after the master
+expires the table.&nbsp; If we accept those grants and then a read
+occurs the read will succeed since the master has a majority of leases
+even though the callback failed earlier.&nbsp; Is that a problem?&nbsp;
+The lease code is using a majority and the application policy is using
+something other value.&nbsp; It feels like this should be okay since
+the data is held by leases on a majority.&nbsp; Should we consider
+having the lease checking threshold be the same as the permanent ack
+policy?&nbsp; That is difficult because Base API users implement
+whatever they want and DB does not know what it is.<br>
+<h3>Checking Leases</h3>
+When a read operation on the master completes, the last thing we need
+to do is verify the master leases.&nbsp; We've already discussed
+refreshing them when they are expired above.&nbsp; We need two things
+for a lease to be valid.&nbsp; It must be within the timeframe of the
+lease grant and the lease must be valid for the last PERM record
+LSN.&nbsp; Here is the logic
+for checking the validity of leases in <i>__rep_lease_check</i>:<br>
+<pre>#define MAX_REFRESH_TRIES  3<br>DB_LSN lease_lsn;<br>REP_LEASE_ENTRY *entry;<br>u_int32_t min_leases, valid_leases;<br>db_timespec cur_time;<br>int ret, tries;<br><br>    tries = 0;<br>retry:<br>    ret = 0;<br>    LOG_SYSTEM_LOCK<br> lease_lsn = lp-&gt;lsn<br>  LOG_SYSTEM_UNLOCK<br>   REP_SYSTEM_LOCK<br> min_leases = rep-&gt;nsites / 2;<br>    __os_gettime(dbenv, &amp;cur_time);<br> for (entry = head of table, valid_leases = 0; entry != NULL &amp;&amp; valid_leases &lt; min_leases; entry++)<br>       if (timespec_cmp(&amp;entry-&gt;end_time, &amp;cur_time) &gt;= 0 &amp;&amp; log_compare(&amp;entry-&gt;lsn, lease_lsn) == 0)<br>            valid_leases++;<br> REP_SYSTEM_UNLOCK<br>   if (valid_leases &lt; min_leases) {<br>     ret =__rep_lease_refresh(dbenv, ...);<br>       /*<br>       * If we are successful, we need to recheck the leases because <br>      * the lease grant messages may have raced with the PERM<br>         * acknowledgement.  Give those messages a chance to arrive.<br>         */<br>     if (ret == 0) {<br>         if (tries &lt;= MAX_REFRESH_TRIES) {<br>                /*<br>               * If we were successful sending, but not successful in racing the<br>               * message thread, yield the processor so that message<br>               * threads may have a chance to run.<br>                 */<br>             if (tries &gt; 0)<br>                   /* __os_sleep instead?? */<br>                  __os_yield()<br>                tries++;<br>                goto retry;<br>         } else<br>              ret = DB_RET_LEASE_EXPIRED;<br>     }<br>   }<br>   return (ret);</pre>
+If the master has enough valid leases it returns success.&nbsp; If it
+does not have enough, it attempts to refresh them.&nbsp; This attempt
+may fail if sending the PERM record does not receive sufficient
+acks.&nbsp; If we do receive sufficient acknowledgements we may still
+find that scheduling of message threads means the master hasn't yet
+processed the incoming <b>REP_LEASE_GRANT</b>
+messages yet.&nbsp; We will retry a couple times (possibly
+parameterized) if the master discovers that situation.&nbsp; <br>
+<h2>Elections</h2>
+When a client grants a lease to a master, it gives up the right to
+participate in an election until that grant expires.&nbsp; If we are
+the master and <i>dbenv-&gt;rep_elect</i>
+is called, it should return, no matter what, like it does today.&nbsp;
+If we are a client and <i>rep_elect</i>
+is called special processing takes place when leases are in
+effect.&nbsp; First, the easy case is if the lease granted by this
+client has already expired, then the client goes directly into the
+election as normal.&nbsp; If a valid lease grant is outstanding to a
+master, this site cannot participate in an election until that grant
+expires.&nbsp; We have at least two options when a site calls the <i>dbenv-&gt;rep_elect</i>
+API while
+leases are in effect.<br>
+<ol>
+  <li>The simplest coding solution for DB would be simply to refuse to
+participate in the election if this site has a current lease granted to
+a master.&nbsp; We would detect this situation and return EINVAL.&nbsp;
+This is correct behavior and trivial to implement.&nbsp; The
+disadvantage of this solution is that the application would then be
+responsible for repeatedly attempting an election until the lease grant
+expired.<br>
+  </li>
+  <li>The more satisfying solution is for DB to wait the remaining time
+for the grant.&nbsp; If this client hears from the master during that
+time the election does not take place and the call to <i>rep_elect</i>
+returns with the
+information for the current/old master.</li>
+</ol>
+<h3>Election Code Changes</h3>
+The code changes to support leases in the election code are fairly
+isolated.&nbsp; First if leases are configured, we must verify the <i>nsites</i>
+parameter is set to 0.&nbsp;
+Second, in <i>__rep_elect_init</i>
+we must not overwrite the value of <i>rep-&gt;nsites</i>
+for leases because it is controlled by the <i>dbenv-&gt;rep_set_nsites</i>
+API.&nbsp;
+These changes are small and easy to understand.<br>
+<br>
+The more complicated code will be the client code when it has an
+outstanding lease granted.&nbsp; The client will wait for the current
+lease grant to expire before proceeding with the election.&nbsp; The
+client will only do so if it does not hear from the master for the
+remainder of the lease grant time.&nbsp; If the client hears from the
+master, it returns and does not begin participating in the
+election.&nbsp; A new election phase, <b>REP_EPHASE0</b>
+will exist so that the call to <i>__rep_wait</i>
+can detect if a master responds.&nbsp; The client, while waiting for
+the lease grant to expire, will send a <b>REP_MASTER_REQ</b>
+message so that the master will respond with a <b>REP_NEWMASTER</b>
+message and thus,
+allow the client to know the master exists.&nbsp; However, it is also
+desirable that if the master
+replies to the client, the master wants the client to update its lease
+grant.&nbsp; <br>
+<br>
+Recall that the <b>REP_NEWMASTER</b>
+message does not result in a lease grant from the client.&nbsp; The
+client responds when it processes a PERM record that has the <b>REPCTL_LEASE</b>
+flag set in the message
+with its lease grant up to the given LSN.&nbsp; Therefore, we want the
+client's <b>REP_MASTER_REQ</b> to
+yield both the discovery of the existing master and have the master
+refresh its leases.&nbsp; The client will also use the <b>REPCTL_LEASE</b>
+flag in its <b>REP_MASTER_REQ</b> message to the
+master.&nbsp; This flag will serve as the indicator to the master that
+it needs to deal with leases and both send the <b>REP_NEWMASTER</b>
+message and refresh
+the lease.<br>
+The code will work as follows:<br>
+<pre>if (leases_configured &amp;&amp; (my_grant_still_valid || lease_never_granted) {<br>   if (lease_never_granted)<br>        wait_time = lease_timeout<br>   else<br>        wait_time = grant_expiration - current_time<br> F_SET(REP_F_EPHASE0);<br>   __rep_send_message(..., REP_MASTER_REQ, ... REPCTL_LEASE);<br>  ret = __rep_wait(..., REP_F_EPHASE0);<br>   if (we found a master)<br>      return<br>} /* if we don't return, fall out and proceed with election */<br></pre>
+On the master side, the code handling the <b>REP_MASTER_REQ</b> will
+do:<br>
+<pre>if (I am master) {<br> ...<br> __rep_send_message(REP_NEWMASTER...)<br>    if (F_ISSET(rp, REPCTL_LEASE))<br>      __rep_lease_refresh(...)<br>}<br></pre>
+Other minor implementation details are that<i> __rep_elect_done</i>
+must also clear
+the <b>REP_F_EPHASE0</b> flag.&nbsp;
+We also, obviously, need to define <b>REP_F_EPHASE0</b>
+in the list of replication flags.&nbsp; Note that the client's call to <i>__rep_wait</i>
+will return upon
+receiving the <b>REP_NEWMASTER</b>
+message.&nbsp; The client will independently refresh its lease when it
+receives the log record from the master's call to refresh the lease.<br>
+<br>
+Again, similar to what I suggested above, the code could simply assume
+global leases are configured, and instead of having the <b>REPCTL_LEASE</b>
+flag at all, the master
+assumes that it needs to refresh leases because it has them configured,
+not because it is specified in the <b>REP_MASTER_REQ</b>
+message it is processing. Right now I don't think every possible
+<b>REP_MASTER_REQ</b> message should result in a lease grant request.<br>
+<h4>Elections and Quiescient Systems</h4>
+It is possible that a master is slow or the client is close to its
+expiration time, or that the master is quiescient and all leases are
+currently expired, but nothing much is going on anyway, yet some client
+calls <i>__rep_elect</i> at that
+time.&nbsp; In the code above, we will not send the <b>REP_MASTER_REQ</b>
+because the lease is
+not valid.&nbsp; The client will simply proceed directly to sending the
+<b>REP_VOTE1</b> message, throwing all
+other clients into an election.&nbsp; The master is still master and
+should stay that way.&nbsp; Currently in response to a vote message, a
+master will broadcast out a <b>REP_NEWMASTER</b>
+to assert its mastership.&nbsp; That causes the election to
+complete.&nbsp; However, if desired the master may want to proactively
+refresh its leases.&nbsp; This situation indicates to me that the
+master should choose to refresh leases based on configuration, not a
+flag sent from the client.&nbsp; I believe anytime the master asserts
+its mastership via sending a <b>REP_NEWMASTER</b>
+message that I need to add code to proactively refresh leases at that
+time.<br>
+<h2>Other Implementation Details</h2>
+<h3>Role Changes<br>
+</h3>
+When a site changes its role via a call to <i>rep_start</i> in either
+direction, we
+must take action when leases are configured.&nbsp; There are three
+types of role changes that all need changes to deal with leases:<br>
+<ol>
+  <li><i>A master downgrading to a
+client.</i> When a master downgrades to a client, it can do so
+immediately after it has proactively expired all existing leases it
+holds.&nbsp; This situation is similar to an error from the send
+callback, and it effectively cancels all outstanding leases held on
+this site.&nbsp; Note that if this master expires its leases, it does
+not have any effect on when the clients' lease grants expire on the
+client side.&nbsp; The clients must still wait their full expected
+grant time.<br>
+  </li>
+  <li><i>A client upgrading to master.</i>
+If a client is upgrading to a master but it has an outstanding lease
+granted to another site, the code will return an <b>EINVAL</b>
+error.&nbsp; This situation
+only arises if the application simply declares this site master.&nbsp;
+If a site wins an election then the election itself should have waited
+long enough for the granted lease to expire and this state should not
+arise then.</li>
+  <li><i>A client finding a new master.</i>
+When a client discovers a new and different master, via a <b>REP_NEWMASTER</b>
+message then the
+client cannot accept that new master until its current lease grant
+expires.&nbsp; This situation should only occur when a site declares
+itself master without an election and that site's lease grant expires
+before this client's grant expires.&nbsp; However, it is <b>possible</b>
+for this situation to arise
+with elections also.&nbsp; If we have 5 sites holding an election and 4
+of those sites have leases expire at about the same time T, and this
+site's lease expires at time T+N and the election timeout is &lt; N,
+then those 4 sites may hold an election and elect a master without this
+site's participation.&nbsp; A client in this situation must call <i>__rep_wait</i>
+with the time remaining
+on its lease.&nbsp; If the lease is expired after waiting the remaining
+time, then the client can accept this new master.&nbsp; If the lease
+was refreshed during the waiting period then the client does not accept
+this new master and returns.<br>
+  </li>
+</ol>
+<h3>DUPMASTER</h3>
+A duplicate master situation can occur if an old master becomes
+disconnected from the rest of the group, that group elects a new master
+and then the partition is resolved.&nbsp; The requirement for master
+leases is that this situation will not cause the newly elected,
+rightful master to receive the <b>DB_REP_DUPMASTER</b>
+return.&nbsp; It is okay for the old master to get that return
+value.&nbsp; When a dual master situation exists, the following will
+happen:<br>
+<ul>
+  <li><i>On the current master and all
+current clients</i> - If the current master receives an update
+message or other conflicting message from the old master then that
+message will be ignored because the generation number is out of date.</li>
+  <li><i>On the old master</i> - If
+the old master receives an update message from the current master, or
+any other message with a later generation from any site, the new
+generation number will trigger this site to return <b>DB_REP_DUPMASTER</b>.&nbsp;
+However,
+instead of broadcasting out the <b>REP_DUPMASTER</b>
+message to shoot down others as well, this site, if leases are
+configured, will call <i>__rep_lease_check</i>
+and if they are expired, return the error.&nbsp; It should be
+impossible for us to receive a later generation message and still hold
+a majority of master leases.&nbsp; Something is seriously wrong and we
+will <b>DB_ASSERT</b> this situation
+cannot happen.<br>
+  </li>
+</ul>
+<h3>Client to Client Synchronization</h3>
+One question to ask is how lease grants interact with client-to-client
+synchronization. The only answer is that they do not.&nbsp; A client
+that is sending log records to another client cannot request the
+receiving client refresh its lease with the master.&nbsp; That client
+does not have a timestamp it can use for the master and clock skew
+makes it meaningless between machines.&nbsp; Therefore, sites that use
+client-to-client synchronization will likely see more lease refreshment
+during the read path and leases will be refreshed during live updates
+only.&nbsp; Of course, if a client supplies log records that fill a
+gap, and the later log records stored came from the master in a live
+update then the client will respond as per the discussion on Gap
+Processing above.<br>
+<h2>Interaction Matrix</h2>
+If leases are granted (by a client) or held (by a master) what should
+the following APIs and messages do?<br>
+<br>
+Other:<br>
+log_archive: Leases do not affect log_archive.&nbsp; OK.<br>
+dbenv-&gt;close: OK.<br>
+crash during lease grant and restart: <b>Potential
+problem here.&nbsp; See discussion below</b>.<br>
+<br>
+Rep Base API method:<br>
+rep_elect: Already discussed above.&nbsp; Must wait for lease to expire.<br>
+rep_flush: Master only, OK - this will be the basis for refreshing
+leases.<br>
+rep_get_*: Not affected by leases.<br>
+rep_process_message: Generally OK.&nbsp; We'll discuss each message
+below.<br>
+rep_set_config: OK.<br>
+rep_set_limit: OK<br>
+rep_set_nsites: Must be called before <i>rep_start</i>
+and <i>nsites</i> is immutable until
+14778 is resolved.<br>
+rep_set_priority: OK<br>
+rep_set_timeout: OK.&nbsp; Used to set lease timeout.<br>
+rep_set_transport: OK.<br>
+rep_start(MASTER): Role changes are discussed above.&nbsp; Make sure
+duplicate rep_start calls are no-ops for leases.<br>
+rep_start(CLIENT): Role changes are discussed above.&nbsp; Make sure
+duplicate calls are no-ops for leases.<br>
+rep_stat: OK.<br>
+rep_sync: Should not be able to happen.&nbsp; Client cannot accept new
+master with outstanding lease grant.&nbsp; Add DB_ASSERT here.<br>
+<br>
+REP_ALIVE: OK.<br>
+REP_ALIVE_REQ: OK.<br>
+REP_ALL_REQ: OK.<br>
+REP_BULK_LOG: OK.&nbsp; Clients check to send ACK.<br>
+REP_BULK_PAGE: Should never process one with lease granted.&nbsp; Add
+DB_ASSERT.<br>
+REP_DUPMASTER: Should never happen, this is what leases are supposed to
+prevent.&nbsp; See above.<br>
+REP_LOG: OK.&nbsp; Clients check to send ACK.<br>
+REP_LOG_MORE: OK.&nbsp; Clients check to send ACK.<br>
+REP_LOG_REQ: OK.<br>
+REP_MASTER_REQ: OK.<br>
+REP_NEWCLIENT: OK.<br>
+REP_NEWFILE: OK.&nbsp; Clients check to send ACK.<br>
+REP_NEWMASTER: See above.<br>
+REP_NEWSITE: OK.<br>
+REP_PAGE: OK.&nbsp; Should never process one with lease granted.&nbsp;
+Add DB_ASSERT.<br>
+REP_PAGE_FAIL:&nbsp; OK.&nbsp; Should never process one with lease
+granted.&nbsp; Add DB_ASSERT.<br>
+REP_PAGE_MORE:&nbsp; OK.&nbsp; Should never process one with lease
+granted.&nbsp; Add DB_ASSERT.<br>
+REP_PAGE_REQ: OK.<br>
+REP_REREQUEST: OK.<br>
+REP_UPDATE: OK.&nbsp; Should never process one with lease
+granted.&nbsp; Add DB_ASSERT.<br>
+REP_UPDATE_REQ: OK.&nbsp; This is a master-only message.<br>
+REP_VERIFY: OK.&nbsp; Should never process one with lease
+granted.&nbsp; Add DB_ASSERT.<br>
+REP_VERIFY_FAIL: OK.&nbsp; Should never process one with lease
+granted.&nbsp; Add DB_ASSERT.<br>
+REP_VERIFY_REQ: OK.<br>
+REP_VOTE1: OK.&nbsp; See Election discussion above.&nbsp; It is
+possible to receive one with a lease granted.&nbsp; Client cannot send
+one with an outstanding lease however.<br>
+REP_VOTE2: OK.&nbsp; See Election discussion above.&nbsp; It is
+possible to receive one with a lease granted.<br>
+<br>
+If the following method or message processing is in progress and a
+client wants to grant a lease, what should it do?&nbsp; Let's examine
+what this means.&nbsp; The client wanting to grant a lease simply means
+it is responding to the receipt of a <b>REP_LOG</b>
+(or its variants) message and applying a log record.&nbsp; Therefore,
+we need to consider a thread processing a log message racing with these
+other actions.<br>
+<br>
+Other:<br>
+log_archive: OK.&nbsp; <br>
+dbenv-&gt;close: User error.&nbsp; User should not be closing the env
+while other threads are using that handle.&nbsp; Should have no effect
+if a 2nd dbenv handle to same env is closed.<br>
+<br>
+Rep Base API method:<br>
+rep_elect: See Election discussion above.&nbsp; <i>rep_elect</i>
+should wait and may grant
+lease while election is in progress.<br>
+rep_flush: Should not be called on client.<br>
+rep_get_*: OK.<br>
+rep_process_message: Generally OK.&nbsp; See handling each message
+below.<br>
+rep_set_config: OK.<br>
+rep_set_limit: OK.<br>
+rep_set_nsites: Must be called before <i>rep_start</i>
+until 14778 is resolved.<br>
+rep_set_priority: OK.<br>
+rep_set_timeout: OK.<br>
+rep_set_transport: OK.<br>
+rep_start(MASTER): OK, can't happen - already protect racing <i>rep_start</i>
+and <i>rep_process_message</i>.<br>
+rep_start(CLIENT): OK, can't happen - already protect racing <i>rep_start</i>
+and <i>rep_process_message</i>.<br>
+rep_stat: OK.<br>
+rep_sync: Shouldn't happen because client cannot grant leases during
+sync-up.&nbsp; Incoming log message ignored.<br>
+<br>
+REP_ALIVE: OK.<br>
+REP_ALIVE_REQ: OK.<br>
+REP_ALL_REQ: OK.<br>
+REP_BULK_LOG: OK.<br>
+REP_BULK_PAGE: OK.&nbsp; Incoming log message ignored during internal
+init.<br>
+REP_DUPMASTER: Shouldn't happen.&nbsp; See DUPMASTER discussion above.<br>
+REP_LOG: OK.<br>
+REP_LOG_MORE: OK.<br>
+REP_LOG_REQ: OK.<br>
+REP_MASTER_REQ: OK.<br>
+REP_NEWCLIENT: OK.<br>
+REP_NEWFILE: OK.<br>
+REP_NEWMASTER: See above.&nbsp; If a client accepts a new master
+because its lease grant expired, then that master sends a message
+requesting the lease grant, this client will not process the log record
+if it is in sync-up recovery, or it may after the master switch is
+complete and the client doesn't need sync-up recovery.&nbsp; Basically,
+just uses existing log record processing/newmaster infrastructure.<br>
+REP_NEWSITE: OK.<br>
+REP_PAGE: OK.&nbsp; Receiving a log record during internal init PAGE
+phase should ignore log record.<br>
+REP_PAGE_FAIL: OK.<br>
+REP_PAGE_MORE: OK.<br>
+REP_PAGE_REQ: OK.<br>
+REP_REREQUEST: OK.<br>
+REP_UPDATE: OK.&nbsp; Receiving a log record during internal init
+should ignore log record.<br>
+REP_UPDATE_REQ: OK - master-only message.<br>
+REP_VERIFY: OK.&nbsp; Receiving a log record during verify phase
+ignores log record.<br>
+REP_VERIFY_FAIL: OK.<br>
+REP_VERIFY_REQ: OK.<br>
+REP_VOTE1: OK.&nbsp; This client is processing someone else's vote when
+the lease request comes in.&nbsp; That is fine.&nbsp; We protect our
+own election and lease interaction in <i>__rep_elect</i>.<br>
+REP_VOTE2: OK.<br>
+<h4>Crashing - Potential Problem<br>
+</h4>
+It appears there is one area where we could have a problem.&nbsp; I
+believe that crashes can cause us to break our guarantee on durability,
+authoritative reads and inability to elect duplicate masters.&nbsp;
+Consider this scenario:<br>
+<ol>
+  <li>A master and 4 clients are all up and running.</li>
+  <li>The master commits a txn and all 4 clients refresh their lease
+grants at time T.</li>
+  <li>All 4 clients have the txn and log records in the cache.&nbsp;
+None are flushing to disk.</li>
+  <li>All 4 clients have responded to the PERM messages as well as
+refreshed their lease with the master.</li>
+  <li>All 4 clients hit the same application coding error and crash
+(machine/OS stays up).</li>
+  <li>Master authoritatively reads data in txn from step 2.</li>
+  <li>All 4 clients restart the application and run recovery, thus the
+txn from step 2 is lost on all clients because it isn't any logs.<span
+ style="font-weight: bold;"></span><br>
+  </li>
+  <li>A network partition happens and the master is alone on its side.</li>
+  <li>All 4 clients are on the other side and elect a new master.</li>
+  <li>Partition resolves itself and we have duplicate masters, where
+the former master still holds all valid lease grants.<span
+ style="font-weight: bold;"></span><br>
+  </li>
+</ol>
+Therefore, we have broken both guarantees.&nbsp; In step 6 the data is
+really not durable and we've given it to the user.&nbsp; One can argue
+that if this is an issue the application better be syncing somewhere if
+they really want durability.&nbsp; However, worse than that is that we
+have a legitimate DUPMASTER situation in step 10 where both masters
+hold valid leases.&nbsp; The reason is that all lease knowledge is in
+the shared memory and that is lost when the app restarts and runs
+recovery.<br>
+<br>
+How can we solve this?&nbsp; The obvious solution is (ugh, yet another)
+durable BDB-owned file with some information in it, such as the current
+lease expiration time so that rebooting after a crash leaves the
+knowledge that the lease was granted.&nbsp; However, writing and
+syncing every lease grant on every client out to disk is far too
+expensive.<br>
+<br>
+A second possible solution is to have clients wait a full lease timeout
+before entering an election the first time. This solution solves the
+DUPMASTER issue, but not the non-authoritative read.&nbsp; This
+solution naturally falls out of elections and leases really.&nbsp; If a
+client has never granted a lease, it should be considered as having to
+wait a full lease timeout before entering an election.&nbsp;
+Applications already know that leases impact elections and this does
+not seem so bad as it is only on the first election.<br>
+<br>
+Is it sufficient to document that the authoritative read is only as
+authoritative as the durability guarantees they make on the sites that
+indicate it is permanent? Yes, I believe this is sufficient.&nbsp; If
+the application says it is permanent and it really isn't, then the
+application is at fault.&nbsp; Believing the application when it
+indicates with the PERM response that it is permanent avoids the
+authoritative problem.&nbsp; <br>
+<h2>Upgrade/Mixed Versions</h2>
+Clearly leases cannot be used with mixed version sites since masters
+running older releases will not have any knowledge of lease
+support.&nbsp; What considerations are needed in the lease code for
+mixed versions?<br>
+<br>
+First if the <b>REP_CONTROL</b>
+structure changes, we need to maintain and use an old version of the
+structure for talking to older clients and masters.&nbsp; The
+implementation of this would be similar to the way we manage for old <b>REP_VOTE_INFO</b>
+structures.&nbsp;
+Second any new messages need translation table entries added.&nbsp;
+Third, if we are assuming global leases then clearly any mixed versions
+cannot have leases configured, and leases cannot be used in mixed
+version groups.&nbsp; Maintaining two versions of the control structure
+is not necessary if we choose a different style of implementation and
+don't change the control structure.<br>
+<br>
+However, then how could an old application both run continuously,
+upgrade to the new release and take advantage of leases without taking
+down the entire application?&nbsp; I believe it is possible for clients
+to be configured for leases but be subject to the master regarding
+leases, yet the master code can assume that if it has leases
+configured, all client sites do as well.&nbsp; In several places above
+I suggested that a client could make a choice based on either a new <b>REPCTL_LEASE</b>
+flag or simply having
+leases turned on locally.&nbsp; If we choose to use the flag, then we
+can support leases with mixed versions.&nbsp; The upgraded clients can
+configure leases and they simply will not be granted until the old
+master is upgraded and send PERM message with the flag indicating it
+wants a lease grant.&nbsp; The client will not grant a lease until such
+time.&nbsp; The clients, while having the leases configured, will not
+grant a lease until told to do so and will simply have an expired
+lease.&nbsp; Then, when the old master finally upgrades, it too can
+configure leases and suddenly all sites are using them.&nbsp; I believe
+this should work just fine and I will need to make sure a client's
+granting of leases is only in response to the master asking for a
+grant.&nbsp; If the master never asks, then the client has them
+configured, but doesn't grant them.<br>
+<h2>Testing</h2>
+Clearly any user-facing API changes will need the equivalent reflection
+in the Tcl API for testing, under CONFIG_TEST.<br>
+<br>
+I am sure the list of tests will grow but off the top of my head:<br>
+Basic test: have N sites all configure leases, run some,&nbsp; read on
+master, etc.<br>
+Refresh test: Perform update on master, sleep until past expiration,
+read on master and make sure leases are refreshed/read successful<br>
+Error test: Test error conditions (reading on client with leases but no
+ignore flag, calling after rep_start, etc)<br>
+Read test: Test reading on both client and master both with and without
+the IGNORE flag.&nbsp; Test that data read with the ignore flag can be
+rolled back.<br>
+Dupmaster test: Force a DUPMASTER situation and verify that the newer
+master cannot get DUPMASTER error.<br>
+Election test: Call election while grant is outstanding and master
+exists.<br>
+Call election while grant is outstanding and master does not exist.<br>
+Call election after expiration on quiescient system with master
+existing.<br>
+Run with a group where some members have leases configured and other do
+not to make sure we get errors instead of dumping core.<br>
+<br>
+<small><br>
+</small>
+</body>
+</html>

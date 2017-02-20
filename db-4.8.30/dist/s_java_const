@@ -1,0 +1,41 @@
+#!/bin/sh -
+#	$Id$
+#
+# Build the Java files.
+
+msgjava="/* DO NOT EDIT: automatically built by dist/s_java_const. */"
+
+. ./RELEASE
+
+t=/tmp/__java
+trap 'rm -f $t; exit 0' 0 1 2 3 13 15
+
+(echo "$msgjava" &&
+ echo &&
+ echo 'package com.sleepycat.db.internal;' &&
+ echo &&
+ echo 'public interface DbConstants' &&
+ echo '{' &&
+ for i in `egrep '^DB_.*J [C|\*]$' pubdef.in | awk '{print $1}'`; do \
+     sed -e ':a' -e '/\\$/N;s/\\\n[	 ]*/ /;ta' \
+         ../dbinc_auto/api_flags.in ../dbinc/db.in | \
+     egrep -w "^#define[	 ]$i|^[	 ][	 ]*$i" ;
+ done |
+ sed -e "s/@DB_VERSION_MAJOR@/$DB_VERSION_MAJOR/" \
+     -e "s/@DB_VERSION_MINOR@/$DB_VERSION_MINOR/" \
+     -e "s/@DB_VERSION_PATCH@/$DB_VERSION_PATCH/" \
+     -e 's/^#define[	 ][	 ]*//' \
+     -e 's/[()=,]/ /g' \
+     -e 's/\/\*.*$//' \
+     -e 's/^[	 ]*//' \
+     -e 's/[	 ]*$//g' \
+     -e 's/[	 ][	 ]*/ /g' \
+     -e 's/ / = /' | \
+ awk '{ print "    int " $0 ";" }' &&
+ echo '}' &&
+ echo &&
+ echo '// end of DbConstants.java') > $t
+
+f=../java/src/com/sleepycat/db/internal/DbConstants.java
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)

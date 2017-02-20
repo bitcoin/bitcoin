@@ -1,0 +1,114 @@
+#
+# Copyright (c) 2004-2009 Oracle.  All rights reserved.
+#
+# http://www.apache.org/licenses/LICENSE-2.0.txt
+#
+
+AC_INIT(mod_db4.c)
+AC_CONFIG_HEADER(config.h)
+AC_PROG_CXX
+
+AC_LANG_PUSH(C++)
+if test "$cross_compiling" = no; then
+    AC_MSG_CHECKING([that C++ compiler can compile simple program])
+fi
+AC_TRY_RUN([int main() { return 0; }],
+           AC_MSG_RESULT(yes),
+           AC_MSG_RESULT(no);AC_MSG_ERROR([a working C++ compiler is required]))
+
+# Allow user to specify flags
+AC_ARG_WITH(cxxflags,
+        [  --with-cxxflags           Specify additional flags to pass to compiler],
+        [
+                if test "x$withval" != "xno" ; then
+                        CXXFLAGS="$withval $CXXFLAGS"
+                fi
+        ]       
+)
+CXXFLAGS=`echo $CXXFLAGS | sed -e 's/-O2//g;' | sed -e 's/-g//g;'`
+AC_ARG_WITH(ldflags,
+        [  --with-ldflags          Specify additional flags to pass to linker],
+        [
+                if test "x$withval" != "xno" ; then
+                        LDFLAGS="$withval $LDFLAGS"
+                fi
+        ]       
+)
+
+AC_ARG_WITH(libs,
+        [  --with-libs             Specify additional libraries],
+        [
+                if test "x$withval" != "xno" ; then
+                        LIBS="$withval $LIBS"
+                fi
+        ]       
+)
+
+AC_ARG_WITH(mm,
+        [  --with-mm             Specify additional libraries],
+        [
+                if test "x$withval" != "xno" ; then
+                        LIBS="-L$withval/lib $LIBS"
+                        CPPFLAGS="-I$withval/include $CPPFLAGS"
+                fi
+        ]       
+
+)
+
+AC_ARG_WITH(db4,
+        [  --with-db4             Specify additional libraries],
+        [
+                if test "x$withval" != "xno" ; then
+                        LIBS="-L$withval/lib $LIBS"
+                        CPPFLAGS="-I$withval/include $CPPFLAGS"
+                fi
+        ]       
+
+)
+
+AC_ARG_WITH(apxs,
+[  --with-apxs[=FILE]   Build shared Apache module. FILE is optional
+                        pathname to the Apache apxs tool; defaults to
+                        "apxs".],
+[
+  if test "$withval" = "yes"; then
+    withval="apxs"
+  fi
+  APXS="$withval"
+  AC_SUBST(APXS)
+],
+[
+  AC_MSG_ERROR([apxs is required])
+])
+
+LIBS="$LIBS -ldb_cxx"
+
+AC_CACHE_CHECK(for union semun,cv_semun,
+  AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
+  ],
+  [union semun x;],
+  [
+    cv_semun=yes
+  ],[
+    cv_semun=no
+  ])
+)
+if test "$cv_semun" = "yes"; then
+  AC_DEFINE(HAVE_SEMUN, 1, [ ])
+else
+  AC_DEFINE(HAVE_SEMUN, 0, [ ])
+fi
+
+AC_SUBST(LDFLAGS)
+AC_SUBST(LIBS)
+AC_SUBST(CPPFLAGS)
+AC_SUBST(CXXFLAGS)
+
+AC_CHECK_LIB(mm, mm_core_create, , [ AC_MSG_ERROR([libmm required]) ])
+
+AC_SUBST(HAVE_SEMUN)
+AC_OUTPUT(Makefile)
+

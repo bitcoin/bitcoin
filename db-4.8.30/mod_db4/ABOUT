@@ -1,0 +1,48 @@
+
+
+This is the mod_db4 apache module, providing a safe framework
+for running db4 applications in the Apache 1.3 environment. In
+general, it is dangerous to run db4 in a multi-process system
+without some facility to coordinate recovery between 
+participating processes. Apache natively provides no
+interface for commuication between processes, so the mod_db4 
+module exists to provide this communication.
+
+Specifically, mod_db4 provides the following facilities:
+
+o New constructors for DB and DB_ENV structures, which install
+replacement open/close methods.
+o Transparent caching of open DB and DB_ENV structures
+o Reference counting on all structures, allowing the module to
+detect the initial opening of any managed database
+and automatically perform recovery.
+o Automatic detection of unexpected failures (segfaults, or a
+module actually calling exit() and avoiding shutdown phases,
+and automatic termination of all child processes with open 
+database resources to attempt consistency.
+
+mod_db4 is designed to be used as an alternative interface to db4.
+To have another Apache module (for example, mod_foo) use mod_db4, 
+do not link mod_foo against libdb-4.2.  In your mod_foo makefile,
+you should 
+
+#include "mod_db4_export.h"
+
+and add your Apache include directory to your CPPFLAGS.
+
+In mod_foo, to create a mod_db4 managed DB_ENV, use the following:
+
+int mod_db4_db_env_create(DB_ENV **dbenvp, u_int32_t flags);
+
+which takes identical arguments to db_env_create().
+
+To create a mod_db4 managed DB, use
+
+int mod_db4_db_create(DB **dbp, DB_ENV *dbenv, u_int32_t flags);
+
+which takes identical arguments to db_create().
+
+Otherwise the API is completely consistent with the standard Berkeley
+DB API.
+
+For installation instructions, see the INSTALL file.

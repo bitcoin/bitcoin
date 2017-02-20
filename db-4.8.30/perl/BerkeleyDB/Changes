@@ -1,0 +1,358 @@
+Revision history for Perl extension BerkeleyDB.
+
+0.39  6th June 2009 
+
+        * Added support for BDB 4.8
+          - associate_foreign 
+          - set_bt_compress (no callbacks as yet).
+
+        * Also added interface to 
+          - ENV->stat_print
+          - ENV->txn_stat_print
+
+        * Oldest Perl supported is now 5.005
+
+        * Fixed issue db_stat when it returned a null pointer.
+          (#46312 rt.cpan.org)
+
+        * Fixed issue with DNM Filters & UTF8 support.
+          Patch supplied by Torsten Foertsch.
+
+0.38  21st February 2009 
+
+        * Fixed typo in BerkleyDB.pod that broke t/pod.t
+
+0.37  18th February 2009 
+
+        * Included CDS section to the pod.
+
+        * Various documentation patches from RT#42243
+
+0.36  30th September 2008 
+
+        * Added support for $ENV->log_get_config and $ENV->log_set_config.
+          Patch supplied by Yuval Kogman (#39651 rt.cpan.org)
+
+0.35  22nd September 2008 
+
+        * Added a combination of independent patches from Claes Jakobsson
+          and Yuval Kogman (#38896 rt.cpan.org) to allow multi-key return
+          from a secondard database.
+
+        * Added support for sequences. Initial patch from  Claes Jakobsson.
+
+        * Get associate to use a transaction if one is specified.
+          #5855 from rt.cpan.org
+
+        * Finish transition of test harness to use Test::More
+
+0.34  27th March 2008 
+
+        * Updates to support building with Berkeley DB version 4.7
+
+        * Typo in #ifdef for ThreadCount support. Spotted by Mark Hindley
+
+        * Updated dbinfo
+
+0.33  17th January 2008 
+
+        * Added failchk, set_isalive, lock_stat_print & mutex_stat_print.
+          Patch provided by Thomas Busch.
+
+0.32  10th July 2007 
+
+        * Updates to support Berkeley DB 4.6
+
+        * Remove all global static data from BerkeleyDB.xs. 
+
+0.31  15th Oct 2006 
+
+        * Fixed DB_GET_BOTH. Tnanks to Thomas Drugeon for spotting the typo
+          in typemap and supplying a regression test for this fix.
+
+0.30  11th Sept 2006 
+
+        * Fixed queue test harness for Berkeley DB 4.5 compliance
+
+        * Added $env->lsn_reset, $txn->set_timeout, $env->set_timeout &
+          $env->get_timeout, $txn->set_tx_max, $txn->get_tx_max
+
+0.29  2nd July 2006 
+
+        * Fixes for cursor get from secondary where primary os recno.
+
+        * Added db_compact
+
+0.28  11th June 2006 
+
+        * Fixes for secondary where primary is recno.
+
+        * GET_BOTH_RANGE wasn't working. It is now.
+
+        * Added FreeBSD hints to README - patch supplied by David Landgren
+          in #17675 from rt.cpan.org
+
+0.27  1st Novemver 2005 
+
+        * Added support for Berkeley DB 4.4
+
+        * Fixed secondary key issue with recno databases
+
+        * Added libscan to Makefile.PL
+
+        * Fixed a problem in t/subdb.t that meant it hung on Win32.
+
+        * The logic for set_mutexlocks was inverted when using Berkeley DB 4.x
+          Bug spotted by Zefram <zefram@fysh.org>
+
+        * Transactional rename/remove added.
+          Patch supplied by Zefram <zefram@fysh.org>
+
+
+0.26  10th October 2004
+
+        * Changed to allow Building with Berkeley DB 4.3
+
+        * added cds_lock and associated methods as a convenience to allow
+          safe updaing of database records when using Berkeley DB CDS mode.
+
+        * added t/cds.t and t/pod.t
+
+        * Modified the test suite to use "-ErrFile => *STDOUT" where 
+          possible. This will make it easier to diagnose build issues.
+
+	* -Errfile will now accept a filehandle as well as a filename
+          This means that -ErrFile => *STDOUT will get all extended error
+          messages displayed directly on screen.
+
+	* Added support for set_shm_key & get_shm_key.
+
+	* Patch from Mark Jason Dominus to add a better error message
+	  when an odd number of parameters are passed to ParseParameters.
+
+	* fixed off-by-one error in my_strdup
+
+	* Fixed a problem with push, pop, shift & unshift with Queue &
+	  Recno when used in CDS mode. These methods were not using
+	  a write cursor behind the scenes. 
+	  Problem reported by Pavel Hlavnicka.
+
+0.25  1st November 2003
+
+	* Minor update to dbinfo
+
+	* Fixed a bug in the test harnesses that is only apparent in
+	  perl 5.8.2.  Original patch courtesy of Michael Schwern.
+
+0.24 27th September 2003
+
+        * Mentioned comp.databases.berkeley-db in README
+
+        * Builds with Berkeley DB 4.2
+
+        * The return type for db->db_fd was wrongly set at DualType -
+          should be int.
+
+0.23 15th June 2003
+
+        * Fixed problem where a secondary index would use the same
+          compare callback as the primary key, regardless of what was
+          defined for the secondary index. 
+	  Problem spotted by Dave Tallman.
+
+        * Also fixed a problem with the associate callback. If the value
+          for the secondary key was not a string, the secondary key was
+          being set incorrectly. This is now fixed.
+
+        * When built with Berkeley DB 3.2 or better, all callbacks now use
+          the BackRef pointer instead of the global CurrentDB. This was
+          done partially to fix the secondary index problem, above.
+
+        * The test harness was failing under cygwin. Now fixed. 
+
+        * Previous release broke TRACE. Fixed.
+
+0.22 17th May 2003
+
+        * win32 problem with open macro fixed.
+
+0.21 12th May 2003
+
+        * adding support for env->set_flags 
+	* adding recursion detection
+	* win32 problem with rename fixed.
+	* problem with sub-database name in Recno & Queue fixed.
+	* fixed the mldbm.t test harness to work with perl 5.8.0
+	* added a note about not using a network drive when running the
+	  test harness.
+	* fixed c_pget
+	* added BerkeleyDB::Env::DB_ENV method
+	* added support for encryption
+	* the dbinfo script will now indicate if the database is encrypted
+	* The CLEAR method is now CDB safe.
+
+0.20 2nd September 2002
+
+        * More support for building with Berkeley DB 4.1.x
+        * db->get & db->pget used the wrong output macro for DBM filters 
+          bug spotted by Aaron Ross.
+	* db_join didn't keep a reference to the cursors it was joining.
+          Spotted by Winton Davies.
+
+0.19 5th June 2002
+        * Removed the targets that used mkconsts from Makefile.PL. They relied
+          on a module that is not available in all versions of Perl.
+        * added support for env->set_verbose
+        * added support for db->truncate
+        * added support for db->rename via BerkeleyDB::db_rename
+        * added support for db->verify via BerkeleyDB::db_verify
+        * added support for db->associate, db->pget & cursor->c_pget
+        * Builds with Berkeley DB 4.1.x
+ 
+
+0.18 6th January 2002
+        * Dropped support for ErrFile as a file handle. It was proving too
+          difficult to get at the underlying FILE * in XS.
+          Reported by Jonas Smedegaard (Debian powerpc) & Kenneth Olwing (Win32)
+        * Fixed problem with abort macro in XSUB.h clashing with txn abort
+          method in Berkeley DB 4.x -- patch supplied by Kenneth Olwing.
+        * DB->set_alloc was getting called too late in BerkeleyDB.xs. 
+          This was causing problems with ActivePerl -- problem reported
+          by Kenneth Olwing.
+        * When opening a queue, the Len proprty set the DB_PAD flag. 
+          Should have been DB_FIXEDLEN. Fix provided by Kenneth Olwing.
+        * Test harness fixes from Kenneth Olwing.
+
+0.17 23 September 2001
+        * Fixed a bug in BerkeleyDB::Recno - reported by Niklas Paulsson. 
+        * Added log_archive - patch supplied by Benjamin Holzman
+        * Added txn_discard
+        * Builds with Berkeley DB 4.0.x
+
+0.16 1 August 2001
+        * added support for Berkeley DB 3.3.x (but no support for any of the
+          new features just yet)
+
+0.15 26 April 2001
+        * Fixed a bug in the processing of the flags options in
+          db_key_range.
+        * added support for set_lg_max & set_lg_bsize
+        * allow DB_TMP_DIR and DB_TEMP_DIR
+        * the -Filename parameter to BerkeleyDB::Queue didn't work.
+        * added symbol DB_CONSUME_WAIT
+
+0.14 21st January 2001
+        * Silenced the warnings when build with a 64-bit Perl.
+        * Can now build with DB 3.2.3h (part of MySQL). The test harness
+          takes an age to do the queue test, but it does eventually pass.
+        * Mentioned the problems that occur when perl is built with sfio.
+
+0.13 15th January 2001
+        * Added support to allow this module to build with Berkeley DB 3.2  
+        * Updated dbinfo to support Berkeley DB 3.1 & 3.2 file format
+          changes.  
+        * Documented the Solaris 2.7 core dump problem in README.
+        * Tidied up the test harness to fix a problem on Solaris where the
+          "fred" directory wasn't being deleted when it should have been.
+        * two calls to "open" clashed with a win32 macro.
+        * size argument for hash_cb is different for Berkeley DB 3.x 
+        * Documented the issue of building on Linux.
+        * Added -Server, -CacheSize & -LockDetect options 
+          [original patch supplied by Graham Barr]
+        * Added support for set_mutexlocks, c_count, set_q_extentsize,
+          key_range, c_dup
+	* Dropped the "attempted to close a Cursor with an open transaction"
+	  error in c_close. The correct behaviour is that the cursor
+	  should be closed before committing/aborting the transaction.
+
+0.12  2nd August 2000
+	* Serious bug with get fixed. Spotted by Sleepycat.
+	* Added hints file for Solaris & Irix (courtesy of Albert Chin-A-Young)
+
+0.11  4th June 2000
+	* When built with Berkeley Db 3.x there can be a clash with the close
+	  macro.
+	* Typo in the definition of DB_WRITECURSOR
+	* The flags parameter wasn't getting sent to db_cursor
+	* Plugged small memory leak in db_cursor (DESTROY wasn't freeing
+	  memory)
+	* Can be built with Berkeley DB 3.1
+   
+0.10  8th December 1999
+	* The DESTROY method was missing for BerkeleyDB::Env. This resulted in
+	  a memory leak. Fixed.
+	* If opening an environment or database failed, there was a small 
+	  memory leak. This has been fixed. 
+	* A thread-enabled Perl it could core when a database was closed. 
+	  Problem traced to the strdup function.
+
+0.09  29th November 1999
+        * the queue.t & subdb.t test harnesses were outputting a few
+          spurious warnings. This has been fixed.
+
+0.08  28nd November 1999
+	* More documentation updates
+	* Changed reference to files in /tmp in examples.t
+	* Fixed a typo in softCrash that caused problems when building
+	  with a thread-enabled Perl.
+	* BerkeleyDB::Error wasn't initialised properly.
+	* ANSI-ified all the static C functions in BerkeleyDB.xs
+	* Added support for the following DB 3.x features:
+	    + The Queue database type
+	    + db_remove
+	    + subdatabases 
+	    + db_stat for Hash & Queue
+
+0.07  21st September 1999
+	* Numerous small bug fixes.
+	* Added support for sorting duplicate values DB_DUPSORT.
+	* Added support for DB_GET_BOTH & DB_NEXT_DUP.
+	* Added get_dup (from DB_File).
+	* beefed up the documentation.
+	* Forgot to add the DB_INIT_CDB in BerkeleyDB.pm in previous release.
+	* Merged the DBM Filter code from DB_File into BerkeleyDB.
+	* Fixed a nasty bug where a closed transaction was still used with
+	  with dp_put, db_get etc.
+	* Added logic to gracefully close everything whenever a fatal error
+	  happens. Previously the plug was just pulled.
+	* It is now a fatal error to explicitly close an environment if there
+	  is still an open database; a database when there are open cursors or
+	  an open transaction; and a cursor if there is an open transaction.
+	  Using object destruction doesn't have this issue, as object
+	  references will ensure everything gets closed in the correct order.
+	* The BOOT code now checks that the version of db.h & libdb are the
+	  same - this seems to be a common problem on Linux.
+	* MLDBM support added.  
+	* Support for the new join cursor added.
+	* Builds with Berkeley DB 3.x
+   	* Updated dbinfo for Berkeley DB 3.x file formats.
+	* Deprecated the TxnMgr class. As with Berkeley DB version 3,
+	  txn_begin etc are now accessed via the environment object.
+	
+0.06  19 December 1998
+	* Minor modifications to get the module to build with DB 2.6.x
+	* Added support for DB 2.6.x's  Concurrent Access Method, DB_INIT_CDB.
+
+0.05  9 November 1998
+	* Added a note to README about how to build Berkeley DB 2.x
+	  when using HP-UX.
+	* Minor modifications to get the module to build with DB 2.5.x
+
+0.04  19 May 1998
+	* Define DEFSV & SAVE_DEFSV if not already defined. This allows
+	  the module to be built with Perl 5.004_04.
+
+0.03  5 May 1998
+	* fixed db_get with DB_SET_RECNO
+	* fixed c_get with DB_SET_RECNO and DB_GET_RECNO
+	* implemented BerkeleyDB::Unknown
+	* implemented BerkeleyDB::Recno, including push, pop etc
+	  modified the txn support. 
+
+0.02  30 October 1997
+	* renamed module to BerkeleyDB	
+	* fixed a few bugs & added more tests
+
+0.01  23 October 1997
+	* first alpha release as BerkDB.
+

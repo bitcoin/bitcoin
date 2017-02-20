@@ -1,0 +1,61 @@
+#!/bin/sh -
+#	$Id$
+
+echo 'Creating Berkeley DB source tree symbolic links...'
+
+build()
+{
+	#echo "	$1 -> $2"
+	(cd ../`dirname $1` && rm -f `basename $1` && ln -s $2 `basename $1`)
+}
+
+build btree/tags ../dist/tags
+build build_unix/tags ../dist/tags
+build clib/tags ../dist/tags
+build common/tags ../dist/tags
+build crypto/tags ../dist/tags
+build cxx/tags ../dist/tags
+build db/tags ../dist/tags
+build db185/tags ../dist/tags
+build db_archive/tags ../dist/tags
+build db_checkpoint/tags ../dist/tags
+build db_deadlock/tags ../dist/tags
+build db_dump/tags ../dist/tags
+build db_dump185/tags ../dist/tags
+build db_hotbackup/tags ../dist/tags
+build db_load/tags ../dist/tags
+build db_printlog/tags ../dist/tags
+build db_recover/tags ../dist/tags
+build db_stat/tags ../dist/tags
+build db_upgrade/tags ../dist/tags
+build db_verify/tags ../dist/tags
+build dbinc/tags ../dist/tags
+build dbinc_auto/tags ../dist/tags
+build dbm/tags ../dist/tags
+build dbreg/tags ../dist/tags
+build env/tags ../dist/tags
+build examples_c/tags ../dist/tags
+build examples_cxx/tags ../dist/tags
+build fileops/tags ../dist/tags
+build hash/tags ../dist/tags
+build hmac/tags ../dist/tags
+build hsearch/tags ../dist/tags
+build libdb_java/tags ../dist/tags
+build lock/tags ../dist/tags
+build log/tags ../dist/tags
+build mp/tags ../dist/tags
+build mutex/tags ../dist/tags
+build os/tags ../dist/tags
+build os_brew/tags ../dist/tags
+build os_qnx/tags ../dist/tags
+build os_s60/tags ../dist/tags
+build os_vxworks/tags ../dist/tags
+build os_windows/tags ../dist/tags
+build qam/tags ../dist/tags
+build rep/tags ../dist/tags
+build repmgr/tags ../dist/tags
+build rpc_client/tags ../dist/tags
+build rpc_server/tags ../dist/tags
+build sequence/tags ../dist/tags
+build tcl/tags ../dist/tags
+build txn/tags ../dist/tags

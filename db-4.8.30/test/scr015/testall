@@ -1,0 +1,32 @@
+#!/bin/sh -
+#	$Id$
+#
+# Run all the C++ regression tests
+
+ecode=0
+prefixarg=""
+stdinarg=""
+while :
+do
+	case "$1" in
+	--prefix=* )
+		prefixarg="$1"; shift;;
+	--stdin )
+		stdinarg="$1"; shift;;
+	* )
+		break
+	esac
+done
+files="`find . -name \*.cpp -print`"
+for file in $files; do
+	name=`echo $file | sed -e 's:^\./::' -e 's/\.cpp$//'`
+	if grep $name ignore > /dev/null; then
+		echo "    **** cxx test $name ignored"
+	else
+		echo "    ==== cxx test $name"
+		if ! sh ./testone $prefixarg $stdinarg $name; then
+			ecode=1
+		fi
+	fi
+done
+exit $ecode

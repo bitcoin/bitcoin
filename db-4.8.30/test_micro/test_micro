@@ -1,0 +1,170 @@
+#! /bin/sh
+#
+# $Id$
+LIBS=${LIBS:-"-lpthread"}
+WINBUILDDIR="Win32/Release"
+
+CYGWIN=0
+HOSTOS="`uname -o 2>/dev/null||uname -s 2>/dev/null`"
+if test `echo "$HOSTOS"|grep -i cygwin|wc -l` -gt 0;then
+	CYGWIN=1
+fi
+
+# build_test_micro_posix
+#	Build test_micro on a POSIX system.
+build_test_micro_posix()
+{
+	# See if there's a test_micro binary already.
+	test $clean -eq 0 && test -x test_micro && return 0
+
+	echo 'Compiling test_micro on posix system...'
+	rm -f test_micro
+	CC=${CC:-gcc}
+	if [ "$CC" = "gcc" ]; then
+		CC="$CC -O3 -Wall"
+	else
+		CC="$CC -O"
+	fi
+	$CC -I. -I../dbinc -I../dbinc_auto -I.. -I$h/source \
+	    $SRC -o test_micro ./libdb.a $LIBS || return 1
+}
+
+# build_test_micro_windows
+#	Build test_micro on a Windows system.
+build_test_micro_windows()
+{
+	# See if there's a test_micro binary already.
+	test $clean -eq 0 && test -x test_micro && return 0
+
+	echo 'Compiling test_micro on windows ...'
+	rm -f test_micro
+
+	cl /nologo /o test_micro /DDB_WIN32 /G6 /Ox /MD\
+	  -I./  -I../ -I$h/source/ -I../dbinc -I../dbinc_auto $SRC $WINSRC\
+	    ./$WINBUILDDIR/libdb*.lib ./Release/libdb*.lib ws2_32.lib advapi32.lib 
+}
+
+# run --
+#	$1: args
+run()
+{
+	# You can set the MAJOR and MINOR environment variables to limit
+	# the BDB releases on which the tests are run.
+	echo Versions db-${MAJOR:-[3-9]}.${MINOR:-*}.*
+	for i in db-${MAJOR:-[3-9]}.${MINOR:-*}.*; do
+
+		major=`echo $i|sed "s/db-//g"|cut -d . -f 1`
+		minor=`echo $i|sed "s/db-//g"|cut -d . -f 2`
+		if test $major -gt "4";then
+			WINBUILDDIR="Win32/Release"
+		elif test $major -lt "4";then
+			WINBUILDDIR="Release"
+		elif test "X$minor" = "X" -o "$minor" -lt "8";then
+			WINBUILDDIR="Release"
+		else
+			WINBUILDDIR="Win32/Release"
+		fi
+
+		if [ -f $i/$variant/libdb.a ] ; then
+			(cd $i/$variant/ &&
+			    build_test_micro_posix || exit 1)
+		elif [ -f $i/build_windows/${WINBUILDDIR}/libdb??.lib ] ; then
+			(cd $i/build_windows &&
+			    build_test_micro_windows || exit 1)
+		 fi
+
+		echo "$i run begins: `date`"
+		echo "test_micro $1..."
+		if [ -f $i/$variant/libdb.a ] ; then
+			(cd $i/$variant/ && ./test_micro $1 || exit 1)
+			if [ -f $t/gmon.out ] ; then
+				mv $t/gmon.out $i/$variant
+				gprof $i/$variant/.libs/lt-test_micro $i/$variant/gmon.out > $i/$variant/gprof.out
+			fi
+		elif [ -f $i/build_windows/${WINBUILDDIR}/libdb??.lib  ] ; then
+			(cd $i/build_windows/ && ./test_micro $1 || exit 1)
+		fi
+		echo "$i run ends: `date`"
+	done
+}
+
+# Get a path to this shellscript.
+t=`dirname $0`
+h=`(cd $t && pwd)`
+if [ "$CYGWIN" = "1" ];then
+	h="`cygpath -m -a \"$h\"`"
+fi
+# We may need to re-compile, create a list of our sources.
+SRC="$h/source/b_curalloc.c $h/source/b_curwalk.c $h/source/b_del.c
+$h/source/b_get.c $h/source/b_inmem.c $h/source/b_load.c $h/source/b_latch.c
+$h/source/b_open.c $h/source/b_put.c $h/source/b_recover.c
+$h/source/b_txn.c $h/source/b_txn_write.c $h/source/b_uname.c
+$h/source/b_util.c $h/source/b_workload.c $h/source/test_micro.c
+$h/../common/util_arg.c"
+
+WINSRC="$h/../clib/getopt.c"
+
+# Process arguments.
+clean=0					# Rebuild test_micro
+workload=0				# Run workload tests
+start_test=0				# Start test
+end_test=0				# End test
+variant=build_unix
+while :
+	do case "$1" in
+	-c)				# Rebuild test_micro.
+		clean=1
+		shift;;
+	-w)				# Run workload tests
+		workload=1
+		shift;;
+	[1-9]*-[0-9]*)			# Range: -3, 3-, 3-10
+		start_test=`echo $1|sed 's/-.*//'`
+		start_test=${start_test:=1}
+		end_test=`echo $1|sed 's/.*-//'`
+		end_test=${end_test:=0}
+		shift;;
+	[1-9]*)				# Specific test
+		start_test="$1"
+		end_test="$1"
+		shift;;
+	-v)	variant=$2	# get code here, rather than from build_unix
+		shift; shift;;
+	*)
+		break;;
+	esac
+done
+test "$#" -ne 0 && {
+	echo 'usage: test_micro [-cw] [# | #- | -# | #-#]' >& 2
+	exit 1
+}
+
+if test $start_test != 0; then
+	cmd="$cmd -s $start_test"
+fi
+if test $end_test != 0; then
+	cmd="$cmd -e $end_test"
+fi
+
+# Create the run directory, and initialize test_micro's arguments.
+t=RUN.`hostname | sed 's/\..*//'`
+[ -d $t ] || mkdir $t
+if [ "$CYGWIN" = "1" ];then
+	cmd="$cmd -d `(cd $t && cygpath -m -a \"$PWD\")`"
+else
+	cmd="$cmd -d `(cd $t && pwd)`"
+fi
+# Set input file.
+if test "$workload" -eq 1; then
+	cmd="$cmd -i $h/configs/run.workload"
+else
+	cmd="$cmd -i $h/configs/run.std"
+fi
+
+# Flush any I/O, just to get as a clean a timing as we can, ignore errors,
+# sync is privleged on some systems.
+(sync && sleep 1 2>&1) > /dev/null
+
+run "$cmd"
+
+exit 0

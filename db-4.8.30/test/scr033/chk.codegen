@@ -1,0 +1,43 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Check to make sure that the db_codegen examples build and compile.
+
+d=../../db_codegen
+
+[ -d $d ] || {
+	echo 'FAIL: cannot find db_codegen source directory.'
+	exit 1
+}
+(cd .. && make db_codegen > /dev/null) || {
+	echo 'FAIL: unable to build db_codgen'
+	exit 1
+}
+
+for i in `find $d -name 'example[0-9]*'` ; do
+	echo "	example $i"
+	rm -rf BUILD && mkdir BUILD && cd BUILD
+	if ../../db_codegen -a c -i ../$i; then
+		:
+	else
+		echo "FAIL: failed to load $i"
+		exit 1
+	fi
+	if cc -DBUILD_STANDALONE -pthread \
+	    -Wall -Werror -I../.. application.c ../../libdb.a -o t; then
+		:
+	else
+		echo "FAIL: failed to compile $i"
+		exit 1
+	fi
+	if ./t ; then
+		:
+	else
+		echo "FAIL: failed to run $i"
+		exit 1
+	fi
+	cd ..
+done
+
+exit 0

@@ -1,0 +1,103 @@
+<!--Copyright 1999-2009 Oracle.  All rights reserved.-->
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.08 [en] (X11; I; FreeBSD 2.2.8-19990120-SNAP i386) [Netscape]">
+</HEAD>
+<BODY>
+
+<H2>
+<A NAME="Debugging"></A>Debugging and Testing</H2>
+We have imported the debugging system from the old test suite into the
+new interface to aid in debugging problems.&nbsp; There are several variables
+that are available both in gdb as globals to the C code, and variables
+in Tcl that the user can set.&nbsp; These variables are linked together
+so that changes in one venue are reflected in the other.&nbsp; The names
+of the variables have been modified a bit to reduce the likelihood
+<BR>of namespace trampling.&nbsp; We have added a double underscore to
+all the names.
+<P>The variables are all initialized to zero (0) thus resulting in debugging
+being turned off.&nbsp; The purpose of the debugging, fundamentally, is
+to allow the user to set a breakpoint prior to making a DB call.&nbsp;
+This breakpoint is set in the <I>__db_loadme() </I>function.&nbsp; The
+user may selectively turn on various debugging areas each controlled by
+a separate variable (note they all have two (2) underscores prepended to
+the name):
+<UL>
+<LI>
+<B>__debug_on</B> - Turns on the debugging system.&nbsp; This must be on
+for any debugging to occur</LI>
+
+<LI>
+<B>__debug_print - </B>Turns on printing a debug count statement on each
+call</LI>
+
+<LI>
+<B>__debug_test -</B> Hits the breakpoint in <I>__db_loadme</I> on the
+specific iteration</LI>
+
+<LI>
+<B>__debug_stop </B>- Hits the breakpoint in <I>__db_loadme</I> on every
+(or the next) iteration</LI>
+</UL>
+<B>Note to developers:</B>&nbsp; Anyone extending this interface must place
+a call to <B>_debug_check()</B> (no arguments) before every call into the
+DB library.
+<P>There is also a command available that will force a call to the _debug_check
+function.
+<P><B>> berkdb debug_check</B>
+<P>
+<HR WIDTH="100%">
+<BR>For testing purposes we have added several hooks into the DB library
+and a small interface into the environment and/or database commands to
+manipulate the hooks.&nbsp; This command interface and the hooks and everything
+that goes with it is only enabled when the test option is configured into
+DB.
+<P><B>> &lt;env> test copy <I>location</I></B>
+<BR><B>> &lt;db> test copy <I>location</I></B>
+<BR><B>> &lt;env> test abort <I>location</I></B>
+<BR><B>> &lt;db> test abort <I>location</I></B>
+<P>In order to test recovery we need to be able to abort the creation or
+deletion process at various points.&nbsp; Also we want to invoke a copy
+function to copy the database file(s)&nbsp; at various points as well so
+that we can obtain before/after snapshots of the databases.&nbsp; The interface
+provides the test command to specify a <B><I>location</I></B> where we
+wish to invoke a <B>copy</B> or an <B>abort</B>.&nbsp; The command is available
+from either the environment or the database for convenience.&nbsp; The
+<B><I>location</I></B>
+can be one of the following:
+<UL>
+<LI>
+<B>none -</B> Clears the location</LI>
+
+<LI>
+<B>preopen -</B> Sets the location prior to the __os_open call in the creation
+process</LI>
+
+<LI>
+<B>postopen</B> - Sets the location to immediately following the __os_open
+call in creation</LI>
+
+<LI>
+<B>postlogmeta</B> - Sets the location to immediately following the __db_log_page
+call to log the meta data in creation.&nbsp; Only valid for Btree.</LI>
+
+<LI>
+<B>postlog</B> - Sets the location to immediately following the last (or
+only) __db_log_page call in creation.</LI>
+
+<LI>
+<B>postsync</B> - Sets the location to immediately following the sync of
+the log page in creation.</LI>
+
+<LI>
+<B>prerename</B> - Sets the location prior to the __os_rename call in the
+deletion process.</LI>
+
+<LI>
+<B>postrename</B> - Sets the location to immediately following the __os_rename
+call in deletion</LI>
+</UL>
+
+</BODY>
+</HTML>

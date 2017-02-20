@@ -1,0 +1,39 @@
+This README describes the steps needed to run a demo example of BerkeleyDB.
+
+1. Read the pages in the Reference Guide that describe building
+   BerkeleyDB on VxWorks:
+
+	$(WIND_BASE)/target/src/BerkeleyDB/docs/ref/build_vxworks/intro.html
+	$(WIND_BASE)/target/src/BerkeleyDB/docs/ref/build_vxworks/notes.html
+	$(WIND_BASE)/target/src/BerkeleyDB/docs/ref/build_vxworks/faq.html
+
+2. Launch Tornado 2.0 and open up the BerkeleyDB project.
+
+3. Add the demo project to that workspace:
+
+	$(WIND_BASE)/target/src/BerkeleyDB/build_vxworks/demo/dbdemo.wpj
+
+4. Build BerkeleyDB as described in the Reference Guide.
+
+5. Build the dbdemo project.
+
+6. Download BerkeleyDB onto the target.
+
+7. Download the dbdemo project onto the target.
+
+8. Open a windsh to the target and run the demo:
+
+	-> dbdemo "<pathname>/<dbname>"
+
+   Where pathname is a pathname string pointing to a directory that the
+   demo can create a database in.  That directory should already exist.
+   The dbname is the name for the database.  For example:
+
+	-> dbdemo "/tmp/demo.db"
+
+9. The demo program will ask for input.  You can type in any string.
+   The program will add an entry to the database with that string as
+   the key and the reverse of that string as the data item for that key.
+   It will continue asking for input until you hit ^D or enter "quit".
+   Upon doing so, the demo program will display all the keys you have
+   entered as input and their data items.

@@ -1,0 +1,54 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Check to make sure we don't need any more symbolic links to tags files.
+
+d=../..
+
+# Test must be run from the top-level directory, not from a test directory.
+[ -f $d/LICENSE ] || {
+	echo 'FAIL: cannot find source distribution directory.'
+	exit 1
+}
+
+# We are dropping the tags file for 4.8 - test is invalid
+# for now exit out 
+echo "<<< test is no longer valid >>>"
+exit 0
+
+
+t1=__1
+t2=__2
+
+(cd $d && ls -F | egrep / | sort |
+    sed -e 's/\///' \
+	-e '/^CVS$/d' \
+	-e '/^build_brew$/d' \
+	-e '/^build_s60$/d' \
+	-e '/^build_vxworks$/d' \
+	-e '/^build_wince$/d' \
+	-e '/^build_windows$/d' \
+	-e '/^docs$/d' \
+	-e '/^docs_book$/d' \
+	-e '/^docs_src$/d' \
+	-e '/^examples_java$/d' \
+	-e '/^java$/d' \
+	-e '/^mod_db4$/d' \
+	-e '/^perl$/d' \
+	-e '/^php_db4$/d' \
+	-e '/^test$/d' \
+	-e '/^test_cxx$/d' \
+	-e '/^test_micro$/d' \
+	-e '/^test_purify$/d' \
+	-e '/^test_thread$/d' \
+	-e '/^test_vxworks$/d') > $t1
+
+(cd $d && ls */tags | sed 's/\/tags$//' | sort) > $t2
+if diff $t1 $t2 > /dev/null; then
+	exit 0
+else
+	echo "<<< source tree >>> tags files"
+	diff $t1 $t2
+	exit 1
+fi

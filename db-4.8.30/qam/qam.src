@@ -1,0 +1,90 @@
+/*-
+ * See the file LICENSE for redistribution information.
+ *
+ * Copyright (c) 1999-2009 Oracle.  All rights reserved.
+ *
+ * $Id$
+ */
+
+DBPRIVATE
+PREFIX	__qam
+
+INCLUDE #include "db_int.h"
+INCLUDE #include "dbinc/crypto.h"
+INCLUDE #include "dbinc/db_page.h"
+INCLUDE #include "dbinc/db_dispatch.h"
+INCLUDE #include "dbinc/db_am.h"
+INCLUDE #include "dbinc/log.h"
+INCLUDE #include "dbinc/qam.h"
+INCLUDE #include "dbinc/txn.h"
+INCLUDE
+
+/*
+ * incfirst
+ * Used when we increment first_recno.
+ */
+BEGIN incfirst		42	84
+DB	fileid		int32_t		ld
+ARG	recno		db_recno_t	lu
+ARG	meta_pgno	db_pgno_t	lu
+END
+
+/*
+ * mvptr
+ * Used when we change one or both of cur_recno and first_recno.
+ */
+BEGIN mvptr		42	85
+ARG	opcode		u_int32_t	lu
+DB	fileid		int32_t		ld
+ARG	old_first	db_recno_t	lu
+ARG	new_first	db_recno_t	lu
+ARG	old_cur		db_recno_t	lu
+ARG	new_cur		db_recno_t	lu
+POINTER	metalsn		DB_LSN *	lu
+ARG	meta_pgno	db_pgno_t	lu
+END
+
+
+/*
+ * del
+ * Used when we delete a record.
+ * recno is the record that is being deleted.
+ */
+BEGIN del		42	79
+DB	fileid		int32_t		ld
+POINTER	lsn		DB_LSN *	lu
+ARG	pgno		db_pgno_t	lu
+ARG	indx		u_int32_t	lu
+ARG	recno		db_recno_t	lu
+END
+
+/*
+ * add
+ * Used when we put a record on a page.
+ * recno is the record being added.
+ * data is the record itself.
+ */
+BEGIN add		42	80
+DB	fileid		int32_t		ld
+POINTER	lsn		DB_LSN *	lu
+ARG	pgno		db_pgno_t	lu
+ARG	indx		u_int32_t	lu
+ARG	recno		db_recno_t	lu
+DBT	data		DBT		s
+ARG	vflag		u_int32_t	lu
+DBT	olddata		DBT		s
+END
+
+/*
+ * delext
+ * Used when we delete a record in extent based queue.
+ * recno is the record that is being deleted.
+ */
+BEGIN delext		42	83
+DB	fileid		int32_t		ld
+POINTER	lsn		DB_LSN *	lu
+ARG	pgno		db_pgno_t	lu
+ARG	indx		u_int32_t	lu
+ARG	recno		db_recno_t	lu
+DBT	data		DBT		s
+END

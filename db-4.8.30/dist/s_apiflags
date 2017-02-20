@@ -1,0 +1,24 @@
+#!/bin/sh -
+#	$Id$
+#
+# Build the automatically generated API flag #defines.
+
+msgc="/* DO NOT EDIT: automatically built by dist/s_apiflags. */"
+
+b=/tmp/api_flags_binary
+t=/tmp/__db_a
+
+trap 'rm -f $b $t; exit 0' 0
+trap 'rm -f $b $t; exit 1' 1 2 3 13 15
+
+cc api_flags.c -o $b || {
+	echo 's_apiflags: unable to compile api_flags.c'
+	exit 1
+}
+
+(echo "$msgc"
+ $b < api_flags) > $t
+
+f=../dbinc_auto/api_flags.in
+cmp $f $t > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)

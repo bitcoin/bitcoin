@@ -1,0 +1,142 @@
+/* DO NOT EDIT: automatically built by dist/s_include. */
+#ifndef	_qam_ext_h_
+#define	_qam_ext_h_
+#if defined(__cplusplus)
+extern "C" {
+#endif
+#define	__qam_position __qam_position@DB_VERSION_UNIQUE_NAME@
+int __qam_position __P((DBC *, db_recno_t *, qam_position_mode, int *));
+#define	__qam_pitem __qam_pitem@DB_VERSION_UNIQUE_NAME@
+int __qam_pitem __P((DBC *,  QPAGE *, u_int32_t, db_recno_t, DBT *));
+#define	__qam_append __qam_append@DB_VERSION_UNIQUE_NAME@
+int __qam_append __P((DBC *, DBT *, DBT *));
+#define	__qam_c_dup __qam_c_dup@DB_VERSION_UNIQUE_NAME@
+int __qam_c_dup __P((DBC *, DBC *));
+#define	__qam_c_init __qam_c_init@DB_VERSION_UNIQUE_NAME@
+int __qam_c_init __P((DBC *));
+#define	__qam_truncate __qam_truncate@DB_VERSION_UNIQUE_NAME@
+int __qam_truncate __P((DB *, DB_TXN *, u_int32_t *));
+#define	__qam_incfirst_log __qam_incfirst_log@DB_VERSION_UNIQUE_NAME@
+int __qam_incfirst_log __P((DB_ENV *, DB_TXN *, DB_LSN *, u_int32_t, int32_t, db_recno_t, db_pgno_t));
+#define	__qam_incfirst_getpgnos __qam_incfirst_getpgnos@DB_VERSION_UNIQUE_NAME@
+int __qam_incfirst_getpgnos __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_incfirst_print __qam_incfirst_print@DB_VERSION_UNIQUE_NAME@
+int __qam_incfirst_print __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_incfirst_read __qam_incfirst_read@DB_VERSION_UNIQUE_NAME@
+int __qam_incfirst_read __P((DB_ENV *, void *, __qam_incfirst_args **));
+#define	__qam_mvptr_log __qam_mvptr_log@DB_VERSION_UNIQUE_NAME@
+int __qam_mvptr_log __P((DB_ENV *, DB_TXN *, DB_LSN *, u_int32_t, u_int32_t, int32_t, db_recno_t, db_recno_t, db_recno_t, db_recno_t, DB_LSN *, db_pgno_t));
+#define	__qam_mvptr_getpgnos __qam_mvptr_getpgnos@DB_VERSION_UNIQUE_NAME@
+int __qam_mvptr_getpgnos __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_mvptr_print __qam_mvptr_print@DB_VERSION_UNIQUE_NAME@
+int __qam_mvptr_print __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_mvptr_read __qam_mvptr_read@DB_VERSION_UNIQUE_NAME@
+int __qam_mvptr_read __P((DB_ENV *, void *, __qam_mvptr_args **));
+#define	__qam_del_log __qam_del_log@DB_VERSION_UNIQUE_NAME@
+int __qam_del_log __P((DB_ENV *, DB_TXN *, DB_LSN *, u_int32_t, int32_t, DB_LSN *, db_pgno_t, u_int32_t, db_recno_t));
+#define	__qam_del_getpgnos __qam_del_getpgnos@DB_VERSION_UNIQUE_NAME@
+int __qam_del_getpgnos __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_del_print __qam_del_print@DB_VERSION_UNIQUE_NAME@
+int __qam_del_print __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_del_read __qam_del_read@DB_VERSION_UNIQUE_NAME@
+int __qam_del_read __P((DB_ENV *, void *, __qam_del_args **));
+#define	__qam_add_log __qam_add_log@DB_VERSION_UNIQUE_NAME@
+int __qam_add_log __P((DB_ENV *, DB_TXN *, DB_LSN *, u_int32_t, int32_t, DB_LSN *, db_pgno_t, u_int32_t, db_recno_t, const DBT *, u_int32_t, const DBT *));
+#define	__qam_add_getpgnos __qam_add_getpgnos@DB_VERSION_UNIQUE_NAME@
+int __qam_add_getpgnos __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_add_print __qam_add_print@DB_VERSION_UNIQUE_NAME@
+int __qam_add_print __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_add_read __qam_add_read@DB_VERSION_UNIQUE_NAME@
+int __qam_add_read __P((DB_ENV *, void *, __qam_add_args **));
+#define	__qam_delete_log __qam_delete_log@DB_VERSION_UNIQUE_NAME@
+int __qam_delete_log __P((DB_ENV *, DB_TXN *, DB_LSN *, u_int32_t, const DBT *, DB_LSN *));
+#define	__qam_delete_getpgnos __qam_delete_getpgnos@DB_VERSION_UNIQUE_NAME@
+int __qam_delete_getpgnos __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_delete_print __qam_delete_print@DB_VERSION_UNIQUE_NAME@
+int __qam_delete_print __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_delete_read __qam_delete_read@DB_VERSION_UNIQUE_NAME@
+int __qam_delete_read __P((DB_ENV *, void *, __qam_delete_args **));
+#define	__qam_rename_log __qam_rename_log@DB_VERSION_UNIQUE_NAME@
+int __qam_rename_log __P((DB_ENV *, DB_TXN *, DB_LSN *, u_int32_t, const DBT *, const DBT *));
+#define	__qam_rename_getpgnos __qam_rename_getpgnos@DB_VERSION_UNIQUE_NAME@
+int __qam_rename_getpgnos __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_rename_print __qam_rename_print@DB_VERSION_UNIQUE_NAME@
+int __qam_rename_print __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_rename_read __qam_rename_read@DB_VERSION_UNIQUE_NAME@
+int __qam_rename_read __P((DB_ENV *, void *, __qam_rename_args **));
+#define	__qam_delext_log __qam_delext_log@DB_VERSION_UNIQUE_NAME@
+int __qam_delext_log __P((DB_ENV *, DB_TXN *, DB_LSN *, u_int32_t, int32_t, DB_LSN *, db_pgno_t, u_int32_t, db_recno_t, const DBT *));
+#define	__qam_delext_getpgnos __qam_delext_getpgnos@DB_VERSION_UNIQUE_NAME@
+int __qam_delext_getpgnos __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_delext_print __qam_delext_print@DB_VERSION_UNIQUE_NAME@
+int __qam_delext_print __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_delext_read __qam_delext_read@DB_VERSION_UNIQUE_NAME@
+int __qam_delext_read __P((DB_ENV *, void *, __qam_delext_args **));
+#define	__qam_init_print __qam_init_print@DB_VERSION_UNIQUE_NAME@
+int __qam_init_print __P((DB_ENV *, int (***)(DB_ENV *, DBT *, DB_LSN *, db_recops, void *), size_t *));
+#define	__qam_init_getpgnos __qam_init_getpgnos@DB_VERSION_UNIQUE_NAME@
+int __qam_init_getpgnos __P((DB_ENV *, int (***)(DB_ENV *, DBT *, DB_LSN *, db_recops, void *), size_t *));
+#define	__qam_init_recover __qam_init_recover@DB_VERSION_UNIQUE_NAME@
+int __qam_init_recover __P((DB_ENV *));
+#define	__qam_mswap __qam_mswap@DB_VERSION_UNIQUE_NAME@
+int __qam_mswap __P((PAGE *));
+#define	__qam_pgin_out __qam_pgin_out@DB_VERSION_UNIQUE_NAME@
+int __qam_pgin_out __P((DB_ENV *, db_pgno_t, void *, DBT *));
+#define	__qam_fprobe __qam_fprobe@DB_VERSION_UNIQUE_NAME@
+int __qam_fprobe __P((DB *, db_pgno_t, void *, qam_probe_mode, u_int32_t));
+#define	__qam_fclose __qam_fclose@DB_VERSION_UNIQUE_NAME@
+int __qam_fclose __P((DB *, db_pgno_t));
+#define	__qam_fremove __qam_fremove@DB_VERSION_UNIQUE_NAME@
+int __qam_fremove __P((DB *, db_pgno_t));
+#define	__qam_sync __qam_sync@DB_VERSION_UNIQUE_NAME@
+int __qam_sync __P((DB *, u_int32_t));
+#define	__qam_gen_filelist __qam_gen_filelist@DB_VERSION_UNIQUE_NAME@
+int __qam_gen_filelist __P(( DB *, QUEUE_FILELIST **));
+#define	__qam_extent_names __qam_extent_names@DB_VERSION_UNIQUE_NAME@
+int __qam_extent_names __P((DB_ENV *, char *, char ***));
+#define	__qam_db_create __qam_db_create@DB_VERSION_UNIQUE_NAME@
+int __qam_db_create __P((DB *));
+#define	__qam_db_close __qam_db_close@DB_VERSION_UNIQUE_NAME@
+int __qam_db_close __P((DB *));
+#define	__db_prqueue __db_prqueue@DB_VERSION_UNIQUE_NAME@
+int __db_prqueue __P((DB *, u_int32_t));
+#define	__qam_remove __qam_remove@DB_VERSION_UNIQUE_NAME@
+int __qam_remove __P((DB *, DB_TXN *, const char *, const char *, DB_LSN *));
+#define	__qam_rename __qam_rename@DB_VERSION_UNIQUE_NAME@
+int __qam_rename __P((DB *, DB_TXN *, const char *, const char *, const char *));
+#define	__qam_open __qam_open@DB_VERSION_UNIQUE_NAME@
+int __qam_open __P((DB *, DB_TXN *, const char *, db_pgno_t, int, u_int32_t));
+#define	__qam_metachk __qam_metachk@DB_VERSION_UNIQUE_NAME@
+int __qam_metachk __P((DB *, const char *, QMETA *));
+#define	__qam_new_file __qam_new_file@DB_VERSION_UNIQUE_NAME@
+int __qam_new_file __P((DB *, DB_TXN *, DB_FH *, const char *));
+#define	__qam_incfirst_recover __qam_incfirst_recover@DB_VERSION_UNIQUE_NAME@
+int __qam_incfirst_recover __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_mvptr_recover __qam_mvptr_recover@DB_VERSION_UNIQUE_NAME@
+int __qam_mvptr_recover __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_del_recover __qam_del_recover@DB_VERSION_UNIQUE_NAME@
+int __qam_del_recover __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_delext_recover __qam_delext_recover@DB_VERSION_UNIQUE_NAME@
+int __qam_delext_recover __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_add_recover __qam_add_recover@DB_VERSION_UNIQUE_NAME@
+int __qam_add_recover __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_delete_recover __qam_delete_recover@DB_VERSION_UNIQUE_NAME@
+int __qam_delete_recover __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_rename_recover __qam_rename_recover@DB_VERSION_UNIQUE_NAME@
+int __qam_rename_recover __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__qam_stat __qam_stat@DB_VERSION_UNIQUE_NAME@
+int __qam_stat __P((DB *, void *, u_int32_t));
+#define	__qam_31_qammeta __qam_31_qammeta@DB_VERSION_UNIQUE_NAME@
+int __qam_31_qammeta __P((DB *, char *, u_int8_t *));
+#define	__qam_32_qammeta __qam_32_qammeta@DB_VERSION_UNIQUE_NAME@
+int __qam_32_qammeta __P((DB *, char *, u_int8_t *));
+#define	__qam_vrfy_meta __qam_vrfy_meta@DB_VERSION_UNIQUE_NAME@
+int __qam_vrfy_meta __P((DB *, VRFY_DBINFO *, QMETA *, db_pgno_t, u_int32_t));
+#define	__qam_vrfy_data __qam_vrfy_data@DB_VERSION_UNIQUE_NAME@
+int __qam_vrfy_data __P((DB *, VRFY_DBINFO *, QPAGE *, db_pgno_t, u_int32_t));
+#define	__qam_vrfy_structure __qam_vrfy_structure@DB_VERSION_UNIQUE_NAME@
+int __qam_vrfy_structure __P((DB *, VRFY_DBINFO *, u_int32_t));
+#if defined(__cplusplus)
+}
+#endif
+#endif /* _qam_ext_h_ */

@@ -1,0 +1,26 @@
+#
+# Copyright (c) 2004-2009 Oracle.  All rights reserved.
+#
+# http://www.apache.org/licenses/LICENSE-2.0.txt
+#
+
+APXS=@APXS@
+CXXFLAGS=@CXXFLAGS@
+CPPFLAGS=@CPPFLAGS@
+LDFLAGS=@LDFLAGS@
+LIBS=@LIBS@
+
+SOURCES=mod_db4.c sem_utils.c skiplist.c utils.c mm_hash.c 
+
+all:	mod_db4.so
+
+mod_db4.so:	$(SOURCES)
+	$(APXS) -c -S CC=$(CXX) $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) $(SOURCES) $(LIBS)
+
+install:	mod_db4.so
+	$(APXS) -i mod_db4.so
+	cp mod_db4_export.h `$(APXS) -q INCLUDEDIR`/
+	chmod a+r `$(APXS) -q INCLUDEDIR`/mod_db4_export.h
+
+clean:
+	rm -f *.o *.a *.so *.lo *.tlo *.to config.cache config.log *.out core

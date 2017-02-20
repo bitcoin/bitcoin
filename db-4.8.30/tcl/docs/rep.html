@@ -1,0 +1,50 @@
+<!--Copyright 1999-2009 Oracle.  All rights reserved.-->
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <title>Replication commands</title>
+</head>
+<body>
+
+<h2>
+<a NAME="Replication Commands"></a>Replication Commands</h2>
+Replication commands are invoked from the environment handle, after
+it has been opened with the appropriate flags defined
+<a href="./env.html">here</a>.<br>
+<hr WIDTH="100%">
+<p><b>> &lt;env> rep_process_message <i>machid</i> <i>control</i>
+<i>rec</i></b>
+<p>This command processes a single incoming replication message.&nbsp; It
+is a direct translation of the <a
+href="../../docs/api_c/rep_process_message.html">rep_process_message</a>
+function.&nbsp;
+It returns either a 0 (for success), a DB error message or it throws a
+Tcl error with a system message.&nbsp; The arguments are:
+<ul>
+<li>
+<b>machid </b>is the machine ID of the machine that <i>sent</i> this
+message.</li>
+
+<li>
+<b>control</b> is a binary string containing the exact contents of the
+<b><i>control</i></b> argument to the <b><i>sendproc</i></b> function
+that was passed this message on another site.</li>
+
+<li>
+<b>rec</b> is a binary string containing the exact contents of the
+<b><i>rec</i></b> argument to the <b><i>sendproc</i></b> function
+that was passed this message on another site.</li>
+</ul>
+
+<hr WIDTH="100%">
+<br><b>> &lt;env> rep_elect <i>nsites</i> <i>pri</i> <i>wait</i>
+<i>sleep</i></b>
+<p>This command causes a replication election.&nbsp; It is a direct translation
+of the <a href="../../docs/api_c/rep_elect.html">rep_elect</a> function.&nbsp;
+Its arguments, all integers, correspond exactly to that C function's
+parameters.
+It will return a list containing two integers, which contain,
+respectively, the integer values returned in the C function's
+<i><b>midp</b></i> and <i><b>selfp</b></i> parameters.
+</body>
+</html>

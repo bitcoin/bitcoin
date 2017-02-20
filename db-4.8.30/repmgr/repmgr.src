@@ -1,0 +1,31 @@
+PREFIX	__repmgr
+
+INCLUDE #include "db_int.h"
+INCLUDE #include "dbinc/db_swap.h"
+INCLUDE
+
+BEGIN_MSG handshake
+ARG	port		u_int16_t
+ARG	priority	u_int32_t
+ARG	flags		u_int32_t
+END
+
+BEGIN_MSG v2handshake
+ARG	port		u_int16_t
+ARG	priority	u_int32_t
+END
+
+BEGIN_MSG ack
+ARG	generation	u_int32_t
+ARG	lsn		DB_LSN
+END
+
+BEGIN_MSG version_proposal
+ARG	min		u_int32_t
+ARG	max		u_int32_t
+END
+
+BEGIN_MSG version_confirmation
+ARG	version		u_int32_t
+END
+

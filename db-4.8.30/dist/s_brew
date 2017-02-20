@@ -1,0 +1,143 @@
+#!/bin/sh -
+#	$Id$
+#
+# Build the BREW files.
+
+msgc="/* DO NOT EDIT: automatically built by dist/s_brew. */"
+
+. RELEASE
+
+s=/tmp/__db_a
+t=/tmp/__db_b
+
+trap 'rm -f $s $t ; exit 0' 0
+trap 'rm -f $s $t ; exit 1' 1 2 3 13 15
+
+# Build the BREW db.h.
+cat <<ENDOFSEDTEXT > $s
+/@inttypes_h_decl@/d
+/@stdint_h_decl@/d
+s/@stddef_h_decl@/#include <stddef.h>/
+/@unistd_h_decl@/d
+/@thread_h_decl@/d
+s/@u_int8_decl@/typedef unsigned char u_int8_t;/
+s/@int16_decl@/typedef short int16_t;/
+s/@u_int16_decl@/typedef unsigned short u_int16_t;/
+s/@int32_decl@/typedef int int32_t;/
+s/@u_int32_decl@/typedef unsigned int u_int32_t;/
+/@int64_decl@/d
+/@u_int64_decl@/d
+s/@u_char_decl@/typedef unsigned char u_char;/
+s/@u_int_decl@/typedef unsigned int u_int;/
+s/@u_long_decl@/typedef unsigned long u_long;/
+s/@u_short_decl@/typedef unsigned short u_short;/
+s/@uintmax_t_decl@/typedef unsigned long uintmax_t;/
+s/@uintptr_t_decl@/typedef unsigned long uintptr_t;/
+s/@FILE_t_decl@/typedef IFile FILE;/
+s/@off_t_decl@/typedef u_int32_t off_t;/
+s/@pid_t_decl@/typedef int pid_t;/
+s/@size_t_decl@/typedef unsigned int size_t;/
+s/@ssize_t_decl@/typedef int ssize_t;/
+s/@time_t_decl@/typedef long time_t;/
+s/@db_seq_decl@/typedef int32_t db_seq_t;/
+s/@db_threadid_t_decl@/typedef uintmax_t db_threadid_t;/
+s/@DB_VERSION_MAJOR@/$DB_VERSION_MAJOR/
+s/@DB_VERSION_MINOR@/$DB_VERSION_MINOR/
+s/@DB_VERSION_PATCH@/$DB_VERSION_PATCH/
+s/@DB_VERSION_STRING@/"$DB_VERSION_STRING"/
+s/@DB_VERSION_UNIQUE_NAME@//
+s/@DB_CONST@//
+s/@DB_PROTO1@/#undef __P/
+s/@DB_PROTO2@/#define	__P(protos)	protos/
+/@platform_header@/d
+/@platform_footer@/{
+	i\\
+typedef struct {\\
+\	AEEApplet a;			/* AEEApplet must be listed first. */\\
+\	void *db_global_values;\\
+} BDBApp;\\
+int brew_bdb_begin __P((void));\\
+void brew_bdb_end __P((void));
+	d
+}
+/^#ifndef.__NO_SYSTEM_INCLUDES/i\\
+#include <AEEFile.h>
+/^#ifndef.__NO_SYSTEM_INCLUDES/,/^#endif/d
+ENDOFSEDTEXT
+(echo "$msgc" &&
+    sed -f $s ../dbinc/db.in &&
+    cat ../dbinc_auto/api_flags.in &&
+    cat ../dbinc_auto/ext_prot.in) > $t
+test `egrep '@.*@' $t` && {
+	egrep '@.*@' $t
+	echo 'Unexpanded autoconf variables found in BREW db.h.'
+	exit 1
+}
+f=../build_brew/db.h
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+
+# Build the BREW db_int.h.
+cat <<ENDOFSEDTEXT > $s
+s/@PATH_SEPARATOR@/\\\\\\\\\/:/
+s/@db_int_def@//
+/#endif.*HAVE_SYSTEM_INCLUDE_FILES/a\\
+#include "brew_db.h"
+ENDOFSEDTEXT
+(echo "$msgc" && sed -f $s ../dbinc/db_int.in) > $t
+test `egrep '@.*@' $t` && {
+	egrep '@.*@' $t
+	echo 'Unexpanded autoconf variables found in BREW db_int.h.'
+	exit 1
+}
+f=../build_brew/db_int.h
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+
+# Build the BREW db_config.h
+# We don't fail, but we complain if the brew_config.in file isn't up-to-date.
+check_config()
+{
+	egrep '^#undef' config.hin | awk '{print $2}' | sort > $s
+	(egrep '#undef' $1 | awk '{print $3}'
+	 egrep '^#define' $1 | awk '{print $2}') | sort > $t
+	cmp $s $t > /dev/null || {
+		echo "config.hin and $1 differ"
+		echo "<<< config.hin >>> $1"
+		diff $s $t
+	}
+}
+check_config brew/brew_config.in
+f=../build_brew/db_config.h
+(echo "$msgc" &&
+    sed "s/__EDIT_DB_VERSION__/$DB_VERSION/" brew/brew_config.in) > $t
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+
+# Build BREW's brew_db.h
+f=../build_brew/brew_db.h
+i=brew/brew_db.in
+cmp $i $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $i $f && chmod 444 $f)
+
+# Build the BREW clib_port.h.
+cat <<ENDOFSEDTEXT > $s
+/@INT64_FMT@/d
+/@UINT64_FMT@/d
+ENDOFSEDTEXT
+sed -f $s clib_port.in > $t
+test `egrep '@.*@' $t` && {
+	egrep '@.*@' $t
+	echo 'Unexpanded autoconf variables found in BREW clib_port.h.'
+	exit 1
+}
+f=../build_brew/clib_port.h
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+
+# Copy in errno.h.
+f=../build_brew/errno.h
+cmp errno.h $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp errno.h $f && chmod 444 $f)
+
+exit 0

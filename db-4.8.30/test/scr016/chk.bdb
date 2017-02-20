@@ -1,0 +1,75 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Run the DB Java API test suite.
+# Alternatively supply the class name for an individual test
+# case and have that run.
+
+# NOTES:
+# This test requires one JAR not included with the Berkeley DB
+# distribution:  JUnit (junit.jar) I've been using the 8/31/2002 version
+# of JUnit.  You can download this JAR from http://jakarta.apache.org/
+#
+# JUNIT_JAR=/Users/gburd/Unix/opt/junit/junit.jar
+
+[ "x$JUNIT_JAR" = "x" ] && {
+	echo 'FAIL: unset environment variable JUNIT_JAR for junit.jar.'
+	exit 1
+}
+
+[ -f $JUNIT_JAR ] || {
+	echo 'FAIL: JUNIT_JAR not a valid path to the junit.jar.'
+	exit 1
+}
+
+case `uname` in
+*CYGWIN*)
+  CP_SEP=";"
+  d="../../build_windows/Win32/Debug"
+  DB_LIB_DIR="$d"
+  PATH="../../build_windows/Win32/Debug:$PATH"
+  export PATH;;
+*)
+  CP_SEP=":"
+  d="../../build_unix/"
+  DB_LIB_DIR="$d/.libs"
+esac
+
+REQUIRED_JARS=$JUNIT_JAR
+DB_JAR=$d/db.jar
+export DB_JAR
+export REQUIRED_JARS
+export CP_SEP
+export DB_LIB_DIR
+
+# Build the tests.
+
+make clean
+
+[ -f ./dbtest.jar ] || (make dbtest.jar) || {
+	echo 'FAIL: unable to find or build dbtest.jar'
+	exit 1
+}
+
+# Run the tests.
+
+if [ -n "$1" ]
+then
+    echo "Running: $1"
+    java -Xcheck:jni -Djava.library.path=$DB_LIB_DIR -cp "$REQUIRED_JARS$CP_SEP$DB_JAR$CP_SEP./dbtest.jar" org.junit.runner.JUnitCore $1
+
+else
+
+    for f in `find classes -name "*Test.class"`; do
+        c=`echo "$f" | sed -e 's/classes\///' -e 's/\.class//' -e 's/\//./g'`
+        echo "Running: $c"
+        if java -Xcheck:jni -Djava.library.path=$DB_LIB_DIR -cp "$REQUIRED_JARS$CP_SEP$DB_JAR$CP_SEP./dbtest.jar" org.junit.runner.JUnitCore $c ; then
+                :
+        else
+            echo "FAIL: test program failed"
+    #        exit 1
+        fi
+    done
+fi
+exit 0

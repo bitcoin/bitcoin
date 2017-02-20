@@ -1,0 +1,67 @@
+
+/* DO NOT EDIT: automatically built by dist/s_include. */
+#ifndef	_DB_EXT_PROT_IN_
+#define	_DB_EXT_PROT_IN_
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+int db_create __P((DB **, DB_ENV *, u_int32_t));
+char *db_strerror __P((int));
+int db_env_set_func_close __P((int (*)(int)));
+int db_env_set_func_dirfree __P((void (*)(char **, int)));
+int db_env_set_func_dirlist __P((int (*)(const char *, char ***, int *)));
+int db_env_set_func_exists __P((int (*)(const char *, int *)));
+int db_env_set_func_free __P((void (*)(void *)));
+int db_env_set_func_fsync __P((int (*)(int)));
+int db_env_set_func_ftruncate __P((int (*)(int, off_t)));
+int db_env_set_func_ioinfo __P((int (*)(const char *, int, u_int32_t *, u_int32_t *, u_int32_t *)));
+int db_env_set_func_malloc __P((void *(*)(size_t)));
+int db_env_set_func_file_map __P((int (*)(DB_ENV *, char *, size_t, int, void **), int (*)(DB_ENV *, void *)));
+int db_env_set_func_region_map __P((int (*)(DB_ENV *, char *, size_t, int *, void **), int (*)(DB_ENV *, void *)));
+int db_env_set_func_pread __P((ssize_t (*)(int, void *, size_t, off_t)));
+int db_env_set_func_pwrite __P((ssize_t (*)(int, const void *, size_t, off_t)));
+int db_env_set_func_open __P((int (*)(const char *, int, ...)));
+int db_env_set_func_read __P((ssize_t (*)(int, void *, size_t)));
+int db_env_set_func_realloc __P((void *(*)(void *, size_t)));
+int db_env_set_func_rename __P((int (*)(const char *, const char *)));
+int db_env_set_func_seek __P((int (*)(int, off_t, int)));
+int db_env_set_func_unlink __P((int (*)(const char *)));
+int db_env_set_func_write __P((ssize_t (*)(int, const void *, size_t)));
+int db_env_set_func_yield __P((int (*)(u_long, u_long)));
+int db_env_create __P((DB_ENV **, u_int32_t));
+char *db_version __P((int *, int *, int *));
+int log_compare __P((const DB_LSN *, const DB_LSN *));
+int db_sequence_create __P((DB_SEQUENCE **, DB *, u_int32_t));
+#if DB_DBM_HSEARCH != 0
+int	 __db_ndbm_clearerr __P((DBM *));
+void	 __db_ndbm_close __P((DBM *));
+int	 __db_ndbm_delete __P((DBM *, datum));
+int	 __db_ndbm_dirfno __P((DBM *));
+int	 __db_ndbm_error __P((DBM *));
+datum __db_ndbm_fetch __P((DBM *, datum));
+datum __db_ndbm_firstkey __P((DBM *));
+datum __db_ndbm_nextkey __P((DBM *));
+DBM	*__db_ndbm_open __P((const char *, int, int));
+int	 __db_ndbm_pagfno __P((DBM *));
+int	 __db_ndbm_rdonly __P((DBM *));
+int	 __db_ndbm_store __P((DBM *, datum, datum, int));
+int	 __db_dbm_close __P((void));
+int	 __db_dbm_delete __P((datum));
+datum __db_dbm_fetch __P((datum));
+datum __db_dbm_firstkey __P((void));
+int	 __db_dbm_init __P((char *));
+datum __db_dbm_nextkey __P((datum));
+int	 __db_dbm_store __P((datum, datum));
+#endif
+#if DB_DBM_HSEARCH != 0
+int __db_hcreate __P((size_t));
+ENTRY *__db_hsearch __P((ENTRY, ACTION));
+void __db_hdestroy __P((void));
+#endif
+
+#if defined(__cplusplus)
+}
+#endif
+#endif /* !_DB_EXT_PROT_IN_ */

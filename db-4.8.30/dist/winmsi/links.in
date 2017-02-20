@@ -1,0 +1,17 @@
+# $Id$
+# Lists links to Web sites to be installed on Windows.
+# If the URL starts with file: it is assumed to be a local file,
+# relative to the installation directory.
+
+# Note: columns below must be separated by tabs.
+
+# shortname	name			URL
+
+oraclecp	"Command Prompt"	"cmd:dbvars.bat"
+oraclewb	"Oracle Website"	"http://www.oracle.com"
+oracletn	"Oracle Technology Network"	"http://forums.oracle.com/forums/category.jspa?categoryID=18"
+oraclech	"Change Log for Berkeley DB WIX_DB_VERSION"	"http://www.sleepycat.com/update/WIX_DB_VERSION/if.WIX_DB_VERSION.html"
+oraclenw	"Berkeley DB Newsgroup"	"http://groups-beta.google.com/group/comp.databases.berkeley-db"
+oraclesu	"Support for Berkeley DB"	"https://metalink.oracle.com/"
+oracleon	"Online Documentation"	"http://dev.sleepycat.com/documentation/bdb.html"
+oracleld	"On disk Documentation"	"file:docs/index.html"

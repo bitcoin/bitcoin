@@ -1,0 +1,1473 @@
+#	$Id$
+#
+# The common functions used by the s_winmsi scripts (both
+# for core DB and DB/XML).
+#
+# This script uses several bash extensions that are convenient
+# since we "know" it will always run under Cygwin: shell functions,
+# 'return', declaration of 'local' variables, $(command) syntax,
+# ${#X} (counting chars), ${X#regexp} (searching) $((expr)) (arithmetic)
+#
+# These functions use 'global' variables:
+#   ERRORLOG             - a filename
+#   PRODUCT_NAME         - e.g. "Berkeley DB"
+#   PRODUCT_VERSION      - e.g. "4.1.25", derived from dist/RELEASE
+#   PRODUCT_MAJOR        - e.g. "4", (for release 4.1.25) from dist/RELEASE
+#   PRODUCT_MINOR        - e.g. "1", (for release 4.1.25) from dist/RELEASE
+#   PRODUCT_PATCH        - e.g. "25", (for release 4.1.25) from dist/RELEASE
+#   PRODUCT_MAJMIN       - e.g. "41", (for release 4.1.25) from dist/RELEASE
+#   PRODUCT_MSVC_VERSION - e.g. "71" for Visual Studio 7, "80" for VS 8
+#   PRODUCT_STAGE        - the staging directory for temp files and builds
+#   PRODUCT_LICENSEDIR   - the tree containing LICENSE and README
+#   PRODUCT_SUB_BLDDIR  - top of the subproduct build e.g. "dbxml-2.0.1/dbxml"
+#   PRODUCT_BLDDIR       - top of the build tree e.g. "dbxml-2.0.1"
+#   PRODUCT_SRCDIR       - the dir we unzip to e.g. "dbxml-2.0.1"
+#   PRODUCT_DBBUILDDIR   - where build_unix dir is for Berkeley DB (for Perl)
+#   PRODUCT_SHARED_WINMSIDIR   - where the master winmsi directory is
+#   PRODUCT_IMAGEDIR     - where the images are (usually winmsi/images)
+#   PRODUCT_ZIP_FILEFMT  - what zip file looks like e.g. "db-X.Y.Z.NC.zip"
+#   PRODUCT_MSI_FILEFMT  - what msi file looks like e.g. "db-X.Y.Z.NC.msi"
+#
+# Some of these may seem redundant, but there are options to take
+# an already built tree from a different place than where we'll unzip
+# to and take our sources from, for example.  This allows a lot of flexibility
+# for development and debugging (especially when these trees can be huge).
+
+# This is the magic tag that creates a new unique GUID in Wix.
+# GUIDs are needed on every <Component ... > entry to ensure
+# that the component can be uninstalled.
+GENGUID='Guid="GUID_CREATE_UNIQUE()"'
+PERSISTGUID='Guid="WIX_DB_PERSISTENT_GUID()"'
+
+# MakeRtf()
+# Standard input is plain text, standard output is RTF.
+#
+MakeRtf() {
+    temp1=/tmp/sbm$$a
+    cat > $temp1
+
+
+# Courier is a good font, but the lines with all caps
+# overflows our current dialog size:
+#     {\rtf1\ansi\deff0{\fonttbl{\f0\fnil\fcharset0 Courier New;}}
+#     \viewkind4\uc1\pard\lang1033\f0\fs16 
+#
+# Using Small fonts works:
+#      {\rtf1\ansi\deff0{\fonttbl{\f0\fswiss\fprq2\fcharset0 Small Fonts;}}
+#      {\colortbl ;\red0\green0\blue0;}
+#      \viewkind4\uc1\pard\cf1\lang1033\f0\fs14 
+
+# Arial is the best compromise:
+    sed -e 's/^ *//' << 'EndOfRTFHeader'
+      {\rtf1\ansi\deff0{\fonttbl{\f0\fswiss\fprq2\fcharset0 Arial;}}
+      {\colortbl ;\red0\green0\blue0;}
+      \viewkind4\uc1\pard\cf1\lang1033\f0\fs16 
+EndOfRTFHeader
+
+# Embedded '<' and '>' can cause problems for Wix
+    sed -e 's:$:\\par:' -e 's:<: \\lquote :' -e 's:>: \\rquote :' < $temp1
+    echo -n '}'
+    rm -f $temp1
+}
+
+# NextId()
+# Get the next available unique id, a simple integer counter.
+# We use a file, rather than a shell variable to track the
+# number, because this is called from subshells at various
+# points, and they cannot affect the variables in the parent shell.
+#
+ComponentID=component.id
+NextId()
+{
+    local id=`cat $ComponentID 2>/dev/null`
+    if [ "$id" = '' ]; then
+       id=0
+    fi
+    id=$(($id + 1))
+    echo "$id" > $ComponentID
+    echo "$id"
+}
+
+# CleanFileName(FILENAME)
+# Removes any strange characters in file names,
+# returning the new name on standard output.
+CleanFileName()
+{
+    echo "$1" | sed -e 's/[-%@!]//g'
+}
+
+# GetShortName(FILENAME)
+# Get a Windows short name for the file,
+# to fit into the 8.3 name space.
+# This is not a great algorithm, but it works.
+# The fact is, the names must be unique, but on
+# Win2000 and WinXP, we'll never see them.
+
+ShortID=short.id
+GetShortName()
+{
+    local name=`echo "$1" | tr '[a-z]' '[A-Z]'`
+
+    # See if the name fits into 8.3. If so,
+    # return it right away.
+    #
+    case "$name" in
+    ?????????*.* )  ;;
+    *.????* )   ;;
+    *.*.* )    ;;
+    *[-%@!]* )    ;;
+    *.* ) echo "$name"
+          return
+          ;;
+    * )
+         if [ "${#1}" -le 8 ]; then
+             echo "$name"
+             return
+         fi
+         ;;
+    esac
+
+    # From NAMEISLONG.EXTLONG, build a name
+    # like NAME~ZZZ.EXT, where ZZZ is a unique (hex)
+    # number we build.  This is 
+
+    local id=`cat $ShortID 2>/dev/null`
+    if [ "$id" = '' ]; then
+       id=0
+    fi
+    id=$(($id + 1))
+    echo "$id" > $ShortID
+    if [ "$id" -ge 4096 ]; then
+        echo "BADBADBAD.TXT"  # return something that will give an error
+        Error "ShortId overflow"
+        exit 1
+    fi
+
+    # Convert the id to hex (I ran out of space using decimal)
+    # This is too slow: id=`echo 16 o $id p | dc`
+    id=`printf "%x" $id`
+
+    # Collect and clean up the part of the name before, and after, the dot
+    local before=`CleanFileName "$name" | sed -e 's/^\([^.]*\)[.].*$/\1/'`
+    local after=`CleanFileName "$name" | sed -e 's/^[^.]*[.]\(.*\)$/\1/'`
+
+    # Make sure the before part fits in 5 chars (not 8, since
+    # we need a few for the unique number).
+    if [ "${#before}" -gt 5 ]; then
+        before=`echo "$before" | sed -e 's/^\(.....\).*/\1/'`
+    fi
+    if [ "${#after}" -gt 3 ]; then
+        after=`echo "$after" | sed -e 's/^\(...\).*/\1/'`
+    fi
+    echo "${before}~${id}.${after}"
+}
+
+# Progress([OPTION,]STRING...)
+# Show a major processing step via echo to stdout and to the error log.
+# An OPTION is "-minor", indicating no big banner.
+#
+Progress()
+{
+    if [ "$1" = -minor ]; then
+       shift
+    else
+       echo "" >> $ERRORLOG
+       echo "============================" >> $ERRORLOG
+    fi
+    echo "$@" >> $ERRORLOG
+    echo "$@" >&15
+}
+
+# Error(STRING...)
+# Show an error in a standard way.
+#
+Error()
+{
+    echo "" >> $ERRORLOG
+    echo "****************** FAIL ******************" >> $ERRORLOG
+    echo "ERROR: $@" >> $ERRORLOG
+    echo "ERROR: $@" >&15
+    echo "See $ERRORLOG for details" >&15
+    return 1
+}
+
+# RequireFileInPath(NAME, PATHVAL, FILE)
+# Look for FILE in the path that has value PATHVAL.
+# The path's name is NAME if it needs to be shown.
+#
+RequireFileInPath()
+{
+    local type="$1"
+    local origpath="$2"
+    local file="$3"
+    local upath="$origpath"
+    if [ "$1" != PATH ]; then
+       upath=`cygpath -up "$origpath"`
+    fi
+
+    SAVEIFS="$IFS"
+    IFS=":"
+    found=no
+    for dir in $upath; do
+        if [ -f "$dir/$file" ]; then
+            IFS="$SAVEIFS"
+            return
+        fi
+    done
+    IFS="$SAVEIFS"
+    Error "File $file not found in $type path: $origpath"
+    exit 1
+}
+
+# Rand4X()
+# Return 4 random hex digits on output
+#
+Rand4X() {
+    # The sed command pads the front with 0's as needed
+    (echo 'obase=16'; echo $RANDOM ) | bc |
+        sed -e 's/^/0000/' -e 's/^.*\(....\)$/\1/'
+    
+}
+
+# RunM4()
+# Run M4, making appropriate substitutions.
+# This function uses GLOBAL variables: PRODUCT_VERSION (e.g. "4.1.25")
+# and PRODUCT_LICENSEDIR, which is where certain text files are found
+#
+RunM4() {
+
+    # Given a version number, like 2.3.45, we want to
+    # create a 8 character name for the directory like db2_3_45.
+    # This name is under a "Oracle" directory,
+    # so it only needs to be unique within the universe of BDB versions.
+    # TODO: instead of using a version number like $DB_VERSION,
+    # maybe use $DB_VERSION_UNIQUE_NAME which looks like "_2003"
+
+    local DB_8CHAR_VERSION=`echo $PRODUCT_VERSION | sed -e 's/[.]/_/g'`
+    if [ ${#DB_8CHAR_VERSION} -le 6 ]; then
+       DB_8CHAR_VERSION="db$DB_8CHAR_VERSION"
+    elif [ ${#DB_8CHAR_VERSION} -le 7 ]; then
+       DB_8CHAR_VERSION="d$DB_8CHAR_VERSION"
+    else
+       Error "Version number too large for simple version number algorithm"
+       exit 1
+    fi
+
+    # Remove leading ./ from PRODUCT_LICENSEDIR if present.
+    local licensedir=`cygpath -w "$PRODUCT_LICENSEDIR"`
+
+    # Create a GUID prefix of the form: ????????-????-????-????-????
+    # This leaves 8 digits of GUID to be manipulated by m4.
+    local GUID_PREFIX="`Rand4X``Rand4X`-`Rand4X`-`Rand4X`-`Rand4X`-`Rand4X`"
+
+    # -P requires that all m4 macros, like define, eval, etc.
+    # are prefixed, like m4_define, m4_eval, etc.  This avoids
+    # various name conflicts with input files.
+    # TODO: rename DB_SRCDIR as DB_LICENSEDIR
+    m4 -P \
+       -DWIX_DB_VERSION="$PRODUCT_VERSION" \
+       -DWIX_DB_8CHAR_VERSION="$DB_8CHAR_VERSION" \
+       -DWIX_DB_GUID_PREFIX="$GUID_PREFIX" \
+       -DWIX_DB_PRODUCT_NAME="$PRODUCT_NAME" \
+       -DWIX_DB_SRCDIR="$licensedir" \
+       -DWIX_DB_TOP="`cygpath -w $PRODUCT_BLDDIR`" \
+       -DWIX_DB_SHARED_WINMSIDIR="$PRODUCT_SHARED_WINMSIDIR" \
+       -DWIX_DB_IMAGEDIR="`cygpath -w $PRODUCT_IMAGEDIR`" \
+       -DWIX_DB_FEATURE_STRUCTURE="m4_include(features.wixinc)" \
+       -DWIX_DB_DIRECTORY_STRUCTURE="m4_include(directory.wixinc)" \
+       -DWIX_DB_LINKS="m4_include(links.wixinc)" \
+       -DWIX_DB_LICENSE_RTF="m4_include(license.rtf)" \
+       -DWIX_DB_ENV_FEATURE_PROPS="m4_include(envprops.wixinc)" \
+       -DWIX_DB_ENV_FEATURE_SET="m4_include(envset.wixinc)" \
+       -DWIX_DB_ENV_FEATURE_SHOW="m4_include(envshow.wixinc)"
+}
+
+# RunTallow(DIR, OPTIONS)
+# Run Tallow, a tool from the WiX distribution
+RunTallow() {
+    local dir="$1"
+    shift
+
+    Id1=`NextId`
+    Id2=`NextId`
+    Id3=`NextId`
+
+    # Tallow is a tool that walks a tree, producing
+    # a WiX directory heirarchy naming the files.
+    # The IDs it produces are not unique (between tallow
+    # runs), so we must make them so here.  Thus "directory78"
+    # becomes "MyFeatureName.123.78" where 123 is an id from NextId.
+    # Secondly, instead of using the tallow output as a separately
+    # compiled fragment, we want to include it directly, so
+    # we need to strip out some extraneous XML entries at the top
+    # and bottom of its output.
+    #
+    # Another thing we do is when we see <Directory></Directory>
+    # pairs, we call m4 macros WIX_DB_{BEGIN,END}_SUBDIR because
+    # we need to track the current directory to generate 'persistent'
+    # GUIDs.  See the discussion about GUIDs in dbwix.m4 .
+    #
+    # !!! For stripping out the extraneous XML, we rely heavily
+    # !!! on the output format, so this is likely to be fragile
+    # !!! between versions of tallow.  Fortunately, it should fail hard.
+    #
+    echo "=============" >> tallow.log
+    echo tallow -nologo -d `cygpath -w "$dir"` "$@" >> tallow.log
+    echo "  <!-- TALLOW output begins here -->"
+         tallow -nologo -d `cygpath -w "$dir"` "$@" > tallow.out || exit 1
+    cat tallow.out >> tallow.log
+    echo "-------------" >> tallow.log
+
+    sed -e '1,/<DirectoryRef/d' -e '/<\/DirectoryRef/,$d' \
+        -e "s/Id=\"directory/Id=\"$feature.$Id1./" \
+        -e "s/Id=\"component/Id=\"$feature.$Id2./" \
+        -e "s/Id=\"file/Id=\"$feature.$Id3./" \
+        -e '/^      <Directory/d' \
+        -e '/^      <\/Directory/d' \
+        -e '/<Directory/s/Name=\"\([^"]*\)"/Name="\1" WIX_DB_BEGIN_SUBDIR(\1) /' \
+        -e '/<\/Directory>/s/$/ WIX_DB_END_SUBDIR()/' \
+        -e "/<Component/s/>/ $PERSISTGUID>/" \
+        < tallow.out > tallow.postsed || exit 1
+
+    echo 'WIX_DB_SET_CURFILE()'
+    echo 'WIX_DB_CLEAR_SUBDIR()'
+    cat tallow.postsed
+    echo 'WIX_DB_CLEAR_SUBDIR()'
+
+    cat tallow.postsed >> tallow.log
+    echo "  <!-- TALLOW output ends here -->"
+}
+
+# ProcessFeatures(INFILES, INFEATURES, INENV, OUTDIRECTORIES, OUTFEATURES,
+#                 OUTSET)
+# Use the files.in and features.in files as
+# input to create two output files, one containing a WiX XML
+# fragment showing directories and needed files,
+# and another containing a WiX XML fragment showing
+# the features in a dependency tree.
+#
+# This creates the heart of the installer flexibility.
+#
+ProcessFeatures() {
+   InFiles="infiles.tmp";  CleanInputFile "$1" "$InFiles" 3 4
+   InFeatures="infeatures.tmp"; CleanInputFile "$2" "$InFeatures" 3 4
+   InEnv="inenv.tmp"; CleanInputFile "$3" "$InEnv" 3 4
+   OutDirs="$4"
+   OutFeatures="$5"
+   OutSet="$6"
+
+   rm -f $OutDirs; touch $OutDirs
+   rm -f $OutFeatures; touch $OutFeatures
+
+   # Initialize the feature list.
+   # This will be expanded (per feature) in ProcessOneFeature
+   #
+   XmlLevel=4
+   Xecho "<Publish Property=\"FeatureList\" Value=\"[NULL]\">" >> $OutSet
+   Xecho "  <![CDATA[1]]></Publish>" >> $OutSet
+
+   Dirs=`cut -f 3 < $InFiles | sort | uniq`
+   Prevdir="/"
+   ProcessDirTransition "$Prevdir" "/" >> $OutDirs
+
+   for Dir in $Dirs; do
+      ProcessDirTransition "$Prevdir" "$Dir" >> $OutDirs
+      ProcessOneDirectory "$Dir" < $InFiles >> $OutDirs || exit 1
+      Prevdir="$Dir"
+   done
+   ProcessDirTransition "$Prevdir" "/" >> $OutDirs
+
+   cat $InEnv | (
+      read line
+      while [ "$line" != '' ]; do
+         local FeatureName=`echo "$line" | cut -f 1`
+         local EnvVariable=`echo "$line" | cut -f 2`
+         local EnvValue=`echo "$line" | cut -f 3`
+         local EnvOption=`echo "$line" | cut -f 4`
+         ProcessOneEnv "$FeatureName" "$EnvVariable" "$EnvValue" "$EnvOption" "$OutDirs" "$OutSet"
+         read line
+      done
+      return 0
+   ) || Error "Error processing environment" || exit 1
+
+   cat $InFeatures | (
+      read line
+      while [ "$line" != '' ]; do
+         local FeaturePath=`echo "$line" | cut -f 1`
+         local ShortName=`echo "$line" | cut -f 2 | StripDoubleQuotes`
+         local Description=`echo "$line" | cut -f 3 | StripDoubleQuotes`
+         local FeatureOptions=`echo "$line" | cut -f 4 | StripDoubleQuotes`
+         ProcessOneFeature "$FeaturePath" "$ShortName" "$Description" "$FeatureOptions" "$OutDirs" "$OutFeatures" "$OutSet"
+         read line
+      done
+      return 0
+   ) || Error "Error processing features" || exit 1
+
+# (PBR)
+# This test code didn't work. My hope was that I could force INSTALLLEVEL
+# to 4 and this would then enable the debug features.
+#   Xecho "<Publish Property=\"INSTALLLEVEL\" Value=\"4\" />" >> $OutSet
+#   Xecho "<Publish Event=\"SetInstallLevel\" Value=\"4\" />" >> $OutSet
+
+}
+
+# ProcessLinks(INLINKS, OUTFEATURES)
+# Process the INLINKS file, and produce XML on stdout.
+# Each line of the input file requires the creation
+# of a '.URL' file in the installation, and a Shortcut
+# in the Windows menu to point to that.
+# Also add the components generated to a feature, put in OUTFEATURES.
+#
+# TODO: We ought to have a Features column in the links.in file,
+# otherwise, the local doc link is always installed.
+#
+ProcessLinks() {
+   # Set a var to a carriage return without actually putting one in this file
+   local CR=`echo A | tr A '\015'`
+   local InLinks="infiles.tmp";  CleanInputFile "$1" "$InLinks" 3 4
+   local here_win=`cygpath -w $(pwd)`
+   # TODO: maybe get a real modification time, but not sure why we need it.
+   local MODTIMEHEX="0000000007DCC301DE"
+   XmlLevel=6
+   local OutFeatures="$2"
+
+   Xecho + "<Feature Id=\"LinksFeature\" Title=\"Links\"" >> $OutFeatures
+   Xecho "   Description=\"Links\" Display=\"hidden\"" >> $OutFeatures
+   Xecho "   Level=\"1\" AllowAdvertise=\"no\"" >> $OutFeatures
+   Xecho "   ConfigurableDirectory=\"INSTALLUTIL\"" >> $$OUTFeatures
+   Xecho "   Absent=\"disallow\">" >> $OutFeatures
+
+   Xecho "<DirectoryRef Id=\"INSTALLUTIL\">"
+   Xecho " <Directory Id=\"INSTALLURL\" Name=\"url\">"
+   Xecho "WIX_DB_SET_CURDIR(/installutil/url)"
+   cat $InLinks | (
+      read line
+      while [ "$line" != '' ]; do
+         local Shortname=`echo "$line" | cut -f 1 | StripDoubleQuotes`
+         local Name=`echo "$line" | cut -f 2 | StripDoubleQuotes`
+         local Url=`echo "$line" | cut -f 3 | StripDoubleQuotes`
+         read line
+
+         # We register the name .bdbsc extension to get the proper icon
+         local UrlName="$Shortname.bdbsc"
+         local UrlShortName="$Shortname.d1b"
+         local TargetFile="[INSTALLDIR]\\installutil\\url\\$UrlName"
+         local CreateUrlFile=true
+         local CommandShortcut=false
+	 local Program=""
+	 case "$Url" in
+         file:* ) CreateUrlFile=false
+                  TargetFile=`echo $Url | sed -e 's/file://'`
+                  TargetFile="[INSTALLDIR]"`cygpath -w $TargetFile`;;
+         cmd:* )  CreateUrlFile=false
+		  UrlName="$Shortname.bat"
+                  UrlShortName="$Shortname.bat"
+	          TargetFile="[INSTALLDIR]\\installutil\\url\\$UrlName"
+                  Program=`echo $Url | sed -e 's/cmd://'`
+                  CommandShortcut=true;;
+         esac
+
+         Xecho "WIX_DB_SET_CURFILE($Shortname)"
+         Xecho + "<Component Id=\"Links.$Shortname\""
+         Xecho "   $PERSISTGUID"
+         Xecho "   SharedDllRefCount=\"yes\" Location=\"either\">"
+
+         if $CreateUrlFile; then
+            echo "[Default]$CR"                 > $UrlName
+            echo "BASEURL=$Url$CR" | RunM4     >> $UrlName   || exit 1
+            echo "[InternetShortcut]$CR"       >> $UrlName
+            echo "URL=$Url$CR"     | RunM4     >> $UrlName   || exit 1
+            echo "Modified=$MODTIMEHEX$CR"     >> $UrlName
+            # TODO: we could have an Entry for IconFile=oracleweb.ico IconIndex=1?
+            echo ''
+            Xecho "<File Id=\"File.$Shortname\" "
+            Xecho "   LongName=\"$UrlName\" Name=\"$UrlShortName\""
+            Xecho "   Compressed=\"yes\" DiskId=\"1\""
+            Xecho "   src=\"$here_win\\$UrlName\" />"
+         fi
+
+         if $CommandShortcut; then
+	   echo "@echo off"                               > $UrlName
+           echo "set DBROOTDIR="                         >> $UrlName
+           echo "for /F \"tokens=3 delims=	\" %%A in ('REG QUERY \"HKLM\\SOFTWARE\\Oracle\\$PRODUCT_NAME\\$PRODUCT_VERSION\" /v RootDirectory') do set DBROOTDIR=%%A"                                   >> $UrlName
+           echo "if ERRORLEVEL 2 goto MISSING"           >> $UrlName
+           echo "if not defined DBROOTDIR goto MISSING"  >> $UrlName
+           echo "set FN=\"%DBROOTDIR%$Program\""         >> $UrlName
+           echo "if not exist %FN% goto NOTFOUND"        >> $UrlName
+           echo "cmd /k \"%DBROOTDIR%$Program\"$CR"      >> $UrlName
+           echo "goto END"                               >> $UrlName
+           echo ":NOTFOUND"                              >> $UrlName
+           echo "echo"                                   >> $UrlName
+           echo "echo  Error: The program does not appear to be installed." >> $UrlName
+           echo "echo"                                   >> $UrlName
+           echo "cmd /k"                                 >> $UrlName
+           echo "goto END"                               >> $UrlName
+           echo ":MISSING"                               >> $UrlName
+           echo "echo"                                   >> $UrlName
+           echo "echo NOTE:"                             >> $UrlName
+           echo "echo   The $PRODUCT_NAME version could not be determined." >> $UrlName
+           echo "echo   If you are running on Windows 2000, make sure the" >> $UrlName
+           echo "echo   REG.EXE program is installed from the Tools disk" >> $UrlName
+           echo "echo"                                   >> $UrlName
+           echo "cmd /k"                                 >> $UrlName
+           echo ":END"                                   >> $UrlName
+
+           Xecho "<File Id=\"File.$Shortname\" "
+           Xecho "   LongName=\"$UrlName\" Name=\"$UrlShortName\""
+           Xecho "   Compressed=\"yes\" DiskId=\"1\""
+           Xecho "   src=\"$here_win\\$UrlName\" />"
+
+           Xecho "<Shortcut Id=\"Short.$Shortname\" Directory=\"BerkeleyDbMenu\""
+           Xecho "   Name=\"$Shortname\" LongName=\"$Name\""
+           Xecho "   WorkingDirectory=\"INSTALLDIR\""
+           Xecho "   Target='$TargetFile'"
+           Xecho "   Show=\"normal\" />"
+         else
+           Xecho "<Shortcut Id=\"Short.$Shortname\" Directory=\"BerkeleyDbMenu\""
+           Xecho "   Name=\"$Shortname\" LongName=\"$Name\""
+           Xecho "   Target='$TargetFile'"
+           Xecho "   Show=\"normal\" />"
+         fi
+     
+
+         Xecho - "</Component>"
+
+         Xecho "<ComponentRef Id=\"Links.$Shortname\" />" >> $OutFeatures
+      done
+      return 0
+   ) || Error "Error processing links" || exit 1
+
+   Xecho "</Directory>"
+   Xecho "</DirectoryRef>"
+   Xecho - "</Feature>"  >> $OutFeatures
+}
+
+# ProcessOneDirectory(DIRECTORYNAME)
+# Called by ProcessFeatures.
+# Argument is the directory name to process
+# Standard input is cleaned up files.in (dirname is 3rd column)
+# Standard output will be WiX XML Component/File entries
+#
+ProcessOneDirectory()
+{
+  Dir="$1"
+  grep "	${Dir}	" | (
+    read line
+    while [ "$line" != '' ]; do
+      local feature=`echo "$line" | cut -f 1`
+      local srcfile=`echo "$line" | cut -f 2`
+      local targetdir=`echo "$line" | cut -f 3`
+      local shortname=`echo "$line" | cut -f 4`
+
+      ProcessOneDirectoryFile "$feature" "$srcfile" "$targetdir" "$shortname" || exit 1
+      read line
+    done
+    return 0
+  ) || Error "Error processing directory $Dir" || exit 1
+}
+
+# ProcessOneDirectoryFile(DIRECTORYNAME)
+# Called by ProcessOneDirectory to process a single file in a directory.
+# Standard output will be a single WiX XML Component/File entries
+#
+ProcessOneDirectoryFile()
+{
+   local feature="$1"
+   local srcfile="$2"
+   local targetdir="$3"
+   local shortname="$4"
+   local base=`basename $srcfile`
+
+   #echo "processing file $srcfile in $feature to directory $targetdir..." >&2
+
+   # Prepend the WIX_DB_TOP unless the source file is absolute
+
+   local root=
+   local checkfile=
+   local wsrcfile=
+
+   case "$srcfile" in
+   /* )  root=""
+         wsrcfile=`cygpath -w $srcfile`
+         checkfile="$srcfile"
+         ;;
+   * )   root="$PRODUCT_BLDDIR/"
+         wsrcfile="WIX_DB_TOP()\\`cygpath -w $srcfile`"
+         checkfile="$PRODUCT_BLDDIR/$srcfile"
+         ;;
+   esac
+
+   # If srcfile ends in / then we'll use tallow to walk the directory
+   case "$srcfile" in
+    */ ) if [ ! -d "$root$srcfile" ]; then
+            Error "$root$srcfile: not a directory"
+            exit 1
+         fi
+         Progress -minor "  expanding $root$srcfile..."
+         RunTallow "$root$srcfile"
+         return 0
+    ;;
+    *'*'* )
+         local dirname=`dirname "$root$srcfile"`
+         RunTallow "$dirname" -df "$base"
+         return 0
+    ;;
+   esac
+
+   if [ "$shortname" = '' ]; then
+     shortname=`GetShortName "$base"`
+   fi
+   ID=`NextId`
+
+   if [ ! -r "$checkfile" ]; then
+     Error "$srcfile: file in feature $feature does not exist"
+     Error "  curdir=`pwd`, pathname=$checkfile"
+     exit 1
+   fi
+
+   Xecho "WIX_DB_SET_CURFILE(${base})"
+   Xecho + "<Component Id=\"$feature.$ID\" Location=\"either\" $PERSISTGUID>"
+   Xecho "<File Id=\"${feature}.${ID}\" Name=\"${shortname}\" LongName=\"${base}\" Compressed=\"yes\" KeyPath=\"yes\" DiskId=\"1\" src=\"${wsrcfile}\" />"
+   Xecho - "</Component>"
+   return 0
+}
+
+# ProcessOneFeature(FEATUREPATH, SHORTNAME, DESCRIPTION, OPTS, INDIRECTORYFILE,
+#                   OUTFEATURE, OUTSET)
+# Called by ProcessFeatures to process a line in the features.in file.
+# The first three arguments are the values of the first three columns:
+# the feature dependency path (e.g. "Java/JavaExamples"), the short
+# name, and a descriptive name.  The last argument is the directory
+# file that lists the components.  We use the last name of the feature
+# path (e.g. JavaExamples) to locate all components (really directories)
+# named accordingly, so they can be listed as needed parts of the Feature.
+# Standard output will be WiX XML Feature entries.
+#
+ProcessOneFeature() {
+      local featurename="$1"
+      local shortname="$2"
+      local opts="$4"
+      local dirfile="$5"
+      local outfeature="$6"
+      local outset="$7"
+
+      XmlLevel=4
+      local featcount=0
+      local featurestring=""
+      if [ $(SlashCount $featurename) -gt 0 ]; then
+         local parent=`echo $featurename | sed -e 's:/[^/]*$::' -e 's:.*/::'`
+         featurename=`echo $featurename | sed -e 's:^.*/::'`
+         featcount=1
+         Xecho "<FeatureRef Id=\"$parent\">" >> $outfeature
+      fi
+
+
+      # TODO: how to get +default to work?
+      #    have tried messing with level="0" (doesn't show it)
+      #    InstallDefault=\"source\" (doesn't make a difference)
+      #
+      local leveldebug="Level=\"4\""
+      local levelparam="Level=\"1\""
+      local leveldisable="Level=\"0\""
+      local defparam="InstallDefault=\"source\""
+      local displayparam="Display=\"expand\""
+      local params="AllowAdvertise=\"no\""
+      local regfeature=""
+
+      local descparam=""
+      if [ "$3" != '' ]; then
+         descparam="Description=\"$3\""
+      fi
+
+      local opt
+      local reqtext=""
+      local isdebugFeature=false
+      for opt in $opts; do
+        case "$opt" in
+        +default )         ;;
+        +required )        params="$params Absent=\"disallow\""
+                           reqtext=" (required)";;
+        +invisible )       displayparam="Display=\"hidden\""
+                           params="$params Absent=\"disallow\"";;
+        +debug )           isdebugFeature=true;;
+
+        * )                Error "features.in: Bad option $opt"
+                           exit 1;;
+        esac
+      done
+
+
+# (PBR)
+# I tried to get debugging features to work but I could not. The last thing I
+# tried was to set either ADDSOURCE or INSTALLLEVEL. Neither of these solutions
+# will cause the feature conditions to rerun. The only thing I've found to do
+# that is to rerun CostFinalize. The problem with this is it will re-enable all
+# the options again. I'm keeping the basic framework for +debug support
+      if "$isdebugFeature"; then
+        regfeature="${featurename:1}"
+        echo "regfeature = $regfeature"
+
+        Xecho + "<Feature Id=\"$featurename\" Title=\"$shortname$reqtext\" $descparam $params $displayparam $leveldebug $defparam>" >> $outfeature
+      else
+        Xecho + "<Feature Id=\"$featurename\" Title=\"$shortname$reqtext\" $descparam $params $displayparam $levelparam $defparam>" >> $outfeature
+      fi
+
+
+      grep 'Component.*Id="'$featurename'[.0-9]*"' "$dirfile" | sed -e 's/\(Id="[^"]*"\).*/\1 \/>/' -e 's/Component /ComponentRef /' >> $outfeature
+
+      # Create a separate subfeature for any environment variables
+      # associated with the main feature.
+      # The <Condition> stuff is the magic that enables/disables
+      # setting the environment variables depending on the check box property.
+
+      Xecho + "<Feature Id=\"env.$featurename\" Title=\"env vars\" $params Display=\"hidden\" $levelparam $defparam>" >> $outfeature
+
+      Xecho "<Condition $leveldisable><![CDATA[EnvironmentSetCheck<>1]]></Condition>" >> $outfeature
+      Xecho "<Condition $levelparam><![CDATA[EnvironmentSetCheck=1]]></Condition>" >> $outfeature
+      grep 'Component.*Id="env\.'$featurename'[.0-9]*"' "$dirfile" | sed -e 's/\(Id="[^"]*"\).*/\1 \/>/' -e 's/Component /ComponentRef /' >> $outfeature
+
+      Xecho - "</Feature>" >> $outfeature
+      Xecho - "</Feature>" >> $outfeature
+
+      while [ "$featcount" -gt 0 ]; do
+         Xecho - "</FeatureRef>"  >> $outfeature
+         featcount=$(($featcount - 1))
+      done
+
+      # Append the name to the feature list if it is to be installed.
+      # This publish fragment gets 'executed' when leaving the
+      # dialog to select features.  Note that we have to quote
+      # the comma for m4 (`,') since this appears in a macro usage.
+      #
+
+# (PBR)
+# This code sets ADDSOURCE to show which debug options to include. This does not work
+      # If this is a debug feature, only turn on the value if the parent is on
+      if "$isdebugFeature"; then
+ 	  regfeature="${featurename:1}"
+
+#          Xecho "<Publish Property=\"ADDSOURCE\" Value=\"[ADDSOURCE]\`,'\">" >> $outset
+#          Xecho "  <![CDATA[&${regfeature} = 3 AND DebugCheck=\"yes\" AND ADDSOURCE <> NULL]]></Publish>" >> $outset
+
+#          Xecho "<Publish Property=\"ADDSOURCE\" Value=\"[ADDSOURCE]${featurename}\">" >> $outset
+#          Xecho "  <![CDATA[&${regfeature} = 3 AND DebugCheck=\"yes\"]]></Publish>" >> $outset
+
+          Xecho "<Publish Property=\"FeatureList\" Value=\"[FeatureList]\`,' ${shortname}\">" >> $outset
+          Xecho "  <![CDATA[&${regfeature} = 3 AND DebugCheck=\"yes\"]]></Publish>" >> $outset
+
+      else
+        Xecho "<Publish Property=\"FeatureList\" Value=\"[FeatureList]\`,' ${shortname}\">" >> $outset
+        Xecho "  <![CDATA[&${featurename} = 3]]></Publish>" >> $outset
+      fi
+}
+
+# ProcessOneEnv(FEATURE, ENVNAME, ENVVALUE, OPTS, OUTDIRS, OUTSET)
+# Called by ProcessFeatures to process a line in the environment.in file.
+# The four arguments are the values of the four columns.
+# The output will be into two files:
+#   OUTDIRS: WiX XML Component entries, that contain environment values.
+#            This controls the actual setting of the variables.
+#   OUTSET:   WiX XML to set the installer variables if an env variable
+#             is set or a feature selected.
+#
+ProcessOneEnv() {
+      local feature="$1"
+      local envname="$2"
+      local envvalue="$3"
+      local opts="$4"
+      local outdirs="$5"
+      local outset="$6"
+
+      # Make the path uniform.
+      # echo "c:\Program Files\...\/Lib/Hello" | sed -e 's:\\/:\\:' -e 's:/:\\:g`
+      # This produces c:\Program Files\...\Lib\Hello
+      case "$envvalue" in
+      /* ) envvalue=`echo "$envvalue" | sed -e 's:^/::'`
+      esac
+
+      local path="[INSTALLDIR]$envvalue"
+
+      local opt
+      part="last"
+      for opt in $opts; do
+        case "$opt" in
+        +first )         part="first";;
+        +last )          part="last";;
+        * )                Error "environment.in: Bad option $opt"
+                           exit 1;;
+        esac
+      done
+
+      # Generate the OUTDIRS fragment
+      # This looks like:
+      #
+      # <Component Id="env.CoreAPI.43" Guid="4B75755F-1129-292C-3434-238410000247">
+      #   <Environment Id="env.44" Name="+-LIB" Action="set"
+      #     Permanent="no" Part="first" Value="[INSTALLDIR]Lib" />
+      # </Component>
+      #
+      # Having a unique guid makes uninstall work.
+      # Note: We really want these installed as System rather than
+      # User vars (using the System="yes" tag), but only if user
+      # installs for *all* users.  There is no convenient way to
+      # do that, so we leave them as default (User variables).
+
+
+      XmlLevel=4
+      local Id=`NextId`
+      Xecho "WIX_DB_SET_CURFILE(${envname})" >> $outdirs
+      Xecho + "<Component Id=\"env.$feature.$Id\" $PERSISTGUID>"    >> $outdirs
+      Id=`NextId`
+
+      Xecho "<Environment Id=\"env.$Id\" Name=\"+-$envname\" Action=\"set\""  >> $outdirs
+      Xecho "  Permanent=\"no\" Part=\"$part\" Value=\"$path\" />"  >> $outdirs
+
+      Xecho "</Component>"   >> $outdirs
+
+      # Generate the OUTSET fragment
+      # This looks like:
+      #
+      #    <Publish Property="CLASSPATHValue" Value="[INSTALLDIR]Lib/db.jar;[CLASSPATHValue]">
+      #      <![CDATA[&JavaAPI = 3]]></Publish>
+      #    <Publish Property="CLASSPATHEscValue" Value="[INSTALLDIR]Lib/db.jar;[CLASSPATHEscValue]">
+      #      <![CDATA[&JavaAPI = 3]]></Publish>
+      #
+      # This is equivalent to pseudocode:
+      #      if (InstallFeature(JavaAPI)) {
+      #           Prepend CLASSPATHValue with "Lib/db.jar;"
+      #           Prepend CLASSPATHEscValue with "Lib/db.jar;"
+      #      }
+      #
+      XmlLevel=4
+      Xecho "<Publish Property=\"${envname}Value\" Value=\"[INSTALLDIR]${envvalue};[${envname}Value]\">" >> $outset
+      Xecho "   <![CDATA[&${feature} = 3]]></Publish>" >> $outset
+
+      Xecho "<Publish Property=\"${envname}EscValue\" Value=\"[INSTALLDIR]${envvalue};[${envname}EscValue]\">" >> $outset
+      Xecho "   <![CDATA[&${feature} = 3]]></Publish>" >> $outset
+
+      
+}
+
+# CreateProperty(ID, VALUE)
+# Generate a <Property...> tag on the stdout
+CreateProperty() {
+   Xecho "<Property Id=\"$1\" Hidden=\"yes\"><![CDATA[$2]]></Property>"
+}
+
+# ProcessTagProperties(OUTPROPS)
+# Generate some identification tags as properties.
+# This will let us look at an installer and figure out
+# when it was built, etc.
+ProcessTagProperties() {
+   local outprops="$1"
+   local insdate=`date`
+   XmlLevel=4
+
+   CreateProperty _DB_MSI_INSTALLER_DATE "$insdate"   >> $outprops
+   CreateProperty _DB_MSI_PRODUCT_NAME "$PRODUCT_NAME" >> $outprops
+   CreateProperty _DB_MSI_PRODUCT_VERSION "$PRODUCT_VERSION" >> $outprops
+   CreateProperty ARPCOMMENTS "Installer for $PRODUCT_NAME $PRODUCT_VERSION built on $insdate" >> $outprops
+}
+    
+# ProcessEnv(INENVFILE, INBATFILE, OUTPROPS, OUTSET, OUTSHOW)
+# We generate some Property magic to show the user what is set.
+#
+ProcessEnv() {
+   InEnv="inenv.tmp"; CleanInputFile "$1" "$InEnv" 3 4
+   inbat="$2"
+   outprops="$3"
+   outset="$4"
+   outshow="$5"
+
+   # Get a list of the environment variables
+   local envvar
+   local envvars=`cut -f 2 < $InEnv | sort | uniq`
+
+   # For each environment var, create lines that declare
+   # a pair of properties in the envprops.wixinc file like:
+   #
+   #  <Property Id="CLASSPATHValue" Hidden="yes"></Property>
+   #  <Property Id="CLASSPATHEscValue" Hidden="yes"></Property>
+   #
+   # And create lines in the envset.wixinc file like:
+   #
+   #   <Publish Property="CLASSPATHValue" Value="%CLASSPATH%">
+   #        <![CDATA[1]]></Publish>
+   #   <Publish Property="CLASSPATHEscValue" Value="\\%CLASSPATH\\%">
+   #        <![CDATA[1]]></Publish>
+   #
+   # More will be added to that file later.
+   # Then, create lines in the envshow.wixinc file like:
+   #
+   #  <Control Id="CLASSPATHText" Type="Text"
+   #               X="23" Width="316" PARTIALHEIGHT(10, 2)
+   #               TabSkip="no" Text="CLASSPATH:" />
+   #
+   #  <Control Id="CLASSPATHValueText" Type="Text"
+   #               X="37" Width="316" PARTIALHEIGHT(20, 7)
+   #               TabSkip="no" Text="[CLASSPATHValue]" />
+
+   for envvar in $envvars; do
+      XmlLevel=4
+      CreateProperty "${envvar}Value" "" >> $outprops
+      CreateProperty "${envvar}EscValue" "" >> $outprops
+
+      XmlLevel=4
+      Xecho "<Publish Property=\"${envvar}Value\" Value=\"%${envvar}%\">" >> $outset
+      Xecho "      <![CDATA[1]]></Publish>" >> $outset
+      Xecho "<Publish Property=\"${envvar}EscValue\" Value=\"\\%${envvar}\\%\">" >> $outset
+      Xecho "      <![CDATA[1]]></Publish>" >> $outset
+
+      XmlLevel=4
+      Xecho "<Control Id=\"${envvar}Text\" Type=\"Text\""  >> $outshow
+      Xecho "         X=\"23\" Width=\"316\" PARTIALHEIGHT(10, 2)" >> $outshow
+      Xecho "         TabSkip=\"no\" Text=\"${envvar}:\" />"  >> $outshow
+
+      Xecho "<Control Id=\"${envvar}ValueText\" Type=\"Text\"" >> $outshow
+      Xecho "         X=\"37\" Width=\"316\" PARTIALHEIGHT(20, 7)" >> $outshow
+      Xecho "         TabSkip=\"no\" Text=\"[${envvar}Value]\" />" >> $outshow
+
+   done
+
+   # Create the dbvars.bat file from the .bat template file
+   # TODO: the bat template file currently knows the variables
+   #       and their values, it should get them from the environment.in
+
+   RunM4 <"$inbat" >"$PRODUCT_STAGE/dbvars.bat" || Error "m4 failed" || exit 1
+}
+
+
+# CleanInputFile(INFILENAME, OUTFILENAME, MINELEMENTS, MAXELEMENTS)
+# A filter to preprocess and validate input files.
+# We end up without comment lines, a single tab between elements,
+# and a trailing tab.
+# Also some selected shell variables are expanded for convenience.
+# We verify that each line has the number of elements that fall within
+# the given min and max.
+#
+CleanInputFile() {
+   sed \
+        -e 's/#.*//' \
+        -e 's/ *	/	/g' \
+        -e 's/	 */	/g' \
+        -e '/^[ 	]*$/d' \
+        -e 's/$/	/' \
+        -e 's/		*/	/g'  \
+        -e 's:\${PRODUCT_VERSION}:'"${PRODUCT_VERSION}":g \
+        -e 's:\${PRODUCT_MAJOR}:'"${PRODUCT_MAJOR}":g \
+        -e 's:\${PRODUCT_MINOR}:'"${PRODUCT_MINOR}":g \
+        -e 's:\${PRODUCT_PATCH}:'"${PRODUCT_PATCH}":g \
+        -e 's:\${PRODUCT_MAJMIN}:'"${PRODUCT_MAJMIN}":g \
+        -e 's:\${PRODUCT_MSVC_VERSION}:'"${PRODUCT_MSVC_VERSION}":g \
+        -e 's:\${PRODUCT_STAGE}:'"${PRODUCT_STAGE}":g \
+	-e 's:\${PRODUCT_SHARED_WINMSIDIR}:'"${PRODUCT_SHARED_WINMSIDIR}":g \
+        -e 's/^[\r \t]*$//' \
+          < "$1" > "$2"
+
+   # count tabs on each line
+   sed -e 's/[^\t]//g' -e 's/[\t]/x/g' < "$2" | (
+        read line
+        linecount=1
+        while [ "$line" != '' ]; do
+            chars=`echo "$line" | wc -c`
+            chars=$(($chars - 1))  # Remove newline
+            if [ "$chars" -lt "$3" -o "$chars" -gt "$4" ]; then
+               Error "$1: Input file error on or after line $linecount"
+            fi
+            read line
+            linecount=$(($linecount + 1))
+        done
+   )
+}
+
+# StripDoubleQuotes()
+# In some input files, we allow double quotes around
+# multi-word strings for readability.  We strip them
+# here from standard input and write to standard output.
+# We only expect them at the beginning and end.
+#
+StripDoubleQuotes() {
+   sed -e 's/^"//' -e 's/"$//'
+}
+
+# IndentXml(PLUSMINUS_ARG)
+# A global variable $XmlLevel is kept for the indent level.
+# Every call creates blank output that matches the indent level.
+# In addition, with a '-' argument, the indent level
+# decrements by one before printing.
+# With a '+', the indent level increments after printing.
+# This is generally just used by Xecho
+#
+XmlLevel=0
+IndentXml() {
+   if [ "$1" = '-' -a $XmlLevel != 0 ]; then
+     XmlLevel=$(($XmlLevel - 1))
+   fi
+   local idx=0
+   while [ "$idx" != "$XmlLevel" ]; do
+     echo -n '  '
+     idx=$(($idx + 1))
+   done
+   if [ "$1" = '+' ]; then
+     XmlLevel=$(($XmlLevel + 1))
+   fi
+}
+
+# Xecho [ - | + ] ...
+# echoes arguments (like) echo, except that the output
+# is indented for XML first.  If +, the indentation changes
+# after printing, if -, the indentation changes before printing.
+#
+Xecho()
+{
+   local xarg=
+   if [ "$1" = '-' -o "$1" = '+' ]; then
+      xarg="$1"
+      shift
+   fi
+   IndentXml $xarg
+   echo "$@"
+}
+
+# SlashCount(PATH)
+# Returns the number of slashes in its argument
+# Note, we are relying on some advanced
+# features of bash shell substitution
+#
+SlashCount()
+{
+   local allslash=`echo "$1" | sed -e 's:[^/]*::g'`
+   echo "${#allslash}"
+}
+
+# ProcessDirTransition(PREVDIR, NEXTDIR)
+# Used by ProcessFeatures to create the parts
+# of an WiX <Directory> heirarchy (on stdout) needed to
+# transition from directory PREVDIR to NEXTDIR.
+# This may include any needed </Directory> entries as well.
+# For example, ProcessDirTransition /Bin/Stuff /Bin/Foo/Bar
+# produces:
+#    </Directory>      ...to go up one from 'Stuff'
+#    <Directory Foo>
+#      <Directory Bar>
+#
+ProcessDirTransition() {
+   local p="$1"
+   local n="$2"
+   if [ "$p" = '' ]; then p=/; fi
+   if [ "$n" = '' ]; then n=/; fi
+   local nextdir="$2"
+
+   # The number of slashes in $p is the current directory level.
+   XmlLevel=$(($(SlashCount $p) + 4))
+
+   while [ "$p" != / ]; do
+      if [ "${n#${p}}" != "$n" ]; then
+         break
+      fi
+
+      # go up one level, and keep $p terminated with a /
+      p=`dirname $p`
+      case "$p" in
+      */ )   ;;
+      * )    p=$p/;;
+      esac
+      Xecho - "</Directory>"
+   done
+   n=${n#${p}}
+   while [ "$n" != '' ]; do
+      local dirname=`echo $n | sed -e 's:/.*::'`
+      local cleanname=`CleanFileName "$dirname"`
+      local shortname=`GetShortName "$cleanname"`
+      local dirid=`NextId`
+
+      local larg=""
+      if [ "${shortname}" != "${dirname}" ]; then
+          larg="LongName=\"${dirname}\""
+      fi
+      Xecho + "<Directory Id=\"${cleanname}Dir.$dirid\" Name=\"${shortname}\" $larg>"
+
+      n=`echo $n | sed -e 's:^[^/]*/::'`
+   done
+
+   Xecho "WIX_DB_SET_CURDIR($nextdir)"      # Tell the m4 macro what the current dir is
+}
+
+# SetupErrorLog()
+# Given the global variable ERRORLOG for the name of the
+# error output file, do any setup required to make that happen.
+#
+SetupErrorLog() {
+
+    # Before we start to use ERRORLOG, we get a full pathname,
+    # since the caller may change directories at times.
+    case "$ERRORLOG" in
+    /* ) ;;
+    *)   ERRORLOG=`pwd`"/$ERRORLOG" ;;
+    esac
+
+    rm -f $ERRORLOG
+
+    # File descriptor tricks.
+    # Duplicate current stderr to 15, as we'll occasionally
+    # need to report progress to it.  Then, redirect all
+    # stderr from now on to the ERRORLOG.
+    # 
+    exec 15>&2
+    exec 2>>$ERRORLOG
+}
+
+# RequireCygwin
+# Cygwin does not install certain needed components by default.
+# Check to make sure that everything needed by the script
+# and functions is here.
+#
+RequireCygwin() {
+    Progress -minor "checking for Cygwin..."
+    RequireFileInPath PATH "$PATH" m4
+    RequireFileInPath PATH "$PATH" gcc
+    RequireFileInPath PATH "$PATH" make
+    RequireFileInPath PATH "$PATH" unzip
+    RequireFileInPath PATH "$PATH" bc
+    RequireFileInPath PATH "$PATH" openssl    # needed for MD5 hashing
+}
+
+# RequireJava()
+# A java SDK (with include files) must be installed
+#
+RequireJava() {
+    Progress -minor "checking for Java..."
+    RequireFileInPath INCLUDE "$INCLUDE" jni.h
+    RequireFileInPath INCLUDE "$INCLUDE" jni_md.h
+    RequireFileInPath PATH "$PATH" jar.exe
+    RequireFileInPath PATH "$PATH" javac.exe
+}
+
+# RequireTcl()
+# A Tcl SDK (with compatible .lib files) must be installed
+#
+RequireTcl() {
+    Progress -minor "checking for Tcl..."
+    RequireFileInPath INCLUDE "$INCLUDE" tcl.h
+    RequireFileInPath LIB "$LIB" tcl84g.lib
+    RequireFileInPath LIB "$LIB" tcl84.lib
+}
+
+# RequireWix()
+# WiX must be installed
+#
+RequireWix() {
+    Progress -minor "checking for WiX..."
+    RequireFileInPath PATH "$PATH" candle.exe
+    RequireFileInPath PATH "$PATH" light.exe
+    RequireFileInPath PATH "$PATH" tallow.exe
+}
+
+# RequirePerl()
+# Perl must be installed
+#
+RequirePerl() {
+    Progress -minor "checking for Perl..."
+    RequireFileInPath PATH "$PATH" perl.exe
+}
+
+# RequirePython()
+# Python (and include files) must be installed
+#
+RequirePython() {
+    Progress -minor "checking for Python..."
+    RequireFileInPath INCLUDE "$INCLUDE" Python.h
+    RequireFileInPath PATH "$PATH" python.exe
+}
+
+# CreateDbPerl()
+# Build Perl interface (for Berkeley DB only).
+#
+CreateDbPerl() {
+
+    # First build Berkeley DB using cygwin, as that version is
+    # needed for the Perl build
+    local here=`pwd`
+    Progress "building using Cygwin tools (needed for perl)"
+    cd "${PRODUCT_DBBUILDDIR}"
+    insdir="${PRODUCT_STAGE}/install_unix"
+    ../dist/configure --prefix="$insdir" >>$ERRORLOG  || exit 1
+    make install   >>$ERRORLOG  || exit 1
+
+    Progress "building perl"
+    cd ../perl/BerkeleyDB
+    BERKELEYDB_INCLUDE="$insdir/include" BERKELEYDB_LIB="$insdir/lib" \
+         perl Makefile.PL >>$ERRORLOG   || exit 1
+    make >>$ERRORLOG
+    cd $here
+}
+
+# CreateWindowsSystem()
+# Copy Windows system files
+#
+CreateWindowsSystem() {
+    local here=`pwd`
+    Progress "Copy Windows system files..."
+    cd "${PRODUCT_SUB_BLDDIR}"
+
+    if [ $PRODUCT_MSVC_VERSION = "80" ]; then
+        cp -f "$MSVC_ROOT_DIR/VC/redist/x86/Microsoft.VC80.CRT/msvcm80.dll" build_windows/Win32/Release/ || exit 1
+        cp -f "$MSVC_ROOT_DIR/VC/redist/x86/Microsoft.VC80.CRT/msvcp80.dll" build_windows/Win32/Release/ || exit 1
+        cp -f "$MSVC_ROOT_DIR/VC/redist/x86/Microsoft.VC80.CRT/msvcr80.dll" build_windows/Win32/Release/ || exit 1
+        cp -f "$MSVC_ROOT_DIR/VC/redist/x86/Microsoft.VC80.CRT/Microsoft.VC80.CRT.manifest" build_windows/Win32/Release/ || exit 1
+        cp -f "$MSVC_ROOT_DIR/VC/redist/x86/Microsoft.VC80.CRT/msvcm80.dll" build_windows/Win32/Debug/ || exit 1
+        cp -f "$MSVC_ROOT_DIR/VC/redist/x86/Microsoft.VC80.CRT/msvcp80.dll" build_windows/Win32/Debug/ || exit 1
+        cp -f "$MSVC_ROOT_DIR/VC/redist/x86/Microsoft.VC80.CRT/msvcr80.dll" build_windows/Win32/Debug/ || exit 1
+        cp -f "$MSVC_ROOT_DIR/VC/redist/x86/Microsoft.VC80.CRT/Microsoft.VC80.CRT.manifest" build_windows/Win32/Debug/ || exit 1
+    else
+        cp -f $SYSTEMROOT/system32/msvcr$PRODUCT_MSVC_VERSION.dll  build_windows/Win32/Release/ || exit 1
+        cp -f $SYSTEMROOT/system32/msvcp$PRODUCT_MSVC_VERSION.dll  build_windows/Win32/Release/ || exit 1
+        cp -f $SYSTEMROOT/system32/msvcr$PRODUCT_MSVC_VERSION.dll build_windows/Win32/Debug/ || exit 1
+        cp -f $SYSTEMROOT/system32/msvcp$PRODUCT_MSVC_VERSION.dll build_windows/Win32/Debug/ || exit 1
+    fi
+    cd $here
+}
+
+# CreateInclude(DIR, FILES)
+# Create an include directory populated with the files given
+#
+CreateInclude() {
+
+    local incdir="$1"
+    shift
+
+    Progress "creating the "$incdir" directory..."
+    rm -rf "$incdir"
+    mkdir "$incdir"  || exit 1
+    cp -r "$@" "$incdir"
+}
+
+# CreateWindowsBuild()
+# Do the windows build as defined by the winbuild.bat file
+#
+CreateWindowsBuild() {
+    local here=`pwd`
+    Progress "building using Windows tools..."
+    cd "${PRODUCT_SUB_BLDDIR}"  || exit 1
+
+    # Before starting, copy any installer tools here.
+    # This makes building these tools straightforward
+    # and the results are left in the build directory.
+    #
+    cp -r ${PRODUCT_SHARED_WINMSIDIR}/instenv .
+
+    # We create a wbuild.bat file, which is essentially
+    # identical, except it has the carriage returns added.
+    # This allows us to use our favorite editors on winbuild.bat .
+    #
+    sed -e 's/$//' < ${PRODUCT_STAGE}/../winbuild.bat | tr '\001' '\015'  > wbuild.bat
+    rm -f winbld.out winbld.err
+    touch winbld.out winbld.err
+    echo "Build output and errors are collected in" >> $ERRORLOG
+    echo "  winbld.{out,err} until the build has completed." >> $ERRORLOG
+    cmd.exe /x /c call wbuild.bat
+    status=$?
+    cat winbld.out >> $ERRORLOG
+    if [ -s winbld.err -o "$status" != 0 ]; then
+       cat winbld.err >> $ERRORLOG
+       Error "Errors during windows build"
+       exit 1
+    fi
+    cd $here
+}
+
+# CreateSources(SOURCESDIR,DOCDIR...)
+# Create the sources directory, ignoring things in the docdirs
+#
+CreateSources() {
+    local sources="$1"
+
+    Progress "creating the Sources directory in $sources..."
+    rm -rf "$sources" "$sources/../docs/"
+    unzip -q -u ../../$OPT_INFILE -d tmp_dir || exit 1
+    mv ./tmp_dir/${dbver}/docs "$sources/../" || exit 1
+    mv ./tmp_dir/${dbver} "$sources" || exit 1
+}
+
+# Usage()
+# Show the usage for this script.
+#
+Usage()
+{
+    echo "Usage:  s_winmsi [ options ]" >&2
+    echo "Options: " >&2
+    echo "   -input file       use file rather than ${PRODUCT_ZIP_FILEFMT}" >&2
+    echo "                     where X.Y.Z is defined by ../RELEASE" >&2
+    echo "   -output file      use file rather than ${PRODUCT_MSI_FILEFMT}" >&2
+    echo "                     where X.Y.Z is defined by ../RELEASE" >&2
+    echo "   -usebuild DIR     use DIR for exes, DLLs, etc. " >&2
+    echo "                     rather than building from scratch" >&2
+    echo "   -preserve         preserve the winmsi/msi_staging directory" >&2
+    echo "   -skipgen          skip generating m4 include files" >&2
+}
+
+# SetupOptions()
+# Parse command line options and set global variables as indicated below.
+#
+SetupOptions() {
+    OPT_USEBUILD=
+    OPT_PRESERVE=false
+    OPT_CONTINUE=false
+    OPT_INFILE=
+    OPT_OUTFILE=
+    OPT_SKIPGEN=false
+    while [ "$#" -gt 0 ]; do
+        arg="$1"; shift
+        case "$arg" in
+        -usebuild )  OPT_USEBUILD="$1"; shift ;;
+        -skipgen )   OPT_SKIPGEN=true ;;
+        -preserve )  OPT_PRESERVE=true;;
+        -continue )  OPT_CONTINUE=true;;
+        -input )     OPT_INFILE="$1"; shift ;;
+        -output )    OPT_OUTFILE="$1"; shift ;;
+        * )
+            echo "ERROR: Unknown argument '$arg' to s_winmsi" >&2
+            Usage
+            exit 1
+            ;;
+        esac
+    done
+    if [ "$OPT_INFILE" = '' -o ! -f "$OPT_INFILE" ]; then
+        echo "$OPT_INFILE: not found"
+        exit 1
+    fi
+}
+
+# CreateStage()
+# Create the staging area
+#
+CreateStage() {
+    Progress "creating staging area..."
+    if [ "$PRODUCT_STAGE" = '' ]; then
+        Error "PRODUCT_STAGE not set"
+        exit 1
+    fi
+    if ! $OPT_PRESERVE; then
+        trap 'rm -rf ${PRODUCT_STAGE} ; exit 0' 0 1 2 3 13 15
+    fi
+    if ! $OPT_CONTINUE; then
+        rm -rf ${PRODUCT_STAGE}   || exit 1
+    else
+        # Cleanup files that would break :)
+        rm -f ${PRODUCT_STAGE}/*wxs   || exit 1
+        rm -f ${PRODUCT_STAGE}/*wixinc   || exit 1
+        rm -f ${PRODUCT_STAGE}/*tmp   || exit 1
+        rm -f ${PRODUCT_STAGE}/*bdbsc   || exit 1
+        rm -f ${PRODUCT_STAGE}/tallow*   || exit 1
+    fi
+    if [ ! -d ${PRODUCT_STAGE} ]; then
+        mkdir ${PRODUCT_STAGE}    || exit 1
+    fi
+
+    cd ${PRODUCT_STAGE}
+    
+    Progress "extracting $OPT_INFILE..."
+    unzip -q -u ../../$OPT_INFILE  || exit 1
+    
+    if [ ! -d $PRODUCT_LICENSEDIR ]; then
+        Error "$OPT_INFILE: no top level $PRODUCT_LICENSEDIR directory"
+        exit 1
+    fi
+
+    # TODO: In the 4.8.12 package this file was not writable, it needs to
+    # be for the build. Make it so. Remove me.
+    chmod 664 ${PRODUCT_SRCDIR}/csharp/doc/libdb_dotnet${PRODUCT_MAJMIN}.XML
+}
+
+# CreateLicenseRtf(LICENSEIN, LICENSERTF)
+# From a text LICENSE file, create the equivalent in .rtf format.
+#
+CreateLicenseRtf() {
+    local licensein="$1"
+    local licensertf="$2"
+
+    if [ ! -f "$licensein" ]; then
+        Error "License file $licensein: does not exist"
+        exit 1
+    fi
+    Progress "creating ${licensertf}..."
+    
+    # Build a list of references to components ids (i.e. directories)
+    # that are listed in the .wxs file.  This is needed to refer to
+    # all of the source (sadly it appears there is no better way!)
+    #
+    if ! grep '^=-=-=-=' $licensein > /dev/null; then
+        Error "LICENSE has changed format, this script must be adapted"
+        exit 1
+    fi
+    
+    sed -e '1,/^=-=-=-=-=/d' < $licensein | MakeRtf > $licensertf
+}
+
+    
+# CreateMsi(INFILE,WXSFILE,MSIFILE)
+# Do the final creation of the output .MSI file.
+# It is assumed that all *.wixinc files are now in place.
+# INFILE is an absolute name of the m4 input WiX file.
+# WXSFILE is a short (basename) of the postprocessed WiX file,
+#       after macro expansion, it will be left in staging directory.
+# MSIFILE is a short (basename) of the output .MSI name
+#
+CreateMsi() {
+    local infile="$1"
+    local wxs="$2"
+    local msifile="$3"
+    local o=`echo "$wxs" | sed -e 's/[.]wxs$//' -e 's/$/.wixobj/'`
+    local tmpfile="dbcore.wxs.tmp"
+
+    rm -f $o $wxs 
+
+    # Preprocess the ${PROD}wix.in file, adding the things we need
+    #
+    Progress "Running m4 to create $wxs..."
+    RunM4 < "$infile" > "$PRODUCT_STAGE/$wxs"  || Error "m4 failed" || exit 1
+    # Remove any stray "PUT-GUID-HERE" tags.
+    # They are added by some recent versions of WiX, including 2.0.5805.0
+    # The scripts already insert valid GUIDs.
+    sed -e 's/ Guid="PUT-GUID-HERE" / /' < "$wxs" > "$tmpfile"
+    rm -f "$wxs"
+    mv "$tmpfile" "$wxs"
+
+    local here=`pwd`
+    cd "$PRODUCT_STAGE"
+    rm -f "$o" "$msifile"
+    Progress "compiling $wxs..."
+    candle -w0 $wxs  >> $ERRORLOG || Error "candle (compiler) failed" || exit 1
+
+    Progress "linking .msi file..."
+    light -o "$msifile" $o  >> $ERRORLOG  || Error "light (linker) failed" || exit 1
+    (rm -f "../../$msifile" && mv "$msifile" ../..)  >> $ERRORLOG  || exit 1
+    cd $here
+}
+
+# CreateWixIncludeFiles()
+# Do all processing of input files to produce
+# the include files that we need to process the Wix input file.
+#
+CreateWixIncludeFiles() {
+    local here=`pwd`
+    cd "$PRODUCT_STAGE"
+    # Touch all the wix include files in case any end up empty.
+    touch directory.wixinc features.wixinc envprops.wixinc \
+          envset.wixinc envshow.wixinc links.wixinc
+
+    Progress "tagging the installer..."
+    ProcessTagProperties envprops.wixinc
+    
+    Progress "processing environment..."
+    ProcessEnv ../environment.in ../dbvarsbat.in envprops.wixinc envset.wixinc envshow.wixinc
+    
+    Progress "processing features and files..."
+    ProcessFeatures ../files.in ../features.in ../environment.in \
+                   directory.wixinc features.wixinc \
+                   envset.wixinc
+    
+    Progress "processing links..."
+    ProcessLinks ../links.in features.wixinc > links.wixinc
+    cd $here
+}

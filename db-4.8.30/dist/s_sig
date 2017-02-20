@@ -1,0 +1,88 @@
+#!/bin/sh -
+#	$Id$
+#
+# Build structure signature code.
+
+a=/tmp/__db_a.$$
+b=/tmp/__db_b.$$
+trap 'rm -f $a $b; exit 0' 0 1 2 3 13 15
+
+cat ../dbinc/db.in ../dbinc/db_int.in ../dbinc/*.h | 
+sed -e '/__addrinfo/d' \
+    -e '/__aes_cipher/d' \
+    -e '/__cipher/d' \
+    -e '/__queued_output/d' \
+    -e '/__repmgr_connection/d' \
+    -e '/__repmgr_message/d' \
+    -e '/__repmgr_retry/d' \
+    -e '/__repmgr_runnable/d' \
+    -e '/__repmgr_site/d' \
+    -e '/struct.*mutex.*{/i\
+#ifdef	HAVE_MUTEX_SUPPORT' \
+    -e '/struct.*mutex.*{/a\
+#endif' \
+    -e 's/.*[	 ]*struct[	 ]*\(__[a-z_]*\)[	 ]*{.*/	__ADD(\1);/p' \
+    -e d > $a
+
+cnt=`sed -e '$=' -e d $a`
+
+cat << END_OF_TEXT > $b
+/*-
+ * DO NOT EDIT: automatically built by dist/s_sig.
+ *
+ * \$Id$
+ */
+
+#include "db_config.h"
+
+#define	__INCLUDE_NETWORKING	1
+#define __INCLUDE_SELECT_H      1
+#include "db_int.h"
+
+#include "dbinc/db_page.h"
+#include "dbinc/btree.h"
+#include "dbinc/crypto.h"
+#include "dbinc/db_join.h"
+#include "dbinc/db_verify.h"
+#include "dbinc/hash.h"
+#include "dbinc/lock.h"
+#include "dbinc/log.h"
+#include "dbinc/mp.h"
+#include "dbinc/partition.h"
+#include "dbinc/qam.h"
+#include "dbinc/txn.h"
+
+END_OF_TEXT
+
+echo "#define	__STRUCTURE_COUNT	$cnt" >> $b
+
+cat << END_OF_TEXT >> $b
+
+/*
+ * __env_struct_sig --
+ *	Compute signature of structures.
+ *
+ * PUBLIC: u_int32_t __env_struct_sig __P((void));
+ */
+u_int32_t
+__env_struct_sig()
+{
+	u_short t[__STRUCTURE_COUNT + 5];
+	u_int i;
+
+	i = 0;
+#define	__ADD(s)	(t[i++] = sizeof(struct s))
+
+END_OF_TEXT
+
+cat $a >> $b
+
+cat << END_OF_TEXT >> $b
+
+	return (__ham_func5(NULL, t, i * sizeof(t[0])));
+}
+END_OF_TEXT
+
+f=../env/env_sig.c
+cmp $b $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $b $f && chmod 444 $f)

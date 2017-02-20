@@ -1,0 +1,111 @@
+#!/bin/sh -
+#	$Id$
+#
+# Build the Tcl test files.
+
+msg1="# Automatically built by dist/s_test; may require local editing."
+msg2="# Automatically built by dist/s_test; may require local editing."
+
+t=/tmp/__t
+trap 'rm -f $t; exit 0' 0 1 2 3 13 15
+
+. RELEASE
+
+(echo "$msg1"					&& \
+ echo ""					&& \
+ echo "set tclsh_path @TCL_TCLSH@"		&& \
+ echo "set tcllib .libs/libdb_tcl-@DB_VERSION_MAJOR@.@DB_VERSION_MINOR@@LIBTSO_MODSUFFIX@" && \
+ echo ""					&& \
+ echo "set rpc_server localhost"	 	&& \
+ echo "set rpc_path ."			 	&& \
+ echo "set rpc_testdir \$rpc_path/TESTDIR"	&& \
+ echo ""					&& \
+ echo "set src_root @srcdir@/.."		&& \
+ echo "set test_path @srcdir@/../test"		&& \
+ echo "set je_root @srcdir@/../../je"		&& \
+ echo ""					&& \
+ echo "global testdir"				&& \
+ echo "set testdir ./TESTDIR"			&& \
+ echo ""					&& \
+ echo "global dict"				&& \
+ echo "global util_path"			&& \
+ echo ""					&& \
+ echo "global is_freebsd_test"			&& \
+ echo "global is_hp_test"			&& \
+ echo "global is_linux_test"			&& \
+ echo "global is_qnx_test"			&& \
+ echo "global is_sunos_test"			&& \
+ echo "global is_windows_test"			&& \
+ echo "global is_windows9x_test"		&& \
+ echo ""					&& \
+ echo "global valid_methods"			&& \
+ echo "global checking_valid_methods"		&& \
+ echo "global test_recopts"			&& \
+ echo ""					&& \
+ echo "set KILL \"@KILL@\"") > $t
+
+f=../test/include.tcl
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+
+(echo "$msg1"					&& \
+ echo ""					&& \
+ echo "set tclsh_path SET_YOUR_TCLSH_PATH"	&& \
+ echo "set buildpath Win32/Debug"	&& \
+ echo "set tcllib libdb_tcl${DB_VERSION_MAJOR}${DB_VERSION_MINOR}d.dll" && \
+ echo ""					&& \
+ echo "set src_root .."				&& \
+ echo "set test_path ../test"			&& \
+ echo "set je_root ../../je"			&& \
+ echo ""					&& \
+ echo "global testdir"				&& \
+ echo "set testdir ./TESTDIR"			&& \
+ echo ""					&& \
+ echo "global dict"				&& \
+ echo "global util_path"			&& \
+ echo ""					&& \
+ echo "global is_freebsd_test"			&& \
+ echo "global is_hp_test"			&& \
+ echo "global is_linux_test"			&& \
+ echo "global is_qnx_test"			&& \
+ echo "global is_sunos_test"			&& \
+ echo "global is_windows_test"			&& \
+ echo "global is_windows9x_test"		&& \
+ echo ""					&& \
+ echo "global valid_methods"			&& \
+ echo "global checking_valid_methods"		&& \
+ echo "global test_recopts"			&& \
+ echo ""					&& \
+ echo "set KILL dbkill.exe") > $t
+
+f=../build_windows/include.tcl
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+
+# Build the test directory TESTS file.
+(echo $msg2;
+cat `egrep -l '^#[	 ][	 ]*TEST' ../test/*.tcl` |
+sed -e '/^#[	 ][	 ]*TEST/!{' \
+    -e 's/.*//' \
+    -e '}' |
+cat -s |
+sed -e '/TEST/{' \
+    -e 's/^#[	 ][	 ]*TEST[	 ]*//' \
+    -e 's/^	//' \
+    -e 'H' \
+    -e 'd' \
+    -e '}' \
+    -e 's/.*//' \
+    -e x \
+    -e 's/\n/__LINEBREAK__/g' |
+sort |
+sed -e 's/__LINEBREAK__/\
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\
+/' \
+    -e 's/__LINEBREAK__/\
+	/g' |
+sed -e 's/^[	 ][	 ]*$//') > $t
+
+f=../test/TESTS
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)

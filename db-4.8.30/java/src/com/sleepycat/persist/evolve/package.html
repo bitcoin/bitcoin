@@ -1,0 +1,321 @@
+<!-- $Id$ -->
+<html>
+<body>
+Utilities for managing class evolution of persistent objects.
+
+<h1>Class Evolution</h1>
+
+<p>For persistent data that is not short lived, changes to persistent classes
+are almost inevitable.  Some changes are compatible with existing types, and
+data conversion for these changes is performed automatically and transparently.
+Other changes are not compatible with existing types.  Mutations can be used to
+explicitly manage many types of incompatible changes.</p>
+
+<p>Not all incompatible class changes can be handled via mutations.  For
+example, complex refactoring may require a transformation that manipulates
+multiple entity instances at once.  Such changes are not possible with
+mutations but can be made by performing a <a href="#storeConversion">store
+conversion</a>.</p>
+
+<p>The different categories of type changes are described below.</p>
+
+<h2>Key Field Changes</h2>
+
+<p>Unlike entity data, key data is not versioned.  Therefore, the physical key
+format for an index is fixed once the index has been opened, and the changes
+allowed for key fields are very limited.  The only changes allowed for key
+fields are:</p>
+<ul>
+<li>The name of a key field may be changed, as long as this change is
+accompanied by a {@link com.sleepycat.persist.evolve.Renamer} mutation.</li>
+<li>A primitive type may be changed to its corresponding primitive wrapper
+type.  This is a compatible change.</li>
+<li>For primary key fields and fields of a composite key class, a primitive
+wrapper type may be changed to its corresponding primitive type.  This is
+allowed because these key fields with reference types may never have null
+values.  This is a compatible change.</li>
+</ul>
+
+<p>Any other changes to a key field are incompatible and may be made only by
+performing a <a href="#storeConversion">store conversion</a>.</p>
+
+<p>Key ordering, including the behavior of a custom {@link
+java.lang.Comparable}, is also fixed, since keys are stored in order in the
+index.  The specifications for key ordering may not be changed, and the
+developer is responsible for not changing the behavior of a {@code Comparable}
+key class.  <strong>WARNING:</strong>: Changing the behavior of a {@code
+Comparable} key class is likely to make the index unusable.</p>
+
+<h2>Compatible Type Changes</h2>
+
+<p>Entity data, unlike key data, is versioned.  Therefore, some changes can be
+made compatibly and other changes can be handled via mutations.  Compatible
+changes are defined below.  To make a compatible class change, a mutation is
+not required; however, the class version must be assigned a new (greater)
+integer value.</p>
+
+<p>Changes to a class hierarchy are compatible in some cases.  A new class may
+be inserted in the hierarchy.  A class may be deleted from the hierarchy as
+long as one of the following is true: 1) it contains no persistent fields, 2)
+any persistent fields are deleted with field Deleter mutations, or 3) the class
+is deleted with a class Deleter mutation.  Classes in an existing hierarchy may
+not be reordered compatibly, and fields may not moved from one class to another
+compatibly; for such changes a class Converter mutation is required.</p>
+
+<p>Changes to field types in entity class definitions are compatible when they
+conform to the Java Language Specification definitions for <a
+href="http://java.sun.com/docs/books/jls/third_edition/html/conversions.html#5.1.2">Widening
+Primitive Conversions</a> and <a
+href="http://java.sun.com/docs/books/jls/third_edition/html/conversions.html#5.1.5">Widening
+Reference Conversions</a>.  For example, a smaller integer
+type may be changed to a larger integer type, and a reference type may be
+changed to one of its supertypes.  Automatic widening conversions are performed
+as described in the Java Language Specification.</p>
+
+<p>Primitive types may also be compatibly changed to their corresponding
+primitive wrapper types, or to the wrapper type for a widened primitive type.
+However, changing from a primitive wrapper type to a primitive type is not a
+compatible change since existing null values could not be represented.</p>
+
+<p>Integer primitive types (byte, short, char, int, long) and their primitive
+wrapper types may be compatibly changed to the BigInteger type.</p>
+
+<p>Enum values may be added compatibly, but may not be deleted or renamed.  As
+long as new values are declared after existing values, the default sort order
+for enum key fields will match the declaration order, i.e, the default sort
+order will match the enum ordinal order. If a new value is inserted (declared
+before an existing value), it will be sorted after all existing values but
+before newly added values.  However, these ordering rules are only guaranteed
+for enums containing up to 631 values and only if existing values are not
+reordered.  If more than 631 values are declared or the declarations of
+existing values are reordered, then the default sort order will be arbitrary
+and will not match the declaration (ordinal) order.</p>
+
+<p>In addition, adding fields to a class is a compatible change.  When a
+persistent instance of a class is read that does not contain the new field, the
+new field is initialized by the default constructor.</p>
+
+<p>All other changes to instance fields are considered incompatible.
+Incompatible changes may be handled via mutations, as described next.</p>
+
+<p>Note that whenever a class is changed, either compatibly or incompatibly, a
+new (higher) class version number must be assigned.  See {@link
+com.sleepycat.persist.model.Entity#version} and {@link
+com.sleepycat.persist.model.Persistent#version} for information on assigning
+class version numbers.</p>
+
+<h2>Mutations</h2>
+
+<p>There are three types of mutations: {@link
+com.sleepycat.persist.evolve.Renamer}, {@link
+com.sleepycat.persist.evolve.Deleter} and {@link
+com.sleepycat.persist.evolve.Converter}.</p>
+
+<p>A class or field can be renamed using a {@link
+com.sleepycat.persist.evolve.Renamer}.  Renaming is not expensive, since it
+does not involve conversion of instance data.</p>
+
+<p>A class or field can be deleted using a {@link
+com.sleepycat.persist.evolve.Deleter}.</p>
+<ul>
+<li>Deleting an entity class causes removal of the primary and secondary
+indices for the store, on other words, removal of all store entities for that
+class and its subclasses.  Removal is performed when the store is opened.  A
+{@link com.sleepycat.persist.evolve.Deleter} should be used for an entity class
+in all of the following circumstances:
+  <ul>
+  <li>When removing the entity class itself.</li>
+  <li>When removing {@link com.sleepycat.persist.model.Entity} from the class
+  to make it non-persistent.</li>
+  <li>When removing {@link com.sleepycat.persist.model.Entity} from the class
+  and adding {@link com.sleepycat.persist.model.Persistent}, to use it as an
+  embedded persistent class but not an entity class.  The version of the class
+  must be incremented in this case.</li>
+  </ul>
+</li>
+
+<li>Deleting a non-entity class does not itself cause deletion of instance
+data, but is needed to inform DPL that the deleted class will not be used.
+Instances of the deleted class must be handled (discarded or converted to
+another class) by {@link com.sleepycat.persist.evolve.Deleter} or {@link
+com.sleepycat.persist.evolve.Converter} mutations for the field or enclosing
+class that contain embedded instances of the deleted class.  A {@link
+com.sleepycat.persist.evolve.Deleter} should be used for a non-entity class in
+all of the following circumstances:
+  <ul>
+  <li>When removing the persistent class itself.</li>
+  <li>When removing {@link com.sleepycat.persist.model.Persistent} from the
+  class to make it non-persistent.</li>
+  <li>When removing {@link com.sleepycat.persist.model.Persistent} from the
+  class and adding {@link com.sleepycat.persist.model.Entity}, to use it as an
+  entity class but not an embedded persistent class.  The version of the class
+  must be incremented in this case.</li>
+  </ul>
+</li>
+
+<li>Deleting a field causes automatic conversion of the instances containing
+that field, in order to discard the field values.</li>
+</ul>
+
+<p>Other incompatible changes are handled by creating a {@link
+com.sleepycat.persist.evolve.Converter} mutation and implementing a {@link
+com.sleepycat.persist.evolve.Conversion#convert Conversion.convert} method that
+manipulates the raw objects and/or simple values directly.  The {@code convert}
+method is passed an object of the old incompatible type and it returns an
+object of a current type.</p>
+
+<p>Conversions can be specified in two ways: for specific fields or for all
+instances of a class.  A different {@link
+com.sleepycat.persist.evolve.Converter} constructor is used in each case.
+Field-specific conversions are used instead of class conversions when both are
+applicable.</p>
+
+<p>Note that a class conversion may be not specified for an enum class.  A
+field conversion, or a class conversion for the class declaring the field, may
+be used.</p>
+
+<p>Note that each mutation is applied to a specific class version number.  The
+class version must be explicitly specified in a mutation for two reasons:</p>
+<ol>
+<li>This provides safety in the face of multiple unconverted versions of a
+given type.  Without a version, a single conversion method would have to handle
+multiple input types, and would have to distinguish between them by examining
+the data or type information.</li>
+<li>This allows arbitrary changes to be made.  For example, a series of name
+changes may reuse a given name for more than one version.  To identify the
+specific type being converted or renamed, a version number is needed.</li>
+</ol>
+<p>See {@link com.sleepycat.persist.model.Entity#version} and {@link
+com.sleepycat.persist.model.Persistent#version} for information on assigning
+class version numbers.</p>
+
+<p>Mutations are therefore responsible for converting each existing
+incompatible class version to the current version as defined by a current class
+definition.  For example, consider that class-version A-1 is initially changed
+to A-2 and a mutation is added for converting A-1 to A-2.  If later changes in
+version A-3 occur before converting all A-1 instances to version A-2, the
+converter for A-1 will have to be changed.  Instead of converting from A-1 to
+A-2 it will need to convert from A-1 to A-3.  In addition, a mutation
+converting A-2 to A-3 will be needed.</p>
+
+<p>When a {@link com.sleepycat.persist.evolve.Converter} mutation applies to a
+given object, other mutations that may apply to that object are not
+automatically performed.  It is the responsibility of the {@link
+com.sleepycat.persist.evolve.Converter} to return an object that conforms to
+the current class definition, including renaming fields and classes.  If the
+input object has nested objects or superclasses that also need conversion, the
+converter must perform these nested conversions before returning the final
+converted object.  This rule avoids the complexity and potential errors that
+could result if a converter mutation were automatically combined with other
+mutations in an arbitrary manner.</p>
+
+<p>The {@link com.sleepycat.persist.EntityStore#evolve EntityStore.evolve}
+method may optionally be used to ensure that all instances of an old class
+version are converted to the current version.</p>
+
+<h2>Other Metadata Changes</h2>
+
+<p>When a class that happens to be an entity class is renamed, it remains an
+entity class.  When a field that happens to be a primary or
+secondary key field is renamed, its metadata remains intact as well.</p>
+
+<p>When the {@link com.sleepycat.persist.model.SecondaryKey} annotation is
+added to an <em>existing</em> field, a new index is created automatically.  The
+new index will be populated by reading the entire primary index when the
+primary index is opened.</p>
+
+<p>When the {@link com.sleepycat.persist.model.SecondaryKey} annotation is
+included with a <em>new</em> field, a new index is created automatically.  The
+new field is required to be a reference type (not a primitive) and must be
+initialized to null (the default behavior) in the default constructor.
+Entities will be indexed by the field when they are stored with a non-null key
+value.</p>
+
+<p>When a field with the {@link com.sleepycat.persist.model.SecondaryKey}
+annotation is deleted, or when the {@link
+com.sleepycat.persist.model.SecondaryKey} annotation is removed from a field
+without deleting it, the secondary index is removed (dropped).  Removal occurs
+when the store is opened.</p>
+
+<p>The {@link com.sleepycat.persist.model.SecondaryKey#relate
+SecondaryKey.relate} property may NOT be changed.  All other properties of a
+{@link com.sleepycat.persist.model.SecondaryKey} may be changed, although
+avoiding changes that cause foreign key integrity errors is the responsibility
+of the application developer.  For example, if the {@link
+com.sleepycat.persist.model.SecondaryKey#relatedEntity} property is added but
+not all existing secondary keys reference existing primary keys for the related
+entity, foreign key integrity errors may occur.</p>
+
+<p>The {@link com.sleepycat.persist.model.PrimaryKey} annotation may NOT be
+removed from a field in an entity class.</p>
+
+<p>The {@link com.sleepycat.persist.model.PrimaryKey#sequence} property may be
+added, removed, or changed to a different name.</p>
+
+<p>The {@link com.sleepycat.persist.model.Persistent#proxyFor} property may NOT
+be added, removed, or changed to a different class.</p>
+
+<h2>Warnings on Testing and Backups</h2>
+
+<p>The application developer is responsible for verifying that class evolution
+works properly before deploying with a changed set of persistent classes.  The
+DPL will report errors when old class definitions cannot be evolved, for
+example, when a mutation is missing.  To test that no such errors will occur,
+application test cases must include instances of all persistent classes.</p>
+
+<p>Converter mutations require special testing.  Since the application
+conversion method is allowed to return instances of any type, the DPL cannot
+check that the proper type is returned until the data is accessed.  To avoid
+data access errors, application test cases must cover converter mutations for
+all potential input and output types.</p>
+
+<p>When secondary keys are dropped or entity classes are deleted, the
+underlying databases are deleted and cannot be recovered from the store.  This
+takes place when the store is opened.  It is strongly recommended that a backup
+of the entire store is made before opening the store and causing class
+evolution to proceed.</p>
+
+<h2><a name="storeConversion">Store Conversion<a/></h2>
+
+<p>When mutations are not sufficient for handling class changes, a full store
+conversion may be performed.  This is necessary for two particular types of
+class changes:</p>
+<ul>
+<li>A change to a physical key format, for example, a change from type
+{@code int} to type {@code long}.</li>
+<li>A conversion that involves multiple entities at once, for example,
+combining two separate entity classes into a new single entity class.</li>
+</ul>
+
+<p>To perform a full store conversion, a program is written that performs the
+following steps to copy the data from the old store to a new converted
+store:</p>
+<ol>
+<li>The old store is opened as a {@link com.sleepycat.persist.raw.RawStore} and
+the new store is opened as an {@link com.sleepycat.persist.EntityStore}.</li>
+<li>All entities are read from the old store.  Entities are read using a {@link
+com.sleepycat.persist.raw.RawStore} to allow access to entities for which no
+compatible class exists.</li>
+<li>The {@link com.sleepycat.persist.raw.RawObject} entities are then converted
+to the format desired.  Raw objects can be arbitrarily manipulated as needed.
+The updated raw objects must conform to the new evolved class definitions.</li>
+<li>The updated raw entities are converted to live objects by calling the
+{@link com.sleepycat.persist.model.EntityModel#convertRawObject
+EntityModel.convertRawObject} method of the new store.  This method converts
+raw objects obtained from a different store, as long as they conform to the new
+evolved class definitions.</li>
+<li>The new live objects are written to the new {@link
+com.sleepycat.persist.EntityStore} using a {@link
+com.sleepycat.persist.PrimaryIndex} as usual.</li>
+</ol>
+
+<p>To perform such a conversion, two separate stores must be open at once.
+Both stores may be in the same {@link com.sleepycat.db.Environment}, if
+desired, by giving them different store names.  But since all data is being
+rewritten, there are performance advantages to creating the new store in a new
+fresh environment: the data will be compacted as it is written, and the old
+store can be removed very quickly by deleting the old environment directory
+after the conversion is complete.</p>
+
+</body>
+</html>

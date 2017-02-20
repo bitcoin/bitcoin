@@ -1,0 +1,34 @@
+#!/bin/sh -
+#	$Id$
+#
+# Build the autoconfiguration files.
+
+trap 'rm -f aclocal.m4 ; exit 0' 0 1 2 3 13 15
+
+. ./RELEASE
+
+echo "autoconf: building aclocal.m4..."
+cat aclocal/*.m4 aclocal_java/*.m4 > aclocal.m4
+
+echo "autoconf: running autoheader to build config.hin..."
+rm -f config.hin
+autoheader
+chmod 444 config.hin
+
+echo "autoconf: running autoconf to build configure"
+rm -f configure
+autoconf
+
+# Edit version information we couldn't pre-compute.
+sed -e "s/__EDIT_DB_VERSION_MAJOR__/$DB_VERSION_MAJOR/g" \
+    -e "s/__EDIT_DB_VERSION_MINOR__/$DB_VERSION_MINOR/g" \
+    -e "s/__EDIT_DB_VERSION_PATCH__/$DB_VERSION_PATCH/g" \
+    -e "s/__EDIT_DB_VERSION_STRING__/$DB_VERSION_STRING/g" \
+    -e "s/__EDIT_DB_VERSION_UNIQUE_NAME__/$DB_VERSION_UNIQUE_NAME/g" \
+    -e "s/__EDIT_DB_VERSION__/$DB_VERSION/g" configure > configure.version
+mv configure.version configure
+
+rm -rf autom4te.cache
+chmod 555 configure
+
+chmod 555 config.guess config.sub install-sh

@@ -1,0 +1,29 @@
+Document file - DO NOT EDIT
+
+<BEGIN> CORE_INFO_TYPE
+Workspace
+<END>
+
+<BEGIN> CORE_INFO_VERSION
+2.0
+<END>
+
+<BEGIN> projectList
+$(PRJ_DIR)/BerkeleyDB20small.wpj \
+	$(PRJ_DIR)/db_archive/db_archive20.wpj \
+	$(PRJ_DIR)/db_checkpoint/db_checkpoint20.wpj \
+	$(PRJ_DIR)/db_deadlock/db_deadlock20.wpj \
+	$(PRJ_DIR)/db_dump/db_dump20.wpj \
+	$(PRJ_DIR)/db_load/db_load20.wpj \
+	$(PRJ_DIR)/db_printlog/db_printlog20.wpj \
+	$(PRJ_DIR)/db_recover/db_recover20.wpj \
+	$(PRJ_DIR)/db_stat/db_stat20.wpj \
+	$(PRJ_DIR)/db_upgrade/db_upgrade20.wpj \
+	$(PRJ_DIR)/db_verify/db_verify20.wpj \
+	$(PRJ_DIR)/dbdemo/dbdemo20.wpj
+<END>
+
+<BEGIN> userComments
+
+<END>
+

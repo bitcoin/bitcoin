@@ -1,0 +1,5 @@
+README.TXT: Oracle Berkeley DB @DB_VERSION_MAJOR@.@DB_VERSION_MINOR@ Release v@DB_VERSION_MAJOR@.@DB_VERSION_MINOR@.@DB_VERSION_PATCH@
+
+Information on known problems, changes introduced with the
+current revision of the CD-ROM, and other product bulletins
+can be obtained from the Oracle web site.

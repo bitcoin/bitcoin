@@ -1,0 +1,29 @@
+Document file - DO NOT EDIT
+
+<BEGIN> CORE_INFO_TYPE
+Workspace
+<END>
+
+<BEGIN> CORE_INFO_VERSION
+2.2
+<END>
+
+<BEGIN> projectList
+$(PRJ_DIR)/BerkeleyDB22.wpj \
+	$(PRJ_DIR)/db_archive/db_archive22.wpj \
+	$(PRJ_DIR)/db_checkpoint/db_checkpoint22.wpj \
+	$(PRJ_DIR)/db_deadlock/db_deadlock22.wpj \
+	$(PRJ_DIR)/db_dump/db_dump22.wpj \
+	$(PRJ_DIR)/db_load/db_load22.wpj \
+	$(PRJ_DIR)/db_printlog/db_printlog22.wpj \
+	$(PRJ_DIR)/db_recover/db_recover22.wpj \
+	$(PRJ_DIR)/db_stat/db_stat22.wpj \
+	$(PRJ_DIR)/db_upgrade/db_upgrade22.wpj \
+	$(PRJ_DIR)/db_verify/db_verify22.wpj \
+	$(PRJ_DIR)/dbdemo/dbdemo22.wpj
+<END>
+
+<BEGIN> userComments
+
+<END>
+

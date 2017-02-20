@@ -1,0 +1,468 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{FD045D60-ABAD-4A6C-9794-9BFB085FC3E7}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>14.0.25431.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>..\build_windows\$(Platform)\Debug\</OutDir>
+    <IntDir>./$(OutDir)db\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>..\build_windows\$(Platform)\Release\</OutDir>
+    <IntDir>./$(OutDir)db\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>..\build_windows\$(Platform)\Debug\</OutDir>
+    <IntDir>./$(OutDir)db\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>..\build_windows\$(Platform)\Release\</OutDir>
+    <IntDir>./$(OutDir)db\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <MinimalRebuild>true</MinimalRebuild>
+      <AdditionalIncludeDirectories>../build_windows;../;../dbinc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_DEBUG;DB_CREATE_DLL;WIN32;_UNICODE;UNICODE;DIAGNOSTIC;CONFIG_TEST;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <PrecompiledHeaderOutputFile>./$(OutDir)db.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>$(OutDir)db/</AssemblerListingLocation>
+      <ObjectFileName>$(OutDir)db/</ObjectFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <Link>
+      <AdditionalOptions>/machine:x86 /FIXED:NO /export:__db_assert %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)libdb48d.dll</OutputFile>
+      <ProgramDatabaseFile>$(OutDir)libdb48d.pdb</ProgramDatabaseFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ImportLibrary>$(OutDir)libdb48d.lib</ImportLibrary>
+      <ModuleDefinitionFile>..\build_windows\libdb.def</ModuleDefinitionFile>
+      <TargetMachine>NotSet</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <MinimalRebuild>true</MinimalRebuild>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>../build_windows;../;../dbinc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;NDEBUG;DB_CREATE_DLL;WIN32;_UNICODE;UNICODE;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader />
+      <PrecompiledHeaderOutputFile>./$(OutDir)db.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>$(OutDir)db/</AssemblerListingLocation>
+      <ObjectFileName>$(OutDir)db/</ObjectFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <Link>
+      <AdditionalOptions>/machine:x86 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)libdb48.dll</OutputFile>
+      <ProgramDatabaseFile>$(OutDir)libdb48.pdb</ProgramDatabaseFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ImportLibrary>$(OutDir)libdb48.lib</ImportLibrary>
+      <ModuleDefinitionFile>..\build_windows\libdb.def</ModuleDefinitionFile>
+      <TargetMachine>NotSet</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <MinimalRebuild>true</MinimalRebuild>
+      <AdditionalIncludeDirectories>../build_windows;../;../dbinc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_DEBUG;DB_CREATE_DLL;WIN32;_UNICODE;UNICODE;DIAGNOSTIC;CONFIG_TEST;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <PrecompiledHeaderOutputFile>./$(OutDir)db.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>$(OutDir)db/</AssemblerListingLocation>
+      <ObjectFileName>$(OutDir)db/</ObjectFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <Link>
+      <AdditionalOptions>/machine:x64 /FIXED:NO /export:__db_assert %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)libdb48d.dll</OutputFile>
+      <ProgramDatabaseFile>$(OutDir)libdb48d.pdb</ProgramDatabaseFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ImportLibrary>$(OutDir)libdb48d.lib</ImportLibrary>
+      <ModuleDefinitionFile>..\build_windows\libdb.def</ModuleDefinitionFile>
+      <TargetMachine>NotSet</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <MinimalRebuild>true</MinimalRebuild>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>../build_windows;../;../dbinc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;NDEBUG;DB_CREATE_DLL;WIN32;_UNICODE;UNICODE;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader />
+      <PrecompiledHeaderOutputFile>./$(OutDir)db.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>$(OutDir)db/</AssemblerListingLocation>
+      <ObjectFileName>$(OutDir)db/</ObjectFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <Link>
+      <AdditionalOptions>/machine:x64 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)libdb48.dll</OutputFile>
+      <ProgramDatabaseFile>$(OutDir)libdb48.pdb</ProgramDatabaseFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ImportLibrary>$(OutDir)libdb48.lib</ImportLibrary>
+      <ModuleDefinitionFile>..\build_windows\libdb.def</ModuleDefinitionFile>
+      <TargetMachine>NotSet</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\btree\btree_auto.c" />
+    <ClCompile Include="..\btree\bt_compact.c" />
+    <ClCompile Include="..\btree\bt_compare.c" />
+    <ClCompile Include="..\btree\bt_compress.c" />
+    <ClCompile Include="..\btree\bt_conv.c" />
+    <ClCompile Include="..\btree\bt_curadj.c" />
+    <ClCompile Include="..\btree\bt_cursor.c" />
+    <ClCompile Include="..\btree\bt_delete.c" />
+    <ClCompile Include="..\btree\bt_method.c" />
+    <ClCompile Include="..\btree\bt_open.c" />
+    <ClCompile Include="..\btree\bt_put.c" />
+    <ClCompile Include="..\btree\bt_rec.c" />
+    <ClCompile Include="..\btree\bt_reclaim.c" />
+    <ClCompile Include="..\btree\bt_recno.c" />
+    <ClCompile Include="..\btree\bt_rsearch.c" />
+    <ClCompile Include="..\btree\bt_search.c" />
+    <ClCompile Include="..\btree\bt_split.c" />
+    <ClCompile Include="..\btree\bt_stat.c" />
+    <ClCompile Include="..\btree\bt_upgrade.c" />
+    <ClCompile Include="..\btree\bt_verify.c" />
+    <ClCompile Include="..\clib\strsep.c" />
+    <ClCompile Include="..\common\dbt.c" />
+    <ClCompile Include="..\common\db_byteorder.c" />
+    <ClCompile Include="..\common\db_compint.c" />
+    <ClCompile Include="..\common\db_err.c" />
+    <ClCompile Include="..\common\db_getlong.c" />
+    <ClCompile Include="..\common\db_idspace.c" />
+    <ClCompile Include="..\common\db_log2.c" />
+    <ClCompile Include="..\common\db_shash.c" />
+    <ClCompile Include="..\common\mkpath.c" />
+    <ClCompile Include="..\common\openflags.c" />
+    <ClCompile Include="..\common\os_method.c" />
+    <ClCompile Include="..\common\util_cache.c" />
+    <ClCompile Include="..\common\util_log.c" />
+    <ClCompile Include="..\common\util_sig.c" />
+    <ClCompile Include="..\common\zerofill.c" />
+    <ClCompile Include="..\crypto\aes_method.c" />
+    <ClCompile Include="..\crypto\crypto.c" />
+    <ClCompile Include="..\crypto\mersenne\mt19937db.c" />
+    <ClCompile Include="..\crypto\rijndael\rijndael-alg-fst.c" />
+    <ClCompile Include="..\crypto\rijndael\rijndael-api-fst.c" />
+    <ClCompile Include="..\cxx\cxx_db.cpp" />
+    <ClCompile Include="..\cxx\cxx_dbc.cpp" />
+    <ClCompile Include="..\cxx\cxx_dbt.cpp" />
+    <ClCompile Include="..\cxx\cxx_env.cpp" />
+    <ClCompile Include="..\cxx\cxx_except.cpp" />
+    <ClCompile Include="..\cxx\cxx_lock.cpp" />
+    <ClCompile Include="..\cxx\cxx_logc.cpp" />
+    <ClCompile Include="..\cxx\cxx_mpool.cpp" />
+    <ClCompile Include="..\cxx\cxx_multi.cpp" />
+    <ClCompile Include="..\cxx\cxx_seq.cpp" />
+    <ClCompile Include="..\cxx\cxx_txn.cpp" />
+    <ClCompile Include="..\dbm\dbm.c" />
+    <ClCompile Include="..\dbreg\dbreg.c" />
+    <ClCompile Include="..\dbreg\dbreg_auto.c" />
+    <ClCompile Include="..\dbreg\dbreg_rec.c" />
+    <ClCompile Include="..\dbreg\dbreg_stat.c" />
+    <ClCompile Include="..\dbreg\dbreg_util.c" />
+    <ClCompile Include="..\db\crdel_auto.c" />
+    <ClCompile Include="..\db\crdel_rec.c" />
+    <ClCompile Include="..\db\db.c" />
+    <ClCompile Include="..\db\db_am.c" />
+    <ClCompile Include="..\db\db_auto.c" />
+    <ClCompile Include="..\db\db_cam.c" />
+    <ClCompile Include="..\db\db_cds.c" />
+    <ClCompile Include="..\db\db_conv.c" />
+    <ClCompile Include="..\db\db_dispatch.c" />
+    <ClCompile Include="..\db\db_dup.c" />
+    <ClCompile Include="..\db\db_iface.c" />
+    <ClCompile Include="..\db\db_join.c" />
+    <ClCompile Include="..\db\db_meta.c" />
+    <ClCompile Include="..\db\db_method.c" />
+    <ClCompile Include="..\db\db_open.c" />
+    <ClCompile Include="..\db\db_overflow.c" />
+    <ClCompile Include="..\db\db_ovfl_vrfy.c" />
+    <ClCompile Include="..\db\db_pr.c" />
+    <ClCompile Include="..\db\db_rec.c" />
+    <ClCompile Include="..\db\db_reclaim.c" />
+    <ClCompile Include="..\db\db_remove.c" />
+    <ClCompile Include="..\db\db_rename.c" />
+    <ClCompile Include="..\db\db_ret.c" />
+    <ClCompile Include="..\db\db_setid.c" />
+    <ClCompile Include="..\db\db_setlsn.c" />
+    <ClCompile Include="..\db\db_sort_multiple.c" />
+    <ClCompile Include="..\db\db_stati.c" />
+    <ClCompile Include="..\db\db_truncate.c" />
+    <ClCompile Include="..\db\db_upg.c" />
+    <ClCompile Include="..\db\db_upg_opd.c" />
+    <ClCompile Include="..\db\db_vrfy.c" />
+    <ClCompile Include="..\db\db_vrfyutil.c" />
+    <ClCompile Include="..\db\partition.c" />
+    <ClCompile Include="..\env\env_alloc.c" />
+    <ClCompile Include="..\env\env_config.c" />
+    <ClCompile Include="..\env\env_failchk.c" />
+    <ClCompile Include="..\env\env_file.c" />
+    <ClCompile Include="..\env\env_globals.c" />
+    <ClCompile Include="..\env\env_method.c" />
+    <ClCompile Include="..\env\env_name.c" />
+    <ClCompile Include="..\env\env_open.c" />
+    <ClCompile Include="..\env\env_recover.c" />
+    <ClCompile Include="..\env\env_region.c" />
+    <ClCompile Include="..\env\env_register.c" />
+    <ClCompile Include="..\env\env_sig.c" />
+    <ClCompile Include="..\env\env_stat.c" />
+    <ClCompile Include="..\fileops\fileops_auto.c" />
+    <ClCompile Include="..\fileops\fop_basic.c" />
+    <ClCompile Include="..\fileops\fop_rec.c" />
+    <ClCompile Include="..\fileops\fop_util.c" />
+    <ClCompile Include="..\hash\hash.c" />
+    <ClCompile Include="..\hash\hash_auto.c" />
+    <ClCompile Include="..\hash\hash_conv.c" />
+    <ClCompile Include="..\hash\hash_dup.c" />
+    <ClCompile Include="..\hash\hash_func.c" />
+    <ClCompile Include="..\hash\hash_meta.c" />
+    <ClCompile Include="..\hash\hash_method.c" />
+    <ClCompile Include="..\hash\hash_open.c" />
+    <ClCompile Include="..\hash\hash_page.c" />
+    <ClCompile Include="..\hash\hash_rec.c" />
+    <ClCompile Include="..\hash\hash_reclaim.c" />
+    <ClCompile Include="..\hash\hash_stat.c" />
+    <ClCompile Include="..\hash\hash_upgrade.c" />
+    <ClCompile Include="..\hash\hash_verify.c" />
+    <ClCompile Include="..\hmac\hmac.c" />
+    <ClCompile Include="..\hmac\sha1.c" />
+    <ClCompile Include="..\hsearch\hsearch.c" />
+    <ClCompile Include="..\lock\lock.c" />
+    <ClCompile Include="..\lock\lock_deadlock.c" />
+    <ClCompile Include="..\lock\lock_failchk.c" />
+    <ClCompile Include="..\lock\lock_id.c" />
+    <ClCompile Include="..\lock\lock_list.c" />
+    <ClCompile Include="..\lock\lock_method.c" />
+    <ClCompile Include="..\lock\lock_region.c" />
+    <ClCompile Include="..\lock\lock_stat.c" />
+    <ClCompile Include="..\lock\lock_timer.c" />
+    <ClCompile Include="..\lock\lock_util.c" />
+    <ClCompile Include="..\log\log.c" />
+    <ClCompile Include="..\log\log_archive.c" />
+    <ClCompile Include="..\log\log_compare.c" />
+    <ClCompile Include="..\log\log_debug.c" />
+    <ClCompile Include="..\log\log_get.c" />
+    <ClCompile Include="..\log\log_method.c" />
+    <ClCompile Include="..\log\log_put.c" />
+    <ClCompile Include="..\log\log_stat.c" />
+    <ClCompile Include="..\mp\mp_alloc.c" />
+    <ClCompile Include="..\mp\mp_bh.c" />
+    <ClCompile Include="..\mp\mp_fget.c" />
+    <ClCompile Include="..\mp\mp_fmethod.c" />
+    <ClCompile Include="..\mp\mp_fopen.c" />
+    <ClCompile Include="..\mp\mp_fput.c" />
+    <ClCompile Include="..\mp\mp_fset.c" />
+    <ClCompile Include="..\mp\mp_method.c" />
+    <ClCompile Include="..\mp\mp_mvcc.c" />
+    <ClCompile Include="..\mp\mp_region.c" />
+    <ClCompile Include="..\mp\mp_register.c" />
+    <ClCompile Include="..\mp\mp_resize.c" />
+    <ClCompile Include="..\mp\mp_stat.c" />
+    <ClCompile Include="..\mp\mp_sync.c" />
+    <ClCompile Include="..\mp\mp_trickle.c" />
+    <ClCompile Include="..\mutex\mut_alloc.c" />
+    <ClCompile Include="..\mutex\mut_failchk.c" />
+    <ClCompile Include="..\mutex\mut_method.c" />
+    <ClCompile Include="..\mutex\mut_region.c" />
+    <ClCompile Include="..\mutex\mut_stat.c" />
+    <ClCompile Include="..\mutex\mut_win32.c" />
+    <ClCompile Include="..\os\os_abort.c" />
+    <ClCompile Include="..\os\os_addrinfo.c" />
+    <ClCompile Include="..\os\os_alloc.c" />
+    <ClCompile Include="..\os\os_ctime.c" />
+    <ClCompile Include="..\os\os_pid.c" />
+    <ClCompile Include="..\os\os_root.c" />
+    <ClCompile Include="..\os\os_rpath.c" />
+    <ClCompile Include="..\os\os_stack.c" />
+    <ClCompile Include="..\os\os_tmpdir.c" />
+    <ClCompile Include="..\os\os_uid.c" />
+    <ClCompile Include="..\os_windows\os_abs.c" />
+    <ClCompile Include="..\os_windows\os_clock.c" />
+    <ClCompile Include="..\os_windows\os_config.c" />
+    <ClCompile Include="..\os_windows\os_cpu.c" />
+    <ClCompile Include="..\os_windows\os_dir.c" />
+    <ClCompile Include="..\os_windows\os_errno.c" />
+    <ClCompile Include="..\os_windows\os_fid.c" />
+    <ClCompile Include="..\os_windows\os_flock.c" />
+    <ClCompile Include="..\os_windows\os_fsync.c" />
+    <ClCompile Include="..\os_windows\os_getenv.c" />
+    <ClCompile Include="..\os_windows\os_handle.c" />
+    <ClCompile Include="..\os_windows\os_map.c" />
+    <ClCompile Include="..\os_windows\os_mkdir.c" />
+    <ClCompile Include="..\os_windows\os_open.c" />
+    <ClCompile Include="..\os_windows\os_rename.c" />
+    <ClCompile Include="..\os_windows\os_rw.c" />
+    <ClCompile Include="..\os_windows\os_seek.c" />
+    <ClCompile Include="..\os_windows\os_stat.c" />
+    <ClCompile Include="..\os_windows\os_truncate.c" />
+    <ClCompile Include="..\os_windows\os_unlink.c" />
+    <ClCompile Include="..\os_windows\os_yield.c" />
+    <ClCompile Include="..\qam\qam.c" />
+    <ClCompile Include="..\qam\qam_auto.c" />
+    <ClCompile Include="..\qam\qam_conv.c" />
+    <ClCompile Include="..\qam\qam_files.c" />
+    <ClCompile Include="..\qam\qam_method.c" />
+    <ClCompile Include="..\qam\qam_open.c" />
+    <ClCompile Include="..\qam\qam_rec.c" />
+    <ClCompile Include="..\qam\qam_stat.c" />
+    <ClCompile Include="..\qam\qam_upgrade.c" />
+    <ClCompile Include="..\qam\qam_verify.c" />
+    <ClCompile Include="..\repmgr\repmgr_auto.c" />
+    <ClCompile Include="..\repmgr\repmgr_elect.c" />
+    <ClCompile Include="..\repmgr\repmgr_method.c" />
+    <ClCompile Include="..\repmgr\repmgr_msg.c" />
+    <ClCompile Include="..\repmgr\repmgr_net.c" />
+    <ClCompile Include="..\repmgr\repmgr_queue.c" />
+    <ClCompile Include="..\repmgr\repmgr_sel.c" />
+    <ClCompile Include="..\repmgr\repmgr_stat.c" />
+    <ClCompile Include="..\repmgr\repmgr_util.c" />
+    <ClCompile Include="..\repmgr\repmgr_windows.c" />
+    <ClCompile Include="..\rep\rep_auto.c" />
+    <ClCompile Include="..\rep\rep_backup.c" />
+    <ClCompile Include="..\rep\rep_elect.c" />
+    <ClCompile Include="..\rep\rep_lease.c" />
+    <ClCompile Include="..\rep\rep_log.c" />
+    <ClCompile Include="..\rep\rep_method.c" />
+    <ClCompile Include="..\rep\rep_record.c" />
+    <ClCompile Include="..\rep\rep_region.c" />
+    <ClCompile Include="..\rep\rep_stat.c" />
+    <ClCompile Include="..\rep\rep_util.c" />
+    <ClCompile Include="..\rep\rep_verify.c" />
+    <ClCompile Include="..\sequence\sequence.c" />
+    <ClCompile Include="..\sequence\seq_stat.c" />
+    <ClCompile Include="..\txn\txn.c" />
+    <ClCompile Include="..\txn\txn_auto.c" />
+    <ClCompile Include="..\txn\txn_chkpt.c" />
+    <ClCompile Include="..\txn\txn_failchk.c" />
+    <ClCompile Include="..\txn\txn_method.c" />
+    <ClCompile Include="..\txn\txn_rec.c" />
+    <ClCompile Include="..\txn\txn_recover.c" />
+    <ClCompile Include="..\txn\txn_region.c" />
+    <ClCompile Include="..\txn\txn_stat.c" />
+    <ClCompile Include="..\txn\txn_util.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="libdb.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="libdb.rc">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_DEBUG;$(NoInherit));%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">_DEBUG;$(NoInherit));%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NDEBUG;$(NoInherit));%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NDEBUG;$(NoInherit));%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

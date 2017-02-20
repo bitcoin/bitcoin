@@ -1,0 +1,6 @@
+# NeXT needs /usr/lib/libposix.a to load along with DB_File.so
+if ( $dlsrc eq "dl_next.xs" ) {
+    @DynaLoader::dl_resolve_using = ( '/usr/lib/libposix.a' );
+}
+
+1;

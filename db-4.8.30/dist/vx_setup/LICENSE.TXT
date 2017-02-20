@@ -1,0 +1,2 @@
+Copyright (c) 1996-2009 Oracle.  All rights reserved.
+See the file LICENSE for redistribution information.

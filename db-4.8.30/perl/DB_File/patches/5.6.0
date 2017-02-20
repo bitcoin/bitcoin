@@ -1,0 +1,294 @@
+diff -cr perl-5.6.0.orig/Configure perl-5.6.0/Configure
+*** perl-5.6.0.orig/Configure	Wed Mar 22 20:36:37 2000
+--- perl-5.6.0/Configure	Sun Sep 17 23:40:15 2000
+***************
+*** 217,222 ****
+--- 217,223 ----
+  nm=''
+  nroff=''
+  perl=''
++ perllibs=''
+  pg=''
+  pmake=''
+  pr=''
+***************
+*** 14971,14976 ****
+--- 14972,14985 ----
+  shift
+  extensions="$*"
+  
++ : Remove libraries needed only for extensions
++ : The appropriate ext/Foo/Makefile.PL will add them back in, if
++ : necessary.
++ set X `echo " $libs " | 
++   sed -e 's@ -lndbm @ @' -e 's@ -lgdbm @ @' -e 's@ -ldbm @ @' -e 's@ -ldb @ @'` 
++ shift
++ perllibs="$*"
++ 
+  : Remove build directory name from cppstdin so it can be used from
+  : either the present location or the final installed location.
+  echo " "
+***************
+*** 15640,15645 ****
+--- 15649,15655 ----
+  path_sep='$path_sep'
+  perl5='$perl5'
+  perl='$perl'
++ perllibs='$perllibs'
+  perladmin='$perladmin'
+  perlpath='$perlpath'
+  pg='$pg'
+diff -cr perl-5.6.0.orig/Makefile.SH perl-5.6.0/Makefile.SH
+*** perl-5.6.0.orig/Makefile.SH	Sat Mar 11 16:05:24 2000
+--- perl-5.6.0/Makefile.SH	Sun Sep 17 23:40:15 2000
+***************
+*** 70,76 ****
+  		*)	shrpldflags="$shrpldflags -b noentry"
+  			;;
+  		esac
+! 	        shrpldflags="$shrpldflags $ldflags $libs $cryptlib"
+  		linklibperl="-L $archlibexp/CORE -L `pwd | sed 's/\/UU$//'` -lperl"
+  		;;
+  	hpux*)
+--- 70,76 ----
+  		*)	shrpldflags="$shrpldflags -b noentry"
+  			;;
+  		esac
+! 	        shrpldflags="$shrpldflags $ldflags $perllibs $cryptlib"
+  		linklibperl="-L $archlibexp/CORE -L `pwd | sed 's/\/UU$//'` -lperl"
+  		;;
+  	hpux*)
+***************
+*** 176,182 ****
+  ext = \$(dynamic_ext) \$(static_ext) \$(nonxs_ext)
+  DYNALOADER = lib/auto/DynaLoader/DynaLoader\$(LIB_EXT)
+  
+! libs = $libs $cryptlib
+  
+  public = perl $suidperl utilities translators
+  
+--- 176,182 ----
+  ext = \$(dynamic_ext) \$(static_ext) \$(nonxs_ext)
+  DYNALOADER = lib/auto/DynaLoader/DynaLoader\$(LIB_EXT)
+  
+! libs = $perllibs $cryptlib
+  
+  public = perl $suidperl utilities translators
+  
+***************
+*** 333,339 ****
+  case "$osname" in
+  aix)
+  	$spitshell >>Makefile <<!GROK!THIS!
+! LIBS			= $libs
+  # In AIX we need to change this for building Perl itself from
+  # its earlier definition (which is for building external
+  # extensions *after* Perl has been built and installed)
+--- 333,339 ----
+  case "$osname" in
+  aix)
+  	$spitshell >>Makefile <<!GROK!THIS!
+! LIBS			= $perllibs
+  # In AIX we need to change this for building Perl itself from
+  # its earlier definition (which is for building external
+  # extensions *after* Perl has been built and installed)
+diff -cr perl-5.6.0.orig/lib/ExtUtils/Embed.pm perl-5.6.0/lib/ExtUtils/Embed.pm
+*** perl-5.6.0.orig/lib/ExtUtils/Embed.pm	Sun Jan 23 12:08:32 2000
+--- perl-5.6.0/lib/ExtUtils/Embed.pm	Sun Sep 17 23:40:15 2000
+***************
+*** 193,199 ****
+      @path = $path ? split(/:/, $path) : @INC;
+  
+      push(@potential_libs, @link_args)    if scalar @link_args;
+!     push(@potential_libs, $Config{libs}) if defined $std;
+  
+      push(@mods, static_ext()) if $std;
+  
+--- 193,199 ----
+      @path = $path ? split(/:/, $path) : @INC;
+  
+      push(@potential_libs, @link_args)    if scalar @link_args;
+!     push(@potential_libs, $Config{perllibs}) if defined $std;
+  
+      push(@mods, static_ext()) if $std;
+  
+diff -cr perl-5.6.0.orig/lib/ExtUtils/Liblist.pm perl-5.6.0/lib/ExtUtils/Liblist.pm
+*** perl-5.6.0.orig/lib/ExtUtils/Liblist.pm	Wed Mar 22 16:16:31 2000
+--- perl-5.6.0/lib/ExtUtils/Liblist.pm	Sun Sep 17 23:40:15 2000
+***************
+*** 17,34 ****
+  
+  sub _unix_os2_ext {
+      my($self,$potential_libs, $verbose) = @_;
+!     if ($^O =~ 'os2' and $Config{libs}) { 
+  	# Dynamic libraries are not transitive, so we may need including
+  	# the libraries linked against perl.dll again.
+  
+  	$potential_libs .= " " if $potential_libs;
+! 	$potential_libs .= $Config{libs};
+      }
+      return ("", "", "", "") unless $potential_libs;
+      warn "Potential libraries are '$potential_libs':\n" if $verbose;
+  
+      my($so)   = $Config{'so'};
+!     my($libs) = $Config{'libs'};
+      my $Config_libext = $Config{lib_ext} || ".a";
+  
+  
+--- 17,34 ----
+  
+  sub _unix_os2_ext {
+      my($self,$potential_libs, $verbose) = @_;
+!     if ($^O =~ 'os2' and $Config{perllibs}) { 
+  	# Dynamic libraries are not transitive, so we may need including
+  	# the libraries linked against perl.dll again.
+  
+  	$potential_libs .= " " if $potential_libs;
+! 	$potential_libs .= $Config{perllibs};
+      }
+      return ("", "", "", "") unless $potential_libs;
+      warn "Potential libraries are '$potential_libs':\n" if $verbose;
+  
+      my($so)   = $Config{'so'};
+!     my($libs) = $Config{'perllibs'};
+      my $Config_libext = $Config{lib_ext} || ".a";
+  
+  
+***************
+*** 198,204 ****
+      my $BC		= 1 if $cc =~ /^bcc/i;
+      my $GC		= 1 if $cc =~ /^gcc/i;
+      my $so		= $Config{'so'};
+!     my $libs		= $Config{'libs'};
+      my $libpth		= $Config{'libpth'};
+      my $libext		= $Config{'lib_ext'} || ".lib";
+  
+--- 198,204 ----
+      my $BC		= 1 if $cc =~ /^bcc/i;
+      my $GC		= 1 if $cc =~ /^gcc/i;
+      my $so		= $Config{'so'};
+!     my $libs		= $Config{'perllibs'};
+      my $libpth		= $Config{'libpth'};
+      my $libext		= $Config{'lib_ext'} || ".lib";
+  
+***************
+*** 338,344 ****
+                   $self->{CCFLAS}   || $Config{'ccflags'};
+    @crtls = ( ($dbgqual =~ m-/Debug-i ? $Config{'dbgprefix'} : '')
+                . 'PerlShr/Share' );
+!   push(@crtls, grep { not /\(/ } split /\s+/, $Config{'libs'});
+    push(@crtls, grep { not /\(/ } split /\s+/, $Config{'libc'});
+    # In general, we pass through the basic libraries from %Config unchanged.
+    # The one exception is that if we're building in the Perl source tree, and
+--- 338,344 ----
+                   $self->{CCFLAS}   || $Config{'ccflags'};
+    @crtls = ( ($dbgqual =~ m-/Debug-i ? $Config{'dbgprefix'} : '')
+                . 'PerlShr/Share' );
+!   push(@crtls, grep { not /\(/ } split /\s+/, $Config{'perllibs'});
+    push(@crtls, grep { not /\(/ } split /\s+/, $Config{'libc'});
+    # In general, we pass through the basic libraries from %Config unchanged.
+    # The one exception is that if we're building in the Perl source tree, and
+***************
+*** 624,630 ****
+  =item *
+  
+  If C<$potential_libs> is empty, the return value will be empty.
+! Otherwise, the libraries specified by C<$Config{libs}> (see Config.pm)
+  will be appended to the list of C<$potential_libs>.  The libraries
+  will be searched for in the directories specified in C<$potential_libs>,
+  C<$Config{libpth}>, and in C<$Config{installarchlib}/CORE>.
+--- 624,630 ----
+  =item *
+  
+  If C<$potential_libs> is empty, the return value will be empty.
+! Otherwise, the libraries specified by C<$Config{perllibs}> (see Config.pm)
+  will be appended to the list of C<$potential_libs>.  The libraries
+  will be searched for in the directories specified in C<$potential_libs>,
+  C<$Config{libpth}>, and in C<$Config{installarchlib}/CORE>.
+***************
+*** 668,674 ****
+  alphanumeric characters are treated as flags.  Unknown flags will be ignored.
+  
+  An entry that matches C</:nodefault/i> disables the appending of default
+! libraries found in C<$Config{libs}> (this should be only needed very rarely).
+  
+  An entry that matches C</:nosearch/i> disables all searching for
+  the libraries specified after it.  Translation of C<-Lfoo> and
+--- 668,674 ----
+  alphanumeric characters are treated as flags.  Unknown flags will be ignored.
+  
+  An entry that matches C</:nodefault/i> disables the appending of default
+! libraries found in C<$Config{perllibs}> (this should be only needed very rarely).
+  
+  An entry that matches C</:nosearch/i> disables all searching for
+  the libraries specified after it.  Translation of C<-Lfoo> and
+***************
+*** 678,684 ****
+  
+  An entry that matches C</:search/i> reenables searching for
+  the libraries specified after it.  You can put it at the end to
+! enable searching for default libraries specified by C<$Config{libs}>.
+  
+  =item *
+  
+--- 678,684 ----
+  
+  An entry that matches C</:search/i> reenables searching for
+  the libraries specified after it.  You can put it at the end to
+! enable searching for default libraries specified by C<$Config{perllibs}>.
+  
+  =item *
+  
+diff -cr perl-5.6.0.orig/lib/ExtUtils/MM_Unix.pm perl-5.6.0/lib/ExtUtils/MM_Unix.pm
+*** perl-5.6.0.orig/lib/ExtUtils/MM_Unix.pm	Thu Mar  2 17:52:52 2000
+--- perl-5.6.0/lib/ExtUtils/MM_Unix.pm	Sun Sep 17 23:40:15 2000
+***************
+*** 2450,2456 ****
+  MAP_STATIC    = ",
+  join(" \\\n\t", reverse sort keys %static), "
+  
+! MAP_PRELIBS   = $Config::Config{libs} $Config::Config{cryptlib}
+  ";
+  
+      if (defined $libperl) {
+--- 2450,2456 ----
+  MAP_STATIC    = ",
+  join(" \\\n\t", reverse sort keys %static), "
+  
+! MAP_PRELIBS   = $Config::Config{perllibs} $Config::Config{cryptlib}
+  ";
+  
+      if (defined $libperl) {
+diff -cr perl-5.6.0.orig/myconfig.SH perl-5.6.0/myconfig.SH
+*** perl-5.6.0.orig/myconfig.SH	Sat Feb 26 06:34:49 2000
+--- perl-5.6.0/myconfig.SH	Sun Sep 17 23:41:17 2000
+***************
+*** 48,54 ****
+    Linker and Libraries:
+      ld='$ld', ldflags ='$ldflags'
+      libpth=$libpth
+!     libs=$libs
+      libc=$libc, so=$so, useshrplib=$useshrplib, libperl=$libperl
+    Dynamic Linking:
+      dlsrc=$dlsrc, dlext=$dlext, d_dlsymun=$d_dlsymun, ccdlflags='$ccdlflags'
+--- 48,54 ----
+    Linker and Libraries:
+      ld='$ld', ldflags ='$ldflags'
+      libpth=$libpth
+!     libs=$perllibs
+      libc=$libc, so=$so, useshrplib=$useshrplib, libperl=$libperl
+    Dynamic Linking:
+      dlsrc=$dlsrc, dlext=$dlext, d_dlsymun=$d_dlsymun, ccdlflags='$ccdlflags'
+diff -cr perl-5.6.0.orig/patchlevel.h perl-5.6.0/patchlevel.h
+*** perl-5.6.0.orig/patchlevel.h	Wed Mar 22 20:23:11 2000
+--- perl-5.6.0/patchlevel.h	Sun Sep 17 23:40:15 2000
+***************
+*** 70,75 ****
+--- 70,76 ----
+  #if !defined(PERL_PATCHLEVEL_H_IMPLICIT) && !defined(LOCAL_PATCH_COUNT)
+  static	char	*local_patches[] = {
+  	NULL
++ 	,"NODB-1.0 - remove -ldb from core perl binary."
+  	,NULL
+  };
+  

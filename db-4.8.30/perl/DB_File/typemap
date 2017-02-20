@@ -1,0 +1,57 @@
+# typemap for Perl 5 interface to Berkeley 
+#
+# written by Paul Marquess <Paul.Marquess@btinternet.com>
+# last modified 20th June 2004
+# version 1.809
+#
+#################################### DB SECTION
+#
+# 
+
+u_int			T_U_INT
+DB_File			T_PTROBJ
+DBT			T_dbtdatum
+DBTKEY			T_dbtkeydatum
+
+INPUT
+T_dbtkeydatum
+    {
+	SV * my_sv = $arg;
+	DBM_ckFilter(my_sv, filter_store_key, \"filter_store_key\");
+	DBT_clear($var) ;
+	SvGETMAGIC(my_sv) ;
+        if (db->type == DB_RECNO) {
+	    if (SvOK(my_sv))
+	        Value = GetRecnoKey(aTHX_ db, SvIV(my_sv)) ; 
+            else
+	        Value = 1 ;
+	    $var.data = & Value; 
+	    $var.size = (int)sizeof(recno_t);
+        }
+        else if (SvOK(my_sv)) {
+	    STRLEN len;
+	    $var.data = SvPVbyte(my_sv, len);
+	    $var.size = (int)len;
+	}
+    }
+T_dbtdatum
+    {
+	SV * my_sv = $arg;
+	DBM_ckFilter(my_sv, filter_store_value, \"filter_store_value\");
+	DBT_clear($var) ;
+	SvGETMAGIC(my_sv) ;
+	if (SvOK(my_sv)) {
+	    STRLEN len;
+	    $var.data = SvPVbyte(my_sv, len);
+	    $var.size = (int)len;
+	}
+    }
+
+OUTPUT
+
+T_dbtkeydatum
+	OutputKey($arg, $var)
+T_dbtdatum
+	OutputValue($arg, $var)
+T_PTROBJ
+        sv_setref_pv($arg, dbtype, (void*)$var);

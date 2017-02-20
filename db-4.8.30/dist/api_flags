@@ -1,0 +1,473 @@
+db_env_create
+	DB_CXX_NO_EXCEPTIONS		# C++: return error values
+	DB_RPCCLIENT			# An RPC client environment
+
+DbEnv.dbremove
+	DB_AUTO_COMMIT			# Implied transaction
+	DB_TXN_NOT_DURABLE		# Don't log the remove
+
+DbEnv.dbrename
+	DB_AUTO_COMMIT			# Implied transaction
+
+DbEnv.fileid_reset
+	DB_ENCRYPT			# File contains encrypted databases
+
+DbEnv.open
+	DB_CREATE			# Create as necessary
+	DB_FAILCHK			# Run failchk on open
+	DB_INIT_CDB			# Concurrent Access Methods
+	DB_INIT_LOCK			# Initialize locking
+	DB_INIT_LOG			# Initialize logging
+	DB_INIT_MPOOL			# Initialize mpool
+	DB_INIT_REP			# Initialize replication
+	DB_INIT_TXN			# Initialize transactions
+	DB_LOCKDOWN			# Lock memory into physical core
+	DB_PRIVATE			# DB_ENV is process local
+	DB_RECOVER			# Run normal recovery
+	DB_RECOVER_FATAL		# Run catastrophic recovery
+	DB_REGISTER			# Multi-process registry
+	DB_SYSTEM_MEM			# Use system-backed memory
+	DB_THREAD			# Handle is free-threaded
+	DB_USE_ENVIRON			# Use the environment
+	DB_USE_ENVIRON_ROOT		# Use the environment if root
+
+DbEnv.lock_stat
+	DB_STAT_CLEAR			# Clear stats after return
+
+DbEnv.lock_stat_print
+	DB_STAT_ALL			# Everything
+	DB_STAT_CLEAR			# Clear stats after return
+	DB_STAT_LOCK_CONF		# Print lock conflict matrix
+	DB_STAT_LOCK_LOCKERS		# Print lockers
+	DB_STAT_LOCK_OBJECTS		# Print lock objects
+	DB_STAT_LOCK_PARAMS		# Print lock parameters
+	DB_STAT_SUBSYSTEM		# Print subsystems
+
+DbEnv.lock_vec
+	DB_LOCK_NOWAIT			# Don't wait for an unavailable lock
+	DB_LOCK_RECORD			# UNDOC: record lock
+	DB_LOCK_SET_TIMEOUT		# UNDOC: set lock timeout
+	DB_LOCK_SWITCH			# UNDOC: switch existing lock
+	DB_LOCK_UPGRADE			# UNDOC: upgrade existing lock
+
+DbEnv.log_archive
+	DB_ARCH_ABS			# Absolute pathnames
+	DB_ARCH_DATA			# Data files
+	DB_ARCH_LOG			# Log files
+	DB_ARCH_REMOVE			# Remove log files
+
+DbEnv.log_put
+	DB_FLUSH			# Flush data to disk
+	DB_LOG_CHKPNT			# UNDOC: Flush supports a checkpoint
+	DB_LOG_COMMIT			# UNDOC: Flush supports a commit
+	DB_LOG_NOCOPY			# UNDOC: Don't copy data
+	DB_LOG_NOT_DURABLE		# UNDOC: Do not log; keep in memory
+	DB_LOG_WRNOSYNC			# UNDOC: Write, don't sync log_put
+
+DbEnv.log_set_config
+	DB_LOG_DIRECT			# Don't buffer log files in the OS
+	DB_LOG_DSYNC			# Set O_DSYNC on the log
+	DB_LOG_AUTO_REMOVE		# Automatically remove log files
+	DB_LOG_IN_MEMORY		# Store logs in buffers in memory
+	DB_LOG_ZERO			# Zero log file on creation
+
+DbEnv.log_stat
+	DB_STAT_CLEAR			# Clear stats after return
+
+DbEnv.log_stat_print
+	DB_STAT_ALL			# Everything
+	DB_STAT_CLEAR			# Clear stats after return
+	DB_STAT_SUBSYSTEM		# Print subsystems
+
+DbEnv.lsn_reset
+	DB_ENCRYPT			# File contains encrypted databases
+
+DbEnv.memp_stat
+	DB_STAT_CLEAR			# Clear stats after return
+
+DbEnv.memp_stat_print
+	DB_STAT_ALL			# Everything
+	DB_STAT_CLEAR			# Clear stats after return
+	DB_STAT_MEMP_HASH		# Print mpool hash buckets
+	DB_STAT_MEMP_NOERROR		# UNDOC: continue on error
+	DB_STAT_SUBSYSTEM		# Print subsystems
+
+DbEnv.mutex_alloc
+	DB_MUTEX_ALLOCATED		# UNDOC: Mutex currently allocated
+	DB_MUTEX_LOCKED			# UNDOC: Mutex currently locked
+	DB_MUTEX_LOGICAL_LOCK		# UNDOC: Mutex backs a database lock
+	DB_MUTEX_PROCESS_ONLY		# Mutex private to a process
+	DB_MUTEX_SELF_BLOCK		# Must be able to block self
+	DB_MUTEX_SHARED			# Shared (read/write) mutex
+
+DbEnv.mutex_stat
+	DB_STAT_CLEAR			# Clear stats after return
+
+DbEnv.mutex_stat_print
+	DB_STAT_ALL			# Everything
+	DB_STAT_CLEAR			# Clear stats after return
+	DB_STAT_SUBSYSTEM		# Print subsystems
+
+DbEnv.remove
+	DB_FORCE
+	DB_USE_ENVIRON			# Use the environment
+	DB_USE_ENVIRON_ROOT		# Use the environment if root
+
+DbEnv.rep_set_config
+	DB_REPMGR_CONF_2SITE_STRICT	# Don't cheat on election votes
+	DB_REP_CONF_BULK		# Bulk transfer
+	DB_REP_CONF_DELAYCLIENT		# Delay client synchronization
+	DB_REP_CONF_INMEM		# In-memory replication
+	DB_REP_CONF_LEASE		# Master leases
+	DB_REP_CONF_NOAUTOINIT		# No automatic client init
+	DB_REP_CONF_NOWAIT		# Don't wait, return error
+
+DbEnv.rep_set_transport
+	DB_REP_ANYWHERE			# Message can be serviced anywhere
+	DB_REP_NOBUFFER			# Do not buffer this message
+	DB_REP_PERMANENT		# Important -- app may want to flush
+	DB_REP_REREQUEST		# This msg already been requested
+
+DbEnv.rep_start
+	DB_REP_CLIENT			# Client
+	DB_REP_MASTER			# Master
+
+DbEnv.rep_stat
+	DB_STAT_CLEAR			# Clear stats after return
+
+DbEnv.rep_stat_print
+	DB_STAT_ALL			# Everything
+	DB_STAT_CLEAR			# Clear stats after return
+	DB_STAT_SUBSYSTEM		# Print subsystems
+
+DbEnv.repmgr_add_remote_site
+	DB_REPMGR_PEER			# C2C synchronization
+
+DbEnv.repmgr_start
+	DB_REP_CLIENT			# Client
+	DB_REP_ELECTION			# Election
+	DB_REP_MASTER			# Master
+
+DbEnv.repmgr_stat
+	DB_STAT_CLEAR			# Clear stats after return
+
+DbEnv.repmgr_stat_print
+	DB_STAT_ALL			# Everything
+	DB_STAT_CLEAR			# Clear stats after return
+	DB_STAT_SUBSYSTEM		# Print subsystems
+
+DbEnv.set_encrypt
+	DB_ENCRYPT_AES			# AES, assumes SHA1 checksum
+
+DbEnv.set_feedback.op
+	DB_RECOVER			# Running recovery.
+
+DbEnv.set_flags
+	DB_AUTO_COMMIT			# Implied transaction
+	DB_CDB_ALLDB			# Set CDB locking per environment
+	DB_DIRECT_DB			# Don't buffer databases in the OS
+	DB_DSYNC_DB			# Set O_DSYNC on the databases
+	DB_MULTIVERSION			# Multiversion concurrency control
+	DB_NOLOCKING			# Set locking/mutex behavior
+	DB_NOMMAP			# Don't mmap the underlying file
+	DB_NOPANIC			# Set panic state per environment
+	DB_OVERWRITE			# Overwrite unlinked region files
+	DB_PANIC_ENVIRONMENT		# Set panic state per environment
+	DB_REGION_INIT			# Page-fault regions on open
+	DB_TIME_NOTGRANTED		# Return NOTGRANTED on timeout
+	DB_TXN_NOSYNC			# Do not sync log on commit
+	DB_TXN_NOWAIT			# Do not wait for locks
+	DB_TXN_SNAPSHOT			# Snapshot isolation
+	DB_TXN_WRITE_NOSYNC		# Write the log bug don't sync
+	DB_YIELDCPU			# Yield the CPU (a lot)
+
+DbEnv.set_isalive
+	DB_MUTEX_ALLOCATED		# UNDOC: Mutex currently allocated
+	DB_MUTEX_LOCKED			# UNDOC: Mutex currently locked
+	DB_MUTEX_LOGICAL_LOCK		# UNDOC: Mutex backs a database lock
+	DB_MUTEX_PROCESS_ONLY		# Mutex private to a process
+	DB_MUTEX_SELF_BLOCK		# Must be able to block self
+
+DbEnv.set_timeout
+	DB_SET_LOCK_TIMEOUT		# Set lock timeout
+	DB_SET_TXN_NOW			# UNDOC: Timeout lock now
+	DB_SET_TXN_TIMEOUT		# Set transaction timeout
+	DB_SET_REG_TIMEOUT		# Set dbregister timeout
+
+DbEnv.set_verbose
+	DB_VERB_DEADLOCK		# Deadlock detection information
+	DB_VERB_FILEOPS			# Major file operations
+	DB_VERB_FILEOPS_ALL		# All file operations
+	DB_VERB_RECOVERY		# Recovery information
+	DB_VERB_REGISTER		# Dump waits-for table
+	DB_VERB_REPLICATION		# All replication and repmgr output
+	DB_VERB_REPMGR_CONNFAIL		# Repmgr connection failure output
+	DB_VERB_REPMGR_MISC		# Miscellaneous repmgr output
+	DB_VERB_REP_ELECT		# Replication election output
+	DB_VERB_REP_LEASE		# Replication master lease output
+	DB_VERB_REP_MISC		# Miscellaneous replication output
+	DB_VERB_REP_MSGS		# Replication message output
+	DB_VERB_REP_SYNC		# Replication client sync output
+	DB_VERB_REP_TEST		# Replication temporary test output
+	DB_VERB_WAITSFOR		# Dump waits-for table
+
+DbEnv.stat_print
+	DB_STAT_ALL			# Everything
+	DB_STAT_CLEAR			# Clear stats after return
+	DB_STAT_SUBSYSTEM		# Print subsystems
+
+DbEnv.txn_begin
+	DB_READ_COMMITTED		# Degree 2 isolation
+	DB_READ_UNCOMMITTED		# Degree 1 isolation
+	DB_TXN_NOSYNC			# Do not sync log on commit
+	DB_TXN_NOWAIT			# Do not wait for locks
+	DB_TXN_SNAPSHOT			# Snapshot isolation
+	DB_TXN_SYNC			# Always sync log on commit
+	DB_TXN_WAIT			# Always wait for locks in this txn
+	DB_TXN_WRITE_NOSYNC		# Write the log but don't sync
+
+DbEnv.txn_checkpoint
+	DB_CKP_INTERNAL			# UNDOC: internally generated checkpoint
+	DB_FORCE			# Force
+
+DbEnv.txn_recover
+	__MASK=0xff			# Berkeley DB operation codes.
+
+DbEnv.txn_stat
+	DB_STAT_CLEAR			# Clear stats after return
+
+DbEnv.txn_stat_print
+	DB_STAT_ALL			# Everything
+	DB_STAT_CLEAR			# Clear stats after return
+	DB_STAT_SUBSYSTEM		# Print subsystems
+
+DbLogc.get
+	__MASK=0xff			# Berkeley DB operation codes.
+
+DbMpoolFile.close
+	DB_MPOOL_DISCARD		# UNDOC: Discard file
+	DB_MPOOL_NOLOCK			# UNDOC: Already have mpf locked
+
+DbMpoolFile.get
+	DB_MPOOL_CREATE			# Create a page
+	DB_MPOOL_DIRTY			# Get page for an update
+	DB_MPOOL_EDIT			# Modify without copying
+	DB_MPOOL_FREE			# UNDOC: Free page if present
+	DB_MPOOL_LAST			# Return the last page
+	DB_MPOOL_NEW			# Create a new page
+	DB_MPOOL_TRY			# Try to read a page, but don't block
+
+DbMpoolFile.open
+	DB_CREATE			# Create as necessary
+	DB_DIRECT			# Don't buffer the file in the OS
+	DB_DURABLE_UNKNOWN		# UNDOC: Durability on open
+	DB_EXTENT			# UNDOC: dealing with an extent
+	DB_MULTIVERSION			# Multiversion concurrency control
+	DB_NOMMAP			# Don't mmap underlying file
+	DB_ODDFILESIZE			# Truncate file to N * pgsize
+	DB_RDONLY			# Read-only (O_RDONLY)
+	DB_TXN_NOT_DURABLE		# UNDOC: Mark file not durable on open
+
+DbMpoolFile.set_flags
+	DB_MPOOL_NOFILE			# Never open a backing file
+	DB_MPOOL_UNLINK			# Unlink the file on last close
+
+DbSequence.get
+	DB_AUTO_COMMIT			# UNDOC: compatibility only
+	DB_TXN_NOSYNC			# Do not sync log on commit
+
+DbSequence.open
+	DB_AUTO_COMMIT			# UNDOC: compatibility only
+	DB_CREATE			# Create as necessary
+	DB_EXCL				# Exclusive open (O_EXCL)
+	DB_THREAD			# Handle is free-threaded
+
+DbSequence.remove
+	DB_TXN_NOSYNC			# Do not sync log on commit
+
+DbSequence.set_flags
+	DB_SEQ_DEC			# Decrement sequence
+	DB_SEQ_INC			# Increment sequence
+	DB_SEQ_RANGE_SET		# UNDOC: Range set
+	DB_SEQ_WRAP			# Wrap sequence at min/max
+	DB_SEQ_WRAPPED			# UNDOC: Just wrapped
+
+DbSequence.stat
+	DB_STAT_CLEAR			# Clear stats after return
+
+DbSequence.stat_print
+	DB_STAT_CLEAR			# Clear stats after return
+	DB_STAT_SUBSYSTEM		# Print subsystems
+
+DbTxn.commit
+	DB_TXN_NOSYNC			# Do not sync log on commit
+	DB_TXN_SYNC			# Always sync log on commit
+
+DbTxn.set_timeout
+	DB_SET_LOCK_TIMEOUT		# Set lock timeout
+	DB_SET_TXN_TIMEOUT		# Set transaction timeout
+
+db_create
+	DB_CXX_NO_EXCEPTIONS		# C++: return error values
+
+Db.associate
+	DB_AUTO_COMMIT			# UNDOC: compatibility only
+	DB_CREATE			# Create as necessary
+	DB_IMMUTABLE_KEY		# Secondary key is immutable
+
+Db.associate_foreign
+	DB_FOREIGN_ABORT		# If foreign key exists, delete aborts
+	DB_FOREIGN_CASCADE		# If foreign key exists, delete cascades
+	DB_FOREIGN_NULLIFY		# If foreign key exists, nullify it
+
+Db.close
+	__MASK=0xff			# Berkeley DB operation codes.
+
+Db.compact
+	DB_FREELIST_ONLY		# Just sort and truncate
+	DB_FREE_SPACE			# Free space
+
+Db.cursor
+	DB_CURSOR_BULK			# Optimize for bulk updates
+	DB_CURSOR_TRANSIENT		# UNDOC: Single-use cursor
+	DB_READ_COMMITTED		# Degree 2 isolation
+	DB_READ_UNCOMMITTED		# Degree 1 isolation
+	DB_WRITECURSOR			# Cursor can update (CDB)
+	DB_WRITELOCK			# Cursor should get write locks
+	DB_TXN_SNAPSHOT			# Snapshot isolation
+
+Db.del
+	DB_AUTO_COMMIT			# UNDOC: compatibility only
+	DB_MULTIPLE			# Delete multiple data values
+	DB_MULTIPLE_KEY			# Delete multiple key/data pairs
+
+Db.exists
+	DB_READ_COMMITTED		# Degree 2 isolation
+	DB_READ_UNCOMMITTED		# Degree 1 isolation
+	DB_RMW				# Acquire write lock immediately
+
+Db.get
+	__MASK=0xff			# Berkeley DB operation codes.
+	DB_AUTO_COMMIT			# UNDOC: compatibility only
+	DB_IGNORE_LEASE			# Ignore leases
+	DB_MULTIPLE			# Return multiple data values
+	DB_READ_COMMITTED		# Degree 2 isolation
+	DB_READ_UNCOMMITTED		# Degree 1 isolation
+	DB_RMW				# Acquire write lock immediately
+
+Db.pget
+	__MASK=0xff			# Berkeley DB operation codes.
+	DB_IGNORE_LEASE			# Ignore leases
+	DB_MULTIPLE			# Return multiple data values
+	DB_READ_COMMITTED		# Degree 2 isolation
+	DB_READ_UNCOMMITTED		# Degree 1 isolation
+	DB_RMW				# Acquire write lock immediately
+
+Db.join
+	DB_JOIN_NOSORT			# Don't try to optmize join
+
+Db.open
+	DB_AUTO_COMMIT			# Implied transaction
+	DB_CREATE			# Create file as necessary
+	DB_EXCL				# Exclusive open (O_EXCL)
+	DB_FCNTL_LOCKING		# UNDOC: fcntl(2) locking
+	DB_MULTIVERSION			# Multiversion concurrency control
+	DB_NOMMAP			# Don't mmap underlying file
+	DB_NO_AUTO_COMMIT		# UNDOC: override env's AUTO_COMMIT
+	DB_RDONLY			# Read-only (O_RDONLY)
+	DB_RDWRMASTER			# UNDOC: allow subdb master open R/W
+	DB_READ_UNCOMMITTED		# Degree 1 isolation
+	DB_THREAD			# Handle is free-threaded
+	DB_TRUNCATE			# Discard existing DB (O_TRUNC)
+
+	# The following flags aren't actually part of the Db.open method
+	# API, but they are accepted by the underlying __db_open function.
+	DB_DURABLE_UNKNOWN		# UNDOC: Durability on open
+	DB_ODDFILESIZE			# UNDOC: Truncate file to N * pgsize
+	DB_WRITEOPEN			# UNDOC: open with write lock
+
+	# The following flags are DB constructor flags.  However, create and/or
+	# open of BDB XML containers is done in a single call (rather than the
+	# two-call "construct the object, then open it" paradigm used by DB),
+	# and they can't collide for that reason.
+	DB_CXX_NO_EXCEPTIONS		# C++: return error values
+
+Db.put
+	__MASK=0xff			# Berkeley DB operation codes.
+	DB_AUTO_COMMIT			# UNDOC: compatibility only
+	DB_MULTIPLE			# Put multiple (from key and data DBTs)
+	DB_MULTIPLE_KEY			# Put multiple (from key DBT)
+
+Db.set_encrypt
+	DB_ENCRYPT_AES			# AES, assumes SHA1 checksum
+
+Db.set_feedback
+	DB_UPGRADE			# Upgrading
+	DB_VERIFY			# Verifying
+
+Db.set_flags
+	DB_CHKSUM			# Checksums
+	DB_DUP				# Btree, Hash: duplicate keys
+	DB_DUPSORT			# Btree, Hash: sorted duplicated
+	DB_ENCRYPT			# AES, assumes SHA1 checksum
+	DB_INORDER			# Queue: strict ordering on consume
+	DB_RECNUM			# Btree: record numbers
+	DB_RENUMBER			# Recno: renumber on insert/delete
+	DB_REVSPLITOFF			# Btree: turn off reverse splits
+	DB_SNAPSHOT			# Recno: snapshot the input
+	DB_TXN_NOT_DURABLE		# Do not log changes
+
+Db.stat
+	DB_FAST_STAT			# Don't traverse the database
+	DB_READ_COMMITTED		# Degree 2 isolation
+	DB_READ_UNCOMMITTED		# Degree 1 isolation
+
+Db.truncate
+	DB_AUTO_COMMIT			# UNDOC: compatibility only
+
+Db.upgrade
+	DB_DUPSORT			# Upgrade duplicate data items
+
+Db.verify
+	DB_AGGRESSIVE			# Salvage whatever could be data
+	DB_NOORDERCHK			# Skip sort order/hashing check
+	DB_ORDERCHKONLY			# Only perform the order check
+	DB_PRINTABLE			# Use printable format for salvage
+	DB_PR_PAGE			# UNDOC: Show page contents (-da)
+	DB_PR_RECOVERYTEST		# UNDOC: Recover test (-dr)
+	DB_SALVAGE			# Salvage what looks like data
+	DB_UNREF			# UNDOC: Report unreferenced pages
+	DB_VERIFY_PARTITION		# Verifying a partition
+
+	# Flags understood by the btree structure checks (__bam_vrfy_subtree).
+	# These share the same space as the global flags to Db.verify.
+	DB_ST_DUPOK			# UNDOC: Duplicates are acceptable
+	DB_ST_DUPSET			# UNDOC: Subtree is in a duplicate tree
+	DB_ST_DUPSORT			# UNDOC: Duplicates are sorted
+	DB_ST_IS_RECNO			# UNDOC: Subtree is a recno
+	DB_ST_OVFL_LEAF			# UNDOC: Overflow reffed from leaf page
+	DB_ST_RECNUM			# UNDOC: Subtree has record numbering on
+	DB_ST_RELEN			# UNDOC: Subtree has fixed-length recs
+	DB_ST_TOPLEVEL			# UNDOC: Subtree == entire tree
+
+	# Flags understood by __bam_salvage and __db_salvage.  These need not
+	# share name space with the __bam_vrfy_subtree flags, but must share
+	# with Db.verify.
+	DB_SA_SKIPFIRSTKEY		# UNDOC: I have no idea what this does.
+	DB_SA_UNKNOWNKEY		# UNDOC: The salvage key is unknown
+
+DbCursor.dup
+	__MASK=0xff			# Berkeley DB operation codes.
+	DB_SHALLOW_DUP			# UNDOC: Don't duplicate compression info
+
+DbCursor.get
+	__MASK=0xff			# Berkeley DB operation codes.
+	DB_IGNORE_LEASE			# Ignore leases
+	DB_MULTIPLE			# Return multiple data values
+	DB_MULTIPLE_KEY			# Return multiple key/data pairs
+	DB_READ_COMMITTED		# Degree 2 isolation
+	DB_READ_UNCOMMITTED		# Degree 1 isolation
+	DB_RMW				# Acquire write lock immediately
+
+DbCursor.put
+	__MASK=0xff			# Berkeley DB operation codes.

@@ -1,0 +1,1329 @@
+<!-- 
+  * This file drives construction of Windows Visual Studio project files for BDB XML
+  * This file is not used directly by the XQuery script that creates projects.
+  * It is pre-processed first to perform variable substitution for variable names
+  * surrounded by '@' characters.  These variables names change from release to
+  * release, and this substitution makes it possible to keep the XQuery script more
+  * static.  The variables are replaced using lib_paths.sed
+  * It'd be simple enough to perform the variable substitutions using XQuery as well,
+  * but the lib_paths.sed mechanism already exists and works.
+  *
+  * TBD: describe format in more detail
+  -->
+<projects>
+  <variable name="sourcePath">../</variable>
+  <variable name="outputBase.7.10">../build_windows/</variable>
+  <variable name="outputBase.8.00">../build_windows/</variable>
+  <preprocessor config="all">WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE</preprocessor>
+  <preprocessor config="Debug">_DEBUG</preprocessor>
+  <preprocessor config="Release">NDEBUG</preprocessor>
+  <preprocessor config="dll">_USRDLL</preprocessor>
+  <preprocessor config="app">_CONSOLE</preprocessor>
+  <preprocessor config="static_lib">_LIB;</preprocessor>
+  <preprocessor config="static_app"></preprocessor>
+  <library name="winsock">
+    <libname config="Debug">ws2_32</libname>
+    <libname config="Release">ws2_32</libname>
+  </library>
+  <library name="php_db4">
+    <libname config="Debug">php_db4d</libname>
+    <libname config="Release">php_db4</libname>
+    <platform name="Win32">
+      <config type="Debug">
+	<libdir>$(OutDir)</libdir>
+      </config>
+      <config type="Release">
+	<libdir>$(OutDir)</libdir>
+      </config>
+    </platform>
+  </library>
+  <library name="db">
+    <libname config="Debug">libdb@DB_VERSION_MAJOR@@DB_VERSION_MINOR@d</libname>
+    <libname config="Release">libdb@DB_VERSION_MAJOR@@DB_VERSION_MINOR@</libname>
+    <platform name="Win32 x64 IA64">
+      <config type="Debug">
+	<libdir>$(OutDir)</libdir>
+      </config>
+      <config type="Release">
+	<libdir>$(OutDir)</libdir>
+      </config>
+    </platform>
+  </library>
+  <library name="db_small">
+    <libname config="Debug">libdb_small@DB_VERSION_MAJOR@@DB_VERSION_MINOR@d</libname>
+    <libname config="Release">libdb_small@DB_VERSION_MAJOR@@DB_VERSION_MINOR@</libname>
+    <platform name="Win32 x64 IA64">
+      <config type="Debug">
+	<libdir>$(OutDir)</libdir>
+      </config>
+      <config type="Release">
+	<libdir>$(OutDir)</libdir>
+      </config>
+    </platform>
+  </library>
+  <library name="db_small_static">
+    <libname config="Debug">libdb_small@DB_VERSION_MAJOR@@DB_VERSION_MINOR@sd</libname>
+    <libname config="Release">libdb_small@DB_VERSION_MAJOR@@DB_VERSION_MINOR@s</libname>
+    <platform name="Win32 x64 IA64">
+      <config type="Debug">
+	<libdir>$(OutDir)</libdir>
+      </config>
+      <config type="Release">
+	<libdir>$(OutDir)</libdir>
+      </config>
+    </platform>
+  </library>
+  <library name="db_static">
+    <libname config="Debug">libdb@DB_VERSION_MAJOR@@DB_VERSION_MINOR@sd</libname>
+    <libname config="Release">libdb@DB_VERSION_MAJOR@@DB_VERSION_MINOR@s</libname>
+    <platform name="Win32 x64 IA64">
+      <config type="Debug">
+	<libdir>$(OutDir)</libdir>
+      </config>
+      <config type="Release">
+	<libdir>$(OutDir)</libdir>
+      </config>
+    </platform>
+  </library>
+  <library name="db_stl">
+    <libname config="Debug">libdb_stl@DB_VERSION_MAJOR@@DB_VERSION_MINOR@d</libname>
+    <libname config="Release">libdb_stl@DB_VERSION_MAJOR@@DB_VERSION_MINOR@</libname>
+    <platform name="Win32 x64 IA64">
+      <config type="Debug">
+	<libdir>$(OutDir)</libdir>
+      </config>
+      <config type="Release">
+	<libdir>$(OutDir)</libdir>
+      </config>
+    </platform>
+    <options><compile platform="x64 IA64">/bigobj</compile></options>
+  </library>
+  <library name="db_stl_static">
+    <libname config="Debug">libdb_stl@DB_VERSION_MAJOR@@DB_VERSION_MINOR@sd</libname>
+    <libname config="Release">libdb_stl@DB_VERSION_MAJOR@@DB_VERSION_MINOR@s</libname>
+    <platform name="Win32 x64 IA64">
+      <config type="Debug">
+	<libdir>$(OutDir)</libdir>
+      </config>
+      <config type="Release">
+	<libdir>$(OutDir)</libdir>
+      </config>
+    </platform>
+    <options><compile platform="x64 IA64">/bigobj</compile></options>
+  </library>
+  <library name="db_csharp">
+    <libname config="Debug">libdb_csharp@DB_VERSION_MAJOR@@DB_VERSION_MINOR@d</libname>
+    <libname config="Release">libdb_csharp@DB_VERSION_MAJOR@@DB_VERSION_MINOR@</libname>
+  </library>
+  <library name="db_java">
+    <libname config="Debug">libdb_java@DB_VERSION_MAJOR@@DB_VERSION_MINOR@d</libname>
+    <libname config="Release">libdb_java@DB_VERSION_MAJOR@@DB_VERSION_MINOR@</libname>
+  </library>
+  <library name="db_tcl">
+    <libname config="Debug">libdb_tcl@DB_VERSION_MAJOR@@DB_VERSION_MINOR@d</libname>
+    <libname config="Release">libdb_tcl@DB_VERSION_MAJOR@@DB_VERSION_MINOR@</libname>
+    <platform name="Win32 x64 IA64">
+      <config type="Debug">
+	<libdir>$(OutDir)</libdir>
+      </config>
+      <config type="Release">
+	<libdir>$(OutDir)</libdir>
+      </config>
+    </platform>
+  </library>
+  <library name="tcl">
+    <libname config="Debug">tcl84g</libname>
+    <libname config="Release">tcl84</libname>
+    <platform name="Win32 x64 IA64">
+      <config type="Debug">
+	<libdir>C:/tcl/lib</libdir>
+      </config>
+      <config type="Release">
+	<libdir>C:/tcl/lib</libdir>
+      </config>
+    </platform>
+  </library>
+  <include name="all">../build_windows,../dbinc</include>
+  <include name="db">../build_windows,../,../dbinc</include>
+  <include name="db_stl">../stl,../,../dbinc</include>
+  <include name="ex_csv">../examples_c/csv</include>
+  <project name="php_db4" guid="44AFD8B5-687F-4B9D-B163-1F381CC11794">
+    <type>dll</type>
+    <depends>db</depends>
+    <depends>php5ts</depends>
+    <include type="ref">all</include>
+    <include type="rel">php_db4</include>
+    <preprocessor config="all">COMPILE_DL_DB4;DB4_EXPORTS;HAVE_DB_H=1;ZEND_WIN32=1;PHP_WIN32=1;ZEND_WIN32_FORCE_INLINE;ZTS=1</preprocessor>
+    <preprocessor config="Release">NDebug;ZEND_DEBUG=0</preprocessor>
+    <preprocessor config="Debug">ZEND_DEBUG=1</preprocessor>
+    <files>
+      <file name="php_db4/db4.cpp"/>
+    </files>
+  </project>
+  <project name="db" guid="FD045D60-ABAD-4A6C-9794-9BFB085FC3E7">
+    <type>dll</type>
+    <depends>winsock</depends>
+    <include type="ref">db</include>
+    <moddef file="build_windows/libdb.def"/>
+    <options>
+      <nowp64/>
+      <link config="Debug">/FIXED:NO /export:__db_assert</link>
+    </options>
+    <preprocessor config="all">DB_CREATE_DLL;WIN32;_UNICODE;UNICODE</preprocessor>
+    <preprocessor config="Debug">DIAGNOSTIC;CONFIG_TEST</preprocessor>
+    <files>
+      <file name="crypto/aes_method.c"/>
+      <file name="btree/bt_compact.c"/>
+      <file name="btree/bt_compare.c"/>
+      <file name="btree/bt_compress.c"/>
+      <file name="btree/bt_conv.c"/>
+      <file name="btree/bt_curadj.c"/>
+      <file name="btree/bt_cursor.c"/>
+      <file name="btree/bt_delete.c"/>
+      <file name="btree/bt_method.c"/>
+      <file name="btree/bt_open.c"/>
+      <file name="btree/bt_put.c"/>
+      <file name="btree/bt_rec.c"/>
+      <file name="btree/bt_reclaim.c"/>
+      <file name="btree/bt_recno.c"/>
+      <file name="btree/bt_rsearch.c"/>
+      <file name="btree/bt_search.c"/>
+      <file name="btree/bt_split.c"/>
+      <file name="btree/bt_stat.c"/>
+      <file name="btree/bt_upgrade.c"/>
+      <file name="btree/bt_verify.c"/>
+      <file name="btree/btree_auto.c"/>
+      <file name="db/crdel_auto.c"/>
+      <file name="db/crdel_rec.c"/>
+      <file name="crypto/crypto.c"/>
+      <file name="cxx/cxx_db.cpp"/>
+      <file name="cxx/cxx_dbc.cpp"/>
+      <file name="cxx/cxx_dbt.cpp"/>
+      <file name="cxx/cxx_env.cpp"/>
+      <file name="cxx/cxx_except.cpp"/>
+      <file name="cxx/cxx_lock.cpp"/>
+      <file name="cxx/cxx_logc.cpp"/>
+      <file name="cxx/cxx_mpool.cpp"/>
+      <file name="cxx/cxx_multi.cpp"/>
+      <file name="cxx/cxx_seq.cpp"/>
+      <file name="cxx/cxx_txn.cpp"/>
+      <file name="db/db.c"/>
+      <file name="db/db_am.c"/>
+      <file name="db/db_auto.c"/>
+      <file name="common/db_byteorder.c"/>
+      <file name="db/db_cam.c"/>
+      <file name="db/db_cds.c"/>
+      <file name="db/db_conv.c"/>
+      <file name="db/db_dispatch.c"/>
+      <file name="db/db_dup.c"/>
+      <file name="common/db_err.c"/>
+      <file name="common/db_getlong.c"/>
+      <file name="common/db_idspace.c"/>
+      <file name="common/db_compint.c"/>
+      <file name="db/db_iface.c"/>
+      <file name="db/db_join.c"/>
+      <file name="common/db_log2.c"/>
+      <file name="db/db_meta.c"/>
+      <file name="db/db_method.c"/>
+      <file name="db/db_open.c"/>
+      <file name="db/db_overflow.c"/>
+      <file name="db/db_ovfl_vrfy.c"/>
+      <file name="db/db_pr.c"/>
+      <file name="db/db_rec.c"/>
+      <file name="db/db_reclaim.c"/>
+      <file name="db/db_remove.c"/>
+      <file name="db/db_rename.c"/>
+      <file name="db/db_ret.c"/>
+      <file name="db/db_setid.c"/>
+      <file name="db/db_setlsn.c"/>
+      <file name="common/db_shash.c"/>
+      <file name="db/db_sort_multiple.c"/>
+      <file name="db/db_stati.c"/>
+      <file name="db/db_truncate.c"/>
+      <file name="db/db_upg.c"/>
+      <file name="db/db_upg_opd.c"/>
+      <file name="db/db_vrfy.c"/>
+      <file name="db/db_vrfyutil.c"/>
+      <file name="db/partition.c"/>
+      <file name="dbm/dbm.c"/>
+      <file name="dbreg/dbreg.c"/>
+      <file name="dbreg/dbreg_auto.c"/>
+      <file name="dbreg/dbreg_rec.c"/>
+      <file name="dbreg/dbreg_stat.c"/>
+      <file name="dbreg/dbreg_util.c"/>
+      <file name="common/dbt.c"/>
+      <file name="env/env_alloc.c"/>
+      <file name="env/env_config.c"/>
+      <file name="env/env_failchk.c"/>
+      <file name="env/env_file.c"/>
+      <file name="env/env_globals.c"/>
+      <file name="env/env_method.c"/>
+      <file name="env/env_name.c"/>
+      <file name="env/env_open.c"/>
+      <file name="env/env_recover.c"/>
+      <file name="env/env_region.c"/>
+      <file name="env/env_register.c"/>
+      <file name="env/env_sig.c"/>
+      <file name="env/env_stat.c"/>
+      <file name="fileops/fileops_auto.c"/>
+      <file name="fileops/fop_basic.c"/>
+      <file name="fileops/fop_rec.c"/>
+      <file name="fileops/fop_util.c"/>
+      <file name="hash/hash.c"/>
+      <file name="hash/hash_auto.c"/>
+      <file name="hash/hash_conv.c"/>
+      <file name="hash/hash_dup.c"/>
+      <file name="hash/hash_func.c"/>
+      <file name="hash/hash_meta.c"/>
+      <file name="hash/hash_method.c"/>
+      <file name="hash/hash_open.c"/>
+      <file name="hash/hash_page.c"/>
+      <file name="hash/hash_rec.c"/>
+      <file name="hash/hash_reclaim.c"/>
+      <file name="hash/hash_stat.c"/>
+      <file name="hash/hash_upgrade.c"/>
+      <file name="hash/hash_verify.c"/>
+      <file name="hmac/hmac.c"/>
+      <file name="hsearch/hsearch.c"/>
+      <file name="build_windows/libdb.def"/>
+      <file name="build_windows/libdb.rc"/>
+      <file name="lock/lock.c"/>
+      <file name="lock/lock_deadlock.c"/>
+      <file name="lock/lock_failchk.c"/>
+      <file name="lock/lock_id.c"/>
+      <file name="lock/lock_list.c"/>
+      <file name="lock/lock_method.c"/>
+      <file name="lock/lock_region.c"/>
+      <file name="lock/lock_stat.c"/>
+      <file name="lock/lock_timer.c"/>
+      <file name="lock/lock_util.c"/>
+      <file name="log/log.c"/>
+      <file name="log/log_archive.c"/>
+      <file name="log/log_compare.c"/>
+      <file name="log/log_debug.c"/>
+      <file name="log/log_get.c"/>
+      <file name="log/log_method.c"/>
+      <file name="log/log_put.c"/>
+      <file name="log/log_stat.c"/>
+      <file name="common/mkpath.c"/>
+      <file name="mp/mp_alloc.c"/>
+      <file name="mp/mp_bh.c"/>
+      <file name="mp/mp_fget.c"/>
+      <file name="mp/mp_fmethod.c"/>
+      <file name="mp/mp_fopen.c"/>
+      <file name="mp/mp_fput.c"/>
+      <file name="mp/mp_fset.c"/>
+      <file name="mp/mp_method.c"/>
+      <file name="mp/mp_mvcc.c"/>
+      <file name="mp/mp_region.c"/>
+      <file name="mp/mp_register.c"/>
+      <file name="mp/mp_resize.c"/>
+      <file name="mp/mp_stat.c"/>
+      <file name="mp/mp_sync.c"/>
+      <file name="mp/mp_trickle.c"/>
+      <file name="crypto/mersenne/mt19937db.c"/>
+      <file name="mutex/mut_alloc.c"/>
+      <file name="mutex/mut_failchk.c"/>
+      <file name="mutex/mut_method.c"/>
+      <file name="mutex/mut_region.c"/>
+      <file name="mutex/mut_stat.c"/>
+      <file name="mutex/mut_win32.c"/>
+      <file name="common/openflags.c"/>
+      <file name="os/os_abort.c"/>
+      <file name="os/os_addrinfo.c"/>
+      <file name="os_windows/os_abs.c"/>
+      <file name="os/os_alloc.c"/>
+      <file name="os_windows/os_clock.c"/>
+      <file name="os_windows/os_config.c"/>
+      <file name="os_windows/os_cpu.c"/>
+      <file name="os/os_ctime.c"/>
+      <file name="os_windows/os_dir.c"/>
+      <file name="os_windows/os_errno.c"/>
+      <file name="os_windows/os_fid.c"/>
+      <file name="os_windows/os_flock.c"/>
+      <file name="os_windows/os_fsync.c"/>
+      <file name="os_windows/os_getenv.c"/>
+      <file name="os_windows/os_handle.c"/>
+      <file name="os_windows/os_map.c"/>
+      <file name="os_windows/os_mkdir.c"/>
+      <file name="os_windows/os_open.c"/>
+      <file name="os/os_pid.c"/>
+      <file name="os_windows/os_rename.c"/>
+      <file name="os/os_root.c"/>
+      <file name="os/os_rpath.c"/>
+      <file name="os_windows/os_rw.c"/>
+      <file name="os_windows/os_seek.c"/>
+      <file name="os/os_stack.c"/>
+      <file name="os_windows/os_stat.c"/>
+      <file name="os/os_tmpdir.c"/>
+      <file name="os_windows/os_truncate.c"/>
+      <file name="os/os_uid.c"/>
+      <file name="os_windows/os_unlink.c"/>
+      <file name="os_windows/os_yield.c"/>
+      <file name="qam/qam.c"/>
+      <file name="qam/qam_auto.c"/>
+      <file name="qam/qam_conv.c"/>
+      <file name="qam/qam_files.c"/>
+      <file name="qam/qam_method.c"/>
+      <file name="qam/qam_open.c"/>
+      <file name="qam/qam_rec.c"/>
+      <file name="qam/qam_stat.c"/>
+      <file name="qam/qam_upgrade.c"/>
+      <file name="qam/qam_verify.c"/>
+      <file name="rep/rep_auto.c"/>
+      <file name="rep/rep_backup.c"/>
+      <file name="rep/rep_elect.c"/>
+      <file name="rep/rep_lease.c"/>
+      <file name="rep/rep_log.c"/>
+      <file name="rep/rep_method.c"/>
+      <file name="rep/rep_record.c"/>
+      <file name="rep/rep_region.c"/>
+      <file name="rep/rep_stat.c"/>
+      <file name="rep/rep_util.c"/>
+      <file name="rep/rep_verify.c"/>
+      <file name="repmgr/repmgr_auto.c"/>
+      <file name="repmgr/repmgr_elect.c"/>
+      <file name="repmgr/repmgr_method.c"/>
+      <file name="repmgr/repmgr_msg.c"/>
+      <file name="repmgr/repmgr_net.c"/>
+      <file name="repmgr/repmgr_queue.c"/>
+      <file name="repmgr/repmgr_sel.c"/>
+      <file name="repmgr/repmgr_stat.c"/>
+      <file name="repmgr/repmgr_util.c"/>
+      <file name="repmgr/repmgr_windows.c"/>
+      <file name="crypto/rijndael/rijndael-alg-fst.c"/>
+      <file name="crypto/rijndael/rijndael-api-fst.c"/>
+      <file name="sequence/seq_stat.c"/>
+      <file name="sequence/sequence.c"/>
+      <file name="hmac/sha1.c"/>
+      <file name="clib/strsep.c"/>
+      <file name="txn/txn.c"/>
+      <file name="txn/txn_auto.c"/>
+      <file name="txn/txn_chkpt.c"/>
+      <file name="txn/txn_failchk.c"/>
+      <file name="txn/txn_method.c"/>
+      <file name="txn/txn_rec.c"/>
+      <file name="txn/txn_recover.c"/>
+      <file name="txn/txn_region.c"/>
+      <file name="txn/txn_stat.c"/>
+      <file name="txn/txn_util.c"/>
+      <file name="common/os_method.c"/>
+      <file name="common/util_cache.c"/>
+      <file name="common/util_log.c"/>
+      <file name="common/util_sig.c"/>
+      <file name="common/zerofill.c"/>
+    </files>
+  </project>
+  <project name="db_small" guid="B7124116-7A43-4BF1-B727-4C8ADE40FF7F">
+    <type>dll</type>
+    <depends>winsock</depends>
+    <include type="ref">db</include>
+    <options>
+      <nowp64/>
+      <link config="Debug">/FIXED:NO /export:__db_assert</link>
+    </options>
+    <preprocessor config="all">DB_CREATE_DLL;WIN32;_UNICODE;UNICODE;HAVE_SMALLBUILD</preprocessor>
+    <preprocessor config="Debug">DIAGNOSTIC</preprocessor>
+    <files>
+      <file name="btree\bt_compact.c"/>
+      <file name="btree\bt_compare.c"/>
+      <file name="btree\bt_conv.c"/>
+      <file name="btree\bt_curadj.c"/>
+      <file name="btree\bt_cursor.c"/>
+      <file name="btree\bt_delete.c"/>
+      <file name="btree\bt_method.c"/>
+      <file name="btree\bt_open.c"/>
+      <file name="btree\bt_put.c"/>
+      <file name="btree\bt_rec.c"/>
+      <file name="btree\bt_reclaim.c"/>
+      <file name="btree\bt_recno.c"/>
+      <file name="btree\bt_rsearch.c"/>
+      <file name="btree\bt_search.c"/>
+      <file name="btree\bt_split.c"/>
+      <file name="btree\bt_stat.c"/>
+      <file name="btree\bt_upgrade.c"/>
+      <file name="btree\btree_auto.c"/>
+      <file name="clib\strsep.c"/>
+      <file name="common\crypto_stub.c"/>
+      <file name="common\db_byteorder.c"/>
+      <file name="common\db_err.c"/>
+      <file name="common\db_getlong.c"/>
+      <file name="common\db_idspace.c"/>
+      <file name="common\db_log2.c"/>
+      <file name="common\db_shash.c"/>
+      <file name="common\dbt.c"/>
+      <file name="common\mkpath.c"/>
+      <file name="common\os_method.c"/>
+      <file name="common\util_cache.c"/>
+      <file name="common\util_log.c"/>
+      <file name="common\util_sig.c"/>
+      <file name="common\zerofill.c"/>
+      <file name="cxx\cxx_db.cpp"/>
+      <file name="cxx\cxx_dbc.cpp"/>
+      <file name="cxx\cxx_dbt.cpp"/>
+      <file name="cxx\cxx_env.cpp"/>
+      <file name="cxx\cxx_except.cpp"/>
+      <file name="cxx\cxx_lock.cpp"/>
+      <file name="cxx\cxx_logc.cpp"/>
+      <file name="cxx\cxx_mpool.cpp"/>
+      <file name="cxx\cxx_multi.cpp"/>
+      <file name="cxx\cxx_seq.cpp"/>
+      <file name="cxx\cxx_txn.cpp"/>
+      <file name="db\crdel_auto.c"/>
+      <file name="db\crdel_rec.c"/>
+      <file name="db\db.c"/>
+      <file name="db\db_am.c"/>
+      <file name="db\db_auto.c"/>
+      <file name="db\db_cam.c"/>
+      <file name="db\db_cds.c"/>
+      <file name="db\db_conv.c"/>
+      <file name="db\db_dispatch.c"/>
+      <file name="db\db_dup.c"/>
+      <file name="db\db_iface.c"/>
+      <file name="db\db_join.c"/>
+      <file name="db\db_meta.c"/>
+      <file name="db\db_method.c"/>
+      <file name="db\db_open.c"/>
+      <file name="db\db_overflow.c"/>
+      <file name="db\db_pr.c"/>
+      <file name="db\db_rec.c"/>
+      <file name="db\db_reclaim.c"/>
+      <file name="db\db_remove.c"/>
+      <file name="db\db_rename.c"/>
+      <file name="db\db_ret.c"/>
+      <file name="db\db_setid.c"/>
+      <file name="db\db_setlsn.c"/>
+      <file name="db\db_sort_multiple.c"/>
+      <file name="db\db_stati.c"/>
+      <file name="db\db_truncate.c"/>
+      <file name="db\db_upg.c"/>
+      <file name="db\db_upg_opd.c"/>
+      <file name="db\db_vrfy_stub.c"/>
+      <file name="db\partition.c"/>
+      <file name="dbreg\dbreg.c"/>
+      <file name="dbreg\dbreg_auto.c"/>
+      <file name="dbreg\dbreg_rec.c"/>
+      <file name="dbreg\dbreg_stat.c"/>
+      <file name="dbreg\dbreg_util.c"/>
+      <file name="env\env_alloc.c"/>
+      <file name="env\env_config.c"/>
+      <file name="env\env_failchk.c"/>
+      <file name="env\env_file.c"/>
+      <file name="env\env_globals.c"/>
+      <file name="env\env_method.c"/>
+      <file name="env\env_name.c"/>
+      <file name="env\env_open.c"/>
+      <file name="env\env_recover.c"/>
+      <file name="env\env_region.c"/>
+      <file name="env\env_register.c"/>
+      <file name="env\env_sig.c"/>
+      <file name="env\env_stat.c"/>
+      <file name="fileops\fileops_auto.c"/>
+      <file name="fileops\fop_basic.c"/>
+      <file name="fileops\fop_rec.c"/>
+      <file name="fileops\fop_util.c"/>
+      <file name="hash\hash_func.c"/>
+      <file name="hash\hash_stub.c"/>
+      <file name="hmac\hmac.c"/>
+      <file name="hmac\sha1.c"/>
+      <file name="lock\lock.c"/>
+      <file name="lock\lock_deadlock.c"/>
+      <file name="lock\lock_failchk.c"/>
+      <file name="lock\lock_id.c"/>
+      <file name="lock\lock_list.c"/>
+      <file name="lock\lock_method.c"/>
+      <file name="lock\lock_region.c"/>
+      <file name="lock\lock_stat.c"/>
+      <file name="lock\lock_timer.c"/>
+      <file name="lock\lock_util.c"/>
+      <file name="log\log.c"/>
+      <file name="log\log_archive.c"/>
+      <file name="log\log_compare.c"/>
+      <file name="log\log_debug.c"/>
+      <file name="log\log_get.c"/>
+      <file name="log\log_method.c"/>
+      <file name="log\log_put.c"/>
+      <file name="log\log_stat.c"/>
+      <file name="mp\mp_alloc.c"/>
+      <file name="mp\mp_bh.c"/>
+      <file name="mp\mp_fget.c"/>
+      <file name="mp\mp_fmethod.c"/>
+      <file name="mp\mp_fopen.c"/>
+      <file name="mp\mp_fput.c"/>
+      <file name="mp\mp_fset.c"/>
+      <file name="mp\mp_method.c"/>
+      <file name="mp\mp_mvcc.c"/>
+      <file name="mp\mp_region.c"/>
+      <file name="mp\mp_register.c"/>
+      <file name="mp\mp_resize.c"/>
+      <file name="mp\mp_stat.c"/>
+      <file name="mp\mp_sync.c"/>
+      <file name="mp\mp_trickle.c"/>
+      <file name="mutex\mut_alloc.c"/>
+      <file name="mutex\mut_failchk.c"/>
+      <file name="mutex\mut_method.c"/>
+      <file name="mutex\mut_region.c"/>
+      <file name="mutex\mut_stat.c"/>
+      <file name="mutex\mut_win32.c"/>
+      <file name="os\os_abort.c"/>
+      <file name="os\os_alloc.c"/>
+      <file name="os\os_ctime.c"/>
+      <file name="os\os_pid.c"/>
+      <file name="os\os_root.c"/>
+      <file name="os\os_rpath.c"/>
+      <file name="os\os_stack.c"/>
+      <file name="os\os_tmpdir.c"/>
+      <file name="os\os_uid.c"/>
+      <file name="os_windows\os_abs.c"/>
+      <file name="os_windows\os_clock.c"/>
+      <file name="os_windows\os_config.c"/>
+      <file name="os_windows\os_cpu.c"/>
+      <file name="os_windows\os_dir.c"/>
+      <file name="os_windows\os_errno.c"/>
+      <file name="os_windows\os_fid.c"/>
+      <file name="os_windows\os_flock.c"/>
+      <file name="os_windows\os_fsync.c"/>
+      <file name="os_windows\os_getenv.c"/>
+      <file name="os_windows\os_handle.c"/>
+      <file name="os_windows\os_map.c"/>
+      <file name="os_windows\os_mkdir.c"/>
+      <file name="os_windows\os_open.c"/>
+      <file name="os_windows\os_rename.c"/>
+      <file name="os_windows\os_rw.c"/>
+      <file name="os_windows\os_seek.c"/>
+      <file name="os_windows\os_stat.c"/>
+      <file name="os_windows\os_truncate.c"/>
+      <file name="os_windows\os_unlink.c"/>
+      <file name="os_windows\os_yield.c"/>
+      <file name="qam\qam_stub.c"/>
+      <file name="rep\rep_stub.c"/>
+      <file name="repmgr\repmgr_stub.c"/>
+      <file name="sequence\seq_stat.c"/>
+      <file name="sequence\sequence.c"/>
+      <file name="txn\txn.c"/>
+      <file name="txn\txn_auto.c"/>
+      <file name="txn\txn_chkpt.c"/>
+      <file name="txn\txn_failchk.c"/>
+      <file name="txn\txn_method.c"/>
+      <file name="txn\txn_rec.c"/>
+      <file name="txn\txn_recover.c"/>
+      <file name="txn\txn_region.c"/>
+      <file name="txn\txn_stat.c"/>
+      <file name="txn\txn_util.c"/>
+    </files>
+  </project>
+  <project name="db_small_static" guid="FE85C600-38A6-11DE-8A39-0800200C9A66">
+    <type>static_lib</type>
+    <include type="ref">db</include>
+    <preprocessor config="all">WIN32;_UNICODE;UNICODE;HAVE_SMALLBUILD</preprocessor>
+    <preprocessor config="Debug">DIAGNOSTIC</preprocessor>
+    <options><nowp64/></options>
+  </project>
+  <project name="db_stl" guid="284CC197-0C66-11DE-8C30-0800200C9A66">
+    <type>dll</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <include type="ref">db_stl</include>
+    <options><nowp64/></options>
+    <preprocessor config="all">DB_CREATE_DLL;_UNICODE;UNICODE</preprocessor>
+    <files>
+      <file name="stl/dbstl_exception.h"/>
+      <file name="stl/dbstl_map.h"/>
+      <file name="stl/dbstl_set.h"/>
+      <file name="stl/dbstl_utility.h"/>
+      <file name="stl/dbstl_vector.h"/>
+      <file name="stl/dbstl_common.h"/>
+      <file name="stl/dbstl_base_iterator.h"/>
+      <file name="stl/dbstl_container.cpp"/>
+      <file name="stl/dbstl_container.h"/>
+      <file name="stl/dbstl_dbc.h"/>
+      <file name="stl/dbstl_dbt.h"/>
+      <file name="stl/dbstl_element_ref.h"/>
+      <file name="stl/dbstl_inner_utility.h"/>
+      <file name="stl/dbstl_resource_manager.cpp"/>
+      <file name="stl/dbstl_resource_manager.h"/>
+    </files>
+  </project>
+  <project name="db_stl_static" guid="284CC198-0C66-11DE-8C30-0800200C9A66">
+    <type>static_lib</type>
+    <include type="ref">db</include>
+    <include type="ref">db_stl</include>
+    <preprocessor config="all">_UNICODE;UNICODE</preprocessor>
+    <preprocessor config="Debug">DIAGNOSTIC</preprocessor>
+    <options><nowp64/></options>
+  </project>
+  <project name="db_tcl" guid="7F3D3EEE-2ABB-4F0F-A2A7-DE88C1989BE1">
+    <type>dll</type>
+    <depends>db</depends>
+    <depends>tcl</depends>
+    <include type="ref">db</include>
+    <moddef file="build_windows/libdb_tcl.def"/>
+    <preprocessor config="all">DB_CREATE_DLL;_UNICODE;DB_TCL_SUPPORT</preprocessor>
+    <preprocessor config="Debug">DIAGNOSTIC;CONFIG_TEST</preprocessor>
+    <files>
+      <file name="os/os_abort.c"/>
+      <file name="os/os_stack.c"/>
+      <file name="tcl/tcl_compat.c"/>
+      <file name="tcl/tcl_db.c"/>
+      <file name="tcl/tcl_db_pkg.c"/>
+      <file name="tcl/tcl_dbcursor.c"/>
+      <file name="tcl/tcl_env.c"/>
+      <file name="tcl/tcl_internal.c"/>
+      <file name="tcl/tcl_lock.c"/>
+      <file name="tcl/tcl_log.c"/>
+      <file name="tcl/tcl_mp.c"/>
+      <file name="tcl/tcl_mutex.c"/>
+      <file name="tcl/tcl_rep.c"/>
+      <file name="tcl/tcl_seq.c"/>
+      <file name="tcl/tcl_txn.c"/>
+      <file name="tcl/tcl_util.c"/>
+      <file name="build_windows/libdb_tcl.def"/>
+    </files>
+  </project>
+  <project name="db_java" guid="0052E828-5F10-4973-8729-50B0C5598702">
+    <type>dll</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <options><nowp64/></options>
+    <preprocessor config="all">DB_CREATE_DLL;_UNICODE;UNICODE</preprocessor>
+    <event name="custom">
+      <command config="ReleaseDebug">
+echo compiling Berkeley DB Java classes 
+mkdir "./$(OutDir)/classes/" 
+javac -g -d "$(OutDir)\classes" -classpath "$(OutDir)\classes" ..\java\src\com\sleepycat\db\*.java ..\java\src\com\sleepycat\db\internal\*.java ..\java\src\com\sleepycat\asm\*.java ..\java\src\com\sleepycat\bind\*.java ..\java\src\com\sleepycat\bind\serial\*.java ..\java\src\com\sleepycat\bind\tuple\*.java ..\java\src\com\sleepycat\collections\*.java ..\java\src\com\sleepycat\compat\*.java ..\java\src\com\sleepycat\persist\*.java ..\java\src\com\sleepycat\persist\evolve\*.java ..\java\src\com\sleepycat\persist\impl\*.java ..\java\src\com\sleepycat\persist\model\*.java ..\java\src\com\sleepycat\persist\raw\*.java ..\java\src\com\sleepycat\util\*.java ..\java\src\com\sleepycat\util\keyrange\*.java 
+echo compiling examples
+mkdir "$(OutDir)\classes.ex"
+javac -g -d "$(OutDir)\classes.ex" -classpath "$(OutDir)\classes;$(OutDir)\classes.ex" ..\examples_java\src\db\*.java ..\examples_java\src\db\GettingStarted\*.java ..\examples_java\src\db\repquote\*.java ..\examples_java\src\collections\access\*.java ..\examples_java\src\collections\hello\*.java ..\examples_java\src\collections\ship\basic\*.java ..\examples_java\src\collections\ship\entity\*.java ..\examples_java\src\collections\ship\tuple\*.java ..\examples_java\src\collections\ship\sentity\*.java ..\examples_java\src\collections\ship\marshal\*.java ..\examples_java\src\collections\ship\factory\*.java ..\examples_java\src\persist\*.java ..\examples_java\src\persist\gettingStarted\*.java ..\examples_java\src\persist\txn\*.java
+echo creating jar files
+jar cf "$(OutDir)/db.jar" -C "$(OutDir)\classes" .
+jar cf "$(OutDir)/dbexamples.jar" -C "$(OutDir)\classes.ex" .
+echo Java build finished</command>
+      <output>force_compilation.txt</output>
+    </event>
+    <files>
+      <file name="libdb_java/db_java_wrap.c"/>
+    </files>
+  </project>
+  <project name="db_csharp" guid="13DE550F-16FD-4AC2-9EC6-B1A18F41476F">
+    <type>dll</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <options><nowp64/></options>
+    <preprocessor config="all">DB_CREATE_DLL;_UNICODE;UNICODE</preprocessor>
+    <files>
+      <file name="libdb_csharp/db_csharp_wrap.c"/>
+    </files>
+  </project>
+  <project name="db_archive" guid="56056344-53A1-4FA6-B20B-862C0BA68953">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="db_archive/db_archive.c"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="db_checkpoint" guid="A3BE0163-1E6C-4235-9B6B-3A36ABB5E285">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="db_checkpoint/db_checkpoint.c"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="db_deadlock" guid="CD0FD995-B4D1-4907-987B-99CF3304E7E0">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="db_deadlock/db_deadlock.c"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="db_dump" guid="DB067D2C-7163-428B-AAF8-642316AB173B">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="db_dump/db_dump.c"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="db_hotbackup" guid="67C0DABC-353A-491F-9A77-8E2E601ED52B">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="db_hotbackup/db_hotbackup.c"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="db_load" guid="7640133F-4AB8-42DA-ADB5-95F21447F7D5">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="db_load/db_load.c"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="db_perf" guid="5835B4B0-2F99-11DE-8C30-0800200C9A66">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="test_perf/db_perf.c"/>
+      <file name="test_perf/perf_checkpoint.c"/>
+      <file name="test_perf/perf_config.c"/>
+      <file name="test_perf/perf_dbs.c"/>
+      <file name="test_perf/perf_dead.c"/>
+      <file name="test_perf/perf_debug.c"/>
+      <file name="test_perf/perf_file.c"/>
+      <file name="test_perf/perf_key.c"/>
+      <file name="test_perf/perf_log.c"/>
+      <file name="test_perf/perf_misc.c"/>
+      <file name="test_perf/perf_op.c"/>
+      <file name="test_perf/perf_parse.c"/>
+      <file name="test_perf/perf_rand.c"/>
+      <file name="test_perf/perf_spawn.c"/>
+      <file name="test_perf/perf_stat.c"/>
+      <file name="test_perf/perf_sync.c"/>
+      <file name="test_perf/perf_thread.c"/>
+      <file name="test_perf/perf_trickle.c"/>
+      <file name="test_perf/perf_txn.c"/>
+      <file name="test_perf/perf_util.c"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="db_printlog" guid="D505F51B-2B92-4850-A08F-9113D947FF4B">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="db_printlog/db_printlog.c"/>
+      <file name="btree/btree_autop.c"/>
+      <file name="db/crdel_autop.c"/>
+      <file name="db/db_autop.c"/>
+      <file name="dbreg/dbreg_autop.c"/>
+      <file name="fileops/fileops_autop.c"/>
+      <file name="hash/hash_autop.c"/>
+      <file name="qam/qam_autop.c"/>
+      <file name="txn/txn_autop.c"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="db_recover" guid="9E03FD51-E387-4EEF-9EEA-E71707A56212">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="db_recover/db_recover.c"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="db_repsite" guid="23A3F970-2E25-11DE-8C30-0800200C9A66">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="test_repmgr/db_repsite.cpp"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="db_sql" guid="738ee880-0e33-11de-8c30-0800200c9a66">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="db_sql/db_sql.c"/>
+      <file name="db_sql/preparser.c"/>
+      <file name="db_sql/parsefuncs.c"/>
+      <file name="db_sql/tokenize.c"/>
+      <file name="db_sql/buildpt.c"/>
+      <file name="db_sql/utils.c"/>
+      <file name="db_sql/generate.c"/>
+      <file name="db_sql/generate_test.c"/>
+      <file name="db_sql/generation_utils.c"/>
+      <file name="db_sql/generate_verification.c"/>
+      <file name="db_sql/hint_comment.c"/>
+      <file name="db_sql/sqlite/sqlprintf.c"/>
+      <file name="db_sql/sqlite/parse.c"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="db_stat" guid="19D3A4CB-1C12-43D4-A94B-D2B387AD43E5">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="db_stat/db_stat.c"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="db_test" guid="B17B933F-6F75-4095-BE51-12666358163A" output="dbkill">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="build_windows/dbkill.cpp"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="db_upgrade" guid="5F4D66DB-8D75-43D4-A1BB-60A01BC6B32F">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="db_upgrade/db_upgrade.c"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="db_verify" guid="12E118CA-CAAE-4F54-AE81-8D9981AA0635">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="db_verify/db_verify.c"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="db_static" guid="671539AA-D9A6-4B7B-8044-61B511D6F432">
+    <type>static_lib</type>
+    <include type="ref">db</include>
+    <preprocessor config="all">_UNICODE;UNICODE</preprocessor>
+    <preprocessor config="Debug">DIAGNOSTIC</preprocessor>
+    <options><nowp64/></options>
+  </project>
+  <project name="ex_access" guid="75DF98AA-25DF-4183-A022-024CF918480D">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_c/ex_access.c"/>
+    </files>
+  </project>
+  <project name="ex_btrec" guid="5DD66F4B-EB4A-4453-BC31-3FF7B2240634">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_c/ex_btrec.c"/>
+    </files>
+  </project>
+  <project name="ex_csvcode" guid="54E6A58D-561D-467E-B378-6BA2EE138880">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <include type="ref">ex_csv</include>
+    <event name="postbuild">
+      <command config="Release">$(OUTDIR)\ex_csvcode.exe -c ../examples_c/csv/csv_local.c -h ../examples_c/csv/csv_local.h -f ../examples_c/csv/sample.desc</command>
+      <command config="Debug">$(OUTDIR)\ex_csvcode.exe -c ../examples_c/csv/csv_local.c -h ../examples_c/csv/csv_local.h -f ../examples_c/csv/sample.desc</command>
+      <description>Generate csv_local.{c|h} files.</description>
+    </event>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_c/csv/code.c"/>
+    </files>
+  </project>
+  <project name="ex_csvload" guid="CEC6CC37-88A3-4573-8957-6BA0CEF94B3D">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <include type="ref">ex_csv</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_c/csv/DbRecord.c"/>
+      <file name="examples_c/csv/csv_local.c"/>
+      <file name="examples_c/csv/db.c"/>
+      <file name="examples_c/csv/load.c"/>
+      <file name="examples_c/csv/load_main.c"/>
+      <file name="examples_c/csv/util.c"/>
+    </files>
+  </project>
+  <project name="ex_csvquery" guid="438BEA9C-A9DF-4EAE-A9F7-A5F35CAF3FB9">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <include type="ref">ex_csv</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_c/csv/Dbrecord.c"/>
+      <file name="examples_c/csv/csv_local.c"/>
+      <file name="examples_c/csv/db.c"/>
+      <file name="examples_c/csv/query.c"/>
+      <file name="examples_c/csv/query_main.c"/>
+      <file name="examples_c/csv/util.c"/>
+    </files>
+  </project>
+  <project name="ex_env" guid="443530F5-CCC3-40C8-A89B-AEF6C14D3A41">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_c/ex_env.c"/>
+    </files>
+  </project>
+  <project name="ex_lock" guid="B254668F-C28F-4B14-92A5-3BF4B83D02EE">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_c/ex_lock.c"/>
+    </files>
+  </project>
+  <project name="ex_mpool" guid="0F6925F0-6243-47E0-A0FF-05F70B15FC2C">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_c/ex_mpool.c"/>
+    </files>
+  </project>
+  <project name="ex_rep_base" guid="BDBF0EE2-1551-47A4-ACD0-B22B05DF4D77">
+    <type>app</type>
+    <depends>db</depends>
+    <depends>winsock</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_c/ex_rep/base/rep_base.c"/>
+      <file name="examples_c/ex_rep/common/rep_common.c"/>
+      <file name="examples_c/ex_rep/base/rep_msg.c"/>
+      <file name="examples_c/ex_rep/base/rep_net.c"/>
+    </files>
+  </project>
+  <project name="ex_rep_mgr" guid="365A89B8-B5A5-4EC6-990B-08254028E1A6">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_c/ex_rep/common/rep_common.c"/>
+      <file name="examples_c/ex_rep/mgr/rep_mgr.c"/>
+    </files>
+  </project>
+  <project name="ex_sequence" guid="4E43DB5C-D050-4003-A4FF-6294D9F498DD">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_c/ex_sequence.c"/>
+    </files>
+  </project>
+  <project name="ex_stream" guid="8F3D872E-C7F5-4C0D-9974-0F0CB9DAA527">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_c/ex_stream.c"/>
+    </files>
+  </project>
+  <project name="ex_tpcb" guid="8632C58A-CC00-4116-B61A-CBE0F2C11CAD">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_c/ex_tpcb.c"/>
+    </files>
+  </project>
+  <project name="ex_txnguide" guid="80B961C4-D1D6-48E9-8965-CFCE69BF85E2">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_c/txn_guide/txn_guide.c"/>
+    </files>
+  </project>
+  <project name="ex_txnguide_inmem" guid="925BD215-6680-4FFF-8345-0741E4627B1F">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_c/txn_guide/txn_guide_inmemory.c"/>
+    </files>
+  </project>
+  <project name="example_database_load" guid="56C01012-66D7-4295-B382-F3815366DB26">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_c/getting_started/example_database_load.c"/>
+      <file name="examples_c/getting_started/gettingstarted_common.c"/>
+    </files>
+  </project>
+  <project name="example_database_read" guid="0D35F7E6-425B-4D09-B805-B6D47A9B4AB3">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_c/getting_started/example_database_read.c"/>
+      <file name="examples_c/getting_started/gettingstarted_common.c"/>
+    </files>
+  </project>
+  <project name="excxx_access" guid="2575F0DD-DAA5-4AE5-AC81-7C47507AD279">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_cxx/AccessExample.cpp"/>
+    </files>
+  </project>
+  <project name="excxx_btrec" guid="38C080B1-7003-48DF-820D-06348BC87B1B">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_cxx/BtRecExample.cpp"/>
+    </files>
+  </project>
+  <project name="excxx_env" guid="E790C029-341D-489B-B987-D35947AD78C3">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_cxx/EnvExample.cpp"/>
+    </files>
+  </project>
+  <project name="excxx_example_database_load" guid="A4F42222-FE02-431D-A046-B049E516DEB7">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_cxx/getting_started/MyDb.cpp"/>
+      <file name="examples_cxx/getting_started/excxx_example_database_load.cpp"/>
+    </files>
+  </project>
+  <project name="excxx_example_database_read" guid="81C97B03-193C-4021-A78E-F0A2A2AFAA87">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_cxx/getting_started/MyDb.cpp"/>
+      <file name="examples_cxx/getting_started/excxx_example_database_read.cpp"/>
+    </files>
+  </project>
+  <project name="excxx_lock" guid="19393F5D-DBBE-450C-9217-EA0C7503E277">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_cxx/LockExample.cpp"/>
+    </files>
+  </project>
+  <project name="excxx_mpool" guid="DAEDD51B-0FED-4779-A99A-C09E4D2ACB5E">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_cxx/MpoolExample.cpp"/>
+    </files>
+  </project>
+  <project name="excxx_repquote" guid="75046027-E052-4E8B-AE87-E27DE9C2BC21">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_cxx/excxx_repquote/RepConfigInfo.cpp"/>
+      <file name="examples_cxx/excxx_repquote/RepQuoteExample.cpp"/>
+    </files>
+  </project>
+  <project name="excxx_sequence" guid="D90AE774-03EF-4945-A3C3-AC76BF90825F">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_cxx/SequenceExample.cpp"/>
+    </files>
+  </project>
+  <project name="excxx_tpcb" guid="77BD278B-7927-4C88-9198-5067C549398D">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_cxx/TpcbExample.cpp"/>
+    </files>
+  </project>
+  <project name="excxx_txnguide" guid="2E9B94E9-024C-4255-9104-BA81FF7F2591">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_cxx/txn_guide/TxnGuide.cpp"/>
+    </files>
+  </project>
+  <project name="excxx_txnguide_inmem" guid="009413E4-EFDF-42FB-8631-931CFAEAAB72">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="clib/getopt.c"/>
+      <file name="examples_cxx/txn_guide/TxnGuideInMemory.cpp"/>
+    </files>
+  </project>
+  <project name="exstl_access" guid="284CC190-0C66-11DE-8C30-0800200C9A66">
+    <type>app</type>
+    <depends>db</depends>
+    <depends>db_stl</depends>
+    <include type="ref">db</include>
+    <include type="ref">db_stl</include>
+    <options><compile platform="x64 IA64">/bigobj</compile></options>
+    <files>
+      <file name="examples_stl/StlAccessExample.cpp"/>
+    </files>
+  </project>
+  <project name="exstl_repquote" guid="284CC191-0C66-11DE-8C30-0800200C9A66">
+    <type>app</type>
+    <depends>db</depends>
+    <depends>db_stl</depends>
+    <include type="ref">db</include>
+    <include type="ref">db_stl</include>
+    <options><compile platform="x64 IA64">/bigobj</compile></options>
+    <files>
+      <file name="examples_stl/repquote/StlRepConfigInfo.cpp"/>
+      <file name="examples_stl/repquote/StlRepConfigInfo.hpp"/>
+      <file name="examples_stl/repquote/StlRepQuoteExample.cpp"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="exstl_tpcb" guid="284CC192-0C66-11DE-8C30-0800200C9A66">
+    <type>app</type>
+    <depends>db</depends>
+    <depends>db_stl</depends>
+    <include type="ref">db</include>
+    <include type="ref">db_stl</include>
+    <options><compile platform="x64 IA64">/bigobj</compile></options>
+    <files>
+      <file name="examples_stl/StlTpcbExample.cpp"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="exstl_txnguide" guid="284CC193-0C66-11DE-8C30-0800200C9A66">
+    <type>app</type>
+    <depends>db</depends>
+    <depends>db_stl</depends>
+    <include type="ref">db</include>
+    <include type="ref">db_stl</include>
+    <options><compile platform="x64 IA64">/bigobj</compile></options>
+    <files>
+      <file name="examples_stl/StlTransactionGuideExample.cpp"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="stl_test" guid="284CC194-0C66-11DE-8C30-0800200C9A66">
+    <type>app</type>
+    <depends>db</depends>
+    <depends>db_stl</depends>
+    <include type="ref">db</include>
+    <include type="ref">db_stl</include>
+    <preprocessor config="all">_SCL_SECURE_NO_WARNINGS</preprocessor>
+    <options><compile platform="x64 IA64">/bigobj</compile></options>
+    <files>
+      <file name="test_stl/base/ptype.h"/>
+      <file name="test_stl/base/test.h"/>
+      <file name="test_stl/base/test_assoc.h"/>
+      <file name="test_stl/base/test_dbstl.cpp"/>
+      <file name="test_stl/base/test_mt.h"/>
+      <file name="test_stl/base/test_util.cpp"/>
+      <file name="test_stl/base/test_util.h"/>
+      <file name="test_stl/base/test_vector.h"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="stl_test_stlport" guid="284CC195-0C66-11DE-8C30-0800200C9A66">
+    <type>app</type>
+    <depends>db</depends>
+    <depends>db_stl</depends>
+    <include type="ref">db</include>
+    <include type="ref">db_stl</include>
+    <preprocessor config="all">_SCL_SECURE_NO_WARNINGS</preprocessor>
+    <options><compile platform="x64 IA64">/bigobj</compile></options>
+    <files>
+      <file name="test_stl/stlport/fadapter.h"/>
+      <file name="test_stl/stlport/fib.h"/>
+      <file name="test_stl/stlport/iota.h"/>
+      <file name="test_stl/stlport/map1.h"/>
+      <file name="test_stl/stlport/rand.h"/>
+      <file name="test_stl/stlport/stl_test.cpp"/>
+      <file name="test_stl/stlport/stl_test.h"/>
+      <file name="test_stl/stlport/test_builder.cpp"/>
+      <file name="test_stl/stlport/unary.h"/>
+      <file name="test_stl/stlport/utility.cpp"/>
+    </files>
+  </project>
+  <project name="stl_test_msexamples" guid="284CC196-0C66-11DE-8C30-0800200C9A66">
+    <type>app</type>
+    <depends>db</depends>
+    <depends>db_stl</depends>
+    <include type="ref">db</include>
+    <include type="ref">db_stl</include>
+    <preprocessor config="all">_SCL_SECURE_NO_WARNINGS</preprocessor>
+    <options><compile platform="x64 IA64">/bigobj</compile></options>
+    <files>
+      <file name="test_stl/ms_examples/ms_stl_common.cpp"/>
+      <file name="test_stl/ms_examples/ms_stl_common.hpp"/>
+      <file name="test_stl/ms_examples/ms_stl_main.cpp"/>
+      <file name="test_stl/ms_examples/ptype.h"/>
+      <file name="test_stl/ms_examples/tgetopt.cpp"/>
+      <file name="test_stl/ms_examples/test_builder.cpp"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="test_micro" guid="9556E0A0-2E25-11DE-8C30-0800200C9A66">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="test_micro/source/b_curalloc.c"/>
+      <file name="test_micro/source/b_curwalk.c"/>
+      <file name="test_micro/source/b_del.c"/>
+      <file name="test_micro/source/b_get.c"/>
+      <file name="test_micro/source/b_inmem.c"/>
+      <file name="test_micro/source/b_latch.c"/>
+      <file name="test_micro/source/b_load.c"/>
+      <file name="test_micro/source/b_open.c"/>
+      <file name="test_micro/source/b_put.c"/>
+      <file name="test_micro/source/b_recover.c"/>
+      <file name="test_micro/source/b_txn.c"/>
+      <file name="test_micro/source/b_txn_write.c"/>
+      <file name="test_micro/source/b_uname.c"/>
+      <file name="test_micro/source/b_util.c"/>
+      <file name="test_micro/source/b_workload.c"/>
+      <file name="test_micro/source/test_micro.c"/>
+      <file name="common/util_arg.c"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+  <project name="test_mutex" guid="9556E0A1-2E25-11DE-8C30-0800200C9A66">
+    <type>app</type>
+    <depends>db</depends>
+    <include type="ref">db</include>
+    <files>
+      <file name="mutex/test_mutex.c"/>
+      <file name="clib/getopt.c"/>
+    </files>
+  </project>
+</projects>

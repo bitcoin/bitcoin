@@ -1,0 +1,40 @@
+# $Id$
+
+getting_started/
+		Examples from the Getting Started Guide
+
+bench_001.c	Micro-benchmark for the bulk fetch interface.
+
+ex_access.c	Using just the DB access methods.
+
+ex_apprec/	Application-specific recovery.
+
+ex_btrec.c	Using the BTREE access method with record numbers.
+
+ex_dbclient.c	Using DB from an RPC client.
+
+ex_env.c	Setting up the DB environment.
+
+ex_lock.c	Locking.
+
+ex_mpool.c	Shared memory buffer pools.
+
+ex_rep/		Replication.  This creates a toy stock quote server
+		with DB's single-master, multiple-client replication,
+		with communication over TCP.  See ex_rep/README.
+
+ex_sequence.c	Sequences.
+
+ex_thread.c	Threaded application with multiple readers and writers.
+
+ex_tpcb.c	TPC/B.
+		Ex_tpcb sets up a framework in which to run a TPC/B test.
+		Database initialization (the -i flag) and running the
+		benchmark (-n flag) must take place separately (i.e.,
+		first create the database, then run 1 or more copies of
+		the benchmark).  Furthermore, when running more than one
+		TPCB process, it is necessary to run the deadlock detector
+		(db_deadlock), since it is possible for concurrent tpcb
+		processes to deadlock.  For performance measurement, it
+		will also be beneficial to run the db_checkpoint process
+		as well.

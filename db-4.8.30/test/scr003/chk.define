@@ -1,0 +1,106 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Check to make sure that all #defines are actually used.
+# Check to make sure that all #defines start in column 1.
+
+d=../..
+
+[ -f $d/LICENSE ] || {
+	echo 'FAIL: cannot find source distribution directory.'
+	exit 1
+}
+
+exitv=0
+t1=__1
+t2=__2
+t3=__3
+
+find $d -name '*.c' -o -name '*.cpp' |
+    sed -e '/\/php_db4\//d' |
+    xargs egrep '^[	 ][	 ]*#' > $t1
+test -s $t1 && {
+	echo "FAIL: found #defines with leading white space:"
+	cat $t1
+	exit 1
+}
+
+egrep '^#define' $d/dbinc/*.h $d/dbinc/*.in |
+    sed -e '/db_185.in/d' -e '/queue.h/d'  |
+    awk '{print $2}' |
+    sed -e '/^AI_CANONNAME/d' \
+	-e '/^AI_NUMERICHOST/d' \
+	-e '/^B_DELETE/d' \
+	-e '/^B_MAX/d' \
+	-e '/^CHECK_THREAD/d' \
+	-e '/^DB_BTREEOLDVER/d' \
+	-e '/^DB_DEGREE_2/d' \
+	-e '/^DB_HASHOLDVER/d' \
+	-e '/^DB_LOCKVERSION/d' \
+	-e '/^DB_LOG_PERM_42_44/d' \
+	-e '/^DB_LOG_RESEND_42_44/d' \
+	-e '/^DB_MAX_PAGES/d' \
+	-e '/^DB_PAGE_QUEUE_LEN/d' \
+	-e '/^DB_QAMOLDVER/d' \
+	-e '/^DB_RETURNS_A_KEY_HASH/d' \
+	-e '/^DB_SPARE_FLAG/d' \
+	-e '/^DB_TXNVERSION/d' \
+	-e '/^DB_UNUSED/d' \
+	-e '/^DEFINE_DB_CLASS/d' \
+	-e '/^FHASH/d' \
+	-e '/^HASH_UNUSED/d' \
+	-e '/^HPUX_MUTEX_PAD/d' \
+	-e '/^LOG_OP/d' \
+	-e '/^MAX_ID/d' \
+	-e '/^MAXHOSTNAMELEN/d' \
+	-e '/^MINFILL/d' \
+	-e '/^MUTEX_FIELDS/d' \
+	-e '/^MUTEX_LOCK_PARTITION/d' \
+	-e '/^MUTEX_UNLOCK_PARTITION/d' \
+	-e '/^NAME_TO_SEQUENCE/d' \
+	-e '/^NCACHED2X/d' \
+	-e '/^NCACHED30/d' \
+	-e '/^PAIR_MASK/d' \
+	-e '/^P_16_COPY/d' \
+	-e '/^P_32_COPY/d' \
+	-e '/^P_32_SWAP/d' \
+	-e '/^P_64_COPY/d' \
+	-e '/^P_64_SWAP/d' \
+	-e '/^P_TO_UINT16/d' \
+	-e '/^QPAGE_CHKSUM/d' \
+	-e '/^QPAGE_NORMAL/d' \
+	-e '/^QPAGE_SEC/d' \
+	-e '/^SIZEOF_PAGE/d' \
+	-e '/^TAILQ_/d' \
+	-e '/^UINT64_FMT/d' \
+	-e '/^UINT64_MAX/d' \
+	-e '/^VM_PAGESIZE/d' \
+	-e '/^WRAPPED_CLASS/d' \
+	-e '/^_WIN32_WINNT/d' \
+	-e '/^__BIT_TYPES_DEFINED__/d' \
+	-e '/^__DBC_INTERNAL/d' \
+	-e '/^__STDC__/d' \
+	-e '/^__lock_locker_hash/d' \
+	-e '/^i_/d' \
+	-e '/_H_/d' \
+	-e 's/(.*//' | sort > $t1
+
+find $d -name '*.c' -o -name '*.cpp' > $t2
+for i in `cat $t1`; do
+	if egrep -w $i `cat $t2` > /dev/null; then
+	    :;
+	else
+	    f=`egrep -l "#define.*$i" $d/dbinc/*.h  $d/dbinc/*.in |
+	    sed 's;\.\.\/\.\.\/dbinc/;;' | tr -s "[:space:]" " "`
+	    echo "FAIL: $i: $f"
+	fi
+done | sort -k 2 > $t3
+
+test -s $t3 && {
+	cat $t3
+	echo "FAIL: found unused #defines"
+	exit 1
+}
+
+exit $exitv

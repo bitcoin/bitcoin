@@ -1,0 +1,309 @@
+Document file - DO NOT EDIT
+
+<BEGIN> BUILD_PENTIUM_debug_BUILDRULE
+BerkeleyDB22small.out
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_AR
+arpentium
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_ARCHIVE
+$(PRJ_DIR)/PENTIUM_debug/BerkeleyDB22small.a
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_AS
+ccpentium
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_CC
+ccpentium
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_CC_ARCH_SPEC
+-mcpu=pentiumpro -march=pentiumpro
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_CFLAGS
+-g \
+	-mcpu=pentiumpro \
+	-march=pentiumpro \
+	-ansi \
+	-nostdlib \
+	-fno-builtin \
+	-fno-defer-pop \
+	-I. \
+	-I$(WIND_BASE)/target/h \
+	-DCPU=PENTIUM2 \
+	-DTOOL_FAMILY=gnu \
+	-DTOOL=gnu \
+	-O0 \
+	-I$(PRJ_DIR) \
+	-I$(PRJ_DIR)/.. \
+	-DDIAGNOSTIC \
+	-DDEBUG
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_CFLAGS_AS
+-g \
+	-mcpu=pentiumpro \
+	-march=pentiumpro \
+	-ansi \
+	-nostdlib \
+	-fno-builtin \
+	-fno-defer-pop \
+	-P \
+	-xassembler-with-cpp \
+	-I. \
+	-I$(WIND_BASE)/target/h \
+	-DCPU=PENTIUM2 \
+	-DTOOL_FAMILY=gnu \
+	-DTOOL=gnu
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_CPP
+ccpentium -E -P
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_HEX_FLAGS
+
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_LD
+ldpentium
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_LDFLAGS
+-X -N
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_LD_PARTIAL
+ccpentium -r -nostdlib -Wl,-X
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_LD_PARTIAL_FLAGS
+-X -r
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_NM
+nmpentium -g
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_OPTION_DEFINE_MACRO
+-D
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_OPTION_DEPEND
+-M -w
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_OPTION_GENERATE_DEPENDENCY_FILE
+-MD
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_OPTION_INCLUDE_DIR
+-I
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_OPTION_LANG_C
+-xc
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_OPTION_UNDEFINE_MACRO
+-U
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_POST_BUILD_RULE
+
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_PRJ_LIBS
+
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_SIZE
+sizepentium
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_MACRO_TOOL_FAMILY
+gnu
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_RO_DEPEND_PATH
+{$(WIND_BASE)/target/h/} \
+	{$(WIND_BASE)/target/src/} \
+	{$(WIND_BASE)/target/config/}
+<END>
+
+<BEGIN> BUILD_PENTIUM_debug_TC
+::tc_PENTIUM2gnu
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_BUILDRULE
+BerkeleyDB22small.out
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_AR
+arpentium
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_ARCHIVE
+$(PRJ_DIR)/PENTIUM_release/BerkeleyDB22small.a
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_AS
+ccpentium
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_CC
+ccpentium
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_CC_ARCH_SPEC
+-mcpu=pentiumpro -march=pentiumpro
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_CFLAGS
+-mcpu=pentiumpro \
+	-march=pentiumpro \
+	-ansi \
+	-nostdlib \
+	-fno-builtin \
+	-fno-defer-pop \
+	-I. \
+	-I$(WIND_BASE)/target/h \
+	-DCPU=PENTIUM2 \
+	-DTOOL_FAMILY=gnu \
+	-DTOOL=gnu \
+	-O2 \
+	-I$(PRJ_DIR) \
+	-I$(PRJ_DIR)/..
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_CFLAGS_AS
+-g \
+	-mcpu=pentiumpro \
+	-march=pentiumpro \
+	-ansi \
+	-nostdlib \
+	-fno-builtin \
+	-fno-defer-pop \
+	-P \
+	-xassembler-with-cpp \
+	-I. \
+	-I$(WIND_BASE)/target/h \
+	-DCPU=PENTIUM2 \
+	-DTOOL_FAMILY=gnu \
+	-DTOOL=gnu
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_CPP
+ccpentium -E -P
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_HEX_FLAGS
+
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_LD
+ldpentium
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_LDFLAGS
+-X -N
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_LD_PARTIAL
+ccpentium -r -nostdlib -Wl,-X
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_LD_PARTIAL_FLAGS
+-X -r
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_NM
+nmpentium -g
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_OPTION_DEFINE_MACRO
+-D
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_OPTION_DEPEND
+-M -w
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_OPTION_GENERATE_DEPENDENCY_FILE
+-MD
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_OPTION_INCLUDE_DIR
+-I
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_OPTION_LANG_C
+-xc
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_OPTION_UNDEFINE_MACRO
+-U
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_POST_BUILD_RULE
+
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_PRJ_LIBS
+
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_SIZE
+sizepentium
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_MACRO_TOOL_FAMILY
+gnu
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_RO_DEPEND_PATH
+{$(WIND_BASE)/target/h/} \
+	{$(WIND_BASE)/target/src/} \
+	{$(WIND_BASE)/target/config/}
+<END>
+
+<BEGIN> BUILD_PENTIUM_release_TC
+::tc_PENTIUM2gnu
+<END>
+
+<BEGIN> BUILD_RULE_BerkeleyDB22small.out
+
+<END>
+
+<BEGIN> BUILD_RULE_BerkeleyDB22small.pl
+
+<END>
+
+<BEGIN> BUILD_RULE_archive
+
+<END>
+
+<BEGIN> BUILD_RULE_objects
+
+<END>
+
+<BEGIN> BUILD__CURRENT
+PENTIUM_debug
+<END>
+
+<BEGIN> BUILD__LIST
+PENTIUM_release PENTIUM_debug
+<END>
+
+<BEGIN> CORE_INFO_TYPE
+::prj_vxApp
+<END>
+
+<BEGIN> CORE_INFO_VERSION
+2.2
+<END>
+

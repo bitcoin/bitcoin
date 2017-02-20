@@ -1,0 +1,94 @@
+#!/bin/sh -
+
+# The examples must be hand-edited after they are copied:
+# - add EnvironmentConfig.setInitializeCache(true), setInitializeLocking(true)
+# - add DatabaseConfig.setType(DatabaseType.BTREE)
+# - add null databaseName param to openDatabase() and openSecondaryDatabase()
+
+COPY_EXAMPLES=0
+
+JEDIR=$1
+if [ $# -eq 1 ] ; then
+    DBDIR=..
+else
+    DBDIR=$2
+fi
+
+if [ ! -d "$DBDIR/dbinc" -o ! -f "$JEDIR/build.xml" ] ; then
+	echo >&2 "Usage $0 /path/to/je [ /path/to/db ]"
+	exit 1
+fi
+
+JEDIR=$(cd "$JEDIR" ; /bin/pwd)
+DBDIR=$(cd "$DBDIR" ; /bin/pwd)
+
+JESRC="$JEDIR/src"
+JETEST="$JEDIR/test"
+JEEXAMPLES="$JEDIR/examples"
+DBSRC="$DBDIR/java/src"
+DBTEST="$DBDIR/test/scr024/src"
+DBEXAMPLES="$DBDIR/examples_java/src"
+DIRMATCH="com/sleepycat/\(\(asm\)\|\(bind\)\|\(collections\)\|\(persist\)\|\(util\)\)"
+EXAMPLESMATCH="^\./\(\(collections\)\|\(persist\)\)"
+
+cd "$JESRC"
+for d in `find . -type d | grep -v CVS | grep $DIRMATCH` ; do
+    #echo "$DBSRC/$d"
+    mkdir -p "$DBSRC/$d"
+done
+cd "$JETEST"
+for d in `find . -type d | grep -v CVS | grep $DIRMATCH` ; do
+    #echo "$DBTEST/$d"
+    mkdir -p "$DBTEST/$d"
+done
+if [ $COPY_EXAMPLES -eq 1 ] ; then
+    cd "$JEEXAMPLES"
+    for d in `find . -type d | grep -v CVS | grep $EXAMPLESMATCH` ; do
+        #echo "$DBEXAMPLES/$d"
+        mkdir -p "$DBEXAMPLES/$d"
+    done
+fi
+
+E1='s/com\.sleepycat\.je/com.sleepycat.db/g'
+E2='/<!-- begin JE only -->/,/<!-- end JE only -->/d'
+E3='s/LockConflictException/DeadlockException/g'
+E4='s/$Id:.*\$/$Id$/'
+E5='s/TransactionGettingStarted/gsg_txn\/JAVA/'
+EXCLUDESRC="\(\(DeletedClassException\)\|\(IncompatibleClassException\)\|\(StoreExistsException\)\|\(StoreNotFoundException\)\)"
+#EXCLUDESRC="\(\(ClassEnhancerTask\)\|\(DeletedClassException\)\|\(IncompatibleClassException\)\|\(StoreExistsException\)\|\(StoreNotFoundException\)\)"
+EXCLUDETESTS="\(\(ConvertAndAddTest\)\|\(DevolutionTest\)\|\(TestVersionCompatibility\)\|\(XACollectionTest\)\)"
+
+cd "$JESRC"
+for f in `find . -name '*.java' -o -name "package.html" | grep $DIRMATCH | grep -v $EXCLUDESRC` ; do
+    #echo $DBSRC/$f
+    sed -e "$E1" -e "$E2" -e "$E3" -e "$E4" -e "$E5" < $f \
+        > $DBSRC/$f.sed.out
+    diff -q -I "\$\Id:" $DBSRC/$f $DBSRC/$f.sed.out || \
+        mv -f $DBSRC/$f.sed.out $DBSRC/$f
+    rm -f $DBSRC/$f.sed.out
+done
+
+cd "$JETEST"
+for f in `find . -name '*.java' -o -name "*.java.original" | grep $DIRMATCH | grep -v $EXCLUDETESTS` \
+        ; do
+    #echo $DBTEST/$f
+    sed -e "$E1" -e "$E2" -e "$E3" -e "$E4" -e "$E5" < $f \
+        > $DBTEST/$f.sed.out
+    diff -q -I "\$\Id:" $DBTEST/$f $DBTEST/$f.sed.out || \
+        mv -f $DBTEST/$f.sed.out $DBTEST/$f
+    rm -f $DBTEST/$f.sed.out
+done
+
+if [ $COPY_EXAMPLES -eq 1 ] ; then
+    cd "$JEEXAMPLES"
+    for f in `find . -name '*.java' | grep $EXAMPLESMATCH` ; do
+        #echo $DBEXAMPLES/$f
+        sed -e "$E1" -e "$E2" -e "$E3" -e "$E4" -e "$E5" < $f \
+            > $DBEXAMPLES/$f.sed.out
+        diff -q -I "\$\Id:" $DBEXAMPLES/$f $DBEXAMPLES/$f.sed.out || \
+            mv -f $DBEXAMPLES/$f.sed.out $DBEXAMPLES/$f
+        rm -f $DBEXAMPLES/$f.sed.out
+    done
+fi
+
+exit 0

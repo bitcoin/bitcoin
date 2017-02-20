@@ -1,0 +1,115 @@
+b_curalloc -c 100
+b_curwalk -c 10 -d 10 -Ss -t btree -w 10 -C 524288 -P 1024
+b_curwalk -c 10 -d 10 -Ss -t hash -w 10 -C 524288 -P 1024
+b_curwalk -c 10 -d 10 -p -t btree -w 10 -C 524288 -P 1024
+b_curwalk -c 10 -d 10 -p -t hash -w 10 -C 524288 -P 1024
+b_curwalk -c 10 -d 10 -pSs -t btree -w 10 -C 524288 -P 1024
+b_curwalk -c 10 -d 10 -pSs -t hash -w 10 -C 524288 -P 1024
+b_curwalk -c 10 -d 10 -ps -t btree -w 10 -C 524288 -P 1024
+b_curwalk -c 10 -d 10 -ps -t hash -w 10 -C 524288 -P 1024
+b_curwalk -c 10 -d 10 -s -t btree -w 10 -C 524288 -P 1024
+b_curwalk -c 10 -d 10 -s -t hash -w 10 -C 524288 -P 1024
+b_curwalk -c 10 -d 100 -t btree -w 10 -C 524288 -P 1024
+b_curwalk -c 10 -d 100 -t hash -w 10 -C 524288 -P 1024
+b_curwalk -c 10 -d 10 -s -t btree -w 10 -C 524288 -P 1024
+b_curwalk -c 100 -d 10 -s -t hash -w 10 -C 524288 -P 1024
+b_curwalk -c 100 -d 10 -t btree -w 10 -C 524288 -P 1024
+b_curwalk -c 100 -d 10 -t hash -w 10 -C 524288 -P 1024
+b_curwalk -c 100 -p -t btree -w 10 -C 524288 -P 1024
+b_curwalk -c 100 -p -t hash -w 10 -C 524288 -P 1024
+b_curwalk -c 100 -p -t queue -w 10 -C 524288 -P 1024
+b_curwalk -c 100 -p -t recno -w 10 -C 524288 -P 1024
+b_curwalk -c 100 -t btree -w 10 -C 524288 -P 1024
+b_curwalk -c 100 -t hash -w 10 -C 524288 -P 1024
+b_curwalk -c 100 -t queue -w 10 -C 524288 -P 1024
+b_curwalk -c 100 -t recno -w 10 -C 524288 -P 1024
+
+b_del -c 100 -t btree -C 524288
+b_del -c 100 -t hash -C 524288
+b_del -c 100 -t queue -C 524288
+b_del -c 100 -t recno -C 524288
+b_del -w -c 100 -t btree -C 524288
+b_del -w -c 100 -t hash -C 524288
+b_del -w -c 100 -t queue -C 524288
+b_del -w -c 100 -t recno -C 524288
+
+b_get -c 100 -t btree -C 524288
+b_get -c 100 -t hash -C 524288
+b_get -c 100 -t queue -C 524288
+b_get -c 100 -t recno -C 524288
+
+b_inmem -d 32 -k 8 -o 10 -P 1024  -C 524288 bulk
+b_inmem -d 32 -k 8 -o 10 -P 1024  -C 524288 txn-sync
+b_inmem -d 32 -k 8 -o 10 -P 1024  -C 524288 read
+b_inmem -d 32 -k 8 -o 100 -P 1024 -C 524288 txn-nosync
+b_inmem -d 32 -k 8 -o 100 -P 1024 -C 524288 txn-read
+b_inmem -d 32 -k 8 -o 100 -P 1024 -C 524288 txn-write
+b_inmem -d 32 -k 8 -o 100 -P 1024 -C 524288 txn-write-nosync
+b_inmem -d 32 -k 8 -o 100 -P 1024 -C 524288 write
+
+b_load -c 100 -t hash -C 524288
+b_load -c 100 -t btree -C 524288
+b_load -c 100 -t queue -C 524288
+b_load -c 100 -t recno -C 524288
+b_load -d -c 100 -t btree -C 524288
+b_load -d -c 100 -t hash -C 524288
+
+b_open -c 100 -d -t btree
+b_open -c 100 -d -t hash
+b_open -c 100 -d -t queue
+b_open -c 100 -d -t recno
+b_open -c 100 -f -t btree
+b_open -c 100 -f -t hash
+b_open -c 100 -f -t queue
+b_open -c 100 -f -t recno
+b_open -c 100 -fd -t btree
+b_open -c 100 -fd -t hash
+b_open -c 100 -fd -t recno
+b_open -c 100 -t btree
+b_open -c 100 -t hash
+b_open -c 100 -t queue
+b_open -c 100 -t recno
+
+b_put -c 10 -d 64 -t btree -C 524288
+b_put -c 10 -d 64 -t hash -C 524288
+b_put -c 10 -d 64 -t recno -C 524288
+b_put -c 100 -s 10 -t btree -C 524288
+b_put -c 100 -s 10 -t hash -C 524288
+b_put -c 100 -s 10 -t queue -C 524288
+b_put -c 100 -s 10 -t recno -C 524288
+b_put -c 100 -t btree -C 524288
+b_put -c 100 -t hash -C 524288
+b_put -c 100 -t queue -C 524288
+b_put -c 100 -t recno -C 524288
+
+b_recover -c 100 -C 524288
+
+b_txn -a -c 100
+b_txn -c 100
+
+b_txn_write -a -c 100
+b_txn_write -ar -c 100
+b_txn_write -c 100
+b_txn_write -r -c 100
+b_txn_write -rw -c 100
+b_txn_write -w -c 100
+
+b_workload -w A -c 100 -g 10 -d 20 -p 1024 -t btree
+b_workload -w A -c 100 -g 10 -d 20 -p 1024 -t hash
+b_workload -w A -c 100 -g 10 -d 20 -p 1024 -t btree
+b_workload -w A -c 100 -g 10 -d 20 -p 1024 -t hash
+b_workload -w A -c 100 -g 10 -d 20 -p 1024 -t btree
+b_workload -w A -c 100 -g 10 -d 20 -p 1024 -t hash
+b_workload -w A -c 100 -g 10 -d 20 -p 1024 -t btree
+b_workload -w A -c 100 -g 10 -d 20 -p 1024 -t hash
+b_workload -w A -c 100 -g 10 -d 256 -p 1024 -t btree
+b_workload -w A -c 100 -g 10 -d 256 -p 1024 -t hash
+b_workload -w A -c 100 -g 10 -o -t btree -p 1024
+b_workload -w A -c 100 -g 10 -o -t hash -p 1024
+b_workload -w E -c 100 -g 10 -d 20 -p 1024 -t btree
+b_workload -w E -c 100 -g 10 -d 20 -p 1024 -t hash
+b_workload -w F -c 100 -g 10 -d 20 -p 1024 -t btree
+b_workload -w F -c 100 -g 10 -d 20 -p 1024 -t hash
+b_workload -w G -c 100 -g 10 -d 20 -p 1024 -t btree
+b_workload -w G -c 100 -g 10 -d 20 -p 1024 -t hash
+b_workload -w H -c 100 -d 20 -p 1024 -t hash

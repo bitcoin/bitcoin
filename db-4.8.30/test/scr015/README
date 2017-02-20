@@ -1,0 +1,36 @@
+# $Id$
+
+Use the scripts testall or testone to run all, or just one of the C++
+tests.  You must be in this directory to run them.  For example,
+
+        $ export LIBS="-L/usr/include/BerkeleyDB/lib"
+        $ export CXXFLAGS="-I/usr/include/BerkeleyDB/include"
+        $ export LD_LIBRARY_PATH="/usr/include/BerkeleyDB/lib"
+	$ ./testone TestAppendRecno
+	$ ./testall
+
+The scripts will use c++ in your path.  Set environment variables $CXX
+to override this.  It will also honor any $CXXFLAGS and $LIBS
+variables that are set, except that -c are silently removed from
+$CXXFLAGS (since we do the compilation in one step).
+
+To run successfully, you will probably need to set $LD_LIBRARY_PATH
+to be the directory containing libdb_cxx-X.Y.so
+
+As an alternative, use the --prefix=<DIR> option, a la configure
+to set the top of the BerkeleyDB install directory.  This forces
+the proper options to be added to $LIBS, $CXXFLAGS $LD_LIBRARY_PATH.
+For example,
+
+	$ ./testone --prefix=/usr/include/BerkeleyDB TestAppendRecno
+	$ ./testall --prefix=/usr/include/BerkeleyDB
+
+The test framework is pretty simple.  Any <name>.cpp file in this
+directory that is not mentioned in the 'ignore' file represents a
+test.  If the test is not compiled successfully, the compiler output
+is left in <name>.compileout .  Otherwise, the java program is run in
+a clean subdirectory using as input <name>.testin, or if that doesn't
+exist, /dev/null.  Output and error from the test run are put into
+<name>.out, <name>.err .  If <name>.testout, <name>.testerr exist,
+they are used as reference files and any differences are reported.
+If either of the reference files does not exist, /dev/null is used.

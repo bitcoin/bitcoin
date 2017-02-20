@@ -1,0 +1,332 @@
+#include "db_config.h"
+
+#include "db_int.h"
+#include "dbinc/db_page.h"
+#include "dbinc/__qam.h"
+#include "dbinc/log.h"
+
+/*
+ * __qam_incfirst_recover --
+ *	Recovery function for incfirst.
+ *
+ * PUBLIC: int __qam_incfirst_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__qam_incfirst_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__qam_incfirst_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__qam_incfirst_print);
+	REC_INTRO(__qam_incfirst_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+
+/*
+ * __qam_mvptr_recover --
+ *	Recovery function for mvptr.
+ *
+ * PUBLIC: int __qam_mvptr_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__qam_mvptr_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__qam_mvptr_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__qam_mvptr_print);
+	REC_INTRO(__qam_mvptr_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+
+/*
+ * __qam_del_recover --
+ *	Recovery function for del.
+ *
+ * PUBLIC: int __qam_del_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__qam_del_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__qam_del_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__qam_del_print);
+	REC_INTRO(__qam_del_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+
+/*
+ * __qam_add_recover --
+ *	Recovery function for add.
+ *
+ * PUBLIC: int __qam_add_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__qam_add_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__qam_add_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__qam_add_print);
+	REC_INTRO(__qam_add_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+
+/*
+ * __qam_delext_recover --
+ *	Recovery function for delext.
+ *
+ * PUBLIC: int __qam_delext_recover
+ * PUBLIC:   __P((env *, DBT *, DB_LSN *, db_recops, void *));
+ */
+int
+__qam_delext_recover(env, dbtp, lsnp, op, info)
+	env *env;
+	DBT *dbtp;
+	DB_LSN *lsnp;
+	db_recops op;
+	void *info;
+{
+	__qam_delext_args *argp;
+	DB *file_dbp;
+	DBC *dbc;
+	DB_MPOOLFILE *mpf;
+	DB_THREAD_INFO *ip;
+	PAGE *pagep;
+	int cmp_n, cmp_p, modified, ret;
+
+	ip = ((DB_TXNHEAD *)info)->thread_info;
+
+	REC_PRINT(__qam_delext_print);
+	REC_INTRO(__qam_delext_read, ip, 0);
+
+	if ((ret = mpf->get(mpf, &argp->pgno, 0, &pagep)) != 0)
+		if (DB_REDO(op)) {
+			if ((ret = mpf->get(mpf,
+			    &argp->pgno, DB_MPOOL_CREATE, &pagep)) != 0)
+				goto out;
+		} else {
+			*lsnp = argp->prev_lsn;
+			ret = 0;
+			goto out;
+		}
+
+	modified = 0;
+	cmp_n = log_compare(lsnp, &LSN(pagep));
+
+	/*
+	 * Use this when there is something like "pagelsn" in the argp
+	 * structure.  Sometimes, you might need to compare meta-data
+	 * lsn's instead.
+	 *
+	 * cmp_p = log_compare(&LSN(pagep), argp->pagelsn);
+	 */
+	if (cmp_p == 0 && DB_REDO(op)) {
+		/* Need to redo update described. */
+		modified = 1;
+	} else if (cmp_n == 0 && !DB_REDO(op)) {
+		/* Need to undo update described. */
+		modified = 1;
+	}
+	if (ret = mpf->put(mpf, pagep, modified ? DB_MPOOL_DIRTY : 0))
+		goto out;
+
+	*lsnp = argp->prev_lsn;
+	ret = 0;
+
+out:	REC_CLOSE;
+}
+

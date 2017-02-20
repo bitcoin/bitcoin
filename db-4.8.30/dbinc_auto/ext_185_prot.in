@@ -1,0 +1,19 @@
+
+/* DO NOT EDIT: automatically built by dist/s_include. */
+#ifndef	_DB_EXT_185_PROT_IN_
+#define	_DB_EXT_185_PROT_IN_
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+#ifdef _DB185_INT_H_
+DB185 *__db185_open __P((const char *, int, int, DBTYPE, const void *));
+#else
+DB *__db185_open __P((const char *, int, int, DBTYPE, const void *));
+#endif
+
+#if defined(__cplusplus)
+}
+#endif
+#endif /* !_DB_EXT_185_PROT_IN_ */

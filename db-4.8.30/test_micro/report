@@ -1,0 +1,121 @@
+#! /bin/sh
+#
+# $Id$
+
+# Use our pathname to locate the absolute path for our awk scripts.
+t=`dirname $0`
+h=`(cd $t && echo $PWD)`
+
+# We need a temporary file, and we need to clean it up after failure.
+tmp="$PWD/__t"
+trap 'rm -f $tmp; exit 1' 1 2 3 13 15
+trap 'rm -f $tmp; exit 0' 0
+
+# header --
+#	Output HTML page header.
+#	$1: directory name.
+header()
+{
+	echo "<html>"
+	echo "<head>"
+	machine=`echo $1 | sed 's/.*\.//'`
+	echo "<title>Berkeley DB test_micro run: $machine</title>"
+	echo "</head>"
+	echo "<body bgcolor=white>"
+	echo "<center><h1>Berkeley DB test_micro run: $machine</h1></center>"
+	echo "<p align=right>`date`</p>"
+	test -f UNAME && cat UNAME
+}
+
+# footer --
+#	Output HTML page footer.
+footer()
+{
+	echo "</body>"
+	echo "</html>"
+}
+
+# table --
+#	Create a table.
+#	$1: output file
+table()
+{
+	title="Test $1: `egrep '^#' $1 | sort -u | sed 's/^#[	 ]*//'`"
+	echo "<hr size=1 noshade>"
+	echo "<table cellspacing=0 cellpadding=0 border=0>"
+	echo "<th align=left colspan=2>$title</th>"
+	echo "<tr>"
+	echo "<th align=right>Release</th>"
+	echo "<th align=center>Operations/second</th>"
+	echo "</tr>"
+
+	# You can set the MAJOR and MINOR environment variables to limit
+	# the BDB releases for which a report is created.
+	#
+	# Process the output into a single line per release.
+	egrep "^${MAJOR:-[0-9][0-9]*}.${MINOR:-*}" $1 |
+	awk -f $h/report.awk |
+	sort -n > $tmp
+
+	# Get the release count, and maximum value.
+	nrel=`wc -l $tmp`
+	max=`sort -k 2 -n -t ":" < $tmp | tail -1 | awk -F: '{print $2}'`
+
+	# Display the output.
+	IFS=":"
+	cat $tmp | while true; do
+		# release, average, runs, percent, standard deviation
+		read rel avg runs percent rsd
+		if test "X$rel" = "X" ; then
+			break;
+		fi
+
+		# echo "read: rel $rel, avg $avg, runs $runs, percent $percent, rsd $rsd" > /dev/stderr
+
+		echo "<tr>"
+		echo "<td align=right width=80><pre>$rel</pre></td>"
+		echo "<td>"
+		echo "<table>"
+		echo "<tr>"
+		if [ "$max" = "0.00" ];then
+			t=0
+		else
+			t=`echo "400 * ($avg/($max + $max/10))" | bc -l`
+		fi
+		t=`printf %.0f $t`
+		echo "<td bgcolor='#003366' width=$t>&nbsp;</td>"
+		t=`echo "400 - $t" | bc`
+		echo "<td bgcolor='#CCCCCC' width=$t>&nbsp;</td>"
+		echo "<td>&nbsp;&nbsp;</td>"
+		echo "<td align=right width=100><pre>$avg</pre></td>"
+		if test "X$percent" != "X" -o "X$rsd" != "X"; then
+			echo -n "<td align=right><pre>&nbsp;&nbsp;("
+			if test "X$percent" = "X"; then
+				echo -n '***'
+			else
+				echo -n "-$percent"
+			fi
+			if test "X$rsd" != "X"; then
+				echo -n ", $rsd rsd, $runs runs"
+			fi
+			echo ")</pre></td>"
+		fi
+		echo "</tr>"
+		echo "</table>"
+		echo "</tr>"
+	done
+	echo "</table>"
+}
+
+for i in RUN.*; do
+	echo "Building $i..."
+	name=`echo $i | sed 's/RUN.//'`
+	(cd $i
+	header $i
+	for j in `ls [0-9]* | sort -n`; do
+		table $j
+	done
+	footer) > $i/$name.html
+done
+
+exit 0

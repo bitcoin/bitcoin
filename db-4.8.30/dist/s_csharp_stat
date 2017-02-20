@@ -1,0 +1,163 @@
+#!/bin/sh -
+#	$Id$
+#
+# Build the CSharp stat structures
+
+msgcsharp="/*-
+ * Automatically built by dist/s_java_csharp.
+ *
+ * See the file LICENSE for redistribution information.
+ *
+ * Copyright (c) 2002-2009 Oracle.  All rights reserved.
+ */"
+
+f=../csharp/Internal/StatStructs.cs
+t=AA_TEST
+#trap 'rm -f $t; exit 0' 0 1 2 3 13 15
+
+# Script to convert DB C structure declarations in CSharp declarations
+# Pull out the structure we're concerned with, strip out ifdefs and defines
+# and finally convert from C to C# types
+csclass()
+{
+    sed -n "/struct $1 {/,/^}/p" < ../dbinc/db.in |
+    sed -e "/$1/d" \
+    	-e '/^}/d' \
+	-e "/CONFIG_TEST/,/#endif/d" \
+	-e "/^#/d" \
+    	-e 's:\tchar \*:\tinternal string :' \
+	-e 's:\tdb_pgno_t:\tinternal uint:' \
+	-e 's:\tdb_seq_t:\tinternal long:' \
+	-e 's:\tdb_threadid_t:\tinternal uint:' \
+	-e 's:\tdb_timeout_t:\tinternal uint:' \
+	-e 's:\tDB_LSN:\tinternal DB_LSN_STRUCT:' \
+	-e 's:\tDB_TXN_ACTIVE \*:\tinternal IntPtr :' \
+	-e 's:\tint\s:\tinternal int :' \
+	-e 's:\tint32_t:\tinternal int:' \
+	-e 's:\tpid_t:\tinternal int:' \
+	-e 's:\troff_t:\tinternal IntPtr:' \
+	-e 's:\tsize_t:\tinternal IntPtr:' \
+	-e 's:\ttime_t:\tinternal long:' \
+    	-e 's:\tu_int32_t:\tinternal uint:' \
+        -e 's:\tuintmax_t:\tinternal ulong:' \
+	-e "s:/\*.*\*/::" \
+    	-e "/\/\*/ {
+N
+/\/\*.*\*\// {
+s:/\*.*\*/::
+P
+D
+}
+}"
+}
+
+stat_class()
+{
+	c_struct=__db_$1
+	cs_struct=$2
+
+	(cat <<EOF
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct $cs_struct {
+EOF
+	 csclass $c_struct
+	 echo '    }'
+	 echo ) >> $t
+}
+
+txn_active()
+{
+    (echo "internal enum DB_TXN_ACTIVE_STATUS {"
+        sed -n "/struct __db_txn_active {/,/^}/p" < ../dbinc/db.in |
+	sed -n "/^#define/p" | awk '{print "        " $2 " = " $3 ","}'
+	echo "}"
+	echo ) >> $t
+
+    (cat <<EOF
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct DB_TXN_ACTIVE {
+EOF
+
+	sed -n "/struct __db_txn_active {/,/^}/p" < ../dbinc/db.in |
+	sed -e "/__db_txn_active/d" \
+	    -e '/^}/d' \
+	    -e "/CONFIG_TEST/,/#endif/d" \
+	    -e "/^#/d" \
+	    -e "/gid\[.*\]/d" \
+	    -e "/name\[.*\]/d" \
+	    -e 's:\tchar \*:\tinternal string :' \
+	    -e 's:\tdb_pgno_t:\tinternal uint:' \
+	    -e 's:\tdb_seq_t:\tinternal long:' \
+	    -e 's:\tdb_threadid_t:\tinternal uint:' \
+	    -e 's:\tdb_timeout_t:\tinternal uint:' \
+	    -e 's:\tDB_LSN:\tinternal DB_LSN_STRUCT:' \
+	    -e 's:\tDB_TXN_ACTIVE \*:\tinternal IntPtr:' \
+	    -e 's:\tint\s:\tinternal int :' \
+	    -e 's:\tint32_t:\tinternal int:' \
+	    -e 's:\tpid_t:\tinternal int:' \
+	    -e 's:\troff_t:\tinternal IntPtr:' \
+	    -e 's:\tsize_t:\tinternal IntPtr:' \
+	    -e 's:\ttime_t:\tinternal long:' \
+	    -e 's:\tu_int32_t status:\tinternal DB_TXN_ACTIVE_STATUS status:' \
+	    -e 's:\tu_int32_t:\tinternal uint:' \
+	    -e 's:\tuintmax_t:\tinternal ulong:' \
+	    -e "s:/\*.*\*/::"
+	echo '    }'
+	echo ) >> $t
+}
+
+cat > $t <<EOF
+$msgcsharp
+
+using System;
+using System.Runtime.InteropServices;
+
+namespace BerkeleyDB.Internal {
+EOF
+
+stat_class bt_stat BTreeStatStruct
+stat_class h_stat HashStatStruct
+stat_class lock_stat LockStatStruct
+stat_class log_stat LogStatStruct
+stat_class mpool_fstat MPoolFileStatStruct
+stat_class mpool_stat MPoolStatStruct
+
+cat >>$t <<EOF
+    internal struct MempStatStruct {
+        internal MPoolStatStruct st;
+        internal MPoolFileStatStruct[] files;
+}
+
+EOF
+
+stat_class mutex_stat MutexStatStruct
+stat_class qam_stat QueueStatStruct
+stat_class bt_stat RecnoStatStruct
+stat_class repmgr_stat RepMgrStatStruct
+stat_class rep_stat ReplicationStatStruct
+stat_class seq_stat SequenceStatStruct
+stat_class txn_stat TransactionStatStruct
+
+cat >> $t <<EOF
+    internal struct DB_LSN_STRUCT {
+        internal uint file;
+        internal uint offset;
+    }
+
+EOF
+
+txn_active
+
+cat >> $t <<EOF
+    internal struct TxnStatStruct {
+        internal TransactionStatStruct st;
+        internal DB_TXN_ACTIVE[] st_txnarray;
+        internal byte[][] st_txngids;
+        internal string[] st_txnnames;
+    }
+}
+
+EOF
+
+cmp $f $t > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 644 $f)

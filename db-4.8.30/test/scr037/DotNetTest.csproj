@@ -1,0 +1,116 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{08D940C7-AAF5-413A-95E3-58A46880DC4D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>DotNetTest</RootNamespace>
+    <AssemblyName>DotNetTest</AssemblyName>
+    <StartupObject>
+    </StartupObject>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <ItemGroup>
+    <Compile Include="BTreeCursorTest.cs" />
+    <Compile Include="BTreeDatabaseConfigTest.cs" />
+    <Compile Include="BTreeDatabaseTest.cs" />
+    <Compile Include="Configuration.cs" />
+    <Compile Include="CursorConfigTest.cs" />
+    <Compile Include="CursorTest.cs" />
+    <Compile Include="DatabaseConfigTest.cs" />
+    <Compile Include="DatabaseEnvironmentConfigTest.cs" />
+    <Compile Include="DatabaseEnvironmentTest.cs" />
+    <Compile Include="DatabaseExceptionTest.cs" />
+    <Compile Include="DatabaseTest.cs" />
+    <Compile Include="ForeignKeyTest.cs" />
+    <Compile Include="HashCursorTest.cs" />
+    <Compile Include="HashDatabaseConfigTest.cs" />
+    <Compile Include="HashDatabaseTest.cs" />
+    <Compile Include="JoinCursorTest.cs" />
+    <Compile Include="LockingConfigTest.cs" />
+    <Compile Include="LockTest.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="LogConfigTest.cs" />
+    <Compile Include="MPoolConfigTest.cs" />
+    <Compile Include="MutexConfigTest.cs" />
+    <Compile Include="QueueDatabaseConfigTest.cs" />
+    <Compile Include="QueueDatabaseTest.cs" />
+    <Compile Include="RecnoCursorTest.cs" />
+    <Compile Include="RecnoDatabaseConfigTest.cs" />
+    <Compile Include="RecnoDatabaseTest.cs" />
+    <Compile Include="ReplicationConfigTest.cs" />
+    <Compile Include="ReplicationTest.cs" />
+    <Compile Include="SecondaryBTreeDatabaseConfigTest.cs" />
+    <Compile Include="SecondaryBTreeDatabaseTest.cs" />
+    <Compile Include="SecondaryCursorTest.cs" />
+    <Compile Include="SecondaryDatabaseConfigTest.cs" />
+    <Compile Include="SecondaryDatabaseTest.cs" />
+    <Compile Include="SecondaryHashDatabaseConfigTest.cs" />
+    <Compile Include="SecondaryHashDatabaseTest.cs" />
+    <Compile Include="SecondaryQueueDatabaseConfigTest.cs" />
+    <Compile Include="SecondaryQueueDatabaseTest.cs" />
+    <Compile Include="SecondaryRecnoDatabaseConfigTest.cs" />
+    <Compile Include="SecondaryRecnoDatabaseTest.cs" />
+    <Compile Include="SequenceConfigTest.cs" />
+    <Compile Include="SequenceTest.cs" />
+    <Compile Include="TestException.cs" />
+    <Compile Include="TransactionConfigTest.cs" />
+    <Compile Include="TransactionTest.cs" />
+    <Compile Include="XMLReader.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\csharp\db_dotnet.csproj">
+      <Project>{4696FB1E-1E5F-40B9-BD8C-A54D3BDA00F6}</Project>
+      <Name>db_dotnet</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="nunit.framework, Version=2.4.8.0, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL" />
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.XML" />
+  </ItemGroup>
+  <PropertyGroup>
+    <PreBuildEvent>IF $(ConfigurationName) == Debug SET LIBEXT=d
+IF $(ConfigurationName) == Release SET LIBEXT
+
+copy /B "$(SolutionDir)Win32\$(ConfigurationName)\libdb48%25LIBEXT%25.dll" "$(TargetDir)"
+copy /B "$(SolutionDir)Win32\$(ConfigurationName)\libdb_csharp48%25LIBEXT%25.dll" "$(TargetDir)"
+copy "$(ProjectDir)AllTestData.xml" "$(TargetDir)"</PreBuildEvent>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="AllTestData.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bdb4.7.db" />
+  </ItemGroup>
+</Project>

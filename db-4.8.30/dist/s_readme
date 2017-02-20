@@ -1,0 +1,25 @@
+#!/bin/sh -
+#	$Id$
+#
+# Build the README.
+
+echo 'Updating Berkeley DB README file...'
+
+d=..
+
+t=/tmp/__t
+trap 'rm -f $t; exit 0' 0 1 2 3 13 15
+
+. RELEASE
+
+cat << END_OF_README>$t
+$DB_VERSION_STRING
+
+This is version $DB_VERSION_MAJOR.$DB_VERSION_MINOR.$DB_VERSION_PATCH of Berkeley DB from Oracle.  To view release and
+installation documentation, load the distribution file docs/index.html
+into your web browser.
+END_OF_README
+
+f=../README
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)

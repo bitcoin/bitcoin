@@ -1,0 +1,14 @@
+
+This test suite is designed to test the basic functionality of the core DB Java API.
+
+To build and run the test suite you need to have JUnit 4 or higher installed, and set in your environment as JUNIT_JAR.
+
+The script chk.bdb builds and runs all of the test cases currently enabled.
+
+Each new java source file you created needs to be added to the Makefile.
+
+The script createnewtest.sh in this directory does just that. run the script with a single parameter which is the name of the new test to create. It will populate the java source file in com/sleepycat/db/test with the basic layout all tests should have.
+
+The two files config_nix and config_win are used by the test cases to load profile information. For now they only contain a path to the root directory where test output files should be written.
+The configuration gets loaded via the TestUtils class.
+

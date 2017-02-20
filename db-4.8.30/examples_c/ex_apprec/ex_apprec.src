@@ -1,0 +1,33 @@
+/*-
+ * See the file LICENSE for redistribution information.
+ *
+ * Copyright (c) 2002-2009 Oracle.  All rights reserved.
+ *
+ * $Id$
+ */
+
+PREFIX	ex_apprec
+INCLUDE #include "ex_apprec.h"
+
+/*
+ * This is the source file used to generate the application-specific recovery
+ * functions used by the ex_apprec example.  It should be turned into usable
+ * source code (including a template for the recovery function itself) by
+ * invoking changing to the dist directory of the DB distribution and
+ * running the gen_rec.awk script there as follows:
+ *
+ *     awk -f ./gen_rec.awk \
+ *         -v source_file=../examples_c/ex_apprec/ex_apprec_auto.c         \
+ *         -v header_file=../examples_c/ex_apprec/ex_apprec_auto.h         \
+ *         -v template_file=../examples_c/ex_apprec/ex_apprec_template     \
+ *         < ../examples_c/ex_apprec/ex_apprec.src
+ */
+
+/*
+ * mkdir: used to create a directory
+ *
+ * dirname:	relative or absolute pathname of the directory to be created
+ */
+BEGIN mkdir	42	10000
+DBT	dirname		DBT		s
+END

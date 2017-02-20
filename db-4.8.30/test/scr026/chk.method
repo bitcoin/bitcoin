@@ -1,0 +1,108 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Check that DB doesn't call DB or DB_ENV methods internally.
+
+d=../..
+
+t=__1
+
+echo ========================================================
+echo "Check that DB doesn't call DB or DB_ENV methods internally."
+echo ========================================================
+m=`grep '(\*[a-z][_a-z]*)' $d/dbinc/db.in |
+   sed -e 's/^[^(]*(\*//' \
+       -e 's/).*//' \
+       -e '/am_bulk/d' \
+       -e '/am_close/d' \
+       -e '/am_del/d' \
+       -e '/am_destroy/d' \
+       -e '/am_get/d' \
+       -e '/am_put/d' \
+       -e '/am_remove/d' \
+       -e '/am_rename/d' \
+       -e '/am_writelock/d' \
+       -e '/app_dispatch/d' \
+       -e '/db_append_recno/d' \
+       -e '/db_errcall/d' \
+       -e '/db_event_func/d' \
+       -e '/db_feedback/d' \
+       -e '/db_free/d' \
+       -e '/db_malloc/d' \
+       -e '/db_paniccall/d' \
+       -e '/db_realloc/d' \
+       -e '/dbt_usercopy/d' \
+       -e '/dup_compare/d' \
+       -e '/s_callback/d' |
+   sort -u`
+
+(cd $d && for i in $m; do
+	#echo "$i..." > /dev/stderr
+	egrep -- "->$i\(" */*.[ch]
+done) |
+sed \
+    -e '/Wrapper function for/d' \
+    -e '/\/db.h:/d' \
+    -e '/^[^:]*:[	 ]*\*[	 ]/d' \
+    -e '/^common\/db_getlong.c:/d' \
+    -e '/^common\/util_cache.c:/d' \
+    -e '/^common\/util_log.c:/d' \
+    -e '/^common\/util_sig.c:/d' \
+    -e '/^db185\//d' \
+    -e '/^db_archive\//d' \
+    -e '/^db_checkpoint\//d' \
+    -e '/^db_codegen\//d' \
+    -e '/^db_deadlock\//d' \
+    -e '/^db_dump185\//d' \
+    -e '/^db_dump\//d' \
+    -e '/^db_hotbackup\//d' \
+    -e '/^db_load\//d' \
+    -e '/^db_printlog\//d' \
+    -e '/^db_recover\//d' \
+    -e '/^db_stat\//d' \
+    -e '/^db_sql\//d' \
+    -e '/^db_upgrade\//d' \
+    -e '/^db_verify\//d' \
+    -e '/^dbm\//d' \
+    -e '/^examples_c\//d' \
+    -e '/^examples_cxx\//d' \
+    -e '/^examples_java\//d' \
+    -e '/^hsearch\//d' \
+    -e '/^libdb_java\//d' \
+    -e '/^libdb_csharp\//d' \
+    -e '/^mod_db4\//d' \
+    -e '/^mutex\/tm.c:/d' \
+    -e '/^php_db4\//d' \
+    -e '/^stl\//d' \
+    -e '/^tcl\//d' \
+    -e '/^test\//d' \
+    -e '/^test_erlang\//d' \
+    -e '/^test_perf\//d' \
+    -e '/^test_purify\//d' \
+    -e '/^test_repmgr\//d' \
+    -e '/^test_server\//d' \
+    -e '/^test_thread\//d' \
+    -e '/^test_vxworks\//d' \
+    -e '/^xa\//d' \
+    -e '/closeme->close() is a wrapper;/d' \
+    -e '/crypto.c.*db_cipher->close/d' \
+    -e '/db_err.c:.*dbenv->db_msgcall(dbenv, buf);/d' \
+    -e '/db_iface.c:.*(txn->commit(txn, nosync ? DB_TXN_NOSYNC : 0));/d' \
+    -e '/db_iface.c:.*if ((t_ret = txn->abort(txn)) != 0)/d' \
+    -e '/db_iface.c:.*return (dbenv->txn_begin(dbenv, NULL, txnidp, 0));/d' \
+    -e '/db_iface.c:.*return (dbp->get(dbp, txn, key, &data, flags));/d' \
+    -e '/dbenv->is_alive(/d' \
+    -e '/dbenv->thread_id(/d' \
+    -e '/dbenv->thread_id_string(/d' \
+    -e '/rep_util.c:.*ret = dbenv->rep_send(/d' \
+    -e '/test_mutex.c:/d'
+>$t
+
+test -s $t && {
+        cat $t
+	echo "FAIL: found DB/DB_ENV method calls DB library."
+	exit 1
+}
+
+exit 0

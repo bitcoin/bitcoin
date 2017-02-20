@@ -1,0 +1,5 @@
+# Begin Special Build Tool
+SOURCE="$(InputPath)"
+PostBuild_Desc=Generate csv_local.c
+PostBuild_Cmds="$(OUTDIR)\ex_csvcode.exe" -c ../examples_c/csv/csv_local.c -h ../examples_c/csv/csv_local.h -f ../examples_c/csv/sample.desc
+# End Special Build Tool

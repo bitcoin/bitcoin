@@ -1,0 +1,301 @@
+# $Id$
+
+Synchronization in the Locking Subsystem
+
+This is a document that describes how we implemented fine-grain locking
+in the lock manager (that is, locking on a hash bucket level instead of
+locking the entire region).  We found that the increase in concurrency
+was not sufficient to warrant the increase in complexity or the additional
+cost of performing each lock operation.  Therefore, we don't use this
+any more.  Should we have to do fine-grain locking in a future release,
+this would be a reasonable starting point.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+1. Data structures
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+The lock manager maintains 3 different structures:
+
+Objects (__db_lockobj):
+	Describes an object that is locked.  When used with DB, this consists
+	of a __db_ilock (a file identifier and a page number).
+
+Lockers (__db_locker):
+	Identifies a specific locker ID and maintains the head of a list of
+	locks held by a locker (for using during transaction commit/abort).
+
+Locks (__db_lock):
+	Describes a particular object lock held on behalf of a particular
+	locker id.
+
+Objects and Lockers reference Locks.
+
+These structures are organized via two synchronized hash tables.  Each
+hash table consists of two physical arrays: the array of actual hash
+buckets and an array of mutexes so we can lock individual buckets, rather
+than the whole table.
+
+One hash table contains Objects and the other hash table contains Lockers.
+Objects contain two lists of locks, waiters and holders: holders currently
+hold a lock on the Object, waiters are lock waiting to be granted.
+Lockers are a single linked list that connects the Locks held on behalf
+of the specific locker ID.
+
+In the diagram below:
+
+Locker ID #1 holds a lock on Object #1 (L1) and Object #2 (L5), and is
+waiting on a lock on Object #1 (L3).
+
+Locker ID #2 holds a lock on Object #1 (L2) and is waiting on a lock for
+Object #2 (L7).
+
+Locker ID #3 is waiting for a lock on Object #2 (L6).
+
+	OBJECT                   -----------------------
+	HASH                     |                     |
+                             ----|-------------        |
+	________    _______  |   |   ________ |        |
+	|	|-->| O1  |--|---|-->|  O2  | |        |
+	|_______|   |_____|  |   |   |______| V        |
+	|	|    W  H--->L1->L2   W  H--->L5       |	holders
+	|_______|    |       |   |    |                V
+	|	|    ------->L3  \    ------->L6------>L7	waiters
+	|_______|           /     \            \
+	.	.          /       \            \
+	.	.          |        \            \
+	.	.          |         \            -----------
+	|_______|          |          --------------        |
+	|	|      ____|____                ___|_____  _|______
+	|_______|      |       |                |       |  |      |
+	|	|      | LID1  |                |  LID2 |  | LID3 |
+	|_______|      |_______|                |_______|  |______|
+			   ^                        ^        ^
+			   |                        |        |
+			___|________________________|________|___
+	       LOCKER	|    |    |    |    |    |    |    |    |
+	       HASH	|    |    |    |    |    |    |    |    |
+			|    |    |    |    |    |    |    |    |
+			|____|____|____|____|____|____|____|____|
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+2. Synchronization
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+There are four types of mutexes in the subsystem.
+
+Object mutexes;
+	These map one-to-one to each bucket in the Object hash table.
+	Holding a mutex on an Object bucket secures all the Objects in
+	that bucket as well as the Lock structures linked from those
+	Objects.  All fields in the Locks EXCEPT the Locker links (the
+	links that attach Locks by Locker ID) are protected by these
+	mutexes.
+
+Locker mutexes:
+	These map one-to-one to each bucket in the Locker hash table.
+	Holding a mutex on a Locker bucket secures the Locker structures
+	and the Locker links in the Locks.
+
+Memory mutex:
+	This mutex allows calls to allocate/free memory, i.e. calls to
+	__db_shalloc and __db_shalloc_free, as well as manipulation of
+	the Object, Locker and Lock free lists.
+
+Region mutex:
+	This mutex is currently only used to protect the locker ids.
+	It may also be needed later to provide exclusive access to
+	the region for deadlock detection.
+
+Creating or removing a Lock requires locking both the Object lock and the
+Locker lock (and eventually the shalloc lock to return the item to the
+free list).
+
+The locking hierarchy is as follows:
+
+	The Region mutex may never be acquired after any other mutex.
+
+	The Object mutex may be acquired after the Region mutex.
+
+	The Locker mutex may be acquired after the Region and Object
+	mutexes.
+
+	The Memory mutex may be acquired after any mutex.
+
+So, if both and Object mutex and a Locker mutex are going to be acquired,
+the Object mutex must be acquired first.
+
+The Memory mutex may be acquired after any other mutex, but no other mutexes
+can be acquired once the Memory mutex is held.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+3. The algorithms:
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+The locking subsystem supports four basic operations:
+	Get a Lock (lock_get)
+
+	Release a Lock (lock_put)
+
+	Release all the Locks on a specific Object (lock_vec)
+
+	Release all the Locks for a specific Locker (lock_vec)
+
+Get a lock:
+	Acquire Object bucket mutex.
+	Acquire Locker bucket mutex.
+
+	Acquire Memory mutex.
+	If the Object does not exist
+		Take an Object off the freelist.
+	If the Locker doesn't exist
+		Take a Locker off the freelist.
+	Take a Lock off the free list.
+	Release Memory mutex.
+
+	Add Lock to the Object list.
+	Add Lock to the Locker list.
+	Release Locker bucket mutex
+
+	If the lock cannot be granted
+		Release Object bucket mutex
+		Acquire lock mutex (blocks)
+
+		Acquire Object bucket mutex
+		If lock acquisition did not succeed (e.g, deadlock)
+			Acquire Locker bucket mutex
+			If locker should be destroyed
+				Remove locker from hash table
+				Acquire Memory mutex
+				Return locker to free list
+				Release Memory mutex
+			Release Locker bucket mutex
+
+			If object should be released
+				Acquire Memory mutex
+				Return object to free list
+				Release Memory mutex
+
+	Release Object bucket mutex
+
+Release a lock:
+	Acquire Object bucket mutex.
+		(Requires that we be able to find the Object hash bucket
+		without looking inside the Lock itself.)
+
+	If releasing a single lock and the user provided generation number
+	doesn't match the Lock's generation number, the Lock has been reused
+	and we return failure.
+
+	Enter lock_put_internal:
+		if the Lock is still on the Object's lists:
+			Increment Lock's generation number.
+			Remove Lock from the Object's list (NULL link fields).
+			Promote locks for the Object.
+
+		Enter locker_list_removal
+			Acquire Locker bucket mutex.
+			If Locker doesn't exist:
+				Release Locker bucket mutex
+				Release Object bucket mutex
+				Return error.
+			Else if Locker marked as deleted:
+				dont_release = TRUE
+			Else
+				Remove Lock from Locker list.
+				If Locker has no more locks
+					Remove Locker from table.
+					Acquire Memory mutex.
+					Return Locker to free list
+					Release Memory mutex
+			Release Locker bucket mutex.
+		Exit locker_list_removal
+
+		If (!dont_release)
+			Acquire Memory mutex
+			Return Lock to free list
+			Release Memory mutex
+
+	Exit lock_put_internal
+
+	Release Object bucket mutex
+
+Release all the Locks on a specific Object (lock_vec, DB_PUT_ALL_OBJ):
+
+	Acquire Object bucket mutex.
+
+	For each lock on the waiter list:
+		lock_put_internal
+	For each lock on the holder list:
+		lock_put_internal
+
+	Release Object bucket mutex.
+
+Release all the Locks for a specific Locker (lock_vec, DB_PUT_ALL):
+
+	Acquire Locker bucket mutex.
+	Mark Locker deleted.
+	Release Locker mutex.
+
+	For each lock on the Locker's list:
+		Remove from locker's list
+			(The lock could get put back on the free list in
+			lock_put and then could get reallocated and the
+			act of setting its locker links could clobber us.)
+		Perform "Release a Lock" above: skip locker_list_removal.
+
+	Acquire Locker bucket mutex.
+	Remove Locker
+	Release Locker mutex.
+
+	Acquire Memory mutex
+	Return Locker to free list
+	Release Memory mutex
+
+Deadlock detection (lock_detect):
+
+	For each bucket in Object table
+		Acquire the Object bucket mutex.
+		create waitsfor
+
+	For each bucket in Object table
+		Release the Object mutex.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+FAQ:
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Q: Why do you need generation numbers?
+A: If a lock has been released due to a transaction abort (potentially in a
+   different process), and then lock is released by a thread of control
+   unaware of the abort, the lock might have potentially been re-allocated
+   to a different object.  The generation numbers detect this problem.
+
+   Note, we assume that reads/writes of lock generation numbers are atomic,
+   if they are not, it is theoretically possible that a re-allocated lock
+   could be mistaken for another lock.
+
+Q: Why is is safe to walk the Locker list without holding any mutexes at
+   all?
+A: Locks are created with both the Object and Locker bucket mutexes held.
+   Once created, they removed in two ways:
+
+   a) when a specific Lock is released, in which case, the Object and
+   Locker bucket mutexes are again held, and
+
+   b) when all Locks for a specific Locker Id is released.
+
+   In case b), the Locker bucket mutex is held while the Locker chain is
+   marked as "destroyed", which blocks any further access to the Locker
+   chain.  Then, each individual Object bucket mutex is acquired when each
+   individual Lock is removed.
+
+Q: What are the implications of doing fine grain locking?
+
+A: Since we no longer globally lock the entire region, lock_vec will no
+   longer be atomic.  We still execute the items in a lock_vec in order,
+   so things like lock-coupling still work, but you can't make any
+   guarantees about atomicity.
+
+Q: How do I configure for FINE_GRAIN locking?
+
+A: We currently do not support any automatic configuration for FINE_GRAIN
+   locking.  When we do, will need to document that atomicity discussion
+   listed above (it is bug-report #553).

@@ -1,0 +1,41 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <!-- The configuration and platform will be used to determine which
+         assemblies to include from solution and project documentation
+         sources -->
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{226e77d7-acb1-4866-9eb3-957798539f3e}</ProjectGuid>
+    <SHFBSchemaVersion>1.8.0.0</SHFBSchemaVersion>
+    <!-- AssemblyName, Name, and RootNamespace are not used by SHFB but Visual
+         Studio adds them anyway -->
+    <AssemblyName>Documentation</AssemblyName>
+    <RootNamespace>Documentation</RootNamespace>
+    <Name>Documentation</Name>
+    <!-- SHFB properties -->
+    <OutputPath>..\..\docs\csharp\</OutputPath>
+    <HtmlHelpName>BerkeleyDB</HtmlHelpName>
+    <HelpFileFormat>Help1xAndWebsite</HelpFileFormat>
+    <KeepLogFile>False</KeepLogFile>
+    <CopyrightText>Copyright %28c%29 1996-2009 Oracle. All rights reserved.</CopyrightText>
+    <HelpTitle>Berkeley DB .NET API Documentation</HelpTitle>
+    <NamingMethod>MemberName</NamingMethod>
+    <MissingTags>AutoDocumentCtors</MissingTags>
+    <VisibleItems>InheritedMembers, InheritedFrameworkMembers</VisibleItems>
+    <DocumentationSources>
+      <DocumentationSource sourceFile="..\db_dotnet.csproj" />
+    </DocumentationSources>
+    <FeedbackEMailLinkText>
+    </FeedbackEMailLinkText>
+    <FooterText>Report Feedback on this item in the Oracle Technology Network Forum</FooterText>
+  </PropertyGroup>
+  <!-- There are no properties for these two groups but they need to appear in
+       order for Visual Studio to perform the build. -->
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  </PropertyGroup>
+  <!-- Import the SHFB build targets -->
+  <Import Project="$(SHFBROOT)\SandcastleHelpFileBuilder.targets" />
+</Project>

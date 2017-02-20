@@ -1,0 +1,133 @@
+#!/usr/local/bin/perl
+
+# Name:		dbinfo -- identify berkeley DB version used to create 
+#			  a database file
+#
+# Author:	Paul Marquess  <Paul.Marquess@btinternet.com>
+# Version: 	1.06 
+# Date		27th March 2008
+#
+#     Copyright (c) 1998-2008 Paul Marquess. All rights reserved.
+#     This program is free software; you can redistribute it and/or
+#     modify it under the same terms as Perl itself.
+
+# Todo: Print more stats on a db file, e.g. no of records
+#       add log/txn/lock files
+
+use strict ;
+
+my %Data =
+	(
+	0x053162 =>	# DB_BTREEMAGIC
+            {
+			  Type 	   => "Btree",
+			  Versions => # DB_BTREEVERSION
+				{
+				  1	=> [0, "Unknown (older than 1.71)"],
+				  2	=> [0, "Unknown (older than 1.71)"],
+				  3	=> [0, "1.71 -> 1.85, 1.86"],
+				  4	=> [0, "Unknown"],
+				  5	=> [0, "2.0.0 -> 2.3.0"],
+				  6	=> [0, "2.3.1 -> 2.7.7"],
+				  7	=> [0, "3.0.x"],
+				  8	=> [0, "3.1.x -> 4.0.x"],
+				  9	=> [1, "4.1.x or greater"],
+				}
+			},
+	0x061561 => 	# DB_HASHMAGIC
+            {
+			  Type     => "Hash",
+			  Versions => # DB_HASHVERSION
+				{
+				  1	=> [0, "Unknown (older than 1.71)"],
+        			  2     => [0, "1.71 -> 1.85"],
+        			  3     => [0, "1.86"],
+        			  4     => [0, "2.0.0 -> 2.1.0"],
+        			  5     => [0, "2.2.6 -> 2.7.7"],
+        			  6     => [0, "3.0.x"],
+				  7	=> [0, "3.1.x -> 4.0.x"],
+				  8	=> [1, "4.1.x or greater"],
+				  9	=> [1, "4.6.x or greater"],
+				}
+			},
+	0x042253 => 	# DB_QAMMAGIC
+            {
+			  Type     => "Queue",
+			  Versions => # DB_QAMVERSION
+				{
+				  1	=> [0, "3.0.x"],
+				  2	=> [0, "3.1.x"],
+				  3	=> [0, "3.2.x -> 4.0.x"],
+				  4	=> [1, "4.1.x or greater"],
+				}
+			},
+	) ;
+
+die "Usage: dbinfo file\n" unless @ARGV == 1 ;
+
+print "testing file $ARGV[0]...\n\n" ;
+open (F, "<$ARGV[0]") or die "Cannot open file $ARGV[0]: $!\n" ;
+
+my $buff ;
+read F, $buff, 30 ;
+
+
+my (@info) = unpack("NNNNNNC", $buff) ;
+my (@info1) = unpack("VVVVVVC", $buff) ;
+my ($magic, $version, $endian, $encrypt) ;
+
+if ($Data{$info[0]}) # first try DB 1.x format, big endian
+{
+    $magic = $info[0] ;
+    $version = $info[1] ;
+    $endian  = "Big Endian" ;
+    $encrypt = "Not Supported";
+}
+elsif ($Data{$info1[0]}) # first try DB 1.x format, little endian
+{
+    $magic = $info1[0] ;
+    $version = $info1[1] ;
+    $endian  = "Little Endian" ;
+    $encrypt = "Not Supported";
+}
+elsif ($Data{$info[3]}) # next DB 2.x big endian
+{
+    $magic = $info[3] ;
+    $version = $info[4] ;
+    $endian  = "Big Endian" ;
+}
+elsif ($Data{$info1[3]}) # next DB 2.x little endian
+{
+    $magic = $info1[3] ;
+    $version = $info1[4] ;
+    $endian  = "Little Endian" ;
+}
+else
+  { die "not a Berkeley DB database file.\n" }
+
+my $type = $Data{$magic} ;
+$magic = sprintf "%06X", $magic ;
+
+my $ver_string = "Unknown" ;
+
+if ( defined $type->{Versions}{$version} )
+{
+     $ver_string = $type->{Versions}{$version}[1];
+     if ($type->{Versions}{$version}[0] )
+       { $encrypt = $info[6] ? "Enabled" : "Disabled" }
+     else
+       { $encrypt = "Not Supported" }
+}
+
+print <<EOM ;
+File Type:		Berkeley DB $type->{Type} file.
+File Version ID:	$version
+Built with Berkeley DB:	$ver_string
+Byte Order:		$endian
+Magic:			$magic
+Encryption:             $encrypt
+EOM
+
+close F ;
+
+exit ;

@@ -1,0 +1,128 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Check to make sure all of the stat structure members are included in
+# all of the possible formats.
+
+# Top-level directory.
+d=../..
+docs=$d/docs/api_reference
+
+# Path names are from a top-level directory.
+[ -f $d/README ] || {
+	echo 'FAIL: cannot find source distribution directory.'
+	exit 1
+}
+
+exitv=0
+t=__tmp
+
+# Extract the field names for a structure from the db.h file.
+inc_fields()
+{
+	sed -e "/struct $1 {/,/^};$/p" \
+	    -e d < $d/dbinc/db.in |
+	sed -e 1d \
+	    -e '$d' \
+	    -e '/;/!d' \
+	    -e 's/;.*//' \
+	    -e 's/^[	 ].*[ \*]//'
+}
+
+cat << END_OF_IGNORE > IGNORE
+bt_maxkey
+bt_metaflags
+hash_metaflags
+qs_metaflags
+qs_ndata
+st_hash_max_nowait
+END_OF_IGNORE
+
+# Check to make sure the elements of a structure from db.h appear in
+# the other files.
+inc()
+{
+	for i in `inc_fields $1`; do
+		if egrep -w $i IGNORE > /dev/null; then
+			echo "	$1: ignoring $i"
+			continue
+		fi
+		for j in $2; do
+			if egrep -w $i $j > /dev/null; then
+				:;
+			else
+				echo "	$1: $i not found in $j."
+				exitv=1
+			fi
+		done
+	done
+}
+
+inc	"__db_bt_stat" "$d/tcl/tcl_db.c $d/btree/bt_stat.c $docs/C/dbstat.html"
+inc	"__db_h_stat" "$d/tcl/tcl_db.c $d/hash/hash_stat.c $docs/C/dbstat.html"
+inc	__db_lock_stat \
+	"$d/tcl/tcl_lock.c $d/lock/lock_stat.c $docs/C/lockstat.html"
+inc	__db_log_stat "$d/tcl/tcl_log.c $d/log/log_stat.c $docs/C/logstat.html"
+inc	__db_mpool_fstat \
+	"$d/tcl/tcl_mp.c $d/mp/mp_stat.c $docs/C/mempstat.html"
+inc	__db_mpool_stat \
+	"$d/tcl/tcl_mp.c $d/mp/mp_stat.c $docs/C/mempstat.html"
+inc	__db_mutex_stat \
+	"$d/mutex/mut_stat.c $docs/C/mutexstat.html"
+inc	"__db_qam_stat" \
+	"$d/tcl/tcl_db.c $d/qam/qam_stat.c $docs/C/dbstat.html"
+inc	__db_rep_stat \
+	"$d/tcl/tcl_rep.c $d/rep/rep_stat.c $docs/C/repstat.html"
+inc	__db_seq_stat \
+	"$d/tcl/tcl_seq.c $d/sequence/seq_stat.c $docs/C/seqstat.html"
+inc	__db_txn_stat \
+	"$d/tcl/tcl_txn.c $d/txn/txn_stat.c $docs/C/txnstat.html"
+
+# Check to make sure the elements from a man page appears in db.in.
+man()
+{
+	for i in `cat $t`; do
+		if egrep -w $i IGNORE > /dev/null; then
+			echo "	$1: ignoring $i"
+			continue
+		fi
+		if egrep -w $i $d/dbinc/db.in > /dev/null; then
+			:;
+		else
+			echo "	$1: $i not found in db.h."
+			exitv=1
+		fi
+	done
+}
+
+sed -e '/m4_field(/!d' \
+    -e 's/.*m4_field[^,]*,[ ]*\([^,]*\).*/\1/' < $docs/C/dbstat.html > $t
+man "checking db_stat.so against db.h"
+
+sed -e '/m4_field(/!d' \
+    -e 's/.*m4_field[^,]*,[ ]*\([^,]*\).*/\1/' < $docs/C/lockstat.html > $t
+man "checking lock_stat.so against db.h"
+
+sed -e '/m4_field(/!d' \
+    -e 's/.*m4_field[^,]*,[ ]*\([^,]*\).*/\1/' < $docs/C/logstat.html > $t
+man "checking log_stat.so against db.h"
+
+sed -e '/m4_field(/!d' \
+    -e 's/.*m4_field[^,]*,[ ]*\([^,]*\).*/\1/' < $docs/C/mempstat.html > $t
+man "checking memp_stat.so against db.h"
+
+sed -e '/m4_field(/!d' \
+    -e 's/.*m4_field[^,]*,[ ]*\([^,]*\).*/\1/' < $docs/C/repstat.html > $t
+man "checking rep_stat.so against db.h"
+
+sed -e '/m4_field(/!d' \
+    -e 's/.*m4_field[^,]*,[ ]*\([^,]*\).*/\1/' < $docs/C/seqstat.html > $t
+man "checking seq_stat.so against db.h"
+
+sed -e '/m4_field(/!d' \
+    -e 's/.*m4_field[^,]*,[ ]*\([^,]*\).*/\1/' \
+    -e 's/__LB__.*//' < $docs/C/txnstat.html > $t
+man "checking txn_stat.so against db.h"
+
+exit $exitv

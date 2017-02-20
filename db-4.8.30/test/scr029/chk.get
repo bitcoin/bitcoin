@@ -1,0 +1,29 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Build a program that calls the getters.
+
+[ -f ../libdb.a ] || (cd .. && make libdb.a) || {
+	echo 'FAIL: unable to find or build libdb.a'
+	exit 1
+}
+
+CINC=-I..
+[ `uname` = "Linux" ] && CINC="$CINC -pthread" 
+
+if cc -g -Wall $CINC t.c ../libdb.a -o t; then
+	:
+else
+	echo "FAIL: unable to compile test program t.c"
+	exit 1
+fi
+
+if ./t; then
+	:
+else
+	echo "FAIL: test program failed"
+	exit 1
+fi
+
+exit 0

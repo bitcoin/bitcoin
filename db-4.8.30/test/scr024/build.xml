@@ -1,0 +1,415 @@
+<!-- $Id$ -->
+<project name="clover" default="build" basedir=".">
+
+  <property name="db" location="../.."/>
+  <property name="db.jar" location="${db}/build_unix/db.jar"/>
+  <property name="test.src" location="src"/>
+  <property name="examples.src" location="${db}/examples_java/src"/>
+  <property name="clover.initstring" location="reports/clover.db"/>
+  <property name="clover.excludes" value="**/test/** collections/** db/** com/sleepycat/db/**"/>
+  <!--
+  <property name="build.compiler"
+            value="org.apache.tools.ant.taskdefs.CloverCompilerAdapter"/>
+  -->
+
+  <target name="all" depends="clean,test,report"/>
+
+  <target name="clean">
+    <delete dir="classes"/>
+    <delete dir="tmp"/>
+    <delete dir="reports"/>
+    <delete dir="original"/>
+    <delete dir="evolved"/>
+    <delete dir="testevolvedir"/>
+    <delete dir="testserialdir"/>
+    <delete dir="testenhancedir"/>
+  </target>
+
+  <target name="init">
+    <mkdir dir="classes"/>
+    <mkdir dir="tmp"/>
+    <mkdir dir="reports"/>
+  </target>
+
+  <path id="clover.classpath">
+    <pathelement location="clover.jar"/>
+    <pathelement location="velocity.jar"/>
+  </path>
+
+  <path id="classpath">
+    <pathelement location="${db.jar}"/>
+    <pathelement location="classes"/>
+    <pathelement location="clover.jar"/>
+    <path refid="clover.classpath"/>
+  </path>
+
+  <path id="enhanced.classpath">
+    <pathelement location="${db.jar}"/>
+    <pathelement location="testenhancedir"/>
+  </path>
+
+  <target name="build" depends="init">
+    <echo message="Using db.jar: ${db.jar}"/>
+    <javac destdir="classes" debug="on" source="1.5" target="1.5">
+      <classpath refid="classpath"/>
+      <src path="${test.src}"/>
+      <src path="${examples.src}"/>
+      <exclude name="com/sleepycat/**/release/**"/>
+    </javac>
+    <!-- Compile original version of TestSerial.java.original. -->
+    <property name="testserialpath"
+              value="com/sleepycat/collections/test/serial/TestSerial"/>
+    <copy file="${test.src}/${testserialpath}.java.original"
+          tofile="testserialdir/${testserialpath}.java"/>
+    <javac destdir="testserialdir" debug="on" source="1.5" target="1.5"
+           includeAntRuntime="true" srcdir="testserialdir">
+      <include name="${testserialpath}.java"/>
+      <classpath refid="classpath"/>
+    </javac>
+    <!-- Compile original version of EvolveClasses. -->
+    <copy file=
+      "${test.src}/com/sleepycat/persist/test/EvolveClasses.java.original"
+          tofile=
+      "testevolvedir/com/sleepycat/persist/test/EvolveClasses.java"/>
+    <copy file=
+      "${test.src}/com/sleepycat/persist/test/EvolveCase.java"
+          tofile=
+      "testevolvedir/com/sleepycat/persist/test/EvolveCase.java"/>
+    <copy file=
+      "${test.src}/com/sleepycat/persist/test/PersistTestUtils.java"
+          tofile=
+      "testevolvedir/com/sleepycat/persist/test/PersistTestUtils.java"/>
+    <javac debug="on" source="1.5" target="1.5">
+      <src path="testevolvedir"/>
+      <classpath refid="classpath"/>
+    </javac>
+  </target>
+
+  <target name="test" depends="build">
+
+    <!-- Determine which tests to run. -->
+    <condition property="dotestserial">
+      <or>
+        <not><isset property="testcase"/></not>
+        <equals arg1="${testcase}" arg2=
+         "com.sleepycat.collections.test.serial.StoredClassCatalogTest"/>
+      </or>
+    </condition>
+    <condition property="dotestevolve">
+      <or>
+        <not><isset property="testcase"/></not>
+        <equals arg1="${testcase}"
+                arg2="com.sleepycat.persist.test.EvolveTest"/>
+      </or>
+    </condition>
+
+    <!-- Performs initialization needed before StoredClassCatalogTest. -->
+    <junit fork="yes" dir="." printsummary="on" haltonfailure="on"
+           showoutput="on">
+      <jvmarg value="-ea"/>
+      <classpath path="testserialdir"/> <!-- Must be first -->
+      <classpath refid="classpath"/>
+      <sysproperty key="testdestdir" value="./tmp"/>
+      <sysproperty key="longtest" value="${longtest}"/>
+      <formatter type="plain" usefile="false"/>
+      <formatter type="xml"/>
+      <test name=
+            "com.sleepycat.collections.test.serial.StoredClassCatalogTestInit"
+            todir="reports" if="dotestserial"/>
+    </junit>
+
+    <!-- Performs initialization needed before persist EvolveTest. -->
+    <junit fork="yes" dir="." printsummary="on" haltonfailure="on"
+           showoutput="on">
+      <jvmarg value="-ea"/>
+      <classpath path="testevolvedir"/>
+      <classpath refid="classpath"/>
+      <sysproperty key="testdestdir" value="./tmp"/>
+      <sysproperty key="longtest" value="${longtest}"/>
+      <formatter type="plain" usefile="false"/>
+      <formatter type="xml"/>
+      <test name="com.sleepycat.persist.test.EvolveTestInit"
+            todir="reports" if="dotestevolve"/>
+    </junit>
+
+    <!-- Performs testcase if set, or batch tests. -->
+    <junit fork="yes" dir="." printsummary="on" haltonfailure="on"
+           showoutput="on">
+      <jvmarg value="-ea"/>
+      <classpath refid="classpath"/>
+      <sysproperty key="testdestdir" value="./tmp"/>
+      <sysproperty key="longtest" value="${longtest}"/>
+      <formatter type="plain" usefile="false"/>
+      <formatter type="xml"/>
+      <test name="${testcase}" todir="reports" if="testcase"/>
+      <batchtest todir="reports" unless="testcase">
+        <fileset dir="classes" includes="**/*Test.class"/>
+      </batchtest>
+    </junit>
+
+    <!-- Run the persist tests with -javaagent to enhance classes as they are
+         loaded.  In this, and the following two tests with enhanced classes,
+         set the expectEnhanced system property to cause the test to fail if
+         classes are not enhanced.  -->
+    <echo message="Run persist tests with -javaagent"/>
+    <junit fork="yes" dir="." printsummary="on" haltonfailure="on"
+           showoutput="on">
+      <jvmarg value="-ea"/>
+      <jvmarg value="-javaagent:${db.jar}=enhance:-v,com.sleepycat.persist"/>
+      <classpath refid="classpath"/>
+      <sysproperty key="testdestdir" value="./tmp"/>
+      <sysproperty key="longtest" value="${longtest}"/>
+      <sysproperty key="expectEnhanced" value="true"/>
+      <formatter type="plain" usefile="false"/>
+      <formatter type="xml"/>
+      <batchtest todir="reports" unless="testcase">
+        <fileset dir="classes"
+                 includes="com/sleepycat/persist/**/*Test.class"/>
+      </batchtest>
+    </junit>
+
+    <!-- Enhance persist test classes by rewriting the class files with the
+         enhancer ant task, and run the persist tests again.  Compile
+         ClassEnhancerTask here.  It is not compiled into db.jar because that
+         would create a primary build dependency on the Ant libraries. -->
+    <echo message="Run persist tests with ClassEnhancer ant task"/>
+    <delete dir="testenhancedir"/>
+    <mkdir dir="testenhancedir"/>
+    <copy todir="testenhancedir">
+      <fileset dir="classes" includes="com/sleepycat/persist/**/*.class"/>
+    </copy>
+    <javac destdir="testenhancedir" debug="on" source="1.5" target="1.5"
+           includeAntRuntime="true" srcdir="${db}/java/src">
+      <include name="com/sleepycat/persist/model/ClassEnhancerTask.java"/>
+      <classpath refid="classpath"/>
+    </javac>
+    <taskdef name="enhancer"
+             classname="com.sleepycat.persist.model.ClassEnhancerTask">
+      <classpath refid="enhanced.classpath"/>
+    </taskdef>
+    <enhancer verbose="on">
+      <fileset dir="testenhancedir"/>
+    </enhancer>
+    <junit fork="yes" dir="." printsummary="on" haltonfailure="on"
+           showoutput="on">
+      <jvmarg value="-ea"/>
+      <classpath refid="enhanced.classpath"/>
+      <classpath refid="classpath"/>
+      <sysproperty key="testdestdir" value="./tmp"/>
+      <sysproperty key="longtest" value="${longtest}"/>
+      <sysproperty key="expectEnhanced" value="true"/>
+      <formatter type="plain" usefile="false"/>
+      <formatter type="xml"/>
+      <batchtest todir="reports" unless="testcase">
+        <fileset dir="classes"
+                 includes="com/sleepycat/persist/**/*Test.class"/>
+      </batchtest>
+    </junit>
+
+    <!-- Enhance persist test classes by rewriting the class files with the
+         ClassEnhancer main program, and run the persist tests again. -->
+    <echo message="Run persist tests with ClassEnhancer main program"/>
+    <delete dir="testenhancedir"/>
+    <mkdir dir="testenhancedir"/>
+    <copy todir="testenhancedir">
+      <fileset dir="classes" includes="com/sleepycat/persist/**/*.class"/>
+    </copy>
+    <java fork="yes" failonerror="true"
+          classname="com.sleepycat.persist.model.ClassEnhancer">
+      <arg line="-v testenhancedir"/>
+      <classpath refid="classpath"/>
+    </java>
+    <junit fork="yes" dir="." printsummary="on" haltonfailure="on"
+           showoutput="on">
+      <jvmarg value="-ea"/>
+      <classpath refid="enhanced.classpath"/>
+      <classpath refid="classpath"/>
+      <sysproperty key="testdestdir" value="./tmp"/>
+      <sysproperty key="longtest" value="${longtest}"/>
+      <sysproperty key="expectEnhanced" value="true"/>
+      <formatter type="plain" usefile="false"/>
+      <formatter type="xml"/>
+      <batchtest todir="reports" unless="testcase">
+        <fileset dir="classes"
+                 includes="com/sleepycat/persist/**/*Test.class"/>
+      </batchtest>
+    </junit>
+
+  </target>
+
+  <!-- examples runs all examples, but does not include access_example because
+       it is interactive.
+  -->
+  <target name="examples" depends="build">
+    <echo message="=== HelloDatabaseWorld ==="/>
+    <java dir="." fork="yes" classpathref="classpath" failonerror="true"
+         classname="collections.hello.HelloDatabaseWorld"/>
+    <echo message=""/>
+    <antcall target="one_shipment_example">
+      <param name="param_name" value="basic"/>
+    </antcall>
+    <antcall target="one_shipment_example">
+      <param name="param_name" value="index"/>
+    </antcall>
+    <antcall target="one_shipment_example">
+      <param name="param_name" value="entity"/>
+    </antcall>
+    <antcall target="one_shipment_example">
+      <param name="param_name" value="tuple"/>
+    </antcall>
+    <antcall target="one_shipment_example">
+      <param name="param_name" value="sentity"/>
+    </antcall>
+    <antcall target="one_shipment_example">
+      <param name="param_name" value="marshal"/>
+    </antcall>
+    <antcall target="one_shipment_example">
+      <param name="param_name" value="factory"/>
+    </antcall>
+    <antcall target="one_persist_example">
+      <param name="param_name" value="CustomKeyOrderExample"/>
+    </antcall>
+    <antcall target="one_persist_example">
+      <param name="param_name" value="EventExample"/>
+    </antcall>
+    <antcall target="one_persist_example">
+      <param name="param_name" value="EventExampleDPL"/>
+    </antcall>
+    <antcall target="one_persist_example">
+      <param name="param_name" value="PersonExample"/>
+    </antcall>
+    <antcall target="DplDump">
+      <param name="home" value="tmp"/>
+      <param name="store" value="PersonStore"/>
+    </antcall>
+    <antcall target="db-gettingStarted"/>
+    <antcall target="db-txn"/>
+    <antcall target="persist-gettingStarted"/>
+    <antcall target="persist-txn"/>
+  </target>
+
+  <target name="one_shipment_example">
+    <echo message="=== ${param_name} ==="/>
+    <delete dir="tmp"/>
+    <mkdir dir="tmp"/>
+    <java dir="." fork="yes" classpathref="classpath" failonerror="true"
+     classname="collections.ship.${param_name}.Sample"/>
+  </target>
+
+  <target name="one_persist_example">
+    <echo message="=== ${param_name} ==="/>
+    <delete dir="tmp"/>
+    <mkdir dir="tmp"/>
+    <java fork="yes" dir="." classname="persist.${param_name}"
+          failonerror="true">
+      <jvmarg value="-ea"/>
+      <arg line="-h tmp"/>
+      <classpath refid="classpath"/>
+    </java>
+  </target>
+
+  <!--
+  Before running this example, first run another DPL example that writes to the
+  home directory.  Note that we do not clear the home directory here, in order
+  to use the DB in the home directory from a previous run.
+  -->
+  <target name="DplDump">
+    <echo message="=== DplDump ${home} ${store} ==="/>
+    <java fork="yes" dir="." classname="persist.DplDump" failonerror="true">
+      <jvmarg value="-ea"/>
+      <arg line="-h ${home} -s ${store}"/>
+      <classpath refid="classpath"/>
+    </java>
+  </target>
+
+  <target name="access_example" depends="build">
+    <echo message="=== AccessExample ==="/>
+    <java fork="yes" dir="." classpathref="classpath" failonerror="true"
+          classname="collections.access.AccessExample">
+    </java>
+  </target>
+
+  <!-- Test GSG examples -->
+
+  <target name="db-gettingStarted" depends="build">
+    <delete dir="tmp"/>
+    <mkdir dir="tmp"/>
+    <copy todir="tmp">
+      <fileset dir="${examples.src}/db/GettingStarted">
+        <include name="*.txt"/>
+        <exclude name="*.java"/>
+      </fileset>
+    </copy>
+    <java fork="yes" dir="tmp"
+        classname="db.GettingStarted.ExampleDatabaseLoad"
+        failonerror="true">
+      <arg line="-h ."/>
+      <classpath refid="classpath"/>
+    </java>
+    <java fork="yes" dir="tmp"
+        classname="db.GettingStarted.ExampleDatabaseRead"
+        failonerror="true">
+      <arg line="-h ."/>
+      <classpath refid="classpath"/>
+    </java>
+    <delete file="tmp/inventory.txt"/>
+    <delete file="tmp/vendors.txt"/>
+  </target>
+
+  <target name="db-txn" depends="build">
+    <delete dir="tmp"/>
+    <mkdir dir="tmp"/>
+    <java fork="yes" dir="."
+        classname="db.txn.TxnGuide"
+        failonerror="true">
+      <arg line="-h tmp"/>
+      <classpath refid="classpath"/>
+    </java>
+  </target>
+
+  <target name="persist-gettingStarted" depends="build">
+    <delete dir="tmp"/>
+    <mkdir dir="tmp"/>
+    <mkdir dir="tmp/JEDB"/>
+    <copy todir="tmp">
+      <fileset dir="${examples.src}/persist/gettingStarted">
+        <include name="*.txt"/>
+        <exclude name="*.java"/>
+      </fileset>
+    </copy>
+    <java fork="yes" dir="tmp"
+        classname="persist.gettingStarted.SimpleStorePut"
+        failonerror="true">
+      <arg line="-h ."/>
+      <classpath refid="classpath"/>
+    </java>
+    <java fork="yes" dir="tmp"
+        classname="persist.gettingStarted.SimpleStoreGet"
+        failonerror="true">
+      <arg line="-h ."/>
+      <classpath refid="classpath"/>
+    </java>
+    <delete file="tmp/inventory.txt"/>
+    <delete file="tmp/vendors.txt"/>
+  </target>
+
+  <target name="persist-txn" depends="build">
+    <delete dir="tmp"/>
+    <mkdir dir="tmp"/>
+    <java fork="yes" dir="."
+        classname="persist.txn.TxnGuideDPL"
+        failonerror="true">
+      <arg line="-h tmp"/>
+      <classpath refid="classpath"/>
+    </java>
+  </target>
+
+  <target name="report">
+    <java classname="com.cortexeb.tools.clover.reporters.html.HtmlReporter"
+          failonerror="true" fork="true">
+       <arg line="--outputdir reports --showSrc --initstring ${clover.initstring} --title 'Berkeley DB Java BDB API'"/>
+       <classpath refid="clover.classpath"/>
+    </java>
+  </target>
+
+</project>

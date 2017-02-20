@@ -1,0 +1,49 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Check for inclusion of files already included in db_int.h.
+
+d=../..
+
+# Test must be run from the top-level directory, not from a test directory.
+[ -f $d/LICENSE ] || {
+	echo 'FAIL: cannot find source distribution directory.'
+	exit 1
+}
+
+t1=__1
+t2=__2
+
+egrep -- '#include[	 ]' $d/dbinc/db_int.in |
+sed -e '/[	 ]db\.h'/d \
+    -e 's/^#include.//' \
+    -e 's/[<>"]//g' \
+    -e 's/[	 ].*//' > $t1
+
+for i in `cat $t1`; do
+	(cd $d && egrep "^#include[	 ].*[<\"]$i[>\"]" */*.[ch])
+done |
+sed -e '/^build/d' \
+    -e '/^db_codegen\/code_capi.c/d' \
+    -e '/^db_dump185/d' \
+    -e '/^dbinc\/mutex_int.h.*<sys\/mman.h>/d' \
+    -e '/^dbinc\/win_db.h:/d' \
+    -e '/^examples_c/d' \
+    -e '/^libdb_java.*errno.h/d' \
+    -e '/^libdb_java.*java_util.h/d' \
+    -e '/^libdb_java\/db_java_wrap.c/d' \
+    -e '/^mod_db4/d' \
+    -e '/^mutex\/tm.c/d' \
+    -e '/^os\/os_map.c.*<sys\/mman.h>/d' \
+    -e '/^perl/d' \
+    -e '/^php_db4/d' \
+    -e '/^test_/d' \
+    > $t2
+
+[ -s $t2 ] && {
+	echo 'FAIL: found extraneous includes in the source'
+	cat $t2
+	exit 1
+}
+exit 0

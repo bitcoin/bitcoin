@@ -1,0 +1,85 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Check to make sure the auto-generated utility code in the VxWorks build
+# directory compiles.
+
+d=../..
+
+[ -f $d/LICENSE ] || {
+	echo 'FAIL: cannot find source distribution directory.'
+	exit 1
+}
+[ -f ../libdb.a ] || (cd .. && make libdb.a) || {
+	echo 'FAIL: unable to find or build libdb.a'
+	exit 1
+}
+
+F="$d/clib/getopt.c $d/common/util_arg.c $d/common/util_cache.c
+	$d/common/util_log.c $d/common/util_sig.c $d/*/*_autop.c"
+
+header()
+{
+	echo "int $1(int, char *[]);"
+	echo "int"
+	echo "main(int argc, char *argv[])"
+	echo "{return ($1(argc, argv));}"
+}
+
+LIST="\
+    db_archive \
+    db_checkpoint \
+    db_deadlock \
+    db_dump \
+    db_hotbackup \
+    db_load \
+    db_printlog \
+    db_recover \
+    db_stat \
+    db_upgrade \
+    db_verify \
+    dbdemo \
+    test_micro"
+
+# Build each program individually.
+for i in $LIST; do
+	echo "	compiling Vxworks version of $i"
+	header $i > MAIN.c
+	if cc -Wall -I.. -I$d -I$d/build_vxworks/$i \
+	    $d/build_vxworks/$i/*.c MAIN.c $F ../libdb.a -o t; then
+		:
+	else
+		echo "FAIL: unable to compile VxWorks version of $i"
+		exit 1
+	fi
+done
+
+# Build all of the programs as one big binary.
+inc=`echo $LIST | sed 's/[^ ][^ ]*/-I$d\/build_vxworks\/&/g'`
+src=`echo $LIST | sed 's/[^ ][^ ]*/$d\/build_vxworks\/&\/*.c/g'`
+
+(
+for i in $LIST; do
+	echo "int ${i}_main(int, char *[]);"
+done
+echo "int"
+echo "main(int argc, char *argv[])"
+echo "{"
+echo "int r;"
+for i in $LIST; do
+	echo "r += ${i}_main(argc, argv);"
+done
+echo "return (r);"
+echo "}"
+) > MAIN.c
+
+echo "	compiling VxWorks utility composite"
+if cc -Wall -I.. -I$d $inc `eval ls $src` MAIN.c $F ../libdb.a -o t; then
+	:
+else
+	echo 'FAIL: unable to compile VxWorks utility composite'
+	exit 1
+fi
+
+exit 0

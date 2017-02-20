@@ -1,0 +1,3199 @@
+# Automatically built by dist/s_test; may require local editing.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Allocate and lock a self-blocking mutex.  Start another process. 
+	Try to lock the mutex again -- it will block.  
+	Unlock the mutex from the other process, and the blocked 
+	lock should be obtained.  Clean up.
+	Do another test with a "-process-only" mutex.  The second 
+	process should not be able to unlock the mutex.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Allocate, lock, unlock, and free a bunch of mutexes. 
+	Set basic configuration options and check mutex_stat and 
+	the mutex getters for the correct values. 
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+backup
+	Test of hotbackup functionality. 
+
+	Do all the of the following tests with and without 
+	the -c (checkpoint) option.  Make sure that -c and 
+	-d (data_dir) are not allowed together. 
+
+	(1) Test that plain and simple hotbackup works. 
+	(2) Test with -data_dir (-d). 
+	(3) Test updating an existing hot backup (-u).
+	(4) Test with absolute path. 
+	(5) Test with DB_CONFIG (-D), setting log_dir (-l)
+	and data_dir (-d).
+	(6) DB_CONFIG and update.  
+	(7) Repeat hot backup (non-update) with DB_CONFIG and 
+	existing directories. 
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+bigfile001
+	Create a database greater than 4 GB in size.  Close, verify.
+	Grow the database somewhat.  Close, reverify.  Lather, rinse,
+	repeat.  Since it will not work on all systems, this test is
+	not run by default.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+bigfile002
+	This one should be faster and not require so much disk space,
+	although it doesn't test as extensively.  Create an mpool file
+	with 1K pages.  Dirty page 6000000.  Sync.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+dbm
+	Historic DBM interface test.  Use the first 1000 entries from the
+	dictionary.  Insert each with self as key and data; retrieve each.
+	After all are entered, retrieve all; compare output to original.
+	Then reopen the file, re-retrieve everything.  Finally, delete
+	everything.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+db_reptest
+	Wrapper to configure and run the db_reptest program.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+dead001
+	Use two different configurations to test deadlock detection among a
+	variable number of processes.  One configuration has the processes
+	deadlocked in a ring.  The other has the processes all deadlocked on
+	a single resource.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+dead002
+	Same test as dead001, but use "detect on every collision" instead
+	of separate deadlock detector.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+dead003
+
+	Same test as dead002, but explicitly specify DB_LOCK_OLDEST and
+	DB_LOCK_YOUNGEST.  Verify the correct lock was aborted/granted.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+dead006
+	use timeouts rather than the normal dd algorithm.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+dead007
+	Tests for locker and txn id wraparound.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+env001
+	Test of env remove interface (formerly env_remove).
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+env002
+	Test of DB_LOG_DIR and env name resolution.
+	With an environment path specified using -home, and then again
+	with it specified by the environment variable DB_HOME:
+	1) Make sure that the set_lg_dir option is respected
+	a) as a relative pathname.
+	b) as an absolute pathname.
+	2) Make sure that the DB_LOG_DIR db_config argument is respected,
+	again as relative and absolute pathnames.
+	3) Make sure that if -both- db_config and a file are present,
+	only the file is respected (see doc/env/naming.html).
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+env003
+	Test DB_TMP_DIR and env name resolution
+	With an environment path specified using -home, and then again
+	with it specified by the environment variable DB_HOME:
+	1) Make sure that the DB_TMP_DIR config file option is respected
+	a) as a relative pathname.
+	b) as an absolute pathname.
+	2) Make sure that the -tmp_dir config option is respected,
+	again as relative and absolute pathnames.
+	3) Make sure that if -both- -tmp_dir and a file are present,
+	only the file is respected (see doc/env/naming.html).
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+env004
+	Test multiple data directories.  Do a bunch of different opens
+	to make sure that the files are detected in different directories.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+env005
+	Test that using subsystems without initializing them correctly
+	returns an error.  Cannot test mpool, because it is assumed in
+	the Tcl code.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+env006
+	Make sure that all the utilities exist and run.
+	Test that db_load -r options don't blow up.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+env007
+	Test DB_CONFIG config file options for berkdb env.
+	1) Make sure command line option is respected
+	2) Make sure that config file option is respected
+	3) Make sure that if -both- DB_CONFIG and the set_<whatever>
+	method is used, only the file is respected.
+	Then test all known config options.
+	Also test config options on berkdb open.  This isn't
+	really env testing, but there's no better place to put it.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+env008
+	Test environments and subdirectories.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+env009
+	Test calls to all the various stat functions.  We have several
+	sprinkled throughout the test suite, but this will ensure that
+	we run all of them at least once.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+env010
+	Run recovery in an empty directory, and then make sure we can still
+	create a database in that directory.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+env011
+	Run with region overwrite flag.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+env012
+	Test DB_REGISTER.
+
+	DB_REGISTER will fail on systems without fcntl.  If it
+	fails, make sure we got the expected DB_OPNOTSUP return.
+
+	Then, the real tests:
+	For each test, we start a process that opens an env with -register.
+
+	1. Verify that a 2nd process can enter the existing env with -register.
+
+	2. Kill the 1st process, and verify that the 2nd process can enter
+	with "-register -recover".
+
+	3. Kill the 1st process, and verify that the 2nd process cannot
+	enter with just "-register".
+
+	4. While the 1st process is still running, a 2nd process enters
+	with "-register".  Kill the 1st process.  Verify that a 3rd process
+	can enter with "-register -recover".  Verify that the 3rd process,
+	entering, causes process 2 to fail with the message DB_RUNRECOVERY.
+
+	5. We had a bug where recovery was always run with -register
+	if there were empty slots in the process registry file.  Verify
+	that recovery doesn't automatically run if there is an empty slot.
+
+	6. Verify process cannot connect when specifying -failchk and an
+	isalive function has not been declared.
+
+	7. Verify that a 2nd process can enter the existing env with -register
+	and -failchk and having specified an isalive function
+
+	8. Kill the 1st process, and verify that the 2nd process can enter
+	with "-register -failchk -recover"
+
+	9. 2nd process enters with "-register -failchk".  Kill the 1st process.
+	2nd process may get blocked on a mutex held by process one.  Verify
+	3rd process can enter with "-register -recover -failchk".   3rd process
+	should run failchk, clear out open txn/log from process 1.   It will
+	enter env without need for any additional recovery.   We look for 
+	"Freeing log information .." sentence in the log for 3rd process as 
+	an indication that failchk ran.   If DB_RUNRECOVERY were returned 
+	instead it would mean failchk could not recover. 
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+env013
+	Test of basic functionality of fileid_reset.
+
+	Create a database in an env.  Copy it to a new file within
+	the same env.  Reset the file id and make sure it has changed.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+env014
+
+	Make sure that attempts to open an environment with
+	incompatible flags (e.g. replication without transactions)
+	fail with the appropriate messages.
+
+	A new thread of control joining an env automatically
+	initializes the same subsystems as the original env.
+	Make sure that the attempt to change subsystems when
+	joining an env fails with the appropriate messages.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+env015
+	Rename the underlying directory of an env, make sure everything
+	still works.  Test runs with regular named databases and with
+	in-memory named databases.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+env016
+	Replication settings and DB_CONFIG
+
+	Create a DB_CONFIG for various replication settings.  Use
+	rep_stat or getter functions to verify they're set correctly.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+env017
+	Check documented "stat" fields against the fields
+	returned by the "stat" functions.  Make sure they
+	match, and that none are missing.	
+	These are the stat functions we test:
+	env log_stat
+	env lock_stat
+	env txn_stat
+	env mutex_stat
+	env rep_stat
+	env repmgr_stat
+	env mpool_stat
+	db_stat
+	seq_stat
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+env018
+	Test getters when joining an env.  When a second handle is 
+	opened on an existing env, get_open_flags needs to return 
+	the correct flags to the second handle so it knows what sort
+	of environment it's just joined.
+
+	For several different flags to env_open, open an env.  Open
+	a second handle on the same env, get_open_flags and verify 
+	the flag is returned.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+fop001.tcl
+	Test file system operations, combined in a transaction. [#7363]
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+fop002.tcl
+	Test file system operations in the presence of bad permissions.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+fop003
+
+	Test behavior of create and truncate for compatibility
+	with sendmail.
+	1.  DB_TRUNCATE is not allowed with locking or transactions.
+	2.  Can -create into zero-length existing file.
+	3.  Can -create into non-zero-length existing file if and
+	only if DB_TRUNCATE is specified.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+fop004
+	Test of DB->rename(). (formerly test075)
+	Test that files can be renamed from one directory to another.
+	Test that files can be renamed using absolute or relative
+	pathnames.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+fop005
+	Test of DB->remove()
+	Formerly test080.
+	Test use of dbremove with and without envs, with absolute
+	and relative paths, and with subdirectories.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+fop006
+	Test file system operations in multiple simultaneous
+	transactions.  Start one transaction, do a file operation.
+	Start a second transaction, do a file operation.  Abort
+	or commit txn1, then abort or commit txn2, and check for
+	appropriate outcome.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+fop007
+	Test file system operations on named in-memory databases.
+	Combine two ops in one transaction.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+fop008
+	Test file system operations on named in-memory databases.
+	Combine two ops in one transaction.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+jointest
+	Test duplicate assisted joins.  Executes 1, 2, 3 and 4-way joins
+	with differing index orders and selectivity.
+
+	We'll test 2-way, 3-way, and 4-way joins and figure that if those
+	work, everything else does as well.  We'll create test databases
+	called join1.db, join2.db, join3.db, and join4.db.  The number on
+	the database describes the duplication -- duplicates are of the
+	form 0, N, 2N, 3N, ...  where N is the number of the database.
+	Primary.db is the primary database, and null.db is the database
+	that has no matching duplicates.
+
+	We should test this on all btrees, all hash, and a combination thereof
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+lock001
+	Make sure that the basic lock tests work.  Do some simple gets
+	and puts for a single locker.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+lock002
+	Exercise basic multi-process aspects of lock.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+lock003
+	Exercise multi-process aspects of lock.  Generate a bunch of parallel
+	testers that try to randomly obtain locks;  make sure that the locks
+	correctly protect corresponding objects.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+lock004
+	Test locker ids wraping around.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+lock005
+	Check that page locks are being released properly.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+lock006
+	Test lock_vec interface.  We do all the same things that
+	lock001 does, using lock_vec instead of lock_get and lock_put,
+	plus a few more things like lock-coupling.
+	1.  Get and release one at a time.
+	2.  Release with put_obj (all locks for a given locker/obj).
+	3.  Release with put_all (all locks for a given locker).
+	Regularly check lock_stat to verify all locks have been
+	released.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+log001
+	Read/write log records.
+	Test with and without fixed-length, in-memory logging,
+	and encryption.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+log002
+	Tests multiple logs
+	Log truncation
+	LSN comparison and file functionality.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+log003
+	Verify that log_flush is flushing records correctly.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+log004
+	Make sure that if we do PREVs on a log, but the beginning of the
+	log has been truncated, we do the right thing.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+log005
+	Check that log file sizes can change on the fly.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+log006
+	Test log file auto-remove.
+	Test normal operation.
+	Test a long-lived txn.
+	Test log_archive flags.
+	Test db_archive flags.
+	Test turning on later.
+	Test setting via DB_CONFIG.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+log007
+	Test of in-memory logging bugs. [#11505]
+
+	Test db_printlog with in-memory logs.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+log008
+	Test what happens if a txn_ckp record falls into a
+	different log file than the DBREG_CKP records generated
+	by the same checkpoint.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+log009
+	Test of logging and getting log file version information.
+	Each time we cross a log file boundary verify we can
+	get the version via the log cursorlag.
+	Do this both forward and backward.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+memp001
+	Randomly updates pages.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+memp002
+	Tests multiple processes accessing and modifying the same files.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+memp003
+	Test reader-only/writer process combinations; we use the access methods
+	for testing.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+memp004
+	Test that small read-only databases are mapped into memory.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+mut001
+	Exercise the mutex API.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+mut002
+	Two-process mutex test.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+mut003
+	Try doing mutex operations out of order.  Make sure 
+	we get appropriate errors.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+plat001
+
+	Test of portability of sequences.
+
+	Create and dump a database containing sequences.  Save the dump.
+	This test is used in conjunction with the upgrade tests, which
+	will compare the saved dump to a locally created dump.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd001
+	Per-operation recovery tests for non-duplicate, non-split
+	messages.  Makes sure that we exercise redo, undo, and do-nothing
+	condition.  Any test that appears with the message (change state)
+	indicates that we've already run the particular test, but we are
+	running it again so that we can change the state of the data base
+	to prepare for the next test (this applies to all other recovery
+	tests as well).
+
+	These are the most basic recovery tests.  We do individual recovery
+	tests for each operation in the access method interface.  First we
+	create a file and capture the state of the database (i.e., we copy
+	it.  Then we run a transaction containing a single operation.  In
+	one test, we abort the transaction and compare the outcome to the
+	original copy of the file.  In the second test, we restore the
+	original copy of the database and then run recovery and compare
+	this against the actual database.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd002
+	Split recovery tests.  For every known split log message, makes sure
+	that we exercise redo, undo, and do-nothing condition.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd003
+	Duplicate recovery tests.  For every known duplicate log message,
+	makes sure that we exercise redo, undo, and do-nothing condition.
+
+	Test all the duplicate log messages and recovery operations.  We make
+	sure that we exercise all possible recovery actions: redo, undo, undo
+	but no fix necessary and redo but no fix necessary.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd004
+	Big key test where big key gets elevated to internal page.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd005
+	Verify reuse of file ids works on catastrophic recovery.
+
+	Make sure that we can do catastrophic recovery even if we open
+	files using the same log file id.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd006
+	Nested transactions.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd007
+	File create/delete tests.
+
+	This is a recovery test for create/delete of databases.  We have
+	hooks in the database so that we can abort the process at various
+	points and make sure that the transaction doesn't commit.  We
+	then need to recover and make sure the file is correctly existing
+	or not, as the case may be.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd008
+	Test deeply nested transactions and many-child transactions.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd009
+	Verify record numbering across split/reverse splits and recovery.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd010
+	Test stability of btree duplicates across btree off-page dup splits
+	and reverse splits and across recovery.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd011
+	Verify that recovery to a specific timestamp works.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd012
+	Test of log file ID management. [#2288]
+	Test recovery handling of file opens and closes.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd013
+	Test of cursor adjustment on child transaction aborts. [#2373]
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd014
+	This is a recovery test for create/delete of queue extents.  We
+	then need to recover and make sure the file is correctly existing
+	or not, as the case may be.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd015
+	This is a recovery test for testing lots of prepared txns.
+	This test is to force the use of txn_recover to call with the
+	DB_FIRST flag and then DB_NEXT.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd016
+	Test recovery after checksum error.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd017
+	Test recovery and security.  This is basically a watered
+	down version of recd001 just to verify that encrypted environments
+	can be recovered.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd018
+	Test recover of closely interspersed checkpoints and commits.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd019
+	Test txn id wrap-around and recovery.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd020
+	Test creation of intermediate directories -- an
+	undocumented, UNIX-only feature.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd021
+	Test of failed opens in recovery.
+
+	If a file was deleted through the file system (and not
+	within Berkeley DB), an error message should appear.
+	Test for regular files and subdbs.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd022
+	Test that pages allocated by an aborted subtransaction
+	within an aborted prepared parent transaction are returned
+	to the free list after recovery.  This exercises
+	__db_pg_prepare in systems without FTRUNCATE.  [#7403]
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd023
+	Test recover of reverse split.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+recd024
+	Test recovery of streaming partial insert operations. These are 
+	operations that do multiple partial puts that append to an existing
+	data item (as long as the data item is on an overflow page).
+	The interesting cases are:
+	* Simple streaming operations
+	* Operations that cause the overflow item to flow onto another page.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep001
+	Replication rename and forced-upgrade test.
+
+	Run rep_test in a replicated master environment.
+	Verify that the database on the client is correct.
+	Next, remove the database, close the master, upgrade the
+	client, reopen the master, and make sure the new master can
+	correctly run rep_test and propagate it in the other direction.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep002
+	Basic replication election test.
+
+	Run a modified version of test001 in a replicated master
+	environment; hold an election among a group of clients to
+	make sure they select a proper master from amongst themselves,
+	in various scenarios.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep003
+	Repeated shutdown/restart replication test
+
+	Run a quick put test in a replicated master environment;
+	start up, shut down, and restart client processes, with
+	and without recovery.  To ensure that environment state
+	is transient, use DB_PRIVATE.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep005
+	Replication election test with error handling.
+
+	Run rep_test in a replicated master environment;
+	hold an election among a group of clients to make sure they select
+	a proper master from amongst themselves, forcing errors at various
+	locations in the election path.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep006
+	Replication and non-rep env handles.
+
+	Run a modified version of test001 in a replicated master
+	environment; verify that the database on the client is correct.
+	Next, create a non-rep env handle to the master env.
+	Attempt to open the database r/w to force error.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep007
+	Replication and bad LSNs
+
+	Run rep_test in a replicated master env.
+	Close the client.  Make additional changes to master.
+	Close the master.  Open the client as the new master.
+	Make several different changes.  Open the old master as
+	the client.  Verify periodically that contents are correct.
+	This test is not appropriate for named in-memory db testing
+	because the databases are lost when both envs are closed.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep008
+	Replication, back up and synchronizing
+
+	Run a modified version of test001 in a replicated master
+	environment.
+	Close master and client.
+	Copy the master log to the client.
+	Clean the master.
+	Reopen the master and client.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep009
+	Replication and DUPMASTERs
+	Run test001 in a replicated environment.
+
+	Declare one of the clients to also be a master.
+	Close a client, clean it and then declare it a 2nd master.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep010
+	Replication and ISPERM
+
+	With consecutive message processing, make sure every
+	DB_REP_PERMANENT is responded to with an ISPERM when
+	processed.  With gaps in the processing, make sure
+	every DB_REP_PERMANENT is responded to with an ISPERM
+	or a NOTPERM.  Verify in both cases that the LSN returned
+	with ISPERM is found in the log.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep011
+	Replication: test open handle across an upgrade.
+
+	Open and close test database in master environment.
+	Update the client.  Check client, and leave the handle
+	to the client open as we close the masterenv and upgrade
+	the client to master.  Reopen the old master as client
+	and catch up.  Test that we can still do a put to the
+	handle we created on the master while it was still a
+	client, and then make sure that the change can be
+	propagated back to the new client.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep012
+	Replication and dead DB handles.
+
+	Run a modified version of test001 in a replicated master env.
+	Run in replicated environment with secondary indices too.
+	Make additional changes to master, but not to the client.
+	Downgrade the master and upgrade the client with open db handles.
+	Verify that the roll back on clients gives dead db handles.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep013
+	Replication and swapping master/clients with open dbs.
+
+	Run a modified version of test001 in a replicated master env.
+	Make additional changes to master, but not to the client.
+	Swap master and client.
+	Verify that the roll back on clients gives dead db handles.
+	Rerun the test, turning on client-to-client synchronization.
+	Swap and verify several times.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep014
+	Replication and multiple replication handles.
+	Test multiple client handles, opening and closing to
+	make sure we get the right openfiles.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep015
+	Locking across multiple pages with replication.
+
+	Open master and client with small pagesize and
+	generate more than one page and generate off-page
+	dups on the first page (second key) and last page
+	(next-to-last key).
+	Within a single transaction, for each database, open
+	2 cursors and delete the first and last entries (this
+	exercises locks on regular pages).  Intermittently
+	update client during the process.
+	Within a single transaction, for each database, open
+	2 cursors.  Walk to the off-page dups and delete one
+	from each end (this exercises locks on off-page dups).
+	Intermittently update client.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep016
+	Replication election test with varying required nvotes.
+
+	Run a modified version of test001 in a replicated master environment;
+	hold an election among a group of clients to make sure they select
+	the master with varying required participants.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep017
+	Concurrency with checkpoints.
+
+	Verify that we achieve concurrency in the presence of checkpoints.
+	Here are the checks that we wish to make:
+	While dbenv1 is handling the checkpoint record:
+	Subsequent in-order log records are accepted.
+	Accepted PERM log records get NOTPERM
+	A subsequent checkpoint gets NOTPERM
+	After checkpoint completes, next txn returns PERM
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep018
+	Replication with dbremove.
+
+	Verify that the attempt to remove a database file
+	on the master hangs while another process holds a
+	handle on the client.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep019
+	Replication and multiple clients at same LSN.
+	Have several clients at the same LSN.  Run recovery at
+	different times.  Declare a client master and after sync-up
+	verify all client logs are identical.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep020
+	Replication elections - test election generation numbers.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep021
+	Replication and multiple environments.
+	Run similar tests in separate environments, making sure
+	that some data overlaps.  Then, "move" one client env
+	from one replication group to another and make sure that
+	we do not get divergent logs.  We either match the first
+	record and end up with identical logs or we get an error.
+	Verify all client logs are identical if successful.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep022
+	Replication elections - test election generation numbers
+	during simulated network partition.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep023
+	Replication using two master handles.
+
+	Open two handles on one master env.  Create two
+	databases, one through each master handle.  Process
+	all messages through the first master handle.  Make
+	sure changes made through both handles are picked
+	up properly.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep024
+	Replication page allocation / verify test
+
+	Start a master (site 1) and a client (site 2).  Master
+	closes (simulating a crash).  Site 2 becomes the master
+	and site 1 comes back up as a client.  Verify database.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep025
+	Test of DB_REP_JOIN_FAILURE.
+
+	One master, one client.
+	Generate several log files.
+	Remove old master log files.
+	Delete client files and restart client.
+	Put one more record to the master.  At the next
+	processing of messages, the client should get JOIN_FAILURE.
+	Recover with a hot failover.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep026
+	Replication elections - simulate a crash after sending
+	a vote.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep027
+	Replication and secondary indexes.
+
+	Set up a secondary index on the master and make sure
+	it can be accessed from the client.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep028
+	Replication and non-rep env handles. (Also see rep006.)
+
+	Open second non-rep env on client, and create a db
+	through this handle.  Open the db on master and put
+	some data.  Check whether the non-rep handle keeps
+	working.  Also check if opening the client database
+	in the non-rep env writes log records.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep029
+	Test of internal initialization.
+
+	One master, one client.
+	Generate several log files.
+	Remove old master log files.
+	Delete client files and restart client.
+	Put one more record to the master.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep030
+	Test of internal initialization multiple files and pagesizes.
+	Hold some databases open on master.
+
+	One master, one client using a data_dir for internal init.
+	Generate several log files.
+	Remove old master log files.
+	Delete client files and restart client.
+	Put one more record to the master.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep031
+	Test of internal initialization and blocked operations.
+
+	One master, one client.
+	Put one more record to the master.
+	Test that internal initialization blocks:
+	log_archive, rename, remove, fileid_reset, lsn_reset.
+	Sleep 30+ seconds.
+	Test that blocked operations are now unblocked.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep032
+	Test of log gap processing.
+
+	One master, one client.
+	Run rep_test.
+	Run rep_test without sending messages to client.
+	Make sure client missing the messages catches up properly.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep033
+	Test of internal initialization with rename and remove of dbs.
+
+	One master, one client.
+	Generate several databases.  Replicate to client.
+	Do some renames and removes, both before and after
+	closing the client.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep034
+	Test of STARTUPDONE notification.
+
+	STARTUPDONE can now be recognized without the need for new "live" log
+	records from the master (under favorable conditions).  The response to
+	the ALL_REQ at the end of synchronization includes an end-of-log marker
+	that now triggers it.  However, the message containing that end marker
+	could get lost, so live log records still serve as a back-up mechanism.
+	The end marker may also be set under c2c sync, but only if the serving
+	client has itself achieved STARTUPDONE.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep035
+	Test sync-up recovery in replication.
+
+	We need to fork off 3 child tclsh processes to operate
+	on Site 3's (client always) home directory:
+	Process 1 continually calls lock_detect.
+	Process 2 continually calls txn_checkpoint.
+	Process 3 continually calls memp_trickle.
+	Process 4 continually calls log_archive.
+	Sites 1 and 2 will continually swap being master
+	(forcing site 3 to continually run sync-up recovery)
+	New master performs 1 operation, replicates and downgrades.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep036
+	Multiple master processes writing to the database.
+	One process handles all message processing.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep037
+	Test of internal initialization and page throttling.
+
+	One master, one client, force page throttling.
+	Generate several log files.
+	Remove old master log files.
+	Delete client files and restart client.
+	Put one more record to the master.
+	Verify page throttling occurred.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep038
+	Test of internal initialization and ongoing master updates.
+
+	One master, one client.
+	Generate several log files.
+	Remove old master log files.
+	Delete client files and restart client.
+	Put more records on master while initialization is in progress.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep039
+	Test of interrupted internal initialization.  The
+	interruption is due to a changed master, or the client crashing,
+	or both.
+
+	One master, two clients.
+	Generate several log files. Remove old master log files.
+	Restart client, optionally having "cleaned" client env dir.  Either
+	way, this has the effect of forcing an internal init.
+	Interrupt the internal init.
+	Vary the number of times we process messages to make sure
+	the interruption occurs at varying stages of the first internal
+	initialization.
+
+	Run for btree and queue only because of the number of permutations.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep040
+	Test of racing rep_start and transactions.
+
+	One master, one client.
+	Have master in the middle of a transaction.
+	Call rep_start to make master a client.
+	Commit the transaction.
+	Call rep_start to make master the master again.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep041
+	Turn replication on and off at run-time.
+
+	Start a master with replication OFF (noop transport function).
+	Run rep_test to advance log files and archive.
+	Start up client; change master to working transport function.
+	Now replication is ON.
+	Do more ops, make sure client is up to date.
+	Close client, turn replication OFF on master, do more ops.
+	Repeat from point A.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep042
+	Concurrency with updates.
+
+	Verify racing role changes and updates don't result in
+	pages with LSN 0,1.  Set up an environment that is master.
+	Spawn child process that does a delete, but using the
+	$env check so that it sleeps in the middle of the call.
+	Master downgrades and then sleeps as a client so that
+	child will run.  Verify child does not succeed (should
+	get read-only error) due to role change in the middle of
+	its call.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep043
+
+	Constant writes during upgrade/downgrade.
+
+	Three envs take turns being master.  Each env
+	has a child process which does writes all the
+	time.  They will succeed when that env is master
+	and fail when it is not.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep044
+
+	Test rollbacks with open file ids.
+
+	We have one master with two handles and one client.
+	Each time through the main loop, we open a db, write
+	to the db, and close the db.  Each one of these actions
+	is propagated to the client, or a roll back is forced
+	by swapping masters.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep045
+
+	Replication with versions.
+
+	Mimic an application where a database is set up in the
+	background and then put into a replication group for use.
+	The "version database" identifies the current live
+	version, the database against which queries are made.
+	For example, the version database might say the current
+	version is 3, and queries would then be sent to db.3.
+	Version 4 is prepared for use while version 3 is in use.
+	When version 4 is complete, the version database is updated
+	to point to version 4 so queries can be directed there.
+
+	This test has a master and two clients.  One client swaps
+	roles with the master, and the other client runs constantly
+	in another process.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep046
+	Replication and basic bulk transfer.
+	Set bulk transfer replication option.
+	Run long txns on master and then commit.  Process on client
+	and verify contents.  Run a very long txn so that logging
+	must send the log.  Process and verify on client.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep047
+	Replication and log gap bulk transfers.
+	Set bulk transfer replication option.
+	Run test.  Start a new client (to test ALL_REQ and bulk).
+	Run small test again.  Clear messages for 1 client.
+	Run small test again to test LOG_REQ gap processing and bulk.
+	Process and verify on clients.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep048
+	Replication and log gap bulk transfers.
+	Have two master env handles.  Turn bulk on in
+	one (turns it on for both).  Turn it off in the other.
+	While toggling, send log records from both handles.
+	Process message and verify master and client match.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep049
+	Replication and delay syncing clients - basic test.
+
+	Open and start up a master and two clients.  Turn on delay sync
+	in the delayed client.  Change master, add data and process messages.
+	Verify delayed client does not match.  Make additional changes and
+	update the delayted client.  Verify all match.
+	Add in a fresh delayed client to test delay of ALL_REQ.
+	Process startup messages and verify freshc client has no database.
+	Sync and verify fresh client matches.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep050
+	Replication and delay syncing clients - change master test.
+
+	Open and start up master and 4 clients.  Turn on delay for 3 clients.
+	Switch masters, add data and verify delayed clients are out of date.
+	Make additional changes to master.  And change masters again.
+	Sync/update delayed client and verify.  The 4th client is a brand
+	new delayed client added in to test the non-verify path.
+
+	Then test two different things:
+	1. Swap master again while clients are still delayed.
+	2. Swap master again while sync is proceeding for one client.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep051
+	Test of compaction with replication.
+
+	Run rep_test in a replicated master environment.
+	Delete a large number of entries and compact with -freespace.
+	Propagate the changes to the client and make sure client and
+	master match.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep052
+	Test of replication with NOWAIT.
+
+	One master, one client.  After initializing
+	everything normally, close client and let the
+	master get ahead -- far enough that the master
+	no longer has the client's last log file.
+	Reopen the client and turn on NOWAIT.
+	Process a few messages to get the client into
+	recovery mode, and verify that lockout occurs
+	on a txn API call (txn_begin) and an env API call.
+	Process all the messages and verify that lockout
+	is over.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep053
+	Replication and basic client-to-client synchronization.
+
+	Open and start up master and 1 client.
+	Start up a second client later and verify it sync'ed from
+	the original client, not the master.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep054
+	Test of internal initialization where a far-behind
+	client takes over as master.
+
+	One master, two clients.
+	Run rep_test and process.
+	Close client 1.
+	Run rep_test, opening new databases, and processing
+	messages.  Archive as we go so that log files get removed.
+	Close master and reopen client 1 as master.  Process messages.
+	Verify that new master and client are in sync.
+	Run rep_test again, adding data to one of the new
+	named databases.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep055
+	Test of internal initialization and log archiving.
+
+	One master, one client.
+	Generate several log files.
+	Remove old master log files and generate several more.
+	Get list of archivable files from db_archive and restart client.
+	As client is in the middle of internal init, remove
+	the log files returned earlier by db_archive.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep058
+
+	Replication with early databases
+
+	Mimic an application where they create a database before
+	calling rep_start, thus writing log records on a client
+	before it is a client.  Verify we cannot join repl group.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep060
+	Test of normally running clients and internal initialization.
+	Have a client running normally, but slow/far behind the master.
+	Then the master checkpoints and archives, causing the client
+	to suddenly be thrown into internal init.  This test tests
+	that we clean up the old files/pages in mpool and dbreg.
+	Also test same thing but the app holding an open dbp as well.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep061
+	Test of internal initialization multiple files and pagesizes
+	with page gaps.
+
+	One master, one client.
+	Generate several log files.
+	Remove old master log files.
+	Delete client files and restart client.
+	Put one more record to the master.
+	Force some page messages to get dropped.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep062
+	Test of internal initialization where client has a different
+	kind of database than the master.
+
+	Create a master of one type, and let the client catch up.
+	Close the client.
+	Remove the database on the master, and create a new
+	database of the same name but a different type.
+	Run the master ahead far enough that internal initialization
+	will be required on the reopen of the client.
+	Reopen the client and verify.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep063
+	Replication election test with simulated different versions
+	for each site.  This tests that old sites with real priority
+	trump ELECTABLE sites with zero priority even with greater LSNs.
+	There is a special case in the code for testing that if the
+	priority is <= 10, we simulate mixed versions for elections.
+
+	Run a rep_test in a replicated master environment and close;
+	hold an election among a group of clients to make sure they select
+	the master with varying LSNs and priorities.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep064
+	Replication rename and forced-upgrade test.
+
+	The test verifies that the client correctly
+	(internally) closes files when upgrading to master.
+	It does this by having the master have a database
+	open, then crashing.  The client upgrades to master,
+	and attempts to remove the open database.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep065
+	Tests replication running with different versions.
+	This capability is introduced with 4.5.
+
+	Start a replication group of 1 master and N sites, all
+	running some historical version greater than or equal to 4.4.
+	Take down a client and bring it up again running current.
+	Run some upgrades, make sure everything works.
+
+	Each site runs the tcllib of its own version, but uses
+	the current tcl code (e.g. test.tcl).
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep066
+	Replication and dead log handles.
+
+	Run rep_test on master and a client.
+	Simulate client crashes (master continues) until log 2.
+	Open 2nd master env handle and put something in log and flush.
+	Downgrade master, restart client as master.
+	Run rep_test on newmaster until log 2.
+	New master writes log records, newclient processes records
+	and 2nd newclient env handle calls log_flush.
+	New master commits, newclient processes and should succeed.
+	Make sure 2nd handle detects the old log handle and doesn't
+	write to a stale handle (if it does, the processing of the
+	commit will fail).
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep067
+	Replication election test with large timeouts.
+
+	Test replication elections among clients with widely varying
+	timeouts.  This test is used to simulate a customer that
+	wants to force full participation in an election, but only
+	if all sites are present (i.e. if all sites are restarted
+	together).  If any site has already been part of the group,
+	then we want to be able to elect a master based on majority.
+	Using varied timeouts, we can force full participation if
+	all sites are present with "long_timeout" amount of time and
+	then revert to majority.
+
+	A long_timeout would be several minutes whereas a normal
+	short timeout would be a few seconds.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep068
+	Verify replication of dbreg operations does not hang clients.
+	In a simple replication group, create a database with very
+	little data.  With DB_TXN_NOSYNC the database can be created
+	at the client even though the log is not flushed.  If we crash
+	and restart, the application of the log starts over again, even
+	though the database is still there.  The application can open
+	the database before replication tries to re-apply the create.
+	This causes a hang as replication waits to be able to get a
+	handle lock.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep069
+	Test of internal initialization and elections.
+
+	If a client is in a recovery mode of any kind, it
+	participates in elections at priority 0 so it can
+	never be elected master.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep070
+	Test of startup_done condition with idle master.
+
+	Join a client to an existing master, and verify that
+	the client detects startup_done even if the master
+	does not execute any new transactions.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep071
+	Test of multiple simultaneous client env handles and
+	upgrading/downgrading.  Tests use of temp db handle
+	internally.
+
+	Open a master and 2 handles to the same client env.
+	Run rep_test.
+	Close master and upgrade client to master using one env handle.
+	Run rep_test again, and then downgrade back to client.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep072
+	Verify that internal init does not leak resources from
+	the locking subsystem.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep073
+
+	Test of allowing clients to create and update their own scratch
+	databases within the environment.  Doing so requires the use
+	use of the DB_TXN_NOT_DURABLE flag for those databases.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep074
+	Verify replication withstands send errors processing requests.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep075
+	Replication and prepared transactions.
+	Test having outstanding prepared transactions and simulating
+	crashing or upgrading or downgrading sites.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep076
+	Replication elections - what happens if elected client
+	does not become master?
+
+	Set up a master and 3 clients.  Take down master, run election.
+	The elected client will ignore the fact that it's been elected,
+	so we still have 2 clients.
+
+	Run another election, a regular election that allows the winner
+	to become master, and make sure it goes okay.  We do this both
+	for the client that ignored its election and for the other client.
+
+	This simulates what would happen if, say, we had a temporary
+	network partition and lost the winner.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep077
+
+	Replication, recovery and applying log records immediately.
+	Master and 1 client.  Start up both sites.
+	Close client and run rep_test on the master so that the
+	log record is the same LSN the client would be expecting.
+	Reopen client with recovery and verify the client does not
+	try to apply that "expected" record before it synchronizes
+	with the master.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep078
+
+	Replication and basic lease test.
+	Set leases on master and 2 clients.
+	Do a lease operation and process to all clients.
+	Read with lease on master.  Do another lease operation
+	and don't process on any client.  Try to read with
+	on the master and verify it fails.  Process the messages
+	to the clients and retry the read.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep079
+	Replication leases and invalid usage.
+
+	Open a client without leases.  Attempt to set leases after rep_start.
+	Attempt to declare as master without election.
+	Run an election with an nsites parameter value.
+	Elect a master with leases.  Put some data and send to clients.
+	Cleanly shutdown master env.  Restart without
+	recovery and verify leases are expired and refreshed.
+	Add a new client without leases to a group using leases.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep080
+	NOAUTOINIT with empty client logs.
+
+	Verify that a fresh client trying to join the group for
+	the first time observes the setting of DELAY_SYNC and NOAUTOINIT
+	properly.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep081
+	Test of internal initialization and missing database files.
+
+	One master, one client, two databases.
+	Generate several log files.
+	Remove old master log files.
+	Start up client.
+	Remove or replace one master database file while client initialization 
+	is in progress, make sure other master database can keep processing.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep082
+	Sending replication requests to correct master site.
+
+	Regression test for a bug [#16592] where a client could send an
+	UPDATE_REQ to another client instead of the master.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep083
+	Replication clients must never send VERIFY_FAIL to a c2c request.
+
+	Regression test for a bug [#16592] where a client could send a
+	VERIFY_FAIL to another client, which is illegal.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep084
+	Abbreviated internal init for named in-memory databases (NIMDBs).
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep085
+	Skipping unnecessary abbreviated internal init.
+
+	Make sure that once we've materialized NIMDBs, we don't bother
+	trying to do it again on subsequent sync without recovery.  Make
+	sure we do probe for the need to materialize NIMDBs, but don't do
+	any internal init at all if there are no NIMDBs.  Note that in order to
+	do this test we don't even need any NIMDBs.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep086
+	Interrupted abbreviated internal init.
+
+	Make sure we cleanly remove partially loaded named in-memory
+	databases (NIMDBs).
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep087
+	Abbreviated internal init with open file handles.
+
+	Client has open handle to an on-disk DB when abbreviated
+	internal init starts.  Make sure we lock out access, and make sure
+	it ends up as HANDLE_DEAD.  Also, make sure that if there are
+	no NIMDBs, that we *don't* get HANDLE_DEAD.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rep088
+	Replication roll-back preserves checkpoint.
+
+	Create a situation where a client has to roll back its
+	log, discarding some existing transactions, in order to sync
+	with a new master.
+
+	1. When the client still has its entire log file history, all
+	the way back to log file #1, it's OK if the roll-back discards
+	any/all checkpoints.
+	2. When old log files have been archived, if the roll-back would
+	remove all existing checkpoints it must be forbidden.  The log
+	must always have a checkpoint (or all files back through #1).
+	The client must do internal init or return JOIN_FAILURE.
+	3. (the normal case) Old log files archived, and a checkpoint
+	still exists in the portion of the log which will remain after
+	the roll-back: no internal-init/JOIN_FAILURE necessary.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr001
+	Basic repmgr test. 
+
+	Create an appointed master and two clients, process some records and 
+	verify resulting databases.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr002
+	Basic repmgr election test. 
+
+	Open three clients of different priorities and make sure repmgr 
+	elects expected master. Shut master down, make sure repmgr elects 
+	expected remaining client master, make sure former master can join 
+	as client.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr003
+	Basic repmgr internal init test. 
+
+	Start an appointed master site and two clients, processing 
+	transactions between each additional site. Verify all expected 
+	transactions are replicated.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr004
+	Basic repmgr test with in-memory logs.
+
+	Create an appointed master and two clients, process some records and 
+	verify resulting databases.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr005
+	Basic repmgr test with in-memory databases. 
+
+	Create an appointed master and two clients, process some records and 
+	verify resulting databases.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr006
+	Basic repmgr test with bulk processing. 
+
+	Create an appointed master and two clients, process some records and 
+	verify resulting databases.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr007
+	Basic repmgr client shutdown/restart test.
+
+	Start an appointed master site and two clients. Shutdown and
+	restart each client, processing transactions after each restart.
+	Verify all expected transactions are replicated.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr008
+	Basic repmgr test with client-to-client configuration.
+
+	Create a master and two clients, process some records and verify 
+	resulting databases.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr009
+	repmgr API error test.
+
+	Try a variety of repmgr calls that result in errors. Also
+	try combinations of repmgr and base replication API calls
+	that result in errors.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr010
+	Acknowledgement policy and timeout test. 
+
+	Verify that "quorum" acknowledgement policy succeeds with fewer than 
+	nsites running. Verify that "all" acknowledgement policy results in 
+	ack failures with fewer than nsites running.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr011
+	repmgr two site strict majority test.
+
+	Start an appointed master and one client with 2 site strict
+	majority set. Shut down the master site, wait and verify that
+	the client site was not elected master. Start up master site
+	and verify that transactions are processed as expected.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr012
+	repmgr heartbeat test.
+
+	Start an appointed master and one client site. Set heartbeat
+	send and monitor values and process some transactions. Stop
+	sending heartbeats from master and verify that client sees
+	a dropped connection.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr013
+	Site list test. 
+
+	Configure a master and two clients where one client is a peer of 
+	the other and verify resulting site lists.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr014
+	Basic repmgr in-memory test. 
+
+	Create an appointed master and two clients, process some records and 
+	verify resulting databases. Put databases, logs and replication files
+	in-memory.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr015
+	Basic repmgr in-memory election test. 
+
+	Open three clients of different priorities and make sure repmgr 
+	elects expected master. Shut master down, make sure repmgr elects 
+	expected remaining client master, make sure former master can join 
+	as client. Replication files are in-memory; databases, logs and
+	environment regions are on-disk.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr016
+	Basic repmgr in-memory internal init test. 
+
+	Start an appointed master site and two clients, processing 
+	transactions between each additional site. Verify all expected 
+	transactions are replicated. Replication files are in-memory; 
+	databases, logs and environment regions are on-disk.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr017
+	repmgr in-memory cache overflow test. 
+
+	Start an appointed master site and one client, putting databases,
+	environment regions, logs and replication files in-memory. Set 
+	very small cachesize and run enough transactions to overflow cache. 
+	Shut down and restart master and client, giving master a larger cache. 
+	Run and verify a small number of transactions.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr018
+	Check repmgr stats.
+
+	Start an appointed master and one client. Shut down the client,
+	run some transactions at the master and verify that there are
+	acknowledgement failures and one dropped connection. Shut down
+	and restart client again and verify that there are two dropped
+	connections.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr019
+	Basic repmgr test with in-memory databases and in-memory logs. 
+
+	Create an appointed master and two clients, process some records and 
+	verify resulting databases.
+
+	Run for btree only because access method shouldn't matter.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr022
+	Basic test of repmgr's multi-process master support.
+
+	Set up a simple 2-site group, create data and replicate it.
+	Add a second process at the master and have it write some
+	updates.  It does not explicitly start repmgr (nor do any
+	replication configuration, for that matter).  Its first
+	update triggers initiation of connections, and so it doesn't
+	get to the client without a log request.  But later updates
+	should go directly.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr023
+	Repmgr support for multi-process master.
+
+	Start two processes at the master.
+	Add a client site (not previously known to the master 
+	processes), and make sure
+	both master processes connect to it.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr024
+	Ensuring exactly one listener process.
+
+	Start a repmgr process with a listener.
+	Start a second process, and see that it does not become the listener.
+	Shut down the first process (gracefully).  Now a second process should
+	become listener.
+	Kill the listener process abruptly.  Running failchk should show that
+	recovery is necessary.  Run recovery and start a clean listener.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr025
+	Repmgr site address discovery via handshakes.
+
+	Master with 2 processes, does not know client's address.
+	Client processes start in either order, connect to master.
+	Master learns of client's address via handshake message.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr026
+	Repmgr site address discovery via NEWSITE
+
+	New client, previously unknown to (main) master process, connects to an
+	existing client, which broadcasts NEWSITE message.
+	This causes master to discover its address, and connect to it.
+	Other new clients may also have been added to master's configuration in
+	the interim (via a subordinate master process).
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr027
+	Repmgr recognition of peer setting, across processes.
+
+	Set up a master and two clients, synchronized with some data.
+	Add a new client, configured to use c2c sync with one of the original
+	clients.  Check stats to make sure the correct c2c peer was used.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr028
+	Simple smoke test for repmgr elections with multi-process envs.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr029
+	Repmgr combined with replication-unaware process at master.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr030
+	Subordinate connections and processes should not trigger elections.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr031
+	Test repmgr's internal juggling of peer EID's.
+
+	Set up master and 2 clients, A and B.
+	Add a third client (C), with two processes.
+	The first process will be configured to know about A.
+	The second process will know about B, and set that as peer,
+	but when it joins the env site B will have to be shuffled
+	into a later position in the list, because A is already first.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+repmgr032
+	Multi-process repmgr start-up policies.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rpc001
+	Test RPC server timeouts for cursor, txn and env handles.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rpc002
+	Test invalid RPC functions and make sure we error them correctly
+	Test server home directory error cases
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rpc003
+	Test RPC and secondary indices.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rpc004
+	Test RPC server and security
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rpc005
+	Test RPC server handle ID sharing
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rpc006
+	Test RPC server and multiple operations to server.
+	Make sure the server doesn't deadlock itself, but
+	returns DEADLOCK to the client.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rsrc001
+	Recno backing file test.  Try different patterns of adding
+	records and making sure that the corresponding file matches.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rsrc002
+	Recno backing file test #2: test of set_re_delim.  Specify a backing
+	file with colon-delimited records, and make sure they are correctly
+	interpreted.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rsrc003
+	Recno backing file test.  Try different patterns of adding
+	records and making sure that the corresponding file matches.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+rsrc004
+	Recno backing file test for EOF-terminated records.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+scr###
+	The scr### directories are shell scripts that test a variety of
+	things, including things about the distribution itself.  These
+	tests won't run on most systems, so don't even try to run them.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdb001	Tests mixing db and subdb operations
+	Tests mixing db and subdb operations
+	Create a db, add data, try to create a subdb.
+	Test naming db and subdb with a leading - for correct parsing
+	Existence check -- test use of -excl with subdbs
+
+	Test non-subdb and subdb operations
+	Test naming (filenames begin with -)
+	Test existence (cannot create subdb of same name with -excl)
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdb002
+	Tests basic subdb functionality
+	Small keys, small data
+	Put/get per key
+	Dump file
+	Close, reopen
+	Dump file
+
+	Use the first 10,000 entries from the dictionary.
+	Insert each with self as key and data; retrieve each.
+	After all are entered, retrieve all; compare output to original.
+	Close file, reopen, do retrieve and re-verify.
+	Then repeat using an environment.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdb003
+	Tests many subdbs
+	Creates many subdbs and puts a small amount of
+	data in each (many defaults to 1000)
+
+	Use the first 1000 entries from the dictionary as subdbnames.
+	Insert each with entry as name of subdatabase and a partial list
+	as key/data.  After all are entered, retrieve all; compare output
+	to original.  Close file, reopen, do retrieve and re-verify.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdb004
+	Tests large subdb names
+	subdb name = filecontents,
+	key = filename, data = filecontents
+	Put/get per key
+	Dump file
+	Dump subdbs, verify data and subdb name match
+
+	Create 1 db with many large subdbs.  Use the contents as subdb names.
+	Take the source files and dbtest executable and enter their names as
+	the key with their contents as data.  After all are entered, retrieve
+	all; compare output to original. Close file, reopen, do retrieve and
+	re-verify.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdb005
+	Tests cursor operations in subdbs
+	Put/get per key
+	Verify cursor operations work within subdb
+	Verify cursor operations do not work across subdbs
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdb006
+	Tests intra-subdb join
+
+	We'll test 2-way, 3-way, and 4-way joins and figure that if those work,
+	everything else does as well.  We'll create test databases called
+	sub1.db, sub2.db, sub3.db, and sub4.db.  The number on the database
+	describes the duplication -- duplicates are of the form 0, N, 2N, 3N,
+	...  where N is the number of the database.  Primary.db is the primary
+	database, and sub0.db is the database that has no matching duplicates.
+	All of these are within a single database.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdb007
+	Tests page size difference errors between subdbs.
+	If the physical file already exists, we ignore pagesize specifications
+	on any subsequent -creates.
+
+	1.  Create/open a subdb with system default page size.
+	Create/open a second subdb specifying a different page size.
+	The create should succeed, but the pagesize of the new db
+	will be the system default page size.
+	2.  Create/open a subdb with a specified, non-default page size.
+	Create/open a second subdb specifying a different page size.
+	The create should succeed, but the pagesize of the new db
+	will be the specified page size from the first create.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdb008
+	Tests explicit setting of lorders for subdatabases -- the
+	lorder should be ignored.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdb009
+	Test DB->rename() method for subdbs
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdb010
+	Test DB->remove() method and DB->truncate() for subdbs
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdb011
+	Test deleting Subdbs with overflow pages
+	Create 1 db with many large subdbs.
+	Test subdatabases with overflow pages.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdb012
+	Test subdbs with locking and transactions
+	Tests creating and removing subdbs while handles
+	are open works correctly, and in the face of txns.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdb013
+	Tests in-memory subdatabases.
+	Create an in-memory subdb.  Test for persistence after
+	overflowing the cache.  Test for conflicts when we have
+	two in-memory files.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdb014
+	Tests mixing in-memory named and in-memory unnamed dbs.
+	Create a regular in-memory db, add data.
+	Create a named in-memory db.
+	Try to create the same named in-memory db again (should fail).
+	Try to create a different named in-memory db (should succeed).
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdb015
+	Tests basic in-memory named database functionality
+	Small keys, small data
+	Put/get per key
+
+	Use the first 10,000 entries from the dictionary.
+	Insert each with self as key and data; retrieve each.
+	After all are entered, retrieve all; compare output to original.
+	Close file, reopen, do retrieve and re-verify.
+	Then repeat using an environment.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdb016
+	Creates many in-memory named dbs and puts a small amount of
+	data in each (many defaults to 100)
+
+	Use the first 100 entries from the dictionary as names.
+	Insert each with entry as name of subdatabase and a partial list
+	as key/data.  After all are entered, retrieve all; compare output
+	to original.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdb017
+	Test DB->rename() for in-memory named databases.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdb018
+	Tests join of in-memory named databases.
+
+	We'll test 2-way, 3-way, and 4-way joins and figure that if those work,
+	everything else does as well.  We'll create test databases called
+	sub1.db, sub2.db, sub3.db, and sub4.db.  The number on the database
+	describes the duplication -- duplicates are of the form 0, N, 2N, 3N,
+	...  where N is the number of the database.  Primary.db is the primary
+	database, and sub0.db is the database that has no matching duplicates.
+	All of these are within a single database.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdb019
+	Tests in-memory subdatabases.
+	Create an in-memory subdb.  Test for persistence after
+	overflowing the cache.  Test for conflicts when we have
+	two in-memory files.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdb020
+	Tests in-memory subdatabases.
+	Create an in-memory subdb with one page size.  Close, and
+	open with a different page size: should fail.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdbtest001
+	Tests multiple access methods in one subdb
+	Open several subdbs, each with a different access method
+	Small keys, small data
+	Put/get per key per subdb
+	Dump file, verify per subdb
+	Close, reopen per subdb
+	Dump file, verify per subdb
+
+	Make several subdb's of different access methods all in one DB.
+	Rotate methods and repeat [#762].
+	Use the first 10,000 entries from the dictionary.
+	Insert each with self as key and data; retrieve each.
+	After all are entered, retrieve all; compare output to original.
+	Close file, reopen, do retrieve and re-verify.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sdbtest002
+	Tests multiple access methods in one subdb access by multiple
+	processes.
+	Open several subdbs, each with a different access method
+	Small keys, small data
+	Put/get per key per subdb
+	Fork off several child procs to each delete selected
+	data from their subdb and then exit
+	Dump file, verify contents of each subdb is correct
+	Close, reopen per subdb
+	Dump file, verify per subdb
+
+	Make several subdb's of different access methods all in one DB.
+	Fork of some child procs to each manipulate one subdb and when
+	they are finished, verify the contents of the databases.
+	Use the first 10,000 entries from the dictionary.
+	Insert each with self as key and data; retrieve each.
+	After all are entered, retrieve all; compare output to original.
+	Close file, reopen, do retrieve and re-verify.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sec001
+	Test of security interface
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sec002
+	Test of security interface and catching errors in the
+	face of attackers overwriting parts of existing files.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+si001
+	Secondary index put/delete with lorder test
+
+	Put data in primary db and check that pget on secondary
+	index finds the right entries.  Alter the primary in the
+	following ways, checking for correct data each time:
+	Overwrite data in primary database.
+	Delete half of entries through primary.
+	Delete half of remaining entries through secondary.
+	Append data (for record-based primaries only).
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+si002
+	Basic cursor-based secondary index put/delete test
+
+	Cursor put data in primary db and check that pget
+	on secondary index finds the right entries.
+	Open and use a second cursor to exercise the cursor
+	comparison API on secondaries.  
+	Overwrite while walking primary, check pget again.
+	Overwrite while walking secondary (use c_pget), check
+	pget again.
+	Cursor delete half of entries through primary, check.
+	Cursor delete half of remainder through secondary, check.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+si003
+	si001 with secondaries created and closed mid-test
+	Basic secondary index put/delete test with secondaries
+	created mid-test.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+si004
+	si002 with secondaries created and closed mid-test
+	Basic cursor-based secondary index put/delete test, with
+	secondaries created mid-test.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+si005
+	Basic secondary index put/delete test with transactions
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+si006
+
+	Test -immutable_key interface.
+
+	DB_IMMUTABLE_KEY is an optimization to be used when a
+	secondary key will not be changed.  It does not prevent
+	a deliberate change to the secondary key, it just does not
+	propagate that change when it is made to the primary.
+	This test verifies that a change to the primary is propagated
+	to the secondary or not as specified by -immutable_key.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+si007
+	Secondary index put/delete with lorder test
+
+	This test is the same as si001 with the exception
+	that we create and populate the primary and THEN
+	create the secondaries and associate them with -create.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+si008
+	Secondary index put/delete with lorder test
+
+	This test is the same as si001 except that we
+	create the secondaries with different byte orders:
+	one native, one swapped.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sijointest: Secondary index and join test.
+	This used to be si005.tcl.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test001
+	Small keys/data
+	Put/get per key
+	Dump file
+	Close, reopen
+	Dump file
+
+	Use the first 10,000 entries from the dictionary.
+	Insert each with self as key and data; retrieve each.
+	After all are entered, retrieve all; compare output to original.
+	Close file, reopen, do retrieve and re-verify.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test002
+	Small keys/medium data
+	Put/get per key
+	Dump file
+	Close, reopen
+	Dump file
+
+	Use the first 10,000 entries from the dictionary.
+	Insert each with self as key and a fixed, medium length data string;
+	retrieve each. After all are entered, retrieve all; compare output
+	to original. Close file, reopen, do retrieve and re-verify.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test003
+	Small keys/large data
+	Put/get per key
+	Dump file
+	Close, reopen
+	Dump file
+
+	Take the source files and dbtest executable and enter their names
+	as the key with their contents as data.  After all are entered,
+	retrieve all; compare output to original. Close file, reopen, do
+	retrieve and re-verify.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test004
+	Small keys/medium data
+	Put/get per key
+	Sequential (cursor) get/delete
+
+	Check that cursor operations work.  Create a database.
+	Read through the database sequentially using cursors and
+	delete each element.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test005
+	Small keys/medium data
+	Put/get per key
+	Close, reopen
+	Sequential (cursor) get/delete
+
+	Check that cursor operations work.  Create a database; close
+	it and reopen it.  Then read through the database sequentially
+	using cursors and delete each element.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test006
+	Small keys/medium data
+	Put/get per key
+	Keyed delete and verify
+
+	Keyed delete test.
+	Create database.
+	Go through database, deleting all entries by key.
+	Then do the same for unsorted and sorted dups.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test007
+	Small keys/medium data
+	Put/get per key
+	Close, reopen
+	Keyed delete
+
+	Check that delete operations work.  Create a database; close
+	database and reopen it.  Then issues delete by key for each
+	entry.  (Test006 plus reopen)
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test008
+	Small keys/large data
+	Put/get per key
+	Loop through keys by steps (which change)
+	... delete each key at step
+	... add each key back
+	... change step
+	Confirm that overflow pages are getting reused
+
+	Take the source files and dbtest executable and enter their names as
+	the key with their contents as data.  After all are entered, begin
+	looping through the entries; deleting some pairs and then readding them.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test009
+	Small keys/large data
+	Same as test008; close and reopen database
+
+	Check that we reuse overflow pages.  Create database with lots of
+	big key/data pairs.  Go through and delete and add keys back
+	randomly.  Then close the DB and make sure that we have everything
+	we think we should.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test010
+	Duplicate test
+	Small key/data pairs.
+
+	Use the first 10,000 entries from the dictionary.
+	Insert each with self as key and data; add duplicate records for each.
+	After all are entered, retrieve all; verify output.
+	Close file, reopen, do retrieve and re-verify.
+	This does not work for recno
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test011
+	Duplicate test
+	Small key/data pairs.
+	Test DB_KEYFIRST, DB_KEYLAST, DB_BEFORE and DB_AFTER.
+	To test off-page duplicates, run with small pagesize.
+
+	Use the first 10,000 entries from the dictionary.
+	Insert each with self as key and data; add duplicate records for each.
+	Then do some key_first/key_last add_before, add_after operations.
+	This does not work for recno
+
+	To test if dups work when they fall off the main page, run this with
+	a very tiny page size.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test012
+	Large keys/small data
+	Same as test003 except use big keys (source files and
+	executables) and small data (the file/executable names).
+
+	Take the source files and dbtest executable and enter their contents
+	as the key with their names as data.  After all are entered, retrieve
+	all; compare output to original. Close file, reopen, do retrieve and
+	re-verify.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test013
+	Partial put test
+	Overwrite entire records using partial puts.
+	Make sure that NOOVERWRITE flag works.
+
+	1. Insert 10000 keys and retrieve them (equal key/data pairs).
+	2. Attempt to overwrite keys with NO_OVERWRITE set (expect error).
+	3. Actually overwrite each one with its datum reversed.
+
+	No partial testing here.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test014
+	Exercise partial puts on short data
+	Run 5 combinations of numbers of characters to replace,
+	and number of times to increase the size by.
+
+	Partial put test, small data, replacing with same size.  The data set
+	consists of the first nentries of the dictionary.  We will insert them
+	(and retrieve them) as we do in test 1 (equal key/data pairs).  Then
+	we'll try to perform partial puts of some characters at the beginning,
+	some at the end, and some at the middle.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test015
+	Partial put test
+	Partial put test where the key does not initially exist.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test016
+	Partial put test
+	Partial put where the datum gets shorter as a result of the put.
+
+	Partial put test where partial puts make the record smaller.
+	Use the first 10,000 entries from the dictionary.
+	Insert each with self as key and a fixed, medium length data string;
+	retrieve each. After all are entered, go back and do partial puts,
+	replacing a random-length string with the key value.
+	Then verify.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test017
+	Basic offpage duplicate test.
+
+	Run duplicates with small page size so that we test off page duplicates.
+	Then after we have an off-page database, test with overflow pages too.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test018
+	Offpage duplicate test
+	Key_{first,last,before,after} offpage duplicates.
+	Run duplicates with small page size so that we test off page
+	duplicates.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test019
+	Partial get test.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test020
+	In-Memory database tests.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test021
+	Btree range tests.
+
+	Use the first 10,000 entries from the dictionary.
+	Insert each with self, reversed as key and self as data.
+	After all are entered, retrieve each using a cursor SET_RANGE, and
+	getting about 20 keys sequentially after it (in some cases we'll
+	run out towards the end of the file).
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test022
+	Test of DB->getbyteswapped().
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test023
+	Duplicate test
+	Exercise deletes and cursor operations within a duplicate set.
+	Add a key with duplicates (first time on-page, second time off-page)
+	Number the dups.
+	Delete dups and make sure that CURRENT/NEXT/PREV work correctly.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test024
+	Record number retrieval test.
+	Test the Btree and Record number get-by-number functionality.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test025
+	DB_APPEND flag test.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test026
+	Small keys/medium data w/duplicates
+	Put/get per key.
+	Loop through keys -- delete each key
+	... test that cursors delete duplicates correctly
+
+	Keyed delete test through cursor.  If ndups is small; this will
+	test on-page dups; if it's large, it will test off-page dups.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test027
+	Off-page duplicate test
+	Test026 with parameters to force off-page duplicates.
+
+	Check that delete operations work.  Create a database; close
+	database and reopen it.  Then issues delete by key for each
+	entry.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test028
+	Cursor delete test
+	Test put operations after deleting through a cursor.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test029
+	Test the Btree and Record number renumbering.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test030
+	Test DB_NEXT_DUP Functionality.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test031
+	Duplicate sorting functionality
+	Make sure DB_NODUPDATA works.
+
+	Use the first 10,000 entries from the dictionary.
+	Insert each with self as key and "ndups" duplicates
+	For the data field, prepend random five-char strings (see test032)
+	that we force the duplicate sorting code to do something.
+	Along the way, test that we cannot insert duplicate duplicates
+	using DB_NODUPDATA.
+
+	By setting ndups large, we can make this an off-page test
+	After all are entered, retrieve all; verify output.
+	Close file, reopen, do retrieve and re-verify.
+	This does not work for recno
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test032
+	DB_GET_BOTH, DB_GET_BOTH_RANGE
+
+	Use the first 10,000 entries from the dictionary.  Insert each with
+	self as key and "ndups" duplicates.   For the data field, prepend the
+	letters of the alphabet in a random order so we force the duplicate
+	sorting code to do something.  By setting ndups large, we can make
+	this an off-page test. By setting overflow to be 1, we can make
+	this an overflow test.
+
+	Test the DB_GET_BOTH functionality by retrieving each dup in the file
+	explicitly.  Test the DB_GET_BOTH_RANGE functionality by retrieving
+	the unique key prefix (cursor only).  Finally test the failure case.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test033
+	DB_GET_BOTH without comparison function
+
+	Use the first 10,000 entries from the dictionary.  Insert each with
+	self as key and data; add duplicate records for each.  After all are
+	entered, retrieve all and verify output using DB_GET_BOTH (on DB and
+	DBC handles) and DB_GET_BOTH_RANGE (on a DBC handle) on existent and
+	nonexistent keys.
+
+	XXX
+	This does not work for rbtree.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test034
+	test032 with off-page or overflow case with non-duplicates
+	and duplicates.
+
+	DB_GET_BOTH, DB_GET_BOTH_RANGE functionality with off-page 
+	or overflow case within non-duplicates and duplicates.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test035
+	Test033 with off-page duplicates
+	DB_GET_BOTH functionality with off-page duplicates.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test036
+	Test KEYFIRST and KEYLAST when the key doesn't exist
+	Put nentries key/data pairs (from the dictionary) using a cursor
+	and KEYFIRST and KEYLAST (this tests the case where use use cursor
+	put for non-existent keys).
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test037
+	Test DB_RMW
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test038
+	DB_GET_BOTH, DB_GET_BOTH_RANGE on deleted items
+
+	Use the first 10,000 entries from the dictionary.  Insert each with
+	self as key and "ndups" duplicates.  For the data field, prepend the
+	letters of the alphabet in a random order so we force the duplicate
+	sorting code to do something.  By setting ndups large, we can make
+	this an off-page test
+
+	Test the DB_GET_BOTH and DB_GET_BOTH_RANGE functionality by retrieving
+	each dup in the file explicitly.  Then remove each duplicate and try
+	the retrieval again.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test039
+	DB_GET_BOTH/DB_GET_BOTH_RANGE on deleted items without comparison
+	function.
+
+	Use the first 10,000 entries from the dictionary.  Insert each with
+	self as key and "ndups" duplicates.  For the data field, prepend the
+	letters of the alphabet in a random order so we force the duplicate
+	sorting code to do something.  By setting ndups large, we can make
+	this an off-page test.
+
+	Test the DB_GET_BOTH and DB_GET_BOTH_RANGE functionality by retrieving
+	each dup in the file explicitly.  Then remove each duplicate and try
+	the retrieval again.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test040
+	Test038 with off-page duplicates
+	DB_GET_BOTH functionality with off-page duplicates.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test041
+	Test039 with off-page duplicates
+	DB_GET_BOTH functionality with off-page duplicates.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test042
+	Concurrent Data Store test (CDB)
+
+	Multiprocess DB test; verify that locking is working for the
+	concurrent access method product.
+
+	Use the first "nentries" words from the dictionary.  Insert each with
+	self as key and a fixed, medium length data string.  Then fire off
+	multiple processes that bang on the database.  Each one should try to
+	read and write random keys.  When they rewrite, they'll append their
+	pid to the data string (sometimes doing a rewrite sometimes doing a
+	partial put).  Some will use cursors to traverse through a few keys
+	before finding one to write.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test043
+	Recno renumbering and implicit creation test
+	Test the Record number implicit creation and renumbering options.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test044
+	Small system integration tests
+	Test proper functioning of the checkpoint daemon,
+	recovery, transactions, etc.
+
+	System integration DB test: verify that locking, recovery, checkpoint,
+	and all the other utilities basically work.
+
+	The test consists of $nprocs processes operating on $nfiles files.  A
+	transaction consists of adding the same key/data pair to some random
+	number of these files.  We generate a bimodal distribution in key size
+	with 70% of the keys being small (1-10 characters) and the remaining
+	30% of the keys being large (uniform distribution about mean $key_avg).
+	If we generate a key, we first check to make sure that the key is not
+	already in the dataset.  If it is, we do a lookup.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test045
+	Small random tester
+	Runs a number of random add/delete/retrieve operations.
+	Tests both successful conditions and error conditions.
+
+	Run the random db tester on the specified access method.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test046
+	Overwrite test of small/big key/data with cursor checks.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test047
+	DBcursor->c_get get test with SET_RANGE option.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test048
+	Cursor stability across Btree splits.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test049
+	Cursor operations on uninitialized cursors.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test050
+	Overwrite test of small/big key/data with cursor checks for Recno.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test051
+	Fixed-length record Recno test.
+	0. Test various flags (legal and illegal) to open
+	1. Test partial puts where dlen != size (should fail)
+	2. Partial puts for existent record -- replaces at beg, mid, and
+	end of record, as well as full replace
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test052
+	Renumbering record Recno test.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test053
+	Test of the DB_REVSPLITOFF flag in the Btree and Btree-w-recnum
+	methods.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test054
+	Cursor maintenance during key/data deletion.
+
+	This test checks for cursor maintenance in the presence of deletes.
+	There are N different scenarios to tests:
+	1. No duplicates.  Cursor A deletes a key, do a  GET for the key.
+	2. No duplicates.  Cursor is positioned right before key K, Delete K,
+	do a next on the cursor.
+	3. No duplicates.  Cursor is positioned on key K, do a regular delete
+	of K, do a current get on K.
+	4. Repeat 3 but do a next instead of current.
+	5. Duplicates. Cursor A is on the first item of a duplicate set, A
+	does a delete.  Then we do a non-cursor get.
+	6. Duplicates.  Cursor A is in a duplicate set and deletes the item.
+	do a delete of the entire Key. Test cursor current.
+	7. Continue last test and try cursor next.
+	8. Duplicates.  Cursor A is in a duplicate set and deletes the item.
+	Cursor B is in the same duplicate set and deletes a different item.
+	Verify that the cursor is in the right place.
+	9. Cursors A and B are in the place in the same duplicate set.  A
+	deletes its item.  Do current on B.
+	10. Continue 8 and do a next on B.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test055
+	Basic cursor operations.
+	This test checks basic cursor operations.
+	There are N different scenarios to tests:
+	1. (no dups) Set cursor, retrieve current.
+	2. (no dups) Set cursor, retrieve next.
+	3. (no dups) Set cursor, retrieve prev.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test056
+	Cursor maintenance during deletes.
+	Check if deleting a key when a cursor is on a duplicate of that
+	key works.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test057
+	Cursor maintenance during key deletes.
+	1.  Delete a key with a cursor.  Add the key back with a regular
+	put.  Make sure the cursor can't get the new item.
+	2.  Put two cursors on one item.  Delete through one cursor,
+	check that the other sees the change.
+	3.  Same as 2, with the two cursors on a duplicate.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test058
+	Verify that deleting and reading duplicates results in correct ordering.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test059
+	Cursor ops work with a partial length of 0.
+	Make sure that we handle retrieves of zero-length data items correctly.
+	The following ops, should allow a partial data retrieve of 0-length.
+	db_get
+	db_cget FIRST, NEXT, LAST, PREV, CURRENT, SET, SET_RANGE
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test060
+	Test of the DB_EXCL flag to DB->open().
+	1) Attempt to open and create a nonexistent database; verify success.
+	2) Attempt to reopen it;  verify failure.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test061
+	Test of txn abort and commit for in-memory databases.
+	a) Put + abort: verify absence of data
+	b) Put + commit: verify presence of data
+	c) Overwrite + abort: verify that data is unchanged
+	d) Overwrite + commit: verify that data has changed
+	e) Delete + abort: verify that data is still present
+	f) Delete + commit: verify that data has been deleted
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test062
+	Test of partial puts (using DB_CURRENT) onto duplicate pages.
+	Insert the first 200 words into the dictionary 200 times each with
+	self as key and <random letter>:self as data.  Use partial puts to
+	append self again to data;  verify correctness.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test063
+	Test of the DB_RDONLY flag to DB->open
+	Attempt to both DB->put and DBC->c_put into a database
+	that has been opened DB_RDONLY, and check for failure.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test064
+	Test of DB->get_type
+	Create a database of type specified by method.
+	Make sure DB->get_type returns the right thing with both a normal
+	and DB_UNKNOWN open.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test065
+	Test of DB->stat, both -DB_FAST_STAT and row
+	counts with DB->stat -txn.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test066
+	Test of cursor overwrites of DB_CURRENT w/ duplicates.
+
+	Make sure a cursor put to DB_CURRENT acts as an overwrite in a
+	database with duplicates.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test067
+	Test of DB_CURRENT partial puts onto almost empty duplicate
+	pages, with and without DB_DUP_SORT.
+
+	Test of DB_CURRENT partial puts on almost-empty duplicate pages.
+	This test was written to address the following issue, #2 in the
+	list of issues relating to bug #0820:
+
+	2. DBcursor->put, DB_CURRENT flag, off-page duplicates, hash and btree:
+	In Btree, the DB_CURRENT overwrite of off-page duplicate records
+	first deletes the record and then puts the new one -- this could
+	be a problem if the removal of the record causes a reverse split.
+	Suggested solution is to acquire a cursor to lock down the current
+	record, put a new record after that record, and then delete using
+	the held cursor.
+
+	It also tests the following, #5 in the same list of issues:
+	5. DBcursor->put, DB_AFTER/DB_BEFORE/DB_CURRENT flags, DB_DBT_PARTIAL
+	set, duplicate comparison routine specified.
+	The partial change does not change how data items sort, but the
+	record to be put isn't built yet, and that record supplied is the
+	one that's checked for ordering compatibility.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test068
+	Test of DB_BEFORE and DB_AFTER with partial puts.
+	Make sure DB_BEFORE and DB_AFTER work properly with partial puts, and
+	check that they return EINVAL if DB_DUPSORT is set or if DB_DUP is not.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test069
+	Test of DB_CURRENT partial puts without duplicates-- test067 w/
+	small ndups to ensure that partial puts to DB_CURRENT work
+	correctly in the absence of duplicate pages.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test070
+	Test of DB_CONSUME (Four consumers, 1000 items.)
+
+	Fork off six processes, four consumers and two producers.
+	The producers will each put 20000 records into a queue;
+	the consumers will each get 10000.
+	Then, verify that no record was lost or retrieved twice.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test071
+	Test of DB_CONSUME (One consumer, 10000 items.)
+	This is DB Test 70, with one consumer, one producers, and 10000 items.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test072
+	Test of cursor stability when duplicates are moved off-page.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test073
+	Test of cursor stability on duplicate pages.
+
+	Does the following:
+	a. Initialize things by DB->putting ndups dups and
+	setting a reference cursor to point to each.
+	b. c_put ndups dups (and correspondingly expanding
+	the set of reference cursors) after the last one, making sure
+	after each step that all the reference cursors still point to
+	the right item.
+	c. Ditto, but before the first one.
+	d. Ditto, but after each one in sequence first to last.
+	e. Ditto, but after each one in sequence from last to first.
+	occur relative to the new datum)
+	f. Ditto for the two sequence tests, only doing a
+	DBC->c_put(DB_CURRENT) of a larger datum instead of adding a
+	new one.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test074
+	Test of DB_NEXT_NODUP.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test076
+	Test creation of many small databases in a single environment. [#1528].
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test077
+	Test of DB_GET_RECNO [#1206].
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test078
+	Test of DBC->c_count(). [#303]
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test079
+	Test of deletes in large trees.  (test006 w/ sm. pagesize).
+
+	Check that delete operations work in large btrees.  10000 entries
+	and a pagesize of 512 push this out to a four-level btree, with a
+	small fraction of the entries going on overflow pages.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test081
+	Test off-page duplicates and overflow pages together with
+	very large keys (key/data as file contents).
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test082
+	Test of DB_PREV_NODUP (uses test074).
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test083
+	Test of DB->key_range.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test084
+	Basic sanity test (test001) with large (64K) pages.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test085
+	Test of cursor behavior when a cursor is pointing to a deleted
+	btree key which then has duplicates added. [#2473]
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test086
+	Test of cursor stability across btree splits/rsplits with
+	subtransaction aborts (a variant of test048).  [#2373]
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test087
+	Test of cursor stability when converting to and modifying
+	off-page duplicate pages with subtransaction aborts. [#2373]
+
+	Does the following:
+	a. Initialize things by DB->putting ndups dups and
+	setting a reference cursor to point to each.  Do each put twice,
+	first aborting, then committing, so we're sure to abort the move
+	to off-page dups at some point.
+	b. c_put ndups dups (and correspondingly expanding
+	the set of reference cursors) after the last one, making sure
+	after each step that all the reference cursors still point to
+	the right item.
+	c. Ditto, but before the first one.
+	d. Ditto, but after each one in sequence first to last.
+	e. Ditto, but after each one in sequence from last to first.
+	occur relative to the new datum)
+	f. Ditto for the two sequence tests, only doing a
+	DBC->c_put(DB_CURRENT) of a larger datum instead of adding a
+	new one.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test088
+	Test of cursor stability across btree splits with very
+	deep trees (a variant of test048). [#2514]
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test089
+	Concurrent Data Store test (CDB)
+
+	Enhanced CDB testing to test off-page dups, cursor dups and
+	cursor operations like c_del then c_get.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test090
+	Test for functionality near the end of the queue using test001.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test091
+	Test of DB_CONSUME_WAIT.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test092
+	Test of DB_DIRTY_READ [#3395]
+
+	We set up a database with nentries in it.  We then open the
+	database read-only twice.  One with dirty reads and one without.
+	We open the database for writing and update some entries in it.
+	Then read those new entries via db->get (clean and dirty), and
+	via cursors (clean and dirty).
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test093
+	Test set_bt_compare (btree key comparison function) and
+	set_h_compare (hash key comparison function).
+
+	Open a database with a comparison function specified,
+	populate, and close, saving a list with that key order as
+	we do so.  Reopen and read in the keys, saving in another
+	list; the keys should be in the order specified by the
+	comparison function.  Sort the original saved list of keys
+	using the comparison function, and verify that it matches
+	the keys as read out of the database.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test094
+	Test using set_dup_compare.
+
+	Use the first 10,000 entries from the dictionary.
+	Insert each with self as key and data; retrieve each.
+	After all are entered, retrieve all; compare output to original.
+	Close file, reopen, do retrieve and re-verify.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test095
+	Bulk get test for methods supporting dups. [#2934]
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test096
+	Db->truncate test.
+	For all methods:
+	Test that truncate empties an existing database.
+	Test that truncate-write in an aborted txn doesn't
+	change the original contents.
+	Test that truncate-write in a committed txn does
+	overwrite the original contents.
+	For btree and hash, do the same in a database with offpage dups.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test097
+	Open up a large set of database files simultaneously.
+	Adjust for local file descriptor resource limits.
+	Then use the first 1000 entries from the dictionary.
+	Insert each with self as key and a fixed, medium length data string;
+	retrieve each. After all are entered, retrieve all; compare output
+	to original.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test098
+	Test of DB_GET_RECNO and secondary indices.  Open a primary and
+	a secondary, and do a normal cursor get followed by a get_recno.
+	(This is a smoke test for "Bug #1" in [#5811].)
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test099
+
+	Test of DB->get and DBC->c_get with set_recno and get_recno.
+
+	Populate a small btree -recnum database.
+	After all are entered, retrieve each using -recno with DB->get.
+	Open a cursor and do the same for DBC->c_get with set_recno.
+	Verify that set_recno sets the record number position properly.
+	Verify that get_recno returns the correct record numbers.
+
+	Using the same database, open 3 cursors and position one at
+	the beginning, one in the middle, and one at the end.  Delete
+	by cursor and check that record renumbering is done properly.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test100
+	Test for functionality near the end of the queue
+	using test025 (DB_APPEND).
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test101
+	Test for functionality near the end of the queue
+	using test070 (DB_CONSUME).
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test102
+	Bulk get test for record-based methods. [#2934]
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test103
+	Test bulk get when record numbers wrap around.
+
+	Load database with items starting before and ending after
+	the record number wrap around point.  Run bulk gets (-multi_key)
+	with various buffer sizes and verify the contents returned match
+	the results from a regular cursor get.
+
+	Then delete items to create a sparse database and make sure it
+	still works.  Test both -multi and -multi_key since they behave
+	differently.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test106
+
+
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test107
+	Test of read-committed (degree 2 isolation). [#8689]
+
+	We set up a database.  Open a read-committed transactional cursor and
+	a regular transactional cursor on it. Position each cursor on one page,
+	and do a put to a different page.
+
+	Make sure that:
+	- the put succeeds if we are using degree 2 isolation.
+	- the put deadlocks within a regular transaction with
+	a regular cursor.
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test109
+
+	Test of sequences.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test110
+	Partial get test with duplicates.
+
+	For hash and btree, create and populate a database
+	with dups. Randomly selecting offset and length,
+	retrieve data from each record and make sure we
+	get what we expect.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test111
+	Test database compaction.
+
+	Populate a database.  Remove a high proportion of entries.
+	Dump and save contents.  Compact the database, dump again,
+	and make sure we still have the same contents.
+	Add back some entries, delete more entries (this time by
+	cursor), dump, compact, and do the before/after check again.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test112
+	Test database compaction with a deep tree.
+
+	This is a lot like test111, but with a large number of
+	entries and a small page size to make the tree deep.
+	To make it simple we use numerical keys all the time.
+
+	Dump and save contents.  Compact the database, dump again,
+	and make sure we still have the same contents.
+	Add back some entries, delete more entries (this time by
+	cursor), dump, compact, and do the before/after check again.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test113
+	Test database compaction with duplicates.
+
+	This is essentially test111 with duplicates.
+	To make it simple we use numerical keys all the time.
+
+	Dump and save contents.  Compact the database, dump again,
+	and make sure we still have the same contents.
+	Add back some entries, delete more entries (this time by
+	cursor), dump, compact, and do the before/after check again.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test114
+	Test database compaction with overflows.
+
+	Populate a database.  Remove a high proportion of entries.
+	Dump and save contents.  Compact the database, dump again,
+	and make sure we still have the same contents.
+	Add back some entries, delete more entries (this time by
+	cursor), dump, compact, and do the before/after check again.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test115
+	Test database compaction with user-specified btree sort.
+
+	This is essentially test111 with the user-specified sort.
+	Populate a database.  Remove a high proportion of entries.
+	Dump and save contents.  Compact the database, dump again,
+	and make sure we still have the same contents.
+	Add back some entries, delete more entries (this time by
+	cursor), dump, compact, and do the before/after check again.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test116
+	Test of basic functionality of lsn_reset.
+
+	Create a database in an env.  Copy it to a new file within
+	the same env.  Reset the page LSNs.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test117
+	Test database compaction with requested fill percent.
+
+	Populate a database.  Remove a high proportion of entries.
+	Dump and save contents.  Compact the database, requesting
+	fill percentages starting at 10% and working our way up to
+	100.  On each cycle, make sure we still have the same contents.
+
+	Unlike the other compaction tests, this one does not
+	use -freespace.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test119
+	Test behavior when Berkeley DB returns DB_BUFFER_SMALL on a cursor.
+
+	If the user-supplied buffer is not large enough to contain
+	the returned value, DB returns BUFFER_SMALL.  If it does,
+	check that the cursor does not move -- if it moves, it will
+	skip items. [#13815]
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test120
+	Test of multi-version concurrency control.
+
+	Test basic functionality: a snapshot transaction started
+	before a regular transaction's put can't see the modification.
+	A snapshot transaction started after the put can see it.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test121
+	Tests of multi-version concurrency control.
+
+	MVCC and cursor adjustment.
+	Set up a -snapshot cursor and position it in the middle
+	of a database.
+	Write to the database, both before and after the cursor,
+	and verify that it stays on the same position.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test122
+	Tests of multi-version concurrency control.
+
+	MVCC and databases that turn multi-version on and off.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test123
+	Concurrent Data Store cdsgroup smoke test.
+
+	Open a CDS env with -cdb_alldb.
+	Start a "txn" with -cdsgroup.
+	Create two databases in the env, do a cursor put 
+	in both within the same txn.  This should succeed.  
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+test125
+	Test cursor comparison API.
+
+	The cursor comparison API reports whether two cursors within
+	the same database are at the same position.  It does not report
+	any information about relative position.
+
+	1. Test two uninitialized cursors (error).
+	2. Test one uninitialized cursor, one initialized (error). 
+	3. Test two cursors in different databases (error).
+	4. Put two cursors in the same place, test for match.  Walk
+	them back and forth a bit, more matching. 
+	5. Two cursors in the same spot.  Delete through one.  
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+txn001
+	Begin, commit, abort testing.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+txn002
+	Verify that  read-only transactions do not write log records.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+txn003
+	Test abort/commit/prepare of txns with outstanding child txns.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+txn004
+	Test of wraparound txnids (txn001)
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+txn005
+	Test transaction ID wraparound and recovery.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+txn008
+	Test of wraparound txnids (txn002)
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+txn009
+	Test of wraparound txnids (txn003)
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+txn010
+	Test DB_ENV->txn_checkpoint arguments/flags
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+txn011
+	Test durable and non-durable txns.
+	Test a mixed env (with both durable and non-durable
+	dbs), then a purely non-durable env.  Make sure commit
+	and abort work, and that only the log records we
+	expect are written.
+	Test that we can't get a durable handle on an open ND
+	database, or vice versa.  Test that all subdb's
+	must be of the same type (D or ND).
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+txn012
+	Test txn->getname and txn->setname.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+txn013
+	Test of txns used in the wrong environment.
+	Set up two envs.  Start a txn in one env, and attempt to use it
+	in the other env.  Verify we get the appropriate error message.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+txn014
+	Test of parent and child txns working on the same database.
+	A txn that will become a parent create a database.
+	A txn that will not become a parent creates another database.
+	Start a child txn of the 1st txn.
+	Verify that the parent txn is disabled while child is open.
+	1. Child reads contents with child handle (should succeed).
+	2. Child reads contents with parent handle (should succeed).
+	Verify that the non-parent txn can read from its database,
+	and that the child txn cannot.
+	Return to the child txn.
+	3. Child writes with child handle (should succeed).
+	4. Child writes with parent handle (should succeed).
+
+	Commit the child, verify that the parent can write again.
+	Check contents of database with a second child.

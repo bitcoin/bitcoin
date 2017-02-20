@@ -1,0 +1,97 @@
+# Filename:	config.in
+#
+# written by Paul Marquess <Paul.Marquess@btinternet.com>
+# last modified 9th Sept 1997
+# version 1.55
+
+# 1. Where is the file db.h?
+#
+#    Change the path below to point to the directory where db.h is
+#    installed on your system.
+
+INCLUDE	= /usr/local/BerkeleyDB/include
+#INCLUDE	= /usr/local/include
+#INCLUDE	= /usr/include
+
+# 2. Where is libdb?
+#
+#    Change the path below to point to the directory where libdb is
+#    installed on your system.
+
+LIB	= /usr/local/BerkeleyDB/lib
+#LIB	= /usr/local/lib
+#LIB	= /usr/lib
+
+# 3. What version of Berkely DB have you got?
+#
+#    If you have version 2.0 or greater, you can skip this question.
+#
+#    If you have Berkeley DB 1.78 or greater you shouldn't have to
+#    change the definitions for PREFIX and HASH below.
+#
+#    For older versions of Berkeley DB change both PREFIX and HASH to int.
+#    Version 1.71, 1.72 and 1.73 are known to need this change.
+#
+#    If you don't know what version you have have a look in the file db.h. 
+#
+#    Search for the string "DB_VERSION_MAJOR". If it is present, you
+#    have Berkeley DB version 2 (or greater).
+#
+#    If that didn't work, find the definition of the BTREEINFO typedef.
+#    Check the return type from the prefix element. It should look like
+#    this in an older copy of db.h:
+#
+#        int      (*prefix)      __P((const DBT *, const DBT *));  
+#
+#    and like this in a more recent copy:
+#
+#        size_t  (*prefix)       /* prefix function */
+#            __P((const DBT *, const DBT *));
+#
+#    Change the definition of PREFIX, below, to reflect the return type
+#    of the prefix function in your db.h.
+#
+#    Now find the definition of the HASHINFO typedef. Check the return
+#    type of the hash element. Older versions look like this:
+#
+#        int      (*hash) __P((const void *, size_t));      
+#
+#    newer like this:
+#
+#        u_int32_t               /* hash function */
+#                (*hash) __P((const void *, size_t));
+#
+#    Change the definition of HASH, below, to reflect the return type of
+#    the hash function in your db.h.
+#
+
+PREFIX	=	size_t
+HASH	=	u_int32_t
+
+# 4. Is the library called libdb?
+#
+#    If you have copies of both 1.x and 2.x Berkeley DB installed on
+#    your system it can sometimes be tricky to make sure you are using
+#    the correct one. Renaming one (or creating a symbolic link) to
+#    include the version number of the library can help.
+#
+#    For example, if you have both Berkeley DB 2.3.12 and 1.85 on your
+#    system and you want to use the Berkeley DB version 2 library you
+#    could rename the version 2 library from libdb.a to libdb-2.3.12.a and
+#    change the DBNAME line below to look like this:
+#
+#        DBNAME = -ldb-2.3.12
+#
+#    That will ensure you are linking the correct version of the DB
+#    library.
+#
+#    Note: If you are building this module with Win32, -llibdb will be
+#    used by default.
+#
+#    If you have changed the name of the library, uncomment the line
+#    below (by removing the leading #) and edit the line to use the name
+#    you have picked.
+ 
+#DBNAME = -ldb-2.4.10
+
+# end of file config.in

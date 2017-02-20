@@ -154,6 +154,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ProjectReference Include="..\db-4.8.30\build_windows\db_static.vcxproj">
+      <Project>{671539aa-d9a6-4b7b-8044-61b511d6f432}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\_bitcoin_common.vcxproj">
       <Project>{8effd767-7623-4556-9a30-36533462915e}</Project>
     </ProjectReference>
@@ -166,7 +169,6 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\BerkeleyDB-4_8_30-Cpp.4.8.30.2\build\native\BerkeleyDB-4_8_30-Cpp.targets" Condition="Exists('..\packages\BerkeleyDB-4_8_30-Cpp.4.8.30.2\build\native\BerkeleyDB-4_8_30-Cpp.targets')" />
     <Import Project="..\packages\boost.1.63.0.0\build\native\boost.targets" Condition="Exists('..\packages\boost.1.63.0.0\build\native\boost.targets')" />
     <Import Project="..\packages\boost_atomic-vc140.1.63.0.0\build\native\boost_atomic-vc140.targets" Condition="Exists('..\packages\boost_atomic-vc140.1.63.0.0\build\native\boost_atomic-vc140.targets')" />
     <Import Project="..\packages\boost_bzip2-vc140.1.63.0.0\build\native\boost_bzip2-vc140.targets" Condition="Exists('..\packages\boost_bzip2-vc140.1.63.0.0\build\native\boost_bzip2-vc140.targets')" />
@@ -223,7 +225,6 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\BerkeleyDB-4_8_30-Cpp.4.8.30.2\build\native\BerkeleyDB-4_8_30-Cpp.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\BerkeleyDB-4_8_30-Cpp.4.8.30.2\build\native\BerkeleyDB-4_8_30-Cpp.targets'))" />
     <Error Condition="!Exists('..\packages\boost.1.63.0.0\build\native\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost.1.63.0.0\build\native\boost.targets'))" />
     <Error Condition="!Exists('..\packages\boost_atomic-vc140.1.63.0.0\build\native\boost_atomic-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_atomic-vc140.1.63.0.0\build\native\boost_atomic-vc140.targets'))" />
     <Error Condition="!Exists('..\packages\boost_bzip2-vc140.1.63.0.0\build\native\boost_bzip2-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_bzip2-vc140.1.63.0.0\build\native\boost_bzip2-vc140.targets'))" />

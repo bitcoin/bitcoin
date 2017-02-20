@@ -1,0 +1,25 @@
+@echo off
+
+:: $Id$
+:: This file sets the environment variables needed to run Berkeley DB.
+
+set DBROOTDIR=
+for /F "tokens=3 delims=	" %%A in ('REG QUERY "HKLM\SOFTWARE\Oracle\Berkeley DB\WIX_DB_VERSION" /v RootDirectory') do set DBROOTDIR=%%A
+if ERRORLEVEL 2 goto MISSING
+if not defined DBROOTDIR goto MISSING
+
+echo Setting environment variables for Berkeley DB, installed in %DBROOTDIR%
+
+set PATH=%DBROOTDIR%\bin;%DBROOTDIR%\bin\debug;%PATH%
+set CLASSPATH=%CLASSPATH%;%DBROOTDIR%\jar\debug\db.jar;%DBROOTDIR%\jar\debug\dbexamples.jar;%CLASSPATH%;%DBROOTDIR%\jar\db.jar;%DBROOTDIR%\jar\dbexamples.jar
+goto END
+
+:MISSING
+echo
+echo NOTE:
+echo   The Berkeley DB version could not be determined.
+echo   If you are running on Windows 2000, make sure the
+echo   REG.EXE program is installed from the Tools disk"
+echo
+
+:END

@@ -1,0 +1,168 @@
+<!--Copyright 1999-2009 Oracle.  All rights reserved.-->
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.08 [en] (X11; I; FreeBSD 2.2.8-19990120-SNAP i386) [Netscape]">
+</HEAD>
+<BODY>
+
+<H2>
+<A NAME="Compatibility Commands"></A>Compatibility Commands</H2>
+The compatibility commands for old Dbm and Ndbm are described in the <A HREF="../../docs/api_c/dbm.html">dbm</A>
+manpage.
+<P><B>> berkdb dbminit <I>filename</I></B>
+<P>This command will invoke the dbminit function.&nbsp;&nbsp; <B><I>Filename</I></B>
+is used as the name of the database.
+<P>
+<HR WIDTH="100%"><B>> berkdb dbmclose</B>
+<P>This command will invoke the dbmclose function.
+<P>
+<HR WIDTH="100%"><B>> berkdb fetch <I>key</I></B>
+<P>This command will invoke the fetch function.&nbsp;&nbsp; It will return
+the data associated with the given <B><I>key </I></B>or a Tcl error.
+<P>
+<HR WIDTH="100%"><B>> berkdb store <I>key data</I></B>
+<P>This command will invoke the store function.&nbsp;&nbsp; It will store
+the <B><I>key/data</I></B> pair.&nbsp; It will return a 0 on success or
+throw a Tcl error.
+<P>
+<HR WIDTH="100%"><B>> berkdb delete <I>key</I></B>
+<P>This command will invoke the deletet function.&nbsp;&nbsp; It will delete
+the <B><I>key</I></B> from the database.&nbsp; It will return a 0 on success
+or throw a Tcl error.
+<P>
+<HR WIDTH="100%"><B>> berkdb firstkey</B>
+<P>This command will invoke the firstkey function.&nbsp;&nbsp; It will
+return the first key in the database or a Tcl error.
+<P>
+<HR WIDTH="100%"><B>> berkdb nextkey <I>key</I></B>
+<P>This command will invoke the nextkey function.&nbsp;&nbsp; It will return
+the next key after the given <B><I>key</I></B> or a Tcl error.
+<P>
+<HR WIDTH="100%"><B>> berkdb hcreate <I>nelem</I></B>
+<P>This command will invoke the hcreate function with <B><I>nelem</I></B>
+elements.&nbsp; It will return a 0 on success or a Tcl error.
+<P>
+<HR WIDTH="100%"><B>> berkdb hsearch <I>key data action</I></B>
+<P>This command will invoke the hsearch function with <B><I>key</I></B>
+and <B><I>data</I></B>.&nbsp; The <B><I>action</I></B> must be either <B>find</B>
+or <B>enter</B>.&nbsp; If it is <B>find</B>, it will return the resultant
+data.&nbsp; If it is <B>enter</B>, it will return a 0 on success or a Tcl
+error.
+<P>
+<HR WIDTH="100%"><B>> berkdb hdestroy</B>
+<P>This command will invoke the hdestroy function.&nbsp; It will return
+a 0.
+<HR WIDTH="100%"><B>> berkdb ndbm_open [-create] [-rdonly] [-truncate]
+[-mode
+<I>mode</I>] [--] <I>filename</I></B>
+<P>This command will invoke the dbm_open function.&nbsp;&nbsp;&nbsp; After
+it successfully gets a handle to a database, we bind it to a new Tcl command
+of the form <B><I>ndbmX, </I></B>where X is an integer starting at 0 (e.g.
+<B>ndbm0,
+ndbm1, </B>etc).&nbsp; We use the <I>Tcl_CreateObjCommand()&nbsp;</I> to
+create the top level database function.&nbsp; It is through this handle
+that the user can access all of the commands described below.&nbsp; Internally,
+the database handle is sent as the <I>ClientData</I> portion of the new
+command set so that all future database calls access the appropriate handle.
+<P>The arguments are:
+<UL>
+<LI>
+<B>-- </B>- Terminate the list of options and use remaining arguments as
+the file or subdb names (thus allowing the use of filenames beginning with
+a dash '-')</LI>
+
+<LI>
+<B>-create</B> selects the O_CREAT flag&nbsp; to create underlying files</LI>
+
+<LI>
+<B>-rdonly</B> selects the O_RDONLY flag for opening in read-only mode</LI>
+
+<LI>
+<B>-truncate</B> selects the O_TRUNC flag to truncate the database</LI>
+
+<LI>
+<B>-mode<I> mode</I></B> specifies the mode for created files</LI>
+
+<LI>
+<B><I>filename</I></B> indicates the name of the database</LI>
+</UL>
+
+<P><BR>
+<HR WIDTH="100%">
+<BR><B>> &lt;ndbm> close</B>
+<P>This command closes the database and renders the handle invalid.&nbsp;&nbsp;
+This command directly translates to the dbm_close function call.&nbsp;
+It returns either a 0 (for success),&nbsp; or it throws a Tcl error with
+a system message.
+<P>Additionally, since the handle is no longer valid, we will call <I>Tcl_DeleteCommand()
+</I>so
+that further uses of the handle will be dealt with properly by Tcl itself.&nbsp;
+<HR WIDTH="100%">
+<BR><B>> &lt;ndbm> clearerr</B>
+<P>This command clears errors&nbsp; the database.&nbsp;&nbsp; This command
+directly translates to the dbm_clearerr function call.&nbsp; It returns
+either a 0 (for success),&nbsp; or it throws a Tcl error with a system
+message.
+<P>
+<HR WIDTH="100%">
+<BR><B>> &lt;ndbm> delete <I>key</I></B>
+<P>This command deletes the <B><I>key</I></B> from thedatabase.&nbsp;&nbsp;
+This command directly translates to the dbm_delete function call.&nbsp;
+It returns either a 0 (for success),&nbsp; or it throws a Tcl error with
+a system message.
+<P>
+<HR WIDTH="100%">
+<BR><B>> &lt;ndbm> dirfno</B>
+<P>This command directly translates to the dbm_dirfno function call.&nbsp;
+It returns either resultts,&nbsp; or it throws a Tcl error with a system
+message.
+<P>
+<HR WIDTH="100%">
+<BR><B>> &lt;ndbm> error</B>
+<P>This command returns the last error.&nbsp;&nbsp; This command directly
+translates to the dbm_error function call.&nbsp; It returns an error string..
+<P>
+<HR WIDTH="100%">
+<BR><B>> &lt;ndbm> fetch <I>key</I></B>
+<P>This command gets the given <B><I>key</I></B> from the database.&nbsp;&nbsp;
+This command directly translates to the dbm_fetch function call.&nbsp;
+It returns either the data,&nbsp; or it throws a Tcl error with a system
+message.
+<P>
+<HR WIDTH="100%">
+<BR><B>> &lt;ndbm> firstkey</B>
+<P>This command returns the first key in the database.&nbsp;&nbsp; This
+command directly translates to the dbm_firstkey function call.&nbsp; It
+returns either the key,&nbsp; or it throws a Tcl error with a system message.
+<P>
+<HR WIDTH="100%">
+<BR><B>> &lt;ndbm> nextkey</B>
+<P>This command returns the next key in the database.&nbsp;&nbsp; This
+command directly translates to the dbm_nextkey function call.&nbsp; It
+returns either the key,&nbsp; or it throws a Tcl error with a system message.
+<P>
+<HR WIDTH="100%">
+<BR><B>> &lt;ndbm> pagfno</B>
+<P>This command directly translates to the dbm_pagfno function call.&nbsp;
+It returns either resultts,&nbsp; or it throws a Tcl error with a system
+message.
+<BR>
+<HR WIDTH="100%">
+<BR><B>> &lt;ndbm> rdonly</B>
+<P>This command changes the database to readonly.&nbsp;&nbsp; This command
+directly translates to the dbm_rdonly function call.&nbsp; It returns either
+a 0 (for success),&nbsp; or it throws a Tcl error with a system message.
+<P>
+<HR WIDTH="100%">
+<BR><B>> &lt;ndbm> store <I>key data </I>insert|replace</B>
+<P>This command puts the given <B><I>key</I></B> and <B><I>data</I></B>
+pair into the database.&nbsp;&nbsp; This command directly translates to
+the dbm_store function call.&nbsp; It will either <B>insert</B> or <B>replace</B>
+the data based on the action given in the third argument.&nbsp; It returns
+either a 0 (for success),&nbsp; or it throws a Tcl error with a system
+message.
+<BR>
+<HR WIDTH="100%">
+</BODY>
+</HTML>

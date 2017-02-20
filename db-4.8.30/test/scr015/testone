@@ -1,0 +1,122 @@
+#!/bin/sh -
+#	$Id$
+#
+# Run just one C++ regression test, the single argument
+# is the basename of the test, e.g. TestRpcServer
+
+error()
+{
+	echo '' >&2
+	echo "C++ regression error: $@" >&2
+	echo '' >&2
+	ecode=1
+}
+
+# compares the result against the good version,
+# reports differences, and removes the result file
+# if there are no differences.
+#
+compare_result()
+{
+	good="$1"
+	latest="$2"
+	if [ ! -e "$good" ]; then
+		echo "Note: $good does not exist"
+		return
+	fi
+	tmpout=/tmp/blddb$$.tmp
+	diff "$good" "$latest" > $tmpout
+	if [ -s $tmpout ]; then
+		nbad=`grep '^[0-9]' $tmpout | wc -l`
+		error "$good and $latest differ in $nbad places."
+	else
+		rm $latest
+	fi
+	rm -f $tmpout
+}
+
+ecode=0
+stdinflag=n
+gdbflag=n
+CXX=${CXX:-c++}
+LIBS=${LIBS:-}
+
+# remove any -c option in the CXXFLAGS
+CXXFLAGS="`echo " ${CXXFLAGS} " | sed -e 's/ -c //g'`"
+
+# determine the prefix of the install tree
+prefix=""
+while :
+do
+	case "$1" in
+	--prefix=* )
+		prefix="`echo $1 | sed -e 's/--prefix=//'`"; shift
+		LIBS="-L$prefix/lib -ldb_cxx $LIBS"
+		CXXFLAGS="-I$prefix/include $CXXFLAGS"
+	        export LD_LIBRARY_PATH="$prefix/lib:$LD_LIBRARY_PATH"
+		;;
+	--stdin )
+		stdinflag=y; shift
+		;;
+	--gdb )
+		CXXFLAGS="-g $CXXFLAGS"
+		gdbflag=y; shift
+		;;
+        * )
+		break
+                ;;
+	esac
+done
+
+if [ "$#" = 0 ]; then
+	echo 'Usage: testone [ --prefix=<dir> | --stdin ] TestName'
+        exit 1
+fi
+name="$1"
+
+# compile
+rm -rf TESTDIR; mkdir TESTDIR
+cd ./TESTDIR
+
+${CXX} ${CXXFLAGS} -o $name ../$name.cpp ${LIBS} > ../$name.compileout 2>&1
+if [ $? != 0 -o -s ../$name.compileout ]; then
+	error "compilation of $name failed, see $name.compileout"
+	exit 1
+fi
+rm -f ../$name.compileout
+
+# find input and error file
+infile=../$name.testin
+if [ ! -f $infile ]; then
+	infile=/dev/null
+fi
+
+# run and diff results
+rm -rf TESTDIR
+if [ "$gdbflag" = y ]; then
+	if [ -s $infile ]; then
+		echo "Input file is $infile"
+	fi
+	gdb ./$name
+        exit 0
+elif [ "$stdinflag" = y ]; then
+	./$name           >../$name.out 2>../$name.err
+else
+	./$name  <$infile >../$name.out 2>../$name.err
+fi
+cd ..
+
+testerr=$name.testerr
+if [ ! -f $testerr ]; then
+	testerr=/dev/null
+fi
+
+testout=$name.testout
+if [ ! -f $testout ]; then
+	testout=/dev/null
+fi
+
+compare_result $testout $name.out
+compare_result $testerr $name.err
+rm -rf TESTDIR
+exit $ecode

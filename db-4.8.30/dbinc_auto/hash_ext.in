@@ -1,0 +1,234 @@
+/* DO NOT EDIT: automatically built by dist/s_include. */
+#ifndef	_hash_ext_h_
+#define	_hash_ext_h_
+#if defined(__cplusplus)
+extern "C" {
+#endif
+#define	__ham_quick_delete __ham_quick_delete@DB_VERSION_UNIQUE_NAME@
+int __ham_quick_delete __P((DBC *));
+#define	__ham_c_init __ham_c_init@DB_VERSION_UNIQUE_NAME@
+int __ham_c_init __P((DBC *));
+#define	__ham_c_count __ham_c_count@DB_VERSION_UNIQUE_NAME@
+int __ham_c_count __P((DBC *, db_recno_t *));
+#define	__ham_c_dup __ham_c_dup@DB_VERSION_UNIQUE_NAME@
+int __ham_c_dup __P((DBC *, DBC *));
+#define	__ham_call_hash __ham_call_hash@DB_VERSION_UNIQUE_NAME@
+u_int32_t __ham_call_hash __P((DBC *, u_int8_t *, int32_t));
+#define	__ham_init_dbt __ham_init_dbt@DB_VERSION_UNIQUE_NAME@
+int __ham_init_dbt __P((DB_ENV *, DBT *, u_int32_t, void **, u_int32_t *));
+#define	__ham_c_update __ham_c_update@DB_VERSION_UNIQUE_NAME@
+int __ham_c_update __P((DBC *, u_int32_t, int, int));
+#define	__ham_get_clist __ham_get_clist@DB_VERSION_UNIQUE_NAME@
+int __ham_get_clist __P((DB *, db_pgno_t, u_int32_t, DBC ***));
+#define	__ham_insdel_log __ham_insdel_log@DB_VERSION_UNIQUE_NAME@
+int __ham_insdel_log __P((DB_ENV *, DB_TXN *, DB_LSN *, u_int32_t, u_int32_t, int32_t, db_pgno_t, u_int32_t, DB_LSN *, const DBT *, const DBT *));
+#define	__ham_insdel_getpgnos __ham_insdel_getpgnos@DB_VERSION_UNIQUE_NAME@
+int __ham_insdel_getpgnos __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_insdel_print __ham_insdel_print@DB_VERSION_UNIQUE_NAME@
+int __ham_insdel_print __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_insdel_read __ham_insdel_read@DB_VERSION_UNIQUE_NAME@
+int __ham_insdel_read __P((DB_ENV *, void *, __ham_insdel_args **));
+#define	__ham_newpage_log __ham_newpage_log@DB_VERSION_UNIQUE_NAME@
+int __ham_newpage_log __P((DB_ENV *, DB_TXN *, DB_LSN *, u_int32_t, u_int32_t, int32_t, db_pgno_t, DB_LSN *, db_pgno_t, DB_LSN *, db_pgno_t, DB_LSN *));
+#define	__ham_newpage_getpgnos __ham_newpage_getpgnos@DB_VERSION_UNIQUE_NAME@
+int __ham_newpage_getpgnos __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_newpage_print __ham_newpage_print@DB_VERSION_UNIQUE_NAME@
+int __ham_newpage_print __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_newpage_read __ham_newpage_read@DB_VERSION_UNIQUE_NAME@
+int __ham_newpage_read __P((DB_ENV *, void *, __ham_newpage_args **));
+#define	__ham_splitdata_log __ham_splitdata_log@DB_VERSION_UNIQUE_NAME@
+int __ham_splitdata_log __P((DB_ENV *, DB_TXN *, DB_LSN *, u_int32_t, int32_t, u_int32_t, db_pgno_t, const DBT *, DB_LSN *));
+#define	__ham_splitdata_getpgnos __ham_splitdata_getpgnos@DB_VERSION_UNIQUE_NAME@
+int __ham_splitdata_getpgnos __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_splitdata_print __ham_splitdata_print@DB_VERSION_UNIQUE_NAME@
+int __ham_splitdata_print __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_splitdata_read __ham_splitdata_read@DB_VERSION_UNIQUE_NAME@
+int __ham_splitdata_read __P((DB_ENV *, void *, __ham_splitdata_args **));
+#define	__ham_replace_log __ham_replace_log@DB_VERSION_UNIQUE_NAME@
+int __ham_replace_log __P((DB_ENV *, DB_TXN *, DB_LSN *, u_int32_t, int32_t, db_pgno_t, u_int32_t, DB_LSN *, int32_t, const DBT *, const DBT *, u_int32_t));
+#define	__ham_replace_getpgnos __ham_replace_getpgnos@DB_VERSION_UNIQUE_NAME@
+int __ham_replace_getpgnos __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_replace_print __ham_replace_print@DB_VERSION_UNIQUE_NAME@
+int __ham_replace_print __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_replace_read __ham_replace_read@DB_VERSION_UNIQUE_NAME@
+int __ham_replace_read __P((DB_ENV *, void *, __ham_replace_args **));
+#define	__ham_copypage_log __ham_copypage_log@DB_VERSION_UNIQUE_NAME@
+int __ham_copypage_log __P((DB_ENV *, DB_TXN *, DB_LSN *, u_int32_t, int32_t, db_pgno_t, DB_LSN *, db_pgno_t, DB_LSN *, db_pgno_t, DB_LSN *, const DBT *));
+#define	__ham_copypage_getpgnos __ham_copypage_getpgnos@DB_VERSION_UNIQUE_NAME@
+int __ham_copypage_getpgnos __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_copypage_print __ham_copypage_print@DB_VERSION_UNIQUE_NAME@
+int __ham_copypage_print __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_copypage_read __ham_copypage_read@DB_VERSION_UNIQUE_NAME@
+int __ham_copypage_read __P((DB_ENV *, void *, __ham_copypage_args **));
+#define	__ham_metagroup_log __ham_metagroup_log@DB_VERSION_UNIQUE_NAME@
+int __ham_metagroup_log __P((DB_ENV *, DB_TXN *, DB_LSN *, u_int32_t, int32_t, u_int32_t, db_pgno_t, DB_LSN *, db_pgno_t, DB_LSN *, db_pgno_t, DB_LSN *, u_int32_t));
+#define	__ham_metagroup_getpgnos __ham_metagroup_getpgnos@DB_VERSION_UNIQUE_NAME@
+int __ham_metagroup_getpgnos __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_metagroup_print __ham_metagroup_print@DB_VERSION_UNIQUE_NAME@
+int __ham_metagroup_print __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_metagroup_read __ham_metagroup_read@DB_VERSION_UNIQUE_NAME@
+int __ham_metagroup_read __P((DB_ENV *, void *, __ham_metagroup_args **));
+#define	__ham_groupalloc_log __ham_groupalloc_log@DB_VERSION_UNIQUE_NAME@
+int __ham_groupalloc_log __P((DB_ENV *, DB_TXN *, DB_LSN *, u_int32_t, int32_t, DB_LSN *, db_pgno_t, u_int32_t, db_pgno_t));
+#define	__ham_groupalloc_getpgnos __ham_groupalloc_getpgnos@DB_VERSION_UNIQUE_NAME@
+int __ham_groupalloc_getpgnos __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_groupalloc_print __ham_groupalloc_print@DB_VERSION_UNIQUE_NAME@
+int __ham_groupalloc_print __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_groupalloc_read __ham_groupalloc_read@DB_VERSION_UNIQUE_NAME@
+int __ham_groupalloc_read __P((DB_ENV *, void *, __ham_groupalloc_args **));
+#define	__ham_curadj_log __ham_curadj_log@DB_VERSION_UNIQUE_NAME@
+int __ham_curadj_log __P((DB_ENV *, DB_TXN *, DB_LSN *, u_int32_t, int32_t, db_pgno_t, u_int32_t, u_int32_t, u_int32_t, int, int, u_int32_t));
+#define	__ham_curadj_getpgnos __ham_curadj_getpgnos@DB_VERSION_UNIQUE_NAME@
+int __ham_curadj_getpgnos __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_curadj_print __ham_curadj_print@DB_VERSION_UNIQUE_NAME@
+int __ham_curadj_print __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_curadj_read __ham_curadj_read@DB_VERSION_UNIQUE_NAME@
+int __ham_curadj_read __P((DB_ENV *, void *, __ham_curadj_args **));
+#define	__ham_chgpg_log __ham_chgpg_log@DB_VERSION_UNIQUE_NAME@
+int __ham_chgpg_log __P((DB_ENV *, DB_TXN *, DB_LSN *, u_int32_t, int32_t, db_ham_mode, db_pgno_t, db_pgno_t, u_int32_t, u_int32_t));
+#define	__ham_chgpg_getpgnos __ham_chgpg_getpgnos@DB_VERSION_UNIQUE_NAME@
+int __ham_chgpg_getpgnos __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_chgpg_print __ham_chgpg_print@DB_VERSION_UNIQUE_NAME@
+int __ham_chgpg_print __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_chgpg_read __ham_chgpg_read@DB_VERSION_UNIQUE_NAME@
+int __ham_chgpg_read __P((DB_ENV *, void *, __ham_chgpg_args **));
+#define	__ham_init_print __ham_init_print@DB_VERSION_UNIQUE_NAME@
+int __ham_init_print __P((DB_ENV *, int (***)(DB_ENV *, DBT *, DB_LSN *, db_recops, void *), size_t *));
+#define	__ham_init_getpgnos __ham_init_getpgnos@DB_VERSION_UNIQUE_NAME@
+int __ham_init_getpgnos __P((DB_ENV *, int (***)(DB_ENV *, DBT *, DB_LSN *, db_recops, void *), size_t *));
+#define	__ham_init_recover __ham_init_recover@DB_VERSION_UNIQUE_NAME@
+int __ham_init_recover __P((DB_ENV *));
+#define	__ham_pgin __ham_pgin@DB_VERSION_UNIQUE_NAME@
+int __ham_pgin __P((DB_ENV *, db_pgno_t, void *, DBT *));
+#define	__ham_pgout __ham_pgout@DB_VERSION_UNIQUE_NAME@
+int __ham_pgout __P((DB_ENV *, db_pgno_t, void *, DBT *));
+#define	__ham_mswap __ham_mswap@DB_VERSION_UNIQUE_NAME@
+int __ham_mswap __P((void *));
+#define	__ham_add_dup __ham_add_dup@DB_VERSION_UNIQUE_NAME@
+int __ham_add_dup __P((DBC *, DBT *, u_int32_t, db_pgno_t *));
+#define	__ham_dup_convert __ham_dup_convert@DB_VERSION_UNIQUE_NAME@
+int __ham_dup_convert __P((DBC *));
+#define	__ham_make_dup __ham_make_dup@DB_VERSION_UNIQUE_NAME@
+int __ham_make_dup __P((DB_ENV *, const DBT *, DBT *d, void **, u_int32_t *));
+#define	__ham_dsearch __ham_dsearch@DB_VERSION_UNIQUE_NAME@
+void __ham_dsearch __P((DBC *, DBT *, u_int32_t *, int *, u_int32_t));
+#define	__ham_cprint __ham_cprint@DB_VERSION_UNIQUE_NAME@
+void __ham_cprint __P((DBC *));
+#define	__ham_func2 __ham_func2@DB_VERSION_UNIQUE_NAME@
+u_int32_t __ham_func2 __P((DB *, const void *, u_int32_t));
+#define	__ham_func3 __ham_func3@DB_VERSION_UNIQUE_NAME@
+u_int32_t __ham_func3 __P((DB *, const void *, u_int32_t));
+#define	__ham_func4 __ham_func4@DB_VERSION_UNIQUE_NAME@
+u_int32_t __ham_func4 __P((DB *, const void *, u_int32_t));
+#define	__ham_func5 __ham_func5@DB_VERSION_UNIQUE_NAME@
+u_int32_t __ham_func5 __P((DB *, const void *, u_int32_t));
+#define	__ham_test __ham_test@DB_VERSION_UNIQUE_NAME@
+u_int32_t __ham_test __P((DB *, const void *, u_int32_t));
+#define	__ham_get_meta __ham_get_meta@DB_VERSION_UNIQUE_NAME@
+int __ham_get_meta __P((DBC *));
+#define	__ham_release_meta __ham_release_meta@DB_VERSION_UNIQUE_NAME@
+int __ham_release_meta __P((DBC *));
+#define	__ham_dirty_meta __ham_dirty_meta@DB_VERSION_UNIQUE_NAME@
+int __ham_dirty_meta __P((DBC *));
+#define	__ham_db_create __ham_db_create@DB_VERSION_UNIQUE_NAME@
+int __ham_db_create __P((DB *));
+#define	__ham_db_close __ham_db_close@DB_VERSION_UNIQUE_NAME@
+int __ham_db_close __P((DB *));
+#define	__ham_open __ham_open@DB_VERSION_UNIQUE_NAME@
+int __ham_open __P((DB *, DB_TXN *, const char *, db_pgno_t, u_int32_t));
+#define	__ham_metachk __ham_metachk@DB_VERSION_UNIQUE_NAME@
+int __ham_metachk __P((DB *, const char *, HMETA *));
+#define	__ham_new_file __ham_new_file@DB_VERSION_UNIQUE_NAME@
+int __ham_new_file __P((DB *, DB_TXN *, DB_FH *, const char *));
+#define	__ham_new_subdb __ham_new_subdb@DB_VERSION_UNIQUE_NAME@
+int __ham_new_subdb __P((DB *, DB_TXN *, db_pgno_t));
+#define	__ham_item __ham_item@DB_VERSION_UNIQUE_NAME@
+int __ham_item __P((DBC *, db_lockmode_t, db_pgno_t *));
+#define	__ham_item_reset __ham_item_reset@DB_VERSION_UNIQUE_NAME@
+int __ham_item_reset __P((DBC *));
+#define	__ham_item_init __ham_item_init@DB_VERSION_UNIQUE_NAME@
+void __ham_item_init __P((DBC *));
+#define	__ham_item_last __ham_item_last@DB_VERSION_UNIQUE_NAME@
+int __ham_item_last __P((DBC *, db_lockmode_t, db_pgno_t *));
+#define	__ham_item_first __ham_item_first@DB_VERSION_UNIQUE_NAME@
+int __ham_item_first __P((DBC *, db_lockmode_t, db_pgno_t *));
+#define	__ham_item_prev __ham_item_prev@DB_VERSION_UNIQUE_NAME@
+int __ham_item_prev __P((DBC *, db_lockmode_t, db_pgno_t *));
+#define	__ham_item_next __ham_item_next@DB_VERSION_UNIQUE_NAME@
+int __ham_item_next __P((DBC *, db_lockmode_t, db_pgno_t *));
+#define	__ham_putitem __ham_putitem@DB_VERSION_UNIQUE_NAME@
+void __ham_putitem __P((PAGE *p, const DBT *, int));
+#define	__ham_reputpair __ham_reputpair@DB_VERSION_UNIQUE_NAME@
+void __ham_reputpair __P((PAGE *p, u_int32_t, u_int32_t, const DBT *, const DBT *));
+#define	__ham_del_pair __ham_del_pair@DB_VERSION_UNIQUE_NAME@
+int __ham_del_pair __P((DBC *, int));
+#define	__ham_replpair __ham_replpair@DB_VERSION_UNIQUE_NAME@
+int __ham_replpair __P((DBC *, DBT *, u_int32_t));
+#define	__ham_onpage_replace __ham_onpage_replace@DB_VERSION_UNIQUE_NAME@
+void __ham_onpage_replace __P((PAGE *, size_t, u_int32_t, int32_t, int32_t,  DBT *));
+#define	__ham_split_page __ham_split_page@DB_VERSION_UNIQUE_NAME@
+int __ham_split_page __P((DBC *, u_int32_t, u_int32_t));
+#define	__ham_add_el __ham_add_el@DB_VERSION_UNIQUE_NAME@
+int __ham_add_el __P((DBC *, const DBT *, const DBT *, int));
+#define	__ham_copy_item __ham_copy_item@DB_VERSION_UNIQUE_NAME@
+void __ham_copy_item __P((size_t, PAGE *, u_int32_t, PAGE *));
+#define	__ham_add_ovflpage __ham_add_ovflpage@DB_VERSION_UNIQUE_NAME@
+int __ham_add_ovflpage __P((DBC *, PAGE *, int, PAGE **));
+#define	__ham_get_cpage __ham_get_cpage@DB_VERSION_UNIQUE_NAME@
+int __ham_get_cpage __P((DBC *, db_lockmode_t));
+#define	__ham_next_cpage __ham_next_cpage@DB_VERSION_UNIQUE_NAME@
+int __ham_next_cpage __P((DBC *, db_pgno_t, int));
+#define	__ham_lock_bucket __ham_lock_bucket@DB_VERSION_UNIQUE_NAME@
+int __ham_lock_bucket __P((DBC *, db_lockmode_t));
+#define	__ham_dpair __ham_dpair@DB_VERSION_UNIQUE_NAME@
+void __ham_dpair __P((DB *, PAGE *, u_int32_t));
+#define	__ham_insdel_recover __ham_insdel_recover@DB_VERSION_UNIQUE_NAME@
+int __ham_insdel_recover __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_newpage_recover __ham_newpage_recover@DB_VERSION_UNIQUE_NAME@
+int __ham_newpage_recover __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_replace_recover __ham_replace_recover@DB_VERSION_UNIQUE_NAME@
+int __ham_replace_recover __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_splitdata_recover __ham_splitdata_recover@DB_VERSION_UNIQUE_NAME@
+int __ham_splitdata_recover __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_copypage_recover __ham_copypage_recover@DB_VERSION_UNIQUE_NAME@
+int __ham_copypage_recover __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_metagroup_recover __ham_metagroup_recover@DB_VERSION_UNIQUE_NAME@
+int __ham_metagroup_recover __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_groupalloc_recover __ham_groupalloc_recover@DB_VERSION_UNIQUE_NAME@
+int __ham_groupalloc_recover __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_curadj_recover __ham_curadj_recover@DB_VERSION_UNIQUE_NAME@
+int __ham_curadj_recover __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_chgpg_recover __ham_chgpg_recover@DB_VERSION_UNIQUE_NAME@
+int __ham_chgpg_recover __P((DB_ENV *, DBT *, DB_LSN *, db_recops, void *));
+#define	__ham_reclaim __ham_reclaim@DB_VERSION_UNIQUE_NAME@
+int __ham_reclaim __P((DB *, DB_TXN *txn));
+#define	__ham_truncate __ham_truncate@DB_VERSION_UNIQUE_NAME@
+int __ham_truncate __P((DB *, DB_TXN *txn, u_int32_t *));
+#define	__ham_stat __ham_stat@DB_VERSION_UNIQUE_NAME@
+int __ham_stat __P((DB *, void *, u_int32_t));
+#define	__ham_traverse __ham_traverse@DB_VERSION_UNIQUE_NAME@
+int __ham_traverse __P((DBC *, db_lockmode_t, int (*)(DB *, PAGE *, void *, int *), void *, int));
+#define	__ham_30_hashmeta __ham_30_hashmeta@DB_VERSION_UNIQUE_NAME@
+int __ham_30_hashmeta __P((DB *, char *, u_int8_t *));
+#define	__ham_30_sizefix __ham_30_sizefix@DB_VERSION_UNIQUE_NAME@
+int __ham_30_sizefix __P((DB *, DB_FH *, char *, u_int8_t *));
+#define	__ham_31_hashmeta __ham_31_hashmeta@DB_VERSION_UNIQUE_NAME@
+int __ham_31_hashmeta __P((DB *, char *, u_int32_t, DB_FH *, PAGE *, int *));
+#define	__ham_31_hash __ham_31_hash@DB_VERSION_UNIQUE_NAME@
+int __ham_31_hash __P((DB *, char *, u_int32_t, DB_FH *, PAGE *, int *));
+#define	__ham_vrfy_meta __ham_vrfy_meta@DB_VERSION_UNIQUE_NAME@
+int __ham_vrfy_meta __P((DB *, VRFY_DBINFO *, HMETA *, db_pgno_t, u_int32_t));
+#define	__ham_vrfy __ham_vrfy@DB_VERSION_UNIQUE_NAME@
+int __ham_vrfy __P((DB *, VRFY_DBINFO *, PAGE *, db_pgno_t, u_int32_t));
+#define	__ham_vrfy_structure __ham_vrfy_structure@DB_VERSION_UNIQUE_NAME@
+int __ham_vrfy_structure __P((DB *, VRFY_DBINFO *, db_pgno_t, u_int32_t));
+#define	__ham_vrfy_hashing __ham_vrfy_hashing@DB_VERSION_UNIQUE_NAME@
+int __ham_vrfy_hashing __P((DB *, u_int32_t, HMETA *, u_int32_t, db_pgno_t, u_int32_t, u_int32_t (*) __P((DB *, const void *, u_int32_t))));
+#define	__ham_salvage __ham_salvage@DB_VERSION_UNIQUE_NAME@
+int __ham_salvage __P((DB *, VRFY_DBINFO *, db_pgno_t, PAGE *, void *, int (*)(void *, const void *), u_int32_t));
+#define	__ham_meta2pgset __ham_meta2pgset@DB_VERSION_UNIQUE_NAME@
+int __ham_meta2pgset __P((DB *, VRFY_DBINFO *, HMETA *, u_int32_t, DB *));
+#if defined(__cplusplus)
+}
+#endif
+#endif /* _hash_ext_h_ */

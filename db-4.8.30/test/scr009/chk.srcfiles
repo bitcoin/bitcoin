@@ -1,0 +1,50 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Check to make sure we haven't forgotten to add any files to the list
+# of source files Windows uses to build its dsp files.
+
+d=../..
+
+[ -f $d/LICENSE ] || {
+	echo 'FAIL: cannot find source distribution directory.'
+	exit 1
+}
+
+f=$d/dist/srcfiles.in
+t1=__1
+t2=__2
+
+sed -e '/^[ 	#]/d' \
+    -e '/^db_server_clnt.c/d' \
+    -e '/^db_server_svc.c/d' \
+    -e '/^db_server_xdr.c/d' \
+    -e '/^examples_c\/csv\/csv_local.c/d' \
+    -e '/^gen_db_server.c/d' \
+    -e '/^$/d' < $f |
+    awk '{print $1}' > $t1
+find $d -type f |
+    sed -e 's/^\.\.\/\.\.\///' \
+        -e '/^build[^_]/d' \
+	-e '/^dist\//d' \
+        -e '/^libdb_java\/java_stat_auto.c/d' \
+        -e '/^mod_db4\//d' \
+        -e '/^perl\//d' \
+        -e '/^php_db4\//d' \
+        -e '/^rpc_server\/c\/gen_db_server.c/d' \
+        -e '/^test\//d' \
+	-e '/^test_erlang/d' \
+        -e '/^test_server/d' \
+        -e '/^test_thread/d' \
+        -e '/^test_vxworks/d' |
+    egrep '\.c$|\.cpp$|\.def$|\.rc$' |
+    sort > $t2
+
+cmp $t1 $t2 > /dev/null || {
+    echo "<<< srcfiles.in >>> existing files"
+    diff $t1 $t2
+    exit 1
+}
+
+exit 0

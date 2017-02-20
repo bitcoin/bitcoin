@@ -1,0 +1,65 @@
+#!/bin/sh -
+#	$Id$
+#
+# Build BREW .dsp files.
+
+. RELEASE
+
+SRCFILES=srcfiles.in
+
+s=/tmp/__db_a
+t=/tmp/__db_b
+
+trap 'rm -f $s $t; exit 0' 0
+trap 'rm -f $s $t; exit 1' 1 2 3 13 15
+
+# Build the bdb_brew.dsp file.
+dsp()
+{
+	grep -w brew $SRCFILES | awk '{print $1}' > $s
+
+	(cat brew/bdb_brew.dsp;
+	for i in `cat $s`; do
+		echo '# Begin Source File'
+		echo "SOURCE=../$i"
+		echo '# End Source File'
+	done | sed 's/\//\\/g'
+	echo '# End Group'
+	echo '# End Target'
+	echo '# End Project') > $t
+
+	f=../build_brew/bdb_brew.dsp
+	cmp $t $f > /dev/null 2>&1 ||
+	    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+}
+
+# Build the bdbread.mak applet example file.
+mak()
+{
+	(/bin/echo -n 'OBJS           =bdbread.o AEEModGen.o AEEAppGen.o'
+	grep -w brew $SRCFILES |
+	    awk '{print $1}' |
+	    sed -e 's/.*\///' \
+	        -e 's/\.c/\.o/g' |
+	    awk '{printf " %s", $1}'
+	echo "") > $s
+
+	sed -e '/LIST OF OBJECT FILES/{' \
+	    -e "r $s" \
+	    -e 'd' \
+	    -e '}' < brew/bdbread.mak > $t
+
+	for i in `grep -w brew $SRCFILES | awk '{print $1}'`; do
+		echo "`basename $i .c`.o:	../$i"
+	done |
+	sed 's/\//\\/g' >> $t
+
+	f=../build_brew/bdbread.mak
+	cmp $t $f > /dev/null 2>&1 ||
+	    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+}
+
+dsp
+mak
+
+exit 0

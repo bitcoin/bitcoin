@@ -1,0 +1,419 @@
+#!/bin/sh -
+#	$Id$
+#
+# Build the Java files.
+
+msgjava="/*-
+ * Automatically built by dist/s_java_stat.
+ * Only the javadoc comments can be edited.
+ *
+ * See the file LICENSE for redistribution information.
+ *
+ * Copyright (c) 2002-2009 Oracle.  All rights reserved.
+ */"
+
+s=/tmp/__java.sed
+t=/tmp/__java
+t0=/tmp/__java0
+c=/tmp/__javajnic
+u1=/tmp/__javautil1
+u2=/tmp/__javautil2
+trap 'rm -f $s $t $t0 $c $u1 $u2; exit 0' 0 1 2 3 13 15
+
+# Script to convert DB C structure declarations into Java declarations.
+jclass()
+{
+	cat > $s <<EOF
+/struct __db_$1 {/,/^}/{
+	/__db_$1/d
+	/CONFIG_TEST/,/#endif/d
+	/;/!d
+	/^}/d
+	/db_threadid_t/d
+	/char[	 ]*/{
+		s/^[	 ]*char[*	 ]*[	 ]*\([^[;]*\).*/\\
+$2    private String \1;\\
+$2    public String get_\1() {\\
+$2        return \1;\\
+$2    }/p
+		d
+	}
+	/db_seq_t/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/\\
+$2    private long \1;\\
+$2    public long get_\1() {\\
+$2        return \1;\\
+$2    }/p
+		d
+	}
+	/time_t/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/\\
+$2    private long \1;\\
+$2    public long get_\1() {\\
+$2        return \1;\\
+$2    }/p
+		d
+	}
+	/uintmax_t/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/\\
+$2    private long \1;\\
+$2    public long get_\1() {\\
+$2        return \1;\\
+$2    }/p
+		d
+	}
+	/DB_LSN[	 ]*/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/\\
+$2    private LogSequenceNumber \1;\\
+$2    public LogSequenceNumber get_\1() {\\
+$2        return \1;\\
+$2    }/p
+		d
+	}
+	/DB_TXN_ACTIVE[	 ]*\*/{
+		s/^[	 ]*[^\*]*\*[	 ]*\([^;]*\).*/\\
+$2    private Active[] \1;\\
+$2    public Active[] get_\1() {\\
+$2        return \1;\\
+$2    }/p
+		d
+	}
+	/u_int8_t[	 ]*gid\[/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^[;]*\).*/\\
+$2    private byte[] \1;\\
+$2    public byte[] get_\1() {\\
+$2        return \1;\\
+$2    }/p
+		d
+	}
+	/u_int32_t.*startup_complete/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^[;]*\).*/\\
+$2    private int \1;\\
+$2    public boolean get_\1() {\\
+$2        return (\1 != 0);\\
+$2    }/p
+		d
+	}
+	s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/\\
+$2    private int \1;\\
+$2    public int get_\1() {\\
+$2        return \1;\\
+$2    }/p
+}
+EOF
+	sed -n -f $s < ../dbinc/db.in |
+	perl -w -p -e 's/get_(st|bt|hash|qs|compact)_/get_/;' \
+	           -e 'if (m/get.*\(/) {' \
+	           -e     's/_n([b-df-hj-np-tv-z]|upgrade)/_num_$1/;' \
+	           -e     's/_(min|max)([a-z])/_$1_$2/;' \
+	           -e     's/_mvcc/_multiversion/;' \
+	           -e     's/cnt/_count_/;' \
+	           -e     's/_pg/_pages_/;' \
+	           -e     's/(count|flag|free|page|percent|size|sync|timeout)/_$1/g;' \
+	           -e     's/([^p])(id\()/$1_$2/g;' \
+	           -e     's/__*/_/g;' \
+	           -e     's/_(.)/\U$1/g' \
+	           -e '};' \
+	           -e '1'
+}
+
+# Script to convert DB C structure declarations into a JNI method to fill the
+# corresponding Java class
+jclass_jni()
+{
+	fill=__dbj_fill_$1
+	j_class=$2
+	jni_fieldid_decls $1 $2
+	jni_fieldids $1 $2
+	cat > $s <<EOF
+/struct __db_$1 {/,/^}/{
+	/__db_$1/d
+	/CONFIG_TEST/,/#endif/d
+	/;/!d
+	/^}/d
+	/db_threadid_t/d
+	/char[	 ]*/{
+		s/^[	 ]*char[*	 ]*[	 ]*\([^[;]*\).*/	JAVADB_STAT_STRING(jnienv, jobj, $1_\1_fid, statp, \1);/p
+		d
+	}
+	/db_seq_t/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/	JAVADB_STAT_LONG(jnienv, jobj, $1_\1_fid, statp, \1);/p
+		d
+	}
+	/time_t/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/	JAVADB_STAT_LONG(jnienv, jobj, $1_\1_fid, statp, \1);/p
+		d
+	}
+	/uintmax_t/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/	JAVADB_STAT_LONG(jnienv, jobj, $1_\1_fid, statp, \1);/p
+		d
+	}
+	/DB_LSN[	 ]*/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/	JAVADB_STAT_LSN(jnienv, jobj, $1_\1_fid, statp, \1);/p
+		d
+	}
+	/DB_TXN_ACTIVE[	 ]*\*/{
+		s/^[	 ]*[^\*]*\*[	 ]*\([^;]*\).*/	JAVADB_STAT_ACTIVE(jnienv, jobj, $1_\1_fid, statp, \1);/p
+		d
+	}
+	/u_int8_t[	 ]*gid\[/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^[;]*\).*/	JAVADB_STAT_GID(jnienv, jobj, $1_\1_fid, statp, \1);/p
+		d
+	}
+	s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/	JAVADB_STAT_INT(jnienv, jobj, $1_\1_fid, statp, \1);/p
+}
+EOF
+	echo "static int $fill(JNIEnv *jnienv," >> $c
+	echo "    jobject jobj, struct __db_$1 *statp) {" >> $c
+	sed -n -f $s < ../dbinc/db.in >> $c
+        echo '	return (0);' >> $c
+	echo '}' >> $c
+}
+
+jni_fieldid_decls()
+{
+	cat > $s <<EOF
+/struct __db_$1 {/,/^}/{
+	/__db_$1/d
+	/CONFIG_TEST/,/#endif/d
+	/;/!d
+	/^}/d
+	/db_threadid_t/d
+	/char[	 ]*/{
+		s/^[	 ]*char[*	 ]*[	 ]*\([^[;]*\).*/static jfieldID $1_\1_fid;/p
+		d
+	}
+	/db_seq_t/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/static jfieldID $1_\1_fid;/p
+		d
+	}
+	/time_t/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/static jfieldID $1_\1_fid;/p
+		d
+	}
+	/uintmax_t/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/static jfieldID $1_\1_fid;/p
+		d
+	}
+	/DB_LSN[	 ]*/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/static jfieldID $1_\1_fid;/p
+		d
+	}
+	/DB_TXN_ACTIVE[	 ]*\*/{
+		s/^[	 ]*[^\*]*\*[	 ]*\([^;]*\).*/static jfieldID $1_\1_fid;/p
+		d
+	}
+	/u_int8_t[	 ]*gid\[/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^[;]*\).*/static jfieldID $1_\1_fid;/p
+		d
+	}
+	s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/static jfieldID $1_\1_fid;/p
+}
+EOF
+	sed -n -f $s < ../dbinc/db.in >> $u1
+}
+
+jni_fieldids()
+{
+	cat > $s <<EOF
+/struct __db_$1 {/,/^}/{
+	/__db_$1/d
+	/CONFIG_TEST/,/#endif/d
+	/;/!d
+	/^}/d
+	/db_threadid_t/d
+	/char[	 ]*/{
+		s/^[	 ]*char[*	 ]*[	 ]*\([^[;]*\).*/	{ \&$1_\1_fid, \&$1_class, \"\1\", \"Ljava\/lang\/String;\" },/p
+		d
+	}
+	/db_seq_t/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/	{ \&$1_\1_fid, \&$1_class, \"\1\", \"J\" },/p
+		d
+	}
+	/time_t/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/	{ \&$1_\1_fid, \&$1_class, \"\1\", \"J\" },/p
+		d
+	}
+	/uintmax_t/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/	{ \&$1_\1_fid, \&$1_class, \"\1\", \"J\" },/p
+		d
+	}
+	/DB_LSN[	 ]*/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/	{ \&$1_\1_fid, \&$1_class, \"\1\", \"L\" DB_PKG \"LogSequenceNumber;\" },/p
+		d
+	}
+	/DB_TXN_ACTIVE[	 ]*\*/{
+		s/^[	 ]*[^\*]*\*[	 ]*\([^;]*\).*/	{ \&$1_\1_fid, \&$1_class, \"\1\", \"[L\" DB_PKG \"TransactionStats\$Active;\" },/p
+		d
+	}
+	/u_int8_t[	 ]*gid\[/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^[;]*\).*/	{ \&$1_\1_fid, \&$1_class, \"\1\", \"[B\" },/p
+		d
+	}
+	s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/	{ \&$1_\1_fid, \&$1_class, \"\1\", \"I\" },/p
+}
+EOF
+	sed -n -f $s < ../dbinc/db.in >> $u2
+}
+
+# Script to convert DB C structure declarations into a toString method body
+jclass_toString()
+{
+	cat > $s <<EOF
+/struct __db_$1 {/,/^}/{
+	/__db_$1/d
+	/CONFIG_TEST/,/#endif/d
+	/;/!d
+	/^}/d
+	/db_threadid_t/d
+	/char[	 ]*/{
+		s/^[	 ]*char[*	 ]*[	 ]*\([^[;]*\).*/$3            + "\\\\n$3  \1=" + \1/p
+		d
+	}
+	/DB_TXN_ACTIVE[	 ]*\*/{
+		s/^[	 ]*[^\*]*\*[	 ]*\([^;]*\).*/$3            + \"\\\\n$3  \1=\" + DbUtil.objectArrayToString(\1, \"\1\")/p
+		d
+	}
+	/u_int8_t[	 ]*gid\[/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^[;]*\).*/$3            + \"\\\\n$3  \1=\" + DbUtil.byteArrayToString(\1)/p
+		d
+	}
+	/u_int32_t.*startup_complete/{
+		s/^[	 ]*[^	 ]*[	 ]*\([^[;]*\).*/$3            + \"\\\\n$3  \1=\" + (\1 != 0)/p
+		d
+	}
+	s/^[	 ]*[^	 ]*[	 ]*\([^;]*\).*/$3            + \"\\\\n$3  \1=\" + \1/p
+}
+EOF
+	echo
+	echo "$3    public String toString() {"
+	echo "$3        return \"$2:\""
+	sed -n -f $s < ../dbinc/db.in
+	echo "$3            ;"
+	echo "$3    }"
+}
+
+stat_class()
+{
+	c_struct=__db_$1
+	j_class=$2
+	extends=$3
+	imports=$4
+	extradecls=$5
+
+	(cat <<EOF
+$msgjava
+
+package com.sleepycat.db;
+$imports
+public class $j_class$extends {
+    // no public constructor
+    /* package */ $j_class() {}$extradecls
+EOF
+	 jclass $1
+	 jclass_toString $1 $2
+	 echo '}') > $t0
+	f=../java/src/com/sleepycat/db/$j_class.java
+	./s_javadoc_merge $f $t0 > $t
+	cmp $t $f > /dev/null 2>&1 ||
+	    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+	jclass_jni $1 $2
+}
+
+echo "$msgjava" > $c
+> $u1
+> $u2
+
+stat_class bt_stat BtreeStats " extends DatabaseStats"
+
+# Build CompactStats.java - not purely a statistics class, but close enough to
+# share this code.
+(cat <<EOF
+$msgjava
+
+package com.sleepycat.db;
+
+import com.sleepycat.db.internal.DbUtil;
+
+public class CompactStats
+{
+    // no public constructor
+    /* package */ CompactStats() {}
+
+    /* package */
+    CompactStats(int fillpercent, int timeout, int pages) {
+        this.compact_fillpercent = fillpercent;
+        this.compact_timeout = timeout;
+        this.compact_pages = pages;
+    }
+EOF
+ jclass compact
+ jclass_toString compact CompactStats
+ echo '}') |
+   perl -w -p -e 's,public int get(FillPercent|Pages\(|Timeout|Truncate),/* package */ int get$1,g;'> $t0
+f=../java/src/com/sleepycat/db/CompactStats.java
+./s_javadoc_merge $f $t0 > $t
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+jclass_jni compact __dbj_fill_compact
+
+stat_class h_stat HashStats " extends DatabaseStats"
+stat_class lock_stat LockStats
+stat_class log_stat LogStats
+stat_class mpool_fstat CacheFileStats
+stat_class mpool_stat CacheStats
+stat_class mutex_stat MutexStats
+stat_class qam_stat QueueStats " extends DatabaseStats"
+stat_class rep_stat ReplicationStats "" "
+import com.sleepycat.db.internal.DbConstants;
+" "
+    public static final int REP_CLIENT = DbConstants.DB_REP_CLIENT;
+
+    public static final int REP_MASTER = DbConstants.DB_REP_MASTER;
+
+    public static final int REP_NONE = 0;"
+
+stat_class repmgr_stat ReplicationManagerStats
+stat_class seq_stat SequenceStats
+
+# Build TransactionStats.java - special because of embedded Active class
+(echo "$msgjava"
+ echo
+ echo 'package com.sleepycat.db;'
+ echo
+ echo 'import com.sleepycat.db.internal.DbUtil;'
+ echo
+ echo 'public class TransactionStats'
+ echo '{'
+ echo "    // no public constructor"
+ echo "    /* package */ TransactionStats() {}"
+ echo
+ echo "    public static class Active {"
+ echo "        // no public constructor"
+ echo "        /* package */ Active() {}"
+ jclass txn_active "    "
+ jclass_toString txn_active Active "    "
+ echo '    };'
+ jclass txn_stat
+ jclass_toString txn_stat TransactionStats
+ echo '}') > $t0
+f=../java/src/com/sleepycat/db/TransactionStats.java
+./s_javadoc_merge $f $t0 > $t
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+jclass_jni txn_stat __dbj_fill_txn_stat
+jclass_jni txn_active __dbj_fill_txn_active
+
+mv $c $t
+f=../libdb_java/java_stat_auto.c
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 444 $f)
+
+f=../libdb_java/java_util.i
+sed '/BEGIN-STAT-FIELD-DECLS/q' < $f > $t
+cat $u1 >> $t
+sed -n '/END-STAT-FIELD-DECLS/,/BEGIN-STAT-FIELDS/p' < $f >> $t
+cat $u2 >> $t
+sed -n '/END-STAT-FIELDS/,$p' < $f >> $t
+cmp $t $f > /dev/null 2>&1 ||
+    (echo "Building $f" && rm -f $f && cp $t $f && chmod 644 $f)

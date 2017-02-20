@@ -1,0 +1,158 @@
+Document file - DO NOT EDIT
+
+<BEGIN> BUILD_PENTIUMgnu_BUILDRULE
+db_upgrade20.out
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_AR
+ar386
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_ARCHIVE
+$(PRJ_DIR)/PENTIUMgnu/db_upgrade20.a
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_AS
+cc386
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_CC
+cc386
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_CFLAGS
+-g \
+	-mpentium \
+	-ansi \
+	-nostdinc \
+	-DRW_MULTI_THREAD \
+	-D_REENTRANT \
+	-fvolatile \
+	-nostdlib \
+	-fno-builtin \
+	-fno-defer-pop \
+	-I$(PRJ_DIR)/.. \
+	-I$(PRJ_DIR)/../.. \
+	-I$(WIND_BASE)/target/h \
+	-DCPU=PENTIUM
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_CFLAGS_AS
+-g \
+	-mpentium \
+	-ansi \
+	-nostdinc \
+	-fvolatile \
+	-nostdlib \
+	-fno-builtin \
+	-fno-defer-pop \
+	-P \
+	-x \
+	assembler-with-cpp \
+	-I$(WIND_BASE)/target/h \
+	-DCPU=PENTIUM
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_CPP
+cc386 -E -P -xc
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_LD
+ld386
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_LDDEPS
+
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_LDFLAGS
+-X -N
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_LD_PARTIAL_FLAGS
+-X -r
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_NM
+nm386 -g
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_OPTION_DEFINE_MACRO
+-D
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_OPTION_INCLUDE_DIR
+-I
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_POST_BUILD_RULE
+
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_PRJ_LIBS
+
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_MACRO_SIZE
+size386
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_RO_DEPEND_PATH
+{$(WIND_BASE)/target/h/} \
+	{$(WIND_BASE)/target/src/} \
+	{$(WIND_BASE)/target/config/}
+<END>
+
+<BEGIN> BUILD_PENTIUMgnu_TC
+::tc_PENTIUMgnu
+<END>
+
+<BEGIN> BUILD_RULE_archive
+
+<END>
+
+<BEGIN> BUILD_RULE_db_upgrade20.out
+
+<END>
+
+<BEGIN> BUILD_RULE_objects
+
+<END>
+
+<BEGIN> BUILD__CURRENT
+PENTIUMgnu
+<END>
+
+<BEGIN> BUILD__LIST
+PENTIUMgnu
+<END>
+
+<BEGIN> CORE_INFO_TYPE
+::prj_vxApp
+<END>
+
+<BEGIN> CORE_INFO_VERSION
+2.0
+<END>
+<BEGIN> FILE_db_upgrade.c_dependDone
+FALSE
+<END>
+
+<BEGIN> FILE_db_upgrade.c_dependencies
+<END>
+
+<BEGIN> FILE_db_upgrade.c_objects
+db_upgrade.o
+<END>
+
+<BEGIN> FILE_db_upgrade.c_tool
+C/C++ compiler
+<END>
+
+<BEGIN> PROJECT_FILES
+$(PRJ_DIR)/db_upgrade.c
+<END>
+
+<BEGIN> userComments
+db_upgrade
+<END>

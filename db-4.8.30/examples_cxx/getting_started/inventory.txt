@@ -1,0 +1,800 @@
+Oranges#OranfruiRu6Ghr#0.71#451#fruits#TriCounty Produce
+Oranges#OranfruiXRPFn1#0.73#263#fruits#Simply Fresh
+Oranges#OranfruiLEuzQj#0.69#261#fruits#Off the Vine
+Apples#ApplfruiZls4Du#1.20#472#fruits#TriCounty Produce
+Apples#Applfrui8fewZe#1.21#402#fruits#Simply Fresh
+Apples#ApplfruiXoT6xG#1.20#728#fruits#Off the Vine
+Bananas#BanafruipIlluX#0.50#207#fruits#TriCounty Produce
+Bananas#BanafruiEQhWuj#0.50#518#fruits#Simply Fresh
+Bananas#BanafruimpRgPO#0.50#741#fruits#Off the Vine
+Almonds#AlmofruiPPCLz8#0.55#600#fruits#TriCounty Produce
+Almonds#AlmofruidMyKmp#0.54#745#fruits#Simply Fresh
+Almonds#Almofrui7K0xzH#0.53#405#fruits#Off the Vine
+Allspice#AllsfruibJGK4R#0.94#669#fruits#TriCounty Produce
+Allspice#Allsfruilfvoeg#0.94#244#fruits#Simply Fresh
+Allspice#Allsfruio12BOS#0.95#739#fruits#Off the Vine
+Apricot#AprifruijphEpM#0.89#560#fruits#TriCounty Produce
+Apricot#AprifruiU1zIDn#0.91#980#fruits#Simply Fresh
+Apricot#AprifruichcwYS#0.95#668#fruits#Off the Vine
+Avocado#AvocfruiwYYomu#0.99#379#fruits#TriCounty Produce
+Avocado#AvocfruiT6IwWE#1.02#711#fruits#Simply Fresh
+Avocado#AvocfruisbK1h5#0.97#856#fruits#Off the Vine
+Bael Fruit#BaelfruilAU7Hj#0.41#833#fruits#TriCounty Produce
+Bael Fruit#BaelfruiX2KvqV#0.40#770#fruits#Simply Fresh
+Bael Fruit#Baelfruidjne4e#0.39#778#fruits#Off the Vine
+Betel Nut#BetefruiQYdHqQ#0.34#926#fruits#TriCounty Produce
+Betel Nut#Betefrui32BKAz#0.37#523#fruits#Simply Fresh
+Betel Nut#BetefruisaWzY4#0.34#510#fruits#Off the Vine
+Black Walnut#BlacfruiXxIuMU#0.57#923#fruits#TriCounty Produce
+Black Walnut#BlacfruiZXgY9t#0.59#312#fruits#Simply Fresh
+Black Walnut#BlacfruikWO0vz#0.60#877#fruits#Off the Vine
+Blueberry#BluefruiCbxb4t#1.02#276#fruits#TriCounty Produce
+Blueberry#BluefruiBuCfgO#1.03#522#fruits#Simply Fresh
+Blueberry#Bluefruixz8MkE#1.01#278#fruits#Off the Vine
+Boysenberry#BoysfruizxyMuz#1.05#239#fruits#TriCounty Produce
+Boysenberry#Boysfrui3hTRQu#1.09#628#fruits#Simply Fresh
+Boysenberry#BoysfruinpLvr3#1.02#349#fruits#Off the Vine
+Breadnut#Breafrui0kDPs6#0.31#558#fruits#TriCounty Produce
+Breadnut#Breafrui44s3og#0.32#879#fruits#Simply Fresh
+Breadnut#BreafruiwyLKhJ#0.30#407#fruits#Off the Vine
+Cactus#Cactfruiyo2ddH#0.56#601#fruits#TriCounty Produce
+Cactus#CactfruixTOLv5#0.54#477#fruits#Simply Fresh
+Cactus#Cactfrui4ioUav#0.55#896#fruits#Off the Vine
+California Wild Grape#CalifruiZsWAa6#0.78#693#fruits#TriCounty Produce
+California Wild Grape#Califruid84xyt#0.83#293#fruits#Simply Fresh
+California Wild Grape#CalifruiLSJFoJ#0.81#543#fruits#Off the Vine
+Cashew#CashfruihaOFVP#0.37#221#fruits#TriCounty Produce
+Cashew#Cashfruizzcw1E#0.38#825#fruits#Simply Fresh
+Cashew#CashfruiqtMe2Q#0.38#515#fruits#Off the Vine
+Chico Sapote#ChicfruiY534SX#0.47#216#fruits#TriCounty Produce
+Chico Sapote#ChicfruiSqL3Lc#0.45#476#fruits#Simply Fresh
+Chico Sapote#ChicfruiurzIp4#0.47#200#fruits#Off the Vine
+Chinese Jello#ChinfruiyRg75u#0.64#772#fruits#TriCounty Produce
+Chinese Jello#ChinfruiuIUj0X#0.65#624#fruits#Simply Fresh
+Chinese Jello#ChinfruiwXbRrL#0.67#719#fruits#Off the Vine
+Common Guava#Commfruib6znSI#0.80#483#fruits#TriCounty Produce
+Common Guava#Commfrui6eUivL#0.81#688#fruits#Simply Fresh
+Common Guava#CommfruibWKnz3#0.84#581#fruits#Off the Vine
+Crabapple#CrabfruioY2L63#0.94#582#fruits#TriCounty Produce
+Crabapple#Crabfruijxcxyt#0.94#278#fruits#Simply Fresh
+Crabapple#CrabfruibvWd8K#0.95#213#fruits#Off the Vine
+Cranberry#CranfruiJxmKr5#0.83#923#fruits#TriCounty Produce
+Cranberry#CranfruiPlklAF#0.84#434#fruits#Simply Fresh
+Cranberry#Cranfrui3G5XL9#0.84#880#fruits#Off the Vine
+Damson Plum#DamsfruibMRMwe#0.98#782#fruits#TriCounty Produce
+Damson Plum#DamsfruiV6wFLk#1.03#400#fruits#Simply Fresh
+Damson Plum#DamsfruiLhqFrQ#0.98#489#fruits#Off the Vine
+Date Palm#DatefruigS31GU#1.14#315#fruits#TriCounty Produce
+Date Palm#DatefruipKPaJK#1.09#588#fruits#Simply Fresh
+Date Palm#Datefrui5fTyNS#1.14#539#fruits#Off the Vine
+Dragon's Eye#DragfruirGJ3aI#0.28#315#fruits#TriCounty Produce
+Dragon's Eye#DragfruiBotxqt#0.27#705#fruits#Simply Fresh
+Dragon's Eye#DragfruiPsSnV9#0.29#482#fruits#Off the Vine
+East Indian Wine Palm#EastfruiNXFJuG#0.43#992#fruits#TriCounty Produce
+East Indian Wine Palm#Eastfruiq06fRr#0.40#990#fruits#Simply Fresh
+East Indian Wine Palm#Eastfrui4QUwl2#0.43#351#fruits#Off the Vine
+English Walnut#EnglfruiBMtHtW#1.04#787#fruits#TriCounty Produce
+English Walnut#EnglfruiHmVzxV#1.03#779#fruits#Simply Fresh
+English Walnut#Englfrui18Tc9n#1.06#339#fruits#Off the Vine
+False Mangosteen#FalsfruibkmYqH#0.66#971#fruits#TriCounty Produce
+False Mangosteen#FalsfruipBsbcX#0.68#250#fruits#Simply Fresh
+False Mangosteen#FalsfruiPrFfhe#0.70#386#fruits#Off the Vine
+Fried Egg Tree#FriefruiihHUdc#0.29#649#fruits#TriCounty Produce
+Fried Egg Tree#FriefruimdD1rf#0.28#527#fruits#Simply Fresh
+Fried Egg Tree#FriefruivyAzYq#0.29#332#fruits#Off the Vine
+Genipap#GenifruiDtKusQ#0.62#986#fruits#TriCounty Produce
+Genipap#GenifruiXq32eP#0.61#326#fruits#Simply Fresh
+Genipap#Genifruiphwwyq#0.61#794#fruits#Off the Vine
+Ginger#GingfruiQLbRZI#0.28#841#fruits#TriCounty Produce
+Ginger#GingfruiS8kK4p#0.29#432#fruits#Simply Fresh
+Ginger#GingfruioL3Y4S#0.27#928#fruits#Off the Vine
+Grapefruit#Grapfruih86Zxh#1.07#473#fruits#TriCounty Produce
+Grapefruit#GrapfruiwL1v0N#1.08#878#fruits#Simply Fresh
+Grapefruit#GrapfruihmJzWm#1.02#466#fruits#Off the Vine
+Hackberry#HackfruiQjomN7#0.22#938#fruits#TriCounty Produce
+Hackberry#HackfruiWS0eKp#0.20#780#fruits#Simply Fresh
+Hackberry#Hackfrui0MIv6J#0.21#345#fruits#Off the Vine
+Honey Locust#HonefruiebXGRc#1.08#298#fruits#TriCounty Produce
+Honey Locust#HonefruiPSqILB#1.00#427#fruits#Simply Fresh
+Honey Locust#Honefrui6UXtvW#1.03#422#fruits#Off the Vine
+Japanese Plum#JapafruihTmoYR#0.40#658#fruits#TriCounty Produce
+Japanese Plum#JapafruifGqz0l#0.40#700#fruits#Simply Fresh
+Japanese Plum#JapafruiufWkLx#0.39#790#fruits#Off the Vine
+Jojoba#JojofruisE0wTh#0.97#553#fruits#TriCounty Produce
+Jojoba#JojofruiwiYLp2#1.02#969#fruits#Simply Fresh
+Jojoba#JojofruigMD1ej#0.96#899#fruits#Off the Vine
+Jostaberry#JostfruiglsEGV#0.50#300#fruits#TriCounty Produce
+Jostaberry#JostfruiV3oo1h#0.52#423#fruits#Simply Fresh
+Jostaberry#JostfruiUBerur#0.53#562#fruits#Off the Vine
+Kangaroo Apple#KangfruiEQknz8#0.60#661#fruits#TriCounty Produce
+Kangaroo Apple#KangfruiNabdFq#0.60#377#fruits#Simply Fresh
+Kangaroo Apple#Kangfrui7hky1i#0.60#326#fruits#Off the Vine
+Ken's Red#Ken'fruinPUSIm#0.21#337#fruits#TriCounty Produce
+Ken's Red#Ken'fruiAoZlpl#0.21#902#fruits#Simply Fresh
+Ken's Red#Ken'frui5rmbd4#0.22#972#fruits#Off the Vine
+Ketembilla#Ketefrui3yAKxQ#0.31#303#fruits#TriCounty Produce
+Ketembilla#KetefruiROn6F5#0.34#283#fruits#Simply Fresh
+Ketembilla#Ketefrui16Rsts#0.33#887#fruits#Off the Vine
+King Orange#KingfruisOFzWk#0.74#429#fruits#TriCounty Produce
+King Orange#KingfruiBmzRJT#0.74#500#fruits#Simply Fresh
+King Orange#KingfruiGsrgRX#0.78#994#fruits#Off the Vine
+Kola Nut#KolafruiBbtAuw#0.58#991#fruits#TriCounty Produce
+Kola Nut#KolafruirbnLVS#0.62#733#fruits#Simply Fresh
+Kola Nut#Kolafrui1ItXJx#0.58#273#fruits#Off the Vine
+Kuko#Kukofrui6YH5Ds#0.41#647#fruits#TriCounty Produce
+Kuko#Kukofrui7WZaZK#0.39#241#fruits#Simply Fresh
+Kuko#Kukofruig9MQFT#0.40#204#fruits#Off the Vine
+Kumquat#KumqfruiT6WKQL#0.73#388#fruits#TriCounty Produce
+Kumquat#KumqfruidLiFLU#0.70#393#fruits#Simply Fresh
+Kumquat#KumqfruiL6zhQX#0.71#994#fruits#Off the Vine
+Kwai Muk#KwaifruiQK1zOE#1.10#249#fruits#TriCounty Produce
+Kwai Muk#KwaifruifbCRlT#1.14#657#fruits#Simply Fresh
+Kwai Muk#Kwaifruipe7T2m#1.09#617#fruits#Off the Vine
+Lanzone#LanzfruijsPf1v#0.34#835#fruits#TriCounty Produce
+Lanzone#LanzfruibU3QoL#0.34#404#fruits#Simply Fresh
+Lanzone#LanzfruiYgHwv6#0.34#237#fruits#Off the Vine
+Lemon#Lemofrui4Tgsg2#0.46#843#fruits#TriCounty Produce
+Lemon#LemofruivK6qvj#0.43#207#fruits#Simply Fresh
+Lemon#LemofruiXSXqJ0#0.44#910#fruits#Off the Vine
+Lemon Grass#LemofruiVFgVh5#0.40#575#fruits#TriCounty Produce
+Lemon Grass#LemofruiWIelvi#0.41#386#fruits#Simply Fresh
+Lemon Grass#LemofruiGVAow0#0.39#918#fruits#Off the Vine
+Lilly-pilly#LillfruiEQnW1m#1.21#974#fruits#TriCounty Produce
+Lilly-pilly#LillfruiMqVuR5#1.23#303#fruits#Simply Fresh
+Lilly-pilly#LillfruiVGH9p4#1.17#512#fruits#Off the Vine
+Ling Nut#LingfruiGtOf8X#0.85#540#fruits#TriCounty Produce
+Ling Nut#LingfruiuP0Jf9#0.83#200#fruits#Simply Fresh
+Ling Nut#LingfruiuO5qf5#0.81#319#fruits#Off the Vine
+Lipote#LipofruisxD2Qc#0.85#249#fruits#TriCounty Produce
+Lipote#LipofruiHNdIqL#0.85#579#fruits#Simply Fresh
+Lipote#LipofruiSQ2pKK#0.83#472#fruits#Off the Vine
+Litchee#Litcfrui1R6Ydz#0.99#806#fruits#TriCounty Produce
+Litchee#LitcfruiwtDM79#1.01#219#fruits#Simply Fresh
+Litchee#LitcfruilpPZbC#1.05#419#fruits#Off the Vine
+Longan#LongfruiEI0lWF#1.02#573#fruits#TriCounty Produce
+Longan#LongfruiPQxxSF#1.04#227#fruits#Simply Fresh
+Longan#LongfruisdI812#0.99#993#fruits#Off the Vine
+Love-in-a-mist#LovefruiKYPW70#0.69#388#fruits#TriCounty Produce
+Love-in-a-mist#LovefruiHrgjDa#0.67#478#fruits#Simply Fresh
+Love-in-a-mist#LovefruipSOWVz#0.71#748#fruits#Off the Vine
+Lychee#LychfruiicVLnY#0.38#276#fruits#TriCounty Produce
+Lychee#LychfruiGY6yJr#0.38#602#fruits#Simply Fresh
+Lychee#LychfruiTzDCq2#0.40#572#fruits#Off the Vine
+Mabolo#MabofruiSY8RQS#0.97#263#fruits#TriCounty Produce
+Mabolo#MabofruiOWWk0n#0.98#729#fruits#Simply Fresh
+Mabolo#MabofruixQLOTF#0.98#771#fruits#Off the Vine
+Macadamia Nut#MacafruiZppJPw#1.22#888#fruits#TriCounty Produce
+Macadamia Nut#MacafruiI7XFMV#1.24#484#fruits#Simply Fresh
+Macadamia Nut#Macafrui4x8bxV#1.20#536#fruits#Off the Vine
+Madagascar Plum#MadafruiVj5fDf#1.14#596#fruits#TriCounty Produce
+Madagascar Plum#MadafruivJhAFI#1.15#807#fruits#Simply Fresh
+Madagascar Plum#Madafrui7MTe1x#1.17#355#fruits#Off the Vine
+Magnolia Vine#MagnfruiigN4Y1#1.17#321#fruits#TriCounty Produce
+Magnolia Vine#MagnfruicKtiHd#1.15#353#fruits#Simply Fresh
+Magnolia Vine#MagnfruiLPDSCp#1.23#324#fruits#Off the Vine
+Mamey#Mamefrui5rjLF6#0.36#683#fruits#TriCounty Produce
+Mamey#MamefruiM6ndnR#0.38#404#fruits#Simply Fresh
+Mamey#Mamefruiq9KntD#0.36#527#fruits#Off the Vine
+Mandarin Orange#MandfruiRKpmKL#0.42#352#fruits#TriCounty Produce
+Mandarin Orange#Mandfrui1V0KLG#0.42#548#fruits#Simply Fresh
+Mandarin Orange#Mandfruig2o9Fg#0.41#686#fruits#Off the Vine
+Marany Nut#MarafruiqkrwoJ#1.14#273#fruits#TriCounty Produce
+Marany Nut#MarafruiCGKpke#1.12#482#fruits#Simply Fresh
+Marany Nut#MarafruiB1YE5x#1.09#412#fruits#Off the Vine
+Marula#MarufruiXF4biH#0.22#403#fruits#TriCounty Produce
+Marula#MarufruidZiVKZ#0.23#317#fruits#Simply Fresh
+Marula#MarufruiIS8BEp#0.21#454#fruits#Off the Vine
+Mayhaw#MayhfruiCSrm7k#0.24#220#fruits#TriCounty Produce
+Mayhaw#MayhfruiNRDzWs#0.25#710#fruits#Simply Fresh
+Mayhaw#MayhfruiIUCyEg#0.24#818#fruits#Off the Vine
+Meiwa Kumquat#MeiwfruiYhv3AY#0.21#997#fruits#TriCounty Produce
+Meiwa Kumquat#MeiwfruiyzQFNR#0.22#347#fruits#Simply Fresh
+Meiwa Kumquat#Meiwfruict4OUp#0.21#923#fruits#Off the Vine
+Mexican Barberry#Mexifrui2P2dXi#0.28#914#fruits#TriCounty Produce
+Mexican Barberry#MexifruiywUTMI#0.29#782#fruits#Simply Fresh
+Mexican Barberry#MexifruijPHu5X#0.29#367#fruits#Off the Vine
+Meyer Lemon#Meyefruin9901J#0.38#824#fruits#TriCounty Produce
+Meyer Lemon#MeyefruiNeQpjO#0.37#617#fruits#Simply Fresh
+Meyer Lemon#MeyefruiYEVznZ#0.37#741#fruits#Off the Vine
+Mississippi Honeyberry#Missfruipb5iW3#0.95#595#fruits#TriCounty Produce
+Mississippi Honeyberry#MissfruiINiDbB#0.96#551#fruits#Simply Fresh
+Mississippi Honeyberry#MissfruiNUQ82a#0.93#396#fruits#Off the Vine
+Monkey Pot#MonkfruiXlTW4j#0.90#896#fruits#TriCounty Produce
+Monkey Pot#Monkfrui1p7a4h#0.88#344#fruits#Simply Fresh
+Monkey Pot#Monkfrui4eKggb#0.92#917#fruits#Off the Vine
+Monos Plum#Monofrui0Mv9aV#1.11#842#fruits#TriCounty Produce
+Monos Plum#Monofrui6iTGQY#1.14#570#fruits#Simply Fresh
+Monos Plum#MonofruiNu2uGH#1.13#978#fruits#Off the Vine
+Moosewood#MoosfruiMXEGex#0.86#969#fruits#TriCounty Produce
+Moosewood#Moosfrui8805mB#0.86#963#fruits#Simply Fresh
+Moosewood#MoosfruiOsnDFL#0.88#594#fruits#Off the Vine
+Natal Orange#NatafruitB8Kh2#0.42#332#fruits#TriCounty Produce
+Natal Orange#NatafruiOhqRrd#0.42#982#fruits#Simply Fresh
+Natal Orange#NatafruiRObMf6#0.41#268#fruits#Off the Vine
+Nectarine#NectfruilNfeD8#0.36#601#fruits#TriCounty Produce
+Nectarine#NectfruiQfjt6b#0.35#818#fruits#Simply Fresh
+Nectarine#Nectfrui5U7U96#0.37#930#fruits#Off the Vine
+Neem Tree#NeemfruiCruEMF#0.24#222#fruits#TriCounty Produce
+Neem Tree#NeemfruiGv0pv5#0.24#645#fruits#Simply Fresh
+Neem Tree#NeemfruiUFPVfk#0.25#601#fruits#Off the Vine
+New Zealand Spinach#New fruihDIgec#0.87#428#fruits#TriCounty Produce
+New Zealand Spinach#New fruiaoR9TP#0.87#630#fruits#Simply Fresh
+New Zealand Spinach#New fruiy8LBul#0.94#570#fruits#Off the Vine
+Olosapo#OlosfruiGXvaMm#0.76#388#fruits#TriCounty Produce
+Olosapo#OlosfruiESlpB3#0.76#560#fruits#Simply Fresh
+Olosapo#OlosfruiFNEkER#0.76#962#fruits#Off the Vine
+Oregon Grape#OregfruiWxhzrf#1.14#892#fruits#TriCounty Produce
+Oregon Grape#OregfruiMgjHUn#1.20#959#fruits#Simply Fresh
+Oregon Grape#OregfruiC5UCxX#1.17#419#fruits#Off the Vine
+Otaheite Apple#OtahfruilT0iFj#0.21#579#fruits#TriCounty Produce
+Otaheite Apple#Otahfrui92PyMY#0.22#857#fruits#Simply Fresh
+Otaheite Apple#OtahfruiLGD1EH#0.20#807#fruits#Off the Vine
+Oyster Plant#OystfruimGxOsj#0.77#835#fruits#TriCounty Produce
+Oyster Plant#Oystfrui1kudBX#0.81#989#fruits#Simply Fresh
+Oyster Plant#OystfruiaX3uO2#0.80#505#fruits#Off the Vine
+Panama Berry#PanafruiZG0Vp4#1.19#288#fruits#TriCounty Produce
+Panama Berry#PanafruiobvXPE#1.21#541#fruits#Simply Fresh
+Panama Berry#PanafruipaW8F3#1.16#471#fruits#Off the Vine
+Peach Tomato#PeacfruiQpovYH#1.20#475#fruits#TriCounty Produce
+Peach Tomato#PeacfruixYXLTN#1.18#655#fruits#Simply Fresh
+Peach Tomato#PeacfruiILDYAp#1.23#876#fruits#Off the Vine
+Peanut#Peanfruiy8M7pt#0.69#275#fruits#TriCounty Produce
+Peanut#PeanfruiEimbED#0.65#307#fruits#Simply Fresh
+Peanut#Peanfruic452Vc#0.68#937#fruits#Off the Vine
+Peanut Butter Fruit#PeanfruixEDt9Y#0.27#628#fruits#TriCounty Produce
+Peanut Butter Fruit#PeanfruiST0T0R#0.27#910#fruits#Simply Fresh
+Peanut Butter Fruit#Peanfrui7jeRN2#0.27#938#fruits#Off the Vine
+Pear#PearfruiB5YmSJ#0.20#945#fruits#TriCounty Produce
+Pear#PearfruiA93XZx#0.21#333#fruits#Simply Fresh
+Pear#PearfruioNKiIf#0.21#715#fruits#Off the Vine
+Pecan#PecafruiiTIv1Z#0.26#471#fruits#TriCounty Produce
+Pecan#PecafruiMGkqla#0.26#889#fruits#Simply Fresh
+Pecan#Pecafrui1szYz2#0.25#929#fruits#Off the Vine
+Purple Passion Fruit#Purpfrui4mMGkD#1.04#914#fruits#TriCounty Produce
+Purple Passion Fruit#Purpfrui5XOW3K#1.06#423#fruits#Simply Fresh
+Purple Passion Fruit#PurpfruifDTAgW#1.05#549#fruits#Off the Vine
+Red Mulberry#Red fruiVLOXIW#1.24#270#fruits#TriCounty Produce
+Red Mulberry#Red fruiXNXt4a#1.21#836#fruits#Simply Fresh
+Red Mulberry#Red fruiUseWLG#1.21#795#fruits#Off the Vine
+Red Princess#Red fruigJLR4V#0.23#829#fruits#TriCounty Produce
+Red Princess#Red fruinVKps5#0.23#558#fruits#Simply Fresh
+Red Princess#Red frui0jl9mg#0.24#252#fruits#Off the Vine
+Striped Screw Pine#StrifruiUKzjoU#0.60#226#fruits#TriCounty Produce
+Striped Screw Pine#StrifruivWLDzH#0.64#685#fruits#Simply Fresh
+Striped Screw Pine#StrifruiiF7CGH#0.60#983#fruits#Off the Vine
+Tapioca#Tapifruib4LCqt#0.40#955#fruits#TriCounty Produce
+Tapioca#TapifruiwgQLj9#0.41#889#fruits#Simply Fresh
+Tapioca#TapifruiZ6Igg3#0.41#655#fruits#Off the Vine
+Tavola#Tavofrui0k9XOt#1.16#938#fruits#TriCounty Produce
+Tavola#Tavofrui8DuRxL#1.08#979#fruits#Simply Fresh
+Tavola#TavofruiNZEuJZ#1.16#215#fruits#Off the Vine
+Tea#TeafruiL0357s#1.11#516#fruits#TriCounty Produce
+Tea#TeafruiD5soTf#1.13#970#fruits#Simply Fresh
+Tea#TeafruiOWq4oO#1.19#357#fruits#Off the Vine
+Ugli Fruit#UglifruipKNCpf#0.24#501#fruits#TriCounty Produce
+Ugli Fruit#UglifruifbDrzc#0.24#642#fruits#Simply Fresh
+Ugli Fruit#Uglifruiwx8or4#0.24#280#fruits#Off the Vine
+Vegetable Brain#VegefruieXLBoc#0.73#355#fruits#TriCounty Produce
+Vegetable Brain#Vegefruik5FSdl#0.71#498#fruits#Simply Fresh
+Vegetable Brain#VegefruiKBfzN0#0.72#453#fruits#Off the Vine
+White Walnut#Whitfruit3oVHL#0.30#501#fruits#TriCounty Produce
+White Walnut#WhitfruiHygydw#0.30#913#fruits#Simply Fresh
+White Walnut#WhitfruieNtplo#0.30#401#fruits#Off the Vine
+Wood Apple#WoodfruijVPRqA#0.68#501#fruits#TriCounty Produce
+Wood Apple#Woodfrui4Zk69T#0.68#616#fruits#Simply Fresh
+Wood Apple#WoodfruiuSLHZK#0.70#474#fruits#Off the Vine
+Yellow Horn#Yellfrui5igjjf#1.18#729#fruits#TriCounty Produce
+Yellow Horn#Yellfrui0DiPqa#1.13#517#fruits#Simply Fresh
+Yellow Horn#Yellfrui0ljvqC#1.14#853#fruits#Off the Vine
+Yellow Sapote#YellfruilGmCfq#0.93#204#fruits#TriCounty Produce
+Yellow Sapote#Yellfrui4J2mke#0.88#269#fruits#Simply Fresh
+Yellow Sapote#Yellfrui6PuXaL#0.86#575#fruits#Off the Vine
+Ylang-ylang#Ylanfrui3rmByO#0.76#429#fruits#TriCounty Produce
+Ylang-ylang#YlanfruiA80Nkq#0.76#886#fruits#Simply Fresh
+Ylang-ylang#YlanfruinUEm5d#0.72#747#fruits#Off the Vine
+Zapote Blanco#ZapofruisZ5sMA#0.67#428#fruits#TriCounty Produce
+Zapote Blanco#ZapofruilKxl7N#0.65#924#fruits#Simply Fresh
+Zapote Blanco#ZapofruiAe6Eu1#0.68#255#fruits#Off the Vine
+Zulu Nut#Zulufrui469K4k#0.71#445#fruits#TriCounty Produce
+Zulu Nut#ZulufruiWbz6vU#0.71#653#fruits#Simply Fresh
+Zulu Nut#Zulufrui0LJnWK#0.71#858#fruits#Off the Vine
+Artichoke#ArtivegeIuqmS4#0.71#282#vegetables#The Pantry
+Artichoke#Artivegebljjnf#0.69#66#vegetables#TriCounty Produce
+Artichoke#ArtivegeTa2lcF#0.70#618#vegetables#Off the Vine
+Asparagus#AspavegezC0cDl#0.23#70#vegetables#The Pantry
+Asparagus#AspavegeM1q5Kt#0.24#546#vegetables#TriCounty Produce
+Asparagus#AspavegeXWbCb8#0.24#117#vegetables#Off the Vine
+Basil#Basivegev08fzf#0.31#213#vegetables#The Pantry
+Basil#BasivegeF3Uha7#0.29#651#vegetables#TriCounty Produce
+Basil#BasivegeqR8SHC#0.31#606#vegetables#Off the Vine
+Bean#BeanvegegCFUOp#0.27#794#vegetables#The Pantry
+Bean#BeanvegeqMSEVq#0.27#468#vegetables#TriCounty Produce
+Bean#Beanvege4IGUwX#0.27#463#vegetables#Off the Vine
+Beet#BeetvegedEv4Ic#0.35#120#vegetables#The Pantry
+Beet#Beetvegegi1bz1#0.35#540#vegetables#TriCounty Produce
+Beet#BeetvegemztZcN#0.36#386#vegetables#Off the Vine
+Blackeyed Pea#Blacvege3TPldr#0.86#133#vegetables#The Pantry
+Blackeyed Pea#Blacvege3Zqnep#0.88#67#vegetables#TriCounty Produce
+Blackeyed Pea#Blacvege3khffZ#0.90#790#vegetables#Off the Vine
+Cabbage#CabbvegeY0c4Fw#0.82#726#vegetables#The Pantry
+Cabbage#CabbvegeoaK7Co#0.85#439#vegetables#TriCounty Produce
+Cabbage#CabbvegeVvO646#0.82#490#vegetables#Off the Vine
+Carrot#CarrvegeEbI0sw#0.45#717#vegetables#The Pantry
+Carrot#CarrvegeEZndWL#0.49#284#vegetables#TriCounty Produce
+Carrot#CarrvegewUkHao#0.47#122#vegetables#Off the Vine
+Cauliflower#Caulvege1CPeNG#0.68#756#vegetables#The Pantry
+Cauliflower#CaulvegedrPqib#0.66#269#vegetables#TriCounty Produce
+Cauliflower#CaulvegeT6cka8#0.65#728#vegetables#Off the Vine
+Chayote#ChayvegePRReGE#0.14#233#vegetables#The Pantry
+Chayote#Chayvegep058f7#0.14#88#vegetables#TriCounty Produce
+Chayote#ChayvegeoxO40S#0.14#611#vegetables#Off the Vine
+Corn#CornvegeukXkv6#0.72#632#vegetables#The Pantry
+Corn#CornvegePnPREC#0.72#609#vegetables#TriCounty Produce
+Corn#CornvegeO0GwoQ#0.70#664#vegetables#Off the Vine
+Cucumber#CucuvegeEqQeA7#0.94#499#vegetables#The Pantry
+Cucumber#CucuvegewmKbJ1#0.94#738#vegetables#TriCounty Produce
+Cucumber#CucuvegeUW6JaA#0.94#565#vegetables#Off the Vine
+Cantaloupe#CantvegeIHs9vJ#0.66#411#vegetables#The Pantry
+Cantaloupe#CantvegeEaDdST#0.66#638#vegetables#TriCounty Produce
+Cantaloupe#CantvegewWQEa0#0.64#682#vegetables#Off the Vine
+Carraway#CarrvegewuL4Ma#0.32#740#vegetables#The Pantry
+Carraway#CarrvegeyiWfBj#0.32#265#vegetables#TriCounty Produce
+Carraway#CarrvegeMjb1i9#0.31#732#vegetables#Off the Vine
+Celeriac#CelevegeoTBicd#0.74#350#vegetables#The Pantry
+Celeriac#CelevegeCNABoZ#0.70#261#vegetables#TriCounty Produce
+Celeriac#Celevege9LUeww#0.70#298#vegetables#Off the Vine
+Celery#Celevegej40ZCc#0.59#740#vegetables#The Pantry
+Celery#CelevegerYlVRy#0.58#734#vegetables#TriCounty Produce
+Celery#Celevege67eimC#0.58#619#vegetables#Off the Vine
+Chervil#ChervegeuH4Dge#0.09#502#vegetables#The Pantry
+Chervil#Chervegea1OyKO#0.09#299#vegetables#TriCounty Produce
+Chervil#Chervegeq56gMO#0.09#474#vegetables#Off the Vine
+Chicory#Chicvege79qoQ8#0.09#709#vegetables#The Pantry
+Chicory#ChicvegeTSVBQq#0.10#477#vegetables#TriCounty Produce
+Chicory#Chicvege6qpcyi#0.10#282#vegetables#Off the Vine
+Chinese Cabbage#ChinvegeFNsSRn#0.78#408#vegetables#The Pantry
+Chinese Cabbage#Chinvege2ldNr3#0.80#799#vegetables#TriCounty Produce
+Chinese Cabbage#ChinvegeK3R2Td#0.80#180#vegetables#Off the Vine
+Chinese Beans#ChinvegebxbyPy#0.45#654#vegetables#The Pantry
+Chinese Beans#ChinvegewKGwgx#0.45#206#vegetables#TriCounty Produce
+Chinese Beans#ChinvegevVjzC0#0.47#643#vegetables#Off the Vine
+Chines Kale#ChinvegeCfdkss#0.70#239#vegetables#The Pantry
+Chines Kale#Chinvege6V6Dne#0.65#548#vegetables#TriCounty Produce
+Chines Kale#ChinvegeB7vE3x#0.66#380#vegetables#Off the Vine
+Chinese Radish#ChinvegeXcM4eq#0.22#190#vegetables#The Pantry
+Chinese Radish#ChinvegeTdUBqN#0.22#257#vegetables#TriCounty Produce
+Chinese Radish#ChinvegeMXMms8#0.22#402#vegetables#Off the Vine
+Chinese Mustard#ChinvegeRDdpdl#0.33#149#vegetables#The Pantry
+Chinese Mustard#ChinvegeABDhNd#0.32#320#vegetables#TriCounty Produce
+Chinese Mustard#Chinvege8NPwa2#0.34#389#vegetables#Off the Vine
+Cilantro#CilavegeQXBEsW#0.60#674#vegetables#The Pantry
+Cilantro#CilavegeRgjkUG#0.60#355#vegetables#TriCounty Produce
+Cilantro#CilavegelT2msu#0.59#464#vegetables#Off the Vine
+Collard#CollvegesTGGNw#0.32#745#vegetables#The Pantry
+Collard#CollvegeAwdor5#0.32#124#vegetables#TriCounty Produce
+Collard#CollvegeQe900L#0.30#796#vegetables#Off the Vine
+Coriander#CorivegeXxp4xY#0.26#560#vegetables#The Pantry
+Coriander#Corivege9xBAT0#0.27#321#vegetables#TriCounty Produce
+Coriander#CorivegeCfNjBx#0.27#709#vegetables#Off the Vine
+Dandelion#DandvegeJNcnbr#0.11#285#vegetables#The Pantry
+Dandelion#DandvegeGwBkHZ#0.11#733#vegetables#TriCounty Produce
+Dandelion#DandvegeZfwVqn#0.11#57#vegetables#Off the Vine
+Daikon Radish#DaikvegeHHsd7M#0.61#743#vegetables#The Pantry
+Daikon Radish#DaikvegeIu17yC#0.62#459#vegetables#TriCounty Produce
+Daikon Radish#DaikvegePzFjqf#0.63#296#vegetables#Off the Vine
+Eggplant#EggpvegeKJtydN#0.55#200#vegetables#The Pantry
+Eggplant#EggpvegeQMKrNs#0.53#208#vegetables#TriCounty Produce
+Eggplant#EggpvegeN0WnSo#0.51#761#vegetables#Off the Vine
+English Pea#Englvegea1ytIn#0.40#457#vegetables#The Pantry
+English Pea#EnglvegerU9Vty#0.37#263#vegetables#TriCounty Produce
+English Pea#EnglvegeCmkd3y#0.39#430#vegetables#Off the Vine
+Fennel#Fennvegebz2UM7#0.76#545#vegetables#The Pantry
+Fennel#FennvegeQzjtZ3#0.78#795#vegetables#TriCounty Produce
+Fennel#FennvegeXSrW61#0.75#79#vegetables#Off the Vine
+Garlic#GarlvegesR2yel#0.76#478#vegetables#The Pantry
+Garlic#GarlvegeEQvt8W#0.77#349#vegetables#TriCounty Produce
+Garlic#GarlvegedljBdK#0.80#708#vegetables#Off the Vine
+Ginger#GingvegeMNiTc2#0.88#563#vegetables#The Pantry
+Ginger#Gingvegeq366Sn#0.89#738#vegetables#TriCounty Produce
+Ginger#GingvegeznyyVj#0.89#598#vegetables#Off the Vine
+Horseradish#HorsvegemSwISt#0.12#622#vegetables#The Pantry
+Horseradish#HorsvegetCOS0x#0.11#279#vegetables#TriCounty Produce
+Horseradish#Horsvegew6XXaS#0.12#478#vegetables#Off the Vine
+Japanese Eggplant#JapavegeTdKDCL#0.57#539#vegetables#The Pantry
+Japanese Eggplant#JapavegevsJfGa#0.58#782#vegetables#TriCounty Produce
+Japanese Eggplant#JapavegeCIrIxd#0.57#777#vegetables#Off the Vine
+Jerusalem Artichoke#Jeruvege928cr0#0.13#231#vegetables#The Pantry
+Jerusalem Artichoke#JeruvegeC2v086#0.14#123#vegetables#TriCounty Produce
+Jerusalem Artichoke#JeruvegeehCYzi#0.14#196#vegetables#Off the Vine
+Jicama#JicavegeRWYj9n#0.75#79#vegetables#The Pantry
+Jicama#JicavegeGk5LKH#0.71#292#vegetables#TriCounty Produce
+Jicama#JicavegeUjpaX1#0.70#308#vegetables#Off the Vine
+Kale#Kalevegext6RNT#0.55#765#vegetables#The Pantry
+Kale#KalevegeFsp17B#0.53#107#vegetables#TriCounty Produce
+Kale#KalevegeAffBTS#0.57#573#vegetables#Off the Vine
+Kiwifruit#KiwivegeloZBKJ#0.60#769#vegetables#The Pantry
+Kiwifruit#KiwivegenCQAHw#0.59#307#vegetables#TriCounty Produce
+Kiwifruit#Kiwivege0Gi3P2#0.59#235#vegetables#Off the Vine
+Kohlrabi#KohlvegeJFKZDl#0.26#406#vegetables#The Pantry
+Kohlrabi#Kohlvege32UTAj#0.28#613#vegetables#TriCounty Produce
+Kohlrabi#KohlvegejNQC1M#0.28#326#vegetables#Off the Vine
+Leek#Leekvege5iaFtg#0.70#580#vegetables#The Pantry
+Leek#Leekvegei9Wxbz#0.68#188#vegetables#TriCounty Produce
+Leek#LeekvegewY4mAc#0.70#473#vegetables#Off the Vine
+Lettuce#LettvegesK9wDR#0.55#716#vegetables#The Pantry
+Lettuce#LettvegeWzMyCM#0.57#83#vegetables#TriCounty Produce
+Lettuce#LettvegeHgfGG8#0.56#268#vegetables#Off the Vine
+Melons#Melovege6t93WF#0.11#252#vegetables#The Pantry
+Melons#Melovegeq9kz7T#0.12#558#vegetables#TriCounty Produce
+Melons#Melovege9kLTXN#0.12#382#vegetables#Off the Vine
+Mushroom#MushvegeSq53h8#0.59#365#vegetables#The Pantry
+Mushroom#Mushvegedq6lYP#0.59#444#vegetables#TriCounty Produce
+Mushroom#Mushvege8o27D2#0.55#467#vegetables#Off the Vine
+Okra#OkravegeTszQSL#0.55#62#vegetables#The Pantry
+Okra#OkravegeJBWmfh#0.58#165#vegetables#TriCounty Produce
+Okra#OkravegeD6tF9n#0.55#77#vegetables#Off the Vine
+Onion#OniovegejwimQo#0.80#186#vegetables#The Pantry
+Onion#OniovegeUOwwks#0.80#417#vegetables#TriCounty Produce
+Onion#OniovegezcRDrc#0.80#435#vegetables#Off the Vine
+Oregano#OregvegetlU7Ez#0.71#119#vegetables#The Pantry
+Oregano#Oregvege9h9ZKy#0.70#173#vegetables#TriCounty Produce
+Oregano#OregvegebXr0PJ#0.70#773#vegetables#Off the Vine
+Parsley#ParsvegeXFEjjN#0.83#502#vegetables#The Pantry
+Parsley#ParsvegejAg5C4#0.80#454#vegetables#TriCounty Produce
+Parsley#ParsvegehAtH2H#0.84#523#vegetables#Off the Vine
+Parsnip#Parsvegee9Lp6D#0.46#626#vegetables#The Pantry
+Parsnip#ParsvegeSxXHSA#0.47#411#vegetables#TriCounty Produce
+Parsnip#Parsvegea0stPf#0.44#403#vegetables#Off the Vine
+Pea#Peavegecq4SxR#0.18#342#vegetables#The Pantry
+Pea#Peavege46Gdp9#0.18#255#vegetables#TriCounty Produce
+Pea#Peavegeov1gc5#0.18#251#vegetables#Off the Vine
+Pepper#PeppvegeUcBYRp#0.33#52#vegetables#The Pantry
+Pepper#PeppvegeB60btP#0.35#107#vegetables#TriCounty Produce
+Pepper#PeppvegeG4tP3e#0.34#481#vegetables#Off the Vine
+Pigeon Pea#Pigevegec5bAtm#0.94#391#vegetables#The Pantry
+Pigeon Pea#Pigevegeb93eLi#0.91#447#vegetables#TriCounty Produce
+Pigeon Pea#PigevegejEBDRa#0.89#259#vegetables#Off the Vine
+Irish Potato#IrisvegeJNQqby#0.72#355#vegetables#The Pantry
+Irish Potato#Irisvegewq1PLd#0.72#601#vegetables#TriCounty Produce
+Irish Potato#IrisvegeAfFLdO#0.68#740#vegetables#Off the Vine
+Pumpkin#PumpvegeiYsPR8#0.25#776#vegetables#The Pantry
+Pumpkin#PumpvegelqP1Kh#0.25#189#vegetables#TriCounty Produce
+Pumpkin#Pumpvegeb3nQU5#0.26#207#vegetables#Off the Vine
+Radish#RadivegeNwwSBJ#0.16#613#vegetables#The Pantry
+Radish#Radivege0tIBnL#0.16#779#vegetables#TriCounty Produce
+Radish#RadivegeNLqJCf#0.16#731#vegetables#Off the Vine
+Rhubarb#RhubvegeREfOti#0.12#301#vegetables#The Pantry
+Rhubarb#Rhubvege4Jc3b7#0.12#557#vegetables#TriCounty Produce
+Rhubarb#RhubvegeaXqF7H#0.12#378#vegetables#Off the Vine
+Rosemary#Rosevege16QStc#0.73#380#vegetables#The Pantry
+Rosemary#RosevegeNf6Oem#0.75#622#vegetables#TriCounty Produce
+Rosemary#RosevegeFgsOyN#0.74#631#vegetables#Off the Vine
+Rutabaga#RutavegecUYfQ3#0.55#676#vegetables#The Pantry
+Rutabaga#RutavegejOG5DF#0.55#273#vegetables#TriCounty Produce
+Rutabaga#RutavegewEVjzV#0.53#452#vegetables#Off the Vine
+Salsify#SalsvegeViS9HF#0.11#537#vegetables#The Pantry
+Salsify#Salsvegemd3HAL#0.11#753#vegetables#TriCounty Produce
+Salsify#SalsvegeuRCnmq#0.10#787#vegetables#Off the Vine
+Savory#Savovegee4DRWl#0.21#456#vegetables#The Pantry
+Savory#SavovegerZ90Xm#0.21#642#vegetables#TriCounty Produce
+Savory#Savovegeje7yy7#0.22#328#vegetables#Off the Vine
+Sesame#Sesavege4NAWZE#0.84#54#vegetables#The Pantry
+Sesame#SesavegeMTc9IN#0.84#458#vegetables#TriCounty Produce
+Sesame#SesavegegOwAjo#0.83#125#vegetables#Off the Vine
+Shallots#ShalvegeUO2pDO#0.26#599#vegetables#The Pantry
+Shallots#ShalvegeY1sekb#0.27#647#vegetables#TriCounty Produce
+Shallots#ShalvegeSDC8VY#0.27#369#vegetables#Off the Vine
+Sugar Snap Peas#SugavegepUZDTl#0.47#308#vegetables#The Pantry
+Sugar Snap Peas#Sugavege1XyzNH#0.48#205#vegetables#TriCounty Produce
+Sugar Snap Peas#SugavegeJuaG7f#0.46#348#vegetables#Off the Vine
+Soybean#SoybvegeqxSVRL#0.70#639#vegetables#The Pantry
+Soybean#SoybvegezEMjOG#0.68#423#vegetables#TriCounty Produce
+Soybean#SoybvegebanSFq#0.67#268#vegetables#Off the Vine
+Spaghetti Squash#SpagvegeMNO1yC#0.12#753#vegetables#The Pantry
+Spaghetti Squash#SpagvegeilpUaD#0.13#604#vegetables#TriCounty Produce
+Spaghetti Squash#SpagvegeAOoZNX#0.13#431#vegetables#Off the Vine
+Spinach#SpinvegeegXXou#0.10#742#vegetables#The Pantry
+Spinach#SpinvegeVcqXL6#0.11#708#vegetables#TriCounty Produce
+Spinach#SpinvegetZ26DN#0.11#625#vegetables#Off the Vine
+Sweet Potato#SweevegepNDQWb#0.94#720#vegetables#The Pantry
+Sweet Potato#Sweevegepnw7Tm#0.90#377#vegetables#TriCounty Produce
+Sweet Potato#Sweevegeyk0C82#0.89#242#vegetables#Off the Vine
+Swiss Chard#SwisvegeksalTA#0.54#545#vegetables#The Pantry
+Swiss Chard#SwisvegeKm2Kze#0.54#472#vegetables#TriCounty Produce
+Swiss Chard#SwisvegehteuMk#0.56#142#vegetables#Off the Vine
+Taro#Tarovege3fpGV6#0.87#155#vegetables#The Pantry
+Taro#TarovegerZkmof#0.86#371#vegetables#TriCounty Produce
+Taro#TarovegeXKPuzc#0.89#443#vegetables#Off the Vine
+Tarragon#TarrvegeCzVC6U#0.18#491#vegetables#The Pantry
+Tarragon#TarrvegesIkEfS#0.17#65#vegetables#TriCounty Produce
+Tarragon#TarrvegerZsKFP#0.18#180#vegetables#Off the Vine
+Thyme#Thymvege8Rv72c#0.41#442#vegetables#The Pantry
+Thyme#ThymvegeJoUdQS#0.42#237#vegetables#TriCounty Produce
+Thyme#ThymvegeRck5uO#0.43#491#vegetables#Off the Vine
+Tomato#Tomavegey0NHGK#0.31#60#vegetables#The Pantry
+Tomato#TomavegeKAjRUn#0.30#630#vegetables#TriCounty Produce
+Tomato#TomavegePZOHlH#0.30#70#vegetables#Off the Vine
+Turnip#TurnvegeRVQiV5#0.44#580#vegetables#The Pantry
+Turnip#TurnvegeVjIX9D#0.45#743#vegetables#TriCounty Produce
+Turnip#TurnvegelFhvuJ#0.44#219#vegetables#Off the Vine
+Watercress#WatevegelwzPLQ#0.54#230#vegetables#The Pantry
+Watercress#Watevege8oeDCT#0.54#774#vegetables#TriCounty Produce
+Watercress#Watevegexr8L1t#0.55#185#vegetables#Off the Vine
+Watermelon#WatevegeL83MRH#0.19#698#vegetables#The Pantry
+Watermelon#WatevegeR2S4Dq#0.21#488#vegetables#TriCounty Produce
+Watermelon#WatevegepFPXQu#0.21#439#vegetables#Off the Vine
+Kamote#KamovegegdON75#0.13#218#vegetables#The Pantry
+Kamote#KamovegevupDBf#0.13#98#vegetables#TriCounty Produce
+Kamote#KamovegeSQX7IA#0.14#703#vegetables#Off the Vine
+Alogbati#AlogvegeB1WaJU#0.41#775#vegetables#The Pantry
+Alogbati#AlogvegeVr5cPP#0.40#789#vegetables#TriCounty Produce
+Alogbati#AlogvegeyTUQzy#0.40#416#vegetables#Off the Vine
+Ampalaya#AmpavegemR9fSd#0.85#107#vegetables#The Pantry
+Ampalaya#AmpavegeJDu9Im#0.90#676#vegetables#TriCounty Produce
+Ampalaya#AmpavegepL8GH5#0.86#728#vegetables#Off the Vine
+Dahon ng sili#Dahovege6X9grk#0.11#369#vegetables#The Pantry
+Dahon ng sili#DahovegeiHZjQT#0.11#141#vegetables#TriCounty Produce
+Dahon ng sili#DahovegeoCDAH8#0.12#517#vegetables#Off the Vine
+Gabi#GabivegeVm4Xk3#0.44#396#vegetables#The Pantry
+Gabi#Gabivegeu6woqK#0.42#722#vegetables#TriCounty Produce
+Gabi#GabivegezcA7q1#0.42#394#vegetables#Off the Vine
+Kabute#Kabuvege6Tqrif#0.16#123#vegetables#The Pantry
+Kabute#KabuvegeA3uYdG#0.15#183#vegetables#TriCounty Produce
+Kabute#KabuvegeXW6ZiI#0.16#624#vegetables#Off the Vine
+Kamoteng Kahoy#KamovegeAdW37X#0.42#782#vegetables#The Pantry
+Kamoteng Kahoy#KamovegetFlqpC#0.42#515#vegetables#TriCounty Produce
+Kamoteng Kahoy#KamovegeMvxoLn#0.40#166#vegetables#Off the Vine
+Kangkong#KangvegeSFTvEz#0.35#759#vegetables#The Pantry
+Kangkong#KangvegeRLR6gL#0.34#695#vegetables#TriCounty Produce
+Kangkong#Kangvege9BFo14#0.35#783#vegetables#Off the Vine
+Labanos#Labavege3qrWJL#0.94#514#vegetables#The Pantry
+Labanos#LabavegekgVWDH#0.89#210#vegetables#TriCounty Produce
+Labanos#LabavegeiVPgMx#0.89#207#vegetables#Off the Vine
+Labong#LabovegeX3O8yz#0.85#722#vegetables#The Pantry
+Labong#LabovegeI1wSEs#0.87#472#vegetables#TriCounty Produce
+Labong#LabovegeOPiQht#0.85#740#vegetables#Off the Vine
+Malunggay#MaluvegeHkwAFm#0.30#252#vegetables#The Pantry
+Malunggay#Maluvegez6TiSY#0.30#245#vegetables#TriCounty Produce
+Malunggay#MaluvegewzY37D#0.31#405#vegetables#Off the Vine
+Munggo#MungvegeqeuwGw#0.25#362#vegetables#The Pantry
+Munggo#MungvegeNhqWvL#0.26#360#vegetables#TriCounty Produce
+Munggo#MungvegeGxNxQC#0.25#555#vegetables#Off the Vine
+Pechay#PechvegezDeHFZ#0.36#401#vegetables#The Pantry
+Pechay#Pechvegehi4Fcx#0.35#723#vegetables#TriCounty Produce
+Pechay#Pechvege8Pq8Eo#0.36#141#vegetables#Off the Vine
+Sigarilyas#SigavegeMJrtlV#0.88#335#vegetables#The Pantry
+Sigarilyas#SigavegeLhsoOB#0.87#768#vegetables#TriCounty Produce
+Sigarilyas#SigavegeS6RJcA#0.93#356#vegetables#Off the Vine
+Sitaw#Sitavege0hMi9z#0.65#153#vegetables#The Pantry
+Sitaw#Sitavegeez1g6N#0.67#561#vegetables#TriCounty Produce
+Sitaw#Sitavege0BCNeF#0.66#674#vegetables#Off the Vine
+Talong#TalovegevZjVK6#0.10#530#vegetables#The Pantry
+Talong#TalovegexX4MRw#0.09#305#vegetables#TriCounty Produce
+Talong#TalovegeO3U2ze#0.10#126#vegetables#Off the Vine
+Toge#TogevegeYelJUw#0.54#449#vegetables#The Pantry
+Toge#Togevegeilr1xK#0.54#274#vegetables#TriCounty Produce
+Toge#Togevegesvjnyn#0.51#316#vegetables#Off the Vine
+Ube#UbevegeoPnxvb#0.56#397#vegetables#The Pantry
+Ube#Ubevege2CNyve#0.55#450#vegetables#TriCounty Produce
+Ube#UbevegeC43sVj#0.55#263#vegetables#Off the Vine
+Upo#UpovegecOGRqC#0.22#404#vegetables#The Pantry
+Upo#Upovegekjl2wl#0.22#541#vegetables#TriCounty Produce
+Upo#UpovegemTTTwI#0.23#459#vegetables#Off the Vine
+Edamame#EdamvegeVYtk8z#0.79#296#vegetables#The Pantry
+Edamame#Edamvege608vXi#0.78#700#vegetables#TriCounty Produce
+Edamame#Edamvege1jiqGY#0.75#115#vegetables#Off the Vine
+Hairy melon#HairvegeFYFHIw#0.71#789#vegetables#The Pantry
+Hairy melon#HairvegeS7AAqI#0.72#302#vegetables#TriCounty Produce
+Hairy melon#HairvegeO6WJHL#0.72#444#vegetables#Off the Vine
+Burdock#BurdvegeyLstLV#0.56#761#vegetables#The Pantry
+Burdock#BurdvegeZsqAjT#0.56#582#vegetables#TriCounty Produce
+Burdock#BurdvegeycF7mo#0.55#566#vegetables#Off the Vine
+Snake gourd#SnakvegesfHGvt#0.92#626#vegetables#The Pantry
+Snake gourd#SnakvegedlNiBk#0.92#669#vegetables#TriCounty Produce
+Snake gourd#Snakvegec5n1UM#0.92#143#vegetables#Off the Vine
+Wasabi#Wasavege5P5pZp#0.67#751#vegetables#The Pantry
+Wasabi#Wasavege6EEE9r#0.68#559#vegetables#TriCounty Produce
+Wasabi#Wasavege1ve7TY#0.65#61#vegetables#Off the Vine
+Yam#YamvegeRN9ONH#0.57#438#vegetables#The Pantry
+Yam#YamvegeWjdzeA#0.56#564#vegetables#TriCounty Produce
+Yam#YamvegeI1AnyI#0.56#456#vegetables#Off the Vine
+Apple Fritters#AppldessDj96hw#6.12#16#desserts#Mom's Kitchen
+Apple Fritters#AppldessrN1kvM#6.06#7#desserts#The Baking Pan
+Banana Split#Banadess7tpjkJ#10.86#10#desserts#Mom's Kitchen
+Banana Split#Banadessfif758#11.07#14#desserts#The Baking Pan
+Blueberry Boy Bait#BluedesseX2LVU#3.72#16#desserts#Mom's Kitchen
+Blueberry Boy Bait#Bluedess9zLhaH#3.93#9#desserts#The Baking Pan
+Candied Cranberries#CanddessjW92p3#1.77#9#desserts#Mom's Kitchen
+Candied Cranberries#CanddesskhtVoQ#1.72#0#desserts#The Baking Pan
+Daiquiri Souffle#DaiqdessebnYcy#9.54#15#desserts#Mom's Kitchen
+Daiquiri Souffle#DaiqdessfM1DnX#9.72#6#desserts#The Baking Pan
+Bananas Flambe#BanadesscczumD#6.94#12#desserts#Mom's Kitchen
+Bananas Flambe#Banadess8qNfxd#7.07#16#desserts#The Baking Pan
+Pie, Apple#Pie,desshcSHhT#7.88#11#desserts#Mom's Kitchen
+Pie, Apple#Pie,dessTbiwDp#7.88#15#desserts#The Baking Pan
+Pie, Pumpkin#Pie,desswhPBPB#6.00#20#desserts#Mom's Kitchen
+Pie, Pumpkin#Pie,dessDg3NWl#6.24#19#desserts#The Baking Pan
+Pie, Blueberry#Pie,dessw9VdgD#2.14#3#desserts#Mom's Kitchen
+Pie, Blueberry#Pie,dessiSjZKD#2.12#1#desserts#The Baking Pan
+Pie, Pecan#Pie,dess2NqhNR#12.70#20#desserts#Mom's Kitchen
+Pie, Pecan#Pie,dessB1LfcE#12.33#12#desserts#The Baking Pan
+Pie, Cranberry Apple#Pie,dess1mL7IS#10.16#7#desserts#Mom's Kitchen
+Pie, Cranberry Apple#Pie,dessmDhkUA#10.16#11#desserts#The Baking Pan
+Pie, Banana Cream#Pie,dessH80DuG#7.35#6#desserts#Mom's Kitchen
+Pie, Banana Cream#Pie,dessf1YvFb#7.08#11#desserts#The Baking Pan
+Pie, Key Lime#Pie,desshtli5N#4.85#2#desserts#Mom's Kitchen
+Pie, Key Lime#Pie,dessMwQkKm#5.13#1#desserts#The Baking Pan
+Pie, Lemon Meringue#Pie,dess9naVkX#3.74#7#desserts#Mom's Kitchen
+Pie, Lemon Meringue#Pie,dessKYcNML#3.67#5#desserts#The Baking Pan
+Pie, Caramel#Pie,dessSUuiIU#2.27#9#desserts#Mom's Kitchen
+Pie, Caramel#Pie,dessvo8uHh#2.33#4#desserts#The Baking Pan
+Pie, Raspberry#Pie,dessUHhMlS#2.36#0#desserts#Mom's Kitchen
+Pie, Raspberry#Pie,dessJflbf5#2.36#2#desserts#The Baking Pan
+Ice Cream, Chocolate#Ice desseXuyxx#1.44#9#desserts#Mom's Kitchen
+Ice Cream, Chocolate#Ice dessASBohf#1.41#13#desserts#The Baking Pan
+Ice Cream, Vanilla#Ice dessYnzbbt#11.92#19#desserts#Mom's Kitchen
+Ice Cream, Vanilla#Ice dessUBBKp8#11.58#10#desserts#The Baking Pan
+Ice Cream, Strawberry#Ice dessfTwKhD#1.90#14#desserts#Mom's Kitchen
+Ice Cream, Strawberry#Ice dessaO9Fxf#1.99#6#desserts#The Baking Pan
+Ice Cream, Rocky Road#Ice dessyIri3P#13.10#20#desserts#Mom's Kitchen
+Ice Cream, Rocky Road#Ice dessZuLr8F#13.48#13#desserts#The Baking Pan
+Ice Cream, Mint Chocolate Chip#Ice dessV1IGG7#5.75#4#desserts#Mom's Kitchen
+Ice Cream, Mint Chocolate Chip#Ice dessX1gEQ4#5.64#1#desserts#The Baking Pan
+Ice Cream Sundae#Ice dessbhlAXt#5.62#11#desserts#Mom's Kitchen
+Ice Cream Sundae#Ice dessByapxl#5.72#16#desserts#The Baking Pan
+Cobbler, Peach#CobbdessYUGeOB#10.14#20#desserts#Mom's Kitchen
+Cobbler, Peach#CobbdessXfEtUK#10.43#16#desserts#The Baking Pan
+Cobbler, Berry-Pecan#Cobbdessx3htak#5.36#12#desserts#Mom's Kitchen
+Cobbler, Berry-Pecan#Cobbdesse4FUVI#5.41#8#desserts#The Baking Pan
+Cobbler, Blueberry#CobbdessbiI0oF#3.78#11#desserts#Mom's Kitchen
+Cobbler, Blueberry#CobbdessMXxbBN#3.57#2#desserts#The Baking Pan
+Cobbler, Cherry#CobbdessNSa8QW#12.58#0#desserts#Mom's Kitchen
+Cobbler, Cherry#CobbdessA1dADa#12.10#10#desserts#The Baking Pan
+Cobbler, Huckleberry#Cobbdess3t6O8d#3.99#18#desserts#Mom's Kitchen
+Cobbler, Huckleberry#CobbdessGI9euK#3.88#0#desserts#The Baking Pan
+Cobbler, Rhubarb#Cobbdess22X40Z#9.54#0#desserts#Mom's Kitchen
+Cobbler, Rhubarb#CobbdessPfnCT0#9.27#18#desserts#The Baking Pan
+Cobbler, Strawberry#CobbdessI78188#12.43#0#desserts#Mom's Kitchen
+Cobbler, Strawberry#CobbdessH3LdgQ#12.20#3#desserts#The Baking Pan
+Cobbler, Zucchini#Cobbdess5rK4dP#11.24#3#desserts#Mom's Kitchen
+Cobbler, Zucchini#Cobbdess4Ez8kS#10.51#10#desserts#The Baking Pan
+Brownies#BrowdessmogdTl#7.62#9#desserts#Mom's Kitchen
+Brownies#Browdess84Qc1z#7.55#9#desserts#The Baking Pan
+Fudge Bar#Fudgdess8iXSyf#11.72#6#desserts#Mom's Kitchen
+Fudge Bar#FudgdessakU1Id#12.29#5#desserts#The Baking Pan
+Cookies, Oatmeal#Cookdessnq9Oya#2.84#15#desserts#Mom's Kitchen
+Cookies, Oatmeal#CookdessBhgp7p#2.68#10#desserts#The Baking Pan
+Cookies, Chocolate Chip#CookdessRVszsZ#12.73#17#desserts#Mom's Kitchen
+Cookies, Chocolate Chip#CookdessSOoHmT#12.26#19#desserts#The Baking Pan
+Cookies, Peanut Butter#Cookdess2UcMI2#7.82#5#desserts#Mom's Kitchen
+Cookies, Peanut Butter#Cookdess1cILme#7.46#20#desserts#The Baking Pan
+Mousse, Chocolate#MousdessDpN4sQ#6.25#20#desserts#Mom's Kitchen
+Mousse, Chocolate#Mousdess8FyFT8#5.96#1#desserts#The Baking Pan
+Mousse, Blueberry Maple#MousdessacwrkO#7.28#7#desserts#Mom's Kitchen
+Mousse, Blueberry Maple#MousdessbiCMFg#7.21#12#desserts#The Baking Pan
+Mousse, Chocolate Banana#MousdessIeW4qz#5.13#2#desserts#Mom's Kitchen
+Mousse, Chocolate Banana#Mousdess1De9oL#5.08#19#desserts#The Baking Pan
+Mousse, Cherry#Mousdesss1bF8H#13.05#20#desserts#Mom's Kitchen
+Mousse, Cherry#Mousdess0ujevx#12.43#1#desserts#The Baking Pan
+Mousse, Eggnog#MousdessZ38hXj#9.07#10#desserts#Mom's Kitchen
+Mousse, Eggnog#Mousdesshs05ST#8.81#8#desserts#The Baking Pan
+Mousse, Strawberry#MousdessHCDlBK#5.58#3#desserts#Mom's Kitchen
+Mousse, Strawberry#MousdessSZ4PyW#5.36#6#desserts#The Baking Pan
+Sherbet, Cantaloupe#Sherdess3DCxUg#3.11#9#desserts#Mom's Kitchen
+Sherbet, Cantaloupe#Sherdesscp2VIz#2.99#7#desserts#The Baking Pan
+Sherbet, Lemon Milk#Sherdess1JVFOS#7.57#9#desserts#Mom's Kitchen
+Sherbet, Lemon Milk#SherdessC865vu#7.57#0#desserts#The Baking Pan
+Sherbet, Orange Crush#Sherdess8W8Mb9#4.32#18#desserts#Mom's Kitchen
+Sherbet, Orange Crush#SherdessxmVJBF#4.16#10#desserts#The Baking Pan
+Sherbet, Blueberry#SherdessFAgxqp#3.46#9#desserts#Mom's Kitchen
+Sherbet, Blueberry#SherdessMPL87u#3.60#6#desserts#The Baking Pan
+Sherbet, Raspberry#Sherdesse86ugA#6.08#1#desserts#Mom's Kitchen
+Sherbet, Raspberry#Sherdesslc1etR#5.85#12#desserts#The Baking Pan
+Sherbet, Strawberry#SherdessFwv09m#4.63#17#desserts#Mom's Kitchen
+Sherbet, Strawberry#SherdessKB0H7q#4.81#20#desserts#The Baking Pan
+Tart, Apple#TartdessrsTyXA#3.35#18#desserts#Mom's Kitchen
+Tart, Apple#Tartdessp7pyiy#3.13#11#desserts#The Baking Pan
+Tart, Almond#TartdessC7FARL#6.62#10#desserts#Mom's Kitchen
+Tart, Almond#Tartdess1V1A1c#6.68#13#desserts#The Baking Pan
+Tart, Blueberry#TartdesssQZRXX#10.28#10#desserts#Mom's Kitchen
+Tart, Blueberry#TartdessUSJSuc#10.28#9#desserts#The Baking Pan
+Tart, Chocolate-Pear#Tartdess2pdOE4#5.67#17#desserts#Mom's Kitchen
+Tart, Chocolate-Pear#TartdessL3aEDd#5.51#9#desserts#The Baking Pan
+Tart, Lemon Fudge#Tartdess9DhZUT#3.88#3#desserts#Mom's Kitchen
+Tart, Lemon Fudge#TartdesshzLOWt#3.96#13#desserts#The Baking Pan
+Tart, Pecan#TartdessvSbXzd#11.80#3#desserts#Mom's Kitchen
+Tart, Pecan#Tartdess6YXJec#11.04#13#desserts#The Baking Pan
+Tart, Pineapple#TartdesseMfJFe#9.01#18#desserts#Mom's Kitchen
+Tart, Pineapple#TartdessA2Wftr#8.44#13#desserts#The Baking Pan
+Tart, Pear#Tartdess4a1BUc#10.09#2#desserts#Mom's Kitchen
+Tart, Pear#TartdessNw8YPG#10.68#5#desserts#The Baking Pan
+Tart, Raspberry#TartdessAVnpP6#6.18#7#desserts#Mom's Kitchen
+Tart, Raspberry#TartdessfVxZFf#5.95#9#desserts#The Baking Pan
+Tart, Strawberry#Tartdess4IUcZW#4.75#8#desserts#Mom's Kitchen
+Tart, Strawberry#Tartdess2BeEDb#4.61#17#desserts#The Baking Pan
+Tart, Raspberry#TartdesshyBd24#1.85#5#desserts#Mom's Kitchen
+Tart, Raspberry#Tartdess5fqxgy#1.94#20#desserts#The Baking Pan
+Trifle, Berry#TrifdessmEkbU2#12.48#19#desserts#Mom's Kitchen
+Trifle, Berry#TrifdessAV9Ix8#12.60#18#desserts#The Baking Pan
+Trifle, American#TrifdesscsdSCd#4.70#17#desserts#Mom's Kitchen
+Trifle, American#TrifdessTArskm#4.35#11#desserts#The Baking Pan
+Trifle, English#TrifdessX87q8T#8.20#9#desserts#Mom's Kitchen
+Trifle, English#Trifdess52l955#8.12#11#desserts#The Baking Pan
+Trifle, Orange#TrifdesslUwxwe#9.74#15#desserts#Mom's Kitchen
+Trifle, Orange#TrifdessFrfCHP#10.22#1#desserts#The Baking Pan
+Trifle, Pumpkin#TrifdessJKFN96#4.72#7#desserts#Mom's Kitchen
+Trifle, Pumpkin#TrifdessMNw4EV#4.95#16#desserts#The Baking Pan
+Trifle, Scottish#TrifdessFa0JdK#13.63#0#desserts#Mom's Kitchen
+Trifle, Scottish#TrifdessAAUQCN#14.03#6#desserts#The Baking Pan
+Trifle, Sherry#TrifdesscuttJg#4.42#5#desserts#Mom's Kitchen
+Trifle, Sherry#TrifdesspRGpfP#4.21#19#desserts#The Baking Pan
+Trifle, Strawberry#TrifdessAd5TpV#3.58#11#desserts#Mom's Kitchen
+Trifle, Strawberry#Trifdess1rtW0A#3.58#3#desserts#The Baking Pan
+Trifle, Scotch Whiskey#Trifdess2zJsGi#5.44#5#desserts#Mom's Kitchen
+Trifle, Scotch Whiskey#TrifdessL8nuI6#5.18#5#desserts#The Baking Pan
+Cheesecake, Amaretto#CheedessOJBqfD#11.89#5#desserts#Mom's Kitchen
+Cheesecake, Amaretto#CheedessVnDf14#11.89#9#desserts#The Baking Pan
+Cheesecake, Apple#Cheedessuks1YK#11.22#15#desserts#Mom's Kitchen
+Cheesecake, Apple#CheedessMYKaKK#11.01#14#desserts#The Baking Pan
+Cheesecake, Apricot#CheedessKUxTYY#12.34#16#desserts#Mom's Kitchen
+Cheesecake, Apricot#CheedessMvB1pr#11.88#18#desserts#The Baking Pan
+Cheesecake, Australian#CheedessQ9WAIn#2.70#9#desserts#Mom's Kitchen
+Cheesecake, Australian#CheedessE6Jyjc#2.53#14#desserts#The Baking Pan
+Cheesecake, Arkansas#CheedessTbqzmw#6.98#9#desserts#Mom's Kitchen
+Cheesecake, Arkansas#CheedesstWJZfC#6.66#5#desserts#The Baking Pan
+Cheesecake, Blueberry#Cheedessyo51KL#8.07#11#desserts#Mom's Kitchen
+Cheesecake, Blueberry#Cheedess4Hz7P4#8.62#5#desserts#The Baking Pan
+Cheesecake, Cherry#CheedessEahRkC#4.40#14#desserts#Mom's Kitchen
+Cheesecake, Cherry#Cheedess3Nx4jZ#4.65#3#desserts#The Baking Pan
+Cheesecake, Cran-Raspberry#CheedessrJsr9i#13.47#20#desserts#Mom's Kitchen
+Cheesecake, Cran-Raspberry#CheedesshcuXCy#14.00#6#desserts#The Baking Pan
+Cheesecake, German Chocolate#CheedesswayvJL#12.03#16#desserts#Mom's Kitchen
+Cheesecake, German Chocolate#CheedessebTAeB#11.58#0#desserts#The Baking Pan
+Cheesecake, Turtle#CheedessLqgeIA#12.19#6#desserts#Mom's Kitchen
+Cheesecake, Turtle#CheedessvyNohA#12.07#19#desserts#The Baking Pan
+Brownies, Apple#BrowdessIDW1Cc#5.44#12#desserts#Mom's Kitchen
+Brownies, Apple#BrowdessyRMrAH#5.14#12#desserts#The Baking Pan
+Brownies, Fudge#BrowdessmIHIFJ#5.19#8#desserts#Mom's Kitchen
+Brownies, Fudge#BrowdessqewJ38#5.10#17#desserts#The Baking Pan
+Brownies, Almond Macaroon#BrowdessniK7QI#10.57#3#desserts#Mom's Kitchen
+Brownies, Almond Macaroon#BrowdessgkXURH#10.36#17#desserts#The Baking Pan
+Brownies, Butterscotch#BrowdesslpA06E#7.16#13#desserts#Mom's Kitchen
+Brownies, Butterscotch#BrowdessK5hofE#7.30#6#desserts#The Baking Pan
+Brownies, Caramel#BrowdessVGfoA8#3.07#3#desserts#Mom's Kitchen
+Brownies, Caramel#Browdess5jvVMM#3.13#11#desserts#The Baking Pan
+Brownies, Cherry#Browdessyoa66A#3.39#17#desserts#Mom's Kitchen
+Brownies, Cherry#BrowdessIg2JuF#3.39#11#desserts#The Baking Pan
+Brownies, Chocolate Chip#Browdessb9dc59#6.18#10#desserts#Mom's Kitchen
+Brownies, Chocolate Chip#BrowdessvW4nOx#6.43#14#desserts#The Baking Pan
+Brownies, Coconut#BrowdessWPHrVR#3.06#15#desserts#Mom's Kitchen
+Brownies, Coconut#BrowdessGVBlML#2.86#11#desserts#The Baking Pan
+Brownies, Cream Cheese#Browdess1OyRay#12.74#4#desserts#Mom's Kitchen
+Brownies, Cream Cheese#Browdess2fRsNv#12.61#19#desserts#The Baking Pan
+Brownies, Fudge Mint#Browdessl7DP7k#11.45#14#desserts#Mom's Kitchen
+Brownies, Fudge Mint#Browdessv70VKQ#11.34#16#desserts#The Baking Pan
+Brownies, Mint Chip#BrowdessDDMvF7#1.81#15#desserts#Mom's Kitchen
+Brownies, Mint Chip#Browdess0j9PBD#1.84#9#desserts#The Baking Pan
+Cake, Angel Food#CakedessEaqGaE#11.18#3#desserts#Mom's Kitchen
+Cake, Angel Food#CakedessJyAyFe#11.18#14#desserts#The Baking Pan
+Cake, Chocolate#CakedessKLXFbn#10.11#7#desserts#Mom's Kitchen
+Cake, Chocolate#CakedessfNP5Hg#9.91#14#desserts#The Baking Pan
+Cake, Carrot#CakedessUTgMoV#4.20#13#desserts#Mom's Kitchen
+Cake, Carrot#CakedessQdkaYg#4.00#3#desserts#The Baking Pan
+Cake, Lemon Blueberry#CakedessepkeEW#11.73#16#desserts#Mom's Kitchen
+Cake, Lemon Blueberry#CakedessHTKyQs#12.42#16#desserts#The Baking Pan
+Cake Triple Fudge#CakedessiZ75lR#7.92#7#desserts#Mom's Kitchen
+Cake Triple Fudge#CakedessWRrSXP#8.00#15#desserts#The Baking Pan
+Cake, Walnut#CakedessveYVXZ#10.83#17#desserts#Mom's Kitchen
+Cake, Walnut#Cakedesse22rT5#11.04#7#desserts#The Baking Pan
+Cake, French Apple#CakedessjA2Kxv#1.95#0#desserts#Mom's Kitchen
+Cake, French Apple#CakedessNBHCk0#1.86#20#desserts#The Baking Pan
+Cake, Fig#CakedessOncX4y#6.82#3#desserts#Mom's Kitchen
+Cake, Fig#CakedessTJtffn#7.08#10#desserts#The Baking Pan
+Cake, Maple#CakedessnoGPRF#3.04#11#desserts#Mom's Kitchen
+Cake, Maple#CakedessfVattM#3.22#4#desserts#The Baking Pan
+Cake, Devil's Food#CakedessiXcDCt#4.73#7#desserts#Mom's Kitchen
+Cake, Devil's Food#CakedessnBZk45#4.82#6#desserts#The Baking Pan
+Cake, Double-Lemon#CakedesskeS0Vd#3.46#9#desserts#Mom's Kitchen
+Cake, Double-Lemon#Cakedess50vx53#3.60#6#desserts#The Baking Pan
+Sorbet, Blackberry#SorbdessQoa0CE#9.88#15#desserts#Mom's Kitchen
+Sorbet, Blackberry#SorbdessqoOYzv#9.78#9#desserts#The Baking Pan

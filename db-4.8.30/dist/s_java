@@ -1,0 +1,8 @@
+#!/bin/sh -
+#	$Id$
+#
+# Build the Java files.
+
+sh s_java_stat		# Create Java stat methods
+sh s_java_swig		# Create core Java API with SWIG
+sh s_java_const		# Create Java constants

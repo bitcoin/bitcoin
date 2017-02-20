@@ -1,0 +1,116 @@
+/*-
+ * See the file LICENSE for redistribution information.
+ *
+ * Copyright (c) 2001-2009 Oracle.  All rights reserved.
+ *
+ * $Id$
+ */
+
+DBPRIVATE
+PREFIX  __rep
+
+INCLUDE #include "db_int.h"
+INCLUDE #include "dbinc/db_page.h"
+INCLUDE #include "dbinc/db_am.h"
+INCLUDE #include "dbinc/log.h"
+INCLUDE #include "dbinc/mp.h"
+INCLUDE #include "dbinc/txn.h"
+INCLUDE
+
+/*
+ * bulk - message for bulk log records or pages
+ */
+BEGIN_MSG bulk		check_length
+ARG	len		u_int32_t
+ARG	lsn		DB_LSN
+ARG	bulkdata	DBT
+END
+
+/*
+ * control - replication control message
+ */
+BEGIN_MSG control	check_length
+ARG	rep_version	u_int32_t
+ARG	log_version	u_int32_t
+ARG	lsn		DB_LSN
+ARG	rectype		u_int32_t
+ARG	gen		u_int32_t
+ARG	msg_sec		u_int32_t
+ARG	msg_nsec	u_int32_t
+ARG	flags		u_int32_t
+END
+
+/*
+ * egen data
+ */
+BEGIN_MSG egen		check_length
+ARG	egen		u_int32_t
+END
+
+/*
+ * file info
+ */
+BEGIN_MSG fileinfo	alloc check_length version
+ARG	pgsize		u_int32_t
+ARG	pgno		db_pgno_t
+ARG	max_pgno	db_pgno_t
+ARG	filenum		u_int32_t
+ARG	finfo_flags	u_int32_t		
+ARG	type		u_int32_t
+ARG	db_flags	u_int32_t
+ARG	uid		DBT
+ARG	info		DBT
+END
+
+/*
+ * grant info - clients send to masters granting a lease.
+ */
+BEGIN_MSG grant_info	check_length
+ARG	msg_sec		u_int32_t
+ARG	msg_nsec	u_int32_t
+END
+
+/*
+ * We do not need to do anything with LOG record data.
+ * It is opaque data to us.
+ */
+
+/*
+ * log request
+ */
+BEGIN_MSG logreq	check_length
+ARG	endlsn		DB_LSN
+END
+
+/*
+ * We do not need to do anything with NEWCLIENT/NEWSITE cdata dbt.
+ * It is user data and the app has to do whatever transformation
+ * it needs to with its own data.
+ */
+/*
+ * newfile version
+ */
+BEGIN_MSG newfile	check_length
+ARG	version		u_int32_t
+END
+
+/*
+ * update - send update information
+ */
+BEGIN_MSG update	alloc check_length version
+ARG	first_lsn	DB_LSN
+ARG	first_vers	u_int32_t
+ARG	num_files	u_int32_t
+END
+
+/*
+ * vote info
+ */
+BEGIN_MSG vote_info	check_length
+ARG	egen		u_int32_t
+ARG	nsites		u_int32_t
+ARG	nvotes		u_int32_t
+ARG	priority	u_int32_t
+ARG	tiebreaker	u_int32_t
+END
+

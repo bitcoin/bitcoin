@@ -1,0 +1,67 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Check to make sure we haven't forgotten to add any interfaces
+# to the Windows libdb.def file.
+
+d=../..
+
+# Test must be run from the top-level directory, not from a test directory.
+[ -f $d/LICENSE ] || {
+	echo 'FAIL: cannot find source distribution directory.'
+	exit 1
+}
+
+f=$d/build_windows/libdb.def
+t1=__1
+t2=__2
+
+exitv=0
+
+sed '/; /d' $f |
+    egrep @ |
+    awk '{print $1}' |
+    sed -e '/^__/d' \
+	-e '/^;/d' |
+    sort > $t1
+
+egrep __P $d/dbinc_auto/ext_prot.in |
+    sed '/^[a-z]/!d' |
+    awk '{print $2}' |
+    sed -e 's/^\*//' \
+	-e '/db_env_set_func_\(free\|malloc\|realloc\)/p' \
+	-e '/db_env_set_func_/d' |
+    sed '/^__/d' | sort > $t2
+
+if cmp -s $t1 $t2 ; then
+	:
+else
+	echo "<<< libdb.def >>> DB include files"
+	diff $t1 $t2
+	echo "FAIL: missing items in libdb.def file."
+	exitv=1
+fi
+
+# Check to make sure we don't have any extras in the libdb.def file.
+sed '/; /d' $f |
+    egrep @ |
+    awk '{print $1}' |
+    sed -e '/__db_global_values/d' |
+    sed -e '/__db_C*/d' > $t1
+
+for i in `cat $t1`; do
+	if egrep $i $d/*/*.c > /dev/null; then
+		:
+	else
+		echo "$f: $i not found in DB sources"
+	fi
+done > $t2
+
+test -s $t2 && {
+	cat $t2
+	echo "FAIL: found unnecessary items in libdb.def file."
+	exitv=1
+}
+
+exit $exitv

@@ -1,0 +1,124 @@
+#!/bin/sh -
+#
+# $Id$
+#
+# Build a program that calls the run-time API configuration functions.
+
+trap 'rm -rf scr030 ; exit 0' 0
+trap 'rm -rf scr030 ; exit 1' 1 2 3 13 15
+
+[ -d ../../dist ] || {
+	echo 'FAIL: unable to find top-level dist directory'
+	exit 1
+}
+
+# Flags to build Java.
+JAVA_INC=/usr/local/diablo-jdk1.5.0/include
+JAVA_FLAGS="-I$JAVA_INC -I$JAVA_INC/linux -I$JAVA_INC/freebsd"
+
+# Configure and build.
+#	$1: config flags
+config()
+{
+	(echo `date`; echo "run: $1: $dir") | tee CONFIGURATION
+
+	../../../dist/configure $1 > config.OUT 2>&1
+	if test $? -ne 0; then
+		echo "$i: FAILED in configure"
+		return 1
+	fi
+
+	if `echo "$1" | grep disable-statistics > /dev/null`; then
+		echo '#define __TEST_DB_NO_STATISTICS 1' >> db_config.h
+	fi
+
+	(echo /^CFLAGS=/ &&
+	# Configure gcc to complain about everything, and make warnings fatal
+	# errors.
+	echo \
+	's/-c /-c -W -Werror -Wall -Wpointer-arith -Wmissing-prototypes /' &&
+	# Warnings are fatal errors, so don't set gcc warning flags for files
+	# where we can't avoid warnings.
+	echo '/^db_server_svc.*: .*db_server_svc.c$/' &&
+	echo '+1s/\$(CFLAGS)/-c \$(CPPFLAGS)/' &&
+	echo '/^db_server_util.*: .*db_server_util.c$/' &&
+	echo '+1s/\$(CFLAGS)/-c \$(CPPFLAGS)/' &&
+	echo '/^db_server_xdr.*: .*db_server_xdr.c$/' &&
+	echo '+1s/\$(CFLAGS)/-c \$(CPPFLAGS)/' &&
+	echo '/^gen_db_server.*: .*gen_db_server.c$/' &&
+	echo '+1s/\$(CFLAGS)/-c \$(CPPFLAGS)/' &&
+	echo '/^db_java_wrap.*: .*db_java_wrap.c$/' &&
+	echo '+1s/\$(CFLAGS)/-c \$(CPPFLAGS)/' &&
+	echo '/^tcl_db_pkg.*: .*tcl_db_pkg.c$/' &&
+	echo '+1s/\$(CFLAGS)/-c \$(CPPFLAGS)/' &&
+	echo w &&
+	echo q) | ed Makefile > /dev/null
+
+	# If we're compiling Java, we'll need to set up the path.
+	echo "$1" | grep enable-java > /dev/null
+	if test $? -eq 0; then
+		(echo /^CPPFLAGS=/ &&
+		echo "s;\$; $JAVA_FLAGS;" &&
+		echo w &&
+		echo q) | ed Makefile > /dev/null
+	fi
+
+	make > mklog 2>&1 && make ex_access >> mklog 2>&1
+	if test $? -ne 0; then
+		echo "$i: FAILED in make"
+		return 1
+	fi
+
+	(echo a; echo b; echo c) | ./ex_access > /dev/null 2>&1
+	return $?
+}
+
+# Run a test.
+#	$1: config flags
+count=0
+r()
+{
+	count=$(expr $count + 1)
+	dir="scr030.$count"
+	(rm -rf $dir && mkdir $dir && cd $dir && config "$1")
+	if test $? -eq 0; then
+		rm -rf $dir
+	else
+		echo "$1: FAILED to build"
+	fi
+}
+
+# Run through all of the standard single options.
+s="\
+--disable-cryptography \
+--disable-hash \
+--disable-largefile \
+--disable-mutexsupport \
+--disable-queue \
+--disable-replication \
+--disable-statistics \
+--disable-verify \
+--enable-compat185 \
+--enable-debug \
+--enable-debug_rop \
+--enable-debug_wop \
+--enable-diagnostic \
+--enable-dump185 \
+--enable-posixmutexes \
+--enable-smallbuild \
+--enable-umrw \
+--with-mutex=UNIX/fcntl \
+--with-mutex=x86/gcc-assembly \
+--with-uniquename=__KEITH__"
+for i in $s; do
+	r "$i --disable-shared"
+done
+
+# Build specific runs of interest.
+r
+r "--disable-static"
+r "--enable-cxx"
+r "--enable-java"
+r "--with-tcl=/usr/local/lib/tcl8.4"
+r "--enable-test --with-tcl=/usr/local/lib/tcl8.4"
+r "--enable-cxx --enable-java --with-tcl=/usr/local/lib/tcl8.4"

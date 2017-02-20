@@ -1,0 +1,75 @@
+#!/bin/sh -
+#	$Id$
+
+# Remove crypto from the DB source tree.
+
+d=..
+
+t=/tmp/__db_a
+trap 'rm -f $t ; exit 0' 0
+trap 'rm -f $t ; exit 1' 1 2 3 13 15
+
+if ! test -d $d/crypto; then
+	echo "s_crypto: no crypto sources found in the source tree."
+	exit 1
+fi
+
+# Remove the crypto.
+rm -rf $d/crypto
+
+# Update the release splash page.
+f=$d/docs/index.html
+chmod 664 $f
+(echo '/DOES/' &&
+ echo 's/DOES/DOES NOT/' &&
+ echo 'w' &&
+ echo 'q') | ed $f
+
+# Win/32.
+f=win_config.in
+chmod 664 $f
+(echo '/#define.HAVE_CRYPTO/' &&
+ echo 'c' &&
+ echo '/* #undef HAVE_CRYPTO */'
+ echo '.' &&
+ echo 'w' &&
+ echo 'q') | ed $f
+
+f=srcfiles.in
+chmod 664 $f
+f=srcfiles.in
+r=`egrep crypto/crypto.c $f | awk 'BEGIN { FS="\t*" } { print $2 }'`
+(echo 'g/^crypto\//d' &&
+ echo '/crypto_stub\.c/' &&
+ echo "s/\$/ $r/" &&
+ echo 'w' &&
+ echo 'q') | ed $f
+
+# Change out crypto/crypto.c for common/crypto_stub.c, remove all other
+# references to crypto files.
+f=win_projects/projects.template.xml
+chmod 664 $f
+(echo '/crypto\/crypto\.c/' &&
+ echo 'c' &&
+ echo '      <file name="common/crypto_stub.c"/>' &&
+ echo '.' &&
+ echo 'g/"crypto\//d' &&
+ echo "s/\$/ $r/" &&
+ echo ',' &&
+ echo 'w' &&
+ echo 'q') | ed $f
+
+ sh ./s_windows
+ sh ./s_windows_dsp
+
+# VxWorks
+f=vx_config.in
+chmod 664 $f
+(echo '/#define.HAVE_CRYPTO/' &&
+ echo 'c' &&
+ echo '/* #undef HAVE_CRYPTO */'
+ echo '.' &&
+ echo 'w' &&
+ echo 'q') | ed $f
+
+ sh ./s_vxworks

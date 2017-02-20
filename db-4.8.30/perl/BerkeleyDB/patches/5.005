@@ -1,0 +1,209 @@
+diff -rc perl5.005.orig/Configure perl5.005/Configure
+*** perl5.005.orig/Configure	Wed Jul 15 08:05:44 1998
+--- perl5.005/Configure	Sun Nov 12 21:30:40 2000
+***************
+*** 234,239 ****
+--- 234,240 ----
+  nm=''
+  nroff=''
+  perl=''
++ perllibs=''
+  pg=''
+  pmake=''
+  pr=''
+***************
+*** 11279,11284 ****
+--- 11280,11293 ----
+  shift
+  extensions="$*"
+  
++ : Remove libraries needed only for extensions
++ : The appropriate ext/Foo/Makefile.PL will add them back in, if
++ : necessary.
++ set X `echo " $libs " | 
++   sed -e 's@ -lndbm @ @' -e 's@ -lgdbm @ @' -e 's@ -ldbm @ @' -e 's@ -ldb @ @'` 
++ shift
++ perllibs="$*"
++ 
+  : Remove build directory name from cppstdin so it can be used from
+  : either the present location or the final installed location.
+  echo " "
+***************
+*** 11804,11809 ****
+--- 11813,11819 ----
+  patchlevel='$patchlevel'
+  path_sep='$path_sep'
+  perl='$perl'
++ perllibs='$perllibs'
+  perladmin='$perladmin'
+  perlpath='$perlpath'
+  pg='$pg'
+diff -rc perl5.005.orig/Makefile.SH perl5.005/Makefile.SH
+*** perl5.005.orig/Makefile.SH	Sun Jul 19 08:06:35 1998
+--- perl5.005/Makefile.SH	Sun Nov 12 21:30:40 2000
+***************
+*** 150,156 ****
+  ext = \$(dynamic_ext) \$(static_ext) \$(nonxs_ext)
+  DYNALOADER = lib/auto/DynaLoader/DynaLoader\$(LIB_EXT)
+  
+! libs = $libs $cryptlib
+  
+  public = perl $suidperl utilities translators
+  
+--- 150,156 ----
+  ext = \$(dynamic_ext) \$(static_ext) \$(nonxs_ext)
+  DYNALOADER = lib/auto/DynaLoader/DynaLoader\$(LIB_EXT)
+  
+! libs = $perllibs $cryptlib
+  
+  public = perl $suidperl utilities translators
+  
+diff -rc perl5.005.orig/lib/ExtUtils/Embed.pm perl5.005/lib/ExtUtils/Embed.pm
+*** perl5.005.orig/lib/ExtUtils/Embed.pm	Wed Jul 22 07:45:02 1998
+--- perl5.005/lib/ExtUtils/Embed.pm	Sun Nov 12 21:30:40 2000
+***************
+*** 194,200 ****
+      @path = $path ? split(/:/, $path) : @INC;
+  
+      push(@potential_libs, @link_args)    if scalar @link_args;
+!     push(@potential_libs, $Config{libs}) if defined $std;
+  
+      push(@mods, static_ext()) if $std;
+  
+--- 194,200 ----
+      @path = $path ? split(/:/, $path) : @INC;
+  
+      push(@potential_libs, @link_args)    if scalar @link_args;
+!     push(@potential_libs, $Config{perllibs}) if defined $std;
+  
+      push(@mods, static_ext()) if $std;
+  
+diff -rc perl5.005.orig/lib/ExtUtils/Liblist.pm perl5.005/lib/ExtUtils/Liblist.pm
+*** perl5.005.orig/lib/ExtUtils/Liblist.pm	Wed Jul 22 07:09:42 1998
+--- perl5.005/lib/ExtUtils/Liblist.pm	Sun Nov 12 21:30:40 2000
+***************
+*** 16,33 ****
+  
+  sub _unix_os2_ext {
+      my($self,$potential_libs, $verbose) = @_;
+!     if ($^O =~ 'os2' and $Config{libs}) { 
+  	# Dynamic libraries are not transitive, so we may need including
+  	# the libraries linked against perl.dll again.
+  
+  	$potential_libs .= " " if $potential_libs;
+! 	$potential_libs .= $Config{libs};
+      }
+      return ("", "", "", "") unless $potential_libs;
+      warn "Potential libraries are '$potential_libs':\n" if $verbose;
+  
+      my($so)   = $Config{'so'};
+!     my($libs) = $Config{'libs'};
+      my $Config_libext = $Config{lib_ext} || ".a";
+  
+  
+--- 16,33 ----
+  
+  sub _unix_os2_ext {
+      my($self,$potential_libs, $verbose) = @_;
+!     if ($^O =~ 'os2' and $Config{perllibs}) { 
+  	# Dynamic libraries are not transitive, so we may need including
+  	# the libraries linked against perl.dll again.
+  
+  	$potential_libs .= " " if $potential_libs;
+! 	$potential_libs .= $Config{perllibs};
+      }
+      return ("", "", "", "") unless $potential_libs;
+      warn "Potential libraries are '$potential_libs':\n" if $verbose;
+  
+      my($so)   = $Config{'so'};
+!     my($libs) = $Config{'perllibs'};
+      my $Config_libext = $Config{lib_ext} || ".a";
+  
+  
+***************
+*** 290,296 ****
+                   $self->{CCFLAS}   || $Config{'ccflags'};
+    @crtls = ( ($dbgqual =~ m-/Debug-i ? $Config{'dbgprefix'} : '')
+                . 'PerlShr/Share' );
+!   push(@crtls, grep { not /\(/ } split /\s+/, $Config{'libs'});
+    push(@crtls, grep { not /\(/ } split /\s+/, $Config{'libc'});
+    # In general, we pass through the basic libraries from %Config unchanged.
+    # The one exception is that if we're building in the Perl source tree, and
+--- 290,296 ----
+                   $self->{CCFLAS}   || $Config{'ccflags'};
+    @crtls = ( ($dbgqual =~ m-/Debug-i ? $Config{'dbgprefix'} : '')
+                . 'PerlShr/Share' );
+!   push(@crtls, grep { not /\(/ } split /\s+/, $Config{'perllibs'});
+    push(@crtls, grep { not /\(/ } split /\s+/, $Config{'libc'});
+    # In general, we pass through the basic libraries from %Config unchanged.
+    # The one exception is that if we're building in the Perl source tree, and
+***************
+*** 598,604 ****
+  =item *
+  
+  If C<$potential_libs> is empty, the return value will be empty.
+! Otherwise, the libraries specified by C<$Config{libs}> (see Config.pm)
+  will be appended to the list of C<$potential_libs>.  The libraries
+  will be searched for in the directories specified in C<$potential_libs>
+  as well as in C<$Config{libpth}>. For each library that is found,  a
+--- 598,604 ----
+  =item *
+  
+  If C<$potential_libs> is empty, the return value will be empty.
+! Otherwise, the libraries specified by C<$Config{perllibs}> (see Config.pm)
+  will be appended to the list of C<$potential_libs>.  The libraries
+  will be searched for in the directories specified in C<$potential_libs>
+  as well as in C<$Config{libpth}>. For each library that is found,  a
+diff -rc perl5.005.orig/lib/ExtUtils/MM_Unix.pm perl5.005/lib/ExtUtils/MM_Unix.pm
+*** perl5.005.orig/lib/ExtUtils/MM_Unix.pm	Tue Jul 14 04:39:12 1998
+--- perl5.005/lib/ExtUtils/MM_Unix.pm	Sun Nov 12 21:30:41 2000
+***************
+*** 2281,2287 ****
+  MAP_STATIC    = ",
+  join(" \\\n\t", reverse sort keys %static), "
+  
+! MAP_PRELIBS   = $Config::Config{libs} $Config::Config{cryptlib}
+  ";
+  
+      if (defined $libperl) {
+--- 2281,2287 ----
+  MAP_STATIC    = ",
+  join(" \\\n\t", reverse sort keys %static), "
+  
+! MAP_PRELIBS   = $Config::Config{perllibs} $Config::Config{cryptlib}
+  ";
+  
+      if (defined $libperl) {
+diff -rc perl5.005.orig/myconfig perl5.005/myconfig
+*** perl5.005.orig/myconfig	Fri Apr  3 01:20:35 1998
+--- perl5.005/myconfig	Sun Nov 12 21:30:41 2000
+***************
+*** 34,40 ****
+    Linker and Libraries:
+      ld='$ld', ldflags ='$ldflags'
+      libpth=$libpth
+!     libs=$libs
+      libc=$libc, so=$so, useshrplib=$useshrplib, libperl=$libperl
+    Dynamic Linking:
+      dlsrc=$dlsrc, dlext=$dlext, d_dlsymun=$d_dlsymun, ccdlflags='$ccdlflags'
+--- 34,40 ----
+    Linker and Libraries:
+      ld='$ld', ldflags ='$ldflags'
+      libpth=$libpth
+!     libs=$perllibs
+      libc=$libc, so=$so, useshrplib=$useshrplib, libperl=$libperl
+    Dynamic Linking:
+      dlsrc=$dlsrc, dlext=$dlext, d_dlsymun=$d_dlsymun, ccdlflags='$ccdlflags'
+diff -rc perl5.005.orig/patchlevel.h perl5.005/patchlevel.h
+*** perl5.005.orig/patchlevel.h	Wed Jul 22 19:22:01 1998
+--- perl5.005/patchlevel.h	Sun Nov 12 21:30:41 2000
+***************
+*** 39,44 ****
+--- 39,45 ----
+   */
+  static	char	*local_patches[] = {
+  	NULL
++ 	,"NODB-1.0 - remove -ldb from core perl binary."
+  	,NULL
+  };
+  
