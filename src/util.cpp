@@ -325,12 +325,12 @@ int LogPrintStr(const std::string &str)
     return ret;
 }
 
+static const std::set<std::string> affirmativeStrings{"", "1", "t", "y", "true", "yes"};
+
 /** Interpret string as boolean, for argument parsing */
 static bool InterpretBool(const std::string& strValue)
 {
-    if (strValue.empty())
-        return true;
-    return (atoi(strValue) != 0);
+    return (affirmativeStrings.count(strValue) != 0);
 }
 
 /** Turn -noX into -X=0 */

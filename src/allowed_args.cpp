@@ -116,7 +116,7 @@ std::string AllowedArgs::helpMessage() const
 // CheckValueFunc functions
 //
 
-static const std::set<char> boolChars{'0', '1'};
+static const std::set<std::string> boolStrings{"", "1", "0", "t", "f", "y", "n", "true", "false", "yes", "no"};
 static const std::set<char> intChars{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 static const std::set<char> amountChars{'.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
@@ -130,9 +130,7 @@ static bool validateString(const std::string& str, const std::set<char>& validCh
 
 static bool optionalBool(const std::string& str)
 {
-    if (str.empty())
-        return true;
-    return validateString(str, boolChars);
+    return (boolStrings.count(str) != 0);
 }
 
 static bool requiredStr(const std::string& str)

@@ -44,13 +44,17 @@ BOOST_AUTO_TEST_CASE(boolarg)
     BOOST_CHECK(!GetBoolArg("-fooo", false));
     BOOST_CHECK(GetBoolArg("-fooo", true));
 
-    ResetArgs("-listen=0");
-    BOOST_CHECK(!GetBoolArg("-listen", false));
-    BOOST_CHECK(!GetBoolArg("-listen", true));
+    for (auto strValue : std::list<std::string>{"0", "f", "n", "false", "no"}) {
+        ResetArgs("-listen=" + strValue);
+        BOOST_CHECK(!GetBoolArg("-listen", false));
+        BOOST_CHECK(!GetBoolArg("-listen", true));
+    }
 
-    ResetArgs("-listen=1");
-    BOOST_CHECK(GetBoolArg("-listen", false));
-    BOOST_CHECK(GetBoolArg("-listen", true));
+    for (auto strValue : std::list<std::string>{"", "1", "t", "y", "true", "yes"}) {
+        ResetArgs("-listen=" + strValue);
+        BOOST_CHECK(GetBoolArg("-listen", false));
+        BOOST_CHECK(GetBoolArg("-listen", true));
+    }
 
     // New 0.6 feature: auto-map -nosomething to !-something:
     ResetArgs("-nolisten");
