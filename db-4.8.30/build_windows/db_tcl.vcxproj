@@ -1,0 +1,248 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{7F3D3EEE-2ABB-4F0F-A2A7-DE88C1989BE1}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>14.0.25431.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>..\build_windows\$(Platform)\Debug\</OutDir>
+    <IntDir>./$(OutDir)db_tcl\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>..\build_windows\$(Platform)\Release\</OutDir>
+    <IntDir>./$(OutDir)db_tcl\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>..\build_windows\$(Platform)\Debug\</OutDir>
+    <IntDir>./$(OutDir)db_tcl\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>..\build_windows\$(Platform)\Release\</OutDir>
+    <IntDir>./$(OutDir)db_tcl\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <MinimalRebuild>true</MinimalRebuild>
+      <AdditionalIncludeDirectories>../build_windows;../;../dbinc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_DEBUG;DB_CREATE_DLL;_UNICODE;DB_TCL_SUPPORT;DIAGNOSTIC;CONFIG_TEST;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <PrecompiledHeaderOutputFile>./$(OutDir)db_tcl.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>$(OutDir)db_tcl/</AssemblerListingLocation>
+      <ObjectFileName>$(OutDir)db_tcl/</ObjectFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <Link>
+      <AdditionalOptions>/machine:x86 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>libdb48d.lib;tcl84g.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);C:/tcl/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>$(OutDir)libdb_tcl48d.dll</OutputFile>
+      <ProgramDatabaseFile>$(OutDir)libdb_tcl48d.pdb</ProgramDatabaseFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ImportLibrary>$(OutDir)libdb_tcl48d.lib</ImportLibrary>
+      <ModuleDefinitionFile>..\build_windows\libdb_tcl.def</ModuleDefinitionFile>
+      <TargetMachine>NotSet</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <MinimalRebuild>true</MinimalRebuild>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>../build_windows;../;../dbinc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;NDEBUG;DB_CREATE_DLL;_UNICODE;DB_TCL_SUPPORT;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader />
+      <PrecompiledHeaderOutputFile>./$(OutDir)db_tcl.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>$(OutDir)db_tcl/</AssemblerListingLocation>
+      <ObjectFileName>$(OutDir)db_tcl/</ObjectFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <Link>
+      <AdditionalOptions>/machine:x86 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>libdb48.lib;tcl84.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);C:/tcl/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>$(OutDir)libdb_tcl48.dll</OutputFile>
+      <ProgramDatabaseFile>$(OutDir)libdb_tcl48.pdb</ProgramDatabaseFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ImportLibrary>$(OutDir)libdb_tcl48.lib</ImportLibrary>
+      <ModuleDefinitionFile>..\build_windows\libdb_tcl.def</ModuleDefinitionFile>
+      <TargetMachine>NotSet</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <MinimalRebuild>true</MinimalRebuild>
+      <AdditionalIncludeDirectories>../build_windows;../;../dbinc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_DEBUG;DB_CREATE_DLL;_UNICODE;DB_TCL_SUPPORT;DIAGNOSTIC;CONFIG_TEST;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <PrecompiledHeaderOutputFile>./$(OutDir)db_tcl.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>$(OutDir)db_tcl/</AssemblerListingLocation>
+      <ObjectFileName>$(OutDir)db_tcl/</ObjectFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <Link>
+      <AdditionalOptions>/machine:x64 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>libdb48d.lib;tcl84g.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);C:/tcl/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>$(OutDir)libdb_tcl48d.dll</OutputFile>
+      <ProgramDatabaseFile>$(OutDir)libdb_tcl48d.pdb</ProgramDatabaseFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ImportLibrary>$(OutDir)libdb_tcl48d.lib</ImportLibrary>
+      <ModuleDefinitionFile>..\build_windows\libdb_tcl.def</ModuleDefinitionFile>
+      <TargetMachine>NotSet</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <MinimalRebuild>true</MinimalRebuild>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>../build_windows;../;../dbinc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;NDEBUG;DB_CREATE_DLL;_UNICODE;DB_TCL_SUPPORT;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader />
+      <PrecompiledHeaderOutputFile>./$(OutDir)db_tcl.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>$(OutDir)db_tcl/</AssemblerListingLocation>
+      <ObjectFileName>$(OutDir)db_tcl/</ObjectFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <Link>
+      <AdditionalOptions>/machine:x64 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>libdb48.lib;tcl84.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);C:/tcl/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>$(OutDir)libdb_tcl48.dll</OutputFile>
+      <ProgramDatabaseFile>$(OutDir)libdb_tcl48.pdb</ProgramDatabaseFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ImportLibrary>$(OutDir)libdb_tcl48.lib</ImportLibrary>
+      <ModuleDefinitionFile>..\build_windows\libdb_tcl.def</ModuleDefinitionFile>
+      <TargetMachine>NotSet</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\os\os_abort.c" />
+    <ClCompile Include="..\os\os_stack.c" />
+    <ClCompile Include="..\tcl\tcl_compat.c" />
+    <ClCompile Include="..\tcl\tcl_db.c" />
+    <ClCompile Include="..\tcl\tcl_dbcursor.c" />
+    <ClCompile Include="..\tcl\tcl_db_pkg.c" />
+    <ClCompile Include="..\tcl\tcl_env.c" />
+    <ClCompile Include="..\tcl\tcl_internal.c" />
+    <ClCompile Include="..\tcl\tcl_lock.c" />
+    <ClCompile Include="..\tcl\tcl_log.c" />
+    <ClCompile Include="..\tcl\tcl_mp.c" />
+    <ClCompile Include="..\tcl\tcl_mutex.c" />
+    <ClCompile Include="..\tcl\tcl_rep.c" />
+    <ClCompile Include="..\tcl\tcl_seq.c" />
+    <ClCompile Include="..\tcl\tcl_txn.c" />
+    <ClCompile Include="..\tcl\tcl_util.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="libdb_tcl.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="db.vcxproj">
+      <Project>{fd045d60-abad-4a6c-9794-9bfb085fc3e7}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
