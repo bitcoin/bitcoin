@@ -2075,7 +2075,6 @@ void static UpdateAddressIndex(const CBlock& block, CBlockUndo& blockundo, bool 
     if (!fTxOutIndex)
         return;
 
-    assert(&block != nullptr);
     assert(block.vtx.size() > 0);
     unsigned int i = 0;
     if (!fConnect)

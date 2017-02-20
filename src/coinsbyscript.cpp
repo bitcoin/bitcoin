@@ -177,8 +177,8 @@ bool CCoinsViewByScriptDB::DeleteAllCoinsByScript()
             {
                 i += v.size();
                 CDBBatch batch(db);
-                BOOST_FOREACH(const uint160& hash, v)
-                    batch.Erase(make_pair(DB_COINS_BYSCRIPT, hash)); // delete
+                BOOST_FOREACH(const uint160& _hash, v)
+                    batch.Erase(make_pair(DB_COINS_BYSCRIPT, _hash)); // delete
                 db.WriteBatch(batch);
                 v.clear();
             }
