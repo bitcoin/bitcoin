@@ -88,7 +88,7 @@
       <AdditionalIncludeDirectories>../build_windows;../;../dbinc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_DEBUG;_UNICODE;UNICODE;DIAGNOSTIC;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader />
       <PrecompiledHeaderOutputFile>./$(OutDir)db_static.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(OutDir)db_static/</AssemblerListingLocation>
@@ -111,7 +111,7 @@
       <AdditionalIncludeDirectories>../build_windows;../;../dbinc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;NDEBUG;_UNICODE;UNICODE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader />
       <PrecompiledHeaderOutputFile>./$(OutDir)db_static.pch</PrecompiledHeaderOutputFile>
@@ -133,7 +133,7 @@
       <AdditionalIncludeDirectories>../build_windows;../;../dbinc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_DEBUG;_UNICODE;UNICODE;DIAGNOSTIC;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader />
       <PrecompiledHeaderOutputFile>./$(OutDir)db_static.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(OutDir)db_static/</AssemblerListingLocation>
@@ -156,7 +156,7 @@
       <AdditionalIncludeDirectories>../build_windows;../;../dbinc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;NDEBUG;_UNICODE;UNICODE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader />
       <PrecompiledHeaderOutputFile>./$(OutDir)db_static.pch</PrecompiledHeaderOutputFile>
