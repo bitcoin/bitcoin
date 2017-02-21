@@ -107,15 +107,6 @@ Additionally the `setnetworkactive` RPC command has been added which does
 the same thing as the GUI icon. The command takes one boolean parameter,
 `true` enables networking and `false` disables it.
 
-Out-of-sync Modal Info Layer
-----------------------------
-
-When Bitcoin Core is out-of-sync on startup, a semi-transparent information
-layer will be shown over top of the normal display. This layer contains
-details about the current sync progress and estimates the amount of time
-remaining to finish syncing. This layer can also be hidden and subsequently
-unhidden by clicking on the progress bar at the bottom of the window.
-
 Support for JSON-RPC Named Arguments
 ------------------------------------
 
@@ -178,13 +169,6 @@ so that all old nodes receive the final alert.
 GUI Changes
 -----------
 
- - After resetting the options by clicking the `Reset Options` button 
-   in the options dialog or with the `-resetguioptions` startup option, 
-   the user will be prompted to choose the data directory again. This 
-   is to ensure that custom data directories will be kept after the 
-   option reset which clears the custom data directory set via the choose 
-   datadir dialog.
-
  - Multiple peers can now be selected in the list of peers in the debug 
    window. This allows for users to ban or disconnect multiple peers 
    simultaneously instead of banning them one at a time.
@@ -225,23 +209,31 @@ Low-level RPC changes
    optimizations to memory management. See [Pull #8753](https://github.com/bitcoin/bitcoin/pull/8753)
    for more information.
 
-HTTP REST Changes
------------------
-
- - UTXO set query (`GET /rest/getutxos/<checkmempool>/<txid>-<n>/<txid>-<n>
-   /.../<txid>-<n>.<bin|hex|json>`) responses were changed to return status 
-   code `HTTP_BAD_REQUEST` (400) instead of `HTTP_INTERNAL_SERVER_ERROR` (500)
-   when requests contain invalid parameters.
-
 Minimum Fee Rate Policies
 -------------------------
 
-Since the changes in 0.12 to automatically limit the size of the mempool and improve the performance of block creation in mining code it has not been important for relay nodes or miners to set `-minrelaytxfee`. With this release the following concepts that were tied to this option have been separated out:
-- incremental relay fee used for calculating BIP 125 replacement and mempool limiting. (1000 satoshis/kB)
-- calculation of threshold for a dust output. (effectively 3 * 1000 satoshis/kB)
-- minimum fee rate of a package of transactions to be included in a block created by the mining code. If miners wish to set this minimum they can use the new `-blockmintxfee` option.  (defaults to 1000 satoshis/kB)
+Since the changes in 0.12 to automatically limit the size of the mempool and
+improve the performance of block creation in mining code it has not been
+important for relay nodes or miners to set `-minrelaytxfee`. With this release
+the following concepts that were tied to this option have been separated out:
+
+ - incremental relay fee used for calculating BIP 125 replacement and mempool
+   limiting is configured with the `-incrementalrelayfee` option.
+
+ - calculation of threshold for a dust output is based on the configured
+   `-dustrelayfee` option.
+
+ - minimum fee rate of a package of transactions to be included in a block
+   created by the mining code. If miners wish to set this minimum they can use
+   the new `-blockmintxfee` option.
 
 The `-minrelaytxfee` option continues to exist but is recommended to be left unset.
+
+All four options default to 1000 satoshis per kB.
+
+Additionally, fee-less transactions have been long non-functional due to a high
+volume of fee-paying spam. As such, the default for the rate limit of no-fee
+transactions (`-limitfreerelay`) has been set to `0` kB/minute.
 
 Fee Estimation Changes
 ----------------------
@@ -258,17 +250,12 @@ Fee Estimation Changes
 Removal of Priority Estimation
 ------------------------------
 
-- Estimation of "priority" needed for a transaction to be included within a target
-  number of blocks has been removed.  The rpc calls are deprecated and will either
-  return -1 or 1e24 appropriately. The format for `fee_estimates.dat` has also
-  changed to no longer save these priority estimates. It will automatically be
-  converted to the new format which is not readable by prior versions of the
-  software.
-
-- Support for "priority" (coin age) transaction sorting for mining is
-  considered deprecated in Core and will be removed in the next major version.
-  This is not to be confused with the `prioritisetransaction` RPC which will remain
-  supported by Core for adding fee deltas to transactions.
+Estimation of "priority" needed for a transaction to be included within a target
+number of blocks has been removed. The rpc calls are deprecated and will either
+return -1 or 1e24 appropriately. The format for `fee_estimates.dat` has also
+changed to no longer save these priority estimates. It will automatically be
+converted to the new format which is not readable by prior versions of the
+software.
 
 P2P connection management
 --------------------------
@@ -395,7 +382,7 @@ and git merge commit are mentioned.
 - #9349 `2db4cbc` Make CScript (and prevector) c++11 movable (sipa)
 - #9252 `ce5c1f4` Release cs\_main before calling ProcessNewBlock, or processing headers (cmpctblock handling) (sdaftuar)
 - #9283 `869781c` A few more CTransactionRef optimizations (sipa)
-- #9499 `9c9af5a` Use recent-rejects, orphans, and recently-replaced txn for compact-block-reconstruction
+- #9499 `9c9af5a` Use recent-rejects, orphans, and recently-replaced txn for compact-block-reconstruction (Matt Corallo)
 
 ### P2P protocol and network code
 - #8128 `1030fa7` Turn net structures into dumb storage classes (theuni)
@@ -790,8 +777,7 @@ Thanks to everyone who directly contributed to this release:
 - Mitchell Cash
 - mrbandrews
 - mruddy
-- Nicolas DORIER
-- NicolasDorier
+- Nicolas Dorier
 - nomnombtc
 - Patrick Strateman
 - Pavel Janík
