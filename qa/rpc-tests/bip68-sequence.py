@@ -51,11 +51,12 @@ class BIP68Test(BitcoinTestFramework):
         print("Running test BIP68 not consensus before versionbits activation")
         self.test_bip68_not_consensus()
 
-        print("Verifying nVersion=2 transactions are standard")
-        self.test_version2_relay()
-
         print("Activating BIP68 (and 112/113)")
         self.activateCSV()
+
+        print("Verifying nVersion=2 transactions are standard.")
+        print("Note that with current versions of bitcoin software, nVersion=2 transactions are always standard (independent of BIP68 activation status).")
+        self.test_version2_relay()
 
         print("Passed\n")
 
@@ -396,7 +397,16 @@ class BIP68Test(BitcoinTestFramework):
         self.nodes[0].submitblock(ToHex(block))
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
-    # Use self.nodes[1] to test that version 2 transactions are standard even before BIP68 activation.
+    def activateCSV(self):
+        # activation should happen at block height 432 (3 periods)
+        min_activation_height = 432
+        height = self.nodes[0].getblockcount()
+        assert(height < 432)
+        self.nodes[0].generate(432-height)
+        assert(get_bip9_status(self.nodes[0], 'csv')['status'] == 'active')
+        sync_blocks(self.nodes)
+
+    # Use self.nodes[1] to test that version 2 transactions are standard.
     def test_version2_relay(self):
         inputs = [ ]
         outputs = { self.nodes[1].getnewaddress() : 1.0 }
@@ -406,15 +416,6 @@ class BIP68Test(BitcoinTestFramework):
         tx.nVersion = 2
         tx_signed = self.nodes[1].signrawtransaction(ToHex(tx))["hex"]
         tx_id = self.nodes[1].sendrawtransaction(tx_signed)
-
-    def activateCSV(self):
-        # activation should happen at block height 432 (3 periods)
-        min_activation_height = 432
-        height = self.nodes[0].getblockcount()
-        assert(height < 432)
-        self.nodes[0].generate(432-height)
-        assert(get_bip9_status(self.nodes[0], 'csv')['status'] == 'active')
-        sync_blocks(self.nodes)
 
 if __name__ == '__main__':
     BIP68Test().main()
