@@ -136,17 +136,17 @@ bool AppInit(int argc, char* argv[])
         if (!AppInitBasicSetup())
         {
             // InitError will have been called with detailed error, which ends up on console
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         if (!AppInitParameterInteraction())
         {
             // InitError will have been called with detailed error, which ends up on console
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         if (!AppInitSanityChecks())
         {
             // InitError will have been called with detailed error, which ends up on console
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         if (GetBoolArg("-daemon", false))
         {
