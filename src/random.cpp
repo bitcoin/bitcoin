@@ -21,6 +21,17 @@
 #include <sys/time.h>
 #endif
 
+#ifdef HAVE_SYS_GETRANDOM
+#include <sys/syscall.h>
+#include <linux/random.h>
+#endif
+#ifdef HAVE_GETENTROPY
+#include <unistd.h>
+#endif
+#ifdef HAVE_SYSCTL_ARND
+#include <sys/sysctl.h>
+#endif
+
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
@@ -92,32 +103,65 @@ static void RandAddSeedPerfmon()
 }
 
 /** Get 32 bytes of system entropy. */
-static void GetOSRand(unsigned char *ent32)
+void GetOSRand(unsigned char *ent32)
 {
-#ifdef WIN32
+#if defined(WIN32)
     HCRYPTPROV hProvider;
     int ret = CryptAcquireContextW(&hProvider, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
     if (!ret) {
         RandFailure();
     }
-    ret = CryptGenRandom(hProvider, 32, ent32);
+    ret = CryptGenRandom(hProvider, NUM_OS_RANDOM_BYTES, ent32);
     if (!ret) {
         RandFailure();
     }
     CryptReleaseContext(hProvider, 0);
+#elif defined(HAVE_SYS_GETRANDOM)
+    /* Linux. From the getrandom(2) man page:
+     * "If the urandom source has been initialized, reads of up to 256 bytes
+     * will always return as many bytes as requested and will not be
+     * interrupted by signals."
+     */
+    if (syscall(SYS_getrandom, ent32, NUM_OS_RANDOM_BYTES, 0) != NUM_OS_RANDOM_BYTES) {
+        RandFailure();
+    }
+#elif defined(HAVE_GETENTROPY)
+    /* On OpenBSD this can return up to 256 bytes of entropy, will return an
+     * error if more are requested.
+     * The call cannot return less than the requested number of bytes.
+     */
+    if (getentropy(ent32, NUM_OS_RANDOM_BYTES) != 0) {
+        RandFailure();
+    }
+#elif defined(HAVE_SYSCTL_ARND)
+    /* FreeBSD and similar. It is possible for the call to return less
+     * bytes than requested, so need to read in a loop.
+     */
+    static const int name[2] = {CTL_KERN, KERN_ARND};
+    int have = 0;
+    do {
+        size_t len = NUM_OS_RANDOM_BYTES - have;
+        if (sysctl(name, ARRAYLEN(name), ent32 + have, &len, NULL, 0) != 0) {
+            RandFailure();
+        }
+        have += len;
+    } while (have < NUM_OS_RANDOM_BYTES);
 #else
+    /* Fall back to /dev/urandom if there is no specific method implemented to
+     * get system entropy for this OS.
+     */
     int f = open("/dev/urandom", O_RDONLY);
     if (f == -1) {
         RandFailure();
     }
     int have = 0;
     do {
-        ssize_t n = read(f, ent32 + have, 32 - have);
-        if (n <= 0 || n + have > 32) {
+        ssize_t n = read(f, ent32 + have, NUM_OS_RANDOM_BYTES - have);
+        if (n <= 0 || n + have > NUM_OS_RANDOM_BYTES) {
             RandFailure();
         }
         have += n;
-    } while (have < 32);
+    } while (have < NUM_OS_RANDOM_BYTES);
     close(f);
 #endif
 }
