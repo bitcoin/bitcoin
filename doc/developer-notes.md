@@ -448,7 +448,7 @@ Current subtrees include:
   - Upstream at https://github.com/jgarzik/univalue ; report important PRs to Core to avoid delay.
 
 
-Git and github tips
+Git and GitHub tips
 ---------------------
 
 - For resolving merge/rebase conflicts, it can be useful to enable diff3 style using

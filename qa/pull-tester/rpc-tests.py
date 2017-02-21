@@ -2,25 +2,21 @@
 # Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 """
-Run Regression Test Suite
+rpc-tests.py - run regression test suite
 
 This module calls down into individual test cases via subprocess. It will
-forward all unrecognized arguments onto the individual test scripts, other
-than:
+forward all unrecognized arguments onto the individual test scripts.
 
-    - `-extended`: run the "extended" test suite in addition to the basic one.
-    - `-win`: signal that this is running in a Windows environment, and we
-      should run the tests.
-    - `--coverage`: this generates a basic coverage report for the RPC
-      interface.
+RPC tests are disabled on Windows by default. Use --force to run them anyway.
 
 For a description of arguments recognized by test scripts, see
 `qa/pull-tester/test_framework/test_framework.py:BitcoinTestFramework.main`.
 
 """
 
+import argparse
+import configparser
 import os
 import time
 import shutil
@@ -29,77 +25,9 @@ import subprocess
 import tempfile
 import re
 
-sys.path.append("qa/pull-tester/")
-from tests_config import *
-
-BOLD = ("","")
-if os.name == 'posix':
-    # primitive formatting on supported
-    # terminal via ANSI escape sequences:
-    BOLD = ('\033[0m', '\033[1m')
-
-RPC_TESTS_DIR = SRCDIR + '/qa/rpc-tests/'
-
-#If imported values are not defined then set to zero (or disabled)
-if 'ENABLE_WALLET' not in vars():
-    ENABLE_WALLET=0
-if 'ENABLE_BITCOIND' not in vars():
-    ENABLE_BITCOIND=0
-if 'ENABLE_UTILS' not in vars():
-    ENABLE_UTILS=0
-if 'ENABLE_ZMQ' not in vars():
-    ENABLE_ZMQ=0
-
-ENABLE_COVERAGE=0
-
-#Create a set to store arguments and create the passon string
-opts = set()
-passon_args = []
-PASSON_REGEX = re.compile("^--")
-PARALLEL_REGEX = re.compile('^-parallel=')
-
-print_help = False
-run_parallel = 4
-
-for arg in sys.argv[1:]:
-    if arg == "--help" or arg == "-h" or arg == "-?":
-        print_help = True
-        break
-    if arg == '--coverage':
-        ENABLE_COVERAGE = 1
-    elif PASSON_REGEX.match(arg):
-        passon_args.append(arg)
-    elif PARALLEL_REGEX.match(arg):
-        run_parallel = int(arg.split(sep='=', maxsplit=1)[1])
-    else:
-        opts.add(arg)
-
-#Set env vars
-if "BITCOIND" not in os.environ:
-    os.environ["BITCOIND"] = BUILDDIR + '/src/bitcoind' + EXEEXT
-
-if EXEEXT == ".exe" and "-win" not in opts:
-    # https://github.com/bitcoin/bitcoin/commit/d52802551752140cf41f0d9a225a43e84404d3e9
-    # https://github.com/bitcoin/bitcoin/pull/5677#issuecomment-136646964
-    print("Win tests currently disabled by default.  Use -win option to enable")
-    sys.exit(0)
-
-if not (ENABLE_WALLET == 1 and ENABLE_UTILS == 1 and ENABLE_BITCOIND == 1):
-    print("No rpc tests to run. Wallet, utils, and bitcoind must all be enabled")
-    sys.exit(0)
-
-# python3-zmq may not be installed. Handle this gracefully and with some helpful info
-if ENABLE_ZMQ:
-    try:
-        import zmq
-    except ImportError:
-        print("ERROR: \"import zmq\" failed. Set ENABLE_ZMQ=0 or "
-              "to run zmq tests, see dependency info in /qa/README.md.")
-        # ENABLE_ZMQ=0
-        raise
-
-testScripts = [
-    # longest test should go first, to favor running tests in parallel
+BASE_SCRIPTS= [
+    # Scripts that are run by the travis build process.
+    # Longest test should go first, to favor running tests in parallel
     'wallet-hd.py',
     'walletbackup.py',
     # vv Tests less than 5m vv
@@ -154,11 +82,17 @@ testScripts = [
     'bumpfee.py',
     'rpcnamedargs.py',
     'listsinceblock.py',
+    'p2p-leaktests.py',
 ]
-if ENABLE_ZMQ:
-    testScripts.append('zmq_test.py')
 
-testScriptsExt = [
+ZMQ_SCRIPTS = [
+    # ZMQ test can only be run if bitcoin was built with zmq-enabled.
+    # call rpc_tests.py with -nozmq to explicitly exclude these tests.
+    "zmq_test.py"]
+
+EXTENDED_SCRIPTS = [
+    # These tests are not run by the travis build process.
+    # Longest test should go first, to favor running tests in parallel
     'pruning.py',
     # vv Tests less than 20m vv
     'smartfees.py',
@@ -168,6 +102,7 @@ testScriptsExt = [
     # vv Tests less than 2m vv
     'bip68-sequence.py',
     'getblocktemplate_longpoll.py',
+    'p2p-timeouts.py',
     # vv Tests less than 60s vv
     'bip9-softforks.py',
     'p2p-feefilter.py',
@@ -187,44 +122,126 @@ testScriptsExt = [
     'replace-by-fee.py',
 ]
 
+ALL_SCRIPTS = BASE_SCRIPTS + ZMQ_SCRIPTS + EXTENDED_SCRIPTS
 
-def runtests():
-    test_list = []
-    if '-extended' in opts:
-        test_list = testScripts + testScriptsExt
-    elif len(opts) == 0 or (len(opts) == 1 and "-win" in opts):
-        test_list = testScripts
-    else:
-        for t in testScripts + testScriptsExt:
-            if t in opts or re.sub(".py$", "", t) in opts:
-                test_list.append(t)
+def main():
+    # Parse arguments and pass through unrecognised args
+    parser = argparse.ArgumentParser(add_help=False,
+                                     usage='%(prog)s [rpc-test.py options] [script options] [scripts]',
+                                     description=__doc__,
+                                     epilog='''
+    Help text and arguments for individual test script:''',
+                                     formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('--coverage', action='store_true', help='generate a basic coverage report for the RPC interface')
+    parser.add_argument('--extended', action='store_true', help='run the extended test suite in addition to the basic tests')
+    parser.add_argument('--force', '-f', action='store_true', help='run tests even on platforms where they are disabled by default (e.g. windows).')
+    parser.add_argument('--help', '-h', '-?', action='store_true', help='print help text and exit')
+    parser.add_argument('--jobs', '-j', type=int, default=4, help='how many test scripts to run in parallel. Default=4.')
+    parser.add_argument('--nozmq', action='store_true', help='do not run the zmq tests')
+    args, unknown_args = parser.parse_known_args()
 
-    if print_help:
-        # Only print help of the first script and exit
-        subprocess.check_call((RPC_TESTS_DIR + test_list[0]).split() + ['-h'])
+    # Create a set to store arguments and create the passon string
+    tests = set(arg for arg in unknown_args if arg[:2] != "--")
+    passon_args = [arg for arg in unknown_args if arg[:2] == "--"]
+
+    # Read config generated by configure.
+    config = configparser.ConfigParser()
+    config.read_file(open(os.path.dirname(__file__) + "/tests_config.ini"))
+
+    enable_wallet = config["components"].getboolean("ENABLE_WALLET")
+    enable_utils = config["components"].getboolean("ENABLE_UTILS")
+    enable_bitcoind = config["components"].getboolean("ENABLE_BITCOIND")
+    enable_zmq = config["components"].getboolean("ENABLE_ZMQ") and not args.nozmq
+
+    if config["environment"]["EXEEXT"] == ".exe" and not args.force:
+        # https://github.com/bitcoin/bitcoin/commit/d52802551752140cf41f0d9a225a43e84404d3e9
+        # https://github.com/bitcoin/bitcoin/pull/5677#issuecomment-136646964
+        print("Tests currently disabled on Windows by default. Use --force option to enable")
         sys.exit(0)
 
-    coverage = None
+    if not (enable_wallet and enable_utils and enable_bitcoind):
+        print("No rpc tests to run. Wallet, utils, and bitcoind must all be enabled")
+        print("Rerun `configure` with -enable-wallet, -with-utils and -with-daemon and rerun make")
+        sys.exit(0)
 
-    if ENABLE_COVERAGE:
+    # python3-zmq may not be installed. Handle this gracefully and with some helpful info
+    if enable_zmq:
+        try:
+            import zmq
+        except ImportError:
+            print("ERROR: \"import zmq\" failed. Use -nozmq to run without the ZMQ tests."
+                  "To run zmq tests, see dependency info in /qa/README.md.")
+            raise
+
+    # Build list of tests
+    if tests:
+        # Individual tests have been specified. Run specified tests that exist
+        # in the ALL_SCRIPTS list. Accept the name with or without .py extension.
+        test_list = [t for t in ALL_SCRIPTS if
+                (t in tests or re.sub(".py$", "", t) in tests)]
+        if not test_list:
+            print("No valid test scripts specified. Check that your test is in one "
+                  "of the test lists in rpc-tests.py or run rpc-tests.py with no arguments to run all tests")
+            print("Scripts not found:")
+            print(tests)
+            sys.exit(0)
+
+    else:
+        # No individual tests have been specified. Run base tests, and
+        # optionally ZMQ tests and extended tests.
+        test_list = BASE_SCRIPTS
+        if enable_zmq:
+            test_list += ZMQ_SCRIPTS
+        if args.extended:
+            test_list += EXTENDED_SCRIPTS
+            # TODO: BASE_SCRIPTS and EXTENDED_SCRIPTS are sorted by runtime
+            # (for parallel running efficiency). This combined list will is no
+            # longer sorted.
+
+    if args.help:
+        # Print help for rpc-tests.py, then print help of the first script and exit.
+        parser.print_help()
+        subprocess.check_call((config["environment"]["SRCDIR"] + '/qa/rpc-tests/' + test_list[0]).split() + ['-h'])
+        sys.exit(0)
+
+    run_tests(test_list, config["environment"]["SRCDIR"], config["environment"]["BUILDDIR"], config["environment"]["EXEEXT"], args.jobs, args.coverage, passon_args)
+
+def run_tests(test_list, src_dir, build_dir, exeext, jobs=1, enable_coverage=False, args=[]):
+    BOLD = ("","")
+    if os.name == 'posix':
+        # primitive formatting on supported
+        # terminal via ANSI escape sequences:
+        BOLD = ('\033[0m', '\033[1m')
+
+    #Set env vars
+    if "BITCOIND" not in os.environ:
+        os.environ["BITCOIND"] = build_dir + '/src/bitcoind' + exeext
+
+    tests_dir = src_dir + '/qa/rpc-tests/'
+
+    flags = ["--srcdir=" + src_dir] + args
+    flags.append("--cachedir=%s/qa/cache" % build_dir)
+
+    if enable_coverage:
         coverage = RPCCoverage()
-        print("Initializing coverage directory at %s\n" % coverage.dir)
-    flags = ["--srcdir=%s/src" % BUILDDIR] + passon_args
-    flags.append("--cachedir=%s/qa/cache" % BUILDDIR)
-    if coverage:
         flags.append(coverage.flag)
+        print("Initializing coverage directory at %s\n" % coverage.dir)
+    else:
+        coverage = None
 
-    if len(test_list) > 1 and run_parallel > 1:
+    if len(test_list) > 1 and jobs > 1:
         # Populate cache
-        subprocess.check_output([RPC_TESTS_DIR + 'create_cache.py'] + flags)
+        subprocess.check_output([tests_dir + 'create_cache.py'] + flags)
 
     #Run Tests
-    max_len_name = len(max(test_list, key=len))
+    all_passed = True
     time_sum = 0
     time0 = time.time()
-    job_queue = RPCTestHandler(run_parallel, test_list, flags)
+
+    job_queue = RPCTestHandler(jobs, tests_dir, test_list, flags)
+
+    max_len_name = len(max(test_list, key=len))
     results = BOLD[1] + "%s | %s | %s\n\n" % ("TEST".ljust(max_len_name), "PASSED", "DURATION") + BOLD[0]
-    all_passed = True
     for _ in range(len(test_list)):
         (name, stdout, stderr, passed, duration) = job_queue.get_next()
         all_passed = all_passed and passed
@@ -233,8 +250,10 @@ def runtests():
         print('\n' + BOLD[1] + name + BOLD[0] + ":")
         print('' if passed else stdout + '\n', end='')
         print('' if stderr == '' else 'stderr:\n' + stderr + '\n', end='')
-        results += "%s | %s | %s s\n" % (name.ljust(max_len_name), str(passed).ljust(6), duration)
         print("Pass: %s%s%s, Duration: %s s\n" % (BOLD[1], passed, BOLD[0], duration))
+
+        results += "%s | %s | %s s\n" % (name.ljust(max_len_name), str(passed).ljust(6), duration)
+
     results += BOLD[1] + "\n%s | %s | %s s (accumulated)" % ("ALL".ljust(max_len_name), str(all_passed).ljust(6), time_sum) + BOLD[0]
     print(results)
     print("\nRuntime: %s s" % (int(time.time() - time0)))
@@ -247,15 +266,15 @@ def runtests():
 
     sys.exit(not all_passed)
 
-
 class RPCTestHandler:
     """
     Trigger the testscrips passed in via the list.
     """
 
-    def __init__(self, num_tests_parallel, test_list=None, flags=None):
+    def __init__(self, num_tests_parallel, tests_dir, test_list=None, flags=None):
         assert(num_tests_parallel >= 1)
         self.num_jobs = num_tests_parallel
+        self.tests_dir = tests_dir
         self.test_list = test_list
         self.flags = flags
         self.num_running = 0
@@ -275,7 +294,7 @@ class RPCTestHandler:
             log_stderr = tempfile.SpooledTemporaryFile(max_size=2**16)
             self.jobs.append((t,
                               time.time(),
-                              subprocess.Popen((RPC_TESTS_DIR + t).split() + self.flags + port_seed,
+                              subprocess.Popen((self.tests_dir + t).split() + self.flags + port_seed,
                                                universal_newlines=True,
                                                stdout=log_stdout,
                                                stderr=log_stderr),
@@ -340,10 +359,10 @@ class RPCCoverage(object):
 
         """
         # This is shared from `qa/rpc-tests/test-framework/coverage.py`
-        REFERENCE_FILENAME = 'rpc_interface.txt'
-        COVERAGE_FILE_PREFIX = 'coverage.'
+        reference_filename = 'rpc_interface.txt'
+        coverage_file_prefix = 'coverage.'
 
-        coverage_ref_filename = os.path.join(self.dir, REFERENCE_FILENAME)
+        coverage_ref_filename = os.path.join(self.dir, reference_filename)
         coverage_filenames = set()
         all_cmds = set()
         covered_cmds = set()
@@ -356,7 +375,7 @@ class RPCCoverage(object):
 
         for root, dirs, files in os.walk(self.dir):
             for filename in files:
-                if filename.startswith(COVERAGE_FILE_PREFIX):
+                if filename.startswith(coverage_file_prefix):
                     coverage_filenames.add(os.path.join(root, filename))
 
         for filename in coverage_filenames:
@@ -367,4 +386,4 @@ class RPCCoverage(object):
 
 
 if __name__ == '__main__':
-    runtests()
+    main()

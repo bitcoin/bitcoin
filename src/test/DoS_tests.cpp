@@ -23,7 +23,7 @@
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
-// Tests this internal-to-main.cpp method:
+// Tests these internal-to-net_processing.cpp methods:
 extern bool AddOrphanTx(const CTransactionRef& tx, NodeId peer);
 extern void EraseOrphansFor(NodeId peer);
 extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
