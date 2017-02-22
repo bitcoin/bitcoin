@@ -1932,8 +1932,18 @@ bool CWalletTx::IsTrusted() const
         if (parent == NULL)
             return false;
         const CTxOut& parentOut = parent->tx->vout[txin.prevout.n];
-        if (pwallet->IsMine(parentOut) != ISMINE_SPENDABLE)
-            return false;
+        const auto& isMine = pwallet->IsMine(parentOut);
+        if (isMine != ISMINE_SPENDABLE)
+        {
+            // If the wallet is external HD, check if it is a key we generated
+            if (!pwallet->IsExternalHD() || isMine != ISMINE_WATCH_SOLVABLE)
+                return false;
+            const auto& meta = pwallet->mapKeyMetadata;
+            auto it = meta.find(CScriptID(parentOut.scriptPubKey));
+            if (it == meta.end() ||
+                it->second.hdKeypath.empty())
+                return false;
+        }
     }
     return true;
 }
