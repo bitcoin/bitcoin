@@ -239,3 +239,33 @@ FastRandomContext::FastRandomContext(bool fDeterministic)
     }
 }
 
+bool Random_SanityCheck()
+{
+    /* This does not measure the quality of randomness, but it does test that
+     * OSRandom() overwrites all 32 bytes of the output given a maximum
+     * number of tries.
+     */
+    static const ssize_t MAX_TRIES = 1024;
+    uint8_t data[NUM_OS_RANDOM_BYTES];
+    bool overwritten[NUM_OS_RANDOM_BYTES] = {}; /* Tracks which bytes have been overwritten at least once */
+    int num_overwritten;
+    int tries = 0;
+    /* Loop until all bytes have been overwritten at least once, or max number tries reached */
+    do {
+        memset(data, 0, NUM_OS_RANDOM_BYTES);
+        GetOSRand(data);
+        for (int x=0; x < NUM_OS_RANDOM_BYTES; ++x) {
+            overwritten[x] |= (data[x] != 0);
+        }
+
+        num_overwritten = 0;
+        for (int x=0; x < NUM_OS_RANDOM_BYTES; ++x) {
+            if (overwritten[x]) {
+                num_overwritten += 1;
+            }
+        }
+
+        tries += 1;
+    } while (num_overwritten < NUM_OS_RANDOM_BYTES && tries < MAX_TRIES);
+    return (num_overwritten == NUM_OS_RANDOM_BYTES); /* If this failed, bailed out after too many tries */
+}

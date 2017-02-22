@@ -58,4 +58,9 @@ static const ssize_t NUM_OS_RANDOM_BYTES = 32;
  */
 void GetOSRand(unsigned char *ent32);
 
+/** Check that OS randomness is available and returning the requested number
+ * of bytes.
+ */
+bool Random_SanityCheck();
+
 #endif // BITCOIN_RANDOM_H
