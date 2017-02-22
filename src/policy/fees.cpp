@@ -214,9 +214,14 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
 
     bool foundAnswer = false;
     unsigned int bins = unconfTxs.size();
+    bool newBucketRange = true;
 
     // Start counting from highest(default) or lowest feerate transactions
     for (int bucket = startbucket; bucket >= 0 && bucket <= maxbucketindex; bucket += step) {
+        if (newBucketRange) {
+            curNearBucket = bucket;
+            newBucketRange = false;
+        }
         curFarBucket = bucket;
         nConf += confAvg[confTarget - 1][bucket];
         totalNum += txCtAvg[bucket];
@@ -243,7 +248,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
                 extraNum = 0;
                 bestNearBucket = curNearBucket;
                 bestFarBucket = curFarBucket;
-                curNearBucket = bucket + step;
+                newBucketRange = true;
             }
         }
     }
