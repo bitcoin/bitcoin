@@ -23,24 +23,37 @@ git diff -U0 HEAD~1.. | ./contrib/devtools/clang-format-diff.py -p1 -i -v
 copyright\_header.py
 ====================
 
-Provides utilities for managing copyright headers of `The Bitcoin Core
-developers` in repository source files. It has three subcommands:
+Provides utilities for managing copyright headers in repository source files.
+It has four subcommands:
 
 ```
-$ ./copyright_header.py report <base_directory> [verbose]
+$ ./copyright_header.py report <base_directory>
+$ ./copyright_header.py check <base_directory>
 $ ./copyright_header.py update <base_directory>
 $ ./copyright_header.py insert <file>
 ```
 Running these subcommands without arguments displays a usage string.
 
-copyright\_header.py report \<base\_directory\> [verbose]
+copyright\_header.py report \<base\_directory\>
 ---------------------------------------------------------
 
 Produces a report of all copyright header notices found inside the source files
-of a repository. Useful to quickly visualize the state of the headers.
-Specifying `verbose` will list the full filenames of files of each category.
+of a repository. Useful to quickly visualize the state of the headers in the
+repository. If there are issues found, the specific files are listed with a
+summary of what the issue is.
 
-copyright\_header.py update \<base\_directory\> [verbose]
+copyright\_header.py check \<base\_directory\>
+---------------------------------------------------------
+
+Similar to the `report` command, but is for a more straightforward check meant
+to accept or reject the state of the repository. If no issues are found, it
+returns a zero status. If issues are found it returns a non-zero status and
+also lists the specific files and gives a suggestion for how to resolve the
+issue. Resolution involves either fixing the file (because there was a
+legitimate problem) or updating the script's rules (because making an exception
+is appropriate).
+
+copyright\_header.py update \<base\_directory\>
 ---------------------------------------------------------
 Updates all the copyright headers of `The Bitcoin Core developers` which were
 changed in a year more recent than is listed. For example:
