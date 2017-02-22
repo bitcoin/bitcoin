@@ -219,7 +219,7 @@ def run_tests(test_list, src_dir, build_dir, exeext, jobs=1, enable_coverage=Fal
 
     tests_dir = src_dir + '/qa/rpc-tests/'
 
-    flags = ["--srcdir=" + src_dir] + args
+    flags = ["--srcdir={}/src".format(build_dir)] + args
     flags.append("--cachedir=%s/qa/cache" % build_dir)
 
     if enable_coverage:
