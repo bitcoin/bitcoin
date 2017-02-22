@@ -16,10 +16,8 @@
 #include "chain.h" // Freeze CBlockIndex
 #include "base58.h" // Freeze CBitcoinAddress
 
-#ifdef ENABLE_WALLET
 #include "wallet/wallet.h"  // Freeze wallet test
 #include "wallet/wallet_ismine.h"
-#endif
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
