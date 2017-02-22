@@ -74,7 +74,7 @@ bool CDBEnv::Open(const fs::path& pathIn)
 
     strPath = pathIn.string();
     fs::path pathLogDir = pathIn / "database";
-    TryCreateDirectory(pathLogDir);
+    TryCreateDirectories(pathLogDir);
     fs::path pathErrorFile = pathIn / "db.log";
     LogPrintf("CDBEnv::Open: LogDir=%s ErrorFile=%s\n", pathLogDir.string(), pathErrorFile.string());
 
