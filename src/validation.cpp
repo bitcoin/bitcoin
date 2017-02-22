@@ -4211,7 +4211,7 @@ bool LoadMempool(void)
 
             CAmount amountdelta = nFeeDelta;
             if (amountdelta) {
-                mempool.PrioritiseTransaction(tx->GetHash(), tx->GetHash().ToString(), prioritydummy, amountdelta);
+                mempool.PrioritiseTransaction(tx->GetHash(), prioritydummy, amountdelta);
             }
             CValidationState state;
             if (nTime + nExpiryTimeout > nNow) {
@@ -4232,7 +4232,7 @@ bool LoadMempool(void)
         file >> mapDeltas;
 
         for (const auto& i : mapDeltas) {
-            mempool.PrioritiseTransaction(i.first, i.first.ToString(), prioritydummy, i.second);
+            mempool.PrioritiseTransaction(i.first, prioritydummy, i.second);
         }
     } catch (const std::exception& e) {
         LogPrintf("Failed to deserialize mempool data on disk: %s. Continuing anyway.\n", e.what());
