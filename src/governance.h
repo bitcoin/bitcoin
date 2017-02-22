@@ -236,6 +236,10 @@ private:
 
     hash_time_m_t mapWatchdogObjects;
 
+    uint256 nHashWatchdogCurrent;
+
+    int64_t nTimeWatchdogCurrent;
+
     object_ref_cache_t mapVoteToObject;
 
     vote_cache_t mapInvalidVotes;
@@ -285,7 +289,7 @@ public:
     std::vector<CGovernanceObject*> GetAllNewerThan(int64_t nMoreThanTime);
 
     bool IsBudgetPaymentBlock(int nBlockHeight);
-    bool AddGovernanceObject (CGovernanceObject& govobj);
+    bool AddGovernanceObject(CGovernanceObject& govobj, CNode* pfrom = NULL);
 
     std::string GetRequiredPaymentsString(int nBlockHeight);
 
@@ -301,6 +305,8 @@ public:
         mapObjects.clear();
         mapSeenGovernanceObjects.clear();
         mapWatchdogObjects.clear();
+        nHashWatchdogCurrent = uint256();
+        nTimeWatchdogCurrent = 0;
         mapVoteToObject.Clear();
         mapInvalidVotes.Clear();
         mapOrphanVotes.Clear();
@@ -327,6 +333,8 @@ public:
         READWRITE(mapOrphanVotes);
         READWRITE(mapObjects);
         READWRITE(mapWatchdogObjects);
+        READWRITE(nHashWatchdogCurrent);
+        READWRITE(nTimeWatchdogCurrent);
         READWRITE(mapLastMasternodeObject);
         if(ser_action.ForRead() && (strVersion != SERIALIZATION_VERSION_STRING)) {
             Clear();
@@ -414,6 +422,8 @@ private:
     void RebuildVoteMaps();
 
     void AddCachedTriggers();
+
+    bool UpdateCurrentWatchdog(CGovernanceObject& watchdogNew);
 
 };
 

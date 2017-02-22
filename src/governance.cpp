@@ -20,7 +20,7 @@ std::map<uint256, int64_t> mapAskedForGovernanceObject;
 
 int nSubmittedFinalBudget;
 
-const std::string CGovernanceManager::SERIALIZATION_VERSION_STRING = "CGovernanceManager-Version-9";
+const std::string CGovernanceManager::SERIALIZATION_VERSION_STRING = "CGovernanceManager-Version-10";
 
 CGovernanceManager::CGovernanceManager()
     : pCurrentBlockIndex(NULL),
@@ -30,6 +30,8 @@ CGovernanceManager::CGovernanceManager()
       mapSeenGovernanceObjects(),
       mapMasternodeOrphanObjects(),
       mapWatchdogObjects(),
+      nHashWatchdogCurrent(),
+      nTimeWatchdogCurrent(0),
       mapVoteToObject(MAX_CACHE_SIZE),
       mapInvalidVotes(MAX_CACHE_SIZE),
       mapOrphanVotes(MAX_CACHE_SIZE),
@@ -219,7 +221,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
         govobj.UpdateSentinelVariables(); //this sets local vars in object
 
-        if(AddGovernanceObject(govobj))
+        if(AddGovernanceObject(govobj, pfrom))
         {
             LogPrintf("MNGOVERNANCEOBJECT -- %s new\n", strHash);
             govobj.Relay();
@@ -305,7 +307,7 @@ void CGovernanceManager::CheckOrphanVotes(CGovernanceObject& govobj, CGovernance
     fRateChecksEnabled = true;
 }
 
-bool CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj)
+bool CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CNode* pfrom)
 {
     LOCK2(cs_main, cs);
     std::string strError = "";
@@ -330,14 +332,23 @@ bool CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj)
 
     LogPrint("gobject", "CGovernanceManager::AddGovernanceObject -- Adding object: hash = %s, type = %d\n", nHash.ToString(), govobj.GetObjectType()); 
 
-    // If it's a watchdog, make sure it fits required time bounds
-    if(govobj.nObjectType == GOVERNANCE_OBJECT_WATCHDOG &&
-        (govobj.GetCreationTime() < GetAdjustedTime() - GOVERNANCE_WATCHDOG_EXPIRATION_TIME ||
-        govobj.GetCreationTime() > GetAdjustedTime() + GOVERNANCE_WATCHDOG_EXPIRATION_TIME)
-    ) {
-        // drop it
-        LogPrint("gobject", "CGovernanceManager::AddGovernanceObject -- CreationTime is out of bounds: hash = %s\n", nHash.ToString());
-        return false;
+    if(govobj.nObjectType == GOVERNANCE_OBJECT_WATCHDOG) {
+        // If it's a watchdog, make sure it fits required time bounds
+        if((govobj.GetCreationTime() < GetAdjustedTime() - GOVERNANCE_WATCHDOG_EXPIRATION_TIME ||
+            govobj.GetCreationTime() > GetAdjustedTime() + GOVERNANCE_WATCHDOG_EXPIRATION_TIME)
+            ) {
+            // drop it
+            LogPrint("gobject", "CGovernanceManager::AddGovernanceObject -- CreationTime is out of bounds: hash = %s\n", nHash.ToString());
+            return false;
+        }
+
+        if(!UpdateCurrentWatchdog(govobj)) {
+            if(pfrom && (nHashWatchdogCurrent != uint256())) {
+                pfrom->PushInventory(CInv(MSG_GOVERNANCE_OBJECT, nHashWatchdogCurrent));
+            }
+            LogPrint("gobject", "CGovernanceManager::AddGovernanceObject -- Watchdog not better than current: hash = %s\n", nHash.ToString());
+            return false;
+        }
     }
 
     // INSERT INTO OUR GOVERNANCE OBJECT MEMORY
@@ -369,6 +380,38 @@ bool CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj)
     return true;
 }
 
+bool CGovernanceManager::UpdateCurrentWatchdog(CGovernanceObject& watchdogNew)
+{
+    bool fAccept = false;
+
+    arith_uint256 nHashNew = UintToArith256(watchdogNew.GetHash());
+    arith_uint256 nHashCurrent = UintToArith256(nHashWatchdogCurrent);
+
+    int64_t nExpirationDelay = GOVERNANCE_WATCHDOG_EXPIRATION_TIME / 2;
+    int64_t nNow = GetTime();
+
+    if((nHashWatchdogCurrent == uint256()) ||
+       (((nNow - nTimeWatchdogCurrent) > nExpirationDelay) && (nNow - watchdogNew.GetCreationTime() < nExpirationDelay)) ||
+       (nHashNew > nHashCurrent)) {
+        LOCK(cs);
+        object_m_it it = mapObjects.find(nHashWatchdogCurrent);
+        if(it != mapObjects.end()) {
+            LogPrint("gobject", "CGovernanceManager::UpdateCurrentWatchdog -- Expiring previous current watchdog, hash = %s\n", nHashWatchdogCurrent.ToString());
+            it->second.fExpired = true;
+            if(it->second.nDeletionTime == 0) {
+                it->second.nDeletionTime = nNow;
+            }
+        }
+        nHashWatchdogCurrent = watchdogNew.GetHash();
+        nTimeWatchdogCurrent = watchdogNew.GetCreationTime();
+        fAccept = true;
+        LogPrint("gobject", "CGovernanceManager::UpdateCurrentWatchdog -- Current watchdog updated to: hash = %s\n",
+                 ArithToUint256(nHashNew).ToString());
+    }
+
+    return fAccept;
+}
+
 void CGovernanceManager::UpdateCachesAndClean()
 {
     LogPrint("gobject", "CGovernanceManager::UpdateCachesAndClean\n");
@@ -393,6 +436,9 @@ void CGovernanceManager::UpdateCachesAndClean()
                     if(it2->second.nDeletionTime == 0) {
                         it2->second.nDeletionTime = nNow;
                     }
+                }
+                if(it->first == nHashWatchdogCurrent) {
+                    nHashWatchdogCurrent = uint256();
                 }
                 mapWatchdogObjects.erase(it++);
             }
@@ -435,7 +481,8 @@ void CGovernanceManager::UpdateCachesAndClean()
             continue;
         }
 
-        std::string strHash = pObj->GetHash().ToString();
+        uint256 nHash = it->first;
+        std::string strHash = nHash.ToString();
 
         // IF CACHE IS NOT DIRTY, WHY DO THIS?
         if(pObj->IsSetDirtyCache()) {
@@ -444,6 +491,10 @@ void CGovernanceManager::UpdateCachesAndClean()
 
             // UPDATE SENTINEL SIGNALING VARIABLES
             pObj->UpdateSentinelVariables();
+        }
+
+        if(pObj->IsSetCachedDelete() && (nHash == nHashWatchdogCurrent)) {
+            nHashWatchdogCurrent = uint256();
         }
 
         // IF DELETE=TRUE, THEN CLEAN THE MESS UP!
@@ -471,7 +522,7 @@ void CGovernanceManager::UpdateCachesAndClean()
                     ++lit;
                 }
             }
-            if(pObj->nObjectType == GOVERNANCE_OBJECT_WATCHDOG && pObj->IsSetCachedDelete()) {
+            if(pObj->nObjectType == GOVERNANCE_OBJECT_WATCHDOG) {
                 mapWatchdogObjects.erase(it->first);
             }
             mapObjects.erase(it++);
@@ -903,6 +954,12 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
     }
 
     CGovernanceObject& govobj = it->second;
+
+    if(govobj.IsSetCachedDelete() || govobj.IsSetExpired()) {
+        LogPrint("gobject", "CGovernanceObject::ProcessVote -- ignoring vote for expired or deleted object, hash = %s\n", nHashGovobj.ToString());
+        return false;
+    }
+
     bool fOk = govobj.ProcessVote(pfrom, vote, exception);
     if(fOk) {
         mapVoteToObject.Insert(nHashVote, &govobj);
