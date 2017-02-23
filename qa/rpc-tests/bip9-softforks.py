@@ -2,6 +2,19 @@
 # Copyright (c) 2015-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+"""Test BIP 9 soft forks.
+
+Connect to a single node.
+regtest lock-in with 108/144 block signalling
+activation after a further 144 blocks
+mine 2 block and save coinbases for later use
+mine 141 blocks to transition from DEFINED to STARTED
+mine 100 blocks signalling readiness and 44 not in order to fail to change state this period
+mine 108 blocks signalling readiness and 36 blocks not signalling readiness (STARTED->LOCKED_IN)
+mine a further 143 blocks (LOCKED_IN)
+test that enforcement has not triggered (which triggers ACTIVE)
+test that enforcement has triggered
+"""
 
 from test_framework.blockstore import BlockStore
 from test_framework.test_framework import ComparisonTestFramework
@@ -13,21 +26,6 @@ from test_framework.script import CScript, OP_1NEGATE, OP_CHECKSEQUENCEVERIFY, O
 from io import BytesIO
 import time
 import itertools
-
-'''
-This test is meant to exercise BIP forks
-Connect to a single node.
-regtest lock-in with 108/144 block signalling
-activation after a further 144 blocks
-mine 2 block and save coinbases for later use
-mine 141 blocks to transition from DEFINED to STARTED
-mine 100 blocks signalling readiness and 44 not in order to fail to change state this period
-mine 108 blocks signalling readiness and 36 blocks not signalling readiness (STARTED->LOCKED_IN)
-mine a further 143 blocks (LOCKED_IN)
-test that enforcement has not triggered (which triggers ACTIVE)
-test that enforcement has triggered
-'''
-
 
 class BIP9SoftForksTest(ComparisonTestFramework):
 
@@ -225,21 +223,21 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         return
 
     def csv_invalidate(self, tx):
-        '''Modify the signature in vin 0 of the tx to fail CSV
+        """Modify the signature in vin 0 of the tx to fail CSV
         Prepends -1 CSV DROP in the scriptSig itself.
-        '''
+        """
         tx.vin[0].scriptSig = CScript([OP_1NEGATE, OP_CHECKSEQUENCEVERIFY, OP_DROP] +
                                       list(CScript(tx.vin[0].scriptSig)))
 
     def sequence_lock_invalidate(self, tx):
-        '''Modify the nSequence to make it fails once sequence lock rule is activated (high timespan)
-        '''
+        """Modify the nSequence to make it fails once sequence lock rule is
+        activated (high timespan).
+        """
         tx.vin[0].nSequence = 0x00FFFFFF
         tx.nLockTime = 0
 
     def mtp_invalidate(self, tx):
-        '''Modify the nLockTime to make it fails once MTP rule is activated
-        '''
+        """Modify the nLockTime to make it fails once MTP rule is activated."""
         # Disable Sequence lock, Activate nLockTime
         tx.vin[0].nSequence = 0x90FFFFFF
         tx.nLockTime = self.last_block_time

@@ -2,21 +2,19 @@
 # Copyright (c) 2015-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-import time
-
-'''
-Test behavior of -maxuploadtarget.
+"""Test behavior of -maxuploadtarget.
 
 * Verify that getdata requests for old blocks (>1week) are dropped
 if uploadtarget has been reached.
 * Verify that getdata requests for recent blocks are respecteved even
 if uploadtarget has been reached.
 * Verify that the upload counters are reset after 24 hours.
-'''
+"""
+
+from test_framework.mininode import *
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import *
+import time
 
 # TestNode: bare-bones "peer".  Used mostly as a conduit for a test to sending
 # p2p messages to a node, generating the messages in the main testing logic.

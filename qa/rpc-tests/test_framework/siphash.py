@@ -2,11 +2,10 @@
 # Copyright (c) 2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+"""Specialized SipHash-2-4 implementations.
 
-#
-# siphash.py - Specialized SipHash-2-4 implementations
-#
-# This implements SipHash-2-4 for 256-bit integers.
+This implements SipHash-2-4 for 256-bit integers.
+"""
 
 def rotl64(n, b):
     return n >> (64 - b) | (n & ((1 << (64 - b)) - 1)) << b

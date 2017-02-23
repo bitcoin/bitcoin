@@ -2,10 +2,13 @@
 # Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+"""Test running bitcoind with -reindex and -reindex-chainstate options.
 
-#
-# Test -reindex and -reindex-chainstate with CheckBlockIndex
-#
+- Start a single node and generate 3 blocks.
+- Stop the node and restart it with -reindex. Verify that the node has reindexed up to block 3.
+- Stop the node and restart it with -reindex-chainstate. Verify that the node has reindexed up to block 3.
+"""
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     start_nodes,
