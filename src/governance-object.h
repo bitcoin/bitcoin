@@ -62,10 +62,12 @@ struct vote_instance_t {
 
     vote_outcome_enum_t eOutcome;
     int64_t nTime;
+    int64_t nCreationTime;
 
-    vote_instance_t(vote_outcome_enum_t eOutcomeIn = VOTE_OUTCOME_NONE, int64_t nTimeIn = 0)
+    vote_instance_t(vote_outcome_enum_t eOutcomeIn = VOTE_OUTCOME_NONE, int64_t nTimeIn = 0, int64_t nCreationTimeIn = 0)
         : eOutcome(eOutcomeIn),
-          nTime(nTimeIn)
+          nTime(nTimeIn),
+          nCreationTime(nCreationTimeIn)
     {}
 
     ADD_SERIALIZE_METHODS;
@@ -76,6 +78,7 @@ struct vote_instance_t {
         int nOutcome = int(eOutcome);
         READWRITE(nOutcome);
         READWRITE(nTime);
+        READWRITE(nCreationTime);
         if(ser_action.ForRead()) {
             eOutcome = vote_outcome_enum_t(nOutcome);
         }
