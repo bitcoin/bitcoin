@@ -304,12 +304,12 @@
         <translation>Sign &amp;message...</translation>
     </message>
     <message>
-        <location line="+427"/>
+        <location line="+430"/>
         <source>Synchronizing with network...</source>
         <translation>Synchronizing with network...</translation>
     </message>
     <message>
-        <location line="-505"/>
+        <location line="-508"/>
         <source>&amp;Overview</source>
         <translation>&amp;Overview</translation>
     </message>
@@ -404,7 +404,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+357"/>
+        <location line="+360"/>
         <source>Click to disable network activity.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -429,7 +429,7 @@
         <translation>Reindexing blocks on disk...</translation>
     </message>
     <message>
-        <location line="-508"/>
+        <location line="-511"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>Send coins to a Bitcoin address</translation>
     </message>
@@ -459,12 +459,12 @@
         <translation>&amp;Verify message...</translation>
     </message>
     <message>
-        <location line="+514"/>
+        <location line="+517"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="-739"/>
+        <location line="-742"/>
         <source>Wallet</source>
         <translation>Wallet</translation>
     </message>
@@ -549,7 +549,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="+354"/>
+        <location line="+357"/>
         <source>%n active connection(s) to Bitcoin network</source>
         <translation>
             <numerusform>%n active connection to Bitcoin network</numerusform>
@@ -610,12 +610,12 @@
         <translation>Up to date</translation>
     </message>
     <message>
-        <location line="-438"/>
+        <location line="-441"/>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+197"/>
+        <location line="+200"/>
         <source>%1 client</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1601,7 +1601,7 @@
 <context>
     <name>PaymentServer</name>
     <message>
-        <location filename="../paymentserver.cpp" line="+328"/>
+        <location filename="../paymentserver.cpp" line="+326"/>
         <location line="+216"/>
         <location line="+42"/>
         <location line="+113"/>
