@@ -185,16 +185,16 @@ extern CRPCTable tableRPC;
  * Utilities: convert hex-encoded Values
  * (throws error if not hex).
  */
-extern uint256 ParseHashV(const UniValue& v, std::string strName);
-extern uint256 ParseHashO(const UniValue& o, std::string strKey);
-extern std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName);
-extern std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey);
+uint256 ParseHashV(const UniValue& v, std::string strName);
+uint256 ParseHashO(const UniValue& o, std::string strKey);
+std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName);
+std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey);
 
-extern CAmount AmountFromValue(const UniValue& value);
-extern UniValue ValueFromAmount(const CAmount& amount);
-extern double GetDifficulty(const CBlockIndex* blockindex = NULL);
-extern std::string HelpExampleCli(const std::string& methodname, const std::string& args);
-extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
+CAmount AmountFromValue(const UniValue& value);
+UniValue ValueFromAmount(const CAmount& amount);
+double GetDifficulty(const CBlockIndex* blockindex = NULL);
+std::string HelpExampleCli(const std::string& methodname, const std::string& args);
+std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
 
 bool StartRPC();
 void InterruptRPC();
