@@ -195,22 +195,6 @@ bool CParallelValidation::IsAlreadyValidating(const NodeId nodeid)
     return false;
 }
 
-#if 0
-void CParallelValidation::StopAllValidationThreads()
-{
-    LOCK(cs_blockvalidationthread);
-    map<boost::thread::id, CHandleBlockMsgThreads>::iterator mi = mapBlockValidationThreads.begin();
-    while (mi != mapBlockValidationThreads.end())
-    {
-        if ((*mi).second.pScriptQueue != NULL) {
-            (*mi).second.pScriptQueue->Quit(); // quit any active script queue threads
-        }
-        (*mi).second.fQuit = true; // quit the PV thread
-        mi++;
-    }
-}
-#endif
-
 void CParallelValidation::StopAllValidationThreads(const boost::thread::id this_id)
 {
     LOCK(cs_blockvalidationthread);
@@ -489,7 +473,6 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
         {
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes) {
-                
                 if (pnode->mapThinBlocksInFlight.erase(inv.hash)) {
                     pnode->thinBlockWaitingForTxns = -1;
                     pnode->thinBlock.SetNull();

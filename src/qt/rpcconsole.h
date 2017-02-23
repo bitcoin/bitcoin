@@ -87,7 +87,9 @@ public Q_SLOTS:
     void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress);
     /** Set size (number of transactions and memory usage) of the mempool in the UI */
     void setMempoolSize(long numberOfTxs, size_t dynUsage);
-    /** BU: Set tx's per second in the UI */
+    /** Set number of transactions in ophan pool in the UI */
+    void setOrphanPoolSize(long numberOfTxs);
+    /** Set tx's per second in the UI */
     void setTransactionsPerSecond(double nTxPerSec);
     /** Go forward or back in history */
     void browseHistory(int offset);

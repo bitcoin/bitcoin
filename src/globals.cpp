@@ -89,9 +89,6 @@ uint64_t CNode::nTotalBytesSent = 0;
 CCriticalSection CNode::cs_totalBytesRecv;
 CCriticalSection CNode::cs_totalBytesSent;
 
-bool fIsChainNearlySyncd;
-CCriticalSection cs_ischainnearlysyncd;
-
 // critical sections from net.cpp
 CCriticalSection cs_setservAddNodeAddresses;
 CCriticalSection cs_vAddedNodes;
@@ -214,7 +211,7 @@ CRequestManager requester;  // after the maps nodes and tweaks
 CParallelValidation PV;  // Singleton class
 CAllScriptCheckQueues allScriptCheckQueues; // Singleton class
 
-CStatHistory<unsigned int, MinValMax<unsigned int> > txAdded; //"memPool/txAdded");
+CStatHistory<unsigned int> txAdded; //"memPool/txAdded");
 CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize; // "memPool/size",STAT_OP_AVE);
 CStatHistory<uint64_t > recvAmt; 
 CStatHistory<uint64_t > sendAmt; 

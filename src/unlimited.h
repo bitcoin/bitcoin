@@ -149,6 +149,11 @@ extern CLeakyBucket sendShaper;
 // Test to determine if traffic shaping is enabled
 extern bool IsTrafficShapingEnabled();
 
+
+extern bool IsChainNearlySyncd();
+extern void IsChainNearlySyncdInit();
+extern uint64_t LargestBlockSeen(uint64_t nBlockSize = 0);
+
 // BUIP010 Xtreme Thinblocks: begin
 
 // Xpress Validation: begin
@@ -164,12 +169,6 @@ extern std::set<uint256> setUnVerifiedOrphanTxHash;
 extern CCriticalSection cs_xval;
 // Xpress Validation: end
 
-extern bool fIsChainNearlySyncd;
-extern uint64_t LargestBlockSeen(uint64_t nBlockSize = 0);
-extern CCriticalSection cs_ischainnearlysyncd;
-
-extern bool IsChainNearlySyncd();
-extern void IsChainNearlySyncdInit();
 extern void LoadFilter(CNode *pfrom, CBloomFilter *filter);
 
 extern bool CheckAndRequestExpeditedBlocks(CNode* pfrom);  // Checks to see if the node is configured in bitcoin.conf to be an expedited block source and if so, request them.
@@ -203,7 +202,7 @@ void UpdateSendStats(CNode* pfrom, const char* strCommand, int msgSize, int64_t 
 
 void UpdateRecvStats(CNode* pfrom, const std::string& strCommand, int msgSize, int64_t nTimeReceived);
 // txn mempool statistics
-extern CStatHistory<unsigned int, MinValMax<unsigned int> > txAdded;
+extern CStatHistory<unsigned int> txAdded;
 extern CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize;
 
 // Configuration variable validators

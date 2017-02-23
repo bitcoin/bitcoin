@@ -56,6 +56,10 @@ public:
 
     //! Return number of transactions in the mempool
     long getMempoolSize() const;
+
+    //! Return number of transactions in the orphan pool
+    long getOrphanPoolSize() const;
+
     //! Return the dynamic memory usage of the mempool
     size_t getMempoolDynamicUsage() const;
     
@@ -88,7 +92,8 @@ private:
     PeerTableModel *peerTableModel;
     BanTableModel *banTableModel;
 
-    QTimer *pollTimer;
+    QTimer *pollTimer1;
+    QTimer *pollTimer2;
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
@@ -97,6 +102,7 @@ Q_SIGNALS:
     void numConnectionsChanged(int count);
     void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
+    void orphanPoolSizeChanged(long count);
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
     void transactionsPerSecondChanged(double tansactionsPerSecond);  // BU:
@@ -108,7 +114,8 @@ Q_SIGNALS:
     void showProgress(const QString &title, int nProgress);
 
 public Q_SLOTS:
-    void updateTimer();
+    void updateTimer1();
+    void updateTimer2();
     void updateNumConnections(int numConnections);
     void updateAlert(const QString &hash, int status);
     void updateBanlist();

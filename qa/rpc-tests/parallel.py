@@ -64,9 +64,7 @@ class ParallelTest (BitcoinTestFramework):
             i += 1
           print ("  syncing...")
           self.sync_all()
-            
-                        
-        
+                    
     def run_test (self):
         if self.rep:
             self.repetitiveTest()

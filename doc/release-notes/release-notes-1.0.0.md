@@ -635,10 +635,10 @@ fanquake (4):
 Credits
 =======
 
-Thanks to all BU deves who directly contributed to this release:
+Thanks to all BU developers who directly contributed to this release:
 
 - BitcoinErrorLog
-- Amaury (deadalnix ) Sèchet
+- Amaury (deadalnix ) Séchet
 - Tom (dgenr8) Harding
 - Jerry (digitsu) Chan
 - ftrader

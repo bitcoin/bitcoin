@@ -29,18 +29,19 @@
 #include "stat.h"
 #include "tweak.h"
 
-#include <boost/atomic.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <iomanip>
 #include <boost/thread.hpp>
 #include <inttypes.h>
 #include <queue>
+#include <atomic>
 
 using namespace std;
 
 extern CTxMemPool mempool; // from main.cpp
-static boost::atomic<uint64_t> nLargestBlockSeen(BLOCKSTREAM_CORE_MAX_BLOCK_SIZE); // track the largest block we've seen
+static atomic<uint64_t> nLargestBlockSeen{BLOCKSTREAM_CORE_MAX_BLOCK_SIZE}; // track the largest block we've seen
+static atomic<bool> fIsChainNearlySyncd{false};
 
 bool IsTrafficShapingEnabled();
 
@@ -413,6 +414,7 @@ std::string UnlimitedCmdLineHelp()
     strUsage += HelpMessageOpt("-maxoutconnections=<n>", strprintf(_("Initiate at most <n> connections to peers (default: %u).  If this number is higher than --maxconnections, it will be reduced to --maxconnections."), DEFAULT_MAX_OUTBOUND_CONNECTIONS));
     strUsage += HelpMessageOpt("-parallel=<n>",  strprintf(_("Turn Parallel Block Validation on or off (off: 0, on: 1, default: %d)"), 1));
     strUsage += TweakCmdLineHelp();
+    strUsage += HelpMessageOpt("-parallel=<n>",  strprintf(_("Turn Parallel Block Validation on or off (off: 0, on: 1, default: %d)"), 1));
     return strUsage;
 }
 
@@ -1073,21 +1075,22 @@ UniValue settrafficshaping(const UniValue& params, bool fHelp)
 // This way we avoid having to lock cs_main so often which tends to be a bottleneck.
 void IsChainNearlySyncdInit() 
 {
-    LOCK2(cs_main, cs_ischainnearlysyncd);
-    if (!pindexBestHeader) fIsChainNearlySyncd = false;  // Not nearly synced if we don't have any blocks!
-    else
-      {
-      if(chainActive.Height() < pindexBestHeader->nHeight - 2)
-        fIsChainNearlySyncd = false;
-      else
-        fIsChainNearlySyncd = true;
-      }
+    LOCK(cs_main);
+    if (!pindexBestHeader) {
+        // Not nearly synced if we don't have any blocks!
+        fIsChainNearlySyncd.store(false);
+    }
+    else {
+        if (chainActive.Height() < pindexBestHeader->nHeight - 2)
+            fIsChainNearlySyncd.store(false);
+        else
+            fIsChainNearlySyncd.store(true);
+    }
 }
 
 bool IsChainNearlySyncd()
 {
-    LOCK(cs_ischainnearlysyncd);
-    return fIsChainNearlySyncd;
+    return fIsChainNearlySyncd.load();
 }
 
 uint64_t LargestBlockSeen(uint64_t nBlockSize)
