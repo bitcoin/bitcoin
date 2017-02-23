@@ -690,6 +690,16 @@ bool InitSanityCheck(void)
     if (!glibc_sanity_test() || !glibcxx_sanity_test())
         return false;
 
+    CMutableTransaction tx;
+    tx.vin.resize(1);
+    tx.vout.resize(1);
+    size_t nMinTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+    size_t nMinStrippedTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
+    if (MIN_TRANSACTION_SIZE != nMinTxSize || MIN_TRANSACTION_SIZE != nMinStrippedTxSize) {
+        InitError(strprintf("MIN_TRANSACTION_SIZE verification failure: const %u vs min=%u vs minstripped=%u", MIN_TRANSACTION_SIZE, nMinTxSize, nMinStrippedTxSize));
+        return false;
+    }
+
     return true;
 }
 
