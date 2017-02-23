@@ -268,7 +268,7 @@ void BitcoinCore::initialize()
 {
     try
     {
-        qDebug() << __func__ << ": Running AppInit2 in thread";
+        qDebug() << __func__ << ": Running initialization in thread";
         if (!AppInitBasicSetup())
         {
             Q_EMIT initializeResult(false);
@@ -457,7 +457,7 @@ void BitcoinApplication::initializeResult(int retval)
     returnValue = retval ? 0 : 1;
     if(retval)
     {
-        // Log this only after AppInit2 finishes, as then logging setup is guaranteed complete
+        // Log this only after AppInitMain finishes, as then logging setup is guaranteed complete
         qWarning() << "Platform customization:" << platformStyle->getName();
 #ifdef ENABLE_WALLET
         PaymentServer::LoadRootCAs();
