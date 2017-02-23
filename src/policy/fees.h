@@ -141,9 +141,14 @@ private:
 
     /** Classes to track historical data on transaction confirmations */
     TxConfirmStats* feeStats;
+    TxConfirmStats* shortStats;
+    TxConfirmStats* longStats;
 
     unsigned int trackedTxs;
     unsigned int untrackedTxs;
+
+    std::vector<double> buckets;              // The upper-bound of the range for the bucket (inclusive)
+    std::map<double, unsigned int> bucketMap; // Map of bucket upper-bound to index into all vectors by bucket
 
     mutable CCriticalSection cs_feeEstimator;
 
