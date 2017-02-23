@@ -7,10 +7,12 @@
 #define BITCOIN_COINS_H
 
 #include "compressor.h"
+#include "consensus/storage_interfaces_cpp.h"
 #include "core_memusage.h"
 #include "hash.h"
 #include "memusage.h"
 #include "serialize.h"
+#include "tinyformat.h"
 #include "uint256.h"
 
 #include <assert.h>
@@ -71,7 +73,7 @@
  *              * 8c988f1a4a4de2161e0f50aac7f17e7f9555caa4: address uint160
  *  - height = 120891
  */
-class CCoins
+class CCoins : public CCoinsInterface
 {
 public:
     //! whether transaction is a coinbase
@@ -149,7 +151,7 @@ public:
 
     void CalcMaskSize(unsigned int &nBytes, unsigned int &nNonzeroBytes) const;
 
-    bool IsCoinBase() const {
+    virtual bool IsCoinBase() const {
         return fCoinBase;
     }
 
@@ -220,13 +222,13 @@ public:
     bool Spend(uint32_t nPos);
 
     //! check whether a particular output is still available
-    bool IsAvailable(unsigned int nPos) const {
-        return (nPos < vout.size() && !vout[nPos].IsNull());
+    virtual bool IsAvailable(int32_t nPos) const {
+        return ((unsigned int)nPos < vout.size() && !vout[nPos].IsNull());
     }
 
     //! check whether the entire CCoins is spent
     //! note that only !IsPruned() CCoins can be serialized
-    bool IsPruned() const {
+    virtual bool IsPruned() const {
         BOOST_FOREACH(const CTxOut &out, vout)
             if (!out.IsNull())
                 return false;
@@ -240,6 +242,21 @@ public:
         }
         return ret;
     }
+
+    // Fully implement CCoinsInterface
+    virtual const CAmount& GetAmount(int32_t nPos) const
+    {
+        return vout[nPos].nValue;
+    };
+    virtual const CScript& GetScriptPubKey(int32_t nPos) const
+    {
+        return vout[nPos].scriptPubKey;
+    };
+    virtual int64_t GetHeight() const
+    {
+        return nHeight;
+    };
+
 };
 
 class SaltedTxidHasher
@@ -303,7 +320,7 @@ private:
 };
 
 /** Abstract view on the open txout dataset. */
-class CCoinsView
+class CCoinsView : public CUtxoView
 {
 public:
     //! Retrieve the CCoins (unspent transaction outputs) for a given txid
@@ -325,6 +342,14 @@ public:
 
     //! As we use CCoinsViews polymorphically, have a virtual destructor
     virtual ~CCoinsView() {}
+
+    // Fully implement CUtxoView
+
+    //! AccessCoins not implemented for CCoinsView
+    virtual const CCoinsInterface* AccessCoins(const uint256 &txid) const
+    {
+        throw std::runtime_error(strprintf("%s: Not implemented for CCoinsView.", __func__));
+    };
 };
 
 
@@ -408,7 +433,7 @@ public:
      * more efficient than GetCoins. Modifications to other cache entries are
      * allowed while accessing the returned pointer.
      */
-    const CCoins* AccessCoins(const uint256 &txid) const;
+    virtual const CCoins* AccessCoins(const uint256 &txid) const;
 
     /**
      * Return a modifiable reference to a CCoins. If no entry with the given
@@ -456,9 +481,6 @@ public:
      * @return	Sum of value of all inputs (scriptSigs)
      */
     CAmount GetValueIn(const CTransaction& tx) const;
-
-    //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
-    bool HaveInputs(const CTransaction& tx) const;
 
     /**
      * Return priority of tx at height nHeight. Also calculate the sum of the values of the inputs
