@@ -86,8 +86,8 @@ script:
     - if [ "$RUN_TESTS" = "true" ]; then make $MAKEJOBS check VERBOSE=1; fi
     - if [ "$TRAVIS_EVENT_TYPE" = "cron" ]; then extended="--extended --exclude pruning"; fi
     - if [ "$RUN_TESTS" = "true" ]; then test/functional/test_runner.py --coverage ${extended}; fi
-    - if [ "$RUN_ALL_RPC_TESTS" = "true" ]; then test/functional/test_runner.py p2p-segwit --oldbinary=../bitcoin-0.12.1/bin/bitcoind; fi
-    - if [ "$RUN_ALL_RPC_TESTS" = "true" ]; then test/functional/test_runner.py -extended --coverage; fi
+    - if [ "$RUN_ALL_RPC_TESTS" = "true" ]; then test/functional/test_runner.py compatibility --oldbinary=../bitcoin-0.12.1/bin/bitcoind; fi
+    - if [ "$RUN_ALL_RPC_TESTS" = "true" ]; then test/functional/test_runner.py --extended -x pruning,rpcbind_test --coverage; fi
 after_script:
     - echo $TRAVIS_COMMIT_RANGE
     - echo $TRAVIS_COMMIT_LOG
