@@ -390,9 +390,11 @@ bool CGovernanceManager::UpdateCurrentWatchdog(CGovernanceObject& watchdogNew)
     int64_t nExpirationDelay = GOVERNANCE_WATCHDOG_EXPIRATION_TIME / 2;
     int64_t nNow = GetTime();
 
-    if((nHashWatchdogCurrent == uint256()) ||
-       (((nNow - nTimeWatchdogCurrent) > nExpirationDelay) && (nNow - watchdogNew.GetCreationTime() < nExpirationDelay)) ||
-       (nHashNew > nHashCurrent)) {
+    if(nHashWatchdogCurrent == uint256() ||                                             // no known current OR
+       ((nNow - watchdogNew.GetCreationTime() < nExpirationDelay) &&                    // (new one is NOT expired AND
+        ((nNow - nTimeWatchdogCurrent > nExpirationDelay) || (nHashNew > nHashCurrent)))//  (current is expired OR
+                                                                                        //   its hash is lower))
+    ) {
         LOCK(cs);
         object_m_it it = mapObjects.find(nHashWatchdogCurrent);
         if(it != mapObjects.end()) {
