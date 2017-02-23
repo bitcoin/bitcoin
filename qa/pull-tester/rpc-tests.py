@@ -133,6 +133,7 @@ def main():
     Help text and arguments for individual test script:''',
                                      formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('--coverage', action='store_true', help='generate a basic coverage report for the RPC interface')
+    parser.add_argument('--exclude', '-x', help='specify a comma-seperated-list of scripts to exclude. Do not include the .py extension in the name.')
     parser.add_argument('--extended', action='store_true', help='run the extended test suite in addition to the basic tests')
     parser.add_argument('--force', '-f', action='store_true', help='run tests even on platforms where they are disabled by default (e.g. windows).')
     parser.add_argument('--help', '-h', '-?', action='store_true', help='print help text and exit')
@@ -179,13 +180,6 @@ def main():
         # in the ALL_SCRIPTS list. Accept the name with or without .py extension.
         test_list = [t for t in ALL_SCRIPTS if
                 (t in tests or re.sub(".py$", "", t) in tests)]
-        if not test_list:
-            print("No valid test scripts specified. Check that your test is in one "
-                  "of the test lists in rpc-tests.py or run rpc-tests.py with no arguments to run all tests")
-            print("Scripts not found:")
-            print(tests)
-            sys.exit(0)
-
     else:
         # No individual tests have been specified. Run base tests, and
         # optionally ZMQ tests and extended tests.
@@ -197,6 +191,17 @@ def main():
             # TODO: BASE_SCRIPTS and EXTENDED_SCRIPTS are sorted by runtime
             # (for parallel running efficiency). This combined list will is no
             # longer sorted.
+
+    # Remove the test cases that the user has explicitly asked to exclude.
+    if args.exclude:
+        for exclude_test in args.exclude.split(','):
+            if exclude_test + ".py" in test_list:
+                test_list.remove(exclude_test + ".py")
+
+    if not test_list:
+        print("No valid test scripts specified. Check that your test is in one "
+              "of the test lists in rpc-tests.py, or run rpc-tests.py with no arguments to run all tests")
+        sys.exit(0)
 
     if args.help:
         # Print help for rpc-tests.py, then print help of the first script and exit.
