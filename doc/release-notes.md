@@ -354,6 +354,8 @@ and git merge commit are mentioned.
 - #9778 `ad168ef` Add two hour buffer to manual pruning (morcos)
 - #9761 `9828f9a` Use 2 hour grace period for key timestamps in importmulti rescans (ryanofsky)
 - #9474 `48d7e0d` Mark the minconf parameter to move as ignored (sipa)
+- #9619 `861cb0c` Bugfix: RPC/Mining: GBT should return 1 MB sizelimit before segwit activates (luke-jr)
+- #9773 `9072395` Return errors from importmulti if complete rescans are not successful (ryanofsky)
 
 ### Block and transaction handling
 - #8391 `37d83bb` Consensus: Remove ISM (NicolasDorier)
@@ -396,6 +398,7 @@ and git merge commit are mentioned.
 - #9252 `ce5c1f4` Release cs\_main before calling ProcessNewBlock, or processing headers (cmpctblock handling) (sdaftuar)
 - #9283 `869781c` A few more CTransactionRef optimizations (sipa)
 - #9499 `9c9af5a` Use recent-rejects, orphans, and recently-replaced txn for compact-block-reconstruction
+- #9813 `3972a8e` Read/write mempool.dat as a binary (paveljanik)
 
 ### P2P protocol and network code
 - #8128 `1030fa7` Turn net structures into dumb storage classes (theuni)
@@ -494,6 +497,8 @@ and git merge commit are mentioned.
 - #8249 `4e1567a` Enable (and check for) 64-bit ASLR on Windows (laanwj)
 - #9758 `476cc47` Selectively suppress deprecation warnings (jonasschnelli)
 - #9783 `6d61a2b` release: bump gitian descriptors for a new 0.14 package cache (theuni)
+- #9789 `749fe95` build: add --enable-werror and warn on vla's (theuni)
+- #9831 `99fd85c` build: force a c++ standard to be specified (theuni)
 
 ### GUI
 - #8192 `c503863` Remove URLs from About dialog translations (fanquake)
@@ -536,6 +541,7 @@ and git merge commit are mentioned.
 - #9718 `36f9d3a` Qt/Intro: Various fixes (luke-jr)
 - #9735 `ec66d06` devtools: Handle Qt formatting characters edge-case in update-translations.py (laanwj)
 - #9755 `a441db0` Bugfix: Qt/Options: Restore persistent "restart required" notice (luke-jr)
+- #9817 `7d75a5a` Fix segfault crash when shutdown the GUI in disablewallet mode (jonasschnelli)
 
 ### Wallet
 - #8367 `045106b` Ensure <0.13 clients can't open HD wallets (jonasschnelli)
@@ -575,6 +581,7 @@ and git merge commit are mentioned.
 - #9771 `e43a585` Add missing cs\_wallet lock that triggers new lock held assertion (ryanofsky)
 - #9316 `3097ea4` Disable free transactions when relay is disabled (MarcoFalke)
 - #9615 `d2c9e4d` Wallet incremental fee (morcos)
+- #9760 `40c754c` Remove importmulti always-true check (ryanofsky)
 
 ### Tests and QA
 - #8270 `6e5e5ab` Tests: Use portable #! in python scripts (/usr/bin/env) (ChoHag)
@@ -629,6 +636,8 @@ and git merge commit are mentioned.
 - #9707 `b860915` Fix RPC failure testing (jnewbery)
 - #8621 `e8ed6eb` contrib: python: Don't use shell=True (MarcoFalke)
 - #9269 `43e8150` Align struct COrphan definition (sipa)
+- #9820 `599c69a` Fix pruning test broken by 2 hour manual prune window (ryanofsky)
+- #9824 `260c71c` qa: Check return code when stopping nodes (MarcoFalke)
 
 ### Documentation
 - #8332 `806b9e7` Clarify witness branches in transaction.h serialization (dcousens)
@@ -713,6 +722,7 @@ and git merge commit are mentioned.
 - #9679 `a351162` Access WorkQueue::running only within the cs lock (TheBlueMatt)
 - #9777 `8dee822` Handle unusual maxsigcachesize gracefully (jnewbery)
 - #8863,#8807 univalue: Pull subtree (MarcoFalke)
+- #9798 `e22c067` Fix Issue #9775 (Check returned value of fopen) (kirit93)
 
 Credits
 =======
@@ -771,6 +781,7 @@ Thanks to everyone who directly contributed to this release:
 - Justin Camarena
 - Karl-Johan Alm
 - Kaz Wesley
+- kirit93
 - Koki Takahashi
 - Lauda
 - leijurv
