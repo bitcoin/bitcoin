@@ -19,6 +19,7 @@ import http.client
 import random
 import shutil
 import subprocess
+import tempfile
 import time
 import re
 import errno
@@ -329,7 +330,7 @@ def _rpchost_to_args(rpchost):
         rv += ['-rpcport=' + rpcport]
     return rv
 
-def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
+def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
     """
     Start a bitcoind and return RPC connection to it
     """
@@ -338,7 +339,7 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
         binary = os.getenv("BITCOIND", "bitcoind")
     args = [ binary, "-datadir="+datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-mocktime="+str(get_mocktime()) ]
     if extra_args is not None: args.extend(extra_args)
-    bitcoind_processes[i] = subprocess.Popen(args)
+    bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)
     if os.getenv("PYTHON_DEBUG", ""):
         print("start_node: bitcoind started, waiting for RPC to come up")
     url = rpc_url(i, rpchost)
@@ -351,6 +352,25 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
         coverage.write_all_rpc_commands(COVERAGE_DIR, proxy)
 
     return proxy
+
+def assert_start_raises_init_error(i, dirname, extra_args=None, expected_msg=None):
+    with tempfile.SpooledTemporaryFile(max_size=2**16) as log_stderr:
+        try:
+            node = start_node(i, dirname, extra_args, stderr=log_stderr)
+            stop_node(node, i)
+        except Exception as e:
+            assert 'bitcoind exited' in str(e) #node must have shutdown
+            if expected_msg is not None:
+                log_stderr.seek(0)
+                stderr = log_stderr.read().decode('utf-8')
+                if expected_msg not in stderr:
+                    raise AssertionError("Expected error \"" + expected_msg + "\" not found in:\n" + stderr)
+        else:
+            if expected_msg is None:
+                assert_msg = "bitcoind should have exited with an error"
+            else:
+                assert_msg = "bitcoind should have exited with expected error " + expected_msg
+            raise AssertionError(assert_msg)
 
 def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
     """
