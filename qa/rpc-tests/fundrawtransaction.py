@@ -469,7 +469,9 @@ class RawTransactionsTest(BitcoinTestFramework):
         # locked wallet test
         self.nodes[1].encryptwallet("test")
         self.nodes.pop(1)
-        stop_nodes(self.nodes)
+        stop_node(self.nodes[0], 0)
+        stop_node(self.nodes[1], 2)
+        stop_node(self.nodes[2], 3)
 
         self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, [['-usehd=0'], ['-usehd=0'], ['-usehd=0'], ['-usehd=0']])
         # This test is not meant to test fee estimation and we'd like
