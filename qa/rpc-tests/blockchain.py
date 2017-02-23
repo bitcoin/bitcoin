@@ -17,6 +17,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.authproxy import JSONRPCException
 from test_framework.util import (
     assert_equal,
+    assert_greater_than_or_equal,
     assert_raises,
     assert_is_hex_string,
     assert_is_hash_string,
@@ -79,7 +80,8 @@ class BlockchainTest(BitcoinTestFramework):
         assert isinstance(header['nonce'], int)
         assert isinstance(header['version'], int)
         assert isinstance(int(header['versionHex'], 16), int)
-        assert isinstance(header['difficulty'], Decimal)
+        assert isinstance(header['difficulty'], (Decimal, int))
+        assert_greater_than_or_equal(header['difficulty'], 1.0)
 
 if __name__ == '__main__':
     BlockchainTest().main()
