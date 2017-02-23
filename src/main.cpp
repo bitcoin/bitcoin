@@ -2658,7 +2658,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             nFees += viewTempCache.GetValueIn(tx)-tx.GetValueOut();
 
             // Only check inputs when the tx hash in not in the setPreVerifiedTxHash as would only
-            // happen if this were a regular block or when a tx is found w?ithin the returning XThinblock.
+            // happen if this were a regular block or when a tx is found within the returning XThinblock.
             uint256 hash = tx.GetHash();
             {
                 {
@@ -2726,7 +2726,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     if (fParallel) cs_main.lock();
     // Last check for chain work just in case the thread manages to get here before being terminated.
     if (PV.ChainWorkHasChanged(nStartingChainWork) || PV.QuitReceived(this_id, fParallel)) {
-        return false; // no need to lock cs_main before returing as it should already be locked.
+        return false; // no need to lock cs_main before returning as it should already be locked.
     }
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
@@ -3262,7 +3262,7 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
             return false;
 
         // Once the first block has been disconnected and a re-org has begun then we need to terminate any
-        // currently running PV threads that are validating.  They will likley have self terminated
+        // currently running PV threads that are validating.  They will likely have self terminated
         // at this point anyway because the chain tip and UTXO base view will have changed but just
         // to be sure we are not waiting on script threads to finish we can issue the termination here.
         if (fParallel && !fBlocksDisconnected) {

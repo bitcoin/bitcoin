@@ -9,6 +9,9 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 class ParallelTest (BitcoinTestFramework):
+    def __init__(self):
+      self.rep = False
+      BitcoinTestFramework.__init__(self)
 
     def setup_chain(self):
         print ("Initializing test directory "+self.options.tmpdir)
@@ -26,7 +29,49 @@ class ParallelTest (BitcoinTestFramework):
         self.is_network_split=False
         self.sync_all()
 
+    def repetitiveTest(self):
+        # get some coins
+        self.nodeLookup = {}
+        i = 0
+        for n in self.nodes:
+          print("Node %d is %s" % (i,n.url))
+          print ("generating coins for node")  
+          n.generate(200)
+          self.sync_all()
+          i += 1
+          
+        for i in range(0,200):
+          # Create many utxo's
+          print ("round %d: Generating txns..." % i)
+          for n in self.nodes:  
+            send_to = {}
+            n.keypoolrefill(100)
+            n.keypoolrefill(100)
+            for i in range(200):
+              send_to[n.getnewaddress()] = Decimal("0.01")
+            n.sendmany("", send_to)
+
+            self.sync_all()
+          print ("  generating blocks...")
+          i = 0
+          for n in self.nodes:
+            try:
+                n.generate(1)
+            except JSONRPCException as e:
+                print (e)
+                print ("Node ", i, " ", n.url)
+                pdb.set_trace()
+            i += 1
+          print ("  syncing...")
+          self.sync_all()
+            
+                        
+        
     def run_test (self):
+        if self.rep:
+            self.repetitiveTest()
+            return
+        
         print ("Mining blocks with PV off...")
 
         # Mine some blocks on node2 which we will need at the end to generate a few transactions from that node
@@ -343,6 +388,19 @@ class ParallelTest (BitcoinTestFramework):
         wait_bitcoinds()
 
 
+def Test():
+    t = ParallelTest()
+    t.rep = True
+    t.main(["--tmpdir=/ramdisk/test", "--nocleanup","--noshutdown"])
 
 if __name__ == '__main__':
-    ParallelTest ().main ()
+    p = ParallelTest()  
+    if "--rep" in sys.argv:
+        print("Repetitive test")
+        p.rep = True
+        sys.argv.remove("--rep")
+    else:
+        p.rep = False
+        
+    p.main ()
+    
