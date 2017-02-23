@@ -412,6 +412,7 @@ std::string UnlimitedCmdLineHelp()
     strUsage += HelpMessageOpt("-maxexpeditedblockrecipients=<n>", _("The maximum number of nodes this node will forward expedited blocks to"));
     strUsage += HelpMessageOpt("-maxexpeditedtxrecipients=<n>", _("The maximum number of nodes this node will forward expedited transactions to"));
     strUsage += HelpMessageOpt("-maxoutconnections=<n>", strprintf(_("Initiate at most <n> connections to peers (default: %u).  If this number is higher than --maxconnections, it will be reduced to --maxconnections."), DEFAULT_MAX_OUTBOUND_CONNECTIONS));
+    strUsage += HelpMessageOpt("-parallel=<n>",  strprintf(_("Turn Parallel Block Validation on or off (off: 0, on: 1, default: %d)"), 1));
     strUsage += TweakCmdLineHelp();
     strUsage += HelpMessageOpt("-parallel=<n>",  strprintf(_("Turn Parallel Block Validation on or off (off: 0, on: 1, default: %d)"), 1));
     return strUsage;

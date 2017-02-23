@@ -56,6 +56,7 @@ bool CParallelValidation::Initialize(const boost::thread::id this_id, const CBlo
 
     if (fParallel)
     {
+        // If the chain tip has passed this block by, its an orphan.  It cannot be connected to the active chain, so return.
         if (chainActive.Tip()->nChainWork > pindex->nChainWork) {
             LogPrintf("returning because chainactive tip is now ahead of chainwork for this block\n");
             return false;
@@ -192,20 +193,6 @@ bool CParallelValidation::IsAlreadyValidating(const NodeId nodeid)
         iter++;
     }
     return false;
-}
-
-void CParallelValidation::StopAllValidationThreads()
-{
-    LOCK(cs_blockvalidationthread);
-    map<boost::thread::id, CHandleBlockMsgThreads>::iterator mi = mapBlockValidationThreads.begin();
-    while (mi != mapBlockValidationThreads.end())
-    {
-        if ((*mi).second.pScriptQueue != NULL) {
-            (*mi).second.pScriptQueue->Quit(); // quit any active script queue threads
-        }
-        (*mi).second.fQuit = true; // quit the PV thread
-        mi++;
-    }
 }
 
 void CParallelValidation::StopAllValidationThreads(const boost::thread::id this_id)
@@ -424,11 +411,10 @@ void CParallelValidation::HandleBlockMessage(CNode *pfrom, const string &strComm
         semPV->wait();
     }
 
-    boost::thread * thread = new boost::thread(boost::bind(&HandleBlockMessageThread, pfrom, strCommand, block, inv));
-    {
-        thread->detach();
-    }
+    boost::thread thread(boost::bind(&HandleBlockMessageThread, pfrom, strCommand, block, inv));
+    thread.detach();  // Separate actual thread from the "thread" object so its fine to fall out of scope 
 }
+
 void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlock &block, const CInv &inv)
 {
 
@@ -487,8 +473,7 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
         {
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes) {
-                if (pnode->mapThinBlocksInFlight.count(inv.hash)) {
-                    pnode->mapThinBlocksInFlight.erase(inv.hash); 
+                if (pnode->mapThinBlocksInFlight.erase(inv.hash)) {
                     pnode->thinBlockWaitingForTxns = -1;
                     pnode->thinBlock.SetNull();
                 }

@@ -149,6 +149,7 @@ extern CLeakyBucket sendShaper;
 // Test to determine if traffic shaping is enabled
 extern bool IsTrafficShapingEnabled();
 
+
 extern bool IsChainNearlySyncd();
 extern void IsChainNearlySyncdInit();
 extern uint64_t LargestBlockSeen(uint64_t nBlockSize = 0);

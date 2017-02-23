@@ -138,9 +138,9 @@ public:
     /* Is this block already running a validation thread? */
     bool IsAlreadyValidating(const NodeId id);
 
-    /* Terminate All currently running Block Validation threads */
-    void StopAllValidationThreads();
-    void StopAllValidationThreads(const boost::thread::id this_id);
+    /* Terminate all currently running Block Validation threads, except the passed thread */    
+    void StopAllValidationThreads(const boost::thread::id this_id = boost::thread::id());
+    /* Terminate all currently running Block Validation threads whose chainWork is <= the passed parameter, except the calling thread  */
     void StopAllValidationThreads(const uint32_t nChainWork);
     void WaitForAllValidationThreadsToStop();
 
