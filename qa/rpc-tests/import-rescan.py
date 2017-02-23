@@ -2,7 +2,9 @@
 # Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test rescan behavior of importaddress, importpubkey, importprivkey, and
+"""Test wallet import RPCs.
+
+Test rescan behavior of importaddress, importpubkey, importprivkey, and
 importmulti RPCs with different types of keys and rescan options.
 
 In the first part of the test, node 0 creates an address for each type of

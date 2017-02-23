@@ -2,34 +2,29 @@
 # Copyright (c) 2015-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+"""Compare two or more bitcoinds to each other.
+
+To use, create a class that implements get_tests(), and pass it in
+as the test generator to TestManager.  get_tests() should be a python
+generator that returns TestInstance objects.  See below for definition.
+
+TestNode behaves as follows:
+    Configure with a BlockStore and TxStore
+    on_inv: log the message but don't request
+    on_headers: log the chain tip
+    on_pong: update ping response map (for synchronization)
+    on_getheaders: provide headers via BlockStore
+    on_getdata: provide blocks via BlockStore
+"""
 
 from .mininode import *
 from .blockstore import BlockStore, TxStore
 from .util import p2p_port
 
-'''
-This is a tool for comparing two or more bitcoinds to each other
-using a script provided.
-
-To use, create a class that implements get_tests(), and pass it in
-as the test generator to TestManager.  get_tests() should be a python
-generator that returns TestInstance objects.  See below for definition.
-'''
-
-# TestNode behaves as follows:
-# Configure with a BlockStore and TxStore
-# on_inv: log the message but don't request
-# on_headers: log the chain tip
-# on_pong: update ping response map (for synchronization)
-# on_getheaders: provide headers via BlockStore
-# on_getdata: provide blocks via BlockStore
-
 global mininode_lock
 
 class RejectResult(object):
-    '''
-    Outcome that expects rejection of a transaction or block.
-    '''
+    """Outcome that expects rejection of a transaction or block."""
     def __init__(self, code, reason=b''):
         self.code = code
         self.reason = reason

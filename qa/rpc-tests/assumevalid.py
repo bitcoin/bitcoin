@@ -2,8 +2,7 @@
 # Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-'''
-assumevalid.py
+"""Test logic for skipping signature validation on old blocks.
 
 Test logic for skipping signature validation on blocks which we've assumed
 valid (https://github.com/bitcoin/bitcoin/pull/9484)
@@ -29,7 +28,7 @@ Start three nodes:
     - node2 has -assumevalid set to the hash of block 102. Try to sync to
       block 200. node2 will reject block 102 since it's assumed valid, but it
       isn't buried by at least two weeks' work.
-'''
+"""
 
 from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework

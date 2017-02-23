@@ -2,14 +2,13 @@
 # Copyright (c) 2015-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+"""Test transaction signing using the signrawtransaction RPC."""
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 
 class SignRawTransactionsTest(BitcoinTestFramework):
-    """Tests transaction signing via RPC command "signrawtransaction"."""
-
     def __init__(self):
         super().__init__()
         self.setup_clean_chain = True
@@ -20,7 +19,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         self.is_network_split = False
 
     def successful_signing_test(self):
-        """Creates and signs a valid raw transaction with one input.
+        """Create and sign a valid raw transaction with one input.
 
         Expected results:
 
@@ -65,7 +64,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
 
 
     def script_verification_error_test(self):
-        """Creates and signs a raw transaction with valid (vin 0), invalid (vin 1) and one missing (vin 2) input script.
+        """Create and sign a raw transaction with valid (vin 0), invalid (vin 1) and one missing (vin 2) input script.
 
         Expected results:
 

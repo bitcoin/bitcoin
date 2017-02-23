@@ -2,6 +2,19 @@
 # Copyright (c) 2015-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+"""Test BIP66 (DER SIG).
+
+Connect to a single node.
+Mine 2 (version 2) blocks (save the coinbases for later).
+Generate 98 more version 2 blocks, verify the node accepts.
+Mine 749 version 3 blocks, verify the node accepts.
+Check that the new DERSIG rules are not enforced on the 750th version 3 block.
+Check that the new DERSIG rules are enforced on the 751st version 3 block.
+Mine 199 new version blocks.
+Mine 1 old-version block.
+Mine 1 new version block.
+Mine 1 old version block, see that the node rejects.
+"""
 
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import *
@@ -15,10 +28,10 @@ import time
 # A canonical signature consists of: 
 # <30> <total len> <02> <len R> <R> <02> <len S> <S> <hashtype>
 def unDERify(tx):
-    '''
+    """
     Make the signature in vin 0 of a tx non-DER-compliant,
     by adding padding after the S-value.
-    '''
+    """
     scriptSig = CScript(tx.vin[0].scriptSig)
     newscript = []
     for i in scriptSig:
@@ -27,20 +40,6 @@ def unDERify(tx):
         else:
             newscript.append(i)
     tx.vin[0].scriptSig = CScript(newscript)
-    
-'''
-This test is meant to exercise BIP66 (DER SIG).
-Connect to a single node.
-Mine 2 (version 2) blocks (save the coinbases for later).
-Generate 98 more version 2 blocks, verify the node accepts.
-Mine 749 version 3 blocks, verify the node accepts.
-Check that the new DERSIG rules are not enforced on the 750th version 3 block.
-Check that the new DERSIG rules are enforced on the 751st version 3 block.
-Mine 199 new version blocks.
-Mine 1 old-version block.
-Mine 1 new version block.
-Mine 1 old version block, see that the node rejects.
-'''
             
 class BIP66Test(ComparisonTestFramework):
 

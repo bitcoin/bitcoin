@@ -2,9 +2,7 @@
 # Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-"""
-Exercise the wallet backup code.  Ported from walletbackup.sh.
+"""Test the wallet backup features.
 
 Test case is:
 4 nodes. 1 2 and 3 send transactions between each other,

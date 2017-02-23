@@ -2,15 +2,7 @@
 # Copyright (c) 2015-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-import time
-from test_framework.blocktools import create_block, create_coinbase
-
-'''
-AcceptBlockTest -- test processing of unrequested blocks.
+"""Test processing of unrequested blocks.
 
 Since behavior differs when receiving unrequested blocks from whitelisted peers
 versus non-whitelisted peers, this tests the behavior of both (effectively two
@@ -54,7 +46,13 @@ The test:
 
 7. Send Node0 the missing block again.
    Node0 should process and the tip should advance.
-'''
+"""
+
+from test_framework.mininode import *
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import *
+import time
+from test_framework.blocktools import create_block, create_coinbase
 
 # TestNode: bare-bones "peer".  Used mostly as a conduit for a test to sending
 # p2p messages to a node, generating the messages in the main testing logic.

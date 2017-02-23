@@ -2,16 +2,15 @@
 # Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+"""Test spending coinbase transactions.
 
-#
-# Test spending coinbase transactions.
-# The coinbase transaction in block N can appear in block
-# N+100... so is valid in the mempool when the best block
-# height is N+99.
-# This test makes sure coinbase spends that will be mature
-# in the next block are accepted into the memory pool,
-# but less mature coinbase spends are NOT.
-#
+The coinbase transaction in block N can appear in block
+N+100... so is valid in the mempool when the best block
+height is N+99.
+This test makes sure coinbase spends that will be mature
+in the next block are accepted into the memory pool,
+but less mature coinbase spends are NOT.
+"""
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
