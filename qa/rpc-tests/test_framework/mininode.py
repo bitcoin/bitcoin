@@ -1744,7 +1744,7 @@ class NodeConn(asyncore.dispatcher):
     def send_message(self, message, pushbuf=False):
         if self.state != "connected" and not pushbuf:
             raise IOError('Not connected, no pushbuf')
-            logger.debug("Send message to %s:%d: %s" % (self.dstaddr, self.dstport, repr(message)))
+        logger.debug("Send message to %s:%d: %s" % (self.dstaddr, self.dstport, repr(message)))
         command = message.command
         data = message.serialize()
         tmsg = self.MAGIC_BYTES[self.network]
