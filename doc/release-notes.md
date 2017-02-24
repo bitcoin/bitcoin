@@ -359,7 +359,6 @@ and git merge commit are mentioned.
 - #8788 `97c7f73` Give RPC commands more information about the RPC request (jonasschnelli)
 - #7948 `5d2c8e5` Augment getblockchaininfo bip9\_softforks data (mruddy)
 - #8980 `0e22855` importmulti: Avoid using boost::variant::operator!=, which is only in newer boost versions (luke-jr)
-- #9087 `924de0b` Give more details when "generate" fails (jtimon)
 - #9025 `4d8558a` Getrawtransaction should take a bool for verbose (jnewbery)
 - #8811 `5754e03` Add support for JSON-RPC named arguments (laanwj)
 - #9520 `2456a83` Deprecate non-txindex getrawtransaction and better warning (sipa)
@@ -419,7 +418,7 @@ and git merge commit are mentioned.
 - #9349 `2db4cbc` Make CScript (and prevector) c++11 movable (sipa)
 - #9252 `ce5c1f4` Release cs\_main before calling ProcessNewBlock, or processing headers (cmpctblock handling) (sdaftuar)
 - #9283 `869781c` A few more CTransactionRef optimizations (sipa)
-- #9499 `9c9af5a` Use recent-rejects, orphans, and recently-replaced txn for compact-block-reconstruction
+- #9499 `9c9af5a` Use recent-rejects, orphans, and recently-replaced txn for compact-block-reconstruction (TheBlueMatt)
 - #9813 `3972a8e` Read/write mempool.dat as a binary (paveljanik)
 
 ### P2P protocol and network code
@@ -566,7 +565,6 @@ and git merge commit are mentioned.
 - #9817 `7d75a5a` Fix segfault crash when shutdown the GUI in disablewallet mode (jonasschnelli)
 
 ### Wallet
-- #8367 `045106b` Ensure <0.13 clients can't open HD wallets (jonasschnelli)
 - #8152 `b9c1cd8` Remove `CWalletDB*` parameter from CWallet::AddToWallet (pstratem)
 - #8432 `c7e05b3` Make CWallet::fFileBacked private (pstratem)
 - #8445 `f916700` Move CWallet::setKeyPool to private section of CWallet (pstratem)
@@ -577,7 +575,7 @@ and git merge commit are mentioned.
 - #8696 `a1f8d3e` Wallet: Remove last external reference to CWalletDB (pstratem)
 - #8768 `886e8c9` init: Get rid of fDisableWallet (MarcoFalke)
 - #8486 `ab0b411` Add high transaction fee warnings (MarcoFalke)
-- #8851 `940748b` Move key derivation logic from GenerateNewKey to DeriveNewChildKey (pstratem) (MarcoFalke)
+- #8851 `940748b` Move key derivation logic from GenerateNewKey to DeriveNewChildKey (pstratem)
 - #8287 `e10af96` Set fLimitFree = true (MarcoFalke)
 - #8928 `c587577` Fix init segfault where InitLoadWallet() calls ATMP before genesis (TheBlueMatt)
 - #7551 `f2d7056` Add importmulti RPC call (pedrobranco)
@@ -656,7 +654,6 @@ and git merge commit are mentioned.
 - #9691 `fc67cd2` Init ECC context for `test_bitcoin_fuzzy` (gmaxwell)
 - #9712 `d304fef` bench: Fix initialization order in registration (laanwj)
 - #9707 `b860915` Fix RPC failure testing (jnewbery)
-- #8621 `e8ed6eb` contrib: python: Don't use shell=True (MarcoFalke)
 - #9269 `43e8150` Align struct COrphan definition (sipa)
 - #9820 `599c69a` Fix pruning test broken by 2 hour manual prune window (ryanofsky)
 - #9824 `260c71c` qa: Check return code when stopping nodes (MarcoFalke)
@@ -702,6 +699,7 @@ and git merge commit are mentioned.
 - #8274 `7a2d402` util: Update tinyformat (laanwj)
 - #8291 `5cac8b1` util: CopyrightHolders: Check for untranslated substitution (MarcoFalke)
 - #8557 `44691f3` contrib: Rework verifybinaries (MarcoFalke)
+- #8621 `e8ed6eb` contrib: python: Don't use shell=True (MarcoFalke)
 - #8813 `fb24d7e` bitcoind: Daemonize using daemon(3) (laanwj)
 - #9004 `67728a3` Clarify `listenonion` (unsystemizer)
 - #8674 `bae81b8` tools for analyzing, updating and adding copyright headers in source files (isle2983)
