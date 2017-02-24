@@ -72,7 +72,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
     def setup_network(self):
         self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-maxorphantx=1000", "-debug",
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-maxorphantx=1000",
                                                               "-whitelist=127.0.0.1",
                                                               "-limitancestorcount=50",
                                                               "-limitancestorsize=101",

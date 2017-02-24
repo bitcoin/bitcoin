@@ -102,7 +102,7 @@ class P2PLeakTest(BitcoinTestFramework):
         super().__init__()
         self.num_nodes = 1
     def setup_network(self):
-        extra_args = [['-debug', '-banscore='+str(banscore)]
+        extra_args = [['-banscore='+str(banscore)]
                       for i in range(self.num_nodes)]
         self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
 

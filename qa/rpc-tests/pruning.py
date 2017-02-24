@@ -41,19 +41,19 @@ class PruneTest(BitcoinTestFramework):
         self.is_network_split = False
 
         # Create nodes 0 and 1 to mine
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-maxreceivebuffer=20000","-blockmaxsize=999000", "-checkblocks=5"], timewait=900))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-maxreceivebuffer=20000","-blockmaxsize=999000", "-checkblocks=5"], timewait=900))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-maxreceivebuffer=20000","-blockmaxsize=999000", "-checkblocks=5"], timewait=900))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-maxreceivebuffer=20000","-blockmaxsize=999000", "-checkblocks=5"], timewait=900))
 
         # Create node 2 to test pruning
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-maxreceivebuffer=20000","-prune=550"], timewait=900))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-maxreceivebuffer=20000","-prune=550"], timewait=900))
         self.prunedir = self.options.tmpdir+"/node2/regtest/blocks/"
 
         # Create nodes 3 and 4 to test manual pruning (they will be re-started with manual pruning later)
-        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug=0","-maxreceivebuffer=20000","-blockmaxsize=999000"], timewait=900))
-        self.nodes.append(start_node(4, self.options.tmpdir, ["-debug=0","-maxreceivebuffer=20000","-blockmaxsize=999000"], timewait=900))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-maxreceivebuffer=20000","-blockmaxsize=999000"], timewait=900))
+        self.nodes.append(start_node(4, self.options.tmpdir, ["-maxreceivebuffer=20000","-blockmaxsize=999000"], timewait=900))
 
         # Create nodes 5 to test wallet in prune mode, but do not connect
-        self.nodes.append(start_node(5, self.options.tmpdir, ["-debug=0", "-prune=550"]))
+        self.nodes.append(start_node(5, self.options.tmpdir, ["-prune=550"]))
 
         # Determine default relay fee
         self.relayfee = self.nodes[0].getnetworkinfo()["relayfee"]
@@ -107,7 +107,7 @@ class PruneTest(BitcoinTestFramework):
             # Node 2 stays connected, so it hears about the stale blocks and then reorg's when node0 reconnects
             # Stopping node 0 also clears its mempool, so it doesn't have node1's transactions to accidentally mine
             self.stop_node(0)
-            self.nodes[0]=start_node(0, self.options.tmpdir, ["-debug","-maxreceivebuffer=20000","-blockmaxsize=999000", "-checkblocks=5"], timewait=900)
+            self.nodes[0]=start_node(0, self.options.tmpdir, ["-maxreceivebuffer=20000","-blockmaxsize=999000", "-checkblocks=5"], timewait=900)
             # Mine 24 blocks in node 1
             for i in range(24):
                 if j == 0:
@@ -132,7 +132,7 @@ class PruneTest(BitcoinTestFramework):
         # Reboot node 1 to clear its mempool (hopefully make the invalidate faster)
         # Lower the block max size so we don't keep mining all our big mempool transactions (from disconnected blocks)
         self.stop_node(1)
-        self.nodes[1]=start_node(1, self.options.tmpdir, ["-debug","-maxreceivebuffer=20000","-blockmaxsize=5000", "-checkblocks=5", "-disablesafemode"], timewait=900)
+        self.nodes[1]=start_node(1, self.options.tmpdir, ["-maxreceivebuffer=20000","-blockmaxsize=5000", "-checkblocks=5", "-disablesafemode"], timewait=900)
 
         height = self.nodes[1].getblockcount()
         print("Current block height:", height)
@@ -155,7 +155,7 @@ class PruneTest(BitcoinTestFramework):
 
         # Reboot node1 to clear those giant tx's from mempool
         self.stop_node(1)
-        self.nodes[1]=start_node(1, self.options.tmpdir, ["-debug","-maxreceivebuffer=20000","-blockmaxsize=5000", "-checkblocks=5", "-disablesafemode"], timewait=900)
+        self.nodes[1]=start_node(1, self.options.tmpdir, ["-maxreceivebuffer=20000","-blockmaxsize=5000", "-checkblocks=5", "-disablesafemode"], timewait=900)
 
         print("Generating new longer chain of 300 more blocks")
         self.nodes[1].generate(300)
@@ -228,13 +228,13 @@ class PruneTest(BitcoinTestFramework):
 
     def manual_test(self, node_number, use_timestamp):
         # at this point, node has 995 blocks and has not yet run in prune mode
-        node = self.nodes[node_number] = start_node(node_number, self.options.tmpdir, ["-debug=0"], timewait=900)
+        node = self.nodes[node_number] = start_node(node_number, self.options.tmpdir, timewait=900)
         assert_equal(node.getblockcount(), 995)
         assert_raises_jsonrpc(-1, "not in prune mode", node.pruneblockchain, 500)
         self.stop_node(node_number)
 
         # now re-start in manual pruning mode
-        node = self.nodes[node_number] = start_node(node_number, self.options.tmpdir, ["-debug=0","-prune=1"], timewait=900)
+        node = self.nodes[node_number] = start_node(node_number, self.options.tmpdir, ["-prune=1"], timewait=900)
         assert_equal(node.getblockcount(), 995)
 
         def height(index):
@@ -308,7 +308,7 @@ class PruneTest(BitcoinTestFramework):
 
         # stop node, start back up with auto-prune at 550MB, make sure still runs
         self.stop_node(node_number)
-        self.nodes[node_number] = start_node(node_number, self.options.tmpdir, ["-debug=0","-prune=550"], timewait=900)
+        self.nodes[node_number] = start_node(node_number, self.options.tmpdir, ["-prune=550"], timewait=900)
 
         print("Success")
 
@@ -316,7 +316,7 @@ class PruneTest(BitcoinTestFramework):
         # check that the pruning node's wallet is still in good shape
         print("Stop and start pruning node to trigger wallet rescan")
         self.stop_node(2)
-        start_node(2, self.options.tmpdir, ["-debug=1","-prune=550"])
+        start_node(2, self.options.tmpdir, ["-prune=550"])
         print("Success")
 
         # check that wallet loads loads successfully when restarting a pruned node after IBD.
@@ -326,7 +326,7 @@ class PruneTest(BitcoinTestFramework):
         nds = [self.nodes[0], self.nodes[5]]
         sync_blocks(nds, wait=5, timeout=300)
         self.stop_node(5) #stop and start to trigger rescan
-        start_node(5, self.options.tmpdir, ["-debug=1","-prune=550"])
+        start_node(5, self.options.tmpdir, ["-prune=550"])
         print ("Success")
 
     def run_test(self):
