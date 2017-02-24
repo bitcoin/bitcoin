@@ -846,8 +846,8 @@ int SocketSendData(CNode* pnode)
                 // error
                 int nErr = WSAGetLastError();
                 if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS) {
-		  LogPrintf("socket send error '%s' to %s (%d)\n", NetworkErrorString(nErr),pnode->addrName.c_str(),pnode->id);
-                    pnode->CloseSocketDisconnect();
+                    LogPrintf("socket send error '%s' to %s (%d)\n", NetworkErrorString(nErr), pnode->addrName.c_str(), pnode->id);
+                    pnode->fDisconnect = true;
                 }
             }
             // couldn't send anything at all
@@ -1421,7 +1421,7 @@ void ThreadSocketHandler()
                         if (nBytes > 0) {
                             receiveShaper.leak(nBytes);
                             if (!pnode->ReceiveMsgBytes(recvMsgBuf, nBytes))
-                                pnode->CloseSocketDisconnect();
+                                pnode->fDisconnect = true;
                             int64_t tmp = GetTime();
                             pnode->recvGap << (tmp - pnode->nLastRecv);
                             pnode->nLastRecv = tmp;
@@ -1431,15 +1431,15 @@ void ThreadSocketHandler()
                         } else if (nBytes == 0) {
                             // socket closed gracefully
                             if (!pnode->fDisconnect)
-			      LogPrint("net", "Node %s socket closed\n",pnode->addrName.c_str());
-                            pnode->CloseSocketDisconnect();
+                                LogPrint("net", "Node %s socket closed\n", pnode->addrName.c_str());
+                            pnode->fDisconnect = true;
                         } else if (nBytes < 0) {
                             // error
                             int nErr = WSAGetLastError();
                             if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS) {
                                 if (!pnode->fDisconnect)
-				  LogPrintf("Node %s socket recv error '%s'\n", pnode->addrName.c_str(), NetworkErrorString(nErr));
-                                pnode->CloseSocketDisconnect();
+                                    LogPrintf("Node %s socket recv error '%s'\n", pnode->addrName.c_str(), NetworkErrorString(nErr));
+                                pnode->fDisconnect = true;
                             }
                         }
                     }
@@ -2031,7 +2031,7 @@ void ThreadMessageHandler()
                 TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
                 if (lockRecv) {
                     if (!g_signals.ProcessMessages(pnode))
-                        pnode->CloseSocketDisconnect();
+                        pnode->fDisconnect = true;
 
                     if (pnode->nSendSize < SendBufferSize()) {
                         if (!pnode->vRecvGetData.empty() || (!pnode->vRecvMsg.empty() && pnode->vRecvMsg[0].complete())) {
