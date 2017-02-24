@@ -105,6 +105,8 @@ static void GetOSRand(unsigned char *ent32)
         RandFailure();
     }
     CryptReleaseContext(hProvider, 0);
+#elif arc4random_supported
+    arc4random_buf(ent32,32);
 #else
     int f = open("/dev/urandom", O_RDONLY);
     if (f == -1) {
