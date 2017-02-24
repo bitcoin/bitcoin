@@ -15,6 +15,7 @@
 #include <QThread>
 
 class ClientModel;
+class GuiNetWatch;
 class PlatformStyle;
 class RPCTimerInterface;
 class WalletModel;
@@ -153,6 +154,7 @@ private:
     interfaces::Node& m_node;
     Ui::RPCConsole* const ui;
     ClientModel *clientModel = nullptr;
+    GuiNetWatch *netwatch = nullptr;
     QStringList history;
     int historyPtr = 0;
     QString cmdBeforeBrowsing;
