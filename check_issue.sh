@@ -8,7 +8,7 @@ define hook-stop
     if \$_exitcode != -999
         quit
     else
-        bt
+        thread apply all backtrace
         quit
     end
 end
