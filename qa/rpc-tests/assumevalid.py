@@ -73,7 +73,7 @@ class SendHeadersTest(BitcoinTestFramework):
         # we need to pre-mine a block with an invalid transaction
         # signature so we can pass in the block hash as assumevalid.
         self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug"]))
+        self.nodes.append(start_node(0, self.options.tmpdir))
 
     def run_test(self):
 
@@ -146,14 +146,14 @@ class SendHeadersTest(BitcoinTestFramework):
 
         # Start node1 and node2 with assumevalid so they accept a block with a bad signature.
         self.nodes.append(start_node(1, self.options.tmpdir,
-                                     ["-debug", "-assumevalid=" + hex(block102.sha256)]))
+                                     ["-assumevalid=" + hex(block102.sha256)]))
         node1 = BaseNode()  # connects to node1
         connections.append(NodeConn('127.0.0.1', p2p_port(1), self.nodes[1], node1))
         node1.add_connection(connections[1])
         node1.wait_for_verack()
 
         self.nodes.append(start_node(2, self.options.tmpdir,
-                                     ["-debug", "-assumevalid=" + hex(block102.sha256)]))
+                                     ["-assumevalid=" + hex(block102.sha256)]))
         node2 = BaseNode()  # connects to node2
         connections.append(NodeConn('127.0.0.1', p2p_port(2), self.nodes[2], node2))
         node2.add_connection(connections[2])
