@@ -6770,26 +6770,30 @@ bool SendMessages(CNode* pto)
                 // The last entry in vBlockHashesToAnnounce was our tip at some point
                 // in the past.
                 if (!pto->vBlockHashesToAnnounce.empty()) {
-                    const uint256 &hashToAnnounce = pto->vBlockHashesToAnnounce.back();
-                    BlockMap::iterator mi = mapBlockIndex.find(hashToAnnounce);
-                    assert(mi != mapBlockIndex.end());
-                    CBlockIndex *pindex = mi->second;
+                    BOOST_FOREACH(const uint256 &hashToAnnounce, pto->vBlockHashesToAnnounce) {
+                        LogPrintf("trying to announnce block %s\n" ,hashToAnnounce.ToString());
+                        //const uint256 &hashToAnnounce = pto->vBlockHashesToAnnounce.back();
+                        BlockMap::iterator mi = mapBlockIndex.find(hashToAnnounce);
+                        assert(mi != mapBlockIndex.end());
+                        CBlockIndex *pindex = mi->second;
 
-                    // Warn if we're announcing a block that is not on the main chain.
-                    // This should be very rare and could be optimized out.
-                    // Just log for now.
-                    if (chainActive[pindex->nHeight] != pindex) {
-                        LogPrint("net", "Announcing block %s not on main chain (tip=%s)\n",
-                            hashToAnnounce.ToString(), chainActive.Tip()->GetBlockHash().ToString());
-                    }
+                        // Warn if we're announcing a block that is not on the main chain.
+                        // This should be very rare and could be optimized out.
+                        // Just log for now.
+                        if (chainActive[pindex->nHeight] != pindex) {
+                            LogPrint("net", "Announcing block %s not on main chain (tip=%s)\n",
+                                hashToAnnounce.ToString(), chainActive.Tip()->GetBlockHash().ToString());
+                        }
 
-                    // If the peer announced this block to us, don't inv it back.
-                    // (Since block announcements may not be via inv's, we can't solely rely on
-                    // setInventoryKnown to track this.)
-                    if (!PeerHasHeader(&state, pindex)) {
-                        pto->PushInventory(CInv(MSG_BLOCK, hashToAnnounce));
-                        LogPrint("net", "%s: sending inv peer=%d hash=%s\n", __func__,
-                            pto->id, hashToAnnounce.ToString());
+                        // If the peer announced this block to us, don't inv it back.
+                        // (Since block announcements may not be via inv's, we can't solely rely on
+                        // setInventoryKnown to track this.)
+                        if (!PeerHasHeader(&state, pindex)) 
+                        {
+                            pto->PushInventory(CInv(MSG_BLOCK, hashToAnnounce));
+                            LogPrint("net", "%s: sending inv peer=%d hash=%s\n", __func__,
+                                pto->id, hashToAnnounce.ToString());
+                        }
                     }
                 }
             } else if (!vHeaders.empty()) {
