@@ -25,8 +25,6 @@ env:
     - HOST=i686-pc-linux-gnu PACKAGES="g++-multilib bc python3-zmq gdb" DEP_OPTS="NO_QT=1" RUN_TESTS=true GOAL="src/test/test_bitcoin" BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++" USE_SHELL="/bin/dash"
 # bitcoind
     - HOST=x86_64-unknown-linux-gnu PACKAGES="bc python3-zmq gdb" DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1" RUN_TESTS=true GOAL="src/test/test_bitcoin" BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports CPPFLAGS=-DDEBUG_LOCKORDER"
-# No wallet
-    - HOST=x86_64-unknown-linux-gnu PACKAGES="python3 gdb" DEP_OPTS="NO_WALLET=1" RUN_TESTS=true GOAL="src/test/test_bitcoin" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
 
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
