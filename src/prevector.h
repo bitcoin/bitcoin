@@ -5,6 +5,7 @@
 #ifndef _BITCOIN_PREVECTOR_H_
 #define _BITCOIN_PREVECTOR_H_
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -170,10 +171,15 @@ private:
             }
         } else {
             if (!is_direct()) {
+                /* FIXME: Because malloc/realloc here won't call new_handler if allocation fails, assert
+                    success. These should instead use an allocator or new/delete so that handlers
+                    are called as necessary, but performance would be slightly degraded by doing so. */
                 _union.indirect = static_cast<char*>(realloc(_union.indirect, ((size_t)sizeof(T)) * new_capacity));
+                assert(_union.indirect);
                 _union.capacity = new_capacity;
             } else {
                 char* new_indirect = static_cast<char*>(malloc(((size_t)sizeof(T)) * new_capacity));
+                assert(new_indirect);
                 T* src = direct_ptr(0);
                 T* dst = reinterpret_cast<T*>(new_indirect);
                 memcpy(dst, src, size() * sizeof(T));
