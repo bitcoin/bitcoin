@@ -73,8 +73,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         # simple test #
         ###############
         inputs  = [ ]
-        outputs = { self.nodes[0].getnewaddress() : 1.0 }
-        rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
+        outputs = { self.nodes[0].getnewaddress() : 100000000 }
+        rawtx   = self.nodes[2].createrawtransaction(inputs, outputs, 0, False)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
         fee = rawtxfund['fee']
