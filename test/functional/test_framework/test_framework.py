@@ -30,11 +30,11 @@ from .authproxy import JSONRPCException
 
 
 class BitcoinTestFramework(object):
-
     def __init__(self):
         self.num_nodes = 4
         self.setup_clean_chain = False
         self.nodes = None
+        self.chains = None
 
     def run_test(self):
         raise NotImplementedError
@@ -55,42 +55,60 @@ class BitcoinTestFramework(object):
     def setup_nodes(self):
         return start_nodes(self.num_nodes, self.options.tmpdir)
 
-    def setup_network(self, split = False):
+    def setup_network(self, splits = None):
+        """
+        Set up the network to be split into chains according to splits.
+        If splits is a boolean, it is interpreted as "split down the half" for True,
+        and "do not split" for False. Otherwise, it must be an array of indices
+        indicating at which node the next split should occur. E.g. [2] would mean
+        the network is split into
+            node 0          node 2
+            node 1          node 3
+                            ...
+        [3, 5] would mean
+            node 0          node 3      node 5
+            node 1          node 4      node 6
+            node 2                      ...
+        """
         self.nodes = self.setup_nodes()
+        if splits == False or not splits: splits = []
+        if splits == True: splits = [int(self.num_nodes/2)]
+        splits.append(self.num_nodes)
 
         # Connect the nodes as a "chain".  This allows us
-        # to split the network between nodes 1 and 2 to get
+        # to split the network between e.g. nodes 1 and 2 to get
         # two halves that can work on competing chains.
 
-        # If we joined network halves, connect the nodes from the joint
-        # on outward.  This ensures that chains are properly reorganised.
-        if not split:
-            connect_nodes_bi(self.nodes, 1, 2)
-            sync_blocks(self.nodes[1:3])
-            sync_mempools(self.nodes[1:3])
+        self.chains = []
+        curr_chain = []
+        for i in range(self.num_nodes - 1):
+            curr_chain.append(self.nodes[i])
+            if i + 1 == splits[len(self.chains)]:
+                self.chains.append(curr_chain)
+                curr_chain = []
+            else:
+                connect_nodes_bi(self.nodes, i, i + 1)
+        curr_chain.append(self.nodes[self.num_nodes - 1])
+        self.chains.append(curr_chain)
 
-        connect_nodes_bi(self.nodes, 0, 1)
-        connect_nodes_bi(self.nodes, 2, 3)
-        self.is_network_split = split
+        self.is_network_split = len(self.chains) > 1
         self.sync_all()
 
-    def split_network(self):
+    def split_network(self, splits = True):
         """
-        Split the network of four nodes into nodes 0/1 and 2/3.
+        Split the network into chains.
+        With 4 nodes and two chains = 2, we split the nodes into nodes 0/1 and 2/3.
+        If splits is a boolean, it is interpreted as "split down the half" for True,
+        and "do not split" for False.
         """
         assert not self.is_network_split
         stop_nodes(self.nodes)
-        self.setup_network(True)
+        self.setup_network(splits)
 
     def sync_all(self):
-        if self.is_network_split:
-            sync_blocks(self.nodes[:2])
-            sync_blocks(self.nodes[2:])
-            sync_mempools(self.nodes[:2])
-            sync_mempools(self.nodes[2:])
-        else:
-            sync_blocks(self.nodes)
-            sync_mempools(self.nodes)
+        for chain in self.chains if self.chains else [self.nodes]:
+            sync_blocks(chain)
+            sync_mempools(chain)
 
     def join_network(self):
         """
@@ -101,7 +119,6 @@ class BitcoinTestFramework(object):
         self.setup_network(False)
 
     def main(self):
-
         parser = optparse.OptionParser(usage="%prog [options]")
         parser.add_option("--nocleanup", dest="nocleanup", default=False, action="store_true",
                           help="Leave bitcoinds and test.* datadir on exit or error")
