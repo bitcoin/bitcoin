@@ -6,10 +6,10 @@ handle SIGTERM nostop print pass
 handle SIGPIPE nostop
 define hook-stop
     if \$_exitcode != -999
-        quit
+        quit \$_exitcode
     else
         thread apply all backtrace
-        quit
+        quit 1
     end
 end
 echo .gdbinit: running app\n
