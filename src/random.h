@@ -7,6 +7,7 @@
 #define BITCOIN_RANDOM_H
 
 #include "crypto/chacha20.h"
+#include "crypto/common.h"
 #include "uint256.h"
 
 #include <stdint.h>
@@ -88,6 +89,17 @@ public:
             bitbuf >>= bits;
             bitbuf_size -= bits;
             return ret;
+        }
+    }
+
+    /** Generate a random integer in the range [0..range). */
+    uint64_t randrange(uint64_t range)
+    {
+        --range;
+        int bits = CountBits(range);
+        while (true) {
+            uint64_t ret = randbits(bits);
+            if (ret <= range) return ret;
         }
     }
 
