@@ -10,6 +10,7 @@
 #include "crypto/sha512.h"
 #include "crypto/hmac_sha256.h"
 #include "crypto/hmac_sha512.h"
+#include "random.h"
 #include "utilstrencodings.h"
 #include "test/test_bitcoin.h"
 #include "test/test_random.h"
@@ -482,6 +483,28 @@ BOOST_AUTO_TEST_CASE(chacha20_testvector)
                  "a97a5f576fe064025d3ce042c566ab2c507b138db853e3d6959660996546cc9c4a6eafdc777c040d70eaf46f76dad3979e5c5"
                  "360c3317166a1c894c94a371876a94df7628fe4eaaf2ccb27d5aaae0ad7ad0f9d4b6ad3b54098746d4524d38407a6deb3ab78"
                  "fab78c9");
+}
+
+BOOST_AUTO_TEST_CASE(countbits_tests)
+{
+    FastRandomContext ctx;
+    for (int i = 0; i <= 64; ++i) {
+        if (i == 0) {
+            // Check handling of zero.
+            BOOST_CHECK_EQUAL(CountBits(0), 0);
+        } else if (i < 10) {
+            for (uint64_t j = 1 << (i - 1); (j >> i) == 0; ++j) {
+                // Exhaustively test up to 10 bits
+                BOOST_CHECK_EQUAL(CountBits(j), i);
+            }
+        } else {
+            for (int k = 0; k < 1000; k++) {
+                // Randomly test 1000 samples of each length above 10 bits.
+                uint64_t j = ((uint64_t)1) << (i - 1) | ctx.randbits(i - 1);
+                BOOST_CHECK_EQUAL(CountBits(j), i);
+            }
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
