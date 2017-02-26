@@ -30,7 +30,8 @@ from test_framework.script import (CScript,
                                    OP_CHECKLOCKTIMEVERIFY,
                                    OP_DROP)
 from test_framework.test_framework import ComparisonTestFramework
-from test_framework.util import *
+from test_framework.util import (hex_str_to_bytes,
+                                 start_nodes)
 
 def cltv_invalidate(tx):
     '''Modify the signature in vin 0 of the tx to fail CLTV

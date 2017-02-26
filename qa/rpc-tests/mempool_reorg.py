@@ -9,7 +9,12 @@ that spend (directly or indirectly) coinbase transactions.
 """
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (JSONRPCException,
+                                 assert_equal,
+                                 assert_raises,
+                                 connect_nodes,
+                                 create_tx,
+                                 start_node)
 
 # Create one-input, one-output, no-fee transaction:
 class MempoolCoinbaseTest(BitcoinTestFramework):

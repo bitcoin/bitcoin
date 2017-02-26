@@ -32,7 +32,12 @@ from test_framework.script import (CScript,
                                    OP_CHECKSEQUENCEVERIFY,
                                    OP_DROP)
 from test_framework.test_framework import ComparisonTestFramework
-from test_framework.util import *
+from test_framework.util import (assert_equal,
+                                 bytes_to_hex_str,
+                                 hex_str_to_bytes,
+                                 shutil,
+                                 start_nodes,
+                                 stop_nodes)
 
 class BIP9SoftForksTest(ComparisonTestFramework):
 

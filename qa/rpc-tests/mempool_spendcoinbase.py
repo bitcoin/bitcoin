@@ -13,7 +13,11 @@ but less mature coinbase spends are NOT.
 """
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (JSONRPCException,
+                                 assert_equal,
+                                 assert_raises,
+                                 create_tx,
+                                 start_node)
 
 # Create one-input, one-output, no-fee transaction:
 class MempoolSpendCoinbaseTest(BitcoinTestFramework):

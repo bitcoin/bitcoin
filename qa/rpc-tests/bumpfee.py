@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the bumpfee RPC."""
 
+from decimal import Decimal
 import io
 
 from segwit import send_to_witness
@@ -12,7 +13,16 @@ from test_framework.blocktools import (create_block,
                                        create_coinbase)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.mininode import CTransaction
-from test_framework.util import *
+from test_framework.util import (JSONRPCException,
+                                 assert_equal,
+                                 assert_raises_message,
+                                 bitcoind_processes,
+                                 bytes_to_hex_str,
+                                 connect_nodes_bi,
+                                 hex_str_to_bytes,
+                                 start_node,
+                                 start_nodes,
+                                 sync_mempools)
 
 # Sequence number that is BIP 125 opt-in and BIP 68-compliant
 BIP125_SEQUENCE_NUMBER = 0xfffffffd

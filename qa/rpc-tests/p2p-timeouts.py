@@ -23,9 +23,13 @@
 
 from time import sleep
 
-from test_framework.mininode import *
+from test_framework.mininode import (NetworkThread,
+                                     NodeConn,
+                                     SingleNodeConnCB,
+                                     msg_ping)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (p2p_port,
+                                 start_nodes)
 
 class TestNode(SingleNodeConnCB):
     def __init__(self):

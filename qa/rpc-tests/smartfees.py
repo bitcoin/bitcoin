@@ -5,9 +5,16 @@
 """Test fee estimation code."""
 
 from collections import OrderedDict
+from decimal import Decimal
+import random
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (assert_equal,
+                                 connect_nodes,
+                                 satoshi_round,
+                                 start_node,
+                                 sync_blocks,
+                                 sync_mempools)
 
 # Construct 2 trivial P2SH's and the ScriptSigs that spend them
 # So we can create many many transactions without needing to spend

@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the SegWit changeover logic."""
 
+from decimal import Decimal
 from io import BytesIO
 
 from test_framework.address import (key_to_p2pkh,
@@ -27,7 +28,13 @@ from test_framework.script import (CScript,
                                    OP_HASH160,
                                    hash160)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (JSONRPCException,
+                                 assert_equal,
+                                 bytes_to_hex_str,
+                                 connect_nodes,
+                                 hex_str_to_bytes,
+                                 start_node,
+                                 sync_blocks)
 
 NODE_0 = 0
 NODE_1 = 1

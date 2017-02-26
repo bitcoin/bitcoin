@@ -9,7 +9,9 @@ from hashlib import sha256
 from struct import pack
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (JSONRPCException,
+                                 assert_raises,
+                                 connect_nodes_bi)
 
 def b2x(b):
     return b2a_hex(b).decode('ascii')

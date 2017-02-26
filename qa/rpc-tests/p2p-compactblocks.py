@@ -8,14 +8,60 @@ Version 1 compact blocks are pre-segwit (txids)
 Version 2 compact blocks are post-segwit (wtxids)
 """
 
+from decimal import Decimal
+import random
+
 from test_framework.blocktools import (create_block,
                                        create_coinbase,
                                        add_witness_commitment)
-from test_framework.mininode import *
+from test_framework.mininode import (BlockTransactions,
+                                     BlockTransactionsRequest,
+                                     CBlock,
+                                     CBlockHeader,
+                                     CInv,
+                                     COutPoint,
+                                     CTransaction,
+                                     CTxIn,
+                                     CTxInWitness,
+                                     CTxOut,
+                                     FromHex,
+                                     HeaderAndShortIDs,
+                                     MSG_WITNESS_FLAG,
+                                     NODE_NETWORK,
+                                     NODE_WITNESS,
+                                     NetworkThread,
+                                     NodeConn,
+                                     P2PHeaderAndShortIDs,
+                                     PrefilledTransaction,
+                                     SingleNodeConnCB,
+                                     ToHex,
+                                     calculate_shortid,
+                                     mininode_lock,
+                                     msg_block,
+                                     msg_blocktxn,
+                                     msg_cmpctblock,
+                                     msg_getblocktxn,
+                                     msg_getdata,
+                                     msg_getheaders,
+                                     msg_headers,
+                                     msg_inv,
+                                     msg_sendcmpct,
+                                     msg_sendheaders,
+                                     msg_tx,
+                                     msg_witness_block,
+                                     msg_witness_blocktxn,
+                                     ser_uint256,
+                                     wait_until)
 from test_framework.script import (CScript,
                                    OP_TRUE)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (assert_equal,
+                                 connect_nodes,
+                                 get_bip9_status,
+                                 p2p_port,
+                                 satoshi_round,
+                                 start_nodes,
+                                 sync_blocks)
 
 # TestNode: A peer we use to send messages to bitcoind, and store responses.
 class TestNode(SingleNodeConnCB):

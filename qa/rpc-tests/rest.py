@@ -5,13 +5,20 @@
 """Test the REST API."""
 
 from codecs import encode
+from decimal import Decimal
 import http.client
 from io import BytesIO
-from struct import *
+import json
+from struct import (pack,
+                    unpack)
 import urllib.parse
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (assert_equal,
+                                 assert_greater_than,
+                                 connect_nodes_bi,
+                                 hex_str_to_bytes,
+                                 start_nodes)
 
 def deser_uint256(f):
     r = 0

@@ -4,10 +4,15 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node handling."""
 
+import time
 import urllib.parse
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (assert_equal,
+                                 connect_nodes_bi,
+                                 p2p_port,
+                                 start_node,
+                                 stop_node)
 
 class NodeHandlingTest (BitcoinTestFramework):
 

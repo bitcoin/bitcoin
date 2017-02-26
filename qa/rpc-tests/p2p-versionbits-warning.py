@@ -8,14 +8,23 @@ Generate chains with block versions that appear to be signalling unknown
 soft-forks, and test that warning alerts are generated.
 """
 
+import os
 import re
 import time
 
 from test_framework.blocktools import (create_block,
                                        create_coinbase)
-from test_framework.mininode import *
+from test_framework.mininode import (NetworkThread,
+                                     NodeConn,
+                                     NodeConnCB,
+                                     mininode_lock,
+                                     msg_block,
+                                     msg_ping,
+                                     msg_pong)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (p2p_port,
+                                 start_nodes,
+                                 stop_nodes)
 
 VB_PERIOD = 144 # versionbits period length for regtest
 VB_THRESHOLD = 108 # versionbits activation threshold for regtest

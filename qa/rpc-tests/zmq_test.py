@@ -8,7 +8,9 @@ import struct
 import zmq
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (assert_equal,
+                                 bytes_to_hex_str,
+                                 start_nodes)
 
 class ZMQTest (BitcoinTestFramework):
 

@@ -4,8 +4,18 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the fundrawtransaction RPC."""
 
+from decimal import Decimal
+
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (JSONRPCException,
+                                 assert_equal,
+                                 assert_fee_amount,
+                                 assert_greater_than,
+                                 assert_greater_than_or_equal,
+                                 connect_nodes_bi,
+                                 count_bytes,
+                                 start_nodes,
+                                 stop_node)
 
 def get_unspent(listunspent, amount):
     for utx in listunspent:

@@ -13,9 +13,20 @@ if uploadtarget has been reached.
 
 import time
 
-from test_framework.mininode import *
+from test_framework.mininode import (CInv,
+                                     NetworkThread,
+                                     NodeConn,
+                                     NodeConnCB,
+                                     msg_getdata,
+                                     msg_ping,
+                                     msg_pong,
+                                     wait_until)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (assert_equal,
+                                 mine_large_block,
+                                 p2p_port,
+                                 start_node,
+                                 stop_node)
 
 # TestNode: bare-bones "peer".  Used mostly as a conduit for a test to sending
 # p2p messages to a node, generating the messages in the main testing logic.

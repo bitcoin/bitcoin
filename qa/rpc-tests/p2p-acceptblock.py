@@ -48,13 +48,26 @@ The test:
    Node0 should process and the tip should advance.
 """
 
+import os
 import time
 
 from test_framework.blocktools import (create_block,
                                        create_coinbase)
-from test_framework.mininode import *
+from test_framework.mininode import (CBlockHeader,
+                                     CInv,
+                                     NetworkThread,
+                                     NodeConn,
+                                     NodeConnCB,
+                                     mininode_lock,
+                                     msg_block,
+                                     msg_headers,
+                                     msg_inv,
+                                     msg_ping,
+                                     msg_pong)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (assert_equal,
+                                 p2p_port,
+                                 start_node)
 
 # TestNode: bare-bones "peer".  Used mostly as a conduit for a test to sending
 # p2p messages to a node, generating the messages in the main testing logic.

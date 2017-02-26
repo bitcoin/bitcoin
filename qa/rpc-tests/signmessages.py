@@ -5,7 +5,7 @@
 """Test RPC commands for signing and verifying messages."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import start_nodes
 
 class SignMessagesTest(BitcoinTestFramework):
 

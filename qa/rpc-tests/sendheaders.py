@@ -75,9 +75,26 @@ e. Announce one more that doesn't connect.
 
 from test_framework.blocktools import (create_block,
                                        create_coinbase)
-from test_framework.mininode import *
+from test_framework.mininode import (CBlockHeader,
+                                     CInv,
+                                     NetworkThread,
+                                     NodeConn,
+                                     SingleNodeConnCB,
+                                     mininode_lock,
+                                     msg_block,
+                                     msg_getblocks,
+                                     msg_getdata,
+                                     msg_getheaders,
+                                     msg_headers,
+                                     msg_inv,
+                                     msg_sendheaders,
+                                     wait_until)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (assert_equal,
+                                 connect_nodes,
+                                 p2p_port,
+                                 start_nodes,
+                                 sync_blocks)
 
 direct_fetch_response_time = 0.05
 

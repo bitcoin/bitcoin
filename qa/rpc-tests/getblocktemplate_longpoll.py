@@ -4,10 +4,12 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test longpolling with getblocktemplate."""
 
+from decimal import Decimal
 import threading
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (get_rpc_proxy,
+                                 random_transaction)
 
 class LongpollThread(threading.Thread):
     def __init__(self, node):

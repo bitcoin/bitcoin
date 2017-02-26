@@ -11,18 +11,67 @@ We use the testing framework in which we expect a particular answer from
 each test.
 """
 
+import copy
 import time
 import struct
 
-from test_framework.blocktools import *
+from test_framework.blocktools import (CBlock,
+                                       COIN,
+                                       COutPoint,
+                                       CScript,
+                                       CTransaction,
+                                       CTxIn,
+                                       CTxOut,
+                                       OP_CHECKSIG,
+                                       OP_RETURN,
+                                       OP_TRUE,
+                                       create_block,
+                                       create_coinbase,
+                                       create_transaction,
+                                       get_legacy_sigopcount_block,
+                                       ser_uint256,
+                                       uint256_from_str)
 from test_framework.comptool import (TestManager,
                                      TestInstance,
                                      RejectResult)
 from test_framework.key import CECKey
-from test_framework.mininode import *
-from test_framework.script import *
+from test_framework.mininode import (CBlock,
+                                     CBlockHeader,
+                                     COIN,
+                                     COutPoint,
+                                     CTransaction,
+                                     CTxIn,
+                                     CTxOut,
+                                     MAX_BLOCK_BASE_SIZE,
+                                     NetworkThread,
+                                     ser_uint256,
+                                     uint256_from_compact,
+                                     uint256_from_str)
+from test_framework.script import (CScript,
+                                   CTransaction,
+                                   CTxOut,
+                                   MAX_SCRIPT_ELEMENT_SIZE,
+                                   OP_2DUP,
+                                   OP_CHECKMULTISIG,
+                                   OP_CHECKMULTISIGVERIFY,
+                                   OP_CHECKSIG,
+                                   OP_CHECKSIGVERIFY,
+                                   OP_ELSE,
+                                   OP_ENDIF,
+                                   OP_EQUAL,
+                                   OP_FALSE,
+                                   OP_HASH160,
+                                   OP_IF,
+                                   OP_INVALIDOPCODE,
+                                   OP_RETURN,
+                                   OP_TRUE,
+                                   SIGHASH_ALL,
+                                   SignatureHash,
+                                   hash160,
+                                   ser_uint256,
+                                   uint256_from_str)
 from test_framework.test_framework import ComparisonTestFramework
-from test_framework.util import *
+from test_framework.util import assert_equal
 
 class PreviousSpendableOutput(object):
     def __init__(self, tx = CTransaction(), n = -1):

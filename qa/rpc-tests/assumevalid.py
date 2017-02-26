@@ -33,10 +33,25 @@ Start three nodes:
 from test_framework.blocktools import (create_block,
                                        create_coinbase)
 from test_framework.key import CECKey
-from test_framework.mininode import *
-from test_framework.script import *
+from test_framework.mininode import (CBlockHeader,
+                                     COutPoint,
+                                     CTransaction,
+                                     CTxIn,
+                                     CTxOut,
+                                     NetworkThread,
+                                     NodeConn,
+                                     SingleNodeConnCB,
+                                     msg_block,
+                                     msg_headers,
+                                     wait_until)
+from test_framework.script import (CScript,
+                                   CTransaction,
+                                   CTxOut,
+                                   OP_TRUE,)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (assert_equal,
+                                 p2p_port,
+                                 start_node)
 
 class BaseNode(SingleNodeConnCB):
     def __init__(self):

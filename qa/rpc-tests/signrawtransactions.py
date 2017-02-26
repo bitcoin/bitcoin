@@ -5,7 +5,10 @@
 """Test transaction signing using the signrawtransaction RPC."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (JSONRPCException,
+                                 assert_equal,
+                                 assert_raises,
+                                 start_nodes)
 
 class SignRawTransactionsTest(BitcoinTestFramework):
     def __init__(self):

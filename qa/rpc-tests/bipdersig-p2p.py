@@ -27,7 +27,8 @@ from test_framework.mininode import (CTransaction,
                                      NetworkThread)
 from test_framework.script import CScript
 from test_framework.test_framework import ComparisonTestFramework
-from test_framework.util import *
+from test_framework.util import (hex_str_to_bytes,
+                                 start_nodes)
 
 # A canonical signature consists of: 
 # <30> <total len> <02> <len R> <R> <02> <len S> <S> <hashtype>

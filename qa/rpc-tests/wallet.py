@@ -4,8 +4,23 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet."""
 
+from decimal import Decimal
+import time
+
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (JSONRPCException,
+                                 assert_array_result,
+                                 assert_equal,
+                                 assert_fee_amount,
+                                 assert_raises_message,
+                                 connect_nodes_bi,
+                                 count_bytes,
+                                 start_node,
+                                 start_nodes,
+                                 stop_node,
+                                 stop_nodes,
+                                 sync_blocks,
+                                 sync_mempools)
 
 class WalletTest (BitcoinTestFramework):
 

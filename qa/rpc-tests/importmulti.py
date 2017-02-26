@@ -5,7 +5,11 @@
 """Test the importmulti RPC."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (JSONRPCException,
+                                 assert_equal,
+                                 assert_raises_message,
+                                 start_nodes,
+                                 stop_nodes)
 
 class ImportMultiTest (BitcoinTestFramework):
     def __init__(self):

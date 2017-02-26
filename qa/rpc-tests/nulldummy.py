@@ -17,7 +17,11 @@ from io import BytesIO
 import time
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (JSONRPCException,
+                                 assert_equal,
+                                 bytes_to_hex_str,
+                                 hex_str_to_bytes,
+                                 start_nodes)
 from test_framework.mininode import (CTransaction,
                                      NetworkThread)
 from test_framework.blocktools import (create_coinbase,

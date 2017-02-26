@@ -6,6 +6,7 @@
 
 from binascii import hexlify
 import random
+import struct
 import time
 
 from test_framework.blocktools import (create_block,
@@ -14,10 +15,82 @@ from test_framework.blocktools import (create_block,
                                        WITNESS_COMMITMENT_HEADER)
 from test_framework.key import (CECKey,
                                 CPubKey)
-from test_framework.mininode import *
-from test_framework.script import *
+from test_framework.mininode import (CBlock,
+                                     CBlockHeader,
+                                     CInv,
+                                     COutPoint,
+                                     CTransaction,
+                                     CTxIn,
+                                     CTxInWitness,
+                                     CTxOut,
+                                     CTxWitness,
+                                     MAX_BLOCK_BASE_SIZE,
+                                     MSG_WITNESS_FLAG,
+                                     NODE_NETWORK,
+                                     NODE_WITNESS,
+                                     NetworkThread,
+                                     NodeConn,
+                                     NodeConnCB,
+                                     bytes_to_hex_str,
+                                     hash256,
+                                     hex_str_to_bytes,
+                                     mininode_lock,
+                                     msg_block,
+                                     msg_getdata,
+                                     msg_headers,
+                                     msg_inv,
+                                     msg_ping,
+                                     msg_pong,
+                                     msg_tx,
+                                     msg_witness_block,
+                                     msg_witness_tx,
+                                     ser_uint256,
+                                     ser_vector,
+                                     sha256,
+                                     uint256_from_str)
+from test_framework.script import (CScript,
+                                   CScriptNum,
+                                   CScriptOp,
+                                   CTransaction,
+                                   CTxOut,
+                                   OP_0,
+                                   OP_1,
+                                   OP_16,
+                                   OP_2DROP,
+                                   OP_CHECKMULTISIG,
+                                   OP_CHECKSIG,
+                                   OP_DROP,
+                                   OP_DUP,
+                                   OP_ELSE,
+                                   OP_ENDIF,
+                                   OP_EQUAL,
+                                   OP_EQUALVERIFY,
+                                   OP_HASH160,
+                                   OP_IF,
+                                   OP_RETURN,
+                                   OP_TRUE,
+                                   SIGHASH_ALL,
+                                   SIGHASH_ANYONECANPAY,
+                                   SIGHASH_NONE,
+                                   SIGHASH_SINGLE,
+                                   SegwitVersion1SignatureHash,
+                                   SignatureHash,
+                                   hash160,
+                                   hash256,
+                                   ser_uint256,
+                                   sha256,
+                                   uint256_from_str)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (assert_equal,
+                                 bytes_to_hex_str,
+                                 connect_nodes,
+                                 get_bip9_status,
+                                 hex_str_to_bytes,
+                                 p2p_port,
+                                 start_node,
+                                 stop_node,
+                                 sync_blocks,
+                                 sync_mempools)
 
 # The versionbit bit used to signal activation of SegWit
 VB_WITNESS_BIT = 1

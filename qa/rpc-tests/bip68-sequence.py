@@ -4,10 +4,25 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test BIP68 implementation."""
 
-from test_framework.blocktools import *
+import time
+
+from test_framework.blocktools import (COIN,
+                                       COutPoint,
+                                       CScript,
+                                       CTransaction,
+                                       CTxIn,
+                                       CTxOut,
+                                       create_block,
+                                       create_coinbase)
 from test_framework.mininode import ToHex, FromHex
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (JSONRPCException,
+                                 assert_equal,
+                                 connect_nodes,
+                                 get_bip9_status,
+                                 satoshi_round,
+                                 start_node,
+                                 sync_blocks)
 
 SEQUENCE_LOCKTIME_DISABLE_FLAG = (1<<31)
 SEQUENCE_LOCKTIME_TYPE_FLAG = (1<<22) # this means use time (0 means height)
