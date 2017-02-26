@@ -11,9 +11,10 @@
  no effect on transactions which are already conflicted or abandoned.
 """
 
+import urllib.parse
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-import urllib.parse
 
 class AbandonConflictTest(BitcoinTestFramework):
     def __init__(self):

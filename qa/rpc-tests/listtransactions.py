@@ -4,10 +4,12 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listtransactions API."""
 
+from io import BytesIO
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-from test_framework.mininode import CTransaction, COIN
-from io import BytesIO
+from test_framework.mininode import (CTransaction,
+                                     COIN)
 
 def txFromHex(hexstring):
     tx = CTransaction()

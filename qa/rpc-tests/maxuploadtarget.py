@@ -11,10 +11,11 @@ if uploadtarget has been reached.
 * Verify that the upload counters are reset after 24 hours.
 """
 
+import time
+
 from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-import time
 
 # TestNode: bare-bones "peer".  Used mostly as a conduit for a test to sending
 # p2p messages to a node, generating the messages in the main testing logic.

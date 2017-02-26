@@ -30,12 +30,13 @@ Start three nodes:
       isn't buried by at least two weeks' work.
 """
 
+from test_framework.blocktools import (create_block,
+                                       create_coinbase)
+from test_framework.key import CECKey
 from test_framework.mininode import *
+from test_framework.script import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-from test_framework.blocktools import create_block, create_coinbase
-from test_framework.key import CECKey
-from test_framework.script import *
 
 class BaseNode(SingleNodeConnCB):
     def __init__(self):

@@ -9,13 +9,12 @@
 - Stop the node and restart it with -reindex-chainstate. Verify that the node has reindexed up to block 3.
 """
 
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (
-    start_nodes,
-    stop_nodes,
-    assert_equal,
-)
 import time
+
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (assert_equal,
+                                 start_nodes,
+                                 stop_nodes)
 
 class ReindexTest(BitcoinTestFramework):
 

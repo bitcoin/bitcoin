@@ -4,10 +4,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the ZMQ API."""
 
+import struct
+import zmq
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-import zmq
-import struct
 
 class ZMQTest (BitcoinTestFramework):
 

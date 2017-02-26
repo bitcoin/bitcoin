@@ -4,15 +4,20 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test segwit transactions and blocks on P2P network."""
 
+from binascii import hexlify
+import random
+import time
+
+from test_framework.blocktools import (create_block,
+                                       create_coinbase,
+                                       add_witness_commitment,
+                                       WITNESS_COMMITMENT_HEADER)
+from test_framework.key import (CECKey,
+                                CPubKey)
 from test_framework.mininode import *
+from test_framework.script import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-from test_framework.script import *
-from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment, WITNESS_COMMITMENT_HEADER
-from test_framework.key import CECKey, CPubKey
-import time
-import random
-from binascii import hexlify
 
 # The versionbit bit used to signal activation of SegWit
 VB_WITNESS_BIT = 1

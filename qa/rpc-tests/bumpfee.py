@@ -4,13 +4,15 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the bumpfee RPC."""
 
+import io
+
 from segwit import send_to_witness
+
+from test_framework.blocktools import (create_block,
+                                       create_coinbase)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework import blocktools
 from test_framework.mininode import CTransaction
 from test_framework.util import *
-
-import io
 
 # Sequence number that is BIP 125 opt-in and BIP 68-compliant
 BIP125_SEQUENCE_NUMBER = 0xfffffffd
@@ -310,7 +312,7 @@ def submit_block_with_tx(node, tx):
     tip = node.getbestblockhash()
     height = node.getblockcount() + 1
     block_time = node.getblockheader(tip)["mediantime"] + 1
-    block = blocktools.create_block(int(tip, 16), blocktools.create_coinbase(height), block_time)
+    block = create_block(int(tip, 16), create_coinbase(height), block_time)
     block.vtx.append(ctx)
     block.rehash()
     block.hashMerkleRoot = block.calc_merkle_root()

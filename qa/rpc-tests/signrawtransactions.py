@@ -7,7 +7,6 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-
 class SignRawTransactionsTest(BitcoinTestFramework):
     def __init__(self):
         super().__init__()

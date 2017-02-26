@@ -48,11 +48,13 @@ The test:
    Node0 should process and the tip should advance.
 """
 
+import time
+
+from test_framework.blocktools import (create_block,
+                                       create_coinbase)
 from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-import time
-from test_framework.blocktools import create_block, create_coinbase
 
 # TestNode: bare-bones "peer".  Used mostly as a conduit for a test to sending
 # p2p messages to a node, generating the messages in the main testing logic.

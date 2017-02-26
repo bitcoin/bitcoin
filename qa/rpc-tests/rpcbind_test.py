@@ -4,10 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test running bitcoind with the -rpcbind and -rpcallowip options."""
 
+from test_framework.netutil import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-from test_framework.netutil import *
-
 
 class RPCBindTest(BitcoinTestFramework):
 

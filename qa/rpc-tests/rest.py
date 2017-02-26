@@ -4,14 +4,14 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the REST API."""
 
+from codecs import encode
+import http.client
+from io import BytesIO
+from struct import *
+import urllib.parse
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-from struct import *
-from io import BytesIO
-from codecs import encode
-
-import http.client
-import urllib.parse
 
 def deser_uint256(f):
     r = 0

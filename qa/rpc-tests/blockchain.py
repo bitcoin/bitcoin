@@ -13,17 +13,14 @@ Tests correspond to code in rpc/blockchain.cpp.
 
 from decimal import Decimal
 
-from test_framework.test_framework import BitcoinTestFramework
 from test_framework.authproxy import JSONRPCException
-from test_framework.util import (
-    assert_equal,
-    assert_raises,
-    assert_is_hex_string,
-    assert_is_hash_string,
-    start_nodes,
-    connect_nodes_bi,
-)
-
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (assert_equal,
+                                 assert_is_hash_string,
+                                 assert_is_hex_string,
+                                 assert_raises,
+                                 connect_nodes_bi,
+                                 start_nodes)
 
 class BlockchainTest(BitcoinTestFramework):
 

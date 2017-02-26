@@ -5,8 +5,10 @@
 """Test the dumpwallet RPC."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (start_nodes, start_node, assert_equal, bitcoind_processes)
-
+from test_framework.util import (assert_equal,
+                                 bitcoind_processes,
+                                 start_node,
+                                 start_nodes)
 
 def read_dump(file_name, addrs, hd_master_addr_old):
     """

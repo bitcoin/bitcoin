@@ -7,7 +7,6 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-
 def get_unspent(listunspent, amount):
     for utx in listunspent:
         if utx['amount'] == amount:

@@ -16,14 +16,21 @@ Mine 1 new version block.
 Mine 1 old version block, see that the node rejects.
 """
 
-from test_framework.test_framework import ComparisonTestFramework
-from test_framework.util import *
-from test_framework.mininode import CTransaction, NetworkThread
-from test_framework.blocktools import create_coinbase, create_block
-from test_framework.comptool import TestInstance, TestManager
-from test_framework.script import CScript, OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP
 from io import BytesIO
 import time
+
+from test_framework.blocktools import (create_coinbase,
+                                       create_block)
+from test_framework.comptool import (TestInstance,
+                                     TestManager)
+from test_framework.mininode import (CTransaction,
+                                     NetworkThread)
+from test_framework.script import (CScript,
+                                   OP_1NEGATE,
+                                   OP_CHECKLOCKTIMEVERIFY,
+                                   OP_DROP)
+from test_framework.test_framework import ComparisonTestFramework
+from test_framework.util import *
 
 def cltv_invalidate(tx):
     '''Modify the signature in vin 0 of the tx to fail CLTV
