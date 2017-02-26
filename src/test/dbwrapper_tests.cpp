@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
     CDBWrapper dbw(ph, (1 << 20), true, false, false);
     for (int x=0x00; x<10; ++x) {
         for (int y = 0; y < 10; y++) {
-            sprintf(buf, "%d", x);
+            snprintf(buf, sizeof(buf), "%d", x);
             StringContentsSerializer key(buf);
             for (int z = 0; z < y; z++)
                 key += key;
@@ -293,12 +293,12 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
             seek_start = 0;
         else
             seek_start = 5;
-        sprintf(buf, "%d", seek_start);
+        snprintf(buf, sizeof(buf), "%d", seek_start);
         StringContentsSerializer seek_key(buf);
         it->Seek(seek_key);
         for (int x=seek_start; x<10; ++x) {
             for (int y = 0; y < 10; y++) {
-                sprintf(buf, "%d", x);
+                snprintf(buf, sizeof(buf), "%d", x);
                 std::string exp_key(buf);
                 for (int z = 0; z < y; z++)
                     exp_key += exp_key;
