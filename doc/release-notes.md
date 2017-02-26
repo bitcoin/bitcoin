@@ -342,6 +342,16 @@ Fundrawtransaction change address reuse
 - Users should also consider using `getrawchangeaddress()` in conjunction
   with `fundrawtransaction`'s `changeAddress` option.
 
+Unused mempool memory used by coincache
+----------------------------------------
+
+- Before 0.14, memory reserved for mempool (using the `-maxmempool` option)
+  went unused during initial block download, or IBD. In 0.14, the UTXO DB cache
+  (controlled with the `-dbcache` option) borrows memory from the mempool
+  when there is extra memory available. This may result in an increase in
+  memory usage during IBD for those previously relying on only the `-dbcache`
+  option to limit memory during that time.
+
 0.14.0 Change log
 =================
 
