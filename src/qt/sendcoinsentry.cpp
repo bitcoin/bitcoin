@@ -35,7 +35,9 @@ SendCoinsEntry::SendCoinsEntry(const PlatformStyle *platformStyle, QWidget *pare
     if (platformStyle->getUseExtraSpacing())
         ui->payToLayout->setSpacing(4);
 #if QT_VERSION >= 0x040700
-    ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));
+    ui->addAsLabel->setPlaceholderText(tr("Enter a private label for this address to add it to your address book"));
+    ui->lineEditPublic->setPlaceholderText(tr("Enter a public label for this transaction"));
+
 #endif
 
     // normal bitcoin address field

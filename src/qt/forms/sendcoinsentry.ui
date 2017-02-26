@@ -191,14 +191,14 @@
       <item>
        <widget class="QLineEdit" name="addAsLabel">
         <property name="toolTip">
-         <string>Enter a label for this address to add it to the list of used addresses</string>
+         <string>Enter a private label for this address to add it to the list of used addresses</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QLabel" name="labelPublic">
         <property name="text">
-         <string>&amp;Public Label:</string>
+         <string>Public Label:</string>
         </property>
         <property name="margin">
          <number>5</number>
@@ -206,7 +206,11 @@
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="lineEditPublic"/>
+       <widget class="QLineEdit" name="lineEditPublic">
+        <property name="toolTip">
+         <string>Enter a public label for this transaction</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>

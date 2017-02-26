@@ -16,8 +16,10 @@
 #include "chain.h" // Freeze CBlockIndex
 #include "base58.h" // Freeze CBitcoinAddress
 
+#ifdef ENABLE_WALLET
 #include "wallet/wallet.h"  // Freeze wallet test
 #include "wallet/wallet_ismine.h"
+#endif
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
@@ -323,6 +325,8 @@ BOOST_AUTO_TEST_CASE(multisig_Sign)
         BOOST_CHECK_MESSAGE(SignSignature(keystore, txFrom, txTo[i], 0), strprintf("SignSignature %d", i));
     }
 }
+
+#ifdef ENABLE_WALLET
 BOOST_AUTO_TEST_CASE(cltv_freeze)
 {
 
@@ -378,6 +382,7 @@ BOOST_AUTO_TEST_CASE(cltv_freeze)
 
 
 }
+
 BOOST_AUTO_TEST_CASE(opreturn_send)
 {
 
@@ -397,13 +402,11 @@ BOOST_AUTO_TEST_CASE(opreturn_send)
     CScript s = GetScriptLabelPublic(inMsg);
 
     outMsg = getLabelPublic(s);
-
     BOOST_CHECK(inMsg == outMsg);
-
     BOOST_CHECK(Solver(s, whichType, solutions));
     BOOST_CHECK(whichType == TX_LABELPUBLIC);
 
 
 }
-
+#endif
 BOOST_AUTO_TEST_SUITE_END()
