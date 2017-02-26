@@ -20,21 +20,23 @@ msg_block, msg_tx, msg_headers, etc.:
 ser_*, deser_*: functions that handle serialization/deserialization
 """
 
-import struct
-import socket
 import asyncore
-import time
-import sys
-import random
-from .util import hex_str_to_bytes, bytes_to_hex_str
-from io import BytesIO
 from codecs import encode
-import hashlib
-from threading import RLock
-from threading import Thread
-import logging
 import copy
-from test_framework.siphash import siphash256
+import hashlib
+from io import BytesIO
+import logging
+import random
+import socket
+import struct
+import sys
+from threading import (RLock,
+                       Thread)
+import time
+
+from .siphash import siphash256
+from .util import (hex_str_to_bytes,
+                   bytes_to_hex_str)
 
 BIP0031_VERSION = 60000
 MY_VERSION = 70014  # past bip-31 for ping/pong

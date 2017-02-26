@@ -9,7 +9,6 @@ This file is copied from python-bitcoinlib.
 
 import struct
 
-
 # generic big endian MPI format
 
 def bn_bytes(v, have_ext=False):

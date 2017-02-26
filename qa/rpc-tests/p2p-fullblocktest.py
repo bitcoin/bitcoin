@@ -17,6 +17,7 @@ from test_framework.comptool import TestManager, TestInstance, RejectResult
 from test_framework.blocktools import *
 import time
 from test_framework.key import CECKey
+from test_framework.mininode import *
 from test_framework.script import *
 import struct
 

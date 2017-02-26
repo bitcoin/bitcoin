@@ -10,7 +10,6 @@ testing.
 
 import os
 
-
 REFERENCE_FILENAME = 'rpc_interface.txt'
 
 

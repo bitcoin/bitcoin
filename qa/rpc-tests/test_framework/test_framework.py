@@ -7,26 +7,23 @@
 import logging
 import optparse
 import os
-import sys
 import shutil
+import sys
 import tempfile
 import traceback
 
-from .util import (
-    initialize_chain,
-    start_nodes,
-    connect_nodes_bi,
-    sync_blocks,
-    sync_mempools,
-    stop_nodes,
-    stop_node,
-    enable_coverage,
-    check_json_precision,
-    initialize_chain_clean,
-    PortSeed,
-)
 from .authproxy import JSONRPCException
-
+from .util import (PortSeed,
+                   check_json_precision,
+                   connect_nodes_bi,
+                   enable_coverage,
+                   initialize_chain_clean,
+                   initialize_chain,
+                   start_nodes,
+                   stop_node,
+                   stop_nodes,
+                   sync_blocks,
+                   sync_mempools)
 
 class BitcoinTestFramework(object):
 
