@@ -5,7 +5,7 @@
 #include "chain.h"
 #include "clientversion.h"
 #include "chainparams.h"
-#include "miner.h"
+#include "checkpoints.h"
 #include "consensus/consensus.h"
 #include "consensus/params.h"
 #include "consensus/validation.h"
@@ -13,6 +13,7 @@
 #include "utilmoneystr.h"
 #include "leakybucket.h"
 #include "main.h"
+#include "miner.h"
 #include "net.h"
 #include "policy/policy.h"
 #include "primitives/block.h"
@@ -43,6 +44,7 @@ using namespace std;
 extern CTxMemPool mempool; // from main.cpp
 static atomic<uint64_t> nLargestBlockSeen{BLOCKSTREAM_CORE_MAX_BLOCK_SIZE}; // track the largest block we've seen
 static atomic<bool> fIsChainNearlySyncd{false};
+static atomic<bool> fIsInitialBlockDownload{false};
 
 bool IsTrafficShapingEnabled();
 
@@ -1341,6 +1343,43 @@ UniValue settrafficshaping(const UniValue& params, bool fHelp)
     }
 
     return NullUniValue;
+}
+
+// fIsInitialBlockDownload is updated only during startup and whenever we receive a header.
+// This way we avoid having to lock cs_main so often which tends to be a bottleneck.
+void IsInitialBlockDownloadInit()
+{
+    const CChainParams& chainParams = Params();
+    LOCK(cs_main);
+    if (!pindexBestHeader) {
+        // Not nearly synced if we don't have any blocks!
+        fIsInitialBlockDownload.store(true);
+        return;
+    }
+    if (fImporting || fReindex) {
+        fIsInitialBlockDownload.store(true);
+        return;
+    }
+    if (fCheckpointsEnabled && chainActive.Height() < Checkpoints::GetTotalBlocksEstimate(chainParams.Checkpoints())) {
+        fIsInitialBlockDownload.store(true);
+        return;
+    }
+    static bool lockIBDState = false;
+    if (lockIBDState) {
+        fIsInitialBlockDownload.store(false);
+        return;
+    }
+    bool state = (chainActive.Height() < pindexBestHeader->nHeight - 24 * 6 ||
+            pindexBestHeader->GetBlockTime() < GetTime() - chainParams.MaxTipAge());
+    if (!state)
+        lockIBDState = true;
+    fIsInitialBlockDownload.store(state);
+    return;
+}
+
+bool IsInitialBlockDownload()
+{
+    return fIsInitialBlockDownload.load();
 }
 
 
