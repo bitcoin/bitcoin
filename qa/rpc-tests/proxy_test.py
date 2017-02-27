@@ -30,6 +30,7 @@ addnode connect to generic DNS name
 import os
 import socket
 
+from test_framework.netutil import test_ipv6_local
 from test_framework.socks5 import (Socks5Configuration,
                                    Socks5Command,
                                    Socks5Server,
@@ -39,7 +40,6 @@ from test_framework.util import (PORT_MIN,
                                  PORT_RANGE,
                                  assert_equal,
                                  start_nodes)
-from test_framework.netutil import test_ipv6_local
 
 RANGE_BEGIN = PORT_MIN + 2 * PORT_RANGE  # Start after p2p and rpc ports
 

@@ -36,11 +36,11 @@ import logging
 import os
 import sys
 from random import randint
+import shutil
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (assert_equal,
                                  connect_nodes,
-                                 shutil,
                                  start_node,
                                  start_nodes,
                                  stop_node,

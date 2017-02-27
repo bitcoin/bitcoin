@@ -15,22 +15,10 @@ import copy
 import time
 import struct
 
-from test_framework.blocktools import (CBlock,
-                                       COIN,
-                                       COutPoint,
-                                       CScript,
-                                       CTransaction,
-                                       CTxIn,
-                                       CTxOut,
-                                       OP_CHECKSIG,
-                                       OP_RETURN,
-                                       OP_TRUE,
-                                       create_block,
+from test_framework.blocktools import (create_block,
                                        create_coinbase,
                                        create_transaction,
-                                       get_legacy_sigopcount_block,
-                                       ser_uint256,
-                                       uint256_from_str)
+                                       get_legacy_sigopcount_block)
 from test_framework.comptool import (TestManager,
                                      TestInstance,
                                      RejectResult)
@@ -48,8 +36,6 @@ from test_framework.mininode import (CBlock,
                                      uint256_from_compact,
                                      uint256_from_str)
 from test_framework.script import (CScript,
-                                   CTransaction,
-                                   CTxOut,
                                    MAX_SCRIPT_ELEMENT_SIZE,
                                    OP_2DUP,
                                    OP_CHECKMULTISIG,
@@ -67,9 +53,7 @@ from test_framework.script import (CScript,
                                    OP_TRUE,
                                    SIGHASH_ALL,
                                    SignatureHash,
-                                   hash160,
-                                   ser_uint256,
-                                   uint256_from_str)
+                                   hash160)
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import assert_equal
 

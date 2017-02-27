@@ -16,18 +16,18 @@ Generate 427 more blocks.
 from io import BytesIO
 import time
 
+from test_framework.blocktools import (create_coinbase,
+                                       create_block,
+                                       add_witness_commitment)
+from test_framework.mininode import (CTransaction,
+                                     NetworkThread)
+from test_framework.script import CScript
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (JSONRPCException,
                                  assert_equal,
                                  bytes_to_hex_str,
                                  hex_str_to_bytes,
                                  start_nodes)
-from test_framework.mininode import (CTransaction,
-                                     NetworkThread)
-from test_framework.blocktools import (create_coinbase,
-                                       create_block,
-                                       add_witness_commitment)
-from test_framework.script import CScript
 
 NULLDUMMY_ERROR = "64: non-mandatory-script-verify-flag (Dummy CHECKMULTISIG argument must be zero)"
 

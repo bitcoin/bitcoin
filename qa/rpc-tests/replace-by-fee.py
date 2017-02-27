@@ -10,9 +10,7 @@ from test_framework.mininode import (COIN,
                                      CTxIn,
                                      CTxOut,
                                      bytes_to_hex_str)
-from test_framework.script import (CScript,
-                                   CTransaction,
-                                   CTxOut)
+from test_framework.script import CScript
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (JSONRPCException,
                                  assert_equal,

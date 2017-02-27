@@ -7,6 +7,8 @@
 from decimal import Decimal
 from io import BytesIO
 
+from test_framework.mininode import (CTransaction,
+                                     COIN)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (assert_array_result,
                                  assert_equal,
@@ -15,8 +17,6 @@ from test_framework.util import (assert_array_result,
                                  hex_str_to_bytes,
                                  start_nodes,
                                  sync_mempools)
-from test_framework.mininode import (CTransaction,
-                                     COIN)
 
 def txFromHex(hexstring):
     tx = CTransaction()

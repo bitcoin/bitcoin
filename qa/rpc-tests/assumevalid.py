@@ -45,9 +45,7 @@ from test_framework.mininode import (CBlockHeader,
                                      msg_headers,
                                      wait_until)
 from test_framework.script import (CScript,
-                                   CTransaction,
-                                   CTxOut,
-                                   OP_TRUE,)
+                                   OP_TRUE)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (assert_equal,
                                  p2p_port,

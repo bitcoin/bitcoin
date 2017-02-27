@@ -20,7 +20,6 @@ from test_framework.mininode import (CInv,
                                      NetworkThread,
                                      NodeConn,
                                      NodeConnCB,
-                                     logging,
                                      mininode_lock,
                                      msg_inv)
 from test_framework.test_framework import BitcoinTestFramework

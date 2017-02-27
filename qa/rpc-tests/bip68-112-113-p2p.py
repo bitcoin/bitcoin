@@ -55,7 +55,6 @@ from test_framework.mininode import (ToHex,
                                      CTransaction,
                                      NetworkThread)
 from test_framework.script import (CScript,
-                                   CTransaction,
                                    OP_CHECKSEQUENCEVERIFY,
                                    OP_DROP)
 from test_framework.test_framework import ComparisonTestFramework
