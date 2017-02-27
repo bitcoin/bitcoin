@@ -61,12 +61,6 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
         pcoinsTip = new CCoinsViewCache(pcoinsdbview);
         InitBlockIndex(chainparams);
-#ifdef ENABLE_WALLET
-        bool fFirstRun;
-        pwalletMain = new CWallet("wallet.dat");
-        pwalletMain->LoadWallet(fFirstRun);
-        RegisterValidationInterface(pwalletMain);
-#endif
 
         nScriptCheckThreads = 3;
         AddAllScriptCheckQueuesAndThreads(nScriptCheckThreads, &threadGroup);
