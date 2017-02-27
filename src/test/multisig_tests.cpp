@@ -10,12 +10,10 @@
 #include "script/script_error.h"
 #include "script/interpreter.h"
 #include "script/sign.h"
+#include "script/ismine.h"
 #include "uint256.h"
 #include "test/test_bitcoin.h"
 
-#ifdef ENABLE_WALLET
-#include "wallet/wallet_ismine.h"
-#endif
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
@@ -211,10 +209,8 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         CTxDestination addr;
         BOOST_CHECK(ExtractDestination(s, addr));
         BOOST_CHECK(addr == keyaddr[0]);
-#ifdef ENABLE_WALLET
         BOOST_CHECK(IsMine(keystore, s));
         BOOST_CHECK(!IsMine(emptykeystore, s));
-#endif
     }
     {
         vector<valtype> solutions;
@@ -226,10 +222,8 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         CTxDestination addr;
         BOOST_CHECK(ExtractDestination(s, addr));
         BOOST_CHECK(addr == keyaddr[0]);
-#ifdef ENABLE_WALLET
         BOOST_CHECK(IsMine(keystore, s));
         BOOST_CHECK(!IsMine(emptykeystore, s));
-#endif
     }
     {
         vector<valtype> solutions;
@@ -240,11 +234,9 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         BOOST_CHECK_EQUAL(solutions.size(), 4U);
         CTxDestination addr;
         BOOST_CHECK(!ExtractDestination(s, addr));
-#ifdef ENABLE_WALLET
         BOOST_CHECK(IsMine(keystore, s));
         BOOST_CHECK(!IsMine(emptykeystore, s));
         BOOST_CHECK(!IsMine(partialkeystore, s));
-#endif
     }
     {
         vector<valtype> solutions;
@@ -259,11 +251,9 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         BOOST_CHECK(addrs[0] == keyaddr[0]);
         BOOST_CHECK(addrs[1] == keyaddr[1]);
         BOOST_CHECK(nRequired == 1);
-#ifdef ENABLE_WALLET
         BOOST_CHECK(IsMine(keystore, s));
         BOOST_CHECK(!IsMine(emptykeystore, s));
         BOOST_CHECK(!IsMine(partialkeystore, s));
-#endif
     }
     {
         vector<valtype> solutions;

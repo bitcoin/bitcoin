@@ -109,6 +109,18 @@ extern int isChainExcessive(const CBlockIndex* blk, unsigned int checkDepth = ex
 // Check whether any block N back in this chain is an excessive block
 extern int chainContainsExcessive(const CBlockIndex* blk, unsigned int goBack=0);
 
+//// Internal CPU miner
+
+static const bool DEFAULT_GENERATE = false;
+static const int DEFAULT_GENERATE_THREADS = 1;
+
+// Run the miner threads
+extern void GenerateBitcoins(bool fGenerate, int nThreads, const CChainParams& chainparams);
+
+// Internal CPU miner RPC calls
+extern UniValue getgenerate(const UniValue& params, bool fHelp);
+extern UniValue setgenerate(const UniValue& params, bool fHelp);
+
 // RPC calls
 
 // RPC Get a particular tweak
@@ -150,6 +162,11 @@ extern CLeakyBucket sendShaper;
 extern bool IsTrafficShapingEnabled();
 
 
+// Check whether we are doing an initial block download (synchronizing from disk or network)
+extern bool IsInitialBlockDownload();
+extern void IsInitialBlockDownloadInit();
+
+// Check whether we are nearly sync'd.  Used primarily to determine whether an xthin can be retrieved.
 extern bool IsChainNearlySyncd();
 extern void IsChainNearlySyncdInit();
 extern uint64_t LargestBlockSeen(uint64_t nBlockSize = 0);
