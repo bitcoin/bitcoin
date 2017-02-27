@@ -7,11 +7,11 @@
 Test rescan behavior of importaddress, importpubkey, importprivkey, and
 importmulti RPCs with different types of keys and rescan options.
 
-In the first part of the test, node 0 creates an address for each type of
-import RPC call and sends BTC to it. Then other nodes import the addresses,
-and the test makes listtransactions and getbalance calls to confirm that the
-importing node either did or did not execute rescans picking up the send
-transactions.
+In the first part of the test, node 1 creates an address for each type of
+import RPC call and node 0 sends BTC to it. Then other nodes import the
+addresses, and the test makes listtransactions and getbalance calls to confirm
+that the importing node either did or did not execute rescans picking up the
+send transactions.
 
 In the second part of the test, node 0 sends more BTC to each address, and the
 test makes more listtransactions and getbalance calls to confirm that the
@@ -83,6 +83,12 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
             assert_equal(tx["txid"], txid)
             assert_equal(tx["confirmations"], confirmations)
             assert_equal("trusted" not in tx, True)
+            # Verify the transaction is correctly marked watchonly depending on
+            # whether the transaction pays to an imported public key or
+            # imported private key. The test setup ensures that transaction
+            # inputs will not be from watchonly keys (important because
+            # involvesWatchonly will be true if either the transaction output
+            # or inputs are watchonly).
             if self.data != Data.priv:
                 assert_equal(tx["involvesWatchonly"], True)
             else:
@@ -108,11 +114,11 @@ RESCAN_WINDOW = 2 * 60 * 60
 class ImportRescanTest(BitcoinTestFramework):
     def __init__(self):
         super().__init__()
-        self.num_nodes = 1 + len(IMPORT_NODES)
+        self.num_nodes = 2 + len(IMPORT_NODES)
 
     def setup_network(self):
         extra_args = [["-debug=1"] for _ in range(self.num_nodes)]
-        for i, import_node in enumerate(IMPORT_NODES, 1):
+        for i, import_node in enumerate(IMPORT_NODES, 2):
             if import_node.prune:
                 extra_args[i] += ["-prune=1"]
 
@@ -125,9 +131,9 @@ class ImportRescanTest(BitcoinTestFramework):
         # each possible type of wallet import RPC.
         for i, variant in enumerate(IMPORT_VARIANTS):
             variant.label = "label {} {}".format(i, variant)
-            variant.address = self.nodes[0].validateaddress(self.nodes[0].getnewaddress(variant.label))
-            variant.key = self.nodes[0].dumpprivkey(variant.address["address"])
-            variant.initial_amount = 25 - (i + 1) / 4.0
+            variant.address = self.nodes[1].validateaddress(self.nodes[1].getnewaddress(variant.label))
+            variant.key = self.nodes[1].dumpprivkey(variant.address["address"])
+            variant.initial_amount = 10 - (i + 1) / 4.0
             variant.initial_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.initial_amount)
 
         # Generate a block containing the initial transactions, then another
@@ -144,7 +150,7 @@ class ImportRescanTest(BitcoinTestFramework):
         for variant in IMPORT_VARIANTS:
             variant.expect_disabled = variant.rescan == Rescan.yes and variant.prune and variant.call == Call.single
             expect_rescan = variant.rescan == Rescan.yes and not variant.expect_disabled
-            variant.node = self.nodes[1 + IMPORT_NODES.index(ImportNode(variant.prune, expect_rescan))]
+            variant.node = self.nodes[2 + IMPORT_NODES.index(ImportNode(variant.prune, expect_rescan))]
             variant.do_import(timestamp)
             if expect_rescan:
                 variant.expected_balance = variant.initial_amount
@@ -158,7 +164,7 @@ class ImportRescanTest(BitcoinTestFramework):
         # Create new transactions sending to each address.
         fee = self.nodes[0].getnetworkinfo()["relayfee"]
         for i, variant in enumerate(IMPORT_VARIANTS):
-            variant.sent_amount = 25 - (2 * i + 1) / 8.0
+            variant.sent_amount = 10 - (2 * i + 1) / 8.0
             variant.sent_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.sent_amount)
 
         # Generate a block containing the new transactions.
