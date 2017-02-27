@@ -8,7 +8,12 @@ VALID=false
 REVSIG=false
 IFS='
 '
-for LINE in $(echo "$INPUT" | gpg --trust-model always "$@" 2>/dev/null); do
+if [ "$BITCOIN_VERIFY_COMMITS_ALLOW_SHA1" = 1 ]; then
+	GPG_RES="$(echo "$INPUT" | gpg --trust-model always "$@" 2>/dev/null)"
+else
+	GPG_RES="$(echo "$INPUT" | gpg --trust-model always --weak-digest sha1 "$@" 2>/dev/null)"
+fi
+for LINE in $(echo "$GPG_RES"); do
 	case "$LINE" in
 	"[GNUPG:] VALIDSIG "*)
 		while read KEY; do
