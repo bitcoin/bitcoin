@@ -411,6 +411,13 @@ void CParallelValidation::HandleBlockMessage(CNode *pfrom, const string &strComm
         semPV->wait();
     }
 
+    // Add a reference here because we are detaching a thread which may run for a long time and
+    // we do not want CNode to be deleted if the node should disconnect while we are processing this block.
+    // We will clean up this reference when the thread finishes.
+    {
+        LOCK(cs_vNodes);
+        pfrom->AddRef();
+    }
     boost::thread thread(boost::bind(&HandleBlockMessageThread, pfrom, strCommand, block, inv));
     thread.detach();  // Separate actual thread from the "thread" object so its fine to fall out of scope 
 }
@@ -511,6 +518,12 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
     {
     LOCK(cs_semPV);
     semPV->post();
+    }
+
+    // Remove the CNode reference we aquired just before we launched this thread.
+    {
+        LOCK(cs_vNodes);
+        pfrom->Release();
     }
 }
 
