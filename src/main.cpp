@@ -3302,6 +3302,10 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
             } else {
                 pindexNewTip = pindexConnect;
 
+                // Update the syncd status after each block is handled
+                IsChainNearlySyncdInit();
+                IsInitialBlockDownloadInit();
+
                 if (!IsInitialBlockDownload()) {
                     // Notify external zmq listeners about the new tip.
                     GetMainSignals().UpdatedBlockTip(pindexConnect);
@@ -3320,9 +3324,6 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
                     break;
                     */
                 }
-
-                // Update the syncd status after each block is handled
-                IsChainNearlySyncdInit();
             }
         }
 
@@ -3338,6 +3339,7 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
 
         // Update the syncd status after each block is handled
         IsChainNearlySyncdInit();
+        IsInitialBlockDownloadInit();
     }
     if (fBlocksDisconnected) {
         mempool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1, STANDARD_LOCKTIME_VERIFY_FLAGS);
@@ -3371,7 +3373,6 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
 
         CBlockIndex *pindexNewTip = NULL;
         const CBlockIndex *pindexFork;
-        bool fInitialDownload;
         {
             CBlockIndex *pindexOldTip = chainActive.Tip();
             pindexMostWork = FindMostWorkChain();
@@ -3428,8 +3429,6 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
 
             pindexNewTip = chainActive.Tip();
             pindexFork = chainActive.FindFork(pindexOldTip);
-            IsInitialBlockDownloadInit(); // update status after each block is processed.
-            fInitialDownload = IsInitialBlockDownload();
         }
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
 
@@ -3437,7 +3436,7 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
         if (pindexFork != pindexNewTip) {
             // BU move to activatebestchainstep  uiInterface.NotifyBlockTip(fInitialDownload, pindexNewTip);
 
-            if (!fInitialDownload) {
+            if (!IsInitialBlockDownload()) {
                 // Find the hashes of all blocks that weren't previously in the best chain.
                 std::vector<uint256> vHashes;
                 CBlockIndex *pindexToAnnounce = pindexNewTip;
