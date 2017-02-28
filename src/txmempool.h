@@ -244,8 +244,12 @@ public:
         double f1 = aModFee * bSize;
         double f2 = aSize * bModFee;
 
+        // Given a feerate tie, prefer a larger package.
         if (f1 == f2) {
-            return a.GetTime() >= b.GetTime();
+            if (aSize == bSize) {
+                return a.GetTime() >= b.GetTime();
+            }
+            return aSize < bSize;
         }
         return f1 < f2;
     }
@@ -255,7 +259,7 @@ public:
     {
         double f1 = (double)a.GetModifiedFee() * a.GetSizeWithDescendants();
         double f2 = (double)a.GetModFeesWithDescendants() * a.GetTxSize();
-        return f2 > f1;
+        return f2 >= f1;
     }
 };
 
@@ -270,8 +274,12 @@ public:
     {
         double f1 = (double)a.GetModifiedFee() * b.GetTxSize();
         double f2 = (double)b.GetModifiedFee() * a.GetTxSize();
+        // Given a feerate tie, prefer a larger package.
         if (f1 == f2) {
-            return b.GetTx().GetHash() < a.GetTx().GetHash();
+            if (a.GetTxSize() == b.GetTxSize()) {
+                return b.GetTx().GetHash() < a.GetTx().GetHash();
+            }
+            return a.GetTxSize() > b.GetTxSize();
         }
         return f1 > f2;
     }
@@ -301,8 +309,12 @@ public:
         double f1 = aFees * bSize;
         double f2 = aSize * bFees;
 
+        // Given a feerate tie, prefer a larger package.
         if (f1 == f2) {
-            return a.GetTx().GetHash() < b.GetTx().GetHash();
+            if (aSize == bSize) {
+                return a.GetTx().GetHash() < b.GetTx().GetHash();
+            }
+            return aSize > bSize;
         }
 
         return f1 > f2;
