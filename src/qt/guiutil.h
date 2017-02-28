@@ -116,10 +116,10 @@ namespace GUIUtil
     void openDebugLogfile();
 	
     // Open chaincoin.conf
-    void openConfigfile();	
+    bool openConfigfile();
 
     // Open masternode.conf
-    void openMNConfigfile();	
+    bool openMNConfigfile();
 
     // Browse backup folder
     void showBackups();

@@ -767,12 +767,18 @@ void BitcoinGUI::showPeers()
 
 void BitcoinGUI::showConfEditor()
 {
-    GUIUtil::openConfigfile();
+    /* show an error if there was some problem opening the file */
+    if (!GUIUtil::openConfigfile()) {
+        QMessageBox::critical(this, tr("Error"), tr("The configuration file could not be opened."));
+    }
 }
 
 void BitcoinGUI::showMNConfEditor()
 {
-    GUIUtil::openMNConfigfile();
+    /* show an error if there was some problem opening the file */
+    if (!GUIUtil::openMNConfigfile()) {
+        QMessageBox::critical(this, tr("Error"), tr("The configuration file could not be opened."));
+    }
 }
 
 void BitcoinGUI::showBackups()

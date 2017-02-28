@@ -433,22 +433,37 @@ void openDebugLogfile()
         QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathDebug)));
 }
 
-void openConfigfile()
+bool openConfigfile()
 {
     boost::filesystem::path pathConfig = GetConfigFile(BITCOIN_CONF_FILENAME);
 
-    /* Open chaincoin.conf with the associated application */
-    if (boost::filesystem::exists(pathConfig))
-        QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
+    /* Create the file */
+    boost::filesystem::ofstream configFile(pathConfig, std::ios_base::app);
+
+    if (!configFile.good())
+        return false;
+
+    configFile.close();
+
+    /* Open bitcoin.conf with the associated application */
+    return QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
 }
 
-void openMNConfigfile()
+bool openMNConfigfile()
 {
     boost::filesystem::path pathConfig = GetMasternodeConfigFile(MASTERNODE_CONF_FILENAME);
 
+    /* Create the file */
+    boost::filesystem::ofstream configFile(pathConfig, std::ios_base::app);
+
+    if (!configFile.good())
+        return false;
+
+    configFile.close();
+
     /* Open masternode.conf with the associated application */
     if (boost::filesystem::exists(pathConfig))
-        QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
+    return QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
 }
 
 void showBackups()
