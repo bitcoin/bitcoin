@@ -35,22 +35,16 @@ private:
     // Count the total # of txs in each bucket
     // Track the historical moving average of this total over blocks
     std::vector<double> txCtAvg;
-    // and calculate the total for the current block to update the moving average
-    std::vector<int> curBlockTxCt;
 
     // Count the total # of txs confirmed within Y blocks in each bucket
     // Track the historical moving average of theses totals over blocks
     std::vector<std::vector<double>> confAvg; // confAvg[Y][X]
-    // and calculate the totals for the current block to update the moving averages
-    std::vector<std::vector<int>> curBlockConf; // curBlockConf[Y][X]
 
     std::vector<std::vector<double>> failAvg; // future use
 
     // Sum the total feerate of all tx's in each bucket
     // Track the historical moving average of this total over blocks
     std::vector<double> avg;
-    // and calculate the total for the current block to update the moving average
-    std::vector<double> curBlockVal;
 
     // Combine the conf counts with tx counts to calculate the confirmation % for each Y,X
     // Combine the total value with the tx counts to calculate the avg feerate per bucket
@@ -79,7 +73,7 @@ public:
     TxConfirmStats(const std::vector<double>& defaultBuckets, const std::map<double, unsigned int>& defaultBucketMap,
                    unsigned int maxConfirms, double decay);
 
-    /** Clear the state of the curBlock variables to start counting for the new block */
+    /** Roll the circular buffer for unconfirmed txs*/
     void ClearCurrent(unsigned int nBlockHeight);
 
     /**
@@ -148,28 +142,20 @@ TxConfirmStats::TxConfirmStats(const std::vector<double>& defaultBuckets,
 }
 
 void TxConfirmStats::resizeInMemoryCounters(size_t newbuckets) {
-    curBlockConf.resize(GetMaxConfirms());
     // newbuckets must be passed in because the buckets referred to during Read have not been updated yet.
     unconfTxs.resize(GetMaxConfirms());
     for (unsigned int i = 0; i < unconfTxs.size(); i++) {
-        curBlockConf[i].resize(newbuckets);
         unconfTxs[i].resize(newbuckets);
     }
     oldUnconfTxs.resize(newbuckets);
-    curBlockTxCt.resize(newbuckets);
-    curBlockVal.resize(newbuckets);
 }
 
-// Zero out the data for the current block
+// Roll the unconfirmed txs circular buffer
 void TxConfirmStats::ClearCurrent(unsigned int nBlockHeight)
 {
     for (unsigned int j = 0; j < buckets.size(); j++) {
         oldUnconfTxs[j] += unconfTxs[nBlockHeight%unconfTxs.size()][j];
         unconfTxs[nBlockHeight%unconfTxs.size()][j] = 0;
-        for (unsigned int i = 0; i < curBlockConf.size(); i++)
-            curBlockConf[i][j] = 0;
-        curBlockTxCt[j] = 0;
-        curBlockVal[j] = 0;
     }
 }
 
@@ -180,20 +166,20 @@ void TxConfirmStats::Record(int blocksToConfirm, double val)
     if (blocksToConfirm < 1)
         return;
     unsigned int bucketindex = bucketMap.lower_bound(val)->second;
-    for (size_t i = blocksToConfirm; i <= curBlockConf.size(); i++) {
-        curBlockConf[i - 1][bucketindex]++;
+    for (size_t i = blocksToConfirm; i <= confAvg.size(); i++) {
+        confAvg[i - 1][bucketindex]++;
     }
-    curBlockTxCt[bucketindex]++;
-    curBlockVal[bucketindex] += val;
+    txCtAvg[bucketindex]++;
+    avg[bucketindex] += val;
 }
 
 void TxConfirmStats::UpdateMovingAverages()
 {
     for (unsigned int j = 0; j < buckets.size(); j++) {
         for (unsigned int i = 0; i < confAvg.size(); i++)
-            confAvg[i][j] = confAvg[i][j] * decay + curBlockConf[i][j];
-        avg[j] = avg[j] * decay + curBlockVal[j];
-        txCtAvg[j] = txCtAvg[j] * decay + curBlockTxCt[j];
+            confAvg[i][j] = confAvg[i][j] * decay;
+        avg[j] = avg[j] * decay;
+        txCtAvg[j] = txCtAvg[j] * decay;
     }
 }
 
@@ -521,22 +507,23 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
     // of unconfirmed txs to remove from tracking.
     nBestSeenHeight = nBlockHeight;
 
-    // Clear the current block state and update unconfirmed circular buffer
+    // Update unconfirmed circular buffer
     feeStats->ClearCurrent(nBlockHeight);
     shortStats->ClearCurrent(nBlockHeight);
     longStats->ClearCurrent(nBlockHeight);
 
+    // Decay all exponential averages
+    feeStats->UpdateMovingAverages();
+    shortStats->UpdateMovingAverages();
+    longStats->UpdateMovingAverages();
+
     unsigned int countedTxs = 0;
-    // Repopulate the current block states
+    // Update averages with data points from current block
     for (unsigned int i = 0; i < entries.size(); i++) {
         if (processBlockTx(nBlockHeight, entries[i]))
             countedTxs++;
     }
 
-    // Update all exponential averages with the current block state
-    feeStats->UpdateMovingAverages();
-    shortStats->UpdateMovingAverages();
-    longStats->UpdateMovingAverages();
 
     LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy after updating estimates for %u of %u txs in block, since last block %u of %u tracked, new mempool map size %u\n",
              countedTxs, entries.size(), trackedTxs, trackedTxs + untrackedTxs, mapMemPoolTxs.size());
