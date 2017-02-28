@@ -497,6 +497,7 @@ and git merge commit are mentioned.
 - #9765 `1e92e04` Harden against mistakes handling invalid blocks (sdaftuar)
 - #9779 `3c02b95` Update nMinimumChainWork and defaultAssumeValid (gmaxwell)
 - #8524 `19b0f33` Precompute sighashes (sipa)
+- #9791 `1825a03` Avoid VLA in hash.h (sipa)
 
 ### Build system
 - #8238 `6caf3ee` ZeroMQ 4.1.5 && ZMQ on Windows (fanquake)
@@ -673,6 +674,8 @@ and git merge commit are mentioned.
 - #9269 `43e8150` Align struct COrphan definition (sipa)
 - #9820 `599c69a` Fix pruning test broken by 2 hour manual prune window (ryanofsky)
 - #9824 `260c71c` qa: Check return code when stopping nodes (MarcoFalke)
+- #9875 `50953c2` tests: Fix dangling pwalletMain pointer in wallet tests (laanwj)
+- #9839 `eddaa6b` [qa] Make import-rescan.py watchonly check reliable (ryanofsky)
 
 ### Documentation
 - #8332 `806b9e7` Clarify witness branches in transaction.h serialization (dcousens)
@@ -710,6 +713,8 @@ and git merge commit are mentioned.
 - #8915 `03dd707` Add copyright/patent issues to possible NACK reasons (petertodd)
 - #8965 `23e03f8` Mention that PPA doesn't support Debian (anduck)
 - #9115 `bfc7aad` Mention reporting security issues responsibly (paveljanik)
+- #9840 `08e0690` Update sendfrom RPC help to correct coin selection misconception (ryanofsky)
+- #9865 `289204f` Change bitcoin address in RPC help message (marijnfs)
 
 ### Miscellaneous
 - #8274 `7a2d402` util: Update tinyformat (laanwj)
@@ -759,6 +764,7 @@ and git merge commit are mentioned.
 - #9777 `8dee822` Handle unusual maxsigcachesize gracefully (jnewbery)
 - #8863,#8807 univalue: Pull subtree (MarcoFalke)
 - #9798 `e22c067` Fix Issue #9775 (Check returned value of fopen) (kirit93)
+- #9856 `69832aa` Terminate immediately when allocation fails (theuni)
 
 Credits
 =======
@@ -825,6 +831,7 @@ Thanks to everyone who directly contributed to this release:
 - Luke Dashjr
 - maiiz
 - MarcoFalke
+- Marijn Stollenga
 - Marty Jones
 - Masahiko Hyuga
 - Matt Corallo
