@@ -31,6 +31,7 @@ using namespace std;
 
 static bool fRPCRunning = false;
 static bool fRPCInWarmup = true;
+static unsigned int nRPCAmountDecimals = DEFAULT_RPC_AMOUNT_DECIMALS;
 static std::string rpcWarmupStatus("RPC server started");
 static CCriticalSection cs_rpcWarmup;
 /* Timer-creating functions */
@@ -121,12 +122,21 @@ void RPCTypeCheckObj(const UniValue& o,
     }
 }
 
+bool SetRpcAmountDecimals(unsigned int decimals)
+{
+    if (decimals <= 8) {
+        nRPCAmountDecimals = decimals;
+        return true;
+    }
+    return false;
+}
+
 CAmount AmountFromValue(const UniValue& value)
 {
     if (!value.isNum() && !value.isStr())
         throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number or string");
     CAmount amount;
-    if (!ParseFixedPoint(value.getValStr(), 8, &amount))
+    if (!ParseFixedPoint(value.getValStr(), nRPCAmountDecimals, &amount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
     if (!MoneyRange(amount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
@@ -137,8 +147,9 @@ UniValue ValueFromAmount(const CAmount& amount)
 {
     bool sign = amount < 0;
     int64_t n_abs = (sign ? -amount : amount);
-    int64_t quotient = n_abs / COIN;
-    int64_t remainder = n_abs % COIN;
+    unsigned int nRpcUnit = pow(10, nRPCAmountDecimals);
+    int64_t quotient = n_abs / nRpcUnit;
+    int64_t remainder = n_abs % nRpcUnit;
     return UniValue(UniValue::VNUM,
             strprintf("%s%d.%08d", sign ? "-" : "", quotient, remainder));
 }
