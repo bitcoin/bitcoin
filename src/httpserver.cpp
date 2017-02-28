@@ -35,6 +35,9 @@
 #endif
 #endif
 
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+
 /** Maximum size of http request (request line + headers) */
 static const size_t MAX_HEADERS_SIZE = 8192;
 
@@ -596,13 +599,34 @@ void HTTPRequest::WriteHeader(const std::string& hdr, const std::string& value)
  * Replies must be sent in the main loop in the main http thread,
  * this cannot be done from worker threads.
  */
-void HTTPRequest::WriteReply(int nStatus, const std::string& strReply)
+void HTTPRequest::WriteReply(int nStatus, const std::string& strReply, bool fGzip)
 {
     assert(!replySent && req);
     // Send event to main http thread to send reply message
     struct evbuffer* evb = evhttp_request_get_output_buffer(req);
     assert(evb);
-    evbuffer_add(evb, strReply.data(), strReply.size());
+
+    if (fGzip)
+    {
+        // Compress reply
+        std::string strGzippedReply;
+        {
+            boost::iostreams::filtering_ostream compressingStream;
+            compressingStream.push(boost::iostreams::gzip_compressor(boost::iostreams::gzip_params(boost::iostreams::gzip::best_compression)));
+            compressingStream.push(boost::iostreams::back_inserter(strGzippedReply));
+            compressingStream << strReply;
+            boost::iostreams::close(compressingStream);
+        }
+
+        // Send compressed reply
+        evbuffer_add(evb, strGzippedReply.data(), strGzippedReply.size());
+    }
+    else
+    {
+        // Send raw reply
+        evbuffer_add(evb, strReply.data(), strReply.size());
+    }
+
     HTTPEvent* ev = new HTTPEvent(eventBase, true,
         std::bind(evhttp_send_reply, req, nStatus, (const char*)NULL, (struct evbuffer *)NULL));
     ev->trigger(0);

@@ -109,7 +109,7 @@ public:
      * @note Can be called only once. As this will give the request back to the
      * main thread, do not call any other HTTPRequest methods after calling this.
      */
-    void WriteReply(int nStatus, const std::string& strReply = "");
+    void WriteReply(int nStatus, const std::string& strReply = "", bool fGzip = false);
 };
 
 /** Event handler closure.

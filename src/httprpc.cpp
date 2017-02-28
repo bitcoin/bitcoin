@@ -162,6 +162,13 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
         return false;
     }
 
+    bool fGzip = GetBoolArg("-rpcgzip", false);
+    if (fGzip) {
+        // Don't use gzip compression if client isn't providing appropriate Accept-Encoding header.
+        std::pair<bool, std::string> encHeader = req->GetHeader("Accept-Encoding");
+        fGzip = (encHeader.first && encHeader.second == "gzip");
+    }
+
     JSONRPCRequest jreq;
     if (!RPCAuthorized(authHeader.second, jreq.authUser)) {
         LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", req->GetPeer().ToString());
@@ -202,7 +209,9 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
             throw JSONRPCError(RPC_PARSE_ERROR, "Top-level object parse error");
 
         req->WriteHeader("Content-Type", "application/json");
-        req->WriteReply(HTTP_OK, strReply);
+        if (fGzip)
+            req->WriteHeader("Content-Encoding", "gzip");
+        req->WriteReply(HTTP_OK, strReply, fGzip);
     } catch (const UniValue& objError) {
         JSONErrorReply(req, objError, jreq.id);
         return false;
