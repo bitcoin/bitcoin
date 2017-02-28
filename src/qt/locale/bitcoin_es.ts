@@ -486,6 +486,10 @@
         <translation>%1 cliente</translation>
     </message>
     <message>
+        <source>Connecting to peers...</source>
+        <translation>Conectando a pares...</translation>
+    </message>
+    <message>
         <source>Catching up...</source>
         <translation>Actualizando...</translation>
     </message>
@@ -2473,6 +2477,10 @@
 </context>
 <context>
     <name>TransactionDesc</name>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>Abrir para %n bloque más</numerusform><numerusform>Abrir para %n bloques más</numerusform></translation>
+    </message>
     <message>
         <source>Open until %1</source>
         <translation>Abierto hasta %1</translation>
@@ -2517,6 +2525,10 @@
         <source>, has not been successfully broadcast yet</source>
         <translation>, no ha sido emitido con éxito aún</translation>
     </message>
+    <message numerus="yes">
+        <source>, broadcast through %n node(s)</source>
+        <translation><numerusform>, transmitir a través de %n nodo</numerusform><numerusform>, transmitir a través de %n nodos</numerusform></translation>
+    </message>
     <message>
         <source>Date</source>
         <translation>Fecha</translation>
@@ -2557,6 +2569,10 @@
         <source>Credit</source>
         <translation>Credito</translation>
     </message>
+    <message numerus="yes">
+        <source>matures in %n more block(s)</source>
+        <translation><numerusform>disponible en %n bloque más</numerusform><numerusform>disponible en %n bloques más</numerusform></translation>
+    </message>
     <message>
         <source>not accepted</source>
         <translation>no aceptada</translation>
@@ -2592,6 +2608,10 @@
     <message>
         <source>Transaction ID</source>
         <translation>Identificador de transacción (ID)</translation>
+    </message>
+    <message>
+        <source>Transaction total size</source>
+        <translation>Tamaño total de transacción</translation>
     </message>
     <message>
         <source>Output index</source>
@@ -2654,6 +2674,10 @@
     <message>
         <source>Label</source>
         <translation>Etiqueta</translation>
+    </message>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>Abrir para %n bloque más</numerusform><numerusform>Abrir para %n bloques más</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -2988,6 +3012,18 @@
 </translation>
     </message>
     <message>
+        <source>Accept connections from outside (default: 1 if no -proxy or -connect/-noconnect)</source>
+        <translation>Aceptar conexiones desde el exterior (predeterminado: 1 si no -proxy o -connect/-desconectar)</translation>
+    </message>
+    <message>
+        <source>Connect only to the specified node(s); -noconnect or -connect=0 alone to disable automatic connections</source>
+        <translation>Conectar sólo al nodo(s) especificado; -no conectar or -conectar=solo 0 para deshabilitar conexiones automáticas</translation>
+    </message>
+    <message>
+        <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
+        <translation>Distribuido bajo la licencia de software MIT, vea el archivo adjunto %s o %s</translation>
+    </message>
+    <message>
         <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
         <translation>Si &lt;category&gt; no es proporcionado o si &lt;category&gt; =1, muestra toda la información de depuración.</translation>
     </message>
@@ -3063,6 +3099,14 @@
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Ejecutar comando cuando una transacción del monedero cambia (%s en cmd se remplazará por TxID)</translation>
+    </message>
+    <message>
+        <source>Extra transactions to keep in memory for compact block reconstructions (default: %u)</source>
+        <translation>Transacciones extra a mantener en la memoria para reconstrucciones de bloque compacto (predeterminado: %u)</translation>
+    </message>
+    <message>
+        <source>If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)</source>
+        <translation>Si este bloque está en la cadena asuma que sus predecesores y él son válidos y potencialmente se saltan su script de verificación (0 para verificar todo, predeterminado: %s, testnet: %s)</translation>
     </message>
     <message>
         <source>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</source>
@@ -3678,6 +3722,10 @@ Establecer la serialización de las transacciones sin procesar o el bloque hex d
     <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Dirección -proxy inválida: '%s'</translation>
+    </message>
+    <message>
+        <source>Keypool ran out, please call keypoolrefill first</source>
+        <translation>Keypool se ha agotado, llame a keypoolrefill primero</translation>
     </message>
     <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
