@@ -1098,6 +1098,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                     result.pushKV("error", JSONRPCError(RPC_MISC_ERROR, strprintf("Failed to rescan before time %d, transactions may be missing.", scannedRange->GetBlockTimeMax())));
                     response.push_back(std::move(result));
                 }
+                ++i;
             }
         }
     }
