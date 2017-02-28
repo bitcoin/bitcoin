@@ -39,6 +39,17 @@ public:
     virtual bool HaveCScript(const CScriptID &hash) const =0;
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const =0;
 
+    //! Support for HTLC preimages
+    virtual bool GetPreimage(
+        const std::vector<unsigned char>& image,
+        std::vector<unsigned char>& preimage
+    ) const =0;
+
+    virtual bool AddPreimage(
+        const std::vector<unsigned char>& image,
+        const std::vector<unsigned char>& preimage
+    ) =0;
+
     //! Support for Watch-only addresses
     virtual bool AddWatchOnly(const CScript &dest) =0;
     virtual bool RemoveWatchOnly(const CScript &dest) =0;
@@ -50,6 +61,7 @@ typedef std::map<CKeyID, CKey> KeyMap;
 typedef std::map<CKeyID, CPubKey> WatchKeyMap;
 typedef std::map<CScriptID, CScript > ScriptMap;
 typedef std::set<CScript> WatchOnlySet;
+typedef std::map<std::vector<unsigned char>, std::vector<unsigned char>> PreimageMap;
 
 /** Basic key store, that keeps keys in an address->secret map */
 class CBasicKeyStore : public CKeyStore
@@ -59,6 +71,7 @@ protected:
     WatchKeyMap mapWatchKeys;
     ScriptMap mapScripts;
     WatchOnlySet setWatchOnly;
+    PreimageMap mapPreimages;
 
 public:
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
@@ -101,6 +114,16 @@ public:
     virtual bool AddCScript(const CScript& redeemScript);
     virtual bool HaveCScript(const CScriptID &hash) const;
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const;
+
+    bool GetPreimage(
+        const std::vector<unsigned char>& image,
+        std::vector<unsigned char>& preimage
+    ) const;
+    
+    bool AddPreimage(
+        const std::vector<unsigned char>& image,
+        const std::vector<unsigned char>& preimage
+    );
 
     virtual bool AddWatchOnly(const CScript &dest);
     virtual bool RemoveWatchOnly(const CScript &dest);

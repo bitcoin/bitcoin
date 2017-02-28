@@ -66,6 +66,33 @@ bool CBasicKeyStore::GetCScript(const CScriptID &hash, CScript& redeemScriptOut)
     return false;
 }
 
+bool CBasicKeyStore::GetPreimage(
+    const std::vector<unsigned char>& image,
+    std::vector<unsigned char>& preimage
+) const
+{
+    LOCK(cs_KeyStore);
+
+    PreimageMap::const_iterator it = mapPreimages.find(image);
+    if (it != mapPreimages.end()) {
+        preimage = it->second;
+
+        return true;
+    }
+    return false;
+}
+
+bool CBasicKeyStore::AddPreimage(
+    const std::vector<unsigned char>& image,
+    const std::vector<unsigned char>& preimage
+)
+{
+    LOCK(cs_KeyStore);
+
+    mapPreimages[image] = preimage;
+    return true;
+}
+
 static bool ExtractPubKey(const CScript &dest, CPubKey& pubKeyOut)
 {
     //TODO: Use Solver to extract this?
