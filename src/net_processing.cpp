@@ -338,7 +338,9 @@ bool MarkBlockAsInFlight(NodeId nodeid, const uint256& hash, const Consensus::Pa
     // Short-circuit most stuff in case its from the same node
     map<uint256, pair<NodeId, list<QueuedBlock>::iterator> >::iterator itInFlight = mapBlocksInFlight.find(hash);
     if (itInFlight != mapBlocksInFlight.end() && itInFlight->second.first == nodeid) {
-        *pit = &itInFlight->second.second;
+        if (pit) {
+            *pit = &itInFlight->second.second;
+        }
         return false;
     }
 
