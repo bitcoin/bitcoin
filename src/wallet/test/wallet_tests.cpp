@@ -395,24 +395,35 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 50 * COIN);
     }
 
+    // Verify importmulti RPC returns failure for a key whose creation time is
+    // before the missing block, and success for a key whose creation time is
+    // after.
     {
         CWallet wallet;
         CWallet *backup = ::pwalletMain;
         ::pwalletMain = &wallet;
+        UniValue keys;
+        keys.setArray();
         UniValue key;
         key.setObject();
         key.pushKV("scriptPubKey", HexStr(GetScriptForRawPubKey(coinbaseKey.GetPubKey())));
         key.pushKV("timestamp", 0);
         key.pushKV("internal", UniValue(true));
-        UniValue keys;
-        keys.setArray();
+        keys.push_back(key);
+        key.clear();
+        key.setObject();
+        CKey futureKey;
+        futureKey.MakeNewKey(true);
+        key.pushKV("scriptPubKey", HexStr(GetScriptForRawPubKey(futureKey.GetPubKey())));
+        key.pushKV("timestamp", newTip->GetBlockTimeMax() + 7200);
+        key.pushKV("internal", UniValue(true));
         keys.push_back(key);
         JSONRPCRequest request;
         request.params.setArray();
         request.params.push_back(keys);
 
         UniValue response = importmulti(request);
-        BOOST_CHECK_EQUAL(response.write(), strprintf("[{\"success\":false,\"error\":{\"code\":-1,\"message\":\"Failed to rescan before time %d, transactions may be missing.\"}}]", newTip->GetBlockTimeMax()));
+        BOOST_CHECK_EQUAL(response.write(), strprintf("[{\"success\":false,\"error\":{\"code\":-1,\"message\":\"Failed to rescan before time %d, transactions may be missing.\"}},{\"success\":true}]", newTip->GetBlockTimeMax()));
         ::pwalletMain = backup;
     }
 }
