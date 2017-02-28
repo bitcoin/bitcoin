@@ -125,6 +125,19 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
         break;
     }
 
+    case TX_HTLC:
+    {
+        // Only consider HTLC's "mine" if we own ALL the keys
+        // involved.
+        vector<valtype> keys;
+        keys.push_back(vSolutions[1]);
+        keys.push_back(vSolutions[3]);
+        if (HaveKeys(keys, keystore) == keys.size()) {
+            return ISMINE_SPENDABLE;
+        }
+        break;
+    }
+
     case TX_MULTISIG:
     {
         // Only consider transactions "mine" if we own ALL the

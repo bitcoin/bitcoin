@@ -108,6 +108,30 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
         ret.push_back(valtype()); // workaround CHECKMULTISIG bug
         return (SignN(vSolutions, creator, scriptPubKey, ret, sigversion));
 
+    case TX_HTLC:
+        {
+            std::vector<unsigned char> image(vSolutions[0]);
+            std::vector<unsigned char> preimage;
+
+            if (creator.KeyStore().GetPreimage(image, preimage)) {
+                keyID = CPubKey(vSolutions[1]).GetID();
+                if (!Sign1(keyID, creator, scriptPubKey, ret, sigversion)) {
+                    return false;
+                }
+
+                ret.push_back(preimage);
+                ret.push_back({1});
+            } else {
+                keyID = CPubKey(vSolutions[3]).GetID();
+                if (!Sign1(keyID, creator, scriptPubKey, ret, sigversion)) {
+                    return false;
+                }
+
+                ret.push_back(valtype());
+            }
+            return true;
+        }
+
     case TX_WITNESS_V0_KEYHASH:
         ret.push_back(vSolutions[0]);
         return true;
@@ -312,6 +336,7 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
     switch (txType)
     {
     case TX_NONSTANDARD:
+    case TX_HTLC:
     case TX_NULL_DATA:
         // Don't know anything about this, assume bigger one is correct:
         if (sigs1.script.size() >= sigs2.script.size())

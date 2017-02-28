@@ -27,6 +27,7 @@ const char* GetTxnOutputType(txnouttype t)
     {
     case TX_NONSTANDARD: return "nonstandard";
     case TX_PUBKEY: return "pubkey";
+    case TX_HTLC: return "htlc";
     case TX_PUBKEYHASH: return "pubkeyhash";
     case TX_SCRIPTHASH: return "scripthash";
     case TX_MULTISIG: return "multisig";
@@ -54,6 +55,29 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
 
         // Sender provides N pubkeys, receivers provides M signatures
         mTemplates.insert(make_pair(TX_MULTISIG, CScript() << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
+
+        // HTLC where sender requests preimage of a hash
+        {
+            // Hash opcode and template opcode to match digest
+            const std::pair<opcodetype, opcodetype> accepted_hashers[] = {
+                make_pair(OP_SHA256, OP_BLOB32),
+                make_pair(OP_RIPEMD160, OP_BLOB20)
+            };
+            const opcodetype accepted_timeout_ops[] = {OP_CHECKLOCKTIMEVERIFY, OP_CHECKSEQUENCEVERIFY};
+
+            BOOST_FOREACH(auto hasher, accepted_hashers) {
+                BOOST_FOREACH(opcodetype timeout_op, accepted_timeout_ops) {
+                    mTemplates.insert(make_pair(TX_HTLC, CScript()
+                        << OP_IF
+                        <<     hasher.first << hasher.second << OP_EQUALVERIFY << OP_PUBKEY
+                        << OP_ELSE
+                        <<     OP_U32INT << timeout_op << OP_DROP << OP_PUBKEY
+                        << OP_ENDIF
+                        << OP_CHECKSIG
+                    ));
+                }
+            }
+        }
     }
 
     vSolutionsRet.clear();
@@ -166,6 +190,33 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
                 else
                     break;
             }
+            else if (opcode2 == OP_U32INT)
+            {
+                CScriptNum sn(0);
+                try {
+                    sn = CScriptNum(vch1, true, 5);
+                } catch(scriptnum_error) {
+                    break;
+                }
+
+                if (sn < 0 || sn > std::numeric_limits<uint32_t>::max()) {
+                    break;
+                }
+
+                vSolutionsRet.push_back(vch1);
+            }
+            else if (opcode2 == OP_BLOB32)
+            {
+                if (vch1.size() != sizeof(uint256))
+                    break;
+                vSolutionsRet.push_back(vch1);
+            }
+            else if (opcode2 == OP_BLOB20)
+            {
+                if (vch1.size() != sizeof(uint160))
+                    break;
+                vSolutionsRet.push_back(vch1);
+            }
             else if (opcode1 != opcode2 || vch1 != vch2)
             {
                 // Others must match exactly
@@ -232,6 +283,28 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, vecto
 
             CTxDestination address = pubKey.GetID();
             addressRet.push_back(address);
+        }
+
+        if (addressRet.empty())
+            return false;
+    }
+    else if (typeRet == TX_HTLC)
+    {
+        // Seller
+        {
+            CPubKey pubKey(vSolutions[1]);
+            if (pubKey.IsValid()) {
+                CTxDestination address = pubKey.GetID();
+                addressRet.push_back(address);
+            }
+        }
+        // Refund
+        {
+            CPubKey pubKey(vSolutions[3]);
+            if (pubKey.IsValid()) {
+                CTxDestination address = pubKey.GetID();
+                addressRet.push_back(address);
+            }
         }
 
         if (addressRet.empty())
