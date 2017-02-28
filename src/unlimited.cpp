@@ -807,7 +807,7 @@ void static BitcoinMiner(const CChainParams& chainparams)
                 return;
             }
             CBlock *pblock = &pblocktemplate->block;
-            IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
+            IncrementExtraNonce(pblock, nExtraNonce);
 
             LogPrintf("Running BitcoinMiner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
                 ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));

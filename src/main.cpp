@@ -3888,9 +3888,13 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
-            !std::equal(expect.begin(), expect.end(), block.vtx[0].vin[0].scriptSig.begin())) {
-            return state.DoS(100, error("%s: block height mismatch in coinbase", __func__), REJECT_INVALID, "bad-cb-height");
-        }
+            !std::equal(expect.begin(), expect.end(), block.vtx[0].vin[0].scriptSig.begin()))
+          {
+            int blockCoinbaseHeight = block.GetHeight();
+            uint256 hashp = block.hashPrevBlock;
+            uint256 hash = block.GetHash();
+            return state.DoS(100, error("%s: block height mismatch in coinbase, expected %d, got %d, block is %s, parent block is %s, pprev is %s", __func__,nHeight,blockCoinbaseHeight,hash.ToString(),hashp.ToString(), pindexPrev->phashBlock->ToString()), REJECT_INVALID, "bad-cb-height");
+          }
     }
 
     return true;
