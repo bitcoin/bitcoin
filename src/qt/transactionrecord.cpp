@@ -58,7 +58,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         {
             std::string labelPublic = getLabelPublic(txout.scriptPubKey);
             if (labelPublic != "")
-                // since address is unchange the previous address is associated with the OP_RETURN script
                 listAllAddresses["<" + labelPublic + ">"] = txout.scriptPubKey;
             else
                 // add the unknown scriptPubKey as n/a - TODO could also skip these if there is no need to display/filter??

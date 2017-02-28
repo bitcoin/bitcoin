@@ -209,14 +209,14 @@ public:
         return 0;
     }
 
-    QString describe(TransactionRecord *rec, int unit)
+    QString describe(TransactionRecord *rec, int unit, QString labelFreeze)
     {
         {
             LOCK2(cs_main, wallet->cs_wallet);
             std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
             if(mi != wallet->mapWallet.end())
             {
-                return TransactionDesc::toHTML(wallet, mi->second, rec, unit);
+                return TransactionDesc::toHTML(wallet, mi->second, rec, unit, labelFreeze);
             }
         }
         return QString();
@@ -616,9 +616,9 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     case WatchonlyDecorationRole:
         return txWatchonlyDecoration(rec);
     case LongDescriptionRole:
-        return priv->describe(rec, walletModel->getOptionsModel()->getDisplayUnit());
+        return priv->describe(rec, walletModel->getOptionsModel()->getDisplayUnit(), walletModel->getAddressTableModel()->labelForFreeze(QString::fromStdString(address)));
     case AddressRole:
-        return QString::fromStdString(address);
+        return formatTxToAddress(rec, false);
     case LabelRole:        
         return label;
     case AmountRole:
