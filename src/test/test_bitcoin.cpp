@@ -59,8 +59,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         RegisterAllCoreRPCCommands(tableRPC);
         ClearDatadirCache();
         pathTemp = GetTempPath() / strprintf("test_bitcoin_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
-        boost::filesystem::create_directories(pathTemp);
-        mapArgs["-datadir"] = pathTemp.string();
+        fs::create_directories(pathTemp);
         pblocktree = new CBlockTreeDB(1 << 20, true);
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
         pcoinsTip = new CCoinsViewCache(pcoinsdbview);
@@ -79,7 +78,7 @@ TestingSetup::~TestingSetup()
         delete pcoinsTip;
         delete pcoinsdbview;
         delete pblocktree;
-        boost::filesystem::remove_all(pathTemp);
+        fs::remove_all(pathTemp);
 }
 
 TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)

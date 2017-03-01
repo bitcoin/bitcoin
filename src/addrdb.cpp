@@ -36,7 +36,7 @@ bool CBanDB::Write(const banmap_t& banSet)
     ssBanlist << hash;
 
     // open temp output file, and associate with CAutoFile
-    boost::filesystem::path pathTmp = GetDataDir() / tmpfn;
+    fs::path pathTmp = GetDataDir() / tmpfn;
     FILE *file = fopen(pathTmp.string().c_str(), "wb");
     CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
     if (fileout.IsNull())
@@ -68,7 +68,7 @@ bool CBanDB::Read(banmap_t& banSet)
         return error("%s: Failed to open file %s", __func__, pathBanlist.string());
 
     // use file size to size memory buffer
-    uint64_t fileSize = boost::filesystem::file_size(pathBanlist);
+    uint64_t fileSize = fs::file_size(pathBanlist);
     uint64_t dataSize = 0;
     // Don't try to resize to a negative number if file is small
     if (fileSize >= sizeof(uint256))
@@ -133,7 +133,7 @@ bool CAddrDB::Write(const CAddrMan& addr)
     ssPeers << hash;
 
     // open temp output file, and associate with CAutoFile
-    boost::filesystem::path pathTmp = GetDataDir() / tmpfn;
+    fs::path pathTmp = GetDataDir() / tmpfn;
     FILE *file = fopen(pathTmp.string().c_str(), "wb");
     CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
     if (fileout.IsNull())
@@ -165,7 +165,7 @@ bool CAddrDB::Read(CAddrMan& addr)
         return error("%s: Failed to open file %s", __func__, pathAddr.string());
 
     // use file size to size memory buffer
-    uint64_t fileSize = boost::filesystem::file_size(pathAddr);
+    uint64_t fileSize = fs::file_size(pathAddr);
     uint64_t dataSize = 0;
     // Don't try to resize to a negative number if file is small
     if (fileSize >= sizeof(uint256))

@@ -105,7 +105,7 @@ bool AppInit(int argc, char* argv[])
 
     try
     {
-        if (!boost::filesystem::is_directory(GetDataDir(false)))
+        if (!fs::is_directory(GetDataDir(false)))
         {
             fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", mapArgs["-datadir"].c_str());
             return false;

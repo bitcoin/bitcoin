@@ -91,8 +91,8 @@ static int AppInitRPC(int argc, char* argv[])
         }
         return EXIT_SUCCESS;
     }
-    if (!boost::filesystem::is_directory(GetDataDir(false))) {
-        fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", mapArgs["-datadir"].c_str());
+    if (!fs::is_directory(GetDataDir(false))) {
+        fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", GetArg("-datadir", "").c_str());
         return EXIT_FAILURE;
     }
     try {
@@ -173,7 +173,7 @@ UniValue CallRPC(const string& strMethod, const UniValue& params)
         if (!GetAuthCookie(&strRPCUserColonPass)) {
             throw runtime_error(strprintf(
                 _("Could not locate RPC credentials. No authentication cookie could be found, and no rpcpassword is set in the configuration file (%s)"),
-                    GetConfigFile().string().c_str()));
+                     GetConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME)).string().c_str()));
 
         }
     } else {
