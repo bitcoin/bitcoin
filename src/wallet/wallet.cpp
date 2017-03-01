@@ -5030,8 +5030,6 @@ bool CWallet::BackupWallet(const std::string& strDest)
 // either supply "wallet" (if already loaded) or "strWalletFile" (if wallet wasn't loaded yet)
 bool AutoBackupWallet (CWallet* wallet, std::string strWalletFile, std::string& strBackupWarning, std::string& strBackupError)
 {
-    namespace fs = boost::filesystem;
-
     strBackupWarning = strBackupError = "";
 
     if(nWalletBackups > 0)

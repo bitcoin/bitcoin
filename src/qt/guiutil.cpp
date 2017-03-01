@@ -433,10 +433,10 @@ void openDebugLogfile()
 
 bool openConfigfile()
 {
-    boost::filesystem::path pathConfig = GetConfigFile(BITCOIN_CONF_FILENAME);
+    fs::path pathConfig = GetConfigFile(BITCOIN_CONF_FILENAME);
 
     /* Create the file */
-    boost::filesystem::ofstream configFile(pathConfig, std::ios_base::app);
+    fs::ofstream configFile(pathConfig, std::ios_base::app);
 
     if (!configFile.good())
         return false;
@@ -449,10 +449,10 @@ bool openConfigfile()
 
 bool openMNConfigfile()
 {
-    boost::filesystem::path pathConfig = GetMasternodeConfigFile(MASTERNODE_CONF_FILENAME);
+    fs::path pathConfig = GetMasternodeConfigFile(MASTERNODE_CONF_FILENAME);
 
     /* Create the file */
-    boost::filesystem::ofstream configFile(pathConfig, std::ios_base::app);
+    fs::ofstream configFile(pathConfig, std::ios_base::app);
 
     if (!configFile.good())
         return false;
@@ -460,16 +460,16 @@ bool openMNConfigfile()
     configFile.close();
 
     /* Open masternode.conf with the associated application */
-    if (boost::filesystem::exists(pathConfig))
+    if (fs::exists(pathConfig))
     return QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
 }
 
 void showBackups()
 {
-    boost::filesystem::path backupsDir = GetBackupsDir();
+    fs::path backupsDir = GetBackupsDir();
 
     /* Open folder with default browser */
-    if (boost::filesystem::exists(backupsDir))
+    if (fs::exists(backupsDir))
         QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(backupsDir)));
 }
 

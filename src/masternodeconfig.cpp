@@ -1,4 +1,5 @@
 
+#include <fs.h>
 #include <netbase.h>
 #include <masternodeconfig.h>
 #include <util.h>
@@ -16,8 +17,8 @@ void CMasternodeConfig::add(const std::string& alias, const std::string& ip, con
 
 bool CMasternodeConfig::read(std::string& strErrRet) {
     int linenumber = 1;
-    boost::filesystem::path pathMasternodeConfigFile = GetMasternodeConfigFile(MASTERNODE_CONF_FILENAME);
-    boost::filesystem::ifstream streamConfig(pathMasternodeConfigFile);
+    fs::path pathMasternodeConfigFile = GetMasternodeConfigFile(MASTERNODE_CONF_FILENAME);
+    fs::ifstream streamConfig(pathMasternodeConfigFile);
 
     if (!streamConfig.good()) {
         FILE* configFile = fopen(pathMasternodeConfigFile.string().c_str(), "a");
