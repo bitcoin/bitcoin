@@ -17,6 +17,7 @@
 #include "coins.h"
 #include "consensus/consensus.h"
 #include "net.h"
+#include "fs.h"
 #include "script/script_error.h"
 #include "sync.h"
 #include "versionbits.h"

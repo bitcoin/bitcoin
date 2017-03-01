@@ -8,6 +8,7 @@
 #define BITCOIN_WALLET_DB_H
 
 #include "clientversion.h"
+#include "fs.h"
 #include "serialize.h"
 #include "streams.h"
 #include "sync.h"
@@ -16,8 +17,6 @@
 #include <map>
 #include <string>
 #include <vector>
-
-#include <boost/filesystem/path.hpp>
 
 #include <db_cxx.h>
 
