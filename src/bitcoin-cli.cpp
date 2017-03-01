@@ -24,6 +24,7 @@
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 #include <univalue.h>
 
@@ -179,7 +180,7 @@ static void http_request_done(struct evhttp_request *req, void *ctx)
         struct evkeyval* kv = req_reply_headers->tqh_first;
         while (kv)
         {
-            if ( fGzip = (!strcasecmp(kv->key, "Content-Encoding") && !strcasecmp(kv->value, "gzip")) ) break;
+            if ( fGzip = (boost::iequals(kv->key, "Content-Encoding") && boost::iequals(kv->value, "gzip")) ) break;
             kv = kv->next.tqe_next;
         }
     }
