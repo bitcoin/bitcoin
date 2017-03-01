@@ -10,6 +10,6 @@
 
 #include "fs.h"
 
-boost::filesystem::path GetTempPath() {
-    return boost::filesystem::temp_directory_path();
+fs::path GetTempPath() {
+    return fs::temp_directory_path();
 }

@@ -842,12 +842,12 @@ bool CWalletDB::RecoverKeysOnlyFilter(void *callbackData, CDataStream ssKey, CDa
     return true;
 }
 
-bool CWalletDB::VerifyEnvironment(const std::string& walletFile, const boost::filesystem::path& dataDir, std::string& errorStr)
+bool CWalletDB::VerifyEnvironment(const std::string& walletFile, const fs::path& dataDir, std::string& errorStr)
 {
     return CDB::VerifyEnvironment(walletFile, dataDir, errorStr);
 }
 
-bool CWalletDB::VerifyDatabaseFile(const std::string& walletFile, const boost::filesystem::path& dataDir, std::string& warningStr, std::string& errorStr)
+bool CWalletDB::VerifyDatabaseFile(const std::string& walletFile, const fs::path& dataDir, std::string& warningStr, std::string& errorStr)
 {
     return CDB::VerifyDatabaseFile(walletFile, dataDir, errorStr, warningStr, CWalletDB::Recover);
 }

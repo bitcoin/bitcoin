@@ -608,7 +608,7 @@ int main(int argc, char *argv[])
 
     /// 6. Determine availability of data directory and parse bitcoin.conf
     /// - Do not call GetDataDir(true) before this step finishes
-    if (!boost::filesystem::is_directory(GetDataDir(false)))
+    if (!fs::is_directory(GetDataDir(false)))
     {
         QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
                               QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(GetArg("-datadir", ""))));
