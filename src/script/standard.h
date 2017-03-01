@@ -80,6 +80,12 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::
 CScript GetScriptForDestination(const CTxDestination& dest);
 CScript GetScriptForRawPubKey(const CPubKey& pubkey);
 CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
+CScript GetScriptForHTLC(const CPubKey& seller,
+                         const CPubKey& refund,
+                         const std::vector<unsigned char> image,
+                         uint32_t timeout,
+                         opcodetype hasher_type,
+                         opcodetype timeout_type);
 CScript GetScriptForWitness(const CScript& redeemscript);
 
 #endif // BITCOIN_SCRIPT_STANDARD_H

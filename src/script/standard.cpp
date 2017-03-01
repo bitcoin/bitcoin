@@ -374,6 +374,32 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
     return script;
 }
 
+CScript GetScriptForHTLC(const CPubKey& seller,
+                         const CPubKey& refund,
+                         const std::vector<unsigned char> image,
+                         uint32_t timeout,
+                         opcodetype hasher_type,
+                         opcodetype timeout_type)
+{
+    CScript script;
+
+    script << OP_IF;
+    script <<   hasher_type << image << OP_EQUALVERIFY << ToByteVector(seller);
+    script << OP_ELSE;
+
+    if (timeout <= 16) {
+        script << CScript::EncodeOP_N(timeout);
+    } else {
+        script << CScriptNum(timeout);
+    }
+
+    script <<   timeout_type << OP_DROP << ToByteVector(refund);
+    script << OP_ENDIF;
+    script << OP_CHECKSIG;
+
+    return script;
+}
+
 CScript GetScriptForWitness(const CScript& redeemscript)
 {
     CScript ret;
