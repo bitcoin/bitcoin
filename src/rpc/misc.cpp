@@ -224,6 +224,42 @@ UniValue validateaddress(const JSONRPCRequest& request)
     return ret;
 }
 
+void _publickey_from_string(const std::string &ks, CPubKey &out)
+{
+#ifdef ENABLE_WALLET
+    // Case 1: Bitcoin address and we have full public key:
+    CBitcoinAddress address(ks);
+    if (pwalletMain && address.IsValid())
+    {
+        CKeyID keyID;
+        if (!address.GetKeyID(keyID))
+            throw runtime_error(
+                strprintf("%s does not refer to a key",ks));
+        CPubKey vchPubKey;
+        if (!pwalletMain->GetPubKey(keyID, vchPubKey))
+            throw runtime_error(
+                strprintf("no full public key for address %s",ks));
+        if (!vchPubKey.IsFullyValid())
+            throw runtime_error(" Invalid public key: "+ks);
+        out = vchPubKey;
+    }
+
+    // Case 2: hex public key
+    else
+#endif
+    if (IsHex(ks))
+    {
+        CPubKey vchPubKey(ParseHex(ks));
+        if (!vchPubKey.IsFullyValid())
+            throw runtime_error(" Invalid public key: "+ks);
+        out = vchPubKey;
+    }
+    else
+    {
+        throw runtime_error(" Invalid public key: "+ks);
+    }
+}
+
 /**
  * Used by addmultisigaddress / createmultisig:
  */
@@ -246,38 +282,7 @@ CScript _createmultisig_redeemScript(const UniValue& params)
     for (unsigned int i = 0; i < keys.size(); i++)
     {
         const std::string& ks = keys[i].get_str();
-#ifdef ENABLE_WALLET
-        // Case 1: Bitcoin address and we have full public key:
-        CBitcoinAddress address(ks);
-        if (pwalletMain && address.IsValid())
-        {
-            CKeyID keyID;
-            if (!address.GetKeyID(keyID))
-                throw runtime_error(
-                    strprintf("%s does not refer to a key",ks));
-            CPubKey vchPubKey;
-            if (!pwalletMain->GetPubKey(keyID, vchPubKey))
-                throw runtime_error(
-                    strprintf("no full public key for address %s",ks));
-            if (!vchPubKey.IsFullyValid())
-                throw runtime_error(" Invalid public key: "+ks);
-            pubkeys[i] = vchPubKey;
-        }
-
-        // Case 2: hex public key
-        else
-#endif
-        if (IsHex(ks))
-        {
-            CPubKey vchPubKey(ParseHex(ks));
-            if (!vchPubKey.IsFullyValid())
-                throw runtime_error(" Invalid public key: "+ks);
-            pubkeys[i] = vchPubKey;
-        }
-        else
-        {
-            throw runtime_error(" Invalid public key: "+ks);
-        }
+        _publickey_from_string(ks, pubkeys[i]);
     }
     CScript result = GetScriptForMultisig(nRequired, pubkeys);
 
