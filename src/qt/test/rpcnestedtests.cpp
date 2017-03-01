@@ -2,18 +2,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/test/rpcnestedtests.h>
+#include "rpcnestedtests.h"
 
-#include <chainparams.h>
-#include <consensus/validation.h>
-#include <fs.h>
-#include <validation.h>
-#include <rpc/register.h>
-#include <rpc/server.h>
-#include <rpcconsole.h>
-#include <test/test_bitcoin.h>
-#include <univalue.h>
-#include <util.h>
+#include "chainparams.h"
+#include "consensus/validation.h"
+#include "fs.h"
+#include "validation.h"
+#include "rpc/register.h"
+#include "rpc/server.h"
+#include "rpcconsole.h"
+#include "test/testutil.h"
+#include "univalue.h"
+#include "util.h"
 
 #include <QDir>
 #include <QtGlobal>
@@ -28,17 +28,33 @@ static UniValue rpcNestedTest_rpc(const JSONRPCRequest& request)
 
 static const CRPCCommand vRPCCommands[] =
 {
-    { "test", "rpcNestedTest", &rpcNestedTest_rpc, {} },
+    { "test", "rpcNestedTest", &rpcNestedTest_rpc, true, {} },
 };
 
 void RPCNestedTests::rpcNestedTests()
 {
+    UniValue jsonRPCError;
+
     // do some test setup
     // could be moved to a more generic place when we add more tests on QT level
+    const CChainParams& chainparams = Params();
+    RegisterAllCoreRPCCommands(tableRPC);
     tableRPC.appendCommand("rpcNestedTest", &vRPCCommands[0]);
+    ClearDatadirCache();
+    std::string path = QDir::tempPath().toStdString() + "/" + strprintf("test_bitcoin_qt_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
+    QDir dir(QString::fromStdString(path));
+    dir.mkpath(".");
+    ForceSetArg("-datadir", path);
     //mempool.setSanityCheck(1.0);
-
-    TestingSetup test;
+    pblocktree = new CBlockTreeDB(1 << 20, true);
+    pcoinsdbview = new CCoinsViewDB(1 << 23, true);
+    pcoinsTip = new CCoinsViewCache(pcoinsdbview);
+    InitBlockIndex(chainparams);
+    {
+        CValidationState state;
+        bool ok = ActivateBestChain(state, chainparams);
+        QVERIFY(ok);
+    }
 
     SetRPCWarmupFinished();
 
@@ -63,13 +79,13 @@ void RPCNestedTests::rpcNestedTests()
     RPCConsole::RPCExecuteCommandLine(result, "getblockchaininfo "); //whitespace at the end will be tolerated
     QVERIFY(result.substr(0,1) == "{");
 
-    (RPCConsole::RPCExecuteCommandLine(result, "getblockchaininfo()[\"chain\"]")); //Quote path identifier are allowed, but look after a child containing the quotes in the key
+    (RPCConsole::RPCExecuteCommandLine(result, "getblockchaininfo()[\"chain\"]")); //Quote path identifier are allowed, but look after a child contaning the quotes in the key
     QVERIFY(result == "null");
 
     (RPCConsole::RPCExecuteCommandLine(result, "createrawtransaction [] {} 0")); //parameter not in brackets are allowed
     (RPCConsole::RPCExecuteCommandLine(result2, "createrawtransaction([],{},0)")); //parameter in brackets are allowed
     QVERIFY(result == result2);
-    (RPCConsole::RPCExecuteCommandLine(result2, "createrawtransaction( [],  {} , 0   )")); //whitespace between parameters is allowed
+    (RPCConsole::RPCExecuteCommandLine(result2, "createrawtransaction( [],  {} , 0   )")); //whitespace between parametres is allowed
     QVERIFY(result == result2);
 
     RPCConsole::RPCExecuteCommandLine(result, "getblock(getbestblockhash())[tx][0]", &filtered);
@@ -130,4 +146,14 @@ void RPCNestedTests::rpcNestedTests()
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest(abc,,abc)"), std::runtime_error); //don't tollerate empty arguments when using ,
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest(abc,,)"), std::runtime_error); //don't tollerate empty arguments when using ,
 #endif
+
+    UnloadBlockIndex();
+    delete pcoinsTip;
+    pcoinsTip = nullptr;
+    delete pcoinsdbview;
+    pcoinsdbview = nullptr;
+    delete pblocktree;
+    pblocktree = nullptr;
+
+    fs::remove_all(fs::path(path));
 }

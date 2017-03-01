@@ -27,7 +27,7 @@ struct BasicTestingSetup {
 class CConnman;
 struct TestingSetup: public BasicTestingSetup {
     CCoinsViewDB *pcoinsdbview;
-    boost::filesystem::path pathTemp;
+    fs::path pathTemp;
     boost::thread_group threadGroup;
     CConnman* connman;
 
