@@ -8,7 +8,7 @@
 #include <shlobj.h>
 #endif
 
-#include <boost/filesystem.hpp>
+#include "fs.h"
 
 boost::filesystem::path GetTempPath() {
     return boost::filesystem::temp_directory_path();
