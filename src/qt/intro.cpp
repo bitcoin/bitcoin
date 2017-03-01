@@ -6,14 +6,13 @@
 #include "config/bitcoin-config.h"
 #endif
 
+#include "fs.h"
 #include "intro.h"
 #include "ui_intro.h"
 
 #include "guiutil.h"
 
 #include "util.h"
-
-#include <boost/filesystem.hpp>
 
 #include <QFileDialog>
 #include <QSettings>

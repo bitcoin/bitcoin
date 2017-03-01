@@ -9,6 +9,7 @@
 #include "qvalidatedlineedit.h"
 #include "walletmodel.h"
 
+#include "fs.h"
 #include "primitives/transaction.h"
 #include "init.h"
 #include "policy/policy.h"
@@ -35,9 +36,6 @@
 #include "shlwapi.h"
 #endif
 
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 #include <boost/scoped_array.hpp>
 
 #include <QAbstractItemView>

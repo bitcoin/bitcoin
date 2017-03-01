@@ -10,6 +10,7 @@
 #include "chainparams.h"
 #include "clientversion.h"
 #include "compat.h"
+#include "fs.h"
 #include "rpc/server.h"
 #include "init.h"
 #include "noui.h"
@@ -20,7 +21,6 @@
 #include "utilstrencodings.h"
 
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 
 #include <stdio.h>
