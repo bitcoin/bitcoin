@@ -11,6 +11,7 @@
 
 #include <chainparams.h>
 #include <clientmodel.h>
+#include <fs.h>
 #include <guiconstants.h>
 #include <guiutil.h>
 #include <intro.h>
@@ -40,7 +41,6 @@
 
 #include <stdint.h>
 
-#include <boost/filesystem/operations.hpp>
 #include <boost/thread.hpp>
 
 #include <QApplication>

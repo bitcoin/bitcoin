@@ -6,6 +6,7 @@
 #define BITCOIN_QT_GUIUTIL_H
 
 #include <amount.h>
+#include <fs.h>
 
 #include <QEvent>
 #include <QHeaderView>
@@ -16,8 +17,6 @@
 #include <QTableView>
 #include <QLabel>
 #include <QLabel>
-
-#include <boost/filesystem.hpp>
 
 class QValidatedLineEdit;
 class SendCoinsRecipient;
