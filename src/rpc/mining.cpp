@@ -119,8 +119,8 @@ UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript, int nG
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         CBlock *pblock = &pblocktemplate->block;
         {
-            LOCK(cs_main);
-            IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
+          // LOCK(cs_main);
+            IncrementExtraNonce(pblock, nExtraNonce);
         }
         while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
             ++pblock->nNonce;
@@ -525,9 +525,9 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
     }
 
     // Update block
-    static CBlockIndex* pindexPrev;
-    static int64_t nStart;
-    static CBlockTemplate* pblocktemplate;
+    static CBlockIndex* pindexPrev = NULL;
+    static int64_t nStart = 0;
+    static CBlockTemplate* pblocktemplate = NULL;
     if (pindexPrev != chainActive.Tip() ||
         (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 5))
     {
@@ -674,7 +674,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
     result.push_back(Pair("sizelimit", (int64_t)maxGeneratedBlock));
     result.push_back(Pair("curtime", pblock->GetBlockTime()));
     result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
-    result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
+    result.push_back(Pair("height", (int64_t)(pblock->GetHeight()))); // BU get the height directly from the block because pindexPrev could change if another block has come in.
 
     return result;
 }
