@@ -909,6 +909,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         BOOST_FOREACH(CMasternode& mn, vMasternodes) {
             if (vin != CTxIn() && vin != mn.vin) continue; // asked for specific vin but we are not there yet
             if (mn.addr.IsRFC1918() || mn.addr.IsLocal()) continue; // do not send local network masternode
+            if (mn.IsUpdateRequired()) continue; // do not send outdated masternodes
 
             LogPrint("masternode", "DSEG -- Sending Masternode entry: masternode=%s  addr=%s\n", mn.vin.prevout.ToStringShort(), mn.addr.ToString());
             CMasternodeBroadcast mnb = CMasternodeBroadcast(mn);
