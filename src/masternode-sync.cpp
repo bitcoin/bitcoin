@@ -369,9 +369,6 @@ void CMasternodeSync::ProcessTick()
                 continue;
             }
 
-            // Make sure this peer is presumably at the same height
-            if(!CheckNodeHeight(pnode, true)) continue;
-
             // SPORK : ALWAYS ASK FOR SPORKS AS WE SYNC (we skip this mode now)
 
             if(!netfulfilledman.HasFulfilledRequest(pnode->addr, "spork-sync")) {
