@@ -798,7 +798,11 @@ void static BitcoinMiner(const CChainParams& chainparams)
             // Create new block
             //
             unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
-            CBlockIndex* pindexPrev = chainActive.Tip();
+            CBlockIndex* pindexPrev;
+            {
+                LOCK(cs_main);
+                pindexPrev = chainActive.Tip();
+            }
 
             unique_ptr<CBlockTemplate> pblocktemplate(CreateNewBlock(chainparams, coinbaseScript->reserveScript));
             if (!pblocktemplate.get())
@@ -853,8 +857,11 @@ void static BitcoinMiner(const CChainParams& chainparams)
                     break;
                 if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60)
                     break;
-                if (pindexPrev != chainActive.Tip())
-                    break;
+                {
+                    LOCK(cs_main);
+                    if (pindexPrev != chainActive.Tip())
+                        break;
+                }
 
                 // Update nTime every few seconds
                 if (UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev) < 0)
