@@ -6759,8 +6759,6 @@ bool SendMessages(CNode* pto)
                 // in the past.
                 if (!pto->vBlockHashesToAnnounce.empty()) {
                     BOOST_FOREACH(const uint256 &hashToAnnounce, pto->vBlockHashesToAnnounce) {
-                        LogPrintf("trying to announnce block %s\n" ,hashToAnnounce.ToString());
-                        //const uint256 &hashToAnnounce = pto->vBlockHashesToAnnounce.back();
                         BlockMap::iterator mi = mapBlockIndex.find(hashToAnnounce);
                         assert(mi != mapBlockIndex.end());
                         CBlockIndex *pindex = mi->second;
