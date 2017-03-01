@@ -208,7 +208,7 @@ private:
       * statistics from the package selection (for logging statistics).
      *  mapModifiedTx will track the updated ancestor feerate score of
      *  not-in-block transactions that have parents in the block */
-    void addPackageTxs(WorkingState &workState, int &nPackagesSelected, int &nDescendantsUpdated, indexed_modified_transaction_set &mapModifiedTx);
+    void addPackageTxs(WorkingState &workState, int &nPackagesSelected, int &nDescendantsUpdated, int64_t nTimeCutoff, indexed_modified_transaction_set &mapModifiedTx);
 
     // helper functions for addPackageTxs()
     /** Remove confirmed (inBlock) entries from given set */

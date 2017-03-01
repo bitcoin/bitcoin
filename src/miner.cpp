@@ -153,7 +153,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     int nPackagesSelected = 0;
     int nDescendantsUpdated = 0;
-    addPackageTxs(workState, nPackagesSelected, nDescendantsUpdated, mapModifiedTx);
+    addPackageTxs(workState, nPackagesSelected, nDescendantsUpdated, std::numeric_limits<int64_t>::max(), mapModifiedTx);
 
     int64_t nTime1 = GetTimeMicros();
 
@@ -326,7 +326,7 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, CTxMemP
 // Each time through the loop, we compare the best transaction in
 // mapModifiedTxs with the next transaction in the mempool to decide what
 // transaction package to work on next.
-void BlockAssembler::addPackageTxs(WorkingState &workState, int &nPackagesSelected, int &nDescendantsUpdated, indexed_modified_transaction_set &mapModifiedTx)
+void BlockAssembler::addPackageTxs(WorkingState &workState, int &nPackagesSelected, int &nDescendantsUpdated, int64_t nTimeCutoff, indexed_modified_transaction_set &mapModifiedTx)
 {
     // Keep track of entries that failed inclusion, to avoid duplicate work
     CTxMemPool::setEntries failedTx;
@@ -344,7 +344,8 @@ void BlockAssembler::addPackageTxs(WorkingState &workState, int &nPackagesSelect
     {
         // First try to find a new transaction in mapTx to evaluate.
         if (mi != mempool.mapTx.get<ancestor_score>().end() &&
-                SkipMapTxEntry(workState, mempool.mapTx.project<0>(mi), mapModifiedTx, failedTx)) {
+                (mi->GetTime() > nTimeCutoff ||
+                 SkipMapTxEntry(workState, mempool.mapTx.project<0>(mi), mapModifiedTx, failedTx))) {
             ++mi;
             continue;
         }
@@ -354,6 +355,13 @@ void BlockAssembler::addPackageTxs(WorkingState &workState, int &nPackagesSelect
         bool fUsingModified = false;
 
         modtxscoreiter modit = mapModifiedTx.get<ancestor_score>().begin();
+
+        // Remove too-recent entries from mapModifiedTx.
+        if (modit != mapModifiedTx.get<ancestor_score>().end() && modit->iter->GetTime() > nTimeCutoff) {
+            mapModifiedTx.get<ancestor_score>().erase(modit);
+            continue;
+        }
+
         if (mi == mempool.mapTx.get<ancestor_score>().end()) {
             // We're out of entries in mapTx; use the entry from mapModifiedTx
             iter = modit->iter;
