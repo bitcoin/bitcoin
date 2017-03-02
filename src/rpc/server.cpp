@@ -240,10 +240,7 @@ std::string CRPCTable::help(const std::string& strCommand, const std::string& st
     BOOST_FOREACH(const PAIRTYPE(std::string, const CRPCCommand*)& command, vCommands)
     {
         const CRPCCommand *pcmd = command.second;
-        std::string strMethod = pcmd->name;
-        // We already filter duplicates, but these deprecated screw up the sort order
-        if (strMethod.find("label") != std::string::npos)
-            continue;
+        string strMethod = pcmd->name;
         if ((strCommand != "" || pcmd->category == "hidden") && strMethod != strCommand)
             continue;
         try
