@@ -280,6 +280,8 @@ public:
     mutable bool fImmatureWatchCreditCached;
     mutable bool fAvailableWatchCreditCached;
     mutable bool fChangeCached;
+    mutable bool fAllDebitsMineCached;
+    mutable bool fAllDebitsSpendableCached;
     mutable CAmount nDebitCached;
     mutable CAmount nCreditCached;
     mutable CAmount nImmatureCreditCached;
@@ -289,6 +291,8 @@ public:
     mutable CAmount nImmatureWatchCreditCached;
     mutable CAmount nAvailableWatchCreditCached;
     mutable CAmount nChangeCached;
+    mutable bool allDebitsMineCached;
+    mutable bool allDebitsSpendableCached;
 
     CWalletTx()
     {
@@ -319,6 +323,8 @@ public:
         fImmatureWatchCreditCached = false;
         fAvailableWatchCreditCached = false;
         fChangeCached = false;
+        fAllDebitsMineCached = false;
+        fAllDebitsSpendableCached = false;
         nDebitCached = 0;
         nCreditCached = 0;
         nImmatureCreditCached = 0;
@@ -328,6 +334,8 @@ public:
         nAvailableWatchCreditCached = 0;
         nImmatureWatchCreditCached = 0;
         nChangeCached = 0;
+        allDebitsMineCached = false;
+        allDebitsSpendableCached = false;
         nOrderPos = -1;
     }
 
@@ -387,6 +395,8 @@ public:
         fImmatureWatchCreditCached = false;
         fDebitCached = false;
         fChangeCached = false;
+        fAllDebitsMineCached = false;
+        fAllDebitsSpendableCached = false;
     }
 
     void BindWallet(CWallet *pwalletIn)
@@ -397,6 +407,7 @@ public:
 
     //! filter decides which addresses will count towards the debit
     CAmount GetDebit(const isminefilter& filter) const;
+    bool IsAllFromMe(const isminefilter& filter) const;
     CAmount GetCredit(const isminefilter& filter) const;
     CAmount GetImmatureCredit(bool fUseCache=true) const;
     CAmount GetAvailableCredit(bool fUseCache=true) const;
@@ -409,11 +420,6 @@ public:
 
     void GetAccountAmounts(const std::string& strAccount, CAmount& nReceived,
                            CAmount& nSent, CAmount& nFee, const isminefilter& filter) const;
-
-    bool IsFromMe(const isminefilter& filter) const
-    {
-        return (GetDebit(filter) > 0);
-    }
 
     // True if only scriptSigs are different
     bool IsEquivalentTo(const CWalletTx& tx) const;

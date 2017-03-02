@@ -1693,6 +1693,37 @@ CAmount CWalletTx::GetDebit(const isminefilter& filter) const
     return debit;
 }
 
+bool CWalletTx::IsAllFromMe(const isminefilter& filter) const
+{
+    bool allFromMe = false;
+    if (filter == ISMINE_ALL)
+    {
+        if (fAllDebitsMineCached)
+            allFromMe = allDebitsMineCached;
+        else
+        {
+            allDebitsMineCached = pwallet->IsAllFromMe(*this, ISMINE_ALL);
+            fAllDebitsMineCached = true;
+            allFromMe = allDebitsMineCached;
+        }
+    }
+    else if (filter == ISMINE_SPENDABLE)
+    {
+        if (fAllDebitsSpendableCached)
+            allFromMe = allDebitsSpendableCached;
+        else
+        {
+            allDebitsSpendableCached = pwallet->IsAllFromMe(*this, ISMINE_SPENDABLE);
+            fAllDebitsSpendableCached = true;
+            allFromMe = allDebitsSpendableCached;
+        }
+    }
+    else {
+        allFromMe = pwallet->IsAllFromMe(*this, filter);
+    }
+    return allFromMe;
+}
+
 CAmount CWalletTx::GetCredit(const isminefilter& filter) const
 {
     // Must wait until coinbase is safely deep enough in the chain before valuing it
@@ -1841,24 +1872,14 @@ bool CWalletTx::IsTrusted() const
         return true;
     if (nDepth < 0)
         return false;
-    if (!bSpendZeroConfChange || !IsFromMe(ISMINE_ALL)) // using wtx's cached debit
+    // Trusted if all inputs are spendable by us
+    if (!bSpendZeroConfChange || !IsAllFromMe(ISMINE_SPENDABLE))
         return false;
 
     // Don't trust unconfirmed transactions from us unless they are in the mempool.
     if (!InMempool())
         return false;
 
-    // Trusted if all inputs are from us and are in the mempool:
-    BOOST_FOREACH(const CTxIn& txin, tx->vin)
-    {
-        // Transactions not sent by us: not trusted
-        const CWalletTx* parent = pwallet->GetWalletTx(txin.prevout.hash);
-        if (parent == NULL)
-            return false;
-        const CTxOut& parentOut = parent->tx->vout[txin.prevout.n];
-        if (pwallet->IsMine(parentOut) != ISMINE_SPENDABLE)
-            return false;
-    }
     return true;
 }
 
@@ -2161,7 +2182,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 
         const CWalletTx *pcoin = output.tx;
 
-        if (output.nDepth < (pcoin->IsFromMe(ISMINE_ALL) ? nConfMine : nConfTheirs))
+        if (output.nDepth < (pcoin->IsAllFromMe(ISMINE_ALL) ? nConfMine : nConfTheirs))
             continue;
 
         if (!mempool.TransactionWithinChainLimit(pcoin->GetHash(), nMaxAncestors))
@@ -3135,10 +3156,6 @@ std::map<CTxDestination, CAmount> CWallet::GetAddressBalances()
                 continue;
 
             if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
-                continue;
-
-            int nDepth = pcoin->GetDepthInMainChain();
-            if (nDepth < (pcoin->IsFromMe(ISMINE_ALL) ? 0 : 1))
                 continue;
 
             for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++)
