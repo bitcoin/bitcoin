@@ -128,6 +128,20 @@ struct update_for_parent_inclusion
     CTxMemPool::txiter iter;
 };
 
+struct update_for_parent_removal
+{
+    update_for_parent_removal(CTxMemPool::txiter it) : iter(it) {}
+
+    void operator() (CTxMemPoolModifiedEntry &e)
+    {
+        e.nModFeesWithAncestors += iter->GetFee();
+        e.nSizeWithAncestors += iter->GetTxSize();
+        e.nSigOpCostWithAncestors += iter->GetSigOpCost();
+    }
+
+    CTxMemPool::txiter iter;
+};
+
 /** Generate a new block, without valid proof-of-work */
 class BlockAssembler
 {
@@ -177,6 +191,7 @@ private:
     unsigned int nBlockMaxWeight, nBlockMaxSize;
     bool fNeedSizeAccounting;
     CFeeRate blockMinFeeRate;
+    int64_t nRecentTxWindow;
 
     // Chain context for the block
     int nHeight;
@@ -189,6 +204,7 @@ public:
         size_t nBlockMaxWeight;
         size_t nBlockMaxSize;
         CFeeRate blockMinFeeRate;
+        int64_t nRecentTxWindow;
     };
 
     BlockAssembler(const CChainParams& params);
@@ -201,6 +217,8 @@ private:
     // utility functions
     /** Add a tx to the block */
     void AddToBlock(WorkingState &workState, CTxMemPool::txiter iter);
+    /** Remove recent transactions from a block, including any descendants */
+    void RemoveRecentTransactionsFromBlockAndUpdatePackages(WorkingState &workState, int64_t timeCutoff, indexed_modified_transaction_set &mapModifiedTx);
 
     // Methods for how to add transactions to a block.
     /** Add transactions based on feerate including unconfirmed ancestors
