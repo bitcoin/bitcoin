@@ -65,6 +65,72 @@ static UniValue ping(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
+void NodeStatsToJSON(const CNodeStats& stats, UniValue& obj)
+{
+    CNodeStateStats state_stats;
+    bool got_state_stats = GetNodeStateStats(stats.nodeid, state_stats);
+    obj.push_back(Pair("id", stats.nodeid));
+    obj.push_back(Pair("addr", stats.addrName));
+    if (!(stats.addrLocal.empty())) {
+        obj.push_back(Pair("addrlocal", stats.addrLocal));
+    }
+    if (stats.addrBind.IsValid()) {
+        obj.push_back(Pair("addrbind", stats.addrBind.ToString()));
+    }
+    obj.push_back(Pair("services", strprintf("%016x", stats.nServices)));
+    obj.push_back(Pair("relaytxes", stats.fRelayTxes));
+    obj.push_back(Pair("lastsend", stats.nLastSend));
+    obj.push_back(Pair("lastrecv", stats.nLastRecv));
+    obj.push_back(Pair("bytessent", stats.nSendBytes));
+    obj.push_back(Pair("bytesrecv", stats.nRecvBytes));
+    obj.push_back(Pair("conntime", stats.nTimeConnected));
+    obj.push_back(Pair("timeoffset", stats.nTimeOffset));
+    if (stats.dPingTime > 0.0) {
+        obj.push_back(Pair("pingtime", stats.dPingTime));
+    }
+    if (stats.dMinPing < static_cast<double>(std::numeric_limits<int64_t>::max())/1e6) {
+        obj.push_back(Pair("minping", stats.dMinPing));
+    }
+    if (stats.dPingWait > 0.0) {
+        obj.push_back(Pair("pingwait", stats.dPingWait));
+    }
+    obj.push_back(Pair("version", stats.nVersion));
+    // Use the sanitized form of subver here, to avoid tricksy remote peers from
+    // corrupting or modifying the JSON output by putting special characters in
+    // their ver message.
+    obj.push_back(Pair("subver", stats.cleanSubVer));
+    obj.push_back(Pair("inbound", stats.fInbound));
+    obj.push_back(Pair("addnode", stats.m_manual_connection));
+    obj.push_back(Pair("startingheight", stats.nStartingHeight));
+    if (got_state_stats) {
+        obj.push_back(Pair("banscore", state_stats.nMisbehavior));
+        obj.push_back(Pair("synced_headers", state_stats.nSyncHeight));
+        obj.push_back(Pair("synced_blocks", state_stats.nCommonHeight));
+        UniValue heights(UniValue::VARR);
+        for (int height : state_stats.vHeightInFlight) {
+            heights.push_back(height);
+        }
+        obj.push_back(Pair("inflight", heights));
+    }
+    obj.push_back(Pair("whitelisted", stats.fWhitelisted));
+
+    UniValue bytes_sent_per_message(UniValue::VOBJ);
+    for (const mapMsgCmdSize::value_type &i : stats.mapSendBytesPerMsgCmd) {
+        if (i.second > 0) {
+            bytes_sent_per_message.push_back(Pair(i.first, i.second));
+        }
+    }
+    obj.push_back(Pair("bytessent_per_msg", bytes_sent_per_message));
+
+    UniValue bytes_recvd_per_message(UniValue::VOBJ);
+    for (const mapMsgCmdSize::value_type &i : stats.mapRecvBytesPerMsgCmd) {
+        if (i.second > 0) {
+            bytes_recvd_per_message.push_back(Pair(i.first, i.second));
+        }
+    }
+    obj.push_back(Pair("bytesrecv_per_msg", bytes_recvd_per_message));
+}
+
 static UniValue getpeerinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
@@ -128,61 +194,7 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
 
     for (const CNodeStats& stats : vstats) {
         UniValue obj(UniValue::VOBJ);
-        CNodeStateStats statestats;
-        bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
-        obj.pushKV("id", stats.nodeid);
-        obj.pushKV("addr", stats.addrName);
-        if (!(stats.addrLocal.empty()))
-            obj.pushKV("addrlocal", stats.addrLocal);
-        if (stats.addrBind.IsValid())
-            obj.pushKV("addrbind", stats.addrBind.ToString());
-        obj.pushKV("services", strprintf("%016x", stats.nServices));
-        obj.pushKV("relaytxes", stats.fRelayTxes);
-        obj.pushKV("lastsend", stats.nLastSend);
-        obj.pushKV("lastrecv", stats.nLastRecv);
-        obj.pushKV("bytessent", stats.nSendBytes);
-        obj.pushKV("bytesrecv", stats.nRecvBytes);
-        obj.pushKV("conntime", stats.nTimeConnected);
-        obj.pushKV("timeoffset", stats.nTimeOffset);
-        if (stats.dPingTime > 0.0)
-            obj.pushKV("pingtime", stats.dPingTime);
-        if (stats.dMinPing < static_cast<double>(std::numeric_limits<int64_t>::max())/1e6)
-            obj.pushKV("minping", stats.dMinPing);
-        if (stats.dPingWait > 0.0)
-            obj.pushKV("pingwait", stats.dPingWait);
-        obj.pushKV("version", stats.nVersion);
-        // Use the sanitized form of subver here, to avoid tricksy remote peers from
-        // corrupting or modifying the JSON output by putting special characters in
-        // their ver message.
-        obj.pushKV("subver", stats.cleanSubVer);
-        obj.pushKV("inbound", stats.fInbound);
-        obj.pushKV("addnode", stats.m_manual_connection);
-        obj.pushKV("startingheight", stats.nStartingHeight);
-        if (fStateStats) {
-            obj.pushKV("banscore", statestats.nMisbehavior);
-            obj.pushKV("synced_headers", statestats.nSyncHeight);
-            obj.pushKV("synced_blocks", statestats.nCommonHeight);
-            UniValue heights(UniValue::VARR);
-            for (int height : statestats.vHeightInFlight) {
-                heights.push_back(height);
-            }
-            obj.pushKV("inflight", heights);
-        }
-        obj.pushKV("whitelisted", stats.fWhitelisted);
-
-        UniValue sendPerMsgCmd(UniValue::VOBJ);
-        for (const mapMsgCmdSize::value_type &i : stats.mapSendBytesPerMsgCmd) {
-            if (i.second > 0)
-                sendPerMsgCmd.pushKV(i.first, i.second);
-        }
-        obj.pushKV("bytessent_per_msg", sendPerMsgCmd);
-
-        UniValue recvPerMsgCmd(UniValue::VOBJ);
-        for (const mapMsgCmdSize::value_type &i : stats.mapRecvBytesPerMsgCmd) {
-            if (i.second > 0)
-                recvPerMsgCmd.pushKV(i.first, i.second);
-        }
-        obj.pushKV("bytesrecv_per_msg", recvPerMsgCmd);
+        NodeStatsToJSON(stats, obj);
 
         ret.push_back(obj);
     }
