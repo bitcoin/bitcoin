@@ -231,11 +231,9 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
             double curPct = nConf / (totalNum + extraNum);
 
             // Check to see if we are no longer getting confirmed at the success rate
-            if (requireGreater && curPct < successBreakPoint)
-                break;
-            if (!requireGreater && curPct > successBreakPoint)
-                break;
-
+            if ((requireGreater && curPct < successBreakPoint) || (!requireGreater && curPct > successBreakPoint)) {
+                continue;
+            }
             // Otherwise update the cumulative stats, and the bucket variables
             // and reset the counters
             else {
