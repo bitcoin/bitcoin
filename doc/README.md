@@ -1,6 +1,6 @@
-Peercoin (PPCoin) 0.4.0 BETA
+Peercoin (PPCoin) 0.6.0 BETA
 
-Copyright (c) 2011-2014 Peercoin (PPCoin) Developers
+Copyright (c) 2011-2017 Peercoin (PPCoin) Developers
 Distributed under the MIT/X11 software license, see the accompanying
 file license.txt or http://www.opensource.org/licenses/mit-license.php.
 This product includes software developed by the OpenSSL Project for use in
@@ -34,18 +34,19 @@ but allowing incoming connections helps the PPCoin network.
 Upgrade
 -------
 All your existing coins/transactions should be intact with the upgrade.
-To upgrade from 0.3, first backup wallet
+To upgrade from 0.5, first backup wallet
 ppcoind backupwallet <destination_backup_file>
 Then shutdown ppcoind by
 ppcoind stop
-Uninstall v0.3 client, download and install v0.4 client.
-Start up the new ppcoind (0.4.0).
-If upgrade is performed after upgrade deadline then blockchain re-download
-is required.
+Uninstall v0.5 client, download and install v0.6 client.
+Remove all files and subdirectory in your wallet directory EXCEPT FOR
+wallet.dat (wallet file) and ppcoin.conf (configuration file).
+Start up the new ppcoind (0.6).
+For this upgrade blockchain re-download is required.
 
 
 See the documentation/wiki at github:
-  http://github.com/ppcoin/ppcoin
+  http://github.com/peercoin/peercoin
 for help and more information.
 
 
