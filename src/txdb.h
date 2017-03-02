@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+
 class CBlockFileInfo;
 class CBlockIndex;
 struct CDiskTxPos;
@@ -32,6 +33,8 @@ class CCoinsViewDB : public CCoinsView
 {
 protected:
     CDBWrapper db;
+
+
 public:
     CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 

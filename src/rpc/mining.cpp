@@ -16,6 +16,7 @@
 #include "main.h"
 #include "miner.h"
 #include "net.h"
+#include "parallel.h"
 #include "pow.h"
 #include "rpc/server.h"
 #include "txmempool.h"
@@ -118,8 +119,8 @@ UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript, int nG
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         CBlock *pblock = &pblocktemplate->block;
         {
-            LOCK(cs_main);
-            IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
+          // LOCK(cs_main);
+            IncrementExtraNonce(pblock, nExtraNonce);
         }
         while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
             ++pblock->nNonce;
@@ -131,8 +132,21 @@ UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript, int nG
         if (pblock->nNonce == nInnerLoopCount) {
             continue;
         }
+
+
+        // We take a cs_main lock here even though it will also be aquired in ProcessNewBlock.  We want
+        // to make sure we give priority to our own blocks.  This is in order to prevent any other Parallel 
+        // Blocks to validate when we've just mined one of our own blocks.
+        LOCK(cs_main);
+
+        // In we are mining our own block or not running in parallel for any reason 
+        // we must terminate any block validation threads that are currently running,
+        // Unless they have more work than our own block.
+        // TODO: we need a better way to determine if a reorg is in progress.
+        PV.StopAllValidationThreads(pblock->GetBlockHeader().nBits);
+
         CValidationState state;
-        if (!ProcessNewBlock(state, Params(), NULL, pblock, true, NULL))
+        if (!ProcessNewBlock(state, Params(), NULL, pblock, true, NULL, false))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
         ++nHeight;
         blockHashes.push_back(pblock->GetHash().GetHex());
@@ -511,9 +525,9 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
     }
 
     // Update block
-    static CBlockIndex* pindexPrev;
-    static int64_t nStart;
-    static CBlockTemplate* pblocktemplate;
+    static CBlockIndex* pindexPrev = NULL;
+    static int64_t nStart = 0;
+    static CBlockTemplate* pblocktemplate = NULL;
     if (pindexPrev != chainActive.Tip() ||
         (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 5))
     {
@@ -660,7 +674,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
     result.push_back(Pair("sizelimit", (int64_t)maxGeneratedBlock));
     result.push_back(Pair("curtime", pblock->GetBlockTime()));
     result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
-    result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
+    result.push_back(Pair("height", (int64_t)(pblock->GetHeight()))); // BU get the height directly from the block because pindexPrev could change if another block has come in.
 
     return result;
 }
@@ -728,7 +742,20 @@ UniValue submitblock(const UniValue& params, bool fHelp)
     submitblock_StateCatcher sc(block.GetHash());
     LogPrint("rpc", "Received block %s via RPC.\n", block.GetHash().ToString());
     RegisterValidationInterface(&sc);
-    bool fAccepted = ProcessNewBlock(state, Params(), NULL, &block, true, NULL);
+
+
+    // We take a cs_main lock here even though it will also be aquired in ProcessNewBlock.  We want
+    // to make sure we give priority to our own blocks.  This is in order to prevent any other Parallel 
+    // Blocks to validate when we've just mined one of our own blocks.
+    LOCK(cs_main);
+
+    // In we are mining our own block or not running in parallel for any reason 
+    // we must terminate any block validation threads that are currently running,
+    // Unless they have more work than our own block.
+    // TODO: we need a better way to determine if a reorg is in progress.
+    PV.StopAllValidationThreads(block.GetBlockHeader().nBits);
+
+    bool fAccepted = ProcessNewBlock(state, Params(), NULL, &block, true, NULL, false);
     UnregisterValidationInterface(&sc);
     if (fBlockPresent)
     {
