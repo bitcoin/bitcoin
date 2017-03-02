@@ -12,6 +12,7 @@
 #include "uint256.h"
 
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
+static const int SERIALIZE_TRANSACTION_NO_PRECOMPUTATION   = 0x20000000;
 
 static const int WITNESS_SCALE_FACTOR = 4;
 
@@ -295,6 +296,23 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
     s << tx.nLockTime;
 }
 
+class CTransaction;
+
+/* Hashes used in segwit signatures (see BIP 143) */
+struct PrecomputedTransactionData
+{
+private:
+    uint256 hashPrevouts, hashSequence, hashOutputs;
+    bool cacheReady;
+
+public:
+    PrecomputedTransactionData(const CTransaction& tx, bool createCache);
+    uint256 GetPrevoutHash(const CTransaction& tx) const;
+    uint256 GetSequenceHash(const CTransaction& tx) const;
+    uint256 GetOutputsHash(const CTransaction& tx) const;
+
+    bool IsReady() const { return cacheReady; }
+};
 
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
@@ -324,8 +342,18 @@ public:
 private:
     /** Memory only. */
     const uint256 hash;
+    const uint256 wtxid; // Hash with witness
 
     uint256 ComputeHash() const;
+
+    // Compute a hash that includes both transaction and witness data
+    // ComputeWitnessHash() depends on hash (txid) having already been
+    // initialized.
+    uint256 ComputeWitnessHash() const;
+
+public:
+    /** Also memory only */
+    const PrecomputedTransactionData cache;
 
 public:
     /** Construct a CTransaction that qualifies as IsNull() */
@@ -333,7 +361,7 @@ public:
 
     /** Convert a CMutableTransaction into a CTransaction. */
     CTransaction(const CMutableTransaction &tx);
-    CTransaction(CMutableTransaction &&tx);
+    CTransaction(CMutableTransaction &&tx, bool createCache);
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
@@ -343,7 +371,7 @@ public:
     /** This deserializing constructor is provided instead of an Unserialize method.
      *  Unserialize is not possible, since it would require overwriting const fields. */
     template <typename Stream>
-    CTransaction(deserialize_type, Stream& s) : CTransaction(CMutableTransaction(deserialize, s)) {}
+    CTransaction(deserialize_type, Stream& s) : CTransaction(CMutableTransaction(deserialize, s), !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_PRECOMPUTATION)) {}
 
     bool IsNull() const {
         return vin.empty() && vout.empty();
@@ -353,8 +381,13 @@ public:
         return hash;
     }
 
-    // Compute a hash that includes both transaction and witness data
-    uint256 GetWitnessHash() const;
+    const uint256& GetWitnessHash() const {
+        return wtxid;
+    }
+
+    uint256 GetPrevoutHash() const { return cache.GetPrevoutHash(*this); }
+    uint256 GetSequenceHash() const { return cache.GetSequenceHash(*this); }
+    uint256 GetOutputsHash() const { return cache.GetOutputsHash(*this); }
 
     // Return sum of txouts.
     CAmount GetValueOut() const;

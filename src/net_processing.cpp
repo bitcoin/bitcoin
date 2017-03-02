@@ -1036,7 +1036,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 {
                     // Send block from disk
                     CBlock block;
-                    if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
+                    if (!ReadBlockFromDisk(block, (*mi).second, consensusParams, false))
                         assert(!"cannot load block from disk");
                     if (inv.type == MSG_BLOCK)
                         connman.PushMessage(pfrom, msgMaker.Make(SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::BLOCK, block));
