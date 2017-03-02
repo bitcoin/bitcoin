@@ -686,8 +686,6 @@ bool SetStartOnSystemStartup(bool fAutoStart)
 
 fs::path static GetAutostartDir()
 {
-    namespace fs = fs;
-
     char* pszConfigHome = getenv("XDG_CONFIG_HOME");
     if (pszConfigHome) return fs::path(pszConfigHome) / "autostart";
     char* pszHome = getenv("HOME");
