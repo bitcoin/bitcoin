@@ -271,7 +271,10 @@ public:
     std::vector<AddedNodeInfo> GetAddedNodeInfo();
 
     size_t GetNodeCount(NumConnections num);
+    // Gets a vector of NodeStats objects
     void GetNodeStats(std::vector<CNodeStats>& vstats);
+    // Gets a single NodeStats object by NodeID
+    bool GetNodeStats(NodeId, CNodeStats& stats);
     bool DisconnectNode(const std::string& node);
     bool DisconnectNode(NodeId id);
 

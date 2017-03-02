@@ -2556,6 +2556,17 @@ CNode* CConnman::GetNodeByID(NodeId id)
     return nullptr;
 }
 
+bool CConnman::GetNodeStats(NodeId id, CNodeStats& stats)
+{
+    LOCK(cs_vNodes);
+    CNode* node = GetNodeByID(id);
+    if (node) {
+        node->copyStats(stats);
+        return true;
+    }
+    return false;
+}
+
 void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats)
 {
     vstats.clear();
@@ -2576,7 +2587,6 @@ bool CConnman::DisconnectNode(const std::string& strNode)
     }
     return false;
 }
-
 bool CConnman::DisconnectNode(NodeId id)
 {
     LOCK(cs_vNodes);
