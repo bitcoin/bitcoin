@@ -3142,10 +3142,9 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
         return state.Invalid(error("%s: block's timestamp is too early", __func__),
                              REJECT_INVALID, "time-too-old");
 
-    // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
-    if (block.nVersion < 2 && IsSuperMajority(2, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
-        return state.Invalid(error("%s: rejected nVersion=1 block", __func__),
-                             REJECT_OBSOLETE, "bad-version");
+    // Check timestamp
+    if (block.GetBlockTime() > nAdjustedTime + MAX_FUTURE_BLOCK_TIME)
+        return state.Invalid(false, REJECT_INVALID, "time-too-new", "block timestamp too far in the future");
 
     // Reject block.nVersion=2 blocks when 95% (75% on testnet) of the network has upgraded:
     if (block.nVersion < 3 && IsSuperMajority(3, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
