@@ -130,6 +130,8 @@ Low-level RPC changes
 - `getpeerinfo` can now take an `id` argument to only return information about the peer with
   the specified id.
 
+- `updatepeer` can be used to change the `whitelist` and `manual_connection` settings for a peer node.
+
 ### Logging
 
 - The log timestamp format is now ISO 8601 (e.g. "2018-02-28T12:34:56Z").
