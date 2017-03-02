@@ -690,20 +690,17 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     return result;
 }
 
-DBErrors CWalletDB::FindWalletTx(CWallet* pwallet, std::vector<uint256>& vTxHash, std::vector<CWalletTx>& vWtx)
+DBErrors CWalletDB::FindWalletTx(vector<uint256>& vTxHash, vector<CWalletTx>& vWtx)
 {
-    pwallet->vchDefaultKey = CPubKey();
     bool fNoncriticalErrors = false;
     DBErrors result = DB_LOAD_OK;
 
     try {
-        LOCK(pwallet->cs_wallet);
         int nMinVersion = 0;
         if (Read((std::string)"minversion", nMinVersion))
         {
             if (nMinVersion > CLIENT_VERSION)
                 return DB_TOO_NEW;
-            pwallet->LoadMinVersion(nMinVersion);
         }
 
         // Get cursor
@@ -756,12 +753,12 @@ DBErrors CWalletDB::FindWalletTx(CWallet* pwallet, std::vector<uint256>& vTxHash
     return result;
 }
 
-DBErrors CWalletDB::ZapSelectTx(CWallet* pwallet, std::vector<uint256>& vTxHashIn, std::vector<uint256>& vTxHashOut)
+DBErrors CWalletDB::ZapSelectTx(vector<uint256>& vTxHashIn, vector<uint256>& vTxHashOut)
 {
     // build list of wallet TXs and hashes
-    std::vector<uint256> vTxHash;
-    std::vector<CWalletTx> vWtx;
-    DBErrors err = FindWalletTx(pwallet, vTxHash, vWtx);
+    vector<uint256> vTxHash;
+    vector<CWalletTx> vWtx;
+    DBErrors err = FindWalletTx(vTxHash, vWtx);
     if (err != DB_LOAD_OK) {
         return err;
     }
@@ -780,7 +777,6 @@ DBErrors CWalletDB::ZapSelectTx(CWallet* pwallet, std::vector<uint256>& vTxHashI
             break;
         }
         else if ((*it) == hash) {
-            pwallet->mapWallet.erase(hash);
             if(!EraseTx(hash)) {
                 LogPrint("db", "Transaction was found for deletion but returned database error: %s\n", hash.GetHex());
                 delerror = true;
@@ -795,11 +791,11 @@ DBErrors CWalletDB::ZapSelectTx(CWallet* pwallet, std::vector<uint256>& vTxHashI
     return DB_LOAD_OK;
 }
 
-DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet, std::vector<CWalletTx>& vWtx)
+DBErrors CWalletDB::ZapWalletTx(vector<CWalletTx>& vWtx)
 {
     // build list of wallet TXs
-    std::vector<uint256> vTxHash;
-    DBErrors err = FindWalletTx(pwallet, vTxHash, vWtx);
+    vector<uint256> vTxHash;
+    DBErrors err = FindWalletTx(vTxHash, vWtx);
     if (err != DB_LOAD_OK)
         return err;
 
