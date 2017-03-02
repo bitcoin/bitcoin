@@ -88,8 +88,8 @@ private:
     static constexpr double SUCCESS_PCT = .85;
     static constexpr double DOUBLE_SUCCESS_PCT = .95;
 
-    /** Require an avg of 1 tx in the combined feerate bucket per block to have stat significance */
-    static constexpr double SUFFICIENT_FEETXS = 1;
+    /** Require an avg of 0.1 tx in the combined feerate bucket per block to have stat significance */
+    static constexpr double SUFFICIENT_FEETXS = 0.1;
 
     /** Minimum and Maximum values for tracking feerates
      * The MIN_BUCKET_FEERATE should just be set to the lowest reasonable feerate we
