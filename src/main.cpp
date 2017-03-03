@@ -49,6 +49,7 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/math/distributions/poisson.hpp>
 #include <boost/thread.hpp>
+#include <boost/scope_exit.hpp>
 
 using namespace std;
 
@@ -2579,7 +2580,17 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     /*********************************************************************************************
      If in PV, unlock cs_main here so we have no contention when we're checking inputs and scripts
      *********************************************************************************************/
-    if (fParallel) cs_main.unlock();
+    if (fParallel) LEAVE_CRITICAL_SECTION(cs_main);
+
+    // Begin Section for Boost Scope Guard
+    {
+
+    // Scope guard to make sure cs_main is set and resources released if we encounter an exception.
+    BOOST_SCOPE_EXIT(&PV, &fParallel)
+    {
+        PV.SetLocks(fParallel);
+    } BOOST_SCOPE_EXIT_END
+
 
     // Start checking Inputs
     bool inOrphanCache;
@@ -2604,7 +2615,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                 // If we were validating at the same time as another block and the other block wins the validation race
                 // and updates the UTXO first, then we may end up here with missing inputs.  Therefore we checke to see
                 // if the chainwork has advanced or if we recieved a quit and if so return without DOSing the node.
-                PV.SetLocks(fParallel);
                 if (PV.ChainWorkHasChanged(nStartingChainWork) || PV.QuitReceived(this_id, fParallel)) {
                     return false;
                 }
@@ -2621,7 +2631,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             }
 
             if (!SequenceLocks(tx, nLockTimeFlags, &prevheights, *pindex)) {
-                PV.SetLocks(fParallel);
                 return state.DoS(100, error("%s: contains a non-BIP68-final transaction", __func__),
                                  REJECT_INVALID, "bad-txns-nonfinal");
             }
@@ -2658,7 +2667,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                     std::vector<CScriptCheck> vChecks;
                     bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
                     if (!CheckInputs(tx, state, viewTempCache, fScriptChecks, flags, fCacheResults, &resourceTracker, nScriptCheckThreads ? &vChecks : NULL)) {
-                        PV.SetLocks(fParallel);
                         return error("ConnectBlock(): CheckInputs on %s failed with %s", 
                                               tx.GetHash().ToString(), FormatStateMessage(state));
                     }
@@ -2680,7 +2688,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
 
         if (PV.QuitReceived(this_id, fParallel)) {
-            PV.SetLocks(fParallel);
             return false;
         }
     }
@@ -2691,24 +2698,10 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     LogPrint("parallel", "Waiting for script threads to finish\n");
     if (!control.Wait()) {
         // if we end up here then the signature verification failed and we must re-lock cs_main before returning.
-        PV.SetLocks(fParallel);
         return state.DoS(100, false);
     }
     if (PV.QuitReceived(this_id, fParallel)) {
-        PV.SetLocks(fParallel);
         return false;
-    }
-
-
-    /*****************************************************************************************************************
-     *                         Start update of UTXO, if this block wins the validation race                          *
-     *****************************************************************************************************************/
-    // If in PV mode and we win the race then we lock everyone out before updating the UTXO and terminating any
-    // competing threads.
-    if (fParallel) cs_main.lock();
-    // Last check for chain work just in case the thread manages to get here before being terminated.
-    if (PV.ChainWorkHasChanged(nStartingChainWork) || PV.QuitReceived(this_id, fParallel)) {
-        return false; // no need to lock cs_main before returning as it should already be locked.
     }
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
@@ -2720,6 +2713,19 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     if (fJustCheck)
         return true;
+
+
+    /*****************************************************************************************************************
+     *                         Start update of UTXO, if this block wins the validation race                          *
+     *****************************************************************************************************************/
+    // If in PV mode and we win the race then we lock everyone out by taking cs_main but before updating the UTXO and 
+    // terminating any competing threads.
+    } // cs_main is re-aquired automatically as we go out of scope from the BOOST scope guard
+
+    // Last check for chain work just in case the thread manages to get here before being terminated.
+    if (PV.ChainWorkHasChanged(nStartingChainWork) || PV.QuitReceived(this_id, fParallel)) {
+        return false; // no need to lock cs_main before returning as it should already be locked.
+    }
 
     // Quit any competing threads may be validating which have the same previous block before updating the UTXO.
     PV.QuitCompetingThreads(block.GetBlockHeader().hashPrevBlock); 

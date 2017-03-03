@@ -309,7 +309,7 @@ void CParallelValidation::SetLocks(const bool fParallel)
     if (fParallel)
     {
         // cs_main must be re-locked before returning from ConnectBlock()
-        cs_main.lock();
+        ENTER_CRITICAL_SECTION(cs_main);
         boost::thread::id this_id(boost::this_thread::get_id()); 
         LOCK(cs_blockvalidationthread);
         if (mapBlockValidationThreads.count(this_id))

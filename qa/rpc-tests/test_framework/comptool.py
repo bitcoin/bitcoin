@@ -267,7 +267,7 @@ class TestManager(object):
                 elif ((c.cb.bestblockhash == blockhash) != outcome):
                     print("Node ", c.addr, " has best block ", hex(c.cb.bestblockhash), ". Expecting ", hex(blockhash), outcome)
                     print("Quick   RPC returns", c.rpc.getbestblockhash())
-                    time.sleep(5) #wait the requestmanager re-request interval to see if the block shows up
+                    time.sleep(5.5) #wait the requestmanager re-request interval to see if the block shows up
                     print("Delayed RPC returns", c.rpc.getbestblockhash())
 
                     rpcblock =  c.rpc.getbestblockhash()
