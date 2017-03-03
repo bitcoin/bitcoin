@@ -1162,6 +1162,17 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
         if(params[2].get_bool())
             filter = filter | ISMINE_WATCH_ONLY;
 
+    bool fFilterAddress = false;
+    CTxDestination filterAddress =  CNoDestination();
+    if (!fByAccounts && params.size() > 3) {
+        filterAddress =  CBitcoinAddress(params[3].get_str()).Get();
+        CTxDestination nulladdress = CNoDestination();
+        if (filterAddress == nulladdress) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "only_address parameter was invalid");
+        }
+        fFilterAddress = true;
+    }
+
     // Tally
     map<CBitcoinAddress, tallyitem> mapTally;
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
@@ -1181,6 +1192,10 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
             if (!ExtractDestination(txout.scriptPubKey, address))
                 continue;
 
+            if (fFilterAddress && !(filterAddress == address)) {
+                continue;
+            }
+
             isminefilter mine = IsMine(*pwalletMain, address);
             if(!(mine & filter))
                 continue;
@@ -1197,10 +1212,23 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
     // Reply
     UniValue ret(UniValue::VARR);
     map<string, tallyitem> mapAccountTally;
-    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
+
+    // Create mapAddressBook iterator
+    // If we aren't filtering, go from begin() to end()
+    std::map<CTxDestination, CAddressBookData>::const_iterator start = pwalletMain->mapAddressBook.begin();
+    std::map<CTxDestination, CAddressBookData>::const_iterator end = pwalletMain->mapAddressBook.end();
+    // If we are filtering, find() the applicable entry
+    if (fFilterAddress) {
+        start = pwalletMain->mapAddressBook.find(filterAddress);
+        if (start != end) {
+            end = std::next(start);
+        }
+    }
+
+    for(std::map<CTxDestination, CAddressBookData>::const_iterator item_it = start; item_it != end; ++item_it)
     {
-        const CBitcoinAddress& address = item.first;
-        const string& strAccount = item.second.name;
+        const CBitcoinAddress& address = item_it->first;
+        const string& strAccount = item_it->second.name;
         map<CBitcoinAddress, tallyitem>::iterator it = mapTally.find(address);
         if (it == mapTally.end() && !fIncludeEmpty)
             continue;
@@ -1270,15 +1298,15 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
     if (!EnsureWalletIsAvailable(request.fHelp))
         return NullUniValue;
 
-    if (request.fHelp || request.params.size() > 3)
+    if (request.fHelp || request.params.size() > 4)
         throw runtime_error(
-            "listreceivedbyaddress ( minconf include_empty include_watchonly)\n"
+            "listreceivedbyaddress (minconf include_empty include_watchonly only_address)\n"
             "\nList balances by receiving address.\n"
             "\nArguments:\n"
             "1. minconf           (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
             "2. include_empty     (bool, optional, default=false) Whether to include addresses that haven't received any payments.\n"
             "3. include_watchonly (bool, optional, default=false) Whether to include watch-only addresses (see 'importaddress').\n"
-
+            "4. only_address   (string, optional) If present, only return information on this address. Otherwise, return all information.\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
@@ -1300,6 +1328,7 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
             + HelpExampleCli("listreceivedbyaddress", "")
             + HelpExampleCli("listreceivedbyaddress", "6 true")
             + HelpExampleRpc("listreceivedbyaddress", "6, true, true")
+            + HelpExampleRpc("listreceivedbyaddress", "6, true, true, \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\"")
         );
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
@@ -3029,7 +3058,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "listaddressgroupings",     &listaddressgroupings,     false,  {} },
     { "wallet",             "listlockunspent",          &listlockunspent,          false,  {} },
     { "wallet",             "listreceivedbyaccount",    &listreceivedbyaccount,    false,  {"minconf","include_empty","include_watchonly"} },
-    { "wallet",             "listreceivedbyaddress",    &listreceivedbyaddress,    false,  {"minconf","include_empty","include_watchonly"} },
+    { "wallet",             "listreceivedbyaddress",    &listreceivedbyaddress,    false,  {"minconf","include_empty","include_watchonly", "only_address"} },
     { "wallet",             "listsinceblock",           &listsinceblock,           false,  {"blockhash","target_confirmations","include_watchonly"} },
     { "wallet",             "listtransactions",         &listtransactions,         false,  {"account","count","skip","include_watchonly"} },
     { "wallet",             "listunspent",              &listunspent,              false,  {"minconf","maxconf","addresses","include_unsafe"} },
