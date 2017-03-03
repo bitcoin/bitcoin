@@ -694,7 +694,7 @@ UniValue getblockheader(const JSONRPCRequest& request)
 
 UniValue getblock(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw runtime_error(
             "getblock \"blockhash\" ( verbose )\n"
             "\nIf verbose is false, returns a string that is serialized, hex-encoded data for block 'hash'.\n"
@@ -702,6 +702,7 @@ UniValue getblock(const JSONRPCRequest& request)
             "\nArguments:\n"
             "1. \"blockhash\"          (string, required) The block hash\n"
             "2. verbose                (boolean, optional, default=true) true for a json object, false for the hex encoded data\n"
+            "3. txdetails              (boolean, optional, default=false) true for transaction details, false for transaction ids\n"
             "\nResult (for verbose = true):\n"
             "{\n"
             "  \"hash\" : \"hash\",     (string) the block hash (same as provided)\n"
@@ -739,20 +740,29 @@ UniValue getblock(const JSONRPCRequest& request)
     uint256 hash(uint256S(strHash));
 
     bool fVerbose = true;
-    if (request.params.size() > 1)
+    if (request.params.size() > 1) {
         fVerbose = request.params[1].get_bool();
+    }
 
-    if (mapBlockIndex.count(hash) == 0)
+    bool fTxDetails = false;
+    if (request.params.size() > 2) {
+        fTxDetails = request.params[2].get_bool();
+    }
+
+    if (mapBlockIndex.count(hash) == 0) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+    }
 
     CBlock block;
     CBlockIndex* pblockindex = mapBlockIndex[hash];
 
-    if (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0)
+    if (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Block not available (pruned data)");
+    }
 
-    if(!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus()))
+    if(!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus())) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
+    }
 
     if (!fVerbose)
     {
@@ -762,7 +772,7 @@ UniValue getblock(const JSONRPCRequest& request)
         return strHex;
     }
 
-    return blockToJSON(block, pblockindex);
+    return blockToJSON(block, pblockindex, fTxDetails);
 }
 
 struct CCoinsStats

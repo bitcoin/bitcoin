@@ -80,6 +80,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listunspent", 1, "maxconf" },
     { "listunspent", 2, "addresses" },
     { "getblock", 1, "verbose" },
+    { "getblock", 2, "txdetails" },
     { "getblockheader", 1, "verbose" },
     { "gettransaction", 1, "include_watchonly" },
     { "getrawtransaction", 1, "verbose" },
