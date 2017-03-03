@@ -357,8 +357,8 @@ LockedPool::LockedPageArena::~LockedPageArena()
 /*******************************************************************************/
 // Implementation: LockedPoolManager
 //
-LockedPoolManager::LockedPoolManager(std::unique_ptr<LockedPageAllocator> allocator):
-    LockedPool(std::move(allocator), &LockedPoolManager::LockingFailed)
+LockedPoolManager::LockedPoolManager(std::unique_ptr<LockedPageAllocator> allocator_in):
+    LockedPool(std::move(allocator_in), &LockedPoolManager::LockingFailed)
 {
 }
 
