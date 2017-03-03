@@ -3770,6 +3770,12 @@ bool CWallet::InitLoadWallet()
 
     std::string walletFile = GetArg("-wallet", DEFAULT_WALLET_DAT);
 
+    if (walletFile.find_first_of("/\\") != std::string::npos) {
+        return InitError(_("-wallet parameter must only specify a filename (not a path)"));
+    } else if (SanitizeString(walletFile, SAFE_CHARS_FILENAME) != walletFile) {
+        return InitError(_("Invalid characters in -wallet filename"));
+    }
+
     CWallet * const pwallet = CreateWalletFromFile(walletFile);
     if (!pwallet) {
         return false;
