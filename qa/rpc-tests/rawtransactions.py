@@ -24,7 +24,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.num_nodes = 3
 
     def setup_network(self, split=False):
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, extra_args=[["--rpcamountdecimals=0"], ["--rpcamountdecimals=0"], ["--rpcamountdecimals=0"]])
 
         #connect to a local machine for debugging
         #url = "http://bitcoinrpc:DP6DvqZtqXarpeNWyN3LZTFchCCyCUuHwNF7E8pX99x1@%s:%d" % ('127.0.0.1', 18332)
@@ -46,9 +46,9 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.sync_all()
         self.nodes[0].generate(101)
         self.sync_all()
-        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),1.5)
-        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),1.0)
-        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),5.0)
+        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 150000000)
+        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 100000000)
+        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 500000000)
         self.sync_all()
         self.nodes[0].generate(5)
         self.sync_all()
@@ -57,7 +57,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # sendrawtransaction with missing input #
         #########################################
         inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1}] #won't exists
-        outputs = { self.nodes[0].getnewaddress() : 4.998 }
+        outputs = { self.nodes[0].getnewaddress() : 499800000 }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         rawtx   = self.nodes[2].signrawtransaction(rawtx)
 
@@ -86,11 +86,11 @@ class RawTransactionsTest(BitcoinTestFramework):
         bal = self.nodes[2].getbalance()
 
         # send 1.2 BTC to msig adr
-        txId = self.nodes[0].sendtoaddress(mSigObj, 1.2)
+        txId = self.nodes[0].sendtoaddress(mSigObj, 120000000)
         self.sync_all()
         self.nodes[0].generate(1)
         self.sync_all()
-        assert_equal(self.nodes[2].getbalance(), bal+Decimal('1.20000000')) #node2 has both keys of the 2of2 ms addr., tx should affect the balance
+        assert_equal(self.nodes[2].getbalance(), bal+Decimal('120000000')) #node2 has both keys of the 2of2 ms addr., tx should affect the balance
 
 
         # 2of3 test from different nodes
@@ -106,7 +106,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey']])
         mSigObjValid = self.nodes[2].validateaddress(mSigObj)
 
-        txId = self.nodes[0].sendtoaddress(mSigObj, 2.2)
+        txId = self.nodes[0].sendtoaddress(mSigObj, 220000000)
         decTx = self.nodes[0].gettransaction(txId)
         rawTx = self.nodes[0].decoderawtransaction(decTx['hex'])
         sPK = rawTx['vout'][0]['scriptPubKey']['hex']
@@ -122,13 +122,13 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawTx = self.nodes[0].decoderawtransaction(txDetails['hex'])
         vout = False
         for outpoint in rawTx['vout']:
-            if outpoint['value'] == Decimal('2.20000000'):
+            if outpoint['value'] == Decimal('220000000'):
                 vout = outpoint
                 break
 
         bal = self.nodes[0].getbalance()
         inputs = [{ "txid" : txId, "vout" : vout['n'], "scriptPubKey" : vout['scriptPubKey']['hex']}]
-        outputs = { self.nodes[0].getnewaddress() : 2.19 }
+        outputs = { self.nodes[0].getnewaddress() : 219000000 }
         rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
         rawTxPartialSigned = self.nodes[1].signrawtransaction(rawTx, inputs)
         assert_equal(rawTxPartialSigned['complete'], False) #node1 only has one key, can't comp. sign the tx
@@ -140,7 +140,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.sync_all()
         self.nodes[0].generate(1)
         self.sync_all()
-        assert_equal(self.nodes[0].getbalance(), bal+Decimal('50.00000000')+Decimal('2.19000000')) #block reward + tx
+        assert_equal(self.nodes[0].getbalance(), bal+Decimal('5000000000')+Decimal('219000000')) #block reward + tx
 
         # getrawtransaction tests
         # 1. valid parameters - only supply txid
@@ -170,21 +170,21 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises(JSONRPCException, self.nodes[0].getrawtransaction, txHash, {})
 
         inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : 1000}]
-        outputs = { self.nodes[0].getnewaddress() : 1 }
+        outputs = { self.nodes[0].getnewaddress() : 100000000 }
         rawtx   = self.nodes[0].createrawtransaction(inputs, outputs)
         decrawtx= self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['vin'][0]['sequence'], 1000)
         
         inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : -1}]
-        outputs = { self.nodes[0].getnewaddress() : 1 }
+        outputs = { self.nodes[0].getnewaddress() : 100000000 }
         assert_raises(JSONRPCException, self.nodes[0].createrawtransaction, inputs, outputs)
         
         inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : 4294967296}]
-        outputs = { self.nodes[0].getnewaddress() : 1 }
+        outputs = { self.nodes[0].getnewaddress() : 100000000 }
         assert_raises(JSONRPCException, self.nodes[0].createrawtransaction, inputs, outputs)
         
         inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : 4294967294}]
-        outputs = { self.nodes[0].getnewaddress() : 1 }
+        outputs = { self.nodes[0].getnewaddress() : 100000000 }
         rawtx   = self.nodes[0].createrawtransaction(inputs, outputs)
         decrawtx= self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['vin'][0]['sequence'], 4294967294)
