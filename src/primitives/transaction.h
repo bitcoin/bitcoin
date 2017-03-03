@@ -11,6 +11,8 @@
 #include "serialize.h"
 #include "uint256.h"
 
+#include <mutex>
+
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
 
 static const int WITNESS_SCALE_FACTOR = 4;
@@ -450,11 +452,81 @@ struct CMutableTransaction
     }
 };
 
-typedef std::shared_ptr<const CTransaction> CTransactionRef;
-static inline CTransactionRef MakeTransactionRef() { return std::make_shared<const CTransaction>(); }
-template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txIn) { return std::make_shared<const CTransaction>(std::forward<Tx>(txIn)); }
+struct PrecomputedTransactionData
+{
+    uint256 hashPrevouts, hashSequence, hashOutputs;
+    std::once_flag flag; // for ensuring the hashes are generated once
+
+    PrecomputedTransactionData() {}
+    void Compute(const CTransaction &tx);
+};
+
+class CHashedTransaction {
+private:
+    mutable PrecomputedTransactionData cache;
+
+public:
+    const CTransaction tx;
+
+    CHashedTransaction(CMutableTransaction&& txIn) : tx(std::move(txIn)) {}
+    CHashedTransaction(CTransaction&& txIn) : tx(std::move(txIn)) {}
+    CHashedTransaction(const CMutableTransaction& txIn) : tx(txIn) {}
+    CHashedTransaction() {}
+
+    const PrecomputedTransactionData& GetCache() const;
+
+    template <typename Stream>
+    CHashedTransaction(deserialize_type, Stream& s) : tx(CMutableTransaction(deserialize, s)) {}
+};
+
+class CTransactionRef {
+private:
+    std::shared_ptr<const CHashedTransaction> ptx;
+
+public:
+    CTransactionRef() {}
+
+    CTransactionRef(CMutableTransaction&& txIn) { ptx = std::make_shared<const CHashedTransaction>(std::move(txIn)); }
+    CTransactionRef(CTransaction&& txIn) { ptx = std::make_shared<const CHashedTransaction>(std::move(txIn)); }
+
+    CTransactionRef(const CTransactionRef &a) : ptx(a.ptx) {}
+
+    CTransactionRef(std::nullptr_t) {}
+
+    const CTransaction& operator* () const { return ptx->tx; }
+    operator bool() const { return (bool)ptx; }
+
+    // Accessors to make this look like a shared_ptr to a CTransaction.
+    void reset() { ptx.reset(); }
+    long use_count() const { return ptx.use_count(); }
+    const CTransaction *operator->() const { return &(ptx->tx); }
+
+    const PrecomputedTransactionData& GetCache() const { return ptx->GetCache(); }
+
+    template <typename Stream>
+    inline void Serialize(Stream& s) const {
+        ptx->tx.Serialize(s);
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& is) {
+        ptx = std::make_shared<const CHashedTransaction>(deserialize, is);
+    }
+
+    template <typename Stream>
+    CTransactionRef(deserialize_type, Stream& s) {
+        ptx = std::make_shared<const CHashedTransaction>(deserialize, s);
+    }
+};
+
+static inline CTransactionRef MakeTransactionRef() { return CTransactionRef(CTransaction()); }
+template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txIn) { return CTransactionRef(std::forward<Tx>(txIn)); }
 
 /** Compute the weight of a transaction, as defined by BIP 141 */
 int64_t GetTransactionWeight(const CTransaction &tx);
+
+uint256 GetPrevoutHash(const CTransaction &txTo);
+uint256 GetOutputsHash(const CTransaction &txTo);
+uint256 GetSequenceHash(const CTransaction &txTo);
 
 #endif // BITCOIN_PRIMITIVES_TRANSACTION_H
