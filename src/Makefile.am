@@ -178,6 +178,7 @@ BITCOIN_CORE_H = \
   wallet/coincontrol.h \
   wallet/crypter.h \
   wallet/db.h \
+  wallet/feebumper.h \
   wallet/rpcwallet.h \
   wallet/wallet.h \
   wallet/walletdb.h \
@@ -274,11 +275,12 @@ libbitcoin_wallet_a_SOURCES = \
   privatesend-util.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
-  warnings.h \
+  wallet/feebumper.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
+  warnings.h \
   policy/rbf.cpp \
   $(BITCOIN_CORE_H)
 
