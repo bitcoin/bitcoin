@@ -26,7 +26,7 @@ for LINE in $(echo "$GPG_RES"); do
 	case "$LINE" in
 	"[GNUPG:] VALIDSIG "*)
 		while read KEY; do
-			case "$LINE" in "[GNUPG:] VALIDSIG $KEY "*) VALID=true;; esac
+			[ "${LINE#?GNUPG:? VALIDSIG * * * * * * * * * }" = "$KEY" ] && VALID=true
 		done < ./contrib/verify-commits/trusted-keys
 		;;
 	"[GNUPG:] REVKEYSIG "*)
