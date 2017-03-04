@@ -1421,7 +1421,7 @@ UniValue omni_gettradehistoryforaddress(const UniValue& params, bool fHelp)
     // Populate the address trade history into JSON objects until we have processed count transactions
     UniValue response(UniValue::VARR);
     uint32_t processed = 0;
-    for(std::vector<uint256>::iterator it = vecTransactions.begin(); it != vecTransactions.end(); ++it) {
+    for(std::vector<uint256>::reverse_iterator it = vecTransactions.rbegin(); it != vecTransactions.rend(); ++it) {
         UniValue txobj(UniValue::VOBJ);
         int populateResult = populateRPCTransactionObject(*it, txobj, "", true);
         if (0 == populateResult) {
