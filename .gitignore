@@ -369,3 +369,5 @@ paket-files/
 # JetBrains Rider
 .idea/
 *.sln.iml
+
+enc_temp_folder

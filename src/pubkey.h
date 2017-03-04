@@ -145,7 +145,7 @@ public:
     }
 
     //! Get the 256-bit hash of this public key.
-    uint256 GetHash() const
+    uint256 GetPublicKeyHash() const
     {
         return Hash(vch, vch + size());
     }

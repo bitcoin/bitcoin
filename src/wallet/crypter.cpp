@@ -133,7 +133,7 @@ static bool DecryptSecret(const CKeyingMaterial& vMasterKey, const std::vector<u
 static bool DecryptKey(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCryptedSecret, const CPubKey& vchPubKey, CKey& key)
 {
     CKeyingMaterial vchSecret;
-    if(!DecryptSecret(vMasterKey, vchCryptedSecret, vchPubKey.GetHash(), vchSecret))
+    if(!DecryptSecret(vMasterKey, vchCryptedSecret, vchPubKey.GetPublicKeyHash(), vchSecret))
         return false;
 
     if (vchSecret.size() != 32)
@@ -218,7 +218,7 @@ bool CCryptoKeyStore::AddKeyPubKey(const CKey& key, const CPubKey &pubkey)
 
         std::vector<unsigned char> vchCryptedSecret;
         CKeyingMaterial vchSecret(key.begin(), key.end());
-        if (!EncryptSecret(vMasterKey, vchSecret, pubkey.GetHash(), vchCryptedSecret))
+        if (!EncryptSecret(vMasterKey, vchSecret, pubkey.GetPublicKeyHash(), vchCryptedSecret))
             return false;
 
         if (!AddCryptedKey(pubkey, vchCryptedSecret))
@@ -291,7 +291,7 @@ bool CCryptoKeyStore::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
             CPubKey vchPubKey = key.GetPubKey();
             CKeyingMaterial vchSecret(key.begin(), key.end());
             std::vector<unsigned char> vchCryptedSecret;
-            if (!EncryptSecret(vMasterKeyIn, vchSecret, vchPubKey.GetHash(), vchCryptedSecret))
+            if (!EncryptSecret(vMasterKeyIn, vchSecret, vchPubKey.GetPublicKeyHash(), vchCryptedSecret))
                 return false;
             if (!AddCryptedKey(vchPubKey, vchCryptedSecret))
                 return false;
