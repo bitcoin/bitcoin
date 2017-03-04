@@ -217,7 +217,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
 
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'defined')
         test_blocks = self.generate_blocks(61, 4)
-        yield TestInstance(test_blocks, sync_every_block=False) # 1
+        yield TestInstance(test_blocks, sync_every_block=True) # 1
         # Advanced from DEFINED to STARTED, height = 143
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'started')
 
