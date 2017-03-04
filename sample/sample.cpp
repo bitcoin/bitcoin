@@ -9,14 +9,19 @@ int main()
     CKey key;
     key.MakeNewKey(false);
 
-    // env
+    // ※ CBitcoinSecret は g_pCurrentParams に依存する (先に g_pCurrentParams の指定が必要)
     SelectParams(NETWORK_REGTEST);
 
     // private key
     CPrivKey privkey = key.GetPrivKey();
-    CPrivKey privkey2 = key.GetPrivKey();
-    std::string strPrivKey = CBitcoinSecret(key).ToString(); // ※ CBitcoinSecret は g_pCurrentParams に依存する (先に g_pCurrentParams の指定が必要)
-    printf("PRIVKEY: %s\n", strPrivKey.c_str());
+    printf("PRIVKEY in REGTEST: %s\n", CBitcoinSecret(key).ToString().c_str());
+
+    SelectParams(NETWORK_TESTNET);
+    printf("PRIVKEY in TESTNET: %s\n", CBitcoinSecret(key).ToString().c_str());
+
+    SelectParams(NETWORK_MAIN);
+    printf("PRIVKEY in MAIN: %s\n", CBitcoinSecret(key).ToString().c_str()); // ※MAINだと値が変わる
+
 
     // public key
     CPubKey pubkey = key.GetPubKey();
