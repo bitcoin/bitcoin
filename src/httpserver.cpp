@@ -21,12 +21,14 @@
 #include <signal.h>
 #include <future>
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <event2/event.h>
 #include <event2/http.h>
 #include <event2/thread.h>
 #include <event2/buffer.h>
 #include <event2/util.h>
 #include <event2/keyvalq_struct.h>
+#include "support/evunix.h"
 
 #ifdef EVENT__HAVE_NETINET_IN_H
 #include <netinet/in.h>
@@ -181,6 +183,10 @@ static WorkQueue<HTTPClosure>* workQueue = 0;
 std::vector<HTTPPathHandler> pathHandlers;
 //! Bound listening sockets
 std::vector<evhttp_bound_socket *> boundSockets;
+#ifdef HAVE_SOCKADDR_UN
+//! UNIX sockets to clean up on shutdown
+std::vector<boost::filesystem::path> cleanupUNIXSockets;
+#endif
 
 /** Check if a network address is allowed to access the HTTP server */
 static bool ClientAllowed(const CNetAddr& netaddr)
@@ -331,6 +337,8 @@ static bool HTTPBindAddresses(struct evhttp* http)
     } else if (mapMultiArgs.count("-rpcbind")) { // Specific bind address
         const std::vector<std::string>& vbind = mapMultiArgs.at("-rpcbind");
         for (std::vector<std::string>::const_iterator i = vbind.begin(); i != vbind.end(); ++i) {
+            if (boost::starts_with(*i, RPC_ADDR_PREFIX_UNIX)) // Skip UNIX sockets here
+                continue;
             int port = defaultPort;
             std::string host;
             SplitHostPort(*i, port, host);
@@ -351,6 +359,40 @@ static bool HTTPBindAddresses(struct evhttp* http)
             LogPrintf("Binding RPC on address %s port %i failed.\n", i->first, i->second);
         }
     }
+
+    // UNIX socket binding: this is done in a separate pass because it does not care whether
+    // `-rpcallowip` is set.
+    if (mapMultiArgs.count("-rpcbind")) {
+        const std::vector<std::string>& vbind = mapMultiArgs.at("-rpcbind");
+        for (std::vector<std::string>::const_iterator i = vbind.begin(); i != vbind.end(); ++i) {
+            if (boost::starts_with(*i, RPC_ADDR_PREFIX_UNIX)) {
+#ifdef HAVE_SOCKADDR_UN
+                boost::filesystem::path name = boost::filesystem::path(i->substr(RPC_ADDR_PREFIX_UNIX.size()));
+                int fd;
+                evhttp_bound_socket *bind_handle = 0;
+
+                // If path is not complete, it is interpreted relative to the data directory.
+                if (!name.is_complete()) {
+                    name = GetDataDir(true) / name;
+                }
+
+                LogPrint("http", "Binding RPC on UNIX socket %s\n", name.string());
+                if ((fd = evunix_bind_fd(name)) != -1) {
+                    bind_handle = evhttp_accept_socket_with_handle(http, fd);
+                }
+                if (bind_handle) {
+                    boundSockets.push_back(bind_handle);
+                    cleanupUNIXSockets.push_back(name);
+                } else {
+                    LogPrintf("Binding RPC on UNIX socket %s failed.\n", name.string());
+                }
+#else
+                LogPrintf("WARNING: RPC was asked to bind on UNIX socket, which is not supported on this system\n");
+#endif
+            }
+        }
+    }
+
     return !boundSockets.empty();
 }
 
@@ -505,6 +547,12 @@ void StopHTTPServer()
         event_base_free(eventBase);
         eventBase = 0;
     }
+#ifdef HAVE_SOCKADDR_UN
+    //! Clean up UNIX sockets on shutdown
+    for (const auto& path: cleanupUNIXSockets) {
+         evunix_remove_socket(path);
+    }
+#endif
     LogPrint("http", "Stopped HTTP server\n");
 }
 
@@ -619,6 +667,12 @@ CService HTTPRequest::GetPeer()
         const char* address = "";
         uint16_t port = 0;
         evhttp_connection_get_peer(con, (char**)&address, &port);
+        if (!strcmp(address, "localhost")) {
+            /* Special: will get here for UNIX sockets. As we have no way to indicate that,
+             * just pass localhost IPv6.
+             */
+            address = "::1";
+        }
         peer = LookupNumeric(address, port);
     }
     return peer;
