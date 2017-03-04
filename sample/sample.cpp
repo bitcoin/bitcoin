@@ -9,6 +9,9 @@ int main()
     CKey key;
     key.MakeNewKey(false);
 
+    // env
+    SelectParams(NETWORK_REGTEST);
+
     // private key
     CPrivKey privkey = key.GetPrivKey();
     CPrivKey privkey2 = key.GetPrivKey();

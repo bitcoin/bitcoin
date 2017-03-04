@@ -75,7 +75,8 @@ public:
     /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
     /** Return the BIP70 network string (main, test or regtest) */
-    std::string NetworkIDString() const { return strNetworkID; }
+    //std::string NetworkIDString() const { return strNetworkID; }
+    NetworkType GetNetworkType() const { return m_networkType; }
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
@@ -90,7 +91,8 @@ protected:
     uint64_t nPruneAfterHeight;
     std::vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
-    std::string strNetworkID;
+    NetworkType m_networkType;
+    //std::string strNetworkID;
     CBlock genesis;
     std::vector<SeedSpec6> vFixedSeeds;
     bool fMiningRequiresPeers;
@@ -110,13 +112,14 @@ const CChainParams &Params();
 /**
  * @returns CChainParams for the given BIP70 chain name.
  */
-CChainParams& Params(const std::string& chain);
+enum NetworkType;
+CChainParams& Params(NetworkType chain);
 
 /**
  * Sets the params returned by Params() to those for the given BIP70 chain name.
  * @throws std::runtime_error when the chain is not supported.
  */
-void SelectParams(const std::string& chain);
+void SelectParams(NetworkType chain);
 
 /**
  * Allows modifying the BIP9 regtest parameters.

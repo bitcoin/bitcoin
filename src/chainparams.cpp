@@ -69,7 +69,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
 class CMainParams : public CChainParams {
 public:
     CMainParams() {
-        strNetworkID = "main";
+        m_networkType = NETWORK_MAIN;
         consensus.nSubsidyHalvingInterval = 210000;
         consensus.BIP34Height = 227931;
         consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
@@ -172,7 +172,7 @@ static CMainParams mainParams;
 class CTestNetParams : public CChainParams {
 public:
     CTestNetParams() {
-        strNetworkID = "test";
+        m_networkType = NETWORK_TESTNET;
         consensus.nSubsidyHalvingInterval = 210000;
         consensus.BIP34Height = 21111;
         consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8");
@@ -259,7 +259,7 @@ static CTestNetParams testNetParams;
 class CRegTestParams : public CChainParams {
 public:
     CRegTestParams() {
-        strNetworkID = "regtest";
+        m_networkType = NETWORK_REGTEST;
         consensus.nSubsidyHalvingInterval = 150;
         consensus.BIP34Height = 100000000; // BIP34 has not activated on regtest (far in the future so block v1 are not rejected in tests)
         consensus.BIP34Hash = uint256();
@@ -340,19 +340,19 @@ const CChainParams &Params() {
     return *g_pCurrentParams;
 }
 
-CChainParams& Params(const std::string& chain)
+CChainParams& Params(NetworkType chain)
 {
-    if (chain == CBaseChainParams::MAIN)
+    if (chain == NETWORK_MAIN)
             return mainParams;
-    else if (chain == CBaseChainParams::TESTNET)
+    else if (chain == NETWORK_TESTNET)
             return testNetParams;
-    else if (chain == CBaseChainParams::REGTEST)
+    else if (chain == NETWORK_REGTEST)
             return regTestParams;
     else
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
 
-void SelectParams(const std::string& network)
+void SelectParams(NetworkType network)
 {
     SelectBaseParams(network);
     g_pCurrentParams = &Params(network);

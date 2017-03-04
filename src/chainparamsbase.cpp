@@ -9,10 +9,31 @@
 #include "util.h"
 
 #include <assert.h>
+#include <algorithm>
 
+// -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- //
+// Network type and each name
+// -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- //
+static std::map<NetworkType, std::string> _NetworkTypeNames = {
+    { NETWORK_MAIN, "main" },
+    { NETWORK_TESTNET, "test" },
+    { NETWORK_REGTEST, "regtest" },
+};
+std::string NetworkType2String(NetworkType networkType)
+{
+    return _NetworkTypeNames[networkType];
+}
+NetworkType String2NetworkType(const std::string& networkTypeName)
+{
+    auto itr = find_if(_NetworkTypeNames.begin(), _NetworkTypeNames.end(),
+        [networkTypeName](const std::pair<NetworkType, std::string>& s) { return s.second == networkTypeName; });
+    return itr->first;
+}
+/*
 const std::string CBaseChainParams::MAIN = "main";
 const std::string CBaseChainParams::TESTNET = "test";
 const std::string CBaseChainParams::REGTEST = "regtest";
+*/
 
 void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
 {
@@ -73,24 +94,24 @@ const CBaseChainParams& BaseParams()
     return *pCurrentBaseParams;
 }
 
-CBaseChainParams& BaseParams(const std::string& chain)
+CBaseChainParams& BaseParams(NetworkType chain)
 {
-    if (chain == CBaseChainParams::MAIN)
+    if (chain == NETWORK_MAIN)
         return mainParams;
-    else if (chain == CBaseChainParams::TESTNET)
+    else if (chain == NETWORK_TESTNET)
         return testNetParams;
-    else if (chain == CBaseChainParams::REGTEST)
+    else if (chain == NETWORK_REGTEST)
         return regTestParams;
     else
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
 
-void SelectBaseParams(const std::string& chain)
+void SelectBaseParams(NetworkType chain)
 {
     pCurrentBaseParams = &BaseParams(chain);
 }
 
-std::string ChainNameFromCommandLine()
+NetworkType ChainNameFromCommandLine()
 {
     bool fRegTest = GetBoolArg("-regtest", false);
     bool fTestNet = GetBoolArg("-testnet", false);
@@ -98,10 +119,10 @@ std::string ChainNameFromCommandLine()
     if (fTestNet && fRegTest)
         throw std::runtime_error("Invalid combination of -regtest and -testnet.");
     if (fRegTest)
-        return CBaseChainParams::REGTEST;
+        return NETWORK_REGTEST;
     if (fTestNet)
-        return CBaseChainParams::TESTNET;
-    return CBaseChainParams::MAIN;
+        return NETWORK_TESTNET;
+    return NETWORK_MAIN;
 }
 
 bool AreBaseParamsConfigured()

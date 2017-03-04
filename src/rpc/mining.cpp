@@ -250,7 +250,7 @@ UniValue getmininginfo(const JSONRPCRequest& request)
     obj.push_back(Pair("errors",           GetWarnings("statusbar")));
     obj.push_back(Pair("networkhashps",    getnetworkhashps(request)));
     obj.push_back(Pair("pooledtx",         (uint64_t)mempool.size()));
-    obj.push_back(Pair("chain",            Params().NetworkIDString()));
+    obj.push_back(Pair("chain",            NetworkType2String(Params().GetNetworkType())));
     return obj;
 }
 
