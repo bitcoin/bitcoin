@@ -333,11 +333,11 @@ public:
 };
 static CRegTestParams regTestParams;
 
-static CChainParams *pCurrentParams = 0;
+static CChainParams* g_pCurrentParams = 0;
 
 const CChainParams &Params() {
-    assert(pCurrentParams);
-    return *pCurrentParams;
+    assert(g_pCurrentParams);
+    return *g_pCurrentParams;
 }
 
 CChainParams& Params(const std::string& chain)
@@ -355,7 +355,7 @@ CChainParams& Params(const std::string& chain)
 void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
-    pCurrentParams = &Params(network);
+    g_pCurrentParams = &Params(network);
 }
 
 void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)

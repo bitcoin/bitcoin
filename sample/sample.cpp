@@ -12,7 +12,7 @@ int main()
     // private key
     CPrivKey privkey = key.GetPrivKey();
     CPrivKey privkey2 = key.GetPrivKey();
-    std::string strPrivKey = CBitcoinSecret(key).ToString();
+    std::string strPrivKey = CBitcoinSecret(key).ToString(); // ※ CBitcoinSecret は g_pCurrentParams に依存する (先に g_pCurrentParams の指定が必要)
     printf("PRIVKEY: %s\n", strPrivKey.c_str());
 
     // public key
