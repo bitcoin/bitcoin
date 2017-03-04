@@ -100,6 +100,14 @@ extern CAllScriptCheckQueues allScriptCheckQueues; // Singleton class
 
 class CParallelValidation
 {
+
+private:
+
+    // txn hashes that are in the previous block
+    CCriticalSection cs_previousblock;
+    vector<uint256> vPreviousBlock;
+
+
 public:
     struct CHandleBlockMsgThreads {
         CCheckQueue<CScriptCheck>* pScriptQueue;
@@ -162,6 +170,9 @@ public:
     /* Is there a re-org in progress */
     void IsReorgInProgress(const boost::thread::id this_id, const bool fReorg, const bool fParallel);
     bool IsReorgInProgress();
+
+    /* Clear orphans from the orphan cache that are no longer needed*/
+    void ClearOrphanCache(const CBlock &block);
 
     /* Process a block message */
     void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, const CBlock &block, const CInv &inv);
