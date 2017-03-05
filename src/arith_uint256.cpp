@@ -163,7 +163,7 @@ void base_uint<BITS>::SetHex(const std::string& str)
 }
 
 template <unsigned int BITS>
-std::string base_uint<BITS>::ToString() const
+std::string base_uint<BITS>::ToHexString() const
 {
     return (GetHex());
 }
@@ -194,7 +194,7 @@ template int base_uint<256>::CompareTo(const base_uint<256>&) const;
 template bool base_uint<256>::EqualTo(uint64_t) const;
 template double base_uint<256>::getdouble() const;
 template std::string base_uint<256>::GetHex() const;
-template std::string base_uint<256>::ToString() const;
+template std::string base_uint<256>::ToHexString() const;
 template void base_uint<256>::SetHex(const char*);
 template void base_uint<256>::SetHex(const std::string&);
 template unsigned int base_uint<256>::bits() const;

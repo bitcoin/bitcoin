@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\primitive">
+      <UniqueIdentifier>{229af34f-0d90-44c2-8549-519a8d549a34}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\chainparams.cpp">
@@ -109,9 +112,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ui_interface.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\uint256.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\util.cpp">
@@ -258,9 +258,6 @@
     <ClCompile Include="src\amount.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\arith_uint256.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\base58.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -309,6 +306,12 @@
     <ClCompile Include="src\policy\rbf.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\arith_uint256.cpp">
+      <Filter>Source Files\primitive</Filter>
+    </ClCompile>
+    <ClCompile Include="src\uint256.cpp">
+      <Filter>Source Files\primitive</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\addrdb.h">
@@ -321,9 +324,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\amount.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\arith_uint256.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\base58.h">
@@ -596,9 +596,6 @@
     <ClInclude Include="src\ui_interface.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\uint256.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\undo.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -667,6 +664,12 @@
     </ClInclude>
     <ClInclude Include="src\zmq\zmqpublishnotifier.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\arith_uint256.h">
+      <Filter>Source Files\primitive</Filter>
+    </ClInclude>
+    <ClInclude Include="src\uint256.h">
+      <Filter>Source Files\primitive</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
