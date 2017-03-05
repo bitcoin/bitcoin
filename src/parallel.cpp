@@ -28,8 +28,9 @@ using namespace std;
 
 void AddScriptCheckThreads(int i, CCheckQueue<CScriptCheck>* pqueue)
 {
-    string tName = "bitcoin-scriptchk" + i;
-    RenameThread(tName.c_str());
+    ostringstream tName;
+    tName << "bitcoin-scriptchk" << i;
+    RenameThread(tName.str().c_str());
     pqueue->Thread();
 }
 
