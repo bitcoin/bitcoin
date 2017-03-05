@@ -47,9 +47,7 @@
 #include <unistd.h>
 #endif
 
-#ifdef WIN32
-#define MSG_DONTWAIT        0
-#else
+#ifndef WIN32
 typedef u_int SOCKET;
 #include "errno.h"
 #define WSAGetLastError()   errno
@@ -77,6 +75,11 @@ typedef u_int SOCKET;
 // As Solaris does not have the MSG_NOSIGNAL flag for send(2) syscall, it is defined as 0
 #if !defined(HAVE_MSG_NOSIGNAL) && !defined(MSG_NOSIGNAL)
 #define MSG_NOSIGNAL 0
+#endif
+
+// MSG_DONTWAIT is not available on some platforms, if it doesn't exist define it as 0
+#if !defined(HAVE_MSG_DONTWAIT) && !defined(MSG_DONTWAIT)
+#define MSG_DONTWAIT 0
 #endif
 
 #if HAVE_DECL_STRNLEN == 0
