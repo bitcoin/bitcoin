@@ -12,7 +12,7 @@ for LINE in $(echo "$INPUT" | gpg --trust-model always "$@" 2>/dev/null); do
 	case "$LINE" in
 	"[GNUPG:] VALIDSIG "*)
 		while read KEY; do
-			case "$LINE" in "[GNUPG:] VALIDSIG $KEY "*) VALID=true;; esac
+			[ "${LINE#?GNUPG:? VALIDSIG * * * * * * * * * }" = "$KEY" ] && VALID=true
 		done < ./contrib/verify-commits/trusted-keys
 		;;
 	"[GNUPG:] REVKEYSIG "*)
