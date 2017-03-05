@@ -317,8 +317,8 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     uint256 hash = entry.GetTx().GetHash();
     if (mapMemPoolTxs.count(hash)) {
         LogPrint("estimatefee", "Blockpolicy error mempool tx %s already being tracked\n",
-                 hash.ToString().c_str());
-	return;
+                 hash.ToHexString().c_str());
+    return;
     }
 
     if (txHeight != nBestSeenHeight) {

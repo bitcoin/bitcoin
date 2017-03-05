@@ -19,7 +19,7 @@ int main()
 
     // public key hash (CHash256による生成) (uint256 (256bits) (32bytes) binary to string)
     uint256 hash = pubkey.GetPublicKeyHash(); // 256bits = 32bytes binary
-    std::string hashStr = hash.ToString(); // 64長HEX文字列  例: "65d5f35db59351506de1da46cfc33005d5d6e2325667ed70c42f5bcb8a944b8d"
+    std::string hashStr = hash.ToHexString(); // 64長HEX文字列  例: "65d5f35db59351506de1da46cfc33005d5d6e2325667ed70c42f5bcb8a944b8d"
     printf("PUBLIC HASH: %s\n", hashStr.c_str());
 
     // ※ CBitcoinSecret は g_pCurrentParams に依存するため、先に g_pCurrentParams の指定が必要.

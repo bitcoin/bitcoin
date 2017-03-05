@@ -310,8 +310,8 @@ public:
     {
         return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
             pprev, nHeight,
-            hashMerkleRoot.ToString(),
-            GetBlockHash().ToString());
+            hashMerkleRoot.ToHexString(),
+            GetBlockHash().ToHexString());
     }
 
     //! Check whether this block index entry is valid up to the passed validity level.
@@ -408,8 +408,8 @@ public:
         std::string str = "CDiskBlockIndex(";
         str += CBlockIndex::ToString();
         str += strprintf("\n                hashBlock=%s, hashPrev=%s)",
-            GetBlockHash().ToString(),
-            hashPrev.ToString());
+            GetBlockHash().ToHexString(),
+            hashPrev.ToHexString());
         return str;
     }
 };

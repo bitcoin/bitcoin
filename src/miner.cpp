@@ -336,7 +336,7 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
         LogPrintf("priority %.1f fee %s txid %s\n",
                   dPriority,
                   CFeeRate(iter->GetModifiedFee(), iter->GetTxSize()).ToString(),
-                  iter->GetTx().GetHash().ToString());
+                  iter->GetTx().GetHash().ToHexString());
     }
 }
 

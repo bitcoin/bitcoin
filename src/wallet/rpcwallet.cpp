@@ -1790,7 +1790,7 @@ UniValue gettransaction(const JSONRPCRequest& request)
             "      \"fee\": x.xxx,                     (numeric) The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the \n"
             "                                           'send' category of transactions.\n"
             "      \"abandoned\": xxx                  (bool) 'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
-            "                                           'send' category of transactions.\n"			
+            "                                           'send' category of transactions.\n"
             "    }\n"
             "    ,...\n"
             "  ],\n"
@@ -2380,7 +2380,7 @@ UniValue resendwallettransactions(const JSONRPCRequest& request)
     UniValue result(UniValue::VARR);
     BOOST_FOREACH(const uint256& txid, txids)
     {
-        result.push_back(txid.ToString());
+        result.push_back(txid.ToHexString());
     }
     return result;
 }
@@ -2773,7 +2773,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
     }
 
     if (wtx.mapValue.count("replaced_by_txid")) {
-        throw JSONRPCError(RPC_INVALID_REQUEST, strprintf("Cannot bump transaction %s which was already bumped by transaction %s", hash.ToString(), wtx.mapValue.at("replaced_by_txid")));
+        throw JSONRPCError(RPC_INVALID_REQUEST, strprintf("Cannot bump transaction %s which was already bumped by transaction %s", hash.ToHexString(), wtx.mapValue.at("replaced_by_txid")));
     }
 
     // check that original tx consists entirely of our inputs
@@ -2945,7 +2945,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
     CReserveKey reservekey(pwalletMain);
     CWalletTx wtxBumped(pwalletMain, MakeTransactionRef(std::move(tx)));
     wtxBumped.mapValue = wtx.mapValue;
-    wtxBumped.mapValue["replaces_txid"] = hash.ToString();
+    wtxBumped.mapValue["replaces_txid"] = hash.ToHexString();
     wtxBumped.vOrderForm = wtx.vOrderForm;
     wtxBumped.strFromAccount = wtx.strFromAccount;
     wtxBumped.fTimeReceivedIsTxTime = true;
