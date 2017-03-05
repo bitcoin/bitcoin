@@ -48,7 +48,7 @@
 #endif
 
 #ifndef WIN32
-typedef u_int SOCKET;
+typedef unsigned int SOCKET;
 #include "errno.h"
 #define WSAGetLastError()   errno
 #define WSAEINVAL           EINVAL
