@@ -72,16 +72,6 @@ typedef u_int SOCKET;
 #define MAX_PATH            1024
 #endif
 
-// As Solaris does not have the MSG_NOSIGNAL flag for send(2) syscall, it is defined as 0
-#if !defined(HAVE_MSG_NOSIGNAL) && !defined(MSG_NOSIGNAL)
-#define MSG_NOSIGNAL 0
-#endif
-
-// MSG_DONTWAIT is not available on some platforms, if it doesn't exist define it as 0
-#if !defined(HAVE_MSG_DONTWAIT) && !defined(MSG_DONTWAIT)
-#define MSG_DONTWAIT 0
-#endif
-
 #if HAVE_DECL_STRNLEN == 0
 size_t strnlen( const char *start, size_t max_len);
 #endif // HAVE_DECL_STRNLEN
