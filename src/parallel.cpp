@@ -183,7 +183,6 @@ void CParallelValidation::QuitCompetingThreads(const uint256& prevBlockHash)
 bool CParallelValidation::IsAlreadyValidating(const NodeId nodeid)
 {
     // Don't allow a second thinblock to validate if this node is already in the process of validating a block.
-    boost::thread::id this_id(boost::this_thread::get_id());
     LOCK(cs_blockvalidationthread);
     map<boost::thread::id, CParallelValidation::CHandleBlockMsgThreads>::iterator iter = mapBlockValidationThreads.begin();
     while (iter != mapBlockValidationThreads.end()) {
