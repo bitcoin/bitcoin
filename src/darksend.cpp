@@ -2379,22 +2379,12 @@ bool CDarksendQueue::CheckSignature(const CPubKey& pubKeyMasternode)
 
 bool CDarksendQueue::Relay()
 {
-    std::vector<CNode*> vNodesCopy;
-    {
-        LOCK(cs_vNodes);
-        vNodesCopy = vNodes;
-        BOOST_FOREACH(CNode* pnode, vNodesCopy)
-            pnode->AddRef();
-    }
+    std::vector<CNode*> vNodesCopy = CopyNodeVector();
     BOOST_FOREACH(CNode* pnode, vNodesCopy)
         if(pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION)
             pnode->PushMessage(NetMsgType::DSQUEUE, (*this));
 
-    {
-        LOCK(cs_vNodes);
-        BOOST_FOREACH(CNode* pnode, vNodesCopy)
-            pnode->Release();
-    }
+    ReleaseNodeVector(vNodesCopy);
     return true;
 }
 
