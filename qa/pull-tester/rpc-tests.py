@@ -83,6 +83,7 @@ BASE_SCRIPTS= [
     'rpcnamedargs.py',
     'listsinceblock.py',
     'p2p-leaktests.py',
+    'htlc.py'
 ]
 
 ZMQ_SCRIPTS = [
