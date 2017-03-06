@@ -203,12 +203,6 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
         case Label:
             if(rec->label.isEmpty() && role == Qt::DisplayRole)
             {
-				// SYSCOIN
-				CSyscoinAddress myAddress = CSyscoinAddress(rec->address.toStdString());
-				if(myAddress.IsValid() && myAddress.isAlias)
-				{
-					return rec->address;
-				}
                 return tr("(no label)");
             }
             else
@@ -289,15 +283,8 @@ bool AddressTableModel::setData(const QModelIndex &index, const QVariant &value,
             {
                 // Remove old entry
                 wallet->DelAddressBook(curAddress);
-				// SYSCOIN
-				std::string newLabel = rec->label.toStdString();
-				CSyscoinAddress curSysAddress = CSyscoinAddress(rec->address.toStdString());
-				if(curSysAddress.IsValid() && curSysAddress.isAlias && rec->label.isEmpty())
-				{
-					newLabel = rec->address.toStdString();
-				}
-                // SYSCOIN Add new entry with new address
-                wallet->SetAddressBook(newAddress, newLabel, strPurpose);
+                // Add new entry with new address
+                wallet->SetAddressBook(newAddress, rec->label.toStdString(), strPurpose);
             }
         }
         return true;
@@ -405,15 +392,10 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
         return QString();
     }
 
-    // SYSCOIN Add entry
+    // Add entry
     {
-		CSyscoinAddress myAddress = CSyscoinAddress(strAddress);
         LOCK(wallet->cs_wallet);
-		if(myAddress.IsValid() && myAddress.isAlias && strLabel.length() <= 0)
-		{
-			strLabel = strAddress;
-		}
-        wallet->SetAddressBook(myAddress.Get(), strLabel,
+        wallet->SetAddressBook(CSyscoinAddress(strAddress).Get(), strLabel,
                                (type == Send ? "send" : "receive"));
     }
     return QString::fromStdString(strAddress);
