@@ -364,6 +364,22 @@ case $host in
      TARGET_OS=linux
      LEVELDB_TARGET_FLAGS="-DOS_LINUX"
      ;;
+   *dragonfly*)
+     TARGET_OS=dragonfly
+     LEVELDB_TARGET_FLAGS="-DOS_DRAGONFLYBSD"
+     ;;
+   *freebsd*)
+     TARGET_OS=freebsd
+     LEVELDB_TARGET_FLAGS="-DOS_FREEBSD"
+     ;;
+   *netbsd*)
+     TARGET_OS=netbsd
+     LEVELDB_TARGET_FLAGS="-DOS_NETBSD"
+     ;;
+   *openbsd*)
+     TARGET_OS=openbsd
+     LEVELDB_TARGET_FLAGS="-DOS_OPENBSD"
+     ;;
    *)
      OTHER_OS=`echo ${host_os} | awk '{print toupper($0)}'`
      LEVELDB_TARGET_FLAGS="-DOS_${OTHER_OS}"
