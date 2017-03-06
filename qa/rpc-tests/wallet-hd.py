@@ -25,15 +25,9 @@ class WalletHDTest(BitcoinTestFramework):
         tmpdir = self.options.tmpdir
 
         # Make sure can't switch off usehd after wallet creation
-        stop_node(self.nodes[1],1)
-        try:
-            start_node(1, self.options.tmpdir, ['-usehd=0'], redirect_stderr=True)
-            raise AssertionError("Must not allow to turn off HD on an already existing HD wallet")
-        except Exception as e:
-            assert("dashd exited with status 1 during initialization" in str(e))
-        # assert_start_raises_init_error(1, self.options.tmpdir, ['-usehd=0'], 'already existing HD wallet')
-        # self.nodes[1] = start_node(1, self.options.tmpdir, self.node_args[1])
-        self.nodes[1] = start_node(1, self.options.tmpdir, ['-usehd=1', '-keypool=0'], redirect_stderr=True)
+        self.stop_node(1)
+        assert_start_raises_init_error(1, self.options.tmpdir, ['-usehd=0'], 'already existing HD wallet')
+        self.nodes[1] = start_node(1, self.options.tmpdir, self.node_args[1])
         connect_nodes_bi(self.nodes, 0, 1)
 
         # Make sure we use hd, keep chainid
