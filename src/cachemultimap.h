@@ -146,6 +146,13 @@ public:
         return true;
     }
 
+    void GetKeys(std::vector<K>& vecKeys)
+    {
+        for(map_cit it = mapIndex.begin(); it != mapIndex.end(); ++it) {
+            vecKeys.push_back(it->first);
+        }
+    }
+
     void Erase(const K& key)
     {
         map_it mit = mapIndex.find(key);

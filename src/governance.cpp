@@ -16,8 +16,6 @@
 
 CGovernanceManager governance;
 
-std::map<uint256, int64_t> mapAskedForGovernanceObject;
-
 int nSubmittedFinalBudget;
 
 const std::string CGovernanceManager::SERIALIZATION_VERSION_STRING = "CGovernanceManager-Version-11";
@@ -647,25 +645,23 @@ struct sortProposalsByVotes {
     }
 };
 
-void CGovernanceManager::NewBlock()
+void CGovernanceManager::DoMaintenance()
 {
+    // NOTHING TO DO IN LITEMODE
+    if(fLiteMode) {
+        return;
+    }
+
     // IF WE'RE NOT SYNCED, EXIT
     if(!masternodeSync.IsSynced()) return;
 
     if(!pCurrentBlockIndex) return;
-    LOCK(cs);
-
 
     // CHECK OBJECTS WE'VE ASKED FOR, REMOVE OLD ENTRIES
 
-    std::map<uint256, int64_t>::iterator it = mapAskedForGovernanceObject.begin();
-    while(it != mapAskedForGovernanceObject.end()) {
-        if((*it).second > GetTime() - (60*60*24)) {
-            ++it;
-        } else {
-            mapAskedForGovernanceObject.erase(it++);
-        }
-    }
+    CleanOrphanObjects();
+
+    RequestOrphanObjects();
 
     // CHECK AND REMOVE - REPROCESS GOVERNANCE OBJECTS
 
@@ -1029,6 +1025,8 @@ void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nH
         return;
     }
 
+    LogPrint("gobject", "CGovernanceObject::RequestGovernanceObject -- hash = %s (peer=%d)\n", nHash.ToString(), pfrom->GetId());
+
     if(pfrom->nVersion < GOVERNANCE_FILTER_PROTO_VERSION) {
         pfrom->PushMessage(NetMsgType::MNGOVERNANCESYNC, nHash);
         return;
@@ -1291,13 +1289,56 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex *pindex)
         return;
     }
 
+    {
+        LOCK(cs);
+        pCurrentBlockIndex = pindex;
+        nCachedBlockHeight = pCurrentBlockIndex->nHeight;
+        LogPrint("gobject", "CGovernanceManager::UpdatedBlockTip pCurrentBlockIndex->nHeight: %d\n", pCurrentBlockIndex->nHeight);
+    }
+}
+
+void CGovernanceManager::RequestOrphanObjects()
+{
+    std::vector<CNode*> vNodesCopy = CopyNodeVector();
+
+    {
+        LOCK(cs);
+        std::vector<uint256> vecHashes;
+        mapOrphanVotes.GetKeys(vecHashes);
+
+        LogPrint("gobject", "CGovernanceObject::RequestOrphanObjects -- number objects = %d\n", vecHashes.size());
+        for(size_t i = 0; i < vecHashes.size(); ++i) {
+            const uint256& nHash = vecHashes[i];
+            if(mapObjects.find(nHash) != mapObjects.end()) {
+                continue;
+            }
+            for(size_t j = 0; j < vNodesCopy.size(); ++j) {
+                CNode* pnode = vNodesCopy[j];
+                if(pnode->fMasternode) {
+                    continue;
+                }
+                RequestGovernanceObject(pnode, nHash);
+            }
+        }
+    }
+
+    ReleaseNodeVector(vNodesCopy);
+}
+
+void CGovernanceManager::CleanOrphanObjects()
+{
     LOCK(cs);
-    pCurrentBlockIndex = pindex;
-    nCachedBlockHeight = pCurrentBlockIndex->nHeight;
-    LogPrint("gobject", "CGovernanceManager::UpdatedBlockTip pCurrentBlockIndex->nHeight: %d\n", pCurrentBlockIndex->nHeight);
+    const vote_mcache_t::list_t& items = mapOrphanVotes.GetItemList();
 
-    // TO REPROCESS OBJECTS WE SHOULD BE SYNCED
+    int64_t nNow = GetAdjustedTime();
 
-    if(!fLiteMode && masternodeSync.IsSynced())
-        NewBlock();
+    vote_mcache_t::list_cit it = items.begin();
+    while(it != items.end()) {
+        vote_mcache_t::list_cit prevIt = it;
+        ++it;
+        const vote_time_pair_t& pairVote = prevIt->value;
+        if(pairVote.second < nNow) {
+            mapOrphanVotes.Erase(prevIt->key, prevIt->value);
+        }
+    }
 }

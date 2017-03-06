@@ -24,7 +24,6 @@ class CGovernanceTriggerManager;
 class CGovernanceObject;
 class CGovernanceVote;
 
-extern std::map<uint256, int64_t> mapAskedForGovernanceObject;
 extern CGovernanceManager governance;
 
 typedef std::pair<CGovernanceObject, int64_t> object_time_pair_t;
@@ -280,7 +279,7 @@ public:
 
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
-    void NewBlock();
+    void DoMaintenance();
 
     CGovernanceObject *FindGovernanceObject(const uint256& nHash);
 
@@ -424,6 +423,10 @@ private:
     void AddCachedTriggers();
 
     bool UpdateCurrentWatchdog(CGovernanceObject& watchdogNew);
+
+    void RequestOrphanObjects();
+
+    void CleanOrphanObjects();
 
 };
 
