@@ -28,8 +28,9 @@ using namespace std;
 
 void AddScriptCheckThreads(int i, CCheckQueue<CScriptCheck>* pqueue)
 {
-    string tName = "bitcoin-scriptchk" + i;
-    RenameThread(tName.c_str());
+    ostringstream tName;
+    tName << "bitcoin-scriptchk" << i;
+    RenameThread(tName.str().c_str());
     pqueue->Thread();
 }
 
@@ -183,7 +184,6 @@ void CParallelValidation::QuitCompetingThreads(const uint256& prevBlockHash)
 bool CParallelValidation::IsAlreadyValidating(const NodeId nodeid)
 {
     // Don't allow a second thinblock to validate if this node is already in the process of validating a block.
-    boost::thread::id this_id(boost::this_thread::get_id());
     LOCK(cs_blockvalidationthread);
     map<boost::thread::id, CParallelValidation::CHandleBlockMsgThreads>::iterator iter = mapBlockValidationThreads.begin();
     while (iter != mapBlockValidationThreads.end()) {
