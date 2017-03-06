@@ -2179,17 +2179,17 @@ static int64_t nTimePostConnect = 0;
  * part of a single ActivateBestChainStep call.
  *
  * This class also tracks transactions that are removed from the mempool as
- * conflicts and can be used to pass all those transactions through
- * SyncTransaction.
+ * conflicts (per block) and can be used to pass all those transactions
+ * through SyncTransaction.
  */
 class ConnectTrace {
 private:
     std::vector<std::pair<CBlockIndex*, std::shared_ptr<const CBlock> > > blocksConnected;
-    std::vector<CTransactionRef> conflictedTxs;
+    std::vector<std::vector<CTransactionRef> > conflictedTxs;
     CTxMemPool &pool;
 
 public:
-    ConnectTrace(CTxMemPool &_pool) : pool(_pool) {
+    ConnectTrace(CTxMemPool &_pool) : conflictedTxs(1), pool(_pool) {
         pool.NotifyEntryRemoved.connect(boost::bind(&ConnectTrace::NotifyEntryRemoved, this, _1, _2));
     }
 
@@ -2199,6 +2199,7 @@ public:
 
     void BlockConnected(CBlockIndex* pindex, std::shared_ptr<const CBlock> pblock) {
         blocksConnected.emplace_back(pindex, std::move(pblock));
+        conflictedTxs.emplace_back();
     }
 
     std::vector<std::pair<CBlockIndex*, std::shared_ptr<const CBlock> > >& GetBlocksConnected() {
@@ -2207,15 +2208,18 @@ public:
 
     void NotifyEntryRemoved(CTransactionRef txRemoved, MemPoolRemovalReason reason) {
         if (reason == MemPoolRemovalReason::CONFLICT) {
-            conflictedTxs.push_back(txRemoved);
+            conflictedTxs.back().push_back(txRemoved);
         }
     }
 
     void CallSyncTransactionOnConflictedTransactions() {
-        for (const auto& tx : conflictedTxs) {
-            GetMainSignals().SyncTransaction(*tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
+        for (const auto& txRemovedForBlock : conflictedTxs) {
+            for (const auto& tx : txRemovedForBlock) {
+                GetMainSignals().SyncTransaction(*tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
+            }
         }
         conflictedTxs.clear();
+        conflictedTxs.emplace_back();
     }
 };
 
