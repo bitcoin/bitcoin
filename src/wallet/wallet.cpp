@@ -2588,28 +2588,16 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 /**
  * Call after CreateTransaction unless you want to abort
  */
-bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
+bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CConnman* connman, CValidationState& state)
 {
     {
         LOCK2(cs_main, cs_wallet);
-		// SYSCOIN
-        if (fBroadcastTransactions)
-        {
-            // Broadcast
-			CValidationState state;
-            if (!wtxNew.AcceptToMemoryPool(false, maxTxFee, state))
-            {
-                LogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", state.GetRejectReason());
-                return false;
-            }
-        }
         LogPrintf("CommitTransaction:\n%s", wtxNew.ToString());
         {
             // This is only to keep the database open to defeat the auto-flush for the
             // duration of this scope.  This is the only place where this optimization
             // maybe makes sense; please don't do it anywhere else.
             CWalletDB* pwalletdb = fFileBacked ? new CWalletDB(strWalletFile,"r+") : NULL;
-
             // Take key pair from key pool so it won't be used again
             reservekey.KeepKey();
 
@@ -2625,17 +2613,22 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
                 coin.BindWallet(this);
                 NotifyTransactionChanged(this, coin.GetHash(), CT_UPDATED);
             }
-
-            if (fFileBacked)
+			if (fFileBacked)
                 delete pwalletdb;
         }
 
         // Track how many getdata requests our transaction gets
         mapRequestCount[wtxNew.GetHash()] = 0;
-		// SYSCOIN
+
         if (fBroadcastTransactions)
         {
-            wtxNew.RelayWalletTransaction();
+            // Broadcast
+            if (!wtxNew.AcceptToMemoryPool(maxTxFee, state)) {
+                LogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", state.GetRejectReason());
+                // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
+            } else {
+                wtxNew.RelayWalletTransaction(connman);
+            }
         }
     }
     return true;
