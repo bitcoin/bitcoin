@@ -4,23 +4,23 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Helpful routines for regression testing."""
 
-import os
-import sys
-
 from binascii import hexlify, unhexlify
 from base64 import b64encode
 from decimal import Decimal, ROUND_DOWN
-import json
+import errno
 import http.client
+import json
+import os
 import random
+import re
 import shutil
 import subprocess
+import sys
 import time
-import re
-import errno
 
 from . import coverage
-from .authproxy import AuthServiceProxy, JSONRPCException
+from .authproxy import (AuthServiceProxy,
+                        JSONRPCException)
 
 COVERAGE_DIR = None
 

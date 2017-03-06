@@ -4,12 +4,13 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test multiple RPC users."""
 
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import str_to_b64str, assert_equal
-
 import os
 import http.client
 import urllib.parse
+
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (assert_equal,
+                                 str_to_b64str)
 
 class HTTPBasicsTest (BitcoinTestFramework):
 

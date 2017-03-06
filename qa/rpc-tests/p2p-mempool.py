@@ -8,9 +8,17 @@ Test that nodes are disconnected if they send mempool messages when bloom
 filters are not enabled.
 """
 
-from test_framework.mininode import *
+from test_framework.mininode import (NetworkThread,
+                                     NodeConn,
+                                     NodeConnCB,
+                                     msg_mempool,
+                                     msg_ping,
+                                     msg_pong,
+                                     wait_until)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (assert_equal,
+                                 p2p_port,
+                                 start_node)
 
 class TestNode(NodeConnCB):
     def __init__(self):

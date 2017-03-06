@@ -11,12 +11,19 @@ In this test we connect to one node over p2p, and test block requests:
 re-requested.
 """
 
-from test_framework.test_framework import ComparisonTestFramework
-from test_framework.util import *
-from test_framework.comptool import TestManager, TestInstance, RejectResult
-from test_framework.blocktools import *
 import copy
 import time
+
+from test_framework.blocktools import (create_block,
+                                       create_coinbase,
+                                       create_transaction)
+from test_framework.comptool import (TestManager,
+                                     TestInstance,
+                                     RejectResult)
+from test_framework.mininode import (COIN,
+                                     NetworkThread)
+from test_framework.test_framework import ComparisonTestFramework
+from test_framework.util import assert_equal 
 
 # Use the ComparisonTestFramework with 1 node: only use --testbinary.
 class InvalidBlockRequestTest(ComparisonTestFramework):

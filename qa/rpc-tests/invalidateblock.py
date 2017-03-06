@@ -4,8 +4,12 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the invalidateblock RPC."""
 
+import time
+
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (connect_nodes_bi,
+                                 start_node,
+                                 sync_blocks)
 
 class InvalidateTest(BitcoinTestFramework):
     

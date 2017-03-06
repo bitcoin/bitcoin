@@ -16,16 +16,28 @@ test that enforcement has not triggered (which triggers ACTIVE)
 test that enforcement has triggered
 """
 
-from test_framework.blockstore import BlockStore
-from test_framework.test_framework import ComparisonTestFramework
-from test_framework.util import *
-from test_framework.mininode import CTransaction, NetworkThread
-from test_framework.blocktools import create_coinbase, create_block
-from test_framework.comptool import TestInstance, TestManager
-from test_framework.script import CScript, OP_1NEGATE, OP_CHECKSEQUENCEVERIFY, OP_DROP
 from io import BytesIO
-import time
 import itertools
+import shutil
+import time
+
+from test_framework.blockstore import BlockStore
+from test_framework.blocktools import (create_coinbase,
+                                       create_block)
+from test_framework.comptool import (TestInstance,
+                                     TestManager)
+from test_framework.mininode import (CTransaction,
+                                     NetworkThread)
+from test_framework.script import (CScript,
+                                   OP_1NEGATE,
+                                   OP_CHECKSEQUENCEVERIFY,
+                                   OP_DROP)
+from test_framework.test_framework import ComparisonTestFramework
+from test_framework.util import (assert_equal,
+                                 bytes_to_hex_str,
+                                 hex_str_to_bytes,
+                                 start_nodes,
+                                 stop_nodes)
 
 class BIP9SoftForksTest(ComparisonTestFramework):
 

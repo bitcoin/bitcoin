@@ -5,12 +5,10 @@
 """Test the preciousblock RPC."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (
-    assert_equal,
-    connect_nodes_bi,
-    sync_chain,
-    sync_blocks,
-)
+from test_framework.util import (assert_equal,
+                                 connect_nodes_bi,
+                                 sync_chain,
+                                 sync_blocks)
 
 def unidirectional_node_sync_via_rpc(node_src, node_dest):
     blocks_to_copy = []

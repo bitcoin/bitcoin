@@ -31,10 +31,22 @@ Shutdown again, restore using importwallet,
 and confirm again balances are correct.
 """
 
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from random import randint
+from decimal import Decimal
 import logging
+import os
+import sys
+from random import randint
+import shutil
+
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (assert_equal,
+                                 connect_nodes,
+                                 start_node,
+                                 start_nodes,
+                                 stop_node,
+                                 sync_blocks,
+                                 sync_mempools)
+
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO, stream=sys.stdout)
 
 class WalletBackupTest(BitcoinTestFramework):

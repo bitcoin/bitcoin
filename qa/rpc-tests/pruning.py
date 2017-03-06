@@ -9,10 +9,18 @@ This test uses 4GB of disk space.
 This test takes 30 mins or more (up to 2 hours)
 """
 
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
 import time
 import os
+
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (JSONRPCException,
+                                 assert_equal,
+                                 assert_greater_than,
+                                 assert_raises_message,
+                                 connect_nodes,
+                                 mine_large_block,
+                                 start_node,
+                                 sync_blocks)
 
 MIN_BLOCKS_TO_KEEP = 288
 

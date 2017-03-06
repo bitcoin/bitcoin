@@ -12,9 +12,15 @@
 - restart node 0 and verify that the confirmed transactions are still
   available, but that the unconfirmed transaction has been zapped.
 """
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
 
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (JSONRPCException,
+                                 assert_equal,
+                                 assert_raises,
+                                 bitcoind_processes,
+                                 connect_nodes_bi,
+                                 start_node,
+                                 start_nodes)
 
 class ZapWalletTXesTest (BitcoinTestFramework):
 

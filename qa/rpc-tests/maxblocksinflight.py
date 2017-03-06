@@ -10,10 +10,21 @@ test for exceeding 128 blocks in flight, which was the limit an 0.9 client will
 reach. [0.10 clients shouldn't request more than 16 from a single peer.]
 """
 
-from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
 import logging
+import os
+import random
+import time
+
+from test_framework.mininode import (CInv,
+                                     EarlyDisconnectError,
+                                     NetworkThread,
+                                     NodeConn,
+                                     NodeConnCB,
+                                     mininode_lock,
+                                     msg_inv)
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (p2p_port,
+                                 start_nodes)
 
 MAX_REQUESTS = 128
 

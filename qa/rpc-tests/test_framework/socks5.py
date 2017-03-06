@@ -4,8 +4,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Dummy Socks5 server for testing."""
 
-import socket, threading, queue
-import traceback, sys
+import queue
+import socket
+import sys
+import threading
+import traceback
 
 ### Protocol constants
 class Command:

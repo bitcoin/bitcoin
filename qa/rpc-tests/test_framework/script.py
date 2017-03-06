@@ -7,21 +7,26 @@
 This file is modified from python-bitcoinlib.
 """
 
-from .mininode import CTransaction, CTxOut, sha256, hash256, uint256_from_str, ser_uint256, ser_string
 from binascii import hexlify
 import hashlib
-
+import struct
 import sys
+
+from .bignum import bn2vch
+from .mininode import (CTransaction,
+                       CTxOut,
+                       hash256,
+                       ser_string,
+                       ser_uint256,
+                       sha256,
+                       uint256_from_str)
+
 bchr = chr
 bord = ord
 if sys.version > '3':
     long = int
     bchr = lambda x: bytes([x])
     bord = lambda x: x
-
-import struct
-
-from .bignum import bn2vch
 
 MAX_SCRIPT_SIZE = 10000
 MAX_SCRIPT_ELEMENT_SIZE = 520

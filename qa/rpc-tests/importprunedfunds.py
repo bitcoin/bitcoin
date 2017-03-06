@@ -3,9 +3,14 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the importprunedfunds and removeprunedfunds RPCs."""
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
 
+from decimal import Decimal
+
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (JSONRPCException,
+                                 assert_equal,
+                                 connect_nodes_bi,
+                                 start_nodes)
 
 class ImportPrunedFundsTest(BitcoinTestFramework):
 

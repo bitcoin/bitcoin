@@ -5,7 +5,9 @@
 """Test the CHECKLOCKTIMEVERIFY (BIP65) soft-fork logic."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (JSONRPCException,
+                                 connect_nodes,
+                                 start_node)
 
 class BIP65Test(BitcoinTestFramework):
     def __init__(self):

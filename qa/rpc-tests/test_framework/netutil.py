@@ -7,13 +7,14 @@
 Roughly based on http://voorloopnul.com/blog/a-python-netstat-in-less-than-100-lines-of-code/ by Ricardo Pascal
 """
 
-import sys
-import socket
-import fcntl
-import struct
+from binascii import (unhexlify,
+                      hexlify)
 import array
+import fcntl
 import os
-from binascii import unhexlify, hexlify
+import socket
+import struct
+import sys
 
 STATE_ESTABLISHED = '01'
 STATE_SYN_SENT  = '02'
