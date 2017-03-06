@@ -43,7 +43,7 @@ IS_SIGNED () {
 		export BITCOIN_VERIFY_COMMITS_ALLOW_REVSIG=0
 	fi
 
-	if ! git -c "gpg.program=${DIR}/gpg.sh" verify-commit $1 > /dev/null 2>&1; then
+	if ! git -c "gpg.program=${DIR}/gpg.sh" verify-commit $1 > /dev/null; then
 		return 1;
 	fi
 
