@@ -2212,7 +2212,17 @@ static int64_t nTimePostConnect = 0;
  * part of a single ActivateBestChainStep call.
  */
 struct ConnectTrace {
+private:
     std::vector<std::pair<CBlockIndex*, std::shared_ptr<const CBlock> > > blocksConnected;
+
+public:
+    void BlockConnected(CBlockIndex* pindex, std::shared_ptr<const CBlock> pblock) {
+        blocksConnected.emplace_back(pindex, std::move(pblock));
+    }
+
+    std::vector<std::pair<CBlockIndex*, std::shared_ptr<const CBlock> > >& GetBlocksConnected() {
+        return blocksConnected;
+    }
 };
 
 /**
@@ -2270,7 +2280,7 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
     LogPrint(BCLog::BENCH, "  - Connect postprocess: %.2fms [%.2fs]\n", (nTime6 - nTime5) * 0.001, nTimePostConnect * 0.000001);
     LogPrint(BCLog::BENCH, "- Connect block: %.2fms [%.2fs]\n", (nTime6 - nTime1) * 0.001, nTimeTotal * 0.000001);
 
-    connectTrace.blocksConnected.emplace_back(pindexNew, std::move(pthisBlock));
+    connectTrace.BlockConnected(pindexNew, std::move(pthisBlock));
     return true;
 }
 
@@ -2499,7 +2509,7 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
             } // MemPoolConflictRemovalTracker destroyed and conflict evictions are notified
 
             // Transactions in the connected block are notified
-            for (const auto& pair : connectTrace.blocksConnected) {
+            for (const auto& pair : connectTrace.GetBlocksConnected()) {
                 assert(pair.second);
                 const CBlock& block = *(pair.second);
                 for (unsigned int i = 0; i < block.vtx.size(); i++)
