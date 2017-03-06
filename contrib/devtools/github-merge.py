@@ -70,6 +70,14 @@ def ask_prompt(text):
     print("",file=stderr)
     return reply
 
+def get_symlink_files():
+    files = sorted(subprocess.check_output([GIT, 'ls-tree', '--full-tree', '-r', 'HEAD']).splitlines())
+    ret = []
+    for f in files:
+        if (int(f.decode('utf-8').split(" ")[0], 8) & 0o170000) == 0o120000:
+            ret.append(f.decode('utf-8').split("\t")[1])
+    return ret
+
 def tree_sha512sum():
     files = sorted(subprocess.check_output([GIT, 'ls-tree', '--full-tree', '-r', '--name-only', 'HEAD']).splitlines())
     overall = hashlib.sha512()
@@ -198,6 +206,12 @@ def main():
         logmsg = subprocess.check_output([GIT,'log','--pretty=format:%s','-n','1']).decode('utf-8')
         if logmsg.rstrip() != firstline.rstrip():
             print("ERROR: Creating merge failed (already merged?).",file=stderr)
+            exit(4)
+
+        symlink_files = get_symlink_files()
+        for f in symlink_files;
+            print("ERROR: File %s was a symlink" % f)
+        if len(symlink_files) > 0:
             exit(4)
 
         # Put tree SHA512 into the message
