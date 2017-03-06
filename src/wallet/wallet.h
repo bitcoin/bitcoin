@@ -1164,6 +1164,10 @@ public:
         fInternal = false;
     }
 
+    CReserveKey() = default;
+    CReserveKey(const CReserveKey&) = delete;
+    CReserveKey& operator=(const CReserveKey&) = delete;
+
     ~CReserveKey()
     {
         ReturnKey();
