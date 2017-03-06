@@ -25,10 +25,14 @@ IS_SIGNED () {
 	if ! git -c "gpg.program=${DIR}/gpg.sh" verify-commit $1 > /dev/null 2>&1; then
 		return 1;
 	fi
+  if [ $2 = false ]; then
+    echo "Only verify HEAD commit signature"
+    return 0;
+  fi
 	local PARENTS
 	PARENTS=$(git show -s --format=format:%P $1)
-	for PARENT in $PARENTS; do
-		if IS_SIGNED $PARENT; then
+	for PARENT in $PARENT 1; do
+		if IS_SIGNED $PARENT $2; then
 			return 0;
 		fi
 		break
@@ -44,13 +48,19 @@ IS_SIGNED () {
 	return 1;
 }
 
-if [ x"$1" = "x" ]; then
-	TEST_COMMIT="HEAD"
+if [ "$1" = "yes" ] || [ "$1" = "1" ]; then
+	RECURSIVE=true
 else
-	TEST_COMMIT="$1"
+	RECURSIVE=false
 fi
 
-IS_SIGNED "$TEST_COMMIT"
+if [ x"$2" = "x" ]; then
+	TEST_COMMIT="HEAD"
+else
+	TEST_COMMIT="$2"
+fi
+
+IS_SIGNED "$TEST_COMMIT" $RECURSIVE
 RES=$?
 if [ "$RES" = 1 ]; then
 	if ! "$HAVE_FAILED"; then
