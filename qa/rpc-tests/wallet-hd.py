@@ -10,6 +10,7 @@ from test_framework.util import (
     start_node,
     assert_equal,
     connect_nodes_bi,
+    assert_start_raises_init_error
 )
 import os
 import shutil
@@ -30,6 +31,12 @@ class WalletHDTest(BitcoinTestFramework):
 
     def run_test (self):
         tmpdir = self.options.tmpdir
+
+        # Make sure can't switch off usehd after wallet creation
+        self.stop_node(1)
+        assert_start_raises_init_error(1, self.options.tmpdir, ['-usehd=0'], 'already existing HD wallet')
+        self.nodes[1] = start_node(1, self.options.tmpdir, self.node_args[1])
+        connect_nodes_bi(self.nodes, 0, 1)
 
         # Make sure we use hd, keep masterkeyid
         masterkeyid = self.nodes[1].getwalletinfo()['hdmasterkeyid']
