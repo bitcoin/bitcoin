@@ -14,6 +14,9 @@ REVSIG_ALLOWED=$(cat "${DIR}/allow-revsig-commits")
 
 HAVE_FAILED=false
 
+HAVE_GNU_SHA512=1
+[ ! -x "$(which sha512sum)" ] && HAVE_GNU_SHA512=0
+
 if [ x"$1" = "x" ]; then
 	CURRENT_COMMIT="HEAD"
 else
@@ -91,16 +94,26 @@ while true; do
 
 		FILE_HASHES=""
 		for FILE in $(git ls-tree --full-tree -r --name-only "$CURRENT_COMMIT" | LC_ALL=C sort); do
-			HASH=$(git cat-file blob "$CURRENT_COMMIT":"$FILE" | sha512sum | { read FIRST OTHER; echo $FIRST; } )
+			if [ "$HAVE_GNU_SHA512" = 1 ]; then
+				HASH=$(git cat-file blob "$CURRENT_COMMIT":"$FILE" | sha512sum | { read FIRST OTHER; echo $FIRST; } )
+			else
+				HASH=$(git cat-file blob "$CURRENT_COMMIT":"$FILE" | shasum -a 512 | { read FIRST OTHER; echo $FIRST; } )
+			fi
 			[ "$FILE_HASHES" != "" ] && FILE_HASHES="$FILE_HASHES"'
 '
 			FILE_HASHES="$FILE_HASHES$HASH  $FILE"
 		done
+
+		if [ "$HAVE_GNU_SHA512" = 1 ]; then
+			TREE_HASH="$(echo "$FILE_HASHES" | sha512sum)"
+		else
+			TREE_HASH="$(echo "$FILE_HASHES" | shasum -a 512)"
+		fi
 		HASH_MATCHES=0
 		MSG="$(git show -s --format=format:%B "$CURRENT_COMMIT" | tail -n1)"
 
 		case "$MSG  -" in
-			"Tree-SHA512: $(echo "$FILE_HASHES" | sha512sum)")
+			"Tree-SHA512: $TREE_HASH")
 				HASH_MATCHES=1;;
 		esac
 
