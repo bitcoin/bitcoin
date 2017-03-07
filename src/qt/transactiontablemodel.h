@@ -7,8 +7,10 @@
 #define BITCOIN_QT_TRANSACTIONTABLEMODEL_H
 
 #include "bitcoinunits.h"
+#ifdef ENABLE_WALLET
 #include "transactionrecord.h"
-
+#endif
+#include "script/script.h"
 #include <QAbstractTableModel>
 #include <QStringList>
 
