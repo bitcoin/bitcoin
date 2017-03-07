@@ -83,6 +83,9 @@ Low-level RPC changes
   * `getwalletinfo`
   * `getmininginfo`
 
+- `dumpwallet` no longer allows overwriting files. This is a security measure
+  as well as prevents dangerous user mistakes.
+
 Credits
 =======
 
