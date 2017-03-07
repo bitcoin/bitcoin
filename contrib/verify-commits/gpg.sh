@@ -19,8 +19,20 @@ else
 	# an attacker could construct a pull-req that results in a commit object that
 	# they've created a collision for. Not the most likely attack, but preventing
 	# it is pretty easy so we do so as a "belt-and-suspenders" measure.
-
-	GPG_RES="$(echo "$INPUT" | gpg --trust-model always --weak-digest sha1 "$@" 2>/dev/null)"
+	GPG_RES=""
+	for LINE in "$(gpg --version)"; do
+		case "$LINE" in
+			"gpg (GnuPG) 1.4.1"*|"gpg (GnuPG) 2.0."*)
+				echo "Please upgrade to at least gpg 2.1.10 to check for weak signatures" > /dev/stderr
+				GPG_RES="$(echo "$INPUT" | gpg --trust-model always "$@" 2>/dev/null)"
+				;;
+			# We assume if you're running 2.1+, you're probably running 2.1.10+
+			# gpg will fail otherwise
+			# We assume if you're running 1.X, it is either 1.4.1X or 1.4.20+
+			# gpg will fail otherwise
+		esac
+	done
+	[ "$GPG_RES" = "" ] && GPG_RES="$(echo "$INPUT" | gpg --trust-model always --weak-digest sha1 "$@" 2>/dev/null)"
 fi
 for LINE in $(echo "$GPG_RES"); do
 	case "$LINE" in
@@ -40,7 +52,7 @@ if ! $VALID; then
 	exit 1
 fi
 if $VALID && $REVSIG; then
-	echo "$INPUT" | gpg --trust-model always "$@" | grep "\[GNUPG:\] \(NEWSIG\|SIG_ID\|VALIDSIG\)" 2>/dev/null
+	echo "$INPUT" | gpg --trust-model always "$@" 2>/dev/null | grep "\[GNUPG:\] \(NEWSIG\|SIG_ID\|VALIDSIG\)"
 	echo "$GOODREVSIG"
 else
 	echo "$INPUT" | gpg --trust-model always "$@" 2>/dev/null
