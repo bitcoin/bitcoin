@@ -124,7 +124,7 @@ class SegWitTest(BitcoinTestFramework):
     def run_test(self):
         self.nodes[0].generate(161) #block 161
 
-        print("Verify sigops are counted in GBT with pre-BIP141 rules before the fork")
+        self.log.info("Verify sigops are counted in GBT with pre-BIP141 rules before the fork")
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         tmpl = self.nodes[0].getblocktemplate({})
         assert(tmpl['sizelimit'] == 1000000)
@@ -173,7 +173,7 @@ class SegWitTest(BitcoinTestFramework):
         self.nodes[0].generate(260) #block 423
         sync_blocks(self.nodes)
 
-        print("Verify default node can't accept any witness format txs before fork")
+        self.log.info("Verify default node can't accept any witness format txs before fork")
         # unsigned, no scriptsig
         self.fail_accept(self.nodes[0], wit_ids[NODE_0][WIT_V0][0], False)
         self.fail_accept(self.nodes[0], wit_ids[NODE_0][WIT_V1][0], False)
@@ -188,7 +188,7 @@ class SegWitTest(BitcoinTestFramework):
         self.fail_accept(self.nodes[0], p2sh_ids[NODE_0][WIT_V0][0], True)
         self.fail_accept(self.nodes[0], p2sh_ids[NODE_0][WIT_V1][0], True)
 
-        print("Verify witness txs are skipped for mining before the fork")
+        self.log.info("Verify witness txs are skipped for mining before the fork")
         self.skip_mine(self.nodes[2], wit_ids[NODE_2][WIT_V0][0], True) #block 424
         self.skip_mine(self.nodes[2], wit_ids[NODE_2][WIT_V1][0], True) #block 425
         self.skip_mine(self.nodes[2], p2sh_ids[NODE_2][WIT_V0][0], True) #block 426
@@ -196,19 +196,19 @@ class SegWitTest(BitcoinTestFramework):
 
         # TODO: An old node would see these txs without witnesses and be able to mine them
 
-        print("Verify unsigned bare witness txs in versionbits-setting blocks are valid before the fork")
+        self.log.info("Verify unsigned bare witness txs in versionbits-setting blocks are valid before the fork")
         self.success_mine(self.nodes[2], wit_ids[NODE_2][WIT_V0][1], False) #block 428
         self.success_mine(self.nodes[2], wit_ids[NODE_2][WIT_V1][1], False) #block 429
 
-        print("Verify unsigned p2sh witness txs without a redeem script are invalid")
+        self.log.info("Verify unsigned p2sh witness txs without a redeem script are invalid")
         self.fail_accept(self.nodes[2], p2sh_ids[NODE_2][WIT_V0][1], False)
         self.fail_accept(self.nodes[2], p2sh_ids[NODE_2][WIT_V1][1], False)
 
-        print("Verify unsigned p2sh witness txs with a redeem script in versionbits-settings blocks are valid before the fork")
+        self.log.info("Verify unsigned p2sh witness txs with a redeem script in versionbits-settings blocks are valid before the fork")
         self.success_mine(self.nodes[2], p2sh_ids[NODE_2][WIT_V0][1], False, addlength(witness_script(0, self.pubkey[2]))) #block 430
         self.success_mine(self.nodes[2], p2sh_ids[NODE_2][WIT_V1][1], False, addlength(witness_script(1, self.pubkey[2]))) #block 431
 
-        print("Verify previous witness txs skipped for mining can now be mined")
+        self.log.info("Verify previous witness txs skipped for mining can now be mined")
         assert_equal(len(self.nodes[2].getrawmempool()), 4)
         block = self.nodes[2].generate(1) #block 432 (first block with new rules; 432 = 144 * 3)
         sync_blocks(self.nodes)
@@ -216,7 +216,7 @@ class SegWitTest(BitcoinTestFramework):
         segwit_tx_list = self.nodes[2].getblock(block[0])["tx"]
         assert_equal(len(segwit_tx_list), 5)
 
-        print("Verify block and transaction serialization rpcs return differing serializations depending on rpc serialization flag")
+        self.log.info("Verify block and transaction serialization rpcs return differing serializations depending on rpc serialization flag")
         assert(self.nodes[2].getblock(block[0], False) !=  self.nodes[0].getblock(block[0], False))
         assert(self.nodes[1].getblock(block[0], False) ==  self.nodes[2].getblock(block[0], False))
         for i in range(len(segwit_tx_list)):
@@ -227,19 +227,19 @@ class SegWitTest(BitcoinTestFramework):
             assert(self.nodes[1].getrawtransaction(segwit_tx_list[i]) == self.nodes[2].gettransaction(segwit_tx_list[i])["hex"])
             assert(self.nodes[0].getrawtransaction(segwit_tx_list[i]) == bytes_to_hex_str(tx.serialize_without_witness()))
 
-        print("Verify witness txs without witness data are invalid after the fork")
+        self.log.info("Verify witness txs without witness data are invalid after the fork")
         self.fail_mine(self.nodes[2], wit_ids[NODE_2][WIT_V0][2], False)
         self.fail_mine(self.nodes[2], wit_ids[NODE_2][WIT_V1][2], False)
         self.fail_mine(self.nodes[2], p2sh_ids[NODE_2][WIT_V0][2], False, addlength(witness_script(0, self.pubkey[2])))
         self.fail_mine(self.nodes[2], p2sh_ids[NODE_2][WIT_V1][2], False, addlength(witness_script(1, self.pubkey[2])))
 
-        print("Verify default node can now use witness txs")
+        self.log.info("Verify default node can now use witness txs")
         self.success_mine(self.nodes[0], wit_ids[NODE_0][WIT_V0][0], True) #block 432
         self.success_mine(self.nodes[0], wit_ids[NODE_0][WIT_V1][0], True) #block 433
         self.success_mine(self.nodes[0], p2sh_ids[NODE_0][WIT_V0][0], True) #block 434
         self.success_mine(self.nodes[0], p2sh_ids[NODE_0][WIT_V1][0], True) #block 435
 
-        print("Verify sigops are counted in GBT with BIP141 rules after the fork")
+        self.log.info("Verify sigops are counted in GBT with BIP141 rules after the fork")
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         tmpl = self.nodes[0].getblocktemplate({'rules':['segwit']})
         assert(tmpl['sizelimit'] >= 3999577)  # actual maximum size is lower due to minimum mandatory non-witness data
@@ -248,11 +248,11 @@ class SegWitTest(BitcoinTestFramework):
         assert(tmpl['transactions'][0]['txid'] == txid)
         assert(tmpl['transactions'][0]['sigops'] == 8)
 
-        print("Non-segwit miners are not able to use GBT response after activation.")
+        self.log.info("Non-segwit miners are not able to use GBT response after activation.")
         send_to_witness(1, self.nodes[0], find_unspent(self.nodes[0], 50), self.pubkey[0], False, Decimal("49.998"))
         assert_raises_jsonrpc(-8, "Support for 'segwit' rule requires explicit client support", self.nodes[0].getblocktemplate, {})
 
-        print("Verify behaviour of importaddress, addwitnessaddress and listunspent")
+        self.log.info("Verify behaviour of importaddress, addwitnessaddress and listunspent")
 
         # Some public keys to be used later
         pubkeys = [

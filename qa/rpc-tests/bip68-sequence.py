@@ -34,26 +34,26 @@ class BIP68Test(BitcoinTestFramework):
         # Generate some coins
         self.nodes[0].generate(110)
 
-        print("Running test disable flag")
+        self.log.info("Running test disable flag")
         self.test_disable_flag()
 
-        print("Running test sequence-lock-confirmed-inputs")
+        self.log.info("Running test sequence-lock-confirmed-inputs")
         self.test_sequence_lock_confirmed_inputs()
 
-        print("Running test sequence-lock-unconfirmed-inputs")
+        self.log.info("Running test sequence-lock-unconfirmed-inputs")
         self.test_sequence_lock_unconfirmed_inputs()
 
-        print("Running test BIP68 not consensus before versionbits activation")
+        self.log.info("Running test BIP68 not consensus before versionbits activation")
         self.test_bip68_not_consensus()
 
-        print("Activating BIP68 (and 112/113)")
+        self.log.info("Activating BIP68 (and 112/113)")
         self.activateCSV()
 
-        print("Verifying nVersion=2 transactions are standard.")
-        print("Note that with current versions of bitcoin software, nVersion=2 transactions are always standard (independent of BIP68 activation status).")
+        self.log.info("Verifying nVersion=2 transactions are standard.")
+        self.log.info("Note that nVersion=2 transactions are always standard (independent of BIP68 activation status).")
         self.test_version2_relay()
 
-        print("Passed\n")
+        self.log.info("Passed")
 
     # Test that BIP68 is not in effect if tx version is 1, or if
     # the first sequence bit is set.

@@ -32,7 +32,7 @@ class CLazyNode(NodeConnCB):
 
     def bad_message(self, message):
         self.unexpected_msg = True
-        print("should not have received message: %s" % message.command)
+        self.log.info("should not have received message: %s" % message.command)
 
     def on_open(self, conn):
         self.connected = True

@@ -158,9 +158,9 @@ class AbandonConflictTest(BitcoinTestFramework):
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
         newbalance = self.nodes[0].getbalance()
         #assert_equal(newbalance, balance - Decimal("10"))
-        print("If balance has not declined after invalidateblock then out of mempool wallet tx which is no longer")
-        print("conflicted has not resumed causing its inputs to be seen as spent.  See Issue #7315")
-        print(str(balance) + " -> " + str(newbalance) + " ?")
+        self.log.info("If balance has not declined after invalidateblock then out of mempool wallet tx which is no longer")
+        self.log.info("conflicted has not resumed causing its inputs to be seen as spent.  See Issue #7315")
+        self.log.info(str(balance) + " -> " + str(newbalance) + " ?")
 
 if __name__ == '__main__':
     AbandonConflictTest().main()

@@ -36,7 +36,7 @@ class ReindexTest(BitcoinTestFramework):
         while self.nodes[0].getblockcount() < blockcount:
             time.sleep(0.1)
         assert_equal(self.nodes[0].getblockcount(), blockcount)
-        print("Success")
+        self.log.info("Success")
 
     def run_test(self):
         self.reindex(False)
