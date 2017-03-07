@@ -297,13 +297,13 @@ bool CBlockPolicyEstimator::removeTx(uint256 hash)
     }
 }
 
-CBlockPolicyEstimator::CBlockPolicyEstimator(const CFeeRate& _minRelayFee)
+CBlockPolicyEstimator::CBlockPolicyEstimator()
     : nBestSeenHeight(0), trackedTxs(0), untrackedTxs(0)
 {
-    static_assert(MIN_FEERATE > 0, "Min feerate must be nonzero");
-    minTrackedFee = _minRelayFee < CFeeRate(MIN_FEERATE) ? CFeeRate(MIN_FEERATE) : _minRelayFee;
+    static_assert(MIN_BUCKET_FEERATE > 0, "Min feerate must be nonzero");
+    minTrackedFee = CFeeRate(MIN_BUCKET_FEERATE);
     std::vector<double> vfeelist;
-    for (double bucketBoundary = minTrackedFee.GetFeePerK(); bucketBoundary <= MAX_FEERATE; bucketBoundary *= FEE_SPACING) {
+    for (double bucketBoundary = minTrackedFee.GetFeePerK(); bucketBoundary <= MAX_BUCKET_FEERATE; bucketBoundary *= FEE_SPACING) {
         vfeelist.push_back(bucketBoundary);
     }
     vfeelist.push_back(INF_FEERATE);

@@ -554,7 +554,7 @@ public:
 
     /** Create a new CTxMemPool.
      */
-    CTxMemPool(const CFeeRate& _minReasonableRelayFee);
+    CTxMemPool();
     ~CTxMemPool();
 
     /**
