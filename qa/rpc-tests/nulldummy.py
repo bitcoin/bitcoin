@@ -66,38 +66,38 @@ class NULLDUMMYTest(BitcoinTestFramework):
 
         self.log.info("Test 1: NULLDUMMY compliant base transactions should be accepted to mempool and mined before activation [430]")
         test1txs = [self.create_transaction(self.nodes[0], coinbase_txid[0], self.ms_address, 49)]
-        txid1 = self.tx_submit(self.nodes[0], test1txs[0])
+        txid1 = self.nodes[0].sendrawtransaction(bytes_to_hex_str(test1txs[0].serialize_with_witness()), True)
         test1txs.append(self.create_transaction(self.nodes[0], txid1, self.ms_address, 48))
-        txid2 = self.tx_submit(self.nodes[0], test1txs[1])
+        txid2 = self.nodes[0].sendrawtransaction(bytes_to_hex_str(test1txs[1].serialize_with_witness()), True)
         test1txs.append(self.create_transaction(self.nodes[0], coinbase_txid[1], self.wit_ms_address, 49))
-        txid3 = self.tx_submit(self.nodes[0], test1txs[2])
+        txid3 = self.nodes[0].sendrawtransaction(bytes_to_hex_str(test1txs[2].serialize_with_witness()), True)
         self.block_submit(self.nodes[0], test1txs, False, True)
 
         self.log.info("Test 2: Non-NULLDUMMY base multisig transaction should not be accepted to mempool before activation")
         test2tx = self.create_transaction(self.nodes[0], txid2, self.ms_address, 47)
         trueDummy(test2tx)
-        txid4 = self.tx_submit(self.nodes[0], test2tx, NULLDUMMY_ERROR)
+        assert_raises_jsonrpc(-26, NULLDUMMY_ERROR, self.nodes[0].sendrawtransaction, bytes_to_hex_str(test2tx.serialize_with_witness()), True)
 
         self.log.info("Test 3: Non-NULLDUMMY base transactions should be accepted in a block before activation [431]")
         self.block_submit(self.nodes[0], [test2tx], False, True)
 
-        self.log.info("Test 4: Non-NULLDUMMY base multisig transaction is invalid after activation")
-        test4tx = self.create_transaction(self.nodes[0], txid4, self.address, 46)
+        self.log.info ("Test 4: Non-NULLDUMMY base multisig transaction is invalid after activation")
+        test4tx = self.create_transaction(self.nodes[0], test2tx.hash, self.address, 46)
         test6txs=[CTransaction(test4tx)]
         trueDummy(test4tx)
-        self.tx_submit(self.nodes[0], test4tx, NULLDUMMY_ERROR)
+        assert_raises_jsonrpc(-26, NULLDUMMY_ERROR, self.nodes[0].sendrawtransaction, bytes_to_hex_str(test4tx.serialize_with_witness()), True)
         self.block_submit(self.nodes[0], [test4tx])
 
-        self.log.info("Test 5: Non-NULLDUMMY P2WSH multisig transaction invalid after activation")
+        print ("Test 5: Non-NULLDUMMY P2WSH multisig transaction invalid after activation")
         test5tx = self.create_transaction(self.nodes[0], txid3, self.wit_address, 48)
         test6txs.append(CTransaction(test5tx))
         test5tx.wit.vtxinwit[0].scriptWitness.stack[0] = b'\x01'
-        self.tx_submit(self.nodes[0], test5tx, NULLDUMMY_ERROR)
+        assert_raises_jsonrpc(-26, NULLDUMMY_ERROR, self.nodes[0].sendrawtransaction, bytes_to_hex_str(test5tx.serialize_with_witness()), True)
         self.block_submit(self.nodes[0], [test5tx], True)
 
         self.log.info("Test 6: NULLDUMMY compliant base/witness transactions should be accepted to mempool and in block after activation [432]")
         for i in test6txs:
-            self.tx_submit(self.nodes[0], i)
+            self.nodes[0].sendrawtransaction(bytes_to_hex_str(i.serialize_with_witness()), True)
         self.block_submit(self.nodes[0], test6txs, True, True)
 
 
@@ -110,17 +110,6 @@ class NULLDUMMYTest(BitcoinTestFramework):
         f = BytesIO(hex_str_to_bytes(signresult['hex']))
         tx.deserialize(f)
         return tx
-
-
-    def tx_submit(self, node, tx, msg = ""):
-        tx.rehash()
-        try:
-            node.sendrawtransaction(bytes_to_hex_str(tx.serialize_with_witness()), True)
-        except JSONRPCException as exp:
-            assert_equal(exp.error["message"], msg)
-        else:
-            assert_equal('', msg)
-        return tx.hash
 
 
     def block_submit(self, node, txs, witness = False, accept = False):

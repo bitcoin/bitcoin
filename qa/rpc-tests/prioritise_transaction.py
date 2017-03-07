@@ -107,13 +107,9 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         tx_hex = self.nodes[0].signrawtransaction(raw_tx)["hex"]
         tx_id = self.nodes[0].decoderawtransaction(tx_hex)["txid"]
 
-        try:
-            self.nodes[0].sendrawtransaction(tx_hex)
-        except JSONRPCException as exp:
-            assert_equal(exp.error['code'], -26) # insufficient fee
-            assert(tx_id not in self.nodes[0].getrawmempool())
-        else:
-            assert(False)
+        # This will raise an exception due to min relay fee not being met
+        assert_raises_jsonrpc(-26, "66: min relay fee not met", self.nodes[0].sendrawtransaction, tx_hex)
+        assert(tx_id not in self.nodes[0].getrawmempool())
 
         # This is a less than 1000-byte transaction, so just set the fee
         # to be the minimum for a 1000 byte transaction and check that it is
