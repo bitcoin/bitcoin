@@ -4276,7 +4276,7 @@ void DumpMempool(void)
         uint64_t version = MEMPOOL_DUMP_VERSION;
         file << version;
 
-        file << (uint64_t)vinfo.size();
+        file << vinfo.size();
         for (const auto& i : vinfo) {
             file << *(i.tx);
             file << (int64_t)i.nTime;

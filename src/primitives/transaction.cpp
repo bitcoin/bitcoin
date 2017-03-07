@@ -108,7 +108,7 @@ unsigned int CTransaction::CalculateModifiedSize(unsigned int nTxSize) const
         nTxSize = (GetTransactionWeight(*this) + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR;
     for (std::vector<CTxIn>::const_iterator it(vin.begin()); it != vin.end(); ++it)
     {
-        unsigned int offset = 41U + std::min(110U, (unsigned int)it->scriptSig.size());
+        unsigned int offset = 41U + std::min(110U, it->scriptSig.size());
         if (nTxSize > offset)
             nTxSize -= offset;
     }
