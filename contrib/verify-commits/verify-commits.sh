@@ -43,11 +43,12 @@ IS_SIGNED () {
 		export BITCOIN_VERIFY_COMMITS_ALLOW_REVSIG=0
 	fi
 
-	if ! git -c "gpg.program=${DIR}/gpg.sh" verify-commit $1 > /dev/null 2>&1; then
+	if ! git -c "gpg.program=${DIR}/gpg.sh" verify-commit $1 > /dev/null; then
 		return 1;
 	fi
 
-	if [ "$VERIFY_TREE" = 1 ]; then
+	# We set $4 to 1 on the first call, always verifying the top of the tree
+	if [ "$VERIFY_TREE" = 1 -o "$4" = "1" ]; then
 		IFS_CACHE="$IFS"
 		IFS='
 '
@@ -63,9 +64,10 @@ IS_SIGNED () {
 		IFS="$IFS_CACHE"
 
 		FILE_HASHES=""
-		for FILE in $(git ls-tree --full-tree -r --name-only $1 | LANG=C sort); do
+		for FILE in $(git ls-tree --full-tree -r --name-only $1 | LC_ALL=C sort); do
 			HASH=$(git cat-file blob $1:"$FILE" | sha512sum | { read FIRST OTHER; echo $FIRST; } )
-			[ "$FILE_HASHES" != "" ] && FILE_HASHES="$FILE_HASHES"$'\n'
+			[ "$FILE_HASHES" != "" ] && FILE_HASHES="$FILE_HASHES"'
+'
 			FILE_HASHES="$FILE_HASHES$HASH  $FILE"
 		done
 		HASH_MATCHES=0
@@ -86,7 +88,7 @@ IS_SIGNED () {
 	local PARENTS
 	PARENTS=$(git show -s --format=format:%P $1)
 	for PARENT in $PARENTS; do
-		if IS_SIGNED $PARENT $VERIFY_TREE $NO_SHA1; then
+		if IS_SIGNED $PARENT $VERIFY_TREE $NO_SHA1 0; then
 			return 0;
 		fi
 		break
@@ -111,10 +113,9 @@ fi
 DO_CHECKOUT_TEST=0
 if [ x"$2" = "x--tree-checks" ]; then
 	DO_CHECKOUT_TEST=1
-
 fi
 
-IS_SIGNED "$TEST_COMMIT" "$DO_CHECKOUT_TEST" 1
+IS_SIGNED "$TEST_COMMIT" "$DO_CHECKOUT_TEST" 1 1
 RES=$?
 if [ "$RES" = 1 ]; then
 	if ! "$HAVE_FAILED"; then
