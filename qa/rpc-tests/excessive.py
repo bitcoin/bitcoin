@@ -19,6 +19,7 @@ from test_framework.blocktools import *
 import test_framework.script as script
 import pdb
 import sys
+if sys.version_info[0] < 3: raise "Use Python 3"
 import logging
 logging.basicConfig(format='%(asctime)s.%(levelname)s: %(message)s', level=logging.INFO)
 
@@ -42,16 +43,44 @@ class ExcessiveBlockTest (BitcoinTestFramework):
                # It is left here for developers to manually enable.
           TEST_SIZE=100 # TMP 00
           print("Creating addresses...")
+          self.nodes[0].keypoolrefill(TEST_SIZE+1)
           addrs = [ self.nodes[0].getnewaddress() for _ in range(TEST_SIZE+1)]
           with open("walletAddrs.json","w") as f: 
             f.write(str(addrs))
             pdb.set_trace()
 
     def run_test(self):
-        BitcoinTestFramework.run_test (self)
+        BitcoinTestFramework.run_test(self)
+        self.testCli()
         self.testExcessiveSigops()
         self.testExcessiveBlockSize()
         self.testExcessiveTx()
+
+    def testCli(self):
+
+        # Assumes the default excessive at 16MB and mining at 1MB
+        try:
+            self.nodes[0].setminingmaxblock(32000000)
+        except JSONRPCException as e:
+            pass
+        else:
+            assert(0) # was able to set the mining size > the excessive size
+
+        try:
+            self.nodes[0].setminingmaxblock(99)
+        except JSONRPCException as e:
+            pass
+        else:
+            assert(0) # was able to set the mining size below our arbitrary minimum
+
+        try:
+            self.nodes[0].setexcessiveblock(1000,10)
+        except JSONRPCException as e:
+            pass
+        else:
+            assert(0) # was able to set the excessive size < the mining size
+        
+        
 
     def createUtxos(self,node,addrs,amt):
           wallet = node.listunspent()
@@ -122,6 +151,7 @@ class ExcessiveBlockTest (BitcoinTestFramework):
       self.nodes[3].set("net.excessiveSigopsPerMb=100")
 
       logging.info("Creating addresses...")
+      self.nodes[0].keypoolrefill(NUM_ADDRS)
       addrs = [ self.nodes[0].getnewaddress() for _ in range(NUM_ADDRS)]
 
       # test that a < 1MB block ignores the sigops parameter
@@ -235,6 +265,7 @@ class ExcessiveBlockTest (BitcoinTestFramework):
 
         if 1:
           logging.info("Creating addresses...")
+          self.nodes[0].keypoolrefill(TEST_SIZE+1)
           addrs = [ self.nodes[0].getnewaddress() for _ in range(TEST_SIZE+1)]
         else:  # enable if you are using a pre-created wallet, as described above
           logging.info("Loading addresses...")
@@ -312,6 +343,7 @@ class ExcessiveBlockTest (BitcoinTestFramework):
         if self.extended:  # this test checks the behavior of > 1MB blocks with excessive transactions.  it takes a LONG time to generate and propagate 1MB+ txs.
 
           logging.info("Creating addresses...")
+          self.nodes[0].keypoolrefill(2000)
           addrs = [ self.nodes[0].getnewaddress() for _ in range(2000)]
           # Create a LOT of UTXOs for the next test
           wallet = self.nodes[0].listunspent()
@@ -505,8 +537,8 @@ class ExcessiveBlockTest (BitcoinTestFramework):
         self.sync_all()
 
         # counts = [ x.getblockcount() for x in self.nodes ]
-        self.nodes[1].setminingmaxblock(100000)  # not sure how big the txns will be but smaller than this 
         self.nodes[1].setexcessiveblock(100000, 1)  # not sure how big the txns will be but smaller than this 
+        self.nodes[1].setminingmaxblock(100000)  # not sure how big the txns will be but smaller than this 
         self.repeatTx(40,self.nodes[0],addr)
         self.sync_all()
         base = self.nodes[0].getblockcount()
@@ -524,8 +556,13 @@ class ExcessiveBlockTest (BitcoinTestFramework):
           logging.info("round %d" % i)
           for n in self.nodes:
             size = random.randint(1,1000)*1000
-            n.setminingmaxblock(size)
-            n.setexcessiveblock(size, random.randint(0,10))
+            try:  # since miningmaxblock must be <= excessiveblock, raising/lowering may need to run these in different order
+              n.setminingmaxblock(size)
+              n.setexcessiveblock(size, random.randint(0,10))
+            except JSONRPCException:
+              n.setexcessiveblock(size, random.randint(0,10))
+              n.setminingmaxblock(size)
+               
           addrs = [x.getnewaddress() for x in self.nodes]
           ntxs=0
           for i in range(0,random.randint(1,200)):

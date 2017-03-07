@@ -40,6 +40,7 @@ using namespace std;
 
 extern CTxMemPool mempool; // from main.cpp
 static boost::atomic<uint64_t> nLargestBlockSeen(BLOCKSTREAM_CORE_MAX_BLOCK_SIZE); // track the largest block we've seen
+extern CTweakRef<uint64_t> miningBlockSize;
 
 bool IsTrafficShapingEnabled();
 
@@ -597,6 +598,12 @@ void UnlimitedSetup(void)
     excessiveAcceptDepth = GetArg("-excessiveacceptdepth", excessiveAcceptDepth);
     LoadTweaks();  // The above options are deprecated so the same parameter defined as a tweak will override them
 
+    if (maxGeneratedBlock > excessiveBlockSize)
+      {
+        LogPrintf("Reducing the maximum mined block from the configured %d to your excessive block size %d.  Otherwise you would orphan your own blocks.\n", maxGeneratedBlock, excessiveBlockSize);
+        maxGeneratedBlock = excessiveBlockSize;
+      }
+    
     settingsToUserAgentString();
     //  Init network shapers
     int64_t rb = GetArg("-receiveburst", DEFAULT_MAX_RECV_BURST);
@@ -888,9 +895,10 @@ UniValue setminingmaxblock(const UniValue& params, bool fHelp)
     if (arg < 100)
         throw runtime_error("max generated block size must be greater than 100 bytes");
 
-    maxGeneratedBlock = arg;
-
-    return NullUniValue;
+    std::string ret = miningBlockSize.Validate(params[0]);
+    if (!ret.empty())
+      throw runtime_error(ret.c_str());
+    return miningBlockSize.Set(params[0]);
 }
 
 UniValue getblockversion(const UniValue& params, bool fHelp)
