@@ -15,10 +15,10 @@
 #define OMNICORE_VERSION_MAJOR       0
 
 // Increase with every non-consensus affecting feature
-#define OMNICORE_VERSION_MINOR       1
+#define OMNICORE_VERSION_MINOR       2
 
 // Increase with every patch, which is not a feature or consensus affecting
-#define OMNICORE_VERSION_PATCH       99
+#define OMNICORE_VERSION_PATCH       0
 
 // Non-public build number/revision (usually zero)
 #define OMNICORE_VERSION_BUILD       0
