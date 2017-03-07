@@ -65,6 +65,9 @@ Notable changes
 0.15.1 Change log
 =================
 
+- `dumpwallet` no longer allows overwriting files. This is a security measure
+  as well as prevents dangerous user mistakes.
+
 Credits
 =======
 
