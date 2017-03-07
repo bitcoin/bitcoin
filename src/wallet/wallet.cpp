@@ -1952,6 +1952,8 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
 
     {
         LOCK2(cs_main, cs_wallet);
+
+        std::map<CScript, isminetype> mapOutputIsMine;
         for (std::map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const uint256& wtxid = it->first;
@@ -2010,8 +2012,13 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
             }
 
             for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
-                isminetype mine = IsMine(pcoin->tx->vout[i]);
-                if (!(IsSpent(wtxid, i)) && mine != ISMINE_NO &&
+                auto inserted = mapOutputIsMine.emplace(pcoin->tx->vout[i].scriptPubKey, ISMINE_NO);
+                if (inserted.second) {
+                   inserted.first->second = IsMine(pcoin->tx->vout[i]);
+                }
+                isminetype mine = inserted.first->second;
+
+                if (mine != ISMINE_NO && !(IsSpent(wtxid, i)) &&
                     !IsLockedCoin((*it).first, i) && (pcoin->tx->vout[i].nValue > 0 || fIncludeZeroValue) &&
                     (!coinControl || !coinControl->HasSelected() || coinControl->fAllowOtherInputs || coinControl->IsSelected(COutPoint((*it).first, i))))
                         vCoins.push_back(COutput(pcoin, i, nDepth,
