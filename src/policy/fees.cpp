@@ -477,7 +477,7 @@ bool CBlockPolicyEstimator::removeTx(uint256 hash, bool inBlock)
 }
 
 CBlockPolicyEstimator::CBlockPolicyEstimator()
-    : nBestSeenHeight(0), trackedTxs(0), untrackedTxs(0)
+    : nBestSeenHeight(0), firstRecordedHeight(0), trackedTxs(0), untrackedTxs(0)
 {
     static_assert(MIN_BUCKET_FEERATE > 0, "Min feerate must be nonzero");
     minTrackedFee = CFeeRate(MIN_BUCKET_FEERATE);
@@ -601,6 +601,11 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
     for (unsigned int i = 0; i < entries.size(); i++) {
         if (processBlockTx(nBlockHeight, entries[i]))
             countedTxs++;
+    }
+
+    if (firstRecordedHeight == 0 && countedTxs > 0) {
+        firstRecordedHeight = nBestSeenHeight;
+        LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy first recorded height %u\n", firstRecordedHeight);
     }
 
 
