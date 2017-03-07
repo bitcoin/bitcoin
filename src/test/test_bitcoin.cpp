@@ -141,17 +141,14 @@ TestChain100Setup::~TestChain100Setup()
 }
 
 
-CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction &tx, CTxMemPool *pool) {
+CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction &tx) {
     CTransaction txn(tx);
-    return FromTx(txn, pool);
+    return FromTx(txn);
 }
 
-CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CTransaction &txn, CTxMemPool *pool) {
-    // Hack to assume either it's completely dependent on other mempool txs or not at all
-    CAmount inChainValue = pool && pool->HasNoInputsOf(txn) ? txn.GetValueOut() : 0;
-
-    return CTxMemPoolEntry(MakeTransactionRef(txn), nFee, nTime, dPriority, nHeight,
-                           inChainValue, spendsCoinbase, sigOpCost, lp);
+CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CTransaction &txn) {
+    return CTxMemPoolEntry(MakeTransactionRef(txn), nFee, nTime, nHeight,
+                           spendsCoinbase, sigOpCost, lp);
 }
 
 void Shutdown(void* parg)

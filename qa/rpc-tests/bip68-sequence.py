@@ -24,8 +24,8 @@ class BIP68Test(BitcoinTestFramework):
 
     def setup_network(self):
         self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-blockprioritysize=0"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug", "-blockprioritysize=0", "-acceptnonstdtxn=0"]))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug", "-acceptnonstdtxn=0"]))
         self.is_network_split = False
         self.relayfee = self.nodes[0].getnetworkinfo()["relayfee"]
         connect_nodes(self.nodes[0], 1)
@@ -254,7 +254,7 @@ class BIP68Test(BitcoinTestFramework):
 
         # Now mine some blocks, but make sure tx2 doesn't get mined.
         # Use prioritisetransaction to lower the effective feerate to 0
-        self.nodes[0].prioritisetransaction(tx2.hash, -1e15, int(-self.relayfee*COIN))
+        self.nodes[0].prioritisetransaction(tx2.hash, int(-self.relayfee*COIN))
         cur_time = int(time.time())
         for i in range(10):
             self.nodes[0].setmocktime(cur_time + 600)
@@ -267,7 +267,7 @@ class BIP68Test(BitcoinTestFramework):
         test_nonzero_locks(tx2, self.nodes[0], self.relayfee, use_height_lock=False)
 
         # Mine tx2, and then try again
-        self.nodes[0].prioritisetransaction(tx2.hash, 1e15, int(self.relayfee*COIN))
+        self.nodes[0].prioritisetransaction(tx2.hash, int(self.relayfee*COIN))
 
         # Advance the time on the node so that we can test timelocks
         self.nodes[0].setmocktime(cur_time+600)

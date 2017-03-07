@@ -80,7 +80,6 @@ class AbandonConflictTest(BitcoinTestFramework):
 
         # Restart the node with a higher min relay fee so the parent tx is no longer in mempool
         # TODO: redo with eviction
-        # Note had to make sure tx did not have AllowFree priority
         stop_node(self.nodes[0],0)
         self.nodes[0]=start_node(0, self.options.tmpdir, ["-debug","-logtimemicros","-minrelaytxfee=0.0001"])
 

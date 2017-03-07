@@ -295,25 +295,6 @@ bool CCoinsViewCache::HaveInputs(const CTransaction& tx) const
     return true;
 }
 
-double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight, CAmount &inChainInputValue) const
-{
-    inChainInputValue = 0;
-    if (tx.IsCoinBase())
-        return 0.0;
-    double dResult = 0.0;
-    BOOST_FOREACH(const CTxIn& txin, tx.vin)
-    {
-        const CCoins* coins = AccessCoins(txin.prevout.hash);
-        assert(coins);
-        if (!coins->IsAvailable(txin.prevout.n)) continue;
-        if (coins->nHeight <= nHeight) {
-            dResult += (double)(coins->vout[txin.prevout.n].nValue) * (nHeight-coins->nHeight);
-            inChainInputValue += coins->vout[txin.prevout.n].nValue;
-        }
-    }
-    return tx.ComputePriority(dResult);
-}
-
 CCoinsModifier::CCoinsModifier(CCoinsViewCache& cache_, CCoinsMap::iterator it_, size_t usage) : cache(cache_), it(it_), cachedCoinUsage(usage) {
     assert(!cache.hasModifier);
     cache.hasModifier = true;
