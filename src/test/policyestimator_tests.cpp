@@ -83,11 +83,6 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             BOOST_CHECK(feeEst.estimateFee(1) == CFeeRate(0));
             BOOST_CHECK(feeEst.estimateFee(2).GetFeePerK() < 9*baseRate.GetFeePerK() + deltaFee);
             BOOST_CHECK(feeEst.estimateFee(2).GetFeePerK() > 9*baseRate.GetFeePerK() - deltaFee);
-            int answerFound;
-            BOOST_CHECK(feeEst.estimateSmartFee(1, &answerFound, mpool) == feeEst.estimateFee(2) && answerFound == 2);
-            BOOST_CHECK(feeEst.estimateSmartFee(2, &answerFound, mpool) == feeEst.estimateFee(2) && answerFound == 2);
-            BOOST_CHECK(feeEst.estimateSmartFee(4, &answerFound, mpool) == feeEst.estimateFee(4) && answerFound == 4);
-            BOOST_CHECK(feeEst.estimateSmartFee(8, &answerFound, mpool) == feeEst.estimateFee(8) && answerFound == 8);
         }
     }
 
@@ -143,10 +138,8 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
         mpool.removeForBlock(block, ++blocknum);
     }
 
-    int answerFound;
     for (int i = 1; i < 10;i++) {
         BOOST_CHECK(feeEst.estimateFee(i) == CFeeRate(0) || feeEst.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee);
-        BOOST_CHECK(feeEst.estimateSmartFee(i, &answerFound, mpool).GetFeePerK() > origFeeEst[answerFound-1] - deltaFee);
     }
 
     // Mine all those transactions
@@ -194,7 +187,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     mpool.TrimToSize(1);
     BOOST_CHECK(mpool.GetMinFee(1).GetFeePerK() > feeV[5]);
     for (int i = 1; i < 10; i++) {
-        BOOST_CHECK(feeEst.estimateSmartFee(i, NULL, mpool).GetFeePerK() >= feeEst.estimateFee(i).GetFeePerK());
+        BOOST_CHECK(feeEst.estimateSmartFee(i, NULL, mpool).GetFeePerK() >= feeEst.estimateRawFee(i, 0.85, FeeEstimateHorizon::MED_HALFLIFE).GetFeePerK());
         BOOST_CHECK(feeEst.estimateSmartFee(i, NULL, mpool).GetFeePerK() >= mpool.GetMinFee(1).GetFeePerK());
     }
 }

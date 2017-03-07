@@ -658,31 +658,107 @@ CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThr
     return CFeeRate(median);
 }
 
-CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, int *answerFoundAtTarget, const CTxMemPool& pool) const
+
+/** Return a fee estimate at the required successThreshold from the shortest
+ * time horizon which tracks confirmations up to the desired target.  If
+ * checkShorterHorizon is requested, also allow short time horizon estimates
+ * for a lower target to reduce the given answer */
+double CBlockPolicyEstimator::estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon) const
+{
+    double estimate = -1;
+    if (confTarget >= 1 && confTarget <= longStats->GetMaxConfirms()) {
+        // Find estimate from shortest time horizon possible
+        if (confTarget <= shortStats->GetMaxConfirms()) { // short horizon
+            estimate = shortStats->EstimateMedianVal(confTarget, SUFFICIENT_TXS_SHORT, successThreshold, true, nBestSeenHeight);
+        }
+        else if (confTarget <= feeStats->GetMaxConfirms()) { // medium horizon
+            estimate = feeStats->EstimateMedianVal(confTarget, SUFFICIENT_FEETXS, successThreshold, true, nBestSeenHeight);
+        }
+        else { // long horizon
+            estimate = longStats->EstimateMedianVal(confTarget, SUFFICIENT_FEETXS, successThreshold, true, nBestSeenHeight);
+        }
+        if (checkShorterHorizon) {
+            // If a lower confTarget from a more recent horizon returns a lower answer use it.
+            if (confTarget > feeStats->GetMaxConfirms()) {
+                double medMax = feeStats->EstimateMedianVal(feeStats->GetMaxConfirms(), SUFFICIENT_FEETXS, successThreshold, true, nBestSeenHeight);
+                if (medMax > 0 && (estimate == -1 || medMax < estimate))
+                    estimate = medMax;
+            }
+            if (confTarget > shortStats->GetMaxConfirms()) {
+                double shortMax = shortStats->EstimateMedianVal(shortStats->GetMaxConfirms(), SUFFICIENT_TXS_SHORT, successThreshold, true, nBestSeenHeight);
+                if (shortMax > 0 && (estimate == -1 || shortMax < estimate))
+                    estimate = shortMax;
+            }
+        }
+    }
+    return estimate;
+}
+
+double CBlockPolicyEstimator::estimateConservativeFee(unsigned int doubleTarget) const
+{
+    double estimate = -1;
+    if (doubleTarget <= shortStats->GetMaxConfirms()) {
+        estimate = feeStats->EstimateMedianVal(doubleTarget, SUFFICIENT_FEETXS, DOUBLE_SUCCESS_PCT, true, nBestSeenHeight);
+    }
+    if (doubleTarget <= feeStats->GetMaxConfirms()) {
+        double longEstimate = longStats->EstimateMedianVal(doubleTarget, SUFFICIENT_FEETXS, DOUBLE_SUCCESS_PCT, true, nBestSeenHeight);
+        if (longEstimate > estimate) {
+            estimate = longEstimate;
+        }
+    }
+    return estimate;
+}
+
+CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, int *answerFoundAtTarget, const CTxMemPool& pool, bool conservative) const
 {
     if (answerFoundAtTarget)
         *answerFoundAtTarget = confTarget;
 
     double median = -1;
-
     {
         LOCK(cs_feeEstimator);
 
         // Return failure if trying to analyze a target we're not tracking
-        if (confTarget <= 0 || (unsigned int)confTarget > feeStats->GetMaxConfirms())
+        if (confTarget <= 0 || (unsigned int)confTarget > longStats->GetMaxConfirms())
             return CFeeRate(0);
 
         // It's not possible to get reasonable estimates for confTarget of 1
         if (confTarget == 1)
             confTarget = 2;
 
-        while (median < 0 && (unsigned int)confTarget <= feeStats->GetMaxConfirms()) {
-            median = feeStats->EstimateMedianVal(confTarget++, SUFFICIENT_FEETXS, DOUBLE_SUCCESS_PCT, true, nBestSeenHeight);
+        assert(confTarget > 0); //estimateCombinedFee and estimateConservativeFee take unsigned ints
+
+        /** true is passed to estimateCombined fee for target/2 and target so
+         * that we check the max confirms for shorter time horizons as well.
+         * This is necessary to preserve monotonically increasing estimates.
+         * For non-conservative estimates we do the same thing for 2*target, but
+         * for conservative estimates we want to skip these shorter horizons
+         * checks for 2*target becuase we are taking the max over all time
+         * horizons so we already have monotonically increasing estimates and
+         * the purpose of conservative estimates is not to let short term
+         * fluctuations lower our estimates by too much.
+         */
+        double halfEst = estimateCombinedFee(confTarget/2, HALF_SUCCESS_PCT, true);
+        double actualEst = estimateCombinedFee(confTarget, SUCCESS_PCT, true);
+        double doubleEst = estimateCombinedFee(2 * confTarget, DOUBLE_SUCCESS_PCT, !conservative);
+        median = halfEst;
+        if (actualEst > median) {
+            median = actualEst;
+        }
+        if (doubleEst > median) {
+            median = doubleEst;
+        }
+
+        if (conservative || median == -1) {
+            double consEst =  estimateConservativeFee(2 * confTarget);
+            if (consEst > median) {
+                median = consEst;
+            }
         }
     } // Must unlock cs_feeEstimator before taking mempool locks
 
     if (answerFoundAtTarget)
-        *answerFoundAtTarget = confTarget - 1;
+        *answerFoundAtTarget = confTarget;
 
     // If mempool is limiting txs , return at least the min feerate from the mempool
     CAmount minPoolFee = pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
@@ -694,6 +770,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, int *answerFoun
 
     return CFeeRate(median);
 }
+
 
 bool CBlockPolicyEstimator::Write(CAutoFile& fileout) const
 {
