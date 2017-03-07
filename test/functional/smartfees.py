@@ -116,8 +116,8 @@ def check_estimates(node, fees_seen, max_invalid, print_estimates = True):
     for i,e in enumerate(all_estimates): # estimate is for i+1
         if e >= 0:
             valid_estimate = True
-            # estimatesmartfee should return the same result
-            assert_equal(node.estimatesmartfee(i+1)["feerate"], e)
+            if i >= 13:  # for n>=14 estimatesmartfee(n/2) should be at least as high as estimatefee(n)
+                assert(node.estimatesmartfee((i+1)//2)["feerate"] > float(e) - delta)
 
         else:
             invalid_estimates += 1

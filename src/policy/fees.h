@@ -155,7 +155,7 @@ public:
      *  confTarget blocks. If no answer can be given at confTarget, return an
      *  estimate at the lowest target where one can be given.
      */
-    CFeeRate estimateSmartFee(int confTarget, int *answerFoundAtTarget, const CTxMemPool& pool) const;
+    CFeeRate estimateSmartFee(int confTarget, int *answerFoundAtTarget, const CTxMemPool& pool, bool conservative = true) const;
 
     /** Return a specific fee estimate calculation with a given success threshold and time horizon.
      */
@@ -199,6 +199,8 @@ private:
     /** Process a transaction confirmed in a block*/
     bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry);
 
+    double estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon) const;
+    double estimateConservativeFee(unsigned int doubleTarget) const;
 };
 
 class FeeFilterRounder
