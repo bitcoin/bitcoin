@@ -18,6 +18,7 @@ from test_framework.blocktools import *
 import time
 from test_framework.key import CECKey
 from test_framework.script import *
+from test_framework.script import hash160
 import struct
 
 class PreviousSpendableOutput(object):
