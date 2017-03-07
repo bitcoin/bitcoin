@@ -1162,7 +1162,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             InitWarning(warningString);
         if (!errorString.empty())
             return InitError(errorString);
-
     } // (!fDisableWallet)
 #endif // ENABLE_WALLET
     // ********************************************************* Step 6: load block chain
