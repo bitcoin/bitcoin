@@ -162,7 +162,79 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\src\test\bctest.py" />
+    <None Include="..\src\test\bitcoin-util-test.py" />
+    <None Include="..\src\test\Makefile" />
+    <None Include="..\src\test\README.md" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\test\addrman_tests.cpp" />
+    <ClCompile Include="..\src\test\allocator_tests.cpp" />
+    <ClCompile Include="..\src\test\amount_tests.cpp" />
+    <ClCompile Include="..\src\test\arith_uint256_tests.cpp" />
+    <ClCompile Include="..\src\test\base32_tests.cpp" />
+    <ClCompile Include="..\src\test\base58_tests.cpp" />
+    <ClCompile Include="..\src\test\base64_tests.cpp" />
+    <ClCompile Include="..\src\test\bip32_tests.cpp" />
+    <ClCompile Include="..\src\test\blockencodings_tests.cpp" />
+    <ClCompile Include="..\src\test\bloom_tests.cpp" />
+    <ClCompile Include="..\src\test\bswap_tests.cpp" />
+    <ClCompile Include="..\src\test\coins_tests.cpp" />
+    <ClCompile Include="..\src\test\compress_tests.cpp" />
+    <ClCompile Include="..\src\test\crypto_tests.cpp" />
+    <ClCompile Include="..\src\test\cuckoocache_tests.cpp" />
+    <ClCompile Include="..\src\test\dbwrapper_tests.cpp" />
+    <ClCompile Include="..\src\test\DoS_tests.cpp" />
+    <ClCompile Include="..\src\test\getarg_tests.cpp" />
+    <ClCompile Include="..\src\test\hash_tests.cpp" />
+    <ClCompile Include="..\src\test\key_tests.cpp" />
+    <ClCompile Include="..\src\test\limitedmap_tests.cpp" />
+    <ClCompile Include="..\src\test\main_tests.cpp" />
+    <ClCompile Include="..\src\test\mempool_tests.cpp" />
+    <ClCompile Include="..\src\test\merkle_tests.cpp" />
+    <ClCompile Include="..\src\test\miner_tests.cpp" />
+    <ClCompile Include="..\src\test\multisig_tests.cpp" />
+    <ClCompile Include="..\src\test\netbase_tests.cpp" />
+    <ClCompile Include="..\src\test\net_tests.cpp" />
+    <ClCompile Include="..\src\test\pmt_tests.cpp" />
+    <ClCompile Include="..\src\test\policyestimator_tests.cpp" />
+    <ClCompile Include="..\src\test\pow_tests.cpp" />
+    <ClCompile Include="..\src\test\prevector_tests.cpp" />
+    <ClCompile Include="..\src\test\raii_event_tests.cpp" />
+    <ClCompile Include="..\src\test\reverselock_tests.cpp" />
+    <ClCompile Include="..\src\test\rpc_tests.cpp" />
+    <ClCompile Include="..\src\test\sanity_tests.cpp" />
+    <ClCompile Include="..\src\test\scheduler_tests.cpp" />
+    <ClCompile Include="..\src\test\scriptnum_tests.cpp" />
+    <ClCompile Include="..\src\test\script_P2SH_tests.cpp" />
+    <ClCompile Include="..\src\test\script_tests.cpp" />
+    <ClCompile Include="..\src\test\serialize_tests.cpp" />
+    <ClCompile Include="..\src\test\sighash_tests.cpp" />
+    <ClCompile Include="..\src\test\sigopcount_tests.cpp" />
+    <ClCompile Include="..\src\test\skiplist_tests.cpp" />
+    <ClCompile Include="..\src\test\streams_tests.cpp" />
+    <ClCompile Include="..\src\test\testutil.cpp" />
+    <ClCompile Include="..\src\test\test_bitcoin.cpp" />
+    <ClCompile Include="..\src\test\test_bitcoin_fuzzy.cpp" />
+    <ClCompile Include="..\src\test\timedata_tests.cpp" />
+    <ClCompile Include="..\src\test\transaction_tests.cpp" />
+    <ClCompile Include="..\src\test\txvalidationcache_tests.cpp" />
+    <ClCompile Include="..\src\test\uint256_tests.cpp" />
+    <ClCompile Include="..\src\test\univalue_tests.cpp" />
+    <ClCompile Include="..\src\test\util_tests.cpp" />
+    <ClCompile Include="..\src\test\versionbits_tests.cpp" />
+    <ClCompile Include="..\src\wallet\test\accounting_tests.cpp" />
+    <ClCompile Include="..\src\wallet\test\crypto_tests.cpp" />
+    <ClCompile Include="..\src\wallet\test\wallet_tests.cpp" />
+    <ClCompile Include="..\src\wallet\test\wallet_test_fixture.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\test\scriptnum10.h" />
+    <ClInclude Include="..\src\test\testutil.h" />
+    <ClInclude Include="..\src\test\test_bitcoin.h" />
+    <ClInclude Include="..\src\test\test_random.h" />
+    <ClInclude Include="..\src\wallet\test\wallet_test_fixture.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
