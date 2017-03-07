@@ -333,7 +333,7 @@ void CTxMemPoolEntry::UpdateAncestorState(int64_t modifySize, CAmount modifyFee,
     assert(int(nSigOpCostWithAncestors) >= 0);
 }
 
-CTxMemPool::CTxMemPool(const CFeeRate& _minReasonableRelayFee) :
+CTxMemPool::CTxMemPool() :
     nTransactionsUpdated(0)
 {
     _clear(); //lock free clear
@@ -343,7 +343,7 @@ CTxMemPool::CTxMemPool(const CFeeRate& _minReasonableRelayFee) :
     // of transactions in the pool
     nCheckFrequency = 0;
 
-    minerPolicyEstimator = new CBlockPolicyEstimator(_minReasonableRelayFee);
+    minerPolicyEstimator = new CBlockPolicyEstimator();
 }
 
 CTxMemPool::~CTxMemPool()
