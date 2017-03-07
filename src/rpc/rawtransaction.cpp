@@ -800,12 +800,12 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
     if (request.params.size() > 3 && !request.params[3].isNull()) {
         static map<string, int> mapSigHashValues =
             boost::assign::map_list_of
-            (string("ALL"), int(SIGHASH_ALL))
-            (string("ALL|ANYONECANPAY"), int(SIGHASH_ALL|SIGHASH_ANYONECANPAY))
-            (string("NONE"), int(SIGHASH_NONE))
-            (string("NONE|ANYONECANPAY"), int(SIGHASH_NONE|SIGHASH_ANYONECANPAY))
-            (string("SINGLE"), int(SIGHASH_SINGLE))
-            (string("SINGLE|ANYONECANPAY"), int(SIGHASH_SINGLE|SIGHASH_ANYONECANPAY))
+            (string("ALL"), (int)SIGHASH_ALL)
+            (string("ALL|ANYONECANPAY"), (int)(SIGHASH_ALL|SIGHASH_ANYONECANPAY))
+            (string("NONE"), (int)SIGHASH_NONE)
+            (string("NONE|ANYONECANPAY"), (int)(SIGHASH_NONE|SIGHASH_ANYONECANPAY))
+            (string("SINGLE"), (int)SIGHASH_SINGLE)
+            (string("SINGLE|ANYONECANPAY"), (int)(SIGHASH_SINGLE|SIGHASH_ANYONECANPAY))
             ;
         string strHashType = request.params[3].get_str();
         if (mapSigHashValues.count(strHashType))
