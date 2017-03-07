@@ -1427,7 +1427,7 @@ class SegWitTest(BitcoinTestFramework):
                 block = self.build_next_block()
 
         if (not used_sighash_single_out_of_bounds):
-            print("WARNING: this test run didn't attempt SIGHASH_SINGLE with out-of-bounds index value")
+            self.log.info("WARNING: this test run didn't attempt SIGHASH_SINGLE with out-of-bounds index value")
         # Test the transactions we've added to the block
         if (len(block.vtx) > 1):
             self.update_witness_block_with_transactions(block, [])

@@ -79,9 +79,9 @@ class PruneTest(BitcoinTestFramework):
     def test_height_min(self):
         if not os.path.isfile(self.prunedir+"blk00000.dat"):
             raise AssertionError("blk00000.dat is missing, pruning too early")
-        print("Success")
-        print("Though we're already using more than 550MiB, current usage:", calc_usage(self.prunedir))
-        print("Mining 25 more blocks should cause the first block file to be pruned")
+        self.log.info("Success")
+        self.log.info("Though we're already using more than 550MiB, current usage:", calc_usage(self.prunedir))
+        self.log.info("Mining 25 more blocks should cause the first block file to be pruned")
         # Pruning doesn't run until we're allocating another chunk, 20 full blocks past the height cutoff will ensure this
         for i in range(25):
             mine_large_block(self.nodes[0], self.utxo_cache_0)
@@ -92,15 +92,15 @@ class PruneTest(BitcoinTestFramework):
             if time.time() - waitstart > 30:
                 raise AssertionError("blk00000.dat not pruned when it should be")
 
-        print("Success")
+        self.log.info("Success")
         usage = calc_usage(self.prunedir)
-        print("Usage should be below target:", usage)
+        self.log.info("Usage should be below target:", usage)
         if (usage > 550):
             raise AssertionError("Pruning target not being met")
 
     def create_chain_with_staleblocks(self):
         # Create stale blocks in manageable sized chunks
-        print("Mine 24 (stale) blocks on Node 1, followed by 25 (main chain) block reorg from Node 0, for 12 rounds")
+        self.log.info("Mine 24 (stale) blocks on Node 1, followed by 25 (main chain) block reorg from Node 0, for 12 rounds")
 
         for j in range(12):
             # Disconnect node 0 so it can mine a longer reorg chain without knowing about node 1's soon-to-be-stale chain
@@ -124,7 +124,7 @@ class PruneTest(BitcoinTestFramework):
             connect_nodes(self.nodes[2], 0)
             sync_blocks(self.nodes[0:3])
 
-        print("Usage can be over target because of high stale rate:", calc_usage(self.prunedir))
+        self.log.info("Usage can be over target because of high stale rate:", calc_usage(self.prunedir))
 
     def reorg_test(self):
         # Node 1 will mine a 300 block chain starting 287 blocks back from Node 0 and Node 2's tip
@@ -135,11 +135,11 @@ class PruneTest(BitcoinTestFramework):
         self.nodes[1]=start_node(1, self.options.tmpdir, ["-maxreceivebuffer=20000","-blockmaxsize=5000", "-checkblocks=5", "-disablesafemode"], timewait=900)
 
         height = self.nodes[1].getblockcount()
-        print("Current block height:", height)
+        self.log.info("Current block height:", height)
 
         invalidheight = height-287
         badhash = self.nodes[1].getblockhash(invalidheight)
-        print("Invalidating block at height:",invalidheight,badhash)
+        self.log.info("Invalidating block at height:",invalidheight,badhash)
         self.nodes[1].invalidateblock(badhash)
 
         # We've now switched to our previously mined-24 block fork on node 1, but thats not what we want
@@ -151,24 +151,24 @@ class PruneTest(BitcoinTestFramework):
             curhash = self.nodes[1].getblockhash(invalidheight - 1)
 
         assert(self.nodes[1].getblockcount() == invalidheight - 1)
-        print("New best height", self.nodes[1].getblockcount())
+        self.log.info("New best height", self.nodes[1].getblockcount())
 
         # Reboot node1 to clear those giant tx's from mempool
         self.stop_node(1)
         self.nodes[1]=start_node(1, self.options.tmpdir, ["-maxreceivebuffer=20000","-blockmaxsize=5000", "-checkblocks=5", "-disablesafemode"], timewait=900)
 
-        print("Generating new longer chain of 300 more blocks")
+        self.log.info("Generating new longer chain of 300 more blocks")
         self.nodes[1].generate(300)
 
-        print("Reconnect nodes")
+        self.log.info("Reconnect nodes")
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[2], 1)
         sync_blocks(self.nodes[0:3], timeout=120)
 
-        print("Verify height on node 2:",self.nodes[2].getblockcount())
-        print("Usage possibly still high bc of stale blocks in block files:", calc_usage(self.prunedir))
+        self.log.info("Verify height on node 2:",self.nodes[2].getblockcount())
+        self.log.info("Usage possibly still high bc of stale blocks in block files:", calc_usage(self.prunedir))
 
-        print("Mine 220 more blocks so we have requisite history (some blocks will be big and cause pruning of previous chain)")
+        self.log.info("Mine 220 more blocks so we have requisite history (some blocks will be big and cause pruning of previous chain)")
         for i in range(22):
             # This can be slow, so do this in multiple RPC calls to avoid
             # RPC timeouts.
@@ -176,7 +176,7 @@ class PruneTest(BitcoinTestFramework):
         sync_blocks(self.nodes[0:3], timeout=300)
 
         usage = calc_usage(self.prunedir)
-        print("Usage should be below target:", usage)
+        self.log.info("Usage should be below target:", usage)
         if (usage > 550):
             raise AssertionError("Pruning target not being met")
 
@@ -185,7 +185,7 @@ class PruneTest(BitcoinTestFramework):
     def reorg_back(self):
         # Verify that a block on the old main chain fork has been pruned away
         assert_raises_jsonrpc(-1, "Block not available (pruned data)", self.nodes[2].getblock, self.forkhash)
-        print("Will need to redownload block",self.forkheight)
+        self.log.info("Will need to redownload block",self.forkheight)
 
         # Verify that we have enough history to reorg back to the fork point
         # Although this is more than 288 blocks, because this chain was written more recently
@@ -209,14 +209,14 @@ class PruneTest(BitcoinTestFramework):
         # At this point node 2 is within 288 blocks of the fork point so it will preserve its ability to reorg
         if self.nodes[2].getblockcount() < self.mainchainheight:
             blocks_to_mine = first_reorg_height + 1 - self.mainchainheight
-            print("Rewind node 0 to prev main chain to mine longer chain to trigger redownload. Blocks needed:", blocks_to_mine)
+            self.log.info("Rewind node 0 to prev main chain to mine longer chain to trigger redownload. Blocks needed:", blocks_to_mine)
             self.nodes[0].invalidateblock(curchainhash)
             assert(self.nodes[0].getblockcount() == self.mainchainheight)
             assert(self.nodes[0].getbestblockhash() == self.mainchainhash2)
             goalbesthash = self.nodes[0].generate(blocks_to_mine)[-1]
             goalbestheight = first_reorg_height + 1
 
-        print("Verify node 2 reorged back to the main chain, some blocks of which it had to redownload")
+        self.log.info("Verify node 2 reorged back to the main chain, some blocks of which it had to redownload")
         waitstart = time.time()
         while self.nodes[2].getblockcount() < goalbestheight:
             time.sleep(0.1)
@@ -310,28 +310,28 @@ class PruneTest(BitcoinTestFramework):
         self.stop_node(node_number)
         self.nodes[node_number] = start_node(node_number, self.options.tmpdir, ["-prune=550"], timewait=900)
 
-        print("Success")
+        self.log.info("Success")
 
     def wallet_test(self):
         # check that the pruning node's wallet is still in good shape
-        print("Stop and start pruning node to trigger wallet rescan")
+        self.log.info("Stop and start pruning node to trigger wallet rescan")
         self.stop_node(2)
         start_node(2, self.options.tmpdir, ["-prune=550"])
-        print("Success")
+        self.log.info("Success")
 
         # check that wallet loads loads successfully when restarting a pruned node after IBD.
         # this was reported to fail in #7494.
-        print ("Syncing node 5 to test wallet")
+        self.log.info("Syncing node 5 to test wallet")
         connect_nodes(self.nodes[0], 5)
         nds = [self.nodes[0], self.nodes[5]]
         sync_blocks(nds, wait=5, timeout=300)
         self.stop_node(5) #stop and start to trigger rescan
         start_node(5, self.options.tmpdir, ["-prune=550"])
-        print ("Success")
+        self.log.info("Success")
 
     def run_test(self):
-        print("Warning! This test requires 4GB of disk space and takes over 30 mins (up to 2 hours)")
-        print("Mining a big blockchain of 995 blocks")
+        self.log.info("Warning! This test requires 4GB of disk space and takes over 30 mins (up to 2 hours)")
+        self.log.info("Mining a big blockchain of 995 blocks")
         self.create_big_chain()
         # Chain diagram key:
         # *   blocks on main chain
@@ -346,12 +346,12 @@ class PruneTest(BitcoinTestFramework):
         self.stop_node(3)
         self.stop_node(4)
 
-        print("Check that we haven't started pruning yet because we're below PruneAfterHeight")
+        self.log.info("Check that we haven't started pruning yet because we're below PruneAfterHeight")
         self.test_height_min()
         # Extend this chain past the PruneAfterHeight
         # N0=N1=N2 **...*(1020)
 
-        print("Check that we'll exceed disk space target if we have a very high stale block rate")
+        self.log.info("Check that we'll exceed disk space target if we have a very high stale block rate")
         self.create_chain_with_staleblocks()
         # Disconnect N0
         # And mine a 24 block chain on N1 and a separate 25 block chain on N0
@@ -375,7 +375,7 @@ class PruneTest(BitcoinTestFramework):
         self.mainchainheight = self.nodes[2].getblockcount()   #1320
         self.mainchainhash2 = self.nodes[2].getblockhash(self.mainchainheight)
 
-        print("Check that we can survive a 288 block reorg still")
+        self.log.info("Check that we can survive a 288 block reorg still")
         (self.forkheight,self.forkhash) = self.reorg_test() #(1033, )
         # Now create a 288 block reorg by mining a longer chain on N1
         # First disconnect N1
@@ -408,7 +408,7 @@ class PruneTest(BitcoinTestFramework):
         #                                 \
         #                                  *...**(1320)
 
-        print("Test that we can rerequest a block we previously pruned if needed for a reorg")
+        self.log.info("Test that we can rerequest a block we previously pruned if needed for a reorg")
         self.reorg_back()
         # Verify that N2 still has block 1033 on current chain (@), but not on main chain (*)
         # Invalidate 1033 on current chain (@) on N2 and we should be able to reorg to
@@ -428,16 +428,16 @@ class PruneTest(BitcoinTestFramework):
         #
         # N1 doesn't change because 1033 on main chain (*) is invalid
 
-        print("Test manual pruning with block indices")
+        self.log.info("Test manual pruning with block indices")
         self.manual_test(3, use_timestamp=False)
 
-        print("Test manual pruning with timestamps")
+        self.log.info("Test manual pruning with timestamps")
         self.manual_test(4, use_timestamp=True)
 
-        print("Test wallet re-scan")
+        self.log.info("Test wallet re-scan")
         self.wallet_test()
 
-        print("Done")
+        self.log.info("Done")
 
 if __name__ == '__main__':
     PruneTest().main()

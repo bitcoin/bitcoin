@@ -115,7 +115,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         try:
             self.chain_transaction(self.nodes[0], txid, vout, value, fee, 1)
         except JSONRPCException as e:
-            print("too-long-ancestor-chain successfully rejected")
+            self.log.info("too-long-ancestor-chain successfully rejected")
 
         # Check that prioritising a tx before it's added to the mempool works
         # First clear the mempool by mining a block.
@@ -165,9 +165,9 @@ class MempoolPackagesTest(BitcoinTestFramework):
                     mempool = self.nodes[0].getrawmempool(True)
                     assert_equal(mempool[parent_transaction]['descendantcount'], MAX_DESCENDANTS)
             except JSONRPCException as e:
-                print(e.error['message'])
+                self.log.info(e.error['message'])
                 assert_equal(i, MAX_DESCENDANTS - 1)
-                print("tx that would create too large descendant package successfully rejected")
+                self.log.info("tx that would create too large descendant package successfully rejected")
 
         # TODO: check that node1's mempool is as expected
 
