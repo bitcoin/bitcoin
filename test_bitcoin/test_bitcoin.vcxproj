@@ -93,7 +93,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>NOMINMAX;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;HAVE_CONFIG_H;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)/src;$(SolutionDir)/src/config;$(SolutionDir)/src/univalue/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)/src;$(SolutionDir)/src/config;$(SolutionDir)/src/univalue/include;$(SolutionDir)/db-4.8.30/build_windows</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -108,7 +108,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>NOMINMAX;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;HAVE_CONFIG_H;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)/src;$(SolutionDir)/src/config;$(SolutionDir)/src/univalue/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)/src;$(SolutionDir)/src/config;$(SolutionDir)/src/univalue/include;$(SolutionDir)/db-4.8.30/build_windows</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -125,7 +125,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NOMINMAX;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;HAVE_CONFIG_H;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)/src;$(SolutionDir)/src/config;$(SolutionDir)/src/univalue/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)/src;$(SolutionDir)/src/config;$(SolutionDir)/src/univalue/include;$(SolutionDir)/db-4.8.30/build_windows</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -144,7 +144,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NOMINMAX;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;HAVE_CONFIG_H;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)/src;$(SolutionDir)/src/config;$(SolutionDir)/src/univalue/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)/src;$(SolutionDir)/src/config;$(SolutionDir)/src/univalue/include;$(SolutionDir)/db-4.8.30/build_windows</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
