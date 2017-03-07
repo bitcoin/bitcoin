@@ -36,7 +36,7 @@ FastRandomContext insecure_rand_ctx(true);
 extern bool fPrintToConsole;
 extern void noui_connect();
 
-BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
+BasicTestingSetup::BasicTestingSetup(NetworkType chainType)
 {
         ECC_Start();
         SetupEnvironment();
@@ -44,7 +44,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
         InitSignatureCache();
         fPrintToDebugLog = false; // don't want to write to debug.log file
         fCheckBlockIndex = true;
-        SelectParams(chainName);
+        SelectParams(chainType);
         noui_connect();
 }
 
@@ -54,7 +54,7 @@ BasicTestingSetup::~BasicTestingSetup()
         g_connman.reset();
 }
 
-TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)
+TestingSetup::TestingSetup(NetworkType chainType) : BasicTestingSetup(chainType)
 {
     const CChainParams& chainparams = Params();
         // Ideally we'd move all the RPC tests to the functional testing framework
@@ -95,7 +95,7 @@ TestingSetup::~TestingSetup()
         boost::filesystem::remove_all(pathTemp);
 }
 
-TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)
+TestChain100Setup::TestChain100Setup() : TestingSetup(NETWORK_REGTEST)
 {
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
