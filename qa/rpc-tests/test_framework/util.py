@@ -206,7 +206,7 @@ def conninfo_for(node_number, rpchost, datadir):
     rpchost: Override host to connect to (if provided, forces connection through TCP).
     datadir: Data directory
     '''
-    if have_af_unix() and rpchost is None: # Prefer connecting over a UNIX socket, if available
+    if have_af_unix() and rpchost is None and not int(os.getenv("BITCOIN_TEST_RPC_TCP","0")): # Prefer connecting over a UNIX socket, if available
         return RPCConnectInfoUNIX(node_number, rpc_auth_pair(node_number), datadir)
     else:
         return RPCConnectInfoTCP(node_number, rpc_auth_pair(node_number), rpchost, rpc_port(node_number))
