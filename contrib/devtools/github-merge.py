@@ -209,7 +209,7 @@ def main():
             exit(4)
 
         symlink_files = get_symlink_files()
-        for f in symlink_files;
+        for f in symlink_files:
             print("ERROR: File %s was a symlink" % f)
         if len(symlink_files) > 0:
             exit(4)
