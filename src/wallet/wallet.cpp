@@ -1138,6 +1138,7 @@ void CWallet::TransactionAddedToMempool(const CTransactionRef& ptx) {
 }
 
 void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex, const std::vector<CTransactionRef>& vtxConflicted) {
+    LOCK2(cs_main, cs_wallet);
     // TODO: Tempoarily ensure that mempool removals are notified before
     // connected transactions.  This shouldn't matter, but the abandoned
     // state of transactions in our wallet is currently cleared when we
@@ -1147,18 +1148,17 @@ void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const 
     // the notification that the conflicted transaction was evicted.
 
     for (const CTransactionRef& ptx : vtxConflicted) {
-        LOCK2(cs_main, cs_wallet);
         SyncTransaction(ptx, NULL, -1);
     }
     for (size_t i = 0; i < pblock->vtx.size(); i++) {
-        LOCK2(cs_main, cs_wallet);
         SyncTransaction(pblock->vtx[i], pindex, i);
     }
 }
 
 void CWallet::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) {
+    LOCK2(cs_main, cs_wallet);
+
     for (const CTransactionRef& ptx : pblock->vtx) {
-        LOCK2(cs_main, cs_wallet);
         SyncTransaction(ptx, NULL, -1);
     }
 }
