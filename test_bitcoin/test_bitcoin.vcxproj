@@ -216,7 +216,6 @@
     <ClCompile Include="..\src\test\streams_tests.cpp" />
     <ClCompile Include="..\src\test\testutil.cpp" />
     <ClCompile Include="..\src\test\test_bitcoin.cpp" />
-    <ClCompile Include="..\src\test\test_bitcoin_fuzzy.cpp" />
     <ClCompile Include="..\src\test\timedata_tests.cpp" />
     <ClCompile Include="..\src\test\transaction_tests.cpp" />
     <ClCompile Include="..\src\test\txvalidationcache_tests.cpp" />
