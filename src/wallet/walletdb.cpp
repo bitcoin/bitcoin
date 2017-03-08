@@ -797,9 +797,9 @@ void MaybeCompactWalletDB()
 
     if (nLastFlushed != CWalletDB::GetUpdateCounter() && GetTime() - nLastWalletUpdate >= 2)
     {
-        const std::string& strFile = pwalletMain->strWalletFile;
-        if (CDB::PeriodicFlush(strFile))
+        if (CDB::PeriodicFlush(pwalletMain->GetDBHandle())) {
             nLastFlushed = CWalletDB::GetUpdateCounter();
+        }
     }
     fOneThread = false;
 }
@@ -880,3 +880,4 @@ unsigned int CWalletDB::GetUpdateCounter()
 {
     return nWalletDBUpdateCounter;
 }
+
