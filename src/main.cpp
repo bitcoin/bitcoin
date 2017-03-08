@@ -3314,9 +3314,15 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
                 if (!IsInitialBlockDownload()) {
                     // Notify external zmq listeners about the new tip.
                     GetMainSignals().UpdatedBlockTip(pindexConnect);
+                }
 
-                    // Update the UI after each block if we are close to finishing IBD
+                // Update the UI at least every 5 seconds just in case we get in a long loop
+                // as can happen during IBD.  We need an atomic here because there may be other
+                // threads running concurrently.
+                static atomic<int64_t> nLastUpdate = {GetTime()};
+                if (nLastUpdate.load() < GetTime() - 5) {
                     uiInterface.NotifyBlockTip(true, pindexNewTip);
+                    nLastUpdate.store(GetTime());
                 }
 
                 PruneBlockIndexCandidates();
