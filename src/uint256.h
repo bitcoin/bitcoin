@@ -52,6 +52,7 @@ public:
     void SetHex(const char* psz);
     void SetHex(const std::string& str);
     std::string ToHexString() const;
+    std::string ToString() const { return ToHexString(); }
 
     unsigned char* begin()
     {
