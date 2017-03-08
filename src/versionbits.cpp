@@ -18,7 +18,7 @@ const struct BIP9DeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION
         /*.check_mn_protocol =*/ false,
     },
     {
-    /*.name =*/ "segwit",
+        /*.name =*/ "segwit",
         /*.gbt_force =*/ true,
         /*.check_mn_protocol =*/ false,
     }
