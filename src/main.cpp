@@ -3053,7 +3053,14 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
 {
     AssertLockHeld(cs_main);
 
-    assert(pindexNew->pprev == chainActive.Tip());
+    // With PV there is a special case where one chain may be in the process of connecting several blocks but then
+    // a second chain also begins to connect blocks and its block beat the first chains block to advance the tip.
+    // As a result pindexNew->prev on the first chain will no longer match the chaintip as the second chain continues
+    // connecting blocks. Therefore we must return "false" rather than "assert" as was previously the case.
+    //assert(pindexNew->pprev == chainActive.Tip());
+    if (pindexNew->pprev != chainActive.Tip())
+        return false;
+
     // Read block from disk.
     int64_t nTime1 = GetTimeMicros();
     CBlock block;
