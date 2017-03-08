@@ -18,6 +18,7 @@
 #include "main.h" // For DEFAULT_SCRIPTCHECK_THREADS
 #include "net.h"
 #include "txdb.h" // for -dbcache defaults
+#include "tweak.h"
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
@@ -27,6 +28,9 @@
 #include <QNetworkProxy>
 #include <QSettings>
 #include <QStringList>
+
+extern CTweakRef<uint64_t> miningBlockSize;
+extern CTweakRef<unsigned int> ebTweak;
 
 UnlimitedModel::UnlimitedModel(QObject* parent) : QAbstractListModel(parent)
 {
@@ -157,8 +161,19 @@ bool UnlimitedModel::setData(const QModelIndex& index, const QVariant& value, in
             uint64_t mgb = value.toULongLong(&successful);
             if (successful)
               {
-                maxGeneratedBlock = mgb;
-                settings.setValue("maxGeneratedBlock", (unsigned int) maxGeneratedBlock);
+                std::string ret = miningBlockSize.Validate(mgb);
+                if (!ret.empty())
+                  {
+                    // TODO issue an error in the GUI
+                    ret += "\n";
+                    LogPrintf(ret.c_str());
+                    successful = false;
+                  }
+                else
+                  {
+                  miningBlockSize.Set(mgb);
+                  settings.setValue("maxGeneratedBlock", (unsigned int) maxGeneratedBlock);
+                  } 
               }
           } break;
         case ExcessiveBlockSize:
@@ -174,9 +189,20 @@ bool UnlimitedModel::setData(const QModelIndex& index, const QVariant& value, in
           else
             { 
             if (ebs < 1000) ebs *= 1000000;  // If the user put in a size in MB then just auto fix
-            excessiveBlockSize = ebs;
-            settingsToUserAgentString();
-            settings.setValue("excessiveBlockSize", excessiveBlockSize);
+            std::string ret = ebTweak.Validate(ebs);
+            if (!ret.empty())
+              {
+                // TODO issue an error in the GUI
+                ret += "\n";
+                LogPrintf(ret.c_str());
+                successful = false;
+              }
+            else
+              {
+                ebTweak.Set(ebs);  // equivalant to: excessiveBlockSize = ebs;
+                settingsToUserAgentString();
+                settings.setValue("excessiveBlockSize", excessiveBlockSize);
+              }
             }
           } break;
         case ExcessiveAcceptDepth:
