@@ -16,7 +16,7 @@ BOOST_FIXTURE_TEST_SUITE(pow_tests, BasicTestingSetup)
 /* Test calculation of next difficulty target with no constraints applying */
 BOOST_AUTO_TEST_CASE(get_next_work)
 {
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(NETWORK_MAIN);
     const Consensus::Params& params = Params().GetConsensus();
 
     int64_t nLastRetargetTime = 1261130161; // Block #30240
@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(get_next_work)
 /* Test the constraint on the upper bound for next work */
 BOOST_AUTO_TEST_CASE(get_next_work_pow_limit)
 {
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(NETWORK_MAIN);
     const Consensus::Params& params = Params().GetConsensus();
 
     int64_t nLastRetargetTime = 1231006505; // Block #0
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(get_next_work_pow_limit)
 /* Test the constraint on the lower bound for actual time taken */
 BOOST_AUTO_TEST_CASE(get_next_work_lower_limit_actual)
 {
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(NETWORK_MAIN);
     const Consensus::Params& params = Params().GetConsensus();
 
     int64_t nLastRetargetTime = 1279008237; // Block #66528
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(get_next_work_lower_limit_actual)
 /* Test the constraint on the upper bound for actual time taken */
 BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
 {
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(NETWORK_MAIN);
     const Consensus::Params& params = Params().GetConsensus();
 
     int64_t nLastRetargetTime = 1263163443; // NOTE: Not an actual block time
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
 
 BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
 {
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(NETWORK_MAIN);
     const Consensus::Params& params = Params().GetConsensus();
 
     std::vector<CBlockIndex> blocks(10000);

@@ -177,9 +177,6 @@
     <ClCompile Include="..\src\test\test_bitcoin.cpp">
       <Filter>src\test</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\test\test_bitcoin_fuzzy.cpp">
-      <Filter>src\test</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\test\testutil.cpp">
       <Filter>src\test</Filter>
     </ClCompile>
