@@ -250,9 +250,12 @@ class SegWitTest(BitcoinTestFramework):
         assert(tmpl['transactions'][0]['txid'] == txid)
         assert(tmpl['transactions'][0]['sigops'] == 8)
 
-        self.log.info("Non-segwit miners are not able to use GBT response after activation.")
-        send_to_witness(1, self.nodes[0], find_unspent(self.nodes[0], 50), self.pubkey[0], False, Decimal("49.998"))
-        assert_raises_jsonrpc(-8, "Support for 'segwit' rule requires explicit client support", self.nodes[0].getblocktemplate, {})
+        self.log.info("Non-segwit miners are able to use GBT response after activation.")
+        txid = send_to_witness(1, self.nodes[0], find_unspent(self.nodes[0], 50), self.pubkey[0], False, Decimal("49.998"))
+        #assert_raises_jsonrpc(-8, "Support for 'segwit' rule requires explicit client support", self.nodes[0].getblocktemplate, {})
+        tmpl = self.nodes[0].getblocktemplate()
+        # TODO: add a transaction with witness to mempool, and verify it's not
+        # selected for mining.
 
         self.log.info("Verify behaviour of importaddress, addwitnessaddress and listunspent")
 

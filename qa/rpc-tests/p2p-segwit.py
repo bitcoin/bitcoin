@@ -1698,9 +1698,11 @@ class SegWitTest(BitcoinTestFramework):
         for node in [self.nodes[0], self.nodes[2]]:
             gbt_results = node.getblocktemplate()
             block_version = gbt_results['version']
-            # If we're not indicating segwit support, we should not be signalling
-            # for segwit activation, nor should we get a witness commitment.
-            assert_equal(block_version & (1 << VB_WITNESS_BIT), 0)
+            # If we're not indicating segwit support, we will still be
+            # signalling for segwit activation.
+            assert_equal((block_version & (1 << VB_WITNESS_BIT) != 0), node == self.nodes[0])
+            # If we don't specify the segwit rule, then we won't get a default
+            # commitment.
             assert('default_witness_commitment' not in gbt_results)
 
         # Workaround:
