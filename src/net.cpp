@@ -2319,13 +2319,17 @@ void CConnman::Interrupt()
     interruptNet();
     InterruptSocks5(true);
 
-    if (semOutbound)
-        for (int i=0; i<(nMaxOutbound + nMaxFeeler); i++)
+    if (semOutbound) {
+        for (int i=0; i<(nMaxOutbound + nMaxFeeler); i++) {
             semOutbound->post();
+        }
+    }
 
-    if (semAddnode)
-        for (int i=0; i<nMaxAddnode; i++)
+    if (semAddnode) {
+        for (int i=0; i<nMaxAddnode; i++) {
             semAddnode->post();
+        }
+    }
 }
 
 void CConnman::Stop()
