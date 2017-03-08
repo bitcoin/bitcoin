@@ -118,11 +118,15 @@ public:
     }
 };
 
-/** Access to the wallet database (wallet.dat) */
+/** Access to the wallet database.
+ * This should really be named CWalletDBBatch, as it represents a single transaction at the
+ * database. It will be committed when the object goes out of scope.
+ * Optionally (on by default) it will flush to disk as well.
+ */
 class CWalletDB : public CDB
 {
 public:
-    CWalletDB(const std::string& strFilename, const char* pszMode = "r+", bool fFlushOnClose = true) : CDB(strFilename, pszMode, fFlushOnClose)
+    CWalletDB(CWalletDBWrapper& dbw, const char* pszMode = "r+", bool _fFlushOnClose = true) : CDB(dbw, pszMode, _fFlushOnClose)
     {
     }
 
