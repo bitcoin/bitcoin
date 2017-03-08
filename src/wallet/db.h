@@ -144,10 +144,10 @@ protected:
     bool fFlushOnClose;
     CDBEnv *env;
 
+public:
     explicit CDB(CWalletDBWrapper& dbw, const char* pszMode = "r+", bool fFlushOnCloseIn=true);
     ~CDB() { Close(); }
 
-public:
     void Flush();
     void Close();
     static bool Recover(const std::string& filename, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue));
@@ -164,7 +164,7 @@ private:
     CDB(const CDB&);
     void operator=(const CDB&);
 
-protected:
+public:
     template <typename K, typename T>
     bool Read(const K& key, T& value)
     {
