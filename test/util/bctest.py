@@ -23,14 +23,14 @@ def parse_output(a, fmt):
     else:
         raise NotImplementedError("Don't know how to compare %s" % fmt)
 
-def bctest(testDir, testObj, exeext):
+def bctest(testDir, testObj, buildenv):
     """Runs a single test, comparing output and RC to expected output and RC.
 
     Raises an error if input can't be read, executable fails, or output/RC
     are not as expected. Error is caught by bctester() and reported.
     """
     # Get the exec names and arguments
-    execprog = testObj['exec'] + exeext
+    execprog = buildenv.BUILDDIR + "/src/" + testObj['exec'] + buildenv.exeext
     execargs = testObj['args']
     execrun = [execprog] + execargs
 
@@ -112,7 +112,7 @@ def bctester(testDir, input_basename, buildenv):
 
     for testObj in input_data:
         try:
-            bctest(testDir, testObj, buildenv.exeext)
+            bctest(testDir, testObj, buildenv)
             logging.info("PASSED: " + testObj["description"])
         except:
             logging.info("FAILED: " + testObj["description"])
