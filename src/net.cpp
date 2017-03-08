@@ -2380,6 +2380,15 @@ void CConnman::Interrupt()
     if (semOutbound)
         for (int i=0; i<(nMaxOutbound + nMaxFeeler); i++)
             semOutbound->post();
+
+    if (semAddnode)
+        for (int i=0; i<nMaxAddnode; i++)
+            semAddnode->post();
+
+    if (semMasternodeOutbound)
+        for (int i=0; i<MAX_OUTBOUND_MASTERNODE_CONNECTIONS; i++)
+            semMasternodeOutbound->post();
+
 }
 
 void CConnman::Stop()
@@ -2396,14 +2405,6 @@ void CConnman::Stop()
         threadDNSAddressSeed.join();
     if (threadSocketHandler.joinable())
         threadSocketHandler.join();
-
-    if (semAddnode)
-        for (int i=0; i<nMaxAddnode; i++)
-            semOutbound->post();
-
-    if (semMasternodeOutbound)
-        for (int i=0; i<MAX_OUTBOUND_MASTERNODE_CONNECTIONS; i++)
-            semMasternodeOutbound->post();
 
     if (fAddressesInitialized)
     {
