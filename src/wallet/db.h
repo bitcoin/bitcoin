@@ -86,6 +86,36 @@ public:
 
 extern CDBEnv bitdb;
 
+/** An instance of this class represents one database.
+ * For BerkeleyDB this is just a (env, strFile) tuple.
+ **/
+class CWalletDBWrapper
+{
+    friend class CDB;
+public:
+    CWalletDBWrapper(CDBEnv *env_in, const std::string &strFile_in):
+        env(env_in), strFile(strFile_in)
+    {
+    }
+
+    /** Rewrite the entire database on disk, with the exception of key pszSkip if non-zero
+     */
+    bool Rewrite(const char* pszSkip=nullptr);
+
+    /** Back up the entire database to a file.
+     */
+    bool Backup(const std::string& strDest);
+
+    /** Get a name for this database, for debugging etc.
+     */
+    std::string GetName() const { return strFile; }
+
+private:
+    /** BerkeleyDB specific */
+    CDBEnv *env;
+    std::string strFile;
+};
+
 
 /** RAII class that provides access to a Berkeley database */
 class CDB
@@ -97,7 +127,7 @@ protected:
     bool fReadOnly;
     bool fFlushOnClose;
 
-    explicit CDB(const std::string& strFilename, const char* pszMode = "r+", bool fFlushOnCloseIn=true);
+    explicit CDB(CWalletDBWrapper& dbw, const char* pszMode = "r+", bool fFlushOnCloseIn=true);
     ~CDB() { Close(); }
 
 public:
@@ -107,7 +137,7 @@ public:
 
     /* flush the wallet passively (TRY_LOCK)
        ideal to be called periodically */
-    static bool PeriodicFlush(std::string strFile);
+    static bool PeriodicFlush(CWalletDBWrapper& dbw);
     /* verifies the database environment */
     static bool VerifyEnvironment(const std::string& walletFile, const fs::path& dataDir, std::string& errorStr);
     /* verifies the database file */
@@ -310,7 +340,7 @@ public:
         return Write(std::string("version"), nVersion);
     }
 
-    bool static Rewrite(const std::string& strFile, const char* pszSkip = NULL);
+    bool static Rewrite(CWalletDBWrapper& dbw, const char* pszSkip = NULL);
 };
 
 #endif // BITCOIN_WALLET_DB_H

@@ -715,17 +715,35 @@ private:
      */
     bool AddWatchOnly(const CScript& dest) override;
 
+    std::unique_ptr<CWalletDBWrapper> dbw;
+
 public:
     /*
      * Main wallet lock.
      * This lock protects all the fields added by CWallet
      *   except for:
      *      fFileBacked (immutable after instantiation)
-     *      strWalletFile (immutable after instantiation)
      */
     mutable CCriticalSection cs_wallet;
 
-    const std::string strWalletFile;
+    /** Get database handle used by this wallet. Ideally this function would
+     * not be necessary.
+     */
+    CWalletDBWrapper& GetDBHandle()
+    {
+        return *dbw;
+    }
+
+    /** Get a name for this wallet for logging/debugging purposes.
+     */
+    std::string GetName() const
+    {
+        if (dbw) {
+            return dbw->GetName();
+        } else {
+            return "dummy";
+        }
+    }
 
     void LoadKeyPool(int nIndex, const CKeyPool &keypool)
     {
@@ -752,7 +770,7 @@ public:
         SetNull();
     }
 
-    CWallet(const std::string& strWalletFileIn) : strWalletFile(strWalletFileIn)
+    CWallet(std::unique_ptr<CWalletDBWrapper> dbw_in) : dbw(std::move(dbw_in))
     {
         SetNull();
         fFileBacked = true;
