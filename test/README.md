@@ -1,29 +1,32 @@
-The [functional](/test/functional/) folder contains a script test_runner
- to call multiple functional tests from its folder.
+This directory contains integration tests that test bitcoind and its
+utilities in their entirety. It does not contain unit tests, which
+can be found in [/src/test](/src/test), [/src/wallet/test](/src/wallet/test),
+etc.
 
-Every pull request to the bitcoin repository is built and run through
-the regression test suite. You can also run all or only individual
-tests locally.
+There are currently two sets of tests in this directory:
 
-Test dependencies
-=================
-Before running the tests, the following must be installed.
+- [functional](/test/functional) which test the functionality of 
+bitcoind and bitcoin-qt by interacting with them through the RPC and P2P
+interfaces.
+- [util](test/util) which tests the bitcoin utilities, currently only
+bitcoin-tx.
 
-Unix
-----
-The python3-zmq library is required. On Ubuntu or Debian it can be installed via:
-```
-sudo apt-get install python3-zmq
-```
+The util tests are run as part of `make check` target. The functional
+tests are run by the travis continuous build process whenever a pull
+request is opened. Both sets of tests can also be run locally.
 
-OS X
-------
-```
-pip3 install pyzmq
-```
+Functional Test dependencies
+============================
+The ZMQ functional test requires a python ZMQ library. To install it:
 
-Running tests
-=============
+- on Unix, run `sudo apt-get install python3-zmq`
+- on mac OS, run `pip3 install pyzmq`
+
+Running tests locally
+=====================
+
+Functional tests
+----------------
 
 You can run any single test by calling
 
@@ -80,8 +83,15 @@ rm -rf cache
 killall bitcoind
 ```
 
-Writing tests
-=============
-You are encouraged to write tests for new or existing features.
-Further information about the test framework and individual functional
+Util tests
+----------
+
+Util tests can be run locally by running `test/util/bitcoin-util-test.py`. 
+Use the `-v` option for verbose output.
+
+Writing functional tests
+========================
+
+You are encouraged to write functional tests for new or existing features.
+Further information about the functional test framework and individual 
 tests is found in [test/functional](/test/functional).
