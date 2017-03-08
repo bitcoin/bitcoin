@@ -662,8 +662,8 @@ void TorController::reconnect_cb(evutil_socket_t fd, short what, void *arg)
 }
 
 /****** Thread ********/
-struct event_base *gBase;
-boost::thread torControlThread;
+static struct event_base *gBase;
+static boost::thread torControlThread;
 
 static void TorControlThread()
 {
