@@ -123,10 +123,11 @@ public:
  * database. It will be committed when the object goes out of scope.
  * Optionally (on by default) it will flush to disk as well.
  */
-class CWalletDB : public CDB
+class CWalletDB
 {
 public:
-    CWalletDB(CWalletDBWrapper& dbw, const char* pszMode = "r+", bool _fFlushOnClose = true) : CDB(dbw, pszMode, _fFlushOnClose)
+    CWalletDB(CWalletDBWrapper& dbw, const char* pszMode = "r+", bool _fFlushOnClose = true) :
+        batch(dbw, pszMode, _fFlushOnClose)
     {
     }
 
@@ -198,7 +199,20 @@ public:
 
     static void IncrementUpdateCounter();
     static unsigned int GetUpdateCounter();
+
+    //! Begin a new transaction
+    bool TxnBegin();
+    //! Commit current transaction
+    bool TxnCommit();
+    //! Abort current transaction
+    bool TxnAbort();
+    //! Read wallet version
+    bool ReadVersion(int& nVersion);
+    //! Write wallet version
+    bool WriteVersion(int nVersion);
 private:
+    CDB batch;
+
     CWalletDB(const CWalletDB&);
     void operator=(const CWalletDB&);
 };
