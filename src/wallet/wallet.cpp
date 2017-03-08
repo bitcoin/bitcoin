@@ -431,7 +431,7 @@ bool CWallet::HasWalletSpend(const uint256& txid) const
 
 void CWallet::Flush(bool shutdown)
 {
-    bitdb.Flush(shutdown);
+    dbw->Flush(shutdown);
 }
 
 bool CWallet::Verify()
