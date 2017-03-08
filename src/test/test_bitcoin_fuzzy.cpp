@@ -21,7 +21,6 @@
 #include "pubkey.h"
 
 #include <stdint.h>
-#include <unistd.h>
 
 #include <algorithm>
 #include <vector>
@@ -53,7 +52,7 @@ enum TEST_ID {
 bool read_stdin(std::vector<char> &data) {
     char buffer[1024];
     ssize_t length=0;
-    while((length = read(STDIN_FILENO, buffer, 1024)) > 0) {
+    while((length = fread(buffer, 1, 1024, stdin)) > 0) {
         data.insert(data.end(), buffer, buffer+length);
 
         if (data.size() > (1<<20)) return false;
