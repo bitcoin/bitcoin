@@ -1,4 +1,5 @@
 [
+] // TODO: remove this line and port tests below to ppcoin.
 ["The following are deserialized transactions which are invalid."],
 ["They are in the form"],
 ["[[[prevout hash, prevout index, prevout scriptPubKey], [input 2], ...],"],
