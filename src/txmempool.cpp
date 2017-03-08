@@ -895,7 +895,7 @@ CTxMemPool::ReadFeeEstimates(CAutoFile& filein)
     return true;
 }
 
-void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta)
+bool CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta)
 {
     {
         LOCK(cs);
@@ -913,8 +913,12 @@ void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeD
                 mapTx.modify(ancestorIt, update_descendant_state(0, nFeeDelta, 0));
             }
         }
+        else {
+            return false;
+        }
     }
     LogPrintf("PrioritiseTransaction: %s feerate += %s\n", hash.ToString(), FormatMoney(nFeeDelta));
+    return true;
 }
 
 void CTxMemPool::ApplyDelta(const uint256 hash, CAmount &nFeeDelta) const

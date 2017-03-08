@@ -268,7 +268,7 @@ UniValue prioritisetransaction(const JSONRPCRequest& request)
             "                  The fee is not actually paid, only the algorithm for selecting transactions into a block\n"
             "                  considers the transaction as it would have paid a higher (or lower) fee.\n"
             "\nResult:\n"
-            "true              (boolean) Returns true\n"
+            "true              (boolean) Returns true if prioritization was possible, otherwise false\n"
             "\nExamples:\n"
             + HelpExampleCli("prioritisetransaction", "\"txid\" 10000")
             + HelpExampleRpc("prioritisetransaction", "\"txid\", 10000")
@@ -279,7 +279,7 @@ UniValue prioritisetransaction(const JSONRPCRequest& request)
     uint256 hash = ParseHashStr(request.params[0].get_str(), "txid");
     CAmount nAmount = request.params[1].get_int64();
 
-    mempool.PrioritiseTransaction(hash, nAmount);
+    return mempool.PrioritiseTransaction(hash, nAmount);
     return true;
 }
 
