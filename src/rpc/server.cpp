@@ -45,7 +45,6 @@ static struct CRPCSignals
     boost::signals2::signal<void ()> Started;
     boost::signals2::signal<void ()> Stopped;
     boost::signals2::signal<void (const CRPCCommand&)> PreCommand;
-    boost::signals2::signal<void (const CRPCCommand&)> PostCommand;
 } g_rpcSignals;
 
 void RPCServer::OnStarted(boost::function<void ()> slot)
@@ -61,11 +60,6 @@ void RPCServer::OnStopped(boost::function<void ()> slot)
 void RPCServer::OnPreCommand(boost::function<void (const CRPCCommand&)> slot)
 {
     g_rpcSignals.PreCommand.connect(boost::bind(slot, _1));
-}
-
-void RPCServer::OnPostCommand(boost::function<void (const CRPCCommand&)> slot)
-{
-    g_rpcSignals.PostCommand.connect(boost::bind(slot, _1));
 }
 
 void RPCTypeCheck(const UniValue& params,
@@ -492,8 +486,6 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
     {
         throw JSONRPCError(RPC_MISC_ERROR, e.what());
     }
-
-    g_rpcSignals.PostCommand(*pcmd);
 }
 
 std::vector<std::string> CRPCTable::listCommands() const
