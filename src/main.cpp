@@ -85,7 +85,6 @@ uint64_t nPruneTarget = 0;
 bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
 
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
-CAmount maxTxFee = DEFAULT_TRANSACTION_MAXFEE;
 
 // BU: Move global objects to a single file
 extern CTxMemPool mempool;
@@ -1447,10 +1446,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         // BU: we calculate the recommended fee by looking at what's in the mempool.  This starts at 0 though for an
         // empty mempool.  So set the minimum "absurd" fee to 10000 satoshies per byte.  If for some reason fees rise
         // above that, you can specify up to 100x what other txns are paying in the mempool
-        if (fRejectAbsurdFee && nFees > std::max((int64_t)100L*nSize, maxTxFee) * 100 )
+        if (fRejectAbsurdFee && nFees > std::max((int64_t)100L*nSize, maxTxFee.value) * 100 )
             return state.Invalid(false,
                 REJECT_HIGHFEE, "absurdly-high-fee",
-				 strprintf("%d > %d", nFees, std::max((int64_t)1L, maxTxFee) * 10000));
+				 strprintf("%d > %d", nFees, std::max((int64_t)1L, maxTxFee.value) * 10000));
 
         // Calculate in-mempool ancestors, up to a limit.
         CTxMemPool::setEntries setAncestors;
