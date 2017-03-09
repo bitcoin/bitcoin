@@ -1015,10 +1015,10 @@ public:
 
     /* Set the HD chain model (chain child index counters) */
     bool SetHDChain(const CHDChain& chain, bool memonly);
-    const CHDChain& GetHDChain() { return hdChain; }
+    const CHDChain& GetHDChain() const { return hdChain; }
 
     /* Returns true if HD is enabled */
-    bool IsHDEnabled();
+    bool IsHDEnabled() const;
 
     /* Generates a new HD master key (will not be activated) */
     CPubKey GenerateNewHDMasterKey();
