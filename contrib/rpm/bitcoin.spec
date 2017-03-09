@@ -314,7 +314,7 @@ make check
 pushd src
 srcdir=. test/bitcoin-util-test.py
 popd
-test/pull-tester/rpc-tests.py -extended
+test/functional/test_runner.py --extended
 
 %post libs -p /sbin/ldconfig
 
