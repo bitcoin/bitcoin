@@ -893,6 +893,7 @@ UniValue estimaterawfee(const JSONRPCRequest& request)
             "  \"withintarget\" : x.x,   (numeric) number of txs over history horizon in the feerate range that were confirmed within target\n"
             "  \"totalconfirmed\" : x.x, (numeric) number of txs over history horizon in the feerate range that were confirmed at any point\n"
             "  \"inmempool\" : x.x,      (numeric) current number of txs in mempool in the feerate range unconfirmed for at least target blocks\n"
+            "  \"leftmempool\" : x.x,    (numeric) number of txs over history horizon in the feerate range that left mempool unconfirmed after target\n"
             "}\n"
             "\n"
             "A negative feerate is returned if no answer can be given.\n"
@@ -927,11 +928,13 @@ UniValue estimaterawfee(const JSONRPCRequest& request)
     result.push_back(Pair("pass.withintarget", round(buckets.pass.withinTarget * 100.0) / 100.0));
     result.push_back(Pair("pass.totalconfirmed", round(buckets.pass.totalConfirmed * 100.0) / 100.0));
     result.push_back(Pair("pass.inmempool", round(buckets.pass.inMempool * 100.0) / 100.0));
+    result.push_back(Pair("pass.leftmempool", round(buckets.pass.leftMempool * 100.0) / 100.0));
     result.push_back(Pair("fail.startrange", round(buckets.fail.start)));
     result.push_back(Pair("fail.endrange", round(buckets.fail.end)));
     result.push_back(Pair("fail.withintarget", round(buckets.fail.withinTarget * 100.0) / 100.0));
     result.push_back(Pair("fail.totalconfirmed", round(buckets.fail.totalConfirmed * 100.0) / 100.0));
     result.push_back(Pair("fail.inmempool", round(buckets.fail.inMempool * 100.0) / 100.0));
+    result.push_back(Pair("fail.leftmempool", round(buckets.fail.leftMempool * 100.0) / 100.0));
     return result;
 }
 
