@@ -13,7 +13,7 @@ Specifications
 - Number of block confirmation: 42
 - PoS reward: 0 coin
 - Min stake age: 42 hours
-- Max stake age: 420 days
+- Max stake age: unlimited
 - PoS target spacing: 7 minutes
 - PoW algo type: Scrypt
 - PoW reward: 0 coin + tx fees
