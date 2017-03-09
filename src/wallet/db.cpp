@@ -434,6 +434,16 @@ void CDB::Flush()
     env->dbenv->txn_checkpoint(nMinutes ? GetArg("-dblogsize", DEFAULT_WALLET_DBLOGSIZE) * 1024 : 0, nMinutes, 0);
 }
 
+void CWalletDBWrapper::IncrementUpdateCounter()
+{
+    ++nUpdateCounter;
+}
+
+unsigned int CWalletDBWrapper::GetUpdateCounter()
+{
+    return nUpdateCounter.load();
+}
+
 void CDB::Close()
 {
     if (!pdb)
