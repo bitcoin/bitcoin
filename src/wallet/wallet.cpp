@@ -2343,8 +2343,8 @@ CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarge
     // prevent user from paying a fee below minRelayTxFee or minTxFee
     nFeeNeeded = std::max(nFeeNeeded, GetRequiredFee(nTxBytes));
     // But always obey the maximum
-    if (nFeeNeeded > maxTxFee)
-        nFeeNeeded = maxTxFee;
+    if (nFeeNeeded > maxTxFee.value)
+        nFeeNeeded = maxTxFee.value;
     return nFeeNeeded;
 }
 
