@@ -74,6 +74,7 @@ struct EstimatorBucket
     double withinTarget = 0;
     double totalConfirmed = 0;
     double inMempool = 0;
+    double leftMempool = 0;
 };
 
 struct EstimationResult
@@ -145,7 +146,7 @@ public:
     void processTransaction(const CTxMemPoolEntry& entry, bool validFeeEstimate);
 
     /** Remove a transaction from the mempool tracking stats*/
-    bool removeTx(uint256 hash);
+    bool removeTx(uint256 hash, bool inBlock);
 
     /** Return a feerate estimate */
     CFeeRate estimateFee(int confTarget) const;
@@ -165,6 +166,9 @@ public:
 
     /** Read estimation data from a file */
     bool Read(CAutoFile& filein);
+
+    /** Empty mempool transactions on shutdown to record failure to confirm for txs still in mempool */
+    void FlushUnconfirmed(CTxMemPool& pool);
 
 private:
     CFeeRate minTrackedFee;    //!< Passed to constructor to avoid dependency on main
