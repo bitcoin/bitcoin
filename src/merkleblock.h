@@ -63,7 +63,7 @@ protected:
     bool fBad;
 
     /** helper function to efficiently calculate the number of nodes at given height in the merkle tree */
-    unsigned int CalcTreeWidth(int height) {
+    unsigned int CalcTreeWidth(int height) const {
         return (nTransactions+(1 << height)-1) >> height;
     }
 

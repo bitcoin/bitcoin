@@ -81,7 +81,7 @@ private:
     int nThreadsServicingQueue;
     bool stopRequested;
     bool stopWhenEmpty;
-    bool shouldStop() { return stopRequested || (stopWhenEmpty && taskQueue.empty()); }
+    bool shouldStop() const { return stopRequested || (stopWhenEmpty && taskQueue.empty()); }
 };
 
 /**
