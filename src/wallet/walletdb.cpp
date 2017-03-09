@@ -172,12 +172,12 @@ bool CWalletDB::ReadAccount(const std::string& strAccount, CAccount& account)
 
 bool CWalletDB::WriteAccount(const std::string& strAccount, const CAccount& account)
 {
-    return batch.Write(std::make_pair(std::string("acc"), strAccount), account);
+    return WriteIC(std::make_pair(std::string("acc"), strAccount), account);
 }
 
 bool CWalletDB::WriteAccountingEntry(const uint64_t nAccEntryNum, const CAccountingEntry& acentry)
 {
-    return batch.Write(std::make_pair(std::string("acentry"), std::make_pair(acentry.strAccount, nAccEntryNum)), acentry);
+    return WriteIC(std::make_pair(std::string("acentry"), std::make_pair(acentry.strAccount, nAccEntryNum)), acentry);
 }
 
 bool CWalletDB::WriteAccountingEntry_Backend(const CAccountingEntry& acentry)
