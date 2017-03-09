@@ -106,7 +106,7 @@ namespace boost {
 
 } // namespace boost
 
-using namespace std;
+
 
 //Dash only features
 bool fMasternodeMode = false;
@@ -124,9 +124,9 @@ const char * const BITCOIN_CONF_FILENAME = "dash.conf";
 const char * const BITCOIN_PID_FILENAME = "dashd.pid";
 
 CCriticalSection cs_args;
-map<string, string> mapArgs;
-static map<string, vector<string> > _mapMultiArgs;
-const map<string, vector<string> >& mapMultiArgs = _mapMultiArgs;
+std::map<std::string, std::string> mapArgs;
+static std::map<std::string, std::vector<std::string> > _mapMultiArgs;
+const std::map<std::string, std::vector<std::string> >& mapMultiArgs = _mapMultiArgs;
 bool fDebug = false;
 bool fPrintToConsole = false;
 bool fPrintToDebugLog = true;
@@ -213,7 +213,7 @@ static boost::once_flag debugPrintInitFlag = BOOST_ONCE_INIT;
  */
 static FILE* fileout = NULL;
 static boost::mutex* mutexDebugLog = NULL;
-static list<string> *vMsgsBeforeOpenLog;
+static std::list<std::string>* vMsgsBeforeOpenLog;
 
 static int FileWriteStr(const std::string &str, FILE *fp)
 {
@@ -224,7 +224,7 @@ static void DebugPrintInit()
 {
     assert(mutexDebugLog == NULL);
     mutexDebugLog = new boost::mutex();
-    vMsgsBeforeOpenLog = new list<string>;
+    vMsgsBeforeOpenLog = new std::list<std::string>;
 }
 
 void OpenDebugLog()
@@ -257,7 +257,7 @@ bool LogAcceptCategory(const char* category)
         // This helps prevent issues debugging global destructors,
         // where mapMultiArgs might be deleted before another
         // global destructor calls LogPrint()
-        static boost::thread_specific_ptr<set<string> > ptrCategory;
+        static boost::thread_specific_ptr<std::set<std::string> > ptrCategory;
 
         if (!fDebug) {
             if (ptrCategory.get() != NULL) {
@@ -274,29 +274,29 @@ bool LogAcceptCategory(const char* category)
                 LogPrintf("debug turned on:\n");
                 for (int i = 0; i < (int)mapMultiArgs.at("-debug").size(); ++i)
                     LogPrintf("  thread %s category %s\n", strThreadName, mapMultiArgs.at("-debug")[i]);
-                const vector<string>& categories = mapMultiArgs.at("-debug");
-                ptrCategory.reset(new set<string>(categories.begin(), categories.end()));
+                const std::vector<std::string>& categories = mapMultiArgs.at("-debug");
+                ptrCategory.reset(new std::set<std::string>(categories.begin(), categories.end()));
                 // thread_specific_ptr automatically deletes the set when the thread ends.
                 // "dash" is a composite category enabling all Dash-related debug output
-                if(ptrCategory->count(string("dash"))) {
-                    ptrCategory->insert(string("privatesend"));
-                    ptrCategory->insert(string("instantsend"));
-                    ptrCategory->insert(string("masternode"));
-                    ptrCategory->insert(string("spork"));
-                    ptrCategory->insert(string("keepass"));
-                    ptrCategory->insert(string("mnpayments"));
-                    ptrCategory->insert(string("gobject"));
+                if(ptrCategory->count(std::string("dash"))) {
+                    ptrCategory->insert(std::string("privatesend"));
+                    ptrCategory->insert(std::string("instantsend"));
+                    ptrCategory->insert(std::string("masternode"));
+                    ptrCategory->insert(std::string("spork"));
+                    ptrCategory->insert(std::string("keepass"));
+                    ptrCategory->insert(std::string("mnpayments"));
+                    ptrCategory->insert(std::string("gobject"));
                 }
             } else {
-                ptrCategory.reset(new set<string>());
+                ptrCategory.reset(new std::set<std::string>());
             }
         }
-        const set<string>& setCategories = *ptrCategory.get();
+        const std::set<std::string>& setCategories = *ptrCategory.get();
 
         // if not debugging everything and not debugging specific category, LogPrint does nothing.
-        if (setCategories.count(string("")) == 0 &&
-            setCategories.count(string("1")) == 0 &&
-            setCategories.count(string(category)) == 0)
+        if (setCategories.count(std::string("")) == 0 &&
+            setCategories.count(std::string("1")) == 0 &&
+            setCategories.count(std::string(category)) == 0)
             return false;
     }
     return true;
@@ -309,7 +309,7 @@ bool LogAcceptCategory(const char* category)
  */
 static std::string LogTimestampStr(const std::string &str, std::atomic_bool *fStartedNewLine)
 {
-    string strStamped;
+    std::string strStamped;
 
     if (!fLogTimestamps)
         return str;
@@ -333,7 +333,7 @@ static std::string LogTimestampStr(const std::string &str, std::atomic_bool *fSt
  */
 static std::string LogThreadNameStr(const std::string &str, std::atomic_bool *fStartedNewLine)
 {
-    string strThreadLogged;
+    std::string strThreadLogged;
 
     if (!fLogThreadNames)
         return str;
@@ -661,14 +661,14 @@ void ReadConfigFile(const std::string& confPath)
 
     {
         LOCK(cs_args);
-        set<string> setOptions;
+        std::set<std::string> setOptions;
         setOptions.insert("*");
 
         for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
         {
             // Don't overwrite existing settings so command line settings override dash.conf
-            string strKey = string("-") + it->string_key;
-            string strValue = it->value[0];
+            std::string strKey = std::string("-") + it->string_key;
+            std::string strValue = it->value[0];
             InterpretNegativeSetting(strKey, strValue);
             if (mapArgs.count(strKey) == 0)
                 mapArgs[strKey] = strValue;

@@ -606,7 +606,7 @@ UniValue getmempoolentry(const JSONRPCRequest& request)
 UniValue getblockhashes(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
-        throw runtime_error(
+        throw std::runtime_error(
             "getblockhashes timestamp\n"
             "\nReturns array of hashes of blocks within the timestamp range provided.\n"
             "\nArguments:\n"
@@ -724,7 +724,7 @@ UniValue getblockheader(const JSONRPCRequest& request)
 UniValue getblockheaders(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
-        throw runtime_error(
+        throw std::runtime_error(
             "getblockheaders \"hash\" ( count verbose )\n"
             "\nReturns an array of items with information about <count> blockheaders starting from <hash>.\n"
             "\nIf verbose is false, each item is a string that is serialized, hex-encoded data for a single blockheader.\n"

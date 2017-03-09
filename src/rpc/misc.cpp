@@ -118,7 +118,7 @@ UniValue getinfo(const JSONRPCRequest& request)
 UniValue debug(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw runtime_error(
+        throw std::runtime_error(
             "debug ( 0|1|addrman|alert|bench|coindb|db|lock|rand|rpc|selectcoins|mempool"
             "|mempoolrej|net|proxy|prune|http|libevent|tor|zmq|"
             "dash|privatesend|instantsend|masternode|spork|keepass|mnpayments|gobject )\n"
@@ -143,7 +143,7 @@ UniValue debug(const JSONRPCRequest& request)
 UniValue mnsync(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw runtime_error(
+        throw std::runtime_error(
             "mnsync [status|next|reset]\n"
             "Returns the sync status, updates to the next step or resets it entirely.\n"
         );
@@ -262,13 +262,13 @@ UniValue spork(const JSONRPCRequest& request)
 
     }
 
-    throw runtime_error(
+    throw std::runtime_error(
         "spork <name> [<value>]\n"
         "<name> is the corresponding spork name, or 'show' to show all current spork settings, 'active' to show which sporks are active\n"
         "<value> is a epoch datetime to enable or disable spork\n"
         + HelpRequiringPassphrase());
 #else // ENABLE_WALLET
-    throw runtime_error(
+    throw std::runtime_error(
         "spork <name>\n"
         "<name> is the corresponding spork name, or 'show' to show all current spork settings, 'active' to show which sporks are active\n");
 #endif // ENABLE_WALLET
@@ -644,7 +644,7 @@ bool timestampSort(std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> a,
 UniValue getaddressmempool(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw runtime_error(
+        throw std::runtime_error(
             "getaddressmempool\n"
             "\nReturns all mempool deltas for an address (requires addressindex to be enabled).\n"
             "\nArguments:\n"
@@ -715,7 +715,7 @@ UniValue getaddressmempool(const JSONRPCRequest& request)
 UniValue getaddressutxos(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw runtime_error(
+        throw std::runtime_error(
             "getaddressutxos\n"
             "\nReturns all unspent outputs for an address (requires addressindex to be enabled).\n"
             "\nArguments:\n"
@@ -782,7 +782,7 @@ UniValue getaddressutxos(const JSONRPCRequest& request)
 UniValue getaddressdeltas(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1 || !request.params[0].isObject())
-        throw runtime_error(
+        throw std::runtime_error(
             "getaddressdeltas\n"
             "\nReturns all changes for an address (requires addressindex to be enabled).\n"
             "\nArguments:\n"
@@ -870,7 +870,7 @@ UniValue getaddressdeltas(const JSONRPCRequest& request)
 UniValue getaddressbalance(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw runtime_error(
+        throw std::runtime_error(
             "getaddressbalance\n"
             "\nReturns the balance for an address(es) (requires addressindex to be enabled).\n"
             "\nArguments:\n"
@@ -926,7 +926,7 @@ UniValue getaddressbalance(const JSONRPCRequest& request)
 UniValue getaddresstxids(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw runtime_error(
+        throw std::runtime_error(
             "getaddresstxids\n"
             "\nReturns the txids for an address(es) (requires addressindex to be enabled).\n"
             "\nArguments:\n"
@@ -1009,7 +1009,7 @@ UniValue getaddresstxids(const JSONRPCRequest& request)
 UniValue getspentinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1 || !request.params[0].isObject())
-        throw runtime_error(
+        throw std::runtime_error(
             "getspentinfo\n"
             "\nReturns the txid and index where an output is spent.\n"
             "\nArguments:\n"
