@@ -293,7 +293,7 @@ bool LogAcceptCategory(const char* category)
                 ptrCategory.reset(new std::set<std::string>());
             }
         }
-        const std::set<std::string>& setCategories = *ptrCategory.get();
+        const std::set<std::string>& setCategories = *ptrCategory;
 
         // if not debugging everything and not debugging specific category, LogPrint does nothing.
         if (setCategories.count(std::string("")) == 0 &&
