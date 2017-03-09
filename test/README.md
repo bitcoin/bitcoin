@@ -1,5 +1,5 @@
 The [pull-tester](/test/pull-tester/) folder contains a script to call
-multiple tests from the [rpc-tests](/test/rpc-tests/) folder.
+multiple tests from the [functional](/test/functional/) folder.
 
 Every pull request to the bitcoin repository is built and run through
 the regression test suite. You can also run all or only individual
@@ -83,5 +83,5 @@ killall bitcoind
 Writing tests
 =============
 You are encouraged to write tests for new or existing features.
-Further information about the test framework and individual RPC
-tests is found in [test/rpc-tests](/test/rpc-tests).
+Further information about the test framework and individual functional
+tests is found in [test/functional](/test/functional).
