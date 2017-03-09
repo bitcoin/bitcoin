@@ -8,26 +8,46 @@
 #include "qt/sendcoinsdialog.h"
 #include "qt/sendcoinsentry.h"
 #include "qt/transactiontablemodel.h"
+#include "qt/transactionview.h"
 #include "qt/walletmodel.h"
 #include "test/test_bitcoin.h"
 #include "validation.h"
 #include "wallet/wallet.h"
 
 #include <QAbstractButton>
+#include <QAction>
 #include <QApplication>
+#include <QCheckBox>
+#include <QPushButton>
 #include <QTimer>
 #include <QVBoxLayout>
 
 namespace
 {
-//! Press "Yes" button in modal send confirmation dialog.
-void ConfirmSend()
+//! Press "Ok" button in message box dialog.
+void ConfirmMessage(QString* text = nullptr)
 {
-    QTimer::singleShot(0, makeCallback([](Callback* callback) {
+    QTimer::singleShot(0, makeCallback([text](Callback* callback) {
+        for (QWidget* widget : QApplication::topLevelWidgets()) {
+            if (widget->inherits("QMessageBox")) {
+                QMessageBox* messageBox = qobject_cast<QMessageBox*>(widget);
+                if (text) *text = messageBox->text();
+                messageBox->defaultButton()->click();
+            }
+        }
+        delete callback;
+    }), SLOT(call()));
+}
+
+//! Press "Yes" or "Cancel" buttons in modal send confirmation dialog.
+void ConfirmSend(QString* text = nullptr, bool cancel = false)
+{
+    QTimer::singleShot(0, makeCallback([text, cancel](Callback* callback) {
         for (QWidget* widget : QApplication::topLevelWidgets()) {
             if (widget->inherits("SendConfirmationDialog")) {
                 SendConfirmationDialog* dialog = qobject_cast<SendConfirmationDialog*>(widget);
-                QAbstractButton* button = dialog->button(QMessageBox::Yes);
+                if (text) *text = dialog->text();
+                QAbstractButton* button = dialog->button(cancel ? QMessageBox::Cancel : QMessageBox::Yes);
                 button->setEnabled(true);
                 button->click();
             }
@@ -37,12 +57,16 @@ void ConfirmSend()
 }
 
 //! Send coins to address and return txid.
-uint256 SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CBitcoinAddress& address, CAmount amount)
+uint256 SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CBitcoinAddress& address, CAmount amount, bool rbf)
 {
     QVBoxLayout* entries = sendCoinsDialog.findChild<QVBoxLayout*>("entries");
     SendCoinsEntry* entry = qobject_cast<SendCoinsEntry*>(entries->itemAt(0)->widget());
     entry->findChild<QValidatedLineEdit*>("payTo")->setText(QString::fromStdString(address.ToString()));
     entry->findChild<BitcoinAmountField*>("payAmount")->setValue(amount);
+    sendCoinsDialog.findChild<QFrame*>("frameFee")
+        ->findChild<QFrame*>("frameFeeSelection")
+        ->findChild<QCheckBox*>("optInRBF")
+        ->setCheckState(rbf ? Qt::Checked : Qt::Unchecked);
     uint256 txid;
     boost::signals2::scoped_connection c(wallet.NotifyTransactionChanged.connect([&txid](CWallet*, const uint256& hash, ChangeType status) {
         if (status == CT_NEW) txid = hash;
@@ -66,6 +90,32 @@ QModelIndex FindTx(const QAbstractItemModel& model, const uint256& txid)
     return {};
 }
 
+//! Invoke bumpfee on txid and check results.
+void BumpFee(TransactionView& view, const uint256& txid, bool expectDisabled, std::string expectError, bool cancel)
+{
+    QTableView* table = view.findChild<QTableView*>("transactionView");
+    QModelIndex index = FindTx(*table->selectionModel()->model(), txid);
+    QVERIFY2(index.isValid(), "Could not find BumpFee txid");
+
+    // Select row in table, invoke context menu, and make sure bumpfee action is
+    // enabled or disabled as expected.
+    QAction* action = view.findChild<QAction*>("bumpFeeAction");
+    table->selectionModel()->select(index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+    action->setEnabled(expectDisabled);
+    table->customContextMenuRequested({});
+    QCOMPARE(action->isEnabled(), !expectDisabled);
+
+    action->setEnabled(true);
+    QString text;
+    if (expectError.empty()) {
+        ConfirmSend(&text, cancel);
+    } else {
+        ConfirmMessage(&text);
+    }
+    action->trigger();
+    QVERIFY(text.indexOf(QString::fromStdString(expectError)) != -1);
+}
+
 //! Simple qt wallet tests.
 //
 // Test widgets can be debugged interactively calling show() on them and
@@ -81,9 +131,11 @@ QModelIndex FindTx(const QAbstractItemModel& model, const uint256& txid)
 //     src/qt/test/test_bitcoin-qt -platform cocoa    # macOS
 void TestSendCoins()
 {
-    // Set up wallet and chain with 101 blocks (1 mature block for spending).
+    // Set up wallet and chain with 105 blocks (5 mature blocks for spending).
     TestChain100Setup test;
-    test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
+    for (int i = 0; i < 5; ++i) {
+        test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
+    }
     bitdb.MakeMock();
     std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, "wallet_test.dat"));
     CWallet wallet(std::move(dbw));
@@ -100,18 +152,26 @@ void TestSendCoins()
     // Create widgets for sending coins and listing transactions.
     std::unique_ptr<const PlatformStyle> platformStyle(PlatformStyle::instantiate("other"));
     SendCoinsDialog sendCoinsDialog(platformStyle.get());
+    TransactionView transactionView(platformStyle.get());
     OptionsModel optionsModel;
     WalletModel walletModel(platformStyle.get(), &wallet, &optionsModel);
     sendCoinsDialog.setModel(&walletModel);
+    transactionView.setModel(&walletModel);
 
     // Send two transactions, and verify they are added to transaction list.
     TransactionTableModel* transactionTableModel = walletModel.getTransactionTableModel();
-    QCOMPARE(transactionTableModel->rowCount({}), 101);
-    uint256 txid1 = SendCoins(wallet, sendCoinsDialog, CBitcoinAddress(CKeyID()), 5 * COIN);
-    uint256 txid2 = SendCoins(wallet, sendCoinsDialog, CBitcoinAddress(CKeyID()), 10 * COIN);
-    QCOMPARE(transactionTableModel->rowCount({}), 103);
+    QCOMPARE(transactionTableModel->rowCount({}), 105);
+    uint256 txid1 = SendCoins(wallet, sendCoinsDialog, CBitcoinAddress(CKeyID()), 5 * COIN, false /* rbf */);
+    uint256 txid2 = SendCoins(wallet, sendCoinsDialog, CBitcoinAddress(CKeyID()), 10 * COIN, true /* rbf */);
+    QCOMPARE(transactionTableModel->rowCount({}), 107);
     QVERIFY(FindTx(*transactionTableModel, txid1).isValid());
     QVERIFY(FindTx(*transactionTableModel, txid2).isValid());
+
+    // Call bumpfee. Test disabled, canceled, enabled, then failing cases.
+    BumpFee(transactionView, txid1, true /* expect disabled */, "not BIP 125 replaceable" /* expected error */, false /* cancel */);
+    BumpFee(transactionView, txid2, false /* expect disabled */, {} /* expected error */, true /* cancel */);
+    BumpFee(transactionView, txid2, false /* expect disabled */, {} /* expected error */, false /* cancel */);
+    BumpFee(transactionView, txid2, false /* expect disabled */, "already bumped" /* expected error */, false /* cancel */);
 
     bitdb.Flush(true);
     bitdb.Reset();
