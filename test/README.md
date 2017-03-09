@@ -1,5 +1,5 @@
-The [pull-tester](/test/pull-tester/) folder contains a script to call
-multiple tests from the [functional](/test/functional/) folder.
+The [functional](/test/functional/) folder contains a script test_runner
+ to call multiple functional tests from its folder.
 
 Every pull request to the bitcoin repository is built and run through
 the regression test suite. You can also run all or only individual
@@ -27,19 +27,19 @@ Running tests
 
 You can run any single test by calling
 
-    test/pull-tester/rpc-tests.py <testname>
+    test/functional/test_runner.py <testname>
 
 Or you can run any combination of tests by calling
 
-    test/pull-tester/rpc-tests.py <testname1> <testname2> <testname3> ...
+    test/functional/test_runner.py <testname1> <testname2> <testname3> ...
 
 Run the regression test suite with
 
-    test/pull-tester/rpc-tests.py
+    test/functional/test_runner.py
 
 Run all possible tests with
 
-    test/pull-tester/rpc-tests.py --extended
+    test/functional/test_runner.py --extended
 
 By default, tests will be run in parallel. To specify how many jobs to run,
 append `--jobs=n` (default n=4).
@@ -61,7 +61,7 @@ Possible options, which apply to each individual test run:
 ```
 
 If you set the environment variable `PYTHON_DEBUG=1` you will get some debug
-output (example: `PYTHON_DEBUG=1 test/pull-tester/rpc-tests.py wallet`).
+output (example: `PYTHON_DEBUG=1 test/functional/test_runner.py wallet`).
 
 A 200-block -regtest blockchain and wallets for four nodes
 is created the first time a regression test is run and
