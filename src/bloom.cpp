@@ -254,8 +254,8 @@ void CRollingBloomFilter::insert(const std::vector<unsigned char>& vKey)
         if (nGeneration == 4) {
             nGeneration = 1;
         }
-        uint64_t nGenerationMask1 = -(uint64_t)(nGeneration & 1);
-        uint64_t nGenerationMask2 = -(uint64_t)(nGeneration >> 1);
+        uint64_t nGenerationMask1 = 0 - (uint64_t)(nGeneration & 1);
+        uint64_t nGenerationMask2 = 0 - (uint64_t)(nGeneration >> 1);
         /* Wipe old entries that used this generation number. */
         for (uint32_t p = 0; p < data.size(); p += 2) {
             uint64_t p1 = data[p], p2 = data[p + 1];
