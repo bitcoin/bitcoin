@@ -1536,7 +1536,7 @@ bool CWallet::SetHDChain(const CHDChain& chain, bool memonly)
     return true;
 }
 
-bool CWallet::IsHDEnabled()
+bool CWallet::IsHDEnabled() const
 {
     return !hdChain.masterKeyID.IsNull();
 }
