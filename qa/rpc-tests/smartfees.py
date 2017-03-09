@@ -99,7 +99,7 @@ def check_estimates(node, fees_seen, max_invalid, print_estimates = True):
     """
     all_estimates = [ node.estimatefee(i) for i in range(1,26) ]
     if print_estimates:
-        print([str(all_estimates[e-1]) for e in [1,2,3,6,15,25]])
+        self.log.info([str(all_estimates[e-1]) for e in [1,2,3,6,15,25]])
     delta = 1.0e-6 # account for rounding error
     last_e = max(fees_seen)
     for e in [x for x in all_estimates if x >= 0]:
@@ -159,8 +159,8 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.nodes.append(start_node(0, self.options.tmpdir, ["-maxorphantx=1000",
                                                               "-whitelist=127.0.0.1"]))
 
-        print("This test is time consuming, please be patient")
-        print("Splitting inputs so we can generate tx's")
+        self.log.info("This test is time consuming, please be patient")
+        self.log.info("Splitting inputs so we can generate tx's")
         self.txouts = []
         self.txouts2 = []
         # Split a coinbase into two transaction puzzle outputs
@@ -185,7 +185,7 @@ class EstimateFeeTest(BitcoinTestFramework):
             while (len(self.nodes[0].getrawmempool()) > 0):
                 self.nodes[0].generate(1)
             reps += 1
-        print("Finished splitting")
+        self.log.info("Finished splitting")
 
         # Now we can connect the other nodes, didn't want to connect them earlier
         # so the estimates would not be affected by the splitting transactions
@@ -193,8 +193,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         # NOTE: the CreateNewBlock code starts counting block size at 1,000 bytes,
         # (17k is room enough for 110 or so transactions)
         self.nodes.append(start_node(1, self.options.tmpdir,
-                                     ["-blockmaxsize=17000",
-                                      "-maxorphantx=1000", "-debug=estimatefee"]))
+                                     ["-blockmaxsize=17000", "-maxorphantx=1000"]))
         connect_nodes(self.nodes[1], 0)
 
         # Node2 is a stingy miner, that
@@ -238,15 +237,15 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.fees_per_kb = []
         self.memutxo = []
         self.confutxo = self.txouts # Start with the set of confirmed txouts after splitting
-        print("Will output estimates for 1/2/3/6/15/25 blocks")
+        self.log.info("Will output estimates for 1/2/3/6/15/25 blocks")
 
         for i in range(2):
-            print("Creating transactions and mining them with a block size that can't keep up")
+            self.log.info("Creating transactions and mining them with a block size that can't keep up")
             # Create transactions and mine 10 small blocks with node 2, but create txs faster than we can mine
             self.transact_and_mine(10, self.nodes[2])
             check_estimates(self.nodes[1], self.fees_per_kb, 14)
 
-            print("Creating transactions and mining them at a block size that is just big enough")
+            self.log.info("Creating transactions and mining them at a block size that is just big enough")
             # Generate transactions while mining 10 more blocks, this time with node1
             # which mines blocks with capacity just above the rate that transactions are being created
             self.transact_and_mine(10, self.nodes[1])
@@ -257,7 +256,7 @@ class EstimateFeeTest(BitcoinTestFramework):
             self.nodes[1].generate(1)
 
         sync_blocks(self.nodes[0:3], wait=.1)
-        print("Final estimates after emptying mempools")
+        self.log.info("Final estimates after emptying mempools")
         check_estimates(self.nodes[1], self.fees_per_kb, 2)
 
 if __name__ == '__main__':

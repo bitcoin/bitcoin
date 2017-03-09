@@ -90,7 +90,7 @@ class MaxUploadTest(BitcoinTestFramework):
     def setup_network(self):
         # Start a node with maxuploadtarget of 200 MB (/24h)
         self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-maxuploadtarget=800", "-blockmaxsize=999000"]))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-maxuploadtarget=800", "-blockmaxsize=999000"]))
 
     def run_test(self):
         # Before we connect anything, we first set the time on the node
@@ -161,7 +161,7 @@ class MaxUploadTest(BitcoinTestFramework):
             test_nodes[0].send_message(getdata_request)
         test_nodes[0].wait_for_disconnect()
         assert_equal(len(self.nodes[0].getpeerinfo()), 2)
-        print("Peer 0 disconnected after downloading old block too many times")
+        self.log.info("Peer 0 disconnected after downloading old block too many times")
 
         # Requesting the current block on test_nodes[1] should succeed indefinitely,
         # even when over the max upload target.
@@ -172,7 +172,7 @@ class MaxUploadTest(BitcoinTestFramework):
             test_nodes[1].sync_with_ping()
             assert_equal(test_nodes[1].block_receive_map[big_new_block], i+1)
 
-        print("Peer 1 able to repeatedly download new block")
+        self.log.info("Peer 1 able to repeatedly download new block")
 
         # But if test_nodes[1] tries for an old block, it gets disconnected too.
         getdata_request.inv = [CInv(2, big_old_block)]
@@ -180,9 +180,9 @@ class MaxUploadTest(BitcoinTestFramework):
         test_nodes[1].wait_for_disconnect()
         assert_equal(len(self.nodes[0].getpeerinfo()), 1)
 
-        print("Peer 1 disconnected after trying to download old block")
+        self.log.info("Peer 1 disconnected after trying to download old block")
 
-        print("Advancing system time on node to clear counters...")
+        self.log.info("Advancing system time on node to clear counters...")
 
         # If we advance the time by 24 hours, then the counters should reset,
         # and test_nodes[2] should be able to retrieve the old block.
@@ -192,14 +192,14 @@ class MaxUploadTest(BitcoinTestFramework):
         test_nodes[2].sync_with_ping()
         assert_equal(test_nodes[2].block_receive_map[big_old_block], 1)
 
-        print("Peer 2 able to download old block")
+        self.log.info("Peer 2 able to download old block")
 
         [c.disconnect_node() for c in connections]
 
         #stop and start node 0 with 1MB maxuploadtarget, whitelist 127.0.0.1
-        print("Restarting nodes with -whitelist=127.0.0.1")
+        self.log.info("Restarting nodes with -whitelist=127.0.0.1")
         stop_node(self.nodes[0], 0)
-        self.nodes[0] = start_node(0, self.options.tmpdir, ["-debug", "-whitelist=127.0.0.1", "-maxuploadtarget=1", "-blockmaxsize=999000"])
+        self.nodes[0] = start_node(0, self.options.tmpdir, ["-whitelist=127.0.0.1", "-maxuploadtarget=1", "-blockmaxsize=999000"])
 
         #recreate/reconnect 3 test nodes
         test_nodes = []
@@ -225,7 +225,7 @@ class MaxUploadTest(BitcoinTestFramework):
         test_nodes[1].wait_for_disconnect()
         assert_equal(len(self.nodes[0].getpeerinfo()), 3) #node is still connected because of the whitelist
 
-        print("Peer 1 still connected after trying to download old block (whitelisted)")
+        self.log.info("Peer 1 still connected after trying to download old block (whitelisted)")
 
         [c.disconnect_node() for c in connections]
 
