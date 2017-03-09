@@ -284,6 +284,10 @@ struct CNodeState {
     CBlockIndex *pindexBestHeaderSent;
     //! Whether we've started headers synchronization with this peer.
     bool fSyncStarted;
+    //! The start time of the sync
+    int64_t fSyncStartTime;
+    //! Were the first headers requested in a sync received
+    bool fFirstHeadersReceived;
     //! Since when we're stalling block download progress (in microseconds), or 0.
     int64_t nStallingSince;
     list<QueuedBlock> vBlocksInFlight;
@@ -5651,6 +5655,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         bool fCanDirectFetch = CanDirectFetch(chainparams.GetConsensus());
         CNodeState *nodestate = State(pfrom->GetId());
+        nodestate->fFirstHeadersReceived = true;
         // If this set of headers is valid and ends in a block with at least as
         // much work as our tip, download as much as possible.
         if (fCanDirectFetch && pindexLast && pindexLast->IsValid(BLOCK_VALID_TREE) && chainActive.Tip()->nChainWork <= pindexLast->nChainWork) {
@@ -6621,6 +6626,14 @@ bool SendMessages(CNode* pto)
             pto->PushMessage(NetMsgType::REJECT, (string)NetMsgType::BLOCK, reject.chRejectCode, reject.strRejectReason, reject.hashBlock);
         state.rejects.clear();
 
+        // If a sync has been started check whether we received the first batch of headers requested within the timeout period.
+        // If not then disconnect and ban the node and a new node will automatically be selected to start the headers download.
+        if ((state.fSyncStarted) && (state.fSyncStartTime < GetTime() - INITIAL_HEADERS_TIMEOUT) && (!state.fFirstHeadersReceived)) {
+            pto->fDisconnect = true;
+            CNode::Ban(pto->addr, BanReasonNodeMisbehaving, 4*60*60); // ban for 4 hours
+            LogPrintf("Banning %s because initial headers were either not received or not received before the timeout\n", pto->addr.ToString());
+        }
+
         // Start block sync
         if (pindexBestHeader == NULL)
             pindexBestHeader = chainActive.Tip();
@@ -6628,8 +6641,6 @@ bool SendMessages(CNode* pto)
         if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex) {
             // Only actively request headers from a single peer, unless we're close to today.
             if ((nSyncStarted == 0 && fFetch) || pindexBestHeader->GetBlockTime() > GetAdjustedTime() - 24 * 60 * 60) {
-                state.fSyncStarted = true;
-                nSyncStarted++;
                 const CBlockIndex *pindexStart = pindexBestHeader;
                 /* If possible, start at the block preceding the currently
                    best known header.  This ensures that we always get a
@@ -6641,6 +6652,11 @@ bool SendMessages(CNode* pto)
                 if (pindexStart->pprev)
                     pindexStart = pindexStart->pprev;
                 if (pindexStart->nHeight < pto->nStartingHeight) { // BU Bug fix for Core:  Don't start downloading headers unless our chain is shorter
+                    state.fSyncStarted = true;
+                    state.fSyncStartTime = GetTime();
+                    state.fFirstHeadersReceived = false;
+                    nSyncStarted++;
+
                     LogPrint("net", "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->id, pto->nStartingHeight);
                     pto->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexStart), uint256());
                 }
