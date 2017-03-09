@@ -195,7 +195,7 @@ test_bitcoin_filtered.info: test_bitcoin.info
 	$(LCOV) -r $< "/usr/include/*" -o $@
 
 functional_test.info: test_bitcoin_filtered.info
-	-@TIMEOUT=15 python test/functional/test_runner.py $(EXTENDED_RPC_TESTS)
+	-@TIMEOUT=15 python test/functional/test_runner.py $(EXTENDED_FUNCTIONAL_TESTS)
 	$(LCOV) -c -d $(abs_builddir)/src --t functional-tests -o $@
 	$(LCOV) -z -d $(abs_builddir)/src
 	$(LCOV) -z -d $(abs_builddir)/src/leveldb
