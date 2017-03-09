@@ -40,7 +40,9 @@ private:
     // Track the historical moving average of theses totals over blocks
     std::vector<std::vector<double>> confAvg; // confAvg[Y][X]
 
-    std::vector<std::vector<double>> failAvg; // future use
+    // Track moving avg of txs which have been evicted from the mempool
+    // after failing to be confirmed within Y blocks
+    std::vector<std::vector<double>> failAvg; // failAvg[Y][X]
 
     // Sum the total feerate of all tx's in each bucket
     // Track the historical moving average of this total over blocks
@@ -89,7 +91,7 @@ public:
 
     /** Remove a transaction from mempool tracking stats*/
     void removeTx(unsigned int entryHeight, unsigned int nBestSeenHeight,
-                  unsigned int bucketIndex);
+                  unsigned int bucketIndex, bool inBlock);
 
     /** Update our estimates by decaying our historical moving average and updating
         with the data gathered from the current block */
@@ -135,6 +137,10 @@ TxConfirmStats::TxConfirmStats(const std::vector<double>& defaultBuckets,
     for (unsigned int i = 0; i < maxConfirms; i++) {
         confAvg[i].resize(buckets.size());
     }
+    failAvg.resize(maxConfirms);
+    for (unsigned int i = 0; i < maxConfirms; i++) {
+        failAvg[i].resize(buckets.size());
+    }
 
     txCtAvg.resize(buckets.size());
     avg.resize(buckets.size());
@@ -179,6 +185,8 @@ void TxConfirmStats::UpdateMovingAverages()
     for (unsigned int j = 0; j < buckets.size(); j++) {
         for (unsigned int i = 0; i < confAvg.size(); i++)
             confAvg[i][j] = confAvg[i][j] * decay;
+        for (unsigned int i = 0; i < failAvg.size(); i++)
+            failAvg[i][j] = failAvg[i][j] * decay;
         avg[j] = avg[j] * decay;
         txCtAvg[j] = txCtAvg[j] * decay;
     }
@@ -193,6 +201,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
     double nConf = 0; // Number of tx's confirmed within the confTarget
     double totalNum = 0; // Total number of tx's that were ever confirmed
     int extraNum = 0;  // Number of tx's still in mempool for confTarget or longer
+    double failNum = 0; // Number of tx's that were never confirmed but removed from the mempool after confTarget
 
     int maxbucketindex = buckets.size() - 1;
 
@@ -229,6 +238,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
         curFarBucket = bucket;
         nConf += confAvg[confTarget - 1][bucket];
         totalNum += txCtAvg[bucket];
+        failNum += failAvg[confTarget - 1][bucket];
         for (unsigned int confct = confTarget; confct < GetMaxConfirms(); confct++)
             extraNum += unconfTxs[(nBlockHeight - confct)%bins][bucket];
         extraNum += oldUnconfTxs[bucket];
@@ -237,7 +247,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
         // (Only count the confirmed data points, so that each confirmation count
         // will be looking at the same amount of data and same bucket breaks)
         if (totalNum >= sufficientTxVal / (1 - decay)) {
-            double curPct = nConf / (totalNum + extraNum);
+            double curPct = nConf / (totalNum + failNum + extraNum);
 
             // Check to see if we are no longer getting confirmed at the success rate
             if ((requireGreater && curPct < successBreakPoint) || (!requireGreater && curPct > successBreakPoint)) {
@@ -250,6 +260,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
                     failBucket.withinTarget = nConf;
                     failBucket.totalConfirmed = totalNum;
                     failBucket.inMempool = extraNum;
+                    failBucket.leftMempool = failNum;
                     passing = false;
                 }
                 continue;
@@ -265,6 +276,8 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
                 passBucket.totalConfirmed = totalNum;
                 totalNum = 0;
                 passBucket.inMempool = extraNum;
+                passBucket.leftMempool = failNum;
+                failNum = 0;
                 extraNum = 0;
                 bestNearBucket = curNearBucket;
                 bestFarBucket = curFarBucket;
@@ -309,16 +322,17 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
         failBucket.withinTarget = nConf;
         failBucket.totalConfirmed = totalNum;
         failBucket.inMempool = extraNum;
+        failBucket.leftMempool = failNum;
     }
 
-    LogPrint(BCLog::ESTIMATEFEE, "FeeEst: %d %s%.0f%% decay %.5f: need feerate: %g from (%g - %g) %.2f%% %.1f/(%.1f+%d mem) Fail: (%g - %g) %.2f%% %.1f/(%.1f+%d mem)\n",
+    LogPrint(BCLog::ESTIMATEFEE, "FeeEst: %d %s%.0f%% decay %.5f: need feerate: %g from (%g - %g) %.2f%% %.1f/(%.1f+%d mem+%.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f+%d mem+%.1f out)\n",
              confTarget, requireGreater ? ">" : "<", 100.0 * successBreakPoint, decay,
              median, passBucket.start, passBucket.end,
-             100 * passBucket.withinTarget / (passBucket.totalConfirmed + passBucket.inMempool),
-             passBucket.withinTarget, passBucket.totalConfirmed, passBucket.inMempool,
+             100 * passBucket.withinTarget / (passBucket.totalConfirmed + passBucket.inMempool + passBucket.leftMempool),
+             passBucket.withinTarget, passBucket.totalConfirmed, passBucket.inMempool, passBucket.leftMempool,
              failBucket.start, failBucket.end,
-             100 * failBucket.withinTarget / (failBucket.totalConfirmed + failBucket.inMempool),
-             failBucket.withinTarget, failBucket.totalConfirmed, failBucket.inMempool);
+             100 * failBucket.withinTarget / (failBucket.totalConfirmed + failBucket.inMempool + failBucket.leftMempool),
+             failBucket.withinTarget, failBucket.totalConfirmed, failBucket.inMempool, failBucket.leftMempool);
 
 
     if (result) {
@@ -376,6 +390,19 @@ void TxConfirmStats::Read(CAutoFile& filein, int nFileVersion, size_t numBuckets
 
     if (nFileVersion >= 149900) {
         filein >> failAvg;
+        if (maxConfirms != failAvg.size()) {
+            throw std::runtime_error("Corrupt estimates file. Mismatch in confirms tracked for failures");
+        }
+        for (unsigned int i = 0; i < maxConfirms; i++) {
+            if (failAvg[i].size() != numBuckets) {
+                throw std::runtime_error("Corrupt estimates file. Mismatch in one of failure average bucket counts");
+            }
+        }
+    } else {
+        failAvg.resize(confAvg.size());
+        for (unsigned int i = 0; i < failAvg.size(); i++) {
+            failAvg[i].resize(numBuckets);
+        }
     }
 
     // Resize the current block variables which aren't stored in the data file
@@ -394,7 +421,7 @@ unsigned int TxConfirmStats::NewTx(unsigned int nBlockHeight, double val)
     return bucketindex;
 }
 
-void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHeight, unsigned int bucketindex)
+void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHeight, unsigned int bucketindex, bool inBlock)
 {
     //nBestSeenHeight is not updated yet for the new block
     int blocksAgo = nBestSeenHeight - entryHeight;
@@ -422,6 +449,11 @@ void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHe
                      blockIndex, bucketindex);
         }
     }
+    if (!inBlock && blocksAgo >= 1) {
+        for (size_t i = 0; i < blocksAgo && i < failAvg.size(); i++) {
+            failAvg[i][bucketindex]++;
+        }
+    }
 }
 
 // This function is called from CTxMemPool::removeUnchecked to ensure
@@ -429,14 +461,14 @@ void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHe
 // tracked. Txs that were part of a block have already been removed in
 // processBlockTx to ensure they are never double tracked, but it is
 // of no harm to try to remove them again.
-bool CBlockPolicyEstimator::removeTx(uint256 hash)
+bool CBlockPolicyEstimator::removeTx(uint256 hash, bool inBlock)
 {
     LOCK(cs_feeEstimator);
     std::map<uint256, TxStatsInfo>::iterator pos = mapMemPoolTxs.find(hash);
     if (pos != mapMemPoolTxs.end()) {
-        feeStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.bucketIndex);
-        shortStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.bucketIndex);
-        longStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.bucketIndex);
+        feeStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.bucketIndex, inBlock);
+        shortStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.bucketIndex, inBlock);
+        longStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.bucketIndex, inBlock);
         mapMemPoolTxs.erase(hash);
         return true;
     } else {
@@ -511,7 +543,7 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
 
 bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry)
 {
-    if (!removeTx(entry->GetTx().GetHash())) {
+    if (!removeTx(entry->GetTx().GetHash(), true)) {
         // This transaction wasn't being tracked for fee estimation
         return false;
     }
@@ -764,6 +796,18 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
         return false;
     }
     return true;
+}
+
+void CBlockPolicyEstimator::FlushUnconfirmed(CTxMemPool& pool) {
+    int64_t startclear = GetTimeMicros();
+    std::vector<uint256> txids;
+    pool.queryHashes(txids);
+    LOCK(cs_feeEstimator);
+    for (auto& txid : txids) {
+        removeTx(txid, false);
+    }
+    int64_t endclear = GetTimeMicros();
+    LogPrint(BCLog::ESTIMATEFEE, "Recorded %u unconfirmed txs from mempool in %ld micros\n",txids.size(), endclear - startclear);
 }
 
 FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee)
