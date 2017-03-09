@@ -147,7 +147,7 @@ private:
         if (!batch.Write(key, value, fOverwrite)) {
             return false;
         }
-        IncrementUpdateCounter();
+        m_dbw.IncrementUpdateCounter();
         return true;
     }
 
@@ -157,13 +157,14 @@ private:
         if (!batch.Erase(key)) {
             return false;
         }
-        IncrementUpdateCounter();
+        m_dbw.IncrementUpdateCounter();
         return true;
     }
 
 public:
     CWalletDB(CWalletDBWrapper& dbw, const char* pszMode = "r+", bool _fFlushOnClose = true) :
-        batch(dbw, pszMode, _fFlushOnClose)
+        batch(dbw, pszMode, _fFlushOnClose),
+        m_dbw(dbw)
     {
     }
 
@@ -232,9 +233,6 @@ public:
     //! write the hdchain model (external chain child index counter)
     bool WriteHDChain(const CHDChain& chain);
 
-    static void IncrementUpdateCounter();
-    static unsigned int GetUpdateCounter();
-
     //! Begin a new transaction
     bool TxnBegin();
     //! Commit current transaction
@@ -247,6 +245,7 @@ public:
     bool WriteVersion(int nVersion);
 private:
     CDB batch;
+    CWalletDBWrapper& m_dbw;
 
     CWalletDB(const CWalletDB&);
     void operator=(const CWalletDB&);

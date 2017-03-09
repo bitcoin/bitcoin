@@ -119,10 +119,14 @@ public:
      */
     void Flush(bool shutdown);
 
+    void IncrementUpdateCounter();
+    unsigned int GetUpdateCounter();
+
 private:
     /** BerkeleyDB specific */
     CDBEnv *env;
     std::string strFile;
+    std::atomic<unsigned int> nUpdateCounter;
 
     /** Return whether this database handle is a dummy for testing.
      * Only to be used at a low level, application should ideally not care
