@@ -52,6 +52,8 @@ NODE_NETWORK = (1 << 0)
 NODE_GETUTXO = (1 << 1)
 NODE_BLOOM = (1 << 2)
 
+logger = logging.getLogger("TestFramework.mininode")
+
 # Keep our own socket map for asyncore, so that we can track disconnects
 # ourselves (to workaround an issue with closing an asyncore socket when
 # using select)
@@ -1352,8 +1354,7 @@ class NodeConnCB(object):
             try:
                 getattr(self, 'on_' + message.command.decode('ascii'))(conn, message)
             except:
-                print("ERROR delivering %s (%s)" % (repr(message),
-                                                    sys.exc_info()[0]))
+                logger.exception("ERROR delivering %s" % repr(message))
 
     def on_version(self, conn, message):
         if message.nVersion >= 209:
@@ -1464,7 +1465,6 @@ class NodeConn(asyncore.dispatcher):
 
     def __init__(self, dstaddr, dstport, rpc, callback, net="regtest", services=NODE_NETWORK, send_version=True):
         asyncore.dispatcher.__init__(self, map=mininode_socket_map)
-        self.log = logging.getLogger("NodeConn(%s:%d)" % (dstaddr, dstport))
         self.dstaddr = dstaddr
         self.dstport = dstport
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -1489,8 +1489,7 @@ class NodeConn(asyncore.dispatcher):
             vt.addrFrom.port = 0
             self.send_message(vt, True)
 
-        print('MiniNode: Connecting to Dash Node IP # ' + dstaddr + ':' \
-            + str(dstport))
+        logger.info('Connecting to Dash Node: %s:%d' % (self.dstaddr, self.dstport))
 
         try:
             self.connect((dstaddr, dstport))
@@ -1498,18 +1497,14 @@ class NodeConn(asyncore.dispatcher):
             self.handle_close()
         self.rpc = rpc
 
-    def show_debug_msg(self, msg):
-        self.log.debug(msg)
-
     def handle_connect(self):
         if self.state != "connected":
-            self.show_debug_msg("MiniNode: Connected & Listening: \n")
+            logger.debug("Connected & Listening: %s:%d" % (self.dstaddr, self.dstport))
             self.state = "connected"
             self.cb.on_open(self)
 
     def handle_close(self):
-        self.show_debug_msg("MiniNode: Closing Connection to %s:%d... "
-                            % (self.dstaddr, self.dstport))
+        logger.debug("Closing connection to: %s:%d" % (self.dstaddr, self.dstport))
         self.state = "closed"
         self.recvbuf = b""
         self.sendbuf = b""
@@ -1591,17 +1586,14 @@ class NodeConn(asyncore.dispatcher):
                     t.deserialize(f)
                     self.got_message(t)
                 else:
-                    self.show_debug_msg("Unknown command: '" + str(command) + "' " +
-                                        repr(msg))
+                    logger.warning("Received unknown command from %s:%d: '%s' %s" % (self.dstaddr, self.dstport, command, repr(msg)))
         except Exception as e:
-            print('got_data:', repr(e))
-            # import  traceback
-            # traceback.print_tb(sys.exc_info()[2])
+            logger.exception('got_data:', repr(e))
 
     def send_message(self, message, pushbuf=False):
         if self.state != "connected" and not pushbuf:
             raise IOError('Not connected, no pushbuf')
-        self.show_debug_msg("Send %s" % repr(message))
+        logger.debug("Send message to %s:%d: %s" % (self.dstaddr, self.dstport, repr(message)))
         command = message.command
         data = message.serialize()
         tmsg = self.MAGIC_BYTES[self.network]
@@ -1623,7 +1615,7 @@ class NodeConn(asyncore.dispatcher):
                 self.messagemap[b'ping'] = msg_ping_prebip31
         if self.last_sent + 30 * 60 < time.time():
             self.send_message(self.messagemap[b'ping']())
-        self.show_debug_msg("Recv %s" % repr(message))
+        logger.debug("Received message from %s:%d: %s" % (self.dstaddr, self.dstport, repr(message)))
         self.cb.deliver(self, message)
 
     def disconnect_node(self):
