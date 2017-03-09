@@ -9,7 +9,6 @@
 #include "checkpoints.h"
 #include "chain.h"
 #include "wallet/coincontrol.h"
-#include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "key.h"
 #include "keystore.h"
@@ -3932,7 +3931,7 @@ int CMerkleTx::GetBlocksToMaturity() const
 {
     if (!IsCoinBase())
         return 0;
-    return max(0, (COINBASE_MATURITY+1) - GetDepthInMainChain());
+    return max(0, (Params().GetConsensus().coinbaseMaturity + 1) - GetDepthInMainChain());
 }
 
 

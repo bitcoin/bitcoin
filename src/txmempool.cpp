@@ -6,8 +6,8 @@
 #include "txmempool.h"
 
 #include "clientversion.h"
-#include "consensus/consensus.h"
 #include "consensus/validation.h"
+#include "chainparams.h"
 #include "validation.h"
 #include "policy/policy.h"
 #include "policy/fees.h"
@@ -526,6 +526,7 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
     // Remove transactions spending a coinbase which are now immature and no-longer-final transactions
     LOCK(cs);
     setEntries txToRemove;
+    const int coinbaseMaturity = Params().GetConsensus().coinbaseMaturity;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         const CTransaction& tx = it->GetTx();
         LockPoints lp = it->GetLockPoints();
@@ -541,7 +542,7 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
                     continue;
                 const CCoins *coins = pcoins->AccessCoins(txin.prevout.hash);
                 if (nCheckFrequency != 0) assert(coins);
-                if (!coins || (coins->IsCoinBase() && ((signed long)nMemPoolHeight) - coins->nHeight < COINBASE_MATURITY)) {
+                if (!coins || (coins->IsCoinBase() && ((signed long)nMemPoolHeight) - coins->nHeight < coinbaseMaturity)) {
                     txToRemove.insert(it);
                     break;
                 }

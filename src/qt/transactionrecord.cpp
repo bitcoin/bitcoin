@@ -5,7 +5,6 @@
 #include "transactionrecord.h"
 
 #include "base58.h"
-#include "consensus/consensus.h"
 #include "validation.h"
 #include "timedata.h"
 #include "wallet/wallet.h"
