@@ -2871,7 +2871,7 @@ bool CWallet::AddAccountingEntry(const CAccountingEntry& acentry)
 
 bool CWallet::AddAccountingEntry(const CAccountingEntry& acentry, CWalletDB *pwalletdb)
 {
-    if (!pwalletdb->WriteAccountingEntry_Backend(acentry))
+    if (!pwalletdb->WriteAccountingEntry(++nAccountingEntryNumber, acentry))
         return false;
 
     laccentries.push_back(acentry);
