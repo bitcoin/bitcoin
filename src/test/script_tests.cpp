@@ -462,7 +462,7 @@ public:
         return array;
     }
 
-    std::string GetComment()
+    std::string GetComment() const
     {
         return comment;
     }

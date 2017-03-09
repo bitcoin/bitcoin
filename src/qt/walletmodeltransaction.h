@@ -22,15 +22,15 @@ public:
     explicit WalletModelTransaction(const QList<SendCoinsRecipient> &recipients);
     ~WalletModelTransaction();
 
-    QList<SendCoinsRecipient> getRecipients();
+    QList<SendCoinsRecipient> getRecipients() const;
 
-    CWalletTx *getTransaction();
+    CWalletTx *getTransaction() const;
     unsigned int getTransactionSize();
 
     void setTransactionFee(const CAmount& newFee);
-    CAmount getTransactionFee();
+    CAmount getTransactionFee() const;
 
-    CAmount getTotalTransactionAmount();
+    CAmount getTotalTransactionAmount() const;
 
     void newPossibleKeyChange(CWallet *wallet);
     CReserveKey *getPossibleKeyChange();

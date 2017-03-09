@@ -551,7 +551,7 @@ void OptionsModel::setRestartRequired(bool fRequired)
     return settings.setValue("fRestartRequired", fRequired);
 }
 
-bool OptionsModel::isRestartRequired()
+bool OptionsModel::isRestartRequired() const
 {
     QSettings settings;
     return settings.value("fRestartRequired", false).toBool();
