@@ -97,15 +97,15 @@ namespace boost {
 
 } // namespace boost
 
-using namespace std;
+
 
 const char * const BITCOIN_CONF_FILENAME = "bitcoin.conf";
 const char * const BITCOIN_PID_FILENAME = "bitcoind.pid";
 
 CCriticalSection cs_args;
-map<string, string> mapArgs;
-static map<string, vector<string> > _mapMultiArgs;
-const map<string, vector<string> >& mapMultiArgs = _mapMultiArgs;
+std::map<std::string, std::string> mapArgs;
+static std::map<std::string, std::vector<std::string> > _mapMultiArgs;
+const std::map<std::string, std::vector<std::string> >& mapMultiArgs = _mapMultiArgs;
 bool fDebug = false;
 bool fPrintToConsole = false;
 bool fPrintToDebugLog = true;
@@ -191,7 +191,7 @@ static boost::once_flag debugPrintInitFlag = BOOST_ONCE_INIT;
  */
 static FILE* fileout = NULL;
 static boost::mutex* mutexDebugLog = NULL;
-static list<string> *vMsgsBeforeOpenLog;
+static std::list<std::string>* vMsgsBeforeOpenLog;
 
 static int FileWriteStr(const std::string &str, FILE *fp)
 {
@@ -202,7 +202,7 @@ static void DebugPrintInit()
 {
     assert(mutexDebugLog == NULL);
     mutexDebugLog = new boost::mutex();
-    vMsgsBeforeOpenLog = new list<string>;
+    vMsgsBeforeOpenLog = new std::list<std::string>;
 }
 
 void OpenDebugLog()
@@ -238,22 +238,22 @@ bool LogAcceptCategory(const char* category)
         // This helps prevent issues debugging global destructors,
         // where mapMultiArgs might be deleted before another
         // global destructor calls LogPrint()
-        static boost::thread_specific_ptr<set<string> > ptrCategory;
+        static boost::thread_specific_ptr<std::set<std::string> > ptrCategory;
         if (ptrCategory.get() == NULL)
         {
             if (mapMultiArgs.count("-debug")) {
-                const vector<string>& categories = mapMultiArgs.at("-debug");
-                ptrCategory.reset(new set<string>(categories.begin(), categories.end()));
+                const std::vector<std::string>& categories = mapMultiArgs.at("-debug");
+                ptrCategory.reset(new std::set<std::string>(categories.begin(), categories.end()));
                 // thread_specific_ptr automatically deletes the set when the thread ends.
             } else
-                ptrCategory.reset(new set<string>());
+                ptrCategory.reset(new std::set<std::string>());
         }
-        const set<string>& setCategories = *ptrCategory.get();
+        const std::set<std::string>& setCategories = *ptrCategory.get();
 
         // if not debugging everything and not debugging specific category, LogPrint does nothing.
-        if (setCategories.count(string("")) == 0 &&
-            setCategories.count(string("1")) == 0 &&
-            setCategories.count(string(category)) == 0)
+        if (setCategories.count(std::string("")) == 0 &&
+            setCategories.count(std::string("1")) == 0 &&
+            setCategories.count(std::string(category)) == 0)
             return false;
     }
     return true;
@@ -266,7 +266,7 @@ bool LogAcceptCategory(const char* category)
  */
 static std::string LogTimestampStr(const std::string &str, std::atomic_bool *fStartedNewLine)
 {
-    string strStamped;
+    std::string strStamped;
 
     if (!fLogTimestamps)
         return str;
@@ -293,7 +293,7 @@ int LogPrintStr(const std::string &str)
     int ret = 0; // Returns total number of characters written
     static std::atomic_bool fStartedNewLine(true);
 
-    string strTimestamped = LogTimestampStr(str, &fStartedNewLine);
+    std::string strTimestamped = LogTimestampStr(str, &fStartedNewLine);
 
     if (fPrintToConsole)
     {
@@ -561,14 +561,14 @@ void ReadConfigFile(const std::string& confPath)
 
     {
         LOCK(cs_args);
-        set<string> setOptions;
+        std::set<std::string> setOptions;
         setOptions.insert("*");
 
         for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
         {
             // Don't overwrite existing settings so command line settings override bitcoin.conf
-            string strKey = string("-") + it->string_key;
-            string strValue = it->value[0];
+            std::string strKey = std::string("-") + it->string_key;
+            std::string strValue = it->value[0];
             InterpretNegativeSetting(strKey, strValue);
             if (mapArgs.count(strKey) == 0)
                 mapArgs[strKey] = strValue;
