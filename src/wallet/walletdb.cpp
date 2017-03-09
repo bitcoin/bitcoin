@@ -22,8 +22,6 @@
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 
-static std::atomic<unsigned int> nWalletDBUpdateCounter;
-
 //
 // CWalletDB
 //
@@ -762,20 +760,22 @@ void MaybeCompactWalletDB()
         return;
     }
 
-    static unsigned int nLastSeen = CWalletDB::GetUpdateCounter();
-    static unsigned int nLastFlushed = CWalletDB::GetUpdateCounter();
+    CWalletDBWrapper& dbh = pwalletMain->GetDBHandle();
+
+    static unsigned int nLastSeen = dbh.GetUpdateCounter();
+    static unsigned int nLastFlushed = dbh.GetUpdateCounter();
     static int64_t nLastWalletUpdate = GetTime();
 
-    if (nLastSeen != CWalletDB::GetUpdateCounter())
+    if (nLastSeen != dbh.GetUpdateCounter())
     {
-        nLastSeen = CWalletDB::GetUpdateCounter();
+        nLastSeen = dbh.GetUpdateCounter();
         nLastWalletUpdate = GetTime();
     }
 
-    if (nLastFlushed != CWalletDB::GetUpdateCounter() && GetTime() - nLastWalletUpdate >= 2)
+    if (nLastFlushed != dbh.GetUpdateCounter() && GetTime() - nLastWalletUpdate >= 2)
     {
-        if (CDB::PeriodicFlush(pwalletMain->GetDBHandle())) {
-            nLastFlushed = CWalletDB::GetUpdateCounter();
+        if (CDB::PeriodicFlush(dbh)) {
+            nLastFlushed = dbh.GetUpdateCounter();
         }
     }
     fOneThread = false;
@@ -843,16 +843,6 @@ bool CWalletDB::EraseDestData(const std::string &address, const std::string &key
 bool CWalletDB::WriteHDChain(const CHDChain& chain)
 {
     return WriteIC(std::string("hdchain"), chain);
-}
-
-void CWalletDB::IncrementUpdateCounter()
-{
-    nWalletDBUpdateCounter++;
-}
-
-unsigned int CWalletDB::GetUpdateCounter()
-{
-    return nWalletDBUpdateCounter;
 }
 
 bool CWalletDB::TxnBegin()
