@@ -42,7 +42,7 @@ class BitcoinTestFramework(object):
         pass
 
     def setup_chain(self):
-        print("Initializing test directory "+self.options.tmpdir)
+        self.log.info("Initializing test directory "+self.options.tmpdir)
         if self.setup_clean_chain:
             initialize_chain_clean(self.options.tmpdir, self.num_nodes)
         else:
@@ -112,6 +112,8 @@ class BitcoinTestFramework(object):
                           help="Directory for caching pregenerated datadirs")
         parser.add_option("--tmpdir", dest="tmpdir", default=tempfile.mkdtemp(prefix="test"),
                           help="Root directory for datadirs")
+        parser.add_option("-l", "--loglevel", dest="loglevel", default="INFO",
+                          help="log events at this level and higher to the console. Can be set to DEBUG, INFO, WARNING, ERROR or CRITICAL. Passing --loglevel DEBUG will output all logs to console. Note that logs at all levels are always written to the test_framework.log file in the temporary test directory.")
         parser.add_option("--tracerpc", dest="trace_rpc", default=False, action="store_true",
                           help="Print out all RPC calls as they are made")
         parser.add_option("--portseed", dest="port_seed", default=os.getpid(), type='int',
@@ -124,9 +126,6 @@ class BitcoinTestFramework(object):
         # backup dir variable for removal at cleanup
         self.options.root, self.options.tmpdir = self.options.tmpdir, self.options.tmpdir + '/' + str(self.options.port_seed)
 
-        if self.options.trace_rpc:
-            logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
-
         if self.options.coveragedir:
             enable_coverage(self.options.coveragedir)
 
@@ -136,41 +135,41 @@ class BitcoinTestFramework(object):
 
         check_json_precision()
 
+        # Set up temp directory and start logging
+        os.makedirs(self.options.tmpdir, exist_ok=False)
+        self._start_logging()
+
         success = False
+
         try:
-            os.makedirs(self.options.tmpdir, exist_ok=False)
             self.setup_chain()
             self.setup_network()
             self.run_test()
             success = True
         except JSONRPCException as e:
-            print("JSONRPC error: "+e.error['message'])
-            traceback.print_tb(sys.exc_info()[2])
+            self.log.exception("JSONRPC error")
         except AssertionError as e:
-            print("Assertion failed: " + str(e))
-            traceback.print_tb(sys.exc_info()[2])
+            self.log.exception("Assertion failed")
         except KeyError as e:
-            print("key not found: "+ str(e))
-            traceback.print_tb(sys.exc_info()[2])
+            self.log.exception("Key error")
         except Exception as e:
-            print("Unexpected exception caught during testing: " + repr(e))
-            traceback.print_tb(sys.exc_info()[2])
+            self.log.exception("Unexpected exception caught during testing")
         except KeyboardInterrupt as e:
-            print("Exiting after " + repr(e))
+            self.log.warning("Exiting after keyboard interrupt")
 
         if not self.options.noshutdown:
-            print("Stopping nodes")
+            self.log.info("Stopping nodes")
             stop_nodes(self.nodes)
         else:
-            print("Note: bitcoinds were not stopped and may still be running")
+            self.log.info("Note: bitcoinds were not stopped and may still be running")
 
         if not self.options.nocleanup and not self.options.noshutdown and success:
-            print("Cleaning up")
+            self.log.info("Cleaning up")
             shutil.rmtree(self.options.tmpdir)
             if not os.listdir(self.options.root):
                 os.rmdir(self.options.root)
         else:
-            print("Not cleaning up dir %s" % self.options.tmpdir)
+            self.log.warning("Not cleaning up dir %s" % self.options.tmpdir)
             if os.getenv("PYTHON_DEBUG", ""):
                 # Dump the end of the debug logs, to aid in debugging rare
                 # travis failures.
@@ -182,12 +181,39 @@ class BitcoinTestFramework(object):
                     from collections import deque
                     print("".join(deque(open(f), MAX_LINES_TO_PRINT)))
         if success:
-            print("Tests successful")
+            self.log.info("Tests successful")
             sys.exit(0)
         else:
-            print("Failed")
+            self.log.error("Test failed. Test logging available at %s/test_framework.log", self.options.tmpdir)
+            logging.shutdown()
             sys.exit(1)
 
+    def _start_logging(self):
+        # Add logger and logging handlers
+        self.log = logging.getLogger('TestFramework')
+        self.log.setLevel(logging.DEBUG)
+        # Create file handler to log all messages
+        fh = logging.FileHandler(self.options.tmpdir + '/test_framework.log')
+        fh.setLevel(logging.DEBUG)
+        # Create console handler to log messages to stderr. By default this logs only error messages, but can be configured with --loglevel.
+        ch = logging.StreamHandler(sys.stdout)
+        # User can provide log level as a number or string (eg DEBUG). loglevel was caught as a string, so try to convert it to an int
+        ll = int(self.options.loglevel) if self.options.loglevel.isdigit() else self.options.loglevel.upper()
+        ch.setLevel(ll)
+        # Format logs the same as bitcoind's debug.log with microprecision (so log files can be concatenated and sorted)
+        formatter = logging.Formatter(fmt = '%(asctime)s.%(msecs)03d000 %(name)s (%(levelname)s): %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+        fh.setFormatter(formatter)
+        ch.setFormatter(formatter)
+        # add the handlers to the logger
+        self.log.addHandler(fh)
+        self.log.addHandler(ch)
+
+        if self.options.trace_rpc:
+            rpc_logger = logging.getLogger("BitcoinRPC")
+            rpc_logger.setLevel(logging.DEBUG)
+            rpc_handler = logging.StreamHandler(sys.stdout)
+            rpc_handler.setLevel(logging.DEBUG)
+            rpc_logger.addHandler(rpc_handler)
 
 # Test framework for doing p2p comparison testing, which sets up some bitcoind
 # binaries:
@@ -213,6 +239,6 @@ class ComparisonTestFramework(BitcoinTestFramework):
     def setup_network(self):
         self.nodes = start_nodes(
             self.num_nodes, self.options.tmpdir,
-            extra_args=[['-debug', '-whitelist=127.0.0.1']] * self.num_nodes,
+            extra_args=[['-whitelist=127.0.0.1']] * self.num_nodes,
             binary=[self.options.testbinary] +
             [self.options.refbinary]*(self.num_nodes-1))

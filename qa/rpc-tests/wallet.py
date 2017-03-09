@@ -35,7 +35,7 @@ class WalletTest (BitcoinTestFramework):
         assert_equal(len(self.nodes[1].listunspent()), 0)
         assert_equal(len(self.nodes[2].listunspent()), 0)
 
-        print("Mining blocks...")
+        self.log.info("Mining blocks...")
 
         self.nodes[0].generate(1)
 
@@ -332,7 +332,7 @@ class WalletTest (BitcoinTestFramework):
         ]
         chainlimit = 6
         for m in maintenance:
-            print("check " + m)
+            self.log.info("check " + m)
             stop_nodes(self.nodes)
             # set lower ancestor limit for later
             self.nodes = start_nodes(3, self.options.tmpdir, [[m, "-limitancestorcount="+str(chainlimit)]] * 3)

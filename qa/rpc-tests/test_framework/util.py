@@ -19,11 +19,14 @@ import tempfile
 import time
 import re
 import errno
+import logging
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
 
 COVERAGE_DIR = None
+
+logger = logging.getLogger("TestFramework.utils")
 
 # The maximum number of nodes a single test can spawn
 MAX_NODES = 8
@@ -237,6 +240,7 @@ def initialize_chain(test_dir, num_nodes, cachedir):
             break
 
     if create_cache:
+        logger.debug("Creating data directories from cached datadir")
 
         #find and delete old cache directories if any exist
         for i in range(MAX_NODES):
@@ -250,11 +254,9 @@ def initialize_chain(test_dir, num_nodes, cachedir):
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
             bitcoind_processes[i] = subprocess.Popen(args)
-            if os.getenv("PYTHON_DEBUG", ""):
-                print("initialize_chain: bitcoind started, waiting for RPC to come up")
+            logger.debug("initialize_chain: bitcoind started, waiting for RPC to come up")
             wait_for_bitcoind_start(bitcoind_processes[i], rpc_url(i), i)
-            if os.getenv("PYTHON_DEBUG", ""):
-                print("initialize_chain: RPC successfully started")
+            logger.debug("initialize_chain: RPC successfully started")
 
         rpcs = []
         for i in range(MAX_NODES):
@@ -313,15 +315,13 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
     datadir = os.path.join(dirname, "node"+str(i))
     if binary is None:
         binary = os.getenv("BITCOIND", "bitcoind")
-    args = [ binary, "-datadir="+datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-mocktime="+str(get_mocktime()) ]
+    args = [ binary, "-datadir="+datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-mocktime="+str(get_mocktime()) ]
     if extra_args is not None: args.extend(extra_args)
     bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)
-    if os.getenv("PYTHON_DEBUG", ""):
-        print("start_node: bitcoind started, waiting for RPC to come up")
+    logger.debug("initialize_chain: bitcoind started, waiting for RPC to come up")
     url = rpc_url(i, rpchost)
     wait_for_bitcoind_start(bitcoind_processes[i], url, i)
-    if os.getenv("PYTHON_DEBUG", ""):
-        print("start_node: RPC successfully started")
+    logger.debug("initialize_chain: RPC successfully started")
     proxy = get_rpc_proxy(url, i, timeout=timewait)
 
     if COVERAGE_DIR:
@@ -367,10 +367,11 @@ def log_filename(dirname, n_node, logname):
     return os.path.join(dirname, "node"+str(n_node), "regtest", logname)
 
 def stop_node(node, i):
+    logger.debug("Stopping node %d" % i)
     try:
         node.stop()
     except http.client.CannotSendRequest as e:
-        print("WARN: Unable to stop node: " + repr(e))
+        logger.exception("Unable to stop node")
     return_code = bitcoind_processes[i].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
     assert_equal(return_code, 0)
     del bitcoind_processes[i]

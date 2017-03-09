@@ -23,8 +23,8 @@ class AbandonConflictTest(BitcoinTestFramework):
 
     def setup_network(self):
         self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-logtimemicros","-minrelaytxfee=0.00001"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-logtimemicros"]))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-minrelaytxfee=0.00001"]))
+        self.nodes.append(start_node(1, self.options.tmpdir))
         connect_nodes(self.nodes[0], 1)
 
     def run_test(self):
@@ -81,7 +81,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         # Restart the node with a higher min relay fee so the parent tx is no longer in mempool
         # TODO: redo with eviction
         stop_node(self.nodes[0],0)
-        self.nodes[0]=start_node(0, self.options.tmpdir, ["-debug","-logtimemicros","-minrelaytxfee=0.0001"])
+        self.nodes[0]=start_node(0, self.options.tmpdir, ["-minrelaytxfee=0.0001"])
 
         # Verify txs no longer in mempool
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
@@ -107,7 +107,7 @@ class AbandonConflictTest(BitcoinTestFramework):
 
         # Verify that even with a low min relay fee, the tx is not reaccepted from wallet on startup once abandoned
         stop_node(self.nodes[0],0)
-        self.nodes[0]=start_node(0, self.options.tmpdir, ["-debug","-logtimemicros","-minrelaytxfee=0.00001"])
+        self.nodes[0]=start_node(0, self.options.tmpdir, ["-minrelaytxfee=0.00001"])
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
         assert_equal(self.nodes[0].getbalance(), balance)
 
@@ -127,7 +127,7 @@ class AbandonConflictTest(BitcoinTestFramework):
 
         # Remove using high relay fee again
         stop_node(self.nodes[0],0)
-        self.nodes[0]=start_node(0, self.options.tmpdir, ["-debug","-logtimemicros","-minrelaytxfee=0.0001"])
+        self.nodes[0]=start_node(0, self.options.tmpdir, ["-minrelaytxfee=0.0001"])
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
         newbalance = self.nodes[0].getbalance()
         assert_equal(newbalance, balance - Decimal("24.9996"))
@@ -158,9 +158,9 @@ class AbandonConflictTest(BitcoinTestFramework):
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
         newbalance = self.nodes[0].getbalance()
         #assert_equal(newbalance, balance - Decimal("10"))
-        print("If balance has not declined after invalidateblock then out of mempool wallet tx which is no longer")
-        print("conflicted has not resumed causing its inputs to be seen as spent.  See Issue #7315")
-        print(str(balance) + " -> " + str(newbalance) + " ?")
+        self.log.info("If balance has not declined after invalidateblock then out of mempool wallet tx which is no longer")
+        self.log.info("conflicted has not resumed causing its inputs to be seen as spent.  See Issue #7315")
+        self.log.info(str(balance) + " -> " + str(newbalance) + " ?")
 
 if __name__ == '__main__':
     AbandonConflictTest().main()
