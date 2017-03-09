@@ -61,34 +61,6 @@ class TxConfirmStats;
  * they've been outstanding.
  */
 
-/** Track confirm delays up to 25 blocks, can't estimate beyond that */
-static const unsigned int MAX_BLOCK_CONFIRMS = 25;
-
-/** Decay of .998 is a half-life of 346 blocks or about 2.4 days */
-static const double DEFAULT_DECAY = .998;
-
-/** Require greater than 95% of X feerate transactions to be confirmed within Y blocks for X to be big enough */
-static const double MIN_SUCCESS_PCT = .95;
-
-/** Require an avg of 1 tx in the combined feerate bucket per block to have stat significance */
-static const double SUFFICIENT_FEETXS = 1;
-
-// Minimum and Maximum values for tracking feerates
-// The MIN_BUCKET_FEERATE should just be set to the lowest reasonable feerate we
-// might ever want to track.  Historically this has been 1000 since it was
-// inheriting DEFAULT_MIN_RELAY_TX_FEE and changing it is disruptive as it
-// invalidates old estimates files. So leave it at 1000 unless it becomes
-// necessary to lower it, and then lower it substantially.
-static constexpr double MIN_BUCKET_FEERATE = 1000;
-static const double MAX_BUCKET_FEERATE = 1e7;
-static const double INF_FEERATE = MAX_MONEY;
-
-// We have to lump transactions into buckets based on feerate, but we want to be able
-// to give accurate estimates over a large range of potential feerates
-// Therefore it makes sense to exponentially space the buckets
-/** Spacing of FeeRate buckets */
-static const double FEE_SPACING = 1.1;
-
 /**
  *  We want to be able to estimate feerates that are needed on tx's to be included in
  * a certain number of blocks.  Every time a block is added to the best chain, this class records
@@ -96,6 +68,46 @@ static const double FEE_SPACING = 1.1;
  */
 class CBlockPolicyEstimator
 {
+private:
+    /** Track confirm delays up to 12 blocks medium decay */
+    static constexpr unsigned int SHORT_BLOCK_CONFIRMS = 12;
+    /** Track confirm delays up to 48 blocks medium decay */
+    static constexpr unsigned int MED_BLOCK_CONFIRMS = 48;
+    /** Track confirm delays up to 1008 blocks for longer decay */
+    static constexpr unsigned int LONG_BLOCK_CONFIRMS = 1008;
+
+    /** Decay of .962 is a half-life of 18 blocks or about 3 hours */
+    static constexpr double SHORT_DECAY = .962;
+    /** Decay of .998 is a half-life of 144 blocks or about 1 day */
+    static constexpr double MED_DECAY = .9952;
+    /** Decay of .9995 is a half-life of 1008 blocks or about 1 week */
+    static constexpr double LONG_DECAY = .99931;
+
+    /** Require greater than 95% of X feerate transactions to be confirmed within Y blocks for X to be big enough */
+    static constexpr double HALF_SUCCESS_PCT = .6;
+    static constexpr double SUCCESS_PCT = .85;
+    static constexpr double DOUBLE_SUCCESS_PCT = .95;
+
+    /** Require an avg of 1 tx in the combined feerate bucket per block to have stat significance */
+    static constexpr double SUFFICIENT_FEETXS = 1;
+
+    /** Minimum and Maximum values for tracking feerates
+     * The MIN_BUCKET_FEERATE should just be set to the lowest reasonable feerate we
+     * might ever want to track.  Historically this has been 1000 since it was
+     * inheriting DEFAULT_MIN_RELAY_TX_FEE and changing it is disruptive as it
+     * invalidates old estimates files. So leave it at 1000 unless it becomes
+     * necessary to lower it, and then lower it substantially.
+     */
+    static constexpr double MIN_BUCKET_FEERATE = 1000;
+    static constexpr double MAX_BUCKET_FEERATE = 1e7;
+
+    /** Spacing of FeeRate buckets
+     * We have to lump transactions into buckets based on feerate, but we want to be able
+     * to give accurate estimates over a large range of potential feerates
+     * Therefore it makes sense to exponentially space the buckets
+     */
+    static constexpr double FEE_SPACING = 1.05;
+
 public:
     /** Create new BlockPolicyEstimator and initialize stats tracking classes with default values */
     CBlockPolicyEstimator();
@@ -159,6 +171,14 @@ private:
 
 class FeeFilterRounder
 {
+private:
+    static constexpr double MAX_FILTER_FEERATE = 1e7;
+    /** FEE_FILTER_SPACING is just used to provide some quantization of fee
+     * filter results.  Historically it reused FEE_SPACING, but it is completely
+     * unrelated, and was made a separate constant so the two concepts are not
+     * tied together */
+    static constexpr double FEE_FILTER_SPACING = 1.1;
+
 public:
     /** Create new FeeFilterRounder */
     FeeFilterRounder(const CFeeRate& minIncrementalFee);

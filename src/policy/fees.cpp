@@ -14,6 +14,8 @@
 #include "txmempool.h"
 #include "util.h"
 
+static constexpr double INF_FEERATE = 1e99;
+
 /**
  * We will instantiate an instance of this class to track transactions that were
  * included in a block. We will lump transactions into a bucket according to their
@@ -400,6 +402,8 @@ bool CBlockPolicyEstimator::removeTx(uint256 hash)
     std::map<uint256, TxStatsInfo>::iterator pos = mapMemPoolTxs.find(hash);
     if (pos != mapMemPoolTxs.end()) {
         feeStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.bucketIndex);
+        shortStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.bucketIndex);
+        longStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.bucketIndex);
         mapMemPoolTxs.erase(hash);
         return true;
     } else {
@@ -421,9 +425,9 @@ CBlockPolicyEstimator::CBlockPolicyEstimator()
     bucketMap[INF_FEERATE] = bucketIndex;
     assert(bucketMap.size() == buckets.size());
 
-    feeStats = new TxConfirmStats(buckets, bucketMap, MAX_BLOCK_CONFIRMS, DEFAULT_DECAY);
-    shortStats = new TxConfirmStats(buckets, bucketMap, MAX_BLOCK_CONFIRMS, DEFAULT_DECAY);
-    longStats = new TxConfirmStats(buckets, bucketMap, MAX_BLOCK_CONFIRMS, DEFAULT_DECAY);
+    feeStats = new TxConfirmStats(buckets, bucketMap, MED_BLOCK_CONFIRMS, MED_DECAY);
+    shortStats = new TxConfirmStats(buckets, bucketMap, SHORT_BLOCK_CONFIRMS, SHORT_DECAY);
+    longStats = new TxConfirmStats(buckets, bucketMap, LONG_BLOCK_CONFIRMS, LONG_DECAY);
 }
 
 CBlockPolicyEstimator::~CBlockPolicyEstimator()
@@ -464,7 +468,12 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     CFeeRate feeRate(entry.GetFee(), entry.GetTxSize());
 
     mapMemPoolTxs[hash].blockHeight = txHeight;
-    mapMemPoolTxs[hash].bucketIndex = feeStats->NewTx(txHeight, (double)feeRate.GetFeePerK());
+    unsigned int bucketIndex = feeStats->NewTx(txHeight, (double)feeRate.GetFeePerK());
+    mapMemPoolTxs[hash].bucketIndex = bucketIndex;
+    unsigned int bucketIndex2 = shortStats->NewTx(txHeight, (double)feeRate.GetFeePerK());
+    assert(bucketIndex == bucketIndex2);
+    unsigned int bucketIndex3 = longStats->NewTx(txHeight, (double)feeRate.GetFeePerK());
+    assert(bucketIndex == bucketIndex3);
 }
 
 bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry)
@@ -489,6 +498,8 @@ bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxM
     CFeeRate feeRate(entry->GetFee(), entry->GetTxSize());
 
     feeStats->Record(blocksToConfirm, (double)feeRate.GetFeePerK());
+    shortStats->Record(blocksToConfirm, (double)feeRate.GetFeePerK());
+    longStats->Record(blocksToConfirm, (double)feeRate.GetFeePerK());
     return true;
 }
 
@@ -512,6 +523,8 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
 
     // Clear the current block state and update unconfirmed circular buffer
     feeStats->ClearCurrent(nBlockHeight);
+    shortStats->ClearCurrent(nBlockHeight);
+    longStats->ClearCurrent(nBlockHeight);
 
     unsigned int countedTxs = 0;
     // Repopulate the current block states
@@ -522,6 +535,8 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
 
     // Update all exponential averages with the current block state
     feeStats->UpdateMovingAverages();
+    shortStats->UpdateMovingAverages();
+    longStats->UpdateMovingAverages();
 
     LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy after updating estimates for %u of %u txs in block, since last block %u of %u tracked, new mempool map size %u\n",
              countedTxs, entries.size(), trackedTxs, trackedTxs + untrackedTxs, mapMemPoolTxs.size());
@@ -538,7 +553,7 @@ CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget) const
     if (confTarget <= 1 || (unsigned int)confTarget > feeStats->GetMaxConfirms())
         return CFeeRate(0);
 
-    double median = feeStats->EstimateMedianVal(confTarget, SUFFICIENT_FEETXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
+    double median = feeStats->EstimateMedianVal(confTarget, SUFFICIENT_FEETXS, DOUBLE_SUCCESS_PCT, true, nBestSeenHeight);
 
     if (median < 0)
         return CFeeRate(0);
@@ -565,7 +580,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, int *answerFoun
             confTarget = 2;
 
         while (median < 0 && (unsigned int)confTarget <= feeStats->GetMaxConfirms()) {
-            median = feeStats->EstimateMedianVal(confTarget++, SUFFICIENT_FEETXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
+            median = feeStats->EstimateMedianVal(confTarget++, SUFFICIENT_FEETXS, DOUBLE_SUCCESS_PCT, true, nBestSeenHeight);
         }
     } // Must unlock cs_feeEstimator before taking mempool locks
 
@@ -634,7 +649,7 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
 
             std::map<double, unsigned int> tempMap;
 
-            std::unique_ptr<TxConfirmStats> tempFeeStats(new TxConfirmStats(tempBuckets, tempMap, MAX_BLOCK_CONFIRMS, tempDecay));
+            std::unique_ptr<TxConfirmStats> tempFeeStats(new TxConfirmStats(tempBuckets, tempMap, MED_BLOCK_CONFIRMS, tempDecay));
             tempFeeStats->Read(filein, nVersionThatWrote, tempNum);
             // if nVersionThatWrote < 139900 then another TxConfirmStats (for priority) follows but can be ignored.
 
@@ -653,9 +668,9 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
             if (numBuckets <= 1 || numBuckets > 1000)
                 throw std::runtime_error("Corrupt estimates file. Must have between 2 and 1000 feerate buckets");
 
-            std::unique_ptr<TxConfirmStats> fileFeeStats(new TxConfirmStats(buckets, bucketMap, MAX_BLOCK_CONFIRMS, DEFAULT_DECAY));
-            std::unique_ptr<TxConfirmStats> fileShortStats(new TxConfirmStats(buckets, bucketMap, MAX_BLOCK_CONFIRMS, DEFAULT_DECAY));
-            std::unique_ptr<TxConfirmStats> fileLongStats(new TxConfirmStats(buckets, bucketMap, MAX_BLOCK_CONFIRMS, DEFAULT_DECAY));
+            std::unique_ptr<TxConfirmStats> fileFeeStats(new TxConfirmStats(buckets, bucketMap, MED_BLOCK_CONFIRMS, MED_DECAY));
+            std::unique_ptr<TxConfirmStats> fileShortStats(new TxConfirmStats(buckets, bucketMap, SHORT_BLOCK_CONFIRMS, SHORT_DECAY));
+            std::unique_ptr<TxConfirmStats> fileLongStats(new TxConfirmStats(buckets, bucketMap, LONG_BLOCK_CONFIRMS, LONG_DECAY));
             fileFeeStats->Read(filein, nVersionThatWrote, numBuckets);
             fileShortStats->Read(filein, nVersionThatWrote, numBuckets);
             fileLongStats->Read(filein, nVersionThatWrote, numBuckets);
@@ -690,7 +705,7 @@ FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee)
 {
     CAmount minFeeLimit = std::max(CAmount(1), minIncrementalFee.GetFeePerK() / 2);
     feeset.insert(0);
-    for (double bucketBoundary = minFeeLimit; bucketBoundary <= MAX_BUCKET_FEERATE; bucketBoundary *= FEE_SPACING) {
+    for (double bucketBoundary = minFeeLimit; bucketBoundary <= MAX_FILTER_FEERATE; bucketBoundary *= FEE_FILTER_SPACING) {
         feeset.insert(bucketBoundary);
     }
 }
