@@ -105,3 +105,68 @@ a connection to Tor can be made. It can be configured with the `-listenonion`,
 `-torcontrol` and `-torpassword` settings. To show verbose debugging
 information, pass `-debug=tor`.
 
+In more practical way this what you need to do to actually setting tor to operate
+in this new configuration. Firstly you need to be sure that the user under which
+bitcoind is going to be executed has write permission on tor system directories
+(e.g. /var/run/tor/control.authcookie). On Debian and Ubuntu system add such user
+to the `debian-tor` group should be enough (i.e. `sudo adduser $USER debian-tor`)
+
+Then add these lines to `/etc/tor/torrc` (i.e `sudo nano /etc/tor/torrc`)
+
+	ControlPort 9051
+	CookieAuthentication 1
+	HashedControlPassword <TheHashOfYourTorPassword>
+
+to get the hash of your Tor password just use this command
+
+	tor --hash-password <YourTorPassword>
+
+Next you have to restart the Tor service:
+
+	sudo service tor restart
+
+Add these lines to your `bitcoin.conf` file
+
+	proxy=127.0.0.1:9050
+	listen=1
+	onlynet=onion
+	listenonion=1
+	discover=0
+	torcontrol=127.0.0.1:9051
+	torpassword=<TheHashOfYourTorPassword>
+
+Then issue this command to get the url of your onion hidden service
+
+	bitcoin-cli getnetworkinfo | grep -w addr
+
+you should get an output like this one
+
+	"address": "k3a23xgpg2jugxjr.onion"
+
+Pick the onion domain and verify on bitnodes.21.co if you it is
+reachable.
+
+If you want to leverage the nature of tor and stop a DDoS attack to your
+node, firstly stop your node:
+
+	bitcoin-cli stop
+
+Remove your peer file and tor private key from bitcoin data directory
+
+	cd ~/.bitcoin
+	rm onion_private_key
+	rm peers.dat
+
+Removing the `onion_private_key` serves the aim of having a new onion URL for
+your bitcoin node, in such a way your attacker won't be able to harm you
+again in the near term cause the prev URL is not valid any more.
+
+Removing `peer.dat` will let you fetch a bunch of new peers from the seeder
+this somewhat reduce the risk of peering again with your attacker.
+
+If you want to maintain the same onion URL across reboot avoid to delete
+the onion private key file.
+
+Restart your node:
+
+	bitcoind -daemon
