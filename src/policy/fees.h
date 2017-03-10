@@ -98,6 +98,8 @@ private:
     static constexpr unsigned int MED_BLOCK_CONFIRMS = 48;
     /** Track confirm delays up to 1008 blocks for longer decay */
     static constexpr unsigned int LONG_BLOCK_CONFIRMS = 1008;
+    /** Historical estimates that are older than this aren't valid */
+    static const unsigned int OLDEST_ESTIMATE_HISTORY = 6 * 1008;
 
     /** Decay of .962 is a half-life of 18 blocks or about 3 hours */
     static constexpr double SHORT_DECAY = .962;
@@ -205,6 +207,9 @@ private:
 
     double estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon) const;
     double estimateConservativeFee(unsigned int doubleTarget) const;
+    unsigned int BlockSpan() const;
+    unsigned int HistoricalBlockSpan() const;
+    unsigned int MaxUsableEstimate() const;
 };
 
 class FeeFilterRounder
