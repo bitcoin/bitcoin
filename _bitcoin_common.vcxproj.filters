@@ -312,6 +312,7 @@
     <ClCompile Include="src\base_uint.cpp">
       <Filter>Source Files\primitive</Filter>
     </ClCompile>
+    <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\addrdb.h">
@@ -671,6 +672,7 @@
     <ClInclude Include="src\base_uint.h">
       <Filter>Source Files\primitive</Filter>
     </ClInclude>
+    <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
