@@ -17,6 +17,8 @@ P2SH_2 = "8xp4fcNB8rz9UbZC47tv6eui1ZSPMd3iYT" # P2SH of "OP_2 OP_DROP"
 # 4 bytes of OP_TRUE and push 2-byte redeem script of "OP_1 OP_DROP" or "OP_2 OP_DROP"
 SCRIPT_SIG = ["0451025175", "0451025275"]
 
+global log
+
 class DecimalEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, Decimal):
@@ -120,7 +122,7 @@ def check_estimates(node, fees_seen, max_invalid, print_estimates = True):
     """
     all_estimates = [ node.estimatefee(i) for i in range(1,26) ]
     if print_estimates:
-        self.log.info([str(all_estimates[e-1]) for e in [1,2,3,6,15,25]])
+        log.info([str(all_estimates[e-1]) for e in [1,2,3,6,15,25]])
     delta = 1.0e-6 # account for rounding error
     last_e = max(fees_seen)
     for e in [x for x in all_estimates if x >= 0]:
@@ -257,6 +259,9 @@ class EstimateFeeTest(BitcoinTestFramework):
             self.memutxo = newmem
 
     def run_test(self):
+        # Make log handler available to helper functions
+        global log
+        log = self.log
         self.fees_per_kb = []
         self.memutxo = []
         self.confutxo = self.txouts # Start with the set of confirmed txouts after splitting
