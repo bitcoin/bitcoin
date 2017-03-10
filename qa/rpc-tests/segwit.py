@@ -6,11 +6,11 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-from test_framework.mininode import sha256, ripemd160, CTransaction, CTxIn, COutPoint, CTxOut
+from test_framework.mininode import sha256, ripemd160, CTransaction, CTxIn, COutPoint, CTxOut, COIN
 from test_framework.address import script_to_p2sh, key_to_p2pkh
-from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG
+from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG, hash160
 from io import BytesIO
-from test_framework.mininode import FromHex
+from test_framework.mininode import FromHex, ToHex
 
 NODE_0 = 0
 NODE_1 = 1
@@ -18,47 +18,49 @@ NODE_2 = 2
 WIT_V0 = 0
 WIT_V1 = 1
 
-def witness_script(version, pubkey):
-    if (version == 0):
-        pubkeyhash = bytes_to_hex_str(ripemd160(sha256(hex_str_to_bytes(pubkey))))
-        pkscript = "0014" + pubkeyhash
-    elif (version == 1):
-        # 1-of-1 multisig
-        scripthash = bytes_to_hex_str(sha256(hex_str_to_bytes("5121" + pubkey + "51ae")))
-        pkscript = "0020" + scripthash
+# Create a scriptPubKey corresponding to either a P2WPKH output for the
+# given pubkey, or a P2WSH output of a 1-of-1 multisig for the given
+# pubkey. Returns the hex encoding of the scriptPubKey.
+def witness_script(use_p2wsh, pubkey):
+    if (use_p2wsh == False):
+        # P2WPKH instead
+        pubkeyhash = hash160(hex_str_to_bytes(pubkey))
+        pkscript = CScript([OP_0, pubkeyhash])
     else:
-        assert("Wrong version" == "0 or 1")
-    return pkscript
+        # 1-of-1 multisig
+        witness_program = CScript([OP_1, hex_str_to_bytes(pubkey), OP_1, OP_CHECKMULTISIG])
+        scripthash = sha256(witness_program)
+        pkscript = CScript([OP_0, scripthash])
+    return bytes_to_hex_str(pkscript)
 
-def addlength(script):
-    scriptlen = format(len(script)//2, 'x')
-    assert(len(scriptlen) == 2)
-    return scriptlen + script
-
-def create_witnessprogram(version, node, utxo, pubkey, encode_p2sh, amount):
-    pkscript = witness_script(version, pubkey)
+# Return a transaction (in hex) that spends the given utxo to a segwit output,
+# optionally wrapping the segwit output using P2SH.
+def create_witnessprogram(use_p2wsh, utxo, pubkey, encode_p2sh, amount):
+    pkscript = hex_str_to_bytes(witness_script(use_p2wsh, pubkey))
     if (encode_p2sh):
-        p2sh_hash = bytes_to_hex_str(ripemd160(sha256(hex_str_to_bytes(pkscript))))
-        pkscript = "a914"+p2sh_hash+"87"
-    inputs = []
-    outputs = {}
-    inputs.append({ "txid" : utxo["txid"], "vout" : utxo["vout"]} )
-    DUMMY_P2SH = "2MySexEGVzZpRgNQ1JdjdP5bRETznm3roQ2" # P2SH of "OP_1 OP_DROP"
-    outputs[DUMMY_P2SH] = amount
-    tx_to_witness = node.createrawtransaction(inputs,outputs)
-    #replace dummy output with our own
-    tx_to_witness = tx_to_witness[0:110] + addlength(pkscript) + tx_to_witness[-8:]
-    return tx_to_witness
+        p2sh_hash = hash160(pkscript)
+        pkscript = CScript([OP_HASH160, p2sh_hash, OP_EQUAL])
+    tx = CTransaction()
+    tx.vin.append(CTxIn(COutPoint(int(utxo["txid"], 16), utxo["vout"]), b""))
+    tx.vout.append(CTxOut(int(amount*COIN), pkscript))
+    return ToHex(tx)
 
-def send_to_witness(version, node, utxo, pubkey, encode_p2sh, amount, sign=True, insert_redeem_script=""):
-    tx_to_witness = create_witnessprogram(version, node, utxo, pubkey, encode_p2sh, amount)
+# Create a transaction spending a given utxo to a segwit output corresponding
+# to the given pubkey: use_p2wsh determines whether to use P2WPKH or P2WSH;
+# encode_p2sh determines whether to wrap in P2SH.
+# sign=True will have the given node sign the transaction.
+# insert_redeem_script will be added to the scriptSig, if given.
+def send_to_witness(use_p2wsh, node, utxo, pubkey, encode_p2sh, amount, sign=True, insert_redeem_script=""):
+    tx_to_witness = create_witnessprogram(use_p2wsh, utxo, pubkey, encode_p2sh, amount)
     if (sign):
         signed = node.signrawtransaction(tx_to_witness)
         assert("errors" not in signed or len(["errors"]) == 0)
         return node.sendrawtransaction(signed["hex"])
     else:
         if (insert_redeem_script):
-            tx_to_witness = tx_to_witness[0:82] + addlength(insert_redeem_script) + tx_to_witness[84:]
+            tx = FromHex(CTransaction(), tx_to_witness)
+            tx.vin[0].scriptSig += CScript([hex_str_to_bytes(insert_redeem_script)])
+            tx_to_witness = ToHex(tx)
 
     return node.sendrawtransaction(tx_to_witness)
 
@@ -180,8 +182,8 @@ class SegWitTest(BitcoinTestFramework):
         self.fail_accept(self.nodes[0], p2sh_ids[NODE_0][WIT_V0][0], False)
         self.fail_accept(self.nodes[0], p2sh_ids[NODE_0][WIT_V1][0], False)
         # unsigned with redeem script
-        self.fail_accept(self.nodes[0], p2sh_ids[NODE_0][WIT_V0][0], False, addlength(witness_script(0, self.pubkey[0])))
-        self.fail_accept(self.nodes[0], p2sh_ids[NODE_0][WIT_V1][0], False, addlength(witness_script(1, self.pubkey[0])))
+        self.fail_accept(self.nodes[0], p2sh_ids[NODE_0][WIT_V0][0], False, witness_script(False, self.pubkey[0]))
+        self.fail_accept(self.nodes[0], p2sh_ids[NODE_0][WIT_V1][0], False, witness_script(True, self.pubkey[0]))
         # signed
         self.fail_accept(self.nodes[0], wit_ids[NODE_0][WIT_V0][0], True)
         self.fail_accept(self.nodes[0], wit_ids[NODE_0][WIT_V1][0], True)
@@ -205,8 +207,8 @@ class SegWitTest(BitcoinTestFramework):
         self.fail_accept(self.nodes[2], p2sh_ids[NODE_2][WIT_V1][1], False)
 
         self.log.info("Verify unsigned p2sh witness txs with a redeem script in versionbits-settings blocks are valid before the fork")
-        self.success_mine(self.nodes[2], p2sh_ids[NODE_2][WIT_V0][1], False, addlength(witness_script(0, self.pubkey[2]))) #block 430
-        self.success_mine(self.nodes[2], p2sh_ids[NODE_2][WIT_V1][1], False, addlength(witness_script(1, self.pubkey[2]))) #block 431
+        self.success_mine(self.nodes[2], p2sh_ids[NODE_2][WIT_V0][1], False, witness_script(False, self.pubkey[2])) #block 430
+        self.success_mine(self.nodes[2], p2sh_ids[NODE_2][WIT_V1][1], False, witness_script(True, self.pubkey[2])) #block 431
 
         self.log.info("Verify previous witness txs skipped for mining can now be mined")
         assert_equal(len(self.nodes[2].getrawmempool()), 4)
@@ -230,8 +232,8 @@ class SegWitTest(BitcoinTestFramework):
         self.log.info("Verify witness txs without witness data are invalid after the fork")
         self.fail_mine(self.nodes[2], wit_ids[NODE_2][WIT_V0][2], False)
         self.fail_mine(self.nodes[2], wit_ids[NODE_2][WIT_V1][2], False)
-        self.fail_mine(self.nodes[2], p2sh_ids[NODE_2][WIT_V0][2], False, addlength(witness_script(0, self.pubkey[2])))
-        self.fail_mine(self.nodes[2], p2sh_ids[NODE_2][WIT_V1][2], False, addlength(witness_script(1, self.pubkey[2])))
+        self.fail_mine(self.nodes[2], p2sh_ids[NODE_2][WIT_V0][2], False, witness_script(False, self.pubkey[2]))
+        self.fail_mine(self.nodes[2], p2sh_ids[NODE_2][WIT_V1][2], False, witness_script(True, self.pubkey[2]))
 
         self.log.info("Verify default node can now use witness txs")
         self.success_mine(self.nodes[0], wit_ids[NODE_0][WIT_V0][0], True) #block 432
