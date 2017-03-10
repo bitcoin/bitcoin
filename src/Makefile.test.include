@@ -126,6 +126,7 @@ BITCOIN_TESTS =\
   test/streams_tests.cpp \
   test/test_bitcoin.cpp \
   test/test_bitcoin.h \
+  test/test_bitcoin_main.cpp \
   test/test_random.h \
   test/testutil.cpp \
   test/testutil.h \
