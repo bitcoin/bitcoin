@@ -213,6 +213,7 @@
     <ClCompile Include="..\src\wallet\test\wallet_tests.cpp">
       <Filter>src\wallet\test</Filter>
     </ClCompile>
+    <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\test\scriptnum10.h">
@@ -230,5 +231,6 @@
     <ClInclude Include="..\src\wallet\test\wallet_test_fixture.h">
       <Filter>src\wallet\test</Filter>
     </ClInclude>
+    <ClInclude Include="stdafx.h" />
   </ItemGroup>
 </Project>
