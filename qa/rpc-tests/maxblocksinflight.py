@@ -87,6 +87,8 @@ class MaxBlocksInFlightTest(BitcoinTestFramework):
 
     def run_test(self):
         test = TestManager()
+        # pass log handler through to the test manager object
+        test.log = self.log
         test.add_new_connection(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test))
         NetworkThread().start()  # Start up network handling in another thread
         test.run()
