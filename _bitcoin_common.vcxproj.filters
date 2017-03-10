@@ -306,10 +306,10 @@
     <ClCompile Include="src\policy\rbf.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\arith_uint256.cpp">
+    <ClCompile Include="src\uint256.cpp">
       <Filter>Source Files\primitive</Filter>
     </ClCompile>
-    <ClCompile Include="src\uint256.cpp">
+    <ClCompile Include="src\base_uint.cpp">
       <Filter>Source Files\primitive</Filter>
     </ClCompile>
   </ItemGroup>
@@ -665,10 +665,10 @@
     <ClInclude Include="src\zmq\zmqpublishnotifier.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\arith_uint256.h">
+    <ClInclude Include="src\uint256.h">
       <Filter>Source Files\primitive</Filter>
     </ClInclude>
-    <ClInclude Include="src\uint256.h">
+    <ClInclude Include="src\base_uint.h">
       <Filter>Source Files\primitive</Filter>
     </ClInclude>
   </ItemGroup>
