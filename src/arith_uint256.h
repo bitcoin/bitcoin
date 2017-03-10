@@ -25,25 +25,25 @@ template<unsigned int BITS>
 class base_uint
 {
 protected:
-    enum { WIDTH=BITS/32 };
-    uint32_t pn[WIDTH];
+    enum { PN_WIDTH=BITS/32 };
+    uint32_t pn[PN_WIDTH];
 public:
 
     base_uint()
     {
-        for (int i = 0; i < WIDTH; i++)
+        for (int i = 0; i < PN_WIDTH; i++)
             pn[i] = 0;
     }
 
     base_uint(const base_uint& b)
     {
-        for (int i = 0; i < WIDTH; i++)
+        for (int i = 0; i < PN_WIDTH; i++)
             pn[i] = b.pn[i];
     }
 
     base_uint& operator=(const base_uint& b)
     {
-        for (int i = 0; i < WIDTH; i++)
+        for (int i = 0; i < PN_WIDTH; i++)
             pn[i] = b.pn[i];
         return *this;
     }
@@ -52,7 +52,7 @@ public:
     {
         pn[0] = (unsigned int)b;
         pn[1] = (unsigned int)(b >> 32);
-        for (int i = 2; i < WIDTH; i++)
+        for (int i = 2; i < PN_WIDTH; i++)
             pn[i] = 0;
     }
 
@@ -60,7 +60,7 @@ public:
 
     bool operator!() const
     {
-        for (int i = 0; i < WIDTH; i++)
+        for (int i = 0; i < PN_WIDTH; i++)
             if (pn[i] != 0)
                 return false;
         return true;
@@ -69,7 +69,7 @@ public:
     const base_uint operator~() const
     {
         base_uint ret;
-        for (int i = 0; i < WIDTH; i++)
+        for (int i = 0; i < PN_WIDTH; i++)
             ret.pn[i] = ~pn[i];
         return ret;
     }
@@ -77,7 +77,7 @@ public:
     const base_uint operator-() const
     {
         base_uint ret;
-        for (int i = 0; i < WIDTH; i++)
+        for (int i = 0; i < PN_WIDTH; i++)
             ret.pn[i] = ~pn[i];
         ret++;
         return ret;
@@ -89,28 +89,28 @@ public:
     {
         pn[0] = (unsigned int)b;
         pn[1] = (unsigned int)(b >> 32);
-        for (int i = 2; i < WIDTH; i++)
+        for (int i = 2; i < PN_WIDTH; i++)
             pn[i] = 0;
         return *this;
     }
 
     base_uint& operator^=(const base_uint& b)
     {
-        for (int i = 0; i < WIDTH; i++)
+        for (int i = 0; i < PN_WIDTH; i++)
             pn[i] ^= b.pn[i];
         return *this;
     }
 
     base_uint& operator&=(const base_uint& b)
     {
-        for (int i = 0; i < WIDTH; i++)
+        for (int i = 0; i < PN_WIDTH; i++)
             pn[i] &= b.pn[i];
         return *this;
     }
 
     base_uint& operator|=(const base_uint& b)
     {
-        for (int i = 0; i < WIDTH; i++)
+        for (int i = 0; i < PN_WIDTH; i++)
             pn[i] |= b.pn[i];
         return *this;
     }
@@ -135,7 +135,7 @@ public:
     base_uint& operator+=(const base_uint& b)
     {
         uint64_t carry = 0;
-        for (int i = 0; i < WIDTH; i++)
+        for (int i = 0; i < PN_WIDTH; i++)
         {
             uint64_t n = carry + pn[i] + b.pn[i];
             pn[i] = n & 0xffffffff;
@@ -174,7 +174,7 @@ public:
     {
         // prefix operator
         int i = 0;
-        while (++pn[i] == 0 && i < WIDTH-1)
+        while (++pn[i] == 0 && i < PN_WIDTH -1)
             i++;
         return *this;
     }
@@ -191,7 +191,7 @@ public:
     {
         // prefix operator
         int i = 0;
-        while (--pn[i] == (uint32_t)-1 && i < WIDTH-1)
+        while (--pn[i] == (uint32_t)-1 && i < PN_WIDTH -1)
             i++;
         return *this;
     }
@@ -245,7 +245,7 @@ public:
 
     uint64_t GetLow64() const
     {
-        assert(WIDTH >= 2);
+        assert(PN_WIDTH >= 2);
         return pn[0] | (uint64_t)pn[1] << 32;
     }
 };
