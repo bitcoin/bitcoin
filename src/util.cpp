@@ -509,7 +509,11 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
     if (fNetSpecific)
         path /= BaseParams().DataDir();
 
-    fs::create_directories(path);
+    try {
+      fs::create_directories(path);
+    } catch (const fs::filesystem_error&e) {
+      LogPrintf("failed to create directories to (%s): %s\n", path, e.what());
+    }
 
     return path;
 }
@@ -834,5 +838,3 @@ int GetNumCores()
     return boost::thread::hardware_concurrency();
 #endif
 }
-
-
