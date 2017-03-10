@@ -19,8 +19,8 @@ template<unsigned int BITS>
 class base_blob
 {
 protected:
-    enum { WIDTH=BITS/8 };
-    uint8_t data[WIDTH];
+    enum { BYTE_WIDTH=BITS/8 };
+    uint8_t data[BYTE_WIDTH];
 public:
     base_blob()
     {
@@ -31,7 +31,7 @@ public:
 
     bool IsNull() const
     {
-        for (int i = 0; i < WIDTH; i++)
+        for (int i = 0; i < BYTE_WIDTH; i++)
             if (data[i] != 0)
                 return false;
         return true;
@@ -61,7 +61,7 @@ public:
 
     unsigned char* end()
     {
-        return &data[WIDTH];
+        return &data[BYTE_WIDTH];
     }
 
     const unsigned char* begin() const
@@ -71,7 +71,7 @@ public:
 
     const unsigned char* end() const
     {
-        return &data[WIDTH];
+        return &data[BYTE_WIDTH];
     }
 
     unsigned int size() const
