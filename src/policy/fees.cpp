@@ -477,7 +477,7 @@ bool CBlockPolicyEstimator::removeTx(uint256 hash, bool inBlock)
 }
 
 CBlockPolicyEstimator::CBlockPolicyEstimator()
-    : nBestSeenHeight(0), firstRecordedHeight(0), trackedTxs(0), untrackedTxs(0)
+    : nBestSeenHeight(0), firstRecordedHeight(0), historicalFirst(0), historicalBest(0), trackedTxs(0), untrackedTxs(0)
 {
     static_assert(MIN_BUCKET_FEERATE > 0, "Min feerate must be nonzero");
     minTrackedFee = CFeeRate(MIN_BUCKET_FEERATE);
@@ -609,8 +609,9 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
     }
 
 
-    LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy after updating estimates for %u of %u txs in block, since last block %u of %u tracked, new mempool map size %u\n",
-             countedTxs, entries.size(), trackedTxs, trackedTxs + untrackedTxs, mapMemPoolTxs.size());
+    LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy estimates updated by %u of %u block txs, since last block %u of %u tracked, mempool map size %u, max target %u from %s\n",
+             countedTxs, entries.size(), trackedTxs, trackedTxs + untrackedTxs, mapMemPoolTxs.size(),
+             MaxUsableEstimate(), HistoricalBlockSpan() > BlockSpan() ? "historical" : "current");
 
     trackedTxs = 0;
     untrackedTxs = 0;
@@ -663,6 +664,29 @@ CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThr
     return CFeeRate(median);
 }
 
+unsigned int CBlockPolicyEstimator::BlockSpan() const
+{
+    if (firstRecordedHeight == 0) return 0;
+    assert(nBestSeenHeight >= firstRecordedHeight);
+
+    return nBestSeenHeight - firstRecordedHeight;
+}
+
+unsigned int CBlockPolicyEstimator::HistoricalBlockSpan() const
+{
+    if (historicalFirst == 0) return 0;
+    assert(historicalBest >= historicalFirst);
+
+    if (nBestSeenHeight - historicalBest > OLDEST_ESTIMATE_HISTORY) return 0;
+
+    return historicalBest - historicalFirst;
+}
+
+unsigned int CBlockPolicyEstimator::MaxUsableEstimate() const
+{
+    // Block spans are divided by 2 to make sure there are enough potential failing data points for the estimate
+    return std::min(longStats->GetMaxConfirms(), std::max(BlockSpan(), HistoricalBlockSpan()) / 2);
+}
 
 /** Return a fee estimate at the required successThreshold from the shortest
  * time horizon which tracks confirmations up to the desired target.  If
@@ -731,6 +755,14 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, int *answerFoun
         if (confTarget == 1)
             confTarget = 2;
 
+        unsigned int maxUsableEstimate = MaxUsableEstimate();
+        if (maxUsableEstimate <= 1)
+            return CFeeRate(0);
+
+        if ((unsigned int)confTarget > maxUsableEstimate) {
+            confTarget = maxUsableEstimate;
+        }
+
         assert(confTarget > 0); //estimateCombinedFee and estimateConservativeFee take unsigned ints
 
         /** true is passed to estimateCombined fee for target/2 and target so
@@ -784,8 +816,12 @@ bool CBlockPolicyEstimator::Write(CAutoFile& fileout) const
         fileout << 149900; // version required to read: 0.14.99 or later
         fileout << CLIENT_VERSION; // version that wrote the file
         fileout << nBestSeenHeight;
-        unsigned int future1 = 0, future2 = 0;
-        fileout << future1 << future2;
+        if (BlockSpan() > HistoricalBlockSpan()/2) {
+            fileout << firstRecordedHeight << nBestSeenHeight;
+        }
+        else {
+            fileout << historicalFirst << historicalBest;
+        }
         fileout << buckets;
         feeStats->Write(fileout);
         shortStats->Write(fileout);
@@ -803,7 +839,7 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
     try {
         LOCK(cs_feeEstimator);
         int nVersionRequired, nVersionThatWrote;
-        unsigned int nFileBestSeenHeight;
+        unsigned int nFileBestSeenHeight, nFileHistoricalFirst, nFileHistoricalBest;
         filein >> nVersionRequired >> nVersionThatWrote;
         if (nVersionRequired > CLIENT_VERSION)
             return error("CBlockPolicyEstimator::Read(): up-version (%d) fee estimate file", nVersionRequired);
@@ -838,9 +874,10 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
             }
         }
         else { // nVersionThatWrote >= 149900
-            unsigned int future1, future2;
-            filein >> future1 >> future2;
-
+            filein >> nFileHistoricalFirst >> nFileHistoricalBest;
+            if (nFileHistoricalFirst > nFileHistoricalBest || nFileHistoricalBest > nFileBestSeenHeight) {
+                throw std::runtime_error("Corrupt estimates file. Historical block range for estimates is invalid");
+            }
             std::vector<double> fileBuckets;
             filein >> fileBuckets;
             size_t numBuckets = fileBuckets.size();
@@ -871,6 +908,8 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
             longStats = fileLongStats.release();
 
             nBestSeenHeight = nFileBestSeenHeight;
+            historicalFirst = nFileHistoricalFirst;
+            historicalBest = nFileHistoricalBest;
         }
     }
     catch (const std::exception& e) {
