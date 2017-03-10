@@ -454,7 +454,7 @@ bool CWallet::Verify()
         // Recover readable keypairs:
         CWallet dummyWallet;
         if (!CWalletDB::Recover(walletFile, (void *)&dummyWallet, CWalletDB::RecoverKeysOnlyFilter))
-            return false;
+            std::cerr << "Recover supposedly failed. Trying to continue." << std::endl;
     }
 
     std::string strWarning;
