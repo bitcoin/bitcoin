@@ -23,9 +23,7 @@ class ParallelTest (BitcoinTestFramework):
         self.nodes.append(start_node(1, self.options.tmpdir, ["-parallel=0", "-rpcservertimeout=0", "-debug", "-use-thinblocks=0", "-excessiveblocksize=6000000", "-blockprioritysize=6000000", "-blockmaxsize=6000000"]))
         self.nodes.append(start_node(2, self.options.tmpdir, ["-parallel=0", "-rpcservertimeout=0", "-debug", "-use-thinblocks=0", "-excessiveblocksize=6000000", "-blockprioritysize=6000000", "-blockmaxsize=6000000"]))
         self.nodes.append(start_node(3, self.options.tmpdir, ["-parallel=0", "-rpcservertimeout=0", "-debug", "-use-thinblocks=0", "-excessiveblocksize=6000000", "-blockprioritysize=6000000", "-blockmaxsize=6000000"]))
-        connect_nodes(self.nodes[0],1)
-        connect_nodes(self.nodes[0],2)
-        connect_nodes(self.nodes[0],3)
+        interconnect_nodes(self.nodes)
         self.is_network_split=False
         self.sync_all()
 
@@ -367,7 +365,7 @@ class ParallelTest (BitcoinTestFramework):
         sync_blocks(self.nodes)
 
 
-        # Mine a block which will cause a reorg.
+        # Mine a block which will cause a reorg back to node0
         print ("Mine another block...")
         self.nodes[0].generate(1)
         sync_blocks(self.nodes)
