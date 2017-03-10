@@ -7,15 +7,19 @@
 from collections import OrderedDict
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
+from test_framework.script import CScript, OP_1, OP_DROP, OP_2, OP_HASH160, OP_EQUAL, hash160, OP_TRUE
+from test_framework.mininode import CTransaction, CTxIn, CTxOut, COutPoint, ToHex, FromHex, COIN
 
 # Construct 2 trivial P2SH's and the ScriptSigs that spend them
 # So we can create many many transactions without needing to spend
 # time signing.
-P2SH_1 = "2MySexEGVzZpRgNQ1JdjdP5bRETznm3roQ2" # P2SH of "OP_1 OP_DROP"
-P2SH_2 = "2NBdpwq8Aoo1EEKEXPNrKvr5xQr3M9UfcZA" # P2SH of "OP_2 OP_DROP"
+redeem_script_1 = CScript([OP_1, OP_DROP])
+redeem_script_2 = CScript([OP_2, OP_DROP])
+P2SH_1 = CScript([OP_HASH160, hash160(redeem_script_1), OP_EQUAL])
+P2SH_2 = CScript([OP_HASH160, hash160(redeem_script_2), OP_EQUAL])
+
 # Associated ScriptSig's to spend satisfy P2SH_1 and P2SH_2
-# 4 bytes of OP_TRUE and push 2-byte redeem script of "OP_1 OP_DROP" or "OP_2 OP_DROP"
-SCRIPT_SIG = ["0451025175", "0451025275"]
+SCRIPT_SIG = [CScript([OP_TRUE, redeem_script_1]), CScript([OP_TRUE, redeem_script_2])]
 
 global log
 
@@ -35,39 +39,30 @@ def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee
     rand_fee = float(fee_increment)*(1.1892**random.randint(0,28))
     # Total fee ranges from min_fee to min_fee + 127*fee_increment
     fee = min_fee - fee_increment + satoshi_round(rand_fee)
-    inputs = []
+    tx = CTransaction()
     total_in = Decimal("0.00000000")
     while total_in <= (amount + fee) and len(conflist) > 0:
         t = conflist.pop(0)
         total_in += t["amount"]
-        inputs.append({ "txid" : t["txid"], "vout" : t["vout"]} )
+        tx.vin.append(CTxIn(COutPoint(int(t["txid"], 16), t["vout"]), b""))
     if total_in <= amount + fee:
         while total_in <= (amount + fee) and len(unconflist) > 0:
             t = unconflist.pop(0)
             total_in += t["amount"]
-            inputs.append({ "txid" : t["txid"], "vout" : t["vout"]} )
+            tx.vin.append(CTxIn(COutPoint(int(t["txid"], 16), t["vout"]), b""))
         if total_in <= amount + fee:
             raise RuntimeError("Insufficient funds: need %d, have %d"%(amount+fee, total_in))
-    outputs = {}
-    outputs = OrderedDict([(P2SH_1, total_in - amount - fee),
-                           (P2SH_2, amount)])
-    rawtx = from_node.createrawtransaction(inputs, outputs)
-    # createrawtransaction constructs a transaction that is ready to be signed.
-    # These transactions don't need to be signed, but we still have to insert the ScriptSig
-    # that will satisfy the ScriptPubKey.
-    completetx = rawtx[0:10]
-    inputnum = 0
-    for inp in inputs:
-        completetx += rawtx[10+82*inputnum:82+82*inputnum]
-        completetx += SCRIPT_SIG[inp["vout"]]
-        completetx += rawtx[84+82*inputnum:92+82*inputnum]
-        inputnum += 1
-    completetx += rawtx[10+82*inputnum:]
-    txid = from_node.sendrawtransaction(completetx, True)
+    tx.vout.append(CTxOut(int((total_in - amount - fee)*COIN), P2SH_1))
+    tx.vout.append(CTxOut(int(amount*COIN), P2SH_2))
+    # These transactions don't need to be signed, but we still have to insert
+    # the ScriptSig that will satisfy the ScriptPubKey.
+    for inp in tx.vin:
+        inp.scriptSig = SCRIPT_SIG[inp.prevout.n]
+    txid = from_node.sendrawtransaction(ToHex(tx), True)
     unconflist.append({ "txid" : txid, "vout" : 0 , "amount" : total_in - amount - fee})
     unconflist.append({ "txid" : txid, "vout" : 1 , "amount" : amount})
 
-    return (completetx, fee)
+    return (ToHex(tx), fee)
 
 def split_inputs(from_node, txins, txouts, initial_split = False):
     """
@@ -78,18 +73,21 @@ def split_inputs(from_node, txins, txouts, initial_split = False):
     a high coin age when the notion of priority still existed.
     """
     prevtxout = txins.pop()
-    inputs = []
-    inputs.append({ "txid" : prevtxout["txid"], "vout" : prevtxout["vout"] })
+    tx = CTransaction()
+    tx.vin.append(CTxIn(COutPoint(int(prevtxout["txid"], 16), prevtxout["vout"]), b""))
+
     half_change = satoshi_round(prevtxout["amount"]/2)
     rem_change = prevtxout["amount"] - half_change  - Decimal("0.00001000")
-    outputs = OrderedDict([(P2SH_1, half_change), (P2SH_2, rem_change)])
-    rawtx = from_node.createrawtransaction(inputs, outputs)
+    tx.vout.append(CTxOut(int(half_change*COIN), P2SH_1))
+    tx.vout.append(CTxOut(int(rem_change*COIN), P2SH_2))
+
     # If this is the initial split we actually need to sign the transaction
-    # Otherwise we just need to insert the property ScriptSig
+    # Otherwise we just need to insert the proper ScriptSig
     if (initial_split) :
-        completetx = from_node.signrawtransaction(rawtx)["hex"]
+        completetx = from_node.signrawtransaction(ToHex(tx))["hex"]
     else :
-        completetx = rawtx[0:82] + SCRIPT_SIG[prevtxout["vout"]] + rawtx[84:]
+        tx.vin[0].scriptSig = SCRIPT_SIG[prevtxout["vout"]]
+        completetx = ToHex(tx)
     txid = from_node.sendrawtransaction(completetx, True)
     txouts.append({ "txid" : txid, "vout" : 0 , "amount" : half_change})
     txouts.append({ "txid" : txid, "vout" : 1 , "amount" : rem_change})
