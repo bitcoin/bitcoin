@@ -51,8 +51,8 @@ install:
     - if [ "$CHECK_DOC" = 1 ]; then travis_retry git fetch https://github.com/bitcoin-core/ctaes.git; fi
     - if [ "$RUN_ALL_RPC_TESTS" = "true" ]; then mkdir -p bin && cd bin; fi
     - if [ "$RUN_ALL_RPC_TESTS" = "true" ]; then export BIN_OLD=`pwd`; fi
-    - if [ "$RUN_ALL_RPC_TESTS" = "true" ]; then travis_retry wget -N https://bitcoin.org/bin/bitcoin-core-0.12.1/bitcoin-0.12.1-linux64.tar.gz; fi
-    - if [ "$RUN_ALL_RPC_TESTS" = "true" ]; then cd .. && echo "54aca14b7512801ab78cc93f8576e1b66364a890e8017e8a187e4bf0209fd28c  bin/bitcoin-0.12.1-linux64.tar.gz" | sha256sum --check && tar -xzvf bin/bitcoin-0.12.1-linux64.tar.gz; fi
+    - if [ "$RUN_ALL_RPC_TESTS" = "true" ]; then travis_retry wget -N https://bitcoin.org/bin/bitcoin-core-0.14.0/bitcoin-0.14.0-x86_64-linux-gnu.tar.gz; fi
+    - if [ "$RUN_ALL_RPC_TESTS" = "true" ]; then cd .. && echo "06e6ceeb687e784e9aaad45e9407c7eed5f7e9c9bbe44083179287f54f0f9f2b bin/bitcoin-0.14.0-x86_64-linux-gnu.tar.gz" | sha256sum --check && tar -xzvf bin/bitcoin-0.14.0-x86_64-linux-gnu.tar.gz; fi
 before_script:
     - unset CC; unset CXX
     - if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/check-doc.py; fi
@@ -88,7 +88,7 @@ script:
     - if [ "$TRAVIS_EVENT_TYPE" = "cron" ]; then extended="--extended --exclude pruning"; fi
     - if [ "$RUN_TESTS" = "true" ]; then test/functional/test_runner.py --coverage ${extended}; fi
     - if [ "$RUN_ALL_RPC_TESTS" = "true" ]; then travis_wait 30 valgrind src/test/test_bitcoin -p -t wallet_tests; fi
-    - if [ "$RUN_ALL_RPC_TESTS" = "true" ]; then test/functional/test_runner.py compatibility --oldbinary=${BIN_OLD}/../bitcoin-0.12.1/bin/bitcoind; fi
+    - if [ "$RUN_ALL_RPC_TESTS" = "true" ]; then test/functional/test_runner.py compatibility --oldbinary=${BIN_OLD}/../bitcoin-0.14.0/bin/bitcoind; fi
     - if [ "$RUN_ALL_RPC_TESTS" = "true" ]; then test/functional/test_runner.py --extended -x pruning,rpcbind_test --coverage; fi
 after_script:
     - echo $TRAVIS_COMMIT_RANGE
