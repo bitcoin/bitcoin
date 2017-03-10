@@ -424,8 +424,8 @@ std::string UnlimitedCmdLineHelp()
     strUsage += HelpMessageOpt("-parallel=<n>",  strprintf(_("Turn Parallel Block Validation on or off (off: 0, on: 1, default: %d)"), 1));
     strUsage += HelpMessageOpt("-gen", strprintf(_("Generate coins (default: %u)"), DEFAULT_GENERATE));
     strUsage += HelpMessageOpt("-genproclimit=<n>", strprintf(_("Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)"), DEFAULT_GENERATE_THREADS));
+    strUsage += HelpMessageOpt("-ophanpoolexpiry=<n>", strprintf(_("Do not keep transactions in the orphanpool longer than <n> hours (default: %u)"), DEFAULT_ORPHANPOOL_EXPIRY));
     strUsage += TweakCmdLineHelp();
-    strUsage += HelpMessageOpt("-parallel=<n>",  strprintf(_("Turn Parallel Block Validation on or off (off: 0, on: 1, default: %d)"), 1));
     return strUsage;
 }
 

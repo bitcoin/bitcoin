@@ -341,6 +341,31 @@ bool CParallelValidation::IsReorgInProgress()
     return false;
 }
 
+void CParallelValidation::ClearOrphanCache(const CBlock &block)
+{
+    if (!IsInitialBlockDownload())
+    {
+        LOCK(cs_orphancache);
+        {
+            // Erase any orphans that may have been in the previous block and arrived
+            // after the previous block had already been processed.
+            LOCK(cs_previousblock);
+            for (unsigned int i = 0; i < vPreviousBlock.size(); i++) {
+                EraseOrphanTx(vPreviousBlock[i]);
+            }
+            vPreviousBlock.clear();
+
+            // Erase orphans from the current block that were already received.
+            for (unsigned int i = 0; i < block.vtx.size(); i++) {
+                uint256 hash = block.vtx[i].GetHash();
+                vPreviousBlock.push_back(hash);
+                EraseOrphanTx(hash);
+            }
+        }
+    }
+}
+
+
 //  HandleBlockMessage launches a HandleBlockMessageThread.  And HandleBlockMessageThread processes each block and updates 
 //  the UTXO if the block has been accepted and the tip updated. We cleanup and release the semaphore after the thread has finished.
 void CParallelValidation::HandleBlockMessage(CNode *pfrom, const string &strCommand, const CBlock &block, const CInv &inv)
@@ -501,12 +526,8 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
     // Clear the thinblock timer used for preferential download
     thindata.ClearThinBlockTimer(inv.hash);
 
-    // Erase any txns in the block from the orphan cache as they are no longer needed
-    if (IsChainNearlySyncd()) {
-        LOCK(cs_orphancache);
-        for (unsigned int i = 0; i < block.vtx.size(); i++)
-            EraseOrphanTx(block.vtx[i].GetHash());
-    }
+    // Erase any txns from the orphan cache that are no longer needed
+    PV.ClearOrphanCache(block);
     
     // Clear thread data - this must be done before the thread completes or else some other new
     // thread may grab the same thread id and we would end up deleting the entry for the new thread instead.
