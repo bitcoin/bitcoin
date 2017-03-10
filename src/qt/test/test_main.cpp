@@ -14,9 +14,10 @@
 
 #ifdef ENABLE_WALLET
 #include "paymentservertests.h"
+#include "wallettests.h"
 #endif
 
-#include <QCoreApplication>
+#include <QApplication>
 #include <QObject>
 #include <QTest>
 
@@ -43,8 +44,8 @@ int main(int argc, char *argv[])
     bool fInvalid = false;
 
     // Don't remove this, it's needed to access
-    // QCoreApplication:: in the tests
-    QCoreApplication app(argc, argv);
+    // QApplication:: and QCoreApplication:: in the tests
+    QApplication app(argc, argv);
     app.setApplicationName("Bitcoin-Qt-test");
 
     SSL_library_init();
@@ -67,6 +68,12 @@ int main(int argc, char *argv[])
     if (QTest::qExec(&test4) != 0) {
         fInvalid = true;
     }
+#ifdef ENABLE_WALLET
+    WalletTests test5;
+    if (QTest::qExec(&test5) != 0) {
+        fInvalid = true;
+    }
+#endif
 
     return fInvalid;
 }
