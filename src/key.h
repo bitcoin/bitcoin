@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <vector>
 
+class base58string;
 
 /**
  * secp256k1:
@@ -105,6 +106,8 @@ public:
      * This is expensive.
      */
     CPrivKey GetPrivKey() const;
+
+    base58string ToBase58string22() const;
 
     /**
      * Compute the public key from a private key.

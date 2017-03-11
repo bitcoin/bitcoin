@@ -13,6 +13,8 @@
 #include <stdexcept>
 #include <vector>
 
+class base58string;
+
 /**
  * secp256k1:
  * const unsigned int PRIVATE_KEY_SIZE = 279;
@@ -31,6 +33,8 @@ class CKeyID : public uint160
 public:
     CKeyID() : uint160() {}
     CKeyID(const uint160& in) : uint160(in) {}
+public:
+    base58string ToBase58address() const;
 };
 
 typedef uint256 ChainCode;

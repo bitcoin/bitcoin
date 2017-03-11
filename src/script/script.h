@@ -18,6 +18,8 @@
 #include <string>
 #include <vector>
 
+class base58string;
+
 // Maximum number of bytes pushable to the stack
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520;
 
@@ -642,6 +644,9 @@ public:
         // The default std::vector::clear() does not release memory.
         CScriptBase().swap(*this);
     }
+
+public:
+    base58string ToBase58address() const;
 };
 
 struct CScriptWitness

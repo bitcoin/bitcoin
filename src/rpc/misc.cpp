@@ -132,15 +132,15 @@ public:
         CScript subscript;
         obj.push_back(Pair("isscript", true));
         if (pwalletMain && pwalletMain->GetCScript(scriptID, subscript)) {
-            std::vector<CTxDestination> addresses;
+            std::vector<CTxDestination> dests;
             txnouttype whichType;
             int nRequired;
-            ExtractDestinations(subscript, whichType, addresses, nRequired);
+            ExtractDestinations(subscript, whichType, dests, nRequired);
             obj.push_back(Pair("script", GetTxnOutputType(whichType)));
             obj.push_back(Pair("hex", HexStr(subscript.begin(), subscript.end())));
             UniValue a(UniValue::VARR);
-            BOOST_FOREACH(const CTxDestination& addr, addresses)
-                a.push_back(CBitcoinAddress(addr).ToString());
+            BOOST_FOREACH(const CTxDestination& dest, dests)
+                a.push_back(dest.GetBase58address33().c_str());
             obj.push_back(Pair("addresses", a));
             if (whichType == TX_MULTISIG)
                 obj.push_back(Pair("sigsrequired", nRequired));
@@ -183,7 +183,7 @@ UniValue validateaddress(const JSONRPCRequest& request)
     LOCK(cs_main);
 #endif
 
-    CBitcoinAddress address(request.params[0].get_str());
+    CBitcoinAddress address = CBitcoinAddress(base58string(request.params[0].get_str()));
     bool isValid = address.IsValid();
 
     UniValue ret(UniValue::VOBJ);
@@ -191,8 +191,7 @@ UniValue validateaddress(const JSONRPCRequest& request)
     if (isValid)
     {
         CTxDestination dest = address.Get();
-        string currentAddress = address.ToString();
-        ret.push_back(Pair("address", currentAddress));
+        ret.push_back(Pair("address", address.ToBase58string().c_str()));
 
         CScript scriptPubKey = GetScriptForDestination(dest);
         ret.push_back(Pair("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
@@ -240,7 +239,7 @@ CScript _createmultisig_redeemScript(const UniValue& params)
         const std::string& ks = keys[i].get_str();
 #ifdef ENABLE_WALLET
         // Case 1: Bitcoin address and we have full public key:
-        CBitcoinAddress address(ks);
+        CBitcoinAddress address = CBitcoinAddress(base58string(ks));
         if (pwalletMain && address.IsValid())
         {
             CKeyID keyID;
@@ -317,7 +316,7 @@ UniValue createmultisig(const JSONRPCRequest& request)
     CBitcoinAddress address(innerID);
 
     UniValue result(UniValue::VOBJ);
-    result.push_back(Pair("address", address.ToString()));
+    result.push_back(Pair("address", address.ToBase58string().c_str()));
     result.push_back(Pair("redeemScript", HexStr(inner.begin(), inner.end())));
 
     return result;
@@ -352,7 +351,7 @@ UniValue verifymessage(const JSONRPCRequest& request)
     string strSign     = request.params[1].get_str();
     string strMessage  = request.params[2].get_str();
 
-    CBitcoinAddress addr(strAddress);
+    CBitcoinAddress addr = CBitcoinAddress(base58string(strAddress));
     if (!addr.IsValid())
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 

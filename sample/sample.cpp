@@ -8,7 +8,7 @@ int main()
 {
     ECC_Start();
 
-    // random 32bytes binary (※ただし楕円曲線として有効な範囲)
+    // random 32bytes binary (※ただし楕円曲線として有効な範囲) (これをそのまま表示しようとすると64charsになりそうだが.)
     CKey key;
     key.MakeNewKey(false);
 
@@ -28,13 +28,13 @@ int main()
 
     // ※ CBitcoinSecret は g_pCurrentParams に依存するため、先に g_pCurrentParams の指定が必要.
     SelectParams(NETWORK_REGTEST);
-    printf("PRIVKEY in REGTEST: %s (%d)\n", CBitcoinSecret(key).ToString().c_str(), CBitcoinSecret(key).ToString().length());
+    printf("PRIVKEY in REGTEST: %s (%d)\n", key.ToBase58string22().c_str(), strlen(key.ToBase58string22().c_str()));
 
     SelectParams(NETWORK_TESTNET);
-    printf("PRIVKEY in TESTNET: %s (%d)\n", CBitcoinSecret(key).ToString().c_str(), CBitcoinSecret(key).ToString().length());
+    printf("PRIVKEY in TESTNET: %s (%d)\n", key.ToBase58string22().c_str(), strlen(key.ToBase58string22().c_str()));
 
     SelectParams(NETWORK_MAIN);
-    printf("PRIVKEY in MAIN: %s (%d)\n", CBitcoinSecret(key).ToString().c_str(), CBitcoinSecret(key).ToString().length()); // ※MAINだと値が変わる.
+    printf("PRIVKEY in MAIN: %s (%d)\n", key.ToBase58string22().c_str(), strlen(key.ToBase58string22().c_str())); // ※MAINだと値が変わる.
 
 
 
