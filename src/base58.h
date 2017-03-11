@@ -65,6 +65,8 @@ inline bool DecodeBase58Check(const char* psz, std::vector<unsigned char>& vchRe
  */
 inline bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRet);
 
+class base58string;
+
 /**
  * Base class for all base58-encoded data
  */
@@ -85,6 +87,7 @@ protected:
 public:
     bool SetString(const char* psz, unsigned int nVersionBytes = 1);
     bool SetString(const std::string& str);
+    bool SetBase58String(const base58string& str);
     std::string ToString() const;
     int CompareTo(const CBase58Data& b58) const;
 
@@ -93,6 +96,19 @@ public:
     bool operator>=(const CBase58Data& b58) const { return CompareTo(b58) >= 0; }
     bool operator< (const CBase58Data& b58) const { return CompareTo(b58) <  0; }
     bool operator> (const CBase58Data& b58) const { return CompareTo(b58) >  0; }
+
+    friend class base58string;
+};
+
+class base58string {
+public:
+    base58string() {}
+    explicit base58string(const std::string& str) { m_data.SetString(str); }
+    explicit base58string(const char* sz) { m_data.SetString(sz); }
+protected:
+    friend class CBase58Data;
+private:
+    CBase58Data m_data;
 };
 
 /** base58-encoded Bitcoin addresses.
