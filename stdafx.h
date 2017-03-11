@@ -25,3 +25,4 @@
 #include "uint256.h"
 #include "streams.h"
 #include "serialize.h"
+#include "base58.h"
