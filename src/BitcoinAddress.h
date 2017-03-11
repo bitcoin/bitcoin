@@ -22,8 +22,8 @@ public:
 
     CBitcoinAddress() {}
     CBitcoinAddress(const CTxDestination &dest) { Set(dest); }
-    CBitcoinAddress(const std::string& strAddress) { SetString(strAddress); }
-    CBitcoinAddress(const char* pszAddress) { SetString(pszAddress); }
+    CBitcoinAddress(const std::string& strAddress) { _SetString(strAddress); }
+    CBitcoinAddress(const char* pszAddress) { _SetString(pszAddress); }
 
     CTxDestination Get() const;
     bool GetKeyID(CKeyID &keyID) const;

@@ -540,7 +540,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
         if (!keysObj[kidx].isStr())
             throw std::runtime_error("privatekey not a std::string");
         CBitcoinSecret vchSecret;
-        bool fGood = vchSecret.SetString(keysObj[kidx].getValStr());
+        bool fGood = vchSecret.SetBase58string(base58string(keysObj[kidx].getValStr()));
         if (!fGood)
             throw std::runtime_error("privatekey not valid");
 

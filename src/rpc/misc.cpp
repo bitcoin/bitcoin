@@ -397,11 +397,11 @@ UniValue signmessagewithprivkey(const JSONRPCRequest& request)
             + HelpExampleRpc("signmessagewithprivkey", "\"privkey\", \"my message\"")
         );
 
-    string strPrivkey = request.params[0].get_str();
+    base58string strPrivkey(request.params[0].get_str());
     string strMessage = request.params[1].get_str();
 
     CBitcoinSecret vchSecret;
-    bool fGood = vchSecret.SetString(strPrivkey);
+    bool fGood = vchSecret.SetBase58string(strPrivkey);
     if (!fGood)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
     CKey key = vchSecret.GetKey();

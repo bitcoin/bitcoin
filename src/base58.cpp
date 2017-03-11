@@ -168,7 +168,7 @@ void CBase58Data::SetData(const std::vector<unsigned char>& vchVersionIn, const 
     SetData(vchVersionIn, (void*)pbegin, pend - pbegin);
 }
 
-bool CBase58Data::SetString(const char* psz, unsigned int nVersionBytes)
+bool CBase58Data::_SetString(const char* psz, unsigned int nVersionBytes)
 {
     std::vector<unsigned char> vchTemp;
     bool rc58 = DecodeBase58Check(psz, vchTemp);
@@ -185,16 +185,22 @@ bool CBase58Data::SetString(const char* psz, unsigned int nVersionBytes)
     return true;
 }
 
-bool CBase58Data::SetString(const std::string& str)
+bool CBase58Data::_SetString(const std::string& str)
 {
-    return SetString(str.c_str());
+    return _SetString(str.c_str());
 }
 
-std::string CBase58Data::ToString() const
+bool CBase58Data::SetBase58string(const base58string& str)
+{
+    *this = str.m_data;
+    return true;
+}
+
+base58string CBase58Data::ToBase58string() const
 {
     std::vector<unsigned char> vch = vchVersion;
     vch.insert(vch.end(), vchData.begin(), vchData.end());
-    return EncodeBase58Check(vch);
+    return base58string(EncodeBase58Check(vch));
 }
 
 int CBase58Data::CompareTo(const CBase58Data& b58) const

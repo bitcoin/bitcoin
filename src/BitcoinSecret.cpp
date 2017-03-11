@@ -27,12 +27,7 @@ bool CBitcoinSecret::IsValid() const
     return fExpectedFormat && fCorrectVersion;
 }
 
-bool CBitcoinSecret::SetString(const char* pszSecret)
+bool CBitcoinSecret::SetBase58string(const base58string& strSecret)
 {
-    return CBase58Data::SetString(pszSecret) && IsValid();
-}
-
-bool CBitcoinSecret::SetString(const std::string& strSecret)
-{
-    return SetString(strSecret.c_str());
+    return CBase58Data::SetBase58string(strSecret) && IsValid();
 }

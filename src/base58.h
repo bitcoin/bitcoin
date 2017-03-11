@@ -85,10 +85,10 @@ protected:
     void SetData(const std::vector<unsigned char> &vchVersionIn, const unsigned char *pbegin, const unsigned char *pend);
 
 public:
-    bool SetString(const char* psz, unsigned int nVersionBytes = 1);
-    bool SetString(const std::string& str);
-    bool SetBase58String(const base58string& str);
-    std::string ToString() const;
+    bool _SetString(const char* psz, unsigned int nVersionBytes = 1);
+    bool _SetString(const std::string& str);
+    bool SetBase58string(const base58string& str);
+    base58string ToBase58string() const;
     int CompareTo(const CBase58Data& b58) const;
 
     bool operator==(const CBase58Data& b58) const { return CompareTo(b58) == 0; }
@@ -103,8 +103,10 @@ public:
 class base58string {
 public:
     base58string() {}
-    explicit base58string(const std::string& str) { m_data.SetString(str); }
-    explicit base58string(const char* sz) { m_data.SetString(sz); }
+    explicit base58string(const std::string& str, unsigned int nVersionBytes = 1) { m_data._SetString(str.c_str(), nVersionBytes); }
+    explicit base58string(const char* sz, unsigned int nVersionBytes = 1) { m_data._SetString(sz, nVersionBytes); }
+    // std::string ToString() const { return m_data.ToString(); }
+    const char* c_str() const { return m_data.ToBase58string().c_str(); }
 protected:
     friend class CBase58Data;
 private:

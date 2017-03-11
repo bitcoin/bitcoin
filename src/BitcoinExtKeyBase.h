@@ -29,7 +29,7 @@ public:
     }
 
     CBitcoinExtKeyBase(const std::string& strBase58c) {
-        SetString(strBase58c.c_str(), Params().Base58Prefix(Type).size());
+        this->SetBase58string(base58string(strBase58c, Params().Base58Prefix(Type).size()));
     }
 
     CBitcoinExtKeyBase() {}

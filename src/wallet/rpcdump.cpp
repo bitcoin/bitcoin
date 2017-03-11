@@ -108,7 +108,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked();
 
-    string strSecret = request.params[0].get_str();
+    base58string strSecret(request.params[0].get_str());
     string strLabel = "";
     if (request.params.size() > 1)
         strLabel = request.params[1].get_str();
@@ -122,7 +122,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled in pruned mode");
 
     CBitcoinSecret vchSecret;
-    bool fGood = vchSecret.SetString(strSecret);
+    bool fGood = vchSecret.SetBase58string(strSecret);
 
     if (!fGood) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
 
@@ -461,7 +461,7 @@ UniValue importwallet(const JSONRPCRequest& request)
         if (vstr.size() < 2)
             continue;
         CBitcoinSecret vchSecret;
-        if (!vchSecret.SetString(vstr[0]))
+        if (!vchSecret.SetBase58string(base58string(vstr[0])))
             continue;
         CKey key = vchSecret.GetKey();
         CPubKey pubkey = key.GetPubKey();
@@ -540,16 +540,16 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked();
 
-    string strAddress = request.params[0].get_str();
+    base58string strAddress(request.params[0].get_str());
     CBitcoinAddress address;
-    if (!address.SetString(strAddress))
+    if (!address.SetBase58string(strAddress))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
     CKeyID keyID;
     if (!address.GetKeyID(keyID))
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
     CKey vchSecret;
     if (!pwalletMain->GetKey(keyID, vchSecret))
-        throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
+        throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress.ToString() + " is not known");
     return CBitcoinSecret(vchSecret).ToString();
 }
 
@@ -753,10 +753,10 @@ UniValue processImport(const UniValue& data) {
             // Import private keys.
             if (keys.size()) {
                 for (size_t i = 0; i < keys.size(); i++) {
-                    const string& privkey = keys[i].get_str();
+                    base58string privkey(keys[i].get_str());
 
                     CBitcoinSecret vchSecret;
-                    bool fGood = vchSecret.SetString(privkey);
+                    bool fGood = vchSecret.SetBase58string(privkey);
 
                     if (!fGood) {
                         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
@@ -863,11 +863,11 @@ UniValue processImport(const UniValue& data) {
 
             // Import private keys.
             if (keys.size()) {
-                const string& strPrivkey = keys[0].get_str();
+                base58string strPrivkey(keys[0].get_str());
 
                 // Checks.
                 CBitcoinSecret vchSecret;
-                bool fGood = vchSecret.SetString(strPrivkey);
+                bool fGood = vchSecret.SetBase58string(strPrivkey);
 
                 if (!fGood) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");

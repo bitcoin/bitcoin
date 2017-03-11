@@ -710,7 +710,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
         for (unsigned int idx = 0; idx < keys.size(); idx++) {
             UniValue k = keys[idx];
             CBitcoinSecret vchSecret;
-            bool fGood = vchSecret.SetString(k.get_str());
+            bool fGood = vchSecret.SetBase58string(base58string(k.get_str()));
             if (!fGood)
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
             CKey key = vchSecret.GetKey();
