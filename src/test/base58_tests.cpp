@@ -14,6 +14,8 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "test/test_bitcoin.h"
+#include "BitcoinSecret.h"
+#include "BitcoinAddress.h"
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>

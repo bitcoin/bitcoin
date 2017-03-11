@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "key.h"
 #include "base58.h" // CBitcoinSecret
+#include "BitcoinSecret.h"
+#include "BitcoinAddress.h"
 
 int main()
 {

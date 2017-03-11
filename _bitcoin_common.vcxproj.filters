@@ -316,6 +316,15 @@
       <Filter>Source Files\key</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="src\BitcoinAddress.cpp">
+      <Filter>Source Files\key</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BitcoinSecret.cpp">
+      <Filter>Source Files\key</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BitcoinExtKeyBase.cpp">
+      <Filter>Source Files\key</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\addrdb.h">
@@ -676,6 +685,15 @@
       <Filter>Source Files\key</Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="src\BitcoinAddress.h">
+      <Filter>Source Files\key</Filter>
+    </ClInclude>
+    <ClInclude Include="src\BitcoinSecret.h">
+      <Filter>Source Files\key</Filter>
+    </ClInclude>
+    <ClInclude Include="src\BitcoinExtKeyBase.h">
+      <Filter>Source Files\key</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

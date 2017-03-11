@@ -10,6 +10,8 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "test/test_bitcoin.h"
+#include "BitcoinSecret.h"
+#include "BitcoinAddress.h"
 
 #include <string>
 #include <vector>

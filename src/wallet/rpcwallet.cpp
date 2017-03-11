@@ -20,6 +20,8 @@
 #include "utilmoneystr.h"
 #include "wallet.h"
 #include "walletdb.h"
+#include "BitcoinSecret.h"
+#include "BitcoinAddress.h"
 
 #include <stdint.h>
 

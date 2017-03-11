@@ -14,6 +14,8 @@
 #include "util.h"
 #include "utiltime.h"
 #include "wallet/wallet.h"
+#include "BitcoinSecret.h"
+#include "BitcoinAddress.h"
 
 #include <atomic>
 
