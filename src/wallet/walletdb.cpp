@@ -21,6 +21,7 @@
 #include <boost/foreach.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/thread.hpp>
+#include <fstream>
 
 using namespace std;
 
@@ -925,18 +926,41 @@ bool BackupWallet(const CWallet& wallet, const string& strDest)
                 if (boost::filesystem::is_directory(pathDest))
                     pathDest /= wallet.strWalletFile;
 
+// BU copy_file does not work with c++11, due to a link error in many versions of boost.  Return this code to use when the default boost version in most distros fix this bug.
+//                try {
+//#if BOOST_VERSION >= 104000
+//                    boost::filesystem::copy_file(pathSrc, pathDest, boost::filesystem::copy_option::overwrite_if_exists);
+//#else
+//                    boost::filesystem::copy_file(pathSrc, pathDest);
+//#endif
+//                    LogPrintf("copied wallet.dat to %s\n", pathDest.string());
+//                    return true;
+//                } catch (const boost::filesystem::filesystem_error& e) {
+//                    LogPrintf("error copying wallet.dat to %s - %s\n", pathDest.string(), e.what());
+//                    return false;
+//                }
+// Replacement copy code
                 try {
-#if BOOST_VERSION >= 104000
-                    boost::filesystem::copy_file(pathSrc, pathDest, boost::filesystem::copy_option::overwrite_if_exists);
-#else
-                    boost::filesystem::copy_file(pathSrc, pathDest);
-#endif
-                    LogPrintf("copied wallet.dat to %s\n", pathDest.string());
+                    ifstream source(pathSrc.string(), ios::binary);
+                    ofstream dest(pathDest.string(), ios::binary);
+                    if (!source)
+                      {
+                        LogPrintf("error opening source wallet file %s\n", pathSrc.string());
+                        return false;
+                      }
+                    if (!dest)
+                      {
+                        LogPrintf("error opening destination wallet file %s\n", pathDest.string());
+                        return false;
+                      }
+                    dest << source.rdbuf();
                     return true;
-                } catch (const boost::filesystem::filesystem_error& e) {
-                    LogPrintf("error copying wallet.dat to %s - %s\n", pathDest.string(), e.what());
+		}
+                catch (std::ios_base::failure& e) {
+                    LogPrintf("error copying wallet from %s to %s - %s\n", pathSrc.string(), pathDest.string(), e.what());
                     return false;
                 }
+// end replacement copy code              
             }
         }
         MilliSleep(100);
