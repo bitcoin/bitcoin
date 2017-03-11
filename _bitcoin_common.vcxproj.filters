@@ -16,6 +16,9 @@
     <Filter Include="Source Files\primitive">
       <UniqueIdentifier>{229af34f-0d90-44c2-8549-519a8d549a34}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\key">
+      <UniqueIdentifier>{db6f8a17-7d14-49e0-beb2-493547e7f656}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\chainparams.cpp">
@@ -258,9 +261,6 @@
     <ClCompile Include="src\amount.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\base58.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\univalue\lib\univalue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -271,9 +271,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\consensus\merkle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\key.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\keystore.cpp">
@@ -312,6 +309,12 @@
     <ClCompile Include="src\base_uint.cpp">
       <Filter>Source Files\primitive</Filter>
     </ClCompile>
+    <ClCompile Include="src\base58.cpp">
+      <Filter>Source Files\key</Filter>
+    </ClCompile>
+    <ClCompile Include="src\key.cpp">
+      <Filter>Source Files\key</Filter>
+    </ClCompile>
     <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -325,9 +328,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\amount.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\base58.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\script\bitcoinconsensus.h">
@@ -442,9 +442,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\script\ismine.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\key.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\keystore.h">
@@ -671,6 +668,12 @@
     </ClInclude>
     <ClInclude Include="src\base_uint.h">
       <Filter>Source Files\primitive</Filter>
+    </ClInclude>
+    <ClInclude Include="src\base58.h">
+      <Filter>Source Files\key</Filter>
+    </ClInclude>
+    <ClInclude Include="src\key.h">
+      <Filter>Source Files\key</Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
