@@ -204,9 +204,6 @@
     <ClCompile Include="src\script\sign.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\script\standard.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\wallet\crypter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -323,6 +320,9 @@
       <Filter>Source Files\key</Filter>
     </ClCompile>
     <ClCompile Include="src\BitcoinExtKeyBase.cpp">
+      <Filter>Source Files\key</Filter>
+    </ClCompile>
+    <ClCompile Include="src\script\standard.cpp">
       <Filter>Source Files\key</Filter>
     </ClCompile>
   </ItemGroup>
@@ -567,9 +567,6 @@
     <ClInclude Include="src\script\sign.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\script\standard.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\streams.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -692,6 +689,9 @@
       <Filter>Source Files\key</Filter>
     </ClInclude>
     <ClInclude Include="src\BitcoinExtKeyBase.h">
+      <Filter>Source Files\key</Filter>
+    </ClInclude>
+    <ClInclude Include="src\script\standard.h">
       <Filter>Source Files\key</Filter>
     </ClInclude>
   </ItemGroup>
