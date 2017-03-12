@@ -110,7 +110,7 @@ static unsigned int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 1;
  *  Larger windows tolerate larger download speed differences between peer, but increase the potential
  *  degree of disordering of blocks on disk (which make reindexing and in the future perhaps pruning
  *  harder). We'll probably want to make this a per-peer adaptive value at some point. */
-static unsigned int BLOCK_DOWNLOAD_WINDOW = 8;
+static unsigned int BLOCK_DOWNLOAD_WINDOW = 256;
 
 extern CTweak<unsigned int> maxBlocksInTransitPerPeer;  // override the above
 extern CTweak<unsigned int> blockDownloadWindow;
@@ -399,27 +399,21 @@ bool MarkBlockAsReceived(const uint256& hash) {
         avgResponseTime += nResponseTime / blockRange;
         if (avgResponseTime < 0.2) {
             MAX_BLOCKS_IN_TRANSIT_PER_PEER = 32;
-            BLOCK_DOWNLOAD_WINDOW = 256;
         }
         else if (avgResponseTime < 0.5) {
             MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16;
-            BLOCK_DOWNLOAD_WINDOW = 128;
         }
         else if (avgResponseTime < 0.9) {
             MAX_BLOCKS_IN_TRANSIT_PER_PEER = 8;
-            BLOCK_DOWNLOAD_WINDOW = 64;
         }
         else if (avgResponseTime < 1.4) {
             MAX_BLOCKS_IN_TRANSIT_PER_PEER = 4;
-            BLOCK_DOWNLOAD_WINDOW = 32;
         }
         else if (avgResponseTime < 2.0) {
             MAX_BLOCKS_IN_TRANSIT_PER_PEER = 2;
-            BLOCK_DOWNLOAD_WINDOW = 16;
         }
         else  {
             MAX_BLOCKS_IN_TRANSIT_PER_PEER = 1;
-            BLOCK_DOWNLOAD_WINDOW = 8;
         }
 
         LogPrint("thin", "Received block %s in %.2f seconds\n", hash.ToString(), nResponseTime);
@@ -570,10 +564,11 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBl
 
     std::vector<CBlockIndex*> vToFetch;
     CBlockIndex *pindexWalk = state->pindexLastCommonBlock;
-    // Never fetch further than the best block we know the peer has, or more than BLOCK_DOWNLOAD_WINDOW + 1 beyond the last
-    // linked block we have in common with this peer. The +1 is so we can detect stalling, namely if we would be able to
-    // download that next block if the window were 1 larger.
-    int nWindowEnd = state->pindexLastCommonBlock->nHeight + BLOCK_DOWNLOAD_WINDOW;
+    // Never fetch further than the current chain tip + the block download window.  We need to ensure
+    // the if running in pruning mode we don't download too many blocks ahead and as a result use to
+    // much disk space to store unconnected blocks.
+    int nWindowEnd = chainActive.Height() + BLOCK_DOWNLOAD_WINDOW;
+
     int nMaxHeight = std::min<int>(state->pindexBestKnownBlock->nHeight, nWindowEnd + 1);
     NodeId waitingfor = -1;
     while (pindexWalk->nHeight < nMaxHeight) {
