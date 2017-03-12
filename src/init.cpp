@@ -1891,7 +1891,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         uiInterface.InitMessage(_("Masternode cache is empty, skipping payments and governance cache..."));
     }
 
-    uiInterface.InitMessage(_("Loading fullfiled requests cache..."));
+    uiInterface.InitMessage(_("Loading fulfilled requests cache..."));
     CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
     if(!flatdb4.Load(netfulfilledman)) {
         return InitError("Failed to load fulfilled requests cache from netfulfilled.dat");
