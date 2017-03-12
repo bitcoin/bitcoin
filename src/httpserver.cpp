@@ -663,16 +663,21 @@ CService HTTPRequest::GetPeer()
     evhttp_connection* con = evhttp_request_get_connection(req);
     CService peer;
     if (con) {
+#ifdef HAVE_SOCKADDR_UN
+        // evhttp has no way to query what bindsocket a connection
+        // came in on, so we need this low-level code to be able to
+        // correctly mark UNIX socket connections as coming from localhost.
+        struct bufferevent *bev = evhttp_connection_get_bufferevent(con);
+        if (bev && evunix_is_conn_from_unix(bev)) {
+            // As we have no way to signify "UNIX localhost" here, just return
+            // IPv6 localhost.
+            return LookupNumeric("::1", 0);
+        }
+#endif
         // evhttp retains ownership over returned address string
         const char* address = "";
         uint16_t port = 0;
         evhttp_connection_get_peer(con, (char**)&address, &port);
-        if (!strcmp(address, "localhost")) {
-            /* Special: will get here for UNIX sockets. As we have no way to indicate that,
-             * just pass localhost IPv6.
-             */
-            address = "::1";
-        }
         peer = LookupNumeric(address, port);
     }
     return peer;

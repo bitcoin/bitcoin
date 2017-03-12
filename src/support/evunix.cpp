@@ -84,6 +84,18 @@ int evunix_connect_fd(const boost::filesystem::path &path)
     return fd;
 }
 
+bool evunix_is_conn_from_unix_fd(int fd)
+{
+    struct sockaddr_un peer_unix;
+    socklen_t peer_unix_len = sizeof(peer_unix);
+    if (getpeername(fd, (sockaddr*)&peer_unix, &peer_unix_len) == 0) {
+        if (peer_unix.sun_family == AF_UNIX) {
+            return true;
+        }
+    }
+    return false;
+}
+
 struct bufferevent *evunix_bind(struct event_base *base, const boost::filesystem::path &path)
 {
     struct bufferevent *rv;
@@ -104,4 +116,13 @@ struct bufferevent *evunix_connect(struct event_base *base, const boost::filesys
         return NULL;
     }
     return rv;
+}
+
+bool evunix_is_conn_from_unix(struct bufferevent *bev)
+{
+    int fd;
+    if ((fd = bufferevent_getfd(bev)) != -1) {
+        return evunix_is_conn_from_unix_fd(fd);
+    }
+    return false;
 }

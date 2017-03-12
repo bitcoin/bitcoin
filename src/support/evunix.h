@@ -11,6 +11,10 @@
 struct event_base;
 struct bufferevent;
 
+// All these functions come in a plain (high-level) and _fd (low-level)
+// variant. The plain version takes/yields a libevent bufferevent*, the _fd
+// functions file descriptor.
+
 /** Bind on a UNIX socket.
  * Returns a bufferevent that can be used to send or receive data on the socket, or NULL
  * on failure.
@@ -38,5 +42,15 @@ int evunix_connect_fd(const boost::filesystem::path &path);
  * the same name.
  */
 bool evunix_remove_socket(const boost::filesystem::path &path);
+
+/** Return whether incoming connection fd came in on a UNIX socket.
+ */
+bool evunix_is_conn_from_unix_fd(int fd);
+
+/** Return whether incoming connection bev came in on a UNIX socket.
+ * This is a hack because evhttp won't let us know what bound socket a connection
+ * came in on.
+ */
+bool evunix_is_conn_from_unix(struct bufferevent *bev);
 
 #endif
