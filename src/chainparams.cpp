@@ -138,7 +138,9 @@ public:
         // BITCOINUNLIMITED START
         vSeeds.push_back(CDNSSeedData("btcc.com", "seed.btcc.com"));    // BTCC
         vSeeds.push_back(CDNSSeedData("bitnodes.io", "seed.bitnodes.io"));      // Bitnodes (Addy Yeow)
-        vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be")); // Pieter Wuille
+        vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be", true)); // Pieter Wuille, only supports x1, x5, x9, and xd
+        vSeeds.push_back(CDNSSeedData("bitcoinunlimited.info", "seed.bitcoinunlimited.info", true)); // BU seeder
+        vSeeds.push_back(CDNSSeedData("xf2.org", "bitseed.xf2.org")); // Jeff Garzik
         // BITCOINUNLIMITED END
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
