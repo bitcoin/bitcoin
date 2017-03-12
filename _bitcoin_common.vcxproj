@@ -222,6 +222,7 @@
     <ClCompile Include="src\rpc\rawtransaction.cpp" />
     <ClCompile Include="src\rpc\server.cpp" />
     <ClCompile Include="src\scheduler.cpp" />
+    <ClCompile Include="src\ScriptID.cpp" />
     <ClCompile Include="src\script\bitcoinconsensus.cpp" />
     <ClCompile Include="src\script\interpreter.cpp" />
     <ClCompile Include="src\script\ismine.cpp" />
@@ -237,6 +238,7 @@
     <ClCompile Include="src\timedata.cpp" />
     <ClCompile Include="src\torcontrol.cpp" />
     <ClCompile Include="src\txdb.cpp" />
+    <ClCompile Include="src\TxDestination.cpp" />
     <ClCompile Include="src\txmempool.cpp" />
     <ClCompile Include="src\uint256.cpp" />
     <ClCompile Include="src\ui_interface.cpp" />
@@ -340,6 +342,7 @@
     <ClInclude Include="src\rpc\register.h" />
     <ClInclude Include="src\rpc\server.h" />
     <ClInclude Include="src\scheduler.h" />
+    <ClInclude Include="src\ScriptID.h" />
     <ClInclude Include="src\script\bitcoinconsensus.h" />
     <ClInclude Include="src\script\interpreter.h" />
     <ClInclude Include="src\script\ismine.h" />
@@ -362,6 +365,7 @@
     <ClInclude Include="src\tinyformat.h" />
     <ClInclude Include="src\torcontrol.h" />
     <ClInclude Include="src\txdb.h" />
+    <ClInclude Include="src\TxDestination.h" />
     <ClInclude Include="src\txmempool.h" />
     <ClInclude Include="src\uint256.h" />
     <ClInclude Include="src\ui_interface.h" />
