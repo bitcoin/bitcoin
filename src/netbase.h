@@ -25,6 +25,9 @@ static const int DEFAULT_CONNECT_TIMEOUT = 5000;
 //! -dns default
 static const int DEFAULT_NAME_LOOKUP = true;
 
+/** Prefix for UNIX socket addresses on bind/connect */
+extern const std::string P2P_ADDR_PREFIX_UNIX;
+
 class proxyType
 {
 public:
