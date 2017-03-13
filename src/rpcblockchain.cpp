@@ -496,6 +496,20 @@ Object SoftForkDesc(const std::string &name, int version, CBlockIndex* pindex, c
     return rv;
 }
 
+static Value BIP9SoftForkDesc(const std::string& name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
+{
+    Object rv;
+    rv.push_back(Pair("id", name));
+    switch (VersionBitsTipState(consensusParams, id)) {
+    case THRESHOLD_DEFINED: rv.push_back(Pair("status", "defined")); break;
+    case THRESHOLD_STARTED: rv.push_back(Pair("status", "started")); break;
+    case THRESHOLD_LOCKED_IN: rv.push_back(Pair("status", "locked_in")); break;
+    case THRESHOLD_ACTIVE: rv.push_back(Pair("status", "active")); break;
+    case THRESHOLD_FAILED: rv.push_back(Pair("status", "failed")); break;
+    }
+    return rv;
+}
+
 Value getblockchaininfo(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
@@ -523,6 +537,12 @@ Value getblockchaininfo(const Array& params, bool fHelp)
             "        },\n"
             "        \"reject\": { ... }      (object) progress toward rejecting pre-softfork blocks (same fields as \"enforce\")\n"
             "     }, ...\n"
+            "  ],\n"
+            "  \"bip9_softforks\": [       (array) status of BIP9 softforks in progress\n"
+            "     {\n"
+            "        \"id\": \"xxxx\",        (string) name of the softfork\n"
+            "        \"status\": \"xxxx\",    (string) one of \"defined\", \"started\", \"lockedin\", \"active\", \"failed\"\n"
+            "     }\n"
             "  ]\n"
             "}\n"
             "\nExamples:\n"
@@ -545,10 +565,13 @@ Value getblockchaininfo(const Array& params, bool fHelp)
     const Consensus::Params& consensusParams = Params().GetConsensus();
     CBlockIndex* tip = chainActive.Tip();
     Array softforks;
+    Array bip9_softforks;
     softforks.push_back(SoftForkDesc("bip34", 2, tip, consensusParams));
     softforks.push_back(SoftForkDesc("bip66", 3, tip, consensusParams));
     softforks.push_back(SoftForkDesc("bip65", 4, tip, consensusParams));
+    bip9_softforks.push_back(BIP9SoftForkDesc("csv", consensusParams, Consensus::DEPLOYMENT_CSV));
     obj.push_back(Pair("softforks",             softforks));
+    obj.push_back(Pair("bip9_softforks", bip9_softforks));
 
     if (fPruneMode)
     {
