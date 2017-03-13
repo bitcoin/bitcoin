@@ -136,7 +136,7 @@ def sync_blocks(rpc_connections, *, wait=1, timeout=60):
     maxheight = max(x.getblockcount() for x in rpc_connections)
     start_time = cur_time = time.time()
     while cur_time <= start_time + timeout:
-        tips = [r.waitforblockheight(maxheight, int(wait * 1000)) for r in rpc_connections]
+        tips = [r.waitforblockheight(height=maxheight, timeout=int(wait * 1000)) for r in rpc_connections]
         if all(t["height"] == maxheight for t in tips):
             if all(t["hash"] == tips[0]["hash"] for t in tips):
                 return
@@ -279,7 +279,7 @@ def initialize_chain(test_dir, num_nodes, cachedir):
             for peer in range(4):
                 for j in range(25):
                     set_node_times(rpcs, block_time)
-                    rpcs[peer].generate(1)
+                    rpcs[peer].generate(nblocks=1)
                     block_time += 10*60
                 # Must sync before next peer starts generating blocks
                 sync_blocks(rpcs)
@@ -383,11 +383,11 @@ def stop_nodes(nodes):
 
 def set_node_times(nodes, t):
     for node in nodes:
-        node.setmocktime(t)
+        node.setmocktime(timestamp=t)
 
 def connect_nodes(from_connection, node_num):
     ip_port = "127.0.0.1:"+str(p2p_port(node_num))
-    from_connection.addnode(ip_port, "onetry")
+    from_connection.addnode(node=ip_port, command="onetry")
     # poll until version handshake complete to avoid race conditions
     # with transaction relaying
     while any(peer['version'] == 0 for peer in from_connection.getpeerinfo()):
@@ -578,7 +578,7 @@ def satoshi_round(amount):
 # Helper to create at least "count" utxos
 # Pass in a fee that is sufficient for relay and mining new transactions.
 def create_confirmed_utxos(fee, node, count):
-    node.generate(int(0.5*count)+101)
+    node.generate(nblocks=int(0.5*count)+101)
     utxos = node.listunspent()
     iterations = count - len(utxos)
     addr1 = node.getnewaddress()
@@ -598,7 +598,7 @@ def create_confirmed_utxos(fee, node, count):
         txid = node.sendrawtransaction(signed_tx)
 
     while (node.getmempoolinfo()['size'] > 0):
-        node.generate(1)
+        node.generate(nblocks=1)
 
     utxos = node.listunspent()
     assert(len(utxos) >= count)
@@ -663,7 +663,7 @@ def mine_large_block(node, utxos=None):
         utxos.extend(node.listunspent())
     fee = 100 * node.getnetworkinfo()["relayfee"]
     create_lots_of_big_transactions(node, txouts, utxos, num, fee=fee)
-    node.generate(1)
+    node.generate(nblocks=1)
 
 def get_bip9_status(node, key):
     info = node.getblockchaininfo()

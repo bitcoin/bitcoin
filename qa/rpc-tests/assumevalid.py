@@ -88,7 +88,7 @@ class SendHeadersTest(BitcoinTestFramework):
 
         # Build the blockchain
         self.tip = int(self.nodes[0].getbestblockhash(), 16)
-        self.block_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time'] + 1
+        self.block_time = self.nodes[0].getblock(blockhash=self.nodes[0].getbestblockhash())['time'] + 1
 
         self.blocks = []
 
@@ -171,20 +171,20 @@ class SendHeadersTest(BitcoinTestFramework):
             node0.send_message(msg_block(self.blocks[i]))
         node0.sync_with_ping() # make sure the most recent block is synced
         node0.send_message(msg_block(self.blocks[101]))
-        assert_equal(self.nodes[0].getblock(self.nodes[0].getbestblockhash())['height'], 101)
+        assert_equal(self.nodes[0].getblock(blockhash=self.nodes[0].getbestblockhash())['height'], 101)
 
         # Send 3102 blocks to node1. All blocks will be accepted.
         for i in range(2202):
             node1.send_message(msg_block(self.blocks[i]))
         node1.sync_with_ping() # make sure the most recent block is synced
-        assert_equal(self.nodes[1].getblock(self.nodes[1].getbestblockhash())['height'], 2202)
+        assert_equal(self.nodes[1].getblock(blockhash=self.nodes[1].getbestblockhash())['height'], 2202)
 
         # Send 102 blocks to node2. Block 102 will be rejected.
         for i in range(101):
             node2.send_message(msg_block(self.blocks[i]))
         node2.sync_with_ping() # make sure the most recent block is synced
         node2.send_message(msg_block(self.blocks[101]))
-        assert_equal(self.nodes[2].getblock(self.nodes[2].getbestblockhash())['height'], 101)
+        assert_equal(self.nodes[2].getblock(blockhash=self.nodes[2].getbestblockhash())['height'], 101)
 
 if __name__ == '__main__':
     SendHeadersTest().main()
