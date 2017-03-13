@@ -103,8 +103,13 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         {
             // Payment to self
             CAmount nChange = wtx.GetChange();
-
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, "",
+            std::string address;
+            CTxDestination destAddress;
+            if (wtx.tx->vout.size() >= 1 && ExtractDestination(wtx.tx->vout[0].scriptPubKey, destAddress))
+            { 
+                address = CBitcoinAddress(destAddress).ToString();
+            }
+            parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, address,
                             -(nDebit - nChange), nCredit - nChange));
             parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
         }
