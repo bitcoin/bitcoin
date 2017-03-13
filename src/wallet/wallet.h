@@ -466,12 +466,23 @@ public:
     const CWalletTx *tx;
     int i;
     int nDepth;
+
+    /** Whether we have the private keys to spend this output */
     bool fSpendable;
+
+    /** Whether we know how to spend this output, ignoring the lack of keys */
     bool fSolvable;
 
-    COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn)
+    /**
+     * Whether this output is considered safe to spend. Unconfirmed transactions
+     * from outside keys and unconfirmed replacement transactions are considered
+     * unsafe and will not be used to fund new spending transactions.
+     */
+    bool fSafe;
+
+    COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn)
     {
-        tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn;
+        tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn;
     }
 
     std::string ToString() const;
@@ -740,7 +751,7 @@ public:
     /**
      * populate vCoins with vector of available COutputs.
      */
-    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true, const CCoinControl *coinControl = NULL, bool fIncludeZeroValue=false) const;
+    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe=true, const CCoinControl *coinControl = NULL, bool fIncludeZeroValue=false) const;
 
     /**
      * Shuffle and select coins until nTargetValue is reached while avoiding
