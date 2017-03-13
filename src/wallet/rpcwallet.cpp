@@ -2682,11 +2682,9 @@ UniValue listunspent(const JSONRPCRequest& request)
             "      ,...\n"
             "    ]\n"
             "4. include_unsafe (bool, optional, default=true) Include outputs that are not safe to spend\n"
-            "                  because they come from unconfirmed untrusted transactions or unconfirmed\n"
-            "                  replacement transactions (cases where we are less sure that a conflicting\n"
-            "                  transaction won't be mined).\n"
-            "\nResult:\n"
-            "[                             (array of json object)\n"
+            "                  See description of \"safe\" attribute below.\n"
+            "\nResult\n"
+            "[                   (array of json object)\n"
             "  {\n"
             "    \"txid\" : \"txid\",          (string) the transaction id \n"
             "    \"vout\" : n,               (numeric) the vout value\n"
@@ -2698,6 +2696,9 @@ UniValue listunspent(const JSONRPCRequest& request)
             "    \"redeemScript\" : n        (string) The redeemScript if scriptPubKey is P2SH\n"
             "    \"spendable\" : xxx,        (bool) Whether we have the private keys to spend this output\n"
             "    \"solvable\" : xxx,         (bool) Whether we know how to spend this output, ignoring the lack of keys\n"
+            "    \"safe\" : xxx              (bool) Whether this output is considered safe to spend. Unconfirmed transactions\n"
+            "                              from outside keys and unconfirmed replacement transactions are considered unsafe\n"
+            "                              and are not eligible for spending by fundrawtransaction and sendtoaddress.\n"
             "    \"ps_rounds\" : n           (numeric) The number of PS rounds\n"
             "  }\n"
             "  ,...\n"
@@ -2783,6 +2784,7 @@ UniValue listunspent(const JSONRPCRequest& request)
         entry.push_back(Pair("confirmations", out.nDepth));
         entry.push_back(Pair("spendable", out.fSpendable));
         entry.push_back(Pair("solvable", out.fSolvable));
+        entry.push_back(Pair("safe", out.fSafe));
         entry.push_back(Pair("ps_rounds", pwallet->GetCappedOutpointPrivateSendRounds(COutPoint(out.tx->GetHash(), out.i))));
         results.push_back(entry);
     }
