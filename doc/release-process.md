@@ -175,7 +175,38 @@ Commit your signature to gitian.sigs:
     git push  # Assuming you can push to the gitian.sigs tree
     popd
 
-Wait for Windows/OS X detached signatures:
+Codesigner only: Create Windows/OS X detached signatures:
+- Only one person handles codesigning. Everyone else should skip to the next step.
+- Only once the Windows/OS X builds each have 3 matching signatures may they be signed with their respective release keys.
+
+Codesigner only: Sign the osx binary:
+
+    transfer bitcoin-osx-unsigned.tar.gz to osx for signing
+    tar xf bitcoin-osx-unsigned.tar.gz
+    ./detached-sig-create.sh -s "Key ID"
+    Enter the keychain password and authorize the signature
+    Move signature-osx.tar.gz back to the gitian host
+
+Codesigner only: Sign the windows binaries:
+
+    tar xf bitcoin-win-unsigned.tar.gz
+    ./detached-sig-create.sh -key /path/to/codesign.key
+    Enter the passphrase for the key when prompted
+    signature-win.tar.gz will be created
+
+Codesigner only: Commit the detached codesign payloads:
+
+    cd ~/bitcoin-detached-sigs
+    checkout the appropriate branch for this release series
+    rm -rf *
+    tar xf signature-osx.tar.gz
+    tar xf signature-win.tar.gz
+    git add -a
+    git commit -m "point to ${VERSION}"
+    git tag -s v${VERSION} HEAD
+    git push the current branch and new tag
+
+Non-codesigners: wait for Windows/OS X detached signatures:
 
 - Once the Windows/OS X builds each have 3 matching signatures, they will be signed with their respective release keys.
 - Detached signatures will then be committed to the [bitcoin-detached-sigs](https://github.com/bitcoin-core/bitcoin-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
