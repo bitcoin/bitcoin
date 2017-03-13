@@ -20,7 +20,7 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<CO
     CWalletTx* wtx = new CWalletTx(&wallet, MakeTransactionRef(std::move(tx)));
 
     int nAge = 6 * 24;
-    COutput output(wtx, nInput, nAge, true, true);
+    COutput output(wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
     vCoins.push_back(output);
 }
 
