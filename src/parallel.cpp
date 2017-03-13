@@ -173,10 +173,6 @@ void CParallelValidation::QuitCompetingThreads(const uint256& prevBlockHash)
                 LogPrint("parallel", "interrupting a thread with blockhash %s and previous blockhash %s\n", 
                           (*mi).second.hash.ToString(), prevBlockHash.ToString());
             }
-            // Clear the scriptqueue before returning so that we can grab it again if we have another block to process
-            // using this same thread.
-            else if ((*mi).first == this_id)
-                mapBlockValidationThreads[this_id].pScriptQueue = NULL;
         }
     }
 }
@@ -423,9 +419,6 @@ void CParallelValidation::HandleBlockMessage(CNode *pfrom, const string &strComm
                                (*miLargestBlock).second.hash.ToString(), (*miLargestBlock).second.hashPrevBlock.ToString());
                     }
                 }
-                else
-                    assert("No grant possible, but no validation threads are running!");
-
             } // We must not hold the lock here because we could be waiting for a grant, below.
 
             // wait for semaphore grant
