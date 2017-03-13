@@ -420,6 +420,8 @@ public:
     // Whether a ping is requested.
     bool fPingQueued;
 
+    std::vector<unsigned char> vchKeyedNetGroup;
+
     CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn = "", bool fInboundIn = false, bool fNetworkNodeIn = false);
     ~CNode();
 
@@ -435,6 +437,9 @@ private:
     static uint64_t nMaxOutboundCycleStartTime;
     static uint64_t nMaxOutboundLimit;
     static uint64_t nMaxOutboundTimeframe;
+
+    // Secret key for computing keyed net groups
+    static std::vector<unsigned char> vchSecretKey;
 
     CCriticalSection cs_nRefCount;
 
@@ -822,6 +827,8 @@ public:
     //!response the time in second left in the current max outbound cycle
     // in case of no limit, it will always response 0
     static uint64_t GetMaxOutboundTimeLeftInCycle();
+
+    static std::vector<unsigned char> CalculateKeyedNetGroup(CAddress& address);
 };
 
 class CExplicitNetCleanup
