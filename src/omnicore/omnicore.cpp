@@ -3777,6 +3777,9 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
     // check the alert status, do we need to do anything else here?
     CheckExpiredAlerts(nBlockNow, pBlockIndex->GetBlockTime());
 
+    // check that pending transactions are still in the mempool
+    PendingCheck();
+
     // transactions were found in the block, signal the UI accordingly
     if (countMP > 0) CheckWalletUpdate(true);
 
