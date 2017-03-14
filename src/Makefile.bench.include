@@ -25,7 +25,8 @@ bench_bench_bitcoin_SOURCES = \
   bench/base58.cpp \
   bench/lockedpool.cpp \
   bench/perf.cpp \
-  bench/perf.h
+  bench/perf.h \
+  bench/prevector_destructor.cpp
 
 nodist_bench_bench_bitcoin_SOURCES = $(GENERATED_TEST_FILES)
 

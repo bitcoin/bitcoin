@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include <iterator>
+#include <type_traits>
 
 #pragma pack(push, 1)
 /** Implements a drop-in replacement for std::vector<T> which stores up to N
@@ -388,10 +389,14 @@ public:
     iterator erase(iterator first, iterator last) {
         iterator p = first;
         char* endp = (char*)&(*end());
-        while (p != last) {
-            (*p).~T();
-            _size--;
-            ++p;
+        if (!std::is_trivially_destructible<T>::value) {
+            while (p != last) {
+                (*p).~T();
+                _size--;
+                ++p;
+            }
+        } else {
+            _size -= last - p;
         }
         memmove(&(*first), &(*last), endp - ((char*)(&(*last))));
         return first;
@@ -432,7 +437,9 @@ public:
     }
 
     ~prevector() {
-        clear();
+        if (!std::is_trivially_destructible<T>::value) {
+            clear();
+        }
         if (!is_direct()) {
             free(_union.indirect);
             _union.indirect = NULL;
