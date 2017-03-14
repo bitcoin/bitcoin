@@ -102,7 +102,7 @@ def test_segwit_bumpfee_succeeds(rbf_node, dest_address):
     segwit_out = rbf_node.validateaddress(rbf_node.getnewaddress())
     rbf_node.addwitnessaddress(segwit_out["address"])
     segwitid = send_to_witness(
-        version=0,
+        use_p2wsh=False,
         node=rbf_node,
         utxo=segwit_in,
         pubkey=segwit_out["pubkey"],
