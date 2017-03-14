@@ -5925,6 +5925,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         {
             LOCK(cs_main);
             BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
+            if (mi == mapBlockIndex.end()) {
+                Misbehaving(pfrom->GetId(), 100);
+                return false;
+            }
+
             CBlock block;
             const Consensus::Params& consensusParams = Params().GetConsensus();
             if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
