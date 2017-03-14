@@ -778,6 +778,7 @@ public:
         fAnonymizableTallyCachedNonDenom = false;
         vecAnonymizableTallyCached.clear();
         vecAnonymizableTallyCachedNonDenom.clear();
+        nRelockTime = 0;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
