@@ -89,16 +89,16 @@ class TestNode(NodeConnCB):
         return
 
     def wait_for_block(self, blockhash, timeout=60):
-        test_function = lambda: self.last_block != None and self.last_block.sha256 == blockhash
+        test_function = lambda: self.last_block is not None and self.last_block.sha256 == blockhash
         self.sync(test_function, timeout)
         return
 
     def wait_for_getdata(self, timeout=60):
-        test_function = lambda: self.last_getdata != None
+        test_function = lambda: self.last_getdata is not None
         self.sync(test_function, timeout)
 
     def wait_for_getheaders(self, timeout=60):
-        test_function = lambda: self.last_getheaders != None
+        test_function = lambda: self.last_getheaders is not None
         self.sync(test_function, timeout)
 
     def wait_for_inv(self, expected_inv, timeout=60):
@@ -151,7 +151,7 @@ class TestNode(NodeConnCB):
         self.send_message(tx_message)
         self.sync_with_ping()
         assert_equal(tx.hash in self.connection.rpc.getrawmempool(), accepted)
-        if (reason != None and not accepted):
+        if reason is not None and not accepted:
             # Check the rejection reason as well.
             with mininode_lock:
                 assert_equal(self.last_reject.reason, reason)

@@ -71,7 +71,7 @@ def create_coinbase(height, pubkey = None):
     coinbaseoutput.nValue = 50 * COIN
     halvings = int(height/150) # regtest
     coinbaseoutput.nValue >>= halvings
-    if (pubkey != None):
+    if pubkey is not None:
         coinbaseoutput.scriptPubKey = CScript([pubkey, OP_CHECKSIG])
     else:
         coinbaseoutput.scriptPubKey = CScript([OP_TRUE])
