@@ -1856,18 +1856,20 @@ CAmount CWallet::GetBalance() const
     return nTotal;
 }
 
-CAmount CWallet::GetAnonymizableBalance() const
+CAmount CWallet::GetAnonymizableBalance(bool fSkipDenominated) const
 {
     if(fLiteMode) return 0;
 
     std::vector<CompactTallyItem> vecTally;
-    if(!SelectCoinsGrouppedByAddresses(vecTally, false)) return 0;
+    if(!SelectCoinsGrouppedByAddresses(vecTally, fSkipDenominated)) return 0;
 
     CAmount nTotal = 0;
 
     BOOST_FOREACH(CompactTallyItem& item, vecTally) {
-        // try to anonymize all denoms and anything greater than sum of 10 smallest denoms
-        if(IsDenominatedAmount(item.nAmount) || item.nAmount >= vecPrivateSendDenominations.back() * 10)
+        bool fIsDenominated = IsDenominatedAmount(item.nAmount);
+        if(fSkipDenominated && fIsDenominated) continue;
+        // assume that the fee to create denoms be PRIVATESEND_COLLATERAL at max
+        if(item.nAmount >= vecPrivateSendDenominations.back() + (fIsDenominated ? 0 : PRIVATESEND_COLLATERAL))
             nTotal += item.nAmount;
     }
 
@@ -2559,12 +2561,12 @@ bool CWallet::SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecT
         if(fSkipDenominated && fAnonymizableTallyCachedNonDenom) {
             vecTallyRet = vecAnonymizableTallyCachedNonDenom;
             LogPrint("selectcoins", "SelectCoinsGrouppedByAddresses - using cache for non-denom inputs\n");
-            return true;
+            return vecTallyRet.size() > 0;
         }
         if(!fSkipDenominated && fAnonymizableTallyCached) {
             vecTallyRet = vecAnonymizableTallyCached;
             LogPrint("selectcoins", "SelectCoinsGrouppedByAddresses - using cache for all inputs\n");
-            return true;
+            return vecTallyRet.size() > 0;
         }
     }
 
@@ -2605,13 +2607,12 @@ bool CWallet::SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecT
         }
     }
 
-    // we found nothing
-    if(mapTally.size() == 0) return false;
-
     // construct resulting vector
     vecTallyRet.clear();
-    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CompactTallyItem)& item, mapTally)
+    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CompactTallyItem)& item, mapTally) {
+        if(fAnonymizable && item.second.nAmount < vecPrivateSendDenominations.back()) continue;
         vecTallyRet.push_back(item.second);
+    }
 
     // order by amounts per address, from smallest to largest
     sort(vecTallyRet.rbegin(), vecTallyRet.rend(), CompareByAmount());
@@ -2633,7 +2634,7 @@ bool CWallet::SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecT
         strMessage += strprintf("  %s %f\n", item.address.ToString().c_str(), float(item.nAmount)/COIN);
     LogPrint("selectcoins", "%s", strMessage);
 
-    return true;
+    return vecTallyRet.size() > 0;
 }
 
 bool CWallet::SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& vecTxInRet, CAmount& nValueRet, int nPrivateSendRoundsMin, int nPrivateSendRoundsMax) const
@@ -2651,8 +2652,8 @@ bool CWallet::SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<
 
     BOOST_FOREACH(const COutput& out, vCoins)
     {
-        //do not allow inputs less than 1 CENT
-        if(out.tx->vout[out.i].nValue < CENT) continue;
+        //do not allow inputs less than 1/10th of minimum value
+        if(out.tx->vout[out.i].nValue < nValueMin/10) continue;
         //do not allow collaterals to be selected
         if(IsCollateralAmount(out.tx->vout[out.i].nValue)) continue;
         if(fMasterNode && out.tx->vout[out.i].nValue == 1000*COIN) continue; //masternode input
@@ -2670,10 +2671,7 @@ bool CWallet::SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<
         }
     }
 
-    // if it's more than min, we're good to return
-    if(nValueRet >= nValueMin) return true;
-
-    return false;
+    return nValueRet >= nValueMin;
 }
 
 bool CWallet::GetCollateralTxIn(CTxIn& txinRet, CAmount& nValueRet) const

@@ -741,7 +741,7 @@ public:
     CAmount GetUnconfirmedWatchOnlyBalance() const;
     CAmount GetImmatureWatchOnlyBalance() const;
 
-    CAmount GetAnonymizableBalance() const;
+    CAmount GetAnonymizableBalance(bool fSkipDenominated = false) const;
     CAmount GetAnonymizedBalance() const;
     double GetAverageAnonymizedRounds() const;
     CAmount GetNormalizedAnonymizedBalance() const;
