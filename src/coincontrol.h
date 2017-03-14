@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,6 +12,12 @@ class CCoinControl
 {
 public:
     CTxDestination destChange;
+    //! If false, allows unselected inputs, but requires all selected inputs be used
+    bool fAllowOtherInputs;
+    //! Includes watch only addresses which match the ISMINE_WATCH_SOLVABLE criteria
+    bool fAllowWatchOnly;
+    //! Minimum absolute fee (not per kilobyte)
+    CAmount nMinimumTotalFee;
 
     CCoinControl()
     {
@@ -21,7 +27,10 @@ public:
     void SetNull()
     {
         destChange = CNoDestination();
+        fAllowOtherInputs = false;
+        fAllowWatchOnly = false;
         setSelected.clear();
+        nMinimumTotalFee = 0;
     }
 
     bool HasSelected() const
@@ -50,7 +59,7 @@ public:
         setSelected.clear();
     }
 
-    void ListSelected(std::vector<COutPoint>& vOutpoints)
+    void ListSelected(std::vector<COutPoint>& vOutpoints) const
     {
         vOutpoints.assign(setSelected.begin(), setSelected.end());
     }

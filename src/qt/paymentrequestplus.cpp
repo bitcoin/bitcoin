@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,8 +18,6 @@
 #include <QDateTime>
 #include <QDebug>
 #include <QSslCertificate>
-
-using namespace std;
 
 class SSLVerifyError : public std::runtime_error
 {
@@ -49,7 +47,7 @@ bool PaymentRequestPlus::parse(const QByteArray& data)
     return true;
 }
 
-bool PaymentRequestPlus::SerializeToString(string* output) const
+bool PaymentRequestPlus::SerializeToString(std::string* output) const
 {
     return paymentRequest.SerializeToString(output);
 }
@@ -57,12 +55,6 @@ bool PaymentRequestPlus::SerializeToString(string* output) const
 bool PaymentRequestPlus::IsInitialized() const
 {
     return paymentRequest.IsInitialized();
-}
-
-QString PaymentRequestPlus::getPKIType() const
-{
-    if (!IsInitialized()) return QString("none");
-    return QString::fromStdString(paymentRequest.pki_type());
 }
 
 bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) const
@@ -124,7 +116,7 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
     // The first cert is the signing cert, the rest are untrusted certs that chain
     // to a valid root authority. OpenSSL needs them separately.
     STACK_OF(X509) *chain = sk_X509_new_null();
-    for (int i = certs.size()-1; i > 0; i--) {
+    for (int i = certs.size() - 1; i > 0; i--) {
         sk_X509_push(chain, certs[i]);
     }
     X509 *signing_cert = certs[0];
@@ -153,7 +145,7 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
             int error = X509_STORE_CTX_get_error(store_ctx);
             // For testing payment requests, we allow self signed root certs!
             // This option is just shown in the UI options, if -help-debug is enabled.
-            if (!(error == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT && GetBoolArg("-allowselfsignedrootcertificates", false))) {
+            if (!(error == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT && GetBoolArg("-allowselfsignedrootcertificates", DEFAULT_SELFSIGNED_ROOTCERTS))) {
                 throw SSLVerifyError(X509_verify_cert_error_string(error));
             } else {
                qDebug() << "PaymentRequestPlus::getMerchant: Allowing self signed root certificate, because -allowselfsignedrootcertificates is true.";
@@ -172,9 +164,8 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         EVP_MD_CTX_init(&ctx);
         if (!EVP_VerifyInit_ex(&ctx, digestAlgorithm, NULL) ||
             !EVP_VerifyUpdate(&ctx, data_to_verify.data(), data_to_verify.size()) ||
-            !EVP_VerifyFinal(&ctx, (const unsigned char*)paymentRequest.signature().data(), paymentRequest.signature().size(), pubkey)) {
-
-            throw SSLVerifyError("Bad signature, invalid PaymentRequest.");
+            !EVP_VerifyFinal(&ctx, (const unsigned char*)paymentRequest.signature().data(), (unsigned int)paymentRequest.signature().size(), pubkey)) {
+            throw SSLVerifyError("Bad signature, invalid payment request.");
         }
 
         // OpenSSL API for getting human printable strings from certs is baroque.
@@ -210,7 +201,7 @@ QList<std::pair<CScript,CAmount> > PaymentRequestPlus::getPayTo() const
         const unsigned char* scriptStr = (const unsigned char*)details.outputs(i).script().data();
         CScript s(scriptStr, scriptStr+details.outputs(i).script().size());
 
-        result.append(make_pair(s, details.outputs(i).amount()));
+        result.append(std::make_pair(s, details.outputs(i).amount()));
     }
     return result;
 }

@@ -1,10 +1,6 @@
-<TS language="th_TH" version="2.0">
+<TS language="th_TH" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>ดับเบิ้ลคลิก เพื่อแก้ไขที่อยู่ หรือชื่อ</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>สร้างที่อยู่ใหม่</translation>
@@ -76,10 +72,6 @@
         <translation>เปลี่ยนรหัสผ่าน</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>กรอกรหัสผ่านเก่าและรหัสผ่านใหม่สำหรับกระเป๋าสตางค์</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>ยืนยันการเข้ารหัสกระเป๋าสตางค์</translation>
     </message>
@@ -111,6 +103,9 @@
         <source>Wallet decryption failed</source>
         <translation>ถอดรหัสกระเป๋าเงินล้มเหลว</translation>
     </message>
+    </context>
+<context>
+    <name>BanTableModel</name>
     </context>
 <context>
     <name>BitcoinGUI</name>
@@ -287,6 +282,10 @@
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>&amp;Label:</source>
+        <translation>&amp;ชื่อ:</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
@@ -323,6 +322,10 @@
     </context>
 <context>
     <name>SendCoinsEntry</name>
+    <message>
+        <source>&amp;Label:</source>
+        <translation>&amp;ชื่อ:</translation>
+    </message>
     </context>
 <context>
     <name>ShutdownWindow</name>
@@ -349,8 +352,8 @@
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <source>Address</source>
-        <translation>ที่อยู่</translation>
+        <source>Label</source>
+        <translation>ชื่อ</translation>
     </message>
     </context>
 <context>
@@ -390,5 +393,9 @@
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Options:</source>
+        <translation>ตัวเลือก:</translation>
+    </message>
     </context>
 </TS>

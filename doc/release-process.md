@@ -1,83 +1,129 @@
 Release Process
 ====================
 
-* update translations (ping wumpus, Diapolo or tcatm on IRC)
-* see https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md#syncing-with-transifex
+* Update translations (ping wumpus, Diapolo or tcatm on IRC) see [translation_process.md](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md#syncing-with-transifex)
+* Update [bips.md](bips.md) to account for changes since the last release.
+* Update hardcoded [seeds](/contrib/seeds)
 
 * * *
 
-###update (commit) version in sources
+###First time / New builders
+Check out the source code in the following directory hierarchy.
 
+	cd /path/to/your/toplevel/build
+	git clone https://github.com/bitcoin/gitian.sigs.git
+	git clone https://github.com/bitcoin/bitcoin-detached-sigs.git
+	git clone https://github.com/devrandom/gitian-builder.git
+	git clone https://github.com/bitcoin/bitcoin.git
+
+###Bitcoin maintainers/release engineers, update (commit) version in sources
+
+	pushd ./bitcoin
 	contrib/verifysfbinaries/verify.sh
+	configure.ac
 	doc/README*
-	share/setup.nsi
+	doc/Doxyfile
+	contrib/gitian-descriptors/*.yml
 	src/clientversion.h (change CLIENT_VERSION_IS_RELEASE to true)
 
-###tag version in git
+	# tag version in git
 
 	git tag -s v(new version, e.g. 0.8.0)
 
-###write release notes. git shortlog helps a lot, for example:
+	# write release notes. git shortlog helps a lot, for example:
 
 	git shortlog --no-merges v(current version, e.g. 0.7.2)..v(new version, e.g. 0.8.0)
+	popd
 
 * * *
 
-###update gitian
+###Setup and perform Gitian builds
 
- In order to take advantage of the new caching features in gitian, be sure to update to a recent version (e9741525c or higher is recommended)
+ Setup Gitian descriptors:
 
-###perform gitian builds
-
- From a directory containing the bitcoin source, gitian-builder and gitian.sigs
-  
-	export SIGNER=(your gitian key, ie bluematt, sipa, etc)
-	export VERSION=(new version, e.g. 0.8.0)
 	pushd ./bitcoin
+	export SIGNER=(your Gitian key, ie bluematt, sipa, etc)
+	export VERSION=(new version, e.g. 0.8.0)
+	git fetch
 	git checkout v${VERSION}
 	popd
+
+  Ensure your gitian.sigs are up-to-date if you wish to gverify your builds against other Gitian signatures.
+
+	pushd ./gitian.sigs
+	git pull
+	popd
+
+  Ensure gitian-builder is up-to-date to take advantage of new caching features (`e9741525c` or later is recommended).
+
 	pushd ./gitian-builder
+	git pull
 
-###fetch and build inputs: (first time, or when dependency versions change)
- 
+###Fetch and create inputs: (first time, or when dependency versions change)
+
 	mkdir -p inputs
+	wget -P inputs https://bitcoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch
+	wget -P inputs http://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz
 
- Register and download the Apple SDK: (see OSX Readme for details)
- 
- https://developer.apple.com/downloads/download.action?path=Developer_Tools/xcode_6.1.1/xcode_6.1.1.dmg
- 
+ Register and download the Apple SDK: see [OS X readme](README_osx.txt) for details.
+
+ https://developer.apple.com/devcenter/download.action?path=/Developer_Tools/xcode_6.1.1/xcode_6.1.1.dmg
+
  Using a Mac, create a tarball for the 10.9 SDK and copy it to the inputs directory:
- 
+
 	tar -C /Volumes/Xcode/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/ -czf MacOSX10.9.sdk.tar.gz MacOSX10.9.sdk
 
-###Optional: Seed the Gitian sources cache
+###Optional: Seed the Gitian sources cache and offline git repositories
 
-  By default, gitian will fetch source files as needed. For offline builds, they can be fetched ahead of time:
+By default, Gitian will fetch source files as needed. To cache them ahead of time:
 
 	make -C ../bitcoin/depends download SOURCES_PATH=`pwd`/cache/common
 
-  Only missing files will be fetched, so this is safe to re-run for each build.
+Only missing files will be fetched, so this is safe to re-run for each build.
 
-###Build Bitcoin Core for Linux, Windows, and OS X:
-  
+NOTE: Offline builds must use the --url flag to ensure Gitian fetches only from local URLs. For example:
+```
+./bin/gbuild --url bitcoin=/path/to/bitcoin,signature=/path/to/sigs {rest of arguments}
+```
+The gbuild invocations below <b>DO NOT DO THIS</b> by default.
+
+###Build and sign Bitcoin Core for Linux, Windows, and OS X:
+
 	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
-	mv build/out/bitcoin-*.tar.gz build/out/src/bitcoin-*.tar.gz ../
+    mv build/out/bitcoin-*.tar.gz build/out/src/bitcoin-*.tar.gz ../
+
 	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
-	./bin/gsign --signer $SIGNER --release ${VERSION}-win --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
-	mv build/out/bitcoin-*.zip build/out/bitcoin-*.exe ../
+	./bin/gsign --signer $SIGNER --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
+    mv build/out/bitcoin-*-win-unsigned.tar.gz inputs/bitcoin-win-unsigned.tar.gz
+    mv build/out/bitcoin-*.zip build/out/bitcoin-*.exe ../
+
 	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
-	mv build/out/bitcoin-*-unsigned.tar.gz inputs/bitcoin-osx-unsigned.tar.gz
-	mv build/out/bitcoin-*.tar.gz build/out/bitcoin-*.dmg ../
-	popd
+    mv build/out/bitcoin-*-osx-unsigned.tar.gz inputs/bitcoin-osx-unsigned.tar.gz
+    mv build/out/bitcoin-*.tar.gz build/out/bitcoin-*.dmg ../
+
   Build output expected:
 
   1. source tarball (bitcoin-${VERSION}.tar.gz)
-  2. linux 32-bit and 64-bit binaries dist tarballs (bitcoin-${VERSION}-linux[32|64].tar.gz)
-  3. windows 32-bit and 64-bit installers and dist zips (bitcoin-${VERSION}-win[32|64]-setup.exe, bitcoin-${VERSION}-win[32|64].zip)
-  4. OSX unsigned installer (bitcoin-${VERSION}-osx-unsigned.dmg)
-  5. Gitian signatures (in gitian.sigs/${VERSION}-<linux|win|osx-unsigned>/(your gitian key)/
+  2. linux 32-bit and 64-bit dist tarballs (bitcoin-${VERSION}-linux[32|64].tar.gz)
+  3. windows 32-bit and 64-bit unsigned installers and dist zips (bitcoin-${VERSION}-win[32|64]-setup-unsigned.exe, bitcoin-${VERSION}-win[32|64].zip)
+  4. OS X unsigned installer and dist tarball (bitcoin-${VERSION}-osx-unsigned.dmg, bitcoin-${VERSION}-osx64.tar.gz)
+  5. Gitian signatures (in gitian.sigs/${VERSION}-<linux|{win,osx}-unsigned>/(your Gitian key)/
+
+###Verify other gitian builders signatures to your own. (Optional)
+
+  Add other gitian builders keys to your gpg keyring
+
+	gpg --import ../bitcoin/contrib/gitian-downloader/*.pgp
+
+  Verify the signatures
+
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-linux ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-unsigned ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-unsigned ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
+
+	popd
 
 ###Next steps:
 
@@ -85,30 +131,40 @@ Commit your signature to gitian.sigs:
 
 	pushd gitian.sigs
 	git add ${VERSION}-linux/${SIGNER}
-	git add ${VERSION}-win/${SIGNER}
+	git add ${VERSION}-win-unsigned/${SIGNER}
 	git add ${VERSION}-osx-unsigned/${SIGNER}
 	git commit -a
 	git push  # Assuming you can push to the gitian.sigs tree
 	popd
 
-  Wait for OSX detached signature:
-	Once the OSX build has 3 matching signatures, Gavin will sign it with the apple App-Store key.
-	He will then upload a detached signature to be combined with the unsigned app to create a signed binary.
+  Wait for Windows/OS X detached signatures:
+	Once the Windows/OS X builds each have 3 matching signatures, they will be signed with their respective release keys.
+	Detached signatures will then be committed to the [bitcoin-detached-sigs](https://github.com/bitcoin/bitcoin-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
 
-  Create the signed OSX binary:
+  Create (and optionally verify) the signed OS X binary:
 
 	pushd ./gitian-builder
-	# Fetch the signature as instructed by Gavin
-	cp signature.tar.gz inputs/
-	./bin/gbuild -i ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+	./bin/gbuild -i --commit signature=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
 	mv build/out/bitcoin-osx-signed.dmg ../bitcoin-${VERSION}-osx.dmg
 	popd
 
-Commit your signature for the signed OSX binary:
+  Create (and optionally verify) the signed Windows binaries:
+
+	pushd ./gitian-builder
+	./bin/gbuild -i --commit signature=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-win-signer.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-win-signed --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win-signer.yml
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-signed ../bitcoin/contrib/gitian-descriptors/gitian-win-signer.yml
+	mv build/out/bitcoin-*win64-setup.exe ../bitcoin-${VERSION}-win64-setup.exe
+	mv build/out/bitcoin-*win32-setup.exe ../bitcoin-${VERSION}-win32-setup.exe
+	popd
+
+Commit your signature for the signed OS X/Windows binaries:
 
 	pushd gitian.sigs
 	git add ${VERSION}-osx-signed/${SIGNER}
+	git add ${VERSION}-win-signed/${SIGNER}
 	git commit -a
 	git push  # Assuming you can push to the gitian.sigs tree
 	popd
@@ -116,12 +172,6 @@ Commit your signature for the signed OSX binary:
 -------------------------------------------------------------------------
 
 ### After 3 or more people have gitian-built and their results match:
-
-- Perform code-signing.
-
-    - Code-sign Windows -setup.exe (in a Windows virtual machine using signtool)
-
-  Note: only Gavin has the code-signing keys currently.
 
 - Create `SHA256SUMS.asc` for the builds, and GPG-sign it:
 ```bash
@@ -133,15 +183,22 @@ rm SHA256SUMS
 Note: check that SHA256SUMS itself doesn't end up in SHA256SUMS, which is a spurious/nonsensical entry.
 
 - Upload zips and installers, as well as `SHA256SUMS.asc` from last step, to the bitcoin.org server
+  into `/var/www/bin/bitcoin-core-${VERSION}`
 
 - Update bitcoin.org version
 
-  - Make a pull request to add a file named `YYYY-MM-DD-vX.Y.Z.md` with the release notes
-  to https://github.com/bitcoin/bitcoin.org/tree/master/_releases
-   ([Example for 0.9.2.1](https://raw.githubusercontent.com/bitcoin/bitcoin.org/master/_releases/2014-06-19-v0.9.2.1.md)).
+  - First, check to see if the Bitcoin.org maintainers have prepared a
+    release: https://github.com/bitcoin-dot-org/bitcoin.org/labels/Releases
 
-  - After the pull request is merged, the website will automatically show the newest version, as well
-    as update the OS download links. Ping Saivann in case anything goes wrong
+      - If they have, it will have previously failed their Travis CI
+        checks because the final release files weren't uploaded.
+        Trigger a Travis CI rebuild---if it passes, merge.
+
+  - If they have not prepared a release, follow the Bitcoin.org release
+    instructions: https://github.com/bitcoin-dot-org/bitcoin.org#release-notes
+
+  - After the pull request is merged, the website will automatically show the newest version within 15 minutes, as well
+    as update the OS download links. Ping @saivann/@harding (saivann/harding on Freenode) in case anything goes wrong
 
 - Announce the release:
 
@@ -153,8 +210,8 @@ Note: check that SHA256SUMS itself doesn't end up in SHA256SUMS, which is a spur
 
   - Optionally reddit /r/Bitcoin, ... but this will usually sort out itself
 
-- Notify BlueMatt so that he can start building [https://launchpad.net/~bitcoin/+archive/ubuntu/bitcoin](the PPAs)
+- Notify BlueMatt so that he can start building [the PPAs](https://launchpad.net/~bitcoin/+archive/ubuntu/bitcoin)
 
 - Add release notes for the new version to the directory `doc/release-notes` in git master
 
-- Celebrate 
+- Celebrate

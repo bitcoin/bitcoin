@@ -1,43 +1,91 @@
-<TS language="fa_IR" version="2.0">
+<TS language="fa_IR" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Double-click to edit address or label</source>
-        <translation>برای ویرایش حساب و یا برچسب دوبار کلیک نمایید</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
         <translation>گشایش حسابی جدید</translation>
+    </message>
+    <message>
+        <source>&amp;New</source>
+        <translation>جدید</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>کپی کردن حساب انتخاب شده به حافظه سیستم - کلیپ بورد</translation>
     </message>
     <message>
+        <source>&amp;Copy</source>
+        <translation>کپی</translation>
+    </message>
+    <message>
+        <source>C&amp;lose</source>
+        <translation>بستن</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
-        <translation>و کپی آدرس</translation>
+        <translation>کپی آدرس</translation>
+    </message>
+    <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>حذف آدرس های انتخاب شده از لیست</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>صدور داده نوار جاری به یک فایل</translation>
     </message>
     <message>
+        <source>&amp;Export</source>
+        <translation>صدور</translation>
+    </message>
+    <message>
         <source>&amp;Delete</source>
-        <translation>و حذف</translation>
+        <translation>حذف</translation>
+    </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>انتخاب آدرس جهت ارسال کوین ها به آن آدرس</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>انتخاب آدرس جهت دریافت کوین ها از آن آدرس</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>انتخاب</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>ارسال آدرس ها</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>دریافت آدرس ها</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>کپی و برچسب</translation>
+        <translation>کپی برچسب</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation>و ویرایش</translation>
+        <translation>ویرایش</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>صدور لیست آدرس</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Comma separated file (*.csv) فایل جداگانه دستوری</translation>
+        <translation>فایل سی اس وی (*.csv)</translation>
     </message>
-    </context>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>صدور با شکست مواجه شد</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>خطایی به هنگام ذخیره لیست آدرس در %1 رخ داده است. لطفا دوباره تلاش کنید.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -55,6 +103,10 @@
 </context>
 <context>
     <name>AskPassphraseDialog</name>
+    <message>
+        <source>Passphrase Dialog</source>
+        <translation>دیالوگ رمزعبور</translation>
+    </message>
     <message>
         <source>Enter passphrase</source>
         <translation>رمز/پَس فرِیز را وارد کنید</translation>
@@ -92,20 +144,20 @@
         <translation>تغییر رمز/پَس فرِیز</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>رمز/پَس فرِیزِ قدیم و جدید را در wallet  وارد کنید</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>رمزگذاری wallet را تایید کنید</translation>
+    </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>اخطار: کلید Caps Lock فعال است!</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
         <translation>تایید رمزگذاری</translation>
     </message>
     <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin برای اتمام فرایند رمزگذاری بسته خواهد شد. به خاطر داشته باشید که رمزگذاری WALLET شما،  کامپیوتر شما را از آلودگی به بدافزارها مصون نمی دارد.</translation>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>رمز قدیمی و جدید کیف پول را وارد کنید.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -131,6 +183,13 @@
         <source>Wallet decryption failed</source>
         <translation>کشف رمز wallet انجام نشد</translation>
     </message>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>رمز عبور کیف پول با موفقیت تغییر کرد.</translation>
+    </message>
+</context>
+<context>
+    <name>BanTableModel</name>
     </context>
 <context>
     <name>BitcoinGUI</name>
@@ -168,11 +227,11 @@
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation>درباره و QT</translation>
+        <translation>درباره و Qt</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>نمایش اطلاعات درباره QT</translation>
+        <translation>نمایش اطلاعات درباره Qt</translation>
     </message>
     <message>
         <source>&amp;Options...</source>
@@ -191,8 +250,8 @@
         <translation>تغییر رمز/پَس فرِیز</translation>
     </message>
     <message>
-        <source>Modify configuration options for Bitcoin</source>
-        <translation>اصلاح انتخابها برای پیکربندی Bitcoin</translation>
+        <source>&amp;Receiving addresses...</source>
+        <translation>دریافت آدرس ها</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -253,15 +312,6 @@
     <message>
         <source>Incoming transaction</source>
         <translation>تراکنش دریافتی</translation>
-    </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>تاریخ: %1⏎ میزان وجه : %2⏎ نوع: %3⏎ آدرس: %4⏎ 
-</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -346,6 +396,10 @@ Address: %4
         <translation>ویرایش حساب ارسال کننده</translation>
     </message>
     <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>حساب وارد شده «%1» از پیش در دفترچه حساب ها موجود است.</translation>
+    </message>
+    <message>
         <source>The entered address "%1" is not a valid Bitcoin address.</source>
         <translation>آدرس وارد شده "%1" یک آدرس صحیح برای bitcoin نسشت</translation>
     </message>
@@ -389,6 +443,14 @@ Address: %4
         <translation>انتخاب/آپشن</translation>
     </message>
     <message>
+        <source>&amp;Network</source>
+        <translation>شبکه</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>کیف پول</translation>
+    </message>
+    <message>
         <source>&amp;OK</source>
         <translation>و تایید</translation>
     </message>
@@ -411,11 +473,7 @@ Address: %4
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
         <translation>اطلاعات نمایش داده شده ممکن است روزآمد نباشد. wallet شما به صورت خودکار بعد از برقراری اتصال با شبکه bitcoin به روز می شود اما این فرایند هنوز تکمیل نشده است.</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>خارج از روزآمد سازی</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     </context>
@@ -458,16 +516,20 @@ Address: %4
         <source>Current number of blocks</source>
         <translation>تعداد زنجیره های حاضر</translation>
     </message>
-    <message>
-        <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>به کنسول آر.پی.سی. BITCOIN خوش آمدید</translation>
-    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>&amp;Amount:</source>
+        <translation>میزان وجه:</translation>
+    </message>
+    <message>
         <source>&amp;Label:</source>
         <translation>و برچسب</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>پیام:</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -480,6 +542,10 @@ Address: %4
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>کپی آدرس</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>حساب</translation>
@@ -533,6 +599,10 @@ Address: %4
     <message>
         <source>Send Coins</source>
         <translation>سکه های ارسالی</translation>
+    </message>
+    <message>
+        <source>Insufficient funds!</source>
+        <translation>وجوه ناکافی</translation>
     </message>
     <message>
         <source>Amount:</source>
@@ -609,10 +679,26 @@ Address: %4
         <source>Message:</source>
         <translation>پیام:</translation>
     </message>
-    </context>
+    <message>
+        <source>Pay To:</source>
+        <translation>پرداخت به:</translation>
+    </message>
+    <message>
+        <source>Memo:</source>
+        <translation>یادداشت:</translation>
+    </message>
+</context>
 <context>
     <name>ShutdownWindow</name>
-    </context>
+    <message>
+        <source>Bitcoin Core is shutting down...</source>
+        <translation>هسته بیت کوین در حال خاموش شدن است...</translation>
+    </message>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation>تا پیش از بسته شدن این پنجره کامپیوتر خود را خاموش نکنید.</translation>
+    </message>
+</context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
@@ -630,6 +716,10 @@ Address: %4
     <message>
         <source>Alt+P</source>
         <translation>Alt و P</translation>
+    </message>
+    <message>
+        <source>Sign &amp;Message</source>
+        <translation>و امضای پیام </translation>
     </message>
     </context>
 <context>
@@ -707,10 +797,6 @@ Address: %4
         <translation>گونه</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>حساب</translation>
-    </message>
-    <message>
         <source>Open until %1</source>
         <translation>باز کن تا %1</translation>
     </message>
@@ -725,6 +811,10 @@ Address: %4
     <message>
         <source>Generated but not accepted</source>
         <translation>تولید شده اما قبول نشده است</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>برچسب</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -761,10 +851,6 @@ Address: %4
     <message>
         <source>Type of transaction.</source>
         <translation>نوع تراکنش</translation>
-    </message>
-    <message>
-        <source>Destination address of transaction.</source>
-        <translation>آدرس مقصد در تراکنش</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -846,6 +932,14 @@ Address: %4
         <translation>برچسب را ویرایش کنید</translation>
     </message>
     <message>
+        <source>Exporting Failed</source>
+        <translation>صدور با شکست مواجه شد</translation>
+    </message>
+    <message>
+        <source>Exporting Successful</source>
+        <translation>صدور با موفقیت انجام شد</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Comma separated file (*.csv) فایل جداگانه دستوری</translation>
     </message>
@@ -898,6 +992,10 @@ Address: %4
 <context>
     <name>WalletView</name>
     <message>
+        <source>&amp;Export</source>
+        <translation>صدور</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>صدور داده نوار جاری به یک فایل</translation>
     </message>
@@ -934,12 +1032,32 @@ Address: %4
         <translation>به عنوان daemon بک گراند را اجرا کنید و دستورات را قبول نمایید</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>از تستِ شبکه استفاده نمایید</translation>
+        <source>The transaction amount is too small to send after the fee has been deducted</source>
+        <translation>مبلغ تراکنش کمتر از آن است که پس از کسر هزینه  تراکنش قابل ارسال باشد</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>میزان اشتباه است for -maxtxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>میزان اشتباه است for -minrelaytxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
+        <translation>میزان اشتباه است for -mintxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>RPC server options:</source>
+        <translation>گزینه های سرویس دهنده RPC:</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>ارسال اطلاعات پیگیری/خطایابی به کنسول به جای ارسال به فایل debug.log</translation>
+    </message>
+    <message>
+        <source>Send transactions as zero-fee transactions if possible (default: %u)</source>
+        <translation>ارسال تراکنش ها به صورت بدون کارمزد در صورت امکان (پیش فرض: %u)</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
@@ -952,18 +1070,6 @@ Address: %4
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>دستور را وقتی بهترین بلاک تغییر کرد اجرا کن (%s در دستور توسط block hash جایگزین شده است)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>wallet را به جدیدترین نسخه روزآمد کنید</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>زنجیره بلاک را برای تراکنش جا افتاده در WALLET دوباره اسکن کنید</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>برای ارتباطاتِ JSON-RPC  از OpenSSL (https) استفاده کنید</translation>
     </message>
     <message>
         <source>This help message</source>
@@ -982,12 +1088,24 @@ Address: %4
         <translation>خطا در هنگام لود شدن wallet.dat</translation>
     </message>
     <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>میزان اشتباه است for -paytxfee=&lt;amount&gt;: '%s'</translation>
+        <source>Set minimum block size in bytes (default: %u)</source>
+        <translation>تنظیم کمینه اندازه بلاک بر حسب بایت (پیش فرض: %u)</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>میزان اشتباه است</translation>
+        <source>Set the number of threads to service RPC calls (default: %d)</source>
+        <translation>تنظیم تعداد ریسمان ها برای سرویس دهی فراخوانی های RPC (پیش فرض: %d)</translation>
+    </message>
+    <message>
+        <source>Specify configuration file (default: %s)</source>
+        <translation>فایل تنظیمات را مشخص کنید (پیش فرض: %s)</translation>
+    </message>
+    <message>
+        <source>Specify pid file (default: %s)</source>
+        <translation>فایل pid را مشخص کنید (پیش فرض: %s)</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>میزان اشتباه است for -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Insufficient funds</source>
@@ -1020,10 +1138,6 @@ Address: %4
     <message>
         <source>Done loading</source>
         <translation>اتمام لود شدن</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>برای استفاده از %s  از اختیارات</translation>
     </message>
     <message>
         <source>Error</source>

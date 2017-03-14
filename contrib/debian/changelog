@@ -1,3 +1,33 @@
+bitcoin (0.11.0-precise1) precise; urgency=medium
+
+  * New upstream release.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 14 Jul 2015 14:39:00 -1000
+
+bitcoin (0.10.2-precise1) precise; urgency=medium
+
+  * New upstream release.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Mon, 29 Jun 2015 17:33:00 -1000
+
+bitcoin (0.10.1-precise3) precise; urgency=medium
+
+  * Fix build dep (include python).
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 5 May 2015 09:28:00 -1000
+
+bitcoin (0.10.1-precise2) precise; urgency=medium
+
+  * Fix miniupnpc dep.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 5 May 2015 00:33:00 -1000
+
+bitcoin (0.10.1-precise1) precise; urgency=medium
+
+  * New upstream release.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 5 May 2015 00:07:00 -1000
+
 bitcoin (0.10.0-precise1) precise; urgency=medium
 
   * New upstream releases.
@@ -149,7 +179,7 @@ bitcoin (0.5.3-natty0) natty; urgency=low
 bitcoin (0.5.2-natty1) natty; urgency=low
 
   * Remove mentions on anonymity in package descriptions and manpage.
-    These should never have been there, bitcoin isnt anonymous without
+    These should never have been there, bitcoin isn't anonymous without
     a ton of work that virtually no users will ever be willing and
     capable of doing
 
@@ -190,7 +220,7 @@ bitcoin (0.5.0~rc1-natty1) natty; urgency=low
 
   * Add test_bitcoin to build test
   * Fix clean
-  * Remove uneccessary build-dependancies
+  * Remove unnecessary build-dependancies
 
  -- Matt Corallo <matt@bluematt.me>  Wed, 26 Oct 2011 14:37:18 -0400
 
@@ -350,7 +380,7 @@ bitcoin (0.3.20.01~dfsg-1) unstable; urgency=low
 
 bitcoin (0.3.19~dfsg-6) unstable; urgency=low
 
-  * Fix override agressive optimizations.
+  * Fix override aggressive optimizations.
   * Fix tighten build-dependencies to really fit backporting to Lenny:
     + Add fallback build-dependency on libdb4.6++-dev.
     + Tighten unversioned Boost build-dependencies to recent versions,

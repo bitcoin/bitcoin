@@ -1,17 +1,25 @@
-<TS language="vi" version="2.0">
+<TS language="vi" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Click đúp chuột để chỉnh sửa địa chỉ hoặc nhãn dữ liệu</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>Tạo một địa chỉ mới</translation>
     </message>
     <message>
+        <source>&amp;New</source>
+        <translation>Tạo mới</translation>
+    </message>
+    <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Sao chép các địa chỉ đã được chọn vào bộ nhớ tạm thời của hệ thống</translation>
+    </message>
+    <message>
+        <source>&amp;Copy</source>
+        <translation>Sao chép</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>Sao chép địa chỉ</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -41,6 +49,9 @@
     <name>AskPassphraseDialog</name>
     </context>
 <context>
+    <name>BanTableModel</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     </context>
 <context>
@@ -48,6 +59,10 @@
     </context>
 <context>
     <name>CoinControlDialog</name>
+    <message>
+        <source>Amount:</source>
+        <translation>Số lượng:</translation>
+    </message>
     <message>
         <source>Amount</source>
         <translation>Số lượng</translation>
@@ -59,6 +74,14 @@
     </context>
 <context>
     <name>EditAddressDialog</name>
+    <message>
+        <source>&amp;Label</source>
+        <translation>Nhãn dữ liệu</translation>
+    </message>
+    <message>
+        <source>&amp;Address</source>
+        <translation>Địa chỉ</translation>
+    </message>
     </context>
 <context>
     <name>FreespaceChecker</name>
@@ -103,6 +126,10 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Copy &amp;Address</source>
+        <translation>Sao chép địa chỉ</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation>Địa chỉ</translation>
     </message>
@@ -132,6 +159,10 @@
     </context>
 <context>
     <name>SendCoinsDialog</name>
+    <message>
+        <source>Amount:</source>
+        <translation>Số lượng:</translation>
+    </message>
     <message>
         <source>(no label)</source>
         <translation>(chưa có nhãn)</translation>
@@ -165,8 +196,8 @@
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <source>Address</source>
-        <translation>Địa chỉ</translation>
+        <source>Label</source>
+        <translation>Nhãn dữ liệu</translation>
     </message>
     </context>
 <context>

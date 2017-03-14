@@ -1,5 +1,8 @@
 #!/usr/bin/env python
-
+'''
+Run this script every time you change one of the png files. Using pngcrush, it will optimize the png files, remove various color profiles, remove ancillary chunks (alla) and text chunks (text).
+#pngcrush -brute -ow -rem gAMA -rem cHRM -rem iCCP -rem sRGB -rem alla -rem text
+'''
 import os
 import sys
 import subprocess
@@ -15,17 +18,15 @@ def content_hash(filename):
     '''Return hash of RGBA contents of image'''
     i = Image.open(filename)
     i = i.convert('RGBA')
-    data = i.tostring()
+    data = i.tobytes()
     return hashlib.sha256(data).hexdigest()
-
-#optimize png, remove various color profiles, remove ancillary chunks (alla) and text chunks (text)
-#pngcrush -brute -ow -rem gAMA -rem cHRM -rem iCCP -rem sRGB -rem alla -rem text
 
 pngcrush = 'pngcrush'
 git = 'git'
-folders = ["src/qt/res/movies", "src/qt/res/icons", "src/qt/res/images"]
+folders = ["src/qt/res/movies", "src/qt/res/icons", "share/pixmaps"]
 basePath = subprocess.check_output([git, 'rev-parse', '--show-toplevel']).rstrip('\n')
 totalSaveBytes = 0
+noHashChange = True
 
 outputArray = []
 for folder in folders:
@@ -68,6 +69,7 @@ for fileDict in outputArray:
     oldHash = fileDict['sha256Old']
     newHash = fileDict['sha256New']
     totalSaveBytes += fileDict['osize'] - fileDict['psize']
+    noHashChange = noHashChange and (oldHash == newHash)
     print fileDict['file']+"\n  size diff from: "+str(fileDict['osize'])+" to: "+str(fileDict['psize'])+"\n  old sha256: "+oldHash+"\n  new sha256: "+newHash+"\n"
     
-print "completed. Total reduction: "+str(totalSaveBytes)+" bytes"
+print "completed. Checksum stable: "+str(noHashChange)+". Total reduction: "+str(totalSaveBytes)+" bytes"

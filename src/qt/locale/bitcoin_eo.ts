@@ -1,9 +1,9 @@
-<TS language="eo" version="2.0">
+<TS language="eo" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Duoble-klaku por redakti adreson aŭ etikedon</translation>
+        <source>Right-click to edit address or label</source>
+        <translation>Dekstre-klaku por redakti adreson aŭ etikedon</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -35,7 +35,7 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Eksporti al dosiero la datumojn el la aktuala langeto</translation>
+        <translation>Eksporti la datumojn el la aktuala langeto al dosiero</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -89,7 +89,15 @@
         <source>Comma separated file (*.csv)</source>
         <translation>Perkome disigita dosiero (*.csv)</translation>
     </message>
-    </context>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>ekspotado malsukcesinta</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>Okazis eraron dum konservo de adreslisto al %1. Bonvolu provi denove.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -148,10 +156,6 @@
         <translation>Ŝanĝi la pasfrazon</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Tajpu la malnovan kaj novan monujajn pasfrazojn.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Konfirmo de ĉifrado de la monujo</translation>
     </message>
@@ -174,10 +178,6 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>La monujo estas ĉifrita</translation>
-    </message>
-    <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitmono nun fermiĝos por fini la ĉifradon. Memoru, ke eĉ ĉifrado ne protektas kontraŭ ĉiu atako, ekz. se viruso infektus vian komputilon.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -208,6 +208,9 @@
         <translation>Vi sukcese ŝanĝis la pasfrazon de la monujo.</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -283,6 +286,10 @@
         <translation>Malfermi &amp;URI-on...</translation>
     </message>
     <message>
+        <source>Bitcoin Core client</source>
+        <translation>kliento de bitmon-kerno</translation>
+    </message>
+    <message>
         <source>Importing blocks from disk...</source>
         <translation>Importado de blokoj el disko...</translation>
     </message>
@@ -293,10 +300,6 @@
     <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>Sendi monon al Bitmon-adreso</translation>
-    </message>
-    <message>
-        <source>Modify configuration options for Bitcoin</source>
-        <translation>Modifi agordaĵojn por Bitmono</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -333,6 +336,10 @@
     <message>
         <source>&amp;Receive</source>
         <translation>&amp;Ricevi</translation>
+    </message>
+    <message>
+        <source>Show information about Bitcoin Core</source>
+        <translation>Vidigi informon pri Bitmona Kerno</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -398,17 +405,9 @@
         <source>&amp;Command-line options</source>
         <translation>&amp;Komandliniaj agordaĵoj</translation>
     </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n aktiva konekto al la bitmona reto</numerusform><numerusform>%n aktivaj konektoj al la bitmona reto</numerusform></translation>
-    </message>
     <message>
         <source>No block source available...</source>
         <translation>Neniu fonto de blokoj trovebla...</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n horo</numerusform><numerusform>%n horoj</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
@@ -421,6 +420,10 @@
     <message>
         <source>%1 and %2</source>
         <translation>%1 kaj %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n jaro</numerusform><numerusform>%n jaroj</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -455,24 +458,36 @@
         <translation>Ĝisdatigante...</translation>
     </message>
     <message>
+        <source>Date: %1
+</source>
+        <translation>Dato: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>Sumo: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>Tipo: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>Etikedo: %1
+</translation>
+    </message>
+    <message>
         <source>Sent transaction</source>
         <translation>Sendita transakcio</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
         <translation>Envenanta transakcio</translation>
-    </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>Dato: %1
-Sumo: %2
-Tipo: %3
-Adreso: %4
-</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -513,6 +528,10 @@ Adreso: %4
         <translation>Krompago:</translation>
     </message>
     <message>
+        <source>Dust:</source>
+        <translation>Polvo:</translation>
+    </message>
+    <message>
         <source>After Fee:</source>
         <translation>Post krompago:</translation>
     </message>
@@ -535,6 +554,14 @@ Adreso: %4
     <message>
         <source>Amount</source>
         <translation>Sumo</translation>
+    </message>
+    <message>
+        <source>Received with label</source>
+        <translation>Ricevita kun etikedo</translation>
+    </message>
+    <message>
+        <source>Received with address</source>
+        <translation>Ricevita kun adreso</translation>
     </message>
     <message>
         <source>Date</source>
@@ -597,6 +624,10 @@ Adreso: %4
         <translation>Kopii prioritaton</translation>
     </message>
     <message>
+        <source>Copy dust</source>
+        <translation>Kopii polvon</translation>
+    </message>
+    <message>
         <source>Copy change</source>
         <translation>Kopii restmonon</translation>
     </message>
@@ -653,10 +684,6 @@ Adreso: %4
         <translation>ne</translation>
     </message>
     <message>
-        <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation>Tiu ĉi etikedo ruĝiĝas se la grando de la transakcio estas pli ol 1000 bajtoj.</translation>
-    </message>
-    <message>
         <source>This means a fee of at least %1 per kB is required.</source>
         <translation>Tio signifas, ke krompago de almenaŭ po %1 por ĉiu kB estas deviga.</translation>
     </message>
@@ -667,10 +694,6 @@ Adreso: %4
     <message>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
         <translation>Transakcioj kun pli alta prioritato havas pli altan ŝancon inkluziviĝi en bloko.</translation>
-    </message>
-    <message>
-        <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation>Tiu ĉi etikedo ruĝiĝas se iu ajn ricevonto ricevos sumon malpli ol %1.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -789,27 +812,7 @@ Adreso: %4
         <source>command-line options</source>
         <translation>komandliniaj agordaĵoj</translation>
     </message>
-    <message>
-        <source>UI options</source>
-        <translation>UI-agordaĵoj</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Agordi lingvon, ekzemple "de_DE" (defaŭlte: tiu de la sistemo)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Lanĉiĝi plejete</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Montri salutŝildon dum lanĉo (defaŭlte: 1)</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Elekti dosierujon por datumoj dum lanĉo (defaŭlte: 0)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -879,20 +882,20 @@ Adreso: %4
         <translation>Ĉ&amp;efa</translation>
     </message>
     <message>
-        <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Aŭtomate lanĉi Bitmonon post ensaluto al la sistemo.</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin on system login</source>
-        <translation>&amp;Lanĉi Bitmonon tuj post ensaluto al la sistemo</translation>
-    </message>
-    <message>
         <source>Size of &amp;database cache</source>
         <translation>Dosiergrando de &amp;datumbasa kaŝmemoro</translation>
     </message>
     <message>
         <source>MB</source>
         <translation>MB</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside</source>
+        <translation>Akcepti konektojn el ekstere</translation>
+    </message>
+    <message>
+        <source>Allow incoming connections</source>
+        <translation>Permesi envenantajn konektojn</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -905,6 +908,14 @@ Adreso: %4
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Reto</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>Monujo</translation>
+    </message>
+    <message>
+        <source>Expert</source>
+        <translation>Fakulo</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -927,6 +938,14 @@ Adreso: %4
         <translation>la pordo de la prokurilo (ekz. 9050)</translation>
     </message>
     <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;Fenestro</translation>
     </message>
@@ -939,10 +958,6 @@ Adreso: %4
         <translation>&amp;Minimumigi al la sistempleto anstataŭ al la taskopleto</translation>
     </message>
     <message>
-        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Minimumigi la aplikaĵon anstataŭ eliri kaj ĉesi kiam la fenestro estas fermita. Se tiu ĉi estas agordita, la aplikaĵo ĉesas nur kiam oni elektas "Eliri" el la menuo.</translation>
-    </message>
-    <message>
         <source>M&amp;inimize on close</source>
         <translation>M&amp;inimumigi je fermo</translation>
     </message>
@@ -953,10 +968,6 @@ Adreso: %4
     <message>
         <source>User Interface &amp;language:</source>
         <translation>&amp;Lingvo de la fasado:</translation>
-    </message>
-    <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
-        <translation>Vi povas elekti la lingvon uzata en la aplikaĵo ĉi tie. Tiu ekefikos nur post relanĉo de Bitmono.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1022,6 +1033,10 @@ Adreso: %4
         <translation>Minita saldo, kiu ankoraŭ ne maturiĝis</translation>
     </message>
     <message>
+        <source>Balances</source>
+        <translation>Saldoj</translation>
+    </message>
+    <message>
         <source>Total:</source>
         <translation>Totalo:</translation>
     </message>
@@ -1030,10 +1045,14 @@ Adreso: %4
         <translation>via aktuala totala saldo</translation>
     </message>
     <message>
-        <source>out of sync</source>
-        <translation>nesinkronigita</translation>
+        <source>Spendable:</source>
+        <translation>Elspezebla:</translation>
     </message>
-</context>
+    <message>
+        <source>Recent transactions</source>
+        <translation>Lastaj transakcioj</translation>
+    </message>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1093,6 +1112,10 @@ Adreso: %4
     <message>
         <source>%1 m</source>
         <translation>%1 m</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Neniu</translation>
     </message>
     <message>
         <source>N/A</source>
@@ -1173,6 +1196,22 @@ Adreso: %4
         <translation>Aktuala nombro de blokoj</translation>
     </message>
     <message>
+        <source>Received</source>
+        <translation>Ricevita</translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation>Sendita</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation>Versio</translation>
+    </message>
+    <message>
+        <source>Services</source>
+        <translation>Servoj</translation>
+    </message>
+    <message>
         <source>Last block time</source>
         <translation>Horo de la lasta bloko</translation>
     </message>
@@ -1213,16 +1252,8 @@ Adreso: %4
         <translation>Sencimiga protokoldosiero</translation>
     </message>
     <message>
-        <source>Open the Bitcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Malfermi la sencimiga protokoldosiero de Bitmono el la aktuala dosierujo por datumoj. Tio eble daŭros plurajn sekundojn por granda protokoldosiero.</translation>
-    </message>
-    <message>
         <source>Clear console</source>
         <translation>Malplenigi konzolon</translation>
-    </message>
-    <message>
-        <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>Bonvenon al la RPC-konzolo de Bitmono.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1390,7 +1421,7 @@ Adreso: %4
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Sendi Monon</translation>
+        <translation>Sendi Bitmonon</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
@@ -1433,6 +1464,10 @@ Adreso: %4
         <translation>Restmono:</translation>
     </message>
     <message>
+        <source>Transaction Fee:</source>
+        <translation>Krompago:</translation>
+    </message>
+    <message>
         <source>Send to multiple recipients at once</source>
         <translation>Sendi samtempe al pluraj ricevantoj</translation>
     </message>
@@ -1445,8 +1480,12 @@ Adreso: %4
         <translation>Malplenigi ĉiujn kampojn de la formularo.</translation>
     </message>
     <message>
+        <source>Dust:</source>
+        <translation>Polvo:</translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
-        <translation>&amp;Forigi ĉion</translation>
+        <translation>&amp;Forigi Ĉion</translation>
     </message>
     <message>
         <source>Balance:</source>
@@ -1497,16 +1536,8 @@ Adreso: %4
         <translation>Kopii restmonon</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Totala Sumo %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>aŭ</translation>
-    </message>
-    <message>
-        <source>The recipient address is not valid, please recheck.</source>
-        <translation>La adreso de la ricevonto ne validas. Bonvolu kontroli.</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
@@ -1521,10 +1552,6 @@ Adreso: %4
         <translation>La sumo kun la %1 krompago estas pli granda ol via saldo.</translation>
     </message>
     <message>
-        <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>Iu adreso estas ripetita. Vi povas sendi al ĉiu adreso po unufoje en iu send-operacio.</translation>
-    </message>
-    <message>
         <source>Transaction creation failed!</source>
         <translation>Kreo de transakcio fiaskis!</translation>
     </message>
@@ -1535,6 +1562,10 @@ Adreso: %4
     <message>
         <source>(no label)</source>
         <translation>(neniu etikedo)</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation>Kopii polvon</translation>
     </message>
     <message>
         <source>Are you sure you want to send?</source>
@@ -1577,7 +1608,7 @@ Adreso: %4
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Alglui adreson el tondejo</translation>
+        <translation>Alglui adreson de tondejo</translation>
     </message>
     <message>
         <source>Alt+P</source>
@@ -1620,10 +1651,6 @@ Adreso: %4
     <message>
         <source>&amp;Sign Message</source>
         <translation>&amp;Subskribi Mesaĝon</translation>
-    </message>
-    <message>
-        <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Vi povas subskribi mesaĝon per viaj adresoj, por pravigi ke vi estas la posedanto de tiuj adresoj. Atentu, ke vi ne subskriu ion neprecizan, ĉar trompisto povus ruzi kontraŭ vi kaj ŝteli vian identecon. Subskribu nur plene detaligitaj deklaroj pri kiuj vi konsentas.</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -1672,10 +1699,6 @@ Adreso: %4
     <message>
         <source>&amp;Verify Message</source>
         <translation>&amp;Kontroli Mesaĝon</translation>
-    </message>
-    <message>
-        <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>Enmeti la subskriban adreson, la mesaĝon (kune kun ĉiu linisalto, spaceto, taboj, ktp. precize) kaj la subskribon ĉi sube por kontroli la mesaĝon. Atentu, ke vi ne komprenu per la subskribo pli ol la enhavo de la mesaĝo mem, por eviti homo-en-la-mezo-atakon.</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
@@ -1786,10 +1809,6 @@ Adreso: %4
         <source>Status</source>
         <translation>Stato</translation>
     </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, elsendita(j) tra %n nodo</numerusform><numerusform>, elsendita(j) tra %n nodoj</numerusform></translation>
-    </message>
     <message>
         <source>Date</source>
         <translation>Dato</translation>
@@ -1821,10 +1840,6 @@ Adreso: %4
     <message>
         <source>Credit</source>
         <translation>Kredito</translation>
-    </message>
-    <message numerus="yes">
-        <source>matures in %n more block(s)</source>
-        <translation><numerusform>maturiĝos post %n bloko</numerusform><numerusform>maturiĝos post %n blokoj</numerusform></translation>
     </message>
     <message>
         <source>not accepted</source>
@@ -1890,10 +1905,6 @@ Adreso: %4
         <source>, has not been successfully broadcast yet</source>
         <translation>, ankoraŭ ne elsendita sukcese</translation>
     </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Malferma dum ankoraŭ %n bloko</numerusform><numerusform>Malferma dum ankoraŭ %n blokoj</numerusform></translation>
-    </message>
     <message>
         <source>unknown</source>
         <translation>nekonata</translation>
@@ -1921,14 +1932,6 @@ Adreso: %4
         <translation>Tipo</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Adreso</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Malferma dum ankoraŭ %n bloko</numerusform><numerusform>Malferma dum ankoraŭ %n blokoj</numerusform></translation>
-    </message>
-    <message>
         <source>Open until %1</source>
         <translation>Malferma ĝis %1</translation>
     </message>
@@ -1947,6 +1950,10 @@ Adreso: %4
     <message>
         <source>Offline</source>
         <translation>Senkonekte</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etikedo</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
@@ -1987,10 +1994,6 @@ Adreso: %4
     <message>
         <source>Type of transaction.</source>
         <translation>Tipo de transakcio.</translation>
-    </message>
-    <message>
-        <source>Destination address of transaction.</source>
-        <translation>Celadreso de la transakcio.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -2078,6 +2081,10 @@ Adreso: %4
     <message>
         <source>Show transaction details</source>
         <translation>Montri detalojn de transakcio</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>ekspotado malsukcesinta</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -2183,48 +2190,12 @@ Adreso: %4
         <translation>Ruli fone kiel demono kaj akcepti komandojn</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>Uzi la test-reton</translation>
-    </message>
-    <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Akcepti konektojn el ekstere (defaŭlte: 1 se ne estas -proxy nek -connect)</translation>
     </message>
     <message>
-        <source>%s, you must set a rpcpassword in the configuration file:
-%s
-It is recommended you use the following random password:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-The username and password MUST NOT be the same.
-If the file does not exist, create it with owner-readable-only file permissions.
-It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</source>
-        <translation>%s, vi devas specifi rpcpassword en la konfigura dosiero:
-%s
-Estas konsilinde uzi tiun ĉi aleatore kreitan pasvorton:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(ne utilas al vi memorigi tiun ĉi pasvorton)
-La salutnomo kaj la pasvorto estu nepre MALSAMAJ.
-Se la dosiero ne ekzistas, kreu ĝin kun permeso "nur posedanto rajtas legi".
-Estas konsilinde ankaŭ agordi alertnotify por ke vi ricevu avertojn pri eventualaj problemoj;
-ekzemple: alertnotify=echo %%s | mail -s "Averto de Bitmono" admin@foo.com
-</translation>
-    </message>
-    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Bindi al donita adreso kaj ĉiam aŭskulti per ĝi. Uzu la formaton [gastigo]:pordo por IPv6</translation>
-    </message>
-    <message>
-        <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Eraro: la transakcio estas rifuzita. Tio povas okazi se iom da Bitmono en via monujo jam elspeziĝis (ekz. se vi uzis kopion de wallet.dat kies Bitmono jam elspeziĝis, sed ne estis markita kiel elspezita ĉi tie).</translation>
-    </message>
-    <message>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>Eraro: tiu ĉi transakcio bezonas krompagon de almenaŭ %s pro la sumo, la komplekseco, aŭ la uzo de ĵus ricevita mono!</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -2235,10 +2206,6 @@ ekzemple: alertnotify=echo %%s | mail -s "Averto de Bitmono" admin@foo.com
         <translation>Tiu ĉi estas antaŭeldona testa versio - uzu laŭ via propra risko - ne uzu por minado aŭ por aplikaĵoj por vendistoj</translation>
     </message>
     <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Averto: -paytxfee estas agordita per tre alta valoro! Tio estas la krompago, kion vi pagos se vi sendas la transakcion.</translation>
-    </message>
-    <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>Averto: La reto ne tute konsentas! Kelkaj minantoj ŝajne spertas problemojn aktuale.</translation>
     </message>
@@ -2247,20 +2214,12 @@ ekzemple: alertnotify=echo %%s | mail -s "Averto de Bitmono" admin@foo.com
         <translation>Averto: ŝajne ni ne tute konsentas kun niaj samtavolanoj! Eble vi devas ĝisdatigi vian klienton, aŭ eble aliaj nodoj faru same.</translation>
     </message>
     <message>
-        <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Averto: okazis eraro dum lego de wallet.dat! Ĉiuj ŝlosiloj sukcese legiĝis, sed la transakciaj datumoj aŭ la adresaro eble mankas aŭ malĝustas.</translation>
-    </message>
-    <message>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Averto: via wallet.dat estas difektita, sed la datumoj sukcese saviĝis! La originala wallet.dat estas nun konservita kiel wallet.{timestamp}.bak en %s; se via saldo aŭ transakcioj estas malĝustaj vi devus restaŭri per alia sekurkopio.</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; povas esti:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Provo ripari privatajn ŝlosilojn el difektita wallet.dat</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2273,10 +2232,6 @@ ekzemple: alertnotify=echo %%s | mail -s "Averto de Bitmono" admin@foo.com
     <message>
         <source>Corrupted block database detected</source>
         <translation>Difektita blokdatumbazo trovita</translation>
-    </message>
-    <message>
-        <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
-        <translation>Malkovri la propran IP-adreson (defaŭlte: 1 dum aŭskultado sen -externalip)</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
@@ -2303,10 +2258,6 @@ ekzemple: alertnotify=echo %%s | mail -s "Averto de Bitmono" admin@foo.com
         <translation>Eraro: restas malmulte da diskospaco!</translation>
     </message>
     <message>
-        <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>Eraro: monujo ŝlosita, ne eblas krei transakcion!</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Ne sukcesis aŭskulti ajnan pordon. Uzu -listen=0 se tion vi volas.</translation>
     </message>
@@ -2321,10 +2272,6 @@ ekzemple: alertnotify=echo %%s | mail -s "Averto de Bitmono" admin@foo.com
     <message>
         <source>Not enough file descriptors available.</source>
         <translation>Nesufiĉa nombro de dosierpriskribiloj disponeblas.</translation>
-    </message>
-    <message>
-        <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation>Rekontrui blokĉenan indekson el la aktualaj blk000??.dat dosieroj</translation>
     </message>
     <message>
         <source>Specify wallet file (within data directory)</source>
@@ -2351,16 +2298,20 @@ ekzemple: alertnotify=echo %%s | mail -s "Averto de Bitmono" admin@foo.com
         <translation>Vi devas rekontrui la datumbazon kun -reindex por ŝanĝi -txindex</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importas blokojn el ekstera dosiero blk000??.dat</translation>
-    </message>
-    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>Plenumi komandon kiam rilata alerto riceviĝas, aŭ kiam ni vidas tre longan forkon (%s en cms anstataŭiĝas per mesaĝo)</translation>
     </message>
     <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Ne eblas trovi la adreson -whitebind: '%s'</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Informoj</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Nevalida sumo por -maxtxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
@@ -2383,6 +2334,10 @@ ekzemple: alertnotify=echo %%s | mail -s "Averto de Bitmono" admin@foo.com
         <translation>Subskriba transakcio fiaskis</translation>
     </message>
     <message>
+        <source>This is experimental software.</source>
+        <translation>ĝi estas eksperimenta programo</translation>
+    </message>
+    <message>
         <source>Transaction amount too small</source>
         <translation>Transakcia sumo tro malgranda</translation>
     </message>
@@ -2395,20 +2350,12 @@ ekzemple: alertnotify=echo %%s | mail -s "Averto de Bitmono" admin@foo.com
         <translation>Transakcio estas tro granda</translation>
     </message>
     <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation>Uzi UPnP por mapi la aŭskultan pordon (defaŭlte: 1 dum aŭskultado)</translation>
-    </message>
-    <message>
         <source>Username for JSON-RPC connections</source>
         <translation>Salutnomo por konektoj JSON-RPC</translation>
     </message>
     <message>
         <source>Warning</source>
         <translation>Averto</translation>
-    </message>
-    <message>
-        <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation>Averto: tiu ĉi versio estas eksdata. Vi bezonas ĝisdatigon!</translation>
     </message>
     <message>
         <source>wallet.dat corrupt, salvage failed</source>
@@ -2421,18 +2368,6 @@ ekzemple: alertnotify=echo %%s | mail -s "Averto de Bitmono" admin@foo.com
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Plenumi komandon kiam plej bona bloko ŝanĝiĝas (%s en cmd anstataŭiĝas per bloka haketaĵo)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Ĝisdatigi monujon al plej lasta formato</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Reskani la blokĉenon por mankantaj monujaj transakcioj</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Uzi OpenSSL (https) por konektoj JSON-RPC</translation>
     </message>
     <message>
         <source>This help message</source>
@@ -2475,10 +2410,6 @@ ekzemple: alertnotify=echo %%s | mail -s "Averto de Bitmono" admin@foo.com
         <translation>Nevalida sumo por -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>Nevalida sumo</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>Nesufiĉa mono</translation>
     </message>
@@ -2509,10 +2440,6 @@ ekzemple: alertnotify=echo %%s | mail -s "Averto de Bitmono" admin@foo.com
     <message>
         <source>Done loading</source>
         <translation>Ŝargado finiĝis</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>Por uzi la agordon %s</translation>
     </message>
     <message>
         <source>Error</source>

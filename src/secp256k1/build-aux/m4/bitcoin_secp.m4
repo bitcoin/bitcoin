@@ -16,8 +16,7 @@ AC_MSG_RESULT([$has_64bit_asm])
 
 dnl
 AC_DEFUN([SECP_OPENSSL_CHECK],[
-if test x"$use_pkgconfig" = x"yes"; then
-    : #NOP
+  has_libcrypto=no
   m4_ifdef([PKG_CHECK_MODULES],[
     PKG_CHECK_MODULES([CRYPTO], [libcrypto], [has_libcrypto=yes],[has_libcrypto=no])
     if test x"$has_libcrypto" = x"yes"; then
@@ -27,11 +26,16 @@ if test x"$use_pkgconfig" = x"yes"; then
       LIBS="$TEMP_LIBS"
     fi
   ])
-else
-  AC_CHECK_HEADER(openssl/crypto.h,[AC_CHECK_LIB(crypto, main,[has_libcrypto=yes; CRYPTO_LIBS=-lcrypto; AC_DEFINE(HAVE_LIBCRYPTO,1,[Define this symbol if libcrypto is installed])]
-)])
-  LIBS=
-fi
+  if test x$has_libcrypto = xno; then
+    AC_CHECK_HEADER(openssl/crypto.h,[
+      AC_CHECK_LIB(crypto, main,[
+        has_libcrypto=yes
+        CRYPTO_LIBS=-lcrypto
+        AC_DEFINE(HAVE_LIBCRYPTO,1,[Define this symbol if libcrypto is installed])
+      ])
+    ])
+    LIBS=
+  fi
 if test x"$has_libcrypto" = x"yes" && test x"$has_openssl_ec" = x; then
   AC_MSG_CHECKING(for EC functions in libcrypto)
   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[

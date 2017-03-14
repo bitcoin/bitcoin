@@ -29,6 +29,8 @@ TX = 'tx'
 SOURCE_LANG = 'bitcoin_en.ts'
 # Directory with locale files
 LOCALE_DIR = 'src/qt/locale'
+# Minimum number of messages for translation to be considered at all
+MIN_NUM_MESSAGES = 10
 
 def check_at_repository_root():
     if not os.path.exists('.git'):
@@ -37,7 +39,7 @@ def check_at_repository_root():
         exit(1)
 
 def fetch_all_translations():
-    if subprocess.call([TX, 'pull', '-f']):
+    if subprocess.call([TX, 'pull', '-f', '-a']):
         print('Error while fetching translations', file=sys.stderr)
         exit(1)
 
@@ -70,7 +72,7 @@ def sanitize_string(s):
     '''Sanitize string for printing'''
     return s.replace('\n',' ')
 
-def check_format_specifiers(source, translation, errors):
+def check_format_specifiers(source, translation, errors, numerus):
     source_f = split_format_specifiers(find_format_specifiers(source))
     # assert that no source messages contain both Qt and strprintf format specifiers
     # if this fails, go change the source as this is hacky and confusing!
@@ -78,10 +80,13 @@ def check_format_specifiers(source, translation, errors):
     try:
         translation_f = split_format_specifiers(find_format_specifiers(translation))
     except IndexError:
-        errors.append("Parse error in translation '%s'" % sanitize_string(translation))
+        errors.append("Parse error in translation for '%s': '%s'" % (sanitize_string(source), sanitize_string(translation)))
         return False
     else:
         if source_f != translation_f:
+            if numerus and source_f == (set(), ['n']) and translation_f == (set(), []) and translation.find('%') == -1:
+                # Allow numerus translations to omit %n specifier (usually when it only has one possible value)
+                return True
             errors.append("Mismatch between '%s' and '%s'" % (sanitize_string(source), sanitize_string(translation)))
             return False
     return True
@@ -148,7 +153,7 @@ def postprocess_translations(reduce_diff_hacks=False):
                     if translation is None:
                         continue
                     errors = []
-                    valid = check_format_specifiers(source, translation, errors)
+                    valid = check_format_specifiers(source, translation, errors, numerus)
 
                     for error in errors:
                         print('%s: %s' % (filename, error))
@@ -165,6 +170,15 @@ def postprocess_translations(reduce_diff_hacks=False):
                 # Remove entire message if it is an unfinished translation
                 if translation_node.get('type') == 'unfinished':
                     context.remove(message)
+
+        # check if document is (virtually) empty, and remove it if so
+        num_messages = 0
+        for context in root.findall('context'):
+            for message in context.findall('message'):
+                num_messages += 1
+        if num_messages < MIN_NUM_MESSAGES:
+            print('Removing %s, as it contains only %i messages' % (filepath, num_messages))
+            continue
 
         # write fixed-up tree
         # if diff reduction requested, replace some XML to 'sanitize' to qt formatting

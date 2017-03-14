@@ -1,0 +1,21 @@
+--- old/evutil.c   2015-08-28 19:26:23.488765923 -0400
++++ new/evutil.c   2015-08-28 19:27:41.392767019 -0400
+@@ -321,15 +321,16 @@
+ int
+ evutil_make_listen_socket_reuseable(evutil_socket_t sock)
+ {
+-#ifndef WIN32
+ 	int one = 1;
++#ifndef WIN32
+ 	/* REUSEADDR on Unix means, "don't hang on to this address after the
+ 	 * listener is closed."  On Windows, though, it means "don't keep other
+ 	 * processes from binding to this address while we're using it. */
+ 	return setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (void*) &one,
+ 	    (ev_socklen_t)sizeof(one));
+ #else
+-	return 0;
++	return setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char*) &one,
++		(ev_socklen_t)sizeof(one));
+ #endif
+ }
+ 

@@ -2,11 +2,12 @@
 set -e
 
 ROOTDIR=dist
-BUNDLE=${ROOTDIR}/Bitcoin-Qt.app
+BUNDLE="${ROOTDIR}/Bitcoin-Qt.app"
 CODESIGN=codesign
 TEMPDIR=sign.temp
 TEMPLIST=${TEMPDIR}/signatures.txt
 OUT=signature.tar.gz
+OUTROOT=osx
 
 if [ ! -n "$1" ]; then
   echo "usage: $0 <codesign args>"
@@ -19,20 +20,20 @@ mkdir -p ${TEMPDIR}
 
 ${CODESIGN} -f --file-list ${TEMPLIST} "$@" "${BUNDLE}"
 
-for i in `grep -v CodeResources ${TEMPLIST}`; do
-  TARGETFILE="${BUNDLE}/`echo ${i} | sed "s|.*${BUNDLE}/||"`"
-  SIZE=`pagestuff $i -p | tail -2 | grep size | sed 's/[^0-9]*//g'`
-  OFFSET=`pagestuff $i -p | tail -2 | grep offset | sed 's/[^0-9]*//g'`
-  SIGNFILE="${TEMPDIR}/${TARGETFILE}.sign"
-  DIRNAME="`dirname ${SIGNFILE}`"
+grep -v CodeResources < "${TEMPLIST}" | while read i; do
+  TARGETFILE="${BUNDLE}/`echo "${i}" | sed "s|.*${BUNDLE}/||"`"
+  SIZE=`pagestuff "$i" -p | tail -2 | grep size | sed 's/[^0-9]*//g'`
+  OFFSET=`pagestuff "$i" -p | tail -2 | grep offset | sed 's/[^0-9]*//g'`
+  SIGNFILE="${TEMPDIR}/${OUTROOT}/${TARGETFILE}.sign"
+  DIRNAME="`dirname "${SIGNFILE}"`"
   mkdir -p "${DIRNAME}"
   echo "Adding detached signature for: ${TARGETFILE}. Size: ${SIZE}. Offset: ${OFFSET}"
-  dd if=$i of=${SIGNFILE} bs=1 skip=${OFFSET} count=${SIZE} 2>/dev/null
+  dd if="$i" of="${SIGNFILE}" bs=1 skip=${OFFSET} count=${SIZE} 2>/dev/null
 done
 
-for i in `grep CodeResources ${TEMPLIST}`; do
-  TARGETFILE="${BUNDLE}/`echo ${i} | sed "s|.*${BUNDLE}/||"`"
-  RESOURCE="${TEMPDIR}/${TARGETFILE}"
+grep CodeResources < "${TEMPLIST}" | while read i; do
+  TARGETFILE="${BUNDLE}/`echo "${i}" | sed "s|.*${BUNDLE}/||"`"
+  RESOURCE="${TEMPDIR}/${OUTROOT}/${TARGETFILE}"
   DIRNAME="`dirname "${RESOURCE}"`"
   mkdir -p "${DIRNAME}"
   echo "Adding resource for: "${TARGETFILE}""
@@ -41,6 +42,6 @@ done
 
 rm ${TEMPLIST}
 
-tar -C ${TEMPDIR} -czf ${OUT} .
-rm -rf ${TEMPDIR}
+tar -C "${TEMPDIR}" -czf "${OUT}" .
+rm -rf "${TEMPDIR}"
 echo "Created ${OUT}"

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,7 +32,7 @@ public:
     explicit QRImageWidget(QWidget *parent = 0);
     QImage exportImage();
 
-public slots:
+public Q_SLOTS:
     void saveImage();
     void copyImage();
 
@@ -55,7 +55,7 @@ public:
     void setModel(OptionsModel *model);
     void setInfo(const SendCoinsRecipient &info);
 
-private slots:
+private Q_SLOTS:
     void on_btnCopyURI_clicked();
     void on_btnCopyAddress_clicked();
 

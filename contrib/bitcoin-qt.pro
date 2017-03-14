@@ -11,7 +11,7 @@ FORMS += \
     ../src/qt/forms/overviewpage.ui \
     ../src/qt/forms/receivecoinsdialog.ui \
     ../src/qt/forms/receiverequestdialog.ui \
-    ../src/qt/forms/rpcconsole.ui \
+    ../src/qt/forms/debugwindow.ui \
     ../src/qt/forms/sendcoinsdialog.ui \
     ../src/qt/forms/sendcoinsentry.ui \
     ../src/qt/forms/signverifymessagedialog.ui \

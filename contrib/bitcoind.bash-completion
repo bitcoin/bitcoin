@@ -96,7 +96,7 @@ _bitcoind() {
     esac
 
     case "$cur" in
-        -conf=*|-pid=*|-loadblock=*|-wallet=*|-rpcsslcertificatechainfile=*|-rpcsslprivatekeyfile=*)
+        -conf=*|-pid=*|-loadblock=*|-wallet=*)
             cur="${cur#*=}"
             _filedir
             return 0

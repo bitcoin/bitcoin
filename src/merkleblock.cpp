@@ -1,12 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "merkleblock.h"
 
 #include "hash.h"
-#include "primitives/block.h" // for MAX_BLOCK_SIZE
+#include "consensus/consensus.h"
 #include "utilstrencodings.h"
 
 using namespace std;
@@ -29,6 +29,29 @@ CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter& filter)
             vMatch.push_back(true);
             vMatchedTxn.push_back(make_pair(i, hash));
         }
+        else
+            vMatch.push_back(false);
+        vHashes.push_back(hash);
+    }
+
+    txn = CPartialMerkleTree(vHashes, vMatch);
+}
+
+CMerkleBlock::CMerkleBlock(const CBlock& block, const std::set<uint256>& txids)
+{
+    header = block.GetBlockHeader();
+
+    vector<bool> vMatch;
+    vector<uint256> vHashes;
+
+    vMatch.reserve(block.vtx.size());
+    vHashes.reserve(block.vtx.size());
+
+    for (unsigned int i = 0; i < block.vtx.size(); i++)
+    {
+        const uint256& hash = block.vtx[i].GetHash();
+        if (txids.count(hash))
+            vMatch.push_back(true);
         else
             vMatch.push_back(false);
         vHashes.push_back(hash);
@@ -96,8 +119,8 @@ uint256 CPartialMerkleTree::TraverseAndExtract(int height, unsigned int pos, uns
         if (pos*2+1 < CalcTreeWidth(height-1)) {
             right = TraverseAndExtract(height-1, pos*2+1, nBitsUsed, nHashUsed, vMatch);
             if (right == left) {
-                // If the left and right branch should never be identical as the transaction
-                // hashes covered by them must be unique.
+                // The left and right branches should never be identical, as the transaction
+                // hashes covered by them must each be unique.
                 fBad = true;
             }
         } else {
@@ -145,7 +168,7 @@ uint256 CPartialMerkleTree::ExtractMatches(std::vector<uint256> &vMatch) {
     // traverse the partial tree
     unsigned int nBitsUsed = 0, nHashUsed = 0;
     uint256 hashMerkleRoot = TraverseAndExtract(nHeight, 0, nBitsUsed, nHashUsed, vMatch);
-    // verify that no problems occured during the tree traversal
+    // verify that no problems occurred during the tree traversal
     if (fBad)
         return uint256();
     // verify that all bits were consumed (except for the padding caused by serializing it as a byte sequence)

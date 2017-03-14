@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,6 +18,7 @@ public:
     explicit QValidatedLineEdit(QWidget *parent);
     void clear();
     void setCheckValidator(const QValidator *v);
+    bool isValid();
 
 protected:
     void focusInEvent(QFocusEvent *evt);
@@ -27,11 +28,14 @@ private:
     bool valid;
     const QValidator *checkValidator;
 
-public slots:
+public Q_SLOTS:
     void setValid(bool valid);
     void setEnabled(bool enabled);
 
-private slots:
+Q_SIGNALS:
+    void validationDidChange(QValidatedLineEdit *validatedLineEdit);
+    
+private Q_SLOTS:
     void markValid();
     void checkValidity();
 };
