@@ -41,7 +41,7 @@ class BlockchainTest(BitcoinTestFramework):
     def run_test(self):
         self._test_gettxoutsetinfo()
         self._test_getblockheader()
-        self.nodes[0].verifychain(4, 0)
+        self.nodes[0].verifychain(checklevel=4, nblocks=0)
 
     def _test_gettxoutsetinfo(self):
         node = self.nodes[0]
@@ -59,11 +59,11 @@ class BlockchainTest(BitcoinTestFramework):
         node = self.nodes[0]
 
         assert_raises(
-            JSONRPCException, lambda: node.getblockheader('nonsense'))
+            JSONRPCException, lambda: node.getblockheader(blockhash='nonsense'))
 
         besthash = node.getbestblockhash()
-        secondbesthash = node.getblockhash(199)
-        header = node.getblockheader(besthash)
+        secondbesthash = node.getblockhash(height=199)
+        header = node.getblockheader(blockhash=besthash)
 
         assert_equal(header['hash'], besthash)
         assert_equal(header['height'], 200)
