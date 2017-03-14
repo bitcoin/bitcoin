@@ -909,9 +909,10 @@ void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv)
         }
     }
     else
-      {
-	assert(0);  // inv type is not correct 
-      }
+    {
+        Misbehaving(pfrom->GetId(), 100);
+        return;
+    }
     pfrom->blocksSent += 1;
 }
 
