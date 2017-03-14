@@ -327,5 +327,91 @@ class RESTTest (BitcoinTestFramework):
         json_obj = json.loads(json_string)
         assert_equal(json_obj['bestblockhash'], bb_hash)
 
+
+        ######################################
+        # POST /rest/tx/: Send raw transactions
+        ######################################
+        inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1}]
+        outputs = { self.nodes[0].getnewaddress() : 4.99995 }
+        raw_tx   = self.nodes[2].createrawtransaction(inputs, outputs)
+        raw_tx   = self.nodes[2].signrawtransaction(raw_tx)
+
+        #########
+        # sendrawtransaction with missing input
+        #########
+        response = http_post_call(url.hostname, url.port, '/rest/tx'+self.FORMAT_SEPARATOR+"hex", raw_tx['hex'], True)
+        assert_equal(response.status, 400)
+        error_str = response.read()
+        assert_equal("Missing inputs" in error_str, True);
+
+        #########
+        # sendrawtransaction with invalid raw tx
+        #########
+        response = http_post_call(url.hostname, url.port, '/rest/tx'+self.FORMAT_SEPARATOR+"hex", "invalidrawtx", True)
+        assert_equal(response.status, 400)
+        error_str = response.read()
+        assert_equal("TX decode failed invalidrawtx" in error_str, True);
+
+        #########
+        # sendrawtransaction as hex, requesting result as hex
+        #########
+        txId = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 5)
+        self.sync_all()
+        self.nodes[0].generate(5)
+        self.sync_all()
+        inputs  = [ {'txid' : txId, 'vout' : 1}]
+        outputs = { self.nodes[0].getnewaddress() : 4.99995 }
+        raw_tx   = self.nodes[2].createrawtransaction(inputs, outputs)
+        raw_tx   = self.nodes[2].signrawtransaction(raw_tx)
+        response = http_post_call(url.hostname, url.port, '/rest/tx'+self.FORMAT_SEPARATOR+"hex", raw_tx['hex'] , True)
+        assert_equal(response.status, 200)
+        response_str = response.read()
+        assert_equal(self.nodes[2].sendrawtransaction(raw_tx['hex']) in response_str, True);
+
+        self.nodes[0].generate(1)
+        self.sync_all()
+
+        #########
+        # sendrawtransaction with transaction that is already in the block chain
+        #########
+        response = http_post_call(url.hostname, url.port, '/rest/tx'+self.FORMAT_SEPARATOR+"hex", raw_tx['hex'] , True)
+        assert_equal(response.status, 400)
+        response_str = response.read()
+        assert_equal("Transaction already in block chain" in response_str, True);
+
+        #########
+        # sendrawtransaction as hex, requesting result as json
+        #########
+        txId = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 5)
+        inputs  = [ {'txid' : txId, 'vout' : 1}]
+        outputs = { self.nodes[0].getnewaddress() : 4.99995 }
+        raw_tx   = self.nodes[0].createrawtransaction(inputs, outputs)
+        raw_tx   = self.nodes[0].signrawtransaction(raw_tx)
+        response = http_post_call(url.hostname, url.port, '/rest/tx'+self.FORMAT_SEPARATOR+"json", raw_tx['hex'] , True)
+        response_str = response.read()
+        assert_equal(response.status, 200)
+        assert_equal( "{ \"txid\" : \"" +self.nodes[0].sendrawtransaction(raw_tx['hex']) + "\" }" in response_str, True);
+
+        self.nodes[0].generate(1)
+        self.sync_all()
+        self.nodes[2].generate(2)
+        self.sync_all()
+
+        #########
+        # sendrawtransaction as binary, requesting result as binary
+        #########
+        txId = self.nodes[2].sendtoaddress(self.nodes[2].getnewaddress(), 5.0)
+        inputs  = [ {'txid' : txId, 'vout' : 1}]
+        outputs = { self.nodes[2].getnewaddress() : 4.99995 }
+        raw_tx   = self.nodes[2].createrawtransaction(inputs, outputs)
+        raw_tx   = self.nodes[2].signrawtransaction(raw_tx)
+
+        binaryRequest = binascii.unhexlify(raw_tx['hex'])
+        response = http_post_call(url.hostname, url.port, '/rest/tx'+self.FORMAT_SEPARATOR+"bin", binaryRequest , True)
+
+        assert_equal(response.status, 200)
+        response_str = binascii.hexlify(response.read())
+        assert_equal(self.nodes[2].sendrawtransaction(raw_tx['hex']) in response_str, True);
+
 if __name__ == '__main__':
     RESTTest ().main ()

@@ -15,6 +15,15 @@ Given a transaction hash: returns a transaction in binary, hex-encoded binary, o
 
 For full TX query capability, one must enable the transaction index via "txindex=1" command line / configuration option.
 
+####Send raw transaction
+`POST /rest/tx.<bin|hex|json>`
+
+Parameter: transaction=\<signed transaction\>
+
+Submits transaction (serialized, hex-encoded or binary) to local node and network.
+
+Returns transaction id in binary, hex-encoded binary, or JSON formats, or an error if the transaction is invalid for any reason.
+
 ####Blocks
 `GET /rest/block/<BLOCK-HASH>.<bin|hex|json>`
 `GET /rest/block/notxdetails/<BLOCK-HASH>.<bin|hex|json>`

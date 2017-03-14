@@ -15,6 +15,8 @@
 #include "txmempool.h"
 #include "utilstrencodings.h"
 #include "version.h"
+#include "core_io.h"
+#include "consensus/validation.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -393,12 +395,89 @@ static bool rest_tx(HTTPRequest* req, const std::string& strURIPart)
     }
 
     default: {
-        return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: " + AvailableDataFormatsString() + ")");
+        return RESTERR(req, HTTP_NOT_FOUND, "Output format not found (available: " + AvailableDataFormatsString() + ")");
+    }
+    }
+    // not reached
+    return true;
+}
+
+
+static bool rest_tx_sendrawtx(HTTPRequest* req, const std::string& strURIPart)
+{
+    if (!CheckWarmup(req))
+        return false;
+    std::string hashStr;
+    const RetFormat rf = ParseDataFormat(hashStr, strURIPart);
+
+    std::string strTx = req->ReadBody();
+
+    // parse parameter
+    CTransaction tx;
+    if(rf == RF_BINARY)
+    {
+        try {
+            CDataStream bin(SER_NETWORK, PROTOCOL_VERSION);
+            bin << strTx;
+            bin >> tx;
+        }
+        catch (const std::exception&) {
+            return RESTERR(req, HTTP_BAD_REQUEST, strprintf("TX decode failed %s",strTx));
+        }
+    }
+    else
+    {
+        if (!DecodeHexTx(tx, strTx))
+            return RESTERR(req, HTTP_BAD_REQUEST, strprintf("TX decode failed %s",strTx));
+    }
+    uint256 hashTx = tx.GetHash();
+
+    CCoinsViewCache &view = *pcoinsTip;
+    const CCoins* existingCoins = view.AccessCoins(hashTx);
+    bool fHaveMempool = mempool.exists(hashTx);
+    bool fHaveChain = existingCoins && existingCoins->nHeight < 1000000000;
+    if (!fHaveMempool && !fHaveChain) {
+        // push to local node and sync with wallets
+        CValidationState state;
+        bool fMissingInputs;
+        if (!AcceptToMemoryPool(mempool, state, tx, false, &fMissingInputs, true)) {
+            if (state.IsInvalid()) {
+                return RESTERR(req, HTTP_BAD_REQUEST, strprintf("%i: %s", state.GetRejectCode(), state.GetRejectReason()));
+            } else {
+                if (fMissingInputs) {
+                    return RESTERR(req, HTTP_BAD_REQUEST, "Missing inputs");
+                }
+                return RESTERR(req, HTTP_BAD_REQUEST, state.GetRejectReason());
+            }
+        }
+    } else if (fHaveChain) {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Transaction already in block chain");
+    }
+    RelayTransaction(tx);
+
+    switch (rf) {
+    case RF_BINARY: {
+        req->WriteHeader("Content-Type", "application/octet-stream");
+        req->WriteReply(HTTP_OK, strprintf("%c", hashTx.begin()));
+        return true;
+    }
+    case RF_HEX: {
+        req->WriteHeader("Content-Type", "text/plain");
+        req->WriteReply(HTTP_OK, hashTx.GetHex() + "\n");
+        return true;
+    }
+    case RF_JSON: {
+        req->WriteHeader("Content-Type", "application/json");
+        req->WriteReply(HTTP_OK, strprintf("{ \"txid\" : \"%s\" }", hashTx.GetHex()));
+        return true;
+    }
+    default: {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Output format not found (available: .bin, .hex, .json)");
     }
     }
 
     // not reached
-    return true; // continue to process further HTTP reqs on this cxn
+    return true;
 }
 
 static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
@@ -605,6 +684,7 @@ static const struct {
     bool (*handler)(HTTPRequest* req, const std::string& strReq);
 } uri_prefixes[] = {
       {"/rest/tx/", rest_tx},
+      {"/rest/tx", rest_tx_sendrawtx},
       {"/rest/block/notxdetails/", rest_block_notxdetails},
       {"/rest/block/", rest_block_extended},
       {"/rest/chaininfo", rest_chaininfo},
