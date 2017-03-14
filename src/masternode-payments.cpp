@@ -328,7 +328,7 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, 
         }
         netfulfilledman.AddFulfilledRequest(pfrom->addr, NetMsgType::MASTERNODEPAYMENTSYNC);
 
-        Sync(pfrom, nCountNeeded);
+        Sync(pfrom);
         LogPrintf("MASTERNODEPAYMENTSYNC -- Sent Masternode payment votes to peer %d\n", pfrom->id);
 
     } else if (strCommand == NetMsgType::MASTERNODEPAYMENTVOTE) { // Masternode Payments Vote for the Winner
@@ -812,25 +812,16 @@ std::string CMasternodePaymentVote::ToString() const
     return info.str();
 }
 
-// Send all votes up to nCountNeeded blocks (but not more than GetStorageLimit)
-void CMasternodePayments::Sync(CNode* pnode, int nCountNeeded)
+// Send only votes for future blocks, node should request every other missing payment block individually
+void CMasternodePayments::Sync(CNode* pnode)
 {
     LOCK(cs_mapMasternodeBlocks);
 
     if(!pCurrentBlockIndex) return;
 
-    if(pnode->nVersion < 70202) {
-        // Old nodes can only sync via heavy method
-        int nLimit = GetStorageLimit();
-        if(nCountNeeded > nLimit) nCountNeeded = nLimit;
-    } else {
-        // New nodes request missing payment blocks themselves, push only votes for future blocks to them
-        nCountNeeded = 0;
-    }
-
     int nInvCount = 0;
 
-    for(int h = pCurrentBlockIndex->nHeight - nCountNeeded; h < pCurrentBlockIndex->nHeight + 20; h++) {
+    for(int h = pCurrentBlockIndex->nHeight; h < pCurrentBlockIndex->nHeight + 20; h++) {
         if(mapMasternodeBlocks.count(h)) {
             BOOST_FOREACH(CMasternodePayee& payee, mapMasternodeBlocks[h].vecPayees) {
                 std::vector<uint256> vecVoteHashes = payee.GetVoteHashes();
@@ -850,8 +841,6 @@ void CMasternodePayments::Sync(CNode* pnode, int nCountNeeded)
 // Request low data/unknown payment blocks in batches directly from some node instead of/after preliminary Sync.
 void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode)
 {
-    // Old nodes can't process this
-    if(pnode->nVersion < 70202) return;
     if(!pCurrentBlockIndex) return;
 
     LOCK2(cs_main, cs_mapMasternodeBlocks);

@@ -5173,10 +5173,6 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
                         ss << mnodeman.mapSeenMasternodeBroadcast[inv.hash].second;
-                        // backward compatibility patch
-                        if(pfrom->nVersion < 70204) {
-                            ss << (int64_t)0;
-                        }
                         pfrom->PushMessage(NetMsgType::MNANNOUNCE, ss);
                         pushed = true;
                     }

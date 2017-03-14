@@ -366,20 +366,9 @@ public:
     uint256 GetHash() const
     {
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        //
-        // REMOVE AFTER MIGRATION TO 12.1
-        //
-        if(nProtocolVersion < 70201) {
-            ss << sigTime;
-            ss << pubKeyCollateralAddress;
-        } else {
-        //
-        // END REMOVE
-        //
-            ss << vin;
-            ss << pubKeyCollateralAddress;
-            ss << sigTime;
-        }
+        ss << vin;
+        ss << pubKeyCollateralAddress;
+        ss << sigTime;
         return ss.GetHash();
     }
 

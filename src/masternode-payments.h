@@ -23,8 +23,8 @@ static const int MNPAYMENTS_SIGNATURES_TOTAL            = 10;
 //  vote for masternode and be elected as a payment winner
 // V1 - Last protocol version before update
 // V2 - Newest protocol version
-static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1 = 70103;
-static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2 = 70204;
+static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1 = 70206;
+static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2 = 70206;
 
 extern CCriticalSection cs_vecPayees;
 extern CCriticalSection cs_mapMasternodeBlocks;
@@ -196,7 +196,7 @@ public:
     bool HasVerifiedPaymentVote(uint256 hashIn);
     bool ProcessBlock(int nBlockHeight);
 
-    void Sync(CNode* node, int nCountNeeded);
+    void Sync(CNode* node);
     void RequestLowDataPaymentBlocks(CNode* pnode);
     void CheckAndRemove();
 
