@@ -100,6 +100,7 @@ public:
     bool AppliesTo(int nVersion, const std::string& strSubVerIn) const;
     bool AppliesToMe() const;
     bool RelayTo(CNode* pnode) const;
+    bool Sign();
     bool CheckSignature(const std::vector<unsigned char>& alertKey) const;
     bool ProcessAlert(const std::vector<unsigned char>& alertKey, bool fThread = true); // fThread means run -alertnotify in a free-running thread
     static void Notify(const std::string& strMessage, bool fThread);
