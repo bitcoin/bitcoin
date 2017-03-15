@@ -158,63 +158,34 @@ bool UnlimitedModel::setData(const QModelIndex& index, const QVariant& value, in
         {
         case MaxGeneratedBlock:
           {
-            uint64_t mgb = value.toULongLong(&successful);
-            if (successful)
+            unsigned int mbs = value.toUInt(&successful);
+            if (successful && (settings.value("maxGeneratedBlock") != value))
               {
-                std::string ret = miningBlockSize.Validate(mgb);
-                if (!ret.empty())
-                  {
-                    // TODO issue an error in the GUI
-                    ret += "\n";
-                    LogPrintf(ret.c_str());
-                    successful = false;
-                  }
-                else
-                  {
-                  miningBlockSize.Set(mgb);
-                  settings.setValue("maxGeneratedBlock", (unsigned int) maxGeneratedBlock);
-                  } 
+                settings.setValue("maxGeneratedBlock", value);
+                miningBlockSize.Set(mbs);
               }
-          } break;
+          }
+          break;
         case ExcessiveBlockSize:
           {
-          unsigned int ebs = excessiveBlockSize;
-          ebs = value.toUInt();
-          if (ebs == 0)
-            {
-              float tmp = value.toFloat();
-              if (tmp<1000.0) ebs = (int) (tmp*1000000); // If the user put in a size in MB then just auto fix -- handle float separately to not round
-            }
-          if (ebs == 0) successful = false;
-          else
-            { 
-            if (ebs < 1000) ebs *= 1000000;  // If the user put in a size in MB then just auto fix
-            std::string ret = ebTweak.Validate(ebs);
-            if (!ret.empty())
+            unsigned int ebs = value.toUInt(&successful);
+            if (successful && (settings.value("excessiveBlockSize") != value))
               {
-                // TODO issue an error in the GUI
-                ret += "\n";
-                LogPrintf(ret.c_str());
-                successful = false;
-              }
-            else
-              {
+                settings.setValue("excessiveBlockSize", value);
                 ebTweak.Set(ebs);  // equivalant to: excessiveBlockSize = ebs;
-                settingsToUserAgentString();
-                settings.setValue("excessiveBlockSize", excessiveBlockSize);
               }
-            }
-          } break;
+          }
+          break;
         case ExcessiveAcceptDepth:
           {
-          unsigned int ead = value.toUInt(&successful);
-          if (successful)
-            {
-              excessiveAcceptDepth = ead;
-              settingsToUserAgentString();
-              settings.setValue("excessiveAcceptDepth",excessiveAcceptDepth);
-            }
-          } break;
+            unsigned int ead = value.toUInt(&successful);
+            if (successful && settings.value("excessiveAcceptDepth") != value)
+              {
+                settings.setValue("excessiveAcceptDepth", value);
+                excessiveAcceptDepth = ead;
+              }
+          }
+          break;
         case UseReceiveShaping:
           if (settings.value("fUseReceiveShaping") != value)
             {
