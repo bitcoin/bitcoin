@@ -103,6 +103,11 @@ UnlimitedDialog::UnlimitedDialog(QWidget* parent,UnlimitedModel* mdl):
         ui.recvAveEdit->setText("");
     }
     shapingEnableChanged(false);
+
+    // Block Size text field validators
+    ui.miningMaxBlock->setValidator(new QIntValidator(0, INT_MAX, this));
+    ui.excessiveBlockSize->setValidator(new QIntValidator(0, INT_MAX, this));
+    ui.excessiveAcceptDepth->setValidator(new QIntValidator(0, INT_MAX, this));
 }  
 
 
