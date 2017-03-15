@@ -136,9 +136,12 @@ public:
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         // BITCOINUNLIMITED START
-        vSeeds.push_back(CDNSSeedData("btcc.com", "seed.btcc.com"));    // BTCC
+        vSeeds.push_back(CDNSSeedData("bitcoinunlimited.info", "seed.bitcoinunlimited.info", true)); // BU seeder
         vSeeds.push_back(CDNSSeedData("bitnodes.io", "seed.bitnodes.io"));      // Bitnodes (Addy Yeow)
-        vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be")); // Pieter Wuille
+        vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be", true)); // Pieter Wuille, only supports x1, x5, x9, and xd
+        vSeeds.push_back(CDNSSeedData("bluematt.me", "dnsseed.bluematt.me", true));
+        vSeeds.push_back(CDNSSeedData("bitcoinstats.com", "seed.bitcoinstats.com", true)); // Christian Decker, supports x1 - xf
+        vSeeds.push_back(CDNSSeedData("xf2.org", "bitseed.xf2.org")); // Jeff Garzik
         // BITCOINUNLIMITED END
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
