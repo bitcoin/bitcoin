@@ -190,6 +190,7 @@
     <ClCompile Include="src\crypto\sha256.cpp" />
     <ClCompile Include="src\crypto\sha512.cpp" />
     <ClCompile Include="src\dbwrapper.cpp" />
+    <ClCompile Include="src\ExtKey.cpp" />
     <ClCompile Include="src\hash.cpp" />
     <ClCompile Include="src\httprpc.cpp" />
     <ClCompile Include="src\httpserver.cpp" />
@@ -309,6 +310,7 @@
     <ClInclude Include="src\crypto\sha512.h" />
     <ClInclude Include="src\cuckoocache.h" />
     <ClInclude Include="src\dbwrapper.h" />
+    <ClInclude Include="src\ExtKey.h" />
     <ClInclude Include="src\hash.h" />
     <ClInclude Include="src\httprpc.h" />
     <ClInclude Include="src\httpserver.h" />
