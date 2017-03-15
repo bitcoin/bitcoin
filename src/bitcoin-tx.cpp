@@ -249,7 +249,7 @@ static void MutateTxAddOutAddr(CMutableTransaction& tx, const std::string& strIn
 
     // extract and validate ADDRESS
     std::string strAddr = vStrInputParts[1];
-    CBitcoinAddress addr(strAddr);
+    CBitcoinAddress addr = CBitcoinAddress(base58string(strAddr));
     if (!addr.IsValid())
         throw std::runtime_error("invalid TX output address");
     // build standard output script via GetScriptForDestination()
@@ -539,12 +539,9 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
     for (unsigned int kidx = 0; kidx < keysObj.size(); kidx++) {
         if (!keysObj[kidx].isStr())
             throw std::runtime_error("privatekey not a std::string");
-        CBitcoinSecret vchSecret;
-        bool fGood = vchSecret.SetBase58string(base58string(keysObj[kidx].getValStr()));
-        if (!fGood)
+        CKey key = CKey::FromBase58string(base58string(keysObj[kidx].getValStr()));
+        if (!key.IsValid())
             throw std::runtime_error("privatekey not valid");
-
-        CKey key = vchSecret.GetKey();
         tempKeystore.AddKey(key);
     }
 

@@ -57,6 +57,8 @@ public:
         keydata.resize(32);
     }
 
+    static CKey FromBase58string(const base58string& str);
+
     //! Destructor (again necessary because of memlocking).
     ~CKey()
     {
@@ -107,7 +109,7 @@ public:
      */
     CPrivKey GetPrivKey() const;
 
-    base58string ToBase58string22() const;
+    base58string GetBase58stringWithNetworkSecretKeyPrefix() const;
 
     /**
      * Compute the public key from a private key.

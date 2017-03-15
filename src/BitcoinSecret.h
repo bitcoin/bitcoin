@@ -8,7 +8,7 @@
 
 /**
 * A base58-encoded secret key
-* ¦ rpcdump.cpp ‚Å‚µ‚©Žg‚í‚ê‚Ä‚È‚¢‚Á‚Û‚¢BCKey ‚ð base58 ƒGƒ“ƒR[ƒh‚·‚é—p“r
+* â€» rpcdump.cpp ã§ã—ã‹ä½¿ã‚ã‚Œã¦ãªã„ã£ã½ã„ã€‚CKey ã‚’ base58 ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‰ã™ã‚‹ç”¨é€”
 */
 class CBitcoinSecret
 {
@@ -21,6 +21,6 @@ public:
     CBitcoinSecret(const CKey& vchSecret) { this->SetKey(vchSecret); }
     CBitcoinSecret() {}
 
-private:
+public: // ### ä»®.
     CBase58Data m_data;
 };

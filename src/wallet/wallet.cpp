@@ -12,6 +12,7 @@
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "key.h"
+#include "ExtKey.h"
 #include "keystore.h"
 #include "validation.h"
 #include "net.h"

@@ -151,6 +151,22 @@ CPrivKey CKey::GetPrivKey() const {
     return privkey;
 }
 
+#include "BitcoinSecret.h"
+base58string CKey::GetBase58stringWithNetworkSecretKeyPrefix() const
+{
+    return CBitcoinSecret(*this).m_data.ToBase58string();
+}
+
+CKey CKey::FromBase58string(const base58string& strPrivkey)
+{
+    CBitcoinSecret vchSecret;
+    bool fGood = vchSecret.SetBase58string(strPrivkey);
+    if (!fGood)return CKey(); // invalid key
+    CKey key = vchSecret.GetKey();
+    return key;
+}
+
+
 CPubKey CKey::GetPubKey() const {
     assert(fValid);
     secp256k1_pubkey pubkey;

@@ -121,13 +121,8 @@ UniValue importprivkey(const JSONRPCRequest& request)
     if (fRescan && fPruneMode)
         throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled in pruned mode");
 
-    CBitcoinSecret vchSecret;
-    bool fGood = vchSecret.SetBase58string(strSecret);
-
-    if (!fGood) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
-
-    CKey key = vchSecret.GetKey();
-    if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
+    CKey key = CKey::FromBase58string(strSecret);
+    if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
 
     CPubKey pubkey = key.GetPubKey();
     assert(key.VerifyPubKey(pubkey));
@@ -460,10 +455,9 @@ UniValue importwallet(const JSONRPCRequest& request)
         boost::split(vstr, line, boost::is_any_of(" "));
         if (vstr.size() < 2)
             continue;
-        CBitcoinSecret vchSecret;
-        if (!vchSecret.SetBase58string(base58string(vstr[0])))
+        CKey key = CKey::FromBase58string(base58string(vstr[0]));
+        if (!key.IsValid())
             continue;
-        CKey key = vchSecret.GetKey();
         CPubKey pubkey = key.GetPubKey();
         assert(key.VerifyPubKey(pubkey));
         CKeyID keyid = pubkey.GetID();
@@ -550,7 +544,7 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
     CKey vchSecret;
     if (!pwalletMain->GetKey(keyID, vchSecret))
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + std::string(strAddress.c_str()) + " is not known");
-    return vchSecret.ToBase58string22().c_str();
+    return vchSecret.GetBase58stringWithNetworkSecretKeyPrefix().c_str();
 }
 
 
@@ -621,7 +615,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         base58string strAddr = CBitcoinAddress(keyid.GetBase58addressWithNetworkPubkeyPrefix()).ToBase58string66();
         CKey key;
         if (pwalletMain->GetKey(keyid, key)) {
-            file << strprintf("%s %s ", key.ToBase58string22().c_str(), strTime);
+            file << strprintf("%s %s ", key.GetBase58stringWithNetworkSecretKeyPrefix().c_str(), strTime);
             if (pwalletMain->mapAddressBook.count(keyid)) {
                 file << strprintf("label=%s", EncodeDumpString(pwalletMain->mapAddressBook[keyid].name));
             } else if (keyid == masterKeyID) {
@@ -755,17 +749,9 @@ UniValue processImport(const UniValue& data) {
                 for (size_t i = 0; i < keys.size(); i++) {
                     base58string privkey(keys[i].get_str());
 
-                    CBitcoinSecret vchSecret;
-                    bool fGood = vchSecret.SetBase58string(privkey);
-
-                    if (!fGood) {
-                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
-                    }
-
-                    CKey key = vchSecret.GetKey();
-
+                    CKey key = CKey::FromBase58string(privkey);
                     if (!key.IsValid()) {
-                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
                     }
 
                     CPubKey pubkey = key.GetPubKey();
@@ -866,16 +852,9 @@ UniValue processImport(const UniValue& data) {
                 base58string strPrivkey(keys[0].get_str());
 
                 // Checks.
-                CBitcoinSecret vchSecret;
-                bool fGood = vchSecret.SetBase58string(strPrivkey);
-
-                if (!fGood) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
-                }
-
-                CKey key = vchSecret.GetKey();
+                CKey key = CKey::FromBase58string(strPrivkey);
                 if (!key.IsValid()) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
                 }
 
                 CPubKey pubKey = key.GetPubKey();

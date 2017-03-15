@@ -5,6 +5,7 @@
 #pragma once
 
 #include "base58.h"
+#include "ExtKey.h"
 
 template<typename K, int Size, CChainParams::Base58Type Type> class CBitcoinExtKeyBase : public CBase58Data
 {

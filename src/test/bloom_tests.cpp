@@ -87,10 +87,10 @@ BOOST_AUTO_TEST_CASE(bloom_create_insert_serialize_with_tweak)
 BOOST_AUTO_TEST_CASE(bloom_create_insert_key)
 {
     base58string strSecret("5Kg1gnAjaLfKiwhhPpGS3QfRg2m6awQvaj98JCZBZQ5SuS2F15C");
-    CBitcoinSecret vchSecret;
-    BOOST_CHECK(vchSecret.SetBase58string(strSecret));
 
-    CKey key = vchSecret.GetKey();
+    CKey key = CKey::FromBase58string(strSecret);
+    BOOST_CHECK(key.IsValid());
+
     CPubKey pubkey = key.GetPubKey();
     std::vector<unsigned char> vchPubKey(pubkey.begin(), pubkey.end());
 

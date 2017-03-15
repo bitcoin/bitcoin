@@ -28,13 +28,13 @@ int main()
 
     // ※ CBitcoinSecret は g_pCurrentParams に依存するため、先に g_pCurrentParams の指定が必要.
     SelectParams(NETWORK_REGTEST);
-    printf("PRIVKEY in REGTEST: %s (%d)\n", key.ToBase58string22().c_str(), strlen(key.ToBase58string22().c_str()));
+    printf("PRIVKEY in REGTEST: %s (%d)\n", key.GetBase58stringWithNetworkSecretKeyPrefix().c_str(), strlen(key.GetBase58stringWithNetworkSecretKeyPrefix().c_str()));
 
     SelectParams(NETWORK_TESTNET);
-    printf("PRIVKEY in TESTNET: %s (%d)\n", key.ToBase58string22().c_str(), strlen(key.ToBase58string22().c_str()));
+    printf("PRIVKEY in TESTNET: %s (%d)\n", key.GetBase58stringWithNetworkSecretKeyPrefix().c_str(), strlen(key.GetBase58stringWithNetworkSecretKeyPrefix().c_str()));
 
     SelectParams(NETWORK_MAIN);
-    printf("PRIVKEY in MAIN: %s (%d)\n", key.ToBase58string22().c_str(), strlen(key.ToBase58string22().c_str())); // ※MAINだと値が変わる.
+    printf("PRIVKEY in MAIN: %s (%d)\n", key.GetBase58stringWithNetworkSecretKeyPrefix().c_str(), strlen(key.GetBase58stringWithNetworkSecretKeyPrefix().c_str())); // ※MAINだと値が変わる.
 
 
 

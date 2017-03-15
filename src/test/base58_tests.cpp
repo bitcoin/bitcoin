@@ -149,9 +149,8 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
             bool isCompressed = find_value(metadata, "isCompressed").get_bool();
             // Must be valid private key
             // Note: CBitcoinSecret::SetString tests isValid, whereas CBitcoinAddress does not!
-            BOOST_CHECK_MESSAGE(secret.SetBase58string(exp_base58string), "!SetString:"+ strTest);
-            BOOST_CHECK_MESSAGE(secret.IsValid(), "!IsValid:" + strTest);
-            CKey privkey = secret.GetKey();
+            CKey privkey = CKey::FromBase58string(exp_base58string);
+            BOOST_CHECK_MESSAGE(privkey.IsValid(), "!IsValid:" + strTest);
             BOOST_CHECK_MESSAGE(privkey.IsCompressed() == isCompressed, "compressed mismatch:" + strTest);
             BOOST_CHECK_MESSAGE(privkey.size() == exp_payload.size() && std::equal(privkey.begin(), privkey.end(), exp_payload.begin()), "key mismatch:" + strTest);
 
@@ -170,8 +169,8 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
             BOOST_CHECK_MESSAGE(boost::apply_visitor(TestAddrTypeVisitor(exp_addrType), dest), "addrType mismatch" + strTest);
 
             // Public key must be invalid private key
-            secret.SetBase58string(exp_base58string);
-            BOOST_CHECK_MESSAGE(!secret.IsValid(), "IsValid pubkey as privkey:" + strTest);
+            CKey key = CKey::FromBase58string(exp_base58string);
+            BOOST_CHECK_MESSAGE(!key.IsValid(), "IsValid pubkey as privkey:" + strTest);
         }
     }
 }
@@ -204,9 +203,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
             CKey key;
             key.Set(exp_payload.begin(), exp_payload.end(), isCompressed);
             assert(key.IsValid());
-            CBitcoinSecret secret;
-            secret.SetKey(key);
-            BOOST_CHECK_MESSAGE(secret.ToString() == exp_base58string, "result mismatch: " + strTest);
+            BOOST_CHECK_MESSAGE(key.GetBase58stringWithNetworkSecretKeyPrefix().c_str() == exp_base58string, "result mismatch: " + strTest);
         }
         else
         {
@@ -231,7 +228,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
             }
             CBitcoinAddress addrOut;
             BOOST_CHECK_MESSAGE(addrOut.Set(dest), "encode dest: " + strTest);
-            BOOST_CHECK_MESSAGE(addrOut.ToString() == exp_base58string, "mismatch: " + strTest);
+            BOOST_CHECK_MESSAGE(addrOut.ToBase58string66().c_str() == exp_base58string, "mismatch: " + strTest);
         }
     }
 
@@ -247,7 +244,6 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
 BOOST_AUTO_TEST_CASE(base58_keys_invalid)
 {
     UniValue tests = read_json(std::string(json_tests::base58_keys_invalid, json_tests::base58_keys_invalid + sizeof(json_tests::base58_keys_invalid))); // Negative testcases
-    CBitcoinSecret secret;
     CBitcoinAddress addr;
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
@@ -263,8 +259,8 @@ BOOST_AUTO_TEST_CASE(base58_keys_invalid)
         // must be invalid as public and as private key
         addr.SetBase58string(exp_base58string);
         BOOST_CHECK_MESSAGE(!addr.IsValid(), "IsValid pubkey:" + strTest);
-        secret.SetBase58string(exp_base58string);
-        BOOST_CHECK_MESSAGE(!secret.IsValid(), "IsValid privkey:" + strTest);
+        CKey key = CKey::FromBase58string(exp_base58string);
+        BOOST_CHECK_MESSAGE(!key.IsValid(), "IsValid privkey:" + strTest);
     }
 }
 
