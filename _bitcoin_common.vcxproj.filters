@@ -22,6 +22,9 @@
     <Filter Include="Source Files\key\secret">
       <UniqueIdentifier>{dd096edd-b052-4997-8a37-c8c0ed821ef5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\key\script">
+      <UniqueIdentifier>{4956e91b-06e2-4847-a60b-0bc6fc4e62a7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\chainparams.cpp">
@@ -192,12 +195,6 @@
     <ClCompile Include="src\script\ismine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\script\script.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\script\script_error.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\script\sigcache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -322,9 +319,6 @@
     <ClCompile Include="src\TxDestination.cpp">
       <Filter>Source Files\key</Filter>
     </ClCompile>
-    <ClCompile Include="src\ScriptID.cpp">
-      <Filter>Source Files\key</Filter>
-    </ClCompile>
     <ClCompile Include="src\pubkey.cpp">
       <Filter>Source Files\key</Filter>
     </ClCompile>
@@ -336,6 +330,21 @@
     </ClCompile>
     <ClCompile Include="src\ExtKey.cpp">
       <Filter>Source Files\key\secret</Filter>
+    </ClCompile>
+    <ClCompile Include="src\script\script.cpp">
+      <Filter>Source Files\key\script</Filter>
+    </ClCompile>
+    <ClCompile Include="src\script\script_error.cpp">
+      <Filter>Source Files\key\script</Filter>
+    </ClCompile>
+    <ClCompile Include="src\script\script_const.cpp">
+      <Filter>Source Files\key\script</Filter>
+    </ClCompile>
+    <ClCompile Include="src\script\ScriptID.cpp">
+      <Filter>Source Files\key\script</Filter>
+    </ClCompile>
+    <ClCompile Include="src\script\ScriptNum.cpp">
+      <Filter>Source Files\key\script</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -546,12 +555,6 @@
     <ClInclude Include="src\scheduler.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\script\script.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\script\script_error.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\support\allocators\secure.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -700,9 +703,6 @@
     <ClInclude Include="src\TxDestination.h">
       <Filter>Source Files\key</Filter>
     </ClInclude>
-    <ClInclude Include="src\ScriptID.h">
-      <Filter>Source Files\key</Filter>
-    </ClInclude>
     <ClInclude Include="src\pubkey.h">
       <Filter>Source Files\key</Filter>
     </ClInclude>
@@ -714,6 +714,21 @@
     </ClInclude>
     <ClInclude Include="src\ExtKey.h">
       <Filter>Source Files\key\secret</Filter>
+    </ClInclude>
+    <ClInclude Include="src\script\script.h">
+      <Filter>Source Files\key\script</Filter>
+    </ClInclude>
+    <ClInclude Include="src\script\script_error.h">
+      <Filter>Source Files\key\script</Filter>
+    </ClInclude>
+    <ClInclude Include="src\script\ScriptNum.h">
+      <Filter>Source Files\key\script</Filter>
+    </ClInclude>
+    <ClInclude Include="src\script\script_const.h">
+      <Filter>Source Files\key\script</Filter>
+    </ClInclude>
+    <ClInclude Include="src\script\ScriptID.h">
+      <Filter>Source Files\key\script</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
