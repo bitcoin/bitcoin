@@ -3105,8 +3105,8 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
         int nUpgraded = 0;
         const CBlockIndex* pindex = chainActive.Tip();
         for (int bit = 0; bit < VERSIONBITS_NUM_BITS; bit++) {
-			// SYSCOIN, skip auxpow bit 8
-			if(bit == 8)
+			// SYSCOIN, skip auxpow bit 8 or dummy bit 28
+			if(bit == 8 || bit == 28)
 				continue;
             WarningBitsConditionChecker checker(bit);
             ThresholdState state = checker.GetStateFor(pindex, chainParams.GetConsensus(), warningcache[bit]);
