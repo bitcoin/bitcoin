@@ -359,23 +359,34 @@ class WalletTest (BitcoinTestFramework):
         # So we should be able to generate exactly chainlimit txs for each original output
         sending_addr = self.nodes[1].getnewaddress()
         txid_list = []
-        for i in range(chainlimit*2):
+        for i in range((chainlimit - 1 ) * 2):
             txid_list.append(self.nodes[0].sendtoaddress(sending_addr, Decimal('0.0001')))
-        assert_equal(self.nodes[0].getmempoolinfo()['size'], chainlimit*2)
-        assert_equal(len(txid_list), chainlimit*2)
+        assert_equal(self.nodes[0].getmempoolinfo()['size'], (chainlimit - 1) * 2)
+        assert_equal(len(txid_list), (chainlimit - 1 ) * 2)
 
-        # Without walletrejectlongchains, we will still generate a txid
-        # The tx will be stored in the wallet but not accepted to the mempool
+        # With walletrejectlongchains we will not create the tx and store it in our wallet.
+        assert_raises_jsonrpc(-4, "Coin Selection Failed", self.nodes[0].sendtoaddress, sending_addr, Decimal('0.01'))
+
+        # Without walletrejectlongchains, we can submit up to (chainlimit)
+        # transactions to the mempool. The (chainlimit+1)th transaction will be
+        # added to the wallet but not accepted to the mempool
+        stop_node(self.nodes[0],0)
+        self.nodes[0] = start_node(0, self.options.tmpdir, ["-limitancestorcount="+str(chainlimit), "-walletrejectlongchains=0"])
+
+        for i in range(2):
+            txid_list.append(self.nodes[0].sendtoaddress(sending_addr, Decimal('0.0001')))
+
         extra_txid = self.nodes[0].sendtoaddress(sending_addr, Decimal('0.0001'))
         assert(extra_txid not in self.nodes[0].getrawmempool())
         assert(extra_txid in [tx["txid"] for tx in self.nodes[0].listtransactions()])
+
         self.nodes[0].abandontransaction(extra_txid)
         total_txs = len(self.nodes[0].listtransactions("*",99999))
 
         # Try with walletrejectlongchains
         # Double chain limit but require combining inputs, so we pass SelectCoinsMinConf
         stop_node(self.nodes[0],0)
-        self.nodes[0] = start_node(0, self.options.tmpdir, ["-walletrejectlongchains", "-limitancestorcount="+str(2*chainlimit)])
+        self.nodes[0] = start_node(0, self.options.tmpdir, ["-limitancestorcount="+str(2*chainlimit)])
 
         # wait for loadmempool
         timeout = 10
