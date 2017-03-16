@@ -725,6 +725,7 @@ public:
         nLastResend = 0;
         nTimeFirstKey = 0;
         fBroadcastTransactions = false;
+        nRelockTime = 0;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
