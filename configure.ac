@@ -603,6 +603,14 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/socket.h>]],
  [ AC_MSG_RESULT(no)]
 )
 
+dnl Check for MSG_DONTWAIT
+AC_MSG_CHECKING(for MSG_DONTWAIT)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/socket.h>]],
+ [[ int f = MSG_DONTWAIT; ]])],
+ [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_DONTWAIT, 1,[Define this symbol if you have MSG_DONTWAIT]) ],
+ [ AC_MSG_RESULT(no)]
+)
+
 dnl Check for mallopt(M_ARENA_MAX) (to set glibc arenas)
 AC_MSG_CHECKING(for mallopt M_ARENA_MAX)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <malloc.h>]],
