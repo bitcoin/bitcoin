@@ -101,12 +101,56 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 
         if (fAllFromMe && fAllToMe)
         {
-            // Payment to self
-            CAmount nChange = wtx.GetChange();
+            TransactionRecord sub;
 
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, "",
-                            -(nDebit - nChange), nCredit - nChange));
-            parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
+            // Add one entry for all the outputs
+            for (unsigned int nOut = 0; nOut < wtx.tx->vout.size(); nOut++)
+            {
+                const CTxOut& txout = wtx.tx->vout[nOut];
+                sub = TransactionRecord(hash, nTime);
+                sub.idx = nOut;
+                sub.involvesWatchAddress = involvesWatchAddress;
+                CTxDestination address;
+                if (ExtractDestination(txout.scriptPubKey, address))
+                {
+                    sub.type = TransactionRecord::SendToAddress;
+                    sub.address = CBitcoinAddress(address).ToString();
+                }
+                else
+                {
+                    sub.type = TransactionRecord::SendToOther;
+                }
+                sub.credit = txout.nValue;
+                parts.append(sub);
+            }
+
+            // Add one entry for all the debit
+            sub = TransactionRecord(hash, nTime);
+            sub.involvesWatchAddress = involvesWatchAddress;
+            sub.debit = -nDebit;
+            sub.type = TransactionRecord::SendToOther;
+            if (wtx.tx->vin.size() == 1)
+            {
+                const auto& txin = wtx.tx->vin[0];
+                {
+                    LOCK(wallet->cs_wallet);
+                    auto mi = wallet->mapWallet.find(txin.prevout.hash);
+                    if (mi != wallet->mapWallet.end())
+                    {
+                        const auto& prev = (*mi).second;
+                        if (txin.prevout.n < prev.tx->vout.size())
+                        {
+                            CTxDestination address;
+                            if (ExtractDestination(prev.tx->vout[txin.prevout.n].scriptPubKey, address))
+                            {
+                                sub.type = TransactionRecord::SendToAddress;
+                                sub.address = CBitcoinAddress(address).ToString();
+                            }
+                        }
+                    }
+                }
+            }
+            parts.append(sub);
         }
         else if (fAllFromMe)
         {
