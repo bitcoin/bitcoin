@@ -463,7 +463,6 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
     // conditions in AcceptBlock().
     bool forceProcessing = pfrom->fWhitelisted && !IsInitialBlockDownload();
     const CChainParams& chainparams = Params();
-    pfrom->firstBlock += 1;
     if (PV.Enabled()) {
         ProcessNewBlock(state, chainparams, pfrom, &block, forceProcessing, NULL, true);
     }
@@ -512,6 +511,7 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
                 if (pnode->mapThinBlocksInFlight.size() > 0)
                     nTotalThinBlocksInFlight++;
             }
+            pfrom->firstBlock += 1; // update statistics, requires cs_vNodes
         }
 
         // When we no longer have any thinblocks in flight then clear the set
