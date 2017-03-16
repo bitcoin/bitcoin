@@ -313,10 +313,9 @@ UniValue createmultisig(const JSONRPCRequest& request)
     // Construct using pay-to-script-hash:
     CScript inner = _createmultisig_redeemScript(request.params);
     CScriptID innerID(inner);
-    CBitcoinAddress address(innerID);
 
     UniValue result(UniValue::VOBJ);
-    result.push_back(Pair("address", address.ToBase58string66().c_str()));
+    result.push_back(Pair("address", innerID.GetBase58addressWithNetworkScriptPrefix().c_str()));
     result.push_back(Pair("redeemScript", HexStr(inner.begin(), inner.end())));
 
     return result;

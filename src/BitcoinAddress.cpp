@@ -14,19 +14,12 @@ namespace
     public:
         CBitcoinAddressVisitor(CBitcoinAddress* addrIn) : addr(addrIn) {}
 
-        bool operator()(const CKeyID& id) const { assert(0); return false; } // CKeyID 側に移行
-        bool operator()(const CScriptID& id) const { return addr->Set(id); }
+        bool operator()(const CKeyID& id) const { assert(0); return false; } // CKeyID 側に移行.
+        bool operator()(const CScriptID& id) const { assert(0); return false; } // CScriptID 側に移行.
         bool operator()(const CNoDestination& no) const { return false; }
     };
 
 } // anon namespace
-
-
-bool CBitcoinAddress::Set(const CScriptID& id)
-{
-    m_data.SetData(Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS), &id, 20); // ###### script の prefix
-    return true;
-}
 
 bool CBitcoinAddress::Set(const CTxDestination& dest)
 {

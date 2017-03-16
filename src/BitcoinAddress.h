@@ -16,13 +16,11 @@
 class CBitcoinAddress {
 public:
     // bool Set(const CKeyID &id);
-    bool Set(const CScriptID &id);
     bool Set(const CTxDestination &dest);
     bool IsValid() const;
     bool IsValid(const CChainParams &params) const;
 
     CBitcoinAddress() {}
-    CBitcoinAddress(const CScriptID &dest) { Set(dest); }
     CBitcoinAddress(const CTxDestination &dest) { Set(dest); }
     CBitcoinAddress(const base58string& strAddress) { m_data.SetBase58string(strAddress); }
 
@@ -37,7 +35,9 @@ public:
     base58string ToBase58string66() const;
 
 private:
+    CBitcoinAddress(const CScriptID &dest) { Set(dest); }
     CBitcoinAddress(const CKeyID &dest); // CKeyID はもう受け付けない。CKeyID 側で処理をする.
+    // bool Set(const CScriptID &id);
 
 private:
     CBase58Data m_data;

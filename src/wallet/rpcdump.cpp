@@ -163,9 +163,9 @@ void ImportScript(const CScript& script, const string& strLabel, bool isRedeemSc
         throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
 
     if (isRedeemScript) {
-        if (!pwalletMain->HaveCScript(script) && !pwalletMain->AddCScript(script))
+        if (!pwalletMain->HaveCScript(CScriptID(script)) && !pwalletMain->AddCScript(script))
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding p2sh redeemScript to wallet");
-        ImportAddress(CBitcoinAddress(CScriptID(script)), strLabel);
+        ImportAddress(CBitcoinAddress(CScriptID(script).GetBase58addressWithNetworkScriptPrefix()), strLabel);
     } else {
         CTxDestination destination;
         if (ExtractDestination(script, destination)) {
@@ -722,11 +722,11 @@ UniValue processImport(const UniValue& data) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
             }
 
-            if (!pwalletMain->HaveCScript(redeemScript) && !pwalletMain->AddCScript(redeemScript)) {
+            if (!pwalletMain->HaveCScript(CScriptID(redeemScript)) && !pwalletMain->AddCScript(redeemScript)) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "Error adding p2sh redeemScript to wallet");
             }
 
-            CBitcoinAddress redeemAddress = CBitcoinAddress(CScriptID(redeemScript));
+            CBitcoinAddress redeemAddress = CBitcoinAddress(CScriptID(redeemScript).GetBase58addressWithNetworkScriptPrefix());
             CScript redeemDestination = GetScriptForDestination(redeemAddress.Get());
 
             if (::IsMine(*pwalletMain, redeemDestination) == ISMINE_SPENDABLE) {

@@ -274,7 +274,7 @@ static void MutateTxAddOutPubKey(CMutableTransaction& tx, const std::string& str
     if (!pubkey.IsFullyValid())
         throw std::runtime_error("invalid TX output pubkey");
     CScript scriptPubKey = GetScriptForRawPubKey(pubkey);
-    CBitcoinAddress addr(scriptPubKey);
+    // CBitcoinAddress addr(scriptPubKey);
 
     // Extract and validate FLAGS
     bool bSegWit = false;
@@ -292,8 +292,7 @@ static void MutateTxAddOutPubKey(CMutableTransaction& tx, const std::string& str
     if (bScriptHash) {
         // Get the address for the redeem script, then call
         // GetScriptForDestination() to construct a P2SH scriptPubKey.
-        CBitcoinAddress redeemScriptAddr(scriptPubKey);
-        scriptPubKey = GetScriptForDestination(redeemScriptAddr.Get());
+        scriptPubKey = GetScriptForDestination(CScriptID(scriptPubKey));
     }
 
     // construct TxOut, append to transaction output list
@@ -359,8 +358,7 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
     if (bScriptHash) {
         // Get the address for the redeem script, then call
         // GetScriptForDestination() to construct a P2SH scriptPubKey.
-        CBitcoinAddress addr(scriptPubKey);
-        scriptPubKey = GetScriptForDestination(addr.Get());
+        scriptPubKey = GetScriptForDestination(CScriptID(scriptPubKey));
     }
 
     // construct TxOut, append to transaction output list
@@ -423,8 +421,7 @@ static void MutateTxAddOutScript(CMutableTransaction& tx, const std::string& str
       scriptPubKey = GetScriptForWitness(scriptPubKey);
     }
     if (bScriptHash) {
-      CBitcoinAddress addr(scriptPubKey);
-      scriptPubKey = GetScriptForDestination(addr.Get());
+      scriptPubKey = GetScriptForDestination(CScriptID(scriptPubKey));
     }
 
     // construct TxOut, append to transaction output list

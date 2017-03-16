@@ -3,5 +3,7 @@
 
 base58string CScriptID::GetBase58addressWithNetworkScriptPrefix() const
 {
-    return CBitcoinAddress(*this).ToBase58string66();
+    CBase58Data data;
+    data.SetData(Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS), this, 20); // ###### script の prefix
+    return data.ToBase58string();
 }
