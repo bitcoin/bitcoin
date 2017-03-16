@@ -131,6 +131,8 @@ const string strMessageMagic = "Bitcoin Signed Message:\n";
 
 extern CStatHistory<uint64_t> nTxValidationTime;
 extern CStatHistory<uint64_t> nBlockValidationTime;
+extern CCriticalSection cs_blockvalidationtime;
+
 extern CCriticalSection cs_LastBlockFile;
 extern CCriticalSection cs_nBlockSequenceId;
 
@@ -4055,6 +4057,11 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, c
         LogPrintf("Invalid block: ver:%x time:%d Tx size:%d len:%d\n", pblock->nVersion, pblock->nTime, pblock->vtx.size(),byteLen);
     }
 
+    // WARNING: cs_main is not locked here throughout but is released and then re-locked during ActivateBestChain
+    //          If you lock cs_main throughout ProcessNewBlock then you will in effect prevent PV from happening.
+    //          TODO: in order to lock cs_main all the way through we must remove the locking from ActivateBestChain
+    //                but it will require great care because ActivateBestChain requires cs_main however it is also
+    //                called from other places.  Currently it seems best to leave cs_main here as is.
     {
         LOCK(cs_main);
         bool fRequested = MarkBlockAsReceived(pblock->GetHash());
@@ -4116,7 +4123,9 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, c
     LogPrint("bench", "tx: %s, vin: %llu, vout: %llu, len: %d\n", txIn.GetHash().ToString(), txIn.vin.size(), txIn.vout.size(), ::GetSerializeSize(txIn,SER_NETWORK, PROTOCOL_VERSION));
     LogPrint("bench", "tx: %s, vin: %llu, vout: %llu, len: %d\n", txOut.GetHash().ToString(), txOut.vin.size(), txOut.vout.size(), ::GetSerializeSize(txOut,SER_NETWORK, PROTOCOL_VERSION));
     LogPrint("bench", "tx: %s, vin: %llu, vout: %llu, len: %d\n", txLen.GetHash().ToString(), txLen.vin.size(), txLen.vout.size(), ::GetSerializeSize(txLen,SER_NETWORK, PROTOCOL_VERSION));
-    nBlockValidationTime << (end-start);
+
+    LOCK(cs_blockvalidationtime);
+    nBlockValidationTime << (end - start);
     return true;
 }
 
