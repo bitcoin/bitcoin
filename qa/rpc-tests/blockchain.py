@@ -14,10 +14,9 @@ Tests correspond to code in rpc/blockchain.cpp.
 from decimal import Decimal
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.authproxy import JSONRPCException
 from test_framework.util import (
     assert_equal,
-    assert_raises,
+    assert_raises_jsonrpc,
     assert_is_hex_string,
     assert_is_hash_string,
     start_nodes,
@@ -58,8 +57,7 @@ class BlockchainTest(BitcoinTestFramework):
     def _test_getblockheader(self):
         node = self.nodes[0]
 
-        assert_raises(
-            JSONRPCException, lambda: node.getblockheader('nonsense'))
+        assert_raises_jsonrpc(-5, "Block not found", node.getblockheader, "nonsense")
 
         besthash = node.getbestblockhash()
         secondbesthash = node.getblockhash(199)
