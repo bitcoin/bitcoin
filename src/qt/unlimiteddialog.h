@@ -51,6 +51,8 @@ public:
     void setMapper();
     
 private Q_SLOTS:
+    void setOkButtonState(bool fState);
+    void on_resetButton_clicked();
     void on_okButton_clicked();
     void on_cancelButton_clicked();
     void shapingSliderChanged();         // Pushes the traffic shaping slider changes into the traffic shaping edit boxes

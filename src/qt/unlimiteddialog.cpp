@@ -134,7 +134,35 @@ void UnlimitedDialog::setMapper()
     mapper.addMapping(ui.excessiveAcceptDepth,UnlimitedModel::ExcessiveAcceptDepth);
     mapper.toFirst();
 }
-    
+
+void UnlimitedDialog::setOkButtonState(bool fState)
+{
+    ui.okButton->setEnabled(fState);
+}
+
+void UnlimitedDialog::on_resetButton_clicked()
+{
+  if (model) 
+    {
+      // confirmation dialog
+      QMessageBox::StandardButton btnRetVal 
+         = QMessageBox::question(this, 
+            tr("Confirm options reset"), 
+            tr("This is a global reset of all settings!") + 
+            "<br>" + 
+            tr("Client restart required to activate changes.") + 
+            "<br><br>" + 
+            tr("Client will be shut down. Do you want to proceed?"), 
+            QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
+
+      if (btnRetVal == QMessageBox::Cancel)
+        return;
+
+      /* reset all options and close GUI */
+      model->Reset();
+      QApplication::quit();
+    }
+}
 
 void UnlimitedDialog::on_okButton_clicked()
 {
