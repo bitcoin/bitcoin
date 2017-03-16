@@ -226,16 +226,16 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
                 BOOST_ERROR("Bad addrtype: " << strTest);
                 continue;
             }
-            CBitcoinAddress addrOut;
-            BOOST_CHECK_MESSAGE(addrOut.Set(dest), "encode dest: " + strTest);
-            BOOST_CHECK_MESSAGE(addrOut.ToBase58string66().c_str() == exp_base58string, "mismatch: " + strTest);
+            // CBitcoinAddress addrOut;
+            BOOST_CHECK_MESSAGE(!dest.IsNoDestination(), "encode dest: " + strTest);
+            BOOST_CHECK_MESSAGE(dest.GetBase58addressWithNetworkPrefix().c_str() == exp_base58string, "mismatch: " + strTest);
         }
     }
 
     // Visiting a CNoDestination must fail
     CBitcoinAddress dummyAddr;
     CTxDestination nodest = CNoDestination();
-    BOOST_CHECK(!dummyAddr.Set(nodest));
+    BOOST_CHECK(nodest.IsNoDestination());
 
     SelectParams(NETWORK_MAIN);
 }

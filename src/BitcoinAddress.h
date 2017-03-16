@@ -5,6 +5,7 @@
 #pragma once
 
 #include "base58.h"
+class CTxDestination;
 
 /** base58-encoded Bitcoin addresses.
 * Public-key-hash-addresses have version 0 (or 111 testnet).
@@ -16,12 +17,10 @@
 class CBitcoinAddress {
 public:
     // bool Set(const CKeyID &id);
-    bool Set(const CTxDestination &dest);
     bool IsValid() const;
     bool IsValid(const CChainParams &params) const;
 
     CBitcoinAddress() {}
-    CBitcoinAddress(const CTxDestination &dest) { Set(dest); }
     CBitcoinAddress(const base58string& strAddress) { m_data.SetBase58string(strAddress); }
 
     CTxDestination Get() const;
@@ -32,12 +31,16 @@ public:
     bool operator == (const CBitcoinAddress& rhs) const { return this->m_data == rhs.m_data; }
 
     bool SetBase58string(const base58string& str) { return m_data.SetBase58string(str) && IsValid(); }
-    base58string ToBase58string66() const;
 
 private:
     CBitcoinAddress(const CScriptID &dest) { Set(dest); }
     CBitcoinAddress(const CKeyID &dest); // CKeyID はもう受け付けない。CKeyID 側で処理をする.
+    CBitcoinAddress(const CTxDestination &dest) { Set(dest); }
+    bool Set(const CTxDestination &dest);
     // bool Set(const CScriptID &id);
+
+public:
+    friend class CTxDestination;
 
 private:
     CBase58Data m_data;

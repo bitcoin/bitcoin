@@ -61,6 +61,8 @@ public:
         const CTxDestination& rhs = _rhs;
         return lhs == rhs;
     }
+    
+    bool IsNoDestination() const;
 public:
     base58string GetBase58addressWithNetworkPrefix() const;
 };

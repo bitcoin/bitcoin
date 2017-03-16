@@ -612,7 +612,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
         const CKeyID &keyid = it->second;
         std::string strTime = EncodeDumpTime(it->first);
-        base58string strAddr = CBitcoinAddress(keyid.GetBase58addressWithNetworkPubkeyPrefix()).ToBase58string66();
+        base58string strAddr = keyid.GetBase58addressWithNetworkPubkeyPrefix();
         CKey key;
         if (pwalletMain->GetKey(keyid, key)) {
             file << strprintf("%s %s ", key.GetBase58stringWithNetworkSecretKeyPrefix().c_str(), strTime);
@@ -794,7 +794,8 @@ UniValue processImport(const UniValue& data) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey is not a valid public key");
                 }
 
-                CBitcoinAddress pubKeyAddress = CBitcoinAddress(pubKey.GetID().GetBase58addressWithNetworkPubkeyPrefix());
+                base58string pubKeyAddressString = pubKey.GetID().GetBase58addressWithNetworkPubkeyPrefix();
+                CBitcoinAddress pubKeyAddress = CBitcoinAddress(pubKeyAddressString);
 
                 // Consistency check.
                 if (!isScript && !(pubKeyAddress.Get() == address.Get())) {
@@ -803,12 +804,10 @@ UniValue processImport(const UniValue& data) {
 
                 // Consistency check.
                 if (isScript) {
-                    CBitcoinAddress scriptAddress;
                     CTxDestination destination;
 
                     if (ExtractDestination(script, destination)) {
-                        scriptAddress = CBitcoinAddress(destination);
-                        if (!(scriptAddress.Get() == pubKeyAddress.Get())) {
+                        if (!(destination.GetBase58addressWithNetworkPrefix() == pubKeyAddressString)) {
                             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Consistency check failed");
                         }
                     }
@@ -860,7 +859,8 @@ UniValue processImport(const UniValue& data) {
                 CPubKey pubKey = key.GetPubKey();
                 assert(key.VerifyPubKey(pubKey));
 
-                CBitcoinAddress pubKeyAddress = CBitcoinAddress(pubKey.GetID().GetBase58addressWithNetworkPubkeyPrefix());
+                base58string pubKeyAddressString = pubKey.GetID().GetBase58addressWithNetworkPubkeyPrefix();
+                CBitcoinAddress pubKeyAddress = CBitcoinAddress(pubKeyAddressString);
 
                 // Consistency check.
                 if (!isScript && !(pubKeyAddress.Get() == address.Get())) {
@@ -869,12 +869,10 @@ UniValue processImport(const UniValue& data) {
 
                 // Consistency check.
                 if (isScript) {
-                    CBitcoinAddress scriptAddress;
                     CTxDestination destination;
 
                     if (ExtractDestination(script, destination)) {
-                        scriptAddress = CBitcoinAddress(destination);
-                        if (!(scriptAddress.Get() == pubKeyAddress.Get())) {
+                        if (!(destination.GetBase58addressWithNetworkPrefix() == pubKeyAddressString)) {
                             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Consistency check failed");
                         }
                     }

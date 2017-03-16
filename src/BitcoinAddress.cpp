@@ -4,6 +4,7 @@
 
 #include "BitcoinAddress.h"
 
+/*
 namespace
 {
     class CBitcoinAddressVisitor : public boost::static_visitor<bool>
@@ -20,11 +21,14 @@ namespace
     };
 
 } // anon namespace
+*/
 
+/*
 bool CBitcoinAddress::Set(const CTxDestination& dest)
 {
     return boost::apply_visitor(CBitcoinAddressVisitor(this), dest);
 }
+*/
 
 bool CBitcoinAddress::IsValid() const
 {

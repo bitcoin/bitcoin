@@ -112,6 +112,14 @@ public:
     explicit base58string(const char* sz, unsigned int nVersionBytes = 1) { m_data._SetString(sz, nVersionBytes); }
     // std::string ToString() const { return m_data.ToString(); }
     const char* c_str() const { return m_data.ToBase58string().c_str(); }
+
+    int CompareTo(const base58string& str) const { return m_data.CompareTo(str.m_data); }
+    bool operator==(const base58string& str) const { return CompareTo(str) == 0; }
+    bool operator<=(const base58string& str) const { return CompareTo(str) <= 0; }
+    bool operator>=(const base58string& str) const { return CompareTo(str) >= 0; }
+    bool operator< (const base58string& str) const { return CompareTo(str) <  0; }
+    bool operator> (const base58string& str) const { return CompareTo(str) >  0; }
+
 protected:
     friend class CBase58Data;
 private:

@@ -183,7 +183,8 @@ UniValue validateaddress(const JSONRPCRequest& request)
     LOCK(cs_main);
 #endif
 
-    CBitcoinAddress address = CBitcoinAddress(base58string(request.params[0].get_str()));
+    base58string addressString = base58string(request.params[0].get_str());
+    CBitcoinAddress address = CBitcoinAddress(addressString);
     bool isValid = address.IsValid();
 
     UniValue ret(UniValue::VOBJ);
@@ -191,7 +192,7 @@ UniValue validateaddress(const JSONRPCRequest& request)
     if (isValid)
     {
         CTxDestination dest = address.Get();
-        ret.push_back(Pair("address", address.ToBase58string66().c_str()));
+        ret.push_back(Pair("address", addressString.c_str()));
 
         CScript scriptPubKey = GetScriptForDestination(dest);
         ret.push_back(Pair("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
