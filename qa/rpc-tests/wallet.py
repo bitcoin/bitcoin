@@ -72,7 +72,7 @@ class WalletTest (BitcoinTestFramework):
         unspent_0 = self.nodes[2].listunspent()[0]
         unspent_0 = {"txid": unspent_0["txid"], "vout": unspent_0["vout"]}
         self.nodes[2].lockunspent(False, [unspent_0])
-        assert_raises_message(JSONRPCException, "Insufficient funds", self.nodes[2].sendtoaddress, self.nodes[2].getnewaddress(), 200)
+        assert_raises_jsonrpc(-4, "Insufficient funds", self.nodes[2].sendtoaddress, self.nodes[2].getnewaddress(), 200)
         assert_equal([unspent_0], self.nodes[2].listlockunspent())
         self.nodes[2].lockunspent(True, [unspent_0])
         assert_equal(len(self.nodes[2].listlockunspent()), 0)
@@ -255,19 +255,11 @@ class WalletTest (BitcoinTestFramework):
         txObj = self.nodes[0].gettransaction(txId)
         assert_equal(txObj['amount'], Decimal('-0.0001'))
 
-        try:
-            txId  = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), "1f-4")
-        except JSONRPCException as e:
-            assert("Invalid amount" in e.error['message'])
-        else:
-            raise AssertionError("Must not parse invalid amounts")
+        # This will raise an exception because the amount type is wrong
+        assert_raises_jsonrpc(-3, "Invalid amount", self.nodes[0].sendtoaddress, self.nodes[2].getnewaddress(), "1f-4")
 
-
-        try:
-            self.nodes[0].generate("2")
-            raise AssertionError("Must not accept strings as numeric")
-        except JSONRPCException as e:
-            assert("not an integer" in e.error['message'])
+        # This will raise an exception since generate does not accept a string
+        assert_raises_jsonrpc(-1, "not an integer", self.nodes[0].generate, "2")
 
         # Import address and private key to check correct behavior of spendable unspents
         # 1. Send some coins to generate new UTXO
@@ -398,7 +390,7 @@ class WalletTest (BitcoinTestFramework):
 
         node0_balance = self.nodes[0].getbalance()
         # With walletrejectlongchains we will not create the tx and store it in our wallet.
-        assert_raises_message(JSONRPCException, "mempool chain", self.nodes[0].sendtoaddress, sending_addr, node0_balance - Decimal('0.01'))
+        assert_raises_jsonrpc(-4, "Transaction has too long of a mempool chain", self.nodes[0].sendtoaddress, sending_addr, node0_balance - Decimal('0.01'))
 
         # Verify nothing new in wallet
         assert_equal(total_txs, len(self.nodes[0].listtransactions("*",99999)))

@@ -92,11 +92,7 @@ class RPCBindTest(BitcoinTestFramework):
 
         # Check that with invalid rpcallowip, we are denied
         self.run_allowip_test([non_loopback_ip], non_loopback_ip, defaultport)
-        try:
-            self.run_allowip_test(['1.1.1.1'], non_loopback_ip, defaultport)
-            assert(not 'Connection not denied by rpcallowip as expected')
-        except JSONRPCException:
-            pass
+        assert_raises_jsonrpc(-342, "non-JSON HTTP response with '403 Forbidden' from server", self.run_allowip_test, ['1.1.1.1'], non_loopback_ip, defaultport)
 
 if __name__ == '__main__':
     RPCBindTest().main()
