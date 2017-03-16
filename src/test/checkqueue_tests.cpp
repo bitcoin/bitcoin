@@ -46,8 +46,8 @@ struct FakeCheckCheckCompletion {
 
 struct FailingCheck {
     bool fails;
-    FailingCheck(bool fails) : fails(fails){};
-    FailingCheck() : fails(true){};
+    FailingCheck(bool _fails) : fails(_fails){}
+    FailingCheck() : fails(true){}
     bool operator()()
     {
         return !fails;
@@ -96,7 +96,7 @@ struct MemoryCheck {
     };
     ~MemoryCheck(){
         fake_allocated_memory -= b;
-    
+
     };
     void swap(MemoryCheck& x) { std::swap(b, x.b); };
 };
@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Memory)
     tg.join_all();
 }
 
-// Test that a new verification cannot occur until all checks 
+// Test that a new verification cannot occur until all checks
 // have been destructed
 BOOST_AUTO_TEST_CASE(test_CheckQueue_FrozenCleanup)
 {
@@ -408,19 +408,20 @@ BOOST_AUTO_TEST_CASE(test_CheckQueueControl_Locks)
         bool done_ack {false};
         std::condition_variable cv;
         {
+            auto t = [&]{
+                CCheckQueueControl<FakeCheck> control(queue.get());
+                std::unique_lock<std::mutex> l(m);
+                has_lock = true;
+                cv.notify_one();
+                cv.wait(l, [&]{return has_tried;});
+                done = true;
+                cv.notify_one();
+                // Wait until the done is acknowledged
+                //
+                cv.wait(l, [&]{return done_ack;});
+            };
             std::unique_lock<std::mutex> l(m);
-            tg.create_thread([&]{
-                    CCheckQueueControl<FakeCheck> control(queue.get());
-                    std::unique_lock<std::mutex> l(m);
-                    has_lock = true;
-                    cv.notify_one();
-                    cv.wait(l, [&]{return has_tried;});
-                    done = true;
-                    cv.notify_one();
-                    // Wait until the done is acknowledged
-                    //
-                    cv.wait(l, [&]{return done_ack;});
-                    });
+            tg.create_thread(t);
             // Wait for thread to get the lock
             cv.wait(l, [&](){return has_lock;});
             bool fails = false;
@@ -439,4 +440,3 @@ BOOST_AUTO_TEST_CASE(test_CheckQueueControl_Locks)
     }
 }
 BOOST_AUTO_TEST_SUITE_END()
-

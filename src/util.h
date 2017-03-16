@@ -80,9 +80,9 @@ template<typename... Args> std::string FormatStringFromLogArgs(const char *fmt, 
     std::string _log_msg_; /* Unlikely name to avoid shadowing variables */ \
     try { \
         _log_msg_ = tfm::format(__VA_ARGS__); \
-    } catch (tinyformat::format_error &e) { \
+    } catch (tinyformat::format_error &__e) { \
         /* Original format string will have newline so don't add one here */ \
-        _log_msg_ = "Error \"" + std::string(e.what()) + "\" while formatting log message: " + FormatStringFromLogArgs(__VA_ARGS__); \
+        _log_msg_ = "Error \"" + std::string(__e.what()) + "\" while formatting log message: " + FormatStringFromLogArgs(__VA_ARGS__); \
     } \
     LogPrintStr(_log_msg_); \
 } while(0)
@@ -94,9 +94,9 @@ template<typename... Args> std::string FormatStringFromLogArgs(const char *fmt, 
 } while(0)
 
 template<typename... Args>
-bool error(const char* fmt, const Args&... args)
+bool error(const char* fmt, Args... args)
 {
-    LogPrintStr("ERROR: " + tfm::format(fmt, args...) + "\n");
+    LogPrintStr("ERROR: " + tfm::format(fmt, std::forward<Args>(args)...) + "\n");
     return false;
 }
 
