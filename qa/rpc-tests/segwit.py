@@ -105,22 +105,12 @@ class SegWitTest(BitcoinTestFramework):
         assert_equal(len(node.getblock(block[0])["tx"]), 1)
         sync_blocks(self.nodes)
 
-    def fail_accept(self, node, txid, sign, redeem_script=""):
-        try:
-            send_to_witness(1, node, getutxo(txid), self.pubkey[0], False, Decimal("49.998"), sign, redeem_script)
-        except JSONRPCException as exp:
-            assert(exp.error["code"] == -26)
-        else:
-            raise AssertionError("Tx should not have been accepted")
+    def fail_accept(self, node, error_msg, txid, sign, redeem_script=""):
+        assert_raises_jsonrpc(-26, error_msg, send_to_witness, 1, node, getutxo(txid), self.pubkey[0], False, Decimal("49.998"), sign, redeem_script)
 
     def fail_mine(self, node, txid, sign, redeem_script=""):
         send_to_witness(1, node, getutxo(txid), self.pubkey[0], False, Decimal("49.998"), sign, redeem_script)
-        try:
-            node.generate(1)
-        except JSONRPCException as exp:
-            assert(exp.error["code"] == -1)
-        else:
-            raise AssertionError("Created valid block when TestBlockValidity should have failed")
+        assert_raises_jsonrpc(-1, "CreateNewBlock: TestBlockValidity failed", node.generate, 1)
         sync_blocks(self.nodes)
 
     def run_test(self):
@@ -177,18 +167,18 @@ class SegWitTest(BitcoinTestFramework):
 
         self.log.info("Verify default node can't accept any witness format txs before fork")
         # unsigned, no scriptsig
-        self.fail_accept(self.nodes[0], wit_ids[NODE_0][WIT_V0][0], False)
-        self.fail_accept(self.nodes[0], wit_ids[NODE_0][WIT_V1][0], False)
-        self.fail_accept(self.nodes[0], p2sh_ids[NODE_0][WIT_V0][0], False)
-        self.fail_accept(self.nodes[0], p2sh_ids[NODE_0][WIT_V1][0], False)
+        self.fail_accept(self.nodes[0], "mandatory-script-verify-flag", wit_ids[NODE_0][WIT_V0][0], False)
+        self.fail_accept(self.nodes[0], "mandatory-script-verify-flag", wit_ids[NODE_0][WIT_V1][0], False)
+        self.fail_accept(self.nodes[0], "mandatory-script-verify-flag", p2sh_ids[NODE_0][WIT_V0][0], False)
+        self.fail_accept(self.nodes[0], "mandatory-script-verify-flag", p2sh_ids[NODE_0][WIT_V1][0], False)
         # unsigned with redeem script
-        self.fail_accept(self.nodes[0], p2sh_ids[NODE_0][WIT_V0][0], False, witness_script(False, self.pubkey[0]))
-        self.fail_accept(self.nodes[0], p2sh_ids[NODE_0][WIT_V1][0], False, witness_script(True, self.pubkey[0]))
+        self.fail_accept(self.nodes[0], "mandatory-script-verify-flag", p2sh_ids[NODE_0][WIT_V0][0], False, witness_script(False, self.pubkey[0]))
+        self.fail_accept(self.nodes[0], "mandatory-script-verify-flag", p2sh_ids[NODE_0][WIT_V1][0], False, witness_script(True, self.pubkey[0]))
         # signed
-        self.fail_accept(self.nodes[0], wit_ids[NODE_0][WIT_V0][0], True)
-        self.fail_accept(self.nodes[0], wit_ids[NODE_0][WIT_V1][0], True)
-        self.fail_accept(self.nodes[0], p2sh_ids[NODE_0][WIT_V0][0], True)
-        self.fail_accept(self.nodes[0], p2sh_ids[NODE_0][WIT_V1][0], True)
+        self.fail_accept(self.nodes[0], "no-witness-yet", wit_ids[NODE_0][WIT_V0][0], True)
+        self.fail_accept(self.nodes[0], "no-witness-yet", wit_ids[NODE_0][WIT_V1][0], True)
+        self.fail_accept(self.nodes[0], "no-witness-yet", p2sh_ids[NODE_0][WIT_V0][0], True)
+        self.fail_accept(self.nodes[0], "no-witness-yet", p2sh_ids[NODE_0][WIT_V1][0], True)
 
         self.log.info("Verify witness txs are skipped for mining before the fork")
         self.skip_mine(self.nodes[2], wit_ids[NODE_2][WIT_V0][0], True) #block 424
@@ -203,8 +193,8 @@ class SegWitTest(BitcoinTestFramework):
         self.success_mine(self.nodes[2], wit_ids[NODE_2][WIT_V1][1], False) #block 429
 
         self.log.info("Verify unsigned p2sh witness txs without a redeem script are invalid")
-        self.fail_accept(self.nodes[2], p2sh_ids[NODE_2][WIT_V0][1], False)
-        self.fail_accept(self.nodes[2], p2sh_ids[NODE_2][WIT_V1][1], False)
+        self.fail_accept(self.nodes[2], "mandatory-script-verify-flag", p2sh_ids[NODE_2][WIT_V0][1], False)
+        self.fail_accept(self.nodes[2], "mandatory-script-verify-flag", p2sh_ids[NODE_2][WIT_V1][1], False)
 
         self.log.info("Verify unsigned p2sh witness txs with a redeem script in versionbits-settings blocks are valid before the fork")
         self.success_mine(self.nodes[2], p2sh_ids[NODE_2][WIT_V0][1], False, witness_script(False, self.pubkey[2])) #block 430
@@ -457,10 +447,13 @@ class SegWitTest(BitcoinTestFramework):
         importlist.append(bytes_to_hex_str(p2wshop1))
 
         for i in importlist:
+            # import all generated addresses. The wallet already has the private keys for some of these, so catch JSON RPC
+            # exceptions and continue.
             try:
                 self.nodes[0].importaddress(i,"",False,True)
             except JSONRPCException as exp:
                 assert_equal(exp.error["message"], "The wallet already contains the private key for this address or script")
+                assert_equal(exp.error["code"], -4)
 
         self.nodes[0].importaddress(script_to_p2sh(op0)) # import OP_0 as address only
         self.nodes[0].importaddress(multisig_without_privkey_address) # Test multisig_without_privkey
@@ -475,12 +468,7 @@ class SegWitTest(BitcoinTestFramework):
         # note that no witness address should be returned by unsolvable addresses
         # the multisig_without_privkey_address will fail because its keys were not added with importpubkey
         for i in uncompressed_spendable_address + uncompressed_solvable_address + unknown_address + unsolvable_address + [multisig_without_privkey_address]:
-            try:
-                self.nodes[0].addwitnessaddress(i)
-            except JSONRPCException as exp:
-                assert_equal(exp.error["message"], "Public key or redeemscript not known to wallet, or the key is uncompressed")
-            else:
-                assert(False)
+            assert_raises_jsonrpc(-4, "Public key or redeemscript not known to wallet, or the key is uncompressed", self.nodes[0].addwitnessaddress, i)
 
         for i in compressed_spendable_address + compressed_solvable_address:
             witaddress = self.nodes[0].addwitnessaddress(i)
@@ -559,12 +547,8 @@ class SegWitTest(BitcoinTestFramework):
         # note that a multisig address returned by addmultisigaddress is not solvable until it is added with importaddress
         # premature_witaddress are not accepted until the script is added with addwitnessaddress first
         for i in uncompressed_spendable_address + uncompressed_solvable_address + premature_witaddress + [compressed_solvable_address[1]]:
-            try:
-                self.nodes[0].addwitnessaddress(i)
-            except JSONRPCException as exp:
-                assert_equal(exp.error["message"], "Public key or redeemscript not known to wallet, or the key is uncompressed")
-            else:
-                assert(False)
+            # This will raise an exception
+            assert_raises_jsonrpc(-4, "Public key or redeemscript not known to wallet, or the key is uncompressed", self.nodes[0].addwitnessaddress, i)
 
         # after importaddress it should pass addwitnessaddress
         v = self.nodes[0].validateaddress(compressed_solvable_address[1])
