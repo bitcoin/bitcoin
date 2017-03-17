@@ -314,6 +314,7 @@ class ImportMultiTest (BitcoinTestFramework):
         self.nodes[1].generate(100)
         transactionid = self.nodes[1].sendtoaddress(multi_sig_script['address'], 10.00)
         self.nodes[1].generate(1)
+        timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
         transaction = self.nodes[1].gettransaction(transactionid)
 
         self.log.info("Should import a p2sh with respective redeem script and private keys")
@@ -408,6 +409,24 @@ class ImportMultiTest (BitcoinTestFramework):
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)
         assert_equal('timestamp' in address_assert, False)
+
+
+        # Importing existing watch only address with new timestamp should replace saved timestamp.
+        assert_greater_than(timestamp, watchonly_timestamp)
+        print("Should replace previously saved watch only timestamp.")
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": {
+                "address": watchonly_address,
+            },
+            "timestamp": "now",
+        }])
+        assert_equal(result[0]['success'], True)
+        address_assert = self.nodes[1].validateaddress(watchonly_address)
+        assert_equal(address_assert['iswatchonly'], True)
+        assert_equal(address_assert['ismine'], False)
+        assert_equal(address_assert['timestamp'], timestamp)
+        watchonly_timestamp = timestamp
+
 
         # restart nodes to check for proper serialization/deserialization of watch only address
         stop_nodes(self.nodes)
