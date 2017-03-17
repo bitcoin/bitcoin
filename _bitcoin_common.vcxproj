@@ -164,6 +164,9 @@
     <ClCompile Include="src\amount.cpp" />
     <ClCompile Include="src\base58.cpp" />
     <ClCompile Include="src\base_uint.cpp" />
+    <ClCompile Include="src\BitcoinAddress.cpp" />
+    <ClCompile Include="src\BitcoinExtKeyBase.cpp" />
+    <ClCompile Include="src\BitcoinSecret.cpp" />
     <ClCompile Include="src\blockencodings.cpp" />
     <ClCompile Include="src\bloom.cpp" />
     <ClCompile Include="src\chain.cpp" />
@@ -270,6 +273,9 @@
     <ClInclude Include="src\amount.h" />
     <ClInclude Include="src\base58.h" />
     <ClInclude Include="src\base_uint.h" />
+    <ClInclude Include="src\BitcoinAddress.h" />
+    <ClInclude Include="src\BitcoinExtKeyBase.h" />
+    <ClInclude Include="src\BitcoinSecret.h" />
     <ClInclude Include="src\blockencodings.h" />
     <ClInclude Include="src\bloom.h" />
     <ClInclude Include="src\chain.h" />

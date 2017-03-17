@@ -20,6 +20,8 @@
 #include "util.h"
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
+#include "BitcoinSecret.h"
+#include "BitcoinAddress.h"
 
 #include <stdio.h>
 
