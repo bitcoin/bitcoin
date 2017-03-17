@@ -45,8 +45,6 @@ struct CLockLocation {
         return mutexName + "  " + sourceFile + ":" + itostr(sourceLine) + (fTry ? " (TRY)" : "");
     }
 
-    std::string MutexName() const { return mutexName; }
-
     bool fTry;
 private:
     std::string mutexName;

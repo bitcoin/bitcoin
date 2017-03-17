@@ -146,13 +146,6 @@ public:
         while (numThreads > 0)
             cond.wait(lock);
     }
-
-    /** Return current depth of queue */
-    size_t Depth()
-    {
-        std::unique_lock<std::mutex> lock(cs);
-        return queue.size();
-    }
 };
 
 struct HTTPPathHandler
