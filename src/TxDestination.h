@@ -52,13 +52,13 @@ public:
     CTxDestination(const CScriptID& rhs) : Super(rhs) {}
 
     bool operator <  (const CTxDestination& _rhs) const {
-        const CTxDestination& lhs = *this;
-        const CTxDestination& rhs = _rhs;
+        const Super& lhs = *this;
+        const Super& rhs = _rhs;
         return lhs < rhs;
     }
     bool operator == (const CTxDestination& _rhs) const {
-        const CTxDestination& lhs = *this;
-        const CTxDestination& rhs = _rhs;
+        const Super& lhs = *this;
+        const Super& rhs = _rhs;
         return lhs == rhs;
     }
     
