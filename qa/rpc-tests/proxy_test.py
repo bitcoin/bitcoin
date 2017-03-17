@@ -49,6 +49,7 @@ class ProxyTest(BitcoinTestFramework):
         self.num_nodes = 4
         self.setup_clean_chain = False
 
+    def setup_nodes(self):
         self.have_ipv6 = test_ipv6_local()
         # Create two proxies on different ports
         # ... one unauthenticated
@@ -69,7 +70,7 @@ class ProxyTest(BitcoinTestFramework):
             self.conf3.unauth = True
             self.conf3.auth = True
         else:
-            print("Warning: testing without local IPv6 support")
+            self.log.warning("Testing without local IPv6 support")
 
         self.serv1 = Socks5Server(self.conf1)
         self.serv1.start()
@@ -79,7 +80,6 @@ class ProxyTest(BitcoinTestFramework):
             self.serv3 = Socks5Server(self.conf3)
             self.serv3.start()
 
-    def setup_nodes(self):
         # Note: proxies are not used to connect to local nodes
         # this is because the proxy to use is based on CService.GetNetwork(), which return NET_UNROUTABLE for localhost
         args = [
