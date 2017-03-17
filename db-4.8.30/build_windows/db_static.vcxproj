@@ -98,6 +98,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <CompileAs>Default</CompileAs>
+      <TreatSpecificWarningsAsErrors>4717</TreatSpecificWarningsAsErrors>
     </ClCompile>
     <Lib>
       <OutputFile>$(OutDir)libdb48sd.lib</OutputFile>
@@ -121,6 +122,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
+      <TreatSpecificWarningsAsErrors>4717</TreatSpecificWarningsAsErrors>
     </ClCompile>
     <Lib>
       <OutputFile>$(OutDir)libdb48s.lib</OutputFile>
@@ -143,6 +145,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <CompileAs>Default</CompileAs>
+      <TreatSpecificWarningsAsErrors>4717</TreatSpecificWarningsAsErrors>
     </ClCompile>
     <Lib>
       <OutputFile>$(OutDir)libdb48sd.lib</OutputFile>
@@ -166,6 +169,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
+      <TreatSpecificWarningsAsErrors>4717</TreatSpecificWarningsAsErrors>
     </ClCompile>
     <Lib>
       <OutputFile>$(OutDir)libdb48s.lib</OutputFile>
