@@ -192,15 +192,14 @@ bool CBase58Data::_SetString(const std::string& str)
 
 bool CBase58Data::SetBase58string(const base58string& str)
 {
-    *this = str.m_data;
-    return true;
+    return _SetString(str.c_str());
 }
 
-base58string CBase58Data::ToBase58string() const
+std::string CBase58Data::_ToString() const
 {
     std::vector<unsigned char> vch = vchVersion;
     vch.insert(vch.end(), vchData.begin(), vchData.end());
-    return base58string(EncodeBase58Check(vch));
+    return EncodeBase58Check(vch);
 }
 
 int CBase58Data::CompareTo(const CBase58Data& b58) const

@@ -91,7 +91,8 @@ public:
     bool _SetString(const char* psz, unsigned int nVersionBytes = 1);
     bool _SetString(const std::string& str);
     bool SetBase58string(const base58string& str);
-    base58string ToBase58string() const;
+
+    std::string _ToString() const;
     int CompareTo(const CBase58Data& b58) const;
 
     bool operator==(const CBase58Data& b58) const { return CompareTo(b58) == 0; }
