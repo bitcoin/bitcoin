@@ -19,6 +19,12 @@
     <Filter Include="Source Files\key">
       <UniqueIdentifier>{db6f8a17-7d14-49e0-beb2-493547e7f656}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\key\secret">
+      <UniqueIdentifier>{dd096edd-b052-4997-8a37-c8c0ed821ef5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\key\script">
+      <UniqueIdentifier>{4956e91b-06e2-4847-a60b-0bc6fc4e62a7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\chainparams.cpp">
@@ -40,9 +46,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\protocol.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\pubkey.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\random.cpp">
@@ -192,19 +195,10 @@
     <ClCompile Include="src\script\ismine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\script\script.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\script\script_error.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\script\sigcache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\script\sign.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\script\standard.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\wallet\crypter.cpp">
@@ -312,17 +306,47 @@
     <ClCompile Include="src\base58.cpp">
       <Filter>Source Files\key</Filter>
     </ClCompile>
-    <ClCompile Include="src\key.cpp">
-      <Filter>Source Files\key</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="src\BitcoinAddress.cpp">
       <Filter>Source Files\key</Filter>
     </ClCompile>
-    <ClCompile Include="src\BitcoinSecret.cpp">
+    <ClCompile Include="src\BitcoinExtKeyBase.cpp">
       <Filter>Source Files\key</Filter>
     </ClCompile>
-    <ClCompile Include="src\BitcoinExtKeyBase.cpp">
+    <ClCompile Include="src\script\standard.cpp">
+      <Filter>Source Files\key</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TxDestination.cpp">
+      <Filter>Source Files\key</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pubkey.cpp">
+      <Filter>Source Files\key</Filter>
+    </ClCompile>
+    <ClCompile Include="src\key.cpp">
+      <Filter>Source Files\key\secret</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BitcoinSecret.cpp">
+      <Filter>Source Files\key\secret</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ExtKey.cpp">
+      <Filter>Source Files\key\secret</Filter>
+    </ClCompile>
+    <ClCompile Include="src\script\script.cpp">
+      <Filter>Source Files\key\script</Filter>
+    </ClCompile>
+    <ClCompile Include="src\script\script_error.cpp">
+      <Filter>Source Files\key\script</Filter>
+    </ClCompile>
+    <ClCompile Include="src\script\script_const.cpp">
+      <Filter>Source Files\key\script</Filter>
+    </ClCompile>
+    <ClCompile Include="src\script\ScriptID.cpp">
+      <Filter>Source Files\key\script</Filter>
+    </ClCompile>
+    <ClCompile Include="src\script\ScriptNum.cpp">
+      <Filter>Source Files\key\script</Filter>
+    </ClCompile>
+    <ClCompile Include="src\base58string.cpp">
       <Filter>Source Files\key</Filter>
     </ClCompile>
   </ItemGroup>
@@ -510,9 +534,6 @@
     <ClInclude Include="src\protocol.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\pubkey.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\random.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -537,12 +558,6 @@
     <ClInclude Include="src\scheduler.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\script\script.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\script\script_error.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\support\allocators\secure.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -565,9 +580,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\script\sign.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\script\standard.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\streams.h">
@@ -681,17 +693,47 @@
     <ClInclude Include="src\base58.h">
       <Filter>Source Files\key</Filter>
     </ClInclude>
-    <ClInclude Include="src\key.h">
-      <Filter>Source Files\key</Filter>
-    </ClInclude>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="src\BitcoinAddress.h">
       <Filter>Source Files\key</Filter>
     </ClInclude>
-    <ClInclude Include="src\BitcoinSecret.h">
+    <ClInclude Include="src\BitcoinExtKeyBase.h">
       <Filter>Source Files\key</Filter>
     </ClInclude>
-    <ClInclude Include="src\BitcoinExtKeyBase.h">
+    <ClInclude Include="src\script\standard.h">
+      <Filter>Source Files\key</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TxDestination.h">
+      <Filter>Source Files\key</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pubkey.h">
+      <Filter>Source Files\key</Filter>
+    </ClInclude>
+    <ClInclude Include="src\key.h">
+      <Filter>Source Files\key\secret</Filter>
+    </ClInclude>
+    <ClInclude Include="src\BitcoinSecret.h">
+      <Filter>Source Files\key\secret</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ExtKey.h">
+      <Filter>Source Files\key\secret</Filter>
+    </ClInclude>
+    <ClInclude Include="src\script\script.h">
+      <Filter>Source Files\key\script</Filter>
+    </ClInclude>
+    <ClInclude Include="src\script\script_error.h">
+      <Filter>Source Files\key\script</Filter>
+    </ClInclude>
+    <ClInclude Include="src\script\ScriptNum.h">
+      <Filter>Source Files\key\script</Filter>
+    </ClInclude>
+    <ClInclude Include="src\script\script_const.h">
+      <Filter>Source Files\key\script</Filter>
+    </ClInclude>
+    <ClInclude Include="src\script\ScriptID.h">
+      <Filter>Source Files\key\script</Filter>
+    </ClInclude>
+    <ClInclude Include="src\base58string.h">
       <Filter>Source Files\key</Filter>
     </ClInclude>
   </ItemGroup>

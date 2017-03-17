@@ -58,7 +58,8 @@ UniValue getinfo(const JSONRPCRequest& request)
             "  \"connections\": xxxxx,       (numeric) the number of connections\n"
             "  \"proxy\": \"host:port\",     (string, optional) the proxy used by the server\n"
             "  \"difficulty\": xxxxxx,       (numeric) the current difficulty\n"
-            "  \"testnet\": true|false,      (boolean) if the server is using testnet or not\n"
+            "  \"testnet\": true|false,      (boolean) DEPRECATED. if the server is using testnet or not\n"
+            "  \"chain\": \"xxxx\",          (string) current network name as defined in BIP70 (main, test, regtest)\n"
             "  \"keypoololdest\": xxxxxx,    (numeric) the timestamp (seconds since Unix epoch) of the oldest pre-generated key in the key pool\n"
             "  \"keypoolsize\": xxxx,        (numeric) how many new keys are pre-generated\n"
             "  \"unlocked_until\": ttt,      (numeric) the timestamp in seconds since epoch (midnight Jan 1 1970 GMT) that the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
@@ -95,7 +96,8 @@ UniValue getinfo(const JSONRPCRequest& request)
         obj.push_back(Pair("connections",   (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL)));
     obj.push_back(Pair("proxy",         (proxy.IsValid() ? proxy.proxy.ToStringIPPort() : string())));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
-    obj.push_back(Pair("testnet",       Params().GetNetworkType() == NETWORK_TESTNET));
+    obj.push_back(Pair("testnet",       Params().GetNetworkType() == NETWORK_TESTNET)); // DEPRECATED.
+    obj.push_back(Pair("chain",         NetworkType2String(Params().GetNetworkType())));
 #ifdef ENABLE_WALLET
     if (pwalletMain) {
         obj.push_back(Pair("keypoololdest", pwalletMain->GetOldestKeyPoolTime()));
@@ -132,15 +134,15 @@ public:
         CScript subscript;
         obj.push_back(Pair("isscript", true));
         if (pwalletMain && pwalletMain->GetCScript(scriptID, subscript)) {
-            std::vector<CTxDestination> addresses;
+            std::vector<CTxDestination> dests;
             txnouttype whichType;
             int nRequired;
-            ExtractDestinations(subscript, whichType, addresses, nRequired);
+            ExtractDestinations(subscript, whichType, dests, nRequired);
             obj.push_back(Pair("script", GetTxnOutputType(whichType)));
             obj.push_back(Pair("hex", HexStr(subscript.begin(), subscript.end())));
             UniValue a(UniValue::VARR);
-            BOOST_FOREACH(const CTxDestination& addr, addresses)
-                a.push_back(CBitcoinAddress(addr).ToString());
+            BOOST_FOREACH(const CTxDestination& dest, dests)
+                a.push_back(dest.GetBase58addressWithNetworkPrefix().c_str());
             obj.push_back(Pair("addresses", a));
             if (whichType == TX_MULTISIG)
                 obj.push_back(Pair("sigsrequired", nRequired));
@@ -183,7 +185,8 @@ UniValue validateaddress(const JSONRPCRequest& request)
     LOCK(cs_main);
 #endif
 
-    CBitcoinAddress address(request.params[0].get_str());
+    base58string addressString = base58string(request.params[0].get_str());
+    CBitcoinAddress address = CBitcoinAddress(addressString);
     bool isValid = address.IsValid();
 
     UniValue ret(UniValue::VOBJ);
@@ -191,8 +194,7 @@ UniValue validateaddress(const JSONRPCRequest& request)
     if (isValid)
     {
         CTxDestination dest = address.Get();
-        string currentAddress = address.ToString();
-        ret.push_back(Pair("address", currentAddress));
+        ret.push_back(Pair("address", addressString.c_str()));
 
         CScript scriptPubKey = GetScriptForDestination(dest);
         ret.push_back(Pair("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
@@ -240,7 +242,7 @@ CScript _createmultisig_redeemScript(const UniValue& params)
         const std::string& ks = keys[i].get_str();
 #ifdef ENABLE_WALLET
         // Case 1: Bitcoin address and we have full public key:
-        CBitcoinAddress address(ks);
+        CBitcoinAddress address = CBitcoinAddress(base58string(ks));
         if (pwalletMain && address.IsValid())
         {
             CKeyID keyID;
@@ -314,10 +316,9 @@ UniValue createmultisig(const JSONRPCRequest& request)
     // Construct using pay-to-script-hash:
     CScript inner = _createmultisig_redeemScript(request.params);
     CScriptID innerID(inner);
-    CBitcoinAddress address(innerID);
 
     UniValue result(UniValue::VOBJ);
-    result.push_back(Pair("address", address.ToString()));
+    result.push_back(Pair("address", innerID.GetBase58addressWithNetworkScriptPrefix().c_str()));
     result.push_back(Pair("redeemScript", HexStr(inner.begin(), inner.end())));
 
     return result;
@@ -352,7 +353,7 @@ UniValue verifymessage(const JSONRPCRequest& request)
     string strSign     = request.params[1].get_str();
     string strMessage  = request.params[2].get_str();
 
-    CBitcoinAddress addr(strAddress);
+    CBitcoinAddress addr = CBitcoinAddress(base58string(strAddress));
     if (!addr.IsValid())
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 
@@ -397,11 +398,11 @@ UniValue signmessagewithprivkey(const JSONRPCRequest& request)
             + HelpExampleRpc("signmessagewithprivkey", "\"privkey\", \"my message\"")
         );
 
-    string strPrivkey = request.params[0].get_str();
+    base58string strPrivkey(request.params[0].get_str());
     string strMessage = request.params[1].get_str();
 
     CBitcoinSecret vchSecret;
-    bool fGood = vchSecret.SetString(strPrivkey);
+    bool fGood = vchSecret.SetBase58string(strPrivkey);
     if (!fGood)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
     CKey key = vchSecret.GetKey();

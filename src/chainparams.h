@@ -51,11 +51,11 @@ class CChainParams
 {
 public:
     enum Base58Type {
-        PUBKEY_ADDRESS,
-        SCRIPT_ADDRESS,
-        SECRET_KEY,
-        EXT_PUBLIC_KEY,
-        EXT_SECRET_KEY,
+        PUBKEY_ADDRESS, // 公開鍵アドレス.
+        SCRIPT_ADDRESS, // スクリプトアドレス.
+        SECRET_KEY,     // 秘密鍵.
+        EXT_PUBLIC_KEY, // 拡張公開鍵.
+        EXT_SECRET_KEY, // 拡張秘密鍵.
 
         MAX_BASE58_TYPES
     };

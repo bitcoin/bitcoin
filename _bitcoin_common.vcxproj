@@ -96,6 +96,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)/src;$(SolutionDir)/src/config;$(SolutionDir)/src/univalue/include;$(SolutionDir)/db-4.8.30/build_windows</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
+      <TreatSpecificWarningsAsErrors>4717</TreatSpecificWarningsAsErrors>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -112,6 +113,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)/src;$(SolutionDir)/src/config;$(SolutionDir)/src/univalue/include;$(SolutionDir)/db-4.8.30/build_windows</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
+      <TreatSpecificWarningsAsErrors>4717</TreatSpecificWarningsAsErrors>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -130,6 +132,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)/src;$(SolutionDir)/src/config;$(SolutionDir)/src/univalue/include;$(SolutionDir)/db-4.8.30/build_windows</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
+      <TreatSpecificWarningsAsErrors>4717</TreatSpecificWarningsAsErrors>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -150,6 +153,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)/src;$(SolutionDir)/src/config;$(SolutionDir)/src/univalue/include;$(SolutionDir)/db-4.8.30/build_windows</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
+      <TreatSpecificWarningsAsErrors>4717</TreatSpecificWarningsAsErrors>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -163,6 +167,7 @@
     <ClCompile Include="src\addrman.cpp" />
     <ClCompile Include="src\amount.cpp" />
     <ClCompile Include="src\base58.cpp" />
+    <ClCompile Include="src\base58string.cpp" />
     <ClCompile Include="src\base_uint.cpp" />
     <ClCompile Include="src\BitcoinAddress.cpp" />
     <ClCompile Include="src\BitcoinExtKeyBase.cpp" />
@@ -190,6 +195,7 @@
     <ClCompile Include="src\crypto\sha256.cpp" />
     <ClCompile Include="src\crypto\sha512.cpp" />
     <ClCompile Include="src\dbwrapper.cpp" />
+    <ClCompile Include="src\ExtKey.cpp" />
     <ClCompile Include="src\hash.cpp" />
     <ClCompile Include="src\httprpc.cpp" />
     <ClCompile Include="src\httpserver.cpp" />
@@ -226,6 +232,9 @@
     <ClCompile Include="src\script\interpreter.cpp" />
     <ClCompile Include="src\script\ismine.cpp" />
     <ClCompile Include="src\script\script.cpp" />
+    <ClCompile Include="src\script\ScriptID.cpp" />
+    <ClCompile Include="src\script\ScriptNum.cpp" />
+    <ClCompile Include="src\script\script_const.cpp" />
     <ClCompile Include="src\script\script_error.cpp" />
     <ClCompile Include="src\script\sigcache.cpp" />
     <ClCompile Include="src\script\sign.cpp" />
@@ -237,6 +246,7 @@
     <ClCompile Include="src\timedata.cpp" />
     <ClCompile Include="src\torcontrol.cpp" />
     <ClCompile Include="src\txdb.cpp" />
+    <ClCompile Include="src\TxDestination.cpp" />
     <ClCompile Include="src\txmempool.cpp" />
     <ClCompile Include="src\uint256.cpp" />
     <ClCompile Include="src\ui_interface.cpp" />
@@ -272,6 +282,7 @@
     <ClInclude Include="src\addrman.h" />
     <ClInclude Include="src\amount.h" />
     <ClInclude Include="src\base58.h" />
+    <ClInclude Include="src\base58string.h" />
     <ClInclude Include="src\base_uint.h" />
     <ClInclude Include="src\BitcoinAddress.h" />
     <ClInclude Include="src\BitcoinExtKeyBase.h" />
@@ -307,6 +318,7 @@
     <ClInclude Include="src\crypto\sha512.h" />
     <ClInclude Include="src\cuckoocache.h" />
     <ClInclude Include="src\dbwrapper.h" />
+    <ClInclude Include="src\ExtKey.h" />
     <ClInclude Include="src\hash.h" />
     <ClInclude Include="src\httprpc.h" />
     <ClInclude Include="src\httpserver.h" />
@@ -344,6 +356,9 @@
     <ClInclude Include="src\script\interpreter.h" />
     <ClInclude Include="src\script\ismine.h" />
     <ClInclude Include="src\script\script.h" />
+    <ClInclude Include="src\script\ScriptID.h" />
+    <ClInclude Include="src\script\ScriptNum.h" />
+    <ClInclude Include="src\script\script_const.h" />
     <ClInclude Include="src\script\script_error.h" />
     <ClInclude Include="src\script\sigcache.h" />
     <ClInclude Include="src\script\sign.h" />
@@ -362,6 +377,7 @@
     <ClInclude Include="src\tinyformat.h" />
     <ClInclude Include="src\torcontrol.h" />
     <ClInclude Include="src\txdb.h" />
+    <ClInclude Include="src\TxDestination.h" />
     <ClInclude Include="src\txmempool.h" />
     <ClInclude Include="src\uint256.h" />
     <ClInclude Include="src\ui_interface.h" />

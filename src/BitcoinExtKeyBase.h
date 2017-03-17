@@ -5,6 +5,7 @@
 #pragma once
 
 #include "base58.h"
+#include "ExtKey.h"
 
 template<typename K, int Size, CChainParams::Base58Type Type> class CBitcoinExtKeyBase : public CBase58Data
 {
@@ -29,7 +30,7 @@ public:
     }
 
     CBitcoinExtKeyBase(const std::string& strBase58c) {
-        SetString(strBase58c.c_str(), Params().Base58Prefix(Type).size());
+        this->SetBase58string(base58string(strBase58c, Params().Base58Prefix(Type).size()));
     }
 
     CBitcoinExtKeyBase() {}

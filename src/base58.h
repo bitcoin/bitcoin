@@ -66,6 +66,8 @@ inline bool DecodeBase58Check(const char* psz, std::vector<unsigned char>& vchRe
 inline bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRet);
 
 class base58string;
+class CBitcoinSecret;
+class CBitcoinAddress;
 
 /**
  * Base class for all base58-encoded data
@@ -80,15 +82,17 @@ protected:
     typedef std::vector<unsigned char, zero_after_free_allocator<unsigned char> > vector_uchar;
     vector_uchar vchData;
 
+public: // ### 仮
     CBase58Data();
     void SetData(const std::vector<unsigned char> &vchVersionIn, const void* pdata, size_t nSize);
     void SetData(const std::vector<unsigned char> &vchVersionIn, const unsigned char *pbegin, const unsigned char *pend);
 
 public:
-    bool SetString(const char* psz, unsigned int nVersionBytes = 1);
-    bool SetString(const std::string& str);
-    bool SetBase58String(const base58string& str);
-    std::string ToString() const;
+    bool _SetString(const char* psz, unsigned int nVersionBytes = 1);
+    bool _SetString(const std::string& str);
+    bool SetBase58string(const base58string& str);
+
+    std::string _ToString() const;
     int CompareTo(const CBase58Data& b58) const;
 
     bool operator==(const CBase58Data& b58) const { return CompareTo(b58) == 0; }
@@ -98,17 +102,11 @@ public:
     bool operator> (const CBase58Data& b58) const { return CompareTo(b58) >  0; }
 
     friend class base58string;
+    friend class CBitcoinSecret;
+    friend class CBitcoinAddress;
 };
 
-class base58string {
-public:
-    base58string() {}
-    explicit base58string(const std::string& str) { m_data.SetString(str); }
-    explicit base58string(const char* sz) { m_data.SetString(sz); }
-protected:
-    friend class CBase58Data;
-private:
-    CBase58Data m_data;
-};
+#include "base58string.h"
+
 
 #endif // BITCOIN_BASE58_H

@@ -6,6 +6,7 @@
 #ifndef BITCOIN_WALLET_WALLET_H
 #define BITCOIN_WALLET_WALLET_H
 
+#include "pubkey.h" // CKeyID
 #include "amount.h"
 #include "streams.h"
 #include "tinyformat.h"

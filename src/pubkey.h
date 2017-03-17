@@ -13,6 +13,8 @@
 #include <stdexcept>
 #include <vector>
 
+class base58string;
+
 /**
  * secp256k1:
  * const unsigned int PRIVATE_KEY_SIZE = 279;
@@ -31,6 +33,9 @@ class CKeyID : public uint160
 public:
     CKeyID() : uint160() {}
     CKeyID(const uint160& in) : uint160(in) {}
+
+public:
+    base58string GetBase58addressWithNetworkPubkeyPrefix() const;
 };
 
 typedef uint256 ChainCode;
@@ -234,6 +239,9 @@ struct CExtPubKey {
         s.read((char *)&code[0], len);
         Decode(code);
     }
+
+    // CChainParams::EXT_PUBLIC_KEY
+    base58string GetBase58stringWithNetworkExtPublicKeyPrefix() const;
 };
 
 /** Users of this module must hold an ECCVerifyHandle. The constructor and

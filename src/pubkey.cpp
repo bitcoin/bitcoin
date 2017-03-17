@@ -3,9 +3,16 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "pubkey.h"
-
+#include "BitcoinAddress.h"
 #include <secp256k1.h>
 #include <secp256k1_recovery.h>
+
+base58string CKeyID::GetBase58addressWithNetworkPubkeyPrefix() const
+{
+    base58string str;
+    str.SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS), this, 20);
+    return str;
+}
 
 namespace
 {
@@ -278,6 +285,14 @@ bool CExtPubKey::Derive(CExtPubKey &out, unsigned int _nChild) const {
         return false;
     }
     return (!secp256k1_ecdsa_signature_normalize(secp256k1_context_verify, NULL, &sig));
+}
+
+#include "BitcoinExtKeyBase.h"
+
+// CChainParams::EXT_PUBLIC_KEY
+base58string CExtPubKey::GetBase58stringWithNetworkExtPublicKeyPrefix() const
+{
+    return base58string(CBitcoinExtPubKey(*this)._ToString());
 }
 
 /* static */ int ECCVerifyHandle::refcount = 0;
