@@ -3,9 +3,25 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "pubkey.h"
-
+#include "BitcoinAddress.h"
 #include <secp256k1.h>
 #include <secp256k1_recovery.h>
+
+/*
+bool CBitcoinAddress::Set(const CKeyID& id)
+{
+    m_data.SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS), &id, 20); // ###### public key の prefix
+    return true;
+}
+*/
+base58string CKeyID::GetBase58addressWithNetworkPubkeyPrefix() const
+{
+    // CBitcoinAddress a;
+    // a.Set(*this);
+    CBase58Data data;
+    data.SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS), this, 20);
+    return data.ToBase58string();
+}
 
 namespace
 {

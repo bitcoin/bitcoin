@@ -33,8 +33,9 @@ class CKeyID : public uint160
 public:
     CKeyID() : uint160() {}
     CKeyID(const uint160& in) : uint160(in) {}
+
 public:
-    base58string ToBase58address() const;
+    base58string GetBase58addressWithNetworkPubkeyPrefix() const;
 };
 
 typedef uint256 ChainCode;

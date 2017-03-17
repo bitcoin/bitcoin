@@ -9,5 +9,5 @@ public:
     CScriptID(const CScript& in);
     CScriptID(const uint160& in) : uint160(in) {}
 public:
-    base58string ToBase58address() const;
+    base58string GetBase58addressWithNetworkScriptPrefix() const;
 };

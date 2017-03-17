@@ -396,7 +396,7 @@ UniValue importpubkey(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
-    ImportAddress(CBitcoinAddress(pubKey.GetID()), strLabel);
+    ImportAddress(CBitcoinAddress(pubKey.GetID().GetBase58addressWithNetworkPubkeyPrefix()), strLabel);
     ImportScript(GetScriptForRawPubKey(pubKey), strLabel, false);
 
     if (fRescan)
@@ -468,7 +468,7 @@ UniValue importwallet(const JSONRPCRequest& request)
         assert(key.VerifyPubKey(pubkey));
         CKeyID keyid = pubkey.GetID();
         if (pwalletMain->HaveKey(keyid)) {
-            LogPrintf("Skipping import of %s (key already present)\n", keyid.ToBase58address().c_str());
+            LogPrintf("Skipping import of %s (key already present)\n", keyid.GetBase58addressWithNetworkPubkeyPrefix().c_str());
             continue;
         }
         int64_t nTime = DecodeDumpTime(vstr[1]);
@@ -486,7 +486,7 @@ UniValue importwallet(const JSONRPCRequest& request)
                 fLabel = true;
             }
         }
-        LogPrintf("Importing %s...\n", keyid.ToBase58address().c_str());
+        LogPrintf("Importing %s...\n", keyid.GetBase58addressWithNetworkPubkeyPrefix().c_str());
         if (!pwalletMain->AddKeyPubKey(key, pubkey)) {
             fGood = false;
             continue;
@@ -618,7 +618,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
         const CKeyID &keyid = it->second;
         std::string strTime = EncodeDumpTime(it->first);
-        base58string strAddr = CBitcoinAddress(keyid).ToBase58string();
+        base58string strAddr = CBitcoinAddress(keyid.GetBase58addressWithNetworkPubkeyPrefix()).ToBase58string66();
         CKey key;
         if (pwalletMain->GetKey(keyid, key)) {
             file << strprintf("%s %s ", key.ToBase58string22().c_str(), strTime);
@@ -808,7 +808,7 @@ UniValue processImport(const UniValue& data) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey is not a valid public key");
                 }
 
-                CBitcoinAddress pubKeyAddress = CBitcoinAddress(pubKey.GetID());
+                CBitcoinAddress pubKeyAddress = CBitcoinAddress(pubKey.GetID().GetBase58addressWithNetworkPubkeyPrefix());
 
                 // Consistency check.
                 if (!isScript && !(pubKeyAddress.Get() == address.Get())) {
@@ -881,7 +881,7 @@ UniValue processImport(const UniValue& data) {
                 CPubKey pubKey = key.GetPubKey();
                 assert(key.VerifyPubKey(pubKey));
 
-                CBitcoinAddress pubKeyAddress = CBitcoinAddress(pubKey.GetID());
+                CBitcoinAddress pubKeyAddress = CBitcoinAddress(pubKey.GetID().GetBase58addressWithNetworkPubkeyPrefix());
 
                 // Consistency check.
                 if (!isScript && !(pubKeyAddress.Get() == address.Get())) {

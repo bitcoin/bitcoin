@@ -14,22 +14,17 @@ namespace
     public:
         CBitcoinAddressVisitor(CBitcoinAddress* addrIn) : addr(addrIn) {}
 
-        bool operator()(const CKeyID& id) const { return addr->Set(id); }
+        bool operator()(const CKeyID& id) const { assert(0); return false; } // CKeyID 側に移行
         bool operator()(const CScriptID& id) const { return addr->Set(id); }
         bool operator()(const CNoDestination& no) const { return false; }
     };
 
 } // anon namespace
 
-bool CBitcoinAddress::Set(const CKeyID& id)
-{
-    m_data.SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS), &id, 20);
-    return true;
-}
 
 bool CBitcoinAddress::Set(const CScriptID& id)
 {
-    m_data.SetData(Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS), &id, 20);
+    m_data.SetData(Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS), &id, 20); // ###### script の prefix
     return true;
 }
 
@@ -65,6 +60,7 @@ CTxDestination CBitcoinAddress::Get() const
         return CNoDestination();
 }
 
+// ####### これも CKeyID に移行する候補.
 bool CBitcoinAddress::GetKeyID(CKeyID& keyID) const
 {
     if (!IsValid() || m_data.vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS))

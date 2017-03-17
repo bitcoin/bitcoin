@@ -57,7 +57,7 @@ void ScriptPubKeyToJSON(const CScript& scriptPubKey, UniValue& out, bool fInclud
 
     UniValue a(UniValue::VARR);
     BOOST_FOREACH(const CTxDestination& dest, dests)
-        a.push_back(dest.GetBase58address33().c_str());
+        a.push_back(dest.GetBase58addressWithNetworkPrefix().c_str());
     out.push_back(Pair("addresses", a));
 }
 

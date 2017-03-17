@@ -12,15 +12,17 @@
 * Script-hash-addresses have version 5 (or 196 testnet).
 * The data vector contains RIPEMD160(SHA256(cscript)), where cscript is the serialized redemption script.
 */
+// ※ CKeyID は排除。CKeyID 側に処理は移行済み.
 class CBitcoinAddress {
 public:
-    bool Set(const CKeyID &id);
+    // bool Set(const CKeyID &id);
     bool Set(const CScriptID &id);
     bool Set(const CTxDestination &dest);
     bool IsValid() const;
     bool IsValid(const CChainParams &params) const;
 
     CBitcoinAddress() {}
+    CBitcoinAddress(const CScriptID &dest) { Set(dest); }
     CBitcoinAddress(const CTxDestination &dest) { Set(dest); }
     CBitcoinAddress(const base58string& strAddress) { m_data.SetBase58string(strAddress); }
 
@@ -32,7 +34,10 @@ public:
     bool operator == (const CBitcoinAddress& rhs) const { return this->m_data == rhs.m_data; }
 
     bool SetBase58string(const base58string& str) { return m_data.SetBase58string(str) && IsValid(); }
-    base58string ToBase58string() const;
+    base58string ToBase58string66() const;
+
+private:
+    CBitcoinAddress(const CKeyID &dest); // CKeyID はもう受け付けない。CKeyID 側で処理をする.
 
 private:
     CBase58Data m_data;

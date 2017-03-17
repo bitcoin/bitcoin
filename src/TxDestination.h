@@ -62,5 +62,5 @@ public:
         return lhs == rhs;
     }
 public:
-    base58string GetBase58address33() const;
+    base58string GetBase58addressWithNetworkPrefix() const;
 };

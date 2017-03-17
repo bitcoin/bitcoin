@@ -144,7 +144,7 @@ UniValue getnewaddress(const JSONRPCRequest& request)
 
     pwalletMain->SetAddressBook(keyID, strAccount, "receive");
 
-    return keyID.ToBase58address().c_str();
+    return keyID.GetBase58addressWithNetworkPubkeyPrefix().c_str();
 }
 
 
@@ -155,7 +155,7 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
     }
 
-    return CBitcoinAddress(pubKey.GetID());
+    return CBitcoinAddress(pubKey.GetID().GetBase58addressWithNetworkPubkeyPrefix());
 }
 
 UniValue getaccountaddress(const JSONRPCRequest& request)
@@ -185,7 +185,7 @@ UniValue getaccountaddress(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VSTR);
 
-    ret = GetAccountAddress(strAccount).ToBase58string().c_str();
+    ret = GetAccountAddress(strAccount).ToBase58string66().c_str();
     return ret;
 }
 
@@ -221,7 +221,7 @@ UniValue getrawchangeaddress(const JSONRPCRequest& request)
 
     CKeyID keyID = vchPubKey.GetID();
 
-    return keyID.ToBase58address().c_str();
+    return keyID.GetBase58addressWithNetworkPubkeyPrefix().c_str();
 }
 
 
@@ -335,7 +335,7 @@ UniValue getaddressesbyaccount(const JSONRPCRequest& request)
         const CBitcoinAddress& address = item.first;
         const string& strName = item.second.name;
         if (strName == strAccount)
-            ret.push_back(address.ToBase58string().c_str());
+            ret.push_back(address.ToBase58string66().c_str());
     }
     return ret;
 }
@@ -473,7 +473,7 @@ UniValue listaddressgroupings(const JSONRPCRequest& request)
         BOOST_FOREACH(CTxDestination address, grouping)
         {
             UniValue addressInfo(UniValue::VARR);
-            addressInfo.push_back(address.GetBase58address33().c_str());
+            addressInfo.push_back(address.GetBase58addressWithNetworkPrefix().c_str());
             addressInfo.push_back(ValueFromAmount(balances[address]));
             {
                 if (pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get()) != pwalletMain->mapAddressBook.end())
@@ -1038,7 +1038,7 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
     pwalletMain->AddCScript(inner);
 
     pwalletMain->SetAddressBook(innerID, strAccount, "send");
-    return innerID.ToBase58address().c_str();
+    return innerID.GetBase58addressWithNetworkScriptPrefix().c_str();
 }
 
 class Witnessifier : public boost::static_visitor<bool>
@@ -1127,7 +1127,7 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
 
     pwalletMain->SetAddressBook(w.result, "", "receive");
 
-    return w.result.ToBase58address().c_str();
+    return w.result.GetBase58addressWithNetworkScriptPrefix().c_str();
 }
 
 struct tallyitem
@@ -1226,7 +1226,7 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
             UniValue obj(UniValue::VOBJ);
             if(fIsWatchonly)
                 obj.push_back(Pair("involvesWatchonly", true));
-            obj.push_back(Pair("address",       address.ToBase58string().c_str()));
+            obj.push_back(Pair("address",       address.ToBase58string66().c_str()));
             obj.push_back(Pair("account",       strAccount));
             obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
             obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
@@ -1347,7 +1347,7 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
 {
     CBitcoinAddress addr;
     if (addr.Set(dest))
-        entry.push_back(Pair("address", addr.ToBase58string().c_str()));
+        entry.push_back(Pair("address", addr.ToBase58string66().c_str()));
 }
 
 void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter)
@@ -2487,7 +2487,7 @@ UniValue listunspent(const JSONRPCRequest& request)
         entry.push_back(Pair("vout", out.i));
 
         if (fValidAddress) {
-            entry.push_back(Pair("address", address.GetBase58address33().c_str()));
+            entry.push_back(Pair("address", address.GetBase58addressWithNetworkPrefix().c_str()));
 
             if (pwalletMain->mapAddressBook.count(address))
                 entry.push_back(Pair("account", pwalletMain->mapAddressBook[address].name));

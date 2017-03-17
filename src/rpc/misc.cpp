@@ -140,7 +140,7 @@ public:
             obj.push_back(Pair("hex", HexStr(subscript.begin(), subscript.end())));
             UniValue a(UniValue::VARR);
             BOOST_FOREACH(const CTxDestination& dest, dests)
-                a.push_back(dest.GetBase58address33().c_str());
+                a.push_back(dest.GetBase58addressWithNetworkPrefix().c_str());
             obj.push_back(Pair("addresses", a));
             if (whichType == TX_MULTISIG)
                 obj.push_back(Pair("sigsrequired", nRequired));
@@ -191,7 +191,7 @@ UniValue validateaddress(const JSONRPCRequest& request)
     if (isValid)
     {
         CTxDestination dest = address.Get();
-        ret.push_back(Pair("address", address.ToBase58string().c_str()));
+        ret.push_back(Pair("address", address.ToBase58string66().c_str()));
 
         CScript scriptPubKey = GetScriptForDestination(dest);
         ret.push_back(Pair("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
@@ -316,7 +316,7 @@ UniValue createmultisig(const JSONRPCRequest& request)
     CBitcoinAddress address(innerID);
 
     UniValue result(UniValue::VOBJ);
-    result.push_back(Pair("address", address.ToBase58string().c_str()));
+    result.push_back(Pair("address", address.ToBase58string66().c_str()));
     result.push_back(Pair("redeemScript", HexStr(inner.begin(), inner.end())));
 
     return result;

@@ -2910,9 +2910,9 @@ bool CWallet::SetAddressBook(const CTxDestination& address, const string& strNam
                              strPurpose, (fUpdated ? CT_UPDATED : CT_NEW) );
     if (!fFileBacked)
         return false;
-    if (!strPurpose.empty() && !CWalletDB(strWalletFile).WritePurpose(address.GetBase58address33().c_str(), strPurpose))
+    if (!strPurpose.empty() && !CWalletDB(strWalletFile).WritePurpose(address.GetBase58addressWithNetworkPrefix().c_str(), strPurpose))
         return false;
-    return CWalletDB(strWalletFile).WriteName(address.GetBase58address33().c_str(), strName);
+    return CWalletDB(strWalletFile).WriteName(address.GetBase58addressWithNetworkPrefix().c_str(), strName);
 }
 
 bool CWallet::DelAddressBook(const CTxDestination& address)
@@ -2923,7 +2923,7 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
         if(fFileBacked)
         {
             // Delete destdata tuples associated with address
-            base58string strAddress = address.GetBase58address33();
+            base58string strAddress = address.GetBase58addressWithNetworkPrefix();
             BOOST_FOREACH(const PAIRTYPE(string, string) &item, mapAddressBook[address].destdata)
             {
                 CWalletDB(strWalletFile).EraseDestData(strAddress.c_str(), item.first);
@@ -2936,8 +2936,8 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
 
     if (!fFileBacked)
         return false;
-    CWalletDB(strWalletFile).ErasePurpose(address.GetBase58address33().c_str());
-    return CWalletDB(strWalletFile).EraseName(address.GetBase58address33().c_str());
+    CWalletDB(strWalletFile).ErasePurpose(address.GetBase58addressWithNetworkPrefix().c_str());
+    return CWalletDB(strWalletFile).EraseName(address.GetBase58addressWithNetworkPrefix().c_str());
 }
 
 bool CWallet::SetDefaultKey(const CPubKey &vchPubKey)
@@ -3478,7 +3478,7 @@ bool CWallet::AddDestData(const CTxDestination &dest, const std::string &key, co
     mapAddressBook[dest].destdata.insert(std::make_pair(key, value));
     if (!fFileBacked)
         return true;
-    return CWalletDB(strWalletFile).WriteDestData(dest.GetBase58address33().c_str(), key, value);
+    return CWalletDB(strWalletFile).WriteDestData(dest.GetBase58addressWithNetworkPrefix().c_str(), key, value);
 }
 
 bool CWallet::EraseDestData(const CTxDestination &dest, const std::string &key)
@@ -3487,7 +3487,7 @@ bool CWallet::EraseDestData(const CTxDestination &dest, const std::string &key)
         return false;
     if (!fFileBacked)
         return true;
-    return CWalletDB(strWalletFile).EraseDestData(dest.GetBase58address33().c_str(), key);
+    return CWalletDB(strWalletFile).EraseDestData(dest.GetBase58addressWithNetworkPrefix().c_str(), key);
 }
 
 bool CWallet::LoadDestData(const CTxDestination &dest, const std::string &key, const std::string &value)
