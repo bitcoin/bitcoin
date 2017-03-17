@@ -29,34 +29,6 @@ static const CBitcoinAddress addr2C("1CRj2HyM1CXWzHAXLQtiGLyggNT9WQqsDs");
 static const std::string strAddressBad("1HV9Lc3sNHZxwj4Zk6fB38tEmBryq2cBiF");
 
 
-#ifdef KEY_TESTS_DUMPINFO
-void dumpKeyInfo(uint256 privkey)
-{
-    CKey key;
-    key.resize(32);
-    memcpy(&secret[0], &privkey, 32);
-    std::vector<unsigned char> sec;
-    sec.resize(32);
-    memcpy(&sec[0], &secret[0], 32);
-    printf("  * secret (hex): %s\n", HexStr(sec).c_str());
-
-    for (int nCompressed=0; nCompressed<2; nCompressed++)
-    {
-        bool fCompressed = nCompressed == 1;
-        printf("  * %s:\n", fCompressed ? "compressed" : "uncompressed");
-        CBitcoinSecret bsecret;
-        bsecret.SetSecret(secret, fCompressed);
-        printf("    * secret (base58): %s\n", bsecret.ToString().c_str());
-        CKey key;
-        key.SetSecret(secret, fCompressed);
-        std::vector<unsigned char> vchPubKey = key.GetPubKey();
-        printf("    * pubkey (hex): %s\n", HexStr(vchPubKey).c_str());
-        printf("    * address (base58): %s\n", CBitcoinAddress(vchPubKey).ToString().c_str());
-    }
-}
-#endif
-
-
 BOOST_FIXTURE_TEST_SUITE(key_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(key_test1)
