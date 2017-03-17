@@ -40,7 +40,7 @@
 #ifdef ENABLE_DASH_DEBUG
 #define DBG( x ) x
 #else
-#define DBG( x ) 
+#define DBG( x )
 #endif
 
 //Dash only features
@@ -103,8 +103,8 @@ std::string SafeStringFormat(const std::string& fmt, const Args&... args)
 {
     try {
         return tinyformat::format(fmt, args...);
-    } catch (std::runtime_error& e) {
-        std::string message = tinyformat::format("\n****TINYFORMAT ERROR****\n    err=\"%s\"\n    fmt=\"%s\"\n", e.what(), fmt);
+    } catch (std::runtime_error& fmterr) {
+        std::string message = tinyformat::format("\n****TINYFORMAT ERROR****\n    err=\"%s\"\n    fmt=\"%s\"\n", fmterr.what(), fmt);
         fprintf(stderr, "%s", message.c_str());
         return message;
     }
