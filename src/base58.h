@@ -105,25 +105,7 @@ public:
     friend class CBitcoinAddress;
 };
 
-class base58string {
-public:
-    base58string() {}
-    explicit base58string(const std::string& str, unsigned int nVersionBytes = 1) { m_data._SetString(str.c_str(), nVersionBytes); }
-    explicit base58string(const char* sz, unsigned int nVersionBytes = 1) { m_data._SetString(sz, nVersionBytes); }
-    // std::string ToString() const { return m_data.ToString(); }
-    const char* c_str() const { return m_data.ToBase58string().c_str(); }
+#include "base58string.h"
 
-    int CompareTo(const base58string& str) const { return m_data.CompareTo(str.m_data); }
-    bool operator==(const base58string& str) const { return CompareTo(str) == 0; }
-    bool operator<=(const base58string& str) const { return CompareTo(str) <= 0; }
-    bool operator>=(const base58string& str) const { return CompareTo(str) >= 0; }
-    bool operator< (const base58string& str) const { return CompareTo(str) <  0; }
-    bool operator> (const base58string& str) const { return CompareTo(str) >  0; }
-
-protected:
-    friend class CBase58Data;
-private:
-    CBase58Data m_data;
-};
 
 #endif // BITCOIN_BASE58_H

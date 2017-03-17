@@ -346,6 +346,9 @@
     <ClCompile Include="src\script\ScriptNum.cpp">
       <Filter>Source Files\key\script</Filter>
     </ClCompile>
+    <ClCompile Include="src\base58string.cpp">
+      <Filter>Source Files\key</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\addrdb.h">
@@ -729,6 +732,9 @@
     </ClInclude>
     <ClInclude Include="src\script\ScriptID.h">
       <Filter>Source Files\key\script</Filter>
+    </ClInclude>
+    <ClInclude Include="src\base58string.h">
+      <Filter>Source Files\key</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

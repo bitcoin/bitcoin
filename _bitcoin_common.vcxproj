@@ -167,6 +167,7 @@
     <ClCompile Include="src\addrman.cpp" />
     <ClCompile Include="src\amount.cpp" />
     <ClCompile Include="src\base58.cpp" />
+    <ClCompile Include="src\base58string.cpp" />
     <ClCompile Include="src\base_uint.cpp" />
     <ClCompile Include="src\BitcoinAddress.cpp" />
     <ClCompile Include="src\BitcoinExtKeyBase.cpp" />
@@ -281,6 +282,7 @@
     <ClInclude Include="src\addrman.h" />
     <ClInclude Include="src\amount.h" />
     <ClInclude Include="src\base58.h" />
+    <ClInclude Include="src\base58string.h" />
     <ClInclude Include="src\base_uint.h" />
     <ClInclude Include="src\BitcoinAddress.h" />
     <ClInclude Include="src\BitcoinExtKeyBase.h" />
