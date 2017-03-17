@@ -7,20 +7,11 @@
 #include <secp256k1.h>
 #include <secp256k1_recovery.h>
 
-/*
-bool CBitcoinAddress::Set(const CKeyID& id)
-{
-    m_data.SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS), &id, 20); // ###### public key の prefix
-    return true;
-}
-*/
 base58string CKeyID::GetBase58addressWithNetworkPubkeyPrefix() const
 {
-    // CBitcoinAddress a;
-    // a.Set(*this);
-    CBase58Data data;
-    data.SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS), this, 20);
-    return data.ToBase58string();
+    base58string str;
+    str.SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS), this, 20);
+    return str;
 }
 
 namespace
@@ -294,6 +285,14 @@ bool CExtPubKey::Derive(CExtPubKey &out, unsigned int _nChild) const {
         return false;
     }
     return (!secp256k1_ecdsa_signature_normalize(secp256k1_context_verify, NULL, &sig));
+}
+
+#include "BitcoinExtKeyBase.h"
+
+// CChainParams::EXT_PUBLIC_KEY
+base58string CExtPubKey::GetBase58stringWithNetworkExtPublicKeyPrefix() const
+{
+    return base58string(CBitcoinExtPubKey(*this)._ToString());
 }
 
 /* static */ int ECCVerifyHandle::refcount = 0;

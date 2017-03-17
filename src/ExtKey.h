@@ -6,6 +6,7 @@
 #pragma once
 
 #include "key.h"
+class base58string;
 
 struct CExtKey {
     unsigned char nDepth;
@@ -45,4 +46,6 @@ struct CExtKey {
         s.read((char *)&code[0], len);
         Decode(code);
     }
+
+    base58string GetBase58stringWithNetworkExtSecretKeyPrefix() const;
 };

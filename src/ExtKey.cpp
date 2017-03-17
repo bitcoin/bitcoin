@@ -52,3 +52,12 @@ void CExtKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
     memcpy(chaincode.begin(), code + 9, 32);
     key.Set(code + 42, code + BIP32_EXTKEY_SIZE, true);
 }
+
+#include "BitcoinExtKeyBase.h"
+// CChainParams::EXT_SECRET_KEY
+base58string CExtKey::GetBase58stringWithNetworkExtSecretKeyPrefix() const
+{
+    CBitcoinExtKey b58key;
+    b58key.SetKey(*this);
+    return base58string(b58key._ToString());
+}

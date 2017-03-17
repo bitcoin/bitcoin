@@ -239,6 +239,9 @@ struct CExtPubKey {
         s.read((char *)&code[0], len);
         Decode(code);
     }
+
+    // CChainParams::EXT_PUBLIC_KEY
+    base58string GetBase58stringWithNetworkExtPublicKeyPrefix() const;
 };
 
 /** Users of this module must hold an ECCVerifyHandle. The constructor and
