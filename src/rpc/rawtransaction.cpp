@@ -577,7 +577,7 @@ UniValue decodescript(const JSONRPCRequest& request)
     if (type.isStr() && type.get_str() != "scripthash") {
         // P2SH cannot be wrapped in a P2SH. If this script is already a P2SH,
         // don't return the address for a P2SH of the P2SH.
-        r.push_back(Pair("p2sh", script.ToBase58address().c_str()));
+        r.push_back(Pair("p2sh", CScriptID(script).GetBase58addressWithNetworkScriptPrefix().c_str()));
     }
 
     return r;

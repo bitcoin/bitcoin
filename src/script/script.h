@@ -300,9 +300,6 @@ public:
         // The default std::vector::clear() does not release memory.
         CScriptBase().swap(*this);
     }
-
-public:
-    base58string ToBase58address() const;
 };
 
 struct CScriptWitness
