@@ -44,7 +44,7 @@ private:
     bool m_fCompressed;
 
     //! The actual byte data
-    std::vector<unsigned char, secure_allocator<unsigned char> > keydata;
+    std::vector<unsigned char, secure_allocator<unsigned char> > m_keydata;
 
     //! Check whether the 32-byte array pointed to be vch is valid keydata.
     bool static Check(const unsigned char* vch);
@@ -54,7 +54,7 @@ public:
     CKey() : m_fValid(false), m_fCompressed(false)
     {
         // Important: vch must be 32 bytes in length to not break serialization
-        keydata.resize(32);
+        m_keydata.resize(32);
     }
 
     static CKey FromBase58string(const base58string& str);
@@ -68,17 +68,17 @@ public:
     {
         return a.m_fCompressed == b.m_fCompressed &&
             a.size() == b.size() &&
-            memcmp(a.keydata.data(), b.keydata.data(), a.size()) == 0;
+            memcmp(a.m_keydata.data(), b.m_keydata.data(), a.size()) == 0;
     }
 
     //! Initialize using begin and end iterators to byte data.
     template <typename T>
     void Set(const T pbegin, const T pend, bool fCompressedIn)
     {
-        if (size_t(pend - pbegin) != keydata.size()) {
+        if (size_t(pend - pbegin) != m_keydata.size()) {
             m_fValid = false;
         } else if (Check(&pbegin[0])) {
-            memcpy(keydata.data(), (unsigned char*)&pbegin[0], keydata.size());
+            memcpy(m_keydata.data(), (unsigned char*)&pbegin[0], m_keydata.size());
             m_fValid = true;
             m_fCompressed = fCompressedIn;
         } else {
@@ -87,9 +87,9 @@ public:
     }
 
     //! Simple read-only vector-like interface.
-    unsigned int size() const { return (m_fValid ? keydata.size() : 0); }
-    const unsigned char* begin() const { return keydata.data(); }
-    const unsigned char* end() const { return keydata.data() + size(); }
+    unsigned int size() const { return (m_fValid ? m_keydata.size() : 0); }
+    const unsigned char* begin() const { return m_keydata.data(); }
+    const unsigned char* end() const { return m_keydata.data() + size(); }
 
     //! Check whether this private key is valid.
     bool IsValid() const { return m_fValid; }

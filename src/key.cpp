@@ -124,8 +124,8 @@ bool CKey::Check(const unsigned char *vch) {
 
 void CKey::MakeNewKey(bool fCompressedIn) {
     do {
-        GetStrongRandBytes(keydata.data(), keydata.size());
-    } while (!Check(keydata.data()));
+        GetStrongRandBytes(m_keydata.data(), m_keydata.size());
+    } while (!Check(m_keydata.data()));
     m_fValid = true;
     m_fCompressed = fCompressedIn;
 }
