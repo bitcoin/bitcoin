@@ -32,6 +32,13 @@ class base58string;
  */
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CPrivKey;
 
+// util
+class CKeyUtil {
+public:
+    //! Check whether the 32-byte array pointed to be vch is valid keydata.
+    bool static Check(const unsigned char* vch);
+};
+
 /** An encapsulated private key. */
 class CKey
 {
@@ -45,9 +52,6 @@ private:
 
     //! The actual byte data
     std::vector<unsigned char, secure_allocator<unsigned char> > m_keydata;
-
-    //! Check whether the 32-byte array pointed to be vch is valid keydata.
-    bool static Check(const unsigned char* vch);
 
 public:
     //! Construct an invalid private key.
@@ -77,7 +81,7 @@ public:
     {
         if (size_t(pend - pbegin) != m_keydata.size()) {
             m_fValid = false;
-        } else if (Check(&pbegin[0])) {
+        } else if (CKeyUtil::Check(&pbegin[0])) {
             memcpy(m_keydata.data(), (unsigned char*)&pbegin[0], m_keydata.size());
             m_fValid = true;
             m_fCompressed = fCompressedIn;
