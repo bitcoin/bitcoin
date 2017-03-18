@@ -41,7 +41,7 @@ private:
     bool m_fValid;
 
     //! Whether the public key corresponding to this private key is (to be) compressed.
-    bool fCompressed;
+    bool m_fCompressed;
 
     //! The actual byte data
     std::vector<unsigned char, secure_allocator<unsigned char> > keydata;
@@ -51,7 +51,7 @@ private:
 
 public:
     //! Construct an invalid private key.
-    CKey() : m_fValid(false), fCompressed(false)
+    CKey() : m_fValid(false), m_fCompressed(false)
     {
         // Important: vch must be 32 bytes in length to not break serialization
         keydata.resize(32);
@@ -66,7 +66,7 @@ public:
 
     friend bool operator==(const CKey& a, const CKey& b)
     {
-        return a.fCompressed == b.fCompressed &&
+        return a.m_fCompressed == b.m_fCompressed &&
             a.size() == b.size() &&
             memcmp(a.keydata.data(), b.keydata.data(), a.size()) == 0;
     }
@@ -80,7 +80,7 @@ public:
         } else if (Check(&pbegin[0])) {
             memcpy(keydata.data(), (unsigned char*)&pbegin[0], keydata.size());
             m_fValid = true;
-            fCompressed = fCompressedIn;
+            m_fCompressed = fCompressedIn;
         } else {
             m_fValid = false;
         }
@@ -95,7 +95,7 @@ public:
     bool IsValid() const { return m_fValid; }
 
     //! Check whether the public key corresponding to this private key is (to be) compressed.
-    bool IsCompressed() const { return fCompressed; }
+    bool IsCompressed() const { return m_fCompressed; }
 
     //! Initialize from a CPrivKey (serialized OpenSSL private key data).
     bool SetPrivKey(const CPrivKey& vchPrivKey, bool fCompressed);

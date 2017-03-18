@@ -127,13 +127,13 @@ void CKey::MakeNewKey(bool fCompressedIn) {
         GetStrongRandBytes(keydata.data(), keydata.size());
     } while (!Check(keydata.data()));
     m_fValid = true;
-    fCompressed = fCompressedIn;
+    m_fCompressed = fCompressedIn;
 }
 
 bool CKey::SetPrivKey(const CPrivKey &privkey, bool fCompressedIn) {
     if (!ec_privkey_import_der(secp256k1_context_sign, (unsigned char*)begin(), &privkey[0], privkey.size()))
         return false;
-    fCompressed = fCompressedIn;
+    m_fCompressed = fCompressedIn;
     m_fValid = true;
     return true;
 }
@@ -145,7 +145,7 @@ CPrivKey CKey::GetPrivKey() const {
     size_t privkeylen;
     privkey.resize(279);
     privkeylen = 279;
-    ret = ec_privkey_export_der(secp256k1_context_sign, (unsigned char*)&privkey[0], &privkeylen, begin(), fCompressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
+    ret = ec_privkey_export_der(secp256k1_context_sign, (unsigned char*)&privkey[0], &privkeylen, begin(), m_fCompressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
     assert(ret);
     privkey.resize(privkeylen);
     return privkey;
@@ -174,7 +174,7 @@ CPubKey CKey::GetPubKey() const {
     CPubKey result;
     int ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pubkey, begin());
     assert(ret);
-    secp256k1_ec_pubkey_serialize(secp256k1_context_sign, (unsigned char*)result.begin(), &clen, &pubkey, fCompressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
+    secp256k1_ec_pubkey_serialize(secp256k1_context_sign, (unsigned char*)result.begin(), &clen, &pubkey, m_fCompressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
     assert(result.size() == clen);
     assert(result.IsValid());
     return result;
@@ -196,7 +196,7 @@ bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, uint32_
 }
 
 bool CKey::VerifyPubKey(const CPubKey& pubkey) const {
-    if (pubkey.IsCompressed() != fCompressed) {
+    if (pubkey.IsCompressed() != m_fCompressed) {
         return false;
     }
     unsigned char rnd[8];
@@ -220,14 +220,14 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
     secp256k1_ecdsa_recoverable_signature_serialize_compact(secp256k1_context_sign, (unsigned char*)&vchSig[1], &rec, &sig);
     assert(ret);
     assert(rec != -1);
-    vchSig[0] = 27 + rec + (fCompressed ? 4 : 0);
+    vchSig[0] = 27 + rec + (m_fCompressed ? 4 : 0);
     return true;
 }
 
 bool CKey::Load(CPrivKey &privkey, CPubKey &vchPubKey, bool fSkipCheck=false) {
     if (!ec_privkey_import_der(secp256k1_context_sign, (unsigned char*)begin(), &privkey[0], privkey.size()))
         return false;
-    fCompressed = vchPubKey.IsCompressed();
+    m_fCompressed = vchPubKey.IsCompressed();
     m_fValid = true;
 
     if (fSkipCheck)
@@ -251,7 +251,7 @@ bool CKey::Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const
     memcpy(ccChild.begin(), vout.data()+32, 32);
     memcpy((unsigned char*)keyChild.begin(), begin(), 32);
     bool ret = secp256k1_ec_privkey_tweak_add(secp256k1_context_sign, (unsigned char*)keyChild.begin(), vout.data());
-    keyChild.fCompressed = true;
+    keyChild.m_fCompressed = true;
     keyChild.m_fValid = ret;
     return ret;
 }
