@@ -404,8 +404,8 @@ public:
         return (*this);
     }
 
-    void GetAndClear(CSerializeData &data) {
-        data.insert(data.end(), begin(), end());
+    void GetAndClear(CSerializeData &targetData) {
+        targetData.insert(targetData.end(), begin(), end());
         clear();
     }
 
