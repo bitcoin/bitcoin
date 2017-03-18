@@ -16,14 +16,28 @@ CKey CBitcoinSecret::GetKey()
 {
     CKey ret;
     assert(m_data.vchData.size() >= 32);
-    ret.Set(m_data.vchData.begin(), m_data.vchData.begin() + 32, m_data.vchData.size() > 32 && m_data.vchData[32] == 1);
+
+    // 先頭32バイトを抽出してセット.
+    // ※圧縮されている場合は [32] が 1 になっているので、それを bool 値として compressed に渡す.
+    ret.Set(
+        m_data.vchData.begin(),      // pbegin
+        m_data.vchData.begin() + 32, // pend
+        m_data.vchData.size() > 32 && m_data.vchData[32] == 1 // compressed
+    );
     return ret;
 }
 
 bool CBitcoinSecret::IsValid() const
 {
-    bool fExpectedFormat = m_data.vchData.size() == 32 || (m_data.vchData.size() == 33 && m_data.vchData[32] == 1);
-    bool fCorrectVersion = m_data.vchVersion == Params().Base58Prefix(CChainParams::SECRET_KEY);
+    // データ内容チェック (長さおよび圧縮フラグ).
+    bool fExpectedFormat =
+        m_data.vchData.size() == 32 // 非圧縮版.
+        || (m_data.vchData.size() == 33 && m_data.vchData[32] == 1); // 圧縮版.
+
+    // prefix のチェック.
+    bool fCorrectVersion =
+        m_data.vchVersion == Params().Base58Prefix(CChainParams::SECRET_KEY);
+    
     return fExpectedFormat && fCorrectVersion;
 }
 
