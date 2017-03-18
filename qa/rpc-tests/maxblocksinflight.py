@@ -13,6 +13,7 @@ reach. [0.10 clients shouldn't request more than 16 from a single peer.]
 from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
+import logging
 
 MAX_REQUESTS = 128
 
@@ -31,6 +32,7 @@ class TestManager(NodeConnCB):
             raise EarlyDisconnectError(0)
 
     def __init__(self):
+        self.log = logging.getLogger("TestFramework.TestManager")
         NodeConnCB.__init__(self)
 
     def add_new_connection(self, connection):
