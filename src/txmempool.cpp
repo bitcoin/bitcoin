@@ -367,8 +367,7 @@ void CTxMemPool::GetCoinsByScript(const CScript& script, CCoinsByScript& coinsBy
     CCoinsMapByScript::const_iterator it = mapCoinsByScript.find(CCoinsViewByScript::getKey(script));
     if (it != mapCoinsByScript.end())
     {
-        BOOST_FOREACH(const COutPoint &outpoint, it->second.setCoins)
-            coinsByScript.setCoins.insert(outpoint);
+        coinsByScript.setCoins.insert(it->second.setCoins.begin(), it->second.setCoins.end());
     }
 }
 

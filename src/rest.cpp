@@ -678,8 +678,9 @@ static bool rest_gettxoutsbyaddress(HTTPRequest* req, const std::string& strURIP
     UniValue vObjects(UniValue::VARR);
     std::vector<std::pair<int, unsigned int> > vSort;
 
-    BOOST_FOREACH(const CScript &script, vScripts)
+    for(auto& scriptObj: vScripts)
     {
+        const CScript& script = scriptObj;
         CCoinsByScript coinsByScript;
         pcoinsByScript->GetCoinsByScript(script, coinsByScript);
 
