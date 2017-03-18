@@ -141,6 +141,7 @@ BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
 
     // Call the destructor to free leveldb LOCK
     delete dbw;
+    dbw = nullptr;
 
     // Now, set up another wrapper that wants to obfuscate the same directory
     CDBWrapper odbw(ph, (1 << 10), false, false, true);
@@ -182,6 +183,7 @@ BOOST_AUTO_TEST_CASE(existing_data_reindex)
 
     // Call the destructor to free leveldb LOCK
     delete dbw;
+    dbw = nullptr;
 
     // Simulate a -reindex by wiping the existing data store
     CDBWrapper odbw(ph, (1 << 10), false, true, true);
