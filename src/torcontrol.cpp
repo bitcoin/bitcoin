@@ -662,26 +662,26 @@ void TorController::reconnect_cb(evutil_socket_t fd, short what, void *arg)
 }
 
 /****** Thread ********/
-struct event_base *base;
-boost::thread torControlThread;
+static struct event_base *gBase;
+static boost::thread torControlThread;
 
 static void TorControlThread()
 {
-    TorController ctrl(base, GetArg("-torcontrol", DEFAULT_TOR_CONTROL));
+    TorController ctrl(gBase, GetArg("-torcontrol", DEFAULT_TOR_CONTROL));
 
-    event_base_dispatch(base);
+    event_base_dispatch(gBase);
 }
 
 void StartTorControl(boost::thread_group& threadGroup, CScheduler& scheduler)
 {
-    assert(!base);
+    assert(!gBase);
 #ifdef WIN32
     evthread_use_windows_threads();
 #else
     evthread_use_pthreads();
 #endif
-    base = event_base_new();
-    if (!base) {
+    gBase = event_base_new();
+    if (!gBase) {
         LogPrintf("tor: Unable to create event_base\n");
         return;
     }
@@ -691,9 +691,9 @@ void StartTorControl(boost::thread_group& threadGroup, CScheduler& scheduler)
 
 void InterruptTorControl()
 {
-    if (base) {
+    if (gBase) {
         LogPrintf("tor: Thread interrupt\n");
-        event_base_loopbreak(base);
+        event_base_loopbreak(gBase);
     }
 }
 
@@ -701,13 +701,13 @@ void StopTorControl()
 {
     // timed_join() avoids the wallet not closing during a repair-restart. For a 'normal' wallet exit
     // it behaves for our cases exactly like the normal join()
-    if (base) {
+    if (gBase) {
 #if BOOST_VERSION >= 105000
         torControlThread.try_join_for(boost::chrono::seconds(1));
 #else
         torControlThread.timed_join(boost::posix_time::seconds(1));
 #endif
-        event_base_free(base);
-        base = 0;
+        event_base_free(gBase);
+        gBase = 0;
     }
 }
