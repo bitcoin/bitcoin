@@ -46,7 +46,7 @@ struct FakeCheckCheckCompletion {
 
 struct FailingCheck {
     bool fails;
-    FailingCheck(bool fails) : fails(fails){};
+    FailingCheck(bool _fails) : fails(_fails){};
     FailingCheck() : fails(true){};
     bool operator()()
     {
@@ -411,15 +411,15 @@ BOOST_AUTO_TEST_CASE(test_CheckQueueControl_Locks)
             std::unique_lock<std::mutex> l(m);
             tg.create_thread([&]{
                     CCheckQueueControl<FakeCheck> control(queue.get());
-                    std::unique_lock<std::mutex> l(m);
+                    std::unique_lock<std::mutex> ll(m);
                     has_lock = true;
                     cv.notify_one();
-                    cv.wait(l, [&]{return has_tried;});
+                    cv.wait(ll, [&]{return has_tried;});
                     done = true;
                     cv.notify_one();
                     // Wait until the done is acknowledged
                     //
-                    cv.wait(l, [&]{return done_ack;});
+                    cv.wait(ll, [&]{return done_ack;});
                     });
             // Wait for thread to get the lock
             cv.wait(l, [&](){return has_lock;});
