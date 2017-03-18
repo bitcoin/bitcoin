@@ -168,7 +168,7 @@ void CBase58Data::SetData(const std::vector<unsigned char>& vchVersionIn, const 
     SetData(vchVersionIn, (void*)pbegin, pend - pbegin);
 }
 
-bool CBase58Data::_SetString(
+bool CBase58Data::_SetStringWithVersionBytes(
     const char*     psz,
     unsigned int    nVersionBytes // default 1
 )

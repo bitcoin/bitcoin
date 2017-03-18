@@ -12,12 +12,12 @@ public:
     base58string() {}
     explicit base58string(const std::string& str, unsigned int nVersionBytes = 1) {
         CBase58Data data;
-        data._SetString(str.c_str(), nVersionBytes);
+        data._SetStringWithVersionBytes(str.c_str(), nVersionBytes);
         m_string = data._ToString();
     }
     explicit base58string(const char* sz, unsigned int nVersionBytes = 1) {
         CBase58Data data;
-        data._SetString(sz, nVersionBytes);
+        data._SetStringWithVersionBytes(sz, nVersionBytes);
         m_string = data._ToString();
     }
 
