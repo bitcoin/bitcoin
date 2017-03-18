@@ -641,7 +641,7 @@ public:
             if (nNow + pos > vchBuf.size())
                 nNow = vchBuf.size() - pos;
             if (nNow + nReadPos > nSrcPos)
-                nNow = nSrcPos - nReadPos;
+                nNow = (size_t)(nSrcPos - nReadPos);
             memcpy(pch, &vchBuf[pos], nNow);
             nReadPos += nNow;
             pch += nNow;
@@ -669,7 +669,7 @@ public:
     }
 
     bool Seek(uint64_t nPos) {
-        long nLongPos = nPos;
+        long nLongPos = (long)nPos;
         if (nPos != (uint64_t)nLongPos)
             return false;
         if (fseek(src, nLongPos, SEEK_SET))
