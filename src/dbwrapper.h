@@ -132,10 +132,6 @@ public:
         return true;
     }
 
-    unsigned int GetKeySize() {
-        return piter->key().size();
-    }
-
     template<typename V> bool GetValue(V& value) {
         leveldb::Slice slValue = piter->value();
         try {
