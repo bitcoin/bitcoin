@@ -88,7 +88,10 @@ public: // ### 仮
     void SetData(const std::vector<unsigned char> &vchVersionIn, const unsigned char *pbegin, const unsigned char *pend);
 
 public:
-    bool _SetString(const char* psz, unsigned int nVersionBytes = 1);
+    bool _SetStringWithVersionBytes(const char* psz, unsigned int nVersionBytes);
+    bool _SetString(const char* psz) {
+        return _SetStringWithVersionBytes(psz, 1);
+    }
     bool _SetString(const std::string& str);
     bool SetBase58string(const base58string& str);
 
