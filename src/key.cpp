@@ -126,7 +126,7 @@ void CKey::MakeNewKey(bool fCompressedIn) {
     do {
         GetStrongRandBytes(keydata.data(), keydata.size());
     } while (!Check(keydata.data()));
-    fValid = true;
+    m_fValid = true;
     fCompressed = fCompressedIn;
 }
 
@@ -134,12 +134,12 @@ bool CKey::SetPrivKey(const CPrivKey &privkey, bool fCompressedIn) {
     if (!ec_privkey_import_der(secp256k1_context_sign, (unsigned char*)begin(), &privkey[0], privkey.size()))
         return false;
     fCompressed = fCompressedIn;
-    fValid = true;
+    m_fValid = true;
     return true;
 }
 
 CPrivKey CKey::GetPrivKey() const {
-    assert(fValid);
+    assert(m_fValid);
     CPrivKey privkey;
     int ret;
     size_t privkeylen;
@@ -168,7 +168,7 @@ CKey CKey::FromBase58string(const base58string& strPrivkey)
 
 
 CPubKey CKey::GetPubKey() const {
-    assert(fValid);
+    assert(m_fValid);
     secp256k1_pubkey pubkey;
     size_t clen = 65;
     CPubKey result;
@@ -181,7 +181,7 @@ CPubKey CKey::GetPubKey() const {
 }
 
 bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, uint32_t test_case) const {
-    if (!fValid)
+    if (!m_fValid)
         return false;
     vchSig.resize(72);
     size_t nSigLen = 72;
@@ -210,7 +210,7 @@ bool CKey::VerifyPubKey(const CPubKey& pubkey) const {
 }
 
 bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) const {
-    if (!fValid)
+    if (!m_fValid)
         return false;
     vchSig.resize(65);
     int rec = -1;
@@ -228,7 +228,7 @@ bool CKey::Load(CPrivKey &privkey, CPubKey &vchPubKey, bool fSkipCheck=false) {
     if (!ec_privkey_import_der(secp256k1_context_sign, (unsigned char*)begin(), &privkey[0], privkey.size()))
         return false;
     fCompressed = vchPubKey.IsCompressed();
-    fValid = true;
+    m_fValid = true;
 
     if (fSkipCheck)
         return true;
@@ -252,7 +252,7 @@ bool CKey::Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const
     memcpy((unsigned char*)keyChild.begin(), begin(), 32);
     bool ret = secp256k1_ec_privkey_tweak_add(secp256k1_context_sign, (unsigned char*)keyChild.begin(), vout.data());
     keyChild.fCompressed = true;
-    keyChild.fValid = ret;
+    keyChild.m_fValid = ret;
     return ret;
 }
 
