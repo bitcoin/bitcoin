@@ -112,7 +112,9 @@ public:
      * */
     inline bool bit_is_set(uint32_t s) const
     {
-        return (1 << (s & 7)) & mem[s >> 3].load(std::memory_order_relaxed);
+        return (
+            (1 << (s & 7)) & mem[s >> 3].load(std::memory_order_relaxed)
+        ) != 0;
     }
 };
 

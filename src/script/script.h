@@ -38,7 +38,7 @@ protected:
     {
         if (n == -1 || (n >= 1 && n <= 16))
         {
-            push_back(n + (OP_1 - 1));
+            push_back((unsigned char)(n + (OP_1 - 1)));
         }
         else if (n == 0)
         {
@@ -107,7 +107,7 @@ public:
         {
             insert(end(), OP_PUSHDATA2);
             uint8_t data[2];
-            WriteLE16(data, b.size());
+            WriteLE16(data, (uint16_t)b.size());
             insert(end(), data, data + sizeof(data));
         }
         else
