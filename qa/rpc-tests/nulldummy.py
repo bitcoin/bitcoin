@@ -81,14 +81,14 @@ class NULLDUMMYTest(BitcoinTestFramework):
         self.log.info("Test 3: Non-NULLDUMMY base transactions should be accepted in a block before activation [431]")
         self.block_submit(self.nodes[0], [test2tx], False, True)
 
-        self.log.info ("Test 4: Non-NULLDUMMY base multisig transaction is invalid after activation")
+        self.log.info("Test 4: Non-NULLDUMMY base multisig transaction is invalid after activation")
         test4tx = self.create_transaction(self.nodes[0], test2tx.hash, self.address, 46)
         test6txs=[CTransaction(test4tx)]
         trueDummy(test4tx)
         assert_raises_jsonrpc(-26, NULLDUMMY_ERROR, self.nodes[0].sendrawtransaction, bytes_to_hex_str(test4tx.serialize_with_witness()), True)
         self.block_submit(self.nodes[0], [test4tx])
 
-        print ("Test 5: Non-NULLDUMMY P2WSH multisig transaction invalid after activation")
+        self.log.info("Test 5: Non-NULLDUMMY P2WSH multisig transaction invalid after activation")
         test5tx = self.create_transaction(self.nodes[0], txid3, self.wit_address, 48)
         test6txs.append(CTransaction(test5tx))
         test5tx.wit.vtxinwit[0].scriptWitness.stack[0] = b'\x01'
