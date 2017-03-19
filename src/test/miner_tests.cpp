@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
       pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
       BOOST_CHECK(pblocktemplate);
       BOOST_CHECK(pblocktemplate->block.fExcessive == false);
-      BOOST_CHECK(pblocktemplate->block.nBlockSize <= maxGeneratedBlock - 2);
+      BOOST_CHECK(pblocktemplate->block.nBlockSize <= maxGeneratedBlock - 4);
       unsigned int blockSize = pblocktemplate->block.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
       BOOST_CHECK(blockSize <= maxGeneratedBlock - 4);
       minRoom = std::min(minRoom, maxGeneratedBlock - blockSize);
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
       pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
       BOOST_CHECK(pblocktemplate);
       BOOST_CHECK(pblocktemplate->block.fExcessive == false);
-      BOOST_CHECK(pblocktemplate->block.nBlockSize <= maxGeneratedBlock);
+      BOOST_CHECK(pblocktemplate->block.nBlockSize <= maxGeneratedBlock - 2);
       unsigned int blockSize = pblocktemplate->block.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
       BOOST_CHECK(blockSize <= maxGeneratedBlock - 2);
       minRoom = std::min(minRoom, maxGeneratedBlock - blockSize);
