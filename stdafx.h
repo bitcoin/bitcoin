@@ -1,5 +1,10 @@
 #pragma once
 
+#ifdef _MSC_VER
+    // warning C4503: '__LINE__Var': decorated name length exceeded, name was truncated
+    #pragma warning(disable: 4503)
+#endif
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>

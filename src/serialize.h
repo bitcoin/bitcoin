@@ -192,7 +192,7 @@ template<typename Stream> inline void Unserialize(Stream& s, float& a   ) { a = 
 template<typename Stream> inline void Unserialize(Stream& s, double& a  ) { a = ser_uint64_to_double(ser_readdata64(s)); }
 
 template<typename Stream> inline void Serialize(Stream& s, bool a)    { char f=a; ser_writedata8(s, f); }
-template<typename Stream> inline void Unserialize(Stream& s, bool& a) { char f=ser_readdata8(s); a=f; }
+template<typename Stream> inline void Unserialize(Stream& s, bool& a) { char f = (char)ser_readdata8(s); a = (f != 0); }
 
 
 
@@ -221,17 +221,17 @@ void WriteCompactSize(Stream& os, uint64_t nSize)
 {
     if (nSize < 253)
     {
-        ser_writedata8(os, nSize);
+        ser_writedata8(os, (uint8_t)nSize);
     }
     else if (nSize <= std::numeric_limits<unsigned short>::max())
     {
         ser_writedata8(os, 253);
-        ser_writedata16(os, nSize);
+        ser_writedata16(os, (uint16_t)nSize);
     }
     else if (nSize <= std::numeric_limits<unsigned int>::max())
     {
         ser_writedata8(os, 254);
-        ser_writedata32(os, nSize);
+        ser_writedata32(os, (uint32_t)nSize);
     }
     else
     {
@@ -555,7 +555,7 @@ void Serialize(Stream& os, const std::basic_string<C>& str)
 template<typename Stream, typename C>
 void Unserialize(Stream& is, std::basic_string<C>& str)
 {
-    unsigned int nSize = ReadCompactSize(is);
+    unsigned int nSize = (unsigned int)ReadCompactSize(is);
     str.resize(nSize);
     if (nSize != 0)
         is.read((char*)&str[0], nSize * sizeof(str[0]));
@@ -594,7 +594,7 @@ void Unserialize_impl(Stream& is, prevector<N, T>& v, const unsigned char&)
 {
     // Limit size per read so bogus size value won't cause out of memory
     v.clear();
-    unsigned int nSize = ReadCompactSize(is);
+    unsigned int nSize = (unsigned int)ReadCompactSize(is);
     unsigned int i = 0;
     while (i < nSize)
     {
@@ -609,7 +609,7 @@ template<typename Stream, unsigned int N, typename T, typename V>
 void Unserialize_impl(Stream& is, prevector<N, T>& v, const V&)
 {
     v.clear();
-    unsigned int nSize = ReadCompactSize(is);
+    unsigned int nSize = (unsigned int)ReadCompactSize(is);
     unsigned int i = 0;
     unsigned int nMid = 0;
     while (nMid < nSize)
@@ -662,7 +662,7 @@ void Unserialize_impl(Stream& is, std::vector<T, A>& v, const unsigned char&)
 {
     // Limit size per read so bogus size value won't cause out of memory
     v.clear();
-    unsigned int nSize = ReadCompactSize(is);
+    unsigned int nSize = (unsigned int)ReadCompactSize(is);
     unsigned int i = 0;
     while (i < nSize)
     {
@@ -677,7 +677,7 @@ template<typename Stream, typename T, typename A, typename V>
 void Unserialize_impl(Stream& is, std::vector<T, A>& v, const V&)
 {
     v.clear();
-    unsigned int nSize = ReadCompactSize(is);
+    unsigned int nSize = (unsigned int)ReadCompactSize(is);
     unsigned int i = 0;
     unsigned int nMid = 0;
     while (nMid < nSize)
@@ -733,7 +733,7 @@ template<typename Stream, typename K, typename T, typename Pred, typename A>
 void Unserialize(Stream& is, std::map<K, T, Pred, A>& m)
 {
     m.clear();
-    unsigned int nSize = ReadCompactSize(is);
+    unsigned int nSize = (unsigned int)ReadCompactSize(is);
     typename std::map<K, T, Pred, A>::iterator mi = m.begin();
     for (unsigned int i = 0; i < nSize; i++)
     {
@@ -760,7 +760,7 @@ template<typename Stream, typename K, typename Pred, typename A>
 void Unserialize(Stream& is, std::set<K, Pred, A>& m)
 {
     m.clear();
-    unsigned int nSize = ReadCompactSize(is);
+    unsigned int nSize = (unsigned int)ReadCompactSize(is);
     typename std::set<K, Pred, A>::iterator it = m.begin();
     for (unsigned int i = 0; i < nSize; i++)
     {

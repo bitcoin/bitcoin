@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2010 Satoshi Nakamoto
+﻿// Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -122,13 +122,14 @@ public:
         return *this;
     }
 
+    // #### 割と無理やり変換している.
     int getint() const
     {
         if (m_value > std::numeric_limits<int>::max())
             return std::numeric_limits<int>::max();
         else if (m_value < std::numeric_limits<int>::min())
             return std::numeric_limits<int>::min();
-        return m_value;
+        return (int)m_value;
     }
 
     std::vector<unsigned char> getvch() const
