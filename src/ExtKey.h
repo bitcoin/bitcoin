@@ -9,19 +9,19 @@
 class base58string;
 
 struct CExtKey {
-    unsigned char nDepth;
-    unsigned char vchFingerprint[4];
-    unsigned int nChild;
-    ChainCode chaincode;
-    CKey key;
+    unsigned char m_nDepth;
+    unsigned char m_vchFingerprint[4];
+    unsigned int m_nChild;
+    ChainCode m_chaincode;
+    CKey m_key;
 
     friend bool operator==(const CExtKey& a, const CExtKey& b)
     {
-        return a.nDepth == b.nDepth &&
-            memcmp(&a.vchFingerprint[0], &b.vchFingerprint[0], sizeof(vchFingerprint)) == 0 &&
-            a.nChild == b.nChild &&
-            a.chaincode == b.chaincode &&
-            a.key == b.key;
+        return a.m_nDepth == b.m_nDepth &&
+            memcmp(&a.m_vchFingerprint[0], &b.m_vchFingerprint[0], sizeof(m_vchFingerprint)) == 0 &&
+            a.m_nChild == b.m_nChild &&
+            a.m_chaincode == b.m_chaincode &&
+            a.m_key == b.m_key;
     }
 
     void Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const;
