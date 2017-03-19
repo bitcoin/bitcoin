@@ -27,11 +27,11 @@ void CExtKey::SetMaster(const unsigned char *seed, unsigned int nSeedLen) {
 
 CExtPubKey CExtKey::Neuter() const {
     CExtPubKey ret;
-    ret.nDepth = m_nDepth;
-    memcpy(&ret.vchFingerprint[0], &m_vchFingerprint[0], 4);
-    ret.nChild = m_nChild;
-    ret.pubkey = m_key.GetPubKey();
-    ret.chaincode = m_chaincode;
+    ret.m_nDepth = m_nDepth;
+    memcpy(&ret.m_vchFingerprint[0], &m_vchFingerprint[0], 4);
+    ret.m_nChild = m_nChild;
+    ret.m_pubkey = m_key.GetPubKey();
+    ret.m_chaincode = m_chaincode;
     return ret;
 }
 

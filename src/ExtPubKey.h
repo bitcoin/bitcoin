@@ -6,19 +6,19 @@
 #pragma once
 
 struct CExtPubKey {
-    unsigned char nDepth;
-    unsigned char vchFingerprint[4];
-    unsigned int nChild;
-    ChainCode chaincode;
-    CPubKey pubkey;
+    unsigned char m_nDepth;
+    unsigned char m_vchFingerprint[4];
+    unsigned int m_nChild;
+    ChainCode m_chaincode;
+    CPubKey m_pubkey;
 
     friend bool operator==(const CExtPubKey &a, const CExtPubKey &b)
     {
-        return a.nDepth == b.nDepth &&
-            memcmp(&a.vchFingerprint[0], &b.vchFingerprint[0], sizeof(vchFingerprint)) == 0 &&
-            a.nChild == b.nChild &&
-            a.chaincode == b.chaincode &&
-            a.pubkey == b.pubkey;
+        return a.m_nDepth == b.m_nDepth &&
+            memcmp(&a.m_vchFingerprint[0], &b.m_vchFingerprint[0], sizeof(m_vchFingerprint)) == 0 &&
+            a.m_nChild == b.m_nChild &&
+            a.m_chaincode == b.m_chaincode &&
+            a.m_pubkey == b.m_pubkey;
     }
 
     void Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const;
