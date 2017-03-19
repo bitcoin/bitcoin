@@ -4,6 +4,7 @@
 
 #include "ExtKey.h"
 #include "crypto/hmac_sha512.h"
+#include "ExtPubKey.h"
 
 bool CExtKey::Derive(CExtKey &out, unsigned int _nChild) const {
     out.m_nDepth = m_nDepth + 1;

@@ -7,6 +7,7 @@
 
 #include "key.h"
 class base58string;
+struct CExtPubKey;
 
 struct CExtKey {
     unsigned char m_nDepth;
