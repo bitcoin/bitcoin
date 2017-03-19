@@ -257,7 +257,7 @@ public:
      * uint64_t, resulting in failures when syncing the chain (#4634).
      */
     size_t operator()(const uint256& txid) const {
-        return SipHashUint256(k0, k1, txid);
+        return (size_t)SipHashUint256(k0, k1, txid);
     }
 };
 
@@ -452,8 +452,8 @@ public:
      * Note that lightweight clients may not know anything besides the hash of previous transactions,
      * so may not be able to calculate this.
      *
-     * @param[in] tx	transaction for which we are checking input total
-     * @return	Sum of value of all inputs (scriptSigs)
+     * @param[in] tx    transaction for which we are checking input total
+     * @return  Sum of value of all inputs (scriptSigs)
      */
     CAmount GetValueIn(const CTransaction& tx) const;
 

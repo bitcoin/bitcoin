@@ -183,7 +183,7 @@ struct update_ancestor_state
     {}
 
     void operator() (CTxMemPoolEntry &e)
-        { e.UpdateAncestorState(modifySize, modifyFee, modifyCount, modifySigOpsCost); }
+        { e.UpdateAncestorState(modifySize, modifyFee, modifyCount, (int)modifySigOpsCost); }
 
     private:
         int64_t modifySize;
@@ -234,11 +234,11 @@ public:
         bool fUseADescendants = UseDescendantScore(a);
         bool fUseBDescendants = UseDescendantScore(b);
 
-        double aModFee = fUseADescendants ? a.GetModFeesWithDescendants() : a.GetModifiedFee();
-        double aSize = fUseADescendants ? a.GetSizeWithDescendants() : a.GetTxSize();
+        double aModFee = (double)(fUseADescendants ? a.GetModFeesWithDescendants() : a.GetModifiedFee());
+        double aSize = (double)(fUseADescendants ? a.GetSizeWithDescendants() : a.GetTxSize());
 
-        double bModFee = fUseBDescendants ? b.GetModFeesWithDescendants() : b.GetModifiedFee();
-        double bSize = fUseBDescendants ? b.GetSizeWithDescendants() : b.GetTxSize();
+        double bModFee = (double)(fUseBDescendants ? b.GetModFeesWithDescendants() : b.GetModifiedFee());
+        double bSize = (double)(fUseBDescendants ? b.GetSizeWithDescendants() : b.GetTxSize());
 
         // Avoid division by rewriting (a/b > c/d) as (a*d > c*b).
         double f1 = aModFee * bSize;
@@ -291,11 +291,11 @@ class CompareTxMemPoolEntryByAncestorFee
 public:
     bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b)
     {
-        double aFees = a.GetModFeesWithAncestors();
-        double aSize = a.GetSizeWithAncestors();
+        double aFees = (double)a.GetModFeesWithAncestors();
+        double aSize = (double)a.GetSizeWithAncestors();
 
-        double bFees = b.GetModFeesWithAncestors();
-        double bSize = b.GetSizeWithAncestors();
+        double bFees = (double)b.GetModFeesWithAncestors();
+        double bSize = (double)b.GetSizeWithAncestors();
 
         // Avoid division by rewriting (a/b > c/d) as (a*d > c*b).
         double f1 = aFees * bSize;
@@ -527,7 +527,7 @@ public:
      * check does nothing.
      */
     void check(const CCoinsViewCache *pcoins) const;
-    void setSanityCheck(double dFrequency = 1.0) { nCheckFrequency = dFrequency * 4294967295.0; }
+    void setSanityCheck(double dFrequency = 1.0) { nCheckFrequency = (uint32_t)(dFrequency * 4294967295.0); }
 
     // addUnchecked must updated state for all ancestors of a given transaction,
     // to track size/count of descendant transactions.  First version of
