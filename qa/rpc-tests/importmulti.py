@@ -413,7 +413,7 @@ class ImportMultiTest (BitcoinTestFramework):
 
         # Importing existing watch only address with new timestamp should replace saved timestamp.
         assert_greater_than(timestamp, watchonly_timestamp)
-        print("Should replace previously saved watch only timestamp.")
+        self.log.info("Should replace previously saved watch only timestamp.")
         result = self.nodes[1].importmulti([{
             "scriptPubKey": {
                 "address": watchonly_address,

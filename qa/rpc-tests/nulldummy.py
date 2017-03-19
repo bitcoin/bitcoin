@@ -76,7 +76,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         self.log.info("Test 3: Non-NULLDUMMY base transactions should be accepted in a block before activation [431]")
         self.block_submit(self.nodes[0], [test2tx], True)
 
-        self.log.info ("Test 4: Non-NULLDUMMY base multisig transaction is invalid after activation")
+        self.log.info("Test 4: Non-NULLDUMMY base multisig transaction is invalid after activation")
         test4tx = self.create_transaction(self.nodes[0], test2tx.hash, self.address, 46)
         test6txs=[CTransaction(test4tx)]
         trueDummy(test4tx)
