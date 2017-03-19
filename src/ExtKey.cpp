@@ -17,7 +17,7 @@ void CExtKey::SetMaster(const unsigned char *seed, unsigned int nSeedLen) {
     static const unsigned char hashkey[] = { 'B','i','t','c','o','i','n',' ','s','e','e','d' };
     std::vector<unsigned char, secure_allocator<unsigned char>> vout(64);
     CHMAC_SHA512(hashkey, sizeof(hashkey)).Write(seed, nSeedLen).Finalize(vout.data());
-    key.Set(&vout[0], &vout[32], true);
+    key.SetBinary(&vout[0], &vout[32], true);
     memcpy(chaincode.begin(), &vout[32], 32);
     nDepth = 0;
     nChild = 0;
@@ -50,7 +50,7 @@ void CExtKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
     memcpy(vchFingerprint, code + 1, 4);
     nChild = (code[5] << 24) | (code[6] << 16) | (code[7] << 8) | code[8];
     memcpy(chaincode.begin(), code + 9, 32);
-    key.Set(code + 42, code + BIP32_EXTKEY_SIZE, true);
+    key.SetBinary(code + 42, code + BIP32_EXTKEY_SIZE, true);
 }
 
 #include "BitcoinExtKeyBase.h"

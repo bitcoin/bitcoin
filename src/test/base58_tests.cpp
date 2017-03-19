@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
         {
             bool isCompressed = find_value(metadata, "isCompressed").get_bool();
             CKey key;
-            key.Set(exp_payload.begin(), exp_payload.end(), isCompressed);
+            key.SetBinary(&*exp_payload.begin(), &*exp_payload.end(), isCompressed);
             assert(key.IsValid());
             BOOST_CHECK_MESSAGE(key.GetBase58stringWithNetworkSecretKeyPrefix().c_str() == exp_base58string, "result mismatch: " + strTest);
         }

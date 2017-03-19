@@ -238,20 +238,20 @@ struct KeyData
     KeyData()
     {
 
-        key0.Set(vchKey0, vchKey0 + 32, false);
-        key0C.Set(vchKey0, vchKey0 + 32, true);
+        key0.SetBinary(vchKey0, vchKey0 + 32, false);
+        key0C.SetBinary(vchKey0, vchKey0 + 32, true);
         pubkey0 = key0.GetPubKey();
         pubkey0H = key0.GetPubKey();
         pubkey0C = key0C.GetPubKey();
         *const_cast<unsigned char*>(&pubkey0H[0]) = 0x06 | (pubkey0H[64] & 1);
 
-        key1.Set(vchKey1, vchKey1 + 32, false);
-        key1C.Set(vchKey1, vchKey1 + 32, true);
+        key1.SetBinary(vchKey1, vchKey1 + 32, false);
+        key1C.SetBinary(vchKey1, vchKey1 + 32, true);
         pubkey1 = key1.GetPubKey();
         pubkey1C = key1C.GetPubKey();
 
-        key2.Set(vchKey2, vchKey2 + 32, false);
-        key2C.Set(vchKey2, vchKey2 + 32, true);
+        key2.SetBinary(vchKey2, vchKey2 + 32, false);
+        key2C.SetBinary(vchKey2, vchKey2 + 32, true);
         pubkey2 = key2.GetPubKey();
         pubkey2C = key2C.GetPubKey();
     }
