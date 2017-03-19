@@ -25,6 +25,9 @@
     <Filter Include="Source Files\key\script">
       <UniqueIdentifier>{4956e91b-06e2-4847-a60b-0bc6fc4e62a7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\key\pub">
+      <UniqueIdentifier>{529e43d1-1e1a-4d07-8d6e-45a9308351a9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\chainparams.cpp">
@@ -319,9 +322,6 @@
     <ClCompile Include="src\TxDestination.cpp">
       <Filter>Source Files\key</Filter>
     </ClCompile>
-    <ClCompile Include="src\pubkey.cpp">
-      <Filter>Source Files\key</Filter>
-    </ClCompile>
     <ClCompile Include="src\key.cpp">
       <Filter>Source Files\key\secret</Filter>
     </ClCompile>
@@ -348,6 +348,15 @@
     </ClCompile>
     <ClCompile Include="src\base58string.cpp">
       <Filter>Source Files\key</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pubkey.cpp">
+      <Filter>Source Files\key\pub</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ExtPubKey.cpp">
+      <Filter>Source Files\key\pub</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PubKeyUtil.cpp">
+      <Filter>Source Files\key\pub</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -706,9 +715,6 @@
     <ClInclude Include="src\TxDestination.h">
       <Filter>Source Files\key</Filter>
     </ClInclude>
-    <ClInclude Include="src\pubkey.h">
-      <Filter>Source Files\key</Filter>
-    </ClInclude>
     <ClInclude Include="src\key.h">
       <Filter>Source Files\key\secret</Filter>
     </ClInclude>
@@ -735,6 +741,15 @@
     </ClInclude>
     <ClInclude Include="src\base58string.h">
       <Filter>Source Files\key</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pubkey.h">
+      <Filter>Source Files\key\pub</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ExtPubKey.h">
+      <Filter>Source Files\key\pub</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PubKeyUtil.h">
+      <Filter>Source Files\key\pub</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

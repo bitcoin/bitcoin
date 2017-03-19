@@ -156,8 +156,8 @@ void CWallet::DeriveNewChildKey(CKeyMetadata& metadata, CKey& secret)
         metadata.hdMasterKeyID = hdChain.masterKeyID;
         // increment childkey index
         hdChain.nExternalChainCounter++;
-    } while (HaveKey(childKey.key.GetPubKey().GetID()));
-    secret = childKey.key;
+    } while (HaveKey(childKey.m_key.GetPubKey().GetID()));
+    secret = childKey.m_key;
 
     // update the chain model in the database
     if (!CWalletDB(strWalletFile).WriteHDChain(hdChain))
