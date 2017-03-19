@@ -6,6 +6,9 @@
 
 import socket, threading, queue
 import traceback, sys
+import logging
+
+logger = logging.getLogger("TestFramework.socks5")
 
 ### Protocol constants
 class Command:
@@ -112,10 +115,10 @@ class Socks5Connection(object):
 
             cmdin = Socks5Command(cmd, atyp, addr, port, username, password)
             self.serv.queue.put(cmdin)
-            print('Proxy: ', cmdin)
+            logger.info('Proxy: %s', cmdin)
             # Fall through to disconnect
         except Exception as e:
-            traceback.print_exc(file=sys.stderr)
+            logger.exception("socks5 request handling failed.")
             self.serv.queue.put(e)
         finally:
             self.conn.close()
