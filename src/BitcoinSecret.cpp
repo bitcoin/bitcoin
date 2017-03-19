@@ -19,9 +19,9 @@ CKey CBitcoinSecret::GetKey()
 
     // 先頭32バイトを抽出してセット.
     // ※圧縮されている場合は [32] が 1 になっているので、それを bool 値として compressed に渡す.
-    ret.Set(
-        m_data.vchData.begin(),      // pbegin
-        m_data.vchData.begin() + 32, // pend
+    ret.SetBinary(
+        m_data.vchData.data(),      // pbegin
+        m_data.vchData.data() + 32, // pend
         m_data.vchData.size() > 32 && m_data.vchData[32] == 1 // compressed
     );
     return ret;

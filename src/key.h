@@ -76,8 +76,7 @@ public:
     }
 
     //! Initialize using begin and end iterators to byte data.
-    template <typename T>
-    void Set(const T pbegin, const T pend, bool fCompressedIn)
+    void SetBinary(const unsigned char* pbegin, const unsigned char* pend, bool fCompressedIn)
     {
         if (size_t(pend - pbegin) != m_keydata.size()) {
             m_fValid = false;
