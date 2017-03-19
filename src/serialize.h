@@ -437,7 +437,7 @@ public:
     template<typename Stream>
     void Unserialize(Stream& s)
     {
-        size_t size = ReadCompactSize(s);
+        size_t size = (size_t)ReadCompactSize(s);
         if (size > Limit) {
             throw std::ios_base::failure("String length limit exceeded");
         }

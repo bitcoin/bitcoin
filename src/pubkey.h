@@ -131,7 +131,7 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        unsigned int len = ::ReadCompactSize(s);
+        unsigned int len = (unsigned int)::ReadCompactSize(s);
         if (len <= 65) {
             s.read((char*)vch, len);
         } else {
@@ -232,7 +232,7 @@ struct CExtPubKey {
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        unsigned int len = ::ReadCompactSize(s);
+        unsigned int len = (unsigned int)::ReadCompactSize(s);
         unsigned char code[BIP32_EXTKEY_SIZE];
         if (len != BIP32_EXTKEY_SIZE)
             throw std::runtime_error("Invalid extended key size\n");

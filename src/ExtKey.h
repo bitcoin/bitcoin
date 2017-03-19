@@ -41,7 +41,7 @@ struct CExtKey {
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        unsigned int len = ::ReadCompactSize(s);
+        unsigned int len = (unsigned int)::ReadCompactSize(s);
         unsigned char code[BIP32_EXTKEY_SIZE];
         s.read((char *)&code[0], len);
         Decode(code);
