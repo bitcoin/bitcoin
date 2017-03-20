@@ -156,9 +156,13 @@ base58string CKey::GetBase58stringWithNetworkSecretKeyPrefix() const
     CBase58Data data;
 
     assert(this->IsValid());
-    data.SetData(Params().Base58Prefix(CChainParams::SECRET_KEY), this->begin(), this->size());
+    data.SetData(
+        Params().Base58Prefix(CChainParams::SECRET_KEY),
+        this->begin(),
+        this->size() // ここは常に32??? まだよくわからん。m_keydata.size() が来るっぽいが. (※invalidの場合は0)
+    );
     if (this->IsCompressed())
-        data.vchData.push_back(1);
+        data.m_vchData.push_back(1);
 
     return base58string(data._ToString());
 }
@@ -174,25 +178,25 @@ CKey CKey::FromBase58string(const base58string& strPrivkey)
     // -- -- 有効性チェック (旧 CBitcoinSecret::IsValid) -- -- //
     // データ内容チェック (長さおよび圧縮フラグ).
     bool fExpectedFormat =
-        data.vchData.size() == 32 // 非圧縮版.
-        || (data.vchData.size() == 33 && data.vchData[32] == 1); // 圧縮版.
+        data.m_vchData.size() == 32 // 非圧縮版.
+        || (data.m_vchData.size() == 33 && data.m_vchData[32] == 1); // 圧縮版.
     if (!fExpectedFormat)return CKey(); // invalid key
 
     // prefix のチェック.
     bool fCorrectVersion =
-        data.vchVersion == Params().Base58Prefix(CChainParams::SECRET_KEY);
+        data.m_vchVersion == Params().Base58Prefix(CChainParams::SECRET_KEY);
     if (!fCorrectVersion)return CKey(); // invalid key;
 
     // -- -- CKey への変換 -- -- //
     CKey ret;
-    assert(data.vchData.size() >= 32);
+    assert(data.m_vchData.size() >= 32);
 
     // 先頭32バイトを抽出してセット.
     // ※圧縮されている場合は [32] が 1 になっているので、それを bool 値として compressed に渡す.
     ret.SetBinary(
-        data.vchData.data(),      // pbegin
-        data.vchData.data() + 32, // pend
-        data.vchData.size() > 32 && data.vchData[32] == 1 // compressed
+        data.m_vchData.data(),      // pbegin
+        data.m_vchData.data() + 32, // pend
+        data.m_vchData.size() > 32 && data.m_vchData[32] == 1 // compressed
     );
     return ret;
 }

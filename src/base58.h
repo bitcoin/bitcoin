@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2010 Satoshi Nakamoto
+﻿// Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -72,17 +72,18 @@ class CKey;
 /**
  * Base class for all base58-encoded data
  */
-class CBase58Data
-{
+class CBase58Data{
+public:
+    typedef std::vector<unsigned char, zero_after_free_allocator<unsigned char> > VectorUchar;
+
 protected:
     //! the version byte(s)
-    std::vector<unsigned char> vchVersion;
+    std::vector<unsigned char> m_vchVersion;
 
     //! the actually encoded data
-    typedef std::vector<unsigned char, zero_after_free_allocator<unsigned char> > vector_uchar;
-    vector_uchar vchData;
+    VectorUchar m_vchData;
 
-public: // ### 仮
+public: // ### 仮.
     CBase58Data();
     void SetData(const std::vector<unsigned char> &vchVersionIn, const void* pdata, size_t nSize);
     void SetData(const std::vector<unsigned char> &vchVersionIn, const unsigned char *pbegin, const unsigned char *pend);
