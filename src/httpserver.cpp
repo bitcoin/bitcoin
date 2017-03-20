@@ -482,6 +482,7 @@ void StopHTTPServer()
         workQueue->WaitExit();
 #endif        
         delete workQueue;
+        workQueue = nullptr;
     }
     if (eventBase) {
         LogPrint("http", "Waiting for HTTP event thread to exit\n");

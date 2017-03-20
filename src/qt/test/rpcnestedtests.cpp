@@ -160,11 +160,13 @@ void RPCNestedTests::rpcNestedTests()
     pcoinsTip = nullptr;
     llmq::DestroyLLMQSystem();
     delete deterministicMNManager;
+    deterministicMNManager = nullptr;
     delete pcoinsdbview;
     pcoinsdbview = nullptr;
     delete pblocktree;
     pblocktree = nullptr;
     delete evoDb;
+    evoDb = nullptr;
 
     boost::filesystem::remove_all(boost::filesystem::path(path));
 }
