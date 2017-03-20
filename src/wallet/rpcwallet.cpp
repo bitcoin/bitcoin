@@ -2768,6 +2768,7 @@ extern UniValue aliasinfo(const UniValue& params, bool fHelp);
 extern UniValue aliasbalance(const UniValue& params, bool fHelp);
 extern UniValue aliashistory(const UniValue& params, bool fHelp);
 extern UniValue aliasfilter(const UniValue& params, bool fHelp);
+extern UniValue aliaspay(const UniValue& params, bool fHelp);
 extern UniValue generatepublickey(const UniValue& params, bool fHelp);
 extern UniValue syscoinsignrawtransaction(const UniValue& params, bool fHelp);
 extern UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp);
@@ -2876,6 +2877,7 @@ static const CRPCCommand commands[] =
 	{ "wallet", "aliasbalance",      &aliasbalance,         false },
     { "wallet", "aliashistory",      &aliashistory,      false },
     { "wallet", "aliasfilter",       &aliasfilter,       false },
+	{ "wallet", "aliaspay",       &aliaspay,       false },
 	{ "wallet", "generatepublickey", &generatepublickey, false },
 	{ "wallet", "syscoinsignrawtransaction",		 &syscoinsignrawtransaction,	false },
 	{ "wallet", "syscoindecoderawtransaction",		 &syscoindecoderawtransaction,	false },
