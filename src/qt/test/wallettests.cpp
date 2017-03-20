@@ -42,9 +42,9 @@ uint256 SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CBitc
     entry->findChild<QValidatedLineEdit*>("payTo")->setText(QString::fromStdString(address.ToString()));
     entry->findChild<BitcoinAmountField*>("payAmount")->setValue(amount);
     uint256 txid;
-    boost::signals2::scoped_connection c = wallet.NotifyTransactionChanged.connect([&txid](CWallet*, const uint256& hash, ChangeType status) {
+    boost::signals2::scoped_connection c(wallet.NotifyTransactionChanged.connect([&txid](CWallet*, const uint256& hash, ChangeType status) {
         if (status == CT_NEW) txid = hash;
-    });
+    }));
     ConfirmSend();
     QMetaObject::invokeMethod(&sendCoinsDialog, "on_sendButton_clicked");
     return txid;
