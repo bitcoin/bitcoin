@@ -3,11 +3,11 @@ Upstream-Name: 42
 Upstream-Source: https://github.com/42-coin/42
 
 Files: *
-Copyright: 2016, 42 Developers
+Copyright: 2016-2017, 42 Developers
 License: Expat
 
 Files: *
-Copyright: 2012-2015, Novacoin Developers
+Copyright: 2012-2016, Novacoin Developers
 License: Expat
 
 Files: *
