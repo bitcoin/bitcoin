@@ -38,8 +38,8 @@ bool CBitcoinAddress::IsValid() const
 bool CBitcoinAddress::IsValid(const CChainParams& params) const
 {
     bool fCorrectSize = m_data.m_vchData.size() == 20;
-    bool fKnownVersion = m_data.vchVersion == params.Base58Prefix(CChainParams::PUBKEY_ADDRESS) ||
-        m_data.vchVersion == params.Base58Prefix(CChainParams::SCRIPT_ADDRESS);
+    bool fKnownVersion = m_data.m_vchVersion == params.Base58Prefix(CChainParams::PUBKEY_ADDRESS) ||
+        m_data.m_vchVersion == params.Base58Prefix(CChainParams::SCRIPT_ADDRESS);
     return fCorrectSize && fKnownVersion;
 }
 
@@ -49,9 +49,9 @@ CTxDestination CBitcoinAddress::Get() const
         return CNoDestination();
     uint160 id;
     memcpy(&id, &m_data.m_vchData[0], 20);
-    if (m_data.vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS))
+    if (m_data.m_vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS))
         return CKeyID(id);
-    else if (m_data.vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS))
+    else if (m_data.m_vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS))
         return CScriptID(id);
     else
         return CNoDestination();
@@ -60,7 +60,7 @@ CTxDestination CBitcoinAddress::Get() const
 // ####### これも CKeyID に移行する候補.
 bool CBitcoinAddress::GetKeyID(CKeyID& keyID) const
 {
-    if (!IsValid() || m_data.vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS))
+    if (!IsValid() || m_data.m_vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS))
         return false;
     uint160 id;
     memcpy(&id, &m_data.m_vchData[0], 20);
@@ -70,5 +70,5 @@ bool CBitcoinAddress::GetKeyID(CKeyID& keyID) const
 
 bool CBitcoinAddress::IsScript() const
 {
-    return IsValid() && m_data.vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS);
+    return IsValid() && m_data.m_vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS);
 }

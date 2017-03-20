@@ -76,7 +76,7 @@ class CBase58Data
 {
 protected:
     //! the version byte(s)
-    std::vector<unsigned char> vchVersion;
+    std::vector<unsigned char> m_vchVersion;
 
     //! the actually encoded data
     typedef std::vector<unsigned char, zero_after_free_allocator<unsigned char> > vector_uchar;

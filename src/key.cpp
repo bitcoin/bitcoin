@@ -184,7 +184,7 @@ CKey CKey::FromBase58string(const base58string& strPrivkey)
 
     // prefix のチェック.
     bool fCorrectVersion =
-        data.vchVersion == Params().Base58Prefix(CChainParams::SECRET_KEY);
+        data.m_vchVersion == Params().Base58Prefix(CChainParams::SECRET_KEY);
     if (!fCorrectVersion)return CKey(); // invalid key;
 
     // -- -- CKey への変換 -- -- //

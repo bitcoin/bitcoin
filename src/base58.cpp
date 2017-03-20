@@ -151,13 +151,13 @@ bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRe
 
 CBase58Data::CBase58Data()
 {
-    vchVersion.clear();
+    m_vchVersion.clear();
     m_vchData.clear();
 }
 
 void CBase58Data::SetData(const std::vector<unsigned char>& vchVersionIn, const void* pdata, size_t nSize)
 {
-    vchVersion = vchVersionIn;
+    m_vchVersion = vchVersionIn;
     m_vchData.resize(nSize);
     if (!m_vchData.empty())
         memcpy(&m_vchData[0], pdata, nSize);
@@ -181,12 +181,12 @@ bool CBase58Data::_SetStringWithVersionBytes(
     if ((!rc58) || (vchTemp.size() < nVersionBytes)) {
         // エラーとみなし、データをクリアし、失敗結果を返す.
         m_vchData.clear();
-        vchVersion.clear();
+        m_vchVersion.clear();
         return false;
     }
 
     // バージョン値の適用.
-    vchVersion.assign(vchTemp.begin(), vchTemp.begin() + nVersionBytes);
+    m_vchVersion.assign(vchTemp.begin(), vchTemp.begin() + nVersionBytes);
 
     // ※展開データサイズからバージョン値 (default 1) を引いた値はこの時点で 0 以上になっているはず.
     m_vchData.resize(vchTemp.size() - nVersionBytes);
@@ -210,16 +210,16 @@ bool CBase58Data::SetBase58string(const base58string& str)
 
 std::string CBase58Data::_ToString() const
 {
-    std::vector<unsigned char> vch = vchVersion;
+    std::vector<unsigned char> vch = m_vchVersion;
     vch.insert(vch.end(), m_vchData.begin(), m_vchData.end());
     return EncodeBase58Check(vch);
 }
 
 int CBase58Data::CompareTo(const CBase58Data& b58) const
 {
-    if (vchVersion < b58.vchVersion)
+    if (m_vchVersion < b58.m_vchVersion)
         return -1;
-    if (vchVersion > b58.vchVersion)
+    if (m_vchVersion > b58.m_vchVersion)
         return 1;
     if (m_vchData < b58.m_vchData)
         return -1;
