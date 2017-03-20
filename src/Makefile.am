@@ -136,6 +136,7 @@ BITCOIN_CORE_H = \
   support/allocators/zeroafterfree.h \
   support/cleanse.h \
   support/events.h \
+  support/evunix.h \
   support/lockedpool.h \
   sync.h \
   threadsafety.h \
@@ -211,6 +212,9 @@ libbitcoin_server_a_SOURCES = \
   validationinterface.cpp \
   versionbits.cpp \
   $(BITCOIN_CORE_H)
+if BUILD_EVUNIX
+libbitcoin_server_a_SOURCES += support/evunix.cpp
+endif
 
 if ENABLE_ZMQ
 libbitcoin_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
@@ -377,6 +381,9 @@ bitcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPN
 
 # bitcoin-cli binary #
 bitcoin_cli_SOURCES = bitcoin-cli.cpp
+if BUILD_EVUNIX
+bitcoin_cli_SOURCES += support/evunix.cpp
+endif
 bitcoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
 bitcoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bitcoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)

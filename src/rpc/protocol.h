@@ -88,6 +88,9 @@ UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const Un
 std::string JSONRPCReply(const UniValue& result, const UniValue& error, const UniValue& id);
 UniValue JSONRPCError(int code, const std::string& message);
 
+/** To bind to a UNIX socket, use this prefix on rpcbind. */
+extern const std::string RPC_ADDR_PREFIX_UNIX;
+
 /** Get name of RPC authentication cookie file */
 boost::filesystem::path GetAuthCookieFile();
 /** Generate a new RPC authentication cookie and write it to disk */

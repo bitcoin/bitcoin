@@ -63,6 +63,10 @@ Possible options, which apply to each individual test run:
 If you set the environment variable `PYTHON_DEBUG=1` you will get some debug
 output (example: `PYTHON_DEBUG=1 qa/pull-tester/rpc-tests.py wallet`).
 
+To force the tests to use RPC over TCP instead of a UNIX socket (this
+can be useful for troubleshooting) define the environment variable
+`BITCOIN_TEST_RPC_TCP` as `1`.
+
 A 200-block -regtest blockchain and wallets for four nodes
 is created the first time a regression test is run and
 is stored in the cache/ directory. Each node has 25 mature
