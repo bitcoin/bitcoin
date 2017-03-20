@@ -204,9 +204,6 @@
     <ClCompile Include="src\script\sign.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\wallet\crypter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\wallet\db.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -358,6 +355,9 @@
     <ClCompile Include="src\PubKeyUtil.cpp">
       <Filter>Source Files\key\pub</Filter>
     </ClCompile>
+    <ClCompile Include="src\wallet\crypter.cpp">
+      <Filter>Source Files\key</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\addrdb.h">
@@ -436,9 +436,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\core_memusage.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\wallet\crypter.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\cuckoocache.h">
@@ -750,6 +747,9 @@
     </ClInclude>
     <ClInclude Include="src\PubKeyUtil.h">
       <Filter>Source Files\key\pub</Filter>
+    </ClInclude>
+    <ClInclude Include="src\wallet\crypter.h">
+      <Filter>Source Files\key</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
