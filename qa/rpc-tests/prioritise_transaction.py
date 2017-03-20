@@ -49,9 +49,13 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
                 sizes[i] += mempool[j]['size']
             assert(sizes[i] > MAX_BLOCK_BASE_SIZE) # Fail => raise utxo_count
 
+
+        # prioritise a non existing txid
+        assert(self.nodes[0].prioritisetransaction("2638cacce340e31fecdbec0d3bc1b432165ad42cfb44f985072414cbe2f71461", 10000) == False)
+
         # add a fee delta to something in the cheapest bucket and make sure it gets mined
         # also check that a different entry in the cheapest bucket is NOT mined
-        self.nodes[0].prioritisetransaction(txids[0][0], int(3*base_fee*COIN))
+        assert(self.nodes[0].prioritisetransaction(txids[0][0], int(3*base_fee*COIN)) == True)
 
         self.nodes[0].generate(1)
 
