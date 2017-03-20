@@ -67,6 +67,8 @@ static const bool DEFAULT_WALLETBROADCAST = true;
 static const bool DEFAULT_DISABLE_WALLET = false;
 //! if set, all keys will be derived by using BIP32
 static const bool DEFAULT_USE_HD_WALLET = true;
+//! Maximum age of our tip for us to be considered current for anti fee sniping
+static const int64_t MAX_ANTI_FEE_SNIPING_TIP_AGE = 2 * 60 * 60;
 
 extern const char * DEFAULT_WALLET_DAT;
 
