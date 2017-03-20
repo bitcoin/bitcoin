@@ -322,9 +322,6 @@
     <ClCompile Include="src\key.cpp">
       <Filter>Source Files\key\secret</Filter>
     </ClCompile>
-    <ClCompile Include="src\BitcoinSecret.cpp">
-      <Filter>Source Files\key\secret</Filter>
-    </ClCompile>
     <ClCompile Include="src\ExtKey.cpp">
       <Filter>Source Files\key\secret</Filter>
     </ClCompile>
@@ -713,9 +710,6 @@
       <Filter>Source Files\key</Filter>
     </ClInclude>
     <ClInclude Include="src\key.h">
-      <Filter>Source Files\key\secret</Filter>
-    </ClInclude>
-    <ClInclude Include="src\BitcoinSecret.h">
       <Filter>Source Files\key\secret</Filter>
     </ClInclude>
     <ClInclude Include="src\ExtKey.h">

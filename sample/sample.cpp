@@ -1,7 +1,6 @@
 ﻿#include <stdio.h>
 #include "key.h"
-#include "base58.h" // CBitcoinSecret
-#include "BitcoinSecret.h"
+#include "base58.h"
 #include "BitcoinAddress.h"
 
 int main()
@@ -47,7 +46,8 @@ int main()
         std::string hashStr = hash.ToHexString(); // 64長HEX文字列  例: "65d5f35db59351506de1da46cfc33005d5d6e2325667ed70c42f5bcb8a944b8d"
         printf("PUBLIC HASH: %s (%d)\n", hashStr.c_str(), hashStr.length());
 
-        // ※ CBitcoinSecret は g_pCurrentParams に依存するため、先に g_pCurrentParams の指定が必要.
+        // ※ GetBase58stringWithNetworkSecretKeyPrefix は g_pCurrentParams に依存するため、
+        //    先に g_pCurrentParams の指定が必要.
         SelectParams(NETWORK_MAIN);
         printf("PRIVKEY in MAINNET: %s (%d)\n", key.GetBase58stringWithNetworkSecretKeyPrefix().c_str(), strlen(key.GetBase58stringWithNetworkSecretKeyPrefix().c_str())); // ※MAINだと値が変わる.
 

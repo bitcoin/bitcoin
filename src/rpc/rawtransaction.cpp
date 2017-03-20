@@ -23,7 +23,6 @@
 #include "txmempool.h"
 #include "uint256.h"
 #include "utilstrencodings.h"
-#include "BitcoinSecret.h"
 #include "BitcoinAddress.h"
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
