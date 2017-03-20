@@ -622,8 +622,8 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBl
 
 
 
-// Requires cs_main.
   void MarkBlockAsInFlight(NodeId nodeid, const uint256& hash, const Consensus::Params& consensusParams, CBlockIndex *pindex = NULL) {
+    AssertLockHeld(cs_main);
     CNodeState *state = State(nodeid);
     assert(state != NULL);
 
@@ -2026,8 +2026,18 @@ bool CScriptCheck::operator()() {
 int GetSpendHeight(const CCoinsViewCache& inputs)
 {
     LOCK(cs_main);
-    CBlockIndex* pindexPrev = mapBlockIndex.find(inputs.GetBestBlock())->second;
-    return pindexPrev->nHeight + 1;
+    BlockMap::iterator i = mapBlockIndex.find(inputs.GetBestBlock());
+    if (i != mapBlockIndex.end())
+      {
+      CBlockIndex* pindexPrev = i->second;
+      if (pindexPrev)
+        return pindexPrev->nHeight + 1;
+      else
+        {
+          throw runtime_error("GetSpendHeight(): mapBlockIndex contains null block");
+        }
+      }
+    throw runtime_error("GetSpendHeight(): best block does not exist");
 }
 
 namespace Consensus {
@@ -3704,10 +3714,10 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
     AssertLockHeld(cs_main);
     // Check for duplicate
     uint256 hash = block.GetHash();
-    BlockMap::iterator miSelf = mapBlockIndex.find(hash);
     CBlockIndex *pindex = NULL;
-    if (hash != chainparams.GetConsensus().hashGenesisBlock) {
-
+    if (hash != chainparams.GetConsensus().hashGenesisBlock)
+      {
+        BlockMap::iterator miSelf = mapBlockIndex.find(hash);
         if (miSelf != mapBlockIndex.end()) {
             // Block header is already known.
             pindex = miSelf->second;
@@ -5863,7 +5873,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             }
             else
             {
-              // Question: should we set misbehaving and abort if the thin block has a tx with a null hash?
+                // Set misbehaving and abort if the thin block has a tx with a null hash.
+                LogPrintf("Misbehaving - thin block with a NULL hash\n");
+                LOCK(cs_main);
+                Misbehaving(pfrom->GetId(), 100);
+                return false;
             }
             
             if (tx.IsNull())
@@ -6643,7 +6657,7 @@ bool SendMessages(CNode* pto)
                 // headers that aren't on chainActive, give up.
                 BOOST_FOREACH(const uint256 &hash, pto->vBlockHashesToAnnounce) {
                     BlockMap::iterator mi = mapBlockIndex.find(hash);
-                    assert(mi != mapBlockIndex.end());
+                    if (mi == mapBlockIndex.end()) continue;  // BU skip blocks that we don't know about.  was: assert(mi != mapBlockIndex.end());
                     CBlockIndex *pindex = mi->second;
                     if (chainActive[pindex->nHeight] != pindex) {
                         // Bail out if we reorged away from this block
@@ -6691,25 +6705,27 @@ bool SendMessages(CNode* pto)
                 if (!pto->vBlockHashesToAnnounce.empty()) {
                     const uint256 &hashToAnnounce = pto->vBlockHashesToAnnounce.back();
                     BlockMap::iterator mi = mapBlockIndex.find(hashToAnnounce);
-                    assert(mi != mapBlockIndex.end());
-                    CBlockIndex *pindex = mi->second;
+                    if (mi != mapBlockIndex.end()) // was assert(mi != mapBlockIndex.end());
+                      {
+                        CBlockIndex *pindex = mi->second;
 
-                    // Warn if we're announcing a block that is not on the main chain.
-                    // This should be very rare and could be optimized out.
-                    // Just log for now.
-                    if (chainActive[pindex->nHeight] != pindex) {
-                        LogPrint("net", "Announcing block %s not on main chain (tip=%s)\n",
-                            hashToAnnounce.ToString(), chainActive.Tip()->GetBlockHash().ToString());
-                    }
+                        // Warn if we're announcing a block that is not on the main chain.
+                        // This should be very rare and could be optimized out.
+                        // Just log for now.
+                        if (chainActive[pindex->nHeight] != pindex) {
+                          LogPrint("net", "Announcing block %s not on main chain (tip=%s)\n",
+                                   hashToAnnounce.ToString(), chainActive.Tip()->GetBlockHash().ToString());
+                        }
 
-                    // If the peer announced this block to us, don't inv it back.
-                    // (Since block announcements may not be via inv's, we can't solely rely on
-                    // setInventoryKnown to track this.)
-                    if (!PeerHasHeader(&state, pindex)) {
-                        pto->PushInventory(CInv(MSG_BLOCK, hashToAnnounce));
-                        LogPrint("net", "%s: sending inv peer=%d hash=%s\n", __func__,
-                            pto->id, hashToAnnounce.ToString());
-                    }
+                        // If the peer announced this block to us, don't inv it back.
+                        // (Since block announcements may not be via inv's, we can't solely rely on
+                        // setInventoryKnown to track this.)
+                        if (!PeerHasHeader(&state, pindex)) {
+                          pto->PushInventory(CInv(MSG_BLOCK, hashToAnnounce));
+                          LogPrint("net", "%s: sending inv peer=%d hash=%s\n", __func__,
+                                   pto->id, hashToAnnounce.ToString());
+                        }
+                      }
                 }
             } else if (!vHeaders.empty()) {
                 if (vHeaders.size() > 1) {

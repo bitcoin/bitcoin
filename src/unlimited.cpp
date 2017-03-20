@@ -495,7 +495,7 @@ UniValue expedited(const UniValue& params, bool fHelp)
     std::vector<CNode*>::iterator elem = std::find(xpeditedBlkUp.begin(), xpeditedBlkUp.end(),node); 
     if ((flags & EXPEDITED_BLOCKS)&&(flags & EXPEDITED_STOP))
       {
-	if (elem == xpeditedBlkUp.end()) xpeditedBlkUp.erase(elem);
+	if (elem != xpeditedBlkUp.end()) xpeditedBlkUp.erase(elem);
       }
     else if (flags & EXPEDITED_BLOCKS)
       {
