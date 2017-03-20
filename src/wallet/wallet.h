@@ -544,7 +544,7 @@ private:
      * all coins from coinControl are selected; Never select unconfirmed coins
      * if they are not ours
      */
-    bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = NULL) const;
+    bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = NULL, bool bAliasPay = false) const;
 
     CWalletDB *pwalletdbEncryption;
 
@@ -663,7 +663,7 @@ public:
      * completion the coin set and corresponding actual target value is
      * assembled
      */
-    bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, uint64_t nMaxAncestors, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet) const;
+    bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, uint64_t nMaxAncestors, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, bool bAliasPay=false) const;
 
     bool IsSpent(const uint256& hash, unsigned int n) const;
 
@@ -752,7 +752,7 @@ public:
 
 	// SYSCOIN add data and input tx for syscoin service calls
     bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet,
-                           std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true, const CWalletTx* wtxIn=NULL, int nOut = 0, bool sysTx = false, const CWalletTx* wtxLinkIn=NULL, int nLinkOut = 0);
+                           std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true, const CWalletTx* wtxIn=NULL, int nOut = 0, bool sysTx = false, const CWalletTx* wtxLinkIn=NULL, int nLinkOut = 0, bAliasPay=false);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
 
     bool AddAccountingEntry(const CAccountingEntry&, CWalletDB & pwalletdb);
