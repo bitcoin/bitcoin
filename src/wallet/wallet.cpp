@@ -2197,8 +2197,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
         }
         nValue += recipient.nAmount;
 
-        if (recipient.fSubtractFeeFromAmount)
-            nSubtractFeeFromAmount++;
+       /* if (recipient.fSubtractFeeFromAmount)
+            nSubtractFeeFromAmount++;*/
     }
     if (vecSend.empty() || nValue < 0)
     {
@@ -2286,7 +2286,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 								CScript scriptPubKey;
 								scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchFromString(address.aliasName) << OP_2DROP;
 								scriptPubKey += myrecipient.scriptPubKey;
-								myrecipient = {scriptPubKey, myrecipient.nAmount, myrecipient.fSubtractFeeFromAmount};
+								myrecipient = {scriptPubKey, myrecipient.nAmount, false/*myrecipient.fSubtractFeeFromAmount*/};
 								txNew.nVersion = GetSyscoinTxVersion();				
 							}
 						}
