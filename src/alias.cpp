@@ -3088,9 +3088,6 @@ void GetPrivateKeysFromScript(const CScript& script, vector<string> &strKeys)
 }
 UniValue aliaspay(const UniValue& params, bool fHelp) {
 
-    if (!EnsureWalletIsAvailable(fHelp))
-        return NullUniValue;
-
     if (fHelp || params.size() < 2 || params.size() > 4)
         throw runtime_error(
             "aliaspay aliasfrom {\"address\":amount,...} ( minconf \"comment\")\n"
@@ -3168,7 +3165,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
     CAmount nFeeRequired = 0;
     int nChangePosRet = -1;
     string strFailReason;
-    bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePosRet, strFailReason, NULL, true, NULL, 0, false, NULL, 0, true);
+    bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePosRet, strFailReason, NULL, true, NULL, 0, true, NULL, 0, true);
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
     if (!pwalletMain->CommitTransaction(wtx, keyChange))
