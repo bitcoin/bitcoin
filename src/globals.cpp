@@ -31,7 +31,6 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "validationinterface.h"
-#include "alert.h"
 #include "version.h"
 #include "stat.h"
 #include "tweak.h"
@@ -71,9 +70,6 @@ CConditionVariable cvBlockChange;
 proxyType proxyInfo[NET_MAX];
 proxyType nameProxy;
 CCriticalSection cs_proxyInfos;
-
-map<uint256, CAlert> mapAlerts;
-CCriticalSection cs_mapAlerts;
 
 set<uint256> setPreVerifiedTxHash;
 set<uint256> setUnVerifiedOrphanTxHash;
