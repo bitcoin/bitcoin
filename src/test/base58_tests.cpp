@@ -14,7 +14,6 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "test/test_bitcoin.h"
-#include "BitcoinSecret.h"
 #include "BitcoinAddress.h"
 
 #include <boost/foreach.hpp>
@@ -123,7 +122,6 @@ public:
 BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
 {
     UniValue tests = read_json(std::string(json_tests::base58_keys_valid, json_tests::base58_keys_valid + sizeof(json_tests::base58_keys_valid)));
-    CBitcoinSecret secret;
     CBitcoinAddress addr;
     SelectParams(NETWORK_MAIN);
 

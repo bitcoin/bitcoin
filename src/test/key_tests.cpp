@@ -10,7 +10,6 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "test/test_bitcoin.h"
-#include "BitcoinSecret.h"
 #include "BitcoinAddress.h"
 
 #include <string>
@@ -35,20 +34,22 @@ BOOST_FIXTURE_TEST_SUITE(key_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(key_test1)
 {
-    CBitcoinSecret bsecret1, bsecret2, bsecret1C, bsecret2C, baddress1;
-    BOOST_CHECK( bsecret1.SetBase58string(strSecret1));
-    BOOST_CHECK( bsecret2.SetBase58string(strSecret2));
-    BOOST_CHECK( bsecret1C.SetBase58string(strSecret1C));
-    BOOST_CHECK( bsecret2C.SetBase58string(strSecret2C));
-    BOOST_CHECK(!baddress1.SetBase58string(strAddressBad));
+    BOOST_CHECK(!CKey::FromBase58string(strAddressBad).IsValid());
 
-    CKey key1  = bsecret1.GetKey();
+    CKey key1 = CKey::FromBase58string(strSecret1);
+    BOOST_CHECK(key1.IsValid());
     BOOST_CHECK(key1.IsCompressed() == false);
-    CKey key2  = bsecret2.GetKey();
+
+    CKey key2 = CKey::FromBase58string(strSecret2);
+    BOOST_CHECK(key2.IsValid());
     BOOST_CHECK(key2.IsCompressed() == false);
-    CKey key1C = bsecret1C.GetKey();
+    
+    CKey key1C = CKey::FromBase58string(strSecret1C);
+    BOOST_CHECK(key1C.IsValid());
     BOOST_CHECK(key1C.IsCompressed() == true);
-    CKey key2C = bsecret2C.GetKey();
+    
+    CKey key2C = CKey::FromBase58string(strSecret2C);
+    BOOST_CHECK(key2C.IsValid());
     BOOST_CHECK(key2C.IsCompressed() == true);
 
     CPubKey pubkey1  = key1. GetPubKey();

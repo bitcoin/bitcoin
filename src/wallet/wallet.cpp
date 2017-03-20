@@ -26,7 +26,6 @@
 #include "util.h"
 #include "ui_interface.h"
 #include "utilmoneystr.h"
-#include "BitcoinSecret.h"
 #include "BitcoinAddress.h"
 
 #include <assert.h>

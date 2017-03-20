@@ -15,7 +15,6 @@
 #include "wallet.h"
 #include "merkleblock.h"
 #include "core_io.h"
-#include "BitcoinSecret.h"
 #include "BitcoinAddress.h"
 #include "BitcoinExtKeyBase.h"
 

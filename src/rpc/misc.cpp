@@ -13,7 +13,6 @@
 #include "timedata.h"
 #include "util.h"
 #include "utilstrencodings.h"
-#include "BitcoinSecret.h"
 #include "BitcoinAddress.h"
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
@@ -401,13 +400,9 @@ UniValue signmessagewithprivkey(const JSONRPCRequest& request)
     base58string strPrivkey(request.params[0].get_str());
     string strMessage = request.params[1].get_str();
 
-    CBitcoinSecret vchSecret;
-    bool fGood = vchSecret.SetBase58string(strPrivkey);
-    if (!fGood)
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
-    CKey key = vchSecret.GetKey();
+    CKey key = CKey::FromBase58string(strPrivkey);
     if (!key.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
 
     CHashWriter ss(SER_GETHASH, 0);
     ss << strMessageMagic;

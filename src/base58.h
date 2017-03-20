@@ -66,7 +66,6 @@ inline bool DecodeBase58Check(const char* psz, std::vector<unsigned char>& vchRe
 inline bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRet);
 
 class base58string;
-class CBitcoinSecret;
 class CBitcoinAddress;
 class CKey;
 
@@ -106,7 +105,6 @@ public:
     bool operator> (const CBase58Data& b58) const { return CompareTo(b58) >  0; }
 
     friend class base58string;
-    friend class CBitcoinSecret;
     friend class CBitcoinAddress;
     friend class CKey;
 };
