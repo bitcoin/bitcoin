@@ -92,7 +92,7 @@ bool CMasternodeSync::IsBlockchainSynced(bool fBlockAccepted)
     std::vector<CNode*> vNodesCopy = CopyNodeVector();
 
     // We have enough peers and assume most of them are synced
-    if(vNodes.size() >= MASTERNODE_SYNC_ENOUGH_PEERS) {
+    if(vNodesCopy.size() >= MASTERNODE_SYNC_ENOUGH_PEERS) {
         // Check to see how many of our peers are (almost) at the same height as we are
         int nNodesAtSameHeight = 0;
         BOOST_FOREACH(CNode* pnode, vNodesCopy)
