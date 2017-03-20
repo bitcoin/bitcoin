@@ -3086,3 +3086,93 @@ void GetPrivateKeysFromScript(const CScript& script, vector<string> &strKeys)
 		strKeys.push_back(CSyscoinSecret(vchSecret).ToString());
 	}
 }
+UniValue aliaspay(const UniValue& params, bool fHelp) {
+
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp || params.size() < 2 || params.size() > 4)
+        throw runtime_error(
+            "aliaspay aliasfrom {\"address\":amount,...} ( minconf \"comment\")\n"
+            "\nSend multiple times from an alias. Amounts are double-precision floating point numbers."
+            + HelpRequiringPassphrase() + "\n"
+            "\nArguments:\n"
+			"1. \"alias\"				(string, required) alias to pay from\n"
+            "2. \"amounts\"             (string, required) A json object with aliases and amounts\n"
+            "    {\n"
+            "      \"address\":amount   (numeric or string) The syscoin alias is the key, the numeric amount (can be string) in " + CURRENCY_UNIT + " is the value\n"
+            "      ,...\n"
+            "    }\n"
+			"3. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
+            "4. \"comment\"             (string, optional) A comment\n"
+            "\nResult:\n"
+            "\"transactionid\"          (string) The transaction id for the send. Only 1 transaction is created regardless of \n"
+            "                                    the number of addresses.\n"
+            "\nExamples:\n"
+            "\nSend two amounts to two different addresses\aliases:\n"
+            + HelpExampleCli("aliaspay", "\"myalias\" \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"alias2\\\":0.02}\"") +
+            "\nSend two amounts to two different addresses setting the comment:\n"
+            + HelpExampleCli("aliaspay", "\"myalias\" \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\" \"testing\"")
+        );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    string strFromAlias = params[0].get_str();
+	CAliasIndex theAlias;
+	CTransaction aliasTx;
+	if (!GetTxOfAlias(vchFromString(strFromAlias), theAlias, aliasTx, true))
+		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid alias");
+    UniValue sendTo = params[1].get_obj();
+    int nMinDepth = 1;
+    if (params.size() > 2)
+        nMinDepth = params[2].get_int();
+    CWalletTx wtx;
+    if (params.size() > 3 && !params[3].isNull() && !params[3].get_str().empty())
+        wtx.mapValue["comment"] = params[3].get_str();
+
+    set<CSyscoinAddress> setAddress;
+    vector<CRecipient> vecSend;
+
+    CAmount totalAmount = 0;
+    vector<string> keys = sendTo.getKeys();
+    BOOST_FOREACH(const string& name_, keys)
+    {
+        CSyscoinAddress address(name_);
+        if (!address.IsValid())
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Syscoin address: ")+name_);
+
+        if (setAddress.count(address))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+name_);
+        setAddress.insert(address);
+
+        CScript scriptPubKey = GetScriptForDestination(address.Get());
+        CAmount nAmount = AmountFromValue(sendTo[name_]);
+        if (nAmount <= 0)
+            throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
+        totalAmount += nAmount;
+        CRecipient recipient = {scriptPubKey, nAmount, false};
+        vecSend.push_back(recipient);
+    }
+
+    EnsureWalletIsUnlocked();
+    // Check funds
+	UniValue balanceParams(UniValue::VARR);
+	balanceParams.push_back(strFromAlias);
+	const UniValue &resBalance = tableRPC.execute("aliasbalance", balanceParams);
+	CAmount nBalance = AmountFromValue(resBalance);
+    if (totalAmount > nBalance)
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Alias has insufficient funds");
+
+    // Send
+    CReserveKey keyChange(pwalletMain);
+    CAmount nFeeRequired = 0;
+    int nChangePosRet = -1;
+    string strFailReason;
+    bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePosRet, strFailReason, NULL, true, NULL, 0, false, NULL, 0, true);
+    if (!fCreated)
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
+    if (!pwalletMain->CommitTransaction(wtx, keyChange))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Transaction commit failed");
+
+    return wtx.GetHash().GetHex();
+}

@@ -385,7 +385,7 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet", "aliasinfo",         &aliasinfo,         false },
     { "wallet", "aliashistory",      &aliashistory,      false },
     { "wallet", "aliasfilter",       &aliasfilter,       false },
-    { "wallet", "aliasscan",         &aliasscan,         false },
+    { "wallet", "aliaspay",          &aliaspay,          false },
 	{ "wallet", "generatepublickey", &generatepublickey, false },
 
     // use the blockchain as a distributed marketplace
@@ -401,16 +401,7 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "offeracceptlist",      &offeracceptlist,      false },
     { "wallet", "offerinfo",            &offerinfo,            false },
     { "wallet", "offerhistory",         &offerhistory,         false },
-    { "wallet", "offerscan",            &offerscan,            false },
     { "wallet", "offerfilter",          &offerfilter,          false },
-
-// SYSCOIN
-#ifdef ENABLE_DEBUGRPC
-    { "wallet", "offernew_nocheck",    &offernew_nocheck,    false },
-    { "wallet", "offerlink_nocheck",   &offerlink_nocheck,   false },
-    { "wallet", "offerupdate_nocheck", &offerupdate_nocheck, false },
-    { "wallet", "offeraccept_nocheck", &offeraccept_nocheck, false },
-#endif
 
   // use the blockchain as a certificate issuance platform
   { "wallet", "certnew",         &certnew,     false },
@@ -419,7 +410,6 @@ static const CRPCCommand vRPCCommands[] =
   { "wallet", "certlist",              &certlist,          false },
   { "wallet", "certinfo",              &certinfo,          false },
   { "wallet", "certhistory",     &certhistory, false },
-  { "wallet", "certscan",        &certscan,    false },
   { "wallet", "certfilter",      &certfilter,  false },
 
   // use the blockchain for escrow linked to offers
@@ -432,7 +422,6 @@ static const CRPCCommand vRPCCommands[] =
   { "wallet", "escrowlist",              &escrowlist,          false },
   { "wallet", "escrowinfo",              &escrowinfo,          false },
   { "wallet", "escrowhistory",     &escrowhistory, false },
-  { "wallet", "escrowscan",        &escrowscan,    false },
   { "wallet", "escrowfilter",      &escrowfilter,  false },
 
   // use the blockchain for encrypted messaging

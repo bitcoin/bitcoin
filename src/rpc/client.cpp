@@ -63,6 +63,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendmany", 1 },
     { "sendmany", 2 },
     { "sendmany", 4 },
+    { "aliaspay", 1 },
+    { "aliaspay", 2 },
     { "addmultisigaddress", 0 },
     { "addmultisigaddress", 1 },
     { "createmultisig", 0 },

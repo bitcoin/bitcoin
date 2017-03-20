@@ -247,7 +247,7 @@ extern UniValue aliasaffiliates(const UniValue& params, bool fHelp);
 extern UniValue aliasinfo(const UniValue& params, bool fHelp);
 extern UniValue aliashistory(const UniValue& params, bool fHelp);
 extern UniValue aliasfilter(const UniValue& params, bool fHelp);
-extern UniValue aliasscan(const UniValue& params, bool fHelp);
+extern UniValue aliaspay(const UniValue& params, bool fHelp);
 extern UniValue generatepublickey(const UniValue& params, bool fHelp);
 
 
@@ -264,12 +264,6 @@ extern UniValue offerlist(const UniValue& params, bool fHelp);
 extern UniValue offeracceptlist(const UniValue& params, bool fHelp);
 extern UniValue offerhistory(const UniValue& params, bool fHelp);
 extern UniValue offerfilter(const UniValue& params, bool fHelp);
-extern UniValue offerscan(const UniValue& params, bool fHelp);
-
-extern UniValue offernew_nocheck(const UniValue& params, bool fHelp);
-extern UniValue offerupdate_nocheck(const UniValue& params, bool fHelp);
-extern UniValue offeraccept_nocheck(const UniValue& params, bool fHelp);
-extern UniValue offerlink_nocheck(const UniValue& params, bool fHelp);
 
 extern UniValue certupdate(const UniValue& params, bool fHelp);
 extern UniValue certnew(const UniValue& params, bool fHelp);
@@ -278,7 +272,6 @@ extern UniValue certinfo(const UniValue& params, bool fHelp);
 extern UniValue certlist(const UniValue& params, bool fHelp);
 extern UniValue certhistory(const UniValue& params, bool fHelp);
 extern UniValue certfilter(const UniValue& params, bool fHelp);
-extern UniValue certscan(const UniValue& params, bool fHelp);
 
 extern UniValue escrownew(const UniValue& params, bool fHelp);
 extern UniValue escrowrelease(const UniValue& params, bool fHelp);
@@ -290,7 +283,6 @@ extern UniValue escrowinfo(const UniValue& params, bool fHelp);
 extern UniValue escrowlist(const UniValue& params, bool fHelp);
 extern UniValue escrowhistory(const UniValue& params, bool fHelp);
 extern UniValue escrowfilter(const UniValue& params, bool fHelp);
-extern UniValue escrowscan(const UniValue& params, bool fHelp);
 
 extern UniValue messagenew(const UniValue& params, bool fHelp);
 extern UniValue messageinfo(const UniValue& params, bool fHelp);
