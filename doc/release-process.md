@@ -21,6 +21,7 @@ Before every major release:
 
 * Update hardcoded [seeds](/contrib/seeds/README.md). TODO: Give example PR for Dash
 * Update [`BLOCK_CHAIN_SIZE`](/src/qt/intro.cpp) to the current size plus some overhead.
+* Update `src/chainparams.cpp` chainTxData with statistics about the transaction count and rate.
 
 ### First time / New builders
 
