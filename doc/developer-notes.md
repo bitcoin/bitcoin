@@ -132,7 +132,7 @@ Run with the -testnet option to run with "play bitcoins" on the test network, if
 are testing multi-machine code that needs to operate across the internet.
 
 If you are testing something that can run on one machine, run with the -regtest option.
-In regression test mode, blocks can be created on-demand; see qa/rpc-tests/ for tests
+In regression test mode, blocks can be created on-demand; see test/functional/ for tests
 that run in -regtest mode.
 
 **DEBUG_LOCKORDER**
@@ -252,7 +252,7 @@ Wallet
 
   - *Rationale*: In RPC code that conditionally uses the wallet (such as
     `validateaddress`) it is easy to forget that global pointer `pwalletMain`
-    can be NULL. See `qa/rpc-tests/disablewallet.py` for functional tests
+    can be NULL. See `test/functional/disablewallet.py` for functional tests
     exercising the API with `-disablewallet`
 
 - Include `db_cxx.h` (BerkeleyDB header) only when `ENABLE_WALLET` is set
