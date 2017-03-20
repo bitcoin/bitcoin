@@ -2,7 +2,17 @@
 # Copyright (c) 2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test the bumpfee RPC."""
+"""Test the bumpfee RPC.
+
+Verifies that the bumpfee RPC creates replacement transactions successfully when
+its preconditions are met, and returns appropriate errors in other cases.
+
+This module consists of around a dozen individual test cases implemented in the
+top-level functions named as test_<test_case_description>. The test functions
+can be disabled or reordered if needed for debugging. If new test cases are
+added in the the future, they should try to follow the same convention and not
+make assumptions about execution order.
+"""
 
 from segwit import send_to_witness
 from test_framework.test_framework import BitcoinTestFramework
