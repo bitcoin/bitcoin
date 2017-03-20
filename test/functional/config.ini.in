@@ -3,7 +3,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # These environment variables are set by the build process and read by
-# rpc-tests.py
+# test/functional/test_runner.py
 
 [environment]
 SRCDIR=@abs_top_srcdir@

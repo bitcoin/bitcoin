@@ -101,9 +101,9 @@ coverage_percent.txt
 linux-coverage-build
 linux-build
 win32-build
-qa/pull-tester/tests_config.py
-qa/pull-tester/tests_config.ini
-qa/cache/*
+test/functional/config.ini
+test/util/buildenv.py
+test/cache/*
 
 !src/leveldb*/Makefile
 

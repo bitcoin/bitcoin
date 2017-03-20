@@ -1,0 +1,4 @@
+#!/usr/bin/env python
+exeext="@EXEEXT@"
+SRCDIR="@abs_top_srcdir@"
+BUILDDIR="@abs_top_builddir@"
