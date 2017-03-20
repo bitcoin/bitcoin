@@ -1261,7 +1261,20 @@ bool TransactionSignatureChecker::CheckSig(const std::vector<unsigned char>& vch
     int nHashType = vchSig.back();
     vchSig.pop_back();
 
-    uint256 sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion, this->txdata);
+    // sigversion is not considered since we know there will only be one sigversion across an entire input.
+    // Each nHashType produces an unique hash since nHashType is serialized in SignatureHash. So we need 256 cache
+    // slots, instead of only 6 slots for the common types.
+    // If future extra sighashes are defined, this may need extension (or, alternatively, cache read/write could be
+    // skipped for sigversion > SIGVERSION_WITNESS_V0).
+    if (scriptCode != cache.scriptCode) {
+        cache.Clear();
+        cache.scriptCode = scriptCode;
+    }
+    uint256& sighash = cache.value[nHashType];
+    if (!cache.set[nHashType]) {
+        sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion, this->txdata);
+        cache.set[nHashType] = true;
+    }
 
     if (!VerifySignature(vchSig, pubkey, sighash))
         return false;

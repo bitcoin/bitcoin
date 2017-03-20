@@ -117,6 +117,25 @@ struct PrecomputedTransactionData
     PrecomputedTransactionData(const CTransaction& tx);
 };
 
+struct SigHashCache
+{
+    bool set[256];
+    uint256 value[256];
+    CScript scriptCode;
+
+    void Clear()
+    {
+        for (int i=0; i<256; i++) {
+            set[i] = false;
+        }
+    }
+
+    SigHashCache()
+    {
+        Clear();
+    }
+};
+
 enum SigVersion
 {
     SIGVERSION_BASE = 0,
@@ -153,6 +172,7 @@ private:
     unsigned int nIn;
     const CAmount amount;
     const PrecomputedTransactionData* txdata;
+    mutable SigHashCache cache;
 
 protected:
     virtual bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;

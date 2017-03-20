@@ -17,14 +17,44 @@ ssl = ctypes.cdll.LoadLibrary(ctypes.util.find_library ('ssl') or 'libeay32')
 ssl.BN_new.restype = ctypes.c_void_p
 ssl.BN_new.argtypes = []
 
+ssl.BN_add.restype = ctypes.c_int
+ssl.BN_add.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
+
 ssl.BN_bin2bn.restype = ctypes.c_void_p
 ssl.BN_bin2bn.argtypes = [ctypes.c_char_p, ctypes.c_int, ctypes.c_void_p]
+
+ssl.BN_cmp.restype = ctypes.c_int
+ssl.BN_cmp.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+
+ssl.BN_free.restype = None
+ssl.BN_free.argtypes = [ctypes.c_void_p]
+
+ssl.BN_copy.restype = ctypes.c_void_p
+ssl.BN_copy.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+
+ssl.BN_mod_inverse.restype = ctypes.c_void_p
+ssl.BN_mod_inverse.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
+
+ssl.BN_mod_mul.restype = ctypes.c_int
+ssl.BN_mod_mul.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
+
+ssl.BN_mod_sub.restype = ctypes.c_int
+ssl.BN_mod_sub.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
+
+ssl.BN_mul_word.restype = ctypes.c_int
+ssl.BN_mul_word.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
 
 ssl.BN_CTX_free.restype = None
 ssl.BN_CTX_free.argtypes = [ctypes.c_void_p]
 
+ssl.BN_CTX_get.restype = ctypes.c_void_p
+ssl.BN_CTX_get.argtypes = [ctypes.c_void_p]
+
 ssl.BN_CTX_new.restype = ctypes.c_void_p
 ssl.BN_CTX_new.argtypes = []
+
+ssl.EC_GROUP_get_curve_GFp.restype = ctypes.c_int
+ssl.EC_GROUP_get_curve_GFp.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
 
 ssl.ECDH_compute_key.restype = ctypes.c_int
 ssl.ECDH_compute_key.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p]
@@ -34,6 +64,12 @@ ssl.ECDSA_sign.argtypes = [ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c
 
 ssl.ECDSA_verify.restype = ctypes.c_int
 ssl.ECDSA_verify.argtypes = [ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p]
+
+ssl.EC_GROUP_get_degree.restype = ctypes.c_int
+ssl.EC_GROUP_get_degree.argtypes = [ctypes.c_void_p]
+
+ssl.EC_GROUP_get_order.restype = ctypes.c_int
+ssl.EC_GROUP_get_order.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
 
 ssl.EC_KEY_free.restype = None
 ssl.EC_KEY_free.argtypes = [ctypes.c_void_p]
@@ -65,8 +101,14 @@ ssl.EC_POINT_new.argtypes = [ctypes.c_void_p]
 ssl.EC_POINT_free.restype = None
 ssl.EC_POINT_free.argtypes = [ctypes.c_void_p]
 
+ssl.EC_POINT_is_at_infinity.restype = ctypes.c_int
+ssl.EC_POINT_is_at_infinity.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+
 ssl.EC_POINT_mul.restype = ctypes.c_int
 ssl.EC_POINT_mul.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
+
+ssl.EC_POINT_set_compressed_coordinates_GFp.restype = ctypes.c_int
+ssl.EC_POINT_set_compressed_coordinates_GFp.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p]
 
 # this specifies the curve used with ECDSA.
 NID_secp256k1 = 714 # from openssl/obj_mac.h
@@ -188,6 +230,107 @@ class CECKey(object):
         else:
             form = self.POINT_CONVERSION_UNCOMPRESSED
         ssl.EC_KEY_set_conv_form(self.k, form)
+
+    def recover(self, sigR, sigS, msg, msglen, recid, check):
+        """
+        Perform ECDSA key recovery (see SEC1 4.1.6) for curves over (mod p)-fields
+        recid selects which key is recovered
+        if check is non-zero, additional checks are performed
+        """
+        i = int(recid / 2)
+
+        r = None
+        s = None
+        ctx = None
+        R = None
+        O = None
+        Q = None
+
+        assert len(sigR) == 32, len(sigR)
+        assert len(sigS) == 32, len(sigS)
+
+        try:
+            r = ssl.BN_bin2bn(bytes(sigR), len(sigR), ssl.BN_new())
+            s = ssl.BN_bin2bn(bytes(   sigS), len(sigS), ssl.BN_new())
+
+            group = ssl.EC_KEY_get0_group(self.k)
+            ctx = ssl.BN_CTX_new()
+            order = ssl.BN_CTX_get(ctx)
+            ctx = ssl.BN_CTX_new()
+
+            if not ssl.EC_GROUP_get_order(group, order, ctx):
+                return -2
+
+            x = ssl.BN_CTX_get(ctx)
+            if not ssl.BN_copy(x, order):
+                return -1
+            if not ssl.BN_mul_word(x, i):
+                return -1
+            if not ssl.BN_add(x, x, r):
+                return -1
+
+            field = ssl.BN_CTX_get(ctx)
+            if not ssl.EC_GROUP_get_curve_GFp(group, field, None, None, ctx):
+                return -2
+
+            if ssl.BN_cmp(x, field) >= 0:
+                return 0
+
+            R = ssl.EC_POINT_new(group)
+            if R is None:
+                return -2
+            if not ssl.EC_POINT_set_compressed_coordinates_GFp(group, R, x, recid % 2, ctx):
+                return 0
+
+            if check:
+                O = ssl.EC_POINT_new(group)
+                if O is None:
+                    return -2
+                if not ssl.EC_POINT_mul(group, O, None, R, order, ctx):
+                    return -2
+                if not ssl.EC_POINT_is_at_infinity(group, O):
+                    return 0
+
+            Q = ssl.EC_POINT_new(group)
+            if Q is None:
+                return -2
+
+            n = ssl.EC_GROUP_get_degree(group)
+            e = ssl.BN_CTX_get(ctx)
+            if not ssl.BN_bin2bn(msg, msglen, e):
+                return -1
+
+            if 8 * msglen > n:
+                ssl.BN_rshift(e, e, 8 - (n & 7))
+
+            zero = ssl.BN_CTX_get(ctx)
+            # if not ssl.BN_zero(zero):
+            #     return -1
+            if not ssl.BN_mod_sub(e, zero, e, order, ctx):
+                return -1
+            rr = ssl.BN_CTX_get(ctx)
+            if not ssl.BN_mod_inverse(rr, r, order, ctx):
+                return -1
+            sor = ssl.BN_CTX_get(ctx)
+            if not ssl.BN_mod_mul(sor, s, rr, order, ctx):
+                return -1
+            eor = ssl.BN_CTX_get(ctx)
+            if not ssl.BN_mod_mul(eor, e, rr, order, ctx):
+                return -1
+            if not ssl.EC_POINT_mul(group, Q, eor, R, sor, ctx):
+                return -2
+
+            if not ssl.EC_KEY_set_public_key(self.k, Q):
+                return -2
+
+            return 1
+        finally:
+            if r: ssl.BN_free(r)
+            if s: ssl.BN_free(s)
+            if ctx: ssl.BN_CTX_free(ctx)
+            if R: ssl.EC_POINT_free(R)
+            if O: ssl.EC_POINT_free(O)
+            if Q: ssl.EC_POINT_free(Q)
 
 
 class CPubKey(bytes):
