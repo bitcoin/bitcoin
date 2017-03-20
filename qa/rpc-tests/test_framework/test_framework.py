@@ -51,8 +51,8 @@ class BitcoinTestFramework(object):
     def stop_node(self, num_node):
         stop_node(self.nodes[num_node], num_node)
 
-    def setup_nodes(self):
-        return start_nodes(self.num_nodes, self.options.tmpdir)
+    def setup_nodes(self, rpchost=None, extra_args=None):
+        return start_nodes(self.num_nodes, self.options.tmpdir, rpchost=rpchost, extra_args=extra_args)
 
     def setup_network(self, split = False):
         self.nodes = self.setup_nodes()

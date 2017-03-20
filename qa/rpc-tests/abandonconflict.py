@@ -23,8 +23,8 @@ class AbandonConflictTest(BitcoinTestFramework):
 
     def setup_network(self):
         self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-minrelaytxfee=0.00001"]))
-        self.nodes.append(start_node(1, self.options.tmpdir))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-minrelaytxfee=0.00001"], rpchost="127.0.0.1"))
+        self.nodes.append(start_node(1, self.options.tmpdir, [], rpchost="127.0.0.1"))
         connect_nodes(self.nodes[0], 1)
 
     def run_test(self):

@@ -15,11 +15,14 @@
 #include "utilstrencodings.h"
 
 #include <boost/filesystem/operations.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <stdio.h>
 
 #include <event2/buffer.h>
 #include <event2/keyvalq_struct.h>
+#include <event2/bufferevent.h>
 #include "support/events.h"
+#include "support/evunix.h"
 
 #include <univalue.h>
 
@@ -195,8 +198,35 @@ UniValue CallRPC(const std::string& strMethod, const UniValue& params)
     // Obtain event base
     raii_event_base base = obtain_event_base();
 
-    // Synchronously look up hostname
-    raii_evhttp_connection evcon = obtain_evhttp_connection_base(base.get(), host, port);
+    raii_evhttp_connection evcon;
+    if (boost::starts_with(host, RPC_ADDR_PREFIX_UNIX)) {
+#if defined(HAVE_SOCKADDR_UN) && defined(LIBEVENT_EXPERIMENTAL)
+        // This requires a small patch to libevent to be able to pass in a file
+        // descriptor of an existing connection, which can be found here:
+        // https://github.com/libevent/libevent/pull/479
+        // When this lands into a release, replace the LIBEVENT_EXPERIMENTAL with a
+        // check on LIBEVENT_VERSION_NUMBER.
+        boost::filesystem::path name = boost::filesystem::path(host.substr(RPC_ADDR_PREFIX_UNIX.size()));
+        // If path is not complete, it is interpreted relative to the data directory.
+        if (!name.is_complete()) {
+            name = GetDataDir(true) / name;
+        }
+        struct bufferevent *bev = evunix_connect(base.get(), name);
+        if (bev == NULL) {
+            throw CConnectionFailed("couldn't connect to UNIX socket " + name.string());
+        }
+        evcon = raii_evhttp_connection(
+            evhttp_connection_base_bufferevent_new(base.get(), NULL, bev, "", 0)
+        );
+#elif defined(HAVE_SOCKADDR_UN)
+        throw std::runtime_error("RPC was asked to connect to a UNIX socket. However, the version of libevent that this utility was compiled with has no support for that.");
+#else
+        throw std::runtime_error("RPC was asked to connect to a UNIX socket, which is not supported on this system");
+#endif
+    } else {
+        // Synchronously look up hostname
+        evcon = obtain_evhttp_connection_base(base.get(), host, port);
+    }
     evhttp_connection_set_timeout(evcon.get(), GetArg("-rpcclienttimeout", DEFAULT_HTTP_CLIENT_TIMEOUT));
 
     HTTPReply response;

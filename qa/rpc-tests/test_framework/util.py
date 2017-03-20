@@ -23,6 +23,8 @@ import logging
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
+from .conninfo import RPCConnectInfoTCP, RPCConnectInfoUNIX
+from .uhttpconnection import have_af_unix
 
 COVERAGE_DIR = None
 
@@ -69,11 +71,10 @@ def enable_coverage(dirname):
     COVERAGE_DIR = dirname
 
 
-def get_rpc_proxy(url, node_number, timeout=None):
+def get_rpc_proxy(conninfo, timeout=None):
     """
     Args:
-        url (str): URL of the RPC server to call
-        node_number (int): the node number (or id) that this calls to
+        urlinfo (RPCConnectInfo): Connection info of the RPC server to call
 
     Kwargs:
         timeout (int): HTTP timeout in seconds
@@ -85,12 +86,13 @@ def get_rpc_proxy(url, node_number, timeout=None):
     proxy_kwargs = {}
     if timeout is not None:
         proxy_kwargs['timeout'] = timeout
+    proxy_kwargs['connection'] = conninfo.make_connection()
 
-    proxy = AuthServiceProxy(url, **proxy_kwargs)
-    proxy.url = url  # store URL on proxy for info
+    proxy = AuthServiceProxy(conninfo.url, **proxy_kwargs)
+    proxy.url = conninfo.url  # store URL on proxy for info
 
     coverage_logfile = coverage.get_filename(
-        COVERAGE_DIR, node_number) if COVERAGE_DIR else None
+        COVERAGE_DIR, conninfo.node_number) if COVERAGE_DIR else None
 
     return coverage.AuthServiceProxyWrapper(proxy, coverage_logfile)
 
@@ -177,36 +179,39 @@ def sync_mempools(rpc_connections, *, wait=1, timeout=60):
 
 bitcoind_processes = {}
 
-def initialize_datadir(dirname, n):
+def initialize_datadir(dirname, n, rpchost=None):
+    '''
+    Initialize datadir and write bitcoin configuration.
+    '''
     datadir = os.path.join(dirname, "node"+str(n))
+    conninfo = conninfo_for(n, rpchost, datadir)
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
-    rpc_u, rpc_p = rpc_auth_pair(n)
     with open(os.path.join(datadir, "bitcoin.conf"), 'w', encoding='utf8') as f:
         f.write("regtest=1\n")
-        f.write("rpcuser=" + rpc_u + "\n")
-        f.write("rpcpassword=" + rpc_p + "\n")
         f.write("port="+str(p2p_port(n))+"\n")
-        f.write("rpcport="+str(rpc_port(n))+"\n")
         f.write("listenonion=0\n")
-    return datadir
+        for (key, value) in conninfo.bitcoind_args:
+            f.write('%s=%s\n' % (key, value))
+    return datadir, conninfo
 
 def rpc_auth_pair(n):
     return 'rpcuser💻' + str(n), 'rpcpass🔑' + str(n)
 
-def rpc_url(i, rpchost=None):
-    rpc_u, rpc_p = rpc_auth_pair(i)
-    host = '127.0.0.1'
-    port = rpc_port(i)
-    if rpchost:
-        parts = rpchost.split(':')
-        if len(parts) == 2:
-            host, port = parts
-        else:
-            host = rpchost
-    return "http://%s:%s@%s:%d" % (rpc_u, rpc_p, host, int(port))
+def conninfo_for(node_number, rpchost, datadir):
+    '''
+    Return connection info for connecting to a certain node, by number.
+    This is where the decision of what transport to use is made.
 
-def wait_for_bitcoind_start(process, url, i):
+    rpchost: Override host to connect to (if provided, forces connection through TCP).
+    datadir: Data directory
+    '''
+    if have_af_unix() and rpchost is None and not int(os.getenv("BITCOIN_TEST_RPC_TCP","0")): # Prefer connecting over a UNIX socket, if available
+        return RPCConnectInfoUNIX(node_number, rpc_auth_pair(node_number), datadir)
+    else:
+        return RPCConnectInfoTCP(node_number, rpc_auth_pair(node_number), rpchost, rpc_port(node_number))
+
+def wait_for_bitcoind_start(process, conninfo):
     '''
     Wait for bitcoind to start. This means that RPC is accessible and fully initialized.
     Raise an exception if bitcoind exits during initialization.
@@ -215,11 +220,11 @@ def wait_for_bitcoind_start(process, url, i):
         if process.poll() is not None:
             raise Exception('bitcoind exited with status %i during initialization' % process.returncode)
         try:
-            rpc = get_rpc_proxy(url, i)
+            rpc = get_rpc_proxy(conninfo)
             blocks = rpc.getblockcount()
             break # break out of loop on success
         except IOError as e:
-            if e.errno != errno.ECONNREFUSED: # Port not yet open?
+            if e.errno != errno.ECONNREFUSED and e.errno != errno.ENOENT: # Port not yet open or socket not yet created?
                 raise # unknown IO error
         except JSONRPCException as e: # Initialization phase
             if e.error['code'] != -28: # RPC in warmup?
@@ -248,20 +253,22 @@ def initialize_chain(test_dir, num_nodes, cachedir):
                 shutil.rmtree(os.path.join(cachedir,"node"+str(i)))
 
         # Create cache directories, run bitcoinds:
+        conninfos = []
         for i in range(MAX_NODES):
-            datadir=initialize_datadir(cachedir, i)
+            datadir, conninfo = initialize_datadir(cachedir, i)
             args = [ os.getenv("BITCOIND", "bitcoind"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
             bitcoind_processes[i] = subprocess.Popen(args)
             logger.debug("initialize_chain: bitcoind started, waiting for RPC to come up")
-            wait_for_bitcoind_start(bitcoind_processes[i], rpc_url(i), i)
+            wait_for_bitcoind_start(bitcoind_processes[i], conninfo)
             logger.debug("initialize_chain: RPC successfully started")
+            conninfos.append(conninfo)
 
         rpcs = []
         for i in range(MAX_NODES):
             try:
-                rpcs.append(get_rpc_proxy(rpc_url(i), i))
+                rpcs.append(get_rpc_proxy(conninfos[i]))
             except:
                 sys.stderr.write("Error connecting to "+url+"\n")
                 sys.exit(1)
@@ -305,24 +312,23 @@ def initialize_chain_clean(test_dir, num_nodes):
     Useful if a test case wants complete control over initialization.
     """
     for i in range(num_nodes):
-        datadir=initialize_datadir(test_dir, i)
+        initialize_datadir(test_dir, i)
 
 
 def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
     """
     Start a bitcoind and return RPC connection to it
     """
-    datadir = os.path.join(dirname, "node"+str(i))
+    datadir,conninfo = initialize_datadir(dirname, i, rpchost)
     if binary is None:
         binary = os.getenv("BITCOIND", "bitcoind")
     args = [ binary, "-datadir="+datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-mocktime="+str(get_mocktime()) ]
     if extra_args is not None: args.extend(extra_args)
     bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)
     logger.debug("initialize_chain: bitcoind started, waiting for RPC to come up")
-    url = rpc_url(i, rpchost)
-    wait_for_bitcoind_start(bitcoind_processes[i], url, i)
+    wait_for_bitcoind_start(bitcoind_processes[i], conninfo)
     logger.debug("initialize_chain: RPC successfully started")
-    proxy = get_rpc_proxy(url, i, timeout=timewait)
+    proxy = get_rpc_proxy(conninfo, timeout=timewait)
 
     if COVERAGE_DIR:
         coverage.write_all_rpc_commands(COVERAGE_DIR, proxy)

@@ -17,6 +17,7 @@
 #include "crypto/sha256.h"
 #include "hash.h"
 #include "primitives/transaction.h"
+#include "support/evunix.h"
 #include "netbase.h"
 #include "scheduler.h"
 #include "ui_interface.h"
@@ -2095,6 +2096,38 @@ bool CConnman::BindListenPort(const CService &addrBind, std::string& strError, b
         AddLocal(addrBind, LOCAL_BIND);
 
     return true;
+}
+
+bool CConnman::BindUNIX(const boost::filesystem::path &path, std::string& strError, bool fWhitelisted)
+{
+#ifdef HAVE_SOCKADDR_UN
+    // Bind on UNIX socket
+    int fd = evunix_bind_fd(path);
+    if (fd < 0)
+    {
+        strError = "Unable to bind to UNIX socket " + path.string();
+        LogPrintf("%s\n", strError);
+        return false;
+    }
+    SOCKET hListenSocket = (SOCKET)fd;
+    LogPrintf("P2P bound to %s\n", path.string());
+
+    // Listen for incoming connections
+    if (listen(hListenSocket, SOMAXCONN) == SOCKET_ERROR)
+    {
+        strError = strprintf(_("Error: Listening for incoming connections failed (listen returned error %s)"), NetworkErrorString(WSAGetLastError()));
+        LogPrintf("%s\n", strError);
+        CloseSocket(hListenSocket);
+        return false;
+    }
+
+    vhListenSocket.push_back(ListenSocket(hListenSocket, fWhitelisted));
+    return true;
+#else
+    strError = "Error: P2P was asked to bind on UNIX socket, which is not supported on this system";
+    LogPrintf("%s\n", strError);
+    return false;
+#endif
 }
 
 void Discover(boost::thread_group& threadGroup)

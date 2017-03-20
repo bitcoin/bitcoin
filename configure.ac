@@ -617,6 +617,21 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
  [ AC_MSG_RESULT(no)]
 )
 
+# Check for UNIX sockets
+AC_MSG_CHECKING(for sockaddr_un)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/socket.h>
+  #include <sys/un.h>]],
+ [[ struct sockaddr_un addr;
+    addr.sun_family = AF_UNIX; ]])],
+ [ AC_MSG_RESULT(yes);
+   AC_DEFINE(HAVE_SOCKADDR_UN, 1,[Define this symbol if the sockaddr_un is available]) 
+   AM_CONDITIONAL([BUILD_EVUNIX],[true])
+ ],
+ [ AC_MSG_RESULT(no)
+   AM_CONDITIONAL([BUILD_EVUNIX],[false])
+ ]
+)
+
 # Check for reduced exports
 if test x$use_reduce_exports = xyes; then
   AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],[RE_CXXFLAGS="-fvisibility=hidden"],

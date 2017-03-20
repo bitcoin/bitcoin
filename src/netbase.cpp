@@ -15,6 +15,7 @@
 #include "random.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "support/evunix.h"
 
 #include <atomic>
 
@@ -39,6 +40,9 @@ bool fNameLookup = DEFAULT_NAME_LOOKUP;
 // Need ample time for negotiation for very slow proxies such as Tor (milliseconds)
 static const int SOCKS5_RECV_TIMEOUT = 20 * 1000;
 static std::atomic<bool> interruptSocks5Recv(false);
+
+/** Prefix for UNIX socket addresses on bind/connect */
+const std::string P2P_ADDR_PREFIX_UNIX = ":unix:";
 
 enum Network ParseNetwork(std::string net) {
     boost::to_lower(net);
@@ -587,14 +591,38 @@ bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout, b
         return ConnectSocketDirectly(addrDest, hSocketRet, nTimeout);
 }
 
+static bool ConnectUNIXSocket(SOCKET& hSocketRet, boost::filesystem::path path)
+{
+    if (!path.is_complete()) {
+        path = GetDataDir(true) / path;
+    }
+#ifdef HAVE_SOCKADDR_UN
+    int fd = evunix_connect_fd(path);
+    if (fd >= 0) {
+        hSocketRet = (SOCKET)fd;
+        return true;
+    } else {
+        return false;
+    }
+#else
+    LogPrintf("WARNING: P2P was asked to connect on UNIX socket %s, which is not supported on this system\n", path.string());
+    return false;
+#endif
+}
+
 bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, int portDefault, int nTimeout, bool *outProxyConnectionFailed)
 {
-    std::string strDest;
-    int port = portDefault;
-
     if (outProxyConnectionFailed)
         *outProxyConnectionFailed = false;
 
+    std::string pszDestStr(pszDest);
+    if (boost::starts_with(pszDestStr, P2P_ADDR_PREFIX_UNIX)) {
+        boost::filesystem::path name = boost::filesystem::path(pszDestStr.substr(P2P_ADDR_PREFIX_UNIX.size()));
+        return ConnectUNIXSocket(hSocketRet, name);
+    }
+
+    std::string strDest;
+    int port = portDefault;
     SplitHostPort(std::string(pszDest), port, strDest);
 
     proxyType proxy;

@@ -288,6 +288,21 @@ bool static Bind(CConnman& connman, const CService &addr, unsigned int flags) {
     }
     return true;
 }
+
+bool static BindUNIX(CConnman& connman, boost::filesystem::path path, unsigned int flags) {
+    // If path is not complete, it is interpreted relative to the data directory.
+    if (!path.is_complete()) {
+        path = GetDataDir(true) / path;
+    }
+    std::string strError;
+    if (!connman.BindUNIX(path, strError, (flags & BF_WHITELIST) != 0)) {
+        if (flags & BF_REPORT_ERROR)
+            return InitError(strError);
+        return false;
+    }
+    return true;
+}
+
 void OnRPCStarted()
 {
     uiInterface.NotifyBlockTip.connect(&RPCNotifyBlockChange);
@@ -1318,20 +1333,28 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         bool fBound = false;
         if (mapMultiArgs.count("-bind")) {
             BOOST_FOREACH(const std::string& strBind, mapMultiArgs.at("-bind")) {
-                CService addrBind;
-                if (!Lookup(strBind.c_str(), addrBind, GetListenPort(), false))
-                    return InitError(ResolveErrMsg("bind", strBind));
-                fBound |= Bind(connman, addrBind, (BF_EXPLICIT | BF_REPORT_ERROR));
+                if (boost::starts_with(strBind, P2P_ADDR_PREFIX_UNIX)) {
+                    fBound |= BindUNIX(connman, boost::filesystem::path(strBind.substr(RPC_ADDR_PREFIX_UNIX.size())), (BF_EXPLICIT | BF_REPORT_ERROR));
+                } else {
+                    CService addrBind;
+                    if (!Lookup(strBind.c_str(), addrBind, GetListenPort(), false))
+                        return InitError(ResolveErrMsg("bind", strBind));
+                    fBound |= Bind(connman, addrBind, (BF_EXPLICIT | BF_REPORT_ERROR));
+                }
             }
         }
         if (mapMultiArgs.count("-whitebind")) {
             BOOST_FOREACH(const std::string& strBind, mapMultiArgs.at("-whitebind")) {
-                CService addrBind;
-                if (!Lookup(strBind.c_str(), addrBind, 0, false))
-                    return InitError(ResolveErrMsg("whitebind", strBind));
-                if (addrBind.GetPort() == 0)
-                    return InitError(strprintf(_("Need to specify a port with -whitebind: '%s'"), strBind));
-                fBound |= Bind(connman, addrBind, (BF_EXPLICIT | BF_REPORT_ERROR | BF_WHITELIST));
+                if (boost::starts_with(strBind, P2P_ADDR_PREFIX_UNIX)) {
+                    fBound |= BindUNIX(connman, boost::filesystem::path(strBind.substr(RPC_ADDR_PREFIX_UNIX.size())), (BF_EXPLICIT | BF_REPORT_ERROR | BF_WHITELIST));
+                } else {
+                    CService addrBind;
+                    if (!Lookup(strBind.c_str(), addrBind, 0, false))
+                        return InitError(ResolveErrMsg("whitebind", strBind));
+                    if (addrBind.GetPort() == 0)
+                        return InitError(strprintf(_("Need to specify a port with -whitebind: '%s'"), strBind));
+                    fBound |= Bind(connman, addrBind, (BF_EXPLICIT | BF_REPORT_ERROR | BF_WHITELIST));
+                }
             }
         }
         if (!mapMultiArgs.count("-bind") && !mapMultiArgs.count("-whitebind")) {

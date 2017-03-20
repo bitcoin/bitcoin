@@ -16,6 +16,9 @@ class NodeHandlingTest (BitcoinTestFramework):
         self.num_nodes = 4
         self.setup_clean_chain = False
 
+    def setup_nodes(self):
+        return start_nodes(self.num_nodes, self.options.tmpdir, rpchost='127.0.0.1')
+
     def run_test(self):
         ###########################
         # setban/listbanned tests #

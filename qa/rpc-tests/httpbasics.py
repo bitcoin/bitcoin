@@ -17,7 +17,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         self.setup_clean_chain = False
 
     def setup_network(self):
-        self.nodes = self.setup_nodes()
+        self.nodes = self.setup_nodes(rpchost="127.0.0.1")
 
     def run_test(self):
 
