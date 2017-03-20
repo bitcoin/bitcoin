@@ -22,7 +22,9 @@ namespace
 //! Press "Yes" button in modal send confirmation dialog.
 void ConfirmSend()
 {
-    QTimer::singleShot(0, Qt::PreciseTimer, []() {
+    QTimer* timer = new QTimer;
+    timer->setSingleShot(true);
+    QObject::connect(timer, &QTimer::timeout, []() {
         for (QWidget* widget : QApplication::topLevelWidgets()) {
             if (widget->inherits("SendConfirmationDialog")) {
                 SendConfirmationDialog* dialog = qobject_cast<SendConfirmationDialog*>(widget);
@@ -32,6 +34,7 @@ void ConfirmSend()
             }
         }
     });
+    timer->start(0);
 }
 
 //! Send coins to address and return txid.
