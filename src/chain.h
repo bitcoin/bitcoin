@@ -378,6 +378,7 @@ public:
 
     /** Efficiently check whether a block is present in this chain. */
     bool Contains(const CBlockIndex *pindex) const {
+        if (!pindex) return false;  // null pointer isn't in this chain
         return (*this)[pindex->nHeight] == pindex;
     }
 

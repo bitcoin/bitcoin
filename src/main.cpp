@@ -4769,7 +4769,7 @@ static bool AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     {
     case MSG_TX:
         {
-            assert(recentRejects);
+            // remove assertions from P2P code, but this should hold: assert(recentRejects);
             if (chainActive.Tip()->GetBlockHash() != hashRecentRejectsChainTip)
             {
                 // If the chain tip has changed previously rejected transactions
@@ -4777,9 +4777,11 @@ static bool AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
                 // or a double-spend. Reset the rejects filter and give those
                 // txs a second chance.
                 hashRecentRejectsChainTip = chainActive.Tip()->GetBlockHash();
-                recentRejects->reset();
+                if (recentRejects) recentRejects->reset();
+                else recentRejects.reset(new CRollingBloomFilter(120000, 0.000001));
             }
-            return recentRejects->contains(inv.hash) ||
+            bool rrc = recentRejects ? recentRejects->contains(inv.hash) : false;
+            return rrc ||
                    mempool.exists(inv.hash) ||
                    AlreadyHaveOrphan(inv.hash) ||
                    pcoinsTip->HaveCoins(inv.hash);
@@ -5238,12 +5240,23 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     {
         vector<CInv> vInv;
         vRecv >> vInv;
-        if (vInv.size() > MAX_INV_SZ)
+        if ((vInv.size() > MAX_INV_SZ)||(vInv.size() == 0))  // BU check size == 0 to be intolerant of an empty and useless request
         {
             Misbehaving(pfrom->GetId(), 20);
             return error("message inv size() = %u", vInv.size());
         }
-
+        
+        for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)  // Validate that INVs are a valid type
+        {
+            const CInv &inv = vInv[nInv];
+            if (!((inv.type == MSG_TX) || (inv.type == MSG_BLOCK)))
+              {
+              Misbehaving(pfrom->GetId(), 20);
+              return error("message inv invalid type = %u", inv.type);                
+              }
+            // inv.hash does not need validation, since SHA2556 hash can be any value
+        }
+        
         bool fBlocksOnly = GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
 
         // Allow whitelisted peers to send data other than blocks in blocks only mode if whitelistrelay is true
@@ -5252,7 +5265,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         LOCK(cs_main);
 
-        std::vector<CInv> vToFetch;
+        // BU remove, unused        std::vector<CInv> vToFetch;
 
         for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
         {
@@ -5292,8 +5305,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             }
         }
 
-        if (!vToFetch.empty())
-            pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
+        // BU remove, unused       if (!vToFetch.empty())
+        // BU remove, unused          pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
     }
 
 
@@ -5301,11 +5314,22 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     {
         vector<CInv> vInv;
         vRecv >> vInv;
-        if (vInv.size() > MAX_INV_SZ)
+        if ((vInv.size() > MAX_INV_SZ)||(vInv.size() == 0))  // BU check size == 0 to be intolerant of an empty and useless request
         {
             Misbehaving(pfrom->GetId(), 20);
             return error("message getdata size() = %u", vInv.size());
         }
+        for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)  // Validate that INVs are a valid type
+        {
+            const CInv &inv = vInv[nInv];
+            if (!((inv.type == MSG_TX) || (inv.type == MSG_BLOCK) || (inv.type == MSG_FILTERED_BLOCK) || (inv.type == MSG_THINBLOCK) || (inv.type == MSG_XTHINBLOCK)))
+              {
+              Misbehaving(pfrom->GetId(), 20);
+              return error("message inv invalid type = %u", inv.type);                
+              }
+            // inv.hash does not need validation, since SHA2556 hash can be any value
+        }
+        
 
         if (fDebug || (vInv.size() != 1))
             LogPrint("net", "received getdata (%u invsz) peer=%d\n", vInv.size(), pfrom->id);
@@ -5441,7 +5465,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         // Check for recently rejected (and do other quick existence checks)
         if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
         {
-
             mempool.check(pcoinsTip);
             RelayTransaction(tx);
             vWorkQueue.push_back(inv.hash);
@@ -5496,8 +5519,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         // Probably non-standard or insufficient fee/priority
                         LogPrint("mempool", "   removed orphan tx %s\n", orphanHash.ToString());
                         vEraseQueue.push_back(orphanHash);
-                        assert(recentRejects);
-                        recentRejects->insert(orphanHash);
+                        if (recentRejects) recentRejects->insert(orphanHash);  // should always be true
                     }
                     mempool.check(pcoinsTip);
                 }
@@ -5519,8 +5541,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             if (nEvicted > 0)
                 LogPrint("mempool", "mapOrphan overflow, removed %u tx\n", nEvicted);
         } else {
-            assert(recentRejects);
-            recentRejects->insert(tx.GetHash());
+            if (recentRejects) recentRejects->insert(tx.GetHash());  // should always be true
 
             if (pfrom->fWhitelisted && GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY)) {
                 // Always relay transactions received from whitelisted peers, even
@@ -5611,7 +5632,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CNodeState *nodestate = State(pfrom->GetId());
         // If this set of headers is valid and ends in a block with at least as
         // much work as our tip, download as much as possible.
-        if (fCanDirectFetch && pindexLast->IsValid(BLOCK_VALID_TREE) && chainActive.Tip()->nChainWork <= pindexLast->nChainWork) {
+        if (fCanDirectFetch && pindexLast && pindexLast->IsValid(BLOCK_VALID_TREE) && chainActive.Tip()->nChainWork <= pindexLast->nChainWork) {
             vector<CBlockIndex *> vToFetch;
             CBlockIndex *pindexWalk = pindexLast;
             // Calculate all the blocks we'd need to switch to pindexLast, up to a limit.
@@ -5627,7 +5648,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             // very large reorg at a time we think we're close to caught up to
             // the main chain -- this shouldn't really happen.  Bail out on the
             // direct fetch and rely on parallel download instead.
-            if (!chainActive.Contains(pindexWalk)) {
+            if (pindexWalk && !chainActive.Contains(pindexWalk)) {
                 LogPrint("net", "Large reorg, won't direct fetch to %s (%d)\n",
                         pindexLast->GetBlockHash().ToString(),
                         pindexLast->nHeight);
@@ -5640,6 +5661,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         // Can't download any more from this peer
                         break;
                     }
+                    // pindex must be nonnull because we populated vToFetch a few lines above
                     vGetData.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash()));
                     MarkBlockAsInFlight(pfrom->GetId(), pindex->GetBlockHash(), chainparams.GetConsensus(), pindex);
                     LogPrint("net", "Requesting block %s from  peer=%d\n",
@@ -5689,8 +5711,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CBloomFilter filterMemPool;
         CInv inv;
         vRecv >> inv >> filterMemPool;
+        if (!((inv.type == MSG_XTHINBLOCK)||(inv.type == MSG_THINBLOCK)))
+          {
+            Misbehaving(pfrom->GetId(), 20);
+            return error("message inv invalid type = %u", inv.type);                
+          }
+        
 
-        LoadFilter(pfrom, &filterMemPool);
+        LoadFilter(pfrom, &filterMemPool);  // Validates that the filter is reasonably sized.
 
         {
             LOCK(cs_main);
@@ -5714,7 +5742,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
       }
     else if (strCommand == NetMsgType::XPEDITEDBLK)  // BU
       {
-	HandleExpeditedBlock(vRecv,pfrom);
+	if (!HandleExpeditedBlock(vRecv,pfrom))
+          {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 5);
+            return false;            
+          }
       }
     // BU - used to pass BU specific version information similar to NetMsgType::VERSION
     else if (strCommand == NetMsgType::BUVERSION)
@@ -5743,18 +5776,17 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     {
         CXThinBlock thinBlock;
         vRecv >> thinBlock;
-
+        CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
         // Send expedited ASAP
         CValidationState state;
         if (!CheckBlockHeader(thinBlock.header, state, true)) { // block header is bad
-            LogPrint("thin", "Thinblock %s received with bad header from peer %s (%d)\n", thinBlock.header.GetHash().ToString(), pfrom->addrName.c_str(), pfrom->id);
+            LogPrint("thin", "Thinblock %s received with bad header from peer %s (%d)\n", inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id);
             Misbehaving(pfrom->GetId(), 20);
             return false;
         }
-        else if (!IsRecentlyExpeditedAndStore(thinBlock.header.GetHash()))
+        else if (!IsRecentlyExpeditedAndStore(inv.hash))
             SendExpeditedBlock(thinBlock, 0, pfrom);
 
-        CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
         int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
         LogPrint("thin", "Received thinblock %s from peer %s (%d). Size %d bytes.\n", inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id, nSizeThinBlock);
 
@@ -5829,6 +5861,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 else if (inMissingTx)
                     tx = mapMissingTx[hash];
             }
+            else
+            {
+              // Question: should we set misbehaving and abort if the thin block has a tx with a null hash?
+            }
+            
             if (tx.IsNull())
                 missingCount++;
             // This will push an empty/invalid transaction if we don't have it yet
@@ -5863,7 +5900,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             // This marks the end of the transactions we've received. If we get this and we have NOT been able to
             // finish reassembling the block, we need to re-request the full regular block:
             vector<CInv> vGetData;
-            vGetData.push_back(CInv(MSG_BLOCK, thinBlock.header.GetHash())); 
+            vGetData.push_back(inv); 
             pfrom->PushMessage("getdata", vGetData);
             setPreVerifiedTxHash.clear(); // Xpress Validation - clear the set since we do not do XVal on regular blocks
             LogPrint("thin", "Missing %d Thinblock transactions, re-requesting a regular block\n",  
@@ -5894,6 +5931,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         int count=0;
         size_t i;
+        if (pfrom->xThinBlockHashes.size() != pfrom->thinBlock.vtx.size())  // Because the next loop assumes this
+          {
+            LogPrint("thin", "Inconsistent thin block data.  Aborting the thin block\n");
+            // TODO clear out the thin block
+            return true;
+          }
+        
         for (i = 0; i < pfrom->thinBlock.vtx.size(); i++) {
              if (pfrom->thinBlock.vtx[i].IsNull()) {
 	         std::map<uint64_t, CTransaction>::iterator val = mapMissingTx.find(pfrom->xThinBlockHashes[i]);
@@ -6205,14 +6249,22 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         vRecv >> filter;
     
         if (!filter.IsWithinSizeConstraints())
+          {
             // There is no excuse for sending a too-large filter
             Misbehaving(pfrom->GetId(), 100);
+            return false;
+          }
         else
         {
             LOCK(pfrom->cs_filter);
             delete pfrom->pfilter;
             pfrom->pfilter = new CBloomFilter(filter);
-            pfrom->pfilter->UpdateEmptyFull();
+            if (!pfrom->pfilter)
+              {
+                LogPrintf("Unable to allocate new bloom filter -- out of memory");
+                return false;
+              }
+            else pfrom->pfilter->UpdateEmptyFull();
         }
         pfrom->fRelayTxes = true;
     }
@@ -6306,9 +6358,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 }
 
 
-// requires LOCK(cs_vRecvMsg)
 bool ProcessMessages(CNode* pfrom)
 {
+    AssertLockHeld(pfrom->cs_vRecvMsg);  
     const CChainParams& chainparams = Params();
     //if (fDebug)
     //    LogPrintf("%s(%u messages)\n", __func__, pfrom->vRecvMsg.size());
