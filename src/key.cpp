@@ -151,12 +151,19 @@ CPrivKey CKey::GetPrivKey() const {
     return privkey;
 }
 
-#include "BitcoinSecret.h"
 base58string CKey::GetBase58stringWithNetworkSecretKeyPrefix() const
 {
-    return base58string(CBitcoinSecret(*this).m_data._ToString());
+    CBase58Data data;
+
+    assert(this->IsValid());
+    data.SetData(Params().Base58Prefix(CChainParams::SECRET_KEY), this->begin(), this->size());
+    if (this->IsCompressed())
+        data.vchData.push_back(1);
+
+    return base58string(data._ToString());
 }
 
+#include "BitcoinSecret.h"
 CKey CKey::FromBase58string(const base58string& strPrivkey)
 {
     CBitcoinSecret vchSecret;

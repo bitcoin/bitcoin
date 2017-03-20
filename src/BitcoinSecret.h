@@ -13,12 +13,10 @@
 class CBitcoinSecret
 {
 public:
-    void SetKey(const CKey& vchSecret);
     CKey GetKey();
     bool IsValid() const;
     bool SetBase58string(const base58string& strSecret);
 
-    CBitcoinSecret(const CKey& vchSecret) { this->SetKey(vchSecret); }
     CBitcoinSecret() {}
 
 public: // ### 仮.

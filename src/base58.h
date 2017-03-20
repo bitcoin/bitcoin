@@ -68,6 +68,7 @@ inline bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>
 class base58string;
 class CBitcoinSecret;
 class CBitcoinAddress;
+class CKey;
 
 /**
  * Base class for all base58-encoded data
@@ -107,6 +108,7 @@ public:
     friend class base58string;
     friend class CBitcoinSecret;
     friend class CBitcoinAddress;
+    friend class CKey;
 };
 
 #include "base58string.h"

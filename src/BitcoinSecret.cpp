@@ -4,14 +4,6 @@
 
 #include "BitcoinSecret.h"
 
-void CBitcoinSecret::SetKey(const CKey& vchSecret)
-{
-    assert(vchSecret.IsValid());
-    m_data.SetData(Params().Base58Prefix(CChainParams::SECRET_KEY), vchSecret.begin(), vchSecret.size());
-    if (vchSecret.IsCompressed())
-        m_data.vchData.push_back(1);
-}
-
 CKey CBitcoinSecret::GetKey()
 {
     CKey ret;
