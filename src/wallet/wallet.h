@@ -752,7 +752,7 @@ public:
 
 	// SYSCOIN add data and input tx for syscoin service calls
     bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet,
-                           std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true, const CWalletTx* wtxIn=NULL, int nOut = 0, bool sysTx = false, const CWalletTx* wtxLinkIn=NULL, int nLinkOut = 0, bAliasPay=false);
+                           std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true, const CWalletTx* wtxIn=NULL, int nOut = 0, bool sysTx = false, const CWalletTx* wtxLinkIn=NULL, int nLinkOut = 0, bool bAliasPay=false);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
 
     bool AddAccountingEntry(const CAccountingEntry&, CWalletDB & pwalletdb);
