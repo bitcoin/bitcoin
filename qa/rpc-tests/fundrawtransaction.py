@@ -54,10 +54,13 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.sync_all()
 
         watchonly_address = self.nodes[0].getnewaddress()
+        watchonly_address2= self.nodes[0].getnewaddress()
         watchonly_pubkey = self.nodes[0].validateaddress(watchonly_address)["pubkey"]
         watchonly_amount = Decimal(200)
         self.nodes[3].importpubkey(watchonly_pubkey, "", True)
+        self.nodes[3].importaddress(watchonly_address2)
         watchonly_txid = self.nodes[0].sendtoaddress(watchonly_address, watchonly_amount)
+        watchonly_txid2 = self.nodes[0].sendtoaddress(watchonly_address2, Decimal(2))
         self.nodes[0].sendtoaddress(self.nodes[3].getnewaddress(), watchonly_amount / 10)
 
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1.5)
@@ -589,6 +592,16 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         assert("fee" in result.keys())
         assert_greater_than(result["changepos"], -1)
+
+        ##################################################################
+        # test a fundrawtransaction using only watchonly (P2PKH address) #
+        ##################################################################
+
+        inputs = []
+        outputs = {self.nodes[2].getnewaddress() : watchonly_amount + Decimal(1)}
+        rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
+        result = self.nodes[3].fundrawtransaction(rawtx, {'includeWatching': True })
+        assert("fee" in result.keys())
 
         ###############################################################
         # test fundrawtransaction using the entirety of watched funds #
