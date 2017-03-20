@@ -8,7 +8,6 @@
 #include "main.h"
 
 #include "addrman.h"
-#include "alert.h"
 #include "arith_uint256.h"
 #include "chainparams.h"
 #include "checkpoints.h"
@@ -83,7 +82,6 @@ bool fCheckBlockIndex = false;
 bool fCheckpointsEnabled = DEFAULT_CHECKPOINTS_ENABLED;
 size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
-bool fAlerts = DEFAULT_ALERTS;
 bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying, mining and transaction creation) */
@@ -92,8 +90,8 @@ CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 // BU: Move global objects to a single file
 extern CTxMemPool mempool;
 
-// BU: change locking of orphan map from using cs_main to cs_orphancache.  
-// There is too much dependance on cs_main locks which are generally too 
+// BU: change locking of orphan map from using cs_main to cs_orphancache.
+// There is too much dependance on cs_main locks which are generally too
 // broad in scope.
 // Move globals to a single file
 extern CCriticalSection cs_orphancache;
@@ -103,9 +101,9 @@ extern map<uint256, set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_orp
 void EraseOrphansFor(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_orphancache);
 int64_t nLastOrphanCheck = GetTime(); // Used in EraseOrphansByTime()
 
-// BU: start block download at low numbers in case our peers are slow when we start  
+// BU: start block download at low numbers in case our peers are slow when we start
 /** Number of blocks that can be requested at any given time from a single peer. */
-static unsigned int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 1;       
+static unsigned int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 1;
 /** Size of the "block download window": how far ahead of our current height do we fetch?
  *  Larger windows tolerate larger download speed differences between peer, but increase the potential
  *  degree of disordering of blocks on disk (which make reindexing and in the future perhaps pruning
@@ -1180,7 +1178,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
     unsigned int nSigOps = 0;
     ValidationResourceTracker resourceTracker;
     unsigned int nSize = 0;
-    uint64_t start = GetTimeMicros();    
+    uint64_t start = GetTimeMicros();
     AssertLockHeld(cs_main);
     if (pfMissingInputs)
         *pfMissingInputs = false;
@@ -1350,17 +1348,17 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         // MAX_BLOCK_SIGOPS; we still consider this an invalid rather than
         // merely non-standard transaction.
 
-#if 1        
+#if 1
         //#ifdef ALLOW_ALL_VALID_TX_IN_MEMPOOL  // For testing blocks with larger numbers of sigops, we need to be able to create them by creating transactions that miners can create.  This define won't be set outside of testing
         if (nSigOps > BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS)
             return state.DoS(0, false, REJECT_NONSTANDARD, "bad-txns-too-many-sigops", false,
                 strprintf("%d", nSigOps));
-#else        
+#else
         if ((nSigOps > MAX_STANDARD_TX_SIGOPS) || (nBytesPerSigOp && nSigOps > nSize / nBytesPerSigOp))
             return state.DoS(0, false, REJECT_NONSTANDARD, "bad-txns-too-many-sigops", false,
                 strprintf("%d", nSigOps));
 #endif
-        
+
         CAmount mempoolRejectFee = pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nSize);
         if (mempoolRejectFee > 0 && nModifiedFees < mempoolRejectFee) {
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool min fee not met", false, strprintf("%d < %d", nFees, mempoolRejectFee));
@@ -1368,20 +1366,20 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
             // Require that free transactions have sufficient priority to be mined in the next block.
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
         }
-        
+
         // BU - Xtreme Thinblocks Auto Mempool Limiter - begin section
         /* Continuously rate-limit free (really, very-low-fee) transactions
          * This mitigates 'penny-flooding' -- sending thousands of free transactions just to
          * be annoying or make others' transactions take longer to confirm. */
         static const double maxFeeCutoff = boost::lexical_cast<double>(GetArg("-maxlimitertxfee", DEFAULT_MAXLIMITERTXFEE)); /* maximum feeCutoff in satoshi per byte */
 	static const double initFeeCutoff = boost::lexical_cast<double>(GetArg("-minlimitertxfee", DEFAULT_MINLIMITERTXFEE)); /* starting value for feeCutoff in satoshi per byte*/
-        static const int nLimitFreeRelay = GetArg("-limitfreerelay", DEFAULT_LIMITFREERELAY); 
+        static const int nLimitFreeRelay = GetArg("-limitfreerelay", DEFAULT_LIMITFREERELAY);
 
         // get current memory pool size
         uint64_t poolBytes = pool.GetTotalTxSize();
 
 	// Calculate feeCutoff in satoshis per byte:
-	//   When the feeCutoff is larger than the satoshiPerByte of the 
+	//   When the feeCutoff is larger than the satoshiPerByte of the
 	//   current transaction then spam blocking will be in effect. However
 	//   Some free transactions will still get through based on -limitfreerelay
         static double feeCutoff;
@@ -1443,7 +1441,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         // BU - Xtreme Thinblocks Auto Mempool Limiter - end section
 
         // BU: we calculate the recommended fee by looking at what's in the mempool.  This starts at 0 though for an
-        // empty mempool.  So set the minimum "absurd" fee to 10000 satoshies per byte.  If for some reason fees rise 
+        // empty mempool.  So set the minimum "absurd" fee to 10000 satoshies per byte.  If for some reason fees rise
         // above that, you can specify up to 100x what other txns are paying in the mempool
         if (fRejectAbsurdFee && nFees > std::max((int64_t)100L*nSize,(int64_t)::minRelayTxFee.GetFee(nSize)) * 100 )
             return state.Invalid(false,
@@ -1827,6 +1825,27 @@ bool fLargeWorkForkFound = false;
 bool fLargeWorkInvalidChainFound = false;
 CBlockIndex *pindexBestForkTip = NULL, *pindexBestForkBase = NULL;
 
+// Execute a command, as given by -alertnotify, on certain events such as a long fork being seen
+static void AlertNotify(const std::string& strMessage, bool fThread)
+{
+    uiInterface.NotifyAlertChanged();
+    std::string strCmd = GetArg("-alertnotify", "");
+    if (strCmd.empty()) return;
+
+    // Alert text should be plain ascii coming from a trusted source, but to
+    // be safe we first strip anything not in safeChars, then add single quotes around
+    // the whole string before passing it to the shell:
+    std::string singleQuote("'");
+    std::string safeStatus = SanitizeString(strMessage);
+    safeStatus = singleQuote+safeStatus+singleQuote;
+    boost::replace_all(strCmd, "%s", safeStatus);
+
+    if (fThread)
+        boost::thread t(runCommand, strCmd); // thread runs free
+    else
+        runCommand(strCmd);
+}
+
 void CheckForkWarningConditions()
 {
     AssertLockHeld(cs_main);
@@ -1846,7 +1865,7 @@ void CheckForkWarningConditions()
         {
             std::string warning = std::string("'Warning: Large-work fork detected, forking after block ") +
                 pindexBestForkBase->phashBlock->ToString() + std::string("'");
-            CAlert::Notify(warning, true);
+            AlertNotify(warning, true);
         }
         if (pindexBestForkTip && pindexBestForkBase)
         {
@@ -2379,7 +2398,7 @@ void PartitionCheck(bool (*initialDownloadCheck)(), CCriticalSection& cs, const 
     if (!strWarning.empty())
     {
         strMiscWarning = strWarning;
-        CAlert::Notify(strWarning, true);
+        AlertNotify(strWarning, true);
         lastAlertTime = now;
     }
 }
@@ -2439,7 +2458,7 @@ static int64_t nTimeTotal = 0;
 
 bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& view, bool fJustCheck, bool fParallel)
 {
-    /** BU: Start Section to validate inputs - if there are parallel blocks being checked 
+    /** BU: Start Section to validate inputs - if there are parallel blocks being checked
      *      then the winner of this race will get to update the UTXO.
      */
 
@@ -2467,7 +2486,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     const int64_t timeBarrier = GetTime() - (24 * 3600 * checkScriptDays.value);
     // Blocks that have various days of POW behind them makes them secure in that
     // real online nodes have checked the scripts.  Therefore, during initial block
-    // download we don't need to check most of those scripts except for the most 
+    // download we don't need to check most of those scripts except for the most
     // recent ones.
     bool fScriptChecks = !fCheckpointsEnabled || block.nTime > timeBarrier;
 
@@ -2539,7 +2558,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     int64_t nTime2 = GetTimeMicros(); nTimeForks += nTime2 - nTime1;
     LogPrint("bench", "    - Fork checks: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeForks * 0.000001);
 
-    CBlockUndo blockundo; 
+    CBlockUndo blockundo;
     ValidationResourceTracker resourceTracker;
     std::vector<int> prevheights;
     CAmount nFees = 0;
@@ -2554,7 +2573,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     const arith_uint256 nStartingChainWork = chainActive.Tip()->nChainWork;
 
     // Create a vector for storing hashes that will be deleted from the unverified and perverified txn sets.
-    // We will delete these hashes only if and when this block is the one that is accepted saving us the unnecessary 
+    // We will delete these hashes only if and when this block is the one that is accepted saving us the unnecessary
     // repeated locking and unlocking of cs_xval.
     std::vector<uint256> vHashesToDelete;
 
@@ -2596,7 +2615,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     bool inOrphanCache;
     bool inVerifiedCache;
     // When in parallel mode then unlock cs_main for this loop to give any other threads
-    // a chance to process in parallel. This is crucial for parallel validation to work. 
+    // a chance to process in parallel. This is crucial for parallel validation to work.
     // NOTE: the only place where cs_main is needed is if we hit PV.ChainWorkHasChanged, which
     //       internally grabs the cs_main lock when needed.
     for (unsigned int i = 0; i < block.vtx.size(); i++)
@@ -2667,7 +2686,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                     std::vector<CScriptCheck> vChecks;
                     bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
                     if (!CheckInputs(tx, state, viewTempCache, fScriptChecks, flags, fCacheResults, &resourceTracker, nScriptCheckThreads ? &vChecks : NULL)) {
-                        return error("ConnectBlock(): CheckInputs on %s failed with %s", 
+                        return error("ConnectBlock(): CheckInputs on %s failed with %s",
                                               tx.GetHash().ToString(), FormatStateMessage(state));
                     }
                     control.Add(vChecks);
@@ -2718,7 +2737,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     /*****************************************************************************************************************
      *                         Start update of UTXO, if this block wins the validation race                          *
      *****************************************************************************************************************/
-    // If in PV mode and we win the race then we lock everyone out by taking cs_main but before updating the UTXO and 
+    // If in PV mode and we win the race then we lock everyone out by taking cs_main but before updating the UTXO and
     // terminating any competing threads.
     } // cs_main is re-aquired automatically as we go out of scope from the BOOST scope guard
 
@@ -2728,14 +2747,14 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     }
 
     // Quit any competing threads may be validating which have the same previous block before updating the UTXO.
-    PV.QuitCompetingThreads(block.GetBlockHeader().hashPrevBlock); 
+    PV.QuitCompetingThreads(block.GetBlockHeader().hashPrevBlock);
 
     // Flush the temporary UTXO view to the base view (the in memory UTXO main cache)
     int64_t nUpdateCoinsTimeBegin = GetTimeMicros();
     LogPrint("parallel", "Updating UTXO for %s\n", block.GetHash().ToString());
     viewTempCache.Flush();
 
-    int64_t nUpdateCoinsTimeEnd = GetTimeMicros(); 
+    int64_t nUpdateCoinsTimeEnd = GetTimeMicros();
     LogPrint("bench", "      - Update Coins %.3fms\n", nUpdateCoinsTimeEnd - nUpdateCoinsTimeBegin);
 
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
@@ -2752,7 +2771,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             CDiskBlockPos pos;
             if (!FindUndoPos(state, pindex->nFile, pos, ::GetSerializeSize(blockundo, SER_DISK, CLIENT_VERSION) + 40))
                 return error("ConnectBlock(): FindUndoPos failed");
-            
+
 
             uint256 prevHash;
             if (pindex->pprev)  // genesis block prev hash is 0
@@ -2761,7 +2780,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
               prevHash.SetNull();
             if (!UndoWriteToDisk(blockundo, pos, prevHash, chainparams.MessageStart()))
               return AbortNode(state, "Failed to write undo data");
-            
+
 
             // update nUndoPos in block index
             pindex->nUndoPos = pos.nPos;
@@ -2954,7 +2973,7 @@ void static UpdateTip(CBlockIndex *pindexNew) {
                 if (state == THRESHOLD_ACTIVE) {
                     strMiscWarning = strprintf(_("Warning: unknown new rules activated (versionbit %i)"), bit);
                     if (!fWarned) {
-                        CAlert::Notify(strMiscWarning, true);
+                        AlertNotify(strMiscWarning, true);
                         fWarned = true;
                     }
                 } else {
@@ -2980,7 +2999,7 @@ void static UpdateTip(CBlockIndex *pindexNew) {
             // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
             strMiscWarning = _("Warning: Unknown block versions being mined! It's possible unknown rules are in effect");
             if (!fWarned) {
-                CAlert::Notify(strMiscWarning, true);
+                AlertNotify(strMiscWarning, true);
                 fWarned = true;
             }
         }
@@ -3172,14 +3191,14 @@ static CBlockIndex* FindMostWorkChain() {
         // block sizes are not saved.
         if ((fRecentExcessive && !fOldExcessive)&&(depth<excessiveAcceptDepth+EXCESSIVE_BLOCK_CHAIN_RESET))
 	  {
-            CBlockIndex *chain = pindexTest;  
+            CBlockIndex *chain = pindexTest;
             while (chain && (depth<excessiveAcceptDepth)) // skip accept depth blocks, we are looking for an older excessive
 	      {
               chain = chain->pprev;
               depth++;
 	      }
 
-            while (chain && (depth<excessiveAcceptDepth+EXCESSIVE_BLOCK_CHAIN_RESET)) 
+            while (chain && (depth<excessiveAcceptDepth+EXCESSIVE_BLOCK_CHAIN_RESET))
               {
               fOldExcessive |= ((chain->nStatus & BLOCK_EXCESSIVE) != 0);
               chain = chain->pprev;
@@ -3188,7 +3207,7 @@ static CBlockIndex* FindMostWorkChain() {
 	  }
 
         // Conditions where we want to reject the chain
-	if (fFailedChain || fMissingData || (fRecentExcessive && !fOldExcessive)) 
+	if (fFailedChain || fMissingData || (fRecentExcessive && !fOldExcessive))
           {
                 // Candidate chain is not usable (either invalid or missing data)
                 if (fFailedChain && (pindexBestInvalid == NULL || pindexNew->nChainWork > pindexBestInvalid->nChainWork))
@@ -3271,8 +3290,8 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
     bool fContinue = true;
     /** Parallel Validation: fBlock determines whether we pass a block or NULL to ConnectTip().
      *  If the pindexMostWork has been extended while we have been validating the last block then we
-     *  want to pass a NULL so that the next block is read from disk, because we will definitely not 
-     *  have the block. 
+     *  want to pass a NULL so that the next block is read from disk, because we will definitely not
+     *  have the block.
      */
     bool fBlock = true;
     int nHeight = pindexFork ? pindexFork->nHeight : -1;
@@ -3328,7 +3347,7 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
 
                 PruneBlockIndexCandidates();
                 if (!pindexOldTip || chainActive.Tip()->nChainWork > pindexOldTip->nChainWork) {
-                    /* BU: these are commented out for parallel validation: 
+                    /* BU: these are commented out for parallel validation:
                            We must always continue so as to find if the pindexMostWork has advanced while we've
                            been trying to connect the last block.
                     // We're in a better position than we were. Return temporarily to release the lock.
@@ -3413,8 +3432,8 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
             //** PARALLEL BLOCK VALIDATION
             // Find the CBlockIndex of this block if this blocks previous hash matches the old chaintip.  In the
             // case of parallel block validation we may have two or more blocks processing at the same time however
-            // their block headers may not represent what is considered the best block as returned by pindexMostWork. 
-            // Therefore we must supply the blockindex of this block explicitly as being the one with potentially 
+            // their block headers may not represent what is considered the best block as returned by pindexMostWork.
+            // Therefore we must supply the blockindex of this block explicitly as being the one with potentially
             // the most work and which will subsequently advance the chain tip if it wins the validation race.
             if (pblock != NULL && pindexOldTip != NULL && chainActive.Tip() != chainActive.Genesis() && fParallel)
             {
@@ -3814,7 +3833,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         uint64_t nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
         if (nTxSize > nLargestTx) nLargestTx = nTxSize;
     }
-    
+
     if (fConservative && (nSigOps > BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS))  // BU only enforce sigops during block generation not acceptance
       return state.DoS(100, error("CheckBlock(): out-of-bounds SigOpCount"),
         REJECT_INVALID, "bad-blk-sigops", true);
@@ -4091,7 +4110,7 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, c
     CTransaction txIn;
     CTransaction txOut;
     CTransaction txLen;
-   
+
     for (unsigned int i = 0; i < pblock->vtx.size(); i++)
       {
         if (pblock->vtx[i].vin.size() > maxVin)
@@ -4111,7 +4130,7 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, c
             txLen = pblock->vtx[i];
           }
       }
-    
+
     LogPrint("bench", "ProcessNewBlock, time: %d, block: %s, len: %d, numTx: %d, maxVin: %llu, maxVout: %llu, maxTx:%llu\n", end-start, pblock->GetHash().ToString(), pblock->nBlockSize, pblock->vtx.size(),maxVin,maxVout,maxTxSize);
     LogPrint("bench", "tx: %s, vin: %llu, vout: %llu, len: %d\n", txIn.GetHash().ToString(), txIn.vin.size(), txIn.vout.size(), ::GetSerializeSize(txIn,SER_NETWORK, PROTOCOL_VERSION));
     LogPrint("bench", "tx: %s, vin: %llu, vout: %llu, len: %d\n", txOut.GetHash().ToString(), txOut.vin.size(), txOut.vout.size(), ::GetSerializeSize(txOut,SER_NETWORK, PROTOCOL_VERSION));
@@ -4567,7 +4586,7 @@ bool LoadBlockIndex()
     return true;
 }
 
-bool InitBlockIndex(const CChainParams& chainparams) 
+bool InitBlockIndex(const CChainParams& chainparams)
 {
     LOCK(cs_main);
 
@@ -4627,7 +4646,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
             blkdat.SetPos(nRewind);
             nRewind++; // start one byte further next time, in case of failure
             blkdat.SetLimit(); // remove former limit
-            unsigned int nSize = 0;  
+            unsigned int nSize = 0;
             try {
                 // locate a header
                 unsigned char buf[MESSAGE_START_SIZE];
@@ -4912,14 +4931,8 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
     assert(nNodes == forward.size());
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// CAlert
-//
-
 std::string GetWarnings(const std::string& strFor)
 {
-    int nPriority = 0;
     string strStatusBar;
     string strRPC;
     string strGUI;
@@ -4935,35 +4948,18 @@ std::string GetWarnings(const std::string& strFor)
     // Misc warnings like out of disk space and clock is wrong
     if (strMiscWarning != "")
     {
-        nPriority = 1000;
         strStatusBar = strGUI = strMiscWarning;
     }
 
     if (fLargeWorkForkFound)
     {
-        nPriority = 2000;
         strStatusBar = strRPC = "Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.";
         strGUI = _("Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.");
     }
     else if (fLargeWorkInvalidChainFound)
     {
-        nPriority = 2000;
         strStatusBar = strRPC = "Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.";
         strGUI = _("Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.");
-    }
-
-    // Alerts
-    {
-        LOCK(cs_mapAlerts);
-        BOOST_FOREACH(PAIRTYPE(const uint256, CAlert)& item, mapAlerts)
-        {
-            const CAlert& alert = item.second;
-            if (alert.AppliesToMe() && alert.nPriority > nPriority)
-            {
-                nPriority = alert.nPriority;
-                strStatusBar = strGUI = alert.strStatusBar;
-            }
-        }
     }
 
     if (strFor == "gui")
@@ -5150,7 +5146,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                       }
                     }
                     if (pushed) {
-                        pfrom->PushMessage(inv.GetCommand(), cd);                       
+                        pfrom->PushMessage(inv.GetCommand(), cd);
                     }
                 }
                 if (!pushed && inv.type == MSG_TX) {
@@ -5238,7 +5234,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
 
         CheckNodeSupportForThinBlocks(); // BUIP010 Xtreme Thinblocks
-        
+
         if (pfrom->nVersion < MIN_PEER_PROTO_VERSION)
         {
             // disconnect from peers older than this proto version
@@ -5321,13 +5317,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 addrman.Add(addrFrom, addrFrom);
                 addrman.Good(addrFrom);
             }
-        }
-
-        // Relay alerts
-        {
-            LOCK(cs_mapAlerts);
-            BOOST_FOREACH(PAIRTYPE(const uint256, CAlert)& item, mapAlerts)
-                item.second.RelayTo(pfrom);
         }
 
         pfrom->fSuccessfullyConnected = true;
@@ -5907,7 +5896,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             LogPrint("thin", "nGetXthinCount is %f\n", pfrom->nGetXthinCount);
             if (chainparams.NetworkIDString()=="main") // other networks have variable mining rates
 	      {
-		if (pfrom->nGetXthinCount >= 20) 
+		if (pfrom->nGetXthinCount >= 20)
                 {
 		  LogPrintf("DOS: Misbehaving - requesting too many get_xthin - disconnecting\n");
 		  LOCK(cs_main);
@@ -5989,7 +5978,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         LogPrint("thin", "Received thinblock %s from peer %s (%d). Size %d bytes.\n", inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id, nSizeThinBlock);
 
         bool fAlreadyHave = false;
-        // An expedited block or re-requested xthin can arrive and beat the original thin block request/response       
+        // An expedited block or re-requested xthin can arrive and beat the original thin block request/response
         if (!pfrom->mapThinBlocksInFlight.count(inv.hash)) {
             LogPrint("thin", "Thinblock %s from peer %s (%d) received but we already have it\n", inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id);
             LOCK(cs_main);
@@ -6025,9 +6014,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CXRequestThinBlockTx thinRequestBlockTx;
         vRecv >> thinRequestBlockTx;
 
-        // We use MSG_TX here even though we refer to blockhash because we need to track 
+        // We use MSG_TX here even though we refer to blockhash because we need to track
         // how many xblocktx requests we make in case of DOS
-        CInv inv(MSG_TX, thinRequestBlockTx.blockhash); 
+        CInv inv(MSG_TX, thinRequestBlockTx.blockhash);
         LogPrint("thin", "received get_xblocktx for %s peer=%d\n", inv.hash.ToString(), pfrom->id);
 
         // Check for Misbehaving and DOS
@@ -6054,7 +6043,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
             if (mi == mapBlockIndex.end())
             {
-                LogPrint("thin", "Requested block is not available");          
+                LogPrint("thin", "Requested block is not available");
             }
             else
             {
@@ -6067,7 +6056,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 else
                 {
                     for (unsigned int i = 0; i < block.vtx.size(); i++)
-                    { 
+                    {
                         uint64_t cheapHash = block.vtx[i].GetHash().GetCheapHash();
                         if(thinRequestBlockTx.setCheapHashesToRequest.count(cheapHash))
                             vTx.push_back(block.vtx[i]);
@@ -6095,7 +6084,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         // Create the mapMissingTx from all the supplied tx's in the xthinblock
         std::map<uint64_t, CTransaction> mapMissingTx;
-        BOOST_FOREACH(CTransaction tx, thinBlockTx.vMissingTx) 
+        BOOST_FOREACH(CTransaction tx, thinBlockTx.vMissingTx)
             mapMissingTx[tx.GetHash().GetCheapHash()] = tx;
 
         int count=0;
@@ -6160,7 +6149,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
           {
           CValidationState state;
           if (CheckBlockHeader(block, state, true))  // block header is fine
-            SendExpeditedBlock(block, pfrom); 
+            SendExpeditedBlock(block, pfrom);
           }
         requester.Received(inv, pfrom, msgSize);
 
@@ -6301,44 +6290,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     }
 
 
-	// BUIP013 disables network alerts.  fAlerts is always false so conditional code will never run.
-#if 0
-    else if (fAlerts && strCommand == NetMsgType::ALERT)
-    {
-        CAlert alert;
-        vRecv >> alert;
-
-        uint256 alertHash = alert.GetHash();
-        if (pfrom->setKnown.count(alertHash) == 0)
-        {
-            if (alert.ProcessAlert(chainparams.AlertKey()))
-            {
-                // Relay
-                pfrom->setKnown.insert(alertHash);
-                {
-                    LOCK(cs_vNodes);
-                    BOOST_FOREACH(CNode* pnode, vNodes)
-                        alert.RelayTo(pnode);
-                }
-            }
-            else {
-                // Small DoS penalty so peers that send us lots of
-                // duplicate/expired/invalid-signature/whatever alerts
-                // eventually get banned.
-                // This isn't a Misbehaving(100) (immediate ban) because the
-                // peer might be an older or different implementation with
-                // a different signature key, etc.
-                Misbehaving(pfrom->GetId(), 10);
-            }
-        }
-    }
-#endif
-
     else if (strCommand == NetMsgType::FILTERLOAD)
     {
         CBloomFilter filter;
         vRecv >> filter;
-    
+
         if (!filter.IsWithinSizeConstraints())
             // There is no excuse for sending a too-large filter
             Misbehaving(pfrom->GetId(), 100);
@@ -6421,7 +6377,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             //    ss << ": hash " << hash.ToString();
 	    //  }
 	    // LogPrint("net", "Reject %s\n", SanitizeString(ss.str()));
-	 // } 
+	 // }
 	} catch (const std::ios_base::failure&) {
 	  // Avoid feedback loops by preventing reject messages from triggering a new reject message.
 	  LogPrint("net", "Unparseable reject message received\n");
@@ -6788,7 +6744,7 @@ bool SendMessages(CNode* pto)
                         // If the peer announced this block to us, don't inv it back.
                         // (Since block announcements may not be via inv's, we can't solely rely on
                         // setInventoryKnown to track this.)
-                        if (!PeerHasHeader(&state, pindex)) 
+                        if (!PeerHasHeader(&state, pindex))
                         {
                             pto->PushInventory(CInv(MSG_BLOCK, hashToAnnounce));
                             LogPrint("net", "%s: sending inv peer=%d hash=%s\n", __func__,
@@ -6956,7 +6912,7 @@ bool SendMessages(CNode* pto)
                                      pindex->nHeight, pto->addrName.c_str(), pto->id, pto->nPingUsecTime/1000);
                         }
                         else {
-                            vGetData.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash())); 
+                            vGetData.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash()));
                             LogPrint("net", "Requesting block %s (%d) from peer %s (%d)\n", pindex->GetBlockHash().ToString(),
                                      pindex->nHeight, pto->addrName.c_str(), pto->id);
                         }
@@ -6964,7 +6920,7 @@ bool SendMessages(CNode* pto)
                     }
                 }
                 else {
-                    //vGetData.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash())); 
+                    //vGetData.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash()));
                     //MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), consensusParams, pindex);
                     //LogPrint("net", "Requesting block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
                     //                 pindex->nHeight, pto->id);
@@ -7039,6 +6995,6 @@ void MainCleanup()
         LOCK(cs_orphancache);  // BU apply the appropriate lock so no contention during destruction
         // orphan transactions
         mapOrphanTransactions.clear();
-        mapOrphanTransactionsByPrev.clear();  
+        mapOrphanTransactionsByPrev.clear();
       }
   }

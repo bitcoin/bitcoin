@@ -67,7 +67,6 @@ endif
 # bitcoin core #
 BITCOIN_CORE_H = \
   addrman.h \
-  alert.h \
   base58.h \
   bitnodes.h \
   bloom.h \
@@ -166,7 +165,6 @@ libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_server_a_SOURCES = \
   globals.cpp \
   addrman.cpp \
-  alert.cpp \
   bitnodes.cpp \
   bloom.cpp \
   chain.cpp \
