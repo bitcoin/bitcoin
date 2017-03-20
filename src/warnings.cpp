@@ -69,13 +69,13 @@ std::string GetWarnings(const std::string& strFor)
 
     if (fLargeWorkForkFound)
     {
-        strStatusBar = strRPC = "Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.";
-        strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + _("Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.");
+        strStatusBar = strRPC = "Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues. Outgoing and incoming payment may not be reliable! See debug.log for details.";
+        strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + _("Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues. Outgoing and incoming payments may not be reliable! See debug.log for details.");
     }
-    else if (fLargeWorkInvalidChainFound)
+    if (fLargeWorkInvalidChainFound)
     {
-        strStatusBar = strRPC = "Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.";
-        strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + _("Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.");
+        strStatusBar = strRPC = "Warning: Found invalid chain at least 6 blocks longer than our best chain! We do not appear to fully agree with our peers! Outgoing and incoming payment may not be reliable! See debug.log for details.";
+        strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + _("Warning: Found invalid chain at least 6 blocks longer than our best chain! We do not appear to fully agree with our peers! Outgoing and incoming payments may not be reliable! Be wary when being suggested to upgrade! See debug.log for details.");
     }
 
     if (strFor == "gui")

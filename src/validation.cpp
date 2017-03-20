@@ -1208,32 +1208,45 @@ void CheckForkWarningConditions()
     if (pindexBestForkTip && chainActive.Height() - pindexBestForkTip->nHeight >= 72)
         pindexBestForkTip = NULL;
 
-    if (pindexBestForkTip || (pindexBestInvalid && pindexBestInvalid->nChainWork > chainActive.Tip()->nChainWork + (GetBlockProof(*chainActive.Tip()) * 6)))
+    if (pindexBestForkTip && pindexBestForkBase)
     {
-        if (!GetfLargeWorkForkFound() && pindexBestForkBase)
+        if (!GetfLargeWorkForkFound())
         {
             std::string warning = std::string("'Warning: Large-work fork detected, forking after block ") +
-                pindexBestForkBase->phashBlock->ToString() + std::string("'");
+                pindexBestForkBase->phashBlock->ToString() + std::string(". Payments confirmed after this block may be unreliable'");
             AlertNotify(warning);
         }
-        if (pindexBestForkTip && pindexBestForkBase)
-        {
-            LogPrintf("%s: Warning: Large valid fork found\n  forking the chain at height %d (%s)\n  lasting to height %d (%s).\nChain state database corruption likely.\n", __func__,
+        LogPrintf("%s: Warning: Large-work fork found\n  forking the chain at height %d (%s)\n  lasting to height %d (%s).\n  Payments confirmed after the forking block may be unreliable.\n  Our chain state database may be corrupted, or some miners may be experiencing issues.\n", __func__,
                    pindexBestForkBase->nHeight, pindexBestForkBase->phashBlock->ToString(),
                    pindexBestForkTip->nHeight, pindexBestForkTip->phashBlock->ToString());
-            SetfLargeWorkForkFound(true);
-        }
-        else
-        {
-            LogPrintf("%s: Warning: Found invalid chain at least ~6 blocks longer than our best chain.\nChain state database corruption likely.\n", __func__);
-            SetfLargeWorkInvalidChainFound(true);
-        }
+        SetfLargeWorkForkFound(true);
     }
     else
-    {
         SetfLargeWorkForkFound(false);
-        SetfLargeWorkInvalidChainFound(false);
+
+    if (pindexBestInvalid && pindexBestInvalid->nChainWork > chainActive.Tip()->nChainWork + (GetBlockProof(*chainActive.Tip()) * 6)) {
+        CBlockIndex* plonger = pindexBestInvalid;
+        CBlockIndex* pforkbase = chainActive.Tip();
+        while (pforkbase && pforkbase != plonger)
+        {
+            while (plonger && plonger->nHeight > pforkbase->nHeight)
+                plonger = plonger->pprev;
+            if (pforkbase == plonger)
+                break;
+            pforkbase = pforkbase->pprev;
+        }
+        if (!GetfLargeWorkInvalidChainFound())
+        {
+            std::string warning = std::string("'Warning: Large-work invalid chain detected, forking after block ") +
+                    pforkbase->phashBlock->ToString() + std::string(". Payments confirmed after this block may be unreliable'");
+            AlertNotify(warning);
+        }
+        unsigned int nForkLength = ((pindexBestInvalid->nChainWork - chainActive.Tip()->nChainWork) / GetBlockProof(*chainActive.Tip())).getdouble();
+        LogPrintf("%s: Warning: Found invalid chain at least ~%d blocks longer than our best chain.\n Payments confirmed after the forking block at height %d (%s) may be unreliable.\n Our chain state database may be corrupted, or different network rules may be accidentally or intentionally enforced by a majority of miners.\n Be wary when being suggested to upgrade.\n", __func__, nForkLength, pforkbase->nHeight, pforkbase->phashBlock->ToString());
+        SetfLargeWorkInvalidChainFound(true);
     }
+    else
+        SetfLargeWorkInvalidChainFound(false);
 }
 
 void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip)
@@ -1286,9 +1299,9 @@ void static InvalidChainFound(CBlockIndex* pindexNew)
     CheckForkWarningConditions();
 }
 
-void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state) {
-    if (!state.CorruptionPossible()) {
-        pindex->nStatus |= BLOCK_FAILED_VALID;
+void static InvalidBlockFound(CBlockIndex *pindex, const bool& corruptionPossible, const unsigned int& nStatus) {
+    if (!corruptionPossible) {
+        pindex->nStatus |= nStatus;
         setDirtyBlockIndex.insert(pindex);
         setBlockIndexCandidates.erase(pindex);
         InvalidChainFound(pindex);
@@ -2246,7 +2259,7 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
         GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
             if (state.IsInvalid())
-                InvalidBlockFound(pindexNew, state);
+                InvalidBlockFound(pindexNew, state.CorruptionPossible(), BLOCK_FAILED_VALID);
             return error("ConnectTip(): ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
         }
         nTime3 = GetTimeMicros(); nTimeConnectTotal += nTime3 - nTime2;
@@ -2631,7 +2644,7 @@ bool ResetBlockFailureFlags(CBlockIndex *pindex) {
     return true;
 }
 
-CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
+CBlockIndex* AddToBlockIndex(const CBlockHeader& block, const unsigned int& nStatus = BLOCK_VALID_UNKNOWN)
 {
     // Check for duplicate
     uint256 hash = block.GetHash();
@@ -2658,10 +2671,15 @@ CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
     pindexNew->nTimeMax = (pindexNew->pprev ? std::max(pindexNew->pprev->nTimeMax, pindexNew->nTime) : pindexNew->nTime);
     pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
     pindexNew->RaiseValidity(BLOCK_VALID_TREE);
-    if (pindexBestHeader == NULL || pindexBestHeader->nChainWork < pindexNew->nChainWork)
-        pindexBestHeader = pindexNew;
-
-    setDirtyBlockIndex.insert(pindexNew);
+    if (nStatus & BLOCK_FAILED_MASK)
+        InvalidBlockFound(pindexNew, false, nStatus);
+    else {
+        if (pindexBestHeader == NULL || pindexBestHeader->nChainWork < pindexNew->nChainWork)
+            pindexBestHeader = pindexNew;
+        else
+            CheckForkWarningConditionsOnNewFork(pindexNew);
+        setDirtyBlockIndex.insert(pindexNew);
+    }
 
     return pindexNew;
 }
@@ -3057,13 +3075,14 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
     return true;
 }
 
-static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex)
+static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, const bool& certainlyInvalid = false)
 {
     AssertLockHeld(cs_main);
     // Check for duplicate
     uint256 hash = block.GetHash();
     BlockMap::iterator miSelf = mapBlockIndex.find(hash);
     CBlockIndex *pindex = NULL;
+    unsigned int nStatus = certainlyInvalid ? BLOCK_FAILED_VALID : BLOCK_VALID_UNKNOWN;
     if (hash != chainparams.GetConsensus().hashGenesisBlock) {
 
         if (miSelf != mapBlockIndex.end()) {
@@ -3083,25 +3102,37 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
         CBlockIndex* pindexPrev = NULL;
         BlockMap::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
         if (mi == mapBlockIndex.end())
-            return state.DoS(10, error("%s: prev block not found", __func__), 0, "bad-prevblk");
+            return state.DoS(10, error("%s: prev block not found", __func__), 0, "bad-prevblk-missing");
         pindexPrev = (*mi).second;
         if (pindexPrev->nStatus & BLOCK_FAILED_MASK)
-            return state.DoS(100, error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
+            nStatus |= BLOCK_FAILED_CHILD;
 
         assert(pindexPrev);
         if (fCheckpointsEnabled && !CheckIndexAgainstCheckpoint(pindexPrev, state, chainparams, hash))
             return error("%s: CheckIndexAgainstCheckpoint(): %s", __func__, state.GetRejectReason().c_str());
 
-        if (!ContextualCheckBlockHeader(block, state, chainparams.GetConsensus(), pindexPrev, GetAdjustedTime()))
-            return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
+        if (!ContextualCheckBlockHeader(block, state, chainparams.GetConsensus(), pindexPrev, GetAdjustedTime())) {
+            if (state.GetRejectCode() == REJECT_OBSOLETE)
+                nStatus |= BLOCK_FAILED_VALID;
+            else
+                return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
+        }
+
     }
     if (pindex == NULL)
-        pindex = AddToBlockIndex(block);
+        pindex = AddToBlockIndex(block, nStatus);
 
     if (ppindex)
         *ppindex = pindex;
 
     CheckBlockIndex(chainparams.GetConsensus());
+
+    if (nStatus & BLOCK_FAILED_CHILD)
+        return state.Invalid(false, REJECT_INVALID, strprintf("bad-prevblk-invalid"),
+                             strprintf("%s: prev block invalid for %s", __func__, hash.ToString()));
+
+    if (state.GetRejectCode() == REJECT_OBSOLETE)
+        return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
 
     return true;
 }
@@ -3220,6 +3251,10 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         if (ret) {
             // Store to disk
             ret = AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, NULL, fNewBlock);
+        }
+        else {
+            // Store only the header when CheckBlock() failed
+            AcceptBlockHeader(*pblock, state, chainparams, &pindex, !state.CorruptionPossible());
         }
         CheckBlockIndex(chainparams.GetConsensus());
         if (!ret) {
