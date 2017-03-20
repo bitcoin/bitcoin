@@ -37,7 +37,7 @@ bool CBitcoinAddress::IsValid() const
 
 bool CBitcoinAddress::IsValid(const CChainParams& params) const
 {
-    bool fCorrectSize = m_data.vchData.size() == 20;
+    bool fCorrectSize = m_data.m_vchData.size() == 20;
     bool fKnownVersion = m_data.vchVersion == params.Base58Prefix(CChainParams::PUBKEY_ADDRESS) ||
         m_data.vchVersion == params.Base58Prefix(CChainParams::SCRIPT_ADDRESS);
     return fCorrectSize && fKnownVersion;
@@ -48,7 +48,7 @@ CTxDestination CBitcoinAddress::Get() const
     if (!IsValid())
         return CNoDestination();
     uint160 id;
-    memcpy(&id, &m_data.vchData[0], 20);
+    memcpy(&id, &m_data.m_vchData[0], 20);
     if (m_data.vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS))
         return CKeyID(id);
     else if (m_data.vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS))
@@ -63,7 +63,7 @@ bool CBitcoinAddress::GetKeyID(CKeyID& keyID) const
     if (!IsValid() || m_data.vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS))
         return false;
     uint160 id;
-    memcpy(&id, &m_data.vchData[0], 20);
+    memcpy(&id, &m_data.m_vchData[0], 20);
     keyID = CKeyID(id);
     return true;
 }

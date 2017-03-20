@@ -80,7 +80,7 @@ protected:
 
     //! the actually encoded data
     typedef std::vector<unsigned char, zero_after_free_allocator<unsigned char> > vector_uchar;
-    vector_uchar vchData;
+    vector_uchar m_vchData;
 
 public: // ### 仮
     CBase58Data();
