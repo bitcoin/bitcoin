@@ -3,23 +3,23 @@
 # Copyright 2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+"""Test framework for bitcoin utils.
+
+Runs automatically during `make check`.
+
+Can also be run manually."""
+
 import os
 import sys
 import argparse
 import logging
-
-help_text="""Test framework for bitcoin utils.
-
-Runs automatically during `make check`. 
-
-Can also be run manually."""
 
 if __name__ == '__main__':
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     import buildenv
     import bctest
 
-    parser = argparse.ArgumentParser(description=help_text)
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('-v', '--verbose', action='store_true')
     args = parser.parse_args()
     verbose = args.verbose
