@@ -353,15 +353,15 @@ void CWallet::SetBestChain(const CBlockLocator& loc)
 
 bool CWallet::SetMinVersion(enum WalletFeature nVersion, CWalletDB* pwalletdbIn, bool fExplicit)
 {
-    LOCK(cs_wallet); // nWalletVersion
-    if (nWalletVersion >= nVersion)
+    LOCK(cs_wallet); // m_nWalletVersion
+    if (m_nWalletVersion >= nVersion)
         return true;
 
     // when doing an explicit upgrade, if we pass the max version permitted, upgrade all the way
     if (fExplicit && nVersion > m_nWalletMaxVersion)
             nVersion = FEATURE_LATEST;
 
-    nWalletVersion = nVersion;
+    m_nWalletVersion = nVersion;
 
     if (nVersion > m_nWalletMaxVersion)
         m_nWalletMaxVersion = nVersion;
@@ -369,8 +369,8 @@ bool CWallet::SetMinVersion(enum WalletFeature nVersion, CWalletDB* pwalletdbIn,
     if (fFileBacked)
     {
         CWalletDB* pwalletdb = pwalletdbIn ? pwalletdbIn : new CWalletDB(strWalletFile);
-        if (nWalletVersion > 40000)
-            pwalletdb->WriteMinVersion(nWalletVersion);
+        if (m_nWalletVersion > 40000)
+            pwalletdb->WriteMinVersion(m_nWalletVersion);
         if (!pwalletdbIn)
             delete pwalletdb;
     }
@@ -380,9 +380,9 @@ bool CWallet::SetMinVersion(enum WalletFeature nVersion, CWalletDB* pwalletdbIn,
 
 bool CWallet::SetMaxVersion(int nVersion)
 {
-    LOCK(cs_wallet); // nWalletVersion, m_nWalletMaxVersion
+    LOCK(cs_wallet); // m_nWalletVersion, m_nWalletMaxVersion
     // cannot downgrade below current version
-    if (nWalletVersion > nVersion)
+    if (m_nWalletVersion > nVersion)
         return false;
 
     m_nWalletMaxVersion = nVersion;
