@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(merkle_test)
             // If no mutation was done (once for every ntx value), try up to 16 branches.
             if (mutate == 0) {
                 for (int loop = 0; loop < std::min(ntx, 16); loop++) {
-                    // If ntx <= 16, try all branches. Otherise, try 16 random ones.
+                    // If ntx <= 16, try all branches. Otherwise, try 16 random ones.
                     int mtx = loop;
                     if (ntx > 16) {
                         mtx = insecure_rand() % ntx;

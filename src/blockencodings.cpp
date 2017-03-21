@@ -133,6 +133,37 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
     }
     }
 
+    for (size_t i = 0; i < extra_txn.size(); i++) {
+        uint64_t shortid = cmpctblock.GetShortID(extra_txn[i].first);
+        std::unordered_map<uint64_t, uint16_t>::iterator idit = shorttxids.find(shortid);
+        if (idit != shorttxids.end()) {
+            if (!have_txn[idit->second]) {
+                txn_available[idit->second] = extra_txn[i].second;
+                have_txn[idit->second]  = true;
+                mempool_count++;
+                extra_count++;
+            } else {
+                // If we find two mempool/extra txn that match the short id, just
+                // request it.
+                // This should be rare enough that the extra bandwidth doesn't matter,
+                // but eating a round-trip due to FillBlock failure would be annoying
+                // Note that we don't want duplication between extra_txn and mempool to
+                // trigger this case, so we compare witness hashes first
+                if (txn_available[idit->second] &&
+                        txn_available[idit->second]->GetWitnessHash() != extra_txn[i].second->GetWitnessHash()) {
+                    txn_available[idit->second].reset();
+                    mempool_count--;
+                    extra_count--;
+                }
+            }
+        }
+        // Though ideally we'd continue scanning for the two-txn-match-shortid case,
+        // the performance win of an early exit here is too good to pass up and worth
+        // the extra risk.
+        if (mempool_count == shorttxids.size())
+            break;
+    }
+
     LogPrint("cmpctblock", "Initialized PartiallyDownloadedBlock for block %s using a cmpctblock of size %lu\n", cmpctblock.header.GetHash().ToString(), GetSerializeSize(cmpctblock, SER_NETWORK, PROTOCOL_VERSION));
 
     return READ_STATUS_OK;
