@@ -22,7 +22,9 @@ namespace
 //! Press "Yes" button in modal send confirmation dialog.
 void ConfirmSend()
 {
-    QTimer::singleShot(0, Qt::PreciseTimer, []() {
+    QTimer* timer = new QTimer;
+    timer->setSingleShot(true);
+    QObject::connect(timer, &QTimer::timeout, []() {
         for (QWidget* widget : QApplication::topLevelWidgets()) {
             if (widget->inherits("SendConfirmationDialog")) {
                 SendConfirmationDialog* dialog = qobject_cast<SendConfirmationDialog*>(widget);
@@ -32,6 +34,7 @@ void ConfirmSend()
             }
         }
     });
+    timer->start(0);
 }
 
 //! Send coins to address and return txid.
@@ -42,9 +45,9 @@ uint256 SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CBitc
     entry->findChild<QValidatedLineEdit*>("payTo")->setText(QString::fromStdString(address.ToString()));
     entry->findChild<BitcoinAmountField*>("payAmount")->setValue(amount);
     uint256 txid;
-    boost::signals2::scoped_connection c = wallet.NotifyTransactionChanged.connect([&txid](CWallet*, const uint256& hash, ChangeType status) {
+    boost::signals2::scoped_connection c(wallet.NotifyTransactionChanged.connect([&txid](CWallet*, const uint256& hash, ChangeType status) {
         if (status == CT_NEW) txid = hash;
-    });
+    }));
     ConfirmSend();
     QMetaObject::invokeMethod(&sendCoinsDialog, "on_sendButton_clicked");
     return txid;
