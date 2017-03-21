@@ -74,11 +74,6 @@ struct CompareValueOnly
     }
 };
 
-std::string COutput::ToString() const
-{
-    return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToHexString(), i, nDepth, FormatMoney(tx->tx->vout[i].nValue));
-}
-
 const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
 {
     LOCK(cs_wallet);

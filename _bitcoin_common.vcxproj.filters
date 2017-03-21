@@ -376,6 +376,9 @@
     <ClCompile Include="src\script\ismine.cpp">
       <Filter>Source Files\script</Filter>
     </ClCompile>
+    <ClCompile Include="src\wallet\WalletOutput.cpp">
+      <Filter>Source Files\wallet</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\addrdb.h">
@@ -780,6 +783,9 @@
     </ClInclude>
     <ClInclude Include="src\script\ismine.h">
       <Filter>Source Files\script</Filter>
+    </ClInclude>
+    <ClInclude Include="src\wallet\WalletOutput.h">
+      <Filter>Source Files\wallet</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

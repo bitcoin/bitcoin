@@ -35,6 +35,8 @@
 #include "WalletUtil.h"
 #include "AccountingEntry.h"
 #include "KeyPool.h"
+#include "WalletTx.h"
+#include "WalletOutput.h"
 
 extern CWallet* pwalletMain;
 
@@ -122,33 +124,6 @@ struct CRecipient
     CAmount nAmount;
     bool fSubtractFeeFromAmount;
 };
-
-
-
-#include "WalletTx.h"
-
-
-
-
-class COutput
-{
-public:
-    const CWalletTx *tx;
-    int i;
-    int nDepth;
-    bool fSpendable;
-    bool fSolvable;
-
-    COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn)
-    {
-        tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn;
-    }
-
-    std::string ToString() const;
-};
-
-
-
 
 /** Private key that includes an expiration date in case it never gets used. */
 class CWalletKey
