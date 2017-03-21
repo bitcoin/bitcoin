@@ -39,6 +39,7 @@
 #include "WalletOutput.h"
 #include "WalletKey.h"
 #include "ReserveKey.h"
+#include "WalletAccount.h"
 
 extern CWallet* pwalletMain;
 
@@ -547,37 +548,6 @@ public:
     bool SetHDMasterKey(const CPubKey& key);
 };
 
-
-
-/** 
- * Account information.
- * Stored in wallet with key "acc"+string account name.
- */
-class CAccount
-{
-public:
-    CPubKey vchPubKey;
-
-    CAccount()
-    {
-        SetNull();
-    }
-
-    void SetNull()
-    {
-        vchPubKey = CPubKey();
-    }
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        int nVersion = s.GetVersion();
-        if (!(s.GetType() & SER_GETHASH))
-            READWRITE(nVersion);
-        READWRITE(vchPubKey);
-    }
-};
 
 // Helper for producing a bunch of max-sized low-S signatures (eg 72 bytes)
 // ContainerType is meant to hold pair<CWalletTx *, int>, and be iterable
