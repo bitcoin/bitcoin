@@ -145,13 +145,18 @@ bitcoin_test_check: $(TEST_BINARY) FORCE
 bitcoin_test_clean : FORCE
 	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_bitcoin_OBJECTS) $(TEST_BINARY)
 
-check-local:
-	@echo "Running test/util/bitcoin-util-test.py..."
-	$(PYTHON) $(top_builddir)/test/util/bitcoin-util-test.py
+.PHONY: all_functional_tests functional_tests unit_tests util_tests
+
+all_functional_tests functional_tests util_tests:
+	@$(MAKE) -C $(top_builddir) $@
+
+unit_tests:
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 if EMBEDDED_UNIVALUE
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check
 endif
+
+check-local: unit_tests functional_tests util_tests
 
 %.json.h: %.json
 	@$(MKDIR_P) $(@D)
