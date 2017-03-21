@@ -28,6 +28,9 @@
     <Filter Include="Source Files\key\pub">
       <UniqueIdentifier>{529e43d1-1e1a-4d07-8d6e-45a9308351a9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\wallet">
+      <UniqueIdentifier>{4bfe4eb4-9f95-4201-ad71-1bc2500bb1b0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\chainparams.cpp">
@@ -138,9 +141,6 @@
     <ClCompile Include="src\validation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\validationinterface.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\versionbits.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -213,9 +213,6 @@
     <ClCompile Include="src\wallet\rpcwallet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\wallet\wallet.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\wallet\walletdb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -265,9 +262,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\consensus\merkle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\keystore.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\compat\glibc_sanity.cpp">
@@ -352,8 +346,17 @@
     <ClCompile Include="src\PubKeyUtil.cpp">
       <Filter>Source Files\key\pub</Filter>
     </ClCompile>
+    <ClCompile Include="src\wallet\wallet.cpp">
+      <Filter>Source Files\wallet</Filter>
+    </ClCompile>
     <ClCompile Include="src\wallet\crypter.cpp">
-      <Filter>Source Files\key</Filter>
+      <Filter>Source Files\wallet</Filter>
+    </ClCompile>
+    <ClCompile Include="src\validationinterface.cpp">
+      <Filter>Source Files\wallet</Filter>
+    </ClCompile>
+    <ClCompile Include="src\keystore.cpp">
+      <Filter>Source Files\wallet</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -478,9 +481,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\script\ismine.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\keystore.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\limitedmap.h">
@@ -651,16 +651,10 @@
     <ClInclude Include="src\validation.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\validationinterface.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\version.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\versionbits.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\wallet\wallet.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\wallet\walletdb.h">
@@ -742,8 +736,17 @@
     <ClInclude Include="src\PubKeyUtil.h">
       <Filter>Source Files\key\pub</Filter>
     </ClInclude>
+    <ClInclude Include="src\wallet\wallet.h">
+      <Filter>Source Files\wallet</Filter>
+    </ClInclude>
     <ClInclude Include="src\wallet\crypter.h">
-      <Filter>Source Files\key</Filter>
+      <Filter>Source Files\wallet</Filter>
+    </ClInclude>
+    <ClInclude Include="src\validationinterface.h">
+      <Filter>Source Files\wallet</Filter>
+    </ClInclude>
+    <ClInclude Include="src\keystore.h">
+      <Filter>Source Files\wallet</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
