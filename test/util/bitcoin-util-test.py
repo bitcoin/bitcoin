@@ -20,7 +20,7 @@ if __name__ == '__main__':
     import bctest
 
     config = configparser.ConfigParser()
-    config.read_file(open(os.path.dirname(__file__) + "/config.ini"))
+    config.read_file(open(os.path.dirname(__file__) + "/../config.ini"))
 
     buildenv = argparse.Namespace(exeext=config["environment"]["EXEEXT"],
                                   SRCDIR=config["environment"]["SRCDIR"],
