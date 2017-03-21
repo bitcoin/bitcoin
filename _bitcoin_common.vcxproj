@@ -266,6 +266,7 @@
     <ClCompile Include="src\wallet\db.cpp" />
     <ClCompile Include="src\wallet\KeyPool.cpp" />
     <ClCompile Include="src\wallet\MerkleTx.cpp" />
+    <ClCompile Include="src\wallet\ReserveKey.cpp" />
     <ClCompile Include="src\wallet\rpcdump.cpp" />
     <ClCompile Include="src\wallet\rpcwallet.cpp" />
     <ClCompile Include="src\wallet\wallet.cpp" />
@@ -409,6 +410,7 @@
     <ClInclude Include="src\wallet\db.h" />
     <ClInclude Include="src\wallet\KeyPool.h" />
     <ClInclude Include="src\wallet\MerkleTx.h" />
+    <ClInclude Include="src\wallet\ReserveKey.h" />
     <ClInclude Include="src\wallet\rpcwallet.h" />
     <ClInclude Include="src\wallet\wallet.h" />
     <ClInclude Include="src\wallet\walletdb.h" />

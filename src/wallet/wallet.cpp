@@ -2888,39 +2888,6 @@ std::set<CTxDestination> CWallet::GetAccountAddresses(const std::string& strAcco
     return result;
 }
 
-bool CReserveKey::GetReservedKey(CPubKey& pubkey)
-{
-    if (nIndex == -1)
-    {
-        CKeyPool keypool;
-        pwallet->ReserveKeyFromKeyPool(nIndex, keypool);
-        if (nIndex != -1)
-            vchPubKey = keypool.vchPubKey;
-        else {
-            return false;
-        }
-    }
-    assert(vchPubKey.IsValid());
-    pubkey = vchPubKey;
-    return true;
-}
-
-void CReserveKey::KeepKey()
-{
-    if (nIndex != -1)
-        pwallet->KeepKey(nIndex);
-    nIndex = -1;
-    vchPubKey = CPubKey();
-}
-
-void CReserveKey::ReturnKey()
-{
-    if (nIndex != -1)
-        pwallet->ReturnKey(nIndex);
-    nIndex = -1;
-    vchPubKey = CPubKey();
-}
-
 void CWallet::GetAllReserveKeys(set<CKeyID>& setAddress) const
 {
     setAddress.clear();

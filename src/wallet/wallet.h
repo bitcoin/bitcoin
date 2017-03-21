@@ -38,6 +38,7 @@
 #include "WalletTx.h"
 #include "WalletOutput.h"
 #include "WalletKey.h"
+#include "ReserveKey.h"
 
 extern CWallet* pwalletMain;
 
@@ -546,30 +547,6 @@ public:
     bool SetHDMasterKey(const CPubKey& key);
 };
 
-/** A key allocated from the key pool. */
-class CReserveKey : public CReserveScript
-{
-protected:
-    CWallet* pwallet;
-    int64_t nIndex;
-    CPubKey vchPubKey;
-public:
-    CReserveKey(CWallet* pwalletIn)
-    {
-        nIndex = -1;
-        pwallet = pwalletIn;
-    }
-
-    ~CReserveKey()
-    {
-        ReturnKey();
-    }
-
-    void ReturnKey();
-    bool GetReservedKey(CPubKey &pubkey);
-    void KeepKey();
-    void KeepScript() { KeepKey(); }
-};
 
 
 /** 
