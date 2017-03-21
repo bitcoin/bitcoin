@@ -3508,9 +3508,3 @@ bool CWallet::BackupWallet(const std::string& strDest)
     }
     return false;
 }
-
-CWalletKey::CWalletKey(int64_t nExpires)
-{
-    nTimeCreated = (nExpires ? GetTime() : 0);
-    nTimeExpires = nExpires;
-}

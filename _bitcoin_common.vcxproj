@@ -270,6 +270,7 @@
     <ClCompile Include="src\wallet\rpcwallet.cpp" />
     <ClCompile Include="src\wallet\wallet.cpp" />
     <ClCompile Include="src\wallet\walletdb.cpp" />
+    <ClCompile Include="src\wallet\WalletKey.cpp" />
     <ClCompile Include="src\wallet\WalletOutput.cpp" />
     <ClCompile Include="src\wallet\WalletTx.cpp" />
     <ClCompile Include="src\wallet\WalletUtil.cpp" />
@@ -411,6 +412,7 @@
     <ClInclude Include="src\wallet\rpcwallet.h" />
     <ClInclude Include="src\wallet\wallet.h" />
     <ClInclude Include="src\wallet\walletdb.h" />
+    <ClInclude Include="src\wallet\WalletKey.h" />
     <ClInclude Include="src\wallet\WalletOutput.h" />
     <ClInclude Include="src\wallet\WalletTx.h" />
     <ClInclude Include="src\wallet\WalletUtil.h" />
