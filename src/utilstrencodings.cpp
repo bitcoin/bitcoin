@@ -612,6 +612,7 @@ static inline bool ProcessMantissaDigit(char ch, int64_t &mantissa, int &mantiss
 
 bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
 {
+    assert(decimals == 8 || decimals == 0);
     int64_t mantissa = 0;
     int64_t exponent = 0;
     int mantissa_tzeros = 0;
