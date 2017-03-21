@@ -365,15 +365,15 @@ void FinalizeNode(NodeId nodeid) {
     //EraseOrphansFor(nodeid);  BUIP010 Xtreme Thinblocks - We do not want to delete orphans at any time.  We handle them when we accept a block
     nPreferredDownload -= state->fPreferredDownload;
     nPeersWithValidatedDownloads -= (state->nBlocksInFlightValidHeaders != 0);
-    assert(nPeersWithValidatedDownloads >= 0);
+    DbgAssert(nPeersWithValidatedDownloads >= 0, nPeersWithValidatedDownloads=0);
 
     mapNodeState.erase(nodeid);
 
     if (mapNodeState.empty()) {
-        // Do a consistency check after the last peer is removed.
-        assert(mapBlocksInFlight.empty());
-        assert(nPreferredDownload == 0);
-        assert(nPeersWithValidatedDownloads == 0);
+        // Do a consistency check after the last peer is removed.  Force consistent state if production code
+        DbgAssert(mapBlocksInFlight.empty(), mapBlocksInFlight.clear());
+        DbgAssert(nPreferredDownload == 0, nPreferredDownload = 0);
+        DbgAssert(nPeersWithValidatedDownloads == 0, nPeersWithValidatedDownloads = 0);
     }
 }
 
@@ -475,7 +475,7 @@ int64_t GetBlockTimeout(int64_t nTime, int nValidatedQueuedBefore, const Consens
 /** Check whether the last unknown block a peer advertised is not yet known. */
 void ProcessBlockAvailability(NodeId nodeid) {
     CNodeState *state = State(nodeid);
-    assert(state != NULL);
+    DbgAssert(state != NULL, return);  // node already destructed, nothing to do in production mode
 
     if (!state->hashLastUnknownBlock.IsNull()) {
         BlockMap::iterator itOld = mapBlockIndex.find(state->hashLastUnknownBlock);
@@ -490,7 +490,7 @@ void ProcessBlockAvailability(NodeId nodeid) {
 /** Update tracking information about which blocks a peer is assumed to have. */
 void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) {
     CNodeState *state = State(nodeid);
-    assert(state != NULL);
+    DbgAssert(state != NULL, return);  // node already destructed, nothing to do in production mode
 
     ProcessBlockAvailability(nodeid);
 
@@ -542,7 +542,7 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBl
 
     vBlocks.reserve(vBlocks.size() + count);
     CNodeState *state = State(nodeid);
-    assert(state != NULL);
+    DbgAssert(state != NULL, return);
 
     // Make sure pindexBestKnownBlock is up to date, we'll need it.
     ProcessBlockAvailability(nodeid);
@@ -4862,61 +4862,68 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 // Pruned nodes may have deleted the block, so check whether
                 // it's available before trying to send.
                 if (send && (mi->second->nStatus & BLOCK_HAVE_DATA))
-                {
+                  {
                     // Send block from disk
                     CBlock block;
                     if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
-                        assert(!"cannot load block from disk");
-                    if (inv.type == MSG_BLOCK)
-		      {
-    	                pfrom->blocksSent += 1;
-                        pfrom->PushMessage(NetMsgType::BLOCK, block);
-		      }
-
-                    // BUIP010 Xtreme Thinblocks: begin section
-                    else if (inv.type == MSG_THINBLOCK || inv.type == MSG_XTHINBLOCK) {
-                        LogPrint("thin", "Sending xthin by INV queue getdata message\n");
-                        SendXThinBlock(block, pfrom, inv);
-                    }
-                    // BUIP010 Xtreme Thinblocks: end section
-
-                    else // MSG_FILTERED_BLOCK)
-                    {
-                        LOCK(pfrom->cs_filter);
-                        if (pfrom->pfilter)
-                        {
-                            CMerkleBlock merkleBlock(block, *pfrom->pfilter);
-                            pfrom->PushMessage(NetMsgType::MERKLEBLOCK, merkleBlock);
+                      {
+                        // its possible that I know about it but haven't stored it yet
+                        LogPrint("thin", "unable to load block %s from disk\n", (*mi).second->phashBlock ? (*mi).second->phashBlock->ToString() : "");
+                        // no response
+                      }
+                    else
+                      {
+                        if (inv.type == MSG_BLOCK)
+                          {
                             pfrom->blocksSent += 1;
-                            // CMerkleBlock just contains hashes, so also push any transactions in the block the client did not see
-                            // This avoids hurting performance by pointlessly requiring a round-trip
-                            // Note that there is currently no way for a node to request any single transactions we didn't send here -
-                            // they must either disconnect and retry or request the full block.
-                            // Thus, the protocol spec specified allows for us to provide duplicate txn here,
-                            // however we MUST always provide at least what the remote peer needs
-                            typedef std::pair<unsigned int, uint256> PairType;
-                            BOOST_FOREACH(PairType& pair, merkleBlock.vMatchedTxn)
-			      {
-       	                        pfrom->txsSent += 1;
-                                pfrom->PushMessage(NetMsgType::TX, block.vtx[pair.first]);
-			      }
-                        }
-                        // else
-                            // no response
-                    }
+                            pfrom->PushMessage(NetMsgType::BLOCK, block);
+                          }
 
-                    // Trigger the peer node to send a getblocks request for the next batch of inventory
-                    if (inv.hash == pfrom->hashContinue)
-                    {
-                        // Bypass PushInventory, this must send even if redundant,
-                        // and we want it right after the last block so they don't
-                        // wait for other stuff first.
-                        vector<CInv> vInv;
-                        vInv.push_back(CInv(MSG_BLOCK, chainActive.Tip()->GetBlockHash()));
-                        pfrom->PushMessage(NetMsgType::INV, vInv);
-                        pfrom->hashContinue.SetNull();
-                    }
-                }
+                        // BUIP010 Xtreme Thinblocks: begin section
+                        else if (inv.type == MSG_THINBLOCK || inv.type == MSG_XTHINBLOCK) {
+                          LogPrint("thin", "Sending xthin by INV queue getdata message\n");
+                          SendXThinBlock(block, pfrom, inv);
+                        }
+                        // BUIP010 Xtreme Thinblocks: end section
+
+                        else // MSG_FILTERED_BLOCK)
+                          {
+                            LOCK(pfrom->cs_filter);
+                            if (pfrom->pfilter)
+                              {
+                                CMerkleBlock merkleBlock(block, *pfrom->pfilter);
+                                pfrom->PushMessage(NetMsgType::MERKLEBLOCK, merkleBlock);
+                                pfrom->blocksSent += 1;
+                                // CMerkleBlock just contains hashes, so also push any transactions in the block the client did not see
+                                // This avoids hurting performance by pointlessly requiring a round-trip
+                                // Note that there is currently no way for a node to request any single transactions we didn't send here -
+                                // they must either disconnect and retry or request the full block.
+                                // Thus, the protocol spec specified allows for us to provide duplicate txn here,
+                                // however we MUST always provide at least what the remote peer needs
+                                typedef std::pair<unsigned int, uint256> PairType;
+                                BOOST_FOREACH(PairType& pair, merkleBlock.vMatchedTxn)
+                                  {
+                                    pfrom->txsSent += 1;
+                                    pfrom->PushMessage(NetMsgType::TX, block.vtx[pair.first]);
+                                  }
+                              }
+                            // else
+                            // no response
+                          }
+
+                        // Trigger the peer node to send a getblocks request for the next batch of inventory
+                        if (inv.hash == pfrom->hashContinue)
+                          {
+                            // Bypass PushInventory, this must send even if redundant,
+                            // and we want it right after the last block so they don't
+                            // wait for other stuff first.
+                            vector<CInv> vInv;
+                            vInv.push_back(CInv(MSG_BLOCK, chainActive.Tip()->GetBlockHash()));
+                            pfrom->PushMessage(NetMsgType::INV, vInv);
+                            pfrom->hashContinue.SetNull();
+                          }
+                      }
+                  }
             }
             else if (inv.IsKnownType())
             {
@@ -5733,7 +5740,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         {
             LOCK(cs_main);
             BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
-            if (mi == mapBlockIndex.end()) {
+            if (mi == mapBlockIndex.end()) {  // This block does not even exist
+                LogPrint("thin", "Peer %s (%d) requested nonexistent block %s\n", pfrom->addrName.c_str(), pfrom->id, inv.hash.ToString());
                 Misbehaving(pfrom->GetId(), 100);
                 return false;
             }
@@ -5741,9 +5749,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             CBlock block;
             const Consensus::Params& consensusParams = Params().GetConsensus();
             if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
-                assert(!"cannot load block from disk");
-
-            SendXThinBlock(block, pfrom, inv);
+              {
+                // We don't have the block yet, although we know about it.
+                LogPrint("thin", "Peer %s (%d) requested not-yet-received block %s\n", pfrom->addrName.c_str(), pfrom->id, inv.hash.ToString());
+                return false;
+              }
+            else
+              {
+                SendXThinBlock(block, pfrom, inv);
+              }
         }
     }
     else if (strCommand == NetMsgType::XPEDITEDREQUEST)  // BU
@@ -6820,19 +6834,9 @@ bool SendMessages(CNode* pto)
         // to unreasonably increase our timeout.
         if (!pto->fDisconnect && state.vBlocksInFlight.size() > 0) {
             QueuedBlock &queuedBlock = state.vBlocksInFlight.front();
-#if 0  // TODO: original 12.0
-            int64_t nTimeoutIfRequestedNow = GetBlockTimeout(nNow, nQueuedValidatedHeaders - state.nBlocksInFlightValidHeaders, consensusParams);
-            if (queuedBlock.nTimeDisconnect > nTimeoutIfRequestedNow) {
-	      LogPrint("net", "Reducing block download timeout for peer=%s (%d) block=%s, orig=%d new=%d\n", pto->addrName.c_str(), pto->id, queuedBlock.hash.ToString(), queuedBlock.nTimeDisconnect, nTimeoutIfRequestedNow);
-                queuedBlock.nTimeDisconnect = nTimeoutIfRequestedNow;
-            }
-            if (queuedBlock.nTimeDisconnect < nNow) {
-	      LogPrintf("Timeout downloading block %s from peer %s (%d), disconnecting\n", queuedBlock.hash.ToString(), pto->addrName.c_str(), pto->id);
-#else  // new 12.1
             int nOtherPeersWithValidatedDownloads = nPeersWithValidatedDownloads - (state.nBlocksInFlightValidHeaders > 0);
             if (nNow > state.nDownloadingSince + consensusParams.nPowTargetSpacing * (BLOCK_DOWNLOAD_TIMEOUT_BASE + BLOCK_DOWNLOAD_TIMEOUT_PER_PEER * nOtherPeersWithValidatedDownloads)) {
                 LogPrintf("Timeout downloading block %s from peer=%d, disconnecting\n", queuedBlock.hash.ToString(), pto->id);
-#endif
                 pto->fDisconnect = true;
             }
         }

@@ -17,15 +17,6 @@
 #include <univalue.h>
 #include <vector>
 
-#ifdef DEBUG_ASSERTION
-/// If DEBUG_ASSERTION is enabled this asserts when the predicate is false.
-//  If DEBUG_ASSERTION is disabled and the predicate is false, it executes the execInRelease statements.
-//  Typically, the programmer will error out -- return false, raise an exception, etc in the execInRelease code.
-#define DbgAssert(pred, execInRelease) do { assert(pred); } while(0)
-#else
-#define DbgAssert(pred, execInRelease) do { if (!(pred)) { execInRelease; }} while(0)
-#endif
-
 enum {
     TYPICAL_BLOCK_SIZE = 200000,   // used for initial buffer size
     DEFAULT_MAX_GENERATED_BLOCK_SIZE = 1000000,  // default for the maximum size of mined blocks
