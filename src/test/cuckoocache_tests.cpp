@@ -379,7 +379,7 @@ void test_cache_generations()
         // Loose Check that hit rate is above min_hit_rate
         BOOST_CHECK(hit > min_hit_rate);
         // Tighter check, count number of times we are less than tight_hit_rate
-        // (and implicityly, greater than min_hit_rate)
+        // (and implicitly, greater than min_hit_rate)
         out_of_tight_tolerance += hit < tight_hit_rate;
     }
     // Check that being out of tolerance happens less than
