@@ -156,8 +156,8 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
 
 BOOST_AUTO_TEST_CASE(basic_transaction_tests)
 {
-    // Random real transaction (e2769b09e784f32f62ef849763d4f45b98e07ba658647343b915ff832b110436)
-    unsigned char ch[] = {0x01, 0x00, 0x00, 0x00, 0x01, 0x6b, 0xff, 0x7f, 0xcd, 0x4f, 0x85, 0x65, 0xef, 0x40, 0x6d, 0xd5, 0xd6, 0x3d, 0x4f, 0xf9, 0x4f, 0x31, 0x8f, 0xe8, 0x20, 0x27, 0xfd, 0x4d, 0xc4, 0x51, 0xb0, 0x44, 0x74, 0x01, 0x9f, 0x74, 0xb4, 0x00, 0x00, 0x00, 0x00, 0x8c, 0x49, 0x30, 0x46, 0x02, 0x21, 0x00, 0xda, 0x0d, 0xc6, 0xae, 0xce, 0xfe, 0x1e, 0x06, 0xef, 0xdf, 0x05, 0x77, 0x37, 0x57, 0xde, 0xb1, 0x68, 0x82, 0x09, 0x30, 0xe3, 0xb0, 0xd0, 0x3f, 0x46, 0xf5, 0xfc, 0xf1, 0x50, 0xbf, 0x99, 0x0c, 0x02, 0x21, 0x00, 0xd2, 0x5b, 0x5c, 0x87, 0x04, 0x00, 0x76, 0xe4, 0xf2, 0x53, 0xf8, 0x26, 0x2e, 0x76, 0x3e, 0x2d, 0xd5, 0x1e, 0x7f, 0xf0, 0xbe, 0x15, 0x77, 0x27, 0xc4, 0xbc, 0x42, 0x80, 0x7f, 0x17, 0xbd, 0x39, 0x01, 0x41, 0x04, 0xe6, 0xc2, 0x6e, 0xf6, 0x7d, 0xc6, 0x10, 0xd2, 0xcd, 0x19, 0x24, 0x84, 0x78, 0x9a, 0x6c, 0xf9, 0xae, 0xa9, 0x93, 0x0b, 0x94, 0x4b, 0x7e, 0x2d, 0xb5, 0x34, 0x2b, 0x9d, 0x9e, 0x5b, 0x9f, 0xf7, 0x9a, 0xff, 0x9a, 0x2e, 0xe1, 0x97, 0x8d, 0xd7, 0xfd, 0x01, 0xdf, 0xc5, 0x22, 0xee, 0x02, 0x28, 0x3d, 0x3b, 0x06, 0xa9, 0xd0, 0x3a, 0xcf, 0x80, 0x96, 0x96, 0x8d, 0x7d, 0xbb, 0x0f, 0x91, 0x78, 0xff, 0xff, 0xff, 0xff, 0x02, 0x8b, 0xa7, 0x94, 0x0e, 0x00, 0x00, 0x00, 0x00, 0x19, 0x76, 0xa9, 0x14, 0xba, 0xde, 0xec, 0xfd, 0xef, 0x05, 0x07, 0x24, 0x7f, 0xc8, 0xf7, 0x42, 0x41, 0xd7, 0x3b, 0xc0, 0x39, 0x97, 0x2d, 0x7b, 0x88, 0xac, 0x40, 0x94, 0xa8, 0x02, 0x00, 0x00, 0x00, 0x00, 0x19, 0x76, 0xa9, 0x14, 0xc1, 0x09, 0x32, 0x48, 0x3f, 0xec, 0x93, 0xed, 0x51, 0xf5, 0xfe, 0x95, 0xe7, 0x25, 0x59, 0xf2, 0xcc, 0x70, 0x43, 0xf9, 0x88, 0xac, 0x00, 0x00, 0x00, 0x00, 0x00};
+    // Random real transaction (0aad88ccf4a93e6e0c51a4b2c735b72b049a1b0d078dbe033a3ef0e9536483d3)
+    unsigned char ch[] = {1, 0, 0, 0, 199, 164, 233, 86, 2, 171, 88, 83, 94, 35, 232, 126, 67, 179, 60, 10, 33, 147, 214, 124, 159, 158, 168, 5, 176, 215, 131, 102, 144, 176, 62, 55, 234, 104, 131, 227, 50, 0, 0, 0, 0, 106, 71, 48, 68, 2, 32, 88, 154, 50, 124, 193, 82, 175, 93, 51, 97, 189, 152, 199, 127, 180, 209, 71, 49, 47, 127, 50, 198, 163, 180, 64, 191, 246, 174, 84, 5, 212, 215, 2, 32, 18, 33, 141, 93, 247, 182, 40, 158, 113, 103, 131, 179, 96, 254, 95, 0, 216, 45, 248, 190, 253, 163, 66, 216, 74, 144, 254, 145, 223, 34, 197, 175, 1, 33, 3, 44, 11, 40, 58, 0, 195, 137, 189, 135, 164, 112, 10, 218, 234, 79, 108, 142, 191, 128, 216, 61, 169, 146, 235, 252, 42, 140, 235, 149, 30, 60, 123, 255, 255, 255, 255, 229, 149, 206, 86, 116, 48, 226, 74, 58, 240, 243, 222, 116, 172, 234, 175, 208, 114, 244, 83, 185, 107, 168, 161, 52, 212, 91, 57, 201, 238, 196, 79, 0, 0, 0, 0, 106, 71, 48, 68, 2, 32, 56, 191, 119, 175, 41, 39, 97, 9, 15, 84, 12, 14, 99, 15, 205, 67, 120, 159, 187, 33, 80, 201, 104, 81, 19, 136, 230, 248, 187, 124, 104, 188, 2, 32, 96, 31, 40, 246, 36, 40, 39, 65, 151, 172, 231, 201, 14, 12, 99, 74, 73, 37, 1, 92, 58, 192, 253, 14, 250, 249, 245, 11, 226, 232, 204, 137, 1, 33, 3, 246, 76, 253, 20, 111, 183, 124, 112, 238, 11, 28, 102, 137, 133, 107, 97, 47, 69, 144, 217, 121, 33, 38, 128, 210, 2, 43, 187, 217, 129, 245, 157, 255, 255, 255, 255, 1, 64, 167, 144, 0, 0, 0, 0, 0, 25, 118, 169, 20, 65, 1, 103, 158, 39, 245, 201, 210, 142, 205, 250, 28, 169, 18, 134, 215, 5, 108, 237, 91, 136, 172, 0, 0, 0, 0, 0, 0};
     vector<unsigned char> vch(ch, ch + sizeof(ch) -1);
     CDataStream stream(vch, SER_DISK, CLIENT_VERSION);
     CTransaction tx;
@@ -259,16 +259,36 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     CKey key;
     key.MakeNewKey(true);
     t.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
-
-    BOOST_CHECK(t.IsStandard());
-
-    t.vout[0].nValue = 5011; // dust
-    BOOST_CHECK(!t.IsStandard());
-
-    t.vout[0].nValue = 6011; // not dust
     BOOST_CHECK(t.IsStandard());
 
     t.vout[0].scriptPubKey = CScript() << OP_1;
+    BOOST_CHECK(!t.IsStandard());
+
+    // 80-byte TX_NULL_DATA (standard)
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
+    BOOST_CHECK(t.IsStandard());
+
+    // 81-byte TX_NULL_DATA (non-standard)
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3800");
+    BOOST_CHECK(!t.IsStandard());
+
+    // TX_NULL_DATA w/o PUSHDATA
+    t.vout.resize(1);
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN;
+    BOOST_CHECK(t.IsStandard());
+
+    // Only one TX_NULL_DATA permitted in all cases
+    t.vout.resize(2);
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
+    t.vout[1].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
+    BOOST_CHECK(!t.IsStandard());
+
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
+    t.vout[1].scriptPubKey = CScript() << OP_RETURN;
+    BOOST_CHECK(!t.IsStandard());
+
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN;
+    t.vout[1].scriptPubKey = CScript() << OP_RETURN;
     BOOST_CHECK(!t.IsStandard());
 }
 
