@@ -135,6 +135,7 @@ bool CKey::SetPrivKey(const CPrivKey &privkey, bool fCompressedIn) {
     if (!ec_privkey_import_der(secp256k1_context_sign, (unsigned char*)begin(), &privkey[0], privkey.size()))
         return false;
     fCompressed = fCompressedIn;
+    assert(privkey[1] == (fCompressed ? 0x81 : 0x82));
     fValid = true;
     return true;
 }
