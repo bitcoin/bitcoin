@@ -9,6 +9,7 @@ Runs automatically during `make check`.
 
 Can also be run manually."""
 
+import configparser
 import os
 import sys
 import argparse
@@ -16,8 +17,14 @@ import logging
 
 if __name__ == '__main__':
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-    import buildenv
     import bctest
+
+    config = configparser.ConfigParser()
+    config.read_file(open(os.path.dirname(__file__) + "/config.ini"))
+
+    buildenv = argparse.Namespace(exeext=config["environment"]["EXEEXT"],
+                                  SRCDIR=config["environment"]["SRCDIR"],
+                                  BUILDDIR=config["environment"]["BUILDDIR"])
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('-v', '--verbose', action='store_true')

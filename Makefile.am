@@ -277,9 +277,6 @@ EXTRA_DIST += \
 
 CLEANFILES = $(OSX_DMG) $(BITCOIN_WIN_INSTALLER)
 
-# This file is problematic for out-of-tree builds if it exists.
-DISTCLEANFILES = test/util/buildenv.pyc
-
 .INTERMEDIATE: $(COVERAGE_INFO)
 
 DISTCHECK_CONFIGURE_FLAGS = --enable-man
