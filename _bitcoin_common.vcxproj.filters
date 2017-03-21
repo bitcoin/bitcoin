@@ -358,6 +358,12 @@
     <ClCompile Include="src\keystore.cpp">
       <Filter>Source Files\wallet</Filter>
     </ClCompile>
+    <ClCompile Include="src\wallet\AccountingEntry.cpp">
+      <Filter>Source Files\wallet</Filter>
+    </ClCompile>
+    <ClCompile Include="src\wallet\WalletUtil.cpp">
+      <Filter>Source Files\wallet</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\addrdb.h">
@@ -746,6 +752,12 @@
       <Filter>Source Files\wallet</Filter>
     </ClInclude>
     <ClInclude Include="src\keystore.h">
+      <Filter>Source Files\wallet</Filter>
+    </ClInclude>
+    <ClInclude Include="src\wallet\AccountingEntry.h">
+      <Filter>Source Files\wallet</Filter>
+    </ClInclude>
+    <ClInclude Include="src\wallet\WalletUtil.h">
       <Filter>Source Files\wallet</Filter>
     </ClInclude>
   </ItemGroup>
