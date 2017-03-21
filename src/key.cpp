@@ -73,6 +73,17 @@ static int ec_privkey_export_der(
         *privkeylen = 0;
         return 0;
     }
+
+    // ここは常に true では…？ //
+    // SECP256K1_EC_COMPRESSED
+    // SECP256K1_EC_UNCOMPRESSED
+
+    // #define SECP256K1_EC_COMPRESSED   (SECP256K1_FLAGS_TYPE_COMPRESSION | SECP256K1_FLAGS_BIT_COMPRESSION)
+    // #define SECP256K1_FLAGS_BIT_COMPRESSION (1 << 8)
+
+    // #define SECP256K1_EC_UNCOMPRESSED (SECP256K1_FLAGS_TYPE_COMPRESSION)
+    // #define SECP256K1_FLAGS_TYPE_COMPRESSION (1 << 1)
+
     if (compressed) {
         static const unsigned char begin[] = {
             0x30,0x81,0xD3,0x02,0x01,0x01,0x04,0x20
