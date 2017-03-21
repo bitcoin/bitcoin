@@ -34,6 +34,7 @@
 
 #include "WalletUtil.h"
 #include "AccountingEntry.h"
+#include "KeyPool.h"
 
 extern CWallet* pwalletMain;
 
@@ -98,28 +99,6 @@ enum WalletFeature
     FEATURE_LATEST = FEATURE_COMPRPUBKEY // HD is optional, use FEATURE_COMPRPUBKEY as latest version
 };
 
-
-/** A key pool entry */
-class CKeyPool
-{
-public:
-    int64_t nTime;
-    CPubKey vchPubKey;
-
-    CKeyPool();
-    CKeyPool(const CPubKey& vchPubKeyIn);
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        int nVersion = s.GetVersion();
-        if (!(s.GetType() & SER_GETHASH))
-            READWRITE(nVersion);
-        READWRITE(nTime);
-        READWRITE(vchPubKey);
-    }
-};
 
 /** Address book data */
 class CAddressBookData

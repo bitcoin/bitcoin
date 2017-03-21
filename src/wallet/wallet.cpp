@@ -3894,17 +3894,6 @@ bool CWallet::BackupWallet(const std::string& strDest)
     return false;
 }
 
-CKeyPool::CKeyPool()
-{
-    nTime = GetTime();
-}
-
-CKeyPool::CKeyPool(const CPubKey& vchPubKeyIn)
-{
-    nTime = GetTime();
-    vchPubKey = vchPubKeyIn;
-}
-
 CWalletKey::CWalletKey(int64_t nExpires)
 {
     nTimeCreated = (nExpires ? GetTime() : 0);
