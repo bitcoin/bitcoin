@@ -2,11 +2,16 @@
 #include "key.h"
 #include "base58.h"
 #include "BitcoinAddress.h"
+#include <secp256k1.h>
 
 int main()
 {
     // std::vector<unsigned char> v(1, 239); // 要素数 1、中身は [239] なリストができる.
     // unsigned char* p = &v[0];
+
+    printf("0x%X\n", SECP256K1_EC_COMPRESSED);
+    printf("0x%X\n", SECP256K1_EC_UNCOMPRESSED);
+    return 0;
 
     ECC_Start();
 
