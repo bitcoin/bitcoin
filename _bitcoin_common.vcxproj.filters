@@ -31,6 +31,9 @@
     <Filter Include="Source Files\wallet">
       <UniqueIdentifier>{4bfe4eb4-9f95-4201-ad71-1bc2500bb1b0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\script">
+      <UniqueIdentifier>{f2ba9646-f13a-4fef-a436-2dea8b72f42e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\chainparams.cpp">
@@ -193,9 +196,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\script\interpreter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\script\ismine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\script\sigcache.cpp">
@@ -370,6 +370,12 @@
     <ClCompile Include="src\wallet\MerkleTx.cpp">
       <Filter>Source Files\wallet</Filter>
     </ClCompile>
+    <ClCompile Include="src\wallet\WalletTx.cpp">
+      <Filter>Source Files\wallet</Filter>
+    </ClCompile>
+    <ClCompile Include="src\script\ismine.cpp">
+      <Filter>Source Files\script</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\addrdb.h">
@@ -490,9 +496,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\script\interpreter.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\script\ismine.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\limitedmap.h">
@@ -771,6 +774,12 @@
     </ClInclude>
     <ClInclude Include="src\wallet\MerkleTx.h">
       <Filter>Source Files\wallet</Filter>
+    </ClInclude>
+    <ClInclude Include="src\wallet\WalletTx.h">
+      <Filter>Source Files\wallet</Filter>
+    </ClInclude>
+    <ClInclude Include="src\script\ismine.h">
+      <Filter>Source Files\script</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
