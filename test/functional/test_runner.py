@@ -248,7 +248,7 @@ def run_tests(test_list, src_dir, build_dir, exeext, jobs=1, enable_coverage=Fal
     job_queue = TestHandler(jobs, tests_dir, test_list, flags)
 
     max_len_name = len(max(test_list, key=len))
-    results = BOLD[1] + "%s | %s | %s\n\n" % ("TEST".ljust(max_len_name), "PASSED ", "DURATION") + BOLD[0]
+    results = BOLD[1] + "%s | %s | %s\n\n" % ("TEST".ljust(max_len_name), "STATUS ", "DURATION") + BOLD[0]
     for _ in range(len(test_list)):
         (name, stdout, stderr, status, duration) = job_queue.get_next()
         all_passed = all_passed and status != "Failed"
