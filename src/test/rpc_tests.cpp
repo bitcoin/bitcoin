@@ -198,6 +198,8 @@ BOOST_AUTO_TEST_CASE(rpc_parse_monetary_values)
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("2099999999999999"), false), 2099999999999999LL);
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("2099999999999990"), false), 2099999999999990LL);
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("209999999999999"), false), 209999999999999LL);
+    // FIX Decimals: This shouldn't fail? or make sure it always fails
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("10000000000000000"), false), 10000000000000000LL); // 100 M CURRENCY_UNIT (100 000 000 0000 0000 MINIMAL_UNIT)
 
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("-0.00000001")), UniValue);
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0")), 0LL);
