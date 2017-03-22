@@ -4787,8 +4787,14 @@ static bool AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
                 // or a double-spend. Reset the rejects filter and give those
                 // txs a second chance.
                 hashRecentRejectsChainTip = chainActive.Tip()->GetBlockHash();
-                if (recentRejects) recentRejects->reset();
-                else recentRejects.reset(new CRollingBloomFilter(120000, 0.000001));
+                if (recentRejects)
+                {
+                    recentRejects->reset();
+                }
+                else
+                {
+                    recentRejects.reset(new CRollingBloomFilter(120000, 0.000001));
+                }
             }
             bool rrc = recentRejects ? recentRejects->contains(inv.hash) : false;
             return rrc ||
@@ -5257,7 +5263,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     {
         vector<CInv> vInv;
         vRecv >> vInv;
-        if ((vInv.size() > MAX_INV_SZ)||(vInv.size() == 0))  // BU check size == 0 to be intolerant of an empty and useless request
+        // BU check size == 0 to be intolerant of an empty and useless request
+        if ((vInv.size() > MAX_INV_SZ)||(vInv.size() == 0))
         {
             Misbehaving(pfrom->GetId(), 20);
             return error("message inv size() = %u", vInv.size());
@@ -5281,8 +5288,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             fBlocksOnly = false;
 
         LOCK(cs_main);
-
-        // BU remove, unused        std::vector<CInv> vToFetch;
 
         for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
         {
@@ -5321,9 +5326,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 return error("send buffer size() = %u", pfrom->nSendSize);
             }
         }
-
-        // BU remove, unused       if (!vToFetch.empty())
-        // BU remove, unused          pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
     }
 
 
@@ -5331,12 +5333,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     {
         vector<CInv> vInv;
         vRecv >> vInv;
-        if ((vInv.size() > MAX_INV_SZ)||(vInv.size() == 0))  // BU check size == 0 to be intolerant of an empty and useless request
+        // BU check size == 0 to be intolerant of an empty and useless request
+        if ((vInv.size() > MAX_INV_SZ)||(vInv.size() == 0))
         {
             Misbehaving(pfrom->GetId(), 20);
             return error("message getdata size() = %u", vInv.size());
         }
-        for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)  // Validate that INVs are a valid type
+
+        // Validate that INVs are a valid type
+        for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
         {
             const CInv &inv = vInv[nInv];
             if (!((inv.type == MSG_TX) || (inv.type == MSG_BLOCK) || (inv.type == MSG_FILTERED_BLOCK) || (inv.type == MSG_THINBLOCK) || (inv.type == MSG_XTHINBLOCK)))
@@ -5729,13 +5734,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CInv inv;
         vRecv >> inv >> filterMemPool;
         if (!((inv.type == MSG_XTHINBLOCK)||(inv.type == MSG_THINBLOCK)))
-          {
+        {
             Misbehaving(pfrom->GetId(), 20);
             return error("message inv invalid type = %u", inv.type);                
-          }
+        }
         
 
-        LoadFilter(pfrom, &filterMemPool);  // Validates that the filter is reasonably sized.
+        // Validates that the filter is reasonably sized.
+        LoadFilter(pfrom, &filterMemPool);
 
         {
             LOCK(cs_main);
@@ -5962,7 +5968,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (pfrom->xThinBlockHashes.size() != pfrom->thinBlock.vtx.size())  // Because the next loop assumes this
           {
             LogPrint("thin", "Inconsistent thin block data.  Aborting the thin block\n");
-            // TODO clear out the thin block
+            {
+                LOCK(cs_vNodes);
+                pfrom->mapThinBlocksInFlight.erase(inv.hash);
+                pfrom->thinBlockWaitingForTxns = -1;
+                pfrom->thinBlock.SetNull();
+            }
+
+            // Clear the thinblock timer used for preferential download
+            thindata.ClearThinBlockTimer(inv.hash);
             return true;
           }
         

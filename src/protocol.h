@@ -363,7 +363,8 @@ public:
 
     friend bool operator<(const CInv& a, const CInv& b);
 
-    bool IsKnownType() const;  // all types ever used (includes type 3 = "filtered block")
+    /// returns true if this inv is one of any of the inv types ever used.
+    bool IsKnownType() const;
     const char* GetCommand() const;
     std::string ToString() const;
 

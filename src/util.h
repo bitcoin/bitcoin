@@ -35,7 +35,8 @@
 //  Typically, the programmer will error out -- return false, raise an exception, etc in the execInRelease code.
 #define DbgAssert(pred, execInRelease) do { assert(pred); } while(0)
 #else
-#define DbgAssert(pred, execInRelease) do { if (!(pred)) { execInRelease; }} while(0)
+#define DbgStringify(x) #x
+#define DbgAssert(pred, execInRelease) do { if (!(pred)) { LogPrintf("Debug Assertion failed: " #pred "\n"); execInRelease; }} while(0)
 #endif
 
 static const bool DEFAULT_LOGTIMEMICROS = false;

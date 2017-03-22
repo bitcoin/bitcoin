@@ -209,7 +209,8 @@ void HandleExpeditedRequest(CDataStream& vRecv,CNode* pfrom)
             if (xpeditedBlk.size() < maxExpedited )
 	      {
 		LogPrint("blk", "Starting expedited blocks to peer %s (%d).\n", pfrom->addrName.c_str(),pfrom->id);
-		std::vector<CNode*>::iterator it = std::find(xpeditedBlk.begin(), xpeditedBlk.end(),(CNode*)NULL);  // find an empty array location
+                // find an empty array location
+		std::vector<CNode*>::iterator it = std::find(xpeditedBlk.begin(), xpeditedBlk.end(),((CNode*)NULL));
 		if (it != xpeditedBlk.end())
 		  *it = pfrom;
 		else
