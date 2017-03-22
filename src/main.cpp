@@ -623,9 +623,9 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBl
 
 
   void MarkBlockAsInFlight(NodeId nodeid, const uint256& hash, const Consensus::Params& consensusParams, CBlockIndex *pindex = NULL) {
-    AssertLockHeld(cs_main);
+    LOCK(cs_main);
     CNodeState *state = State(nodeid);
-    assert(state != NULL);
+    DbgAssert(state != NULL, return);
 
     // BU why mark as received? because this erases it from the inflight list.  Instead we'll check for it
     // BU removed: MarkBlockAsReceived(hash);
@@ -3119,7 +3119,7 @@ static CBlockIndex* FindMostWorkChain() {
         if (!fInvalidAncestor)
             return pindexNew;
     } while(true);
-    assert(0); // should never get here
+    DbgAssert(0, return NULL); // should never get here
 }
 
 /** Delete all entries in setBlockIndexCandidates that are worse than the current tip. */
@@ -5751,7 +5751,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
               {
                 // We don't have the block yet, although we know about it.
-                LogPrint("thin", "Peer %s (%d) requested not-yet-received block %s\n", pfrom->addrName.c_str(), pfrom->id, inv.hash.ToString());
+                LogPrint("thin", "Peer %s (%d) requested block %s that cannot be read\n", pfrom->addrName.c_str(), pfrom->id, inv.hash.ToString());
                 return false;
               }
             else
