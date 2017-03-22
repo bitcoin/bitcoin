@@ -132,6 +132,18 @@ BOOST_AUTO_TEST_CASE(rpc_createraw_op_return)
 
 BOOST_AUTO_TEST_CASE(rpc_format_monetary_values)
 {
+    BOOST_CHECK(ValueFromAmount(0LL, false).write() == "0");
+    BOOST_CHECK(ValueFromAmount(1LL, false).write() == "1");
+    BOOST_CHECK(ValueFromAmount(17622195LL, false).write() == "17622195");
+    BOOST_CHECK(ValueFromAmount(50000000LL, false).write() == "50000000");
+    BOOST_CHECK(ValueFromAmount(89898989LL, false).write() == "89898989");
+    BOOST_CHECK(ValueFromAmount(100000000LL, false).write() == "100000000"); // 1 CURRENCY_UNIT
+    BOOST_CHECK(ValueFromAmount(100000000000000LL, false).write() == "100000000000000"); // 1 M CURRENCY_UNIT
+    BOOST_CHECK(ValueFromAmount(2100000000000000LL, false).write() == "2100000000000000"); // 21 M CURRENCY_UNIT
+    BOOST_CHECK(ValueFromAmount(10000000000000000LL, false).write() == "10000000000000000");  // 100 M CURRENCY_UNIT (100 000 000 0000 0000 MINIMAL_UNIT)
+    BOOST_CHECK(ValueFromAmount(2099999999999990LL, false).write() == "2099999999999990");
+    BOOST_CHECK(ValueFromAmount(2099999999999999LL, false).write() == "2099999999999999");
+
     BOOST_CHECK(ValueFromAmount(0LL).write() == "0.00000000");
     BOOST_CHECK(ValueFromAmount(1LL).write() == "0.00000001");
     BOOST_CHECK(ValueFromAmount(17622195LL).write() == "0.17622195");
@@ -174,6 +186,19 @@ static UniValue ValueFromString(const std::string &str)
 
 BOOST_AUTO_TEST_CASE(rpc_parse_monetary_values)
 {
+    BOOST_CHECK_THROW(AmountFromValue(ValueFromString("-1"), false), UniValue);
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0"), false), 0LL);
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("1"), false), 1LL);
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("17622195"), false), 17622195LL);
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("50000000"), false), 50000000LL);
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("89898989"), false), 89898989LL);
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("100000000"), false),  100000000LL); // 1 CURRENCY_UNIT
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("100000000000000"), false), 100000000000000LL); // 1 M CURRENCY_UNIT
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("2100000000000000"), false), 2100000000000000LL); // 21 M CURRENCY_UNIT
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("2099999999999999"), false), 2099999999999999LL);
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("2099999999999990"), false), 2099999999999990LL);
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("209999999999999"), false), 209999999999999LL);
+
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("-0.00000001")), UniValue);
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0")), 0LL);
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.00000000")), 0LL);
