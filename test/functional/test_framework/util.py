@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Helpful routines for regression testing."""
 
+import asyncio
 import os
 import sys
 
@@ -307,26 +308,63 @@ def initialize_chain_clean(test_dir, num_nodes):
     for i in range(num_nodes):
         datadir=initialize_datadir(test_dir, i)
 
+def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
+    """Start multiple bitcoinds and return RPC connections to them.
+
+    This function uses an asyncio event loop to start the bitcoind nodes in parallel to speed
+    up test execution."""
+    if extra_args is None: extra_args = [ None for _ in range(num_nodes) ]
+    if binary is None: binary = [ None for _ in range(num_nodes) ]
+    rpcs = []
+    if num_nodes > 0:
+        try:
+            loop = asyncio.get_event_loop()
+            tasks = [asyncio.ensure_future(start_node_async(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i])) for i in range(num_nodes)]
+            loop.run_until_complete(asyncio.wait(tasks))
+            rpcs = [task.result() for task in tasks]
+        except: # If one node failed to start, stop the others
+            stop_nodes(rpcs)
+            raise
+    return rpcs
 
 def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
-    """
-    Start a bitcoind and return RPC connection to it
-    """
+    """Start a single bitcoind node and return an RPC connection to it."""
+    loop = asyncio.get_event_loop()
+    task = asyncio.ensure_future(start_node_async(i, dirname, extra_args, rpchost, timewait, binary, stderr))
+    loop.run_until_complete(task)
+    return task.result()
+
+async def start_node_async(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
+    """An asynchronous co-routine that starts a bitcoind node and returns an RPC connection to it."""
     datadir = os.path.join(dirname, "node"+str(i))
     if binary is None:
         binary = os.getenv("BITCOIND", "bitcoind")
     args = [ binary, "-datadir="+datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-mocktime="+str(get_mocktime()) ]
     if extra_args is not None: args.extend(extra_args)
     bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)
-    logger.debug("initialize_chain: bitcoind started, waiting for RPC to come up")
+    logger.debug("initialize_chain: bitcoind %d started, waiting for RPC to come up" % i)
     url = rpc_url(i, rpchost)
-    wait_for_bitcoind_start(bitcoind_processes[i], url, i)
-    logger.debug("initialize_chain: RPC successfully started")
+
+    while True:
+        if bitcoind_processes[i].poll() is not None:
+            raise Exception('bitcoind exited with status %i during initialization' % bitcoind_processes[i].returncode)
+        try:
+            rpc = get_rpc_proxy(url, i)
+            block = rpc.getblockcount()
+            break  # break out of loop on success
+        except IOError as e:
+            if e.errno != errno.ECONNREFUSED:  # Port not yet open?
+                raise  # unknown IO error
+        except JSONRPCException as e:  # Initialization phase
+            if e.error['code'] != -28:  # RPC in warmup?
+                raise  # unknown JSON RPC exception
+        await asyncio.sleep(0.25)
     proxy = get_rpc_proxy(url, i, timeout=timewait)
 
     if COVERAGE_DIR:
         coverage.write_all_rpc_commands(COVERAGE_DIR, proxy)
 
+    logger.debug("initialize_chain: bitcoind %d startup complete." % i)
     return proxy
 
 def assert_start_raises_init_error(i, dirname, extra_args=None, expected_msg=None):
@@ -348,38 +386,48 @@ def assert_start_raises_init_error(i, dirname, extra_args=None, expected_msg=Non
                 assert_msg = "bitcoind should have exited with expected error " + expected_msg
             raise AssertionError(assert_msg)
 
-def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
-    """
-    Start multiple bitcoinds, return RPC connections to them
-    """
-    if extra_args is None: extra_args = [ None for _ in range(num_nodes) ]
-    if binary is None: binary = [ None for _ in range(num_nodes) ]
-    rpcs = []
-    try:
-        for i in range(num_nodes):
-            rpcs.append(start_node(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i]))
-    except: # If one node failed to start, stop the others
-        stop_nodes(rpcs)
-        raise
-    return rpcs
-
 def log_filename(dirname, n_node, logname):
     return os.path.join(dirname, "node"+str(n_node), "regtest", logname)
 
+def stop_nodes(nodes):
+    """Stop bitcoin nodes and assert that all connections have closed.
+    
+    This function uses an asyncio event loop to stop the nodes in parallel to speen up test execution."""
+    if len(nodes) > 0:
+        loop = asyncio.get_event_loop()
+        tasks = [asyncio.ensure_future(stop_node_async(node, i)) for i, node in enumerate(nodes)]
+        loop.run_until_complete(asyncio.wait(tasks))
+        assert not bitcoind_processes.values()  # All connections must be gone now
+
 def stop_node(node, i):
+    """Stop an individual bitcoind node."""
+    loop = asyncio.get_event_loop()
+    task = asyncio.ensure_future(stop_node_async(node, i))
+    loop.run_until_complete(task)
+
+async def stop_node_async(node, i):
+    """An asynchronous co-routine that stops a bitcoind node."""
     logger.debug("Stopping node %d" % i)
     try:
         node.stop()
     except http.client.CannotSendRequest as e:
         logger.exception("Unable to stop node")
-    return_code = bitcoind_processes[i].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
-    assert_equal(return_code, 0)
-    del bitcoind_processes[i]
-
-def stop_nodes(nodes):
-    for i, node in enumerate(nodes):
-        stop_node(node, i)
-    assert not bitcoind_processes.values() # All connections must be gone now
+    timeout = BITCOIND_PROC_WAIT_TIMEOUT
+    while True:
+        if timeout < 0:
+            logger.error("Node %d failed to stop" % i)
+            assert False
+        return_code = bitcoind_processes[i].poll()
+        if return_code == 0:
+            logger.debug("Node %d stopped" % i)
+            del bitcoind_processes[i]
+            break
+        elif return_code is None:
+            await asyncio.sleep(0.25)
+            timeout -= 0.25
+        else:
+            logger.error("Node %d exited with exit code %d" % (i, return_code))
+            assert False
 
 def set_node_times(nodes, t):
     for node in nodes:
