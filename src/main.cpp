@@ -4868,22 +4868,22 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 // Pruned nodes may have deleted the block, so check whether
                 // it's available before trying to send.
                 if (send && (mi->second->nStatus & BLOCK_HAVE_DATA))
-                  {
+                {
                     // Send block from disk
                     CBlock block;
                     if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
-                      {
+                    {
                         // its possible that I know about it but haven't stored it yet
                         LogPrint("thin", "unable to load block %s from disk\n", (*mi).second->phashBlock ? (*mi).second->phashBlock->ToString() : "");
                         // no response
-                      }
+                    }
                     else
-                      {
+                    {
                         if (inv.type == MSG_BLOCK)
-                          {
+                        {
                             pfrom->blocksSent += 1;
                             pfrom->PushMessage(NetMsgType::BLOCK, block);
-                          }
+                        }
 
                         // BUIP010 Xtreme Thinblocks: begin section
                         else if (inv.type == MSG_THINBLOCK || inv.type == MSG_XTHINBLOCK) {
@@ -4893,10 +4893,10 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         // BUIP010 Xtreme Thinblocks: end section
 
                         else // MSG_FILTERED_BLOCK)
-                          {
+                        {
                             LOCK(pfrom->cs_filter);
                             if (pfrom->pfilter)
-                              {
+                            {
                                 CMerkleBlock merkleBlock(block, *pfrom->pfilter);
                                 pfrom->PushMessage(NetMsgType::MERKLEBLOCK, merkleBlock);
                                 pfrom->blocksSent += 1;
@@ -4908,18 +4908,18 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                                 // however we MUST always provide at least what the remote peer needs
                                 typedef std::pair<unsigned int, uint256> PairType;
                                 BOOST_FOREACH(PairType& pair, merkleBlock.vMatchedTxn)
-                                  {
+                                {
                                     pfrom->txsSent += 1;
                                     pfrom->PushMessage(NetMsgType::TX, block.vtx[pair.first]);
-                                  }
-                              }
+                                }
+                            }
                             // else
                             // no response
-                          }
+                        }
 
                         // Trigger the peer node to send a getblocks request for the next batch of inventory
                         if (inv.hash == pfrom->hashContinue)
-                          {
+                        {
                             // Bypass PushInventory, this must send even if redundant,
                             // and we want it right after the last block so they don't
                             // wait for other stuff first.
@@ -4927,9 +4927,9 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                             vInv.push_back(CInv(MSG_BLOCK, chainActive.Tip()->GetBlockHash()));
                             pfrom->PushMessage(NetMsgType::INV, vInv);
                             pfrom->hashContinue.SetNull();
-                          }
-                      }
-                  }
+                        }
+                    }
+                }
             }
             else if (inv.IsKnownType())
             {
@@ -5274,10 +5274,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         {
             const CInv &inv = vInv[nInv];
             if (!((inv.type == MSG_TX) || (inv.type == MSG_BLOCK)))
-              {
-              Misbehaving(pfrom->GetId(), 20);
-              return error("message inv invalid type = %u", inv.type);                
-              }
+            {
+                Misbehaving(pfrom->GetId(), 20);
+                return error("message inv invalid type = %u", inv.type);                
+            }
             // inv.hash does not need validation, since SHA2556 hash can be any value
         }
         
@@ -5345,10 +5345,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         {
             const CInv &inv = vInv[nInv];
             if (!((inv.type == MSG_TX) || (inv.type == MSG_BLOCK) || (inv.type == MSG_FILTERED_BLOCK) || (inv.type == MSG_THINBLOCK) || (inv.type == MSG_XTHINBLOCK)))
-              {
-              Misbehaving(pfrom->GetId(), 20);
-              return error("message inv invalid type = %u", inv.type);                
-              }
+            {
+                Misbehaving(pfrom->GetId(), 20);
+                return error("message inv invalid type = %u", inv.type);                
+            }
             // inv.hash does not need validation, since SHA2556 hash can be any value
         }
         
@@ -5755,15 +5755,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             CBlock block;
             const Consensus::Params& consensusParams = Params().GetConsensus();
             if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
-              {
+            {
                 // We don't have the block yet, although we know about it.
                 LogPrint("thin", "Peer %s (%d) requested block %s that cannot be read\n", pfrom->addrName.c_str(), pfrom->id, inv.hash.ToString());
                 return false;
-              }
+            }
             else
-              {
+            {
                 SendXThinBlock(block, pfrom, inv);
-              }
+            }
         }
     }
     else if (strCommand == NetMsgType::XPEDITEDREQUEST)  // BU
@@ -5773,11 +5773,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     else if (strCommand == NetMsgType::XPEDITEDBLK)  // BU
       {
 	if (!HandleExpeditedBlock(vRecv,pfrom))
-          {
+        {
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 5);
             return false;            
-          }
+        }
       }
     // BU - used to pass BU specific version information similar to NetMsgType::VERSION
     else if (strCommand == NetMsgType::BUVERSION)
@@ -6291,21 +6291,21 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         vRecv >> filter;
     
         if (!filter.IsWithinSizeConstraints())
-          {
+        {
             // There is no excuse for sending a too-large filter
             Misbehaving(pfrom->GetId(), 100);
             return false;
-          }
+        }
         else
         {
             LOCK(pfrom->cs_filter);
             delete pfrom->pfilter;
             pfrom->pfilter = new CBloomFilter(filter);
             if (!pfrom->pfilter)
-              {
+            {
                 LogPrintf("Unable to allocate new bloom filter -- out of memory");
                 return false;
-              }
+            }
             else pfrom->pfilter->UpdateEmptyFull();
         }
         pfrom->fRelayTxes = true;
@@ -6734,7 +6734,7 @@ bool SendMessages(CNode* pto)
                     const uint256 &hashToAnnounce = pto->vBlockHashesToAnnounce.back();
                     BlockMap::iterator mi = mapBlockIndex.find(hashToAnnounce);
                     if (mi != mapBlockIndex.end()) // was assert(mi != mapBlockIndex.end());
-                      {
+                    {
                         CBlockIndex *pindex = mi->second;
 
                         // Warn if we're announcing a block that is not on the main chain.
@@ -6753,7 +6753,7 @@ bool SendMessages(CNode* pto)
                           LogPrint("net", "%s: sending inv peer=%d hash=%s\n", __func__,
                                    pto->id, hashToAnnounce.ToString());
                         }
-                      }
+                    }
                 }
             } else if (!vHeaders.empty()) {
                 if (vHeaders.size() > 1) {
