@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_UniqueCheck)
 }
 
 
-// Test that blocks which might allocate lots of memory free their memory agressively.
+// Test that blocks which might allocate lots of memory free their memory aggressively.
 //
 // This test attempts to catch a pathological case where by lazily freeing
 // checks might mean leaving a check un-swapped out, and decreasing by 1 each
