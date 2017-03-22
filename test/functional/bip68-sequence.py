@@ -378,8 +378,8 @@ class BIP68Test(BitcoinTestFramework):
         # activation should happen at block height 432 (3 periods)
         min_activation_height = 432
         height = self.nodes[0].getblockcount()
-        assert(height < 432)
-        self.nodes[0].generate(432-height)
+        assert(height < min_activation_height)
+        self.nodes[0].generate(min_activation_height-height)
         assert(get_bip9_status(self.nodes[0], 'csv')['status'] == 'active')
         sync_blocks(self.nodes)
 
