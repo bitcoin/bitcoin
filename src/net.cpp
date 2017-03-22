@@ -396,6 +396,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         CNode* pnode = new CNode(id, nLocalServices, GetBestHeight(), hSocket, addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, pszDest ? pszDest : "", false);
         pnode->nServicesExpected = ServiceFlags(addrConnect.nServices & nRelevantServices);
         pnode->AddRef();
+        pnode->fWhitelisted = CConnman::IsWhitelistedRange((CNetAddr)pnode->addr);
 
         return pnode;
     } else if (!proxyConnectionFailed) {
