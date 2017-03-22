@@ -2028,15 +2028,15 @@ int GetSpendHeight(const CCoinsViewCache& inputs)
     LOCK(cs_main);
     BlockMap::iterator i = mapBlockIndex.find(inputs.GetBestBlock());
     if (i != mapBlockIndex.end())
-      {
-      CBlockIndex* pindexPrev = i->second;
-      if (pindexPrev)
-        return pindexPrev->nHeight + 1;
-      else
+    {
+        CBlockIndex* pindexPrev = i->second;
+        if (pindexPrev)
+            return pindexPrev->nHeight + 1;
+        else
         {
-          throw runtime_error("GetSpendHeight(): mapBlockIndex contains null block");
+            throw runtime_error("GetSpendHeight(): mapBlockIndex contains null block");
         }
-      }
+    }
     throw runtime_error("GetSpendHeight(): best block does not exist");
 }
 
@@ -3715,8 +3715,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
     // Check for duplicate
     uint256 hash = block.GetHash();
     CBlockIndex *pindex = NULL;
-    if (hash != chainparams.GetConsensus().hashGenesisBlock)
-      {
+    if (hash != chainparams.GetConsensus().hashGenesisBlock) {
         BlockMap::iterator miSelf = mapBlockIndex.find(hash);
         if (miSelf != mapBlockIndex.end()) {
             // Block header is already known.
@@ -6301,12 +6300,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             LOCK(pfrom->cs_filter);
             delete pfrom->pfilter;
             pfrom->pfilter = new CBloomFilter(filter);
-            if (!pfrom->pfilter)
-            {
-                LogPrintf("Unable to allocate new bloom filter -- out of memory");
-                return false;
-            }
-            else pfrom->pfilter->UpdateEmptyFull();
+            pfrom->pfilter->UpdateEmptyFull();
         }
         pfrom->fRelayTxes = true;
     }
