@@ -8,24 +8,35 @@ from collections import deque
 import logging
 import optparse
 import os
-import sys
 import shutil
+import subprocess
+import sys
 import tempfile
 import time
 
 from .util import (
-    initialize_chain,
-    start_nodes,
+    PortSeed,
+    MAX_NODES,
+    bitcoind_processes,
+    check_json_precision,
     connect_nodes_bi,
+    disable_mocktime,
     disconnect_nodes,
+    enable_coverage,
+    enable_mocktime,
+    get_mocktime,
+    get_rpc_proxy,
+    initialize_datadir,
+    log_filename,
+    p2p_port,
+    rpc_url,
+    set_node_times,
+    start_nodes,
+    stop_node,
+    stop_nodes,
     sync_blocks,
     sync_mempools,
-    stop_nodes,
-    stop_node,
-    enable_coverage,
-    check_json_precision,
-    initialize_chain_clean,
-    PortSeed,
+    wait_for_bitcoind_start,
 )
 from .authproxy import JSONRPCException
 
@@ -49,9 +60,9 @@ class BitcoinTestFramework(object):
     def setup_chain(self):
         self.log.info("Initializing test directory "+self.options.tmpdir)
         if self.setup_clean_chain:
-            initialize_chain_clean(self.options.tmpdir, self.num_nodes)
+            self._initialize_chain_clean(self.options.tmpdir, self.num_nodes)
         else:
-            initialize_chain(self.options.tmpdir, self.num_nodes, self.options.cachedir)
+            self._initialize_chain(self.options.tmpdir, self.num_nodes, self.options.cachedir)
 
     def stop_node(self, num_node):
         stop_node(self.nodes[num_node], num_node)
@@ -215,6 +226,87 @@ class BitcoinTestFramework(object):
             rpc_handler = logging.StreamHandler(sys.stdout)
             rpc_handler.setLevel(logging.DEBUG)
             rpc_logger.addHandler(rpc_handler)
+
+    def _initialize_chain(self, test_dir, num_nodes, cachedir):
+        """Initialize a pre-mined blockchain for use by the test.
+
+        Create a cache of a 200-block-long chain (with wallet) for MAX_NODES
+        Afterward, create num_nodes copies from the cache."""
+
+        assert num_nodes <= MAX_NODES
+        create_cache = False
+        for i in range(MAX_NODES):
+            if not os.path.isdir(os.path.join(cachedir, 'node' + str(i))):
+                create_cache = True
+                break
+
+        if create_cache:
+            self.log.debug("Creating data directories from cached datadir")
+
+            # find and delete old cache directories if any exist
+            for i in range(MAX_NODES):
+                if os.path.isdir(os.path.join(cachedir, "node" + str(i))):
+                    shutil.rmtree(os.path.join(cachedir, "node" + str(i)))
+
+            # Create cache directories, run bitcoinds:
+            for i in range(MAX_NODES):
+                datadir = initialize_datadir(cachedir, i)
+                args = [os.getenv("BITCOIND", "bitcoind"), "-server", "-keypool=1", "-datadir=" + datadir, "-discover=0"]
+                if i > 0:
+                    args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
+                bitcoind_processes[i] = subprocess.Popen(args)
+                self.log.debug("initialize_chain: bitcoind started, waiting for RPC to come up")
+                wait_for_bitcoind_start(bitcoind_processes[i], rpc_url(i), i)
+                self.log.debug("initialize_chain: RPC successfully started")
+
+            rpcs = []
+            for i in range(MAX_NODES):
+                try:
+                    rpcs.append(get_rpc_proxy(rpc_url(i), i))
+                except:
+                    self.log.exception("Error connecting to node %d" % i)
+                    sys.exit(1)
+
+            # Create a 200-block-long chain; each of the 4 first nodes
+            # gets 25 mature blocks and 25 immature.
+            # Note: To preserve compatibility with older versions of
+            # initialize_chain, only 4 nodes will generate coins.
+            #
+            # blocks are created with timestamps 10 minutes apart
+            # starting from 2010 minutes in the past
+            enable_mocktime()
+            block_time = get_mocktime() - (201 * 10 * 60)
+            for i in range(2):
+                for peer in range(4):
+                    for j in range(25):
+                        set_node_times(rpcs, block_time)
+                        rpcs[peer].generate(1)
+                        block_time += 10 * 60
+                    # Must sync before next peer starts generating blocks
+                    sync_blocks(rpcs)
+
+            # Shut them down, and clean up cache directories:
+            stop_nodes(rpcs)
+            disable_mocktime()
+            for i in range(MAX_NODES):
+                os.remove(log_filename(cachedir, i, "debug.log"))
+                os.remove(log_filename(cachedir, i, "db.log"))
+                os.remove(log_filename(cachedir, i, "peers.dat"))
+                os.remove(log_filename(cachedir, i, "fee_estimates.dat"))
+
+        for i in range(num_nodes):
+            from_dir = os.path.join(cachedir, "node" + str(i))
+            to_dir = os.path.join(test_dir, "node" + str(i))
+            shutil.copytree(from_dir, to_dir)
+            initialize_datadir(test_dir, i)  # Overwrite port/rpcport in bitcoin.conf
+
+    def _initialize_chain_clean(self, test_dir, num_nodes):
+        """Initialize empty blockchain for use by the test.
+
+        Create an empty blockchain and num_nodes wallets.
+        Useful if a test case wants complete control over initialization."""
+        for i in range(num_nodes):
+            initialize_datadir(test_dir, i)
 
 # Test framework for doing p2p comparison testing, which sets up some bitcoind
 # binaries:
