@@ -11,8 +11,11 @@
 /** A hasher class for SHA-256. */
 class CSHA256
 {
+public:
+    static const size_t MIDSTATE_SIZE = 32;
+
 private:
-    uint32_t s[8];
+    uint32_t s[MIDSTATE_SIZE / 4];
     unsigned char buf[64];
     uint64_t bytes;
 
@@ -21,6 +24,8 @@ public:
 
     CSHA256();
     CSHA256& Write(const unsigned char* data, size_t len);
+    void GetMidstate(void *out) const;
+    void SetMidstate(const void *midstate, uint64_t bytes);
     void Finalize(unsigned char hash[OUTPUT_SIZE]);
     CSHA256& Reset();
 };
