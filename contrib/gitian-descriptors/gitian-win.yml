@@ -1,5 +1,5 @@
 ---
-name: "BitcoinUnlimited-win-0.12"
+name: "BitcoinUnlimited-win-1.0"
 enable_cache: true
 suites:
 - "trusty"

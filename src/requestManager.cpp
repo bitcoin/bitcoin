@@ -136,7 +136,7 @@ void CRequestManager::AskFor(const CInv& obj, CNode* from, int priority)
     }
   else
     {
-      assert(!"TBD");
+      DbgAssert(!"Request manager does not handle objects of this type", return);
     }
 
 }

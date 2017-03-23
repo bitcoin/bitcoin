@@ -12,6 +12,7 @@
 #include "pow.h"
 #include "tinyformat.h"
 #include "uint256.h"
+#include "util.h"
 
 #include <vector>
 
@@ -378,6 +379,8 @@ public:
 
     /** Efficiently check whether a block is present in this chain. */
     bool Contains(const CBlockIndex *pindex) const {
+        /* null pointer isn't in this chain but caller should not send in the first place */
+        DbgAssert(pindex, return false);
         return (*this)[pindex->nHeight] == pindex;
     }
 

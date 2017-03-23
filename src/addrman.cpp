@@ -118,7 +118,7 @@ void CAddrMan::SwapRandom(unsigned int nRndPos1, unsigned int nRndPos2)
 
 void CAddrMan::Delete(int nId)
 {
-    assert(mapInfo.count(nId) != 0);
+    DbgAssert(mapInfo.count(nId) != 0, return); // already deleted so no-op
     CAddrInfo& info = mapInfo[nId];
     assert(!info.fInTried);
     assert(info.nRefCount == 0);
