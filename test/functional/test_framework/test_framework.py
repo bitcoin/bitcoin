@@ -31,6 +31,7 @@ from .util import (
     p2p_port,
     rpc_url,
     set_node_times,
+    start_node,
     start_nodes,
     stop_node,
     stop_nodes,
@@ -64,8 +65,17 @@ class BitcoinTestFramework(object):
         else:
             self._initialize_chain(self.options.tmpdir, self.num_nodes, self.options.cachedir)
 
+    def start_node(self, i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
+        return start_node(i, dirname, extra_args, rpchost, timewait, binary, stderr)
+
+    def start_nodes(self, num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
+        return start_nodes(num_nodes, dirname, extra_args, rpchost, timewait, binary)
+
     def stop_node(self, num_node):
         stop_node(self.nodes[num_node], num_node)
+
+    def stop_nodes(self):
+        stop_nodes(self.nodes)
 
     def setup_nodes(self):
         extra_args = None
@@ -165,7 +175,7 @@ class BitcoinTestFramework(object):
 
         if not self.options.noshutdown:
             self.log.info("Stopping nodes")
-            stop_nodes(self.nodes)
+            self.stop_nodes()
         else:
             self.log.info("Note: bitcoinds were not stopped and may still be running")
 
@@ -259,10 +269,10 @@ class BitcoinTestFramework(object):
                 wait_for_bitcoind_start(bitcoind_processes[i], rpc_url(i), i)
                 self.log.debug("initialize_chain: RPC successfully started")
 
-            rpcs = []
+            self.nodes = []
             for i in range(MAX_NODES):
                 try:
-                    rpcs.append(get_rpc_proxy(rpc_url(i), i))
+                    self.nodes.append(get_rpc_proxy(rpc_url(i), i))
                 except:
                     self.log.exception("Error connecting to node %d" % i)
                     sys.exit(1)
@@ -279,14 +289,15 @@ class BitcoinTestFramework(object):
             for i in range(2):
                 for peer in range(4):
                     for j in range(25):
-                        set_node_times(rpcs, block_time)
-                        rpcs[peer].generate(1)
+                        set_node_times(self.nodes, block_time)
+                        self.nodes[peer].generate(1)
                         block_time += 10 * 60
                     # Must sync before next peer starts generating blocks
-                    sync_blocks(rpcs)
+                    sync_blocks(self.nodes)
 
             # Shut them down, and clean up cache directories:
-            stop_nodes(rpcs)
+            self.stop_nodes()
+            self.nodes = []
             disable_mocktime()
             for i in range(MAX_NODES):
                 os.remove(log_filename(cachedir, i, "debug.log"))
@@ -330,7 +341,7 @@ class ComparisonTestFramework(BitcoinTestFramework):
                           help="bitcoind binary to use for reference nodes (if any)")
 
     def setup_network(self):
-        self.nodes = start_nodes(
+        self.nodes = self.start_nodes(
             self.num_nodes, self.options.tmpdir,
             extra_args=[['-whitelist=127.0.0.1']] * self.num_nodes,
             binary=[self.options.testbinary] +
