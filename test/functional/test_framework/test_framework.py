@@ -29,6 +29,7 @@ from .util import (
     p2p_port,
     rpc_url,
     set_node_times,
+    start_node,
     start_nodes,
     stop_node,
     stop_nodes,
@@ -62,6 +63,12 @@ class BitcoinTestFramework(object):
         else:
             self._initialize_chain(self.options.tmpdir, self.num_nodes, self.options.cachedir)
 
+    def start_node(self, i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
+        return start_node(i, dirname, extra_args, rpchost, timewait, binary, stderr)
+
+    def start_nodes(self, num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
+        return start_nodes(num_nodes, dirname, extra_args, rpchost, timewait, binary)
+
     def stop_node(self, num_node):
         stop_node(self.nodes[num_node], num_node)
 
@@ -69,7 +76,7 @@ class BitcoinTestFramework(object):
         stop_nodes(self.nodes)
 
     def setup_nodes(self):
-        return start_nodes(self.num_nodes, self.options.tmpdir)
+        return self.start_nodes(self.num_nodes, self.options.tmpdir)
 
     def setup_network(self, split = False):
         self.nodes = self.setup_nodes()
@@ -336,7 +343,7 @@ class ComparisonTestFramework(BitcoinTestFramework):
                           help="bitcoind binary to use for reference nodes (if any)")
 
     def setup_network(self):
-        self.nodes = start_nodes(
+        self.nodes = self.start_nodes(
             self.num_nodes, self.options.tmpdir,
             extra_args=[['-whitelist=127.0.0.1']] * self.num_nodes,
             binary=[self.options.testbinary] +
