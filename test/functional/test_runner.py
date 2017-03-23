@@ -34,6 +34,7 @@ BASE_SCRIPTS= [
     'fundrawtransaction.py',
     'p2p-compactblocks.py',
     'segwit.py',
+    'multichaintest.py',
     # vv Tests less than 2m vv
     'wallet.py',
     'wallet-accounts.py',
