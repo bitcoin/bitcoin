@@ -22,7 +22,7 @@ If you are moving from another Bitcoin compatible implementations (Core, Classic
 - make a backup of the `~/.bitcoin` dir
 - if you have installed Core via apt using the ppa bitcoin core repo:
    - `sudo apt-get remove bitcoin*`
-   - `sudo rm /etc/apt/source.d/bitcoin-ubuntu-bitcoin-*.*`
+   - `sudo rm /etc/apt/sources.list.d/bitcoin-*.*`
 - if you have compile Core from source:
    - `cd /path/where/the/code/is/stored`
    - `sudo make uninstall`
