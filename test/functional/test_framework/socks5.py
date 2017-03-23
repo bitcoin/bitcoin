@@ -5,7 +5,6 @@
 """Dummy Socks5 server for testing."""
 
 import socket, threading, queue
-import traceback, sys
 import logging
 
 logger = logging.getLogger("TestFramework.socks5")

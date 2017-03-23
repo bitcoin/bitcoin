@@ -22,7 +22,6 @@ happened previously.
 from test_framework.authproxy import JSONRPCException
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (start_nodes, connect_nodes, sync_blocks, assert_equal, set_node_times)
-from decimal import Decimal
 
 import collections
 import enum
