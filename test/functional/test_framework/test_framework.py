@@ -40,6 +40,21 @@ from .util import (
 from .authproxy import JSONRPCException
 
 class BitcoinTestFramework(object):
+    """Base class for a bitcoin test script.
+
+    Individual bitcoin test scripts should subclass this class and override the following methods:
+
+    - __init__()
+    - add_options()
+    - setup_chain()
+    - setup_network()
+    - run_test()
+
+    The main() method should not be overridden.
+
+    This class also contains various public and private helper methods."""
+
+    # Methods to override in subclass test scripts.
 
     TEST_EXIT_PASSED = 0
     TEST_EXIT_FAILED = 1
@@ -50,9 +65,6 @@ class BitcoinTestFramework(object):
         self.setup_clean_chain = False
         self.nodes = None
 
-    def run_test(self):
-        raise NotImplementedError
-
     def add_options(self, parser):
         pass
 
@@ -62,21 +74,6 @@ class BitcoinTestFramework(object):
             self._initialize_chain_clean(self.options.tmpdir, self.num_nodes)
         else:
             self._initialize_chain(self.options.tmpdir, self.num_nodes, self.options.cachedir)
-
-    def start_node(self, i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
-        return start_node(i, dirname, extra_args, rpchost, timewait, binary, stderr)
-
-    def start_nodes(self, num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
-        return start_nodes(num_nodes, dirname, extra_args, rpchost, timewait, binary)
-
-    def stop_node(self, num_node):
-        stop_node(self.nodes[num_node], num_node)
-
-    def stop_nodes(self):
-        stop_nodes(self.nodes)
-
-    def setup_nodes(self):
-        return self.start_nodes(self.num_nodes, self.options.tmpdir)
 
     def setup_network(self, split = False):
         self.nodes = self.setup_nodes()
@@ -97,31 +94,13 @@ class BitcoinTestFramework(object):
         self.is_network_split = split
         self.sync_all()
 
-    def split_network(self):
-        """
-        Split the network of four nodes into nodes 0/1 and 2/3.
-        """
-        assert not self.is_network_split
-        self.stop_nodes()
-        self.setup_network(True)
+    def setup_nodes(self):
+        return self.start_nodes(self.num_nodes, self.options.tmpdir)
 
-    def sync_all(self):
-        if self.is_network_split:
-            sync_blocks(self.nodes[:2])
-            sync_blocks(self.nodes[2:])
-            sync_mempools(self.nodes[:2])
-            sync_mempools(self.nodes[2:])
-        else:
-            sync_blocks(self.nodes)
-            sync_mempools(self.nodes)
+    def run_test(self):
+        raise NotImplementedError
 
-    def join_network(self):
-        """
-        Join the (previously split) network halves together.
-        """
-        assert self.is_network_split
-        self.stop_nodes()
-        self.setup_network(False)
+    # Main function. This should not be overridden by the subclass test scripts.
 
     def main(self):
 
@@ -211,6 +190,48 @@ class BitcoinTestFramework(object):
             self.log.error("Test failed. Test logging available at %s/test_framework.log", self.options.tmpdir)
             logging.shutdown()
             sys.exit(self.TEST_EXIT_FAILED)
+
+    # Public helper methods. These can be accessed by the subclass test scripts.
+
+    def start_node(self, i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
+        return start_node(i, dirname, extra_args, rpchost, timewait, binary, stderr)
+
+    def start_nodes(self, num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
+        return start_nodes(num_nodes, dirname, extra_args, rpchost, timewait, binary)
+
+    def stop_node(self, num_node):
+        stop_node(self.nodes[num_node], num_node)
+
+    def stop_nodes(self):
+        stop_nodes(self.nodes)
+
+    def split_network(self):
+        """
+        Split the network of four nodes into nodes 0/1 and 2/3.
+        """
+        assert not self.is_network_split
+        self.stop_nodes()
+        self.setup_network(True)
+
+    def join_network(self):
+        """
+        Join the (previously split) network halves together.
+        """
+        assert self.is_network_split
+        self.stop_nodes()
+        self.setup_network(False)
+
+    def sync_all(self):
+        if self.is_network_split:
+            sync_blocks(self.nodes[:2])
+            sync_blocks(self.nodes[2:])
+            sync_mempools(self.nodes[:2])
+            sync_mempools(self.nodes[2:])
+        else:
+            sync_blocks(self.nodes)
+            sync_mempools(self.nodes)
+
+    # Private helper methods. These should not be accessed by the subclass test scripts.
 
     def _start_logging(self):
         # Add logger and logging handlers
