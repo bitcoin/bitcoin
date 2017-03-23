@@ -24,7 +24,7 @@ int CWalletTx::GetRequestCount() const
     // Returns -1 if it wasn't being tracked
     int nRequests = -1;
     {
-        LOCK(pwallet->cs_wallet);
+        LOCK(pwallet->m_walletCriticalSection);
         if (IsCoinBase())
         {
             // Generated block
@@ -132,7 +132,7 @@ void CWalletTx::GetAccountAmounts(const string& strAccount, CAmount& nReceived,
         nFee = allFee;
     }
     {
-        LOCK(pwallet->cs_wallet);
+        LOCK(pwallet->m_walletCriticalSection);
         BOOST_FOREACH(const COutputEntry& r, listReceived)
         {
             if (pwallet->mapAddressBook.count(r.destination))

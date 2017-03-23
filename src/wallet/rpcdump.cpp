@@ -103,7 +103,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
         );
 
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK2(cs_main, pwalletMain->m_walletCriticalSection);
 
     EnsureWalletIsUnlocked();
 
@@ -227,7 +227,7 @@ UniValue importaddress(const JSONRPCRequest& request)
     if (request.params.size() > 3)
         fP2SH = request.params[3].get_bool();
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK2(cs_main, pwalletMain->m_walletCriticalSection);
 
     CBitcoinAddress address(base58string(request.params[0].get_str()));
     if (address.IsValid()) {
@@ -299,7 +299,7 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
     wtx.nIndex = txnIndex;
     wtx.hashBlock = merkleBlock.header.GetHash();
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK2(cs_main, pwalletMain->m_walletCriticalSection);
 
     if (pwalletMain->IsMine(wtx)) {
         pwalletMain->AddToWallet(wtx, false);
@@ -326,7 +326,7 @@ UniValue removeprunedfunds(const JSONRPCRequest& request)
             + HelpExampleRpc("removprunedfunds", "\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\"")
         );
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK2(cs_main, pwalletMain->m_walletCriticalSection);
 
     uint256 hash;
     hash.SetHex(request.params[0].get_str());
@@ -388,7 +388,7 @@ UniValue importpubkey(const JSONRPCRequest& request)
     if (!pubKey.IsFullyValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey is not a valid public key");
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK2(cs_main, pwalletMain->m_walletCriticalSection);
 
     ImportAddress(CBitcoinAddress(pubKey.GetID().GetBase58addressWithNetworkPubkeyPrefix()), strLabel);
     ImportScript(GetScriptForRawPubKey(pubKey), strLabel, false);
@@ -426,7 +426,7 @@ UniValue importwallet(const JSONRPCRequest& request)
     if (fPruneMode)
         throw JSONRPCError(RPC_WALLET_ERROR, "Importing wallets is disabled in pruned mode");
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK2(cs_main, pwalletMain->m_walletCriticalSection);
 
     EnsureWalletIsUnlocked();
 
@@ -529,7 +529,7 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
             + HelpExampleRpc("dumpprivkey", "\"myaddress\"")
         );
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK2(cs_main, pwalletMain->m_walletCriticalSection);
 
     EnsureWalletIsUnlocked();
 
@@ -563,7 +563,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             + HelpExampleRpc("dumpwallet", "\"test\"")
         );
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK2(cs_main, pwalletMain->m_walletCriticalSection);
 
     EnsureWalletIsUnlocked();
 
@@ -988,7 +988,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
         }
     }
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK2(cs_main, pwalletMain->m_walletCriticalSection);
     EnsureWalletIsUnlocked();
 
     bool fRunScan = false;

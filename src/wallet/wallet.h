@@ -185,7 +185,7 @@ public:
      *      fFileBacked (immutable after instantiation)
      *      strWalletFile (immutable after instantiation)
      */
-    mutable CCriticalSection cs_wallet;
+    mutable CCriticalSection m_walletCriticalSection;
 
     const std::string strWalletFile;
 
@@ -259,7 +259,7 @@ public:
     const CWalletTx* GetWalletTx(const uint256& hash) const;
 
     //! check whether we are allowed to upgrade (or already support) to the named feature
-    bool CanSupportFeature(enum WalletFeature wf) { AssertLockHeld(cs_wallet); return m_nWalletMaxVersion >= wf; }
+    bool CanSupportFeature(enum WalletFeature wf) { AssertLockHeld(m_walletCriticalSection); return m_nWalletMaxVersion >= wf; }
 
     /**
      * populate vCoins with vector of available COutputs.
@@ -296,7 +296,7 @@ public:
     bool LoadKeyMetadata(const CPubKey &pubkey, const CKeyMetadata &metadata);
 
     bool LoadMinVersion(int nVersion) {
-        AssertLockHeld(cs_wallet); m_nWalletVersion = nVersion; m_nWalletMaxVersion = std::max(m_nWalletMaxVersion, nVersion); return true;
+        AssertLockHeld(m_walletCriticalSection); m_nWalletVersion = nVersion; m_nWalletMaxVersion = std::max(m_nWalletMaxVersion, nVersion); return true;
     }
 
     //! Adds an encrypted key to the store, and saves it to disk.
@@ -440,7 +440,7 @@ public:
     void Inventory(const uint256 &hash)
     {
         {
-            LOCK(cs_wallet);
+            LOCK(m_walletCriticalSection);
             std::map<uint256, int>::iterator mi = mapRequestCount.find(hash);
             if (mi != mapRequestCount.end())
                 (*mi).second++;
@@ -450,13 +450,13 @@ public:
     void GetScriptForMining(boost::shared_ptr<CReserveScript> &script);
     void ResetRequestCount(const uint256 &hash)
     {
-        LOCK(cs_wallet);
+        LOCK(m_walletCriticalSection);
         mapRequestCount[hash] = 0;
     };
     
     unsigned int GetKeyPoolSize()
     {
-        AssertLockHeld(cs_wallet); // setKeyPool
+        AssertLockHeld(m_walletCriticalSection); // setKeyPool
         return setKeyPool.size();
     }
 
@@ -469,7 +469,7 @@ public:
     bool SetMaxVersion(int nVersion);
 
     //! get the current wallet format (the oldest client version guaranteed to understand this wallet)
-    int GetVersion() { LOCK(cs_wallet); return m_nWalletVersion; }
+    int GetVersion() { LOCK(m_walletCriticalSection); return m_nWalletVersion; }
 
     //! Get wallet transactions that conflict with given transaction (spend same outputs)
     std::set<uint256> GetConflicts(const uint256& txid) const;
@@ -485,7 +485,7 @@ public:
     
     /** 
      * Address book entry changed.
-     * @note called with lock cs_wallet held.
+     * @note called with lock m_walletCriticalSection held.
      */
     boost::signals2::signal<void (CWallet *wallet, const CTxDestination
             &address, const std::string &label, bool isMine,
@@ -494,7 +494,7 @@ public:
 
     /** 
      * Wallet transaction added, removed or updated.
-     * @note called with lock cs_wallet held.
+     * @note called with lock m_walletCriticalSection held.
      */
     boost::signals2::signal<void (CWallet *wallet, const uint256 &hashTx,
             ChangeType status)> NotifyTransactionChanged;
