@@ -108,7 +108,12 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
     boost::scoped_ptr<CDBIterator> pcursor(const_cast<CDBWrapper*>(&db)->NewIterator());
     pcursor->Seek(DB_COINS);
 
-    stats.hashBlock = GetBestBlock();
+    {
+      LOCK(cs_main);
+      stats.hashBlock = GetBestBlock();
+      stats.nHeight = mapBlockIndex.find(stats.hashBlock)->second->nHeight;
+    }
+
     ss << stats.hashBlock;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
@@ -136,10 +141,6 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
         }
         pcursor->Next();
     }
-    }
-    {
-        LOCK(cs_main);
-        stats.nHeight = mapBlockIndex.find(stats.hashBlock)->second->nHeight;
     }
     stats.hashSerialized = ss.GetHash();
     stats.nTotalAmount = nTotalAmount;

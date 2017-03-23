@@ -81,7 +81,7 @@ int32_t UnlimitedComputeBlockVersion(const CBlockIndex* pindexPrev, const Consen
 CNode* FindLikelyNode(const std::string& addrName);
 
 // process incoming unsolicited block
-void HandleExpeditedBlock(CDataStream& vRecv,CNode* pfrom);
+bool HandleExpeditedBlock(CDataStream& vRecv,CNode* pfrom);
 
 // Convert the BUComments to the string client's "subversion" string
 extern void settingsToUserAgentString();

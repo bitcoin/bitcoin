@@ -459,7 +459,7 @@ void RPCRegisterTimerInterface(RPCTimerInterface *iface)
 void RPCUnregisterTimerInterface(RPCTimerInterface *iface)
 {
     std::vector<RPCTimerInterface*>::iterator i = std::find(timerInterfaces.begin(), timerInterfaces.end(), iface);
-    assert(i != timerInterfaces.end());
+    DbgAssert(i != timerInterfaces.end(), return);  // already removed, so ignore the problem in production
     timerInterfaces.erase(i);
 }
 

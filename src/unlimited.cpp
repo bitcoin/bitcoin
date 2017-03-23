@@ -193,7 +193,6 @@ void UpdateRecvStats(CNode* pfrom, const std::string& strCommand, int msgSize, i
 
 void HandleExpeditedRequest(CDataStream& vRecv,CNode* pfrom)
 {
-  // TODO locks
   uint64_t options;
   vRecv >> options;
   bool stop = ((options & EXPEDITED_STOP) != 0);  // Are we starting or stopping expedited service?
@@ -218,12 +217,13 @@ void HandleExpeditedRequest(CDataStream& vRecv,CNode* pfrom)
             if (xpeditedBlk.size() < maxExpedited )
 	      {
 		LogPrint("blk", "Starting expedited blocks to peer %s (%d).\n", pfrom->addrName.c_str(),pfrom->id);
+                // find an empty array location
 		std::vector<CNode*>::iterator it = std::find(xpeditedBlk.begin(), xpeditedBlk.end(),((CNode*)NULL));
 		if (it != xpeditedBlk.end())
 		  *it = pfrom;
 		else
 		  xpeditedBlk.push_back(pfrom);
-		pfrom->AddRef();
+		pfrom->AddRef();  // add a reference because we have added this pointer into the expedited array
 	      }
             else
 	      {
@@ -279,7 +279,7 @@ bool IsRecentlyExpeditedAndStore(const uint256& hash)
   return false;
 }
 
-void HandleExpeditedBlock(CDataStream& vRecv,CNode* pfrom)
+bool HandleExpeditedBlock(CDataStream& vRecv,CNode* pfrom)
 {
   unsigned char hops;
   unsigned char msgType;
@@ -289,35 +289,35 @@ void HandleExpeditedBlock(CDataStream& vRecv,CNode* pfrom)
     {
       CXThinBlock thinBlock;
       vRecv >> thinBlock;
+      uint256 blkHash = thinBlock.header.GetHash();
+      CInv inv(MSG_BLOCK, blkHash);
 
-      CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
-
-      BlockMap::iterator mapEntry = mapBlockIndex.find(thinBlock.header.GetHash());
+      BlockMap::iterator mapEntry = mapBlockIndex.find(blkHash);
       CBlockIndex *blkidx = NULL;
       unsigned int status = 0;
       if (mapEntry != mapBlockIndex.end())
 	{
 	  blkidx = mapEntry->second;
-	  status = blkidx->nStatus;
+	  if (blkidx) status = blkidx->nStatus;
 	}
       bool newBlock = ((blkidx == NULL) || (!(blkidx->nStatus & BLOCK_HAVE_DATA)));  // If I have never seen the block or just seen an INV, treat the block as new
       int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);  // TODO replace with size of vRecv for efficiency
       LogPrint("thin", "Received %s expedited thinblock %s from peer %s (%d). Hop %d. Size %d bytes. (status %d,0x%x)\n", newBlock ? "new":"repeated", inv.hash.ToString(), pfrom->addrName.c_str(),pfrom->id, hops, nSizeThinBlock,status,status);
 
       // Skip if we've already seen this block
-      // TODO move thes above the print, once we ensure no unexpected dups.
-      if (IsRecentlyExpeditedAndStore(thinBlock.header.GetHash())) return;
+      // TODO move this above the print, once we ensure no unexpected dups.
+      if (IsRecentlyExpeditedAndStore(blkHash)) return true;
       if (!newBlock) 
 	{
 	  // TODO determine if we have the block or just have an INV to it.
-	  return;
+	  return true;
 	}
 
       CValidationState state;
       if (!CheckBlockHeader(thinBlock.header, state, true))  // block header is bad
 	{
-	  // demerit the sender
-	  return;
+	  // demerit the sender, it should have checked the header before expedited relay
+	  return false;
 	}
       // TODO:  Start headers-only mining now
 
@@ -327,7 +327,9 @@ void HandleExpeditedBlock(CDataStream& vRecv,CNode* pfrom)
   else
     {
       LogPrint("thin", "Received unknown (0x%x) expedited message from peer %s (%d). Hop %d.\n", msgType, pfrom->addrName.c_str(),pfrom->id, hops);
+      return false;
     }
+  return true;
 }
 
 void SendExpeditedBlock(CXThinBlock& thinBlock,unsigned char hops,const CNode* skip)
@@ -506,7 +508,7 @@ UniValue expedited(const UniValue& params, bool fHelp)
     std::vector<CNode*>::iterator elem = std::find(xpeditedBlkUp.begin(), xpeditedBlkUp.end(),node); 
     if ((flags & EXPEDITED_BLOCKS)&&(flags & EXPEDITED_STOP))
       {
-	if (elem == xpeditedBlkUp.end()) xpeditedBlkUp.erase(elem);
+	if (elem != xpeditedBlkUp.end()) xpeditedBlkUp.erase(elem);
       }
     else if (flags & EXPEDITED_BLOCKS)
       {
@@ -1482,23 +1484,27 @@ bool CheckAndRequestExpeditedBlocks(CNode* pfrom)
     {
       BOOST_FOREACH(string& strAddr, mapMultiArgs["-expeditedblock"]) 
         {
-          // Add the peer's listening port if it is empty
-          int pos1 = strAddr.rfind(":");
-          int pos2 = strAddr.rfind("]:");
-          if (pos1 <= 0 && pos2 <= 0)
-              strAddr += ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
-
           string strListeningPeerIP;
           string strPeerIP = pfrom->addr.ToString();
-          pos1 = strPeerIP.rfind(":");
-          pos2 = strPeerIP.rfind("]:");
-          // Handle both ipv4 and ipv6 cases
-          if (pos1 <= 0 && pos2 <= 0) 
-              strListeningPeerIP = strPeerIP + ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
-          else if (pos1 > 0)
-              strListeningPeerIP = strPeerIP.substr(0, pos1) + ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
-          else
-              strListeningPeerIP = strPeerIP.substr(0, pos2) + ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
+          // Add the peer's listening port if it was provided (only misbehaving clients do not provide it)
+          if (pfrom->addrFromPort != 0)
+            {
+              int pos1 = strAddr.rfind(":");
+              int pos2 = strAddr.rfind("]:");
+              if (pos1 <= 0 && pos2 <= 0)
+                strAddr += ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
+
+              pos1 = strPeerIP.rfind(":");
+              pos2 = strPeerIP.rfind("]:");
+              // Handle both ipv4 and ipv6 cases
+              if (pos1 <= 0 && pos2 <= 0) 
+                strListeningPeerIP = strPeerIP + ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
+              else if (pos1 > 0)
+                strListeningPeerIP = strPeerIP.substr(0, pos1) + ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
+              else
+                strListeningPeerIP = strPeerIP.substr(0, pos2) + ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
+            }
+          else strListeningPeerIP = strPeerIP;
 
 	  if(strAddr == strListeningPeerIP)
             {
