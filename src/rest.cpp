@@ -23,7 +23,7 @@
 #include <univalue.h>
 
 static const size_t MAX_GETUTXOS_OUTPOINTS = 15; //allow a max of 15 outpoints to be queried at once
-static const size_t MAX_GETTXOUTSBYADDRESS_SCRIPTS = 15; //allow a max of 15 scripts to be queried at once
+static const size_t MAX_GETUTXOINDEX_SCRIPTS = 15; //allow a max of 15 scripts to be queried at once
 
 enum RetFormat {
     RF_UNDEF,
@@ -601,7 +601,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
     return true; // continue to process further HTTP reqs on this cxn
 }
 
-static bool rest_gettxoutsbyaddress(HTTPRequest* req, const std::string& strURIPart)
+static bool rest_getutxoindex(HTTPRequest* req, const std::string& strURIPart)
 {
     if (!CheckWarmup(req))
         return false;
@@ -633,7 +633,7 @@ static bool rest_gettxoutsbyaddress(HTTPRequest* req, const std::string& strURIP
     if (uriParts.size() > 0)
     {
 
-        //inputs is sent over URI scheme (/rest/gettxoutsbyaddress/checkmempool/addr1/addr2/...)
+        //inputs is sent over URI scheme (/rest/getutxoindex/checkmempool/addr1/addr2/...)
         if (uriParts.size() > 0 && uriParts[0] == "checkmempool")
             fCheckMemPool = true;
 
@@ -671,8 +671,8 @@ static bool rest_gettxoutsbyaddress(HTTPRequest* req, const std::string& strURIP
     }
 
     // limit max scripts
-    if (vScripts.size() > MAX_GETTXOUTSBYADDRESS_SCRIPTS)
-        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Error: max scripts exceeded (max: %d, tried: %d)", MAX_GETTXOUTSBYADDRESS_SCRIPTS, vScripts.size()));
+    if (vScripts.size() > MAX_GETUTXOINDEX_SCRIPTS)
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Error: max scripts exceeded (max: %d, tried: %d)", MAX_GETUTXOINDEX_SCRIPTS, vScripts.size()));
 
     int nMinDepth = fCheckMemPool ? 0 : 1;
     UniValue vObjects(UniValue::VARR);
@@ -716,7 +716,7 @@ static const struct {
       {"/rest/mempool/contents", rest_mempool_contents},
       {"/rest/headers/", rest_headers},
       {"/rest/getutxos", rest_getutxos},
-      {"/rest/gettxoutsbyaddress", rest_gettxoutsbyaddress},
+      {"/rest/getutxoindex", rest_getutxoindex},
 };
 
 bool StartREST()

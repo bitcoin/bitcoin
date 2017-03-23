@@ -20,12 +20,12 @@ static const char DB_BEST_BLOCK = 'B';
 CCoinsViewByScript::CCoinsViewByScript(CCoinsViewByScriptDB* viewIn) : base(viewIn) { }
 
 bool CCoinsViewByScript::GetCoinsByScript(const CScript &script, CCoinsByScript &coins) {
-    const uint160 key = CCoinsViewByScript::getKey(script);
+    const CScriptID key = CScriptID(script);
     if (cacheCoinsByScript.count(key)) {
         coins = cacheCoinsByScript[key];
         return true;
     }
-    if (base->GetCoinsByHashOfScript(key, coins)) {
+    if (base->GetCoinsByScriptID(key, coins)) {
         cacheCoinsByScript[key] = coins;
         return true;
     }
@@ -33,29 +33,25 @@ bool CCoinsViewByScript::GetCoinsByScript(const CScript &script, CCoinsByScript 
 }
 
 CCoinsMapByScript::iterator CCoinsViewByScript::FetchCoinsByScript(const CScript &script, bool fRequireExisting) {
-    const uint160 key = CCoinsViewByScript::getKey(script);
+    const CScriptID key = CScriptID(script);
     CCoinsMapByScript::iterator it = cacheCoinsByScript.find(key);
     if (it != cacheCoinsByScript.end())
         return it;
+
     CCoinsByScript tmp;
-    if (!base->GetCoinsByHashOfScript(key, tmp))
+    if (!base->GetCoinsByScriptID(key, tmp))
     {
         if (fRequireExisting)
             return cacheCoinsByScript.end();
     }
-    CCoinsMapByScript::iterator ret = cacheCoinsByScript.insert(it, std::make_pair(key, CCoinsByScript()));
-    tmp.swap(ret->second);
-    return ret;
+
+    return cacheCoinsByScript.emplace_hint(it, key, tmp);
 }
 
 CCoinsByScript &CCoinsViewByScript::GetCoinsByScript(const CScript &script, bool fRequireExisting) {
     CCoinsMapByScript::iterator it = FetchCoinsByScript(script, fRequireExisting);
     assert(it != cacheCoinsByScript.end());
     return it->second;
-}
-
-uint160 CCoinsViewByScript::getKey(const CScript &script) {
-    return Hash160(script);
 }
 
 uint256 CCoinsViewByScript::GetBestBlock() const {
@@ -75,8 +71,8 @@ CCoinsViewByScriptDB::CCoinsViewByScriptDB(size_t nCacheSize, bool fMemory, bool
 {
 }
 
-bool CCoinsViewByScriptDB::GetCoinsByHashOfScript(const uint160 &hash, CCoinsByScript &coins) const {
-    return db.Read(make_pair(DB_COINS_BYSCRIPT, hash), coins);
+bool CCoinsViewByScriptDB::GetCoinsByScriptID(const CScriptID &scriptID, CCoinsByScript &coins) const {
+    return db.Read(make_pair(DB_COINS_BYSCRIPT, scriptID), coins);
 }
 
 bool CCoinsViewByScriptDB::BatchWrite(CCoinsViewByScript* pcoinsViewByScriptIn, const uint256 &hashBlock) {
@@ -96,7 +92,7 @@ bool CCoinsViewByScriptDB::BatchWrite(CCoinsViewByScript* pcoinsViewByScriptIn, 
     if (!hashBlock.IsNull())
         batch.Write(DB_BEST_BLOCK, hashBlock);
 
-    LogPrint(BCLog::COINDB, "Committing %u coin address indexes to coin database...\n", (unsigned int)count);
+    LogPrint(BCLog::COINDB, "Committing %zu coin address indexes to coin database...\n", (unsigned int)count);
     return db.WriteBatch(batch);
 }
 
@@ -128,7 +124,7 @@ CCoinsViewByScriptDBCursor *CCoinsViewByScriptDB::Cursor() const
     return i;
 }
 
-bool CCoinsViewByScriptDBCursor::GetKey(uint160 &key) const
+bool CCoinsViewByScriptDBCursor::GetKey(CScriptID &key) const
 {
     // Return cached key
     if (keyTmp.first == DB_COINS_BYSCRIPT) {
@@ -164,12 +160,12 @@ bool CCoinsViewByScriptDB::DeleteAllCoinsByScript()
 {
     std::unique_ptr<CCoinsViewByScriptDBCursor> pcursor(Cursor());
 
-    std::vector<uint160> v;
+    std::vector<CScriptID> v;
     int64_t i = 0;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         try {
-            uint160 hash;
+            CScriptID hash;
             if (!pcursor->GetKey(hash))
                 break;
             v.push_back(hash);
@@ -179,7 +175,7 @@ bool CCoinsViewByScriptDB::DeleteAllCoinsByScript()
                 CDBBatch batch(db);
                 for(auto& av: v)
                 {
-                    const uint160& _hash = av;
+                    const CScriptID& _hash = av;
                     batch.Erase(make_pair(DB_COINS_BYSCRIPT, _hash)); // delete
                 }
                 db.WriteBatch(batch);
@@ -197,7 +193,7 @@ bool CCoinsViewByScriptDB::DeleteAllCoinsByScript()
         CDBBatch batch(db);
         for(auto& av: v)
         {
-            const uint160& hash = av;
+            const CScriptID& hash = av;
             batch.Erase(make_pair(DB_COINS_BYSCRIPT, hash)); // delete
         }
         db.WriteBatch(batch);
@@ -235,11 +231,11 @@ bool CCoinsViewByScriptDB::GenerateAllCoinsByScript(CCoinsViewDB* coinsIn)
                 if (coins.vout[j].IsNull() || coins.vout[j].scriptPubKey.IsUnspendable())
                     continue;
 
-                const uint160 key = CCoinsViewByScript::getKey(coins.vout[j].scriptPubKey);
+                const CScriptID key = CScriptID(coins.vout[j].scriptPubKey);
                 if (!mapCoinsByScript.count(key))
                 {
                     CCoinsByScript coinsByScript;
-                    GetCoinsByHashOfScript(key, coinsByScript);
+                    GetCoinsByScriptID(key, coinsByScript);
                     mapCoinsByScript.insert(make_pair(key, coinsByScript));
                 }
                 mapCoinsByScript[key].setCoins.insert(COutPoint(txhash, (uint32_t)j));

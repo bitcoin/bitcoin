@@ -416,7 +416,7 @@ private:
     CBlockPolicyEstimator* minerPolicyEstimator;
 
     uint64_t totalTxSize;      //!< sum of all mempool tx's virtual sizes. Differs from serialized tx size since witness data is discounted. Defined in BIP 141.
-    const bool& fTxOutIndex;
+    const bool fTxOutIndex;
     CCoinsMapByScript mapCoinsByScript; // only used if -txoutindex
     uint64_t cachedInnerUsage; //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
 

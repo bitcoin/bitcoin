@@ -58,7 +58,7 @@ bool GetUTXOStats(CCoinsView *view, CCoinsViewByScriptDB *viewbyscriptdb, CCoins
     std::unique_ptr<CCoinsViewByScriptDBCursor> pcursordb(viewbyscriptdb->Cursor());
     while (pcursordb->Valid()) {
         boost::this_thread::interruption_point();
-        uint160 hash;
+        CScriptID hash;
         CCoinsByScript coinsByScript;
         if (pcursordb->GetKey(hash) && pcursordb->GetValue(coinsByScript)) {
             stats.nAddresses++;

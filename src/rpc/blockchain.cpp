@@ -829,7 +829,7 @@ UniValue gettxoutsetinfo(const JSONRPCRequest& request)
             "  \"transactions\": n,      (numeric) The number of transactions\n"
             "  \"txouts\": n,            (numeric) The number of output transactions\n"
             "  \"addresses\": n,         (numeric) The number of addresses and scripts. Only if -txoutindex=1\n"
-            "  \"txoutsbyaddress\": n,   (numeric) The number of output transactions. Only if -txoutindex=1\n"
+            "  \"utxoindex\": n,   (numeric) The number of output transactions. Only if -txoutindex=1\n"
             "  \"bytes_serialized\": n,  (numeric) The serialized size\n"
             "  \"hash_serialized\": \"hash\",   (string) The serialized hash\n"
             "  \"total_amount\": x.xxx          (numeric) The total amount\n"
@@ -849,7 +849,7 @@ UniValue gettxoutsetinfo(const JSONRPCRequest& request)
         ret.push_back(Pair("transactions", (int64_t)stats.nTransactions));
         ret.push_back(Pair("txouts", (int64_t)stats.nTransactionOutputs));
         ret.push_back(Pair("addresses", (int64_t)stats.nAddresses));
-        ret.push_back(Pair("txoutsbyaddress", (int64_t)stats.nAddressesOutputs));
+        ret.push_back(Pair("utxoindex", (int64_t)stats.nAddressesOutputs));
         ret.push_back(Pair("bytes_serialized", (int64_t)stats.nSerializedSize));
         ret.push_back(Pair("hash_serialized", stats.hashSerialized.GetHex()));
         ret.push_back(Pair("total_amount", ValueFromAmount(stats.nTotalAmount)));
@@ -939,11 +939,11 @@ UniValue gettxout(const JSONRPCRequest& request)
     return ret;
 }
 
-UniValue gettxoutsbyaddress(const JSONRPCRequest& request)
+UniValue getutxoindex(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 4)
         throw std::runtime_error(
-            "gettxoutsbyaddress ( minconf [\"address\",...] count from )\n"
+            "getutxoindex ( minconf [\"address\",...] count from )\n"
             "\nReturns a list of unspent transaction outputs by address (or script).\n"
             "The list is ordered by confirmations in descending order.\n"
             "Note that passing minconf=0 will include the mempool.\n"
@@ -986,9 +986,9 @@ UniValue gettxoutsbyaddress(const JSONRPCRequest& request)
             "  ,...\n"
             "]\n"
             "\nExamples:\n"
-            + HelpExampleCli("gettxoutsbyaddress", "6 \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"")
+            + HelpExampleCli("getutxoindex", "6 \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"")
             + "\nAs a json rpc call\n"
-            + HelpExampleRpc("gettxoutsbyaddress", "6, \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"")
+            + HelpExampleRpc("getutxoindex", "6, \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"")
         );
 
     if (!fTxOutIndex)
@@ -1499,7 +1499,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         true,  {} },
     { "blockchain",         "getrawmempool",          &getrawmempool,          true,  {"verbose"} },
     { "blockchain",         "gettxout",               &gettxout,               true,  {"txid","n","include_mempool"} },
-    { "blockchain",         "gettxoutsbyaddress",     &gettxoutsbyaddress,     true,  {"minconf", "addresses", "count", "from"} },
+    { "blockchain",         "getutxoindex",           &getutxoindex,           true,  {"minconf", "addresses", "count", "from"} },
     { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        true,  {} },
     { "blockchain",         "pruneblockchain",        &pruneblockchain,        true,  {"height"} },
     { "blockchain",         "verifychain",            &verifychain,            true,  {"checklevel","nblocks"} },

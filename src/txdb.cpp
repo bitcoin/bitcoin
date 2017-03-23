@@ -143,12 +143,8 @@ int64_t CCoinsViewDB::CountCoins() const
     int64_t i = 0;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
-        try {
-            i++;
-            pcursor->Next();
-        } catch (std::exception &e) {
-            return 0;
-        }
+        i++;
+        pcursor->Next();
     }
     return i;
 }

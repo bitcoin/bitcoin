@@ -7,7 +7,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 
-class TxOutsByAddressTest(BitcoinTestFramework):
+class UTXOIndexTest(BitcoinTestFramework):
     """Tests -txoutindex"""
 
     def __init__(self):
@@ -43,12 +43,14 @@ class TxOutsByAddressTest(BitcoinTestFramework):
         self.sync_all()
         assert_equal(self.nodes[0].getbalance(), 5090)
         assert_equal(self.nodes[1].getbalance(), 10)
-        txouts = self.nodes[0].gettxoutsbyaddress(1, (address,))
+        txouts = self.nodes[0].getutxoindex(1, (address,))
         txid = txouts[0]["txid"]
         assert_is_hash_string(txid)
         assert_equal(txid, txid1)
 
-        # stop node 2
+        # Stop node 2. We want to restart it later and orphan a node 1 block in
+        # order to test txoutindex handling the reorg. In other words, node 2 is
+        # stopped so that it won't build on a node 1 block.
         stop_node(self.nodes[2], 2)
         self.nodes.pop()
 
@@ -60,9 +62,9 @@ class TxOutsByAddressTest(BitcoinTestFramework):
         self.nodes[1].generate(1)
         self.sync_all()
         assert_equal(self.nodes[0].getbalance(), 5145)
-        txouts = self.nodes[0].gettxoutsbyaddress(1, (address,))
+        txouts = self.nodes[0].getutxoindex(1, (address,))
         assert_equal(txouts, [])
-        txouts = self.nodes[0].gettxoutsbyaddress(1, (address2,))
+        txouts = self.nodes[0].getutxoindex(1, (address2,))
         txid = txouts[0]["txid"]
         assert_is_hash_string(txid)
         assert_equal(txid, txid2)
@@ -81,13 +83,13 @@ class TxOutsByAddressTest(BitcoinTestFramework):
         # - check if txout from tx1 is there again
         # - check if txout from tx2 is gone
         assert_equal(self.nodes[0].getbalance(), 5640)
-        txouts = self.nodes[0].gettxoutsbyaddress(1, (address,))
+        txouts = self.nodes[0].getutxoindex(1, (address,))
         txid = txouts[0]["txid"]
         assert_is_hash_string(txid)
         assert_equal(txid, txid1)
-        txouts = self.nodes[0].gettxoutsbyaddress(1, (address2,))
+        txouts = self.nodes[0].getutxoindex(1, (address2,))
         assert_equal(txouts, [])
 
 if __name__ == '__main__':
-    TxOutsByAddressTest().main()
+    UTXOIndexTest().main()
 

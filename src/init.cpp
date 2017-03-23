@@ -374,7 +374,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-sysperms", _("Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)"));
 #endif
     strUsage += HelpMessageOpt("-txindex", strprintf(_("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)"), DEFAULT_TXINDEX));
-    strUsage += HelpMessageOpt("-txoutindex", strprintf(_("Maintain an address to unspent outputs index (rpc: gettxoutsbyaddress). The index is built on first use. (default: %u)"), 0));
+    strUsage += HelpMessageOpt("-txoutindex", strprintf(_("Maintain an address to unspent outputs index (rpc: getutxoindex). The index is built on first use. (default: %u)"), 0));
 
     strUsage += HelpMessageGroup(_("Connection options:"));
     strUsage += HelpMessageOpt("-addnode=<ip>", _("Add a node to connect to and attempt to keep the connection open"));

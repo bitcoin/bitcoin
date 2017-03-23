@@ -203,11 +203,11 @@ class RESTTest (BitcoinTestFramework):
         self.sync_all()
 
 
-        ##############################################
-        # GETTXOUTSBYADDRESS: query an unspent txout #
-        ##############################################
+        ########################################
+        # GETUTXOINDEX: query an unspent txout #
+        ########################################
         json_request = '/checkmempool/'+address
-        json_string = http_get_call(url.hostname, url.port, '/rest/gettxoutsbyaddress'+json_request+self.FORMAT_SEPARATOR+'json')
+        json_string = http_get_call(url.hostname, url.port, '/rest/getutxoindex'+json_request+self.FORMAT_SEPARATOR+'json')
         json_obj = json.loads(json_string)
 
         #make sure there is just one txout
@@ -220,11 +220,11 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(txout['value'], 0.1)
 
 
-        #####################################################
-        # GETTXOUTSBYADDRESS: query multiple unspent txouts #
-        #####################################################
+        ###############################################
+        # GETUTXOINDEX: query multiple unspent txouts #
+        ###############################################
         json_request = '/checkmempool/'+address+'/'+address2
-        json_string = http_get_call(url.hostname, url.port, '/rest/gettxoutsbyaddress'+json_request+self.FORMAT_SEPARATOR+'json')
+        json_string = http_get_call(url.hostname, url.port, '/rest/getutxoindex'+json_request+self.FORMAT_SEPARATOR+'json')
         json_obj = json.loads(json_string)
 
         #make sure there are two txouts
@@ -239,30 +239,30 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(txout2['value'], 0.1)
 
 
-        ############################################
-        # GETTXOUTSBYADDRESS: query unseen address #
-        ############################################
+        ######################################
+        # GETUTXOINDEX: query unseen address #
+        ######################################
 
         json_request = '/checkmempool/'+self.nodes[0].getnewaddress()
-        json_string = http_get_call(url.hostname, url.port, '/rest/gettxoutsbyaddress'+json_request+self.FORMAT_SEPARATOR+'json')
+        json_string = http_get_call(url.hostname, url.port, '/rest/getutxoindex'+json_request+self.FORMAT_SEPARATOR+'json')
         json_obj = json.loads(json_string)
 
         #make sure there are no txouts (brand new address)
         assert_equal(len(json_obj), 0) 
 
 
-        ########################################
-        # GETTXOUTSBYADDRESS: invalid requests #
-        ########################################
+        ##################################
+        # GETUTXOINDEX: invalid requests #
+        ##################################
 
 
         #do some invalid requests
         json_request = '{"checkmempool'
-        response = http_post_call(url.hostname, url.port, '/rest/gettxoutsbyaddress'+self.FORMAT_SEPARATOR+'json', json_request, True)
+        response = http_post_call(url.hostname, url.port, '/rest/getutxoindex'+self.FORMAT_SEPARATOR+'json', json_request, True)
         assert_equal(response.status, 400) #must be a 400 because we send a invalid json request
 
         json_request = '/checkmempool/xxxx'
-        response = http_post_call(url.hostname, url.port, '/rest/gettxoutsbyaddress'+self.FORMAT_SEPARATOR+'json', json_request, True)
+        response = http_post_call(url.hostname, url.port, '/rest/getutxoindex'+self.FORMAT_SEPARATOR+'json', json_request, True)
         assert_equal(response.status, 400) #must be a 400 because we send a invalid json request
 
         #test limits
@@ -270,14 +270,14 @@ class RESTTest (BitcoinTestFramework):
         for x in range(0, 20):
             json_request += address+'/'
         json_request = json_request.rstrip("/")
-        response = http_post_call(url.hostname, url.port, '/rest/gettxoutsbyaddress'+json_request+self.FORMAT_SEPARATOR+'json', '', True)
+        response = http_post_call(url.hostname, url.port, '/rest/getutxoindex'+json_request+self.FORMAT_SEPARATOR+'json', '', True)
         assert_equal(response.status, 400) #must be a 400 because we exceeding the limits
 
         json_request = '/checkmempool/'
         for x in range(0, 15):
             json_request += address+'/'
         json_request = json_request.rstrip("/")
-        response = http_post_call(url.hostname, url.port, '/rest/gettxoutsbyaddress'+json_request+self.FORMAT_SEPARATOR+'json', '', True)
+        response = http_post_call(url.hostname, url.port, '/rest/getutxoindex'+json_request+self.FORMAT_SEPARATOR+'json', '', True)
         assert_equal(response.status, 200) #must be a 200 because we are within the limits
 
 

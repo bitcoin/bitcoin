@@ -10,6 +10,7 @@
 #include "primitives/transaction.h"
 #include "serialize.h"
 #include "uint256.h"
+#include "script/standard.h"
 
 class CCoinsViewDB;
 class CCoinsViewByScriptDB;
@@ -39,7 +40,7 @@ public:
     }
 };
 
-typedef std::map<uint160, CCoinsByScript> CCoinsMapByScript; // uint160 = hash of script
+typedef std::map<CScriptID, CCoinsByScript> CCoinsMapByScript;
 
 /** Adds a memory cache for coins by address */
 class CCoinsViewByScript
@@ -57,8 +58,6 @@ public:
 
     // Return a modifiable reference to a CCoinsByScript.
     CCoinsByScript &GetCoinsByScript(const CScript &script, bool fRequireExisting = true);
-
-    static uint160 getKey(const CScript &script); // we use the hash of the script as key in the database
 
     void SetBestBlock(const uint256 &hashBlock);
     uint256 GetBestBlock() const;
@@ -80,7 +79,7 @@ class CCoinsViewByScriptDBCursor
 public:
     ~CCoinsViewByScriptDBCursor() {}
 
-    bool GetKey(uint160 &key) const;
+    bool GetKey(CScriptID &key) const;
     bool GetValue(CCoinsByScript &coins) const;
     unsigned int GetValueSize() const;
 
@@ -92,7 +91,7 @@ private:
         pcursor(pcursorIn) {}
     uint256 hashBlock;
     std::unique_ptr<CDBIterator> pcursor;
-    std::pair<char, uint160> keyTmp;
+    std::pair<char, CScriptID> keyTmp;
 
     friend class CCoinsViewByScriptDB;
 };
@@ -105,7 +104,7 @@ protected:
 public:
     CCoinsViewByScriptDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
-    bool GetCoinsByHashOfScript(const uint160 &hash, CCoinsByScript &coins) const;
+    bool GetCoinsByScriptID(const CScriptID &scriptID, CCoinsByScript &coins) const;
     bool BatchWrite(CCoinsViewByScript* pcoinsViewByScriptIn, const uint256 &hashBlock);
     bool WriteFlag(const std::string &name, bool fValue);
     bool ReadFlag(const std::string &name, bool &fValue);

@@ -332,7 +332,7 @@ void CTxMemPoolEntry::UpdateAncestorState(int64_t modifySize, CAmount modifyFee,
 }
 
 CTxMemPool::CTxMemPool(const bool& _fTxOutIndex, CBlockPolicyEstimator* estimator) :
-    nTransactionsUpdated(0), fTxOutIndex(_fTxOutIndex), minerPolicyEstimator(estimator)
+    nTransactionsUpdated(0), minerPolicyEstimator(estimator), fTxOutIndex(_fTxOutIndex)
 {
     _clear(); //lock free clear
 
@@ -364,7 +364,7 @@ unsigned int CTxMemPool::GetTransactionsUpdated() const
 void CTxMemPool::GetCoinsByScript(const CScript& script, CCoinsByScript& coinsByScript) const
 {
     LOCK(cs);
-    CCoinsMapByScript::const_iterator it = mapCoinsByScript.find(CCoinsViewByScript::getKey(script));
+    CCoinsMapByScript::const_iterator it = mapCoinsByScript.find(CScriptID(script));
     if (it != mapCoinsByScript.end())
     {
         coinsByScript.setCoins.insert(it->second.setCoins.begin(), it->second.setCoins.end());
@@ -436,7 +436,7 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     if (fTxOutIndex)
         for (unsigned int i = 0; i < tx.vout.size(); i++)
             if (!tx.vout[i].IsNull() && !tx.vout[i].scriptPubKey.IsUnspendable())
-                mapCoinsByScript[CCoinsViewByScript::getKey(tx.vout[i].scriptPubKey)].setCoins.insert(COutPoint(hash, (uint32_t)i));
+                mapCoinsByScript[CScriptID(tx.vout[i].scriptPubKey)].setCoins.insert(COutPoint(hash, (uint32_t)i));
 
     return true;
 }
@@ -508,7 +508,7 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
                 if (origTx.vout[i].IsNull() || origTx.vout[i].scriptPubKey.IsUnspendable())
                     continue;
 
-                CCoinsMapByScript::iterator it = mapCoinsByScript.find(CCoinsViewByScript::getKey(origTx.vout[i].scriptPubKey));
+                CCoinsMapByScript::iterator it = mapCoinsByScript.find(CScriptID(origTx.vout[i].scriptPubKey));
                 if (it != mapCoinsByScript.end())
                 {
                     it->second.setCoins.erase(COutPoint(origTx.GetHash(), (uint32_t)i));

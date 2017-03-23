@@ -11,17 +11,17 @@
 
 struct CCoinsStats
 {
-    int nHeight;
+    int nHeight{};
     uint256 hashBlock;
-    uint64_t nTransactions;
-    uint64_t nTransactionOutputs;
-    uint64_t nAddresses;
-    uint64_t nAddressesOutputs; // equal nTransactionOutputs (if addressindex is enabled)
-    uint64_t nSerializedSize;
+    uint64_t nTransactions{};
+    uint64_t nTransactionOutputs{};
+    uint64_t nAddresses{};
+    uint64_t nAddressesOutputs{}; // equal nTransactionOutputs (if addressindex is enabled)
+    uint64_t nSerializedSize{};
     uint256 hashSerialized;
-    CAmount nTotalAmount;
+    CAmount nTotalAmount{};
 
-    CCoinsStats() : nHeight(0), nTransactions(0), nTransactionOutputs(0), nAddresses(0), nAddressesOutputs(0), nSerializedSize(0), nTotalAmount(0) {}
+    CCoinsStats() {}
 };
 
 bool GetUTXOStats(CCoinsView *view, CCoinsViewByScriptDB *viewbyscriptdb, CCoinsStats &stats);

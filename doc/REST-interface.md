@@ -80,9 +80,9 @@ $ curl localhost:18332/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff76
 ```
 
 ####Query UTXO set (by address/script)
-`GET /rest/gettxoutsbyaddress/<checkmempool>/<address>/<address>/.../<address>.json`
+`GET /rest/getutxoindex/<checkmempool>/<address>/<address>/.../<address>.json`
 
-The gettxoutsbyaddress command allows querying of the UTXO set given a set of addresses (or script).
+The getutxoindex command allows querying of the UTXO set given a set of addresses (or script).
 
 To use this function, you must start bitcoin with the -txoutindex parameter.
 
@@ -119,7 +119,7 @@ Output:
 
 Example:
 ```
-$ curl localhost:18332/rest/gettxoutsbyaddress/checkmempool/mvkA8gYrKUmXFiuFpoxNGjMjYcV9oCkwGV.json 2>/dev/null | json_pp
+$ curl localhost:18332/rest/getutxoindex/checkmempool/mvkA8gYrKUmXFiuFpoxNGjMjYcV9oCkwGV.json 2>/dev/null | json_pp
 [
    {
       "confirmations" : 721918,
