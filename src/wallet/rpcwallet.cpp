@@ -19,6 +19,7 @@
 #include "util.h"
 #include "utilmoneystr.h"
 #include "wallet.h"
+#include "coincontrol.h"
 #include "walletdb.h"
 
 #include <stdint.h>
@@ -2766,7 +2767,14 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     CAmount nFeeOut;
     std::string strFailReason;
 
-    if (!pwallet->FundTransaction(tx, nFeeOut, overrideEstimatedFeerate, feeRate, changePosition, strFailReason, includeWatching, lockUnspents, setSubtractFeeFromOutputs, reserveChangeKey, changeAddress)) {
+    CCoinControl coinControl;
+    coinControl.destChange = changeAddress;
+    coinControl.fAllowOtherInputs = true;
+    coinControl.fAllowWatchOnly = includeWatching;
+    coinControl.fOverrideFeeRate = overrideEstimatedFeerate;
+    coinControl.nFeeRate = feeRate;
+
+    if (!pwallet->FundTransaction(tx, nFeeOut, coinControl, changePosition, strFailReason, lockUnspents, setSubtractFeeFromOutputs, reserveChangeKey)) {
         throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
     }
 
