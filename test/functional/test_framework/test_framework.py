@@ -42,6 +42,21 @@ from .util import (
 from .authproxy import JSONRPCException
 
 class BitcoinTestFramework(object):
+    """Base class for a bitcoin test script.
+
+    Individual bitcoin test scripts should subclass this class and override the following methods:
+
+    - __init__()
+    - add_options()
+    - setup_chain()
+    - setup_network()
+    - run_test()
+
+    The main() method should not be overridden.
+
+    This class also contains various public and private helper methods."""
+
+    # Methods to override in subclass test scripts.
 
     TEST_EXIT_PASSED = 0
     TEST_EXIT_FAILED = 1
@@ -51,9 +66,6 @@ class BitcoinTestFramework(object):
         self.num_nodes = 4
         self.setup_clean_chain = False
         self.nodes = None
-
-    def run_test(self):
-        raise NotImplementedError
 
     def add_options(self, parser):
         pass
@@ -65,24 +77,6 @@ class BitcoinTestFramework(object):
         else:
             self._initialize_chain(self.options.tmpdir, self.num_nodes, self.options.cachedir)
 
-    def start_node(self, i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
-        return start_node(i, dirname, extra_args, rpchost, timewait, binary, stderr)
-
-    def start_nodes(self, num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
-        return start_nodes(num_nodes, dirname, extra_args, rpchost, timewait, binary)
-
-    def stop_node(self, num_node):
-        stop_node(self.nodes[num_node], num_node)
-
-    def stop_nodes(self):
-        stop_nodes(self.nodes)
-
-    def setup_nodes(self):
-        extra_args = None
-        if hasattr(self, "extra_args"):
-            extra_args = self.extra_args
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
-
     def setup_network(self):
         self.setup_nodes()
 
@@ -93,27 +87,16 @@ class BitcoinTestFramework(object):
             connect_nodes_bi(self.nodes, i, i + 1)
         self.sync_all()
 
-    def split_network(self):
-        """
-        Split the network of four nodes into nodes 0/1 and 2/3.
-        """
-        disconnect_nodes(self.nodes[1], 2)
-        disconnect_nodes(self.nodes[2], 1)
-        self.sync_all([self.nodes[:2], self.nodes[2:]])
+    def setup_nodes(self):
+        extra_args = None
+        if hasattr(self, "extra_args"):
+            extra_args = self.extra_args
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
 
-    def sync_all(self, node_groups=None):
-        if not node_groups:
-            node_groups = [self.nodes]
+    def run_test(self):
+        raise NotImplementedError
 
-        [sync_blocks(group) for group in node_groups]
-        [sync_mempools(group) for group in node_groups]
-
-    def join_network(self):
-        """
-        Join the (previously split) network halves together.
-        """
-        connect_nodes_bi(self.nodes, 1, 2)
-        self.sync_all()
+    # Main function. This should not be overridden by the subclass test scripts.
 
     def main(self):
 
@@ -208,6 +191,45 @@ class BitcoinTestFramework(object):
             self.log.error("Test failed. Test logging available at %s/test_framework.log", self.options.tmpdir)
             logging.shutdown()
             sys.exit(self.TEST_EXIT_FAILED)
+
+    # Public helper methods. These can be accessed by the subclass test scripts.
+
+    def start_node(self, i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
+        return start_node(i, dirname, extra_args, rpchost, timewait, binary, stderr)
+
+    def start_nodes(self, num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
+        return start_nodes(num_nodes, dirname, extra_args, rpchost, timewait, binary)
+
+    def stop_node(self, num_node):
+        stop_node(self.nodes[num_node], num_node)
+
+    def stop_nodes(self):
+        stop_nodes(self.nodes)
+
+    def split_network(self):
+        """
+        Split the network of four nodes into nodes 0/1 and 2/3.
+        """
+        disconnect_nodes(self.nodes[1], 2)
+        disconnect_nodes(self.nodes[2], 1)
+        self.sync_all([self.nodes[:2], self.nodes[2:]])
+
+    def join_network(self):
+        """
+        Join the (previously split) network halves together.
+        """
+        connect_nodes_bi(self.nodes, 1, 2)
+        self.sync_all()
+
+    def sync_all(self, node_groups=None):
+        if not node_groups:
+            node_groups = [self.nodes]
+
+        for group in node_groups:
+            sync_blocks(group)
+            sync_mempools(group)
+
+    # Private helper methods. These should not be accessed by the subclass test scripts.
 
     def _start_logging(self):
         # Add logger and logging handlers
