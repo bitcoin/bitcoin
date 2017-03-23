@@ -628,7 +628,7 @@ void CNode::SetAddrLocal(const CService& addrLocalIn) {
 
 #undef X
 #define X(name) stats.name = name
-void CNode::copyStats(CNodeStats &stats)
+void CNode::CopyStats(CNodeStats &stats)
 {
     stats.nodeid = this->GetId();
     X(nServices);
@@ -2467,7 +2467,7 @@ void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats)
     for(std::vector<CNode*>::iterator it = vNodes.begin(); it != vNodes.end(); ++it) {
         CNode* pnode = *it;
         vstats.emplace_back();
-        pnode->copyStats(vstats.back());
+        pnode->CopyStats(vstats.back());
     }
 }
 
@@ -2619,17 +2619,17 @@ unsigned int CConnman::GetReceiveFloodSize() const { return nReceiveFloodSize; }
 unsigned int CConnman::GetSendBufferSize() const{ return nSendBufferMaxSize; }
 
 CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const std::string& addrNameIn, bool fInboundIn) :
+    nLocalHostNonce(nLocalHostNonceIn),
+    nLocalServices(nLocalServicesIn),
+    nMyStartingHeight(nMyStartingHeightIn),
+    nSendVersion(0),
     nTimeConnected(GetSystemTimeInSeconds()),
     addr(addrIn),
     fInbound(fInboundIn),
     id(idIn),
     nKeyedNetGroup(nKeyedNetGroupIn),
     addrKnown(5000, 0.001),
-    filterInventoryKnown(50000, 0.000001),
-    nLocalHostNonce(nLocalHostNonceIn),
-    nLocalServices(nLocalServicesIn),
-    nMyStartingHeight(nMyStartingHeightIn),
-    nSendVersion(0)
+    filterInventoryKnown(50000, 0.000001)
 {
     nServices = NODE_NONE;
     nServicesExpected = NODE_NONE;
