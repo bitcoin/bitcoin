@@ -3069,12 +3069,18 @@ int64_t CWallet::GetOldestKeyPoolTime()
 
         for(const int64_t& id : setKeyPool)
         {
-            if (!walletdb.ReadPool(id, keypool))
+            if (!walletdb.ReadPool(id, keypool)) {
                 throw std::runtime_error(std::string(__func__) + ": read failed");
-            if (keypool.fInternal && keypool.nTime < oldest_internal)
+            }
+            if (keypool.fInternal && keypool.nTime < oldest_internal) {
                 oldest_internal = keypool.nTime;
-            else if (!keypool.fInternal && keypool.nTime < oldest_external)
+            }
+            else if (!keypool.fInternal && keypool.nTime < oldest_external) {
                 oldest_external = keypool.nTime;
+            }
+            if (oldest_internal != now && oldest_external != now) {
+                break;
+            }
         }
         return std::max(oldest_internal, oldest_external);
     }
