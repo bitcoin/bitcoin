@@ -153,10 +153,17 @@ class EstimateFeeTest(BitcoinTestFramework):
         But first we need to use one node to create a lot of outputs
         which we will use to generate our transactions.
         """
-        self.nodes = []
+        self.extra_args = []
         # Use node0 to mine blocks for input splitting
-        self.nodes.append(self.start_node(0, self.options.tmpdir, ["-maxorphantx=1000",
-                                                              "-whitelist=127.0.0.1"]))
+        self.extra_args.append(["-maxorphantx=1000", "-whitelist=127.0.0.1"])
+        # Node1 mines small blocks but that are bigger than the expected transaction rate.
+        # NOTE: the CreateNewBlock code starts counting block size at 1,000 bytes,
+        # (17k is room enough for 110 or so transactions)
+        self.extra_args.append(["-blockmaxsize=17000", "-maxorphantx=1000"])
+        # Node2 is a stingy miner that produces too small blocks (room for only 55 or so transactions)
+        self.extra_args.append(["-blockmaxsize=8000", "-maxorphantx=1000"])
+
+        self.nodes = self.start_nodes(extra_args=self.extra_args)
 
         self.log.info("This test is time consuming, please be patient")
         self.log.info("Splitting inputs so we can generate tx's")
@@ -188,18 +195,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Now we can connect the other nodes, didn't want to connect them earlier
         # so the estimates would not be affected by the splitting transactions
-        # Node1 mines small blocks but that are bigger than the expected transaction rate.
-        # NOTE: the CreateNewBlock code starts counting block size at 1,000 bytes,
-        # (17k is room enough for 110 or so transactions)
-        self.nodes.append(self.start_node(1, self.options.tmpdir,
-                                     ["-blockmaxsize=17000", "-maxorphantx=1000"]))
         connect_nodes(self.nodes[1], 0)
-
-        # Node2 is a stingy miner, that
-        # produces too small blocks (room for only 55 or so transactions)
-        node2args = ["-blockmaxsize=8000", "-maxorphantx=1000"]
-
-        self.nodes.append(self.start_node(2, self.options.tmpdir, node2args))
         connect_nodes(self.nodes[0], 2)
         connect_nodes(self.nodes[2], 1)
 

@@ -89,7 +89,7 @@ class ProxyTest(BitcoinTestFramework):
             ]
         if self.have_ipv6:
             args[3] = ['-listen', '-proxy=[%s]:%i' % (self.conf3.addr),'-proxyrandomize=0', '-noonion']
-        return self.start_nodes(self.num_nodes, self.options.tmpdir, extra_args=args)
+        return self.start_nodes(extra_args=args)
 
     def node_test(self, node, proxies, auth, test_onion=True):
         rv = []

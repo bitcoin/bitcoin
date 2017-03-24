@@ -36,7 +36,7 @@ class RPCBindTest(BitcoinTestFramework):
         if allow_ips:
             base_args += ['-rpcallowip=' + x for x in allow_ips]
         binds = ['-rpcbind='+addr for addr in addresses]
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, [base_args + binds], connect_to)
+        self.nodes = self.start_nodes(extra_args=[base_args + binds], rpchost=connect_to)
         pid = self.bitcoind_processes[0].pid
         assert_equal(set(get_bind_addrs(pid)), set(expected))
         self.stop_nodes()
@@ -47,7 +47,7 @@ class RPCBindTest(BitcoinTestFramework):
         at a non-localhost IP.
         '''
         base_args = ['-disablewallet', '-nolisten'] + ['-rpcallowip='+x for x in allow_ips]
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, [base_args])
+        self.nodes = self.start_nodes(extra_args=[base_args])
         # connect to node through non-loopback interface
         node = get_rpc_proxy(rpc_url(0, "%s:%d" % (rpchost, rpcport)), 0)
         node.getnetworkinfo()

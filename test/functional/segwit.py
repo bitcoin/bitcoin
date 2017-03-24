@@ -82,10 +82,10 @@ class SegWitTest(BitcoinTestFramework):
         self.num_nodes = 3
 
     def setup_network(self):
-        self.nodes = []
-        self.nodes.append(self.start_node(0, self.options.tmpdir, ["-walletprematurewitness", "-rpcserialversion=0"]))
-        self.nodes.append(self.start_node(1, self.options.tmpdir, ["-blockversion=4", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness", "-rpcserialversion=1"]))
-        self.nodes.append(self.start_node(2, self.options.tmpdir, ["-blockversion=536870915", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness"]))
+        self.extra_args = [["-walletprematurewitness", "-rpcserialversion=0"],
+                           ["-blockversion=4", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness", "-rpcserialversion=1"],
+                           ["-blockversion=536870915", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness"]]
+        self.nodes = self.start_nodes(extra_args=self.extra_args)
         connect_nodes(self.nodes[1], 0)
         connect_nodes(self.nodes[2], 1)
         connect_nodes(self.nodes[0], 2)

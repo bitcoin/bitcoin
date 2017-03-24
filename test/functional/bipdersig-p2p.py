@@ -49,9 +49,8 @@ class BIP66Test(ComparisonTestFramework):
 
     def setup_network(self):
         # Must set the blockversion for this test
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir,
-                                 extra_args=[['-whitelist=127.0.0.1', '-blockversion=2']],
-                                 binary=[self.options.testbinary])
+        self.nodes = self.start_nodes(extra_args=[['-whitelist=127.0.0.1', '-blockversion=2']],
+                                      binary=[self.options.testbinary])
 
     def run_test(self):
         test = TestManager(self, self.options.tmpdir)

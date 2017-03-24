@@ -14,10 +14,7 @@ class BIP66Test(BitcoinTestFramework):
         self.setup_clean_chain = False
 
     def setup_network(self):
-        self.nodes = []
-        self.nodes.append(self.start_node(0, self.options.tmpdir, []))
-        self.nodes.append(self.start_node(1, self.options.tmpdir, ["-blockversion=2"]))
-        self.nodes.append(self.start_node(2, self.options.tmpdir, ["-blockversion=3"]))
+        self.nodes = self.start_nodes(extra_args=[[], ["-blockversion=2"], ["-blockversion=3"]])
         connect_nodes(self.nodes[1], 0)
         connect_nodes(self.nodes[2], 0)
         self.is_network_split = False

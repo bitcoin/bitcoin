@@ -21,10 +21,8 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
     alert_filename = None  # Set by setup_network
 
     def setup_network(self):
-        args = ["-checkmempool"]
-        self.nodes = []
-        self.nodes.append(self.start_node(0, self.options.tmpdir, args))
-        self.nodes.append(self.start_node(1, self.options.tmpdir, args))
+        extra_args = [["-checkmempool"]] * 2
+        self.nodes = self.start_nodes(extra_args=extra_args)
         connect_nodes(self.nodes[1], 0)
         self.is_network_split = False
         self.sync_all()

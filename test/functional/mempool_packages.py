@@ -18,9 +18,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         self.setup_clean_chain = False
 
     def setup_network(self):
-        self.nodes = []
-        self.nodes.append(self.start_node(0, self.options.tmpdir, ["-maxorphantx=1000"]))
-        self.nodes.append(self.start_node(1, self.options.tmpdir, ["-maxorphantx=1000", "-limitancestorcount=5"]))
+        self.nodes = self.start_nodes(extra_args=[["-maxorphantx=1000"], ["-maxorphantx=1000", "-limitancestorcount=5"]])
         connect_nodes(self.nodes[0], 1)
         self.is_network_split = False
         self.sync_all()

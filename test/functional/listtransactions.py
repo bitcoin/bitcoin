@@ -24,7 +24,7 @@ class ListTransactionsTest(BitcoinTestFramework):
     def setup_nodes(self):
         #This test requires mocktime
         enable_mocktime()
-        return self.start_nodes(self.num_nodes, self.options.tmpdir)
+        return self.start_nodes()
 
     def run_test(self):
         # Simple send, 0 to 1:

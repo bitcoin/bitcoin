@@ -18,10 +18,9 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         self.txouts = gen_return_txouts()
 
     def setup_network(self):
-        self.nodes = []
         self.is_network_split = False
 
-        self.nodes.append(self.start_node(0, self.options.tmpdir, ["-printpriority=1"]))
+        self.nodes = self.start_nodes(extra_args=[["-printpriority=1"]])
         self.relayfee = self.nodes[0].getnetworkinfo()['relayfee']
 
     def run_test(self):

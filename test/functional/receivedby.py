@@ -32,7 +32,7 @@ class ReceivedByTest(BitcoinTestFramework):
     def setup_nodes(self):
         #This test requires mocktime
         enable_mocktime()
-        return self.start_nodes(self.num_nodes, self.options.tmpdir)
+        return self.start_nodes()
 
     def run_test(self):
         '''

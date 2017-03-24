@@ -54,7 +54,7 @@ class NodeHandlingTest (BitcoinTestFramework):
         #stop node
         self.stop_node(2)
 
-        self.nodes[2] = self.start_node(2, self.options.tmpdir)
+        self.nodes[2] = self.start_node(2)
         listAfterShutdown = self.nodes[2].listbanned()
         assert_equal("127.0.0.0/24", listAfterShutdown[0]['address'])
         assert_equal("127.0.0.0/32", listAfterShutdown[1]['address'])

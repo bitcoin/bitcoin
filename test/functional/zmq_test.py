@@ -13,25 +13,23 @@ class ZMQTest (BitcoinTestFramework):
 
     def __init__(self):
         super().__init__()
-        self.num_nodes = 4
+        self.num_nodes = 2
 
     port = 28332
 
-    def setup_nodes(self):
+    def setup_network(self):
         self.zmqContext = zmq.Context()
         self.zmqSubSocket = self.zmqContext.socket(zmq.SUB)
         self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"hashblock")
         self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"hashtx")
         self.zmqSubSocket.connect("tcp://127.0.0.1:%i" % self.port)
-        return self.start_nodes(self.num_nodes, self.options.tmpdir, extra_args=[
-            ['-zmqpubhashtx=tcp://127.0.0.1:'+str(self.port), '-zmqpubhashblock=tcp://127.0.0.1:'+str(self.port)],
-            [],
-            [],
-            []
-            ])
+        extra_args = [['-zmqpubhashtx=tcp://127.0.0.1:' + str(self.port), '-zmqpubhashblock=tcp://127.0.0.1:' + str(self.port)], []]
+        self.nodes = self.start_nodes(extra_args=extra_args)
+        connect_nodes_bi(self.nodes, 0, 1)
+        self.is_network_split = False
+        self.sync_all()
 
     def run_test(self):
-        self.sync_all()
 
         genhashes = self.nodes[0].generate(1)
         self.sync_all()

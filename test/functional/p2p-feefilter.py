@@ -52,9 +52,7 @@ class FeeFilterTest(BitcoinTestFramework):
     def setup_network(self):
         # Node1 will be used to generate txs which should be relayed from Node0
         # to our test node
-        self.nodes = []
-        self.nodes.append(self.start_node(0, self.options.tmpdir))
-        self.nodes.append(self.start_node(1, self.options.tmpdir))
+        self.nodes = self.start_nodes()
         connect_nodes(self.nodes[0], 1)
 
     def run_test(self):

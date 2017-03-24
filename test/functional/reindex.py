@@ -21,14 +21,14 @@ class ReindexTest(BitcoinTestFramework):
         self.num_nodes = 1
 
     def setup_network(self):
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir)
+        self.nodes = self.start_nodes()
 
     def reindex(self, justchainstate=False):
         self.nodes[0].generate(3)
         blockcount = self.nodes[0].getblockcount()
         self.stop_nodes()
         extra_args = [["-reindex-chainstate" if justchainstate else "-reindex", "-checkblockindex=1"]]
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
+        self.nodes = self.start_nodes(extra_args=extra_args)
         while self.nodes[0].getblockcount() < blockcount:
             time.sleep(0.1)
         assert_equal(self.nodes[0].getblockcount(), blockcount)
