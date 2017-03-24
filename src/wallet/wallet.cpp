@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2010 Satoshi Nakamoto
+﻿// Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -345,18 +345,20 @@ void CWallet::SetBestChain(const CBlockLocator& loc)
     walletdb.WriteBestBlock(loc);
 }
 
+// m_nWalletVersion を引き上げるときに用いる. (※引き下げることはできない)
 bool CWallet::SetMinVersion(enum WalletFeature nVersion, CWalletDB* pwalletdbIn, bool fExplicit)
 {
     LOCK(m_walletCriticalSection); // m_nWalletVersion
     if (m_nWalletVersion >= nVersion)
         return true;
 
+    // fExplicit が指定されている場合は nVersion にキャップをする？ (上限: FEATURE_LATEST)
     // when doing an explicit upgrade, if we pass the max version permitted, upgrade all the way
     if (fExplicit && nVersion > m_nWalletMaxVersion)
             nVersion = FEATURE_LATEST;
 
+    // 現バージョンおよび上限バージョンの更新.
     m_nWalletVersion = nVersion;
-
     if (nVersion > m_nWalletMaxVersion)
         m_nWalletMaxVersion = nVersion;
 
