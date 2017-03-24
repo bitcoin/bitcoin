@@ -224,6 +224,7 @@ public:
         pwalletdbEncryption = NULL;
     }
 
+private:
     void SetNull()
     {
         m_nWalletVersion = FEATURE_BASE;
@@ -238,6 +239,7 @@ public:
         fBroadcastTransactions = false;
     }
 
+public:
     std::map<uint256, CWalletTx> mapWallet;
     std::list<CAccountingEntry> laccentries;
 
