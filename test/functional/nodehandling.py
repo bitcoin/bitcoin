@@ -52,9 +52,9 @@ class NodeHandlingTest (BitcoinTestFramework):
         time.sleep(2) #make 100% sure we expired 192.168.0.1 node time
 
         #stop node
-        stop_node(self.nodes[2], 2)
+        self.stop_node(2)
 
-        self.nodes[2] = start_node(2, self.options.tmpdir)
+        self.nodes[2] = self.start_node(2, self.options.tmpdir)
         listAfterShutdown = self.nodes[2].listbanned()
         assert_equal("127.0.0.0/24", listAfterShutdown[0]['address'])
         assert_equal("127.0.0.0/32", listAfterShutdown[1]['address'])

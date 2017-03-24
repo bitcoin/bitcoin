@@ -13,10 +13,7 @@ RPCs tested are:
 """
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (
-    start_nodes,
-    assert_equal,
-)
+from test_framework.util import assert_equal
 
 class WalletAccountsTest(BitcoinTestFramework):
 
@@ -27,7 +24,7 @@ class WalletAccountsTest(BitcoinTestFramework):
         self.node_args = [[]]
 
     def setup_network(self):
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.node_args)
+        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, self.node_args)
         self.is_network_split = False
 
     def run_test (self):

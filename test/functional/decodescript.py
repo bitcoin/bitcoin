@@ -17,7 +17,7 @@ class DecodeScriptTest(BitcoinTestFramework):
         self.num_nodes = 1
 
     def setup_network(self, split=False):
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
+        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir)
         self.is_network_split = False
 
     def decodescript_script_sig(self):

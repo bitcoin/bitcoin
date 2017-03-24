@@ -104,7 +104,7 @@ class P2PLeakTest(BitcoinTestFramework):
     def setup_network(self):
         extra_args = [['-banscore='+str(banscore)]
                       for i in range(self.num_nodes)]
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
+        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
 
     def run_test(self):
         no_version_bannode = CNodeNoVersionBan()
