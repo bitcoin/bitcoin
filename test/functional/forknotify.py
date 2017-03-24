@@ -3,6 +3,8 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the -alertnotify option."""
+import os
+import time
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
@@ -41,11 +43,18 @@ class ForkNotifyTest(BitcoinTestFramework):
         self.nodes[1].generate(1)
         self.sync_all()
 
+        # Give bitcoind 10 seconds to write the alert notification
+        timeout = 10.0
+        while timeout > 0:
+            if os.path.exists(self.alert_filename) and os.path.getsize(self.alert_filename):
+                break
+            time.sleep(0.1)
+            timeout -= 0.1
+        else:
+            assert False, "-alertnotify did not warn of up-version blocks"
+
         with open(self.alert_filename, 'r', encoding='utf8') as f:
             alert_text = f.read()
-
-        if len(alert_text) == 0:
-            raise AssertionError("-alertnotify did not warn of up-version blocks")
 
         # Mine more up-version blocks, should not get more alerts:
         self.nodes[1].generate(1)
