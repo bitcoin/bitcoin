@@ -21,7 +21,7 @@ class WalletTest(BitcoinTestFramework):
         self.extra_args = [['-usehd={:d}'.format(i%2==0)] for i in range(4)]
 
     def setup_network(self):
-        self.nodes = start_nodes(3, self.options.tmpdir, self.extra_args[:3])
+        self.nodes = self.start_nodes(3, self.options.tmpdir, self.extra_args[:3])
         connect_nodes_bi(self.nodes,0,1)
         connect_nodes_bi(self.nodes,1,2)
         connect_nodes_bi(self.nodes,0,2)
@@ -178,7 +178,7 @@ class WalletTest(BitcoinTestFramework):
         txid2 = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         sync_mempools(self.nodes)
 
-        self.nodes.append(start_node(3, self.options.tmpdir, self.extra_args[3]))
+        self.nodes.append(self.start_node(3, self.options.tmpdir, self.extra_args[3]))
         connect_nodes_bi(self.nodes, 0, 3)
         sync_blocks(self.nodes)
 
@@ -221,8 +221,8 @@ class WalletTest(BitcoinTestFramework):
         assert(found)
 
         #do some -walletbroadcast tests
-        stop_nodes(self.nodes)
-        self.nodes = start_nodes(3, self.options.tmpdir, [["-walletbroadcast=0"],["-walletbroadcast=0"],["-walletbroadcast=0"]])
+        self.stop_nodes()
+        self.nodes = self.start_nodes(3, self.options.tmpdir, [["-walletbroadcast=0"],["-walletbroadcast=0"],["-walletbroadcast=0"]])
         connect_nodes_bi(self.nodes,0,1)
         connect_nodes_bi(self.nodes,1,2)
         connect_nodes_bi(self.nodes,0,2)
@@ -246,8 +246,8 @@ class WalletTest(BitcoinTestFramework):
         txIdNotBroadcasted  = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 2)
 
         #restart the nodes with -walletbroadcast=1
-        stop_nodes(self.nodes)
-        self.nodes = start_nodes(3, self.options.tmpdir)
+        self.stop_nodes()
+        self.nodes = self.start_nodes(3, self.options.tmpdir)
         connect_nodes_bi(self.nodes,0,1)
         connect_nodes_bi(self.nodes,1,2)
         connect_nodes_bi(self.nodes,0,2)
@@ -348,9 +348,9 @@ class WalletTest(BitcoinTestFramework):
         chainlimit = 6
         for m in maintenance:
             self.log.info("check " + m)
-            stop_nodes(self.nodes)
+            self.stop_nodes()
             # set lower ancestor limit for later
-            self.nodes = start_nodes(3, self.options.tmpdir, [[m, "-limitancestorcount="+str(chainlimit)]] * 3)
+            self.nodes = self.start_nodes(3, self.options.tmpdir, [[m, "-limitancestorcount="+str(chainlimit)]] * 3)
             while m == '-reindex' and [block_count] * 3 != [self.nodes[i].getblockcount() for i in range(3)]:
                 # reindex will leave rpc warm up "early"; Wait for it to finish
                 time.sleep(0.1)
@@ -397,8 +397,8 @@ class WalletTest(BitcoinTestFramework):
 
         # Try with walletrejectlongchains
         # Double chain limit but require combining inputs, so we pass SelectCoinsMinConf
-        stop_node(self.nodes[0],0)
-        self.nodes[0] = start_node(0, self.options.tmpdir, ["-walletrejectlongchains", "-limitancestorcount="+str(2*chainlimit)])
+        self.stop_node(0)
+        self.nodes[0] = self.start_node(0, self.options.tmpdir, ["-walletrejectlongchains", "-limitancestorcount="+str(2*chainlimit)])
 
         # wait for loadmempool
         timeout = 10
