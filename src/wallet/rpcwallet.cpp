@@ -2796,14 +2796,14 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
 int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, CWallet &wallet)
 {
     CMutableTransaction txNew(tx);
-    std::vector<std::pair<CWalletTx*, unsigned int>> vCoins;
+    std::vector<CInputCoin> vCoins;
     // Look up the inputs.  We should have already checked that this transaction
     // IsAllFromMe(ISMINE_SPENDABLE), so every input should already be in our
     // wallet, with a valid index into the vout array.
     for (auto& input : tx.vin) {
         const auto mi = wallet.mapWallet.find(input.prevout.hash);
         assert(mi != wallet.mapWallet.end() && input.prevout.n < mi->second.tx->vout.size());
-        vCoins.emplace_back(std::make_pair(&(mi->second), input.prevout.n));
+        vCoins.emplace_back(CInputCoin(&(mi->second), input.prevout.n));
     }
     if (!wallet.DummySignTx(txNew, vCoins)) {
         // This should never happen, because IsAllFromMe(ISMINE_SPENDABLE)
