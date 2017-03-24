@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2010 Satoshi Nakamoto
+﻿// Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -225,6 +225,7 @@ public:
     }
 
 private:
+    // ※コンストラクタのみから呼ばれる.
     void SetNull()
     {
         m_nWalletVersion = FEATURE_BASE;
@@ -298,7 +299,10 @@ public:
     bool LoadKeyMetadata(const CPubKey &pubkey, const CKeyMetadata &metadata);
 
     bool LoadMinVersion(int nVersion) {
-        AssertLockHeld(m_walletCriticalSection); m_nWalletVersion = nVersion; m_nWalletMaxVersion = std::max(m_nWalletMaxVersion, nVersion); return true;
+        AssertLockHeld(m_walletCriticalSection);
+        m_nWalletVersion = nVersion;
+        m_nWalletMaxVersion = std::max(m_nWalletMaxVersion, nVersion);
+        return true;
     }
 
     //! Adds an encrypted key to the store, and saves it to disk.

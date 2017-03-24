@@ -102,6 +102,7 @@ CPubKey CWallet::GenerateNewKey()
     }
 
     // Compressed public keys were introduced in version 0.6.0
+    // ※ここの処理は冗長な気がする. CanSupportFeature(FEATURE_COMPRPUBKEY)==trueであればSetMinVersionするまでもなく圧縮可のはず.
     if (fCompressed)
         SetMinVersion(FEATURE_COMPRPUBKEY);
 
@@ -359,8 +360,9 @@ bool CWallet::SetMinVersion(enum WalletFeature nVersion, CWalletDB* pwalletdbIn,
 
     // 現バージョンおよび上限バージョンの更新.
     m_nWalletVersion = nVersion;
-    if (nVersion > m_nWalletMaxVersion)
+    if (nVersion > m_nWalletMaxVersion) {
         m_nWalletMaxVersion = nVersion;
+    }
 
     if (fFileBacked)
     {
@@ -612,6 +614,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
         if (!EncryptKeys(vMasterKey))
         {
+            // ###### ここに来たら異常終了しちゃわない??
             if (fFileBacked) {
                 m_pwalletdbEncryption->TxnAbort();
                 delete m_pwalletdbEncryption;
@@ -3187,13 +3190,14 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
         }
     }
 
+    // ※初期値より下がることは無い.
     if (GetBoolArg("-upgradewallet", fFirstRun))
     {
         int nMaxVersion = GetArg("-upgradewallet", 0);
         if (nMaxVersion == 0) // the -upgradewallet without argument case
         {
             LogPrintf("Performing wallet upgrade to %i\n", FEATURE_LATEST);
-            nMaxVersion = CLIENT_VERSION;
+            nMaxVersion = CLIENT_VERSION; // 0.13.99.0 = 139900
             walletInstance->SetMinVersion(FEATURE_LATEST); // permanently upgrade the wallet immediately
         }
         else
