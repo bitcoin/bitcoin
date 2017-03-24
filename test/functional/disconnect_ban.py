@@ -9,10 +9,7 @@ from test_framework.mininode import wait_until
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (assert_equal,
                                  assert_raises_jsonrpc,
-                                 connect_nodes_bi,
-                                 start_node,
-                                 stop_node,
-                                 )
+                                 connect_nodes_bi)
 
 class DisconnectBanTest(BitcoinTestFramework):
 
@@ -68,9 +65,9 @@ class DisconnectBanTest(BitcoinTestFramework):
         self.nodes[1].setmocktime(old_time + 3)
         assert_equal(len(self.nodes[1].listbanned()), 3)
 
-        stop_node(self.nodes[1], 1)
+        self.stop_node(1)
 
-        self.nodes[1] = start_node(1, self.options.tmpdir)
+        self.nodes[1] = self.start_node(1, self.options.tmpdir)
         listAfterShutdown = self.nodes[1].listbanned()
         assert_equal("127.0.0.0/24", listAfterShutdown[0]['address'])
         assert_equal("127.0.0.0/32", listAfterShutdown[1]['address'])
