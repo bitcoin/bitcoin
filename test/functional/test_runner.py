@@ -77,6 +77,7 @@ BASE_SCRIPTS= [
     'rawtransactions.py',
     'reindex.py',
     # vv Tests less than 30s vv
+    "zmq_test.py",
     'mempool_resurrect_test.py',
     'txn_doublespend.py --mineblock',
     'txn_clone.py',
@@ -109,11 +110,6 @@ BASE_SCRIPTS= [
     'listsinceblock.py',
     'p2p-leaktests.py',
 ]
-
-ZMQ_SCRIPTS = [
-    # ZMQ test can only be run if bitcoin was built with zmq-enabled.
-    # call test_runner.py with -nozmq to explicitly exclude these tests.
-    'zmq_test.py']
 
 EXTENDED_SCRIPTS = [
     # These tests are not run by the travis build process.
@@ -149,7 +145,7 @@ EXTENDED_SCRIPTS = [
 ]
 
 # Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
-ALL_SCRIPTS = EXTENDED_SCRIPTS + BASE_SCRIPTS + ZMQ_SCRIPTS
+ALL_SCRIPTS = EXTENDED_SCRIPTS + BASE_SCRIPTS
 
 NON_SCRIPTS = [
     # These are python files that live in the functional tests directory, but are not test scripts.
@@ -174,7 +170,6 @@ def main():
     parser.add_argument('--jobs', '-j', type=int, default=4, help='how many test scripts to run in parallel. Default=4.')
     parser.add_argument('--keepcache', '-k', action='store_true', help='the default behavior is to flush the cache directory on startup. --keepcache retains the cache from the previous testrun.')
     parser.add_argument('--quiet', '-q', action='store_true', help='only print results summary and failure logs')
-    parser.add_argument('--nozmq', action='store_true', help='do not run the zmq tests')
     args, unknown_args = parser.parse_known_args()
 
     # Create a set to store arguments and create the passon string
@@ -192,7 +187,6 @@ def main():
     enable_wallet = config["components"].getboolean("ENABLE_WALLET")
     enable_utils = config["components"].getboolean("ENABLE_UTILS")
     enable_bitcoind = config["components"].getboolean("ENABLE_BITCOIND")
-    enable_zmq = config["components"].getboolean("ENABLE_ZMQ") and not args.nozmq
 
     if config["environment"]["EXEEXT"] == ".exe" and not args.force:
         # https://github.com/bitcoin/bitcoin/commit/d52802551752140cf41f0d9a225a43e84404d3e9
@@ -205,15 +199,6 @@ def main():
         print("Rerun `configure` with -enable-wallet, -with-utils and -with-daemon and rerun make")
         sys.exit(0)
 
-    # python3-zmq may not be installed. Handle this gracefully and with some helpful info
-    if enable_zmq:
-        try:
-            import zmq
-        except ImportError:
-            print("ERROR: \"import zmq\" failed. Use -nozmq to run without the ZMQ tests."
-                  "To run zmq tests, see dependency info in /test/README.md.")
-            raise
-
     # Build list of tests
     if tests:
         # Individual tests have been specified. Run specified tests that exist
@@ -221,11 +206,9 @@ def main():
         test_list = [t for t in ALL_SCRIPTS if
                 (t in tests or re.sub(".py$", "", t) in tests)]
     else:
-        # No individual tests have been specified. Run base tests, and
-        # optionally ZMQ tests and extended tests.
+        # No individual tests have been specified.
+        # Run all base tests, and optionally run extended tests.
         test_list = BASE_SCRIPTS
-        if enable_zmq:
-            test_list += ZMQ_SCRIPTS
         if args.extended:
             # place the EXTENDED_SCRIPTS first since the three longest ones
             # are there and the list is shorter
