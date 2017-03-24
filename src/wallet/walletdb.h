@@ -46,7 +46,7 @@ class CHDChain
 {
 public:
     uint32_t nExternalChainCounter;
-    CKeyID masterKeyID; //!< master key hash160
+    CKeyID m_masterKeyID; //!< master key hash160
 
     static const int CURRENT_VERSION = 1;
     int nVersion;
@@ -58,14 +58,14 @@ public:
     {
         READWRITE(this->nVersion);
         READWRITE(nExternalChainCounter);
-        READWRITE(masterKeyID);
+        READWRITE(m_masterKeyID);
     }
 
     void SetNull()
     {
         nVersion = CHDChain::CURRENT_VERSION;
         nExternalChainCounter = 0;
-        masterKeyID.SetNull();
+        m_masterKeyID.SetNull();
     }
 };
 

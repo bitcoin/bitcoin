@@ -128,7 +128,7 @@ void CWallet::DeriveNewChildKey(CKeyMetadata& metadata, CKey& secret)
     CExtKey childKey;              //key at m/0'/0'/<n>'
 
     // try to get the master key
-    if (!GetKey(m_hdChain.masterKeyID, key))
+    if (!GetKey(m_hdChain.m_masterKeyID, key))
         throw std::runtime_error(std::string(__func__) + ": Master key not found");
 
     masterKey.SetMaster(key.begin(), key.size());
@@ -147,7 +147,7 @@ void CWallet::DeriveNewChildKey(CKeyMetadata& metadata, CKey& secret)
         // example: 1 | BIP32_HARDENED_KEY_LIMIT == 0x80000001 == 2147483649
         externalChainChildKey.Derive(childKey, m_hdChain.nExternalChainCounter | BIP32_HARDENED_KEY_LIMIT);
         metadata.hdKeypath = "m/0'/0'/" + std::to_string(m_hdChain.nExternalChainCounter) + "'";
-        metadata.hdMasterKeyID = m_hdChain.masterKeyID;
+        metadata.hdMasterKeyID = m_hdChain.m_masterKeyID;
         // increment childkey index
         m_hdChain.nExternalChainCounter++;
     } while (HaveKey(childKey.m_key.GetPubKey().GetID()));
@@ -1369,7 +1369,7 @@ bool CWallet::SetHDMasterKey(const CPubKey& pubkey)
     // the child index counter in the database
     // as a hdchain object
     CHDChain newHdChain;
-    newHdChain.masterKeyID = pubkey.GetID();
+    newHdChain.m_masterKeyID = pubkey.GetID();
     SetHDChain(newHdChain, false);
 
     return true;
@@ -1387,7 +1387,7 @@ bool CWallet::SetHDChain(const CHDChain& chain, bool memonly)
 
 bool CWallet::IsHDEnabled()
 {
-    return !m_hdChain.masterKeyID.IsNull();
+    return !m_hdChain.m_masterKeyID.IsNull();
 }
 
 /**
