@@ -2621,6 +2621,21 @@ UniValue listunspent(const JSONRPCRequest& request)
     return results;
 }
 
+bool FindInCoinView(const COutPoint& outpoint, CInputCoin& outputCoin)
+{
+    LOCK2(cs_main, mempool.cs);
+    CCoinsViewMemPool coinsTipMempool(pcoinsTip, mempool);
+    CCoinsViewCache view(&coinsTipMempool);
+    CCoins coins;
+    if (!view.GetCoins(outpoint.hash, coins))
+        return false;
+    if (outpoint.n >= coins.vout.size())
+        return false;
+    outputCoin.outpoint = outpoint;
+    outputCoin.txout = coins.vout[outpoint.n];
+    return !outputCoin.IsNull();
+}
+
 UniValue fundrawtransaction(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -2773,6 +2788,18 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     coinControl.fAllowWatchOnly = includeWatching;
     coinControl.fOverrideFeeRate = overrideEstimatedFeerate;
     coinControl.nFeeRate = feeRate;
+
+    for(const CTxIn& txin: tx.vin)
+    {
+        CInputCoin coin;
+        if (!pwallet->FindCoin(txin.prevout, coin) &&
+            !FindInCoinView(txin.prevout, coin))
+        {
+            throw JSONRPCError(RPC_WALLET_ERROR, "unknown-input");
+        }
+        coinControl.AddKnownCoins(coin);
+        coinControl.Select(txin.prevout);
+    }
 
     if (!pwallet->FundTransaction(tx, nFeeOut, coinControl, changePosition, strFailReason, lockUnspents, setSubtractFeeFromOutputs, reserveChangeKey)) {
         throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);

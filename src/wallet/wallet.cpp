@@ -2211,17 +2211,11 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
         coinControl->ListSelected(vPresetInputs);
     BOOST_FOREACH(const COutPoint& outpoint, vPresetInputs)
     {
-        std::map<uint256, CWalletTx>::const_iterator it = mapWallet.find(outpoint.hash);
-        if (it != mapWallet.end())
-        {
-            const CWalletTx* pcoin = &it->second;
-            // Clearly invalid input, fail
-            if (pcoin->tx->vout.size() <= outpoint.n)
-                return false;
-            nValueFromPresetInputs += pcoin->tx->vout[outpoint.n].nValue;
-            setPresetCoins.insert(CInputCoin(pcoin, outpoint.n));
-        } else
-            return false; // TODO: Allow non-wallet inputs
+        CInputCoin foundCoin;
+        if (!coinControl->FindKnownCoin(outpoint, foundCoin))
+            return false;
+        nValueFromPresetInputs += foundCoin.txout.nValue;
+        setPresetCoins.insert(foundCoin);
     }
 
     // remove preset inputs from vCoins
@@ -2266,9 +2260,6 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, CCoinCo
         vecSend.push_back(recipient);
     }
 
-    BOOST_FOREACH(const CTxIn& txin, tx.vin)
-        coinControl.Select(txin.prevout);
-
     CReserveKey reservekey(this);
     CWalletTx wtx;
     if (!CreateTransaction(vecSend, wtx, reservekey, nFeeRet, nChangePosInOut, strFailReason, &coinControl, false))
@@ -2301,6 +2292,18 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, CCoinCo
         reservekey.KeepKey();
 
     return true;
+}
+
+bool CWallet::FindCoin(const COutPoint& outpoint, CInputCoin& foundCoin)
+{
+    LOCK(cs_wallet);
+    std::map<uint256, CWalletTx>::const_iterator it = mapWallet.find(outpoint.hash);
+    if (it != mapWallet.end())
+    {
+        foundCoin = CInputCoin(&it->second, outpoint.n);
+        return !foundCoin.IsNull();
+    }
+    return false;
 }
 
 bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,

@@ -7,6 +7,7 @@
 
 #include "primitives/transaction.h"
 #include "wallet/wallet.h"
+#include <map>
 
 /** Coin Control Features. */
 class CCoinControl
@@ -76,8 +77,23 @@ public:
         vOutpoints.assign(setSelected.begin(), setSelected.end());
     }
 
+    void AddKnownCoins(const CInputCoin& coin)
+    {
+        knownCoins.insert(std::make_pair(coin.outpoint, coin));
+    }
+
+    bool FindKnownCoin(const COutPoint& outpoint, CInputCoin& foundCoin) const
+    {
+        auto it = knownCoins.find(outpoint);
+        if (it == knownCoins.end())
+            return false;
+        foundCoin = it->second;
+        return true;
+    }
 private:
     std::set<COutPoint> setSelected;
+    //! A map of known UTXO
+    std::map<COutPoint, CInputCoin> knownCoins;
 };
 
 #endif // BITCOIN_WALLET_COINCONTROL_H

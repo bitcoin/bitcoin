@@ -891,6 +891,8 @@ public:
     CAmount GetUnconfirmedWatchOnlyBalance() const;
     CAmount GetImmatureWatchOnlyBalance() const;
 
+    bool FindCoin(const COutPoint& outpoint, CInputCoin& foundCoin);
+
     /**
      * Insert additional inputs into the transaction by
      * calling CreateTransaction();
