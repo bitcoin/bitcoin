@@ -1164,14 +1164,16 @@ bool CWallet::DummySignTx(CMutableTransaction &txNew, const ContainerType &coins
     {
         const CScript& scriptPubKey = coin.txout.scriptPubKey;
         SignatureData sigdata;
-
-        if (!ProduceSignature(DummySignatureCreator(this), scriptPubKey, sigdata))
-        {
-            return false;
-        } else {
-            UpdateTransaction(txNew, nIn, sigdata);
+        auto ismine = IsMine(coin.txout);
+        if (ismine == ISMINE_SPENDABLE || ismine == ISMINE_WATCH_SOLVABLE)
+        { 
+            if (!ProduceSignature(DummySignatureCreator(this), scriptPubKey, sigdata))
+            {
+                return false;
+            } else {
+                UpdateTransaction(txNew, nIn, sigdata);
+            }
         }
-
         nIn++;
     }
     return true;
