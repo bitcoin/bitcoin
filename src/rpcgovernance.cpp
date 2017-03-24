@@ -221,7 +221,8 @@ UniValue gobject(const UniValue& params, bool fHelp)
         governance.AddSeenGovernanceObject(govobj.GetHash(), SEEN_OBJECT_IS_VALID);
         govobj.Relay();
         LogPrintf("gobject(submit) -- Adding locally created governance object - %s\n", strHash);
-        governance.AddGovernanceObject(govobj);
+        bool fAddToSeen = true;
+        governance.AddGovernanceObject(govobj, fAddToSeen);
 
         return govobj.GetHash().ToString();
     }
