@@ -128,7 +128,7 @@ void CWallet::DeriveNewChildKey(CKeyMetadata& metadata, CKey& secret)
     CExtKey childKey;              //key at m/0'/0'/<n>'
 
     // try to get the master key
-    if (!GetKey(hdChain.masterKeyID, key))
+    if (!GetKey(m_hdChain.masterKeyID, key))
         throw std::runtime_error(std::string(__func__) + ": Master key not found");
 
     masterKey.SetMaster(key.begin(), key.size());
@@ -145,16 +145,16 @@ void CWallet::DeriveNewChildKey(CKeyMetadata& metadata, CKey& secret)
         // always derive hardened keys
         // childIndex | BIP32_HARDENED_KEY_LIMIT = derive childIndex in hardened child-index-range
         // example: 1 | BIP32_HARDENED_KEY_LIMIT == 0x80000001 == 2147483649
-        externalChainChildKey.Derive(childKey, hdChain.nExternalChainCounter | BIP32_HARDENED_KEY_LIMIT);
-        metadata.hdKeypath = "m/0'/0'/" + std::to_string(hdChain.nExternalChainCounter) + "'";
-        metadata.hdMasterKeyID = hdChain.masterKeyID;
+        externalChainChildKey.Derive(childKey, m_hdChain.nExternalChainCounter | BIP32_HARDENED_KEY_LIMIT);
+        metadata.hdKeypath = "m/0'/0'/" + std::to_string(m_hdChain.nExternalChainCounter) + "'";
+        metadata.hdMasterKeyID = m_hdChain.masterKeyID;
         // increment childkey index
-        hdChain.nExternalChainCounter++;
+        m_hdChain.nExternalChainCounter++;
     } while (HaveKey(childKey.m_key.GetPubKey().GetID()));
     secret = childKey.m_key;
 
     // update the chain model in the database
-    if (!CWalletDB(strWalletFile).WriteHDChain(hdChain))
+    if (!CWalletDB(strWalletFile).WriteHDChain(m_hdChain))
         throw std::runtime_error(std::string(__func__) + ": Writing HD chain model failed");
 }
 
@@ -1381,13 +1381,13 @@ bool CWallet::SetHDChain(const CHDChain& chain, bool memonly)
     if (!memonly && !CWalletDB(strWalletFile).WriteHDChain(chain))
         throw runtime_error(std::string(__func__) + ": writing chain failed");
 
-    hdChain = chain;
+    m_hdChain = chain;
     return true;
 }
 
 bool CWallet::IsHDEnabled()
 {
-    return !hdChain.masterKeyID.IsNull();
+    return !m_hdChain.masterKeyID.IsNull();
 }
 
 /**

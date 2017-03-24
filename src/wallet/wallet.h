@@ -172,7 +172,7 @@ private:
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
 
     /* the HD chain data model (external chain counters) */
-    CHDChain hdChain;
+    CHDChain m_hdChain;
 
     bool m_fFileBacked;
 
@@ -542,7 +542,7 @@ public:
 
     /* Set the HD chain model (chain child index counters) */
     bool SetHDChain(const CHDChain& chain, bool memonly);
-    const CHDChain& GetHDChain() { return hdChain; }
+    const CHDChain& GetHDChain() { return m_hdChain; }
 
     /* Returns true if HD is enabled */
     bool IsHDEnabled();
