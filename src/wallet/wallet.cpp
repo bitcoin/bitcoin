@@ -138,6 +138,7 @@ void CWallet::DeriveNewChildKey(CKeyMetadata& metadata, CKey& secret, bool inter
     masterKey.Derive(accountKey, BIP32_HARDENED_KEY_LIMIT);
 
     // derive m/0'/0' (external chain) OR m/0'/1' (internal chain)
+    assert(internal ? CanSupportFeature(FEATURE_HD_SPLIT) : true);
     accountKey.Derive(chainChildKey, BIP32_HARDENED_KEY_LIMIT+(internal ? 1 : 0));
 
     // derive child key at next index, skip keys already known to the wallet
