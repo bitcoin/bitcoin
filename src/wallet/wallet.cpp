@@ -147,7 +147,7 @@ void CWallet::DeriveNewChildKey(CKeyMetadata& metadata, CKey& secret)
         // example: 1 | BIP32_HARDENED_KEY_LIMIT == 0x80000001 == 2147483649
         externalChainChildKey.Derive(childKey, m_hdChain.nExternalChainCounter | BIP32_HARDENED_KEY_LIMIT);
         metadata.hdKeypath = "m/0'/0'/" + std::to_string(m_hdChain.nExternalChainCounter) + "'";
-        metadata.hdMasterKeyID = m_hdChain.m_masterKeyID;
+        metadata.m_hdMasterKeyID = m_hdChain.m_masterKeyID;
         // increment childkey index
         m_hdChain.nExternalChainCounter++;
     } while (HaveKey(childKey.m_key.GetPubKey().GetID()));
@@ -1342,7 +1342,7 @@ CPubKey CWallet::GenerateNewHDMasterKey()
 
     // set the hd keypath to "m" -> Master, refers the masterkeyid to itself
     metadata.hdKeypath     = "m";
-    metadata.hdMasterKeyID = pubkey.GetID();
+    metadata.m_hdMasterKeyID = pubkey.GetID();
 
     {
         LOCK(m_walletCriticalSection);

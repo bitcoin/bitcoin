@@ -210,7 +210,7 @@ UniValue validateaddress(const JSONRPCRequest& request)
         if (pwalletMain && address.GetKeyID(keyID) && pwalletMain->mapKeyMetadata.count(keyID) && !pwalletMain->mapKeyMetadata[keyID].hdKeypath.empty())
         {
             ret.push_back(Pair("hdkeypath", pwalletMain->mapKeyMetadata[keyID].hdKeypath));
-            ret.push_back(Pair("hdmasterkeyid", pwalletMain->mapKeyMetadata[keyID].hdMasterKeyID.GetHex()));
+            ret.push_back(Pair("hdmasterkeyid", pwalletMain->mapKeyMetadata[keyID].m_hdMasterKeyID.GetHex()));
         }
 #endif
     }
