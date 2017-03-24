@@ -173,7 +173,7 @@ bool CWallet::AddKeyPubKey(const CKey& secret, const CPubKey &pubkey)
     if (HaveWatchOnly(script))
         RemoveWatchOnly(script);
 
-    if (!fFileBacked)
+    if (!m_fFileBacked)
         return true;
     if (!IsCrypted()) {
         return CWalletDB(strWalletFile).WriteKey(pubkey,
@@ -188,7 +188,7 @@ bool CWallet::AddCryptedKey(const CPubKey &vchPubKey,
 {
     if (!CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret))
         return false;
-    if (!fFileBacked)
+    if (!m_fFileBacked)
         return true;
     {
         LOCK(m_walletCriticalSection);
@@ -223,7 +223,7 @@ bool CWallet::AddCScript(const CScript& redeemScript)
 {
     if (!CCryptoKeyStore::AddCScript(redeemScript))
         return false;
-    if (!fFileBacked)
+    if (!m_fFileBacked)
         return true;
     return CWalletDB(strWalletFile).WriteCScript(Hash160(redeemScript), redeemScript);
 }
@@ -250,7 +250,7 @@ bool CWallet::AddWatchOnly(const CScript &dest)
         return false;
     nTimeFirstKey = 1; // No birthday information for watch-only keys.
     NotifyWatchonlyChanged(true);
-    if (!fFileBacked)
+    if (!m_fFileBacked)
         return true;
     return CWalletDB(strWalletFile).WriteWatchOnly(dest);
 }
@@ -262,7 +262,7 @@ bool CWallet::RemoveWatchOnly(const CScript &dest)
         return false;
     if (!HaveWatchOnly())
         NotifyWatchonlyChanged(false);
-    if (fFileBacked)
+    if (m_fFileBacked)
         if (!CWalletDB(strWalletFile).EraseWatchOnly(dest))
             return false;
 
@@ -364,7 +364,7 @@ bool CWallet::SetMinVersion(enum WalletFeature nVersion, CWalletDB* pwalletdbIn,
         m_nWalletMaxVersion = nVersion;
     }
 
-    if (fFileBacked)
+    if (m_fFileBacked)
     {
         CWalletDB* pwalletdb = pwalletdbIn ? pwalletdbIn : new CWalletDB(strWalletFile);
         if (m_nWalletVersion > 40000)
@@ -600,7 +600,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
     {
         LOCK(m_walletCriticalSection);
         mapMasterKeys[++nMasterKeyMaxID] = kMasterKey;
-        if (fFileBacked)
+        if (m_fFileBacked)
         {
             assert(!m_pwalletdbEncryption);
             m_pwalletdbEncryption = new CWalletDB(strWalletFile);
@@ -615,7 +615,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         if (!EncryptKeys(vMasterKey))
         {
             // ###### ここに来たら異常終了しちゃわない??
-            if (fFileBacked) {
+            if (m_fFileBacked) {
                 m_pwalletdbEncryption->TxnAbort();
                 delete m_pwalletdbEncryption;
             }
@@ -627,7 +627,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         // Encryption was introduced in version 0.4.0
         SetMinVersion(FEATURE_WALLETCRYPT, m_pwalletdbEncryption, true);
 
-        if (fFileBacked)
+        if (m_fFileBacked)
         {
             if (!m_pwalletdbEncryption->TxnCommit()) {
                 delete m_pwalletdbEncryption;
@@ -2440,7 +2440,7 @@ CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarge
 
 DBErrors CWallet::LoadWallet(bool* pfFirstRunRet)
 {
-    if (!fFileBacked)
+    if (!m_fFileBacked)
         return DB_LOAD_OK;
     *pfFirstRunRet = false;
     DBErrors nLoadWalletRet = CWalletDB(strWalletFile,"cr+").LoadWallet(this);
@@ -2467,7 +2467,7 @@ DBErrors CWallet::LoadWallet(bool* pfFirstRunRet)
 
 DBErrors CWallet::ZapSelectTx(vector<uint256>& vHashIn, vector<uint256>& vHashOut)
 {
-    if (!fFileBacked)
+    if (!m_fFileBacked)
         return DB_LOAD_OK;
     DBErrors nZapSelectTxRet = CWalletDB(strWalletFile,"cr+").ZapSelectTx(this, vHashIn, vHashOut);
     if (nZapSelectTxRet == DB_NEED_REWRITE)
@@ -2493,7 +2493,7 @@ DBErrors CWallet::ZapSelectTx(vector<uint256>& vHashIn, vector<uint256>& vHashOu
 
 DBErrors CWallet::ZapWalletTx(std::vector<CWalletTx>& vWtx)
 {
-    if (!fFileBacked)
+    if (!m_fFileBacked)
         return DB_LOAD_OK;
     DBErrors nZapWalletTxRet = CWalletDB(strWalletFile,"cr+").ZapWalletTx(this, vWtx);
     if (nZapWalletTxRet == DB_NEED_REWRITE)
@@ -2528,7 +2528,7 @@ bool CWallet::SetAddressBook(const CTxDestination& address, const string& strNam
     }
     NotifyAddressBookChanged(this, address, strName, ::IsMine(*this, address) != ISMINE_NO,
                              strPurpose, (fUpdated ? CT_UPDATED : CT_NEW) );
-    if (!fFileBacked)
+    if (!m_fFileBacked)
         return false;
     if (!strPurpose.empty() && !CWalletDB(strWalletFile).WritePurpose(address.GetBase58addressWithNetworkPrefix().c_str(), strPurpose))
         return false;
@@ -2540,7 +2540,7 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
     {
         LOCK(m_walletCriticalSection); // mapAddressBook
 
-        if(fFileBacked)
+        if(m_fFileBacked)
         {
             // Delete destdata tuples associated with address
             base58string strAddress = address.GetBase58addressWithNetworkPrefix();
@@ -2554,7 +2554,7 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
 
     NotifyAddressBookChanged(this, address, "", ::IsMine(*this, address) != ISMINE_NO, "", CT_DELETED);
 
-    if (!fFileBacked)
+    if (!m_fFileBacked)
         return false;
     CWalletDB(strWalletFile).ErasePurpose(address.GetBase58addressWithNetworkPrefix().c_str());
     return CWalletDB(strWalletFile).EraseName(address.GetBase58addressWithNetworkPrefix().c_str());
@@ -2562,7 +2562,7 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
 
 bool CWallet::SetDefaultKey(const CPubKey &vchPubKey)
 {
-    if (fFileBacked)
+    if (m_fFileBacked)
     {
         if (!CWalletDB(strWalletFile).WriteDefaultKey(vchPubKey))
             return false;
@@ -2660,7 +2660,7 @@ void CWallet::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool)
 void CWallet::KeepKey(int64_t nIndex)
 {
     // Remove from key pool
-    if (fFileBacked)
+    if (m_fFileBacked)
     {
         CWalletDB walletdb(strWalletFile);
         walletdb.ErasePool(nIndex);
@@ -3063,7 +3063,7 @@ bool CWallet::AddDestData(const CTxDestination &dest, const std::string &key, co
         return false;
 
     mapAddressBook[dest].destdata.insert(std::make_pair(key, value));
-    if (!fFileBacked)
+    if (!m_fFileBacked)
         return true;
     return CWalletDB(strWalletFile).WriteDestData(dest.GetBase58addressWithNetworkPrefix().c_str(), key, value);
 }
@@ -3072,7 +3072,7 @@ bool CWallet::EraseDestData(const CTxDestination &dest, const std::string &key)
 {
     if (!mapAddressBook[dest].destdata.erase(key))
         return false;
-    if (!fFileBacked)
+    if (!m_fFileBacked)
         return true;
     return CWalletDB(strWalletFile).EraseDestData(dest.GetBase58addressWithNetworkPrefix().c_str(), key);
 }
@@ -3444,7 +3444,7 @@ bool CWallet::ParameterInteraction()
 
 bool CWallet::BackupWallet(const std::string& strDest)
 {
-    if (!fFileBacked)
+    if (!m_fFileBacked)
         return false;
     while (true)
     {

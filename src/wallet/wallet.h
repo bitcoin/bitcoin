@@ -174,7 +174,7 @@ private:
     /* the HD chain data model (external chain counters) */
     CHDChain hdChain;
 
-    bool fFileBacked;
+    bool m_fFileBacked;
 
     std::set<int64_t> setKeyPool;
 public:
@@ -182,7 +182,7 @@ public:
      * Main wallet lock.
      * This lock protects all the fields added by CWallet
      *   except for:
-     *      fFileBacked (immutable after instantiation)
+     *      m_fFileBacked (immutable after instantiation)
      *      strWalletFile (immutable after instantiation)
      */
     mutable CCriticalSection m_walletCriticalSection;
@@ -215,7 +215,7 @@ public:
     CWallet(const std::string& strWalletFileIn) : strWalletFile(strWalletFileIn)
     {
         SetNull();
-        fFileBacked = true;
+        m_fFileBacked = true;
     }
 
     ~CWallet()
@@ -230,7 +230,7 @@ private:
     {
         m_nWalletVersion = FEATURE_BASE;
         m_nWalletMaxVersion = FEATURE_BASE;
-        fFileBacked = false;
+        m_fFileBacked = false;
         nMasterKeyMaxID = 0;
         m_pwalletdbEncryption = NULL;
         nOrderPosNext = 0;
