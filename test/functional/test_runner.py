@@ -24,6 +24,9 @@ import subprocess
 import tempfile
 import re
 
+TEST_EXIT_PASSED = 0
+TEST_EXIT_SKIPPED = 77
+
 BASE_SCRIPTS= [
     # Scripts that are run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
@@ -245,20 +248,20 @@ def run_tests(test_list, src_dir, build_dir, exeext, jobs=1, enable_coverage=Fal
     job_queue = TestHandler(jobs, tests_dir, test_list, flags)
 
     max_len_name = len(max(test_list, key=len))
-    results = BOLD[1] + "%s | %s | %s\n\n" % ("TEST".ljust(max_len_name), "PASSED", "DURATION") + BOLD[0]
+    results = BOLD[1] + "%s | %s | %s\n\n" % ("TEST".ljust(max_len_name), "STATUS ", "DURATION") + BOLD[0]
     for _ in range(len(test_list)):
-        (name, stdout, stderr, passed, duration) = job_queue.get_next()
-        all_passed = all_passed and passed
+        (name, stdout, stderr, status, duration) = job_queue.get_next()
+        all_passed = all_passed and status != "Failed"
         time_sum += duration
 
         print('\n' + BOLD[1] + name + BOLD[0] + ":")
-        print('' if passed else stdout + '\n', end='')
+        print('' if status == "Passed" else stdout + '\n', end='')
         print('' if stderr == '' else 'stderr:\n' + stderr + '\n', end='')
-        print("Pass: %s%s%s, Duration: %s s\n" % (BOLD[1], passed, BOLD[0], duration))
+        print("Status: %s%s%s, Duration: %s s\n" % (BOLD[1], status, BOLD[0], duration))
 
-        results += "%s | %s | %s s\n" % (name.ljust(max_len_name), str(passed).ljust(6), duration)
+        results += "%s | %s | %s s\n" % (name.ljust(max_len_name), status.ljust(7), duration)
 
-    results += BOLD[1] + "\n%s | %s | %s s (accumulated)" % ("ALL".ljust(max_len_name), str(all_passed).ljust(6), time_sum) + BOLD[0]
+    results += BOLD[1] + "\n%s | %s | %s s (accumulated)" % ("ALL".ljust(max_len_name), str(all_passed).ljust(7), time_sum) + BOLD[0]
     print(results)
     print("\nRuntime: %s s" % (int(time.time() - time0)))
 
@@ -315,10 +318,15 @@ class TestHandler:
                     log_out.seek(0), log_err.seek(0)
                     [stdout, stderr] = [l.read().decode('utf-8') for l in (log_out, log_err)]
                     log_out.close(), log_err.close()
-                    passed = stderr == "" and proc.returncode == 0
+                    if proc.returncode == TEST_EXIT_PASSED and stderr == "":
+                        status = "Passed"
+                    elif proc.returncode == TEST_EXIT_SKIPPED:
+                        status = "Skipped"
+                    else:
+                        status = "Failed"
                     self.num_running -= 1
                     self.jobs.remove(j)
-                    return name, stdout, stderr, passed, int(time.time() - time0)
+                    return name, stdout, stderr, status, int(time.time() - time0)
             print('.', end='', flush=True)
 
 
