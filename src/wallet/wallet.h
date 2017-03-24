@@ -118,7 +118,8 @@ public:
                 READWRITE(fInternal);
             }
             catch (std::ios_base::failure&) {
-                /* flag as external address if we can't read the internal boolean */
+                /* flag as external address if we can't read the internal boolean
+                   (this will be the case for any wallet before the HD chain split version) */
                 fInternal = false;
             }
         }
@@ -663,6 +664,9 @@ private:
     /* the HD chain data model (external chain counters) */
     CHDChain hdChain;
 
+    /* HD derive new child key (on internal or external chain) */
+    void DeriveNewChildKey(CKeyMetadata& metadata, CKey& secret, bool internal = false);
+
     bool fFileBacked;
 
     std::set<int64_t> setKeyPool;
@@ -791,7 +795,6 @@ public:
      * Generate a new key
      */
     CPubKey GenerateNewKey(bool internal = false);
-    void DeriveNewChildKey(CKeyMetadata& metadata, CKey& secret, bool internal = false);
     //! Adds a key to the store, and saves it to disk.
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey) override;
     //! Adds a key to the store, without saving it to disk (used by LoadWallet)
