@@ -100,19 +100,30 @@ bool CBlockTreeDB::ReadLastBlockFile(int &nFile) {
 bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     CAmount nTotalAmount = 0;
+
+    // I want to lock cs_utxo before unlocking cd_main so that a new block arrival
+    // does not have a moment to update the utxo set between our grabbing the
+    // hash and the height, and our utxo tally.
+    // But there is not reason to keep cs_main locked while we look at the utxo
+    try 
+    {
+      cs_main.lock();
+      stats.hashBlock = GetBestBlock();
+      stats.nHeight = mapBlockIndex.find(stats.hashBlock)->second->nHeight;
+    }
+    catch (...)
+    {
+        cs_main.unlock();
+        throw;
+    }
     {
     LOCK(cs_utxo);
+    cs_main.unlock();
     /* It seems that there are no "const iterators" for LevelDB.  Since we
        only need read operations on it, use a const-cast to get around
        that restriction.  */
     boost::scoped_ptr<CDBIterator> pcursor(const_cast<CDBWrapper*>(&db)->NewIterator());
     pcursor->Seek(DB_COINS);
-
-    {
-      LOCK(cs_main);
-      stats.hashBlock = GetBestBlock();
-      stats.nHeight = mapBlockIndex.find(stats.hashBlock)->second->nHeight;
-    }
 
     ss << stats.hashBlock;
     while (pcursor->Valid()) {
