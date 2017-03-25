@@ -37,7 +37,6 @@ using namespace std;
 CWallet* pwalletMain = NULL;
 /** Transaction fee set by the user */
 CFeeRate payTxFee(DEFAULT_TRANSACTION_FEE);
-CAmount maxTxFee = DEFAULT_TRANSACTION_MAXFEE;
 unsigned int nTxConfirmTarget = DEFAULT_TX_CONFIRM_TARGET;
 bool bSpendZeroConfChange = DEFAULT_SPEND_ZEROCONF_CHANGE;
 bool fSendFreeTransactions = DEFAULT_SEND_FREE_TRANSACTIONS;
@@ -2371,8 +2370,8 @@ CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarge
     // prevent user from paying a fee below minRelayTxFee or minTxFee
     nFeeNeeded = std::max(nFeeNeeded, GetRequiredFee(nTxBytes));
     // But always obey the maximum
-    if (nFeeNeeded > maxTxFee)
-        nFeeNeeded = maxTxFee;
+    if (nFeeNeeded > maxTxFee.value)
+        nFeeNeeded = maxTxFee.value;
     return nFeeNeeded;
 }
 
@@ -3051,8 +3050,6 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-sendfreetransactions", strprintf(_("Send transactions as zero-fee transactions if possible (default: %u)"), DEFAULT_SEND_FREE_TRANSACTIONS));
     strUsage += HelpMessageOpt("-spendzeroconfchange", strprintf(_("Spend unconfirmed change when sending transactions (default: %u)"), DEFAULT_SPEND_ZEROCONF_CHANGE));
     strUsage += HelpMessageOpt("-txconfirmtarget=<n>", strprintf(_("If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)"), DEFAULT_TX_CONFIRM_TARGET));
-    strUsage += HelpMessageOpt("-maxtxfee=<amt>", strprintf(_("Maximum total fees (in %s) to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)"),
-        CURRENCY_UNIT, FormatMoney(DEFAULT_TRANSACTION_MAXFEE)));
     strUsage += HelpMessageOpt("-upgradewallet", _("Upgrade wallet to latest format on startup"));
     strUsage += HelpMessageOpt("-wallet=<file>", _("Specify wallet file (within data directory)") + " " + strprintf(_("(default: %s)"), "wallet.dat"));
     strUsage += HelpMessageOpt("-walletbroadcast", _("Make the wallet broadcast transactions") + " " + strprintf(_("(default: %u)"), DEFAULT_WALLETBROADCAST));
@@ -3237,7 +3234,7 @@ bool CWallet::ParameterInteraction()
         CAmount nFeePerK = 0;
         if (!ParseMoney(mapArgs["-fallbackfee"], nFeePerK))
             return UIError(strprintf(_("Invalid amount for -fallbackfee=<amount>: '%s'"), mapArgs["-fallbackfee"]));
-        if (nFeePerK > nHighTransactionFeeWarning)
+        if (nFeePerK > HIGH_TX_FEE_PER_KB)
             UIWarning(_("-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available."));
         CWallet::fallbackFee = CFeeRate(nFeePerK);
     }
@@ -3246,7 +3243,7 @@ bool CWallet::ParameterInteraction()
         CAmount nFeePerK = 0;
         if (!ParseMoney(mapArgs["-paytxfee"], nFeePerK))
             return UIError(AmountErrMsg("paytxfee", mapArgs["-paytxfee"]));
-        if (nFeePerK > nHighTransactionFeeWarning)
+        if (nFeePerK > HIGH_TX_FEE_PER_KB)
             UIWarning(_("-paytxfee is set very high! This is the transaction fee you will pay if you send a transaction."));
         payTxFee = CFeeRate(nFeePerK, 1000);
         if (payTxFee < ::minRelayTxFee)
@@ -3260,10 +3257,10 @@ bool CWallet::ParameterInteraction()
         CAmount nMaxFee = 0;
         if (!ParseMoney(mapArgs["-maxtxfee"], nMaxFee))
             return UIError(AmountErrMsg("maxtxfee", mapArgs["-maxtxfee"]));
-        if (nMaxFee > nHighTransactionFeeWarning)
+        if (nMaxFee > HIGH_TX_FEE_PER_KB)
             UIWarning(_("-maxtxfee is set very high! Fees this large could be paid on a single transaction."));
-        maxTxFee = nMaxFee;
-        if (CFeeRate(maxTxFee, 1000) < ::minRelayTxFee)
+        maxTxFee.value = nMaxFee;
+        if (CFeeRate(maxTxFee.value, 1000) < ::minRelayTxFee)
         {
             return UIError(strprintf(_("Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)"),
                                        mapArgs["-maxtxfee"], ::minRelayTxFee.ToString()));

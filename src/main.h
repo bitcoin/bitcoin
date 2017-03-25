@@ -52,7 +52,12 @@ static const bool DEFAULT_WHITELISTRELAY = true;
 static const bool DEFAULT_WHITELISTFORCERELAY = true;
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
 static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 1000;
-
+//! -maxtxfee default
+static const CAmount DEFAULT_TRANSACTION_MAXFEE = 0.1 * COIN;
+//! Discourage users to set fees higher than this amount (in satoshis) per kB
+static const CAmount HIGH_TX_FEE_PER_KB = 0.01 * COIN;
+//! -maxtxfee will warn if called with a higher fee than this amount (in satoshis)
+static const CAmount HIGH_MAX_TX_FEE = 100 * HIGH_TX_FEE_PER_KB;
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 5000;  // BU Xtreme Thinblocks change to 5000 or 25MB (5000 x 5000KB max orphan size)
 /** Default for -limitancestorcount, max number of in-mempool ancestors */
@@ -154,8 +159,12 @@ extern unsigned int nBytesPerSigOp;
 extern bool fCheckBlockIndex;
 extern bool fCheckpointsEnabled;
 extern size_t nCoinCacheUsage;
+/** A fee rate smaller than this is considered zero fee (for relaying, mining and transaction creation) */
 extern CFeeRate minRelayTxFee;
+/** Absolute maximum transaction fee (in satoshis) used by wallet and mempool (rejects high fee in sendrawtransaction) */
+extern CTweak<CAmount> maxTxFee;
 extern bool fEnableReplacement;  // BU TODO is this RBF flag?
+/** If the tip is older than this (in seconds), the node is considered to be in initial block download. */
 extern int64_t nMaxTipAge;
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
