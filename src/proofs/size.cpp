@@ -228,6 +228,9 @@ bool CBlockSizeProof::VerifyComponents(const std::vector<CBlockSizeProofComponen
     std::vector<uint256> hashes;
     for (auto& component : components) {
         uint32_t skipcollapse;
+        if (!component.IsValid()) {
+            return false;
+        }
         if (component.IsFullTxProof()) {
             fFoundFullTx = true;
             skipcollapse = 0;

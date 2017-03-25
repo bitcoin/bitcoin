@@ -23,7 +23,7 @@ private:
     std::vector<unsigned char> vchLastChunk;
 
 public:
-    CBlockSizeProofComponent() = delete;
+    CBlockSizeProofComponent() : nTxRepresentedLog2plus1(0), nTxSize(0) {}
     CBlockSizeProofComponent(const CTransaction&, int serialFlags);
     CBlockSizeProofComponent(size_t TxRepresentedLog2, const uint256&);
 
@@ -39,6 +39,10 @@ public:
             READWRITE(VARINT(nTxSize));
             READWRITE(vchLastChunk);
         }
+    }
+
+    bool IsValid() const {
+        return nTxRepresentedLog2plus1 || nTxSize;
     }
 
     bool IsFullTxProof() const {
