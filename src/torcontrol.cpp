@@ -277,17 +277,19 @@ static std::map<std::string,std::string> ParseTorReplyMapping(const std::string 
     size_t ptr=0;
     while (ptr < s.size()) {
         std::string key, value;
-        while (ptr < s.size() && s[ptr] != '=') {
+        while (ptr < s.size() && s[ptr] != '=' && s[ptr] != ' ') {
             key.push_back(s[ptr]);
             ++ptr;
         }
         if (ptr == s.size()) // unexpected end of line
             return std::map<std::string,std::string>();
+        if (s[ptr] == ' ') // The remaining string is an OptArguments
+            break;
         ++ptr; // skip '='
         if (ptr < s.size() && s[ptr] == '"') { // Quoted string
             ++ptr; // skip opening '"'
             bool escape_next = false;
-            while (ptr < s.size() && (!escape_next && s[ptr] != '"')) {
+            while (ptr < s.size() && (escape_next || s[ptr] != '"')) {
                 escape_next = (s[ptr] == '\\');
                 value.push_back(s[ptr]);
                 ++ptr;
