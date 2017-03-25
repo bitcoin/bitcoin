@@ -363,6 +363,7 @@ public:
 
     friend bool operator<(const CInv& a, const CInv& b);
 
+    /// returns true if this inv is one of any of the inv types ever used.
     bool IsKnownType() const;
     const char* GetCommand() const;
     std::string ToString() const;
