@@ -53,6 +53,13 @@ bool IsProtocolV05(unsigned int nTimeTx)
     return (nTimeTx >= (fTestNet? nProtocolV05TestSwitchTime : nProtocolV05SwitchTime));
 }
 
+// Whether a given block is subject to new v0.6 protocol
+bool IsProtocolV06(unsigned int nTimeBlock)
+{
+    // TODO decide on upgrade timing
+    return false;
+}
+
 // Get the last stake modifier and its generation time from a given block
 static bool GetLastStakeModifier(const CBlockIndex* pindex, uint64& nStakeModifier, int64& nModifierTime)
 {
