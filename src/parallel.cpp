@@ -173,10 +173,6 @@ void CParallelValidation::QuitCompetingThreads(const uint256& prevBlockHash)
                 LogPrint("parallel", "interrupting a thread with blockhash %s and previous blockhash %s\n", 
                           (*mi).second.hash.ToString(), prevBlockHash.ToString());
             }
-            // Clear the scriptqueue before returning so that we can grab it again if we have another block to process
-            // using this same thread.
-            else if ((*mi).first == this_id)
-                mapBlockValidationThreads[this_id].pScriptQueue = NULL;
         }
     }
 }
@@ -396,26 +392,26 @@ void CParallelValidation::HandleBlockMessage(CNode *pfrom, const string &strComm
                 if (mapBlockValidationThreads.size() >= nScriptCheckQueues)
                 {
                     uint64_t nLargestBlockSize = 0;
-                    map<boost::thread::id, CParallelValidation::CHandleBlockMsgThreads>::iterator miLargestBlock;
+                    map<boost::thread::id, CParallelValidation::CHandleBlockMsgThreads>::iterator miLargestBlock = mapBlockValidationThreads.end();
                     map<boost::thread::id, CParallelValidation::CHandleBlockMsgThreads>::iterator iter = mapBlockValidationThreads.begin();
                     while (iter != mapBlockValidationThreads.end())
                     {
                         // Find largest block where the previous block hash matches. Meaning this is a new block and it's a competitor to to your block.
-                        map<boost::thread::id, CParallelValidation::CHandleBlockMsgThreads>::iterator mi = iter++;
-                        if ((*mi).second.hashPrevBlock == block.GetBlockHeader().hashPrevBlock) {
-                            if ((*mi).second.nBlockSize > nLargestBlockSize) {
-                                nLargestBlockSize = (*mi).second.nBlockSize;
-                                miLargestBlock = mi;
+                        if ((*iter).second.hashPrevBlock == block.GetBlockHeader().hashPrevBlock) {
+                            if ((*iter).second.nBlockSize > nLargestBlockSize) {
+                                nLargestBlockSize = (*iter).second.nBlockSize;
+                                miLargestBlock = iter;
                             }
                         }
-                    }
+                        iter++;
+                   }
 
                     // if your block is the biggest or of equal size to the biggest then reject it.
                     if (nLargestBlockSize <= nBlockSize) {
                         LogPrint("parallel", "Block validation terminated - Too many blocks currently being validated: %s\n", block.GetHash().ToString());
                         return; // new block is rejected and does not enter PV
                     }
-                    else { // terminate the chosen PV thread
+                    else if (miLargestBlock != mapBlockValidationThreads.end()) { // terminate the chosen PV thread
                         (*miLargestBlock).second.pScriptQueue->Quit(); // terminate the script queue threads
                         LogPrint("parallel", "Sending Quit() to scriptcheckqueue\n");
                         (*miLargestBlock).second.fQuit = true; // terminate the PV thread
@@ -423,9 +419,6 @@ void CParallelValidation::HandleBlockMessage(CNode *pfrom, const string &strComm
                                (*miLargestBlock).second.hash.ToString(), (*miLargestBlock).second.hashPrevBlock.ToString());
                     }
                 }
-                else
-                    assert("No grant possible, but no validation threads are running!");
-
             } // We must not hold the lock here because we could be waiting for a grant, below.
 
             // wait for semaphore grant
@@ -443,8 +436,15 @@ void CParallelValidation::HandleBlockMessage(CNode *pfrom, const string &strComm
         LOCK(cs_vNodes);
         pfrom->AddRef();
     }
-    boost::thread thread(boost::bind(&HandleBlockMessageThread, pfrom, strCommand, block, inv));
-    thread.detach();  // Separate actual thread from the "thread" object so its fine to fall out of scope 
+
+    // only launch block validation in a separate thread if PV is enabled.
+    if (PV.Enabled()) {
+        boost::thread thread(boost::bind(&HandleBlockMessageThread, pfrom, strCommand, block, inv));
+        thread.detach();  // Separate actual thread from the "thread" object so its fine to fall out of scope
+    }
+    else {
+        HandleBlockMessageThread(pfrom, strCommand, block, inv);
+    }
 }
 
 void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlock &block, const CInv &inv)
@@ -463,7 +463,6 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
     // conditions in AcceptBlock().
     bool forceProcessing = pfrom->fWhitelisted && !IsInitialBlockDownload();
     const CChainParams& chainparams = Params();
-    pfrom->firstBlock += 1;
     if (PV.Enabled()) {
         ProcessNewBlock(state, chainparams, pfrom, &block, forceProcessing, NULL, true);
     }
@@ -512,6 +511,7 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
                 if (pnode->mapThinBlocksInFlight.size() > 0)
                     nTotalThinBlocksInFlight++;
             }
+            pfrom->firstBlock += 1; // update statistics, requires cs_vNodes
         }
 
         // When we no longer have any thinblocks in flight then clear the set
