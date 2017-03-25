@@ -52,11 +52,17 @@ int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 
 bool IsTrafficShapingEnabled();
 
+bool MiningAndExcessiveBlockValidatorRule(const unsigned int newExcessiveBlockSize, const unsigned int newMiningBlockSize)
+{
+    // The mined block size must not be greater then the excessive block size.
+    return (newExcessiveBlockSize < newMiningBlockSize);
+}
+
 std::string ExcessiveBlockValidator(const unsigned int &value, unsigned int *item, bool validate)
 {
     if (validate)
     {
-        if (value < maxGeneratedBlock)
+        if (MiningAndExcessiveBlockValidatorRule(value, maxGeneratedBlock))
         {
             std::ostringstream ret;
             ret << "Sorry, your maximum mined block (" << maxGeneratedBlock
@@ -76,7 +82,7 @@ std::string MiningBlockSizeValidator(const uint64_t &value, uint64_t *item, bool
 {
     if (validate)
     {
-        if (value > excessiveBlockSize)
+        if (MiningAndExcessiveBlockValidatorRule(excessiveBlockSize, value))
         {
             std::ostringstream ret;
             ret << "Sorry, your excessive block size (" << excessiveBlockSize
