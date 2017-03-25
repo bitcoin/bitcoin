@@ -248,6 +248,8 @@ bool TorControlConnection::Command(const std::string &cmd, const ReplyHandlerCB&
 
 /* Split reply line in the form 'AUTH METHODS=...' into a type
  * 'AUTH' and arguments 'METHODS=...'.
+ * Grammar is implicitly defined in https://spec.torproject.org/control-spec by
+ * the server reply formats for PROTOCOLINFO (S3.21) and AUTHCHALLENGE (S3.24).
  */
 static std::pair<std::string,std::string> SplitTorReplyLine(const std::string &s)
 {
@@ -263,6 +265,9 @@ static std::pair<std::string,std::string> SplitTorReplyLine(const std::string &s
 }
 
 /** Parse reply arguments in the form 'METHODS=COOKIE,SAFECOOKIE COOKIEFILE=".../control_auth_cookie"'.
+ * Grammar is implicitly defined in https://spec.torproject.org/control-spec by
+ * the server reply formats for PROTOCOLINFO (S3.21), AUTHCHALLENGE (S3.24),
+ * and ADD_ONION (S3.27). See also sections 2.1 and 2.3.
  */
 static std::map<std::string,std::string> ParseTorReplyMapping(const std::string &s)
 {
@@ -278,7 +283,7 @@ static std::map<std::string,std::string> ParseTorReplyMapping(const std::string 
             return std::map<std::string,std::string>();
         ++ptr; // skip '='
         if (ptr < s.size() && s[ptr] == '"') { // Quoted string
-            ++ptr; // skip '='
+            ++ptr; // skip opening '"'
             bool escape_next = false;
             while (ptr < s.size() && (!escape_next && s[ptr] != '"')) {
                 escape_next = (s[ptr] == '\\');
