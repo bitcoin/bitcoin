@@ -242,6 +242,9 @@ bool CBlockSizeProof::VerifyComponents(const std::vector<CBlockSizeProofComponen
 
         hashes.push_back(component.GetTxHash());
         for (size_t i = index >> skipcollapse; i & 1; i >>= 1) {
+            if (hashes.back() == *(hashes.rbegin() + 1)) {
+                return false;
+            }
             CollapseHashes(hashes);
         }
 
@@ -261,7 +264,6 @@ bool CBlockSizeProof::VerifyComponents(const std::vector<CBlockSizeProofComponen
         }
         ++index;
     }
-    // TODO: Check that if there are any duplicate merkle links, there are no full tx proofs on the right side of them.
     merkleroot = hashes.back();
     return true;
 }
