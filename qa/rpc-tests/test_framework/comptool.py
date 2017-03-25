@@ -253,7 +253,6 @@ class TestManager(object):
                 if outcome is None:
                     if c.cb.bestblockhash != self.connections[0].cb.bestblockhash:
                         print("Node ", c.addr, " has best block ", hex(c.cb.bestblockhash), ". Expecting ", hex(self.connections[0].cb.bestblockhash))
-                        # pdb.set_trace()
                         return False
                 elif isinstance(outcome, RejectResult): # Check that block was rejected w/ code
                     if c.cb.bestblockhash == blockhash:
@@ -266,9 +265,17 @@ class TestManager(object):
                         return False
                 elif ((c.cb.bestblockhash == blockhash) != outcome):
                     print("Node ", c.addr, " has best block ", hex(c.cb.bestblockhash), ". Expecting ", hex(blockhash), outcome)
-                    print("Quick   RPC returns", c.rpc.getbestblockhash())
-                    time.sleep(5.5) #wait the requestmanager re-request interval to see if the block shows up
-                    print("Delayed RPC returns", c.rpc.getbestblockhash())
+                    hsh = c.rpc.getbestblockhash()
+                    print("Quick   RPC returns", hsh)
+                    t = 0
+                    # give 20 seconds to sync, this is a pretty generous number.  How much time might it take
+                    # an underpowered test node running 4-6 copies of bitcoind to sync them?  
+                    while t < 10 and hsh != hex(blockhash)[2:]:  # hex(blockhash) returns "0x..." whereas hsh does not have the "0x"
+                        t += 1
+                        time.sleep(2) 
+                        hsh = c.rpc.getbestblockhash()
+                    if t == 10:
+                        print("Delayed RPC returns", hsh)
 
                     rpcblock =  c.rpc.getbestblockhash()
                     block = hex(blockhash)[2:]
@@ -278,7 +285,6 @@ class TestManager(object):
                     if rpcblock == block:
                         return True
                     else:
-		    # pdb.set_trace()
                         return False
 
             return True
