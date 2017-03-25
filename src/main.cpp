@@ -2426,7 +2426,7 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp)
             return state.Invalid(error("AcceptBlock() : rejected by synchronized checkpoint"));
 
         // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
-        if (nVersion < 2)
+        if (nVersion < 2 && IsProtocolV06(nTime))
         {
             if ((!fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 950, 1000)) ||
                 (fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 75, 100)))
@@ -2435,7 +2435,7 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp)
             }
         }
         // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
-        if (nVersion >= 2)
+        if (nVersion >= 2 && IsProtocolV06(nTime))
         {
             // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
             if ((!fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 750, 1000)) ||
