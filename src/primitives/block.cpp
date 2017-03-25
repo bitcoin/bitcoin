@@ -15,6 +15,18 @@ uint256 CBlockHeader::GetHash() const
     return SerializeHash(*this);
 }
 
+int CBlock::GetWitnessCommitmentIndex() const
+{
+    int commitpos = -1;
+    for (size_t o = vtx[0]->vout.size(); o-- > 0; ) {
+        if (vtx[0]->vout[o].scriptPubKey.size() >= 38 && vtx[0]->vout[o].scriptPubKey[0] == OP_RETURN && vtx[0]->vout[o].scriptPubKey[1] == 0x24 && vtx[0]->vout[o].scriptPubKey[2] == 0xaa && vtx[0]->vout[o].scriptPubKey[3] == 0x21 && vtx[0]->vout[o].scriptPubKey[4] == 0xa9 && vtx[0]->vout[o].scriptPubKey[5] == 0xed) {
+            commitpos = o;
+            break;
+        }
+    }
+    return commitpos;
+}
+
 std::string CBlock::ToString() const
 {
     std::stringstream s;
