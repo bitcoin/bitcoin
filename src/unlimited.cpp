@@ -44,11 +44,17 @@ extern CTweakRef<uint64_t> miningBlockSize;
 
 bool IsTrafficShapingEnabled();
 
+bool MiningAndExcessiveBlockValidatorRule(const unsigned int newExcessiveBlockSize, const unsigned int newMiningBlockSize)
+{
+    // The mined block size must not be greater then the excessive block size.
+    return (newExcessiveBlockSize < newMiningBlockSize);
+}
+
 std::string ExcessiveBlockValidator(const unsigned int& value,unsigned int* item,bool validate)
 {
   if (validate)
     {
-      if (value < maxGeneratedBlock) 
+      if (MiningAndExcessiveBlockValidatorRule(value, maxGeneratedBlock))
 	{
         std::ostringstream ret;
         ret << "Sorry, your maximum mined block (" << maxGeneratedBlock << ") is larger than your proposed excessive size (" << value << ").  This would cause you to orphan your own blocks.";    
@@ -66,7 +72,7 @@ std::string MiningBlockSizeValidator(const uint64_t& value,uint64_t* item,bool v
 {
   if (validate)
     {
-      if (value > excessiveBlockSize) 
+      if (MiningAndExcessiveBlockValidatorRule(excessiveBlockSize, value))
 	{
         std::ostringstream ret;
         ret << "Sorry, your excessive block size (" << excessiveBlockSize << ") is smaller than your proposed mined block size (" << value << ").  This would cause you to orphan your own blocks.";    
