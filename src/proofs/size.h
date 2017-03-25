@@ -89,7 +89,7 @@ public:
     }
 
     static size_t CalculateMinTxCount(uint32_t nTxCountLog2);
-    bool Verify(const uint256& merkleroot) const;
+    bool Verify(const uint256& merkleroot, const uint256 *witness_hash, const std::vector<unsigned char> *witness_nonce) const;
     void GetBlockLowerBounds(size_t &nMinStrippedSize, size_t &nMinFullSize, size_t &nMinWeight) const;
 
 private:

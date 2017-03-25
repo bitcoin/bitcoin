@@ -5,6 +5,7 @@
 #include "size.h"
 
 #include "crypto/sha256.h"
+#include "hash.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "serialize.h"
@@ -76,15 +77,26 @@ uint32_t CBlockSizeProof::ceil_log2(size_t n)
 
 CBlockSizeProof::CBlockSizeProof(const CBlock& block, size_t nProveWeight)
 {
+    int commitpos;
+
     const size_t nTxCount = block.vtx.size();
     nTxCountLog2 = ceil_log2(nTxCount);
 
     std::vector<size_t> vFillStripped, vFillWitness;
     BuildFillLists(block, nProveWeight, vFillStripped, vFillWitness);
     FillComponents(componentsStripped, block, vFillStripped, SERIALIZE_TRANSACTION_NO_WITNESS);
-    FillComponents(componentsFull, block, vFillWitness, 0);
+    if (vFillWitness.empty()) {
+        assert(Verify(block.hashMerkleRoot, NULL, NULL));
+    } else {
+        FillComponents(componentsFull, block, vFillWitness, 0);
 
-    assert(Verify(block.hashMerkleRoot));
+        commitpos = block.GetWitnessCommitmentIndex();
+        assert(commitpos != -1);
+        uint256 witness_hash;
+        memcpy(witness_hash.begin(), &block.vtx[0]->vout[commitpos].scriptPubKey[6], 32);
+
+        assert(Verify(block.hashMerkleRoot, &witness_hash, &block.vtx[0]->vin[0].scriptWitness.stack[0]));
+    }
 }
 
 void CBlockSizeProof::BuildFillLists(const CBlock& block, size_t nProveWeight, std::vector<size_t>& vFillStripped, std::vector<size_t>& vFillWitness)
@@ -254,7 +266,7 @@ bool CBlockSizeProof::VerifyComponents(const std::vector<CBlockSizeProofComponen
     return true;
 }
 
-bool CBlockSizeProof::Verify(const uint256& merkleroot) const
+bool CBlockSizeProof::Verify(const uint256& merkleroot, const uint256 * const witness_hash, const std::vector<unsigned char> * const witness_nonce) const
 {
     bool fFoundFullTx = false;
     size_t txcount_stripped, txcount;
@@ -263,10 +275,18 @@ bool CBlockSizeProof::Verify(const uint256& merkleroot) const
         return false;
     }
     if (!componentsFull.empty()) {
+        if (!witness_hash) {
+            // Non-segwit blocks can't have a weight proof
+            return false;
+        }
         if (!VerifyComponents(componentsFull, calculated_merkleroot, fFoundFullTx, txcount)) {
             return false;
         }
-        // TODO: Check witness root hash
+        uint256 hashWitness;
+        CHash256().Write(witness_hash->begin(), witness_hash->size()).Write(witness_nonce->data(), witness_nonce->size()).Finalize(hashWitness.begin());
+        if (hashWitness != calculated_merkleroot) {
+            return false;
+        }
     }
     if (!fFoundFullTx) {
         return false;
