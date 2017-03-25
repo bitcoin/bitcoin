@@ -96,6 +96,7 @@ private:
     static uint32_t ceil_log2(size_t n);
     static void BuildFillLists(const CBlock&, size_t nProveWeight, std::vector<size_t>& vFillStripped, std::vector<size_t>& vFillWitness);
     void FillComponents(std::vector<CBlockSizeProofComponent>& components, const CBlock&, std::vector<size_t>& vFillIndexes, int serialFlags);
+    static bool VerifyComponents(const std::vector<CBlockSizeProofComponent>& components, uint256& out_merkleroot, bool& inout_fFoundFullTx, size_t& out_txcount);
     static void CollapseHashes(std::vector<uint256>& hashes);
     static size_t GetBlockMinSizeForComponents(const std::vector<CBlockSizeProofComponent>&);
 };

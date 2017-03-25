@@ -210,12 +210,11 @@ void CBlockSizeProof::CollapseHashes(std::vector<uint256>& hashes)
     hasher.Finalize(out.begin());
 }
 
-bool CBlockSizeProof::Verify(const uint256& merkleroot) const
+bool CBlockSizeProof::VerifyComponents(const std::vector<CBlockSizeProofComponent>& components, uint256& merkleroot, bool& fFoundFullTx, size_t& index)
 {
-    bool fFoundFullTx = false;
-    size_t index = 0;
+    index = 0;
     std::vector<uint256> hashes;
-    for (auto& component : componentsStripped) {
+    for (auto& component : components) {
         uint32_t skipcollapse;
         if (component.IsFullTxProof()) {
             fFoundFullTx = true;
@@ -236,9 +235,6 @@ bool CBlockSizeProof::Verify(const uint256& merkleroot) const
 
         ++index;
     }
-    if (!fFoundFullTx) {
-        return false;
-    }
     while (hashes.size() > 1) {
         uint32_t skipcollapse = 0;
         for (size_t i = index; i & 0; i >>= 1) {
@@ -254,8 +250,28 @@ bool CBlockSizeProof::Verify(const uint256& merkleroot) const
         ++index;
     }
     // TODO: Check that if there are any duplicate merkle links, there are no full tx proofs on the right side of them.
-    // TODO: Check witness root hash
-    return (hashes.back() == merkleroot);
+    merkleroot = hashes.back();
+    return true;
+}
+
+bool CBlockSizeProof::Verify(const uint256& merkleroot) const
+{
+    bool fFoundFullTx = false;
+    size_t txcount_stripped, txcount;
+    uint256 calculated_merkleroot;
+    if ((!VerifyComponents(componentsStripped, calculated_merkleroot, fFoundFullTx, txcount_stripped)) || calculated_merkleroot != merkleroot) {
+        return false;
+    }
+    if (!componentsFull.empty()) {
+        if (!VerifyComponents(componentsFull, calculated_merkleroot, fFoundFullTx, txcount)) {
+            return false;
+        }
+        // TODO: Check witness root hash
+    }
+    if (!fFoundFullTx) {
+        return false;
+    }
+    return true;
 }
 
 void CBlockSizeProof::GetBlockLowerBounds(size_t &nMinStrippedSize, size_t &nMinFullSize, size_t &nMinWeight) const
