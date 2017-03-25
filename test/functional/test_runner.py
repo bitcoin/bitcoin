@@ -90,7 +90,7 @@ BASE_SCRIPTS= [
 ZMQ_SCRIPTS = [
     # ZMQ test can only be run if bitcoin was built with zmq-enabled.
     # call test_runner.py with -nozmq to explicitly exclude these tests.
-    "zmq_test.py"]
+    'zmq_test.py']
 
 EXTENDED_SCRIPTS = [
     # These tests are not run by the travis build process.
@@ -206,9 +206,9 @@ def main():
         sys.exit(0)
 
     if args.help:
-        # Print help for test_runner.py, then print help of the first script and exit.
+        # Print help for test_runner.py, then print help of the first script (with args removed) and exit.
         parser.print_help()
-        subprocess.check_call((config["environment"]["SRCDIR"] + '/test/functional/' + test_list[0]).split() + ['-h'])
+        subprocess.check_call([(config["environment"]["SRCDIR"] + '/test/functional/' + test_list[0].split()[0])] + ['-h'])
         sys.exit(0)
 
     run_tests(test_list, config["environment"]["SRCDIR"], config["environment"]["BUILDDIR"], config["environment"]["EXEEXT"], args.jobs, args.coverage, passon_args)
@@ -299,9 +299,10 @@ class TestHandler:
             port_seed = ["--portseed={}".format(len(self.test_list) + self.portseed_offset)]
             log_stdout = tempfile.SpooledTemporaryFile(max_size=2**16)
             log_stderr = tempfile.SpooledTemporaryFile(max_size=2**16)
+            test_argv = t.split()
             self.jobs.append((t,
                               time.time(),
-                              subprocess.Popen((self.tests_dir + t).split() + self.flags + port_seed,
+                              subprocess.Popen([self.tests_dir + test_argv[0]] + test_argv[1:] + self.flags + port_seed,
                                                universal_newlines=True,
                                                stdout=log_stdout,
                                                stderr=log_stderr),
