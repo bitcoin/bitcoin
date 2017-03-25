@@ -21,6 +21,7 @@
 #include "policy/policy.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
+#include "proofs/size.h"
 #include "random.h"
 #include "tinyformat.h"
 #include "txmempool.h"
@@ -2590,6 +2591,50 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             LogPrint("net", "received: feefilter of %s from peer=%d\n", CFeeRate(newFeeFilter).ToString(), pfrom->id);
         }
     }
+
+
+    else if (strCommand == NetMsgType::GETFRAUD)
+    {
+        CBlockLocator locator;
+        vRecv >> locator;
+        CBlockIndex *pindex = NULL;
+        for (const uint256& hash : locator.vHave) {
+            BlockMap::iterator mi = mapBlockIndex.find(hash);
+            if (mi == mapBlockIndex.end()) {
+                continue;
+            }
+            for (pindex = mi->second; pindex; pindex = pindex->pprev) {
+                if (pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
+                    connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::FRAUD, pindex->GetBlockHash(), VARINT(0)));
+                    break;
+                }
+                if (pindex->nStatus & BLOCK_FAILED_VALID) {
+                    if ((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TRANSACTIONS) {
+                        // These are only reached when block size/weight are known to be good
+                    } else {
+                        CBlock block;
+                        const bool ret = ReadBlockFromDisk(block, pindex, chainparams.GetConsensus());
+                        assert(ret);
+
+                        if (GetBlockWeight(block) > MAX_BLOCK_WEIGHT) {
+                            CBlockSizeProof fp(block);
+                            connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::FRAUD, pindex->GetBlockHash(), VARINT(2), fp));
+                            break;
+                        }
+                    }
+                    connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::FRAUD, pindex->GetBlockHash(), VARINT(1)));
+                    break;
+                }
+            }
+            if (pindex) {
+                break;
+            }
+        }
+        if (!pindex) {
+            connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::FRAUD));
+        }
+    }
+
 
     else if (strCommand == NetMsgType::NOTFOUND) {
         // We do not care about the NOTFOUND message, but logging an Unknown Command
