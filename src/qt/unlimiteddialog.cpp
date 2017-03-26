@@ -192,7 +192,7 @@ void UnlimitedDialog::validateBlockSize()
     int mmb = ui.miningMaxBlock->text().toInt();
     int ebs = ui.excessiveBlockSize->text().toInt();
 
-    if ( MiningAndExcessiveBlockValidatorRule(ebs, mmb))
+    if ( ! MiningAndExcessiveBlockValidatorRule(ebs, mmb))
     {
        ui.statusLabel->setText(tr("Mined block size cannot be larger then excessive block size!"));
        ui.miningMaxBlock->setStyleSheet("QLineEdit {  background-color: red; }");
