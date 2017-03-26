@@ -50,12 +50,12 @@ void UnlimitedModel::Init()
     // Ensure restart flag is unset on client startup
     setRestartRequired(false);
 
-    unsigned int ead = excessiveBlockSize;
-    unsigned int mgb = maxGeneratedBlock;
+    unsigned int tmpExcessiveBlockSize = excessiveBlockSize;
+    unsigned int tmpMaxGeneratedBlock = maxGeneratedBlock;
 
     if (!settings.contains("excessiveBlockSize"))
       settings.setValue("excessiveBlockSize", QString::number(excessiveBlockSize));
-    else ead = settings.value("excessiveBlockSize").toInt();
+    else tmpExcessiveBlockSize = settings.value("excessiveBlockSize").toInt();
 
     if (!settings.contains("excessiveAcceptDepth"))
       settings.setValue("excessiveAcceptDepth", QString::number(excessiveAcceptDepth));
@@ -63,20 +63,20 @@ void UnlimitedModel::Init()
 
     if (!settings.contains("maxGeneratedBlock"))
         settings.setValue("maxGeneratedBlock", QString::number(maxGeneratedBlock));
-    else mgb = settings.value("maxGeneratedBlock").toInt();
+    else tmpMaxGeneratedBlock = settings.value("maxGeneratedBlock").toInt();
 
-    if (MiningAndExcessiveBlockValidatorRule(ead, mgb))
+    if ( ! MiningAndExcessiveBlockValidatorRule(tmpExcessiveBlockSize, tmpMaxGeneratedBlock))
     {
         std::ostringstream emsg;
-        emsg << "Sorry, your configured maximum mined block (" << mgb <<
-                ") is larger than your configured excessive size (" << ead <<
+        emsg << "Sorry, your configured maximum mined block (" << tmpMaxGeneratedBlock <<
+                ") is larger than your configured excessive size (" << tmpExcessiveBlockSize <<
                 ").  This would cause you to orphan your own blocks.";
         LogPrintf(emsg.str().c_str());
     }
     else
     {
-        miningBlockSize.Set(mgb);
-        ebTweak.Set(ead);
+        miningBlockSize.Set(tmpMaxGeneratedBlock);
+        ebTweak.Set(tmpExcessiveBlockSize);
     }
 
     if (!SoftSetArg("-excessiveblocksize",boost::lexical_cast<std::string>(excessiveBlockSize)))
