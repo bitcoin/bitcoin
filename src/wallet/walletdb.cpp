@@ -552,7 +552,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     DBErrors result = DB_LOAD_OK;
 
     try {
-        LOCK(pwallet->cs_wallet);
+        LOCK(pwallet->m_walletCriticalSection);
         int nMinVersion = 0;
         if (Read((string)"minversion", nMinVersion))
         {
@@ -658,7 +658,7 @@ DBErrors CWalletDB::FindWalletTx(CWallet* pwallet, vector<uint256>& vTxHash, vec
     DBErrors result = DB_LOAD_OK;
 
     try {
-        LOCK(pwallet->cs_wallet);
+        LOCK(pwallet->m_walletCriticalSection);
         int nMinVersion = 0;
         if (Read((string)"minversion", nMinVersion))
         {
@@ -896,7 +896,7 @@ bool CWalletDB::Recover(CDBEnv& dbenv, const std::string& filename, bool fOnlyKe
             bool fReadOK;
             {
                 // Required in LoadKeyMetadata():
-                LOCK(dummyWallet.cs_wallet);
+                LOCK(dummyWallet.m_walletCriticalSection);
                 fReadOK = ReadKeyValue(&dummyWallet, ssKey, ssValue,
                                         wss, strType, strErr);
             }

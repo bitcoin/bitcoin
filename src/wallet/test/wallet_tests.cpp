@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
     CoinSet setCoinsRet, setCoinsRet2;
     CAmount nValueRet;
 
-    LOCK(wallet.cs_wallet);
+    LOCK(wallet.m_walletCriticalSection);
 
     // test multiple times to allow for differences in the shuffle order
     for (int i = 0; i < RUN_TESTS; i++)
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(ApproximateBestSubset)
     CoinSet setCoinsRet;
     CAmount nValueRet;
 
-    LOCK(wallet.cs_wallet);
+    LOCK(wallet.m_walletCriticalSection);
 
     empty_wallet();
 

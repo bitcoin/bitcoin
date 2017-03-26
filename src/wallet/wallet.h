@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2010 Satoshi Nakamoto
+﻿// Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -144,7 +144,7 @@ private:
      */
     bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = NULL) const;
 
-    CWalletDB *pwalletdbEncryption;
+    CWalletDB *m_pwalletdbEncryption;
 
     //! the current wallet version: clients below this version are not able to load the wallet
     int m_nWalletVersion;
@@ -172,9 +172,9 @@ private:
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
 
     /* the HD chain data model (external chain counters) */
-    CHDChain hdChain;
+    CHDChain m_hdChain;
 
-    bool fFileBacked;
+    bool m_fFileBacked;
 
     std::set<int64_t> setKeyPool;
 public:
@@ -182,10 +182,10 @@ public:
      * Main wallet lock.
      * This lock protects all the fields added by CWallet
      *   except for:
-     *      fFileBacked (immutable after instantiation)
+     *      m_fFileBacked (immutable after instantiation)
      *      strWalletFile (immutable after instantiation)
      */
-    mutable CCriticalSection cs_wallet;
+    mutable CCriticalSection m_walletCriticalSection;
 
     const std::string strWalletFile;
 
@@ -215,22 +215,24 @@ public:
     CWallet(const std::string& strWalletFileIn) : strWalletFile(strWalletFileIn)
     {
         SetNull();
-        fFileBacked = true;
+        m_fFileBacked = true;
     }
 
     ~CWallet()
     {
-        delete pwalletdbEncryption;
-        pwalletdbEncryption = NULL;
+        delete m_pwalletdbEncryption;
+        m_pwalletdbEncryption = NULL;
     }
 
+private:
+    // ※コンストラクタのみから呼ばれる.
     void SetNull()
     {
         m_nWalletVersion = FEATURE_BASE;
         m_nWalletMaxVersion = FEATURE_BASE;
-        fFileBacked = false;
+        m_fFileBacked = false;
         nMasterKeyMaxID = 0;
-        pwalletdbEncryption = NULL;
+        m_pwalletdbEncryption = NULL;
         nOrderPosNext = 0;
         nNextResend = 0;
         nLastResend = 0;
@@ -238,6 +240,7 @@ public:
         fBroadcastTransactions = false;
     }
 
+public:
     std::map<uint256, CWalletTx> mapWallet;
     std::list<CAccountingEntry> laccentries;
 
@@ -259,7 +262,7 @@ public:
     const CWalletTx* GetWalletTx(const uint256& hash) const;
 
     //! check whether we are allowed to upgrade (or already support) to the named feature
-    bool CanSupportFeature(enum WalletFeature wf) { AssertLockHeld(cs_wallet); return m_nWalletMaxVersion >= wf; }
+    bool CanSupportFeature(enum WalletFeature wf) { AssertLockHeld(m_walletCriticalSection); return m_nWalletMaxVersion >= wf; }
 
     /**
      * populate vCoins with vector of available COutputs.
@@ -296,7 +299,10 @@ public:
     bool LoadKeyMetadata(const CPubKey &pubkey, const CKeyMetadata &metadata);
 
     bool LoadMinVersion(int nVersion) {
-        AssertLockHeld(cs_wallet); m_nWalletVersion = nVersion; m_nWalletMaxVersion = std::max(m_nWalletMaxVersion, nVersion); return true;
+        AssertLockHeld(m_walletCriticalSection);
+        m_nWalletVersion = nVersion;
+        m_nWalletMaxVersion = std::max(m_nWalletMaxVersion, nVersion);
+        return true;
     }
 
     //! Adds an encrypted key to the store, and saves it to disk.
@@ -427,7 +433,7 @@ public:
     CAmount GetChange(const CTransaction& tx) const;
     void SetBestChain(const CBlockLocator& loc);
 
-    DBErrors LoadWallet(bool& fFirstRunRet);
+    DBErrors LoadWallet(bool* pfFirstRunRet);
     DBErrors ZapWalletTx(std::vector<CWalletTx>& vWtx);
     DBErrors ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut);
 
@@ -440,7 +446,7 @@ public:
     void Inventory(const uint256 &hash)
     {
         {
-            LOCK(cs_wallet);
+            LOCK(m_walletCriticalSection);
             std::map<uint256, int>::iterator mi = mapRequestCount.find(hash);
             if (mi != mapRequestCount.end())
                 (*mi).second++;
@@ -450,13 +456,13 @@ public:
     void GetScriptForMining(boost::shared_ptr<CReserveScript> &script);
     void ResetRequestCount(const uint256 &hash)
     {
-        LOCK(cs_wallet);
+        LOCK(m_walletCriticalSection);
         mapRequestCount[hash] = 0;
     };
     
     unsigned int GetKeyPoolSize()
     {
-        AssertLockHeld(cs_wallet); // setKeyPool
+        AssertLockHeld(m_walletCriticalSection); // setKeyPool
         return setKeyPool.size();
     }
 
@@ -469,7 +475,7 @@ public:
     bool SetMaxVersion(int nVersion);
 
     //! get the current wallet format (the oldest client version guaranteed to understand this wallet)
-    int GetVersion() { LOCK(cs_wallet); return m_nWalletVersion; }
+    int GetVersion() { LOCK(m_walletCriticalSection); return m_nWalletVersion; }
 
     //! Get wallet transactions that conflict with given transaction (spend same outputs)
     std::set<uint256> GetConflicts(const uint256& txid) const;
@@ -485,7 +491,7 @@ public:
     
     /** 
      * Address book entry changed.
-     * @note called with lock cs_wallet held.
+     * @note called with lock m_walletCriticalSection held.
      */
     boost::signals2::signal<void (CWallet *wallet, const CTxDestination
             &address, const std::string &label, bool isMine,
@@ -494,7 +500,7 @@ public:
 
     /** 
      * Wallet transaction added, removed or updated.
-     * @note called with lock cs_wallet held.
+     * @note called with lock m_walletCriticalSection held.
      */
     boost::signals2::signal<void (CWallet *wallet, const uint256 &hashTx,
             ChangeType status)> NotifyTransactionChanged;
@@ -536,7 +542,7 @@ public:
 
     /* Set the HD chain model (chain child index counters) */
     bool SetHDChain(const CHDChain& chain, bool memonly);
-    const CHDChain& GetHDChain() { return hdChain; }
+    const CHDChain& GetHDChain() { return m_hdChain; }
 
     /* Returns true if HD is enabled */
     bool IsHDEnabled();

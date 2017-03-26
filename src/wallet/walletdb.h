@@ -46,7 +46,7 @@ class CHDChain
 {
 public:
     uint32_t nExternalChainCounter;
-    CKeyID masterKeyID; //!< master key hash160
+    CKeyID m_masterKeyID; //!< master key hash160
 
     static const int CURRENT_VERSION = 1;
     int nVersion;
@@ -58,14 +58,14 @@ public:
     {
         READWRITE(this->nVersion);
         READWRITE(nExternalChainCounter);
-        READWRITE(masterKeyID);
+        READWRITE(m_masterKeyID);
     }
 
     void SetNull()
     {
         nVersion = CHDChain::CURRENT_VERSION;
         nExternalChainCounter = 0;
-        masterKeyID.SetNull();
+        m_masterKeyID.SetNull();
     }
 };
 
@@ -78,7 +78,7 @@ public:
     int nVersion;
     int64_t nCreateTime; // 0 means unknown
     std::string hdKeypath; //optional HD/bip32 keypath
-    CKeyID hdMasterKeyID; //id of the HD masterkey used to derive this key
+    CKeyID m_hdMasterKeyID; //id of the HD masterkey used to derive this key
 
     CKeyMetadata()
     {
@@ -99,7 +99,7 @@ public:
         if (this->nVersion >= VERSION_WITH_HDDATA)
         {
             READWRITE(hdKeypath);
-            READWRITE(hdMasterKeyID);
+            READWRITE(m_hdMasterKeyID);
         }
     }
 
@@ -108,7 +108,7 @@ public:
         nVersion = CKeyMetadata::CURRENT_VERSION;
         nCreateTime = 0;
         hdKeypath.clear();
-        hdMasterKeyID.SetNull();
+        m_hdMasterKeyID.SetNull();
     }
 };
 
