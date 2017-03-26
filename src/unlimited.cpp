@@ -55,7 +55,7 @@ bool IsTrafficShapingEnabled();
 bool MiningAndExcessiveBlockValidatorRule(const unsigned int newExcessiveBlockSize, const unsigned int newMiningBlockSize)
 {
     // The mined block size must be less then or equal too the excessive block size.
-    return (newExcessiveBlockSize >= newMiningBlockSize);
+    return ( newMiningBlockSize <= newExcessiveBlockSize );
 }
 
 std::string ExcessiveBlockValidator(const unsigned int &value, unsigned int *item, bool validate)
