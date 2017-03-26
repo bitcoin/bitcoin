@@ -172,11 +172,11 @@ bool UnlimitedModel::setData(const QModelIndex& index, const QVariant& value, in
         {
         case MaxGeneratedBlock:
           {
-            unsigned int mbs = value.toUInt(&successful);
+            unsigned int mgb = value.toUInt(&successful);
             if (successful && (settings.value("maxGeneratedBlock") != value))
               {
                 settings.setValue("maxGeneratedBlock", value);
-                miningBlockSize.Set(mbs);
+                miningBlockSize.Set(mgb);
               }
           }
           break;
