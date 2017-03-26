@@ -52,7 +52,7 @@ def disable_mocktime():
 def get_mocktime():
     return MOCKTIME
 
-def get_rpc_proxy(url, node_number, timeout=None, coveragedir=None):
+def get_rpc_proxy(url, node_number, timeout=None, coverage_dir=None):
     """
     Args:
         url (str): URL of the RPC server to call
@@ -73,7 +73,7 @@ def get_rpc_proxy(url, node_number, timeout=None, coveragedir=None):
     proxy.url = url  # store URL on proxy for info
 
     coverage_logfile = coverage.get_filename(
-        coveragedir, node_number) if coveragedir else None
+        coverage_dir, node_number) if coverage_dir else None
 
     return coverage.AuthServiceProxyWrapper(proxy, coverage_logfile)
 

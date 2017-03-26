@@ -63,7 +63,6 @@ class BitcoinTestFramework(object):
         self.num_nodes = 4
         self.setup_clean_chain = False
         self.nodes = None
-        self.bitcoind_processes = {}
 
     def add_options(self, parser):
         pass
@@ -197,39 +196,42 @@ class BitcoinTestFramework(object):
         if dirname is None:
             dirname = self.options.tmpdir
         if extra_args is None:
-            extra_args = [None for _ in range(num_nodes)]
+            extra_args = [[] for _ in range(num_nodes)]
         if binary is None:
             binary = [None for _ in range(num_nodes)]
-        rpcs = []
+        nodes = []
         try:
             for i in range(num_nodes):
-                rpcs.append(self.start_node(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i]))
+                nodes.append(TestNode(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i], stderr=None, coverage_dir=self.options.coveragedir))
+                nodes[i].start()
+            for node in nodes:
+                while not node.is_rpc_connected():
+                    time.sleep(0.1)
         except:  # If one node failed to start, stop the others
             self.stop_nodes()
             raise
-        return rpcs
 
-    def start_node(self, i, dirname=None, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
+        if self.options.coveragedir is not None:
+            coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
+
+        return nodes
+
+    def start_node(self, i, dirname=None, extra_args=[], rpchost=None, timewait=None, binary=None, stderr=None):
         """Start a bitcoind and return RPC connection to it."""
         if dirname is None:
             dirname = self.options.tmpdir
         datadir = os.path.join(dirname, "node" + str(i))
         if binary is None:
             binary = os.getenv("BITCOIND", "bitcoind")
-        args = [binary, "-datadir=" + datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-mocktime=" + str(get_mocktime())]
-        if extra_args is not None:
-            args.extend(extra_args)
-        self.bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)
-        self.log.debug("initialize_chain: bitcoind started, waiting for RPC to come up")
-        url = rpc_url(i, rpchost)
-        self._wait_for_bitcoind_start(self.bitcoind_processes[i], url, i)
-        self.log.debug("initialize_chain: RPC successfully started")
-        proxy = get_rpc_proxy(url, i, timeout=timewait, coveragedir=self.options.coveragedir)
+        node = TestNode(i, dirname, extra_args, rpchost, timewait, binary, stderr, coverage_dir=self.options.coveragedir)
+        node.start()
+        while not node.is_rpc_connected():
+            time.sleep(0.1)
 
-        if self.options.coveragedir:
-            coverage.write_all_rpc_commands(self.options.coveragedir, proxy)
+        if self.options.coveragedir is not None:
+            coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
 
-        return proxy
+        return node
 
     def assert_start_raises_init_error(self, i, dirname, extra_args=None, expected_msg=None):
         with tempfile.SpooledTemporaryFile(max_size=2**16) as log_stderr:
@@ -238,6 +240,8 @@ class BitcoinTestFramework(object):
                 self.stop_node(i)
             except Exception as e:
                 assert 'bitcoind exited' in str(e)  # node must have shutdown
+                self.nodes[i].running = False
+                self.nodes[i].process = None
                 if expected_msg is not None:
                     log_stderr.seek(0)
                     stderr = log_stderr.read().decode('utf-8')
@@ -251,19 +255,16 @@ class BitcoinTestFramework(object):
                 raise AssertionError(assert_msg)
 
     def stop_nodes(self):
-        for i in range(len(self.nodes)):
-            self.stop_node(i)
-        assert not self.bitcoind_processes.values()  # All connections must be gone now
+        [node.stop_node() for node in self.nodes]
+        # All connections must be gone now
+        for node in self.nodes:
+            while not node.is_node_stopped():
+                time.sleep(0.1)
 
     def stop_node(self, i):
-        self.log.debug("Stopping node %d" % i)
-        try:
-            self.nodes[i].stop()
-        except http.client.CannotSendRequest as e:
-            self.log.exception("Unable to stop node %d" % i)
-        return_code = self.bitcoind_processes[i].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
-        assert_equal(return_code, 0)
-        del self.bitcoind_processes[i]
+        self.nodes[i].stop_node()
+        while not self.nodes[i].is_node_stopped():
+            time.sleep(0.1)
 
     def split_network(self):
         """
@@ -348,18 +349,14 @@ class BitcoinTestFramework(object):
                 args = [os.getenv("BITCOIND", "bitcoind"), "-server", "-keypool=1", "-datadir=" + datadir, "-discover=0"]
                 if i > 0:
                     args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
-                self.bitcoind_processes[i] = subprocess.Popen(args)
-                self.logger.debug("initialize_chain: bitcoind started, waiting for RPC to come up")
-                self._wait_for_bitcoind_start(self.bitcoind_processes[i], rpc_url(i), i)
-                self.logger.debug("initialize_chain: RPC successfully started")
+                self.nodes.append(TestNode(i, datadir, extra_args=[], rpchost=None, timewait=None, binary=None, stderr=None, coverage_dir=None))
+                self.nodes[i].args = args
+                self.nodes[i].start()
 
-            self.nodes = []
-            for i in range(MAX_NODES):
-                try:
-                    self.nodes.append(get_rpc_proxy(rpc_url(i), i, coveragedir=self.options.coveragedir))
-                except:
-                    self.log.exception("Error connecting to node %d" % i)
-                    sys.exit(1)
+            # Wait for RPC connections to be ready
+            for node in self.nodes:
+                while not node.is_rpc_connected():
+                    time.sleep(0.1)
 
             # Create a 200-block-long chain; each of the 4 first nodes
             # gets 25 mature blocks and 25 immature.
@@ -402,31 +399,114 @@ class BitcoinTestFramework(object):
         for i in range(num_nodes):
             initialize_datadir(test_dir, i)
 
-    def _wait_for_bitcoind_start(self, process, url, i):
-        """Wait for bitcoind to start.
-
-        This means that RPC is accessible and fully initialized.
-        Raise an exception if bitcoind exits during initialization."""
-        while True:
-            if process.poll() is not None:
-                raise Exception('bitcoind exited with status %i during initialization' % process.returncode)
-            try:
-                rpc = get_rpc_proxy(url, i, coveragedir=self.options.coveragedir)
-                rpc.getblockcount()
-                break  # break out of loop on success
-            except IOError as e:
-                if e.errno != errno.ECONNREFUSED:  # Port not yet open?
-                    raise  # unknown IO error
-            except JSONRPCException as e:  # Initialization phase
-                if e.error['code'] != -28:  # RPC in warmup?
-                    raise  # unknown JSON RPC exception
-            time.sleep(0.25)
-
 # Test framework for doing p2p comparison testing, which sets up some bitcoind
 # binaries:
 # 1 binary: test binary
 # 2 binaries: 1 test binary, 1 ref binary
 # n>2 binaries: 1 test binary, n-1 ref binaries
+
+class TestNode():
+    """A class for representing a bitcoind node under test.
+
+    This class contains:
+
+    - state about the node (whether it's running, etc)
+    - a Python subprocess.Popen object representing the running process
+    - an RPC connection to the node
+
+    To make things easier for the test writer, a bit of magic is happening under the covers.
+    Any unrecognised messages will be dispatched to the RPC connection."""
+    def __init__(self, i, dirname, extra_args, rpchost, timewait, binary, stderr, coverage_dir):
+        self.index = i
+        self.datadir = os.path.join(dirname, "node" + str(i))
+        self.rpchost = rpchost
+        self.rpc_timeout = timewait
+        if binary is None:
+            self.binary = os.getenv("BITCOIND", "bitcoind")
+        else:
+            self.binary = binary
+        self.stderr = stderr
+        self.coverage_dir = coverage_dir
+        # Most callers will just need to add extra args to the standard list below. For those callers that need more flexibity, they can just set the args property directly.
+        self.extra_args = extra_args
+        self.args = [self.binary, "-datadir=" + self.datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-mocktime=" + str(get_mocktime())]
+
+        self.running = False
+        self.process = None
+        self.rpc_connected = False
+        self.rpc = None
+        self.url = None
+        self.log = logging.getLogger('TestFramework.node%d' % i)
+
+    def __getattr__(self, *args, **kwargs):
+        """Dispatches any unrecognised messages to the RPC connection."""
+        assert self.rpc_connected and not self.rpc is None, "Error: no RPC connection"
+        return self.rpc.__getattr__(*args, **kwargs)
+
+    def start(self):
+        """Start the node."""
+        self.process = subprocess.Popen(self.args + self.extra_args, stderr=self.stderr)
+        self.running = True
+        self.log.debug("bitcoind started, waiting for RPC to come up")
+
+    def is_rpc_connected(self):
+        """Sets up an RPC connection to the bitcoind process. Returns False if unable to connect."""
+        url = rpc_url(self.index, self.rpchost)
+
+        assert not self.process.poll(), "bitcoind exited with status %i during initialization" % self.process.returncode
+
+        try:
+            self.rpc = get_rpc_proxy(url, self.index, self.rpc_timeout, self.coverage_dir)
+            self.rpc.getblockcount()
+            # If the call to getblockcount() succeeds then the RPC connection is up
+            self.rpc_connected = True
+            self.url = self.rpc.url
+            self.log.debug("RPC successfully started")
+            return True
+        except IOError as e:
+            assert e.errno == errno.ECONNREFUSED, "RPC connection returned unexpected error: %d" % e.errno
+        except JSONRPCException as e:  # Initialization phase
+            assert e.error['code'] == -28, "RPC connection returned unknown JSON RPC error: %d" % e.error['code']
+        # RPC connection not yet up. We received either a CONNREFUSED error or a JSON error -28 (RPC_IN_WARMUP). Return None.
+        return False
+
+    def stop_node(self):
+        """Stop the node."""
+        if not self.running:
+            return
+        self.log.debug("Stopping node")
+        try:
+            self.stop()
+        except http.client.CannotSendRequest as e:
+            self.log.exception("Unable to stop node.")
+
+    def is_node_stopped(self):
+        """Checks whether the node has stopped.
+
+        Returns True if the node has stopped. False otherwise.
+        This method is responsible for freeing resources (self.process)."""
+        if not self.running:
+            return True
+        return_code = self.process.poll()
+        if return_code is not None:
+            # process has stopped. Assert that it didn't return an error code.
+            assert_equal(return_code, 0)
+            self.running = False
+            self.process = None
+            self.log.debug("Node stopped")
+            return True
+        return False
+
+    def node_encrypt_wallet(self, passphrase):
+        """"Encrypts the wallet.
+        
+        This causes bitcoind to shutdown, so this method takes
+        care of cleaning up resources."""
+        self.encryptwallet(passphrase)
+        while not self.is_node_stopped():
+            time.sleep(0.1)
+        self.rpc = None
+        self.rpc_connected = False
 
 class ComparisonTestFramework(BitcoinTestFramework):
 

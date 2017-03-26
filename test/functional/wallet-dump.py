@@ -90,9 +90,8 @@ class WalletDumpTest(BitcoinTestFramework):
         assert_equal(found_addr_chg, 50)  # 50 blocks where mined
         assert_equal(found_addr_rsv, 90 + 1)  # keypool size (TODO: fix off-by-one)
 
-        #encrypt wallet, restart, unlock and dump
-        self.nodes[0].encryptwallet('test')
-        self.bitcoind_processes[0].wait()
+        #encrypt wallet, restart, unlock and dump.
+        self.nodes[0].node_encrypt_wallet('test')
         self.nodes = self.start_nodes(extra_args=self.extra_args)
         self.nodes[0].walletpassphrase('test', 10)
         # Should be a no-op:
