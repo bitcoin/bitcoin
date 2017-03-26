@@ -330,6 +330,10 @@ static std::pair<bool,std::string> ReadBinaryFile(const fs::path &filename, size
     char buffer[128];
     size_t n;
     while ((n=fread(buffer, 1, sizeof(buffer), f)) > 0) {
+        // Check for reading errors so we don't return any data if we couldn't
+        // read the entire file (or up to maxsize)
+        if (ferror(f))
+            return std::make_pair(false,"");
         retval.append(buffer, buffer+n);
         if (retval.size() > maxsize)
             break;
