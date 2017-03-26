@@ -167,7 +167,7 @@ namespace tinyformat {
 class format_error: public std::runtime_error
 {
 public:
-    format_error(const std::string &what): std::runtime_error(what) {
+    format_error(const std::string &fmterr): std::runtime_error(fmterr) {
     }
 };
 
