@@ -185,6 +185,10 @@ bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &
             nDepthInsideSensitive = 1;
             filter_begin_pos = chpos;
         }
+        // Make sure stack is not empty before adding something
+        if (stack.empty()) {
+            stack.push_back(std::vector<std::string>());
+        }
         stack.back().push_back(strArg);
     };
 
