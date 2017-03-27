@@ -2858,6 +2858,9 @@ UniValue bumpfee(const JSONRPCRequest& request)
             }
         } else if (options.exists("totalFee")) {
             totalFee = options["totalFee"].get_int64();
+            if (totalFee <= 0) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid totalFee %s (must be greater than 0)", FormatMoney(totalFee)));
+            }
         }
 
         if (options.exists("replaceable")) {
