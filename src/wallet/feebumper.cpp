@@ -236,6 +236,7 @@ bool CFeeBumper::commit(CWallet *pWallet)
     if (txid.IsNull() || !pWallet->mapWallet.count(txid)) {
         vErrors.push_back("Invalid or non-wallet transaction id");
         currentResult = BumpFeeResult::MISC_ERROR;
+        return false;
     }
     CWalletTx& oldWtx = pWallet->mapWallet[txid];
 
