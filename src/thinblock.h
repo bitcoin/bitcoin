@@ -165,6 +165,7 @@ bool CanThinBlockBeDownloaded(CNode *pto);
 void ConnectToThinBlockNodes();
 void CheckNodeSupportForThinBlocks();
 void SendXThinBlock(CBlock &block, CNode *pfrom, const CInv &inv);
+bool IsThinBlockValid(const CNode *pfrom, const std::vector<CTransaction> &vMissingTx, const CBlockHeader &header);
 void BuildSeededBloomFilter(CBloomFilter &memPoolFilter,
     std::vector<uint256> &vOrphanHashes,
     uint256 hash,

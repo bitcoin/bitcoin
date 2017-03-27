@@ -1101,6 +1101,36 @@ void SendXThinBlock(CBlock &block, CNode *pfrom, const CInv &inv)
     pfrom->blocksSent += 1;
 }
 
+bool IsThinBlockValid(const CNode* pfrom, const std::vector<CTransaction>& vMissingTx, const CBlockHeader& header)
+{
+    // Check that that there is at least one txn in the xthin and that the first txn is the coinbase
+    if(vMissingTx.size() <= 0)
+    {
+        LogPrintf("No Transactions found in thinblock or xthinblock %s from peer %s (id=%d).\n",
+            header.GetHash().ToString(), pfrom->addrName.c_str(), pfrom->id);
+        return false;
+    }
+    if(!vMissingTx[0].IsCoinBase())
+    {
+        LogPrintf("First txn is not coinbase for thinblock or xthinblock %s from peer %s (id=%d).\n",
+            header.GetHash().ToString(), pfrom->addrName.c_str(), pfrom->id);
+        return false;
+    }
+
+    // check block header
+    CValidationState state;
+    if (!CheckBlockHeader(header, state, true))
+    {
+        LogPrintf("Received invalid header for thinblock or xthinblock %s from peer %s (id=%d).\n",
+            header.GetHash().ToString(), pfrom->addrName.c_str(), pfrom->id);
+        return false;
+    }
+    if (state.Invalid())
+        return false;
+
+    return true;
+}
+
 void BuildSeededBloomFilter(CBloomFilter &filterMemPool,
     vector<uint256> &vOrphanHashes,
     uint256 hash,

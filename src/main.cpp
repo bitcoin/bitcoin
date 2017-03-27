@@ -5222,7 +5222,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
     }
 }
 
-bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t nTimeReceived)
+bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t nTimeReceived)
 {
     int64_t receiptTime = GetTime();
     const CChainParams& chainparams = Params();
@@ -6035,15 +6035,17 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     {
         CXThinBlock thinBlock;
         vRecv >> thinBlock;
-        CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
-        // Send expedited ASAP
-        CValidationState state;
-        if (!CheckBlockHeader(thinBlock.header, state, true)) { // block header is bad
-            LogPrint("thin", "Thinblock %s received with bad header from peer %s (%d)\n", inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id);
-            Misbehaving(pfrom->GetId(), 20);
+
+        // Check that that there is at least one txn in the xthin and that the first txn is the coinbase
+        if(!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
+        {
+            Misbehaving(pfrom->GetId(), 100);
             return false;
         }
-        else if (!IsRecentlyExpeditedAndStore(inv.hash))
+
+        // Send expedited block ASAP
+        CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
+        if (!IsRecentlyExpeditedAndStore(inv.hash))
             SendExpeditedBlock(thinBlock, 0, pfrom);
 
         int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
@@ -6067,6 +6069,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     {
         CThinBlock thinBlock;
         vRecv >> thinBlock;
+
+        // Check that that there is at least one txn in the thinblock and that the first txn is the coinbase
+        if(!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
+        {
+            Misbehaving(pfrom->GetId(), 100);
+            return false;
+        }
 
         CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
         int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
@@ -6478,8 +6487,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         // Ignore unknown commands for extensibility
         LogPrint("net", "Unknown command \"%s\" from peer=%d\n", SanitizeString(strCommand), pfrom->id);
     }
-
-
 
     return true;
 }

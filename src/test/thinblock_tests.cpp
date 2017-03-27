@@ -6,6 +6,7 @@
 #include "uint256.h"
 #include "random.h"
 #include "bloom.h"
+#include "chainparams.h"
 #include "streams.h"
 #include "version.h"
 #include "serialize.h"
@@ -15,12 +16,21 @@
 #include "thinblock.h"
 #include "txmempool.h"
 #include "main.h"
+
+#include "test/test_bitcoin.h"
+
 #include <boost/test/unit_test.hpp>
 #include <sstream>
 #include <string.h>
 
 extern void BuildSeededBloomFilter(CBloomFilter& memPoolFilter, std::vector<uint256>& vOrphanHashes, uint256 hash);
 
+CService ipaddress(uint32_t i)
+{
+    struct in_addr s;
+    s.s_addr = i;
+    return CService(CNetAddr(s), Params().GetDefaultPort());
+}
 
 CBlock TestBlock() { //Thanks dagurval :)
     // Block taken from bloom_tests.cpp merkle_block_1
@@ -32,7 +42,7 @@ CBlock TestBlock() { //Thanks dagurval :)
     return block;
 };
 
-BOOST_AUTO_TEST_SUITE(thinblock_tests);
+BOOST_FIXTURE_TEST_SUITE(thinblock_tests, TestingSetup)
 
 BOOST_AUTO_TEST_CASE(thinblock_test) {
 
@@ -116,6 +126,77 @@ BOOST_AUTO_TEST_CASE(thinblock_test) {
     CXThinBlock xthinblock7(block, &filter1);
     BOOST_CHECK(xthinblock7.collision);
 
+    /* Create an invalid thinblock and xthinblock where the coinbase is missing and also where no transactions at
+       all are included in the xthin or thinblock. In both cases the node should be banned.
+     */
+    CNode::ClearBanned();
+    fImporting = false;
+    fReindex = false;
+
+    // do xthinblock checks
+    CAddress addr1(ipaddress(0xa0b0c001));
+    CNode dummyNode1(INVALID_SOCKET, addr1, "", true);
+    dummyNode1.nVersion = 1;
+
+    CDataStream vRecv1(SER_NETWORK, PROTOCOL_VERSION);
+    CXThinBlock xthin = xthinblock;
+    xthin.vMissingTx.clear(); // empty the missingtx vector. This should cause an error.
+    vRecv1 << xthin;
+    ProcessMessage(&dummyNode1, NetMsgType::XTHINBLOCK, vRecv1, GetTime());
+    SendMessages(&dummyNode1);
+    BOOST_CHECK(xthin.vMissingTx.size() == 0);
+    BOOST_CHECK(CNode::IsBanned(addr1));
+    
+    vRecv1.clear();
+    xthin = xthinblock;
+    xthin.vMissingTx[0] = xthin.vMissingTx[1]; // delete the coinbase. This should cause an error.
+    vRecv1 << xthin;
+    ProcessMessage(&dummyNode1, NetMsgType::XTHINBLOCK, vRecv1, GetTime());
+    SendMessages(&dummyNode1);
+    BOOST_CHECK(!xthin.vMissingTx[0].IsCoinBase());
+    BOOST_CHECK(CNode::IsBanned(addr1));
+
+    vRecv1.clear();
+    xthin = xthinblock;
+    xthin.header.nBits = 1; // create invalid block header
+    vRecv1 << xthin;
+    ProcessMessage(&dummyNode1, NetMsgType::XTHINBLOCK, vRecv1, GetTime());
+    SendMessages(&dummyNode1);
+    CValidationState state;
+    BOOST_CHECK(!CheckBlockHeader(xthin.header, state, true));
+    BOOST_CHECK(CNode::IsBanned(addr1));
+
+    // do thinblock checks
+    CAddress addr2(ipaddress(0xa0b0c002));
+    CNode dummyNode2(INVALID_SOCKET, addr2, "", true);
+    dummyNode2.nVersion = 1;
+
+    CDataStream vRecv2(SER_NETWORK, PROTOCOL_VERSION);
+    CThinBlock thin = thinblock;
+    thin.vMissingTx.clear(); // empty the missingtx vector. This should cause an error.
+    vRecv2 << thin;
+    ProcessMessage(&dummyNode2, NetMsgType::THINBLOCK, vRecv2, GetTime());
+    SendMessages(&dummyNode2);
+    BOOST_CHECK(thin.vMissingTx.size() == 0);
+    BOOST_CHECK(CNode::IsBanned(addr2));
+
+    vRecv2.clear();
+    thin = thinblock;
+    thin.vMissingTx[0] = thin.vMissingTx[1]; // delete the coinbase. This should cause an error.
+    vRecv2 << thin;
+    ProcessMessage(&dummyNode2, NetMsgType::THINBLOCK, vRecv2, GetTime());
+    SendMessages(&dummyNode2);
+    BOOST_CHECK(!thin.vMissingTx[0].IsCoinBase());
+    BOOST_CHECK(CNode::IsBanned(addr2));
+
+    vRecv2.clear();
+    thin = thinblock;
+    thin.header.nBits = 1; // create invalid block header
+    vRecv2 << thin;
+    ProcessMessage(&dummyNode2, NetMsgType::THINBLOCK, vRecv2, GetTime());
+    SendMessages(&dummyNode2);
+    BOOST_CHECK(!CheckBlockHeader(thin.header, state, true));
+    BOOST_CHECK(CNode::IsBanned(addr2));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
