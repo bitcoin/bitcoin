@@ -107,9 +107,9 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
     // But there is not reason to keep cs_main locked while we look at the utxo
     try 
     {
-      cs_main.lock();
-      stats.hashBlock = GetBestBlock();
-      stats.nHeight = mapBlockIndex.find(stats.hashBlock)->second->nHeight;
+        ENTER_CRITICAL_SECTION(cs_main);
+        stats.hashBlock = GetBestBlock();
+        stats.nHeight = mapBlockIndex.find(stats.hashBlock)->second->nHeight;
     }
     catch (...)
     {
@@ -118,7 +118,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
     }
     {
     LOCK(cs_utxo);
-    cs_main.unlock();
+    LEAVE_CRITICAL_SECTION(cs_main);
     /* It seems that there are no "const iterators" for LevelDB.  Since we
        only need read operations on it, use a const-cast to get around
        that restriction.  */
