@@ -1055,8 +1055,10 @@ public:
     /* Generates a new HD master key (will not be activated) */
     CPubKey GenerateNewHDMasterKey();
     
-    /* Set the current HD master key (will reset the chain child index counters) */
-    bool SetHDMasterKey(const CPubKey& key);
+    /* Set the current HD master key (will reset the chain child index counters)
+       If possibleOldChain is provided, the parameters from the old chain (version)
+       will be preserved. */
+    bool SetHDMasterKey(const CPubKey& key, CHDChain *possibleOldChain = nullptr);
 };
 
 /** A key allocated from the key pool. */
