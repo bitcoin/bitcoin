@@ -35,6 +35,7 @@ from .util import (
     sync_mempools,
 )
 from .authproxy import JSONRPCException
+from .mininode import NodeConn, SingleNodeConnCB
 
 BITCOIND_PROC_WAIT_TIMEOUT = 60
 
@@ -62,7 +63,8 @@ class BitcoinTestFramework(object):
     def __init__(self):
         self.num_nodes = 4
         self.setup_clean_chain = False
-        self.nodes = None
+        self.nodes = []
+        self.p2p_conn_type = SingleNodeConnCB
 
     def add_options(self, parser):
         pass
@@ -120,7 +122,7 @@ class BitcoinTestFramework(object):
                           help="Print out all RPC calls as they are made")
         parser.add_option("--portseed", dest="port_seed", default=os.getpid(), type='int',
                           help="The seed to use for assigning port numbers (default: current process id)")
-        parser.add_option("--coveragedir", dest="coveragedir",
+        parser.add_option("--coveragedir", dest="coveragedir", default=None,
                           help="Write tested RPC commands into this directory")
         self.add_options(parser)
         (self.options, self.args) = parser.parse_args()
@@ -203,6 +205,7 @@ class BitcoinTestFramework(object):
         try:
             for i in range(num_nodes):
                 nodes.append(TestNode(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i], stderr=None, coverage_dir=self.options.coveragedir))
+                nodes[i].p2p_conn_type = self.p2p_conn_type
                 nodes[i].start()
             for node in nodes:
                 while not node.is_rpc_connected():
@@ -224,6 +227,7 @@ class BitcoinTestFramework(object):
         if binary is None:
             binary = os.getenv("BITCOIND", "bitcoind")
         node = TestNode(i, dirname, extra_args, rpchost, timewait, binary, stderr, coverage_dir=self.options.coveragedir)
+        node.p2p_conn_type = self.p2p_conn_type
         node.start()
         while not node.is_rpc_connected():
             time.sleep(0.1)
@@ -413,8 +417,13 @@ class TestNode():
     - state about the node (whether it's running, etc)
     - a Python subprocess.Popen object representing the running process
     - an RPC connection to the node
+    - one or more P2P connections to the node
 
     To make things easier for the test writer, a bit of magic is happening under the covers.
+    send_message is dispatched to the first P2P connection. If there hasn't been a P2P connection
+    before, this class will automatically open a P2P connection to send the message. If there has
+    been a P2P connection open but it has subsequently closed, then the class won't automatically
+    open a new P2P connection. The test writer must explicitly re-open a connection.
     Any unrecognised messages will be dispatched to the RPC connection."""
     def __init__(self, i, dirname, extra_args, rpchost, timewait, binary, stderr, coverage_dir):
         self.index = i
@@ -437,11 +446,16 @@ class TestNode():
         self.rpc = None
         self.url = None
         self.log = logging.getLogger('TestFramework.node%d' % i)
+        self.p2p = None
+        self.p2ps = []
+        self.p2p_connected = False
+        self.p2p_ever_connected = False
+        self.p2p_conn_type = SingleNodeConnCB
 
-    def __getattr__(self, *args, **kwargs):
+    def __getattr__(self, name):
         """Dispatches any unrecognised messages to the RPC connection."""
         assert self.rpc_connected and not self.rpc is None, "Error: no RPC connection"
-        return self.rpc.__getattr__(*args, **kwargs)
+        return self.rpc.__getattr__(name)
 
     def start(self):
         """Start the node."""
@@ -499,7 +513,7 @@ class TestNode():
 
     def node_encrypt_wallet(self, passphrase):
         """"Encrypts the wallet.
-        
+
         This causes bitcoind to shutdown, so this method takes
         care of cleaning up resources."""
         self.encryptwallet(passphrase)
@@ -507,6 +521,35 @@ class TestNode():
             time.sleep(0.1)
         self.rpc = None
         self.rpc_connected = False
+
+    def add_p2p_connections(self, number=1, dstaddr='127.0.0.1', dstport=None, p2p_conn_type=None):
+        if dstport is None:
+            dstport = p2p_port(self.index)
+        if p2p_conn_type is None:
+            p2p_conn_type = self.p2p_conn_type
+        for i in range(number):
+            p2p_conn = p2p_conn_type()
+            self.p2ps.append(p2p_conn)
+            p2p_conn.add_connection(NodeConn(dstaddr, dstport, self.rpc, p2p_conn))
+        if self.p2p is None:
+            self.p2p = self.p2ps[0]
+        while p2p_conn.connection.state != "connected":
+            time.sleep(0.1)
+        p2p_conn.wait_for_verack()
+        self.p2p_connected = True
+        self.p2p_ever_connected = True
+
+    def send_message(self, message):
+        if not self.p2p_ever_connected:
+            self.add_p2p_connections()
+        assert self.p2ps != [], "No p2p connection"
+        self.p2p.send_message(message)
+
+    def disconnect_p2p(self, index=0):
+        self.p2ps[index].connection.disconnect_node()
+        self.p2ps.pop(index)
+        if len(self.p2ps) == 0:
+            self.p2p_connected = False
 
 class ComparisonTestFramework(BitcoinTestFramework):
 
