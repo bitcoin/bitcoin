@@ -16,5 +16,8 @@ class CBlockIndex;
  */
 double GetDifficulty(const CBlockIndex* blockindex = nullptr);
 
+/** Callback for when block tip changed. */
+void RPCNotifyBlockChange(bool ibd, const CBlockIndex *);
+
 #endif
 

@@ -198,7 +198,6 @@ bool StartRPC();
 void InterruptRPC();
 void StopRPC();
 std::string JSONRPCExecBatch(const UniValue& vReq);
-void RPCNotifyBlockChange(bool ibd, const CBlockIndex *);
 
 // Retrieves any serialization flags requested in command line argument
 int RPCSerializationFlags();
