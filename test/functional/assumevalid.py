@@ -39,18 +39,14 @@ from test_framework.mininode import (CBlockHeader,
                                      CTxIn,
                                      CTxOut,
                                      NetworkThread,
-                                     NodeConn,
                                      SingleNodeConnCB,
                                      msg_block,
                                      msg_headers)
 from test_framework.script import (CScript, OP_TRUE)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (start_node, p2p_port, assert_equal)
+from test_framework.util import assert_equal
 
 class BaseNode(SingleNodeConnCB):
-    def __init__(self):
-        super().__init__()
-
     def send_header_for_blocks(self, new_blocks):
         headers_message = msg_headers()
         headers_message.headers = [CBlockHeader(b) for b in new_blocks]
@@ -61,6 +57,7 @@ class AssumeValidTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 3
+        self.p2p_conn_type = BaseNode
 
     def setup_network(self):
         # Start node0. We don't start the other nodes yet since
@@ -97,14 +94,11 @@ class AssumeValidTest(BitcoinTestFramework):
 
     def run_test(self):
 
-        # Connect to node0
-        node0 = BaseNode()
-        connections = []
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], node0))
-        node0.add_connection(connections[0])
+        # Add p2p connection to node0
+        self.nodes[0].add_p2p_connections()
 
         NetworkThread().start()  # Start up network handling in another thread
-        node0.wait_for_verack()
+        self.nodes[0].p2p.wait_for_verack()
 
         # Build the blockchain
         self.tip = int(self.nodes[0].getbestblockhash(), 16)
@@ -166,36 +160,33 @@ class AssumeValidTest(BitcoinTestFramework):
 
         # Start node1 and node2 with assumevalid so they accept a block with a bad signature.
         self.nodes.append(self.start_node(1, extra_args=["-assumevalid=" + hex(block102.sha256)]))
-        node1 = BaseNode()  # connects to node1
-        connections.append(NodeConn('127.0.0.1', p2p_port(1), self.nodes[1], node1))
-        node1.add_connection(connections[1])
-        node1.wait_for_verack()
+        self.nodes[1].add_p2p_connections()
+        self.nodes[1].p2p.wait_for_verack()
 
         self.nodes.append(self.start_node(2, extra_args=["-assumevalid=" + hex(block102.sha256)]))
-        node2 = BaseNode()  # connects to node2
-        connections.append(NodeConn('127.0.0.1', p2p_port(2), self.nodes[2], node2))
-        node2.add_connection(connections[2])
-        node2.wait_for_verack()
+        self.nodes[2].add_p2p_connections()
+        self.nodes[2].p2p.wait_for_verack()
 
         # send header lists to all three nodes
-        node0.send_header_for_blocks(self.blocks[0:2000])
-        node0.send_header_for_blocks(self.blocks[2000:])
-        node1.send_header_for_blocks(self.blocks[0:2000])
-        node1.send_header_for_blocks(self.blocks[2000:])
-        node2.send_header_for_blocks(self.blocks[0:200])
+        self.nodes[0].p2p.send_header_for_blocks(self.blocks[0:2000])
+        self.nodes[0].p2p.send_header_for_blocks(self.blocks[2000:])
+        self.nodes[1].p2p.send_header_for_blocks(self.blocks[0:2000])
+        self.nodes[1].p2p.send_header_for_blocks(self.blocks[2000:])
+        self.nodes[2].p2p.send_header_for_blocks(self.blocks[0:200])
 
         # Send blocks to node0. Block 102 will be rejected.
-        self.send_blocks_until_disconnected(node0)
+        self.send_blocks_until_disconnected(self.nodes[0].p2p)
         self.assert_blockchain_height(self.nodes[0], 101)
 
         # Send all blocks to node1. All blocks will be accepted.
         for i in range(2202):
-            node1.send_message(msg_block(self.blocks[i]))
-        node1.sync_with_ping()  # make sure the most recent block is synced
+            self.nodes[1].send_message(msg_block(self.blocks[i]))
+        # Make sure the most recent block is synced
+        self.nodes[1].p2p.sync_with_ping()
         assert_equal(self.nodes[1].getblock(self.nodes[1].getbestblockhash())['height'], 2202)
 
         # Send blocks to node2. Block 102 will be rejected.
-        self.send_blocks_until_disconnected(node2)
+        self.send_blocks_until_disconnected(self.nodes[2].p2p)
         self.assert_blockchain_height(self.nodes[2], 101)
 
 if __name__ == '__main__':
