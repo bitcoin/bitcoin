@@ -13,13 +13,19 @@ import os
 import subprocess
 import time
 
+from .authproxy import JSONRPCException
+from .mininode import (
+    NodeConn,
+    NodeConnCB,
+    NODE_NETWORK,
+)
 from .util import (
     assert_equal,
     get_rpc_proxy,
     rpc_url,
     wait_until,
+    p2p_port,
 )
-from .authproxy import JSONRPCException
 
 BITCOIND_PROC_WAIT_TIMEOUT = 60
 
@@ -31,9 +37,13 @@ class TestNode():
     - state about the node (whether it's running, etc)
     - a Python subprocess.Popen object representing the running process
     - an RPC connection to the node
+    - one or more P2P connections to the node
 
-    To make things easier for the test writer, a bit of magic is happening under the covers.
-    Any unrecognised messages will be dispatched to the RPC connection."""
+
+    To make things easier for the test writer, this class will try to dispatch
+    messages over the correct interface:
+    - send_message is dispatched to the first P2P connection.
+    - Any unrecognised messages will be dispatched to the RPC connection."""
 
     def __init__(self, i, dirname, extra_args, rpchost, timewait, binary, stderr, mocktime, coverage_dir):
         self.index = i
@@ -63,10 +73,12 @@ class TestNode():
         self.url = None
         self.log = logging.getLogger('TestFramework.node%d' % i)
 
-    def __getattr__(self, *args, **kwargs):
+        self.p2ps = []
+
+    def __getattr__(self, name):
         """Dispatches any unrecognised messages to the RPC connection."""
         assert self.rpc_connected and self.rpc is not None, "Error: no RPC connection"
-        return self.rpc.__getattr__(*args, **kwargs)
+        return self.rpc.__getattr__(name)
 
     def start(self, extra_args=None, stderr=None):
         """Start the node."""
@@ -119,6 +131,7 @@ class TestNode():
             self.stop()
         except http.client.CannotSendRequest:
             self.log.exception("Unable to stop node.")
+        self.p2ps = []
 
     def is_node_stopped(self):
         """Checks whether the node has stopped.
@@ -150,6 +163,39 @@ class TestNode():
         care of cleaning up resources."""
         self.encryptwallet(passphrase)
         self.wait_until_stopped()
+
+    def add_p2p_connection(self, p2p_conn_type, dstaddr='127.0.0.1', dstport=None, services=NODE_NETWORK, send_version=True):
+        """Add a p2p connection to the node.
+
+        This method adds the p2p connection to the self.p2ps list and also
+        returns the connection to the caller."""
+        if dstport is None:
+            dstport = p2p_port(self.index)
+        p2p_conn = p2p_conn_type()
+        self.p2ps.append(p2p_conn)
+        p2p_conn.add_connection(NodeConn(dstaddr, dstport, self.rpc, p2p_conn, services=services, send_version=send_version))
+
+        return p2p_conn
+
+    @property
+    def p2p(self):
+        """Return the first p2p connection
+
+        Convenience property - most tests only use a single p2p connection to each
+        node, so this saves having to write node.p2ps[0] many times."""
+        assert self.p2ps, "No p2p connection"
+        return self.p2ps[0]
+
+    def send_message(self, message):
+        """Send a p2p message to the node."""
+        assert self.p2ps != [], "No p2p connection"
+        self.p2ps[0].send_message(message)
+
+    def disconnect_p2p(self, index=0):
+        """Close the p2p connection to the node."""
+        if self.p2ps[index].connection is not None:
+            self.p2ps[index].connection.disconnect_node()
+        self.p2ps.pop(index)
 
 class TestNodeCLI():
     """Interface to bitcoin-cli for an individual node"""
