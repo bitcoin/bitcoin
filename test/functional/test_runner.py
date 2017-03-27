@@ -124,6 +124,7 @@ EXTENDED_SCRIPTS = [
     'bip9-softforks.py',
     'rpcbind_test.py',
     # vv Tests less than 30s vv
+    'assumevalid.py',
     'bip65-cltv.py',
     'bip65-cltv-p2p.py', # NOTE: needs dash_hash to pass
     'bipdersig-p2p.py', # NOTE: needs dash_hash to pass
