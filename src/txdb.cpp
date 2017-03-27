@@ -113,7 +113,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
     }
     catch (...)
     {
-        cs_main.unlock();
+        LEAVE_CRITICAL_SECTION(cs_main);
         throw;
     }
     {
