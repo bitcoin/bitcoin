@@ -20,7 +20,7 @@
 // calculation, but we should be able to refactor after priority is removed).
 // NOTE: this requires that all inputs must be in mapWallet (eg the tx should
 // be IsAllFromMe).
-int64_t CalculateMaximumSignedTxSize(const CWallet *pWallet, const CTransaction &tx)
+int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *pWallet)
 {
     CMutableTransaction txNew(tx);
     std::vector<std::pair<const CWalletTx *, unsigned int>> vCoins;
@@ -120,7 +120,7 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConf
 
     // Calculate the expected size of the new transaction.
     int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
-    const int64_t maxNewTxSize = CalculateMaximumSignedTxSize(pWallet, *wtx.tx);
+    const int64_t maxNewTxSize = CalculateMaximumSignedTxSize(*wtx.tx, pWallet);
     if (maxNewTxSize < 0) {
         vErrors.push_back("Transaction contains inputs that cannot be signed");
         currentResult = BumpFeeResult::INVALID_ADDRESS_OR_KEY;
