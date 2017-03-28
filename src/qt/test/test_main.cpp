@@ -19,7 +19,9 @@
 
 #include <QApplication>
 #include <QObject>
+#include <QPluginLoader>
 #include <QTest>
+#include <QtDebug>
 
 #include <openssl/ssl.h>
 
@@ -41,6 +43,15 @@ Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 #endif
 #endif
 
+static bool UsesXcb() {
+    for (QObject* plugin: QPluginLoader::staticInstances()) {
+        if (plugin->objectName() == "platforms/qxcb") {
+            return true;
+        }
+    }
+    return QPluginLoader("platforms/qxcb").load();
+}
+
 extern void noui_connect();
 
 // This is all you need to run all the tests
@@ -55,8 +66,17 @@ int main(int argc, char *argv[])
 
     // Don't remove this, it's needed to access
     // QApplication:: and QCoreApplication:: in the tests
-    QApplication app(argc, argv);
-    app.setApplicationName("Bitcoin-Qt-test");
+    std::unique_ptr<QCoreApplication> app;
+    if (!UsesXcb() || getenv("DISPLAY")) {
+        app.reset(new QApplication(argc, argv));
+    } else {
+        // If the test uses XCB but the DISPLAY variable is unset, this will
+        // cause a fatal error during QApplication construction, so fall back to
+        // using QCoreApplication instead.
+        app.reset(new QCoreApplication(argc, argv));
+        qWarning() << "DISPLAY variable is unset. Some tests will be skipped.";
+    }
+    app->setApplicationName("Bitcoin-Qt-test");
 
     SSL_library_init();
 
