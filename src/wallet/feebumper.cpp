@@ -30,7 +30,7 @@ int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *pWal
     for (auto& input : tx.vin) {
         const auto mi = pWallet->mapWallet.find(input.prevout.hash);
         assert(mi != pWallet->mapWallet.end() && input.prevout.n < mi->second.tx->vout.size());
-        vCoins.emplace_back(std::make_pair(&(mi->second), input.prevout.n));
+        vCoins.emplace_back(&(mi->second), input.prevout.n);
     }
     if (!pWallet->DummySignTx(txNew, vCoins)) {
         // This should never happen, because IsAllFromMe(ISMINE_SPENDABLE)
@@ -147,7 +147,7 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConf
             currentResult = BumpFeeResult::INVALID_PARAMETER;
             return;
         }
-        CAmount requiredFee = pWallet->GetRequiredFee(maxNewTxSize);
+        CAmount requiredFee = CWallet::GetRequiredFee(maxNewTxSize);
         if (totalFee < requiredFee) {
             vErrors.push_back(strprintf("Insufficient totalFee (cannot be less than required fee %s)",
                                                                 FormatMoney(requiredFee)));
@@ -159,11 +159,11 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConf
     } else {
         // if user specified a confirm target then don't consider any global payTxFee
         if (specifiedConfirmTarget) {
-            nNewFee = pWallet->GetMinimumFee(maxNewTxSize, newConfirmTarget, mempool, CAmount(0));
+            nNewFee = CWallet::GetMinimumFee(maxNewTxSize, newConfirmTarget, mempool, CAmount(0));
         }
         // otherwise use the regular wallet logic to select payTxFee or default confirm target
         else {
-            nNewFee = pWallet->GetMinimumFee(maxNewTxSize, newConfirmTarget, mempool);
+            nNewFee = CWallet::GetMinimumFee(maxNewTxSize, newConfirmTarget, mempool);
         }
 
         nNewFeeRate = CFeeRate(nNewFee, maxNewTxSize);
