@@ -434,7 +434,7 @@ class ImportMultiTest (BitcoinTestFramework):
         address_assert = self.nodes[1].validateaddress(watchonly_address)
         assert_equal(address_assert['iswatchonly'], True)
         assert_equal(address_assert['ismine'], False)
-        assert_equal(address_assert['timestamp'], watchonly_timestamp);
+        assert_equal(address_assert['timestamp'], watchonly_timestamp)
 
         # Bad or missing timestamps
         self.log.info("Should throw on invalid or missing timestamp values")
