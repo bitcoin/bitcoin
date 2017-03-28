@@ -32,10 +32,9 @@ def get_virtual_size(witness_block):
     vsize = int((3*base_size + total_size + 3)/4)
     return vsize
 
-# Note: we can reduce code by using SingleNodeConnCB (in master, not 0.12)
 class TestNode(NodeConnCB):
     def __init__(self):
-        NodeConnCB.__init__(self)
+        super().__init__()
         self.connection = None
         self.ping_counter = 1
         self.last_pong = msg_pong(0)
