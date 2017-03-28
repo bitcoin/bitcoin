@@ -61,9 +61,9 @@ public:
     {
         READWRITE(this->nVersion);
         READWRITE(nExternalChainCounter);
+        READWRITE(masterKeyID);
         if (this->nVersion >= VERSION_HD_CHAIN_SPLIT)
             READWRITE(nInternalChainCounter);
-        READWRITE(masterKeyID);
     }
 
     void SetNull()
