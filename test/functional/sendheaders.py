@@ -81,9 +81,9 @@ from test_framework.blocktools import create_block, create_coinbase
 
 direct_fetch_response_time = 0.05
 
-class BaseNode(SingleNodeConnCB):
+class BaseNode(NodeConnCB):
     def __init__(self):
-        SingleNodeConnCB.__init__(self)
+        super().__init__()
         self.last_inv = None
         self.last_headers = None
         self.last_block = None
