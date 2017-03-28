@@ -232,7 +232,9 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConf
 bool CFeeBumper::commit(CWallet *pWallet)
 {
     AssertLockHeld(pWallet->cs_wallet);
-    vErrors.clear();
+    if (!vErrors.empty() || currentResult != BumpFeeResult::OK) {
+        return false;
+    }
     if (txid.IsNull() || !pWallet->mapWallet.count(txid)) {
         vErrors.push_back("Invalid or non-wallet transaction id");
         currentResult = BumpFeeResult::MISC_ERROR;
