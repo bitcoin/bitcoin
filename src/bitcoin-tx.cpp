@@ -242,6 +242,9 @@ static void MutateTxAddOutAddr(CMutableTransaction& tx, const std::string& strIn
     std::vector<std::string> vStrInputParts;
     boost::split(vStrInputParts, strInput, boost::is_any_of(":"));
 
+    if (vStrInputParts.size() != 2)
+        throw std::runtime_error("TX output missing or too many separators");
+
     // Extract and validate VALUE
     CAmount value = ExtractAndValidateValue(vStrInputParts[0]);
 
