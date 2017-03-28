@@ -6,8 +6,8 @@ to write to an outputfile."""
 
 import argparse
 from collections import defaultdict, namedtuple
-import glob
 import heapq
+import itertools
 import os
 import re
 import sys
@@ -49,7 +49,10 @@ def read_logs(tmp_dir):
     for each of the input log files."""
 
     files = [("test", "%s/test_framework.log" % tmp_dir)]
-    for i, logfile in enumerate(glob.glob("%s/node*/regtest/debug.log" % tmp_dir)):
+    for i in itertools.count():
+        logfile = "{}/node{}/regtest/debug.log".format(tmp_dir, i)
+        if not os.path.isfile(logfile):
+            break
         files.append(("node%d" % i, logfile))
 
     return heapq.merge(*[get_log_events(source, f) for source, f in files])
