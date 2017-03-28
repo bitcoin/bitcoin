@@ -47,6 +47,7 @@ static atomic<uint64_t> nLargestBlockSeen{BLOCKSTREAM_CORE_MAX_BLOCK_SIZE}; // t
 static atomic<bool> fIsChainNearlySyncd{false};
 static atomic<bool> fIsInitialBlockDownload{false};
 extern CTweakRef<uint64_t> miningBlockSize;
+extern CTweakRef<unsigned int> ebTweak;
 
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 
@@ -1245,15 +1246,10 @@ UniValue setexcessiveblock(const UniValue &params, bool fHelp)
         ebs = boost::lexical_cast<unsigned int>(temp);
     }
 
-    if (ebs < maxGeneratedBlock)
-    {
-        std::ostringstream ret;
-        ret << "Sorry, your maximum mined block (" << maxGeneratedBlock
-            << ") is larger than your proposed excessive size (" << ebs
-            << ").  This would cause you to orphan your own blocks.";
-        throw runtime_error(ret.str());
-    }
-    excessiveBlockSize = ebs;
+    std::string estr = ebTweak.Validate(ebs);
+    if (! estr.empty())
+        throw runtime_error(estr);
+    ebTweak.Set(ebs);
 
     if (params[1].isNum())
         excessiveAcceptDepth = params[1].get_int64();
