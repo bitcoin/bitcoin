@@ -2023,48 +2023,38 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
     }
 }
 
-static void ApproximateBestSubset(std::vector<std::pair<CAmount, std::pair<const CWalletTx*,unsigned int> > >vValue, const CAmount& nTotalLower, const CAmount& nTargetValue,
-                                  std::vector<char>& vfBest, CAmount& nBest, int iterations = 1000)
+static void ApproximateBestSubset(std::vector<std::pair<CAmount, std::pair<const CWalletTx*,unsigned int> > > vValue, const CAmount& nTotalLower, const CAmount& nTargetValue,
+                                  std::vector<std::pair<CAmount, std::pair<const CWalletTx*,unsigned int> > >& vfBest, CAmount& nBest, int iterations = 1000)
 {
-    std::vector<char> vfIncluded;
-
-    vfBest.assign(vValue.size(), true);
+    vfBest = vValue;
     nBest = nTotalLower;
 
+    //The solver here uses a randomized algorithm,
+    //the randomness serves no real security purpose but is just
+    //needed to prevent degenerate behavior and it is important
+    //that the rng is fast. We do not use a constant random sequence,
+    //because there may be some privacy improvement by making
+    //the selection random.
     FastRandomContext insecure_rand;
 
-    for (int nRep = 0; nRep < iterations && nBest != nTargetValue; nRep++)
+    for (int nRep = 0; nRep < iterations; nRep++)
     {
-        vfIncluded.assign(vValue.size(), false);
         CAmount nTotal = 0;
-        bool fReachedTarget = false;
-        for (int nPass = 0; nPass < 2 && !fReachedTarget; nPass++)
-        {
-            for (unsigned int i = 0; i < vValue.size(); i++)
-            {
-                //The solver here uses a randomized algorithm,
-                //the randomness serves no real security purpose but is just
-                //needed to prevent degenerate behavior and it is important
-                //that the rng is fast. We do not use a constant random sequence,
-                //because there may be some privacy improvement by making
-                //the selection random.
-                if (nPass == 0 ? insecure_rand.rand32()&1 : !vfIncluded[i])
-                {
-                    nTotal += vValue[i].first;
-                    vfIncluded[i] = true;
-                    if (nTotal >= nTargetValue)
-                    {
-                        fReachedTarget = true;
-                        if (nTotal < nBest)
-                        {
-                            nBest = nTotal;
-                            vfBest = vfIncluded;
-                        }
-                        nTotal -= vValue[i].first;
-                        vfIncluded[i] = false;
-                    }
-                }
-            }
+
+        for (unsigned int i = 0; i < vValue.size(); i++) {
+          uint32_t n = insecure_rand.rand32() % (vValue.size() - i);
+          std::swap(vValue[i], vValue[i + n]);
+
+          nTotal += vValue[i].first;
+          if (nTotal >= nTargetValue)
+          {
+              if (i <= vfBest.size() || (i+1 == vfBest.size() && nTotal < nBest))
+              {
+                  nBest = nTotal;
+                  vfBest = std::vector<std::pair<CAmount, std::pair<const CWalletTx*,unsigned int> > >(vValue.begin(), vValue.begin() + 1 + i);
+              }
+              nTotal -= vValue[i].first;
+          }
         }
     }
 }
@@ -2139,37 +2129,23 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
     }
 
     // Solve subset sum by stochastic approximation
-    std::sort(vValue.begin(), vValue.end(), CompareValueOnly());
-    std::reverse(vValue.begin(), vValue.end());
-    std::vector<char> vfBest;
+    std::vector<std::pair<CAmount, std::pair<const CWalletTx*,unsigned int> > > vfBest;
     CAmount nBest;
 
     ApproximateBestSubset(vValue, nTotalLower, nTargetValue, vfBest, nBest);
     if (nBest != nTargetValue && nTotalLower >= nTargetValue + MIN_CHANGE)
         ApproximateBestSubset(vValue, nTotalLower, nTargetValue + MIN_CHANGE, vfBest, nBest);
 
-    // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
-    //                                   or the next bigger coin is closer), return the bigger coin
-    if (coinLowestLarger.second.first &&
-        ((nBest != nTargetValue && nBest < nTargetValue + MIN_CHANGE) || coinLowestLarger.first <= nBest))
-    {
-        setCoinsRet.insert(coinLowestLarger.second);
-        nValueRet += coinLowestLarger.first;
+    for (unsigned int i = 0; i < vfBest.size(); i++) {
+      setCoinsRet.insert(vfBest[i].second);
+      nValueRet += vfBest[i].first;
     }
-    else {
-        for (unsigned int i = 0; i < vValue.size(); i++)
-            if (vfBest[i])
-            {
-                setCoinsRet.insert(vValue[i].second);
-                nValueRet += vValue[i].first;
-            }
 
-        LogPrint("selectcoins", "SelectCoins() best subset: ");
-        for (unsigned int i = 0; i < vValue.size(); i++)
-            if (vfBest[i])
-                LogPrint("selectcoins", "%s ", FormatMoney(vValue[i].first));
-        LogPrint("selectcoins", "total %s\n", FormatMoney(nBest));
-    }
+    LogPrint("selectcoins", "SelectCoins() best subset: ");
+    for (unsigned int i = 0; i < vfBest.size(); i++)
+            LogPrint("selectcoins", "%s ", FormatMoney(vValue[i].first));
+    LogPrint("selectcoins", "total %s\n", FormatMoney(nBest));
+
 
     return true;
 }
@@ -2885,7 +2861,7 @@ bool CWallet::SetDefaultKey(const CPubKey &vchPubKey)
 
 /**
  * Mark old keypool keys as used,
- * and generate all new keys 
+ * and generate all new keys
  */
 bool CWallet::NewKeyPool()
 {
