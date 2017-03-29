@@ -19,7 +19,8 @@
 
 CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs(const CBlock& block, bool fUseWTXID) :
         nonce(GetRand(std::numeric_limits<uint64_t>::max())),
-        shorttxids(block.vtx.size() - 1), prefilledtxn(1), header(block) {
+        shorttxids(block.vtx.size() - 1), prefilledtxn(1), header(block)
+{
     FillShortTxIDSelector();
     //TODO: Use our mempool prior to block acceptance to predictively fill more than just the coinbase
     prefilledtxn[0] = {0, block.vtx[0]};
@@ -29,7 +30,8 @@ CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs(const CBlock& block, bool f
     }
 }
 
-void CBlockHeaderAndShortTxIDs::FillShortTxIDSelector() const {
+void CBlockHeaderAndShortTxIDs::FillShortTxIDSelector() const
+{
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << header << nonce;
     CSHA256 hasher;
@@ -40,18 +42,22 @@ void CBlockHeaderAndShortTxIDs::FillShortTxIDSelector() const {
     shorttxidk1 = shorttxidhash.GetUint64(1);
 }
 
-uint64_t CBlockHeaderAndShortTxIDs::GetShortID(const uint256& txhash) const {
+uint64_t CBlockHeaderAndShortTxIDs::GetShortID(const uint256& txhash) const
+{
     static_assert(SHORTTXIDS_LENGTH == 6, "shorttxids calculation assumes 6-byte shorttxids");
     return SipHashUint256(shorttxidk0, shorttxidk1, txhash) & 0xffffffffffffL;
 }
 
-
-
-ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<uint256, CTransactionRef>>& extra_txn) {
-    if (cmpctblock.header.IsNull() || (cmpctblock.shorttxids.empty() && cmpctblock.prefilledtxn.empty()))
+ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& cmpctblock,
+                                              const std::vector<std::pair<uint256,
+                                              CTransactionRef>>& extra_txn)
+{
+    if (cmpctblock.header.IsNull() || (cmpctblock.shorttxids.empty() && cmpctblock.prefilledtxn.empty())) {
         return READ_STATUS_INVALID;
-    if (cmpctblock.shorttxids.size() + cmpctblock.prefilledtxn.size() > MAX_BLOCK_BASE_SIZE / MIN_TRANSACTION_BASE_SIZE)
+    }
+    if (cmpctblock.shorttxids.size() + cmpctblock.prefilledtxn.size() > MAX_BLOCK_BASE_SIZE / MIN_TRANSACTION_BASE_SIZE) {
         return READ_STATUS_INVALID;
+    }
 
     assert(header.IsNull() && txn_available.empty());
     header = cmpctblock.header;
@@ -59,12 +65,14 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
 
     int32_t lastprefilledindex = -1;
     for (size_t i = 0; i < cmpctblock.prefilledtxn.size(); i++) {
-        if (cmpctblock.prefilledtxn[i].tx->IsNull())
+        if (cmpctblock.prefilledtxn[i].tx->IsNull()) {
             return READ_STATUS_INVALID;
+        }
 
         lastprefilledindex += cmpctblock.prefilledtxn[i].index + 1; //index is a uint16_t, so can't overflow here
-        if (lastprefilledindex > std::numeric_limits<uint16_t>::max())
+        if (lastprefilledindex > std::numeric_limits<uint16_t>::max()) {
             return READ_STATUS_INVALID;
+        }
         if ((uint32_t)lastprefilledindex > cmpctblock.shorttxids.size() + i) {
             // If we are inserting a tx at an index greater than our full list of shorttxids
             // plus the number of prefilled txn we've inserted, then we have txn for which we
@@ -82,8 +90,9 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
     std::unordered_map<uint64_t, uint16_t> shorttxids(cmpctblock.shorttxids.size());
     uint16_t index_offset = 0;
     for (size_t i = 0; i < cmpctblock.shorttxids.size(); i++) {
-        while (txn_available[i + index_offset])
+        while (txn_available[i + index_offset]) {
             index_offset++;
+        }
         shorttxids[cmpctblock.shorttxids[i]] = i + index_offset;
         // To determine the chance that the number of entries in a bucket exceeds N,
         // we use the fact that the number of elements in a single bucket is
@@ -95,42 +104,59 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
         // Thus: P(max_elements_per_bucket > N) <= S * (1 - cdf(binomial(n=S,p=1/S), N)).
         // If we assume blocks of up to 16000, allowing 12 elements per bucket should
         // only fail once per ~1 million block transfers (per peer and connection).
-        if (shorttxids.bucket_size(shorttxids.bucket(cmpctblock.shorttxids[i])) > 12)
+        if (shorttxids.bucket_size(shorttxids.bucket(cmpctblock.shorttxids[i])) > 12) {
             return READ_STATUS_FAILED;
+        }
     }
     // TODO: in the shortid-collision case, we should instead request both transactions
     // which collided. Falling back to full-block-request here is overkill.
     if (shorttxids.size() != cmpctblock.shorttxids.size())
         return READ_STATUS_FAILED; // Short ID collision
 
+    size_t missing_txs = shorttxids.size();
+    bool shortid_collision = false;
+
     std::vector<bool> have_txn(txn_available.size());
     {
-    LOCK(pool->cs);
-    const std::vector<std::pair<uint256, CTxMemPool::txiter> >& vTxHashes = pool->vTxHashes;
-    for (size_t i = 0; i < vTxHashes.size(); i++) {
-        uint64_t shortid = cmpctblock.GetShortID(vTxHashes[i].first);
-        std::unordered_map<uint64_t, uint16_t>::iterator idit = shorttxids.find(shortid);
-        if (idit != shorttxids.end()) {
-            if (!have_txn[idit->second]) {
-                txn_available[idit->second] = vTxHashes[i].second->GetSharedTx();
-                have_txn[idit->second]  = true;
-                mempool_count++;
-            } else {
-                // If we find two mempool txn that match the short id, just request it.
-                // This should be rare enough that the extra bandwidth doesn't matter,
-                // but eating a round-trip due to FillBlock failure would be annoying
-                if (txn_available[idit->second]) {
-                    txn_available[idit->second].reset();
-                    mempool_count--;
+        LOCK(pool->cs);
+        const std::vector<std::pair<uint256, CTxMemPool::txiter> >& vTxHashes = pool->vTxHashes;
+        for (size_t i = 0; i < vTxHashes.size(); i++) {
+            uint64_t shortid = cmpctblock.GetShortID(vTxHashes[i].first);
+            std::unordered_map<uint64_t, uint16_t>::iterator idit = shorttxids.find(shortid);
+            if (idit != shorttxids.end()) {
+                if (!have_txn[idit->second]) {
+                    txn_available[idit->second] = vTxHashes[i].second->GetSharedTx();
+                    have_txn[idit->second]  = true;
+                    mempool_count++;
+                    missing_txs--;
+                } else {
+                    // If we find two mempool txn that match the short id, just request it.
+                    // This should be rare enough that the extra bandwidth doesn't matter,
+                    // but eating a round-trip due to FillBlock failure would be annoying
+                    if (txn_available[idit->second]) {
+                        txn_available[idit->second].reset();
+                        shortid_collision = true;
+                    }
                 }
             }
+            if (missing_txs == 0 && !shortid_collision) {
+                // We've found transactions matching all of the shortids and haven't yet
+                // found a shortid collision. We could continue scanning through the
+                // mempool and extra pool in case there's a shortid collision later,
+                // but running GetShortID() on the entire mempool and extra pool is an
+                // expensive operation.
+                //
+                // Instead we just assume that we now have all the correct transactions
+                // from the block. If one of our transactions isn't correct and is
+                // actually a shortid collision, we'll return READ_STATUS_FAILED in
+                // FillBlock() and fall back to requesting the full block from the peer.
+                //
+                // Put simply - there's a very high probibility that we can complete the
+                // block now. The downside is that if we fail, we'll have to request a full
+                // block.
+                break;
+            }
         }
-        // Though ideally we'd continue scanning for the two-txn-match-shortid case,
-        // the performance win of an early exit here is too good to pass up and worth
-        // the extra risk.
-        if (mempool_count == shorttxids.size())
-            break;
-    }
     }
 
     for (size_t i = 0; i < extra_txn.size(); i++) {
@@ -140,8 +166,8 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
             if (!have_txn[idit->second]) {
                 txn_available[idit->second] = extra_txn[i].second;
                 have_txn[idit->second]  = true;
-                mempool_count++;
                 extra_count++;
+                missing_txs--;
             } else {
                 // If we find two mempool/extra txn that match the short id, just
                 // request it.
@@ -152,16 +178,16 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
                 if (txn_available[idit->second] &&
                         txn_available[idit->second]->GetWitnessHash() != extra_txn[i].second->GetWitnessHash()) {
                     txn_available[idit->second].reset();
-                    mempool_count--;
-                    extra_count--;
+                    shortid_collision = true;
                 }
             }
         }
-        // Though ideally we'd continue scanning for the two-txn-match-shortid case,
-        // the performance win of an early exit here is too good to pass up and worth
-        // the extra risk.
-        if (mempool_count == shorttxids.size())
+        if (missing_txs == 0 && !shortid_collision) {
+            // See comment above - we have transactions for all shortids and haven't yet
+            // found a shortid collision. Assume that we have all the correct transactions
+            // in the block.
             break;
+        }
     }
 
     LogPrint("cmpctblock", "Initialized PartiallyDownloadedBlock for block %s using a cmpctblock of size %lu\n", cmpctblock.header.GetHash().ToString(), GetSerializeSize(cmpctblock, SER_NETWORK, PROTOCOL_VERSION));
@@ -169,13 +195,15 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
     return READ_STATUS_OK;
 }
 
-bool PartiallyDownloadedBlock::IsTxAvailable(size_t index) const {
+bool PartiallyDownloadedBlock::IsTxAvailable(size_t index) const
+{
     assert(!header.IsNull());
     assert(index < txn_available.size());
     return txn_available[index] ? true : false;
 }
 
-ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing) {
+ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing)
+{
     assert(!header.IsNull());
     uint256 hash = header.GetHash();
     block = header;
@@ -184,19 +212,22 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
     size_t tx_missing_offset = 0;
     for (size_t i = 0; i < txn_available.size(); i++) {
         if (!txn_available[i]) {
-            if (vtx_missing.size() <= tx_missing_offset)
+            if (vtx_missing.size() <= tx_missing_offset) {
                 return READ_STATUS_INVALID;
+            }
             block.vtx[i] = vtx_missing[tx_missing_offset++];
-        } else
+        } else {
             block.vtx[i] = std::move(txn_available[i]);
+        }
     }
 
     // Make sure we can't call FillBlock again.
     header.SetNull();
     txn_available.clear();
 
-    if (vtx_missing.size() != tx_missing_offset)
+    if (vtx_missing.size() != tx_missing_offset) {
         return READ_STATUS_INVALID;
+    }
 
     CValidationState state;
     if (!CheckBlock(block, state, Params().GetConsensus())) {
@@ -204,15 +235,17 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
         // but that is expensive, and CheckBlock caches a block's
         // "checked-status" (in the CBlock?). CBlock should be able to
         // check its own merkle root and cache that check.
-        if (state.CorruptionPossible())
+        if (state.CorruptionPossible()) {
             return READ_STATUS_FAILED; // Possible Short ID collision
+        }
         return READ_STATUS_CHECKBLOCK_FAILED;
     }
 
-    LogPrint("cmpctblock", "Successfully reconstructed block %s with %lu txn prefilled, %lu txn from mempool (incl at least %lu from extra pool) and %lu txn requested\n", hash.ToString(), prefilled_count, mempool_count, extra_count, vtx_missing.size());
+    LogPrint("cmpctblock", "Successfully reconstructed block %s with %lu txn prefilled, up to %lu txn from mempool, up to %lu from extra pool and %lu txn requested\n", hash.ToString(), prefilled_count, mempool_count, extra_count, vtx_missing.size());
     if (vtx_missing.size() < 5) {
-        for (const auto& tx : vtx_missing)
+        for (const auto& tx : vtx_missing) {
             LogPrint("cmpctblock", "Reconstructed block %s required tx %s\n", hash.ToString(), tx->GetHash().ToString());
+        }
     }
 
     return READ_STATUS_OK;
