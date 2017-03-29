@@ -102,6 +102,18 @@ def bctest(testDir, testObj, buildenv):
         logging.error("Return code mismatch for " + outputFn)
         raise Exception
 
+    if "error_txt" in testObj:
+        want_error = testObj["error_txt"]
+        # Compare error text
+        # TODO: ideally, we'd compare the strings exactly and also assert
+        # That stderr is empty if no errors are expected. However, bitcoin-tx
+        # emits DISPLAY errors when running as a windows application on
+        # linux through wine. Just assert that the expected error text appears
+        # somewhere in stderr.
+        if want_error not in outs[1]:
+            logging.error("Error mismatch:\n" + "Expected: " + want_error + "\nReceived: " + outs[1].rstrip())
+            raise Exception
+
 def bctester(testDir, input_basename, buildenv):
     """ Loads and parses the input file, runs all tests and reports results"""
     input_filename = testDir + "/" + input_basename
