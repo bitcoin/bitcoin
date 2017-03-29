@@ -21,7 +21,7 @@ Using `addnode` is the recommended way of connecting and can be made by a simple
 
 	addnode=<ip:port>
 
-You can have multiple addnode entries up to a maximum of 8 connections (or the number specified via maxoutconnections parameter), so you 
+You can have multiple addnode entries up to a maximum of 8 connections (or the number specified via maxoutconnections parameter), so you
 might have a config file looking as follows:
 
 	addnode=10.233.34.33:8333
@@ -40,14 +40,14 @@ the same time maximizing our use of XTHIN technology.
 3. When to use connect-thinblock
 --------------------------------
 
-the `connect-thinblock` feature is mainly used for the purpose of testing, however in some cases it can be useful for very bandwidth 
+the `connect-thinblock` feature is mainly used for the purpose of testing, however in some cases it can be useful for very bandwidth
 constrained nodes that *always* want every downloaded block to be an XTHIN.  In such a case you would substitute the addnode entry
-above with a connect-thinblockentry.  As with addnode you can have up to 8 `connect-thinblock` entries and your entry would be as 
+above with a connect-thinblockentry.  As with addnode you can have up to 8 `connect-thinblock` entries and your entry would be as
 follows:
 
 	connect-thinblock=<ip:port>
 
-One thing to keep in mind is that with `connect-thinblock`, if the nodes that you are connecting to are down or can not service you then 
+One thing to keep in mind is that with `connect-thinblock`, if the nodes that you are connecting to are down or can not service you then
 you have the possibility of not receiving any new blocks until those nodes come back on line.  Therefore use `connect-thinblock` with
 caution and always use the full 8 connections if you are unsure whether the peers will be online or not.
 
@@ -55,15 +55,15 @@ caution and always use the full 8 connections if you are unsure whether the peer
 4. The thinblock mempool limiter
 ---------------------------------
 
-In order to keep the size of the XTHIN bloom filters from getting too large, a way to limit the size of mempools was implemented in v11.2
-using a simple rate limiting technique.  If the size of the mempool grows to 3X the size of the largest block seen then two things happen, 
-the -minrelaytxfee is gradually increased until it reaches the -maxlimitertxfee, and at the same time the -limitfreerelay is gradually 
-reduced from 150KB per 10 minute interval down to 15KB per 10 minute.  What this system allow us to do is generally allow more zero fee 
-transactions through the system, yet as the mempool becomes overfull we start to choke off the free transactions while at the same time 
-still allowing all high priority and coinbase spends through. This mempool limiting technique has shown itself to be a great way of reducing 
+In order to keep the size of the XTHIN bloom filters from getting too large, a way to limit the size of mempools was implemented in v0.12.1
+using a simple rate limiting technique.  If the size of the mempool grows to 3X the size of the largest block seen then two things happen,
+the -minrelaytxfee is gradually increased until it reaches the -maxlimitertxfee, and at the same time the -limitfreerelay is gradually
+reduced from 150KB per 10 minute interval down to 15KB per 10 minute.  What this system allow us to do is generally allow more zero fee
+transactions through the system, yet as the mempool becomes overfull we start to choke off the free transactions while at the same time
+still allowing all high priority and coinbase spends through. This mempool limiting technique has shown itself to be a great way of reducing
 outbound bandwidth and preventing the propagation of transactions that will never be mined within the default 72 hour window.
 
-During the release of v12.1, Bloom Filter targeting was introduced which supersedes the need for the mempool limiter in keeping bloom 
+During the release of v0.12.1, Bloom Filter targeting was introduced which supersedes the need for the mempool limiter in keeping bloom
 filters smaller however it is still a valuable tool in reducing the total amount of outbound bandwidth.
 
 There are two setting one can change as follows:
