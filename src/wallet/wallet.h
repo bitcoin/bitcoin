@@ -90,6 +90,10 @@ enum WalletFeature
 };
 
 
+class keypool_empty : public std::exception
+{
+};
+
 /** A key pool entry */
 class CKeyPool
 {
@@ -884,7 +888,7 @@ public:
 
     bool NewKeyPool();
     bool TopUpKeyPool(unsigned int kpSize = 0);
-    void ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool);
+    int64_t ReserveKeyFromKeyPool(CKeyPool& keypool);
     void KeepKey(int64_t nIndex);
     void ReturnKey(int64_t nIndex);
     bool GetKeyFromPool(CPubKey &key);
