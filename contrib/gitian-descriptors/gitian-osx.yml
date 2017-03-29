@@ -1,5 +1,5 @@
 ---
-name: "BitcoinUnlimited-osx-0.12.1"
+name: "BitcoinUnlimited-osx-1.0"
 enable_cache: true
 suites:
 - "trusty"

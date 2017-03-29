@@ -143,7 +143,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
       CBlockHeader h;
       nBlockSize += h.GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
     }
-    assert(nBlockSize == 80);  // BU always 80 bytes
+    assert(nBlockSize == 80);  // BU block header is always 80 bytes
 
 
     unsigned int nCoinbaseSize=0;
@@ -410,7 +410,7 @@ void IncrementExtraNonce(CBlock* pblock, unsigned int& nExtraNonce)
 	COINBASE_FLAGS.resize(MAX_COINBASE_SCRIPTSIG_SIZE - script.size());
       }
     txCoinbase.vin[0].scriptSig = script + COINBASE_FLAGS;
-    assert(txCoinbase.vin[0].scriptSig.size() <= 100);
+    assert(txCoinbase.vin[0].scriptSig.size() <= MAX_COINBASE_SCRIPTSIG_SIZE);
 
     pblock->vtx[0] = txCoinbase;
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);

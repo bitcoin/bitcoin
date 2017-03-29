@@ -1288,7 +1288,8 @@ void ThreadSocketHandler()
                     }
                     if (fDelete) {
                         vNodesDisconnected.remove(pnode);
-                        assert(std::find(vNodes.begin(),vNodes.end(), pnode) == vNodes.end());  // make sure it has been removed
+                        // no need to remove from vNodes. we know pnode has already been removed from vNodes since that
+                        // occurred prior to insertion into vNodesDisconnected
                         delete pnode;
                     }
                 }
