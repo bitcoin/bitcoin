@@ -474,16 +474,6 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
     mapMultiArgs[strArg].push_back(strValue);
 }
 
-void ParseParameters(int argc, const char* const argv[])
-{
-    argsGlobal.ParseParameters(argc, argv);
-}
-
-void ReadConfigFile(const std::string& confPath)
-{
-    argsGlobal.ReadConfigFile(confPath);
-}
-
 bool IsArgSet(const std::string& strArg)
 {
     return argsGlobal.IsArgSet(strArg);
@@ -504,19 +494,9 @@ bool GetBoolArg(const std::string& strArg, bool fDefault)
     return argsGlobal.GetBoolArg(strArg, fDefault);
 }
 
-bool SoftSetArg(const std::string& strArg, const std::string& strValue)
-{
-    return argsGlobal.SoftSetArg(strArg, strValue);
-}
-
 bool SoftSetBoolArg(const std::string& strArg, bool fValue)
 {
     return argsGlobal.SoftSetBoolArg(strArg, fValue);
-}
-
-void ForceSetArg(const std::string& strArg, const std::string& strValue)
-{
-    return argsGlobal.ForceSetArg(strArg, strValue);
 }
 
 
