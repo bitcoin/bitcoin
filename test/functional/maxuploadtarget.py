@@ -44,15 +44,6 @@ class TestNode(NodeConnCB):
         except KeyError as e:
             self.block_receive_map[message.block.sha256] = 1
 
-    # Spin until verack message is received from the node.
-    # We use this to signal that our test can begin. This
-    # is called from the testing thread, so it needs to acquire
-    # the global lock.
-    def wait_for_verack(self):
-        def veracked():
-            return self.verack_received
-        return wait_until(veracked, timeout=10)
-
     def wait_for_disconnect(self):
         def disconnected():
             return self.peer_disconnected

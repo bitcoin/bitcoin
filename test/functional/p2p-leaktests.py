@@ -23,6 +23,7 @@ class CLazyNode(NodeConnCB):
         self.connection = None
         self.unexpected_msg = False
         self.connected = False
+        self.ever_connected = False
 
     def add_connection(self, conn):
         self.connection = conn
@@ -36,6 +37,7 @@ class CLazyNode(NodeConnCB):
 
     def on_open(self, conn):
         self.connected = True
+        self.ever_connected = True
 
     def on_version(self, conn, message): self.bad_message(message)
     def on_verack(self, conn, message): self.bad_message(message)
@@ -121,7 +123,9 @@ class P2PLeakTest(BitcoinTestFramework):
 
         NetworkThread().start()  # Start up network handling in another thread
 
-        assert(wait_until(lambda: no_version_bannode.connected and no_version_idlenode.connected and no_verack_idlenode.version_received, timeout=10))
+        assert wait_until(lambda: no_version_bannode.ever_connected, timeout=10)
+        assert wait_until(lambda: no_version_idlenode.ever_connected, timeout=10)
+        assert wait_until(lambda: no_verack_idlenode.version_received, timeout=10)
 
         # Mine a block and make sure that it's not sent to the connected nodes
         self.nodes[0].generate(1)
@@ -130,7 +134,7 @@ class P2PLeakTest(BitcoinTestFramework):
         time.sleep(5)
 
         #This node should have been banned
-        assert(no_version_bannode.connection.state == "closed")
+        assert not no_version_bannode.connected
 
         [conn.disconnect_node() for conn in connections]
 
