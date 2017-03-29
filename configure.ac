@@ -84,6 +84,7 @@ AC_PATH_PROG([GIT], [git])
 AC_PATH_PROG(CCACHE,ccache)
 AC_PATH_PROG(XGETTEXT,xgettext)
 AC_PATH_PROG(HEXDUMP,hexdump)
+AC_PATH_PROG(XVFB_RUN,xvfb-run)
 AC_PATH_TOOL(READELF, readelf)
 AC_PATH_TOOL(CPPFILT, c++filt)
 AC_PATH_TOOL(OBJCOPY, objcopy)
@@ -968,8 +969,6 @@ if test x$build_bitcoin_libs = xyes; then
 fi
 AC_MSG_RESULT($build_bitcoin_libs)
 
-AC_LANG_POP
-
 if test "x$use_ccache" != "xno"; then
   AC_MSG_CHECKING(if ccache should be used)
   if test x$CCACHE = x; then
@@ -1061,10 +1060,38 @@ if test x$bitcoin_enable_qt != xno; then
   if test x$use_gui_tests$bitcoin_enable_qt_test = xyesyes; then
     AC_MSG_RESULT([yes])
     BUILD_TEST_QT="yes"
+
+    if test -z "$XVFB_RUN"; then
+      dnl Check if it is possible to instantiate QApplication in the current
+      dnl runtime environment. This check will fail on systems that use the
+      dnl qt-xcb backend but do not have a DISPLAY environment variable set.
+      dnl In this case, pass --skip-gui-tests to Qt test to avoid running
+      dnl full tests (but still running tests not requiring QApplication).
+      AC_MSG_CHECKING([if qt gui applications can run])
+      TEMP_CPPFLAGS=$CPPFLAGS
+      TEMP_CXXFLAGS=$CXXFLAGS
+      TEMP_LIBS=$LIBS
+      CPPFLAGS="$QT_INCLUDES $CPPFLAGS"
+      CXXFLAGS="$QT_PIE_FLAGS $CXXFLAGS"
+      LIBS="$QT_LIBS $LIBS"
+      AC_RUN_IFELSE([AC_LANG_SOURCE([
+        #include <QApplication>
+        int main(int argc, char *argv[[]]) {
+          QApplication(argc, argv);
+          return 0;
+        }
+      ])], [QT_GUI=yes], [QT_GUI=no; TEST_BITCOIN_QT_ARGS=--skip-gui-tests], [QT_GUI="no (cross compiling)"])
+      AC_MSG_RESULT([$QT_GUI])
+      CPPFLAGS=$TEMP_CPPFLAGS
+      CXXFLAGS=$TEMP_CXXFLAGS
+      LIBS=$TEMP_LIBS
+    fi
   else
     AC_MSG_RESULT([no])
   fi
 fi
+
+AC_LANG_POP
 
 AM_CONDITIONAL([ENABLE_ZMQ], [test "x$use_zmq" = "xyes"])
 
@@ -1147,9 +1174,11 @@ AC_SUBST(EVENT_PTHREADS_LIBS)
 AC_SUBST(ZMQ_LIBS)
 AC_SUBST(PROTOBUF_LIBS)
 AC_SUBST(QR_LIBS)
+AC_SUBST(TEST_BITCOIN_QT_ARGS)
 AC_CONFIG_FILES([Makefile src/Makefile doc/man/Makefile share/setup.nsi share/qt/Info.plist test/functional/config.ini])
 AC_CONFIG_FILES([test/util/buildenv.py],[chmod +x test/util/buildenv.py])
 AC_CONFIG_FILES([contrib/devtools/split-debug.sh],[chmod +x contrib/devtools/split-debug.sh])
+AC_CONFIG_FILES([src/qt/test/test_bitcoin-qt.sh],[chmod +x src/qt/test/test_bitcoin-qt.sh])
 AC_CONFIG_LINKS([test/functional/test_runner.py:test/functional/test_runner.py])
 AC_CONFIG_LINKS([test/util/bitcoin-util-test.py:test/util/bitcoin-util-test.py])
 AC_CONFIG_LINKS([test/util/bctest.py:test/util/bctest.py])
