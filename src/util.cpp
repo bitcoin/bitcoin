@@ -451,7 +451,7 @@ bool ArgsManager::SoftSetArg(const std::string& strArg, const std::string& strVa
     LOCK(cs_args);
     if (mapArgs.count(strArg))
         return false;
-    mapArgs[strArg] = strValue;
+    this->ForceSetArg(strArg, strValue);
     return true;
 }
 
@@ -467,6 +467,7 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
 {
     LOCK(cs_args);
     mapArgs[strArg] = strValue;
+    _mapMultiArgs[strArg].push_back(strValue);
 }
 
 void ParseParameters(int argc, const char* const argv[])
