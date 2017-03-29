@@ -467,6 +467,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # drain the keypool
         self.nodes[1].getnewaddress()
+        self.nodes[1].getrawchangeaddress()
         inputs = []
         outputs = {self.nodes[0].getnewaddress():1.1}
         rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
@@ -476,6 +477,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         #refill the keypool
         self.nodes[1].walletpassphrase("test", 100)
+        self.nodes[1].keypoolrefill(8) #need to refill the keypool to get an internal change address
         self.nodes[1].walletlock()
 
         assert_raises_jsonrpc(-13, "walletpassphrase", self.nodes[1].sendtoaddress, self.nodes[0].getnewaddress(), 1.2)
@@ -644,7 +646,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             if out['value'] > 1.0:
                 changeaddress += out['scriptPubKey']['addresses'][0]
         assert(changeaddress != "")
-        nextaddr = self.nodes[3].getnewaddress()
+        nextaddr = self.nodes[3].getrawchangeaddress()
         # frt should not have removed the key from the keypool
         assert(changeaddress == nextaddr)
 
