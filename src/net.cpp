@@ -356,9 +356,9 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     }
 
     /// debug print
-    LogPrint("net", "trying connection %s lastseen=%.1fhrs\n",
+    LogPrint("net", "trying connection %s lastseen=%s\n",
         pszDest ? pszDest : addrConnect.ToString(),
-        pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime)/3600.0);
+        pszDest ? "now" : strAge(GetAdjustedTime() - addrConnect.nTime));
 
     // Connect
     SOCKET hSocket;
@@ -2713,7 +2713,6 @@ void CNode::AskFor(const CInv& inv)
         nRequestTime = it->second;
     else
         nRequestTime = 0;
-    LogPrint("net", "askfor %s  %d (%s) peer=%d\n", inv.ToString(), nRequestTime, DateTimeStrFormat("%H:%M:%S", nRequestTime/1000000), id);
 
     // Make sure not to reuse time indexes to keep things in the same order
     int64_t nNow = GetTimeMicros() - 1000000;
@@ -2729,6 +2728,7 @@ void CNode::AskFor(const CInv& inv)
     else
         mapAlreadyAskedFor.insert(std::make_pair(inv.hash, nRequestTime));
     mapAskFor.insert(std::make_pair(nRequestTime, inv));
+    LogPrint("net", "askfor(%d,%d,%d) %s  (t-%s) peer=%d\n", mapAskFor.size(), setAskFor.size(), mapAlreadyAskedFor.size(), inv.ToString(), strAge((nRequestTime-nNow)/1000000), id);
 }
 
 bool CConnman::NodeFullyConnected(const CNode* pnode)
