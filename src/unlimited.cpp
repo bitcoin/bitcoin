@@ -411,17 +411,46 @@ std::string UnlimitedCmdLineHelp()
     strUsage += HelpMessageOpt("-sendburst", _("The maximum rate that data can be sent in kB/s.  If there has been a period of lower than average data rates, the client may send extra data to bring the average back to '-receiveavg' but the data rate will not exceed this parameter."));
     strUsage += HelpMessageOpt("-receiveavg", _("The average rate that data can be received in kB/s"));
     strUsage += HelpMessageOpt("-sendavg", _("The maximum rate that data can be sent in kB/s"));
-    strUsage += HelpMessageOpt("-use-thinblocks=<n>", strprintf(_("Turn Thinblocks on or off (off: 0, on: 1, default: %d)"), 1));
-    strUsage += HelpMessageOpt("-connect-thinblock=<ip:port>", _("Connect to a thinblock node(s). Blocks will only be downloaded from a thinblock peer.  If no connections are possible then regular blocks will then be downloaded form any other connected peers."));
-    strUsage += HelpMessageOpt("-minlimitertxfee=<amt>", strprintf(_("Fees (in satoshi/byte) smaller than this are considered zero fee and subject to -limitfreerelay (default: %s)"), DEFAULT_MINLIMITERTXFEE));
-    strUsage += HelpMessageOpt("-maxlimitertxfee=<amt>", strprintf(_("Fees (in satoshi/byte) larger than this are always relayed (default: %s)"), DEFAULT_MAXLIMITERTXFEE));
-    strUsage += HelpMessageOpt("-bitnodes", _("Query for peer addresses via Bitnodes API, if low on addresses (default: 1 unless -connect)"));    
-    strUsage += HelpMessageOpt("-forcebitnodes", strprintf(_("Always query for peer addresses via Bitnodes API (default: %u)"), DEFAULT_FORCEBITNODES));
-    strUsage += HelpMessageOpt("-usednsseed=<host>", _("Add a custom DNS seed to use.  If at least one custom DNS seed is set, the default DNS seeds will be ignored."));
-    strUsage += HelpMessageOpt("-expeditedblock=<host>", _("Request expedited blocks from this host whenever we are connected to it"));
-    strUsage += HelpMessageOpt("-maxexpeditedblockrecipients=<n>", _("The maximum number of nodes this node will forward expedited blocks to"));
-    strUsage += HelpMessageOpt("-maxexpeditedtxrecipients=<n>", _("The maximum number of nodes this node will forward expedited transactions to"));
-    strUsage += HelpMessageOpt("-maxoutconnections=<n>", strprintf(_("Initiate at most <n> connections to peers (default: %u).  If this number is higher than --maxconnections, it will be reduced to --maxconnections."), DEFAULT_MAX_OUTBOUND_CONNECTIONS));
+    strUsage += HelpMessageOpt(
+        "-use-thinblocks=<n>", strprintf(_("Turn Thinblocks on or off (off: 0, on: 1, default: %d)"), 1));
+    strUsage += HelpMessageOpt("-connect-thinblock=<ip:port>",
+        _("Connect to a thinblock node(s). Blocks will only be downloaded from a thinblock peer.  If no connections "
+          "are possible then regular blocks will then be downloaded form any other connected peers."));
+    strUsage +=
+        HelpMessageOpt("-minlimitertxfee=<amt>", strprintf(_("Fees (in satoshi/byte) smaller than this are considered "
+                                                             "zero fee and subject to -limitfreerelay (default: %s)"),
+                                                     DEFAULT_MINLIMITERTXFEE));
+    strUsage += HelpMessageOpt(
+        "-min-xthin-nodes=<n>", strprintf(_("Minimum number of xthin nodes to automatically find and connect "
+        "(default: %d)"), 4));
+    strUsage += HelpMessageOpt("-maxlimitertxfee=<amt>",
+        strprintf(_("Fees (in satoshi/byte) larger than this are always relayed (default: %s)"),
+                                   DEFAULT_MAXLIMITERTXFEE));
+    strUsage += HelpMessageOpt(
+        "-bitnodes", _("Query for peer addresses via Bitnodes API, if low on addresses (default: 1 unless -connect)"));
+    strUsage += HelpMessageOpt("-forcebitnodes",
+        strprintf(_("Always query for peer addresses via Bitnodes API (default: %u)"), DEFAULT_FORCEBITNODES));
+    strUsage += HelpMessageOpt("-usednsseed=<host>", _("Add a custom DNS seed to use.  If at least one custom DNS seed "
+                                                       "is set, the default DNS seeds will be ignored."));
+    strUsage += HelpMessageOpt(
+        "-expeditedblock=<host>", _("Request expedited blocks from this host whenever we are connected to it"));
+    strUsage += HelpMessageOpt("-maxexpeditedblockrecipients=<n>",
+        _("The maximum number of nodes this node will forward expedited blocks to"));
+    strUsage += HelpMessageOpt("-maxexpeditedtxrecipients=<n>",
+        _("The maximum number of nodes this node will forward expedited transactions to"));
+    strUsage += HelpMessageOpt("-maxoutconnections=<n>",
+        strprintf(_("Initiate at most <n> connections to peers (default: %u).  If this number is higher than "
+                    "--maxconnections, it will be reduced to --maxconnections."),
+                                   DEFAULT_MAX_OUTBOUND_CONNECTIONS));
+    strUsage += HelpMessageOpt(
+        "-parallel=<n>", strprintf(_("Turn Parallel Block Validation on or off (off: 0, on: 1, default: %d)"), 1));
+    strUsage += HelpMessageOpt("-gen", strprintf(_("Generate coins (default: %u)"), DEFAULT_GENERATE));
+    strUsage += HelpMessageOpt("-genproclimit=<n>",
+        strprintf(_("Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)"),
+                                   DEFAULT_GENERATE_THREADS));
+    strUsage += HelpMessageOpt("-ophanpoolexpiry=<n>",
+        strprintf(_("Do not keep transactions in the orphanpool longer than <n> hours (default: %u)"),
+                                   DEFAULT_ORPHANPOOL_EXPIRY));
     strUsage += TweakCmdLineHelp();
     return strUsage;
 }
