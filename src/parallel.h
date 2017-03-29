@@ -25,38 +25,50 @@ using namespace std;
 
 extern CCriticalSection cs_blockvalidationthread;
 
-// adds all the script check queues into the "allScriptCheckQueues" global variable and creates nScriptCheckThreads per check queue
+// adds all the script check queues into the "allScriptCheckQueues" global variable and creates nScriptCheckThreads per
+// check queue
 void AddAllScriptCheckQueuesAndThreads(int nScriptCheckThreads, boost::thread_group* threadGroup);
 // Entry point for the script check queue threads.
 void AddScriptCheckThreads(int i, CCheckQueue<CScriptCheck>* pqueue);
 
 extern CCriticalSection cs_semPV;
-extern CSemaphore *semPV; // semaphore for parallel validation threads
+extern CSemaphore* semPV; // semaphore for parallel validation threads
 
 /**
  * Closure representing one script verification
- * Note that this stores references to the spending transaction 
+ * Note that this stores references to the spending transaction
  */
 class CScriptCheck
 {
 private:
     ValidationResourceTracker* resourceTracker;
     CScript scriptPubKey;
-    const CTransaction *ptxTo;
+    const CTransaction* ptxTo;
     unsigned int nIn;
     unsigned int nFlags;
     bool cacheStore;
     ScriptError error;
 
 public:
-    CScriptCheck(): resourceTracker(NULL), ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR) {}
-    CScriptCheck(ValidationResourceTracker* resourceTrackerIn, const CCoins& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn) :
-        resourceTracker(resourceTrackerIn), scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
-        ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR) { }
+    CScriptCheck()
+        : resourceTracker(NULL), ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR)
+    {
+    }
+    CScriptCheck(ValidationResourceTracker* resourceTrackerIn,
+        const CCoins& txFromIn,
+        const CTransaction& txToIn,
+        unsigned int nInIn,
+        unsigned int nFlagsIn,
+        bool cacheIn)
+        : resourceTracker(resourceTrackerIn), scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
+          ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR)
+    {
+    }
 
     bool operator()();
 
-    void swap(CScriptCheck &check) {
+    void swap(CScriptCheck& check)
+    {
         std::swap(resourceTracker, check.resourceTracker);
         scriptPubKey.swap(check.scriptPubKey);
         std::swap(ptxTo, check.ptxTo);
@@ -70,18 +82,17 @@ public:
 };
 
 /**
- * Hold pointers to all script check queues in one vector 
+ * Hold pointers to all script check queues in one vector
  */
 class CAllScriptCheckQueues
 {
 private:
-    std::vector< CCheckQueue<CScriptCheck>*> vScriptCheckQueues;
+    std::vector<CCheckQueue<CScriptCheck>*> vScriptCheckQueues;
 
     CCriticalSection cs;
 
 public:
     CAllScriptCheckQueues() {}
-
     void Add(CCheckQueue<CScriptCheck>* pqueueIn)
     {
         LOCK(cs);
@@ -100,16 +111,15 @@ extern CAllScriptCheckQueues allScriptCheckQueues; // Singleton class
 
 class CParallelValidation
 {
-
 private:
-
     // txn hashes that are in the previous block
     CCriticalSection cs_previousblock;
     vector<uint256> vPreviousBlock;
 
 
 public:
-    struct CHandleBlockMsgThreads {
+    struct CHandleBlockMsgThreads
+    {
         CCheckQueue<CScriptCheck>* pScriptQueue;
         uint256 hash;
         uint256 hashPrevBlock;
@@ -119,7 +129,7 @@ public:
         uint64_t nBlockSize;
         bool fQuit;
         NodeId nodeid;
-        bool fIsValidating; // is the block currently in connectblock() and validating inputs
+        bool fIsValidating;      // is the block currently in connectblock() and validating inputs
         bool fIsReorgInProgress; // has a re-org to another chain been triggered.
     };
     CCriticalSection cs_blockvalidationthread;
@@ -127,12 +137,11 @@ public:
 
 
 public:
-
     CParallelValidation();
 
 
     /* Initialize mapBlockValidationThreads*/
-    void InitThread(const boost::thread::id this_id, const CNode *pfrom, const CBlock &block, const CInv &inv);
+    void InitThread(const boost::thread::id this_id, const CNode* pfrom, const CBlock& block, const CInv& inv);
 
     /* Initialize a PV session */
     bool Initialize(const boost::thread::id this_id, const CBlockIndex* pindex, const bool fParallel);
@@ -146,9 +155,10 @@ public:
     /* Is this block already running a validation thread? */
     bool IsAlreadyValidating(const NodeId id);
 
-    /* Terminate all currently running Block Validation threads, except the passed thread */    
+    /* Terminate all currently running Block Validation threads, except the passed thread */
     void StopAllValidationThreads(const boost::thread::id this_id = boost::thread::id());
-    /* Terminate all currently running Block Validation threads whose chainWork is <= the passed parameter, except the calling thread  */
+    /* Terminate all currently running Block Validation threads whose chainWork is <= the passed parameter, except the
+     * calling thread  */
     void StopAllValidationThreads(const uint32_t nChainWork);
     void WaitForAllValidationThreadsToStop();
 
@@ -172,15 +182,14 @@ public:
     bool IsReorgInProgress();
 
     /* Clear orphans from the orphan cache that are no longer needed*/
-    void ClearOrphanCache(const CBlock &block);
+    void ClearOrphanCache(const CBlock& block);
 
     /* Process a block message */
-    void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, const CBlock &block, const CInv &inv);
-
+    void HandleBlockMessage(CNode* pfrom, const std::string& strCommand, const CBlock& block, const CInv& inv);
 };
-extern CParallelValidation PV;  // Singleton class
+extern CParallelValidation PV; // Singleton class
 
 
-void HandleBlockMessageThread(CNode *pfrom, const std::string &strCommand, const CBlock &block, const CInv &inv);
+void HandleBlockMessageThread(CNode* pfrom, const std::string& strCommand, const CBlock& block, const CInv& inv);
 
 #endif // BITCOIN_PARALLEL_H
