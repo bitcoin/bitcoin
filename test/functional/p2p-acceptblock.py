@@ -70,17 +70,6 @@ class TestNode(NodeConnCB):
     def on_getdata(self, conn, message):
         self.last_getdata = message
 
-    # Spin until verack message is received from the node.
-    # We use this to signal that our test can begin. This
-    # is called from the testing thread, so it needs to acquire
-    # the global lock.
-    def wait_for_verack(self):
-        while True:
-            with mininode_lock:
-                if self.verack_received:
-                    return
-            time.sleep(0.05)
-
     # Wrapper for the NodeConn's send_message function
     def send_message(self, message):
         self.connection.send_message(message)
