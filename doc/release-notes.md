@@ -36,7 +36,14 @@ Notable changes
 Example item
 -----------------------------------------------
 
-0.13.x Change log
+RPC changes
+-----------
+
+The first positional argument of `createrawtransaction` was renamed.
+This interface change breaks compatibility with 0.14.0, when the named
+arguments functionality, introduced in 0.14.0, is used.
+
+0.14.x Change log
 =================
 
 Detailed release notes follow. This overview includes changes that affect
