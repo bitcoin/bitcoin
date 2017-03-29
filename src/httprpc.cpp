@@ -92,10 +92,8 @@ static bool multiUserAuthorized(std::string strUserPass)
     std::string strUser = strUserPass.substr(0, strUserPass.find(":"));
     std::string strPass = strUserPass.substr(strUserPass.find(":") + 1);
 
-    if (gArgs.IsArgSet("-rpcauth")) {
+    for (const std::string& strRPCAuth : gArgs.GetArgs("-rpcauth")) {
         //Search for multi-user login/pass "rpcauth" from config
-        for (std::string strRPCAuth : gArgs.GetArgs("-rpcauth"))
-        {
             std::vector<std::string> vFields;
             boost::split(vFields, strRPCAuth, boost::is_any_of(":$"));
             if (vFields.size() != 3) {
@@ -121,7 +119,6 @@ static bool multiUserAuthorized(std::string strUserPass)
             if (TimingResistantEqual(strHashFromPass, strHash)) {
                 return true;
             }
-        }
     }
     return false;
 }
