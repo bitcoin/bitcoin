@@ -466,7 +466,9 @@ void ArgsManager::ParseParameters(int argc, const char* const argv[])
 std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg)
 {
     LOCK(cs_args);
-    return gArgs.GetArgs(strArg);
+    if (IsArgSet(strArg))
+        return mapMultiArgs.at(strArg);
+    return {};
 }
 
 bool ArgsManager::IsArgSet(const std::string& strArg)

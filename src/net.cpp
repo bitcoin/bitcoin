@@ -1690,7 +1690,7 @@ void CConnman::ProcessOneShot()
 void CConnman::ThreadOpenConnections()
 {
     // Connect to specific addresses
-    if (gArgs.IsArgSet("-connect") && gArgs.GetArgs("-connect").size() > 0)
+    if (gArgs.IsArgSet("-connect"))
     {
         for (int64_t nLoop = 0;; nLoop++)
         {
@@ -1916,8 +1916,7 @@ void CConnman::ThreadOpenAddedConnections()
 {
     {
         LOCK(cs_vAddedNodes);
-        if (gArgs.IsArgSet("-addnode"))
-            vAddedNodes = gArgs.GetArgs("-addnode");
+        vAddedNodes = gArgs.GetArgs("-addnode");
     }
 
     while (true)
