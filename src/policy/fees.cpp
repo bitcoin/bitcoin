@@ -76,7 +76,7 @@ void TxConfirmStats::UpdateMovingAverages()
 
 // returns -1 on error conditions
 double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
-                                         double successBreakPoint, bool requireGreater,
+                                         double successBreakPoint,
                                          unsigned int nBlockHeight)
 {
     // Counters for a bucket (or range of buckets)
@@ -86,28 +86,25 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
 
     int maxbucketindex = buckets.size() - 1;
 
-    // requireGreater means we are looking for the lowest feerate such that all higher
+    // We are looking for the lowest feerate such that all higher
     // values pass, so we start at maxbucketindex (highest feerate) and look at successively
-    // smaller buckets until we reach failure.  Otherwise, we are looking for the highest
-    // feerate such that all lower values fail, and we go in the opposite direction.
-    unsigned int startbucket = requireGreater ? maxbucketindex : 0;
-    int step = requireGreater ? -1 : 1;
+    // smaller buckets until we reach failure.
 
     // We'll combine buckets until we have enough samples.
     // The near and far variables will define the range we've combined
     // The best variables are the last range we saw which still had a high
     // enough confirmation rate to count as success.
     // The cur variables are the current range we're counting.
-    unsigned int curNearBucket = startbucket;
-    unsigned int bestNearBucket = startbucket;
-    unsigned int curFarBucket = startbucket;
-    unsigned int bestFarBucket = startbucket;
+    unsigned int curNearBucket = maxbucketindex;
+    unsigned int bestNearBucket = maxbucketindex;
+    unsigned int curFarBucket = maxbucketindex;
+    unsigned int bestFarBucket = maxbucketindex;
 
     bool foundAnswer = false;
     unsigned int bins = unconfTxs.size();
 
-    // Start counting from highest(default) or lowest feerate transactions
-    for (int bucket = startbucket; bucket >= 0 && bucket <= maxbucketindex; bucket += step) {
+    // Start counting from highest feerate transactions
+    for (int bucket = maxbucketindex; bucket >= 0; bucket--) {
         curFarBucket = bucket;
         nConf += confAvg[confTarget - 1][bucket];
         totalNum += txCtAvg[bucket];
@@ -122,9 +119,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
             double curPct = nConf / (totalNum + extraNum);
 
             // Check to see if we are no longer getting confirmed at the success rate
-            if (requireGreater && curPct < successBreakPoint)
-                break;
-            if (!requireGreater && curPct > successBreakPoint)
+            if (curPct < successBreakPoint)
                 break;
 
             // Otherwise update the cumulative stats, and the bucket variables
@@ -136,7 +131,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
                 extraNum = 0;
                 bestNearBucket = curNearBucket;
                 bestFarBucket = curFarBucket;
-                curNearBucket = bucket + step;
+                curNearBucket = bucket - 1;
             }
         }
     }
@@ -165,9 +160,9 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
         }
     }
 
-    LogPrint("estimatefee", "%3d: For conf success %s %4.2f need feerate %s: %12.5g from buckets %8g - %8g  Cur Bucket stats %6.2f%%  %8.1f/(%.1f+%d mempool)\n",
-             confTarget, requireGreater ? ">" : "<", successBreakPoint,
-             requireGreater ? ">" : "<", median, buckets[minBucket], buckets[maxBucket],
+    LogPrint("estimatefee", "%3d: For conf success > %4.2f need feerate >: %12.5g from buckets %8g - %8g  Cur Bucket stats %6.2f%%  %8.1f/(%.1f+%d mempool)\n",
+             confTarget, successBreakPoint,
+             median, buckets[minBucket], buckets[maxBucket],
              100 * nConf / (totalNum + extraNum), nConf, totalNum, extraNum);
 
     return median;
@@ -413,7 +408,7 @@ CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget)
     if (confTarget <= 1 || (unsigned int)confTarget > feeStats.GetMaxConfirms())
         return CFeeRate(0);
 
-    double median = feeStats.EstimateMedianVal(confTarget, SUFFICIENT_FEETXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
+    double median = feeStats.EstimateMedianVal(confTarget, SUFFICIENT_FEETXS, MIN_SUCCESS_PCT, nBestSeenHeight);
 
     if (median < 0)
         return CFeeRate(0);
@@ -435,7 +430,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, int *answerFoun
 
     double median = -1;
     while (median < 0 && (unsigned int)confTarget <= feeStats.GetMaxConfirms()) {
-        median = feeStats.EstimateMedianVal(confTarget++, SUFFICIENT_FEETXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
+        median = feeStats.EstimateMedianVal(confTarget++, SUFFICIENT_FEETXS, MIN_SUCCESS_PCT, nBestSeenHeight);
     }
 
     if (answerFoundAtTarget)
