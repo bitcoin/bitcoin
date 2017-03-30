@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -187,8 +187,14 @@ UniValue validateaddress(const UniValue& params, bool fHelp)
     {
         CTxDestination dest = address.Get();
         string currentAddress = address.ToString();
-        ret.push_back(Pair("address", currentAddress));
-
+		// SYSCOIN v1 addy compatibility
+		CSyscoinAddress v1addr;
+		v1addr.Set(dest, true);
+		string addressStr = params[0].get_str();
+		if(addressStr[0] == 'S')
+			ret.push_back(Pair("address", v1addr.ToString()));
+		else
+			ret.push_back(Pair("address", currentAddress));
         CScript scriptPubKey = GetScriptForDestination(dest);
         ret.push_back(Pair("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
 
@@ -306,7 +312,14 @@ UniValue createmultisig(const UniValue& params, bool fHelp)
     CSyscoinAddress address(innerID);
 
     UniValue result(UniValue::VOBJ);
-    result.push_back(Pair("address", address.ToString()));
+	// SYSCOIN v1 addy by default
+    CTxDestination dest = address.Get();
+	CSyscoinAddress v1addr;
+	v1addr.Set(dest, true);
+	CSyscoinAddress v2addr;
+	v2addr.Set(dest);
+    result.push_back(Pair("address", v1addr.ToString()));
+	result.push_back(Pair("v2address", v2addr.ToString()));
     result.push_back(Pair("redeemScript", HexStr(inner.begin(), inner.end())));
 
     return result;

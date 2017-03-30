@@ -7,7 +7,7 @@ updates. It is recommended to upgrade to this version.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/syscoin/syscoin/issues>
+  <https://github.com/syscoin/syscoin2/issues>
 
 Upgrading and downgrading
 =========================
@@ -47,12 +47,12 @@ Notable changes
 ===============
 
 This fixes a serious problem on Windows with data directories that have non-ASCII
-characters (https://github.com/syscoin/syscoin/issues/6078).
+characters (https://github.com/syscoin/syscoin2/issues/6078).
 
 For other platforms there are no notable changes.
 
 For the notable changes in 0.10, refer to the release notes
-at https://github.com/syscoin/syscoin/blob/v0.10.0/doc/release-notes.md
+at https://github.com/syscoin/syscoin2/blob/v0.10.0/doc/release-notes.md
 
 0.10.2 Change log
 =================

@@ -1,0 +1,20 @@
+{
+    "txid": "cf90229625e9eb10f6be8156bf6aa5ec2eca19a42b1e05c11f3029b560a32e13",
+    "hash": "cf90229625e9eb10f6be8156bf6aa5ec2eca19a42b1e05c11f3029b560a32e13",
+    "version": 1,
+    "locktime": 0,
+    "vin": [
+    ],
+    "vout": [
+        {
+            "value": 0.00,
+            "n": 0,
+            "scriptPubKey": {
+                "asm": "",
+                "hex": "",
+                "type": "nonstandard"
+            }
+        }
+    ],
+    "hex": "01000000000100000000000000000000000000"
+}

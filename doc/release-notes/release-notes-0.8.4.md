@@ -5,7 +5,7 @@ This is a maintenance release to fix a critical bug and three
 security issues; we urge all users to upgrade.
 
 Please report bugs using the issue tracker at github:
-  https://github.com/syscoin/syscoin/issues
+  https://github.com/syscoin/syscoin2/issues
 
 
 How to Upgrade
@@ -34,7 +34,7 @@ Bloom filters were introduced with version 0.8, so versions 0.8.0
 through 0.8.3 are vulnerable to this critical denial-of-service attack.
 
 A constant-time algorithm is now used to check RPC password
-guess attempts; fixes https://github.com/syscoin/syscoin/issues/2838
+guess attempts; fixes https://github.com/syscoin/syscoin2/issues/2838
 (CVE-2013-4165)
 
 Implement a better fix for the fill-memory-with-orphan-transactions

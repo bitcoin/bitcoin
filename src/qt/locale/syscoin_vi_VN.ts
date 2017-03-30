@@ -1,5 +1,23 @@
 <TS language="vi_VN" version="2.1">
 <context>
+    <name>AcceptandPayOfferListPage</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>Lượng:</translation>
+    </message>
+    </context>
+<context>
+    <name>AcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Xuất dữ liệu trong mục hiện tại ra file</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
@@ -24,10 +42,6 @@
     <message>
         <source>C&amp;lose</source>
         <translation>Đó&amp;ng</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;Copy Địa Chỉ</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -66,6 +80,10 @@
         <translation>Địa chỉ nhận</translation>
     </message>
     <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Copy Địa Chỉ</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>Copy &amp;Nhãn</translation>
     </message>
@@ -82,8 +100,12 @@
         <translation>Comma separated file (*.csv)</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>Xuất Đã Thất Bại</translation>
+        <source>Label</source>
+        <translation>Nhãn</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Địa chỉ</translation>
     </message>
     </context>
 <context>
@@ -101,6 +123,15 @@
         <translation>(không nhãn)</translation>
     </message>
 </context>
+<context>
+    <name>AliasListPage</name>
+    </context>
+<context>
+    <name>AliasTableModel</name>
+    </context>
+<context>
+    <name>AliasView</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -140,135 +171,14 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>SyscoinGUI</name>
-    <message>
-        <source>&amp;Overview</source>
-        <translation>&amp;Tổng quan</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>Node</translation>
-    </message>
-    <message>
-        <source>E&amp;xit</source>
-        <translation>T&amp;hoát</translation>
-    </message>
-    <message>
-        <source>Quit application</source>
-        <translation>Thoát chương trình</translation>
-    </message>
-    <message>
-        <source>About &amp;Qt</source>
-        <translation>Về &amp;Qt</translation>
-    </message>
-    <message>
-        <source>Show information about Qt</source>
-        <translation>Xem thông tin về Qt</translation>
-    </message>
-    <message>
-        <source>Open &amp;URI...</source>
-        <translation>Mở &amp;URI...</translation>
-    </message>
-    <message>
-        <source>Syscoin Core client</source>
-        <translation>Syscoin Core client</translation>
-    </message>
-    <message>
-        <source>Syscoin</source>
-        <translation>Syscoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Ví</translation>
-    </message>
-    <message>
-        <source>&amp;Send</source>
-        <translation>&amp;Gửi</translation>
-    </message>
-    <message>
-        <source>&amp;Receive</source>
-        <translation>&amp;Nhận</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>Ẩn / H&amp;iện</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>Hiện hoặc ẩn cửa sổ chính</translation>
-    </message>
-    <message>
-        <source>&amp;File</source>
-        <translation>&amp;File</translation>
-    </message>
-    <message>
-        <source>&amp;Settings</source>
-        <translation>&amp;Thiết lập</translation>
-    </message>
-    <message>
-        <source>&amp;Help</source>
-        <translation>Trợ &amp;giúp</translation>
-    </message>
-    <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
-        <source>&amp;About Syscoin Core</source>
-        <translation>&amp;Về Syscoin Core</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n giờ</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n ngày</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n tuần</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 và %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n năm</numerusform></translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Lỗi</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Chú ý</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Thông tin</translation>
-    </message>
-    <message>
-        <source>Up to date</source>
-        <translation>Đã cập nhật</translation>
-    </message>
-    <message>
-        <source>Sent transaction</source>
-        <translation>Giao dịch đã gửi</translation>
-    </message>
-    <message>
-        <source>Incoming transaction</source>
-        <translation>Giao dịch đang tới</translation>
-    </message>
+    <name>CertListPage</name>
     </context>
 <context>
-    <name>ClientModel</name>
-    <message>
-        <source>Network Alert</source>
-        <translation>Network Alert</translation>
-    </message>
-</context>
+    <name>CertTableModel</name>
+    </context>
+<context>
+    <name>CertView</name>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -282,10 +192,6 @@
     <message>
         <source>Amount:</source>
         <translation>Lượng:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Tầm quan trọng:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -312,10 +218,6 @@
         <translation>Đã xác nhận</translation>
     </message>
     <message>
-        <source>Priority</source>
-        <translation>Tầm quan trọng</translation>
-    </message>
-    <message>
         <source>Copy address</source>
         <translation>Copy địa chỉ</translation>
     </message>
@@ -326,18 +228,6 @@
     <message>
         <source>Copy amount</source>
         <translation>Lượng copy</translation>
-    </message>
-    <message>
-        <source>low</source>
-        <translation>thấp</translation>
-    </message>
-    <message>
-        <source>lower</source>
-        <translation>thấp hơn</translation>
-    </message>
-    <message>
-        <source>lowest</source>
-        <translation>thấp nhất</translation>
     </message>
     <message>
         <source>yes</source>
@@ -354,6 +244,66 @@
     </context>
 <context>
     <name>EditAddressDialog</name>
+    <message>
+        <source>&amp;Label</source>
+        <translation>Nhãn</translation>
+    </message>
+    <message>
+        <source>&amp;Address</source>
+        <translation>Địa chỉ</translation>
+    </message>
+    </context>
+<context>
+    <name>EditAliasDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Nhìn Chung</translation>
+    </message>
+    </context>
+<context>
+    <name>EditCertDialog</name>
+    </context>
+<context>
+    <name>EditOfferDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Nhìn Chung</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation>Lượng:</translation>
+    </message>
+    </context>
+<context>
+    <name>EditWhitelistOfferDialog</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Xuất dữ liệu trong mục hiện tại ra file</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowInfoDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Nhìn Chung</translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation>Tổng:</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowListPage</name>
+    </context>
+<context>
+    <name>EscrowTableModel</name>
+    </context>
+<context>
+    <name>EscrowView</name>
     </context>
 <context>
     <name>FreespaceChecker</name>
@@ -365,16 +315,15 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
         <source>version</source>
         <translation>version</translation>
     </message>
+    </context>
+<context>
+    <name>InMessageListPage</name>
     <message>
-        <source>About Syscoin Core</source>
-        <translation>Về Syscoin Core</translation>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
     </message>
     </context>
 <context>
@@ -384,13 +333,154 @@
         <translation>Chào mừng</translation>
     </message>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Lỗi</translation>
     </message>
+    </context>
+<context>
+    <name>ManageEscrowDialog</name>
+    </context>
+<context>
+    <name>MessageInfoDialog</name>
+    </context>
+<context>
+    <name>MessageListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Xuất dữ liệu trong mục hiện tại ra file</translation>
+    </message>
+</context>
+<context>
+    <name>MessageTableModel</name>
+    </context>
+<context>
+    <name>MessageView</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Form</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Xuất dữ liệu trong mục hiện tại ra file</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAliasListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Xuất dữ liệu trong mục hiện tại ra file</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyCertListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Xuất dữ liệu trong mục hiện tại ra file</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyEscrowListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Xuất dữ liệu trong mục hiện tại ra file</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Xuất dữ liệu trong mục hiện tại ra file</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferWhitelistTableModel</name>
+    </context>
+<context>
+    <name>MyWhitelistOfferDialog</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Xuất dữ liệu trong mục hiện tại ra file</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>NewMessageDialog</name>
+    </context>
+<context>
+    <name>NewWhitelistDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogBTC</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogZEC</name>
+    </context>
+<context>
+    <name>OfferAcceptInfoDialog</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>Lượng:</translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation>Tổng:</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptTableModel</name>
+    </context>
+<context>
+    <name>OfferEscrowDialog</name>
+    </context>
+<context>
+    <name>OfferFeedbackDialog</name>
+    </context>
+<context>
+    <name>OfferListPage</name>
+    </context>
+<context>
+    <name>OfferPayDialog</name>
+    </context>
+<context>
+    <name>OfferTableModel</name>
+    </context>
+<context>
+    <name>OfferView</name>
+    </context>
+<context>
+    <name>OfferWhitelistTableModel</name>
     </context>
 <context>
     <name>OpenURIDialog</name>
@@ -418,6 +508,10 @@
         <translation>MB</translation>
     </message>
     <message>
+        <source>W&amp;allet</source>
+        <translation>Ví</translation>
+    </message>
+    <message>
         <source>&amp;Display</source>
         <translation>&amp;Hiển thị</translation>
     </message>
@@ -432,6 +526,16 @@
     <message>
         <source>default</source>
         <translation>mặc định</translation>
+    </message>
+    </context>
+<context>
+    <name>OptionsModel</name>
+    </context>
+<context>
+    <name>OutMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
     </message>
     </context>
 <context>
@@ -461,12 +565,20 @@
         <source>Amount</source>
         <translation>Lượng</translation>
     </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 và %2</translation>
+    </message>
     </context>
 <context>
     <name>QRImageWidget</name>
     </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <source>&amp;Information</source>
+        <translation>Thông tin</translation>
+    </message>
     <message>
         <source>General</source>
         <translation>Nhìn Chung</translation>
@@ -491,6 +603,10 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>&amp;Amount:</source>
+        <translation>Lượng:</translation>
+    </message>
+    <message>
         <source>Copy label</source>
         <translation>Copy nhãn</translation>
     </message>
@@ -501,6 +617,10 @@
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;Copy Địa Chỉ</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>Địa chỉ</translation>
@@ -525,16 +645,19 @@
         <translation>Nhãn</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>Lượng</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(không nhãn)</translation>
     </message>
     </context>
 <context>
+    <name>ResellOfferDialog</name>
+    </context>
+<context>
     <name>SendCoinsDialog</name>
+    <message>
+        <source>Insufficient funds!</source>
+        <translation>Không đủ tiền</translation>
+    </message>
     <message>
         <source>Quantity:</source>
         <translation>Lượng:</translation>
@@ -546,10 +669,6 @@
     <message>
         <source>Amount:</source>
         <translation>Lượng:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Tầm quan trọng:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -567,21 +686,118 @@
         <source>(no label)</source>
         <translation>(không nhãn)</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>SendCoinsEntry</name>
+    <message>
+        <source>A&amp;mount:</source>
+        <translation>Lượng:</translation>
+    </message>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
     </context>
 <context>
     <name>ShutdownWindow</name>
+    </context>
+<context>
+    <name>SignRawTxDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Nhìn Chung</translation>
+    </message>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
     </context>
 <context>
     <name>SplashScreen</name>
+    </context>
+<context>
+    <name>SyscoinGUI</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
+        <source>Node</source>
+        <translation>Node</translation>
+    </message>
+    <message>
+        <source>E&amp;xit</source>
+        <translation>T&amp;hoát</translation>
+    </message>
+    <message>
+        <source>Quit application</source>
+        <translation>Thoát chương trình</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation>Về &amp;Qt</translation>
+    </message>
+    <message>
+        <source>Show information about Qt</source>
+        <translation>Xem thông tin về Qt</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>Địa chỉ nhận</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI...</source>
+        <translation>Mở &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Syscoin</source>
+        <translation>Syscoin</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Ví</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>Ẩn / H&amp;iện</translation>
+    </message>
+    <message>
+        <source>Show or hide the main Window</source>
+        <translation>Hiện hoặc ẩn cửa sổ chính</translation>
+    </message>
+    <message>
+        <source>&amp;File</source>
+        <translation>&amp;File</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation>&amp;Thiết lập</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation>Trợ &amp;giúp</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Lỗi</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>Chú ý</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>Thông tin</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation>Đã cập nhật</translation>
+    </message>
+    <message>
+        <source>&amp;About Syscoin Core</source>
+        <translation>&amp;Về Syscoin Core</translation>
+    </message>
+    <message>
+        <source>Sent transaction</source>
+        <translation>Giao dịch đã gửi</translation>
+    </message>
+    <message>
+        <source>Incoming transaction</source>
+        <translation>Giao dịch đang tới</translation>
     </message>
     </context>
 <context>
@@ -611,6 +827,10 @@
         <source>Label</source>
         <translation>Nhãn</translation>
     </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(không nhãn)</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
@@ -625,10 +845,6 @@
     <message>
         <source>Copy amount</source>
         <translation>Lượng copy</translation>
-    </message>
-    <message>
-        <source>Exporting Failed</source>
-        <translation>Xuất Đã Thất Bại</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -650,6 +866,10 @@
         <source>Address</source>
         <translation>Địa chỉ</translation>
     </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Xuất Đã Thất Bại</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
@@ -663,16 +883,24 @@
 <context>
     <name>WalletView</name>
     <message>
-        <source>&amp;Export</source>
-        <translation>X&amp;uất</translation>
-    </message>
-    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Xuất dữ liệu trong mục hiện tại ra file</translation>
     </message>
     </context>
 <context>
     <name>syscoin-core</name>
+    <message>
+        <source>Options:</source>
+        <translation>Lựa chọn:</translation>
+    </message>
+    <message>
+        <source>Syscoin Core</source>
+        <translation>Syscoin Core</translation>
+    </message>
+    <message>
+        <source>(default: %u)</source>
+        <translation>(mặc định: %u)</translation>
+    </message>
     <message>
         <source>Information</source>
         <translation>Thông tin</translation>
@@ -684,10 +912,6 @@
     <message>
         <source>Warning</source>
         <translation>Chú ý</translation>
-    </message>
-    <message>
-        <source>This help message</source>
-        <translation>Thông điệp trợ giúp này</translation>
     </message>
     <message>
         <source>Loading addresses...</source>

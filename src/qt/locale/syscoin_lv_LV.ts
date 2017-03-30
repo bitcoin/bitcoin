@@ -1,5 +1,31 @@
 <TS language="lv_LV" version="2.1">
 <context>
+    <name>AcceptandPayOfferListPage</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>Daudzums:</translation>
+    </message>
+    </context>
+<context>
+    <name>AcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Datus no tekošā ieliktņa eksportēt uz failu</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Visi</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Fails ar komatu kā atdalītāju (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    </context>
+<context>
     <name>AddressBookPage</name>
     <message>
         <source>Create a new address</source>
@@ -20,10 +46,6 @@
     <message>
         <source>C&amp;lose</source>
         <translation>&amp;Aizvērt</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;Kopēt adresi</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -70,6 +92,10 @@
         <translation>Šīs ir jūsu Syscoin adreses maksājumu saņemšanai. Ir ieteicams katram darījumam izmantot jaunu saņemšanas adresi.</translation>
     </message>
     <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Kopēt adresi</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>Kopēt &amp;Nosaukumu</translation>
     </message>
@@ -86,14 +112,14 @@
         <translation>Fails ar komatu kā atdalītāju (*.csv)</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>Eksportēšana Neizdevās</translation>
+        <source>Label</source>
+        <translation>Nosaukums</translation>
     </message>
     <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Radās kļūda, saglabājot adrešu sarakstu %1. Lūdzu, mēģiniet vēlreiz!</translation>
+        <source>Address</source>
+        <translation>Adrese</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -109,6 +135,15 @@
         <translation>(bez nosaukuma)</translation>
     </message>
 </context>
+<context>
+    <name>AliasListPage</name>
+    </context>
+<context>
+    <name>AliasTableModel</name>
+    </context>
+<context>
+    <name>AliasView</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -152,6 +187,10 @@
         <translation>Mainīt paroli</translation>
     </message>
     <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Ievadiet veco un jauno maka paroli.</translation>
+    </message>
+    <message>
         <source>Confirm wallet encryption</source>
         <translation>Apstiprināt maciņa šifrēšanu</translation>
     </message>
@@ -164,24 +203,12 @@
         <translation>Vai tu tiešām vēlies šifrēt savu maciņu?</translation>
     </message>
     <message>
-        <source>Syscoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your syscoins from being stolen by malware infecting your computer.</source>
-        <translation>Syscoin Core tiks aizvērts, lai pabeigtu šifrēšansa procesu. Atcerieties, ka jūsu maka šifrēšana nevar pilnībā pasargāt jūsu monētas no to nozagašanas, inficējot datoru ar ļaunprātīgām programmām.</translation>
-    </message>
-    <message>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>SVARĪGI: Iepriekšējie maka faila dublējumi ir jāaizvieto ar jauno, šifrēto maka failu. Drošības apsvērumu dēļ iepriekšējie nešifrētā maka dublējumi vairs nebūs derīgi, tiklīdz sāksiet izmantot jauno, šifrēto maku.</translation>
-    </message>
-    <message>
-        <source>Warning: The Caps Lock key is on!</source>
-        <translation>Brīdinājums: Caps Lock ir ieslēgts!</translation>
-    </message>
-    <message>
         <source>Wallet encrypted</source>
         <translation>Maciņš nošifrēts</translation>
     </message>
     <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Ievadiet veco un jauno maka paroli.</translation>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>SVARĪGI: Iepriekšējie maka faila dublējumi ir jāaizvieto ar jauno, šifrēto maka failu. Drošības apsvērumu dēļ iepriekšējie nešifrētā maka dublējumi vairs nebūs derīgi, tiklīdz sāksiet izmantot jauno, šifrēto maku.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -211,256 +238,27 @@
         <source>Wallet passphrase was successfully changed.</source>
         <translation>Maciņa parole tika veiksmīgi nomainīta.</translation>
     </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Brīdinājums: Caps Lock ir ieslēgts!</translation>
+    </message>
 </context>
 <context>
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>SyscoinGUI</name>
-    <message>
-        <source>Sign &amp;message...</source>
-        <translation>Parakstīt &amp;ziņojumu...</translation>
-    </message>
-    <message>
-        <source>Synchronizing with network...</source>
-        <translation>Sinhronizācija ar tīklu...</translation>
-    </message>
-    <message>
-        <source>&amp;Overview</source>
-        <translation>&amp;Pārskats</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>Node</translation>
-    </message>
-    <message>
-        <source>Show general overview of wallet</source>
-        <translation>Rādīt vispārēju maciņa pārskatu</translation>
-    </message>
-    <message>
-        <source>&amp;Transactions</source>
-        <translation>&amp;Transakcijas</translation>
-    </message>
-    <message>
-        <source>Browse transaction history</source>
-        <translation>Skatīt transakciju vēsturi</translation>
-    </message>
-    <message>
-        <source>E&amp;xit</source>
-        <translation>&amp;Iziet</translation>
-    </message>
-    <message>
-        <source>Quit application</source>
-        <translation>Aizvērt programmu</translation>
-    </message>
-    <message>
-        <source>About &amp;Qt</source>
-        <translation>Par &amp;Qt</translation>
-    </message>
-    <message>
-        <source>Show information about Qt</source>
-        <translation>Parādīt informāciju par Qt</translation>
-    </message>
-    <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;Iespējas...</translation>
-    </message>
-    <message>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>Šifrēt &amp;maciņu...</translation>
-    </message>
-    <message>
-        <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Maciņa Rezerves Kopija...</translation>
-    </message>
-    <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>Mainīt &amp;Paroli...</translation>
-    </message>
-    <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Sūtīšanas adreses...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Saņemšanas &amp;adreses...</translation>
-    </message>
-    <message>
-        <source>Open &amp;URI...</source>
-        <translation>Atvērt &amp;URI...</translation>
-    </message>
-    <message>
-        <source>Syscoin Core client</source>
-        <translation>Syscoin Core klients</translation>
-    </message>
-    <message>
-        <source>Importing blocks from disk...</source>
-        <translation>Importē blokus no diska...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation>Bloku reindeksēšana no diska...</translation>
-    </message>
-    <message>
-        <source>Send coins to a Syscoin address</source>
-        <translation>Nosūtīt bitkoinus uz Syscoin adresi</translation>
-    </message>
-    <message>
-        <source>Backup wallet to another location</source>
-        <translation>Izveidot maciņa rezerves kopiju citur</translation>
-    </message>
-    <message>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation>Mainīt maciņa šifrēšanas paroli</translation>
-    </message>
-    <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Atkļūdošanas logs</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>Atvērt atkļūdošanas un diagnostikas konsoli</translation>
-    </message>
-    <message>
-        <source>&amp;Verify message...</source>
-        <translation>&amp;Pārbaudīt ziņojumu...</translation>
-    </message>
-    <message>
-        <source>Syscoin</source>
-        <translation>Syscoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Maciņš</translation>
-    </message>
-    <message>
-        <source>&amp;Send</source>
-        <translation>&amp;Sūtīt</translation>
-    </message>
-    <message>
-        <source>&amp;Receive</source>
-        <translation>&amp;Saņemt</translation>
-    </message>
-    <message>
-        <source>Show information about Syscoin Core</source>
-        <translation>Parādīt informāciju par Syscoin Core</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Rādīt / Paslēpt</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>Parādīt vai paslēpt galveno Logu</translation>
-    </message>
-    <message>
-        <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Šifrēt privātās atslēgas kuras pieder tavam maciņam</translation>
-    </message>
-    <message>
-        <source>Sign messages with your Syscoin addresses to prove you own them</source>
-        <translation>Parakstīt ziņojumus ar savām Syscoin adresēm lai pierādītu ka tās pieder tev</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
-        <translation>Pārbaudīt ziņojumus lai pārliecinātos, ka tie tika parakstīti ar norādītajām Syscoin adresēm</translation>
-    </message>
-    <message>
-        <source>&amp;File</source>
-        <translation>&amp;Fails</translation>
-    </message>
-    <message>
-        <source>&amp;Settings</source>
-        <translation>&amp;Uzstādījumi</translation>
-    </message>
-    <message>
-        <source>&amp;Help</source>
-        <translation>&amp;Palīdzība</translation>
-    </message>
-    <message>
-        <source>Tabs toolbar</source>
-        <translation>Ciļņu rīkjosla</translation>
-    </message>
-    <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
-        <source>Request payments (generates QR codes and syscoin: URIs)</source>
-        <translation>Pieprasīt maksājumus (izveido QR kodu un syscoin: URIs)</translation>
-    </message>
-    <message>
-        <source>&amp;About Syscoin Core</source>
-        <translation>Par &amp;Syscoin Core</translation>
-    </message>
-    <message>
-        <source>Open a syscoin: URI or payment request</source>
-        <translation>Atvērt syscoin URI vai maksājuma pieprasījumu</translation>
-    </message>
-    <message>
-        <source>&amp;Command-line options</source>
-        <translation>&amp;Komandrindas iespējas</translation>
-    </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>Nav pieejams neviens bloku avots...</translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 un %2</translation>
-    </message>
-    <message>
-        <source>%1 behind</source>
-        <translation>%1 aizmugurē</translation>
-    </message>
-    <message>
-        <source>Transactions after this will not yet be visible.</source>
-        <translation>Transakcijas pēc šī vel nebūs redzamas</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Kļūda</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Brīdinājums</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Informācija</translation>
-    </message>
-    <message>
-        <source>Up to date</source>
-        <translation>Sinhronizēts</translation>
-    </message>
-    <message>
-        <source>Catching up...</source>
-        <translation>Sinhronizējos...</translation>
-    </message>
-    <message>
-        <source>Sent transaction</source>
-        <translation>Transakcija nosūtīta</translation>
-    </message>
-    <message>
-        <source>Incoming transaction</source>
-        <translation>Ienākoša transakcija</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Maciņš ir &lt;b&gt;šifrēts&lt;/b&gt; un pašlaik &lt;b&gt;atslēgts&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Maciņš ir &lt;b&gt;šifrēts&lt;/b&gt; un pašlaik &lt;b&gt;slēgts&lt;/b&gt;</translation>
-    </message>
-</context>
+    <name>CertListPage</name>
+    </context>
 <context>
-    <name>ClientModel</name>
+    <name>CertTableModel</name>
     <message>
-        <source>Network Alert</source>
-        <translation>Tīkla brīdinājums</translation>
+        <source>Status</source>
+        <translation>Status</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>CertView</name>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -474,10 +272,6 @@
     <message>
         <source>Amount:</source>
         <translation>Daudzums:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Prioritāte:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -520,10 +314,6 @@
         <translation>Apstiprināts</translation>
     </message>
     <message>
-        <source>Priority</source>
-        <translation>Prioritāte</translation>
-    </message>
-    <message>
         <source>Copy address</source>
         <translation>Kopēt adresi</translation>
     </message>
@@ -564,56 +354,12 @@
         <translation>Kopēt baitus</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>Kopēt prioritāti</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation>Kopēt atlikumu</translation>
     </message>
     <message>
-        <source>highest</source>
-        <translation>augstākais</translation>
-    </message>
-    <message>
-        <source>higher</source>
-        <translation>augstāks</translation>
-    </message>
-    <message>
-        <source>high</source>
-        <translation>augsts</translation>
-    </message>
-    <message>
-        <source>medium-high</source>
-        <translation>vidēji-augsts</translation>
-    </message>
-    <message>
-        <source>medium</source>
-        <translation>vidējs</translation>
-    </message>
-    <message>
-        <source>low-medium</source>
-        <translation>zemi-vidējs</translation>
-    </message>
-    <message>
-        <source>low</source>
-        <translation>zems</translation>
-    </message>
-    <message>
-        <source>lower</source>
-        <translation>zemāks</translation>
-    </message>
-    <message>
-        <source>lowest</source>
-        <translation>zemākais</translation>
-    </message>
-    <message>
         <source>(%1 locked)</source>
         <translation>(%1 aizslēgts)</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>neviena</translation>
     </message>
     <message>
         <source>yes</source>
@@ -667,12 +413,12 @@
         <translation>Mainīt nosūtīšanas adresi</translation>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>Nupat ierakstītā adrese "%1" jau atrodas adrešu grāmatā.</translation>
-    </message>
-    <message>
         <source>The entered address "%1" is not a valid Syscoin address.</source>
         <translation>Ierakstītā adrese "%1" nav derīga Syscoin adrese.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>Nupat ierakstītā adrese "%1" jau atrodas adrešu grāmatā.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -683,6 +429,82 @@
         <translation>Neizdevās ģenerēt jaunu atslēgu.</translation>
     </message>
 </context>
+<context>
+    <name>EditAliasDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Vispārējs</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Nav iespējams atslēgt maciņu.</translation>
+    </message>
+</context>
+<context>
+    <name>EditCertDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Nav iespējams atslēgt maciņu.</translation>
+    </message>
+</context>
+<context>
+    <name>EditOfferDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Vispārējs</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation>Daudzums:</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Nav iespējams atslēgt maciņu.</translation>
+    </message>
+</context>
+<context>
+    <name>EditWhitelistOfferDialog</name>
+    <message>
+        <source>Remove</source>
+        <translation>Noņemt</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Datus no tekošā ieliktņa eksportēt uz failu</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Fails ar komatu kā atdalītāju (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowInfoDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Vispārējs</translation>
+    </message>
+    <message>
+        <source>ID</source>
+        <translation>ID</translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation>Kopsumma:</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowListPage</name>
+    </context>
+<context>
+    <name>EscrowTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+</context>
+<context>
+    <name>EscrowView</name>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -705,10 +527,6 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
         <source>version</source>
         <translation>versija</translation>
     </message>
@@ -717,8 +535,8 @@
         <translation>(%1-biti)</translation>
     </message>
     <message>
-        <source>About Syscoin Core</source>
-        <translation>Par Syscoin Core</translation>
+        <source>Command-line options</source>
+        <translation>Komandrindas iespējas</translation>
     </message>
     <message>
         <source>Usage:</source>
@@ -728,16 +546,31 @@
         <source>command-line options</source>
         <translation>komandrindas izvēles</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>InMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Fails ar komatu kā atdalītāju (*.csv)</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>No</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Uz</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Ziņojums</translation>
+    </message>
+    </context>
 <context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
         <translation>Sveiciens</translation>
-    </message>
-    <message>
-        <source>Welcome to Syscoin Core.</source>
-        <translation>Sveicināts Syscoin Core</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -748,13 +581,242 @@
         <translation>Izmantot pielāgotu datu mapi:</translation>
     </message>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Kļūda</translation>
     </message>
+    </context>
+<context>
+    <name>ManageEscrowDialog</name>
+    <message>
+        <source>none</source>
+        <translation>neviena</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageInfoDialog</name>
+    <message>
+        <source>Message:</source>
+        <translation>Ziņojums:</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Datus no tekošā ieliktņa eksportēt uz failu</translation>
+    </message>
+</context>
+<context>
+    <name>MessageTableModel</name>
+    <message>
+        <source>From</source>
+        <translation>No</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Uz</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Ziņojums</translation>
+    </message>
+</context>
+<context>
+    <name>MessageView</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Forma</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>Pēdējā bloka laiks</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Datus no tekošā ieliktņa eksportēt uz failu</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Visi</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Fails ar komatu kā atdalītāju (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAliasListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Datus no tekošā ieliktņa eksportēt uz failu</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Fails ar komatu kā atdalītāju (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyCertListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Datus no tekošā ieliktņa eksportēt uz failu</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Visi</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Fails ar komatu kā atdalītāju (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    </context>
+<context>
+    <name>MyEscrowListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Datus no tekošā ieliktņa eksportēt uz failu</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Visi</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Fails ar komatu kā atdalītāju (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Datus no tekošā ieliktņa eksportēt uz failu</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Visi</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Fails ar komatu kā atdalītāju (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferWhitelistTableModel</name>
+    </context>
+<context>
+    <name>MyWhitelistOfferDialog</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Datus no tekošā ieliktņa eksportēt uz failu</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Fails ar komatu kā atdalītāju (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>NewMessageDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Nav iespējams atslēgt maciņu.</translation>
+    </message>
+</context>
+<context>
+    <name>NewWhitelistDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Nav iespējams atslēgt maciņu.</translation>
+    </message>
+</context>
+<context>
+    <name>OfferAcceptDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogBTC</name>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Rezultāta URI pārāk garš, mēģiniet saīsināt nosaukumu vai ziņojumu. </translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Kļūda kodējot URI QR kodā.</translation>
+    </message>
+    <message>
+        <source>to</source>
+        <translation>uz</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptDialogZEC</name>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Rezultāta URI pārāk garš, mēģiniet saīsināt nosaukumu vai ziņojumu. </translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Kļūda kodējot URI QR kodā.</translation>
+    </message>
+    <message>
+        <source>to</source>
+        <translation>uz</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptInfoDialog</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>Daudzums:</translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation>Kopsumma:</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+</context>
+<context>
+    <name>OfferEscrowDialog</name>
+    </context>
+<context>
+    <name>OfferFeedbackDialog</name>
+    </context>
+<context>
+    <name>OfferListPage</name>
+    </context>
+<context>
+    <name>OfferPayDialog</name>
+    </context>
+<context>
+    <name>OfferTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferView</name>
+    </context>
+<context>
+    <name>OfferWhitelistTableModel</name>
     </context>
 <context>
     <name>OpenURIDialog</name>
@@ -931,6 +993,32 @@
     </message>
 </context>
 <context>
+    <name>OptionsModel</name>
+    <message>
+        <source>All</source>
+        <translation>Visi</translation>
+    </message>
+</context>
+<context>
+    <name>OutMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Fails ar komatu kā atdalītāju (*.csv)</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>No</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Uz</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Ziņojums</translation>
+    </message>
+    </context>
+<context>
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
@@ -972,6 +1060,14 @@
 <context>
     <name>PaymentServer</name>
     <message>
+        <source>Payment request error</source>
+        <translation>Maksājumu pieprasījuma kļūda</translation>
+    </message>
+    <message>
+        <source>Cannot start syscoin: click-to-pay handler</source>
+        <translation>Nevar palaist Syscoin: nospied-lai-maksātu apstrādātāju</translation>
+    </message>
+    <message>
         <source>URI handling</source>
         <translation>URI apstrāde</translation>
     </message>
@@ -988,24 +1084,16 @@
         <translation>Maksājuma pieprasījuma tīkls neatbilst klienta tīklam.</translation>
     </message>
     <message>
-        <source>Payment request error</source>
-        <translation>Maksājumu pieprasījuma kļūda</translation>
-    </message>
-    <message>
-        <source>Cannot start syscoin: click-to-pay handler</source>
-        <translation>Nevar palaist Syscoin: nospied-lai-maksātu apstrādātāju</translation>
-    </message>
-    <message>
         <source>Refund from %1</source>
         <translation>Atmaksa no %1</translation>
     </message>
     <message>
-        <source>Payment acknowledged</source>
-        <translation>Maksājums atzīts</translation>
-    </message>
-    <message>
         <source>Network request error</source>
         <translation>Tīkla pieprasījuma kļūda</translation>
+    </message>
+    <message>
+        <source>Payment acknowledged</source>
+        <translation>Maksājums atzīts</translation>
     </message>
 </context>
 <context>
@@ -1029,7 +1117,15 @@
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
-    </context>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 un %2</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Visi</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -1052,10 +1148,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>Klienta vārds</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
@@ -1074,10 +1166,6 @@
     <message>
         <source>General</source>
         <translation>Vispārējs</translation>
-    </message>
-    <message>
-        <source>Using OpenSSL version</source>
-        <translation>Izmantotā OpenSSL versija</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1134,10 +1222,6 @@
     <message>
         <source>Out:</source>
         <translation>Iz.:</translation>
-    </message>
-    <message>
-        <source>Build date</source>
-        <translation>Kompilācijas datums</translation>
     </message>
     <message>
         <source>Debug log file</source>
@@ -1305,10 +1389,6 @@
         <translation>Ziņojums</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>Daudzums</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(bez nosaukuma)</translation>
     </message>
@@ -1316,11 +1396,10 @@
         <source>(no message)</source>
         <translation>(nav ziņojuma)</translation>
     </message>
-    <message>
-        <source>(no amount)</source>
-        <translation>(nav summas)</translation>
-    </message>
-</context>
+    </context>
+<context>
+    <name>ResellOfferDialog</name>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1356,10 +1435,6 @@
         <translation>Daudzums:</translation>
     </message>
     <message>
-        <source>Priority:</source>
-        <translation>Prioritāte:</translation>
-    </message>
-    <message>
         <source>Fee:</source>
         <translation>Maksa:</translation>
     </message>
@@ -1374,6 +1449,10 @@
     <message>
         <source>Custom change address</source>
         <translation>Pielāgota atlikuma adrese</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>Transakcijas maksa:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -1404,14 +1483,6 @@
         <translation>&amp;Sūtīt</translation>
     </message>
     <message>
-        <source>Confirm send coins</source>
-        <translation>Apstiprināt bitkoinu sūtīšanu</translation>
-    </message>
-    <message>
-        <source>%1 to %2</source>
-        <translation>%1 līdz %2</translation>
-    </message>
-    <message>
         <source>Copy quantity</source>
         <translation>Kopēt daudzumu</translation>
     </message>
@@ -1432,16 +1503,24 @@
         <translation>Kopēt baitus</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>Kopēt prioritāti</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation>Kopēt atlikumu</translation>
     </message>
     <message>
+        <source>%1 to %2</source>
+        <translation>%1 līdz %2</translation>
+    </message>
+    <message>
+        <source>added as transaction fee</source>
+        <translation>pievienots kā transakcijas maksa</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>vai</translation>
+    </message>
+    <message>
+        <source>Confirm send coins</source>
+        <translation>Apstiprināt bitkoinu sūtīšanu</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
@@ -1464,16 +1543,12 @@
         <translation>Brīdinājums: Nederīga Syscoin adrese</translation>
     </message>
     <message>
-        <source>(no label)</source>
-        <translation>(bez nosaukuma)</translation>
-    </message>
-    <message>
         <source>Warning: Unknown change address</source>
         <translation>Brīdinājums: Nezināma atlikuma adrese</translation>
     </message>
     <message>
-        <source>added as transaction fee</source>
-        <translation>pievienots kā transakcijas maksa</translation>
+        <source>(no label)</source>
+        <translation>(bez nosaukuma)</translation>
     </message>
 </context>
 <context>
@@ -1485,10 +1560,6 @@
     <message>
         <source>Pay &amp;To:</source>
         <translation>&amp;Saņēmējs:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Lai pievienotu adresi adrešu grāmatai, tai jādod nosaukums</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -1530,18 +1601,28 @@
         <source>Memo:</source>
         <translation>Memo:</translation>
     </message>
+    <message>
+        <source>Enter a label for this address to add it to your address book</source>
+        <translation>Lai pievienotu adresi adrešu grāmatai, tai jādod nosaukums</translation>
+    </message>
 </context>
 <context>
+    <name>SendConfirmationDialog</name>
+    </context>
+<context>
     <name>ShutdownWindow</name>
-    <message>
-        <source>Syscoin Core is shutting down...</source>
-        <translation>Syscoin Core tiek izslēgta...</translation>
-    </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation>Neizslēdziet datoru kamēr šis logs nepazūd.</translation>
     </message>
 </context>
+<context>
+    <name>SignRawTxDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Vispārējs</translation>
+    </message>
+    </context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
@@ -1664,16 +1745,215 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
-        <source>The Syscoin Core developers</source>
-        <translation>Syscoin Core izstrādātāji</translation>
-    </message>
-    <message>
         <source>[testnet]</source>
         <translation>[testnets]</translation>
+    </message>
+</context>
+<context>
+    <name>SyscoinGUI</name>
+    <message>
+        <source>Sign &amp;message...</source>
+        <translation>Parakstīt &amp;ziņojumu...</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network...</source>
+        <translation>Sinhronizācija ar tīklu...</translation>
+    </message>
+    <message>
+        <source>Node</source>
+        <translation>Node</translation>
+    </message>
+    <message>
+        <source>Show general overview of wallet</source>
+        <translation>Rādīt vispārēju maciņa pārskatu</translation>
+    </message>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation>&amp;Transakcijas</translation>
+    </message>
+    <message>
+        <source>Browse transaction history</source>
+        <translation>Skatīt transakciju vēsturi</translation>
+    </message>
+    <message>
+        <source>E&amp;xit</source>
+        <translation>&amp;Iziet</translation>
+    </message>
+    <message>
+        <source>Quit application</source>
+        <translation>Aizvērt programmu</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation>Par &amp;Qt</translation>
+    </message>
+    <message>
+        <source>Show information about Qt</source>
+        <translation>Parādīt informāciju par Qt</translation>
+    </message>
+    <message>
+        <source>&amp;Options...</source>
+        <translation>&amp;Iespējas...</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>Šifrēt &amp;maciņu...</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet...</source>
+        <translation>&amp;Maciņa Rezerves Kopija...</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>Mainīt &amp;Paroli...</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>&amp;Sūtīšanas adreses...</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>Saņemšanas &amp;adreses...</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI...</source>
+        <translation>Atvērt &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk...</source>
+        <translation>Bloku reindeksēšana no diska...</translation>
+    </message>
+    <message>
+        <source>Send coins to a Syscoin address</source>
+        <translation>Nosūtīt bitkoinus uz Syscoin adresi</translation>
+    </message>
+    <message>
+        <source>Backup wallet to another location</source>
+        <translation>Izveidot maciņa rezerves kopiju citur</translation>
+    </message>
+    <message>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>Mainīt maciņa šifrēšanas paroli</translation>
+    </message>
+    <message>
+        <source>&amp;Debug window</source>
+        <translation>&amp;Atkļūdošanas logs</translation>
+    </message>
+    <message>
+        <source>Open debugging and diagnostic console</source>
+        <translation>Atvērt atkļūdošanas un diagnostikas konsoli</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message...</source>
+        <translation>&amp;Pārbaudīt ziņojumu...</translation>
+    </message>
+    <message>
+        <source>Syscoin</source>
+        <translation>Syscoin</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Maciņš</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;Rādīt / Paslēpt</translation>
+    </message>
+    <message>
+        <source>Show or hide the main Window</source>
+        <translation>Parādīt vai paslēpt galveno Logu</translation>
+    </message>
+    <message>
+        <source>Encrypt the private keys that belong to your wallet</source>
+        <translation>Šifrēt privātās atslēgas kuras pieder tavam maciņam</translation>
+    </message>
+    <message>
+        <source>Sign messages with your Syscoin addresses to prove you own them</source>
+        <translation>Parakstīt ziņojumus ar savām Syscoin adresēm lai pierādītu ka tās pieder tev</translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
+        <translation>Pārbaudīt ziņojumus lai pārliecinātos, ka tie tika parakstīti ar norādītajām Syscoin adresēm</translation>
+    </message>
+    <message>
+        <source>&amp;File</source>
+        <translation>&amp;Fails</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation>&amp;Uzstādījumi</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation>&amp;Palīdzība</translation>
+    </message>
+    <message>
+        <source>Tabs toolbar</source>
+        <translation>Ciļņu rīkjosla</translation>
+    </message>
+    <message>
+        <source>Request payments (generates QR codes and syscoin: URIs)</source>
+        <translation>Pieprasīt maksājumus (izveido QR kodu un syscoin: URIs)</translation>
+    </message>
+    <message>
+        <source>Open a syscoin: URI or payment request</source>
+        <translation>Atvērt syscoin URI vai maksājuma pieprasījumu</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>&amp;Komandrindas iespējas</translation>
+    </message>
+    <message>
+        <source>No block source available...</source>
+        <translation>Nav pieejams neviens bloku avots...</translation>
+    </message>
+    <message>
+        <source>%1 behind</source>
+        <translation>%1 aizmugurē</translation>
+    </message>
+    <message>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation>Transakcijas pēc šī vel nebūs redzamas</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Kļūda</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>Brīdinājums</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>Informācija</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation>Sinhronizēts</translation>
+    </message>
+    <message>
+        <source>&amp;About Syscoin Core</source>
+        <translation>Par &amp;Syscoin Core</translation>
+    </message>
+    <message>
+        <source>Catching up...</source>
+        <translation>Sinhronizējos...</translation>
+    </message>
+    <message>
+        <source>Sent transaction</source>
+        <translation>Transakcija nosūtīta</translation>
+    </message>
+    <message>
+        <source>Incoming transaction</source>
+        <translation>Ienākoša transakcija</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <translation>Maciņš ir &lt;b&gt;šifrēts&lt;/b&gt; un pašlaik &lt;b&gt;atslēgts&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation>Maciņš ir &lt;b&gt;šifrēts&lt;/b&gt; un pašlaik &lt;b&gt;slēgts&lt;/b&gt;</translation>
     </message>
 </context>
 <context>
@@ -1688,10 +1968,6 @@
     <message>
         <source>Open until %1</source>
         <translation>Atvērts līdz %1</translation>
-    </message>
-    <message>
-        <source>conflicted</source>
-        <translation>pretrunā</translation>
     </message>
     <message>
         <source>%1/offline</source>
@@ -1710,6 +1986,10 @@
         <translation>Status</translation>
     </message>
     <message>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>, vēl nav veiksmīgi izziņots</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>Datums</translation>
     </message>
@@ -1724,6 +2004,10 @@
     <message>
         <source>From</source>
         <translation>No</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>nav zināms</translation>
     </message>
     <message>
         <source>To</source>
@@ -1797,14 +2081,6 @@
         <source>false</source>
         <translation>nepatiess</translation>
     </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, vēl nav veiksmīgi izziņots</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>nav zināms</translation>
-    </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -1816,7 +2092,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Šis panelis parāda transakcijas detaļas</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -1828,12 +2104,28 @@
         <translation>Tips</translation>
     </message>
     <message>
+        <source>Label</source>
+        <translation>Nosaukums</translation>
+    </message>
+    <message>
         <source>Open until %1</source>
         <translation>Atvērts līdz %1</translation>
     </message>
     <message>
+        <source>Offline</source>
+        <translation>Bezsaitē</translation>
+    </message>
+    <message>
+        <source>Unconfirmed</source>
+        <translation>Neapstiprināts</translation>
+    </message>
+    <message>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Apstiprināts (%1 apstiprinājumu)</translation>
+    </message>
+    <message>
+        <source>Conflicted</source>
+        <translation>Pretrunā</translation>
     </message>
     <message>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
@@ -1842,22 +2134,6 @@
     <message>
         <source>Generated but not accepted</source>
         <translation>Ģenerēts, taču nav akceptēts</translation>
-    </message>
-    <message>
-        <source>Offline</source>
-        <translation>Bezsaitē</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Nosaukums</translation>
-    </message>
-    <message>
-        <source>Unconfirmed</source>
-        <translation>Neapstiprināts</translation>
-    </message>
-    <message>
-        <source>Conflicted</source>
-        <translation>Pretrunā</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -1882,6 +2158,10 @@
     <message>
         <source>(n/a)</source>
         <translation>(nav pieejams)</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(bez nosaukuma)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
@@ -1987,18 +2267,6 @@
         <translation>Eksportēt Transakciju Vēsturi</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>Eksportēšana Neizdevās</translation>
-    </message>
-    <message>
-        <source>Exporting Successful</source>
-        <translation>Eksportēšana Veiksmīga</translation>
-    </message>
-    <message>
-        <source>The transaction history was successfully saved to %1.</source>
-        <translation>Transakciju vēsture tika veiksmīgi saglabāta uz %1.</translation>
-    </message>
-    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Fails ar komatu kā atdalītāju (*.csv)</translation>
     </message>
@@ -2027,6 +2295,18 @@
         <translation>ID</translation>
     </message>
     <message>
+        <source>Exporting Failed</source>
+        <translation>Eksportēšana Neizdevās</translation>
+    </message>
+    <message>
+        <source>Exporting Successful</source>
+        <translation>Eksportēšana Veiksmīga</translation>
+    </message>
+    <message>
+        <source>The transaction history was successfully saved to %1.</source>
+        <translation>Transakciju vēsture tika veiksmīgi saglabāta uz %1.</translation>
+    </message>
+    <message>
         <source>Range:</source>
         <translation>Diapazons:</translation>
     </message>
@@ -2051,13 +2331,9 @@
         <source>Send Coins</source>
         <translation>Sūtīt Bitkoinus</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;Eksportēt</translation>
-    </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Datus no tekošā ieliktņa eksportēt uz failu</translation>
@@ -2079,12 +2355,12 @@
         <translation>Notikusi kļūme mēģinot saglabāt maciņa datus uz %1.</translation>
     </message>
     <message>
-        <source>The wallet data was successfully saved to %1.</source>
-        <translation>Maciņa dati tika veiksmīgi saglabāti uz %1.</translation>
-    </message>
-    <message>
         <source>Backup Successful</source>
         <translation>Dublēšana Veiksmīga</translation>
+    </message>
+    <message>
+        <source>The wallet data was successfully saved to %1.</source>
+        <translation>Maciņa dati tika veiksmīgi saglabāti uz %1.</translation>
     </message>
 </context>
 <context>
@@ -2112,6 +2388,10 @@
     <message>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Darbināt fonā kā servisu un pieņemt komandas</translation>
+    </message>
+    <message>
+        <source>Syscoin Core</source>
+        <translation>Syscoin Core</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -2194,20 +2474,12 @@
         <translation>Brīdinājums</translation>
     </message>
     <message>
-        <source>wallet.dat corrupt, salvage failed</source>
-        <translation>wallet.dat ir bojāts, glābšana neizdevās</translation>
-    </message>
-    <message>
         <source>Password for JSON-RPC connections</source>
         <translation>JSON-RPC savienojumu parole</translation>
     </message>
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Izpildīt komandu, kad labāk atbilstošais bloks izmainās (%s cmd aizvieto ar bloka hešu)</translation>
-    </message>
-    <message>
-        <source>This help message</source>
-        <translation>Šis palīdzības paziņojums</translation>
     </message>
     <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
@@ -2218,32 +2490,12 @@
         <translation>Ielādē adreses...</translation>
     </message>
     <message>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Nevar ielādēt wallet.dat: maciņš bojāts</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat</source>
-        <translation>Kļūda ielādējot wallet.dat</translation>
-    </message>
-    <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Nederīga -proxy adrese: '%s'</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation>-onlynet komandā norādīts nepazīstams tīkls: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -bind address: '%s'</source>
-        <translation>Nevar uzmeklēt -bind adresi: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -externalip address: '%s'</source>
-        <translation>Nevar atrisināt -externalip adresi: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Nederīgs daudzums priekš -paytxfree=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

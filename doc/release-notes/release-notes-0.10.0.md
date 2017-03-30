@@ -7,7 +7,7 @@ bug fixes.
 
 Please report bugs using the issue tracker at github:
 
-  https://github.com/syscoin/syscoin/issues
+  https://github.com/syscoin/syscoin2/issues
 
 Upgrading and downgrading
 =========================
@@ -142,10 +142,10 @@ unauthenticated access to public node data.
 It is served on the same port as RPC, but does not need a password, and uses
 plain HTTP instead of JSON-RPC.
 
-Assuming a local RPC server running on port 8332, it is possible to request:
-- Blocks: http://localhost:8332/rest/block/*HASH*.*EXT*
-- Blocks without transactions: http://localhost:8332/rest/block/notxdetails/*HASH*.*EXT*
-- Transactions (requires `-txindex`): http://localhost:8332/rest/tx/*HASH*.*EXT*
+Assuming a local RPC server running on port 8370, it is possible to request:
+- Blocks: http://localhost:8370/rest/block/*HASH*.*EXT*
+- Blocks without transactions: http://localhost:8370/rest/block/notxdetails/*HASH*.*EXT*
+- Transactions (requires `-txindex`): http://localhost:8370/rest/tx/*HASH*.*EXT*
 
 In every case, *EXT* can be `bin` (for raw binary data), `hex` (for hex-encoded
 binary) or `json`.
@@ -230,7 +230,7 @@ bindings such as [python-syscoinlib](https://pypi.python.org/pypi/python-syscoin
 alternative node implementations.
 
 This library is called `libsyscoinconsensus.so` (or, `.dll` for Windows).
-Its interface is defined in the C header [syscoinconsensus.h](https://github.com/syscoin/syscoin/blob/0.10/src/script/syscoinconsensus.h).
+Its interface is defined in the C header [syscoinconsensus.h](https://github.com/syscoin/syscoin2/blob/0.10/src/script/syscoinconsensus.h).
 
 In its initial version the API includes two functions:
 

@@ -7,7 +7,7 @@ updates. It is recommended to upgrade to this version.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/syscoin/syscoin/issues>
+  <https://github.com/syscoin/syscoin2/issues>
 
 Upgrading and downgrading
 =========================
@@ -48,7 +48,7 @@ Notable changes
 
 This is a minor release and hence there are no notable changes.
 For the notable changes in 0.10, refer to the release notes for the
-0.10.0 release at https://github.com/syscoin/syscoin/blob/v0.10.0/doc/release-notes.md
+0.10.0 release at https://github.com/syscoin/syscoin2/blob/v0.10.0/doc/release-notes.md
 
 0.10.1 Change log
 =================

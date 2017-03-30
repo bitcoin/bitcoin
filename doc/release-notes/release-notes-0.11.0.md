@@ -7,7 +7,7 @@ bug fixes.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/syscoin/syscoin/issues>
+  <https://github.com/syscoin/syscoin2/issues>
 
 Upgrading and downgrading
 =========================

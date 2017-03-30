@@ -1,5 +1,19 @@
 <TS language="hi_IN" version="2.1">
 <context>
+    <name>AcceptandPayOfferListPage</name>
+    </context>
+<context>
+    <name>AcceptedOfferListPage</name>
+    <message>
+        <source>All</source>
+        <translation>सभी</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
     <name>AddressBookPage</name>
     <message>
         <source>Create a new address</source>
@@ -10,12 +24,12 @@
         <translation>चुनिन्दा पते को सिस्टम क्लिपबोर्ड पर कापी करे !</translation>
     </message>
     <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;पता कॉपी करे</translation>
-    </message>
-    <message>
         <source>&amp;Delete</source>
         <translation>&amp;मिटाए !!</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;पता कॉपी करे</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -28,6 +42,14 @@
     <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Comma separated file (*.csv)</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>लेबल</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>पता</translation>
     </message>
     </context>
 <context>
@@ -45,6 +67,15 @@
         <translation>(कोई लेबल नही !)</translation>
     </message>
 </context>
+<context>
+    <name>AliasListPage</name>
+    </context>
+<context>
+    <name>AliasTableModel</name>
+    </context>
+<context>
+    <name>AliasView</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -120,14 +151,555 @@
     <name>BanTableModel</name>
     </context>
 <context>
+    <name>CertListPage</name>
+    </context>
+<context>
+    <name>CertTableModel</name>
+    </context>
+<context>
+    <name>CertView</name>
+    </context>
+<context>
+    <name>CoinControlDialog</name>
+    <message>
+        <source>Amount:</source>
+        <translation>राशि :</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>राशि</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>taareek</translation>
+    </message>
+    <message>
+        <source>Confirmed</source>
+        <translation>पक्का</translation>
+    </message>
+    <message>
+        <source>Copy address</source>
+        <translation>पता कॉपी करे</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>लेबल कॉपी करे </translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>कॉपी राशि</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(कोई लेबल नही !)</translation>
+    </message>
+    </context>
+<context>
+    <name>EditAddressDialog</name>
+    <message>
+        <source>Edit Address</source>
+        <translation>पता एडिट करना</translation>
+    </message>
+    <message>
+        <source>&amp;Label</source>
+        <translation>&amp;लेबल</translation>
+    </message>
+    <message>
+        <source>&amp;Address</source>
+        <translation>&amp;पता</translation>
+    </message>
+    <message>
+        <source>New receiving address</source>
+        <translation>नया स्वीकार्य पता</translation>
+    </message>
+    <message>
+        <source>New sending address</source>
+        <translation>नया भेजने वाला पता</translation>
+    </message>
+    <message>
+        <source>Edit receiving address</source>
+        <translation>एडिट स्वीकार्य पता </translation>
+    </message>
+    <message>
+        <source>Edit sending address</source>
+        <translation>एडिट भेजने वाला पता</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>डाला गया पता "%1" एड्रेस बुक में पहले से ही मोजूद है|</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>वॉलेट को unlock नहीं किया जा सकता|</translation>
+    </message>
+    <message>
+        <source>New key generation failed.</source>
+        <translation>नयी कुंजी का निर्माण असफल रहा|</translation>
+    </message>
+</context>
+<context>
+    <name>EditAliasDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>वॉलेट को unlock नहीं किया जा सकता|</translation>
+    </message>
+</context>
+<context>
+    <name>EditCertDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>वॉलेट को unlock नहीं किया जा सकता|</translation>
+    </message>
+</context>
+<context>
+    <name>EditOfferDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>वॉलेट को unlock नहीं किया जा सकता|</translation>
+    </message>
+</context>
+<context>
+    <name>EditWhitelistOfferDialog</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowInfoDialog</name>
+    <message>
+        <source>ID</source>
+        <translation>ID</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowListPage</name>
+    </context>
+<context>
+    <name>EscrowTableModel</name>
+    </context>
+<context>
+    <name>EscrowView</name>
+    </context>
+<context>
+    <name>FreespaceChecker</name>
+    </context>
+<context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation>संस्करण</translation>
+    </message>
+    <message>
+        <source>Usage:</source>
+        <translation>खपत :</translation>
+    </message>
+    </context>
+<context>
+    <name>InMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>Intro</name>
+    <message>
+        <source>Error</source>
+        <translation>भूल</translation>
+    </message>
+    </context>
+<context>
+    <name>ManageEscrowDialog</name>
+    </context>
+<context>
+    <name>MessageInfoDialog</name>
+    </context>
+<context>
+    <name>MessageListPage</name>
+    </context>
+<context>
+    <name>MessageTableModel</name>
+    </context>
+<context>
+    <name>MessageView</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>फार्म</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAcceptedOfferListPage</name>
+    <message>
+        <source>All</source>
+        <translation>सभी</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAliasListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyCertListPage</name>
+    <message>
+        <source>All</source>
+        <translation>सभी</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyEscrowListPage</name>
+    <message>
+        <source>All</source>
+        <translation>सभी</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferListPage</name>
+    <message>
+        <source>All</source>
+        <translation>सभी</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferWhitelistTableModel</name>
+    </context>
+<context>
+    <name>MyWhitelistOfferDialog</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>NewMessageDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>वॉलेट को unlock नहीं किया जा सकता|</translation>
+    </message>
+</context>
+<context>
+    <name>NewWhitelistDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>वॉलेट को unlock नहीं किया जा सकता|</translation>
+    </message>
+</context>
+<context>
+    <name>OfferAcceptDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogBTC</name>
+    <message>
+        <source>to</source>
+        <translation>तक</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptDialogZEC</name>
+    <message>
+        <source>to</source>
+        <translation>तक</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptInfoDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptTableModel</name>
+    </context>
+<context>
+    <name>OfferEscrowDialog</name>
+    </context>
+<context>
+    <name>OfferFeedbackDialog</name>
+    </context>
+<context>
+    <name>OfferListPage</name>
+    </context>
+<context>
+    <name>OfferPayDialog</name>
+    </context>
+<context>
+    <name>OfferTableModel</name>
+    </context>
+<context>
+    <name>OfferView</name>
+    </context>
+<context>
+    <name>OfferWhitelistTableModel</name>
+    </context>
+<context>
+    <name>OpenURIDialog</name>
+    </context>
+<context>
+    <name>OptionsDialog</name>
+    <message>
+        <source>Options</source>
+        <translation>विकल्प</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>वॉलेट</translation>
+    </message>
+    <message>
+        <source>&amp;OK</source>
+        <translation>&amp;ओके</translation>
+    </message>
+    <message>
+        <source>&amp;Cancel</source>
+        <translation>&amp;कैन्सल</translation>
+    </message>
+    </context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>All</source>
+        <translation>सभी</translation>
+    </message>
+</context>
+<context>
+    <name>OutMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>OverviewPage</name>
+    <message>
+        <source>Form</source>
+        <translation>फार्म</translation>
+    </message>
+    </context>
+<context>
+    <name>PaymentServer</name>
+    </context>
+<context>
+    <name>PeerTableModel</name>
+    </context>
+<context>
+    <name>QObject</name>
+    <message>
+        <source>Amount</source>
+        <translation>राशि</translation>
+    </message>
+    <message>
+        <source>N/A</source>
+        <translation>लागू नही
+</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>सभी</translation>
+    </message>
+</context>
+<context>
+    <name>QRImageWidget</name>
+    </context>
+<context>
+    <name>RPCConsole</name>
+    <message>
+        <source>N/A</source>
+        <translation>लागू नही
+</translation>
+    </message>
+    <message>
+        <source>&amp;Information</source>
+        <translation>जानकारी</translation>
+    </message>
+    </context>
+<context>
+    <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>&amp;Amount:</source>
+        <translation>राशि :</translation>
+    </message>
+    <message>
+        <source>&amp;Label:</source>
+        <translation>लेबल:</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>लेबल कॉपी करे </translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>कॉपी राशि</translation>
+    </message>
+</context>
+<context>
+    <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;पता कॉपी करे</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>पता</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>राशि</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>लेबल</translation>
+    </message>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>taareek</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>लेबल</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(कोई लेबल नही !)</translation>
+    </message>
+    </context>
+<context>
+    <name>ResellOfferDialog</name>
+    </context>
+<context>
+    <name>SendCoinsDialog</name>
+    <message>
+        <source>Send Coins</source>
+        <translation>सिक्के भेजें|</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>राशि :</translation>
+    </message>
+    <message>
+        <source>Send to multiple recipients at once</source>
+        <translation>एक साथ कई प्राप्तकर्ताओं को भेजें</translation>
+    </message>
+    <message>
+        <source>Balance:</source>
+        <translation>बाकी रकम :</translation>
+    </message>
+    <message>
+        <source>Confirm the send action</source>
+        <translation>भेजने की पुष्टि करें</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>कॉपी राशि</translation>
+    </message>
+    <message>
+        <source>Confirm send coins</source>
+        <translation>सिक्के भेजने की पुष्टि करें</translation>
+    </message>
+    <message>
+        <source>The amount to pay must be larger than 0.</source>
+        <translation>भेजा गया अमाउंट शुन्य से अधिक होना चाहिए|</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(कोई लेबल नही !)</translation>
+    </message>
+</context>
+<context>
+    <name>SendCoinsEntry</name>
+    <message>
+        <source>A&amp;mount:</source>
+        <translation>अमाउंट:</translation>
+    </message>
+    <message>
+        <source>Pay &amp;To:</source>
+        <translation>प्राप्तकर्ता:</translation>
+    </message>
+    <message>
+        <source>&amp;Label:</source>
+        <translation>लेबल:</translation>
+    </message>
+    <message>
+        <source>Alt+A</source>
+        <translation>Alt-A</translation>
+    </message>
+    <message>
+        <source>Paste address from clipboard</source>
+        <translation>Clipboard से एड्रेस paste करें</translation>
+    </message>
+    <message>
+        <source>Alt+P</source>
+        <translation>Alt-P</translation>
+    </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>प्राप्तकर्ता:</translation>
+    </message>
+    <message>
+        <source>Enter a label for this address to add it to your address book</source>
+        <translation>आपकी एड्रेस बुक में इस एड्रेस के लिए एक लेबल लिखें</translation>
+    </message>
+</context>
+<context>
+    <name>SendConfirmationDialog</name>
+    </context>
+<context>
+    <name>ShutdownWindow</name>
+    </context>
+<context>
+    <name>SignRawTxDialog</name>
+    </context>
+<context>
+    <name>SignVerifyMessageDialog</name>
+    <message>
+        <source>Alt+A</source>
+        <translation>Alt-A</translation>
+    </message>
+    <message>
+        <source>Paste address from clipboard</source>
+        <translation>Clipboard से एड्रेस paste करें</translation>
+    </message>
+    <message>
+        <source>Alt+P</source>
+        <translation>Alt-P</translation>
+    </message>
+    <message>
+        <source>Signature</source>
+        <translation>हस्ताक्षर</translation>
+    </message>
+    </context>
+<context>
+    <name>SplashScreen</name>
+    <message>
+        <source>[testnet]</source>
+        <translation>[टेस्टनेट]</translation>
+    </message>
+</context>
+<context>
     <name>SyscoinGUI</name>
     <message>
         <source>Synchronizing with network...</source>
         <translation>नेटवर्क से समकालिक (मिल) रहा है ...</translation>
-    </message>
-    <message>
-        <source>&amp;Overview</source>
-        <translation>&amp;विवरण</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
@@ -224,314 +796,6 @@
     </message>
 </context>
 <context>
-    <name>ClientModel</name>
-    </context>
-<context>
-    <name>CoinControlDialog</name>
-    <message>
-        <source>Amount:</source>
-        <translation>राशि :</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>राशि</translation>
-    </message>
-    <message>
-        <source>Date</source>
-        <translation>taareek</translation>
-    </message>
-    <message>
-        <source>Confirmed</source>
-        <translation>पक्का</translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>पता कॉपी करे</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>लेबल कॉपी करे </translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>कॉपी राशि</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(कोई लेबल नही !)</translation>
-    </message>
-    </context>
-<context>
-    <name>EditAddressDialog</name>
-    <message>
-        <source>Edit Address</source>
-        <translation>पता एडिट करना</translation>
-    </message>
-    <message>
-        <source>&amp;Label</source>
-        <translation>&amp;लेबल</translation>
-    </message>
-    <message>
-        <source>&amp;Address</source>
-        <translation>&amp;पता</translation>
-    </message>
-    <message>
-        <source>New receiving address</source>
-        <translation>नया स्वीकार्य पता</translation>
-    </message>
-    <message>
-        <source>New sending address</source>
-        <translation>नया भेजने वाला पता</translation>
-    </message>
-    <message>
-        <source>Edit receiving address</source>
-        <translation>एडिट स्वीकार्य पता </translation>
-    </message>
-    <message>
-        <source>Edit sending address</source>
-        <translation>एडिट भेजने वाला पता</translation>
-    </message>
-    <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>डाला गया पता "%1" एड्रेस बुक में पहले से ही मोजूद है|</translation>
-    </message>
-    <message>
-        <source>Could not unlock wallet.</source>
-        <translation>वॉलेट को unlock नहीं किया जा सकता|</translation>
-    </message>
-    <message>
-        <source>New key generation failed.</source>
-        <translation>नयी कुंजी का निर्माण असफल रहा|</translation>
-    </message>
-</context>
-<context>
-    <name>FreespaceChecker</name>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation>संस्करण</translation>
-    </message>
-    <message>
-        <source>Usage:</source>
-        <translation>खपत :</translation>
-    </message>
-    </context>
-<context>
-    <name>Intro</name>
-    <message>
-        <source>Error</source>
-        <translation>भूल</translation>
-    </message>
-    </context>
-<context>
-    <name>OpenURIDialog</name>
-    </context>
-<context>
-    <name>OptionsDialog</name>
-    <message>
-        <source>Options</source>
-        <translation>विकल्प</translation>
-    </message>
-    <message>
-        <source>&amp;OK</source>
-        <translation>&amp;ओके</translation>
-    </message>
-    <message>
-        <source>&amp;Cancel</source>
-        <translation>&amp;कैन्सल</translation>
-    </message>
-    </context>
-<context>
-    <name>OverviewPage</name>
-    <message>
-        <source>Form</source>
-        <translation>फार्म</translation>
-    </message>
-    </context>
-<context>
-    <name>PaymentServer</name>
-    </context>
-<context>
-    <name>PeerTableModel</name>
-    </context>
-<context>
-    <name>QObject</name>
-    <message>
-        <source>Amount</source>
-        <translation>राशि</translation>
-    </message>
-    <message>
-        <source>N/A</source>
-        <translation>लागू नही
-</translation>
-    </message>
-    </context>
-<context>
-    <name>QRImageWidget</name>
-    </context>
-<context>
-    <name>RPCConsole</name>
-    <message>
-        <source>N/A</source>
-        <translation>लागू नही
-</translation>
-    </message>
-    <message>
-        <source>&amp;Information</source>
-        <translation>जानकारी</translation>
-    </message>
-    </context>
-<context>
-    <name>ReceiveCoinsDialog</name>
-    <message>
-        <source>&amp;Label:</source>
-        <translation>लेबल:</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>लेबल कॉपी करे </translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>कॉपी राशि</translation>
-    </message>
-</context>
-<context>
-    <name>ReceiveRequestDialog</name>
-    <message>
-        <source>Address</source>
-        <translation>पता</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>राशि</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>लेबल</translation>
-    </message>
-    </context>
-<context>
-    <name>RecentRequestsTableModel</name>
-    <message>
-        <source>Date</source>
-        <translation>taareek</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>लेबल</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>राशि</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(कोई लेबल नही !)</translation>
-    </message>
-    </context>
-<context>
-    <name>SendCoinsDialog</name>
-    <message>
-        <source>Send Coins</source>
-        <translation>सिक्के भेजें|</translation>
-    </message>
-    <message>
-        <source>Amount:</source>
-        <translation>राशि :</translation>
-    </message>
-    <message>
-        <source>Send to multiple recipients at once</source>
-        <translation>एक साथ कई प्राप्तकर्ताओं को भेजें</translation>
-    </message>
-    <message>
-        <source>Balance:</source>
-        <translation>बाकी रकम :</translation>
-    </message>
-    <message>
-        <source>Confirm the send action</source>
-        <translation>भेजने की पुष्टि करें</translation>
-    </message>
-    <message>
-        <source>Confirm send coins</source>
-        <translation>सिक्के भेजने की पुष्टि करें</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>कॉपी राशि</translation>
-    </message>
-    <message>
-        <source>The amount to pay must be larger than 0.</source>
-        <translation>भेजा गया अमाउंट शुन्य से अधिक होना चाहिए|</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(कोई लेबल नही !)</translation>
-    </message>
-    </context>
-<context>
-    <name>SendCoinsEntry</name>
-    <message>
-        <source>A&amp;mount:</source>
-        <translation>अमाउंट:</translation>
-    </message>
-    <message>
-        <source>Pay &amp;To:</source>
-        <translation>प्राप्तकर्ता:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>आपकी एड्रेस बुक में इस एड्रेस के लिए एक लेबल लिखें</translation>
-    </message>
-    <message>
-        <source>&amp;Label:</source>
-        <translation>लेबल:</translation>
-    </message>
-    <message>
-        <source>Alt+A</source>
-        <translation>Alt-A</translation>
-    </message>
-    <message>
-        <source>Paste address from clipboard</source>
-        <translation>Clipboard से एड्रेस paste करें</translation>
-    </message>
-    <message>
-        <source>Alt+P</source>
-        <translation>Alt-P</translation>
-    </message>
-    </context>
-<context>
-    <name>ShutdownWindow</name>
-    </context>
-<context>
-    <name>SignVerifyMessageDialog</name>
-    <message>
-        <source>Alt+A</source>
-        <translation>Alt-A</translation>
-    </message>
-    <message>
-        <source>Paste address from clipboard</source>
-        <translation>Clipboard से एड्रेस paste करें</translation>
-    </message>
-    <message>
-        <source>Alt+P</source>
-        <translation>Alt-P</translation>
-    </message>
-    <message>
-        <source>Signature</source>
-        <translation>हस्ताक्षर</translation>
-    </message>
-    </context>
-<context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[टेस्टनेट]</translation>
-    </message>
-</context>
-<context>
     <name>TrafficGraphWidget</name>
     </context>
 <context>
@@ -549,8 +813,16 @@
         <translation>%1 पुष्टियाँ</translation>
     </message>
     <message>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>, अभी तक सफलतापूर्वक प्रसारित नहीं किया गया है</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>taareek</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>अज्ञात</translation>
     </message>
     <message>
         <source>Transaction ID</source>
@@ -568,14 +840,6 @@
         <source>false</source>
         <translation>ग़लत</translation>
     </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, अभी तक सफलतापूर्वक प्रसारित नहीं किया गया है</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>अज्ञात</translation>
-    </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -587,7 +851,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation> ये खिड़की आपको लेन-देन का विस्तृत विवरण देगी !</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -597,6 +861,10 @@
     <message>
         <source>Type</source>
         <translation>टाइप</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>लेबल</translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -613,10 +881,6 @@
     <message>
         <source>Generated but not accepted</source>
         <translation>जेनरेट किया गया किंतु स्वीकारा नही गया !</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>लेबल</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -641,6 +905,10 @@
     <message>
         <source>(n/a)</source>
         <translation>(लागू नहीं)</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(कोई लेबल नही !)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
@@ -782,7 +1050,7 @@
         <source>Send Coins</source>
         <translation>सिक्के भेजें|</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>
@@ -801,7 +1069,7 @@
         <source>Backup Successful</source>
         <translation>बैकप सफल</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>syscoin-core</name>
     <message>

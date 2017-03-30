@@ -23,9 +23,9 @@ Build-Depends: debhelper,
  libprotobuf-dev, protobuf-compiler,
  python
 Standards-Version: 3.9.2
-Homepage: https://www.syscoin.org/
+Homepage: https://syscoincore.org/
 Vcs-Git: git://github.com/syscoin/syscoin.git
-Vcs-Browser: https://github.com/syscoin/syscoin
+Vcs-Browser: https://github.com/syscoin/syscoin2
 
 Package: syscoind
 Architecture: any

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -47,6 +47,9 @@ namespace GUIUtil
     // Parse "syscoin:" URI into recipient object, return true on successful parsing
     bool parseSyscoinURI(const QUrl &uri, SendCoinsRecipient *out);
     bool parseSyscoinURI(QString uri, SendCoinsRecipient *out);
+	// SYSCOIN
+	QString formatBitcoinURI(const SendCoinsRecipient &info);
+	QString formatZCashURI(const SendCoinsRecipient &info);
     QString formatSyscoinURI(const SendCoinsRecipient &info);
 
     // Returns true if given address+amount meets "dust" definition
@@ -55,7 +58,10 @@ namespace GUIUtil
     // HTML escaping for rich text controls
     QString HtmlEscape(const QString& str, bool fMultiLine=false);
     QString HtmlEscape(const std::string& str, bool fMultiLine=false);
-
+	// SYSCOIN
+    /** Load global CSS theme */
+    QString loadStyleSheet();
+    QString getThemeName();
     /** Copy a field of the currently selected entry of a view to the clipboard. Does nothing if nothing
         is selected.
        @param[in] column  Data column to extract from the model

@@ -38,7 +38,7 @@ newer. Typically, it is packaged by distributions as something like
 *libzmq3-dev*. The C++ wrapper for ZeroMQ is *not* needed.
 
 In order to run the example Python client scripts in contrib/ one must
-also install *python-zmq*, though this is not necessary for daemon
+also install *python3-zmq*, though this is not necessary for daemon
 operation.
 
 ## Enabling
@@ -66,7 +66,7 @@ address. The same address can be used in more than one notification.
 
 For instance:
 
-    $ syscoind -zmqpubhashtx=tcp://127.0.0.1:28332 \
+    $ syscoind -zmqpubhashtx=tcp://127.0.0.1:28370 \
                -zmqpubrawtx=ipc:///tmp/syscoind.tx.raw
 
 Each PUB notification has a topic and body, where the header
@@ -99,3 +99,8 @@ using other means such as firewalling.
 Note that when the block chain tip changes, a reorganisation may occur
 and just the tip will be notified. It is up to the subscriber to
 retrieve the chain from the last known block to the new tip.
+
+There are several possibilities that ZMQ notification can get lost
+during transmission depending on the communication type your are
+using. Syscoind appends an up-counting sequence number to each
+notification which allows listeners to detect lost notifications.

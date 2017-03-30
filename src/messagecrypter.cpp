@@ -4,7 +4,7 @@ bool CMessageCrypter::Encrypt(const string& vchPubKey, const string& vchPlaintex
     try
     {
         AutoSeededRandomPool prng;
-        StringSource ss(vchPubKey, true, new CryptoPP::HexDecoder);
+        StringSource ss(vchPubKey, true);
 		ECIES<ECP>::Encryptor encryptor;
 
         //curve used is secp256k1
@@ -37,7 +37,7 @@ bool CMessageCrypter::Decrypt(const string& vchPrivKey, const string& vchCiphert
     {
         AutoSeededRandomPool prng;
 
-        StringSource ss(vchPrivKey, true /*pumpAll*/, new CryptoPP::HexDecoder);
+        StringSource ss(vchPrivKey, true /*pumpAll*/);
 
         Integer x;
         x.Decode(ss, ss.MaxRetrievable(), Integer::UNSIGNED);

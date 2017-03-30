@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -103,17 +103,23 @@ public:
  */
 class CSyscoinAddress : public CBase58Data {
 public:
+	// SYSCOIN
 	bool isAlias;
+	unsigned char safetyLevel;
+	bool safeSearch;
 	std::string aliasName;
-    bool Set(const CKeyID &id);
-    bool Set(const CScriptID &id);
-    bool Set(const CTxDestination &dest);
+	std::vector<unsigned char> vchRedeemScript;
+	std::vector<unsigned char> vchPubKey;
+
+    bool Set(const CKeyID &id, CChainParams::AddressType sysVer = CChainParams::ADDRESS_SYS);
+    bool Set(const CScriptID &id, CChainParams::AddressType sysVer = CChainParams::ADDRESS_SYS);
+    bool Set(const CTxDestination &dest, CChainParams::AddressType sysVer = CChainParams::ADDRESS_SYS);
     bool IsValid() const;
     bool IsValid(const CChainParams &params) const;
 
 	// SYSCOIN aliases as addresses
     CSyscoinAddress();
-    CSyscoinAddress(const CTxDestination &dest);
+	CSyscoinAddress(const CTxDestination &dest, CChainParams::AddressType sysVer = CChainParams::ADDRESS_SYS);
     CSyscoinAddress(const std::string& strAddress);
     CSyscoinAddress(const char* pszAddress);
 
@@ -167,7 +173,7 @@ public:
     CSyscoinExtKeyBase() {}
 };
 
-typedef CSyscoinExtKeyBase<CExtKey, 74, CChainParams::EXT_SECRET_KEY> CSyscoinExtKey;
-typedef CSyscoinExtKeyBase<CExtPubKey, 74, CChainParams::EXT_PUBLIC_KEY> CSyscoinExtPubKey;
+typedef CSyscoinExtKeyBase<CExtKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_SECRET_KEY> CSyscoinExtKey;
+typedef CSyscoinExtKeyBase<CExtPubKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_PUBLIC_KEY> CSyscoinExtPubKey;
 
 #endif // SYSCOIN_BASE58_H

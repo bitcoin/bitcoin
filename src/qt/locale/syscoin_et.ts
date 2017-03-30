@@ -1,5 +1,31 @@
 <TS language="et" version="2.1">
 <context>
+    <name>AcceptandPayOfferListPage</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>Kogus:</translation>
+    </message>
+    </context>
+<context>
+    <name>AcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Ekspordi kuvatava vahelehe sisu faili</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Kõik</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Komaeraldatud fail (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Staatus</translation>
+    </message>
+    </context>
+<context>
     <name>AddressBookPage</name>
     <message>
         <source>Create a new address</source>
@@ -20,10 +46,6 @@
     <message>
         <source>C&amp;lose</source>
         <translation>S&amp;ulge</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;Kopeeri Aadress</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -50,6 +72,10 @@
         <translation>Need on sinu Syscoini aadressid maksete saatmiseks. Müntide saatmisel kontrolli alati summat ning saaja aadressi.</translation>
     </message>
     <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Kopeeri Aadress</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>&amp;Märgise kopeerimine</translation>
     </message>
@@ -62,8 +88,12 @@
         <translation>Komaeraldatud fail (*.csv)</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>Eksportimine Ebaõnnestus</translation>
+        <source>Label</source>
+        <translation>Silt</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Aadress</translation>
     </message>
     </context>
 <context>
@@ -81,6 +111,15 @@
         <translation>(silti pole)</translation>
     </message>
 </context>
+<context>
+    <name>AliasListPage</name>
+    </context>
+<context>
+    <name>AliasTableModel</name>
+    </context>
+<context>
+    <name>AliasView</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -136,16 +175,12 @@
         <translation>Kas soovid oma rahakoti krüpteerida?</translation>
     </message>
     <message>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>TÄHTIS: Kõik varasemad rahakoti varundfailid tuleks üle kirjutada äsja loodud krüpteeritud rahakoti failiga. Turvakaalutlustel tühistatakse krüpteerimata rahakoti failid alates uue, krüpteeritud rahakoti, kasutusele võtust.</translation>
-    </message>
-    <message>
-        <source>Warning: The Caps Lock key is on!</source>
-        <translation>Hoiatus: Caps Lock on sisse lülitatud!</translation>
-    </message>
-    <message>
         <source>Wallet encrypted</source>
         <translation>Rahakott krüpteeritud</translation>
+    </message>
+    <message>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>TÄHTIS: Kõik varasemad rahakoti varundfailid tuleks üle kirjutada äsja loodud krüpteeritud rahakoti failiga. Turvakaalutlustel tühistatakse krüpteerimata rahakoti failid alates uue, krüpteeritud rahakoti, kasutusele võtust.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -175,266 +210,27 @@
         <source>Wallet passphrase was successfully changed.</source>
         <translation>Rahakoti salafraasi muutmine õnnestus.</translation>
     </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Hoiatus: Caps Lock on sisse lülitatud!</translation>
+    </message>
 </context>
 <context>
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>SyscoinGUI</name>
-    <message>
-        <source>Sign &amp;message...</source>
-        <translation>Signeeri &amp;sõnum</translation>
-    </message>
-    <message>
-        <source>Synchronizing with network...</source>
-        <translation>Võrgusünkimine...</translation>
-    </message>
-    <message>
-        <source>&amp;Overview</source>
-        <translation>&amp;Ülevaade</translation>
-    </message>
-    <message>
-        <source>Show general overview of wallet</source>
-        <translation>Kuva rahakoti üld-ülevaade</translation>
-    </message>
-    <message>
-        <source>&amp;Transactions</source>
-        <translation>&amp;Tehingud</translation>
-    </message>
-    <message>
-        <source>Browse transaction history</source>
-        <translation>Sirvi tehingute ajalugu</translation>
-    </message>
-    <message>
-        <source>E&amp;xit</source>
-        <translation>V&amp;älju</translation>
-    </message>
-    <message>
-        <source>Quit application</source>
-        <translation>Väljumine</translation>
-    </message>
-    <message>
-        <source>About &amp;Qt</source>
-        <translation>Teave &amp;Qt kohta</translation>
-    </message>
-    <message>
-        <source>Show information about Qt</source>
-        <translation>Kuva Qt kohta käiv info</translation>
-    </message>
-    <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;Valikud...</translation>
-    </message>
-    <message>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Krüpteeri Rahakott</translation>
-    </message>
-    <message>
-        <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Varunda Rahakott</translation>
-    </message>
-    <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Salafraasi muutmine</translation>
-    </message>
-    <message>
-        <source>Open &amp;URI...</source>
-        <translation>Ava &amp;URI...</translation>
-    </message>
-    <message>
-        <source>Importing blocks from disk...</source>
-        <translation>Impordi blokid kettalt...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation>Kettal olevate blokkide re-indekseerimine...</translation>
-    </message>
-    <message>
-        <source>Send coins to a Syscoin address</source>
-        <translation>Saada münte Syscoini aadressile</translation>
-    </message>
-    <message>
-        <source>Backup wallet to another location</source>
-        <translation>Varunda rahakott teise asukohta</translation>
-    </message>
-    <message>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation>Rahakoti krüpteerimise salafraasi muutmine</translation>
-    </message>
-    <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Debugimise aken</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>Ava debugimise ja diagnostika konsool</translation>
-    </message>
-    <message>
-        <source>&amp;Verify message...</source>
-        <translation>&amp;Kontrolli sõnumit...</translation>
-    </message>
-    <message>
-        <source>Syscoin</source>
-        <translation>Syscoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Rahakott</translation>
-    </message>
-    <message>
-        <source>&amp;Send</source>
-        <translation>&amp;Saada</translation>
-    </message>
-    <message>
-        <source>&amp;Receive</source>
-        <translation>&amp;Saama</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Näita / Peida</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>Näita või peida peaaken</translation>
-    </message>
-    <message>
-        <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Krüpteeri oma rahakoti privaatvõtmed</translation>
-    </message>
-    <message>
-        <source>Sign messages with your Syscoin addresses to prove you own them</source>
-        <translation>Omandi tõestamiseks allkirjasta sõnumid oma Syscoini aadressiga</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
-        <translation>Kinnita sõnumid kindlustamaks et need allkirjastati määratud Syscoini aadressiga</translation>
-    </message>
-    <message>
-        <source>&amp;File</source>
-        <translation>&amp;Fail</translation>
-    </message>
-    <message>
-        <source>&amp;Settings</source>
-        <translation>&amp;Seaded</translation>
-    </message>
-    <message>
-        <source>&amp;Help</source>
-        <translation>&amp;Abi</translation>
-    </message>
-    <message>
-        <source>Tabs toolbar</source>
-        <translation>Vahelehe tööriistariba</translation>
-    </message>
-    <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoini tuumik</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n tund</numerusform><numerusform>%n tundi</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n päev</numerusform><numerusform>%n päeva</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n nädal</numerusform><numerusform>%n nädalat</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 ja %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n aasta</numerusform><numerusform>%n aastat</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 behind</source>
-        <translation>%1 maas</translation>
-    </message>
-    <message>
-        <source>Last received block was generated %1 ago.</source>
-        <translation>Viimane saabunud blokk loodi %1 tagasi.</translation>
-    </message>
-    <message>
-        <source>Transactions after this will not yet be visible.</source>
-        <translation>Peale seda ei ole tehingud veel nähtavad.</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Tõrge</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Hoiatus</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Informatsioon</translation>
-    </message>
-    <message>
-        <source>Up to date</source>
-        <translation>Ajakohane</translation>
-    </message>
-    <message>
-        <source>Catching up...</source>
-        <translation>Jõuan...</translation>
-    </message>
-    <message>
-        <source>Date: %1
-</source>
-        <translation>Kuupäev: %1
-</translation>
-    </message>
-    <message>
-        <source>Amount: %1
-</source>
-        <translation>Summa: %1
-</translation>
-    </message>
-    <message>
-        <source>Type: %1
-</source>
-        <translation>Tüüp: %1
-</translation>
-    </message>
-    <message>
-        <source>Label: %1
-</source>
-        <translation>&amp;Märgis: %1
-</translation>
-    </message>
-    <message>
-        <source>Address: %1
-</source>
-        <translation>Aadress: %1
-</translation>
-    </message>
-    <message>
-        <source>Sent transaction</source>
-        <translation>Saadetud tehing</translation>
-    </message>
-    <message>
-        <source>Incoming transaction</source>
-        <translation>Sisenev tehing</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Rahakott on &lt;b&gt;krüpteeritud&lt;/b&gt; ning hetkel &lt;b&gt;avatud&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Rahakott on &lt;b&gt;krüpteeritud&lt;/b&gt; ning hetkel &lt;b&gt;suletud&lt;/b&gt;</translation>
-    </message>
-</context>
+    <name>CertListPage</name>
+    </context>
 <context>
-    <name>ClientModel</name>
+    <name>CertTableModel</name>
     <message>
-        <source>Network Alert</source>
-        <translation>Võrgu Häire</translation>
+        <source>Status</source>
+        <translation>Staatus</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>CertView</name>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -480,34 +276,6 @@
     <message>
         <source>Copy fee</source>
         <translation>Kopeeri tasu</translation>
-    </message>
-    <message>
-        <source>highest</source>
-        <translation>kõrgeim</translation>
-    </message>
-    <message>
-        <source>higher</source>
-        <translation>kõrgem</translation>
-    </message>
-    <message>
-        <source>high</source>
-        <translation>kõrge</translation>
-    </message>
-    <message>
-        <source>medium</source>
-        <translation>keskmine</translation>
-    </message>
-    <message>
-        <source>low</source>
-        <translation>madal</translation>
-    </message>
-    <message>
-        <source>lower</source>
-        <translation>madalam</translation>
-    </message>
-    <message>
-        <source>lowest</source>
-        <translation>madalaim</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
@@ -557,12 +325,12 @@
         <translation>Väljaminevate aadresside muutmine</translation>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>Selline aadress on juba olemas: "%1"</translation>
-    </message>
-    <message>
         <source>The entered address "%1" is not a valid Syscoin address.</source>
         <translation>Sisestatud aadress "%1" ei ole Syscoinis kehtiv.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>Selline aadress on juba olemas: "%1"</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -574,6 +342,78 @@
     </message>
 </context>
 <context>
+    <name>EditAliasDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Üldine</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Rahakotti ei avatud</translation>
+    </message>
+</context>
+<context>
+    <name>EditCertDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Rahakotti ei avatud</translation>
+    </message>
+</context>
+<context>
+    <name>EditOfferDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Üldine</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation>Kogus:</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Rahakotti ei avatud</translation>
+    </message>
+</context>
+<context>
+    <name>EditWhitelistOfferDialog</name>
+    <message>
+        <source>Remove</source>
+        <translation>Eemalda</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Ekspordi kuvatava vahelehe sisu faili</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Komaeraldatud fail (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowInfoDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Üldine</translation>
+    </message>
+    <message>
+        <source>ID</source>
+        <translation>ID</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowListPage</name>
+    </context>
+<context>
+    <name>EscrowTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>Staatus</translation>
+    </message>
+</context>
+<context>
+    <name>EscrowView</name>
+    </context>
+<context>
     <name>FreespaceChecker</name>
     <message>
         <source>name</source>
@@ -583,16 +423,8 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoini tuumik</translation>
-    </message>
-    <message>
         <source>version</source>
         <translation>versioon</translation>
-    </message>
-    <message>
-        <source>About Syscoin Core</source>
-        <translation>Kirjeldus Syscoini Tuumast</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -606,7 +438,26 @@
         <source>command-line options</source>
         <translation>käsurea valikud</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>InMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Komaeraldatud fail (*.csv)</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>Saatja</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Saaja</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Sõnum</translation>
+    </message>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -614,13 +465,238 @@
         <translation>Teretulemast</translation>
     </message>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoini tuumik</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Tõrge</translation>
     </message>
+    </context>
+<context>
+    <name>ManageEscrowDialog</name>
+    </context>
+<context>
+    <name>MessageInfoDialog</name>
+    <message>
+        <source>Message:</source>
+        <translation>Sõnum:</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Ekspordi kuvatava vahelehe sisu faili</translation>
+    </message>
+</context>
+<context>
+    <name>MessageTableModel</name>
+    <message>
+        <source>From</source>
+        <translation>Saatja</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Saaja</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Sõnum</translation>
+    </message>
+</context>
+<context>
+    <name>MessageView</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Vorm</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>Viimane ploki aeg</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>Peida</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Ekspordi kuvatava vahelehe sisu faili</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Kõik</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Komaeraldatud fail (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Staatus</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAliasListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Ekspordi kuvatava vahelehe sisu faili</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Komaeraldatud fail (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyCertListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Ekspordi kuvatava vahelehe sisu faili</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Kõik</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Komaeraldatud fail (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Staatus</translation>
+    </message>
+    </context>
+<context>
+    <name>MyEscrowListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Ekspordi kuvatava vahelehe sisu faili</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Kõik</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Komaeraldatud fail (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Ekspordi kuvatava vahelehe sisu faili</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Kõik</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Komaeraldatud fail (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferWhitelistTableModel</name>
+    </context>
+<context>
+    <name>MyWhitelistOfferDialog</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Ekspordi kuvatava vahelehe sisu faili</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Komaeraldatud fail (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>NewMessageDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Rahakotti ei avatud</translation>
+    </message>
+</context>
+<context>
+    <name>NewWhitelistDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Rahakotti ei avatud</translation>
+    </message>
+</context>
+<context>
+    <name>OfferAcceptDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogBTC</name>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Tulemuseks on liiga pikk URL, püüa lühendada märgise/teate teksti.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Tõrge URI'st QR koodi loomisel</translation>
+    </message>
+    <message>
+        <source>to</source>
+        <translation>saaja</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptDialogZEC</name>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Tulemuseks on liiga pikk URL, püüa lühendada märgise/teate teksti.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Tõrge URI'st QR koodi loomisel</translation>
+    </message>
+    <message>
+        <source>to</source>
+        <translation>saaja</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptInfoDialog</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>Kogus:</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>Staatus</translation>
+    </message>
+</context>
+<context>
+    <name>OfferEscrowDialog</name>
+    </context>
+<context>
+    <name>OfferFeedbackDialog</name>
+    </context>
+<context>
+    <name>OfferListPage</name>
+    </context>
+<context>
+    <name>OfferPayDialog</name>
+    </context>
+<context>
+    <name>OfferTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>Staatus</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferView</name>
+    </context>
+<context>
+    <name>OfferWhitelistTableModel</name>
     </context>
 <context>
     <name>OpenURIDialog</name>
@@ -638,6 +714,10 @@
     <message>
         <source>Options</source>
         <translation>Valikud</translation>
+    </message>
+    <message>
+        <source>&amp;Main</source>
+        <translation>&amp;Peamine</translation>
     </message>
     <message>
         <source>MB</source>
@@ -737,6 +817,32 @@
     </message>
 </context>
 <context>
+    <name>OptionsModel</name>
+    <message>
+        <source>All</source>
+        <translation>Kõik</translation>
+    </message>
+</context>
+<context>
+    <name>OutMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Komaeraldatud fail (*.csv)</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>Saatja</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Saaja</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Sõnum</translation>
+    </message>
+    </context>
+<context>
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
@@ -762,12 +868,12 @@
 <context>
     <name>PaymentServer</name>
     <message>
-        <source>URI handling</source>
-        <translation>URI käsitsemine</translation>
-    </message>
-    <message>
         <source>Cannot start syscoin: click-to-pay handler</source>
         <translation>Syscoin ei käivitu: vajuta-maksa toiming</translation>
+    </message>
+    <message>
+        <source>URI handling</source>
+        <translation>URI käsitsemine</translation>
     </message>
     </context>
 <context>
@@ -783,7 +889,15 @@
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
-    </context>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 ja %2</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Kõik</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -793,10 +907,6 @@
     </context>
 <context>
     <name>RPCConsole</name>
-    <message>
-        <source>Client name</source>
-        <translation>Kliendi nimi</translation>
-    </message>
     <message>
         <source>N/A</source>
         <translation>N/A</translation>
@@ -810,12 +920,12 @@
         <translation>&amp;Informatsioon</translation>
     </message>
     <message>
-        <source>General</source>
-        <translation>Üldine</translation>
+        <source>Debug window</source>
+        <translation>Debugimise aken</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>Kasutan OpenSSL versiooni</translation>
+        <source>General</source>
+        <translation>Üldine</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -872,10 +982,6 @@
     <message>
         <source>&amp;Console</source>
         <translation>&amp;Konsool</translation>
-    </message>
-    <message>
-        <source>Build date</source>
-        <translation>Valmistusaeg</translation>
     </message>
     <message>
         <source>Debug log file</source>
@@ -948,6 +1054,10 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;Kopeeri Aadress</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation>Aadress</translation>
     </message>
@@ -987,10 +1097,6 @@
         <translation>Sõnum</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>Kogus</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(silti pole)</translation>
     </message>
@@ -998,16 +1104,19 @@
         <source>(no message)</source>
         <translation>(sõnum puudub)</translation>
     </message>
-    <message>
-        <source>(no amount)</source>
-        <translation>(summa puudub)</translation>
-    </message>
-</context>
+    </context>
+<context>
+    <name>ResellOfferDialog</name>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
         <translation>Müntide saatmine</translation>
+    </message>
+    <message>
+        <source>Insufficient funds!</source>
+        <translation>Liiga suur summa</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -1020,6 +1129,10 @@
     <message>
         <source>Fee:</source>
         <translation>Tasu:</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>Tehingu tasu:</translation>
     </message>
     <message>
         <source>Choose...</source>
@@ -1066,10 +1179,6 @@
         <translation>S&amp;aada</translation>
     </message>
     <message>
-        <source>Confirm send coins</source>
-        <translation>Müntide saatmise kinnitamine</translation>
-    </message>
-    <message>
         <source>Copy amount</source>
         <translation>Kopeeri summa</translation>
     </message>
@@ -1080,6 +1189,10 @@
     <message>
         <source>or</source>
         <translation>või</translation>
+    </message>
+    <message>
+        <source>Confirm send coins</source>
+        <translation>Müntide saatmise kinnitamine</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
@@ -1097,7 +1210,7 @@
         <source>(no label)</source>
         <translation>(silti pole)</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -1107,10 +1220,6 @@
     <message>
         <source>Pay &amp;To:</source>
         <translation>Maksa &amp;:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Aadressiraamatusse sisestamiseks märgista aadress</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -1132,9 +1241,27 @@
         <source>Message:</source>
         <translation>Sõnum:</translation>
     </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>Maksa :</translation>
+    </message>
+    <message>
+        <source>Enter a label for this address to add it to your address book</source>
+        <translation>Aadressiraamatusse sisestamiseks märgista aadress</translation>
+    </message>
+</context>
+<context>
+    <name>SendConfirmationDialog</name>
     </context>
 <context>
     <name>ShutdownWindow</name>
+    </context>
+<context>
+    <name>SignRawTxDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Üldine</translation>
+    </message>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
@@ -1258,16 +1385,225 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoini tuumik</translation>
-    </message>
-    <message>
-        <source>The Syscoin Core developers</source>
-        <translation>Syscoini Tuuma arendajad</translation>
-    </message>
-    <message>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
+    </message>
+</context>
+<context>
+    <name>SyscoinGUI</name>
+    <message>
+        <source>Sign &amp;message...</source>
+        <translation>Signeeri &amp;sõnum</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network...</source>
+        <translation>Võrgusünkimine...</translation>
+    </message>
+    <message>
+        <source>Show general overview of wallet</source>
+        <translation>Kuva rahakoti üld-ülevaade</translation>
+    </message>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation>&amp;Tehingud</translation>
+    </message>
+    <message>
+        <source>Browse transaction history</source>
+        <translation>Sirvi tehingute ajalugu</translation>
+    </message>
+    <message>
+        <source>E&amp;xit</source>
+        <translation>V&amp;älju</translation>
+    </message>
+    <message>
+        <source>Quit application</source>
+        <translation>Väljumine</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation>Teave &amp;Qt kohta</translation>
+    </message>
+    <message>
+        <source>Show information about Qt</source>
+        <translation>Kuva Qt kohta käiv info</translation>
+    </message>
+    <message>
+        <source>&amp;Options...</source>
+        <translation>&amp;Valikud...</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>&amp;Krüpteeri Rahakott</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet...</source>
+        <translation>&amp;Varunda Rahakott</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>&amp;Salafraasi muutmine</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI...</source>
+        <translation>Ava &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk...</source>
+        <translation>Kettal olevate blokkide re-indekseerimine...</translation>
+    </message>
+    <message>
+        <source>Send coins to a Syscoin address</source>
+        <translation>Saada münte Syscoini aadressile</translation>
+    </message>
+    <message>
+        <source>Backup wallet to another location</source>
+        <translation>Varunda rahakott teise asukohta</translation>
+    </message>
+    <message>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>Rahakoti krüpteerimise salafraasi muutmine</translation>
+    </message>
+    <message>
+        <source>&amp;Debug window</source>
+        <translation>&amp;Debugimise aken</translation>
+    </message>
+    <message>
+        <source>Open debugging and diagnostic console</source>
+        <translation>Ava debugimise ja diagnostika konsool</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message...</source>
+        <translation>&amp;Kontrolli sõnumit...</translation>
+    </message>
+    <message>
+        <source>Syscoin</source>
+        <translation>Syscoin</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Rahakott</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;Näita / Peida</translation>
+    </message>
+    <message>
+        <source>Show or hide the main Window</source>
+        <translation>Näita või peida peaaken</translation>
+    </message>
+    <message>
+        <source>Encrypt the private keys that belong to your wallet</source>
+        <translation>Krüpteeri oma rahakoti privaatvõtmed</translation>
+    </message>
+    <message>
+        <source>Sign messages with your Syscoin addresses to prove you own them</source>
+        <translation>Omandi tõestamiseks allkirjasta sõnumid oma Syscoini aadressiga</translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
+        <translation>Kinnita sõnumid kindlustamaks et need allkirjastati määratud Syscoini aadressiga</translation>
+    </message>
+    <message>
+        <source>&amp;File</source>
+        <translation>&amp;Fail</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation>&amp;Seaded</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation>&amp;Abi</translation>
+    </message>
+    <message>
+        <source>Tabs toolbar</source>
+        <translation>Vahelehe tööriistariba</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>Käsurea valikud</translation>
+    </message>
+    <message>
+        <source>%1 behind</source>
+        <translation>%1 maas</translation>
+    </message>
+    <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation>Viimane saabunud blokk loodi %1 tagasi.</translation>
+    </message>
+    <message>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation>Peale seda ei ole tehingud veel nähtavad.</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Tõrge</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>Hoiatus</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>Informatsioon</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation>Ajakohane</translation>
+    </message>
+    <message>
+        <source>&amp;About Syscoin Core</source>
+        <translation>Kirjeldus Syscoini Tuumast</translation>
+    </message>
+    <message>
+        <source>Catching up...</source>
+        <translation>Jõuan...</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>Kuupäev: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>Summa: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>Tüüp: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>&amp;Märgis: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>Aadress: %1
+</translation>
+    </message>
+    <message>
+        <source>Sent transaction</source>
+        <translation>Saadetud tehing</translation>
+    </message>
+    <message>
+        <source>Incoming transaction</source>
+        <translation>Sisenev tehing</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <translation>Rahakott on &lt;b&gt;krüpteeritud&lt;/b&gt; ning hetkel &lt;b&gt;avatud&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation>Rahakott on &lt;b&gt;krüpteeritud&lt;/b&gt; ning hetkel &lt;b&gt;suletud&lt;/b&gt;</translation>
     </message>
 </context>
 <context>
@@ -1284,6 +1620,10 @@
         <translation>Avatud kuni %1</translation>
     </message>
     <message>
+        <source>%1/offline</source>
+        <translation>%1/offline'is</translation>
+    </message>
+    <message>
         <source>%1/unconfirmed</source>
         <translation>%1/kinnitamata</translation>
     </message>
@@ -1294,6 +1634,10 @@
     <message>
         <source>Status</source>
         <translation>Staatus</translation>
+    </message>
+    <message>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>, veel esitlemata</translation>
     </message>
     <message>
         <source>Date</source>
@@ -1310,6 +1654,10 @@
     <message>
         <source>From</source>
         <translation>Saatja</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>tundmatu</translation>
     </message>
     <message>
         <source>To</source>
@@ -1379,14 +1727,6 @@
         <source>false</source>
         <translation>vale</translation>
     </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, veel esitlemata</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>tundmatu</translation>
-    </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -1398,7 +1738,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Paan kuvab tehingu detailid</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -1408,6 +1748,10 @@
     <message>
         <source>Type</source>
         <translation>Tüüp</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Silt</translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -1424,10 +1768,6 @@
     <message>
         <source>Generated but not accepted</source>
         <translation>Loodud, kuid aktsepteerimata</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Silt</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -1452,6 +1792,10 @@
     <message>
         <source>(n/a)</source>
         <translation>(n/a)</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(silti pole)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
@@ -1553,10 +1897,6 @@
         <translation>Kuva tehingu detailid</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>Eksportimine Ebaõnnestus</translation>
-    </message>
-    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Komaeraldatud fail (*.csv)</translation>
     </message>
@@ -1585,6 +1925,10 @@
         <translation>ID</translation>
     </message>
     <message>
+        <source>Exporting Failed</source>
+        <translation>Eksportimine Ebaõnnestus</translation>
+    </message>
+    <message>
         <source>Range:</source>
         <translation>Ulatus:</translation>
     </message>
@@ -1605,13 +1949,9 @@
         <source>Send Coins</source>
         <translation>Müntide saatmine</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;Ekspordi</translation>
-    </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Ekspordi kuvatava vahelehe sisu faili</translation>
@@ -1632,7 +1972,7 @@
         <source>Backup Successful</source>
         <translation>Varundamine õnnestus</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>syscoin-core</name>
     <message>
@@ -1664,6 +2004,10 @@
         <translation>Luba välisühendusi (vaikeväärtus: 1 kui puudub -proxy või -connect)</translation>
     </message>
     <message>
+        <source>Syscoin Core</source>
+        <translation>Syscoini tuumik</translation>
+    </message>
+    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Määratud aadressiga sidumine ning sellelt kuulamine. IPv6 jaoks kasuta vormingut [host]:port</translation>
     </message>
@@ -1674,10 +2018,6 @@
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>See on test-versioon - kasutamine omal riisikol - ära kasuta mining'uks ega kaupmeeste programmides</translation>
-    </message>
-    <message>
-        <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Hoiatus: toimus wallet.dat faili andmete päästmine! Originaal wallet.dat nimetati kaustas %s ümber wallet.{ajatempel}.bak'iks, jäägi või tehingute ebakõlade puhul tuleks teha backup'ist taastamine.</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -1732,6 +2072,10 @@
         <translation>Rahakoti valikud:</translation>
     </message>
     <message>
+        <source>(default: %u)</source>
+        <translation>(vaikimisi: %u)</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Informatsioon</translation>
     </message>
@@ -1772,20 +2116,12 @@
         <translation>Hoiatus</translation>
     </message>
     <message>
-        <source>wallet.dat corrupt, salvage failed</source>
-        <translation>wallet.dat fail on katki, päästmine ebaõnnestus</translation>
-    </message>
-    <message>
         <source>Password for JSON-RPC connections</source>
         <translation>JSON-RPC ühenduste salasõna</translation>
     </message>
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Käivita käsklus, kui parim plokk muutub (käskluse %s asendatakse ploki hash'iga)</translation>
-    </message>
-    <message>
-        <source>This help message</source>
-        <translation>Käesolev abitekst</translation>
     </message>
     <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
@@ -1796,16 +2132,8 @@
         <translation>Aadresside laadimine...</translation>
     </message>
     <message>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Viga wallet.dat käivitamisel. Vigane rahakkott</translation>
-    </message>
-    <message>
         <source>(default: %s)</source>
         <translation>(vaikimisi: %s)</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat</source>
-        <translation>Viga wallet.dat käivitamisel</translation>
     </message>
     <message>
         <source>Invalid -proxy address: '%s'</source>
@@ -1814,18 +2142,6 @@
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation>Kirjeldatud tundmatu võrgustik -onlynet'is: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -bind address: '%s'</source>
-        <translation>Tundmatu -bind aadress: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -externalip address: '%s'</source>
-        <translation>Tundmatu -externalip aadress: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>-paytxfee=&lt;amount&gt; jaoks vigane kogus: '%s'</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

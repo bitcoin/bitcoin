@@ -1,5 +1,5 @@
-#!/usr/bin/env python2
-# Copyright (c) 2014 The Syscoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2014-2016 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,13 +8,14 @@
 #
 
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.authproxy import AuthServiceProxy, JSONRPCException
-from decimal import Decimal
 from test_framework.util import *
-import os
-import shutil
 
 class TxnMallTest(SyscoinTestFramework):
+
+    def __init__(self):
+        super().__init__()
+        self.num_nodes = 4
+        self.setup_clean_chain = False
 
     def add_options(self, parser):
         parser.add_option("--mineblock", dest="mine_block", default=False, action="store_true",
@@ -57,16 +58,10 @@ class TxnMallTest(SyscoinTestFramework):
         clone_inputs = [{"txid":rawtx1["vin"][0]["txid"],"vout":rawtx1["vin"][0]["vout"]}]
         clone_outputs = {rawtx1["vout"][0]["scriptPubKey"]["addresses"][0]:rawtx1["vout"][0]["value"],
                          rawtx1["vout"][1]["scriptPubKey"]["addresses"][0]:rawtx1["vout"][1]["value"]}
-        clone_raw = self.nodes[0].createrawtransaction(clone_inputs, clone_outputs)
+        clone_locktime = rawtx1["locktime"]
+        clone_raw = self.nodes[0].createrawtransaction(clone_inputs, clone_outputs, clone_locktime)
 
-        # 3 hex manipulations on the clone are required
-
-        # manipulation 1. sequence is at version+#inputs+input+sigstub
-        posseq = 2*(4+1+36+1)
-        seqbe = '%08x' % rawtx1["vin"][0]["sequence"]
-        clone_raw = clone_raw[:posseq] + seqbe[6:8] + seqbe[4:6] + seqbe[2:4] + seqbe[0:2] + clone_raw[posseq + 8:]
-
-        # manipulation 2. createrawtransaction randomizes the order of its outputs, so swap them if necessary.
+        # createrawtransaction randomizes the order of its outputs, so swap them if necessary.
         # output 0 is at version+#inputs+input+sigstub+sequence+#outputs
         # 40 SYS serialized is 00286bee00000000
         pos0 = 2*(4+1+36+1+4+1)
@@ -77,11 +72,6 @@ class TxnMallTest(SyscoinTestFramework):
             output0 = clone_raw[pos0 : pos0 + output_len]
             output1 = clone_raw[pos0 + output_len : pos0 + 2 * output_len]
             clone_raw = clone_raw[:pos0] + output1 + output0 + clone_raw[pos0 + 2 * output_len:]
-
-        # manipulation 3. locktime is after outputs
-        poslt = pos0 + 2 * output_len
-        ltbe = '%08x' % rawtx1["locktime"]
-        clone_raw = clone_raw[:poslt] + ltbe[6:8] + ltbe[4:6] + ltbe[2:4] + ltbe[0:2] + clone_raw[poslt + 8:]
 
         # Use a different signature hash type to sign.  This creates an equivalent but malleated clone.
         # Don't send the clone anywhere yet

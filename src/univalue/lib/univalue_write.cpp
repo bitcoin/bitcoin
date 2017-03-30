@@ -8,8 +8,6 @@
 #include "univalue.h"
 #include "univalue_escapes.h"
 
-// TODO: Using UTF8
-
 using namespace std;
 
 static string json_escape(const string& inS)
@@ -23,15 +21,8 @@ static string json_escape(const string& inS)
 
         if (escStr)
             outS += escStr;
-
-        else if (ch < 0x80)
+        else
             outS += ch;
-
-        else { // TODO handle UTF-8 properly
-            char tmpesc[16];
-            sprintf(tmpesc, "\\u%04x", ch);
-            outS += tmpesc;
-        }
     }
 
     return outS;

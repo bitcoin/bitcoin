@@ -1,11 +1,11 @@
 <!DOCTYPE RCC><RCC version="1.0">
     <qresource prefix="/translations">
+        <file alias="af">locale/syscoin_af.qm</file>
         <file alias="af_ZA">locale/syscoin_af_ZA.qm</file>
         <file alias="ar">locale/syscoin_ar.qm</file>
         <file alias="be_BY">locale/syscoin_be_BY.qm</file>
         <file alias="bg_BG">locale/syscoin_bg_BG.qm</file>
         <file alias="bg">locale/syscoin_bg.qm</file>
-        <file alias="bs">locale/syscoin_bs.qm</file>
         <file alias="ca_ES">locale/syscoin_ca_ES.qm</file>
         <file alias="ca">locale/syscoin_ca.qm</file>
         <file alias="ca@valencia">locale/syscoin_ca@valencia.qm</file>
@@ -19,7 +19,9 @@
         <file alias="en_GB">locale/syscoin_en_GB.qm</file>
         <file alias="en">locale/syscoin_en.qm</file>
         <file alias="eo">locale/syscoin_eo.qm</file>
+        <file alias="es_AR">locale/syscoin_es_AR.qm</file>
         <file alias="es_CL">locale/syscoin_es_CL.qm</file>
+        <file alias="es_CO">locale/syscoin_es_CO.qm</file>
         <file alias="es_DO">locale/syscoin_es_DO.qm</file>
         <file alias="es_ES">locale/syscoin_es_ES.qm</file>
         <file alias="es_MX">locale/syscoin_es_MX.qm</file>
@@ -40,11 +42,13 @@
         <file alias="hr">locale/syscoin_hr.qm</file>
         <file alias="hu">locale/syscoin_hu.qm</file>
         <file alias="id_ID">locale/syscoin_id_ID.qm</file>
+        <file alias="it_IT">locale/syscoin_it_IT.qm</file>
         <file alias="it">locale/syscoin_it.qm</file>
         <file alias="ja">locale/syscoin_ja.qm</file>
         <file alias="ka">locale/syscoin_ka.qm</file>
         <file alias="kk_KZ">locale/syscoin_kk_KZ.qm</file>
         <file alias="ko_KR">locale/syscoin_ko_KR.qm</file>
+        <file alias="ku_IQ">locale/syscoin_ku_IQ.qm</file>
         <file alias="ky">locale/syscoin_ky.qm</file>
         <file alias="la">locale/syscoin_la.qm</file>
         <file alias="lt">locale/syscoin_lt.qm</file>
@@ -59,13 +63,16 @@
         <file alias="pt_BR">locale/syscoin_pt_BR.qm</file>
         <file alias="pt_PT">locale/syscoin_pt_PT.qm</file>
         <file alias="ro_RO">locale/syscoin_ro_RO.qm</file>
+        <file alias="ro">locale/syscoin_ro.qm</file>
         <file alias="ru_RU">locale/syscoin_ru_RU.qm</file>
         <file alias="ru">locale/syscoin_ru.qm</file>
         <file alias="sk">locale/syscoin_sk.qm</file>
         <file alias="sl_SI">locale/syscoin_sl_SI.qm</file>
         <file alias="sq">locale/syscoin_sq.qm</file>
+        <file alias="sr@latin">locale/syscoin_sr@latin.qm</file>
         <file alias="sr">locale/syscoin_sr.qm</file>
         <file alias="sv">locale/syscoin_sv.qm</file>
+        <file alias="ta">locale/syscoin_ta.qm</file>
         <file alias="th_TH">locale/syscoin_th_TH.qm</file>
         <file alias="tr_TR">locale/syscoin_tr_TR.qm</file>
         <file alias="tr">locale/syscoin_tr.qm</file>
@@ -75,6 +82,7 @@
         <file alias="vi">locale/syscoin_vi.qm</file>
         <file alias="vi_VN">locale/syscoin_vi_VN.qm</file>
         <file alias="zh_CN">locale/syscoin_zh_CN.qm</file>
+        <file alias="zh_HK">locale/syscoin_zh_HK.qm</file>
         <file alias="zh">locale/syscoin_zh.qm</file>
         <file alias="zh_TW">locale/syscoin_zh_TW.qm</file>
     </qresource>
