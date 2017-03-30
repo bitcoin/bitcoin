@@ -6039,6 +6039,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
         // Check that that there is at least one txn in the xthin and that the first txn is the coinbase
         if(!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
         {
+            LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 100);
             return false;
         }
@@ -6073,6 +6074,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
         // Check that that there is at least one txn in the thinblock and that the first txn is the coinbase
         if(!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
         {
+            LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 100);
             return false;
         }
@@ -6092,6 +6094,15 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
     {
         CXRequestThinBlockTx thinRequestBlockTx;
         vRecv >> thinRequestBlockTx;
+
+        // Message consistency checking
+        if (thinRequestBlockTx.setCheapHashesToRequest.empty() || thinRequestBlockTx.blockhash.IsNull())
+        {
+            LogPrintf("ERROR: incorrectly constructed get_xblocktx received.  Banning peer=%d\n", pfrom->id);
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return false;
+        }
 
         // We use MSG_TX here even though we refer to blockhash because we need to track
         // how many xblocktx requests we make in case of DOS
@@ -6152,6 +6163,15 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
     {
         CXThinBlockTx thinBlockTx;
         vRecv >> thinBlockTx;
+
+        // Message consistency checking
+        if (thinBlockTx.vMissingTx.empty() || thinBlockTx.blockhash.IsNull())
+        {
+            LogPrintf("ERROR: incorrectly constructed xblocktx received.  Banning peer=%d\n", pfrom->id);
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return false;
+        }
 
         CInv inv(MSG_XTHINBLOCK, thinBlockTx.blockhash);
         LogPrint("net", "received blocktxs for %s peer=%d\n", inv.hash.ToString(), pfrom->id);
