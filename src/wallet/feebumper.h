@@ -28,9 +28,19 @@ public:
     const std::vector<std::string>& getErrors() const { return vErrors; }
     CAmount getOldFee() const { return nOldFee; }
     CAmount getNewFee() const { return nNewFee; }
-    CMutableTransaction* getBumpedTxRef() { return &mtx; }
     uint256 getBumpedTxId() const { return bumpedTxid; }
 
+    /* signs the new transaction,
+     * returns false if the tx couldn't be found or if it was
+     * improssible to create the signature(s)
+     */
+    bool signTransaction(CWallet *pWallet);
+
+    /* commits the fee bump,
+     * returns true, in case of CWallet::CommitTransaction was successful
+     * but, eventually sets vErrors if the tx could not be added to the mempool (will try later)
+     * or if the old transaction could not be marked as replaced
+     */
     bool commit(CWallet *pWalletNonConst);
 
 private:
