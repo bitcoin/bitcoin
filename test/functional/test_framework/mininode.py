@@ -1590,34 +1590,25 @@ class NodeConnCB(object):
 
     # Message receiving helper methods
 
-    def sync(self, test_function, timeout=60):
-        while timeout > 0:
-            with mininode_lock:
-                if test_function():
-                    return
-            time.sleep(0.05)
-            timeout -= 0.05
-        raise AssertionError("Sync failed to complete")
-
     def wait_for_block(self, blockhash, timeout=60):
         test_function = lambda: self.last_message.get("block") and self.last_message["block"].block.rehash() == blockhash
-        self.sync(test_function, timeout)
+        assert wait_until(test_function, timeout=timeout)
 
     def wait_for_getdata(self, timeout=60):
         test_function = lambda: self.last_message.get("getdata")
-        self.sync(test_function, timeout)
+        assert wait_until(test_function, timeout=timeout)
 
     def wait_for_getheaders(self, timeout=60):
         test_function = lambda: self.last_message.get("getheaders")
-        self.sync(test_function, timeout)
+        assert wait_until(test_function, timeout=timeout)
 
     def wait_for_inv(self, expected_inv, timeout=60):
         test_function = lambda: self.last_message.get("inv") and self.last_message["inv"] != expected_inv
-        self.sync(test_function, timeout)
+        assert wait_until(test_function, timeout=timeout)
 
     def wait_for_verack(self, timeout=60):
         test_function = lambda: self.message_count["verack"]
-        self.sync(test_function, timeout)
+        assert wait_until(test_function, timeout=timeout)
 
     # Message sending helper functions
 
@@ -1635,12 +1626,9 @@ class NodeConnCB(object):
     def sync_with_ping(self, timeout=60):
         self.send_message(msg_ping(nonce=self.ping_counter))
         test_function = lambda: self.last_message.get("pong") and self.last_message["pong"].nonce == self.ping_counter
-        success = wait_until(test_function, timeout = timeout)
-        if not success:
-            logger.error("sync_with_ping failed!")
-            raise AssertionError("sync_with_ping failed!")
+        assert wait_until(test_function, timeout=timeout)
         self.ping_counter += 1
-        return success
+        return True
 
 # The actual NodeConn class
 # This class provides an interface for a p2p connection to a specified node
