@@ -85,6 +85,10 @@ private:
 
     bool IsInstantSendReadyToLock(const uint256 &txHash);
 
+    /* Used by TransactionAddedToMemorypool/BlockConnected/Disconnected */
+    void SyncTransaction(const CTransactionRef& ptx, const CBlockIndex *pindex, int posInBlock);
+
+
 public:
     CCriticalSection cs_instantsend;
 
@@ -119,7 +123,7 @@ public:
     void Relay(const uint256& txHash, CConnman& connman);
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
-    void SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock);
+    void TransactionAddedToMempool(const CTransactionRef& tx) override;
 
     std::string ToString();
 };
@@ -135,9 +139,9 @@ public:
     CTransactionRef tx;
 
     CTxLockRequest() : tx(MakeTransactionRef()) {}
-    CTxLockRequest(const CTransaction& _tx) : tx(MakeTransactionRef(_tx)) {};
+    CTxLockRequest(const CTransaction& _tx) : tx(MakeTransactionRef(_tx)) {}
 
-    ADD_SERIALIZE_METHODS;
+    ADD_SERIALIZE_METHODS
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {

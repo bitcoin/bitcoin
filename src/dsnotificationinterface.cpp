@@ -50,8 +50,8 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     governance.UpdatedBlockTip(pindexNew, connman);
 }
 
-void CDSNotificationInterface::SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock)
+void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef &tx)
 {
-    instantsend.SyncTransaction(tx, pindex, posInBlock);
-    CPrivateSend::SyncTransaction(tx, pindex, posInBlock);
+    instantsend.TransactionAddedToMempool(tx);
+    CPrivateSend::TransactionAddedToMempool(tx);
 }

@@ -440,11 +440,11 @@ void CPrivateSend::UpdatedBlockTip(const CBlockIndex *pindex)
     }
 }
 
-void CPrivateSend::SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock)
+void CPrivateSend::SyncTransaction(const CTransactionRef& ptx, const CBlockIndex *pindex, int posInBlock)
 {
-    if (tx.IsCoinBase()) return;
+    const CTransaction& tx = *ptx;
 
-    LOCK2(cs_main, cs_mapdstx);
+    if (tx.IsCoinBase()) return;
 
     uint256 txHash = tx.GetHash();
     if (!mapDSTX.count(txHash)) return;
@@ -452,6 +452,13 @@ void CPrivateSend::SyncTransaction(const CTransaction& tx, const CBlockIndex *pi
     // When tx is 0-confirmed or conflicted, posInBlock is SYNC_TRANSACTION_NOT_IN_BLOCK and nConfirmedHeight should be set to -1
     mapDSTX[txHash].SetConfirmedHeight(posInBlock == CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK ? -1 : pindex->nHeight);
     LogPrint(BCLog::PRIVSEND, "CPrivateSendClient::SyncTransaction -- txid=%s\n", txHash.ToString());
+}
+
+void CPrivateSend::TransactionAddedToMempool(const CTransactionRef& ptx) {
+
+    LOCK2(cs_main, cs_wallet);
+    SyncTransaction(ptx, nullptr, -1);
+
 }
 
 //TODO: Rename/move to core

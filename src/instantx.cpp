@@ -853,14 +853,14 @@ void CInstantSend::UpdatedBlockTip(const CBlockIndex *pindex)
     nCachedBlockHeight = pindex->nHeight;
 }
 
-void CInstantSend::SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock)
+void CInstantSend::SyncTransaction(const CTransactionRef& ptx, const CBlockIndex *pindex, int posInBlock)
 {
     // Update lock candidates and votes if corresponding tx confirmed
     // or went from confirmed to 0-confirmed or conflicted.
 
-    if (tx.IsCoinBase()) return;
+    const CTransaction& tx = *ptx;
 
-    LOCK2(cs_main, cs_instantsend);
+    if (tx.IsCoinBase()) return;
 
     uint256 txHash = tx.GetHash();
 
@@ -912,6 +912,13 @@ std::string CInstantSend::ToString()
 {
     LOCK(cs_instantsend);
     return strprintf("Lock Candidates: %llu, Votes %llu", mapTxLockCandidates.size(), mapTxLockVotes.size());
+}
+
+void CInstantSend::TransactionAddedToMempool(const CTransactionRef& ptx) {
+
+    LOCK2(cs_main, cs_wallet);
+    SyncTransaction(ptx, nullptr, -1);
+
 }
 
 //

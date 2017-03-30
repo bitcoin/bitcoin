@@ -354,6 +354,10 @@ private:
 
     static void CheckDSTXes(int nHeight);
 
+    /* Used by TransactionAddedToMemorypool/BlockConnected/Disconnected */
+    static void SyncTransaction(const CTransactionRef& ptx, const CBlockIndex *pindex, int posInBlock);
+
+
 public:
     static void InitStandardDenominations();
     static std::vector<CAmount> GetStandardDenominations() { return vecStandardDenominations; }
@@ -387,7 +391,7 @@ public:
     static CDarksendBroadcastTx GetDSTX(const uint256& hash);
 
     static void UpdatedBlockTip(const CBlockIndex *pindex);
-    static void SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock);
+    static void TransactionAddedToMempool(const CTransactionRef& tx) override;
 };
 
 void ThreadCheckPrivateSend(CConnman& connman);
