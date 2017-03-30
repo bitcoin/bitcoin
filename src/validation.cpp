@@ -949,7 +949,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         }
     }
 
-    GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
+    GetMainSignals().TransactionAddedToMempool(ptx);
 
     return true;
 }
@@ -2120,7 +2120,8 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
     CBlockIndex *pindexDelete = chainActive.Tip();
     assert(pindexDelete);
     // Read block from disk.
-    CBlock block;
+    std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
+    CBlock& block = *pblock;
     if (!ReadBlockFromDisk(block, pindexDelete, chainparams.GetConsensus()))
         return AbortNode(state, "Failed to read block");
     // Apply the block atomically to the chain state.
@@ -2162,9 +2163,7 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
     UpdateTip(pindexDelete->pprev, chainparams);
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
-    for (const auto& tx : block.vtx) {
-        GetMainSignals().SyncTransaction(*tx, pindexDelete->pprev, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
-    }
+    GetMainSignals().BlockDisconnected(pblock);
     return true;
 }
 
@@ -2511,29 +2510,9 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
             pindexFork = chainActive.FindFork(pindexOldTip);
             fInitialDownload = IsInitialBlockDownload();
 
-            // TODO: Temporarily ensure that mempool removals are notified before
-            // connected transactions.  This shouldn't matter, but the abandoned
-            // state of transactions in our wallet is currently cleared when we
-            // receive another notification and there is a race condition where
-            // notification of a connected conflict might cause an outside process
-            // to abandon a transaction and then have it inadvertently cleared by
-            // the notification that the conflicted transaction was evicted.
-
-            // throw all transactions though the signal-interface
-            auto blocksConnected = connectTrace.GetBlocksConnected();
-            for (const PerBlockConnectTrace& trace : blocksConnected) {
-                assert(trace.conflictedTxs);
-                for (const auto& tx : *trace.conflictedTxs) {
-                    GetMainSignals().SyncTransaction(*tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
-                }
-            }
-
-            // Transactions in the connected block are notified
-            for (const PerBlockConnectTrace& trace : blocksConnected) {
+            for (const PerBlockConnectTrace& trace : connectTrace.GetBlocksConnected()) {
                 assert(trace.pblock && trace.pindex);
-                const CBlock& block = *(trace.pblock);
-                for (unsigned int i = 0; i < block.vtx.size(); i++)
-                    GetMainSignals().SyncTransaction(*block.vtx[i], trace.pindex, i);
+                GetMainSignals().BlockConnected(trace.pblock, trace.pindex, *trace.conflictedTxs);
             }
         }
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
