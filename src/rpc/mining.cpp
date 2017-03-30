@@ -635,7 +635,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
                 if (setClientRules.find(vbinfo.name) == setClientRules.end()) {
                     if (!vbinfo.gbt_force) {
                         // If the client doesn't support this, don't indicate it in the [default] version
-						pblock->nVersion |= VersionBitsMask(consensusParams, pos);
+						pblock->nVersion &= ~VersionBitsMask(consensusParams, pos);
                     }
                 }
                 break;
