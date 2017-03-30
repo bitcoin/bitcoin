@@ -19,10 +19,10 @@ banscore = 10
 
 class CLazyNode(NodeConnCB):
     def __init__(self):
+        super().__init__()
         self.connection = None
         self.unexpected_msg = False
         self.connected = False
-        super().__init__()
 
     def add_connection(self, conn):
         self.connection = conn
