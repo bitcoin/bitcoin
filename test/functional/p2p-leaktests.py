@@ -20,16 +20,8 @@ banscore = 10
 class CLazyNode(NodeConnCB):
     def __init__(self):
         super().__init__()
-        self.connection = None
         self.unexpected_msg = False
-        self.connected = False
         self.ever_connected = False
-
-    def add_connection(self, conn):
-        self.connection = conn
-
-    def send_message(self, message):
-        self.connection.send_message(message)
 
     def bad_message(self, message):
         self.unexpected_msg = True
@@ -65,9 +57,6 @@ class CLazyNode(NodeConnCB):
 # Node that never sends a version. We'll use this to send a bunch of messages
 # anyway, and eventually get disconnected.
 class CNodeNoVersionBan(CLazyNode):
-    def __init__(self):
-        super().__init__()
-
     # send a bunch of veracks without sending a message. This should get us disconnected.
     # NOTE: implementation-specific check here. Remove if bitcoind ban behavior changes
     def on_open(self, conn):

@@ -192,7 +192,7 @@ class TestManager(object):
         return wait_until(disconnected, timeout=10)
 
     def wait_for_verack(self):
-        [node.wait_for_verack() for node in self.test_nodes]
+        return all(node.wait_for_verack() for node in self.test_nodes)
 
     def wait_for_pings(self, counter):
         def received_pongs():
