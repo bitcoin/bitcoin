@@ -17,7 +17,6 @@ from test_framework.util import *
 MAX_REQUESTS = 128
 
 class TestManager(NodeConnCB):
-    # set up NodeConnCB callbacks, overriding base class
     def on_getdata(self, conn, message):
         self.log.debug("got getdata %s" % repr(message))
         # Log the requests
@@ -30,11 +29,8 @@ class TestManager(NodeConnCB):
         if not self.disconnectOkay:
             raise EarlyDisconnectError(0)
 
-    def __init__(self):
-        NodeConnCB.__init__(self)
-
     def add_new_connection(self, connection):
-        self.connection = connection
+        super().add_connection(connection)
         self.blockReqCounts = {}
         self.disconnectOkay = False
 
