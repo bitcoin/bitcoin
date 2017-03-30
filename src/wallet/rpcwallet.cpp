@@ -2895,7 +2895,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
     }
 
     // sign bumped transaction
-    if (!pwallet->SignTransaction(*feeBump.getBumpedTxRef())) {
+    if (!feeBump.signTransaction(pwallet)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Can't sign transaction.");
     }
     // commit the bumped transaction
