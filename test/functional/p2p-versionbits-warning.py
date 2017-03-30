@@ -28,7 +28,7 @@ VB_PATTERN = re.compile("^Warning.*versionbit")
 # p2p messages to a node, generating the messages in the main testing logic.
 class TestNode(NodeConnCB):
     def __init__(self):
-        NodeConnCB.__init__(self)
+        super().__init__()
         self.connection = None
         self.ping_counter = 1
         self.last_pong = msg_pong()

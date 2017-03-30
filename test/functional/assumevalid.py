@@ -40,17 +40,14 @@ from test_framework.mininode import (CBlockHeader,
                                      CTxOut,
                                      NetworkThread,
                                      NodeConn,
-                                     SingleNodeConnCB,
+                                     NodeConnCB,
                                      msg_block,
                                      msg_headers)
 from test_framework.script import (CScript, OP_TRUE)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (start_node, p2p_port, assert_equal)
 
-class BaseNode(SingleNodeConnCB):
-    def __init__(self):
-        super().__init__()
-
+class BaseNode(NodeConnCB):
     def send_header_for_blocks(self, new_blocks):
         headers_message = msg_headers()
         headers_message.headers = [CBlockHeader(b) for b in new_blocks]

@@ -15,9 +15,9 @@ from test_framework.blocktools import create_block, create_coinbase, add_witness
 from test_framework.script import CScript, OP_TRUE
 
 # TestNode: A peer we use to send messages to bitcoind, and store responses.
-class TestNode(SingleNodeConnCB):
+class TestNode(NodeConnCB):
     def __init__(self):
-        SingleNodeConnCB.__init__(self)
+        super().__init__()
         self.last_sendcmpct = []
         self.last_headers = None
         self.last_inv = None
