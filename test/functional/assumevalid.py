@@ -190,7 +190,8 @@ class AssumeValidTest(BitcoinTestFramework):
         # Send all blocks to node1. All blocks will be accepted.
         for i in range(2202):
             node1.send_message(msg_block(self.blocks[i]))
-        node1.sync_with_ping()  # make sure the most recent block is synced
+        # Syncing 2200 blocks can take a while on slow systems. Give it plenty of time to sync.
+        node1.sync_with_ping(120)
         assert_equal(self.nodes[1].getblock(self.nodes[1].getbestblockhash())['height'], 2202)
 
         # Send blocks to node2. Block 102 will be rejected.
