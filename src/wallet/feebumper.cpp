@@ -42,7 +42,7 @@ int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *pWal
 
 CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConfirmTarget, bool specifiedConfirmTarget, CAmount totalFee, bool newTxReplaceable)
     :
-    txid(txidIn),
+    txid(std::move(txidIn)),
     nOldFee(0),
     nNewFee(0)
 {
@@ -227,6 +227,11 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConf
     }
 
     currentResult = BumpFeeResult::OK;
+}
+
+bool CFeeBumper::signTransaction(CWallet *pWallet)
+{
+     return pWallet->SignTransaction(mtx);
 }
 
 bool CFeeBumper::commit(CWallet *pWallet)
