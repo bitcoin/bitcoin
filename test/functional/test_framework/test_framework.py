@@ -27,6 +27,7 @@ from .util import (
     PortSeed,
 )
 from .authproxy import JSONRPCException
+from .mininode import NetworkThread
 
 class BitcoinTestFramework(object):
 
@@ -148,6 +149,8 @@ class BitcoinTestFramework(object):
         try:
             self.setup_chain()
             self.setup_network()
+            self.network_thread = NetworkThread()
+            self.network_thread.start()
             self.run_test()
             success = True
         except JSONRPCException as e:
@@ -160,6 +163,8 @@ class BitcoinTestFramework(object):
             self.log.exception("Unexpected exception caught during testing")
         except KeyboardInterrupt as e:
             self.log.warning("Exiting after keyboard interrupt")
+
+        self.network_thread.test_running = False
 
         if not self.options.noshutdown:
             self.log.info("Stopping nodes")

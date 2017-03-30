@@ -52,10 +52,6 @@ events of interest arrive.
 * You can pass the same handler to multiple ```NodeConn```'s if you like, or pass
 different ones to each -- whatever makes the most sense for your test.
 
-* Call ```NetworkThread.start()``` after all ```NodeConn``` objects are created to
-start the networking thread.  (Continue with the test logic in your existing
-thread.)
-
 * RPC calls are available in p2p tests.
 
 * Can be used to write free-form tests, where specific p2p-protocol behavior

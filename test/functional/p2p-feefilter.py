@@ -68,8 +68,6 @@ class FeeFilterTest(BitcoinTestFramework):
         test_node = TestNode()
         connection = NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_node)
         test_node.add_connection(connection)
-        NetworkThread().start()
-        test_node.wait_for_verack()
 
         # Test that invs are received for all txs at feerate of 20 sat/byte
         node1.settxfee(Decimal("0.00020000"))

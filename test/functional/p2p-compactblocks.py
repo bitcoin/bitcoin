@@ -857,11 +857,6 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.segwit_node.add_connection(connections[1])
         self.old_node.add_connection(connections[2])
 
-        NetworkThread().start()  # Start up network handling in another thread
-
-        # Test logic begins here
-        self.test_node.wait_for_verack()
-
         # We will need UTXOs to construct transactions in later tests.
         self.make_utxos()
 

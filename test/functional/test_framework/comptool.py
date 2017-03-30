@@ -62,6 +62,7 @@ class TestNode(NodeConnCB):
         self.closed = True
 
     def add_connection(self, conn):
+        super().add_connection(conn)
         self.conn = conn
 
     def on_headers(self, conn, message):
@@ -191,11 +192,6 @@ class TestManager(object):
             return all(node.closed for node in self.test_nodes)
         return wait_until(disconnected, timeout=10)
 
-    def wait_for_verack(self):
-        def veracked():
-            return all(node.verack_received for node in self.test_nodes)
-        return wait_until(veracked, timeout=10)
-
     def wait_for_pings(self, counter):
         def received_pongs():
             return all(node.received_ping_response(counter) for node in self.test_nodes)
@@ -296,9 +292,6 @@ class TestManager(object):
             return True
 
     def run(self):
-        # Wait until verack is received
-        self.wait_for_verack()
-
         test_number = 1
         for test_instance in self.test_generator.get_tests():
             # We use these variables to keep track of the last block

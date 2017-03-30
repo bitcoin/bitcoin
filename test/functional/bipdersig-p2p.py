@@ -18,7 +18,7 @@ Mine 1 old version block, see that the node rejects.
 
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import *
-from test_framework.mininode import CTransaction, NetworkThread
+from test_framework.mininode import CTransaction
 from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager
 from test_framework.script import CScript
@@ -56,7 +56,6 @@ class BIP66Test(ComparisonTestFramework):
     def run_test(self):
         test = TestManager(self, self.options.tmpdir)
         test.add_all_connections(self.nodes)
-        NetworkThread().start() # Start up network handling in another thread
         test.run()
 
     def create_transaction(self, node, coinbase, to_address, amount):

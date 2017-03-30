@@ -273,12 +273,6 @@ class SendHeadersTest(BitcoinTestFramework):
         inv_node.add_connection(connections[0])
         test_node.add_connection(connections[1])
 
-        NetworkThread().start() # Start up network handling in another thread
-
-        # Test logic begins here
-        inv_node.wait_for_verack()
-        test_node.wait_for_verack()
-
         tip = int(self.nodes[0].getbestblockhash(), 16)
 
         # PART 1

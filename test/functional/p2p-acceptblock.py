@@ -63,23 +63,9 @@ class TestNode(NodeConnCB):
         self.ping_counter = 1
         self.last_pong = msg_pong()
 
-    def add_connection(self, conn):
-        self.connection = conn
-
     # Track the last getdata message we receive (used in the test)
     def on_getdata(self, conn, message):
         self.last_getdata = message
-
-    # Spin until verack message is received from the node.
-    # We use this to signal that our test can begin. This
-    # is called from the testing thread, so it needs to acquire
-    # the global lock.
-    def wait_for_verack(self):
-        while True:
-            with mininode_lock:
-                if self.verack_received:
-                    return
-            time.sleep(0.05)
 
     # Wrapper for the NodeConn's send_message function
     def send_message(self, message):
@@ -120,12 +106,6 @@ class AcceptBlockTest(BitcoinTestFramework):
         connections.append(NodeConn('127.0.0.1', p2p_port(1), self.nodes[1], white_node))
         test_node.add_connection(connections[0])
         white_node.add_connection(connections[1])
-
-        NetworkThread().start() # Start up network handling in another thread
-
-        # Test logic begins here
-        test_node.wait_for_verack()
-        white_node.wait_for_verack()
 
         # 1. Have both nodes mine a block (leave IBD)
         [ n.generate(1) for n in self.nodes ]

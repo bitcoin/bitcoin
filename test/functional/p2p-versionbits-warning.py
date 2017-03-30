@@ -33,9 +33,6 @@ class TestNode(NodeConnCB):
         self.ping_counter = 1
         self.last_pong = msg_pong()
 
-    def add_connection(self, conn):
-        self.connection = conn
-
     def on_inv(self, conn, message):
         pass
 
@@ -89,11 +86,6 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         connections = []
         connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_node))
         test_node.add_connection(connections[0])
-
-        NetworkThread().start() # Start up network handling in another thread
-
-        # Test logic begins here
-        test_node.wait_for_verack()
 
         # 1. Have the node mine one period worth of blocks
         self.nodes[0].generate(VB_PERIOD)

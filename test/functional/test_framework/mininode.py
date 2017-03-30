@@ -1551,8 +1551,13 @@ class NodeConnCB(object):
     # Helper functions
     ##################
 
-    def add_connection(self, conn):
+    def add_connection(self, conn, wait_for_verack=True):
+        """Add a P2P connection to the node, wait for it to open and (optionally) wait for a verack."""
         self.connection = conn
+        while conn.state != "connected":
+            time.sleep(0.1)
+        if wait_for_verack:
+            self.wait_for_verack()
 
     # Wrapper for the NodeConn's send_message function
     def send_message(self, message):
@@ -1779,8 +1784,12 @@ class NodeConn(asyncore.dispatcher):
 
 
 class NetworkThread(Thread):
+    def __init__(self):
+        super().__init__()
+        self.test_running = True
+
     def run(self):
-        while mininode_socket_map:
+        while mininode_socket_map or self.test_running:
             # We check for whether to disconnect outside of the asyncore
             # loop to workaround the behavior of asyncore when using
             # select

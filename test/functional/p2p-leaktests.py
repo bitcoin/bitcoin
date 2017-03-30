@@ -24,9 +24,6 @@ class CLazyNode(NodeConnCB):
         self.unexpected_msg = False
         self.connected = False
 
-    def add_connection(self, conn):
-        self.connection = conn
-
     def send_message(self, message):
         self.connection.send_message(message)
 
@@ -115,11 +112,9 @@ class P2PLeakTest(BitcoinTestFramework):
         connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], no_version_bannode, send_version=False))
         connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], no_version_idlenode, send_version=False))
         connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], no_verack_idlenode))
-        no_version_bannode.add_connection(connections[0])
-        no_version_idlenode.add_connection(connections[1])
-        no_verack_idlenode.add_connection(connections[2])
-
-        NetworkThread().start()  # Start up network handling in another thread
+        no_version_bannode.add_connection(connections[0], wait_for_verack=False)
+        no_version_idlenode.add_connection(connections[1], wait_for_verack=False)
+        no_verack_idlenode.add_connection(connections[2], wait_for_verack=False)
 
         assert(wait_until(lambda: no_version_bannode.connected and no_version_idlenode.connected and no_verack_idlenode.version_received, timeout=10))
 
