@@ -1,5 +1,15 @@
 <TS language="kk_KZ" version="2.1">
 <context>
+    <name>AcceptandPayOfferListPage</name>
+    </context>
+<context>
+    <name>AcceptedOfferListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Үтірмен бөлінген файл (*.csv)</translation>
+    </message>
+    </context>
+<context>
     <name>AddressBookPage</name>
     <message>
         <source>Create a new address</source>
@@ -29,6 +39,14 @@
         <source>Comma separated file (*.csv)</source>
         <translation>Үтірмен бөлінген текст (*.csv)</translation>
     </message>
+    <message>
+        <source>Label</source>
+        <translation>таңба</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Адрес</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
@@ -45,6 +63,15 @@
         <translation>(таңбасыз)</translation>
     </message>
 </context>
+<context>
+    <name>AliasListPage</name>
+    </context>
+<context>
+    <name>AliasTableModel</name>
+    </context>
+<context>
+    <name>AliasView</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -88,104 +115,19 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>SyscoinGUI</name>
-    <message>
-        <source>&amp;Transactions</source>
-        <translation>&amp;Транзакциялар</translation>
-    </message>
-    <message>
-        <source>E&amp;xit</source>
-        <translation>Шығу</translation>
-    </message>
-    <message>
-        <source>&amp;Options...</source>
-        <translation>Параметрлері</translation>
-    </message>
-    <message>
-        <source>&amp;Backup Wallet...</source>
-        <translation>Әмиянды жасыру</translation>
-    </message>
-    <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>Құпия сөзді өзгерту</translation>
-    </message>
-    <message>
-        <source>Syscoin</source>
-        <translation>Биткоин</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Әмиян</translation>
-    </message>
-    <message>
-        <source>&amp;Send</source>
-        <translation>Жіберу</translation>
-    </message>
-    <message>
-        <source>&amp;Receive</source>
-        <translation>Алу</translation>
-    </message>
-    <message>
-        <source>&amp;File</source>
-        <translation>Файл</translation>
-    </message>
-    <message>
-        <source>&amp;Help</source>
-        <translation>Көмек</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n сағат</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n күн</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n апта</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 немесе %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n жыл</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 behind</source>
-        <translation>%1 қалмады</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>қате</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Ескерту</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Информация</translation>
-    </message>
-    <message>
-        <source>Up to date</source>
-        <translation>Жаңартылған</translation>
-    </message>
+    <name>CertListPage</name>
     </context>
 <context>
-    <name>ClientModel</name>
+    <name>CertTableModel</name>
+    </context>
+<context>
+    <name>CertView</name>
     </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
         <source>Amount:</source>
         <translation>Саны</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Басымдық</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -216,10 +158,6 @@
         <translation>Растық</translation>
     </message>
     <message>
-        <source>Priority</source>
-        <translation>Басымдық</translation>
-    </message>
-    <message>
         <source>no</source>
         <translation>жоқ</translation>
     </message>
@@ -231,15 +169,54 @@
 <context>
     <name>EditAddressDialog</name>
     <message>
+        <source>&amp;Label</source>
+        <translation>таңба</translation>
+    </message>
+    <message>
         <source>&amp;Address</source>
         <translation>Адрес</translation>
     </message>
+    </context>
+<context>
+    <name>EditAliasDialog</name>
+    </context>
+<context>
+    <name>EditCertDialog</name>
+    </context>
+<context>
+    <name>EditOfferDialog</name>
+    </context>
+<context>
+    <name>EditWhitelistOfferDialog</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Үтірмен бөлінген файл (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowInfoDialog</name>
+    </context>
+<context>
+    <name>EscrowListPage</name>
+    </context>
+<context>
+    <name>EscrowTableModel</name>
+    </context>
+<context>
+    <name>EscrowView</name>
     </context>
 <context>
     <name>FreespaceChecker</name>
     </context>
 <context>
     <name>HelpMessageDialog</name>
+    </context>
+<context>
+    <name>InMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Үтірмен бөлінген файл (*.csv)</translation>
+    </message>
     </context>
 <context>
     <name>Intro</name>
@@ -249,10 +226,129 @@
     </message>
     </context>
 <context>
+    <name>ManageEscrowDialog</name>
+    </context>
+<context>
+    <name>MessageInfoDialog</name>
+    </context>
+<context>
+    <name>MessageListPage</name>
+    </context>
+<context>
+    <name>MessageTableModel</name>
+    </context>
+<context>
+    <name>MessageView</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    </context>
+<context>
+    <name>MyAcceptedOfferListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Үтірмен бөлінген файл (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAliasListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Үтірмен бөлінген файл (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyCertListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Үтірмен бөлінген файл (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyEscrowListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Үтірмен бөлінген файл (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Үтірмен бөлінген файл (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferWhitelistTableModel</name>
+    </context>
+<context>
+    <name>MyWhitelistOfferDialog</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Үтірмен бөлінген файл (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>NewMessageDialog</name>
+    </context>
+<context>
+    <name>NewWhitelistDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogBTC</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogZEC</name>
+    </context>
+<context>
+    <name>OfferAcceptInfoDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptTableModel</name>
+    </context>
+<context>
+    <name>OfferEscrowDialog</name>
+    </context>
+<context>
+    <name>OfferFeedbackDialog</name>
+    </context>
+<context>
+    <name>OfferListPage</name>
+    </context>
+<context>
+    <name>OfferPayDialog</name>
+    </context>
+<context>
+    <name>OfferTableModel</name>
+    </context>
+<context>
+    <name>OfferView</name>
+    </context>
+<context>
+    <name>OfferWhitelistTableModel</name>
+    </context>
+<context>
     <name>OpenURIDialog</name>
     </context>
 <context>
     <name>OptionsDialog</name>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>Әмиян</translation>
+    </message>
+    </context>
+<context>
+    <name>OptionsModel</name>
+    </context>
+<context>
+    <name>OutMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Үтірмен бөлінген файл (*.csv)</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -269,15 +365,27 @@
         <source>Amount</source>
         <translation>Саны</translation>
     </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 немесе %2</translation>
+    </message>
     </context>
 <context>
     <name>QRImageWidget</name>
     </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <source>&amp;Information</source>
+        <translation>Информация</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>&amp;Amount:</source>
+        <translation>Саны</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
@@ -305,23 +413,18 @@
         <translation>таңба</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>Саны</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(таңбасыз)</translation>
     </message>
+    </context>
+<context>
+    <name>ResellOfferDialog</name>
     </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Amount:</source>
         <translation>Саны</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Басымдық</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -339,18 +442,87 @@
         <source>(no label)</source>
         <translation>(таңбасыз)</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>SendCoinsEntry</name>
+    <message>
+        <source>A&amp;mount:</source>
+        <translation>Саны</translation>
+    </message>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
     </context>
 <context>
     <name>ShutdownWindow</name>
+    </context>
+<context>
+    <name>SignRawTxDialog</name>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
     </context>
 <context>
     <name>SplashScreen</name>
+    </context>
+<context>
+    <name>SyscoinGUI</name>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation>&amp;Транзакциялар</translation>
+    </message>
+    <message>
+        <source>E&amp;xit</source>
+        <translation>Шығу</translation>
+    </message>
+    <message>
+        <source>&amp;Options...</source>
+        <translation>Параметрлері</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet...</source>
+        <translation>Әмиянды жасыру</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>Құпия сөзді өзгерту</translation>
+    </message>
+    <message>
+        <source>Syscoin</source>
+        <translation>Биткоин</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Әмиян</translation>
+    </message>
+    <message>
+        <source>&amp;File</source>
+        <translation>Файл</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation>Көмек</translation>
+    </message>
+    <message>
+        <source>%1 behind</source>
+        <translation>%1 қалмады</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>қате</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>Ескерту</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>Информация</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation>Жаңартылған</translation>
+    </message>
     </context>
 <context>
     <name>TrafficGraphWidget</name>
@@ -378,6 +550,10 @@
     <message>
         <source>Label</source>
         <translation>таңба</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(таңбасыз)</translation>
     </message>
     </context>
 <context>
@@ -414,10 +590,6 @@
     </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>Экспорт</translation>
-    </message>
     </context>
 <context>
     <name>syscoin-core</name>

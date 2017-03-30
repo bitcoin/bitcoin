@@ -6,6 +6,8 @@
 // https://en.syscoin.it/wiki/Payment_Request
 //
 
+syntax = "proto2";
+
 package payments;
 option java_package = "org.syscoin.protocols.payments";
 option java_outer_classname = "Protos";

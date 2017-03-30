@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2014 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -53,16 +53,6 @@ namespace Checkpoints {
         }
 
         return fWorkBefore / (fWorkBefore + fWorkAfter);
-    }
-
-    int GetTotalBlocksEstimate(const CCheckpointData& data)
-    {
-        const MapCheckpoints& checkpoints = data.mapCheckpoints;
-
-        if (checkpoints.empty())
-            return 0;
-
-        return checkpoints.rbegin()->first;
     }
 
     CBlockIndex* GetLastCheckpoint(const CCheckpointData& data)

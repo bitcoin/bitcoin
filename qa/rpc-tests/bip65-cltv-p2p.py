@@ -1,17 +1,15 @@
-#!/usr/bin/env python2
-#
-# Distributed under the MIT/X11 software license, see the accompanying
+#!/usr/bin/env python3
+# Copyright (c) 2015-2016 The Syscoin Core developers
+# Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#
 
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import *
 from test_framework.mininode import CTransaction, NetworkThread
 from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager
-from test_framework.script import CScript, OP_1NEGATE, OP_NOP2, OP_DROP
-from binascii import hexlify, unhexlify
-import cStringIO
+from test_framework.script import CScript, OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP
+from io import BytesIO
 import time
 
 def cltv_invalidate(tx):
@@ -19,7 +17,7 @@ def cltv_invalidate(tx):
 
     Prepends -1 CLTV DROP in the scriptSig itself.
     '''
-    tx.vin[0].scriptSig = CScript([OP_1NEGATE, OP_NOP2, OP_DROP] +
+    tx.vin[0].scriptSig = CScript([OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP] +
                                   list(CScript(tx.vin[0].scriptSig)))
 
 '''
@@ -39,11 +37,12 @@ Mine 1 old version block, see that the node rejects.
 class BIP65Test(ComparisonTestFramework):
 
     def __init__(self):
+        super().__init__()
         self.num_nodes = 1
 
     def setup_network(self):
         # Must set the blockversion for this test
-        self.nodes = start_nodes(1, self.options.tmpdir,
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir,
                                  extra_args=[['-debug', '-whitelist=127.0.0.1', '-blockversion=3']],
                                  binary=[self.options.testbinary])
 
@@ -60,7 +59,7 @@ class BIP65Test(ComparisonTestFramework):
         rawtx = node.createrawtransaction(inputs, outputs)
         signresult = node.signrawtransaction(rawtx)
         tx = CTransaction()
-        f = cStringIO.StringIO(unhexlify(signresult['hex']))
+        f = BytesIO(hex_str_to_bytes(signresult['hex']))
         tx.deserialize(f)
         return tx
 
@@ -68,13 +67,13 @@ class BIP65Test(ComparisonTestFramework):
 
         self.coinbase_blocks = self.nodes[0].generate(2)
         height = 3  # height of the next block to build
-        self.tip = int ("0x" + self.nodes[0].getbestblockhash() + "L", 0)
+        self.tip = int("0x" + self.nodes[0].getbestblockhash(), 0)
         self.nodeaddress = self.nodes[0].getnewaddress()
-        self.last_block_time = time.time()
+        self.last_block_time = int(time.time())
 
         ''' 98 more version 3 blocks '''
         test_blocks = []
-        for i in xrange(98):
+        for i in range(98):
             block = create_block(self.tip, create_coinbase(height), self.last_block_time + 1)
             block.nVersion = 3
             block.rehash()
@@ -87,7 +86,7 @@ class BIP65Test(ComparisonTestFramework):
 
         ''' Mine 749 version 4 blocks '''
         test_blocks = []
-        for i in xrange(749):
+        for i in range(749):
             block = create_block(self.tip, create_coinbase(height), self.last_block_time + 1)
             block.nVersion = 4
             block.rehash()
@@ -139,7 +138,7 @@ class BIP65Test(ComparisonTestFramework):
 
         ''' Mine 199 new version blocks on last valid tip '''
         test_blocks = []
-        for i in xrange(199):
+        for i in range(199):
             block = create_block(self.tip, create_coinbase(height), self.last_block_time + 1)
             block.nVersion = 4
             block.rehash()

@@ -7,7 +7,7 @@ This release include German, Spanish, Spanish-Castilian, Norwegian and Dutch tra
 https://www.transifex.net/projects/p/syscoin/
 
 Please report bugs using the issue tracker at github:
-https://github.com/syscoin/syscoin/issues
+https://github.com/syscoin/syscoin2/issues
 
 For Ubuntu users, there is a new ppa maintained by Matt Corallo which you can add to your system so that it will automatically keep syscoin up-to-date.  Just type "sudo apt-add-repository ppa:syscoin/syscoin" in your terminal, then install the syscoin-qt package.
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -75,6 +75,7 @@ private:
     QFrame *dateRangeWidget;
     QDateTimeEdit *dateFrom;
     QDateTimeEdit *dateTo;
+    QAction *abandonAction;
 
     QWidget *createDateRangeWidget();
 
@@ -94,8 +95,10 @@ private Q_SLOTS:
     void copyAmount();
     void copyTxID();
     void copyTxHex();
+    void copyTxPlainText();
     void openThirdPartyTxUrl(QString url);
     void updateWatchOnlyColumn(bool fHaveWatchOnly);
+    void abandonTx();
 
 Q_SIGNALS:
     void doubleClicked(const QModelIndex&);

@@ -1,5 +1,231 @@
 <TS language="el_GR" version="2.1">
 <context>
+    <name>AcceptandPayOfferListPage</name>
+    <message>
+        <source>Pay Offer</source>
+        <translation>Pay Προσφορά</translation>
+    </message>
+    <message>
+        <source>Offer ID:</source>
+        <translation>ID προσφοράς:</translation>
+    </message>
+    <message>
+        <source>The value associated with this offer.</source>
+        <translation>Η τιμή που σχετίζεται με αυτή την προσφορά.</translation>
+    </message>
+    <message>
+        <source>Lookup the OfferID from the blockchain DB</source>
+        <translation>Αναζήτηση της OfferID από την blockchain DB</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation>Ποσότητα:</translation>
+    </message>
+    <message>
+        <source>Alias:</source>
+        <translation>Ψευδώνυμο:</translation>
+    </message>
+    <message>
+        <source>Notes:</source>
+        <translation>Σημειώσεις:</translation>
+    </message>
+    <message>
+        <source>Offer Details</source>
+        <translation>Λεπτομέρειες προσφοράς</translation>
+    </message>
+    <message>
+        <source>Merchant:</source>
+        <translation>Έμπορος:</translation>
+    </message>
+    <message>
+        <source>Merchant Rating:</source>
+        <translation>Έμπορος Αξιολόγηση:</translation>
+    </message>
+    <message>
+        <source>Title:</source>
+        <translation>Τίτλος:</translation>
+    </message>
+    <message>
+        <source>Category:</source>
+        <translation>Κατηγορία:</translation>
+    </message>
+    <message>
+        <source>Price:</source>
+        <translation>Τιμή:</translation>
+    </message>
+    <message>
+        <source>Currency:</source>
+        <translation>Νόμισμα:</translation>
+    </message>
+    <message>
+        <source>Alias for Exchange Rate Peg:</source>
+        <translation>Γνωστός για τον Exchange Rate Peg:</translation>
+    </message>
+    <message>
+        <source>Quantity Remaining:</source>
+        <translation>Ποσότητα που απομένει:</translation>
+    </message>
+    <message>
+        <source>Quantity Sold:</source>
+        <translation>Ποσότητα Sold:</translation>
+    </message>
+    <message>
+        <source>Description:</source>
+        <translation>Περιγραφή:</translation>
+    </message>
+    <message>
+        <source>Purchase this offer</source>
+        <translation>Αγοράσει αυτή την προσφορά</translation>
+    </message>
+    <message>
+        <source>Click to open image in browser...</source>
+        <translation>Κάντε κλικ για να ανοίξετε την εικόνα σε πρόγραμμα περιήγησης ...</translation>
+    </message>
+    <message>
+        <source>Use Public Profile</source>
+        <translation>Χρησιμοποιήστε δημόσιο προφίλ</translation>
+    </message>
+    <message>
+        <source>Use Private Profile</source>
+        <translation>Χρησιμοποιήστε Ιδιωτικό Προφίλ</translation>
+    </message>
+    <message>
+        <source>Confirm Public Profile Inclusion</source>
+        <translation>Επιβεβαιώστε Δημόσια ένταξη Προφίλ</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to continue?</source>
+        <translation>Είστε βέβαιοι ότι θέλετε να συνεχίσετε;</translation>
+    </message>
+    <message>
+        <source>Confirm Private Profile Inclusion</source>
+        <translation>Επιβεβαιώστε Ιδιωτικό Προφίλ Συμπερίληψη</translation>
+    </message>
+    <message>
+        <source>There was an exception trying to get the alias profile data: </source>
+        <translation>Υπήρχε μια εξαίρεση που προσπαθεί να πάρει τα δεδομένα προφίλ ψευδώνυμο:</translation>
+    </message>
+    <message>
+        <source>There was an exception trying to refresh the alias list: </source>
+        <translation>Υπήρχε μια εξαίρεση που προσπαθεί να ανανεώσετε τη λίστα ψευδώνυμο:</translation>
+    </message>
+    <message>
+        <source>Invalid quantity when trying to accept this offer!</source>
+        <translation>Μη έγκυρη ποσότητα όταν προσπαθούν να αποδεχθεί αυτή την προσφορά!</translation>
+    </message>
+    <message>
+        <source>Please choose an alias before purchasing this offer.</source>
+        <translation>Παρακαλώ επιλέξτε ένα ψευδώνυμο πριν από την αγορά αυτή την προσφορά.</translation>
+    </message>
+    <message>
+        <source>Waiting for confirmation on the purchase of this offer</source>
+        <translation>Αναμονή για επιβεβαίωση για την αγορά αυτής της προσφοράς</translation>
+    </message>
+    <message>
+        <source>URI has been already handled</source>
+        <translation>URI έχει ήδη αντιμετωπιστεί</translation>
+    </message>
+    <message>
+        <source>unlimited</source>
+        <translation>απεριόριστος</translation>
+    </message>
+</context>
+<context>
+    <name>AcceptedOfferListPage</name>
+    <message>
+        <source>Accepted Offers</source>
+        <translation>Αποδεκτές Προσφορές</translation>
+    </message>
+    <message>
+        <source>Refresh accepted offer list</source>
+        <translation>Ανανέωση Η λίστα προσφοράς</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected offer to the system clipboard</source>
+        <translation>Αντιγράψτε το τρέχον επιλεγμένο προσφορά στο πρόχειρο του συστήματος</translation>
+    </message>
+    <message>
+        <source>Details of the selected accepted offer</source>
+        <translation>Λεπτομέρειες του επιλεγμένου αποδεχθεί την προσφορά</translation>
+    </message>
+    <message>
+        <source>Details</source>
+        <translation>Καθέκαστα</translation>
+    </message>
+    <message>
+        <source>Send message to the seller</source>
+        <translation>Αποστολή μηνύματος στον πωλητή</translation>
+    </message>
+    <message>
+        <source>Send Msg To Seller</source>
+        <translation>Αποστολή λάθους στον πωλητή</translation>
+    </message>
+    <message>
+        <source>Leave Feedback</source>
+        <translation>Αφήστε Σχόλια</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Εξαγωγή δεδομένων καρτέλας σε αρχείο</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Όλα</translation>
+    </message>
+    <message>
+        <source>Export Offer Data</source>
+        <translation>Εξαγωγή Προσφορά Δεδομένων</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Αρχείο οριοθετημένο με κόμματα (*.csv)</translation>
+    </message>
+    <message>
+        <source>Offer ID</source>
+        <translation>ID προσφορά</translation>
+    </message>
+    <message>
+        <source>Accept ID</source>
+        <translation>Αποδοχή ID</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>Τίτλος</translation>
+    </message>
+    <message>
+        <source>Height</source>
+        <translation>Ύψος</translation>
+    </message>
+    <message>
+        <source>Price</source>
+        <translation>Τιμή</translation>
+    </message>
+    <message>
+        <source>Currency</source>
+        <translation>Νόμισμα</translation>
+    </message>
+    <message>
+        <source>Total</source>
+        <translation>Σύνολο</translation>
+    </message>
+    <message>
+        <source>Seller</source>
+        <translation>Πωλητής</translation>
+    </message>
+    <message>
+        <source>Buyer</source>
+        <translation>Αγοραστής</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Κατάσταση</translation>
+    </message>
+    <message>
+        <source>Error exporting</source>
+        <translation>σφάλμα κατά την εξαγωγή</translation>
+    </message>
+    </context>
+<context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
@@ -24,10 +250,6 @@
     <message>
         <source>C&amp;lose</source>
         <translation>Κ&amp;λείσιμο</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;Αντιγραφή διεύθυνσης</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -74,6 +296,10 @@
         <translation>Αυτές είναι οι Syscoin διευθύνσεις σας για να λαμβάνετε πληρωμές. Δίνοντας μία ξεχωριστή διεύθυνση σε κάθε αποστολέα, θα μπορείτε να ελέγχετε ποιος σας πληρώνει.</translation>
     </message>
     <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Αντιγραφή διεύθυνσης</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>Αντιγραφή &amp;επιγραφής</translation>
     </message>
@@ -90,14 +316,18 @@
         <translation>Αρχείο οριοθετημένο με κόμματα (*.csv)</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>Η Εξαγωγή Απέτυχε</translation>
+        <source>Label</source>
+        <translation>Επιγραφή</translation>
     </message>
     <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Παρουσιάστηκε σφάλμα κατά την αποθήκευση της λίστας πορτοφολιών στο %1. Παρακαλώ δοκιμάστε ξανά</translation>
+        <source>Address</source>
+        <translation>Διεύθυνση</translation>
     </message>
-</context>
+    <message>
+        <source>Error exporting</source>
+        <translation>σφάλμα κατά την εξαγωγή</translation>
+    </message>
+    </context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -111,6 +341,75 @@
     <message>
         <source>(no label)</source>
         <translation>(χωρίς ετικέτα)</translation>
+    </message>
+</context>
+<context>
+    <name>AliasListPage</name>
+    <message>
+        <source>Aliases</source>
+        <translation>ψευδώνυμα</translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation>Έρευνα</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected alias to the system clipboard</source>
+        <translation>Αντιγράψτε τα επιλεγμένα ψευδώνυμο στο πρόχειρο του συστήματος</translation>
+    </message>
+    <message>
+        <source>Send Msg</source>
+        <translation>Αποστολή λάθους</translation>
+    </message>
+    <message>
+        <source>&lt;&lt;</source>
+        <translation>&lt;&lt;</translation>
+    </message>
+    <message>
+        <source>&gt;&gt;</source>
+        <translation>&gt;&gt;</translation>
+    </message>
+    <message>
+        <source>Search for Syscoin Aliases. Select Safe Search from wallet options if you wish to omit potentially offensive Aliases(On by default)</source>
+        <translation>Αναζητήστε Syscoin ψευδώνυμα. Επιλέξτε Ασφαλή Αναζήτηση από τις επιλογές πορτοφόλι, αν θέλετε να παραλείψετε δυνητικά προσβλητικό Ψευδώνυμα (από προεπιλογή)</translation>
+    </message>
+    <message>
+        <source>Enter search term, regex accepted (ie: ^name returns all Aliases starting with 'name'). Empty will search for all.</source>
+        <translation>Εισάγετε τον όρο αναζήτησης, regex γίνει αποδεκτή (δηλαδή: ^ όνομα επιστρέφει όλα τα ψευδώνυμα που αρχίζουν με 'όνομα »). Αδειάστε θα ψάξει για όλους.</translation>
+    </message>
+    <message>
+        <source>Error: Invalid response from aliasfilter command</source>
+        <translation>Σφάλμα: Μη έγκυρη απόκριση από την εντολή aliasfilter</translation>
+    </message>
+</context>
+<context>
+    <name>AliasTableModel</name>
+    <message>
+        <source>Alias</source>
+        <translation>Ψευδώνυμο</translation>
+    </message>
+    <message>
+        <source>Expires On</source>
+        <translation>Λήγει στις</translation>
+    </message>
+    <message>
+        <source>Alias Status</source>
+        <translation>alias Κατάσταση</translation>
+    </message>
+    <message>
+        <source>Seller Rating</source>
+        <translation>Πωλητής Αξιολόγηση</translation>
+    </message>
+    </context>
+<context>
+    <name>AliasView</name>
+    <message>
+        <source>My Aliases</source>
+        <translation>Ψευδώνυμα μου</translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation>Έρευνα</translation>
     </message>
 </context>
 <context>
@@ -130,6 +429,10 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Επανέλαβε τον νέο κωδικό πρόσβασης</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Εισάγετε τον νέο κωδικό πρόσβασης στον πορτοφόλι &lt;br/&gt; Παρακαλώ χρησιμοποιείστε ένα κωδικό με &lt;b&gt; 10 ή περισσότερους τυχαίους χαρακτήρες&lt;/b&gt; ή &lt;b&gt; οχτώ ή παραπάνω λέξεις&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -156,6 +459,10 @@
         <translation>Άλλαξε κωδικο πρόσβασης</translation>
     </message>
     <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Εισάγετε τον παλιό συνθηματική φράση και νέα φράση πρόσβασης για το πορτοφόλι.</translation>
+    </message>
+    <message>
         <source>Confirm wallet encryption</source>
         <translation>Επιβεβαίωσε την κρυπτογραφηση του πορτοφολιού</translation>
     </message>
@@ -169,20 +476,12 @@
         <translation>Είστε σίγουροι ότι θέλετε να κρυπτογραφήσετε το πορτοφόλι σας;</translation>
     </message>
     <message>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>ΣΗΜΑΝΤΙΚΟ: Τα προηγούμενα αντίγραφα ασφαλείας που έχετε κάνει από το αρχείο του πορτοφόλιου σας θα πρέπει να αντικατασταθουν με το νέο που δημιουργείται, κρυπτογραφημένο αρχείο πορτοφόλιου. Για λόγους ασφαλείας, τα προηγούμενα αντίγραφα ασφαλείας του μη κρυπτογραφημένου αρχείου πορτοφόλιου θα καταστουν άχρηστα μόλις αρχίσετε να χρησιμοποιείτε το νέο κρυπτογραφημένο πορτοφόλι. </translation>
-    </message>
-    <message>
-        <source>Warning: The Caps Lock key is on!</source>
-        <translation>Προσοχη: το πλήκτρο Caps Lock είναι ενεργο.</translation>
-    </message>
-    <message>
         <source>Wallet encrypted</source>
         <translation>Κρυπτογραφημενο πορτοφολι</translation>
     </message>
     <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Εισάγετε τον νέο κωδικό πρόσβασης στον πορτοφόλι &lt;br/&gt; Παρακαλώ χρησιμοποιείστε ένα κωδικό με &lt;b&gt; 10 ή περισσότερους τυχαίους χαρακτήρες&lt;/b&gt; ή &lt;b&gt; οχτώ ή παραπάνω λέξεις&lt;/b&gt;.</translation>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>ΣΗΜΑΝΤΙΚΟ: Τα προηγούμενα αντίγραφα ασφαλείας που έχετε κάνει από το αρχείο του πορτοφόλιου σας θα πρέπει να αντικατασταθουν με το νέο που δημιουργείται, κρυπτογραφημένο αρχείο πορτοφόλιου. Για λόγους ασφαλείας, τα προηγούμενα αντίγραφα ασφαλείας του μη κρυπτογραφημένου αρχείου πορτοφόλιου θα καταστουν άχρηστα μόλις αρχίσετε να χρησιμοποιείτε το νέο κρυπτογραφημένο πορτοφόλι. </translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -212,300 +511,105 @@
         <source>Wallet passphrase was successfully changed.</source>
         <translation>Ο κωδικος του πορτοφολιού άλλαξε με επιτυχία.</translation>
     </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Προσοχη: το πλήκτρο Caps Lock είναι ενεργο.</translation>
+    </message>
 </context>
 <context>
     <name>BanTableModel</name>
-    </context>
-<context>
-    <name>SyscoinGUI</name>
     <message>
-        <source>Sign &amp;message...</source>
-        <translation>Υπογραφή &amp;Μηνύματος...</translation>
+        <source>IP/Netmask</source>
+        <translation>IP / Μάσκα δικτύου</translation>
     </message>
     <message>
-        <source>Synchronizing with network...</source>
-        <translation>Συγχρονισμός με το δίκτυο...</translation>
-    </message>
-    <message>
-        <source>&amp;Overview</source>
-        <translation>&amp;Επισκόπηση</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>Κόμβος</translation>
-    </message>
-    <message>
-        <source>Show general overview of wallet</source>
-        <translation>Εμφάνισε τη γενική εικόνα του πορτοφολιού</translation>
-    </message>
-    <message>
-        <source>&amp;Transactions</source>
-        <translation>&amp;Συναλλαγές</translation>
-    </message>
-    <message>
-        <source>Browse transaction history</source>
-        <translation>Περιήγηση στο ιστορικό συναλλαγών</translation>
-    </message>
-    <message>
-        <source>E&amp;xit</source>
-        <translation>Έ&amp;ξοδος</translation>
-    </message>
-    <message>
-        <source>Quit application</source>
-        <translation>Εξοδος από την εφαρμογή</translation>
-    </message>
-    <message>
-        <source>About &amp;Qt</source>
-        <translation>Σχετικά με &amp;Qt</translation>
-    </message>
-    <message>
-        <source>Show information about Qt</source>
-        <translation>Εμφάνισε πληροφορίες σχετικά με Qt</translation>
-    </message>
-    <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;Επιλογές...</translation>
-    </message>
-    <message>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Κρυπτογράφησε το πορτοφόλι</translation>
-    </message>
-    <message>
-        <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Αντίγραφο ασφαλείας του πορτοφολιού</translation>
-    </message>
-    <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Άλλαξε κωδικο πρόσβασης</translation>
-    </message>
-    <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>Διευθύνσεις αποστολής</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Διευθύνσεις λήψης</translation>
-    </message>
-    <message>
-        <source>Open &amp;URI...</source>
-        <translation>'Ανοιγμα &amp;URI</translation>
-    </message>
-    <message>
-        <source>Syscoin Core client</source>
-        <translation>Εφαρμογή Syscoin Core</translation>
-    </message>
-    <message>
-        <source>Importing blocks from disk...</source>
-        <translation>Εισαγωγή μπλοκ από τον σκληρο δίσκο ... </translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation>Φόρτωση ευρετηρίου μπλοκ στον σκληρο δισκο...</translation>
-    </message>
-    <message>
-        <source>Send coins to a Syscoin address</source>
-        <translation>Στείλε νομίσματα σε μια διεύθυνση syscoin</translation>
-    </message>
-    <message>
-        <source>Backup wallet to another location</source>
-        <translation>Δημιουργία αντιγράφου ασφαλείας πορτοφολιού σε άλλη τοποθεσία</translation>
-    </message>
-    <message>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation>Αλλαγή του κωδικού κρυπτογράφησης του πορτοφολιού</translation>
-    </message>
-    <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Παράθυρο αποσφαλμάτωσης</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>Άνοιγμα κονσόλας αποσφαλμάτωσης και διαγνωστικών</translation>
-    </message>
-    <message>
-        <source>&amp;Verify message...</source>
-        <translation>&amp;Επιβεβαίωση μηνύματος</translation>
-    </message>
-    <message>
-        <source>Syscoin</source>
-        <translation>Syscoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Πορτοφόλι</translation>
-    </message>
-    <message>
-        <source>&amp;Send</source>
-        <translation>&amp;Αποστολή</translation>
-    </message>
-    <message>
-        <source>&amp;Receive</source>
-        <translation>&amp;Παραλαβή </translation>
-    </message>
-    <message>
-        <source>Show information about Syscoin Core</source>
-        <translation>Σχετικά με το Syscoin Core</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Εμφάνισε/Κρύψε</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>Εμφάνιση ή αποκρύψη του κεντρικου παράθυρου </translation>
-    </message>
-    <message>
-        <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Κρυπτογραφήστε τα ιδιωτικά κλειδιά που ανήκουν στο πορτοφόλι σας </translation>
-    </message>
-    <message>
-        <source>Sign messages with your Syscoin addresses to prove you own them</source>
-        <translation>Υπογράψτε ένα μήνυμα για να βεβαιώσετε πως είστε ο κάτοχος αυτής της διεύθυνσης</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
-        <translation>Υπογράψτε ένα μήνυμα για ν' αποδείξετε πως ανήκει μια συγκεκριμένη διεύθυνση Syscoin</translation>
-    </message>
-    <message>
-        <source>&amp;File</source>
-        <translation>&amp;Αρχείο</translation>
-    </message>
-    <message>
-        <source>&amp;Settings</source>
-        <translation>&amp;Ρυθμίσεις</translation>
-    </message>
-    <message>
-        <source>&amp;Help</source>
-        <translation>&amp;Βοήθεια</translation>
-    </message>
-    <message>
-        <source>Tabs toolbar</source>
-        <translation>Εργαλειοθήκη καρτελών</translation>
-    </message>
-    <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
-        <source>Request payments (generates QR codes and syscoin: URIs)</source>
-        <translation>Αίτηση πληρωμών (δημιουργεί QR codes και διευθύνσεις syscoin: )</translation>
-    </message>
-    <message>
-        <source>&amp;About Syscoin Core</source>
-        <translation>&amp;Σχετικά με το Syscoin Core</translation>
-    </message>
-    <message>
-        <source>Show the list of used sending addresses and labels</source>
-        <translation>Προβολή της λίστας των χρησιμοποιημένων διευθύνσεων και ετικετών αποστολής</translation>
-    </message>
-    <message>
-        <source>Show the list of used receiving addresses and labels</source>
-        <translation>Προβολή της λίστας των χρησιμοποιημένων διευθύνσεων και ετικετών λήψεως</translation>
-    </message>
-    <message>
-        <source>Open a syscoin: URI or payment request</source>
-        <translation>Άνοιγμα syscoin: URI αίτησης πληρωμής</translation>
-    </message>
-    <message>
-        <source>&amp;Command-line options</source>
-        <translation>&amp;Επιλογές γραμμής εντολών</translation>
-    </message>
-    <message>
-        <source>Show the Syscoin Core help message to get a list with possible Syscoin command-line options</source>
-        <translation>Εμφανιση του Syscoin-Qt μήνυματος βοήθειας για να πάρετε μια λίστα με τις πιθανές επιλογές Syscoin γραμμής εντολών.</translation>
-    </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>Η πηγή του μπλοκ δεν ειναι διαθέσιμη... </translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 και %2</translation>
-    </message>
-    <message>
-        <source>%1 behind</source>
-        <translation>%1 πίσω</translation>
-    </message>
-    <message>
-        <source>Last received block was generated %1 ago.</source>
-        <translation>Το τελευταίο μπλοκ που ελήφθη δημιουργήθηκε %1 πριν.</translation>
-    </message>
-    <message>
-        <source>Transactions after this will not yet be visible.</source>
-        <translation>Οι συναλλαγές μετά από αυτό δεν θα είναι ακόμη ορατες.</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Σφάλμα</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Προειδοποίηση</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Πληροφορία</translation>
-    </message>
-    <message>
-        <source>Up to date</source>
-        <translation>Ενημερωμένο</translation>
-    </message>
-    <message>
-        <source>Catching up...</source>
-        <translation>Ενημέρωση...</translation>
-    </message>
-    <message>
-        <source>Date: %1
-</source>
-        <translation>Ημερομηνία: %1
-</translation>
-    </message>
-    <message>
-        <source>Amount: %1
-</source>
-        <translation>Ποσό: %1
-</translation>
-    </message>
-    <message>
-        <source>Type: %1
-</source>
-        <translation>Τύπος: %1
-</translation>
-    </message>
-    <message>
-        <source>Label: %1
-</source>
-        <translation>Ετικέτα: %1
-</translation>
-    </message>
-    <message>
-        <source>Address: %1
-</source>
-        <translation>Διεύθυνση: %1
-</translation>
-    </message>
-    <message>
-        <source>Sent transaction</source>
-        <translation>Η συναλλαγή απεστάλη</translation>
-    </message>
-    <message>
-        <source>Incoming transaction</source>
-        <translation>Εισερχόμενη συναλλαγή</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Το πορτοφόλι είναι &lt;b&gt;κρυπτογραφημένο&lt;/b&gt; και &lt;b&gt;ξεκλείδωτο&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Το πορτοφόλι είναι &lt;b&gt;κρυπτογραφημένο&lt;/b&gt; και &lt;b&gt;κλειδωμένο&lt;/b&gt;</translation>
+        <source>Banned Until</source>
+        <translation>Αποκλεισμένο Μέχρι</translation>
     </message>
 </context>
 <context>
-    <name>ClientModel</name>
+    <name>CertListPage</name>
     <message>
-        <source>Network Alert</source>
-        <translation>Ειδοποίηση Δικτύου</translation>
+        <source>Certificates</source>
+        <translation>πιστοποιητικά</translation>
+    </message>
+    <message>
+        <source>All Certificates</source>
+        <translation>Όλα τα πιστοποιητικά</translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation>Έρευνα</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected cert to the system clipboard</source>
+        <translation>Αντιγράψτε το τρέχον επιλεγμένο cert στο πρόχειρο του συστήματος</translation>
+    </message>
+    <message>
+        <source>&lt;&lt;</source>
+        <translation>&lt;&lt;</translation>
+    </message>
+    <message>
+        <source>&gt;&gt;</source>
+        <translation>&gt;&gt;</translation>
+    </message>
+    <message>
+        <source>Search for Syscoin Certificates. Select Safe Search from wallet options if you wish to omit potentially offensive Certificates(On by default)</source>
+        <translation>Αναζήτηση για Πιστοποιητικά Syscoin. Επιλέξτε Ασφαλή Αναζήτηση από τις επιλογές πορτοφόλι, αν θέλετε να παραλείψετε δυνητικά προσβλητικό Πιστοποιητικά (από προεπιλογή)</translation>
+    </message>
+    <message>
+        <source>Enter search term, regex accepted (ie: ^name returns all Certificates starting with 'name'). Empty will search for all.</source>
+        <translation>Εισάγετε τον όρο αναζήτησης, regex γίνει αποδεκτή (δηλαδή: ^ όνομα επιστρέφει με όλα τα πιστοποιητικά που αρχίζουν με 'όνομα »). Αδειάστε θα ψάξει για όλους.</translation>
+    </message>
+    <message>
+        <source>certificates</source>
+        <translation>πιστοποιητικά</translation>
+    </message>
+    <message>
+        <source>General exception when searching certficiates</source>
+        <translation>Γενική εξαίρεση κατά την αναζήτηση certficiates</translation>
+    </message>
+    <message>
+        <source>Error: Invalid response from certfilter command</source>
+        <translation>Σφάλμα: Μη έγκυρη απόκριση από την εντολή certfilter</translation>
+    </message>
+</context>
+<context>
+    <name>CertTableModel</name>
+    <message>
+        <source>Cert</source>
+        <translation>cert</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>Τίτλος</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Κατάσταση</translation>
+    </message>
+    <message>
+        <source>Category</source>
+        <translation>Κατηγορία</translation>
+    </message>
+    <message>
+        <source>Expires On</source>
+        <translation>Λήγει στις</translation>
+    </message>
+    <message>
+        <source>Owner</source>
+        <translation>Ιδιοκτήτης</translation>
+    </message>
+</context>
+<context>
+    <name>CertView</name>
+    <message>
+        <source>My Certificates</source>
+        <translation>πιστοποιητικά μου</translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation>Έρευνα</translation>
     </message>
 </context>
 <context>
@@ -525,10 +629,6 @@
     <message>
         <source>Amount:</source>
         <translation>Ποσό:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Προτεραιότητα:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -583,10 +683,6 @@
         <translation>Επικυρωμένες</translation>
     </message>
     <message>
-        <source>Priority</source>
-        <translation>Προτεραιότητα</translation>
-    </message>
-    <message>
         <source>Copy address</source>
         <translation>Αντιγραφή διεύθυνσης</translation>
     </message>
@@ -627,10 +723,6 @@
         <translation>Αντιγραφή των byte</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>Αντιγραφή προτεραιότητας</translation>
-    </message>
-    <message>
         <source>Copy dust</source>
         <translation>Αντιγραφή 'σκόνης'</translation>
     </message>
@@ -639,60 +731,8 @@
         <translation>Αντιγραφή των ρέστων</translation>
     </message>
     <message>
-        <source>highest</source>
-        <translation>ύψιστη</translation>
-    </message>
-    <message>
-        <source>higher</source>
-        <translation>υψηλότερη</translation>
-    </message>
-    <message>
-        <source>high</source>
-        <translation>ψηλή</translation>
-    </message>
-    <message>
-        <source>medium-high</source>
-        <translation>μεσαία-ψηλή</translation>
-    </message>
-    <message>
-        <source>medium</source>
-        <translation>μεσαία</translation>
-    </message>
-    <message>
-        <source>low-medium</source>
-        <translation>μεσαία-χαμηλή</translation>
-    </message>
-    <message>
-        <source>low</source>
-        <translation>χαμηλή</translation>
-    </message>
-    <message>
-        <source>lower</source>
-        <translation>χαμηλότερη</translation>
-    </message>
-    <message>
-        <source>lowest</source>
-        <translation>χαμηλότατη</translation>
-    </message>
-    <message>
         <source>(%1 locked)</source>
         <translation>(%1 κλειδωμένο)</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>κανένα</translation>
-    </message>
-    <message>
-        <source>This label turns red if the transaction size is greater than 1000 bytes.</source>
-        <translation>Αυτή η ετικέτα γίνεται κόκκινη αν το μέγεθος της συναλλαγής είναι μεγαλύτερο από 1000 bytes.</translation>
-    </message>
-    <message>
-        <source>This label turns red if the priority is smaller than "medium".</source>
-        <translation>Αυτή η ετικέτα γίνεται κόκκινη αν η προτεραιότητα είναι μικρότερη από "μεσαία".</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than %1.</source>
-        <translation>Αυτή η ετικέτα γίνεται κόκκινη αν οποιοσδήποτε παραλήπτης λάβει ποσό μικρότερο από %1.</translation>
     </message>
     <message>
         <source>yes</source>
@@ -703,12 +743,12 @@
         <translation>όχι</translation>
     </message>
     <message>
-        <source>This means a fee of at least %1 per kB is required.</source>
-        <translation>Ελάχιστο χρεώσιμο ποσό τουλάχιστο %1 ανα kB</translation>
+        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
+        <translation>Αυτή η ετικέτα γίνεται κόκκινο εάν υπάρχει παραλήπτης λαμβάνει ένα ποσό μικρότερο από το σημερινό όριο της σκόνης.</translation>
     </message>
     <message>
-        <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation>Συναλλαγές με υψηλότερη προτεραιότητα είναι πιο πιθανό να περιλαμβάνονται σε ένα μπλοκ.</translation>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>Μπορεί να διαφέρει +/- %1 Satoshi (ες) ανά εγγραφή.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -763,12 +803,12 @@
         <translation>Επεξεργασία διεύθυνσης αποστολής</translation>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>Η διεύθυνση "%1" βρίσκεται ήδη στο βιβλίο διευθύνσεων.</translation>
-    </message>
-    <message>
         <source>The entered address "%1" is not a valid Syscoin address.</source>
         <translation>Η διεύθυνση "%1" δεν είναι έγκυρη Syscoin διεύθυνση.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>Η διεύθυνση "%1" βρίσκεται ήδη στο βιβλίο διευθύνσεων.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -777,6 +817,582 @@
     <message>
         <source>New key generation failed.</source>
         <translation>Η δημιουργία νέου κλειδιού απέτυχε.</translation>
+    </message>
+</context>
+<context>
+    <name>EditAliasDialog</name>
+    <message>
+        <source>Edit Alias</source>
+        <translation>Επεξεργασία Alias</translation>
+    </message>
+    <message>
+        <source>General</source>
+        <translation>Γενικά</translation>
+    </message>
+    <message>
+        <source>The alias name.</source>
+        <translation>Το ψευδώνυμο.</translation>
+    </message>
+    <message>
+        <source>Public Profile:</source>
+        <translation>Δημόσιο προφίλ:</translation>
+    </message>
+    <message>
+        <source>Safe Search:</source>
+        <translation>Ασφαλής αναζήτηση:</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Ναί</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Όχι</translation>
+    </message>
+    <message>
+        <source>Expiry:</source>
+        <translation>Λήξη:</translation>
+    </message>
+    <message>
+        <source>Private Profile:</source>
+        <translation>Ιδιωτικό Προφίλ:</translation>
+    </message>
+    <message>
+        <source>Transfer To (Public Key):</source>
+        <translation>Μεταφορά στο (Public Key):</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>Εντάξει</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Ματαίωση</translation>
+    </message>
+    <message>
+        <source>1 Year</source>
+        <translation>1 χρόνος</translation>
+    </message>
+    <message>
+        <source>2 Years</source>
+        <translation>2 χρόνια</translation>
+    </message>
+    <message>
+        <source>3 Years</source>
+        <translation>3 χρόνια</translation>
+    </message>
+    <message>
+        <source>4 Years</source>
+        <translation>4 χρόνια</translation>
+    </message>
+    <message>
+        <source>5 Years</source>
+        <translation>5 χρόνια</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to continue?</source>
+        <translation>Είστε βέβαιοι ότι θέλετε να συνεχίσετε;</translation>
+    </message>
+    <message>
+        <source>New Alias</source>
+        <translation>New Alias</translation>
+    </message>
+    <message>
+        <source>Edit Data Alias</source>
+        <translation>Επεξεργασία Δεδομένων Alias</translation>
+    </message>
+    <message>
+        <source>Transfer Alias</source>
+        <translation>Μεταφορά Alias</translation>
+    </message>
+    <message>
+        <source>Alias:</source>
+        <translation>Ψευδώνυμο:</translation>
+    </message>
+    <message>
+        <source>Empty name for Alias not allowed. Please try again</source>
+        <translation>Κενό όνομα για Alias ​​δεν επιτρέπονται. ΠΑΡΑΚΑΛΩ προσπαθησε ξανα</translation>
+    </message>
+    <message>
+        <source>General exception creating new Alias</source>
+        <translation>Γενική εξαίρεση δημιουργία νέων Alias</translation>
+    </message>
+    <message>
+        <source>General exception updating Alias</source>
+        <translation>Γενική εξαίρεση την ενημέρωση Alias</translation>
+    </message>
+    <message>
+        <source>General exception transferring Alias</source>
+        <translation>Γενική εξαίρεση τη μεταφορά Alias</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Δεν είναι δυνατό το ξεκλείδωμα του πορτοφολιού.</translation>
+    </message>
+</context>
+<context>
+    <name>EditCertDialog</name>
+    <message>
+        <source>Edit Cert</source>
+        <translation>Επεξεργασία Cert</translation>
+    </message>
+    <message>
+        <source>Alias:</source>
+        <translation>Ψευδώνυμο:</translation>
+    </message>
+    <message>
+        <source>Certificate:</source>
+        <translation>Πιστοποιητικό:</translation>
+    </message>
+    <message>
+        <source>The value associated with this certificate.</source>
+        <translation>Η τιμή που σχετίζεται με αυτό το πιστοποιητικό.</translation>
+    </message>
+    <message>
+        <source>Title:</source>
+        <translation>Τίτλος:</translation>
+    </message>
+    <message>
+        <source>The certificate name.</source>
+        <translation>Το όνομα του πιστοποιητικού.</translation>
+    </message>
+    <message>
+        <source>Transfer To:</source>
+        <translation>Μεταφέρω σε:</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Ναί</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Όχι</translation>
+    </message>
+    <message>
+        <source>Safe Search:</source>
+        <translation>Ασφαλής αναζήτηση:</translation>
+    </message>
+    <message>
+        <source>Category:</source>
+        <translation>Κατηγορία:</translation>
+    </message>
+    <message>
+        <source>New Cert</source>
+        <translation>νέα Cert</translation>
+    </message>
+    <message>
+        <source>Transfer Cert</source>
+        <translation>Μεταφορά Cert</translation>
+    </message>
+    <message>
+        <source>certificates</source>
+        <translation>πιστοποιητικά</translation>
+    </message>
+    <message>
+        <source>There was an exception trying to refresh the alias list: </source>
+        <translation>Υπήρχε μια εξαίρεση που προσπαθεί να ανανεώσετε τη λίστα ψευδώνυμο:</translation>
+    </message>
+    <message>
+        <source>Empty name for Cert not allowed. Please try again</source>
+        <translation>Κενό όνομα για Cert δεν επιτρέπονται. ΠΑΡΑΚΑΛΩ προσπαθησε ξανα</translation>
+    </message>
+    <message>
+        <source>General exception creating new Cert</source>
+        <translation>Γενική εξαίρεση δημιουργία νέων Cert</translation>
+    </message>
+    <message>
+        <source>General exception updating Cert</source>
+        <translation>Γενική εξαίρεση την ενημέρωση Cert</translation>
+    </message>
+    <message>
+        <source>General exception transferring Cert</source>
+        <translation>Γενική εξαίρεση τη μεταφορά Cert</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Δεν είναι δυνατό το ξεκλείδωμα του πορτοφολιού.</translation>
+    </message>
+</context>
+<context>
+    <name>EditOfferDialog</name>
+    <message>
+        <source>Edit Offer</source>
+        <translation>Επεξεργασία προσφοράς</translation>
+    </message>
+    <message>
+        <source>General</source>
+        <translation>Γενικά</translation>
+    </message>
+    <message>
+        <source>Offer:</source>
+        <translation>Προσφορά:</translation>
+    </message>
+    <message>
+        <source>Title:</source>
+        <translation>Τίτλος:</translation>
+    </message>
+    <message>
+        <source>Category:</source>
+        <translation>Κατηγορία:</translation>
+    </message>
+    <message>
+        <source>Price:</source>
+        <translation>Τιμή:</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation>Ποσότητα:</translation>
+    </message>
+    <message>
+        <source>Description:</source>
+        <translation>Περιγραφή:</translation>
+    </message>
+    <message>
+        <source>Currency:</source>
+        <translation>Νόμισμα:</translation>
+    </message>
+    <message>
+        <source>Certificate:</source>
+        <translation>Πιστοποιητικό:</translation>
+    </message>
+    <message>
+        <source>Seller Alias:</source>
+        <translation>Πωλητής Ψευδώνυμο:</translation>
+    </message>
+    <message>
+        <source>Private:</source>
+        <translation>Ιδιωτικός:</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Όχι</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Ναί</translation>
+    </message>
+    <message>
+        <source>Safe Search:</source>
+        <translation>Ασφαλής αναζήτηση:</translation>
+    </message>
+    <message>
+        <source>Geolocation:</source>
+        <translation>geolocation:</translation>
+    </message>
+    <message>
+        <source>Commission:</source>
+        <translation>Επιτροπή:</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>Εντάξει</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Ματαίωση</translation>
+    </message>
+    <message>
+        <source>Select Certificate (optional)</source>
+        <translation>Επιλέξτε Πιστοποιητικό (προαιρετικό)</translation>
+    </message>
+    <message>
+        <source>New Offer</source>
+        <translation>νέα Προσφορά</translation>
+    </message>
+    <message>
+        <source>New Offer(Certificate)</source>
+        <translation>Νέα Προσφορά (Πιστοποιητικό)</translation>
+    </message>
+    <message>
+        <source>certificates</source>
+        <translation>πιστοποιητικά</translation>
+    </message>
+    <message>
+        <source>There was an exception trying to refresh the cert list: </source>
+        <translation>Υπήρχε μια εξαίρεση που προσπαθεί να ανανεώσετε τη λίστα cert:</translation>
+    </message>
+    <message>
+        <source>There was an exception trying to refresh the alias list: </source>
+        <translation>Υπήρχε μια εξαίρεση που προσπαθεί να ανανεώσετε τη λίστα ψευδώνυμο:</translation>
+    </message>
+    <message>
+        <source>unlimited</source>
+        <translation>απεριόριστος</translation>
+    </message>
+    <message>
+        <source>Empty name for Offer not allowed. Please try again</source>
+        <translation>Κενό όνομα για την προσφορά δεν επιτρέπονται. ΠΑΡΑΚΑΛΩ προσπαθησε ξανα</translation>
+    </message>
+    <message>
+        <source>Confirm Alias Peg</source>
+        <translation>Επιβεβαίωση Alias ​​Peg</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Δεν είναι δυνατό το ξεκλείδωμα του πορτοφολιού.</translation>
+    </message>
+</context>
+<context>
+    <name>EditWhitelistOfferDialog</name>
+    <message>
+        <source>Manage Affiliates</source>
+        <translation>διαχειριστείτε Συνεργάτες</translation>
+    </message>
+    <message>
+        <source>Refresh affiliate list</source>
+        <translation>Ανανέωση λίστας θυγατρικών</translation>
+    </message>
+    <message>
+        <source>Add a new affiliate</source>
+        <translation>Προσθέστε μια νέα θυγατρική</translation>
+    </message>
+    <message>
+        <source>Remove an affiliate</source>
+        <translation>Αφαιρέστε μια θυγατρική</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation>Αφαίρεση</translation>
+    </message>
+    <message>
+        <source>Remove all affiliates</source>
+        <translation>Κατάργηση όλων των θυγατρικών</translation>
+    </message>
+    <message>
+        <source>Remove All</source>
+        <translation>Αφαίρεση όλων</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Εξαγωγή δεδομένων καρτέλας σε αρχείο</translation>
+    </message>
+    <message>
+        <source>Entry removed successfully!</source>
+        <translation>Έναρξη αφαιρεθεί με επιτυχία!</translation>
+    </message>
+    <message>
+        <source>There was an exception trying to remove this entry: </source>
+        <translation>Υπήρχε μια εξαίρεση προσπαθείτε να καταργήσετε αυτήν την καταχώρηση:</translation>
+    </message>
+    <message>
+        <source>Affiliate list cleared successfully!</source>
+        <translation>κατάλογος θυγατρικών εκκαθαριστεί με επιτυχία!</translation>
+    </message>
+    <message>
+        <source>There was an exception trying to clear the affiliate list: </source>
+        <translation>Υπήρχε μια εξαίρεση που προσπαθεί να καθαρίσει τη λίστα θυγατρικών:</translation>
+    </message>
+    <message>
+        <source>There was an exception trying to refresh the affiliate list: </source>
+        <translation>Υπήρχε μια εξαίρεση που προσπαθεί να ανανεώσετε τη λίστα θυγατρικών:</translation>
+    </message>
+    <message>
+        <source>Export Affiliate Data</source>
+        <translation>Εξαγωγή δεδομένων θυγατρικών</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Αρχείο οριοθετημένο με κόμματα (*.csv)</translation>
+    </message>
+    <message>
+        <source>Alias</source>
+        <translation>Ψευδώνυμο</translation>
+    </message>
+    <message>
+        <source>Expires On</source>
+        <translation>Λήγει στις</translation>
+    </message>
+    <message>
+        <source>Discount</source>
+        <translation>Έκπτωση</translation>
+    </message>
+    <message>
+        <source>Error exporting</source>
+        <translation>σφάλμα κατά την εξαγωγή</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowInfoDialog</name>
+    <message>
+        <source>Escrow Info</source>
+        <translation>Πληροφορίες μεσεγγύησης</translation>
+    </message>
+    <message>
+        <source>General</source>
+        <translation>Γενικά</translation>
+    </message>
+    <message>
+        <source>Escrow Details</source>
+        <translation>μεσεγγύησης Λεπτομέρειες</translation>
+    </message>
+    <message>
+        <source>ID</source>
+        <translation>ID</translation>
+    </message>
+    <message>
+        <source>Offer ID:</source>
+        <translation>ID προσφοράς:</translation>
+    </message>
+    <message>
+        <source>TXID:</source>
+        <translation>TXID:</translation>
+    </message>
+    <message>
+        <source>Offer Title:</source>
+        <translation>Προσφορά Τίτλος:</translation>
+    </message>
+    <message>
+        <source>Height:</source>
+        <translation>Ύψος:</translation>
+    </message>
+    <message>
+        <source>Time:</source>
+        <translation>Χρόνος:</translation>
+    </message>
+    <message>
+        <source>Price:</source>
+        <translation>Τιμή:</translation>
+    </message>
+    <message>
+        <source>Escrow Fee:</source>
+        <translation>Μεσεγγύησης Χρέωση:</translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation>Σύνολο:</translation>
+    </message>
+    <message>
+        <source>Average Rating:</source>
+        <translation>Μέσος όρος βαθμολογίας:</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>Εντάξει</translation>
+    </message>
+    <message>
+        <source>No Feedback Found</source>
+        <translation>Δεν βρέθηκαν Σχόλια</translation>
+    </message>
+    <message>
+        <source>Buyer</source>
+        <translation>Αγοραστής</translation>
+    </message>
+    <message>
+        <source>Seller</source>
+        <translation>Πωλητής</translation>
+    </message>
+    <message>
+        <source>Arbiter</source>
+        <translation>Διαιτητής</translation>
+    </message>
+    <message>
+        <source>No Feedback</source>
+        <translation>δεν Σχόλια</translation>
+    </message>
+    <message>
+        <source>From:</source>
+        <translation>Από:</translation>
+    </message>
+    <message>
+        <source>Rating:</source>
+        <translation>Εκτίμηση:</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowListPage</name>
+    <message>
+        <source>Escrows</source>
+        <translation>escrows</translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation>Έρευνα</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected escrow to the system clipboard</source>
+        <translation>Αντιγράψτε το τρέχον επιλεγμένο μεσεγγύησης στο πρόχειρο του συστήματος</translation>
+    </message>
+    <message>
+        <source>Details</source>
+        <translation>Καθέκαστα</translation>
+    </message>
+    <message>
+        <source>Manage Escrow</source>
+        <translation>διαχειριστείτε μεσεγγύησης</translation>
+    </message>
+    <message>
+        <source>&lt;&lt;</source>
+        <translation>&lt;&lt;</translation>
+    </message>
+    <message>
+        <source>&gt;&gt;</source>
+        <translation>&gt;&gt;</translation>
+    </message>
+    <message>
+        <source>Search for Syscoin Escrows.</source>
+        <translation>Αναζητήστε Syscoin escrows.</translation>
+    </message>
+    <message>
+        <source>Enter search term. Search for arbiter/seller or escrow GUID. Empty will search for all.</source>
+        <translation>Εισάγετε τον όρο αναζήτησης. Αναζήτηση κριτής / πωλητή ή μεσεγγύησης GUID. Αδειάστε θα ψάξει για όλους.</translation>
+    </message>
+    <message>
+        <source>General exception when searching escrow</source>
+        <translation>Γενική εξαίρεση κατά την αναζήτηση μεσεγγύησης</translation>
+    </message>
+    <message>
+        <source>Error: Invalid response from escrowfilter command</source>
+        <translation>Σφάλμα: Μη έγκυρη απόκριση από την εντολή escrowfilter</translation>
+    </message>
+</context>
+<context>
+    <name>EscrowTableModel</name>
+    <message>
+        <source>Escrow</source>
+        <translation>Χρηματική εγγύηση</translation>
+    </message>
+    <message>
+        <source>Time</source>
+        <translation>Χρόνος</translation>
+    </message>
+    <message>
+        <source>Seller</source>
+        <translation>Πωλητής</translation>
+    </message>
+    <message>
+        <source>Arbiter</source>
+        <translation>Διαιτητής</translation>
+    </message>
+    <message>
+        <source>Buyer</source>
+        <translation>Αγοραστής</translation>
+    </message>
+    <message>
+        <source>Offer</source>
+        <translation>Προσφορά</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>Τίτλος</translation>
+    </message>
+    <message>
+        <source>Total</source>
+        <translation>Σύνολο</translation>
+    </message>
+    <message>
+        <source>Rating</source>
+        <translation>Εκτίμηση</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Κατάσταση</translation>
+    </message>
+</context>
+<context>
+    <name>EscrowView</name>
+    <message>
+        <source>Search</source>
+        <translation>Έρευνα</translation>
     </message>
 </context>
 <context>
@@ -805,20 +1421,16 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
         <source>version</source>
         <translation>έκδοση</translation>
     </message>
     <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-bit)</translation>
+        <source>Syscoin Client</source>
+        <translation>Πελάτης Syscoin</translation>
     </message>
     <message>
-        <source>About Syscoin Core</source>
-        <translation>Σχετικά με το Syscoin Core</translation>
+        <source>(%1-bit)</source>
+        <translation>(%1-bit)</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -832,24 +1444,79 @@
         <source>command-line options</source>
         <translation>επιλογής γραμμής εντολών</translation>
     </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>Επιλογές UI:</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Ρυθμίστε τη γλώσσα, για παράδειγμα, "de_DE" (προεπιλογή: τοπικές ρυθμίσεις συστήματος)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Ξεκινήστε ελαχιστοποιηθεί</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Ορισμός πιστοποιητικών ρίζας SSL για την αίτηση πληρωμής (default: -system-)</translation>
+    </message>
+    <message>
+        <source>Reset all settings changed in the GUI</source>
+        <translation>Επαναφορά όλων των ρυθμίσεων αλλάξει στο GUI</translation>
+    </message>
 </context>
+<context>
+    <name>InMessageListPage</name>
+    <message>
+        <source>New Msg</source>
+        <translation>New Msg</translation>
+    </message>
+    <message>
+        <source>Details</source>
+        <translation>Καθέκαστα</translation>
+    </message>
+    <message>
+        <source>Export Message Data</source>
+        <translation>Εξαγωγή δεδομένων μηνύματος</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Αρχείο οριοθετημένο με κόμματα (*.csv)</translation>
+    </message>
+    <message>
+        <source>GUID</source>
+        <translation>GUID</translation>
+    </message>
+    <message>
+        <source>Time</source>
+        <translation>Χρόνος</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>Από</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Προς</translation>
+    </message>
+    <message>
+        <source>Subject</source>
+        <translation>Θέμα</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Μήνυμα</translation>
+    </message>
+    <message>
+        <source>Error exporting</source>
+        <translation>σφάλμα κατά την εξαγωγή</translation>
+    </message>
+    </context>
 <context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
         <translation>Καλώς ήρθατε</translation>
-    </message>
-    <message>
-        <source>Welcome to Syscoin Core.</source>
-        <translation>Καλώς ήρθατε στο Syscoin Core.</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where Syscoin Core will store its data.</source>
-        <translation>Καθώς αυτή είναι η πρώτη φορά που εκκινείται το πρόγραμμα, μπορείτε να διαλέξετε πού θα αποθηκεύει το Syscoin Core τα δεδομένα του.</translation>
-    </message>
-    <message>
-        <source>Syscoin Core will download and store a copy of the Syscoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>O πυρήνας Syscoin θα κατεβάσει και να αποθηκεύσει ένα αντίγραφο της αλυσίδας μπλοκ Syscoin. Τουλάχιστον %1GB δεδομένων θα αποθηκευτούν σε αυτόν τον κατάλογο, και θα αυξηθεί με την πάροδο του χρόνου. Το πορτοφόλι θα αποθηκευτεί σε αυτόν τον κατάλογο.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -858,10 +1525,6 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>Προσαρμογή του φακέλου δεδομένων: </translation>
-    </message>
-    <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -878,6 +1541,1443 @@
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation><numerusform>(από το %n GB που απαιτείται)</numerusform><numerusform>(από τα %n GB που απαιτούνται)</numerusform></translation>
+    </message>
+</context>
+<context>
+    <name>ManageEscrowDialog</name>
+    <message>
+        <source>Manage Your Escrow</source>
+        <translation>Διαχειριστείτε μεσεγγύησης σας</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Ματαίωση</translation>
+    </message>
+    <message>
+        <source>Release this escrow to the seller</source>
+        <translation>Απελευθερώστε αυτό μεσεγγύησης στον πωλητή</translation>
+    </message>
+    <message>
+        <source>Release Escrow</source>
+        <translation>απελευθέρωση μεσεγγύησης</translation>
+    </message>
+    <message>
+        <source>Refund this escrow back to the buyer</source>
+        <translation>Επιστρέφει το εν λόγω μεσεγγύησης πίσω στον αγοραστή</translation>
+    </message>
+    <message>
+        <source>Refund Escrow</source>
+        <translation>μεσεγγύησης επιστροφή χρημάτων</translation>
+    </message>
+    <message>
+        <source> Stars</source>
+        <translation>Ηθοποιοί</translation>
+    </message>
+    <message>
+        <source>Cannot find this escrow on the network, please try again later.</source>
+        <translation>Δεν μπορείτε να βρείτε αυτό το δεσμευμένο στο δίκτυο, δοκιμάστε ξανά αργότερα.</translation>
+    </message>
+    <message>
+        <source>You cannot manage this escrow because you do not own one of either the buyer, merchant or arbiter aliases.</source>
+        <translation>Δεν μπορείτε να διαχειριστείτε αυτή τη μεσεγγύησης, επειδή δεν έχετε το ένα είτε του αγοραστή, έμπορος ή ψευδώνυμα κριτής.</translation>
+    </message>
+    <message>
+        <source>Claim Payment</source>
+        <translation>αίτηση πληρωμής</translation>
+    </message>
+    <message>
+        <source>Claim Refund</source>
+        <translation>αίτηση επιστροφής</translation>
+    </message>
+    <message>
+        <source>Offer:</source>
+        <translation>Προσφορά:</translation>
+    </message>
+    <message>
+        <source>The escrow has been successfully claimed by the merchant. The escrow is complete.</source>
+        <translation>Η μεσεγγύησης έχει υποστήριξε με επιτυχία από τον έμπορο. Η μεσεγγύησης είναι πλήρης.</translation>
+    </message>
+    <message>
+        <source>Leave Feedback</source>
+        <translation>Αφήστε Σχόλια</translation>
+    </message>
+    <message>
+        <source>The escrow has been successfully refunded to the buyer. The escrow is complete.</source>
+        <translation>Η μεσεγγύησης έχει επιτυχία επιστραφεί στον αγοραστή. Η μεσεγγύησης είναι πλήρης.</translation>
+    </message>
+    <message>
+        <source>The escrow status was not recognized. Please contact the Syscoin team.</source>
+        <translation>Το καθεστώς μεσεγγύησης δεν αναγνωρίστηκε. Επικοινωνήστε με την ομάδα Syscoin.</translation>
+    </message>
+    <message>
+        <source>none</source>
+        <translation>κανένα</translation>
+    </message>
+    <message>
+        <source>Thank you for your feedback!</source>
+        <translation>Ευχαριστούμε για την ανταπόκρισή σας!</translation>
+    </message>
+    <message>
+        <source>General exception sending feedbackescrow</source>
+        <translation>Γενική εξαίρεση την αποστολή feedbackescrow</translation>
+    </message>
+    <message>
+        <source>Cannot parse JSON response: </source>
+        <translation>δεν μπορεί να αναλύσει απάντηση JSON:</translation>
+    </message>
+    <message>
+        <source>Please Wait...</source>
+        <translation>Παρακαλώ περιμένετε...</translation>
+    </message>
+    <message>
+        <source>Escrow released successfully!</source>
+        <translation>Μεσεγγύησης κυκλοφόρησε με επιτυχία!</translation>
+    </message>
+    <message>
+        <source>General exception releasing escrow</source>
+        <translation>Γενική εξαίρεση απελευθερώνοντας μεσεγγύησης</translation>
+    </message>
+    <message>
+        <source>Escrow refunded successfully!</source>
+        <translation>Μεσεγγύησης επιστρέφεται με επιτυχία!</translation>
+    </message>
+    <message>
+        <source>General exception refunding escrow</source>
+        <translation>Γενική εξαίρεση επιστροφή μεσεγγύησης</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageInfoDialog</name>
+    <message>
+        <source>Message Info</source>
+        <translation>Πληροφορίες μηνύματος</translation>
+    </message>
+    <message>
+        <source>From:</source>
+        <translation>Από:</translation>
+    </message>
+    <message>
+        <source>The value associated with this message.</source>
+        <translation>Η αξία που συνδέεται με αυτό το μήνυμα.</translation>
+    </message>
+    <message>
+        <source>To:</source>
+        <translation>Να:</translation>
+    </message>
+    <message>
+        <source>The message name.</source>
+        <translation>Το όνομα μήνυμα.</translation>
+    </message>
+    <message>
+        <source>Topic:</source>
+        <translation>Θέμα:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Μήνυμα:</translation>
+    </message>
+    <message>
+        <source>Time:</source>
+        <translation>Χρόνος:</translation>
+    </message>
+</context>
+<context>
+    <name>MessageListPage</name>
+    <message>
+        <source>Message List</source>
+        <translation>Λίστα μηνυμάτων</translation>
+    </message>
+    <message>
+        <source>Refresh message list</source>
+        <translation>Ανανέωση λίστας μηνυμάτων</translation>
+    </message>
+    <message>
+        <source>Send a new message</source>
+        <translation>Στείλτε ένα νέο μήνυμα</translation>
+    </message>
+    <message>
+        <source>New Msg</source>
+        <translation>New Msg</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected message to the system clipboard</source>
+        <translation>Αντιγράψτε το τρέχον επιλεγμένο μήνυμα στο πρόχειρο του συστήματος</translation>
+    </message>
+    <message>
+        <source>Get message details</source>
+        <translation>Πάρτε τις λεπτομέρειες του μηνύματος</translation>
+    </message>
+    <message>
+        <source>Details</source>
+        <translation>Καθέκαστα</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Εξαγωγή δεδομένων καρτέλας σε αρχείο</translation>
+    </message>
+</context>
+<context>
+    <name>MessageTableModel</name>
+    <message>
+        <source>GUID</source>
+        <translation>GUID</translation>
+    </message>
+    <message>
+        <source>Time</source>
+        <translation>Χρόνος</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>Από</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Προς</translation>
+    </message>
+    <message>
+        <source>Subject</source>
+        <translation>Θέμα</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Μήνυμα</translation>
+    </message>
+</context>
+<context>
+    <name>MessageView</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Φόρμα</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>Χρόνος τελευταίου μπλοκ</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>Απόκρυψη</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAcceptedOfferListPage</name>
+    <message>
+        <source>My Accepted Offers</source>
+        <translation>Αποδεκτές Προσφορές μου</translation>
+    </message>
+    <message>
+        <source>Refresh your accepted offer list</source>
+        <translation>Ανανέωση λίστα αποδεκτών προσφορά σας</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected offer to the system clipboard</source>
+        <translation>Αντιγράψτε το τρέχον επιλεγμένο προσφορά στο πρόχειρο του συστήματος</translation>
+    </message>
+    <message>
+        <source>Details of the currently accepted offer</source>
+        <translation>Λεπτομέρειες σχετικά με την τρέχουσα αποδεκτή προσφορά</translation>
+    </message>
+    <message>
+        <source>Details</source>
+        <translation>Καθέκαστα</translation>
+    </message>
+    <message>
+        <source>Send message to buyer</source>
+        <translation>Αποστολή μηνύματος στον αγοραστή</translation>
+    </message>
+    <message>
+        <source>Send Msg To Buyer</source>
+        <translation>Αποστολή λάθους για τον αγοραστή</translation>
+    </message>
+    <message>
+        <source>Leave Feedback</source>
+        <translation>Αφήστε Σχόλια</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Εξαγωγή δεδομένων καρτέλας σε αρχείο</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Όλα</translation>
+    </message>
+    <message>
+        <source>Error making request: </source>
+        <translation>Σφάλμα κάνει αίτηση:</translation>
+    </message>
+    <message>
+        <source>Cannot parse JSON response: </source>
+        <translation>δεν μπορεί να αναλύσει απάντηση JSON:</translation>
+    </message>
+    <message>
+        <source>Please Wait...</source>
+        <translation>Παρακαλώ περιμένετε...</translation>
+    </message>
+    <message>
+        <source>Export Offer Data</source>
+        <translation>Εξαγωγή Προσφορά Δεδομένων</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Αρχείο οριοθετημένο με κόμματα (*.csv)</translation>
+    </message>
+    <message>
+        <source>Offer ID</source>
+        <translation>ID προσφορά</translation>
+    </message>
+    <message>
+        <source>Accept ID</source>
+        <translation>Αποδοχή ID</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>Τίτλος</translation>
+    </message>
+    <message>
+        <source>Height</source>
+        <translation>Ύψος</translation>
+    </message>
+    <message>
+        <source>Price</source>
+        <translation>Τιμή</translation>
+    </message>
+    <message>
+        <source>Currency</source>
+        <translation>Νόμισμα</translation>
+    </message>
+    <message>
+        <source>Total</source>
+        <translation>Σύνολο</translation>
+    </message>
+    <message>
+        <source>Seller</source>
+        <translation>Πωλητής</translation>
+    </message>
+    <message>
+        <source>Buyer</source>
+        <translation>Αγοραστής</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Κατάσταση</translation>
+    </message>
+    <message>
+        <source>Error exporting</source>
+        <translation>σφάλμα κατά την εξαγωγή</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAliasListPage</name>
+    <message>
+        <source>My Aliases</source>
+        <translation>Ψευδώνυμα μου</translation>
+    </message>
+    <message>
+        <source>Refresh alias list</source>
+        <translation>Ανανέωση λίστας ψευδώνυμο</translation>
+    </message>
+    <message>
+        <source>Create a new alias</source>
+        <translation>Δημιουργήστε ένα νέο ψευδώνυμο</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected alias to the system clipboard</source>
+        <translation>Αντιγράψτε τα επιλεγμένα ψευδώνυμο στο πρόχειρο του συστήματος</translation>
+    </message>
+    <message>
+        <source>New Alias</source>
+        <translation>New Alias</translation>
+    </message>
+    <message>
+        <source>Edit selected alias</source>
+        <translation>Επεξεργασία επιλεγμένων ψευδώνυμο</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>Επεξεργασία</translation>
+    </message>
+    <message>
+        <source>Transfer selected alias</source>
+        <translation>Μεταφορά επιλεγμένων ψευδώνυμο</translation>
+    </message>
+    <message>
+        <source>Transfer</source>
+        <translation>Μεταφορά</translation>
+    </message>
+    <message>
+        <source>Create a new public key used for transferring aliases</source>
+        <translation>Δημιουργήστε ένα νέο δημόσιο κλειδί που χρησιμοποιείται για τη μεταφορά ψευδώνυμα</translation>
+    </message>
+    <message>
+        <source>New Public Key</source>
+        <translation>Νέα Δημόσιου Κλειδιού</translation>
+    </message>
+    <message>
+        <source>Open list of affiliates associated with this alias</source>
+        <translation>Ανοίξτε τη λίστα των θυγατρικών που σχετίζονται με αυτό το ψευδώνυμο</translation>
+    </message>
+    <message>
+        <source>Affiliations</source>
+        <translation>Συνεργασίες</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Εξαγωγή δεδομένων καρτέλας σε αρχείο</translation>
+    </message>
+    <message>
+        <source>These are your registered Syscoin Aliases. Alias operations (create, update, transfer) take 2-5 minutes to become active.</source>
+        <translation>Αυτές είναι οι εγγεγραμμένοι σας Syscoin ψευδώνυμα. λειτουργίες Alias ​​(δημιουργία, ενημέρωση, μεταφορά) να λαμβάνουν 2-5 λεπτά για να γίνουν ενεργοί.</translation>
+    </message>
+    <message>
+        <source>You cannot edit this alias because it has expired</source>
+        <translation>Δεν μπορείτε να επεξεργαστείτε αυτό το ψευδώνυμο επειδή έχει λήξει</translation>
+    </message>
+    <message>
+        <source>This alias is still pending, click the refresh button once the alias confirms and try again</source>
+        <translation>Αυτό το ψευδώνυμο εξακολουθεί να εκκρεμεί, κάντε κλικ στο κουμπί ανανέωσης μία φορά το ψευδώνυμο επιβεβαιώνει και προσπαθήστε ξανά</translation>
+    </message>
+    <message>
+        <source>You cannot transfer this alias because it has expired</source>
+        <translation>Δεν μπορείτε να μεταφέρετε αυτό το ψευδώνυμο επειδή έχει λήξει</translation>
+    </message>
+    <message>
+        <source>New Public Key For Alias Transfer</source>
+        <translation>Νέα Δημόσιου Κλειδιού Για Alias ​​Μεταφορά</translation>
+    </message>
+    <message>
+        <source> has been copied to your clipboard! IMPORTANT: This key is for one-time use only! Do not re-use public keys for multiple aliases or transfers.</source>
+        <translation>έχει αντιγραφεί στο πρόχειρο σας! ΣΗΜΑΝΤΙΚΟ: Αυτό το κλειδί είναι για χρήση μόνο μία φορά! Μην χρησιμοποιήσετε ξανά τα δημόσια κλειδιά για πολλά ψευδώνυμα ή μεταφορές.</translation>
+    </message>
+    <message>
+        <source>Could not generate a new public key!</source>
+        <translation>Δεν θα μπορούσε να δημιουργήσει ένα νέο δημόσιο κλειδί!</translation>
+    </message>
+    <message>
+        <source>Export Alias Data</source>
+        <translation>Εξαγωγή Alias ​​Δεδομένων</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Αρχείο οριοθετημένο με κόμματα (*.csv)</translation>
+    </message>
+    <message>
+        <source>Alias</source>
+        <translation>Ψευδώνυμο</translation>
+    </message>
+    <message>
+        <source>Expires On</source>
+        <translation>Λήγει στις</translation>
+    </message>
+    <message>
+        <source>Seller Rating</source>
+        <translation>Πωλητής Αξιολόγηση</translation>
+    </message>
+    <message>
+        <source>Error exporting</source>
+        <translation>σφάλμα κατά την εξαγωγή</translation>
+    </message>
+</context>
+<context>
+    <name>MyCertListPage</name>
+    <message>
+        <source>My Certificates</source>
+        <translation>πιστοποιητικά μου</translation>
+    </message>
+    <message>
+        <source>Refresh certificate list</source>
+        <translation>Ανανέωση λίστας πιστοποιητικό</translation>
+    </message>
+    <message>
+        <source>Create a new certificate</source>
+        <translation>Δημιουργήστε ένα νέο πιστοποιητικό</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected certificate to the system clipboard</source>
+        <translation>Αντιγράψτε το επιλεγμένο πιστοποιητικό στο πρόχειρο του συστήματος</translation>
+    </message>
+    <message>
+        <source>Edit selected certificate</source>
+        <translation>Επεξεργαστείτε επιλεγμένου πιστοποιητικού</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>Επεξεργασία</translation>
+    </message>
+    <message>
+        <source>Transfer selected certificate</source>
+        <translation>Μεταφορά του επιλεγμένου πιστοποιητικού</translation>
+    </message>
+    <message>
+        <source>Transfer</source>
+        <translation>Μεταφορά</translation>
+    </message>
+    <message>
+        <source>Sell selected certificate</source>
+        <translation>Πουλήστε επιλεγμένου πιστοποιητικού</translation>
+    </message>
+    <message>
+        <source>Sell</source>
+        <translation>Πουλώ</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Εξαγωγή δεδομένων καρτέλας σε αρχείο</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Όλα</translation>
+    </message>
+    <message>
+        <source>You cannot sell this certificate because it has expired</source>
+        <translation>Δεν μπορείτε να πουλήσετε το πιστοποιητικό αυτό, επειδή έχει λήξει</translation>
+    </message>
+    <message>
+        <source>You cannot edit this certificate because it has expired</source>
+        <translation>Δεν μπορείτε να επεξεργαστείτε αυτό το πιστοποιητικό, διότι έχει λήξει</translation>
+    </message>
+    <message>
+        <source>You cannot transfer this certificate because it has expired</source>
+        <translation>Δεν μπορείτε να μεταφέρετε αυτό το πιστοποιητικό, διότι έχει λήξει</translation>
+    </message>
+    <message>
+        <source>Export Certificate Data</source>
+        <translation>Δεδομένα πιστοποιητικού εξαγωγής</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Αρχείο οριοθετημένο με κόμματα (*.csv)</translation>
+    </message>
+    <message>
+        <source>Cert</source>
+        <translation>cert</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>Τίτλος</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Κατάσταση</translation>
+    </message>
+    <message>
+        <source>Owner</source>
+        <translation>Ιδιοκτήτης</translation>
+    </message>
+    <message>
+        <source>Category</source>
+        <translation>Κατηγορία</translation>
+    </message>
+    <message>
+        <source>Expires On</source>
+        <translation>Λήγει στις</translation>
+    </message>
+    <message>
+        <source>Error exporting</source>
+        <translation>σφάλμα κατά την εξαγωγή</translation>
+    </message>
+</context>
+<context>
+    <name>MyEscrowListPage</name>
+    <message>
+        <source>My Escrow List</source>
+        <translation>Λίστα μεσεγγύησης μου</translation>
+    </message>
+    <message>
+        <source>Show Completed/ Refunded/Expired Escrows</source>
+        <translation>Εμφάνιση Ολοκληρώθηκε / Επαναχρηματοδοτήθηκε / Έληξε escrows</translation>
+    </message>
+    <message>
+        <source>Refresh your list of escrows</source>
+        <translation>Ανανεώστε τη λίστα των escrows</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected escrow to the system clipboard</source>
+        <translation>Αντιγράψτε το τρέχον επιλεγμένο μεσεγγύησης στο πρόχειρο του συστήματος</translation>
+    </message>
+    <message>
+        <source>Details</source>
+        <translation>Καθέκαστα</translation>
+    </message>
+    <message>
+        <source>Release selected escrow to merchant</source>
+        <translation>Απελευθερώστε επιλεγμένα μεσεγγύησης σε έμπορο</translation>
+    </message>
+    <message>
+        <source>Manage Escrow</source>
+        <translation>διαχειριστείτε μεσεγγύησης</translation>
+    </message>
+    <message>
+        <source>Send message to buyer</source>
+        <translation>Αποστολή μηνύματος στον αγοραστή</translation>
+    </message>
+    <message>
+        <source>Send Msg To Buyer</source>
+        <translation>Αποστολή λάθους για τον αγοραστή</translation>
+    </message>
+    <message>
+        <source>Send message to seller</source>
+        <translation>Αποστολή μηνύματος στον πωλητή</translation>
+    </message>
+    <message>
+        <source>Send Msg To Seller</source>
+        <translation>Αποστολή λάθους στον πωλητή</translation>
+    </message>
+    <message>
+        <source>Send message to arbiter</source>
+        <translation>Στείλτε μήνυμα προς το διαιτητή</translation>
+    </message>
+    <message>
+        <source>Send Msg To Arbiter</source>
+        <translation>Αποστολή MSG στην κριτής</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Εξαγωγή δεδομένων καρτέλας σε αρχείο</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Όλα</translation>
+    </message>
+    <message>
+        <source>Error making request: </source>
+        <translation>Σφάλμα κάνει αίτηση:</translation>
+    </message>
+    <message>
+        <source>Cannot parse JSON response: </source>
+        <translation>δεν μπορεί να αναλύσει απάντηση JSON:</translation>
+    </message>
+    <message>
+        <source>Please Wait...</source>
+        <translation>Παρακαλώ περιμένετε...</translation>
+    </message>
+    <message>
+        <source>Export Escrow Data</source>
+        <translation>Εξαγωγή μεσεγγύησης Δεδομένων</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Αρχείο οριοθετημένο με κόμματα (*.csv)</translation>
+    </message>
+    <message>
+        <source>Error exporting</source>
+        <translation>σφάλμα κατά την εξαγωγή</translation>
+    </message>
+</context>
+<context>
+    <name>MyOfferListPage</name>
+    <message>
+        <source>My Offers</source>
+        <translation>Προσφορές μου</translation>
+    </message>
+    <message>
+        <source>Show Sold Out/ Expired Offers</source>
+        <translation>Εμφάνιση Sold Out / Έληξε Προσφορές</translation>
+    </message>
+    <message>
+        <source>Show Digital Offers Only</source>
+        <translation>Εμφάνιση Digital προσφέρει μόνο</translation>
+    </message>
+    <message>
+        <source>Refresh your list of offers</source>
+        <translation>Ανανεώστε τη λίστα των προσφορών</translation>
+    </message>
+    <message>
+        <source>New Offer</source>
+        <translation>νέα Προσφορά</translation>
+    </message>
+    <message>
+        <source>Create a new offer</source>
+        <translation>Δημιουργήστε μια νέα προσφορά</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected offer to the system clipboard</source>
+        <translation>Αντιγράψτε το τρέχον επιλεγμένο προσφορά στο πρόχειρο του συστήματος</translation>
+    </message>
+    <message>
+        <source>Edit selected offer</source>
+        <translation>Επεξεργασία επιλεγμένων προσφορά</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>Επεξεργασία</translation>
+    </message>
+    <message>
+        <source>Manage affiliates for this offer</source>
+        <translation>Διαχειριστείτε τους συνεργάτες για αυτή την προσφορά</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Εξαγωγή δεδομένων καρτέλας σε αρχείο</translation>
+    </message>
+    <message>
+        <source>Manage Affiliates</source>
+        <translation>διαχειριστείτε Συνεργάτες</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Όλα</translation>
+    </message>
+    <message>
+        <source>You cannot edit this offer because it has expired</source>
+        <translation>Δεν μπορείτε να επεξεργαστείτε αυτή την προσφορά, επειδή έχει λήξει</translation>
+    </message>
+    <message>
+        <source>Export Offer Data</source>
+        <translation>Εξαγωγή Προσφορά Δεδομένων</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Αρχείο οριοθετημένο με κόμματα (*.csv)</translation>
+    </message>
+    <message>
+        <source>Offer</source>
+        <translation>Προσφορά</translation>
+    </message>
+    <message>
+        <source>Cert</source>
+        <translation>cert</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>Τίτλος</translation>
+    </message>
+    <message>
+        <source>Description</source>
+        <translation>Περιγραφή</translation>
+    </message>
+    <message>
+        <source>Category</source>
+        <translation>Κατηγορία</translation>
+    </message>
+    <message>
+        <source>Price</source>
+        <translation>Τιμή</translation>
+    </message>
+    <message>
+        <source>Currency</source>
+        <translation>Νόμισμα</translation>
+    </message>
+    <message>
+        <source>Sold</source>
+        <translation>Πωληθεί</translation>
+    </message>
+    <message>
+        <source>Private</source>
+        <translation>Ιδιωτικός</translation>
+    </message>
+    <message>
+        <source>Seller Alias</source>
+        <translation>Πωλητής Alias</translation>
+    </message>
+    <message>
+        <source>Seller Rating</source>
+        <translation>Πωλητής Αξιολόγηση</translation>
+    </message>
+    <message>
+        <source>Error exporting</source>
+        <translation>σφάλμα κατά την εξαγωγή</translation>
+    </message>
+</context>
+<context>
+    <name>MyOfferWhitelistTableModel</name>
+    <message>
+        <source>Offer</source>
+        <translation>Προσφορά</translation>
+    </message>
+    <message>
+        <source>Alias</source>
+        <translation>Ψευδώνυμο</translation>
+    </message>
+    <message>
+        <source>Discount</source>
+        <translation>Έκπτωση</translation>
+    </message>
+    <message>
+        <source>Expires On</source>
+        <translation>Λήγει στις</translation>
+    </message>
+</context>
+<context>
+    <name>MyWhitelistOfferDialog</name>
+    <message>
+        <source>My Offer Affiliates</source>
+        <translation>Μου Συνεργάτες Προσφορά</translation>
+    </message>
+    <message>
+        <source>Refresh your affiliate list for this offer</source>
+        <translation>Ανανέωση λίστας θυγατρικών σας για αυτή την προσφορά</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Εξαγωγή δεδομένων καρτέλας σε αρχείο</translation>
+    </message>
+    <message>
+        <source>You are an affiliate for these offers. Affiliate operations take 2-5 minutes to become active. The owner of the offer may add you as to his affiliate list and your affiliate entry will show up here.</source>
+        <translation>Είστε μια θυγατρική για αυτές τις προσφορές. επιχειρήσεις θυγατρικών πάρει 2-5 λεπτά για να γίνουν ενεργοί. Ο ιδιοκτήτης της προσφοράς μπορεί να σας προσθέσει ως στην λίστα συνεργατών του και την έναρξη θυγατρικών σας θα εμφανιστούν εδώ.</translation>
+    </message>
+    <message>
+        <source>There was an exception trying to refresh the affiliate list: </source>
+        <translation>Υπήρχε μια εξαίρεση που προσπαθεί να ανανεώσετε τη λίστα θυγατρικών:</translation>
+    </message>
+    <message>
+        <source>Export Affiliate Data</source>
+        <translation>Εξαγωγή δεδομένων θυγατρικών</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Αρχείο οριοθετημένο με κόμματα (*.csv)</translation>
+    </message>
+    <message>
+        <source>Offer</source>
+        <translation>Προσφορά</translation>
+    </message>
+    <message>
+        <source>Alias</source>
+        <translation>Ψευδώνυμο</translation>
+    </message>
+    <message>
+        <source>Discount</source>
+        <translation>Έκπτωση</translation>
+    </message>
+    <message>
+        <source>Error exporting</source>
+        <translation>σφάλμα κατά την εξαγωγή</translation>
+    </message>
+    </context>
+<context>
+    <name>NewMessageDialog</name>
+    <message>
+        <source>New Message</source>
+        <translation>Νέο μήνυμα</translation>
+    </message>
+    <message>
+        <source>From:</source>
+        <translation>Από:</translation>
+    </message>
+    <message>
+        <source>To:</source>
+        <translation>Να:</translation>
+    </message>
+    <message>
+        <source>The message name.</source>
+        <translation>Το όνομα μήνυμα.</translation>
+    </message>
+    <message>
+        <source>Topic:</source>
+        <translation>Θέμα:</translation>
+    </message>
+    <message>
+        <source>Original Message:</source>
+        <translation>Αρχικό Μήνυμα:</translation>
+    </message>
+    <message>
+        <source>Your Message:</source>
+        <translation>Το μήνυμά σου:</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Όχι</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Ναί</translation>
+    </message>
+    <message>
+        <source>Reply Message</source>
+        <translation>Απάντηση Μήνυμα</translation>
+    </message>
+    <message>
+        <source>There was an exception trying to refresh the alias list: </source>
+        <translation>Υπήρχε μια εξαίρεση που προσπαθεί να ανανεώσετε τη λίστα ψευδώνυμο:</translation>
+    </message>
+    <message>
+        <source>Empty message not allowed. Please try again</source>
+        <translation>Αδειάστε το μήνυμα δεν επιτρέπεται. ΠΑΡΑΚΑΛΩ προσπαθησε ξανα</translation>
+    </message>
+    <message>
+        <source>General exception creating new message</source>
+        <translation>Γενική εξαίρεση δημιουργώντας νέο μήνυμα</translation>
+    </message>
+    <message>
+        <source>General exception replying to message</source>
+        <translation>Γενική εξαίρεση απάντηση σε μήνυμα</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Δεν είναι δυνατό το ξεκλείδωμα του πορτοφολιού.</translation>
+    </message>
+</context>
+<context>
+    <name>NewWhitelistDialog</name>
+    <message>
+        <source>Add Affiliate</source>
+        <translation>Προσθέστε θυγατρικών</translation>
+    </message>
+    <message>
+        <source>Offer</source>
+        <translation>Προσφορά</translation>
+    </message>
+    <message>
+        <source>Alias</source>
+        <translation>Ψευδώνυμο</translation>
+    </message>
+    <message>
+        <source>Discount</source>
+        <translation>Έκπτωση</translation>
+    </message>
+    <message>
+        <source>New affiliate added successfully!</source>
+        <translation>Νέα θυγατρική προστέθηκε με επιτυχία!</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Δεν είναι δυνατό το ξεκλείδωμα του πορτοφολιού.</translation>
+    </message>
+</context>
+<context>
+    <name>OfferAcceptDialog</name>
+    <message>
+        <source>Accept Syscoin Offer</source>
+        <translation>Αποδοχή Syscoin Προσφορά</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Ματαίωση</translation>
+    </message>
+    <message>
+        <source>Pay with Bitcoin</source>
+        <translation>Πληρώστε με Bitcoin</translation>
+    </message>
+    <message>
+        <source>Pay with BTC</source>
+        <translation>Πληρώστε με BTC</translation>
+    </message>
+    <message>
+        <source>Pay with Syscoin</source>
+        <translation>Πληρώστε με Syscoin</translation>
+    </message>
+    <message>
+        <source>Use Escrow</source>
+        <translation>χρήση μεσεγγύησης</translation>
+    </message>
+    <message>
+        <source>Pay Escrow</source>
+        <translation>Pay μεσεγγύησης</translation>
+    </message>
+    <message>
+        <source>Pay For Item</source>
+        <translation>Πληρώστε για Είδους</translation>
+    </message>
+    <message>
+        <source>Invalid quantity when trying to accept offer!</source>
+        <translation>Μη έγκυρη ποσότητα, όταν προσπαθούν να δεχτούν την προσφορά!</translation>
+    </message>
+    <message>
+        <source>General exception when accepting offer</source>
+        <translation>Γενική εξαίρεση, όταν δέχεται την προσφορά</translation>
+    </message>
+    <message>
+        <source>Invalid quantity when trying to create escrow!</source>
+        <translation>Μη έγκυρη ποσότητα, όταν προσπαθείτε να δημιουργήσετε μεσεγγύησης!</translation>
+    </message>
+    <message>
+        <source>General exception when creating escrow</source>
+        <translation>Γενική εξαίρεση κατά τη δημιουργία μεσεγγύησης</translation>
+    </message>
+</context>
+<context>
+    <name>OfferAcceptDialogBTC</name>
+    <message>
+        <source>Accept Syscoin Offer</source>
+        <translation>Αποδοχή Syscoin Προσφορά</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Ματαίωση</translation>
+    </message>
+    <message>
+        <source>Open your local Bitcoin client</source>
+        <translation>Ανοίξτε τοπικό πελάτη Bitcoin σας</translation>
+    </message>
+    <message>
+        <source>Open BTC Wallet</source>
+        <translation>Open Πορτοφόλι BTC</translation>
+    </message>
+    <message>
+        <source>Confirm this payment on the Bitcoin blockchain</source>
+        <translation>Επιβεβαίωση αυτής της πληρωμής στο blockchain Bitcoin</translation>
+    </message>
+    <message>
+        <source>Use Escrow</source>
+        <translation>χρήση μεσεγγύησης</translation>
+    </message>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Το αποτέλεσμα της διεύθυνσης είναι πολύ μεγάλο. Μειώστε το μέγεθος για το κείμενο της ετικέτας/ μηνύματος.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Σφάλμα κατά την κωδικοποίηση του URI σε κώδικα QR</translation>
+    </message>
+    <message>
+        <source>Error making request: </source>
+        <translation>Σφάλμα κάνει αίτηση:</translation>
+    </message>
+    <message>
+        <source>Could not create escrow transaction: could not find redeem script in response</source>
+        <translation>Δεν ήταν δυνατή η δημιουργία escrow συναλλαγή: δεν μπόρεσα να βρω εξαγοράσει σενάριο σε απάντηση</translation>
+    </message>
+    <message>
+        <source>to</source>
+        <translation>έως</translation>
+    </message>
+    <message>
+        <source>Cannot parse JSON response: </source>
+        <translation>δεν μπορεί να αναλύσει απάντηση JSON:</translation>
+    </message>
+    <message>
+        <source>Please Wait...</source>
+        <translation>Παρακαλώ περιμένετε...</translation>
+    </message>
+    <message>
+        <source>Please enter a valid Bitcoin Transaction ID into the input box and try again</source>
+        <translation>Παρακαλώ εισάγετε μια έγκυρη Bitcoin αναγνωριστικό συναλλαγής στο πλαίσιο εισαγωγής και δοκιμάστε ξανά</translation>
+    </message>
+    <message>
+        <source>Invalid quantity when trying to accept offer!</source>
+        <translation>Μη έγκυρη ποσότητα, όταν προσπαθούν να δεχτούν την προσφορά!</translation>
+    </message>
+    <message>
+        <source>General exception when accepting offer</source>
+        <translation>Γενική εξαίρεση, όταν δέχεται την προσφορά</translation>
+    </message>
+    <message>
+        <source>Invalid quantity when trying to create escrow!</source>
+        <translation>Μη έγκυρη ποσότητα, όταν προσπαθείτε να δημιουργήσετε μεσεγγύησης!</translation>
+    </message>
+    <message>
+        <source>General exception when creating escrow</source>
+        <translation>Γενική εξαίρεση κατά τη δημιουργία μεσεγγύησης</translation>
+    </message>
+</context>
+<context>
+    <name>OfferAcceptDialogZEC</name>
+    <message>
+        <source>Accept Syscoin Offer</source>
+        <translation>Αποδοχή Syscoin Προσφορά</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Ματαίωση</translation>
+    </message>
+    <message>
+        <source>Open your local Bitcoin client</source>
+        <translation>Ανοίξτε τοπικό πελάτη Bitcoin σας</translation>
+    </message>
+    <message>
+        <source>Confirm this payment on the Bitcoin blockchain</source>
+        <translation>Επιβεβαίωση αυτής της πληρωμής στο blockchain Bitcoin</translation>
+    </message>
+    <message>
+        <source>Use Escrow</source>
+        <translation>χρήση μεσεγγύησης</translation>
+    </message>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Το αποτέλεσμα της διεύθυνσης είναι πολύ μεγάλο. Μειώστε το μέγεθος για το κείμενο της ετικέτας/ μηνύματος.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Σφάλμα κατά την κωδικοποίηση του URI σε κώδικα QR</translation>
+    </message>
+    <message>
+        <source>Error making request: </source>
+        <translation>Σφάλμα κάνει αίτηση:</translation>
+    </message>
+    <message>
+        <source>Could not create escrow transaction: could not find redeem script in response</source>
+        <translation>Δεν ήταν δυνατή η δημιουργία escrow συναλλαγή: δεν μπόρεσα να βρω εξαγοράσει σενάριο σε απάντηση</translation>
+    </message>
+    <message>
+        <source>to</source>
+        <translation>έως</translation>
+    </message>
+    <message>
+        <source>Cannot parse JSON response: </source>
+        <translation>δεν μπορεί να αναλύσει απάντηση JSON:</translation>
+    </message>
+    <message>
+        <source>Please Wait...</source>
+        <translation>Παρακαλώ περιμένετε...</translation>
+    </message>
+    <message>
+        <source>Invalid quantity when trying to accept offer!</source>
+        <translation>Μη έγκυρη ποσότητα, όταν προσπαθούν να δεχτούν την προσφορά!</translation>
+    </message>
+    <message>
+        <source>General exception when accepting offer</source>
+        <translation>Γενική εξαίρεση, όταν δέχεται την προσφορά</translation>
+    </message>
+    <message>
+        <source>Invalid quantity when trying to create escrow!</source>
+        <translation>Μη έγκυρη ποσότητα, όταν προσπαθείτε να δημιουργήσετε μεσεγγύησης!</translation>
+    </message>
+    <message>
+        <source>General exception when creating escrow</source>
+        <translation>Γενική εξαίρεση κατά τη δημιουργία μεσεγγύησης</translation>
+    </message>
+</context>
+<context>
+    <name>OfferAcceptInfoDialog</name>
+    <message>
+        <source>Offer Accept Info</source>
+        <translation>Προσφορά Αποδοχή Πληροφορίες</translation>
+    </message>
+    <message>
+        <source>Buyer:</source>
+        <translation>Αγοραστής:</translation>
+    </message>
+    <message>
+        <source>TXID:</source>
+        <translation>TXID:</translation>
+    </message>
+    <message>
+        <source>Height:</source>
+        <translation>Ύψος:</translation>
+    </message>
+    <message>
+        <source>Time:</source>
+        <translation>Χρόνος:</translation>
+    </message>
+    <message>
+        <source>Price:</source>
+        <translation>Τιμή:</translation>
+    </message>
+    <message>
+        <source>Discount:</source>
+        <translation>Έκπτωση:</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation>Ποσότητα:</translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation>Σύνολο:</translation>
+    </message>
+    <message>
+        <source>Average Rating:</source>
+        <translation>Μέσος όρος βαθμολογίας:</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>Εντάξει</translation>
+    </message>
+    <message>
+        <source>Offer Details</source>
+        <translation>Λεπτομέρειες προσφοράς</translation>
+    </message>
+    <message>
+        <source>Offer Title:</source>
+        <translation>Προσφορά Τίτλος:</translation>
+    </message>
+    <message>
+        <source>Commission:</source>
+        <translation>Επιτροπή:</translation>
+    </message>
+    <message>
+        <source>Offer ID:</source>
+        <translation>ID προσφοράς:</translation>
+    </message>
+    <message>
+        <source>Merchant:</source>
+        <translation>Έμπορος:</translation>
+    </message>
+    <message>
+        <source>Certificate:</source>
+        <translation>Πιστοποιητικό:</translation>
+    </message>
+    <message>
+        <source>No Feedback Found</source>
+        <translation>Δεν βρέθηκαν Σχόλια</translation>
+    </message>
+    <message>
+        <source>Buyer</source>
+        <translation>Αγοραστής</translation>
+    </message>
+    <message>
+        <source>Seller</source>
+        <translation>Πωλητής</translation>
+    </message>
+    <message>
+        <source>No Feedback</source>
+        <translation>δεν Σχόλια</translation>
+    </message>
+    <message>
+        <source>From:</source>
+        <translation>Από:</translation>
+    </message>
+    <message>
+        <source>Rating:</source>
+        <translation>Εκτίμηση:</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptTableModel</name>
+    <message>
+        <source>Offer ID</source>
+        <translation>ID προσφορά</translation>
+    </message>
+    <message>
+        <source>Accept ID</source>
+        <translation>Αποδοχή ID</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>Τίτλος</translation>
+    </message>
+    <message>
+        <source>Height</source>
+        <translation>Ύψος</translation>
+    </message>
+    <message>
+        <source>Price</source>
+        <translation>Τιμή</translation>
+    </message>
+    <message>
+        <source>Currency</source>
+        <translation>Νόμισμα</translation>
+    </message>
+    <message>
+        <source>Total</source>
+        <translation>Σύνολο</translation>
+    </message>
+    <message>
+        <source>Seller</source>
+        <translation>Πωλητής</translation>
+    </message>
+    <message>
+        <source>Buyer</source>
+        <translation>Αγοραστής</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Κατάσταση</translation>
+    </message>
+</context>
+<context>
+    <name>OfferEscrowDialog</name>
+    <message>
+        <source>Payment In Escrow</source>
+        <translation>Πληρωμή Σε μεσεγγύησης</translation>
+    </message>
+    <message>
+        <source>Please click Finish</source>
+        <translation>Παρακαλώ κάντε κλικ στο Finish</translation>
+    </message>
+</context>
+<context>
+    <name>OfferFeedbackDialog</name>
+    <message>
+        <source>Leave Offer Feedback</source>
+        <translation>Αφήστε Προσφορά Σχόλια</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Ματαίωση</translation>
+    </message>
+    <message>
+        <source>Leave Feedback</source>
+        <translation>Αφήστε Σχόλια</translation>
+    </message>
+    <message>
+        <source> Stars</source>
+        <translation>Ηθοποιοί</translation>
+    </message>
+    <message>
+        <source>Buyer:</source>
+        <translation>Αγοραστής:</translation>
+    </message>
+    <message>
+        <source>Thank you for your feedback!</source>
+        <translation>Ευχαριστούμε για την ανταπόκρισή σας!</translation>
+    </message>
+    <message>
+        <source>General exception sending offeracceptfeedback</source>
+        <translation>Γενική εξαίρεση την αποστολή offeracceptfeedback</translation>
+    </message>
+    <message>
+        <source>There was an exception trying to refresh get alias: </source>
+        <translation>Υπήρχε μια εξαίρεση που προσπαθεί να ανανεώσετε πάρει ψευδώνυμο:</translation>
+    </message>
+</context>
+<context>
+    <name>OfferListPage</name>
+    <message>
+        <source>Search Offers</source>
+        <translation>Αναζήτηση Προσφορές</translation>
+    </message>
+    <message>
+        <source>All Categories</source>
+        <translation>Όλες οι κατηγορίες</translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation>Έρευνα</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected offer to the system clipboard</source>
+        <translation>Αντιγράψτε το τρέχον επιλεγμένο προσφορά στο πρόχειρο του συστήματος</translation>
+    </message>
+    <message>
+        <source>Resell this offer for a commission</source>
+        <translation>Μεταπωλούν αυτή την προσφορά για την προμήθεια</translation>
+    </message>
+    <message>
+        <source>Resell</source>
+        <translation>Μεταπωλώ</translation>
+    </message>
+    <message>
+        <source>Purchase this offer</source>
+        <translation>Αγοράσει αυτή την προσφορά</translation>
+    </message>
+    <message>
+        <source>Purchase</source>
+        <translation>Αγορά</translation>
+    </message>
+    <message>
+        <source>Send message to seller</source>
+        <translation>Αποστολή μηνύματος στον πωλητή</translation>
+    </message>
+    <message>
+        <source>Send Msg To Seller</source>
+        <translation>Αποστολή λάθους στον πωλητή</translation>
+    </message>
+    <message>
+        <source>&lt;&lt;</source>
+        <translation>&lt;&lt;</translation>
+    </message>
+    <message>
+        <source>&gt;&gt;</source>
+        <translation>&gt;&gt;</translation>
+    </message>
+    <message>
+        <source>Search for Syscoin Offers (double click on one to purchase). Select Safe Search from wallet options if you wish to omit potentially offensive Offers(On by default)</source>
+        <translation>Αναζήτηση για Syscoin Προσφορές (διπλό κλικ σε κάποιον να αγοράσει). Επιλέξτε Ασφαλή Αναζήτηση από τις επιλογές πορτοφόλι, αν θέλετε να παραλείψετε δυνητικά προσβλητικό προσφορές (από προεπιλογή)</translation>
+    </message>
+    <message>
+        <source>Enter search term, regex accepted (ie: ^name returns all Offer's starting with 'name'). Empty will search for all.</source>
+        <translation>Εισάγετε τον όρο αναζήτησης, αποδέχθηκε regex (δηλαδή: ^ όνομα επιστρέφει όλα Πρότασης που αρχίζουν με 'όνομα »). Αδειάστε θα ψάξει για όλους.</translation>
+    </message>
+    <message>
+        <source>unlimited</source>
+        <translation>απεριόριστος</translation>
+    </message>
+    <message>
+        <source>Sorry, you cannot not resell this offer, it is sold out!</source>
+        <translation>Δυστυχώς, δεν μπορούμε να μεταπωλήσει αυτή την προσφορά, είναι sold out!</translation>
+    </message>
+    <message>
+        <source>Sorry, you cannot not purchase this offer, it is sold out!</source>
+        <translation>Συγνώμη, δεν μπορείτε να μην αγοράσετε αυτή την προσφορά, είναι sold out!</translation>
+    </message>
+    <message>
+        <source>General exception when searching offer</source>
+        <translation>Γενική εξαίρεση, όταν ψάχνουν προσφορά</translation>
+    </message>
+    <message>
+        <source>Error: Invalid response from offerfilter command</source>
+        <translation>Σφάλμα: Μη έγκυρη απόκριση από την εντολή offerfilter</translation>
+    </message>
+</context>
+<context>
+    <name>OfferPayDialog</name>
+    <message>
+        <source>Pay For Item</source>
+        <translation>Πληρώστε για Είδους</translation>
+    </message>
+    <message>
+        <source>Please click Finish</source>
+        <translation>Παρακαλώ κάντε κλικ στο Finish</translation>
+    </message>
+</context>
+<context>
+    <name>OfferTableModel</name>
+    <message>
+        <source>Offer</source>
+        <translation>Προσφορά</translation>
+    </message>
+    <message>
+        <source>Certificate</source>
+        <translation>Πιστοποιητικό</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>Τίτλος</translation>
+    </message>
+    <message>
+        <source>Description</source>
+        <translation>Περιγραφή</translation>
+    </message>
+    <message>
+        <source>Category</source>
+        <translation>Κατηγορία</translation>
+    </message>
+    <message>
+        <source>Price</source>
+        <translation>Τιμή</translation>
+    </message>
+    <message>
+        <source>Currency</source>
+        <translation>Νόμισμα</translation>
+    </message>
+    <message>
+        <source>Sold</source>
+        <translation>Πωληθεί</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Κατάσταση</translation>
+    </message>
+    <message>
+        <source>Private</source>
+        <translation>Ιδιωτικός</translation>
+    </message>
+    <message>
+        <source>Seller Alias</source>
+        <translation>Πωλητής Alias</translation>
+    </message>
+    <message>
+        <source>Rating</source>
+        <translation>Εκτίμηση</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferView</name>
+    <message>
+        <source>Sold</source>
+        <translation>Πωληθεί</translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation>Έρευνα</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferWhitelistTableModel</name>
+    <message>
+        <source>Alias</source>
+        <translation>Ψευδώνυμο</translation>
+    </message>
+    <message>
+        <source>Discount</source>
+        <translation>Έκπτωση</translation>
+    </message>
+    <message>
+        <source>Expires On</source>
+        <translation>Λήγει στις</translation>
     </message>
 </context>
 <context>
@@ -942,12 +3042,44 @@
         <translation>Ελαχιστοποίηση αντί για έξοδο κατά το κλείσιμο του παραθύρου. Όταν αυτή η επιλογή είναι ενεργοποιημένη, η εφαρμογή θα κλείνει μόνο αν επιλεχθεί η Έξοδος στο μενού.</translation>
     </message>
     <message>
+        <source>The user interface language can be set here. This setting will take effect after restarting Syscoin Core.</source>
+        <translation>Η γλώσσα διεπαφής χρήστη μπορεί να οριστεί εδώ. Αυτή η ρύθμιση θα τεθεί σε ισχύ μετά την επανεκκίνηση Syscoin Core.</translation>
+    </message>
+    <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>URLs από τρίτους (π.χ. ένας εξερευνητής μπλοκ) τα οποία εμφανίζονται στην καρτέλα συναλλαγών ως στοιχεία μενού. Το %s στα URL αντικαθιστάται από την τιμή της κατατεμαχισμένης συναλλαγής.</translation>
     </message>
     <message>
         <source>Third party transaction URLs</source>
         <translation>Διευθύνσεις τρίτων συναλλαγών.</translation>
+    </message>
+    <message>
+        <source>&amp;Preferences</source>
+        <translation>&amp; Προτιμήσεις</translation>
+    </message>
+    <message>
+        <source>User Interface Theme:</source>
+        <translation>User Interface Θέμα:</translation>
+    </message>
+    <message>
+        <source>The user interface theme can be set here. This setting will take effect after restarting Syscoin Core.</source>
+        <translation>Το θέμα διεπαφή χρήστη μπορεί να οριστεί εδώ. Αυτή η ρύθμιση θα τεθεί σε ισχύ μετά την επανεκκίνηση Syscoin Core.</translation>
+    </message>
+    <message>
+        <source>Default Peg Alias:</source>
+        <translation>Προεπιλογή Peg Ψευδώνυμο:</translation>
+    </message>
+    <message>
+        <source>Safe Search:</source>
+        <translation>Ασφαλής αναζήτηση:</translation>
+    </message>
+    <message>
+        <source>On</source>
+        <translation>Επί</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Εκτός</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -964,6 +3096,14 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Δίκτυο</translation>
+    </message>
+    <message>
+        <source>Automatically start Syscoin Core after logging in to the system.</source>
+        <translation>Αυτόματη εκκίνηση Syscoin πυρήνα μετά την σύνδεση με το σύστημα.</translation>
+    </message>
+    <message>
+        <source>&amp;Start Syscoin Core on system login</source>
+        <translation>&amp; Start Syscoin Πυρήνα για την είσοδο στο σύστημα</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1018,6 +3158,34 @@
         <translation>Θύρα διαμεσολαβητή</translation>
     </message>
     <message>
+        <source>Used for reaching peers via:</source>
+        <translation>Που χρησιμοποιούνται για την επίτευξη συμμαθητές μέσω:</translation>
+    </message>
+    <message>
+        <source>Shows, if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
+        <translation>Δείχνει, εάν το παρεχόμενο μεσολάβησης προεπιλεγμένη SOCKS5 χρησιμοποιείται για να φτάσει τους συμμαθητές μέσω αυτού του τύπου δικτύου.</translation>
+    </message>
+    <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation>Βραχώδης κορυφή</translation>
+    </message>
+    <message>
+        <source>Connect to the Syscoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Συνδεθείτε στο δίκτυο Syscoin μέσα από ένα ξεχωριστό SOCKS5 μεσολάβησης για Tor κρυμμένα υπηρεσίες.</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Χρησιμοποιήστε ξεχωριστές μεσολάβησης SOCKS5 να φτάσει τους συμμαθητές μέσω Tor κρυμμένο υπηρεσίες:</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;Παράθυρο</translation>
     </message>
@@ -1063,8 +3231,28 @@
         <translation>&amp;Ακύρωση</translation>
     </message>
     <message>
+        <source>shade</source>
+        <translation>σκιά</translation>
+    </message>
+    <message>
+        <source>solid</source>
+        <translation>στερεός</translation>
+    </message>
+    <message>
+        <source>white</source>
+        <translation>άσπρο</translation>
+    </message>
+    <message>
         <source>default</source>
         <translation>προεπιλογή</translation>
+    </message>
+    <message>
+        <source>Please Wait...</source>
+        <translation>Παρακαλώ περιμένετε...</translation>
+    </message>
+    <message>
+        <source>Error communicating with %1: %2</source>
+        <translation>Σφάλμα επικοινωνίας με %1: %2</translation>
     </message>
     <message>
         <source>none</source>
@@ -1079,6 +3267,10 @@
         <translation>Χρειάζεται επανεκκίνηση του προγράμματος για να ενεργοποιηθούν οι αλλαγές.</translation>
     </message>
     <message>
+        <source>Client will be shut down. Do you want to proceed?</source>
+        <translation>Πελάτης θα πρέπει να κλείσει. Θέλετε να συνεχίσετε?</translation>
+    </message>
+    <message>
         <source>This change would require a client restart.</source>
         <translation>Η αλλαγή αυτή θα χρειαστεί επανεκκίνηση του προγράμματος</translation>
     </message>
@@ -1087,6 +3279,60 @@
         <translation>Δεν είναι έγκυρη η διεύθυνση διαμεσολαβητή</translation>
     </message>
 </context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>All</source>
+        <translation>Όλα</translation>
+    </message>
+</context>
+<context>
+    <name>OutMessageListPage</name>
+    <message>
+        <source>New Msg</source>
+        <translation>New Msg</translation>
+    </message>
+    <message>
+        <source>Details</source>
+        <translation>Καθέκαστα</translation>
+    </message>
+    <message>
+        <source>Export Message Data</source>
+        <translation>Εξαγωγή δεδομένων μηνύματος</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Αρχείο οριοθετημένο με κόμματα (*.csv)</translation>
+    </message>
+    <message>
+        <source>GUID</source>
+        <translation>GUID</translation>
+    </message>
+    <message>
+        <source>Time</source>
+        <translation>Χρόνος</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>Από</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Προς</translation>
+    </message>
+    <message>
+        <source>Subject</source>
+        <translation>Θέμα</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Μήνυμα</translation>
+    </message>
+    <message>
+        <source>Error exporting</source>
+        <translation>σφάλμα κατά την εξαγωγή</translation>
+    </message>
+    </context>
 <context>
     <name>OverviewPage</name>
     <message>
@@ -1165,26 +3411,6 @@
 <context>
     <name>PaymentServer</name>
     <message>
-        <source>URI handling</source>
-        <translation>Χειρισμός URI</translation>
-    </message>
-    <message>
-        <source>Invalid payment address %1</source>
-        <translation>Μη έγκυρη διεύθυνση πληρωμής %1</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>Η αίτηση πληρωμής έχει αρνηθεί.</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>Η αίτηση πληρωμής δεν έχει αρχίζει ακόμα.</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>Το ζητούμενο ποσό πληρωμής του %1 είναι πολύ μικρό (θεωρείται σκόνη)</translation>
-    </message>
-    <message>
         <source>Payment request error</source>
         <translation>Σφάλμα αιτήματος πληρωμής</translation>
     </message>
@@ -1193,12 +3419,56 @@
         <translation>Δεν είναι δυνατή η εκκίνηση του Syscoin: click-to-pay handler</translation>
     </message>
     <message>
+        <source>URI handling</source>
+        <translation>Χειρισμός URI</translation>
+    </message>
+    <message>
         <source>Payment request fetch URL is invalid: %1</source>
         <translation>Η διεύθυνση πληρωμής (URL) δεν είναι έγκυρη: %1</translation>
     </message>
     <message>
+        <source>Invalid payment address %1</source>
+        <translation>Μη έγκυρη διεύθυνση πληρωμής %1</translation>
+    </message>
+    <message>
+        <source>URI cannot be parsed! This can be caused by an invalid Syscoin address or malformed URI parameters.</source>
+        <translation>URI δεν μπορεί να αναλυθεί! Αυτό μπορεί να προκληθεί από μια μη έγκυρη διεύθυνση Syscoin ή ακατάλληλο παραμέτρους URI.</translation>
+    </message>
+    <message>
         <source>Payment request file handling</source>
         <translation>Επιλέξτε αρχείο πληρωμής για άνοιγμα.</translation>
+    </message>
+    <message>
+        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
+        <translation>αρχείο αίτηση πληρωμής δεν μπορεί να διαβαστεί! Αυτό μπορεί να προκληθεί από μη έγκυρο αρχείο αίτησης πληρωμής.</translation>
+    </message>
+    <message>
+        <source>Payment request rejected</source>
+        <translation>Η αίτηση πληρωμής έχει αρνηθεί.</translation>
+    </message>
+    <message>
+        <source>Payment request network doesn't match client network.</source>
+        <translation>αίτηση πληρωμής του δικτύου δεν ταιριάζει με το δίκτυο του πελάτη.</translation>
+    </message>
+    <message>
+        <source>Payment request expired.</source>
+        <translation>αίτησης πληρωμής λήξει.</translation>
+    </message>
+    <message>
+        <source>Payment request is not initialized.</source>
+        <translation>Η αίτηση πληρωμής δεν έχει αρχίζει ακόμα.</translation>
+    </message>
+    <message>
+        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
+        <translation>Ανεπιβεβαίωτες αιτήσεις πληρωμής για προσαρμοσμένες δέσμες ενεργειών πληρωμής δεν υποστηρίζονται.</translation>
+    </message>
+    <message>
+        <source>Invalid payment request.</source>
+        <translation>Μη έγκυρη αίτηση πληρωμής.</translation>
+    </message>
+    <message>
+        <source>Requested payment amount of %1 is too small (considered dust).</source>
+        <translation>Το ζητούμενο ποσό πληρωμής του %1 είναι πολύ μικρό (θεωρείται σκόνη)</translation>
     </message>
     <message>
         <source>Refund from %1</source>
@@ -1217,30 +3487,34 @@
         <translation>Κακή απάντηση από διακομιστή %1</translation>
     </message>
     <message>
-        <source>Payment acknowledged</source>
-        <translation>Πληρωμή αναγνωρίστηκε</translation>
-    </message>
-    <message>
         <source>Network request error</source>
         <translation>Σφάλμα αιτήματος δικτύου</translation>
+    </message>
+    <message>
+        <source>Payment acknowledged</source>
+        <translation>Πληρωμή αναγνωρίστηκε</translation>
     </message>
 </context>
 <context>
     <name>PeerTableModel</name>
     <message>
+        <source>User Agent</source>
+        <translation>Πράκτορας χρήστη</translation>
+    </message>
+    <message>
+        <source>Node/Service</source>
+        <translation>Κόμβος / Υπηρεσία</translation>
+    </message>
+    <message>
         <source>Ping Time</source>
         <translation>Χρόνος καθυστέρησης</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>QObject</name>
     <message>
         <source>Amount</source>
         <translation>Ποσό</translation>
-    </message>
-    <message>
-        <source>Enter a Syscoin address (e.g. %1)</source>
-        <translation>Εισάγετε μια διεύθυνση Syscoin (π.χ. %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1270,6 +3544,14 @@
         <source>%1 ms</source>
         <translation>%1 ms</translation>
     </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 και %2</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Όλα</translation>
+    </message>
 </context>
 <context>
     <name>QRImageWidget</name>
@@ -1293,10 +3575,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>Όνομα Πελάτη</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>Μη διαθέσιμο</translation>
     </message>
@@ -1315,10 +3593,6 @@
     <message>
         <source>General</source>
         <translation>Γενικά</translation>
-    </message>
-    <message>
-        <source>Using OpenSSL version</source>
-        <translation>Χρησιμοποιηση της OpenSSL εκδοσης</translation>
     </message>
     <message>
         <source>Using BerkeleyDB version</source>
@@ -1349,6 +3623,18 @@
         <translation>Τρέχον αριθμός μπλοκ</translation>
     </message>
     <message>
+        <source>Memory Pool</source>
+        <translation>πισίνα μνήμη</translation>
+    </message>
+    <message>
+        <source>Current number of transactions</source>
+        <translation>Τρέχων αριθμός των συναλλαγών</translation>
+    </message>
+    <message>
+        <source>Memory usage</source>
+        <translation>Χρήση μνήμης</translation>
+    </message>
+    <message>
         <source>Received</source>
         <translation>Παραλήφθησαν</translation>
     </message>
@@ -1361,12 +3647,40 @@
         <translation>&amp;Χρήστες</translation>
     </message>
     <message>
+        <source>Banned peers</source>
+        <translation>Αποκλεισμένο συνομηλίκους</translation>
+    </message>
+    <message>
         <source>Select a peer to view detailed information.</source>
         <translation>Επιλέξτε ένα χρήστη για να δείτε αναλυτικές πληροφορίες.</translation>
     </message>
     <message>
+        <source>Whitelisted</source>
+        <translation>στη λίστα επιτρεπόμενων</translation>
+    </message>
+    <message>
+        <source>Direction</source>
+        <translation>Κατεύθυνση</translation>
+    </message>
+    <message>
         <source>Version</source>
         <translation>Έκδοση</translation>
+    </message>
+    <message>
+        <source>Starting Block</source>
+        <translation>ξεκινώντας Block</translation>
+    </message>
+    <message>
+        <source>Synced Headers</source>
+        <translation>συγχρονίζονται κεφαλίδες</translation>
+    </message>
+    <message>
+        <source>Synced Blocks</source>
+        <translation>συγχρονισμένο μπλοκ</translation>
+    </message>
+    <message>
+        <source>User Agent</source>
+        <translation>Πράκτορας χρήστη</translation>
     </message>
     <message>
         <source>Services</source>
@@ -1391,6 +3705,18 @@
     <message>
         <source>Ping Time</source>
         <translation>Χρόνος καθυστέρησης</translation>
+    </message>
+    <message>
+        <source>The duration of a currently outstanding ping.</source>
+        <translation>Η διάρκεια του παρόντος εκκρεμούν ping.</translation>
+    </message>
+    <message>
+        <source>Ping Wait</source>
+        <translation>Ping Περιμένετε</translation>
+    </message>
+    <message>
+        <source>Time Offset</source>
+        <translation>Ώρα Offset</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1425,16 +3751,40 @@
         <translation>Εξερχόμενα:</translation>
     </message>
     <message>
-        <source>Build date</source>
-        <translation>Ημερομηνία κατασκευής</translation>
-    </message>
-    <message>
         <source>Debug log file</source>
         <translation>Αρχείο καταγραφής εντοπισμού σφαλμάτων </translation>
     </message>
     <message>
         <source>Clear console</source>
         <translation>Καθαρισμός κονσόλας</translation>
+    </message>
+    <message>
+        <source>&amp;Disconnect Node</source>
+        <translation>&amp; Αποσύνδεση Κόμβος</translation>
+    </message>
+    <message>
+        <source>Ban Node for</source>
+        <translation>Μπαν Κόμβος για</translation>
+    </message>
+    <message>
+        <source>1 &amp;hour</source>
+        <translation>1 ώρα</translation>
+    </message>
+    <message>
+        <source>1 &amp;day</source>
+        <translation>1 ημέρα</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1 εβδομάδα</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1 χρόνος</translation>
+    </message>
+    <message>
+        <source>&amp;Unban Node</source>
+        <translation>&amp; Κατάργηση αποκλεισμού Κόμβος</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1477,6 +3827,14 @@
         <translation>Εξερχόμενα</translation>
     </message>
     <message>
+        <source>Yes</source>
+        <translation>Ναί</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Όχι</translation>
+    </message>
+    <message>
         <source>Unknown</source>
         <translation>Άγνωστο(α)</translation>
     </message>
@@ -1496,8 +3854,28 @@
         <translation>&amp;Μήνυμα:</translation>
     </message>
     <message>
+        <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
+        <translation>Επαναχρησιμοποίηση μία από τις χρησιμοποιηθεί στο παρελθόν διευθύνσεις που λαμβάνει. Επαναχρησιμοποίηση διευθύνσεις παρουσιάζει προβλήματα σχετικά με την ασφάλεια και την προστασία της ιδιωτικής ζωής. Μην χρησιμοποιείτε αυτό, εκτός αν εκ νέου τη δημιουργία μιας αίτησης πληρωμής που πραγματοποιήθηκε πριν.</translation>
+    </message>
+    <message>
         <source>R&amp;euse an existing receiving address (not recommended)</source>
         <translation>Ε&amp;παναχρησιμοποίηση υπάρχουσας διεύθυνσης λήψης (δεν συνιστάται)</translation>
+    </message>
+    <message>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Syscoin network.</source>
+        <translation>Ένα προαιρετικό μήνυμα για να επισυνάψετε στην αίτηση πληρωμής, η οποία θα εμφανίζεται όταν η αίτηση είναι ανοικτή. Σημείωση: Το μήνυμα δεν θα σταλεί με την πληρωμή μέσω του δικτύου Syscoin.</translation>
+    </message>
+    <message>
+        <source>An optional label to associate with the new receiving address.</source>
+        <translation>Μια προαιρετική ετικέτα για να συνδέσει με τη νέα διεύθυνση του παραλήπτη.</translation>
+    </message>
+    <message>
+        <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
+        <translation>Χρησιμοποιήστε αυτή τη φόρμα για να ζητήσετε πληρωμές. Όλα τα πεδία είναι &lt;b&gt;προαιρετικά.&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
+        <translation>Ένα προαιρετικό ποσό που ζητούν. Αφήστε αυτό το κενό ή μηδέν δεν να ζητήσει ένα συγκεκριμένο ποσό.</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -1508,8 +3886,16 @@
         <translation>Καθαρισμός</translation>
     </message>
     <message>
+        <source>Requested payments history</source>
+        <translation>Ζήτησε από την ιστορία πληρωμές</translation>
+    </message>
+    <message>
         <source>&amp;Request payment</source>
         <translation>&amp;Αίτηση πληρωμής</translation>
+    </message>
+    <message>
+        <source>Show the selected request (does the same as double clicking an entry)</source>
+        <translation>Εμφάνιση του επιλεγμένου αίτηση (κάνει το ίδιο με διπλό κλικ μία καταχώρηση)</translation>
     </message>
     <message>
         <source>Show</source>
@@ -1606,10 +3992,6 @@
         <translation>Μήνυμα</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>Ποσό</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(χωρίς ετικέτα)</translation>
     </message>
@@ -1617,9 +3999,32 @@
         <source>(no message)</source>
         <translation>(κανένα μήνυμα)</translation>
     </message>
+    </context>
+<context>
+    <name>ResellOfferDialog</name>
     <message>
-        <source>(no amount)</source>
-        <translation>(κανένα ποσό)</translation>
+        <source>Resell Offer</source>
+        <translation>μεταπωλούν Προσφορά</translation>
+    </message>
+    <message>
+        <source>Offer:</source>
+        <translation>Προσφορά:</translation>
+    </message>
+    <message>
+        <source>Affiliate Markup:</source>
+        <translation>Affiliate Markup:</translation>
+    </message>
+    <message>
+        <source>Description:</source>
+        <translation>Περιγραφή:</translation>
+    </message>
+    <message>
+        <source>Alias:</source>
+        <translation>Ψευδώνυμο:</translation>
+    </message>
+    <message>
+        <source>There was an exception trying to refresh the alias list: </source>
+        <translation>Υπήρχε μια εξαίρεση που προσπαθεί να ανανεώσετε τη λίστα ψευδώνυμο:</translation>
     </message>
 </context>
 <context>
@@ -1657,10 +4062,6 @@
         <translation>Ποσό:</translation>
     </message>
     <message>
-        <source>Priority:</source>
-        <translation>Προτεραιότητα:</translation>
-    </message>
-    <message>
         <source>Fee:</source>
         <translation>Ταρίφα</translation>
     </message>
@@ -1689,8 +4090,16 @@
         <translation>Επιλογή...</translation>
     </message>
     <message>
+        <source>collapse fee-settings</source>
+        <translation>καταρρεύσει αμοιβής ρυθμίσεις</translation>
+    </message>
+    <message>
         <source>per kilobyte</source>
         <translation>ανά kilobyte</translation>
+    </message>
+    <message>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "total at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Αν το έθιμο τέλος ορίζεται σε 1000 satoshis και η συναλλαγή είναι μόνο 250 bytes, τότε "ανά kilobyte" πληρώνει μόνο 250 satoshis στο τέλος, ενώ η "συνολική τουλάχιστον" πληρώνει 1000 satoshis. Για τις συναλλαγές μεγαλύτερες από ένα kilobyte τόσο πληρώσετε με kilobyte.</translation>
     </message>
     <message>
         <source>Hide</source>
@@ -1701,12 +4110,24 @@
         <translation>συνολικά τουλάχιστον</translation>
     </message>
     <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for syscoin transactions than the network can process.</source>
+        <translation>Πληρώνοντας μόνο την ελάχιστη αμοιβή είναι μια χαρά για όσο διάστημα υπάρχει λιγότερο όγκο συναλλαγών από το διάστημα στα μπλοκ. Αλλά πρέπει να γνωρίζετε ότι αυτό μπορεί να καταλήξουν σε ένα ποτέ δεν επιβεβαιώνει συναλλαγή τη στιγμή που υπάρχει μεγαλύτερη ζήτηση για συναλλαγές syscoin από το δίκτυο μπορεί να επεξεργαστεί.</translation>
+    </message>
+    <message>
+        <source>(read the tooltip)</source>
+        <translation>(Διαβάστε το tooltip)</translation>
+    </message>
+    <message>
         <source>Recommended:</source>
         <translation>Προτεινόμενο: </translation>
     </message>
     <message>
         <source>Custom:</source>
         <translation>Προσαρμογή:</translation>
+    </message>
+    <message>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
+        <translation>(Smart τέλος δεν έχει ακόμη προετοιμαστεί. Αυτό συνήθως διαρκεί λίγα τετράγωνα ...)</translation>
     </message>
     <message>
         <source>Confirmation time:</source>
@@ -1719,10 +4140,6 @@
     <message>
         <source>fast</source>
         <translation>Γρήγορο</translation>
-    </message>
-    <message>
-        <source>(confirmation may take longer)</source>
-        <translation>(η επικύρωση ίσως χρειαστεί περισσότερο χρόνο)</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -1757,14 +4174,6 @@
         <translation>Αποστολη</translation>
     </message>
     <message>
-        <source>Confirm send coins</source>
-        <translation>Επιβεβαίωση αποστολής νομισμάτων</translation>
-    </message>
-    <message>
-        <source>%1 to %2</source>
-        <translation>%1 σε %2</translation>
-    </message>
-    <message>
         <source>Copy quantity</source>
         <translation>Αντιγραφή ποσότητας</translation>
     </message>
@@ -1785,16 +4194,36 @@
         <translation>Αντιγραφή των byte</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>Αντιγραφή προτεραιότητας</translation>
+        <source>Copy dust</source>
+        <translation>Αντιγραφή 'σκόνης'</translation>
     </message>
     <message>
         <source>Copy change</source>
         <translation>Αντιγραφή των ρέστων</translation>
     </message>
     <message>
+        <source>%1 to %2</source>
+        <translation>%1 σε %2</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to send?</source>
+        <translation>Είστε βέβαιοι για την αποστολή;</translation>
+    </message>
+    <message>
+        <source>added as transaction fee</source>
+        <translation>προστέθηκαν ως αμοιβή συναλλαγής</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>ή</translation>
+    </message>
+    <message>
+        <source>Confirm send coins</source>
+        <translation>Επιβεβαίωση αποστολής νομισμάτων</translation>
+    </message>
+    <message>
+        <source>The recipient address is not valid. Please recheck.</source>
+        <translation>Η διεύθυνση του παραλήπτη δεν είναι έγκυρο. Παρακαλώ ελέγξτε ξανά.</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
@@ -1809,28 +4238,32 @@
         <translation>Το σύνολο υπερβαίνει το υπόλοιπό σας όταν συμπεριληφθεί και η αμοιβή %1</translation>
     </message>
     <message>
+        <source>Duplicate address found: addresses should only be used once each.</source>
+        <translation>Διπλότυπο διεύθυνση που βρέθηκαν: διευθύνσεις θα πρέπει να χρησιμοποιείται μόνο μία φορά.</translation>
+    </message>
+    <message>
         <source>Transaction creation failed!</source>
         <translation>Η δημιουργία της συναλλαγής απέτυχε!</translation>
+    </message>
+    <message>
+        <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation>Η συναλλαγή απορρίφθηκε! Αυτό μπορεί να συμβεί αν κάποια από τα νομίσματα στο πορτοφόλι σας είχαν ήδη δαπανηθεί, όπως εάν χρησιμοποιείται ένα αντίγραφο του wallet.dat και κερμάτων δαπανήθηκαν στο αντίγραφο, αλλά δεν χαρακτηρίζονται ως δαπανώνται εδώ.</translation>
+    </message>
+    <message>
+        <source>Payment request expired.</source>
+        <translation>αίτησης πληρωμής λήξει.</translation>
     </message>
     <message>
         <source>Warning: Invalid Syscoin address</source>
         <translation>Προειδοποίηση: Μη έγκυρη διεύθυνση Syscoin</translation>
     </message>
     <message>
+        <source>Warning: Unknown change address</source>
+        <translation>Προειδοποίηση: Άγνωστη διεύθυνση αλλαγή</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(χωρίς ετικέτα)</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation>Αντιγραφή 'σκόνης'</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to send?</source>
-        <translation>Είστε βέβαιοι για την αποστολή;</translation>
-    </message>
-    <message>
-        <source>added as transaction fee</source>
-        <translation>προστέθηκαν ως αμοιβή συναλλαγής</translation>
     </message>
 </context>
 <context>
@@ -1842,10 +4275,6 @@
     <message>
         <source>Pay &amp;To:</source>
         <translation>Πληρωμή &amp;σε:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Εισάγετε μια επιγραφή για αυτή τη διεύθυνση ώστε να καταχωρηθεί στο βιβλίο διευθύνσεων</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -1880,12 +4309,32 @@
         <translation>Αφαίρεση αυτής της καταχώρησης</translation>
     </message>
     <message>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less syscoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>Το τέλος θα αφαιρείται από το να αποσταλεί το ποσό. Ο παραλήπτης θα λάβει λιγότερα syscoins από ό, τι εισάγετε στο πεδίο ποσού. Εάν έχουν επιλεγεί πολλαπλούς παραλήπτες, η αμοιβή κατανέμεται εξίσου.</translation>
+    </message>
+    <message>
+        <source>S&amp;ubtract fee from amount</source>
+        <translation>S &amp; ubtract αμοιβή από το ποσό</translation>
+    </message>
+    <message>
         <source>Message:</source>
         <translation>Μήνυμα:</translation>
     </message>
     <message>
+        <source>This is an unauthenticated payment request.</source>
+        <translation>Αυτό είναι ένα χωρίς έλεγχο ταυτότητας αίτησης πληρωμής.</translation>
+    </message>
+    <message>
+        <source>This is an authenticated payment request.</source>
+        <translation>Αυτό είναι ένα επικυρωμένο αίτησης πληρωμής.</translation>
+    </message>
+    <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation>Εισάγεται μία ετικέτα για αυτή την διεύθυνση για να προστεθεί στη λίστα με τις χρησιμοποιημένες διευθύνσεις</translation>
+    </message>
+    <message>
+        <source>A message that was attached to the syscoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Syscoin network.</source>
+        <translation>Ένα μήνυμα που συνδέθηκε με το syscoin: URI το οποίο θα αποθηκευτεί με τη συναλλαγή για την αναφορά σας. Σημείωση: Αυτό το μήνυμα δεν θα σταλεί μέσω του δικτύου Syscoin.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -1895,18 +4344,40 @@
         <source>Memo:</source>
         <translation>Σημείωση:</translation>
     </message>
+    <message>
+        <source>Enter a label for this address to add it to your address book</source>
+        <translation>Εισάγετε μια επιγραφή για αυτή τη διεύθυνση ώστε να καταχωρηθεί στο βιβλίο διευθύνσεων</translation>
+    </message>
+</context>
+<context>
+    <name>SendConfirmationDialog</name>
+    <message>
+        <source>Yes</source>
+        <translation>Ναί</translation>
+    </message>
 </context>
 <context>
     <name>ShutdownWindow</name>
-    <message>
-        <source>Syscoin Core is shutting down...</source>
-        <translation>Το Syscoin Core τερματίζεται...</translation>
-    </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation>Μην απενεργοποιήσετε τον υπολογιστή μέχρι να κλείσει αυτό το παράθυρο.</translation>
     </message>
 </context>
+<context>
+    <name>SignRawTxDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Γενικά</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>Εντάξει</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Ματαίωση</translation>
+    </message>
+    </context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
@@ -1916,6 +4387,10 @@
     <message>
         <source>&amp;Sign Message</source>
         <translation>&amp;Υπογραφή Μηνύματος</translation>
+    </message>
+    <message>
+        <source>You can sign messages/agreements with your addresses to prove you can receive syscoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation>Μπορείτε να υπογράψετε τα μηνύματα / συμφωνίες με τις διευθύνσεις σας για να αποδείξει μπορείτε να λάβετε syscoins σταλεί σε αυτούς. Να είστε προσεκτικοί για να μην υπογράψουν τίποτα ασαφείς ή τυχαία, όπως phishing επιθέσεις μπορεί να προσπαθήσει να σας ξεγελάσει και να υπογράψει την ταυτότητά σας πάνω σε αυτά. υπογράψει μόνο πλήρως λεπτομερείς δηλώσεις συμφωνείτε.</translation>
     </message>
     <message>
         <source>The Syscoin address to sign the message with</source>
@@ -1968,6 +4443,10 @@
     <message>
         <source>&amp;Verify Message</source>
         <translation>&amp;Επιβεβαίωση μηνύματος</translation>
+    </message>
+    <message>
+        <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
+        <translation>Εισάγετε τη διεύθυνση του παραλήπτη, το μήνυμα (βεβαιωθείτε ότι έχετε αντιγράψει αλλαγές γραμμής, χώρους, καρτέλες, κλπ ακριβώς) και την υπογραφή παρακάτω για να επαληθεύσετε το μήνυμα. Να είστε προσεκτικοί για να μην διαβάσετε περισσότερα στην υπογραφή από ό, τι είναι στο ίδιο το υπογεγραμμένο μήνυμα, για να αποφύγει να εξαπατηθεί από έναν άνθρωπο-in-the-middle επίθεση. Σημειώστε ότι αυτό αποδεικνύει μόνο την υπογραφή κόμμα λαμβάνει με τη διεύθυνση, δεν μπορεί να αποδείξει sendership οποιασδήποτε συναλλαγής!</translation>
     </message>
     <message>
         <source>The Syscoin address the message was signed with</source>
@@ -2041,16 +4520,289 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
-        <source>The Syscoin Core developers</source>
-        <translation>Οι προγραμματιστές του Syscoin Core</translation>
-    </message>
-    <message>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
+    </message>
+</context>
+<context>
+    <name>SyscoinGUI</name>
+    <message>
+        <source>Sign &amp;message...</source>
+        <translation>Υπογραφή &amp;Μηνύματος...</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network...</source>
+        <translation>Συγχρονισμός με το δίκτυο...</translation>
+    </message>
+    <message>
+        <source>Node</source>
+        <translation>Κόμβος</translation>
+    </message>
+    <message>
+        <source>Show general overview of wallet</source>
+        <translation>Εμφάνισε τη γενική εικόνα του πορτοφολιού</translation>
+    </message>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation>&amp;Συναλλαγές</translation>
+    </message>
+    <message>
+        <source>Browse transaction history</source>
+        <translation>Περιήγηση στο ιστορικό συναλλαγών</translation>
+    </message>
+    <message>
+        <source>Aliases</source>
+        <translation>ψευδώνυμα</translation>
+    </message>
+    <message>
+        <source>Certificates</source>
+        <translation>πιστοποιητικά</translation>
+    </message>
+    <message>
+        <source>Escrow</source>
+        <translation>Χρηματική εγγύηση</translation>
+    </message>
+    <message>
+        <source>E&amp;xit</source>
+        <translation>Έ&amp;ξοδος</translation>
+    </message>
+    <message>
+        <source>Quit application</source>
+        <translation>Εξοδος από την εφαρμογή</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation>Σχετικά με &amp;Qt</translation>
+    </message>
+    <message>
+        <source>Show information about Qt</source>
+        <translation>Εμφάνισε πληροφορίες σχετικά με Qt</translation>
+    </message>
+    <message>
+        <source>&amp;Options...</source>
+        <translation>&amp;Επιλογές...</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>&amp;Κρυπτογράφησε το πορτοφόλι</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet...</source>
+        <translation>&amp;Αντίγραφο ασφαλείας του πορτοφολιού</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>&amp;Άλλαξε κωδικο πρόσβασης</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>Διευθύνσεις αποστολής</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>Διευθύνσεις λήψης</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI...</source>
+        <translation>'Ανοιγμα &amp;URI</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk...</source>
+        <translation>Φόρτωση ευρετηρίου μπλοκ στον σκληρο δισκο...</translation>
+    </message>
+    <message>
+        <source>Send coins to a Syscoin address</source>
+        <translation>Στείλε νομίσματα σε μια διεύθυνση syscoin</translation>
+    </message>
+    <message>
+        <source>Backup wallet to another location</source>
+        <translation>Δημιουργία αντιγράφου ασφαλείας πορτοφολιού σε άλλη τοποθεσία</translation>
+    </message>
+    <message>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>Αλλαγή του κωδικού κρυπτογράφησης του πορτοφολιού</translation>
+    </message>
+    <message>
+        <source>&amp;Debug window</source>
+        <translation>&amp;Παράθυρο αποσφαλμάτωσης</translation>
+    </message>
+    <message>
+        <source>Open debugging and diagnostic console</source>
+        <translation>Άνοιγμα κονσόλας αποσφαλμάτωσης και διαγνωστικών</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message...</source>
+        <translation>&amp;Επιβεβαίωση μηνύματος</translation>
+    </message>
+    <message>
+        <source>Syscoin</source>
+        <translation>Syscoin</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Πορτοφόλι</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;Εμφάνισε/Κρύψε</translation>
+    </message>
+    <message>
+        <source>Show or hide the main Window</source>
+        <translation>Εμφάνιση ή αποκρύψη του κεντρικου παράθυρου </translation>
+    </message>
+    <message>
+        <source>Encrypt the private keys that belong to your wallet</source>
+        <translation>Κρυπτογραφήστε τα ιδιωτικά κλειδιά που ανήκουν στο πορτοφόλι σας </translation>
+    </message>
+    <message>
+        <source>Sign messages with your Syscoin addresses to prove you own them</source>
+        <translation>Υπογράψτε ένα μήνυμα για να βεβαιώσετε πως είστε ο κάτοχος αυτής της διεύθυνσης</translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
+        <translation>Υπογράψτε ένα μήνυμα για ν' αποδείξετε πως ανήκει μια συγκεκριμένη διεύθυνση Syscoin</translation>
+    </message>
+    <message>
+        <source>&amp;File</source>
+        <translation>&amp;Αρχείο</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation>&amp;Ρυθμίσεις</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation>&amp;Βοήθεια</translation>
+    </message>
+    <message>
+        <source>Tabs toolbar</source>
+        <translation>Εργαλειοθήκη καρτελών</translation>
+    </message>
+    <message>
+        <source>Request payments (generates QR codes and syscoin: URIs)</source>
+        <translation>Αίτηση πληρωμών (δημιουργεί QR codes και διευθύνσεις syscoin: )</translation>
+    </message>
+    <message>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation>Προβολή της λίστας των χρησιμοποιημένων διευθύνσεων και ετικετών αποστολής</translation>
+    </message>
+    <message>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation>Προβολή της λίστας των χρησιμοποιημένων διευθύνσεων και ετικετών λήψεως</translation>
+    </message>
+    <message>
+        <source>Open a syscoin: URI or payment request</source>
+        <translation>Άνοιγμα syscoin: URI αίτησης πληρωμής</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>&amp;Επιλογές γραμμής εντολών</translation>
+    </message>
+    <message>
+        <source>No block source available...</source>
+        <translation>Η πηγή του μπλοκ δεν ειναι διαθέσιμη... </translation>
+    </message>
+    <message>
+        <source>%1 behind</source>
+        <translation>%1 πίσω</translation>
+    </message>
+    <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation>Το τελευταίο μπλοκ που ελήφθη δημιουργήθηκε %1 πριν.</translation>
+    </message>
+    <message>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation>Οι συναλλαγές μετά από αυτό δεν θα είναι ακόμη ορατες.</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Σφάλμα</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>Προειδοποίηση</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>Πληροφορία</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation>Ενημερωμένο</translation>
+    </message>
+    <message>
+        <source>Manage aliases</source>
+        <translation>διαχειριστείτε ψευδώνυμα</translation>
+    </message>
+    <message>
+        <source>Messages</source>
+        <translation>μηνύματα</translation>
+    </message>
+    <message>
+        <source>Manage offers</source>
+        <translation>διαχειριστείτε προσφορές</translation>
+    </message>
+    <message>
+        <source>Manage Certificates</source>
+        <translation>διαχειριστείτε πιστοποιητικά</translation>
+    </message>
+    <message>
+        <source>Escrows with offers</source>
+        <translation>Escrows με τις προσφορές</translation>
+    </message>
+    <message>
+        <source>&amp;About Syscoin Core</source>
+        <translation>&amp;Σχετικά με το Syscoin Core</translation>
+    </message>
+    <message>
+        <source>Catching up...</source>
+        <translation>Ενημέρωση...</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>Ημερομηνία: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>Ποσό: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>Τύπος: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>Ετικέτα: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>Διεύθυνση: %1
+</translation>
+    </message>
+    <message>
+        <source>Sent transaction</source>
+        <translation>Η συναλλαγή απεστάλη</translation>
+    </message>
+    <message>
+        <source>Incoming transaction</source>
+        <translation>Εισερχόμενη συναλλαγή</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <translation>Το πορτοφόλι είναι &lt;b&gt;κρυπτογραφημένο&lt;/b&gt; και &lt;b&gt;ξεκλείδωτο&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation>Το πορτοφόλι είναι &lt;b&gt;κρυπτογραφημένο&lt;/b&gt; και &lt;b&gt;κλειδωμένο&lt;/b&gt;</translation>
     </message>
 </context>
 <context>
@@ -2067,12 +4819,16 @@
         <translation>Ανοιχτό μέχρι %1</translation>
     </message>
     <message>
-        <source>conflicted</source>
-        <translation>σύγκρουση</translation>
-    </message>
-    <message>
         <source>%1/offline</source>
         <translation>%1/χωρίς σύνδεση;</translation>
+    </message>
+    <message>
+        <source>in memory pool</source>
+        <translation>στην πισίνα μνήμη</translation>
+    </message>
+    <message>
+        <source>not in memory pool</source>
+        <translation>Δεν στην πισίνα μνήμη</translation>
     </message>
     <message>
         <source>%1/unconfirmed</source>
@@ -2085,6 +4841,10 @@
     <message>
         <source>Status</source>
         <translation>Κατάσταση</translation>
+    </message>
+    <message>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>, δεν έχει ακόμα μεταδοθεί μ' επιτυχία</translation>
     </message>
     <message>
         <source>Date</source>
@@ -2101,6 +4861,10 @@
     <message>
         <source>From</source>
         <translation>Από</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>άγνωστο</translation>
     </message>
     <message>
         <source>To</source>
@@ -2190,14 +4954,6 @@
         <source>false</source>
         <translation>αναληθής </translation>
     </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, δεν έχει ακόμα μεταδοθεί μ' επιτυχία</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>άγνωστο</translation>
-    </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -2209,7 +4965,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Αυτό το παράθυρο δείχνει μια λεπτομερή περιγραφή της συναλλαγής</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -2221,12 +4977,28 @@
         <translation>Τύπος</translation>
     </message>
     <message>
+        <source>Label</source>
+        <translation>Επιγραφή</translation>
+    </message>
+    <message>
         <source>Open until %1</source>
         <translation>Ανοιχτό μέχρι %1</translation>
     </message>
     <message>
+        <source>Offline</source>
+        <translation>Offline</translation>
+    </message>
+    <message>
+        <source>Unconfirmed</source>
+        <translation>Ανεπιβεβαίωτες</translation>
+    </message>
+    <message>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Επικυρωμένη (%1 επικυρώσεις)</translation>
+    </message>
+    <message>
+        <source>Conflicted</source>
+        <translation>Σύγκρουση</translation>
     </message>
     <message>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
@@ -2235,22 +5007,6 @@
     <message>
         <source>Generated but not accepted</source>
         <translation>Δημιουργήθηκε αλλά απορρίφθηκε</translation>
-    </message>
-    <message>
-        <source>Offline</source>
-        <translation>Offline</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Επιγραφή</translation>
-    </message>
-    <message>
-        <source>Unconfirmed</source>
-        <translation>Ανεπιβεβαίωτες</translation>
-    </message>
-    <message>
-        <source>Conflicted</source>
-        <translation>Σύγκρουση</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -2273,12 +5029,104 @@
         <translation>Εξόρυξη</translation>
     </message>
     <message>
+        <source>Alias Activated</source>
+        <translation>alias Ενεργός</translation>
+    </message>
+    <message>
+        <source>Alias Transferred</source>
+        <translation>alias Μεταφορά</translation>
+    </message>
+    <message>
+        <source>Alias Updated</source>
+        <translation>alias Ενημέρωση</translation>
+    </message>
+    <message>
+        <source>Alias Received</source>
+        <translation>alias Ελήφθη</translation>
+    </message>
+    <message>
+        <source>Offer Activated</source>
+        <translation>προσφορά Ενεργός</translation>
+    </message>
+    <message>
+        <source>Offer Updated</source>
+        <translation>προσφορά Ενημέρωση</translation>
+    </message>
+    <message>
+        <source>Offer Accepted</source>
+        <translation>Προσφορά Αποδεκτές</translation>
+    </message>
+    <message>
+        <source>Offer Accept Received</source>
+        <translation>Προσφορά Αποδοχή Ληφθέντα</translation>
+    </message>
+    <message>
+        <source>Offer Accept Feedback</source>
+        <translation>Προσφορά Αποδοχή Σχόλια</translation>
+    </message>
+    <message>
+        <source>Offer Accept Feedback Received</source>
+        <translation>Προσφορά Δέξου Σχόλια Ληφθείσες</translation>
+    </message>
+    <message>
+        <source>Cert. Activated</source>
+        <translation>Cert. ενεργοποιημένη</translation>
+    </message>
+    <message>
+        <source>Cert. Updated</source>
+        <translation>Cert. Ενημερώθηκε</translation>
+    </message>
+    <message>
+        <source>Cert. Transferred</source>
+        <translation>Cert. μεταφέρονται</translation>
+    </message>
+    <message>
+        <source>Cert. Received</source>
+        <translation>Cert. Ελήφθη</translation>
+    </message>
+    <message>
+        <source>Escrow Activated</source>
+        <translation>μεσεγγύησης Ενεργός</translation>
+    </message>
+    <message>
+        <source>Escrow Released</source>
+        <translation>μεσεγγύησης Κυκλοφόρησε</translation>
+    </message>
+    <message>
+        <source>Escrow Refunded</source>
+        <translation>μεσεγγύησης Επιστροφή χρημάτων</translation>
+    </message>
+    <message>
+        <source>Escrow Feedback</source>
+        <translation>μεσεγγύησης Σχόλια</translation>
+    </message>
+    <message>
+        <source>Escrow Refund Received</source>
+        <translation>Μεσεγγύησης επιστροφές που έχει λάβει</translation>
+    </message>
+    <message>
+        <source>Escrow Refund Complete</source>
+        <translation>Μεσεγγύησης Επιστροφή Ολοκλήρωση</translation>
+    </message>
+    <message>
+        <source>Message Sent</source>
+        <translation>Το μήνυμα στάλθηκε</translation>
+    </message>
+    <message>
+        <source>Message Received</source>
+        <translation>μήνυμα Ελήφθη</translation>
+    </message>
+    <message>
         <source>watch-only</source>
         <translation>Επίβλεψη μόνο:</translation>
     </message>
     <message>
         <source>(n/a)</source>
         <translation>(δ/α)</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(χωρίς ετικέτα)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
@@ -2291,6 +5139,14 @@
     <message>
         <source>Type of transaction.</source>
         <translation>Είδος συναλλαγής.</translation>
+    </message>
+    <message>
+        <source>Whether or not a watch-only address is involved in this transaction.</source>
+        <translation>Είτε ή όχι μια διεύθυνση ρολόι μόνο εμπλέκεται σε αυτή τη συναλλαγή.</translation>
+    </message>
+    <message>
+        <source>User-defined intent/purpose of the transaction.</source>
+        <translation>Ορίζονται από το χρήστη πρόθεση / σκοπό της συναλλαγής.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -2348,6 +5204,94 @@
         <translation>Άλλο</translation>
     </message>
     <message>
+        <source>Alias Activated</source>
+        <translation>alias Ενεργός</translation>
+    </message>
+    <message>
+        <source>Alias Updated</source>
+        <translation>alias Ενημέρωση</translation>
+    </message>
+    <message>
+        <source>Alias Transferred</source>
+        <translation>alias Μεταφορά</translation>
+    </message>
+    <message>
+        <source>Alias Received</source>
+        <translation>alias Ελήφθη</translation>
+    </message>
+    <message>
+        <source>Offer Activated</source>
+        <translation>προσφορά Ενεργός</translation>
+    </message>
+    <message>
+        <source>Offer Updated</source>
+        <translation>προσφορά Ενημέρωση</translation>
+    </message>
+    <message>
+        <source>Offer Accepted</source>
+        <translation>Προσφορά Αποδεκτές</translation>
+    </message>
+    <message>
+        <source>Offer Accept Received</source>
+        <translation>Προσφορά Αποδοχή Ληφθέντα</translation>
+    </message>
+    <message>
+        <source>Offer Accept Feedback</source>
+        <translation>Προσφορά Αποδοχή Σχόλια</translation>
+    </message>
+    <message>
+        <source>Offer Accept Feedback Received</source>
+        <translation>Προσφορά Δέξου Σχόλια Ληφθείσες</translation>
+    </message>
+    <message>
+        <source>Certificate Activated</source>
+        <translation>πιστοποιητικό Ενεργός</translation>
+    </message>
+    <message>
+        <source>Certificate Updated</source>
+        <translation>πιστοποιητικό Ενημέρωση</translation>
+    </message>
+    <message>
+        <source>Certificate Transferred</source>
+        <translation>πιστοποιητικό Μεταφορά</translation>
+    </message>
+    <message>
+        <source>Certificate Received</source>
+        <translation>πιστοποιητικό Ελήφθη</translation>
+    </message>
+    <message>
+        <source>Escrow Activated</source>
+        <translation>μεσεγγύησης Ενεργός</translation>
+    </message>
+    <message>
+        <source>Escrow Released</source>
+        <translation>μεσεγγύησης Κυκλοφόρησε</translation>
+    </message>
+    <message>
+        <source>Escrow Refunded</source>
+        <translation>μεσεγγύησης Επιστροφή χρημάτων</translation>
+    </message>
+    <message>
+        <source>Escrow Refund Complete</source>
+        <translation>Μεσεγγύησης Επιστροφή Ολοκλήρωση</translation>
+    </message>
+    <message>
+        <source>Escrow Refund Received</source>
+        <translation>Μεσεγγύησης επιστροφές που έχει λάβει</translation>
+    </message>
+    <message>
+        <source>Escrow Feedback</source>
+        <translation>μεσεγγύησης Σχόλια</translation>
+    </message>
+    <message>
+        <source>Message Sent</source>
+        <translation>Το μήνυμα στάλθηκε</translation>
+    </message>
+    <message>
+        <source>Message Received</source>
+        <translation>μήνυμα Ελήφθη</translation>
+    </message>
+    <message>
         <source>Enter address or label to search</source>
         <translation>Αναζήτηση με βάση τη διεύθυνση ή την επιγραφή</translation>
     </message>
@@ -2372,6 +5316,10 @@
         <translation>Αντιγραφη του ID Συναλλαγής</translation>
     </message>
     <message>
+        <source>Copy raw transaction</source>
+        <translation>πρώτων συναλλαγών αντίγραφο</translation>
+    </message>
+    <message>
         <source>Edit label</source>
         <translation>Επεξεργασία επιγραφής</translation>
     </message>
@@ -2384,32 +5332,16 @@
         <translation>Εξαγωγή Ιστορικού Συναλλαγών</translation>
     </message>
     <message>
-        <source>Watch-only</source>
-        <translation>Επίβλεψη μόνο:</translation>
-    </message>
-    <message>
-        <source>Exporting Failed</source>
-        <translation>Η Εξαγωγή Απέτυχε</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the transaction history to %1.</source>
-        <translation>Yπήρξε σφάλμα κατά την προσπάθεια αποθήκευσης του ιστορικού συναλλαγών στο %1.</translation>
-    </message>
-    <message>
-        <source>Exporting Successful</source>
-        <translation>Επιτυχής εξαγωγή</translation>
-    </message>
-    <message>
-        <source>The transaction history was successfully saved to %1.</source>
-        <translation>Το ιστορικό συναλλαγών αποθηκεύτηκε επιτυχώς στο %1.</translation>
-    </message>
-    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Αρχείο οριοθετημένο με κόμματα (*.csv)</translation>
     </message>
     <message>
         <source>Confirmed</source>
         <translation>Επικυρωμένες</translation>
+    </message>
+    <message>
+        <source>Watch-only</source>
+        <translation>Επίβλεψη μόνο:</translation>
     </message>
     <message>
         <source>Date</source>
@@ -2430,6 +5362,22 @@
     <message>
         <source>ID</source>
         <translation>ID</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Η Εξαγωγή Απέτυχε</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the transaction history to %1.</source>
+        <translation>Yπήρξε σφάλμα κατά την προσπάθεια αποθήκευσης του ιστορικού συναλλαγών στο %1.</translation>
+    </message>
+    <message>
+        <source>Exporting Successful</source>
+        <translation>Επιτυχής εξαγωγή</translation>
+    </message>
+    <message>
+        <source>The transaction history was successfully saved to %1.</source>
+        <translation>Το ιστορικό συναλλαγών αποθηκεύτηκε επιτυχώς στο %1.</translation>
     </message>
     <message>
         <source>Range:</source>
@@ -2460,13 +5408,9 @@
         <source>Send Coins</source>
         <translation>Αποστολή νομισμάτων</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;Εξαγωγή</translation>
-    </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Εξαγωγή δεδομένων καρτέλας σε αρχείο</translation>
@@ -2488,12 +5432,12 @@
         <translation>Παρουσιάστηκε σφάλμα κατά την αποθήκευση των δεδομένων πορτοφολιού στο %1.</translation>
     </message>
     <message>
-        <source>The wallet data was successfully saved to %1.</source>
-        <translation>Τα δεδομένα πορτοφολιού αποθηκεύτηκαν με επιτυχία στο %1.</translation>
-    </message>
-    <message>
         <source>Backup Successful</source>
         <translation>Η δημιουργια αντιγραφου ασφαλειας πετυχε</translation>
+    </message>
+    <message>
+        <source>The wallet data was successfully saved to %1.</source>
+        <translation>Τα δεδομένα πορτοφολιού αποθηκεύτηκαν με επιτυχία στο %1.</translation>
     </message>
 </context>
 <context>
@@ -2519,28 +5463,84 @@
         <translation>Αποδοχή εντολών κονσόλας και JSON-RPC</translation>
     </message>
     <message>
+        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
+        <translation>Αν &lt;category&gt; δεν παρέχεται ή εάν &lt;category&gt; = 1, η παραγωγή όλων πληροφορίες εντοπισμού σφαλμάτων.</translation>
+    </message>
+    <message>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
+        <translation>Κλαδέψτε: τελευταίο συγχρονισμό πορτοφόλι πηγαίνει πέρα ​​από κλαδεύονται δεδομένων. Θα πρέπει να -reindex (κατεβάστε και πάλι το σύνολο blockchain σε περίπτωση κλαδεύονται κόμβου)</translation>
+    </message>
+    <message>
+        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
+        <translation>Εκ νέου σάρωση δεν είναι δυνατόν σε κλαδεύονται λειτουργία. Θα χρειαστεί να χρησιμοποιήσετε -reindex που θα κατεβάσετε και πάλι το σύνολο blockchain.</translation>
+    </message>
+    <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Σφάλμα: Παρουσιάστηκε ανεπανόρθωτο εσωτερικό σφάλμα, δείτε debug.log για λεπτομέρειες</translation>
+    </message>
+    <message>
+        <source>Pruning blockstore...</source>
+        <translation>Κλάδεμα blockstore ...</translation>
+    </message>
+    <message>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Εκτέλεση στο παρασκήνιο κι αποδοχή εντολών</translation>
+    </message>
+    <message>
+        <source>Unable to start HTTP server. See debug log for details.</source>
+        <translation>Αδύνατη η εκκίνηση του διακομιστή HTTP. Δείτε το αρχείο καταγραφής εντοπισμού σφαλμάτων για περισσότερες λεπτομέρειες.</translation>
     </message>
     <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Να δέχεσαι συνδέσεις από έξω(προεπιλογή:1)</translation>
     </message>
     <message>
+        <source>Syscoin Core</source>
+        <translation>Syscoin Core</translation>
+    </message>
+    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Αποθηκευση σε συγκεκριμένη διεύθυνση. Χρησιμοποιήστε τα πλήκτρα [Host] : συμβολισμός θύρα για IPv6</translation>
+    </message>
+    <message>
+        <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
+        <translation>Διαγραφή όλων των συναλλαγών πορτοφόλι και να ανακτήσει μόνο εκείνα τα μέρη του blockchain μέσω -rescan κατά την εκκίνηση</translation>
+    </message>
+    <message>
+        <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
+        <translation>Διανέμεται υπό την άδεια χρήσης του λογισμικού MIT, δείτε το συνοδευτικό αρχείο COPYING ή &lt;http://www.opensource.org/licenses/mit-license.php&gt; .</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Εκτέλεσε την εντολή όταν το καλύτερο μπλοκ αλλάξει(%s στην εντολή αντικαθίσταται από το hash του μπλοκ)</translation>
     </message>
     <message>
+        <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
+        <translation>Η βάση δεδομένων μπλοκ περιέχει ένα μπλοκ το οποίο φαίνεται να είναι από το μέλλον. Αυτό μπορεί να οφείλεται σε ημερομηνία και την ώρα του υπολογιστή σας έχει ρυθμιστεί σωστά. ξαναχτίσουν μόνο τη βάση δεδομένων μπλοκ αν είστε βέβαιοι ότι η ημερομηνία και η ώρα του υπολογιστή σας είναι σωστές</translation>
+    </message>
+    <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>Αυτό είναι ένα προ-τεστ κυκλοφορίας - χρησιμοποιήστε το με δική σας ευθύνη - δεν χρησιμοποιείτε για εξόρυξη ή για αλλες εφαρμογές</translation>
     </message>
     <message>
-        <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Προειδοποίηση : το αρχειο wallet.dat ειναι διεφθαρμένο, τα δεδομένα σώζονται ! Original wallet.dat αποθηκεύονται ως wallet.{timestamp}.bak στο %s . Αν το υπόλοιπο του ή τις συναλλαγές σας, είναι λάθος θα πρέπει να επαναφέρετε από ένα αντίγραφο ασφαλείας</translation>
+        <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
+        <translation>Χρησιμοποιήστε UPnP για τη χαρτογράφηση της θύρας ακρόασης (προεπιλογή: 1 όταν ακούτε και δεν -proxy)</translation>
+    </message>
+    <message>
+        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
+        <translation>Προειδοποίηση: Το δίκτυο δεν φαίνεται να συμφωνούν πλήρως! Μερικοί ανθρακωρύχοι φαίνεται να αντιμετωπίζουν προβλήματα.</translation>
+    </message>
+    <message>
+        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
+        <translation>Προειδοποίηση: Δεν φαίνεται να συμφωνούν πλήρως με τους συμμαθητές μας! Μπορεί να χρειαστεί να αναβαθμίσετε, ή άλλους κόμβους μπορεί να χρειαστεί να αναβαθμίσετε.</translation>
+    </message>
+    <message>
+        <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
+        <translation>Λευκή Λίστα συμμαθητές σύνδεση από τη συγκεκριμένη μάσκα δικτύου ή τη διεύθυνση IP. Μπορούν να καθοριστούν πολλές φορές.</translation>
+    </message>
+    <message>
+        <source>&lt;category&gt; can be:</source>
+        <translation>&lt;category&gt; μπορεί να είναι:</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2559,8 +5559,32 @@
         <translation>Εντοπισθηκε διεφθαρμενη βαση δεδομενων των μπλοκ</translation>
     </message>
     <message>
+        <source>Debugging/Testing options:</source>
+        <translation>επιλογές debugging / Δοκιμές:</translation>
+    </message>
+    <message>
+        <source>Do not load the wallet and disable wallet RPC calls</source>
+        <translation>Μην τοποθετείτε το πορτοφόλι και να απενεργοποιήσετε το πορτοφόλι κλήσεις RPC</translation>
+    </message>
+    <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>Θελετε να δημιουργηθει τωρα η βαση δεδομενων του μπλοκ? </translation>
+    </message>
+    <message>
+        <source>Enable publish hash block in &lt;address&gt;</source>
+        <translation>Ενεργοποίηση δημοσιεύει μπλοκ κατακερματισμού στην &lt;address&gt;</translation>
+    </message>
+    <message>
+        <source>Enable publish hash transaction in &lt;address&gt;</source>
+        <translation>Ενεργοποίηση δημοσιεύει συναλλαγή κατακερματισμού στην &lt;address&gt;</translation>
+    </message>
+    <message>
+        <source>Enable publish raw block in &lt;address&gt;</source>
+        <translation>Ενεργοποίηση δημοσίευση των πρώτων μπλοκ &lt;address&gt;</translation>
+    </message>
+    <message>
+        <source>Enable publish raw transaction in &lt;address&gt;</source>
+        <translation>Ενεργοποίηση δημοσιεύει τις πρώτες συναλλαγής &lt;address&gt;</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
@@ -2591,6 +5615,10 @@
         <translation>ΕΙσαγωγή...</translation>
     </message>
     <message>
+        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
+        <translation>Λανθασμένες ή δεν γένεση μπλοκ βρέθηκε. Λάθος DataDir για το δίκτυο;</translation>
+    </message>
+    <message>
         <source>Invalid -onion address: '%s'</source>
         <translation>Άκυρη διεύθυνση -onion : '%s'</translation>
     </message>
@@ -2603,8 +5631,32 @@
         <translation>Μόνο σύνδεση σε κόμβους του δικτύου &lt;net&gt; (ipv4, ipv6 ή onion)</translation>
     </message>
     <message>
+        <source>Prune cannot be configured with a negative value.</source>
+        <translation>Κλαδέψτε δεν μπορεί να ρυθμιστεί με μια αρνητική τιμή.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -txindex.</source>
+        <translation>Κλαδέψτε κατάσταση είναι ασυμβίβαστη με -txindex.</translation>
+    </message>
+    <message>
+        <source>Set maximum block size in bytes (default: %d)</source>
+        <translation>Ορίστε το μέγιστο μέγεθος block σε bytes (προεπιλογή: %d)</translation>
+    </message>
+    <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Επιλέξτε αρχείο πορτοφολιού (μέσα απο κατάλογο δεδομένων)</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
+        <translation>Μη υποστηριζόμενη επιχείρημα -benchmark αγνοηθεί, χρησιμοποιήστε -debug = πάγκο.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
+        <translation>Μη υποστηριζόμενη επιχείρημα -debugnet αγνοηθεί, χρησιμοποιήστε -debug = καθαρό.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -tor found, use -onion.</source>
+        <translation>Μη υποστηριζόμενη επιχείρημα -tor βρεθεί, χρήση -onion.</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -2623,36 +5675,60 @@
         <translation>Επιλογές πορτοφολιού:</translation>
     </message>
     <message>
-        <source>Cannot obtain a lock on data directory %s. Syscoin Core is probably already running.</source>
-        <translation>Αδυναμία κλειδώματος του φακέλου δεδομένων %s. Πιθανώς το Syscoin να είναι ήδη ενεργό.</translation>
+        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
+        <translation>Να επιτρέπονται συνδέσεις JSON-RPC από συγκεκριμένη πηγή. Έγκυρο για &lt;ip&gt; είναι ένα ενιαίο IP (π.χ. 1.2.3.4), ένα δίκτυο / μάσκα δικτύου (π.χ. 1.2.3.4/255.255.255.0) ή ένα δίκτυο / CIDR (π.χ. 1.2.3.4/24). Αυτή η επιλογή μπορεί να οριστεί πολλαπλές φορές</translation>
+    </message>
+    <message>
+        <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
+        <translation>Προσδένονται σε συγκεκριμένη διεύθυνση και λευκή λίστα συμμαθητές σύνδεση με αυτό. Χρησιμοποιήστε το [υποδοχής]: λιμάνι συμβολισμός για το IPv6</translation>
+    </message>
+    <message>
+        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
+        <translation>Συνδέονται με συγκεκριμένη διεύθυνση για να ακούσετε για συνδέσεις JSON-RPC. Χρησιμοποιήστε το [υποδοχής]: λιμάνι συμβολισμός για το IPv6. Αυτή η επιλογή μπορεί να οριστεί πολλαπλές φορές (προεπιλογή: συνδέονται με όλες τις διασυνδέσεις)</translation>
+    </message>
+    <message>
+        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
+        <translation>Δημιουργήστε νέα αρχεία με δικαιώματα προεπιλεγμένο σύστημα, αντί της umask 077 (μόνο αποτελεσματικό με ειδικές ανάγκες λειτουργικότητα πορτοφόλι)</translation>
+    </message>
+    <message>
+        <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
+        <translation>Ανακαλύψτε τη δική διευθύνσεις IP (προεπιλογή: 1 όταν ακούτε και δεν -externalip ή -proxy)</translation>
+    </message>
+    <message>
+        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
+        <translation>Ερώτημα για διευθύνσεις από ομοτίμους μέσω αναζήτησης DNS, αν χαμηλά διευθύνσεις (προεπιλογή: 1, εκτός εάν -Σύνδεση)</translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to send after the fee has been deducted</source>
+        <translation>Το ποσό της συναλλαγής είναι πολύ μικρή για να στείλουν μετά το τέλος έχει αφαιρεθεί</translation>
+    </message>
+    <message>
+        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
+        <translation>Αυτό το προϊόν περιλαμβάνει λογισμικό που αναπτύχθηκε από το OpenSSL Project για χρήση στο OpenSSL Toolkit &lt;https://www.openssl.org/&gt; και κρυπτογραφικό λογισμικό γραμμένο από τον Eric Young και λογισμικού UPnP που γράφτηκε από τον Thomas Bernard.</translation>
+    </message>
+    <message>
+        <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
+        <translation>Στη λίστα επιτρεπόμενων τους συνομηλίκους δεν μπορεί να DoS απαγορευθεί και των συναλλαγών τους είναι πάντα αναμεταδίδονται, ακόμη και αν είναι ήδη στο mempool, χρήσιμα π.χ. για μια πύλη</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
+        <translation>Θα πρέπει να ξαναχτίσουν τη βάση δεδομένων με τη χρήση -reindex να πάει πίσω στο ακλάδευτος λειτουργία. Αυτό θα redownload ολόκληρο το blockchain</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Σύνδεση μέσω διαμεσολαβητή SOCKS5</translation>
     </message>
     <message>
-        <source>Error loading wallet.dat: Wallet requires newer version of Syscoin Core</source>
-        <translation>Σφάλμα φόρτωσης wallet.dat: Το Πορτοφόλι απαιτεί μια νεότερη έκδοση του Syscoin</translation>
-    </message>
-    <message>
         <source>Error reading from database, shutting down.</source>
         <translation>Σφάλμα ανάγνωσης από τη βάση δεδομένων, γίνεται τερματισμός.</translation>
     </message>
     <message>
+        <source>Imports blocks from external blk000??.dat file on startup</source>
+        <translation>Εισαγωγές τετράγωνα από εξωτερικές blk000 ??. Dat αρχείο κατά την εκκίνηση</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Πληροφορία</translation>
-    </message>
-    <message>
-        <source>Initialization sanity check failed. Syscoin Core is shutting down.</source>
-        <translation>Η εκκίνηση ελέγχου ορθότητας απέτυχε.  Γίνεται τερματισμός του Syscoin Core.</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Μη έγκυρο ποσό για την παράμετρο -paytxfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Μη έγκυρο ποσό για την παράμετρο -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Node relay options:</source>
@@ -2661,6 +5737,10 @@
     <message>
         <source>RPC server options:</source>
         <translation>Επιλογές διακομιστή RPC:</translation>
+    </message>
+    <message>
+        <source>Rescan the block chain for missing wallet transactions on startup</source>
+        <translation>Σαρώστε ξανά την αλυσίδα μπλοκ για τα εξαφανισμένα συναλλαγές πορτοφόλι κατά την εκκίνηση</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -2679,8 +5759,16 @@
         <translation>Η υπογραφή συναλλαγής απέτυχε </translation>
     </message>
     <message>
+        <source>The transaction amount is too small to pay the fee</source>
+        <translation>Το ποσό της συναλλαγής είναι πολύ μικρή για να καταβάλουν το τέλος</translation>
+    </message>
+    <message>
         <source>This is experimental software.</source>
         <translation>Η εφαρμογή είναι σε πειραματικό στάδιο.</translation>
+    </message>
+    <message>
+        <source>Tor control port password (default: empty)</source>
+        <translation>Tor κωδικό θύρα ελέγχου (προεπιλογή: άδειο)</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -2691,8 +5779,20 @@
         <translation>Τα ποσά των συναλλαγών πρέπει να είναι θετικα</translation>
     </message>
     <message>
+        <source>Transaction too large for fee policy</source>
+        <translation>Συναλλαγή πάρα πολύ μεγάλο για την πολιτική αμοιβής</translation>
+    </message>
+    <message>
         <source>Transaction too large</source>
         <translation>Η συναλλαγή ειναι πολύ μεγάλη </translation>
+    </message>
+    <message>
+        <source>Updating an offer with a cert that does not exist</source>
+        <translation>Επικαιροποίηση μια προσφορά με cert που δεν υπάρχει</translation>
+    </message>
+    <message>
+        <source>Upgrade wallet to latest format on startup</source>
+        <translation>Αναβαθμίστε το πορτοφόλι με τα τελευταία μορφή κατά την εκκίνηση</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
@@ -2703,12 +5803,16 @@
         <translation>Προειδοποίηση</translation>
     </message>
     <message>
+        <source>Whitelist is already empty</source>
+        <translation>Whitelist είναι ήδη άδειο</translation>
+    </message>
+    <message>
         <source>Zapping all transactions from wallet...</source>
         <translation>Μεταφορά όλων των συναλλαγών απο το πορτοφόλι</translation>
     </message>
     <message>
-        <source>wallet.dat corrupt, salvage failed</source>
-        <translation>Το αρχειο wallet.dat ειναι διεφθαρμένο, η διάσωση απέτυχε</translation>
+        <source>ZeroMQ notification options:</source>
+        <translation>επιλογές κοινοποίησης ZeroMQ:</translation>
     </message>
     <message>
         <source>Password for JSON-RPC connections</source>
@@ -2719,10 +5823,6 @@
         <translation>Εκτέλεσε την εντολή όταν το καλύτερο μπλοκ αλλάξει(%s στην εντολή αντικαθίσταται από το hash του μπλοκ)</translation>
     </message>
     <message>
-        <source>This help message</source>
-        <translation>Αυτό το κείμενο βοήθειας</translation>
-    </message>
-    <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Να επιτρέπονται οι έλεγχοι DNS για προσθήκη και σύνδεση κόμβων</translation>
     </message>
@@ -2731,12 +5831,72 @@
         <translation>Φόρτωση διευθύνσεων...</translation>
     </message>
     <message>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Σφάλμα φόρτωσης wallet.dat: Κατεστραμμένο Πορτοφόλι</translation>
+        <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
+        <translation>(1 = κρατήσει TX μετα-δεδομένων π.χ. ιδιοκτήτης του λογαριασμού και οι πληροφορίες αίτησης πληρωμής, 2 = πτώση TX δεδομένα μετα)</translation>
+    </message>
+    <message>
+        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>-maxtxfee βρίσκεται πολύ ψηλά! Τέλη αυτό το μεγάλο θα μπορούσε να καταβληθεί σε μία μόνο συναλλαγή.</translation>
+    </message>
+    <message>
+        <source>-paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>-paytxfee βρίσκεται πολύ ψηλά! Αυτό είναι το τέλος συναλλαγής θα πληρώσετε εάν στείλετε μια συναλλαγή.</translation>
+    </message>
+    <message>
+        <source>Cannot create this offer because the certificate alias does not match the offer alias</source>
+        <translation>δεν μπορεί να δημιουργήσει αυτή την προσφορά, διότι το ψευδώνυμο πιστοποιητικό δεν ταιριάζει με το ψευδώνυμο προσφορά</translation>
+    </message>
+    <message>
+        <source>Cannot purchase this linked offer because the certificate has been transferred or it is linked to another offer</source>
+        <translation>δεν μπορούν να αγοράσουν αυτό συνδέεται προσφορά, διότι το πιστοποιητικό έχει μεταφερθεί ή συνδέεται με άλλη προσφορά</translation>
+    </message>
+    <message>
+        <source>Cannot purchase this offer because the certificate has been transferred or it is linked to another offer</source>
+        <translation>Δεν μπορεί να αγοράσει αυτή την προσφορά, διότι το πιστοποιητικό έχει μεταφερθεί ή συνδέεται με άλλη προσφορά</translation>
+    </message>
+    <message>
+        <source>Cannot update this offer because the certificate alias does not match the linked offer alias</source>
+        <translation>Δεν μπορείτε να ενημερώσετε αυτή την προσφορά, διότι το ψευδώνυμο πιστοποιητικό δεν συμφωνεί με τα συνδεδεμένα ψευδώνυμο προσφορά</translation>
+    </message>
+    <message>
+        <source>Cannot update this offer because the certificate alias does not match the offer alias</source>
+        <translation>Δεν μπορείτε να ενημερώσετε αυτή την προσφορά, διότι το ψευδώνυμο πιστοποιητικό δεν ταιριάζει με το ψευδώνυμο προσφορά</translation>
+    </message>
+    <message>
+        <source>Could not create escrow transaction: Invalid response from createrawtransaction</source>
+        <translation>Δεν ήταν δυνατή η δημιουργία escrow συναλλαγή: Μη έγκυρη απόκριση από createrawtransaction</translation>
+    </message>
+    <message>
+        <source>Could not create escrow transaction: could not find redeem script in response</source>
+        <translation>Δεν ήταν δυνατή η δημιουργία escrow συναλλαγή: δεν μπόρεσα να βρω εξαγοράσει σενάριο σε απάντηση</translation>
+    </message>
+    <message>
+        <source>Could not decode escrow transaction: Invalid response from decoderawtransaction</source>
+        <translation>δεν θα μπορούσε να αποκωδικοποιήσει μεσεγγύησης συναλλαγή: Μη έγκυρη απόκριση από decoderawtransaction</translation>
+    </message>
+    <message>
+        <source>Could not sign escrow transaction: Invalid response from signrawtransaction</source>
+        <translation>Δεν μπορούσε να υπογράψει μεσεγγύησης συναλλαγή: Μη έγκυρη απόκριση από signrawtransaction</translation>
     </message>
     <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Πόσο εξονυχιστική να είναι η επιβεβαίωση του μπλοκ (0-4, προεπιλογή: %u)</translation>
+    </message>
+    <message>
+        <source>Invalid price and/or quantity values. Quantity must be less than 4294967296 and greater than or equal to -1</source>
+        <translation>τιμές μη έγκυρη τιμή ή / και την ποσότητα. Ποσότητα πρέπει να είναι μικρότερη από ό, τι 4294967296 και μεγαλύτερο ή ίσο με -1</translation>
+    </message>
+    <message>
+        <source>Invalid quantity value, must be less than 4294967296 and greater than or equal to -1</source>
+        <translation>Μη έγκυρη τιμή ποσότητα, πρέπει να είναι μικρότερο από ό, τι 4294967296 και μεγαλύτερο ή ίσο με -1</translation>
+    </message>
+    <message>
+        <source>Invalid rating value, must be less than or equal to 5 and greater than or equal to 0</source>
+        <translation>Μη έγκυρη τιμή διαβάθμισης, πρέπει να είναι μικρότερη ή ίση με 5 και μεγαλύτερο ή ίσο με μηδέν</translation>
+    </message>
+    <message>
+        <source>Invalid rating, must be less than or equal to 5 and greater than or equal to 0</source>
+        <translation>Μη έγκυρη βαθμολογία, πρέπει να είναι μικρότερη ή ίση με 5 και μεγαλύτερο ή ίσο με μηδέν</translation>
     </message>
     <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
@@ -2747,12 +5907,456 @@
         <translation>Δευτερόλεπτα πριν επιτραπεί ξανά η σύνδεση των προβληματικών peers (προεπιλογή: %u)</translation>
     </message>
     <message>
-        <source>Error loading wallet.dat</source>
-        <translation>Σφάλμα φόρτωσης αρχείου wallet.dat</translation>
+        <source>Offer guid in the data output does not match the guid in the transaction</source>
+        <translation>Προσφορά guid στην έξοδο δεδομένων δεν ταιριάζει με το GUID στη συναλλαγή</translation>
     </message>
     <message>
-        <source>Generate coins (default: %u)</source>
-        <translation>Δημιουργία νομισμάτων (προκαθορισμος: %u)</translation>
+        <source>Syscoin is open source software produced by a global network of developers. By downloading, distributing and using Syscoin and the Syscoin network you release the developers involved in the Syscoin Project past, present, and future from any and all liability. You are responsible for your creations on the Syscoin network. You agree that the developers of the Syscoin Project carry no responsibility for the actions/data or entities of *any* definition created on the network by yourself or others on the network to which you may be exposed.</source>
+        <translation>Syscoin είναι λογισμικό ανοιχτού κώδικα που παράγεται από ένα παγκόσμιο δίκτυο των προγραμματιστών. Με τη λήψη, διανομή και χρήση Syscoin και το δίκτυο Syscoin αφήσετε τους προγραμματιστές που συμμετέχουν στο παρελθόν Syscoin έργου, το παρόν και το μέλλον από κάθε ευθύνη. Είστε υπεύθυνοι για τις δημιουργίες σας στο δίκτυο Syscoin. Συμφωνείτε ότι οι προγραμματιστές του Έργου Syscoin φέρει καμία ευθύνη για τις ενέργειες / δεδομένων ή οντότητες * κάθε ορισμός * δημιουργήθηκαν στο δίκτυο από τον εαυτό σας ή τους άλλους στο δίκτυο στο οποίο μπορεί να εκτεθείτε.</translation>
+    </message>
+    <message>
+        <source>The developers of the Syscoin Project do not have the power to modify data on the Syscoin network, it is backed by an immutable blockchain, which you further acknowledge through use of Syscoin, the Syscoin network, and Syscoin services. If you do not agree to these terms, please refrain from using Syscoin and its related services.</source>
+        <translation>Οι προγραμματιστές του Έργου Syscoin δεν έχουν την εξουσία να τροποποιεί τα δεδομένα στο δίκτυο Syscoin, υποστηρίζεται από ένα αμετάβλητο blockchain, το οποίο μπορείτε περαιτέρω αναγνωρίζετε μέσω της χρήσης του Syscoin, το δίκτυο Syscoin και υπηρεσίες Syscoin. Εάν δεν συμφωνείτε με αυτούς τους όρους, παρακαλούμε να απέχετε από τη χρήση Syscoin και των συναφών υπηρεσιών του.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
+        <translation>βρέθηκε μη υποστηριζόμενο -socks επιχείρημα. Ρύθμιση SOCKS έκδοση δεν είναι πλέον δυνατή, μόνο SOCKS5 πληρεξούσια που υποστηρίζονται.</translation>
+    </message>
+    <message>
+        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. This option can be specified multiple times</source>
+        <translation>Το όνομα χρήστη και τον κωδικό πρόσβασης διαγραμμισμένο για συνδέσεις JSON-RPC. Το πεδίο &lt;userpw&gt; έρχεται με τη μορφή: &lt;USERNAME&gt; : &lt;SALT&gt; $ &lt;HASH&gt; . Ένα κανονικό σενάριο python περιλαμβάνεται στο μετοχικό / rpcuser. Αυτή η επιλογή μπορεί να οριστεί πολλαπλές φορές</translation>
+    </message>
+    <message>
+        <source>You must be either the arbiter, buyer or seller to leave feedback on this escrow</source>
+        <translation>Θα πρέπει να είναι είτε ο κριτής, αγοραστή ή πωλητή να αφήσετε σχόλια σε αυτό το δεσμευμένο</translation>
+    </message>
+    <message>
+        <source>You must be either the buyer or seller to leave feedback on this offer purchase</source>
+        <translation>Θα πρέπει να είναι είτε ο αγοραστής ή ο πωλητής να αφήσετε σχόλια σε αυτήν την αγορά προσφοράς</translation>
+    </message>
+    <message>
+        <source>Alias Guid input mismatch</source>
+        <translation>αναντιστοιχία εισόδου ψευδώνυμο Guid</translation>
+    </message>
+    <message>
+        <source>Alias address does not refer to a key</source>
+        <translation>διεύθυνση ψευδώνυμο δεν αναφέρεται σε ένα πλήκτρο</translation>
+    </message>
+    <message>
+        <source>Alias arguments incorrect size</source>
+        <translation>επιχειρήματα ψευδώνυμο λάθος μέγεθος</translation>
+    </message>
+    <message>
+        <source>Alias input guid mismatch</source>
+        <translation>Alias ​​αναντιστοιχία guid εισόδου</translation>
+    </message>
+    <message>
+        <source>Alias input mismatch</source>
+        <translation>αναντιστοιχία εισόδου Alias</translation>
+    </message>
+    <message>
+        <source>Alias input to this transaction not found</source>
+        <translation>Alias ​​εισόδου σε αυτή τη συναλλαγή δεν βρέθηκε</translation>
+    </message>
+    <message>
+        <source>Alias name does not follow the domain name specification</source>
+        <translation>ψευδώνυμο δεν ακολουθεί τις προδιαγραφές όνομα τομέα</translation>
+    </message>
+    <message>
+        <source>Alias not provided as input</source>
+        <translation>Ψευδώνυμο που δεν παρέχονται ως είσοδος</translation>
+    </message>
+    <message>
+        <source>Alias private value too big</source>
+        <translation>Alias ​​ιδιωτική αξία πάρα πολύ μεγάλο</translation>
+    </message>
+    <message>
+        <source>Alias public value too big</source>
+        <translation>Alias ​​δημόσια αξία πάρα πολύ μεγάλο</translation>
+    </message>
+    <message>
+        <source>Alias transaction has unknown op</source>
+        <translation>συναλλαγή alias έχει άγνωστη op</translation>
+    </message>
+    <message>
+        <source>Bad alias height</source>
+        <translation>Bad ύψος ψευδώνυμο</translation>
+    </message>
+    <message>
+        <source>Buyer address does not refer to a key</source>
+        <translation>διεύθυνση του αγοραστή δεν αναφέρεται σε ένα πλήκτρο</translation>
+    </message>
+    <message>
+        <source>Buyer alias is not in your wallet</source>
+        <translation>Αγοραστής ψευδώνυμο δεν είναι στο πορτοφόλι σας</translation>
+    </message>
+    <message>
+        <source>Can't determine type of alias input into syscoin service transaction</source>
+        <translation>δεν μπορεί να καθορίσει τον τύπο της εισόδου ψευδώνυμο σε συναλλαγή υπηρεσίας syscoin</translation>
+    </message>
+    <message>
+        <source>Cannot exceed 10 arbiter feedbacks</source>
+        <translation>δεν μπορεί να υπερβαίνει το 10 ανατροφοδοτήσεις κριτής</translation>
+    </message>
+    <message>
+        <source>Cannot exceed 10 buyer feedbacks</source>
+        <translation>δεν μπορεί να υπερβαίνει το 10 ανατροφοδοτήσεις αγοραστή</translation>
+    </message>
+    <message>
+        <source>Cannot exceed 10 seller feedbacks</source>
+        <translation>δεν μπορεί να υπερβαίνει το 10 ανατροφοδοτήσεις πωλητή</translation>
+    </message>
+    <message>
+        <source>Cannot find alias for the recipient of this message. It may be expired</source>
+        <translation>Δεν μπορείτε να βρείτε ψευδώνυμο για τον παραλήπτη αυτού του μηνύματος. Μπορεί να λήξει</translation>
+    </message>
+    <message>
+        <source>Cannot find alias for the sender of this message. It may be expired</source>
+        <translation>Δεν μπορείτε να βρείτε ψευδώνυμο για τον αποστολέα αυτού του μηνύματος. Μπορεί να λήξει</translation>
+    </message>
+    <message>
+        <source>Cannot find alias for this certificate. It may be expired</source>
+        <translation>Δεν μπορείτε να βρείτε το ψευδώνυμο για αυτό το πιστοποιητικό. Μπορεί να λήξει</translation>
+    </message>
+    <message>
+        <source>Cannot find alias for this offer. It may be expired</source>
+        <translation>Δεν μπορείτε να βρείτε ψευδώνυμο για αυτή την προσφορά. Μπορεί να λήξει</translation>
+    </message>
+    <message>
+        <source>Cannot find alias you are transfering to. It may be expired</source>
+        <translation>Δεν μπορείτε να βρείτε το ψευδώνυμό σας μεταφέροντας να. Μπορεί να λήξει</translation>
+    </message>
+    <message>
+        <source>Cannot find arbiter alias. It may be expired</source>
+        <translation>Δεν μπορείτε να βρείτε κριτής ψευδώνυμο. Μπορεί να λήξει</translation>
+    </message>
+    <message>
+        <source>Cannot find buyer alias. It may be expired</source>
+        <translation>δεν μπορεί να βρει αγοραστή ψευδώνυμο. Μπορεί να λήξει</translation>
+    </message>
+    <message>
+        <source>Cannot find seller alias. It may be expired</source>
+        <translation>δεν μπορεί να βρει τον πωλητή ψευδώνυμο. Μπορεί να λήξει</translation>
+    </message>
+    <message>
+        <source>Cannot find this alias in the parent offer affiliate list</source>
+        <translation>Δεν μπορείτε να βρείτε αυτό το ψευδώνυμο στο γονικό κατάλογο προσφορά θυγατρικών</translation>
+    </message>
+    <message>
+        <source>Cannot have accept information on offer activation</source>
+        <translation>δεν μπορεί να δεχτεί πληροφορίες σχετικά με την προσφορά της ενεργοποίησης</translation>
+    </message>
+    <message>
+        <source>Cannot have accept information on offer update</source>
+        <translation>δεν μπορεί να δεχτεί πληροφορίες σχετικά με την προσφορά ενημέρωση</translation>
+    </message>
+    <message>
+        <source>Cannot leave empty feedback</source>
+        <translation>δεν μπορεί να αφήσει κενή σχόλια</translation>
+    </message>
+    <message>
+        <source>Cannot leave feedback in escrow activation</source>
+        <translation>δεν μπορούν να αφήσουν τα σχόλιά στην ενεργοποίηση μεσεγγύησης</translation>
+    </message>
+    <message>
+        <source>Cannot leave feedback in escrow refund</source>
+        <translation>δεν μπορούν να αφήσουν τα σχόλιά στην επιστροφή μεσεγγύησης</translation>
+    </message>
+    <message>
+        <source>Cannot leave feedback in escrow release</source>
+        <translation>δεν μπορούν να αφήσουν σχόλια στο δελτίο μεσεγγύησης</translation>
+    </message>
+    <message>
+        <source>Cannot link to an offer that is already linked to another offer</source>
+        <translation>Δεν μπορείτε να συνδέσετε σε μια προσφορά που είναι ήδη συνδεδεμένο με άλλη προσφορά</translation>
+    </message>
+    <message>
+        <source>Cannot only leave one feedback per transaction</source>
+        <translation>Δεν μπορεί μόνο να αφήσετε ένα feedback ανά συναλλαγή</translation>
+    </message>
+    <message>
+        <source>Cannot purchase a wanted offer</source>
+        <translation>Δεν μπορούν να αγοράσουν ένα ζητούμενο προσφορά</translation>
+    </message>
+    <message>
+        <source>Cannot purchase certificates with Bitcoins</source>
+        <translation>Δεν μπορούν να αγοράσουν τα πιστοποιητικά με Bitcoins</translation>
+    </message>
+    <message>
+        <source>Cannot sell an expired certificate</source>
+        <translation>δεν μπορεί να πουλήσει ένα πιστοποιητικό που έχει λήξει</translation>
+    </message>
+    <message>
+        <source>Cannot send yourself feedback</source>
+        <translation>Δεν μπορείτε να στείλετε στον εαυτό σας σχόλια</translation>
+    </message>
+    <message>
+        <source>Cannot unserialize data inside of this transaction relating to an offer</source>
+        <translation>Δεν είναι δυνατή η unserialize δεδομένων στο εσωτερικό αυτής της συναλλαγής που σχετίζονται με μια προσφορά</translation>
+    </message>
+    <message>
+        <source>Certificate already exists</source>
+        <translation>Πιστοποιητικό υπάρχει ήδη</translation>
+    </message>
+    <message>
+        <source>Certificate arguments incorrect size</source>
+        <translation>επιχειρήματα πιστοποιητικό λάθος μέγεθος</translation>
+    </message>
+    <message>
+        <source>Certificate category too big</source>
+        <translation>Κατηγορία πιστοποιητικό πάρα πολύ μεγάλο</translation>
+    </message>
+    <message>
+        <source>Certificate data too big</source>
+        <translation>δεδομένα πιστοποιητικού πολύ μεγάλο</translation>
+    </message>
+    <message>
+        <source>Certificate guid mismatch</source>
+        <translation>αναντιστοιχία guid πιστοποιητικό</translation>
+    </message>
+    <message>
+        <source>Certificate hex guid too long</source>
+        <translation>εξάγωνο πιστοποιητικό guid πάρα πολύ καιρό</translation>
+    </message>
+    <message>
+        <source>Certificate linked alias not allowed in activate</source>
+        <translation>Πιστοποιητικό που συνδέονται με το ψευδώνυμο δεν επιτρέπονται στο activate</translation>
+    </message>
+    <message>
+        <source>Certificate title too big or is empty</source>
+        <translation>Τίτλος του πιστοποιητικού πολύ μεγάλο ή είναι άδειο</translation>
+    </message>
+    <message>
+        <source>Certificate title too big</source>
+        <translation>Τίτλος του πιστοποιητικού πολύ μεγάλο</translation>
+    </message>
+    <message>
+        <source>Certificate transaction has unknown op</source>
+        <translation>συναλλαγή πιστοποιητικό έχει άγνωστη op</translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2009-%i The Syscoin Core Developers</source>
+        <translation>Πνευματικά δικαιώματα 2009-%i Οι προγραμματιστές του Syscoin Core</translation>
+    </message>
+    <message>
+        <source>Could not create escrow transaction: Invalid response from createescrow</source>
+        <translation>Δεν ήταν δυνατή η δημιουργία escrow συναλλαγή: Μη έγκυρη απόκριση από createescrow</translation>
+    </message>
+    <message>
+        <source>Could not decrypt certificate data</source>
+        <translation>Δεν ήταν δυνατή η αποκρυπτογράφηση των δεδομένων του πιστοποιητικού</translation>
+    </message>
+    <message>
+        <source>Could not encrypt alias private data</source>
+        <translation>δεν θα μπορούσε να κρυπτογραφήσει το ψευδώνυμο ιδιωτικών δεδομένων</translation>
+    </message>
+    <message>
+        <source>Could not encrypt certificate data</source>
+        <translation>Δεν ήταν δυνατή η κρυπτογράφηση των δεδομένων του πιστοποιητικού</translation>
+    </message>
+    <message>
+        <source>Could not encrypt message data for receiver</source>
+        <translation>Δεν ήταν δυνατή η κρυπτογράφηση των δεδομένων του μηνύματος για το δέκτη</translation>
+    </message>
+    <message>
+        <source>Could not encrypt message data for sender</source>
+        <translation>Δεν ήταν δυνατή η κρυπτογράφηση των δεδομένων του μηνύματος για τον αποστολέα</translation>
+    </message>
+    <message>
+        <source>Could not encrypt message to seller</source>
+        <translation>Δεν θα μπορούσε να κρυπτογραφήσει το μήνυμα στον πωλητή</translation>
+    </message>
+    <message>
+        <source>Could not encrypt private alias value!</source>
+        <translation>Δεν ήταν δυνατή η κρυπτογράφηση του προσωπικού αξία ψευδώνυμο!</translation>
+    </message>
+    <message>
+        <source>Could not find a certificate with this key</source>
+        <translation>Δεν μπόρεσα να βρω ένα πιστοποιητικό με αυτό το κλειδί</translation>
+    </message>
+    <message>
+        <source>Could not find a escrow with this key</source>
+        <translation>δεν μπορούσε να βρει έναν δεσμευμένο με αυτό το κλειδί</translation>
+    </message>
+    <message>
+        <source>Could not find an alias with this guid</source>
+        <translation>δεν μπορούσε να βρει ένα ψευδώνυμο με αυτό το GUID</translation>
+    </message>
+    <message>
+        <source>Could not find an alias with this identifier</source>
+        <translation>δεν μπορούσε να βρει ένα ψευδώνυμο με αυτό το αναγνωριστικό</translation>
+    </message>
+    <message>
+        <source>Could not find an alias with this name</source>
+        <translation>δεν μπορούσε να βρει ένα ψευδώνυμο με αυτό το όνομα</translation>
+    </message>
+    <message>
+        <source>Could not find an offer with this guid</source>
+        <translation>δεν μπορούσε να βρει μια προσφορά με αυτό το GUID</translation>
+    </message>
+    <message>
+        <source>Could not find an offer with this identifier</source>
+        <translation>δεν μπορούσε να βρει μια προσφορά με αυτό το αναγνωριστικό</translation>
+    </message>
+    <message>
+        <source>Could not find buyer alias with this name</source>
+        <translation>δεν μπορούσε να βρει αγοραστή ψευδώνυμο με αυτό το όνομα</translation>
+    </message>
+    <message>
+        <source>Could not find currency in the peg alias</source>
+        <translation>δεν μπορούσε να βρει το νόμισμα στο ψευδώνυμο PEG</translation>
+    </message>
+    <message>
+        <source>Could not find offer accept from mempool or disk</source>
+        <translation>δεν μπορούσε να βρει την προσφορά δέχεται από mempool ή δίσκο</translation>
+    </message>
+    <message>
+        <source>Could not find seller alias with this identifier</source>
+        <translation>δεν μπορούσε να βρει πωλητή ψευδώνυμο με αυτό το αναγνωριστικό</translation>
+    </message>
+    <message>
+        <source>Could not find the alias associated with this offer</source>
+        <translation>δεν μπορούσε να βρει το ψευδώνυμο που σχετίζεται με αυτή την προσφορά</translation>
+    </message>
+    <message>
+        <source>Could not find the certificate alias</source>
+        <translation>δεν μπορούσε να βρει το ψευδώνυμο πιστοποιητικό</translation>
+    </message>
+    <message>
+        <source>Could not get linked offer</source>
+        <translation>Δεν θα μπορούσε να πάρει κοινή προσφορά</translation>
+    </message>
+    <message>
+        <source>Creating an offer with a cert that does not exist</source>
+        <translation>Δημιουργώντας μια προσφορά με cert που δεν υπάρχει</translation>
+    </message>
+    <message>
+        <source>Escrow Guid mismatch</source>
+        <translation>Μεσεγγύησης Guid αναντιστοιχία</translation>
+    </message>
+    <message>
+        <source>Escrow already exists</source>
+        <translation>Μεσεγγύησης υπάρχει ήδη</translation>
+    </message>
+    <message>
+        <source>Escrow arguments incorrect size</source>
+        <translation>Μεσεγγύησης επιχειρήματα λάθος μέγεθος</translation>
+    </message>
+    <message>
+        <source>Escrow guid in data output doesn't match guid in transaction</source>
+        <translation>Μεσεγγύησης guid της παραγωγής δεδομένων δεν ταιριάζουν με GUID στο συναλλαγής</translation>
+    </message>
+    <message>
+        <source>Escrow guid too big</source>
+        <translation>Μεσεγγύησης guid πάρα πολύ μεγάλο</translation>
+    </message>
+    <message>
+        <source>Escrow not found when trying to update</source>
+        <translation>Μεσεγγύησης δεν βρέθηκε, όταν προσπαθείτε να ενημερώσετε</translation>
+    </message>
+    <message>
+        <source>Escrow offer guid too long</source>
+        <translation>Μεσεγγύησης προσφορά guid πάρα πολύ καιρό</translation>
+    </message>
+    <message>
+        <source>Escrow redeem script too long</source>
+        <translation>Μεσεγγύησης εξαγοράσει το σενάριο πάρα πολύ καιρό</translation>
+    </message>
+    <message>
+        <source>Escrow refund status too large</source>
+        <translation>Η κατάσταση της επιστροφής μεσεγγύησης πολύ μεγάλο</translation>
+    </message>
+    <message>
+        <source>Escrow transaction has unknown op</source>
+        <translation>συναλλαγή μεσεγγύησης έχει άγνωστη op</translation>
+    </message>
+    <message>
+        <source>Expiration must be within 1 to 5 years</source>
+        <translation>Λήξη πρέπει να είναι μέσα σε 1 έως 5 έτη</translation>
+    </message>
+    <message>
+        <source>Failed to find escrow transaction</source>
+        <translation>Απέτυχε να βρει συναλλαγή μεσεγγύησης</translation>
+    </message>
+    <message>
+        <source>Failed to read alias from alias DB</source>
+        <translation>Αποτυχία να διαβάσετε το ψευδώνυμο από το ψευδώνυμο DB</translation>
+    </message>
+    <message>
+        <source>Failed to read arbiter alias from DB</source>
+        <translation>Αποτυχία ανάγνωσης κριτής ψευδώνυμο από την DB</translation>
+    </message>
+    <message>
+        <source>Failed to read from alias DB</source>
+        <translation>Αποτυχία ανάγνωσης από το ψευδώνυμο DB</translation>
+    </message>
+    <message>
+        <source>Failed to read from certificate DB</source>
+        <translation>Αποτυχία ανάγνωσης από το πιστοποιητικό DB</translation>
+    </message>
+    <message>
+        <source>Failed to read from escrow DB</source>
+        <translation>Αποτυχία ανάγνωσης από το δεσμευμένο DB</translation>
+    </message>
+    <message>
+        <source>Failed to read from offer DB</source>
+        <translation>Αποτυχία ανάγνωσης από την προσφορά DB</translation>
+    </message>
+    <message>
+        <source>Failed to read to alias from alias DB</source>
+        <translation>Αποτυχία να διαβάσετε για να το ψευδώνυμο από το ψευδώνυμο DB</translation>
+    </message>
+    <message>
+        <source>Failed to read transfer alias from DB</source>
+        <translation>Αποτυχία να διαβάσετε το ψευδώνυμο μεταφορά από την DB</translation>
+    </message>
+    <message>
+        <source>Failed to write to alias DB</source>
+        <translation>Αποτυχία εγγραφής στο ψευδώνυμο DB</translation>
+    </message>
+    <message>
+        <source>Failed to write to certifcate DB</source>
+        <translation>Αποτυχία εγγραφής στο Πιστοποιητικού DB</translation>
+    </message>
+    <message>
+        <source>Failed to write to escrow DB</source>
+        <translation>Αποτυχία εγγραφής στο μεσεγγύησης DB</translation>
+    </message>
+    <message>
+        <source>Failed to write to message DB</source>
+        <translation>Αποτυχία εγγραφής στο μήνυμά DB</translation>
+    </message>
+    <message>
+        <source>Failed to write to offer DB</source>
+        <translation>Αποτυχία να γράψω για να προσφέρουν DB</translation>
+    </message>
+    <message>
+        <source>Failed to write to offer link to DB</source>
+        <translation>Αποτυχία να γράψω για να προσφέρουν σύνδεση με την DB</translation>
+    </message>
+    <message>
+        <source>Failed to write to offer to DB</source>
+        <translation>Αποτυχία να γράψω για να προσφέρουν στην DB</translation>
+    </message>
+    <message>
+        <source>Feedback must leave a message</source>
+        <translation>Ανατροφοδότηση πρέπει να αφήσετε ένα μήνυμα</translation>
+    </message>
+    <message>
+        <source>Feedback too long</source>
+        <translation>Feedback πάρα πολύ καιρό</translation>
+    </message>
+    <message>
+        <source>Guid in data output doesn't match guid in transaction</source>
+        <translation>GUID στην έξοδο τα δεδομένα δεν ταιριάζουν με GUID στο συναλλαγής</translation>
+    </message>
+    <message>
+        <source>Guid in data output doesn't match guid in tx</source>
+        <translation>GUID στην έξοδο τα δεδομένα δεν ταιριάζουν με GUID στο tx</translation>
+    </message>
+    <message>
+        <source>Guid mismatch</source>
+        <translation>guid αναντιστοιχία</translation>
     </message>
     <message>
         <source>How many blocks to check at startup (default: %u, 0 = all)</source>
@@ -2767,6 +6371,222 @@
         <translation>Δεν είναι έγκυρη η διεύθυνση διαμεσολαβητή: '%s'</translation>
     </message>
     <message>
+        <source>Invalid feedback transaction</source>
+        <translation>Μη έγκυρη συναλλαγή σχόλια</translation>
+    </message>
+    <message>
+        <source>Invalid number of escrow feedbacks provided</source>
+        <translation>Μη έγκυρος αριθμός των ανατροφοδοτήσεις μεσεγγύησης παρέχονται</translation>
+    </message>
+    <message>
+        <source>Invalid offer buyer alias</source>
+        <translation>Μη έγκυρη ψευδώνυμο προσφορά αγοραστή</translation>
+    </message>
+    <message>
+        <source>Invalid op, should be escrow activate</source>
+        <translation>Μη έγκυρη op, θα πρέπει να είναι δεσμευμένο activate</translation>
+    </message>
+    <message>
+        <source>Invalid op, should be escrow complete</source>
+        <translation>Μη έγκυρη op, θα πρέπει να μεσεγγύησης πλήρη</translation>
+    </message>
+    <message>
+        <source>Invalid op, should be escrow refund</source>
+        <translation>Μη έγκυρη op, θα πρέπει να είναι δεσμευμένο επιστροφή</translation>
+    </message>
+    <message>
+        <source>Invalid op, should be escrow release</source>
+        <translation>Μη έγκυρη op, θα πρέπει να είναι δεσμευμένο απελευθέρωση</translation>
+    </message>
+    <message>
+        <source>Invalid quantity value. Quantity must be less than 4294967296.</source>
+        <translation>Μη έγκυρη τιμή ποσότητας. Ποσότητα πρέπει να είναι μικρότερο από ό, τι 4294967296.</translation>
+    </message>
+    <message>
+        <source>Invalid rating value</source>
+        <translation>Μη έγκυρη τιμή Αξιολόγηση</translation>
+    </message>
+    <message>
+        <source>Linked offer not found. It may be expired</source>
+        <translation>Συνδέεται προσφορά δεν βρέθηκε. Μπορεί να λήξει</translation>
+    </message>
+    <message>
+        <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
+        <translation>Μέγιστες αριθμός συνδέσεων με τους peers &lt;n&gt; (προεπιλογή: %u)</translation>
+    </message>
+    <message>
+        <source>Make the wallet broadcast transactions</source>
+        <translation>Κάντε τις συναλλαγές πορτοφόλι εκπομπή</translation>
+    </message>
+    <message>
+        <source>Message arguments incorrect size</source>
+        <translation>επιχειρήματα μήνυμα λάθος μέγεθος</translation>
+    </message>
+    <message>
+        <source>Message guid in data output does not match guid in transaction</source>
+        <translation>Μήνυμα guid της παραγωγής δεδομένων δεν ταιριάζουν με GUID στο συναλλαγής</translation>
+    </message>
+    <message>
+        <source>Message guid mismatch</source>
+        <translation>Μήνυμα guid αναντιστοιχία</translation>
+    </message>
+    <message>
+        <source>Message subject too long</source>
+        <translation>Θέμα μηνύματος πάρα πολύ καιρό</translation>
+    </message>
+    <message>
+        <source>Message too long</source>
+        <translation>Μήνυμα πάρα πολύ καιρό</translation>
+    </message>
+    <message>
+        <source>Message transaction guid too big</source>
+        <translation>συναλλαγή μήνυμα guid πάρα πολύ μεγάλο</translation>
+    </message>
+    <message>
+        <source>Message transaction has unknown op</source>
+        <translation>συναλλαγή μήνυμα έχει άγνωστη op</translation>
+    </message>
+    <message>
+        <source>Non-Syscoin transaction found</source>
+        <translation>Μη Syscoin συναλλαγή που βρέθηκαν</translation>
+    </message>
+    <message>
+        <source>Not enough quantity left in this offer for this purchase</source>
+        <translation>Δεν υπάρχουν αρκετά ποσότητα μείνει σε αυτή την προσφορά για την αγορά αυτή</translation>
+    </message>
+    <message>
+        <source>Offer accept hex guid too long</source>
+        <translation>Προσφορά δέχονται εξάγωνο guid πάρα πολύ καιρό</translation>
+    </message>
+    <message>
+        <source>Offer already exists</source>
+        <translation>Προσφορά υπάρχει ήδη</translation>
+    </message>
+    <message>
+        <source>Offer arguments incorrect size</source>
+        <translation>Προσφορά επιχειρήματα λάθος μέγεθος</translation>
+    </message>
+    <message>
+        <source>Offer category cannot be empty</source>
+        <translation>Κατηγορία προσφορά δεν μπορεί να είναι κενό</translation>
+    </message>
+    <message>
+        <source>Offer category too long</source>
+        <translation>Κατηγορία προσφορά πάρα πολύ καιρό</translation>
+    </message>
+    <message>
+        <source>Offer curreny too long</source>
+        <translation>Προσφορά νομισματικών πάρα πολύ καιρό</translation>
+    </message>
+    <message>
+        <source>Offer description too long</source>
+        <translation>Περιγραφή προσφορά πάρα πολύ καιρό</translation>
+    </message>
+    <message>
+        <source>Offer geolocation too long</source>
+        <translation>Προσφορά geolocation πάρα πολύ καιρό</translation>
+    </message>
+    <message>
+        <source>Offer guid too long</source>
+        <translation>Προσφορά guid πάρα πολύ καιρό</translation>
+    </message>
+    <message>
+        <source>Offer has too many affiliate entries, only one allowed per transaction</source>
+        <translation>Η προσφορά έχει πάρα πολλές συμμετοχές θυγατρικών, μόνο μία επιτρέπεται ανά συναλλαγή</translation>
+    </message>
+    <message>
+        <source>Offer input and offer guid mismatch</source>
+        <translation>Προσφορά είσοδο και να προσφέρουν guid αναντιστοιχία</translation>
+    </message>
+    <message>
+        <source>Offer link guid hash too long</source>
+        <translation>Προσφορά σύνδεσμο GUID hash πάρα πολύ καιρό</translation>
+    </message>
+    <message>
+        <source>Offer payment message cannot be empty</source>
+        <translation>μήνυμα πληρωμής προσφορά δεν μπορεί να είναι κενό</translation>
+    </message>
+    <message>
+        <source>Offer price must be greater than 0</source>
+        <translation>τιμής προσφοράς θα πρέπει να είναι μεγαλύτερη από 0</translation>
+    </message>
+    <message>
+        <source>Offer title cannot be empty</source>
+        <translation>Τίτλος προσφορά δεν μπορεί να είναι κενό</translation>
+    </message>
+    <message>
+        <source>Offer title too long</source>
+        <translation>Προσφορά τίτλο πάρα πολύ καιρό</translation>
+    </message>
+    <message>
+        <source>Offer transaction has unknown op</source>
+        <translation>Προσφορά συναλλαγή έχει άγνωστη op</translation>
+    </message>
+    <message>
+        <source>OfferAccept arguments incorrect size</source>
+        <translation>OfferAccept επιχειρήματα λάθος μέγεθος</translation>
+    </message>
+    <message>
+        <source>Offeraccept object cannot be empty</source>
+        <translation>Offeraccept αντικείμενο δεν μπορεί να είναι κενό</translation>
+    </message>
+    <message>
+        <source>Offeraccept transaction with guid too big</source>
+        <translation>Offeraccept συναλλαγή με guid πάρα πολύ μεγάλο</translation>
+    </message>
+    <message>
+        <source>Only arbiter can leave this feedback</source>
+        <translation>Μόνο κριτής μπορεί να αφήσει αυτά τα σχόλια</translation>
+    </message>
+    <message>
+        <source>Only arbiter or seller can initiate an escrow refund</source>
+        <translation>Μόνο το διαιτητή ή πωλητής μπορεί να ξεκινήσει μια επιστροφή μεσεγγύησης</translation>
+    </message>
+    <message>
+        <source>Only buyer can claim an escrow refund</source>
+        <translation>Μόνο αγοραστής μπορεί να ζητήσουν επιστροφή μεσεγγύησης</translation>
+    </message>
+    <message>
+        <source>Only buyer can leave the seller feedback</source>
+        <translation>Μόνο αγοραστής μπορεί να αποχωρήσει από την ανατροφοδότηση του πωλητή</translation>
+    </message>
+    <message>
+        <source>Only buyer can leave this feedback</source>
+        <translation>Μόνο ο αγοραστής μπορεί να αφήσει αυτά τα σχόλια</translation>
+    </message>
+    <message>
+        <source>Only seller can leave this feedback</source>
+        <translation>Μόνο πωλητής μπορεί να αφήσει αυτά τα σχόλια</translation>
+    </message>
+    <message>
+        <source>Private key for buyer address is not known</source>
+        <translation>Ιδιωτικό κλειδί για τη διεύθυνση αγοραστής δεν είναι γνωστή</translation>
+    </message>
+    <message>
+        <source>Private key for seller address is not known</source>
+        <translation>Ιδιωτικό κλειδί για τη διεύθυνση πωλητής δεν είναι γνωστή</translation>
+    </message>
+    <message>
+        <source>Quantity must be 1 for a digital offer</source>
+        <translation>Ποσότητα πρέπει να είναι 1 για μια ψηφιακή προσφορά</translation>
+    </message>
+    <message>
+        <source>Quantity must be less than 4294967296</source>
+        <translation>Ποσότητα πρέπει να είναι μικρότερη από ό, τι 4294967296</translation>
+    </message>
+    <message>
+        <source>Seller address does not refer to a key</source>
+        <translation>διεύθυνση Πωλητής δεν αναφέρεται σε ένα πλήκτρο</translation>
+    </message>
+    <message>
+        <source>Seller alias is not in your wallet</source>
+        <translation>Ο πωλητής ψευδώνυμο δεν είναι στο πορτοφόλι σας</translation>
+    </message>
+    <message>
+        <source>Specify configuration file (default: %s)</source>
+        <translation>Ορίστε αρχείο ρυθμίσεων (προεπιλογή: %s)</translation>
+    </message>
+    <message>
         <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
         <translation>Ορισμός λήξης χρονικού ορίου σε χιλιοστά του δευτερολέπτου(προεπιλογή: %d)</translation>
     </message>
@@ -2775,24 +6595,48 @@
         <translation>Ορίστε αρχείο pid (προεπιλογή: %s)</translation>
     </message>
     <message>
+        <source>This alias entry already exists on affiliate list</source>
+        <translation>Αυτή η καταχώρηση ψευδώνυμο υπάρχει ήδη στη λίστα θυγατρικών</translation>
+    </message>
+    <message>
+        <source>This alias entry was not found on affiliate list</source>
+        <translation>Αυτή η καταχώρηση ψευδώνυμο δεν βρέθηκε στη λίστα θυγατρικών</translation>
+    </message>
+    <message>
+        <source>This alias is not in your wallet</source>
+        <translation>Αυτό το ψευδώνυμο δεν είναι στο πορτοφόλι σας</translation>
+    </message>
+    <message>
+        <source>This alias is not yours</source>
+        <translation>Αυτό το ψευδώνυμο δεν είναι δικό σας</translation>
+    </message>
+    <message>
+        <source>This message already exists</source>
+        <translation>Αυτό το μήνυμα υπάρχει ήδη</translation>
+    </message>
+    <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
         <translation>Όριο αποσύνδεσης προβληματικών peers (προεπιλογή: %u)</translation>
+    </message>
+    <message>
+        <source>Trying to accept a linked offer but could not find parent offer</source>
+        <translation>Προσπαθώντας να δεχτεί μια κοινή προσφορά, αλλά δεν μπορούσε να βρει μητρικής προσφορά</translation>
+    </message>
+    <message>
+        <source>Trying to renew an alias that isn't expired</source>
+        <translation>Προσπαθώντας να ανανεώσει ένα ψευδώνυμο που δεν έχει λήξει</translation>
+    </message>
+    <message>
+        <source>Unknown feedback user type</source>
+        <translation>Τύπος χρήστη άγνωστο σχόλια</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation>Άγνωστo δίκτυο ορίζεται σε onlynet: '%s'</translation>
     </message>
     <message>
-        <source>Cannot resolve -bind address: '%s'</source>
-        <translation>Δεν μπορώ να γράψω την προεπιλεγμένη διεύθυνση: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -externalip address: '%s'</source>
-        <translation>Δεν μπορώ να γράψω την προεπιλεγμένη διεύθυνση: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Μη έγκυρο ποσό για την παράμετρο -paytxfee=&lt;amount&gt;: '%s'</translation>
+        <source>failed to read alias from alias DB</source>
+        <translation>απέτυχε να διαβάσει το ψευδώνυμο από το ψευδώνυμο DB</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

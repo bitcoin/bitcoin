@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,19 +11,10 @@
 #include "utilstrencodings.h"
 
 #include <boost/foreach.hpp>
+
 using namespace std;
 // SYSCOIN services
-extern bool DecodeAliasScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch);
-extern bool DecodeCertScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch);
-extern bool DecodeOfferScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch);
-extern bool DecodeMessageScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch);
-extern bool DecodeEscrowScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch);
-extern CScript RemoveAliasScriptPrefix(const CScript& scriptIn);
-extern CScript RemoveCertScriptPrefix(const CScript& scriptIn);
-extern CScript RemoveOfferScriptPrefix(const CScript& scriptIn);
-extern CScript RemoveEscrowScriptPrefix(const CScript& scriptIn);
-extern CScript RemoveMessageScriptPrefix(const CScript& scriptIn);
-
+extern void RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut);
 typedef vector<unsigned char> valtype;
 
 bool fAcceptDatacarrier = DEFAULT_ACCEPT_DATACARRIER;
@@ -41,6 +32,8 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_SCRIPTHASH: return "scripthash";
     case TX_MULTISIG: return "multisig";
     case TX_NULL_DATA: return "nulldata";
+    case TX_WITNESS_V0_KEYHASH: return "witness_v0_keyhash";
+    case TX_WITNESS_V0_SCRIPTHASH: return "witness_v0_scripthash";
     }
     return NULL;
 }
@@ -48,7 +41,7 @@ const char* GetTxnOutputType(txnouttype t)
 /**
  * Return public keys or hashes from scriptPubKey, for 'standard' transaction types.
  */
-// SYSCOIN scriptPubKey -> scriptPubKeyIn for check below
+// SYSCOIN
 bool Solver(const CScript& scriptPubKeyIn, txnouttype& typeRet, vector<vector<unsigned char> >& vSolutionsRet)
 {
     // Templates
@@ -64,20 +57,10 @@ bool Solver(const CScript& scriptPubKeyIn, txnouttype& typeRet, vector<vector<un
         // Sender provides N pubkeys, receivers provides M signatures
         mTemplates.insert(make_pair(TX_MULTISIG, CScript() << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
     }
+
 	// SYSCOIN check to see if this is a syscoin service transaction, if so get the scriptPubKey by extracting service specific script information
 	CScript scriptPubKey = scriptPubKeyIn;
-	vector<vector<unsigned char> > vvch;
-	int op;
-	if (DecodeAliasScript(scriptPubKeyIn, op, vvch))
-		scriptPubKey = RemoveAliasScriptPrefix(scriptPubKeyIn);
-	else if (DecodeOfferScript(scriptPubKeyIn, op, vvch))
-		scriptPubKey = RemoveOfferScriptPrefix(scriptPubKeyIn);
-	else if (DecodeCertScript(scriptPubKeyIn, op, vvch))
-		scriptPubKey = RemoveCertScriptPrefix(scriptPubKeyIn);
-	else if (DecodeEscrowScript(scriptPubKeyIn, op, vvch))
-		scriptPubKey = RemoveEscrowScriptPrefix(scriptPubKeyIn);
-	else if (DecodeMessageScript(scriptPubKeyIn, op, vvch))
-		scriptPubKey = RemoveMessageScriptPrefix(scriptPubKeyIn);
+	RemoveSyscoinScript(scriptPubKeyIn, scriptPubKey);
     vSolutionsRet.clear();
 
     // Shortcut for pay-to-script-hash, which are more constrained than the other types:
@@ -88,6 +71,22 @@ bool Solver(const CScript& scriptPubKeyIn, txnouttype& typeRet, vector<vector<un
         vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
         vSolutionsRet.push_back(hashBytes);
         return true;
+    }
+
+    int witnessversion;
+    std::vector<unsigned char> witnessprogram;
+    if (scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
+        if (witnessversion == 0 && witnessprogram.size() == 20) {
+            typeRet = TX_WITNESS_V0_KEYHASH;
+            vSolutionsRet.push_back(witnessprogram);
+            return true;
+        }
+        if (witnessversion == 0 && witnessprogram.size() == 32) {
+            typeRet = TX_WITNESS_V0_SCRIPTHASH;
+            vSolutionsRet.push_back(witnessprogram);
+            return true;
+        }
+        return false;
     }
 
     // Provably prunable, data-carrying output
@@ -185,27 +184,6 @@ bool Solver(const CScript& scriptPubKeyIn, txnouttype& typeRet, vector<vector<un
     return false;
 }
 
-int ScriptSigArgsExpected(txnouttype t, const std::vector<std::vector<unsigned char> >& vSolutions)
-{
-    switch (t)
-    {
-    case TX_NONSTANDARD:
-    case TX_NULL_DATA:
-        return -1;
-    case TX_PUBKEY:
-        return 1;
-    case TX_PUBKEYHASH:
-        return 2;
-    case TX_MULTISIG:
-        if (vSolutions.size() < 1 || vSolutions[0].size() < 1)
-            return -1;
-        return vSolutions[0][0] + 1;
-    case TX_SCRIPTHASH:
-        return 1; // doesn't include args needed by the script
-    }
-    return -1;
-}
-
 bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
 {
     vector<valtype> vSolutions;
@@ -230,6 +208,22 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
     else if (whichType == TX_SCRIPTHASH)
     {
         addressRet = CScriptID(uint160(vSolutions[0]));
+        return true;
+    }
+	// SYSCOIN
+    else if (whichType == TX_MULTISIG)
+    {
+		vector<CPubKey> pubKeys;
+        int nRequired = vSolutions.front()[0];
+        for (unsigned int i = 1; i < vSolutions.size()-1; i++)
+        {
+            CPubKey pubKey(vSolutions[i]);
+            if (!pubKey.IsValid())
+                continue;
+			pubKeys.push_back(pubKey);
+        }
+		CScript inner = GetScriptForMultisig(nRequired,pubKeys);
+		addressRet = CScriptID(inner);
         return true;
     }
     // Multisig txns have more than one address...
@@ -326,4 +320,27 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
         script << ToByteVector(key);
     script << CScript::EncodeOP_N(keys.size()) << OP_CHECKMULTISIG;
     return script;
+}
+
+CScript GetScriptForWitness(const CScript& redeemscript)
+{
+    CScript ret;
+
+    txnouttype typ;
+    std::vector<std::vector<unsigned char> > vSolutions;
+    if (Solver(redeemscript, typ, vSolutions)) {
+        if (typ == TX_PUBKEY) {
+            unsigned char h160[20];
+            CHash160().Write(&vSolutions[0][0], vSolutions[0].size()).Finalize(h160);
+            ret << OP_0 << std::vector<unsigned char>(&h160[0], &h160[20]);
+            return ret;
+        } else if (typ == TX_PUBKEYHASH) {
+           ret << OP_0 << vSolutions[0];
+           return ret;
+        }
+    }
+    uint256 hash;
+    CSHA256().Write(&redeemscript[0], redeemscript.size()).Finalize(hash.begin());
+    ret << OP_0 << ToByteVector(hash);
+    return ret;
 }

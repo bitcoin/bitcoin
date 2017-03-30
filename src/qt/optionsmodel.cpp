@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,6 +16,7 @@
 #include "main.h" // For DEFAULT_SCRIPTCHECK_THREADS
 #include "net.h"
 #include "txdb.h" // for -dbcache defaults
+#include "intro.h" 
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
@@ -43,6 +44,8 @@ void OptionsModel::Init(bool resetSettings)
     if (resetSettings)
         Reset();
 
+    checkAndMigrate();
+
     QSettings settings;
 
     // Ensure restart flag is unset on client startup
@@ -51,9 +54,14 @@ void OptionsModel::Init(bool resetSettings)
     // These are Qt-only settings:
 
     // Window
+    if (!settings.contains("fHideTrayIcon"))
+        settings.setValue("fHideTrayIcon", false);
+    fHideTrayIcon = settings.value("fHideTrayIcon").toBool();
+    Q_EMIT hideTrayIconChanged(fHideTrayIcon);
+    
     if (!settings.contains("fMinimizeToTray"))
         settings.setValue("fMinimizeToTray", false);
-    fMinimizeToTray = settings.value("fMinimizeToTray").toBool();
+    fMinimizeToTray = settings.value("fMinimizeToTray").toBool() && !fHideTrayIcon;
 
     if (!settings.contains("fMinimizeOnClose"))
         settings.setValue("fMinimizeOnClose", false);
@@ -90,6 +98,9 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("nThreadsScriptVerif", DEFAULT_SCRIPTCHECK_THREADS);
     if (!SoftSetArg("-par", settings.value("nThreadsScriptVerif").toString().toStdString()))
         addOverriddenOption("-par");
+
+    if (!settings.contains("strDataDir"))
+        settings.setValue("strDataDir", Intro::getDefaultDataDirectory());
 
     // Wallet
 #ifdef ENABLE_WALLET
@@ -131,6 +142,29 @@ void OptionsModel::Init(bool resetSettings)
         addOverriddenOption("-onion");
 
     // Display
+	// SYSCOIN
+    if (!settings.contains("theme"))
+        settings.setValue("theme", "");
+    if (!settings.contains("defaultAlias"))
+        settings.setValue("defaultAlias", "");
+    if (!settings.contains("defaultPegAlias") || settings.value("defaultPegAlias", "").toString() == "SYS_RATES")
+        settings.setValue("defaultPegAlias", "sysrates.peg");
+    if (!settings.contains("defaultListAlias"))
+        settings.setValue("defaultListAlias", tr("All"));
+    if (!settings.contains("safesearch"))
+        settings.setValue("safesearch", "Yes");
+    if (!settings.contains("zecEndPoint"))
+		settings.setValue("zecEndPoint", "http://zec.syscoin.org:8080/");
+    if (!settings.contains("btcEndPoint"))
+        settings.setValue("btcEndPoint", "http://btc.syscoin.org:8080/");
+    if (!settings.contains("zecRPCLogin"))
+        settings.setValue("zecRPCLogin", "sysuser");
+    if (!settings.contains("btcRPCLogin"))
+        settings.setValue("btcRPCLogin", "sysuser");
+    if (!settings.contains("zecRPCPassword"))
+        settings.setValue("zecRPCPassword", "JcfJqiyhVVRsYJo0MQKjBJxOZMCrXPqQjUt2Kte2qU");
+    if (!settings.contains("btcRPCPassword"))
+        settings.setValue("btcRPCPassword", "JcfJqiyhVVRsYJo0MQKjBJxOZMCrXPqQjUt2Kte2qU");
     if (!settings.contains("language"))
         settings.setValue("language", "");
     if (!SoftSetArg("-lang", settings.value("language").toString().toStdString()))
@@ -143,8 +177,18 @@ void OptionsModel::Reset()
 {
     QSettings settings;
 
+    // Save the strDataDir setting
+    QString dataDir = Intro::getDefaultDataDirectory();
+    dataDir = settings.value("strDataDir", dataDir).toString();
+
     // Remove all entries from our QSettings object
     settings.clear();
+
+    // Set strDataDir
+    settings.setValue("strDataDir", dataDir);
+
+    // Set that this was reset
+    settings.setValue("fReset", true);
 
     // default setting for OptionsModel::StartAtStartup - disabled
     if (GUIUtil::GetStartOnSystemStartup())
@@ -166,6 +210,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         {
         case StartAtStartup:
             return GUIUtil::GetStartOnSystemStartup();
+        case HideTrayIcon:
+            return fHideTrayIcon;
         case MinimizeToTray:
             return fMinimizeToTray;
         case MapPortUPnP:
@@ -223,6 +269,27 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("nThreadsScriptVerif");
         case Listen:
             return settings.value("fListen");
+        // SYSCOIN
+		case Theme:
+            return settings.value("theme");  
+        case DefaultAlias:
+            return settings.value("defaultAlias");   
+        case DefaultPegAlias:
+            return settings.value("defaultPegAlias");
+       case SafeSearch:
+            return settings.value("safesearch");
+       case ZecEndPoint:
+            return settings.value("zecEndPoint");
+       case BTCEndPoint:
+            return settings.value("btcEndPoint");
+       case ZecRPCLogin:
+            return settings.value("zecRPCLogin");
+       case BTCRPCLogin:
+            return settings.value("btcRPCLogin");
+       case ZecRPCPassword:
+            return settings.value("zecRPCPassword");
+       case BTCRPCPassword:
+            return settings.value("btcRPCPassword");
         default:
             return QVariant();
         }
@@ -241,6 +308,11 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         {
         case StartAtStartup:
             successful = GUIUtil::SetStartOnSystemStartup(value.toBool());
+            break;
+        case HideTrayIcon:
+            fHideTrayIcon = value.toBool();
+            settings.setValue("fHideTrayIcon", fHideTrayIcon);
+    		Q_EMIT hideTrayIconChanged(fHideTrayIcon);
             break;
         case MinimizeToTray:
             fMinimizeToTray = value.toBool();
@@ -343,6 +415,61 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 setRestartRequired(true);
             }
             break;
+		// SYSCOIN
+        case Theme:
+            if (settings.value("theme") != value) {
+                settings.setValue("theme", value);
+                setRestartRequired(true);
+            }
+            break; 
+        case DefaultAlias:
+            if (settings.value("defaultAlias") != value) {
+                settings.setValue("defaultAlias", value);
+            }
+            break;
+        case DefaultPegAlias:
+            if (settings.value("defaultPegAlias") != value) {
+				if(value == "")
+					settings.setValue("defaultPegAlias", "sysrates.peg");
+				else
+					settings.setValue("defaultPegAlias", value);
+            }
+            break;
+        case SafeSearch:
+            if (settings.value("safesearch") != value) {
+				settings.setValue("safesearch", value);
+            }
+            break;
+       case ZecEndPoint:
+            if (settings.value("zecEndPoint") != value) {
+				settings.setValue("zecEndPoint", value);
+            }
+            break;
+       case BTCEndPoint:
+            if (settings.value("btcEndPoint") != value) {
+				settings.setValue("btcEndPoint", value);
+            }
+            break;
+       case ZecRPCLogin:
+            if (settings.value("zecRPCLogin") != value) {
+				settings.setValue("zecRPCLogin", value);
+            }
+            break;
+       case BTCRPCLogin:
+            if (settings.value("btcRPCLogin") != value) {
+				settings.setValue("btcRPCLogin", value);
+            }
+            break;
+       case ZecRPCPassword:
+            if (settings.value("zecRPCPassword") != value) {
+				settings.setValue("zecRPCPassword", value);
+            }
+            break;
+       case BTCRPCPassword:
+            if (settings.value("btcRPCPassword") != value) {
+				settings.setValue("btcRPCPassword", value);
+            }
+            break;
         case CoinControlFeatures:
             fCoinControlFeatures = value.toBool();
             settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
@@ -416,4 +543,23 @@ bool OptionsModel::isRestartRequired()
 {
     QSettings settings;
     return settings.value("fRestartRequired", false).toBool();
+}
+
+void OptionsModel::checkAndMigrate()
+{
+    // Migration of default values
+    // Check if the QSettings container was already loaded with this client version
+    QSettings settings;
+    static const char strSettingsVersionKey[] = "nSettingsVersion";
+    int settingsVersion = settings.contains(strSettingsVersionKey) ? settings.value(strSettingsVersionKey).toInt() : 0;
+    if (settingsVersion < CLIENT_VERSION)
+    {
+        // -dbcache was bumped from 100 to 300 in 0.13
+        // see https://github.com/syscoin/syscoin2/pull/8273
+        // force people to upgrade to the new value if they are using 100MB
+        if (settingsVersion < 130000 && settings.contains("nDatabaseCache") && settings.value("nDatabaseCache").toLongLong() == 100)
+            settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
+
+        settings.setValue(strSettingsVersionKey, CLIENT_VERSION);
+    }
 }

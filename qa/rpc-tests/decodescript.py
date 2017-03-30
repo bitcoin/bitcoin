@@ -1,23 +1,23 @@
-#!/usr/bin/env python2
-# Copyright (c) 2015 The Syscoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2015-2016 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import *
 from test_framework.mininode import *
-from binascii import hexlify, unhexlify
-from cStringIO import StringIO
+from io import BytesIO
 
 class DecodeScriptTest(SyscoinTestFramework):
     """Tests decoding scripts via RPC command "decodescript"."""
 
-    def setup_chain(self):
-        print('Initializing test directory ' + self.options.tmpdir)
-        initialize_chain_clean(self.options.tmpdir, 1)
+    def __init__(self):
+        super().__init__()
+        self.setup_clean_chain = True
+        self.num_nodes = 1
 
     def setup_network(self, split=False):
-        self.nodes = start_nodes(1, self.options.tmpdir)
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
         self.is_network_split = False
 
     def decodescript_script_sig(self):
@@ -102,13 +102,13 @@ class DecodeScriptTest(SyscoinTestFramework):
         # OP_IF
         #   <receiver-pubkey> OP_CHECKSIGVERIFY
         # OP_ELSE
-        #   <lock-until> OP_NOP2 OP_DROP
+        #   <lock-until> OP_CHECKLOCKTIMEVERIFY OP_DROP
         # OP_ENDIF
         # <sender-pubkey> OP_CHECKSIG
         #
         # lock until block 500,000
         rpc_result = self.nodes[0].decodescript('63' + push_public_key + 'ad670320a107b17568' + push_public_key + 'ac')
-        assert_equal('OP_IF ' + public_key + ' OP_CHECKSIGVERIFY OP_ELSE 500000 OP_NOP2 OP_DROP OP_ENDIF ' + public_key + ' OP_CHECKSIG', rpc_result['asm'])
+        assert_equal('OP_IF ' + public_key + ' OP_CHECKSIGVERIFY OP_ELSE 500000 OP_CHECKLOCKTIMEVERIFY OP_DROP OP_ENDIF ' + public_key + ' OP_CHECKSIG', rpc_result['asm'])
 
     def decoderawtransaction_asm_sighashtype(self):
         """Tests decoding scripts via RPC command "decoderawtransaction".
@@ -131,7 +131,7 @@ class DecodeScriptTest(SyscoinTestFramework):
         assert_equal('OP_DUP OP_HASH160 dc863734a218bfe83ef770ee9d41a27f824a6e56 OP_EQUALVERIFY OP_CHECKSIG', rpc_result['vout'][0]['scriptPubKey']['asm'])
         assert_equal('OP_HASH160 2a5edea39971049a540474c6a99edf0aa4074c58 OP_EQUAL', rpc_result['vout'][1]['scriptPubKey']['asm'])
         txSave = CTransaction()
-        txSave.deserialize(StringIO(unhexlify(tx)))
+        txSave.deserialize(BytesIO(hex_str_to_bytes(tx)))
 
         # make sure that a specifically crafted op_return value will not pass all the IsDERSignature checks and then get decoded as a sighash type
         tx = '01000000015ded05872fdbda629c7d3d02b194763ce3b9b1535ea884e3c8e765d42e316724020000006b48304502204c10d4064885c42638cbff3585915b322de33762598321145ba033fc796971e2022100bb153ad3baa8b757e30a2175bd32852d2e1cb9080f84d7e32fcdfd667934ef1b012103163c0ff73511ea1743fb5b98384a2ff09dd06949488028fd819f4d83f56264efffffffff0200000000000000000b6a0930060201000201000180380100000000001976a9141cabd296e753837c086da7a45a6c2fe0d49d7b7b88ac00000000'
@@ -147,7 +147,7 @@ class DecodeScriptTest(SyscoinTestFramework):
         # some more full transaction tests of varying specific scriptSigs. used instead of
         # tests in decodescript_script_sig because the decodescript RPC is specifically
         # for working on scriptPubKeys (argh!).
-        push_signature = hexlify(txSave.vin[0].scriptSig)[2:(0x48*2+4)]
+        push_signature = bytes_to_hex_str(txSave.vin[0].scriptSig)[2:(0x48*2+4)]
         signature = push_signature[2:]
         der_signature = signature[:-2]
         signature_sighash_decoded = der_signature + '[ALL]'
@@ -156,25 +156,24 @@ class DecodeScriptTest(SyscoinTestFramework):
         signature_2_sighash_decoded = der_signature + '[NONE|ANYONECANPAY]'
 
         # 1) P2PK scriptSig
-        txSave.vin[0].scriptSig = unhexlify(push_signature)
-        rpc_result = self.nodes[0].decoderawtransaction(hexlify(txSave.serialize()))
+        txSave.vin[0].scriptSig = hex_str_to_bytes(push_signature)
+        rpc_result = self.nodes[0].decoderawtransaction(bytes_to_hex_str(txSave.serialize()))
         assert_equal(signature_sighash_decoded, rpc_result['vin'][0]['scriptSig']['asm'])
 
         # make sure that the sighash decodes come out correctly for a more complex / lesser used case.
-        txSave.vin[0].scriptSig = unhexlify(push_signature_2)
-        rpc_result = self.nodes[0].decoderawtransaction(hexlify(txSave.serialize()))
+        txSave.vin[0].scriptSig = hex_str_to_bytes(push_signature_2)
+        rpc_result = self.nodes[0].decoderawtransaction(bytes_to_hex_str(txSave.serialize()))
         assert_equal(signature_2_sighash_decoded, rpc_result['vin'][0]['scriptSig']['asm'])
 
         # 2) multisig scriptSig
-        txSave.vin[0].scriptSig = unhexlify('00' + push_signature + push_signature_2)
-        rpc_result = self.nodes[0].decoderawtransaction(hexlify(txSave.serialize()))
+        txSave.vin[0].scriptSig = hex_str_to_bytes('00' + push_signature + push_signature_2)
+        rpc_result = self.nodes[0].decoderawtransaction(bytes_to_hex_str(txSave.serialize()))
         assert_equal('0 ' + signature_sighash_decoded + ' ' + signature_2_sighash_decoded, rpc_result['vin'][0]['scriptSig']['asm'])
 
         # 3) test a scriptSig that contains more than push operations.
         # in fact, it contains an OP_RETURN with data specially crafted to cause improper decode if the code does not catch it.
-        txSave.vin[0].scriptSig = unhexlify('6a143011020701010101010101020601010101010101')
-        rpc_result = self.nodes[0].decoderawtransaction(hexlify(txSave.serialize()))
-        print(hexlify('636174'))
+        txSave.vin[0].scriptSig = hex_str_to_bytes('6a143011020701010101010101020601010101010101')
+        rpc_result = self.nodes[0].decoderawtransaction(bytes_to_hex_str(txSave.serialize()))
         assert_equal('OP_RETURN 3011020701010101010101020601010101010101', rpc_result['vin'][0]['scriptSig']['asm'])
 
     def run_test(self):

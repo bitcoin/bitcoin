@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -79,7 +79,7 @@ class TestAddrTypeVisitor : public boost::static_visitor<bool>
 private:
     std::string exp_addrType;
 public:
-    TestAddrTypeVisitor(const std::string &exp_addrType) : exp_addrType(exp_addrType) { }
+    TestAddrTypeVisitor(const std::string &_exp_addrType) : exp_addrType(_exp_addrType) { }
     bool operator()(const CKeyID &id) const
     {
         return (exp_addrType == "pubkey");
@@ -100,7 +100,7 @@ class TestPayloadVisitor : public boost::static_visitor<bool>
 private:
     std::vector<unsigned char> exp_payload;
 public:
-    TestPayloadVisitor(std::vector<unsigned char> &exp_payload) : exp_payload(exp_payload) { }
+    TestPayloadVisitor(std::vector<unsigned char> &_exp_payload) : exp_payload(_exp_payload) { }
     bool operator()(const CKeyID &id) const
     {
         uint160 exp_key(exp_payload);

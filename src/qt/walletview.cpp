@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,6 +20,12 @@
 #include "walletmodel.h"
 
 #include "ui_interface.h"
+// SYSCOIN
+#include "aliasview.h"
+#include "offerview.h"
+#include "certview.h"
+#include "messageview.h"
+#include "escrowview.h"
 
 #include <QAction>
 #include <QActionGroup>
@@ -29,11 +35,11 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
-WalletView::WalletView(const PlatformStyle *platformStyle, QWidget *parent):
+WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     QStackedWidget(parent),
     clientModel(0),
     walletModel(0),
-    platformStyle(platformStyle)
+    platformStyle(_platformStyle)
 {
     // Create tabs
     overviewPage = new OverviewPage(platformStyle);
@@ -42,11 +48,25 @@ WalletView::WalletView(const PlatformStyle *platformStyle, QWidget *parent):
     QVBoxLayout *vbox = new QVBoxLayout();
     QHBoxLayout *hbox_buttons = new QHBoxLayout();
     transactionView = new TransactionView(platformStyle, this);
+	// SYSCOIN
+    aliasListPage = new QStackedWidget();
+	messageListPage = new QStackedWidget();
+	certListPage = new QStackedWidget();
+    escrowListPage = new QStackedWidget();
+	offerListPage = new QStackedWidget();
+    aliasView = new AliasView(platformStyle, aliasListPage);
+	messageView = new MessageView(platformStyle, messageListPage);
+	escrowView = new EscrowView(platformStyle, escrowListPage);
+	certView = new CertView(platformStyle, certListPage);
+	offerView = new OfferView(platformStyle, offerListPage);
     vbox->addWidget(transactionView);
-    QPushButton *exportButton = new QPushButton(tr("&Export"), this);
+	// SYSCOIN
+    QPushButton *exportButton = new QPushButton(tr("Export"), this);
     exportButton->setToolTip(tr("Export the data in the current tab to a file"));
     if (platformStyle->getImagesOnButtons()) {
-        exportButton->setIcon(platformStyle->SingleColorIcon(":/icons/export"));
+		// SYSCOIN
+		QString theme = GUIUtil::getThemeName();
+        exportButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/export"));
     }
     hbox_buttons->addStretch();
     hbox_buttons->addWidget(exportButton);
@@ -63,6 +83,12 @@ WalletView::WalletView(const PlatformStyle *platformStyle, QWidget *parent):
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
+	// SYSCOIN
+	addWidget(aliasListPage);
+	addWidget(messageListPage);
+	addWidget(escrowListPage);
+    addWidget(certListPage);
+	addWidget(offerListPage);
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), transactionView, SLOT(focusTransaction(QModelIndex)));
@@ -98,47 +124,67 @@ void WalletView::setSyscoinGUI(SyscoinGUI *gui)
 
         // Pass through transaction notifications
         connect(this, SIGNAL(incomingTransaction(QString,int,CAmount,QString,QString,QString)), gui, SLOT(incomingTransaction(QString,int,CAmount,QString,QString,QString)));
+
+		// SYSCOIN
+		aliasView->setSyscoinGUI(gui);
+		messageView->setSyscoinGUI(gui);
+		escrowView->setSyscoinGUI(gui);
+		certView->setSyscoinGUI(gui);
+		offerView->setSyscoinGUI(gui);
     }
 }
 
-void WalletView::setClientModel(ClientModel *clientModel)
+void WalletView::setClientModel(ClientModel *_clientModel)
 {
-    this->clientModel = clientModel;
+    this->clientModel = _clientModel;
 
-    overviewPage->setClientModel(clientModel);
-    sendCoinsPage->setClientModel(clientModel);
+    overviewPage->setClientModel(_clientModel);
+    sendCoinsPage->setClientModel(_clientModel);
+	// SYSCOIN
+    aliasView->setClientModel(clientModel);
+	messageView->setClientModel(clientModel);
+	escrowView->setClientModel(clientModel);
+    certView->setClientModel(clientModel);
+	offerView->setClientModel(clientModel);
 }
 
-void WalletView::setWalletModel(WalletModel *walletModel)
+void WalletView::setWalletModel(WalletModel *_walletModel)
 {
-    this->walletModel = walletModel;
+    this->walletModel = _walletModel;
 
     // Put transaction list in tabs
-    transactionView->setModel(walletModel);
-    overviewPage->setWalletModel(walletModel);
-    receiveCoinsPage->setModel(walletModel);
-    sendCoinsPage->setModel(walletModel);
-    usedReceivingAddressesPage->setModel(walletModel->getAddressTableModel());
-    usedSendingAddressesPage->setModel(walletModel->getAddressTableModel());
+    transactionView->setModel(_walletModel);
+    overviewPage->setWalletModel(_walletModel);
+    receiveCoinsPage->setModel(_walletModel);
+    sendCoinsPage->setModel(_walletModel);
+    usedReceivingAddressesPage->setModel(_walletModel->getAddressTableModel());
+    usedSendingAddressesPage->setModel(_walletModel->getAddressTableModel());
 
-    if (walletModel)
+    if (_walletModel)
     {
         // Receive and pass through messages from wallet model
-        connect(walletModel, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
+        connect(_walletModel, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
 
         // Handle changes in encryption status
-        connect(walletModel, SIGNAL(encryptionStatusChanged(int)), this, SIGNAL(encryptionStatusChanged(int)));
+        connect(_walletModel, SIGNAL(encryptionStatusChanged(int)), this, SIGNAL(encryptionStatusChanged(int)));
         updateEncryptionStatus();
 
+
         // Balloon pop-up for new transaction
-        connect(walletModel->getTransactionTableModel(), SIGNAL(rowsInserted(QModelIndex,int,int)),
+        connect(_walletModel->getTransactionTableModel(), SIGNAL(rowsInserted(QModelIndex,int,int)),
                 this, SLOT(processNewTransaction(QModelIndex,int,int)));
 
         // Ask for passphrase if needed
-        connect(walletModel, SIGNAL(requireUnlock()), this, SLOT(unlockWallet()));
+        connect(_walletModel, SIGNAL(requireUnlock()), this, SLOT(unlockWallet()));
 
         // Show progress dialog
-        connect(walletModel, SIGNAL(showProgress(QString,int)), this, SLOT(showProgress(QString,int)));
+        connect(_walletModel, SIGNAL(showProgress(QString,int)), this, SLOT(showProgress(QString,int)));
+		// SYSCOIN
+        aliasView->setWalletModel(walletModel);
+		messageView->setWalletModel(walletModel);
+		escrowView->setWalletModel(walletModel);
+        certView->setWalletModel(walletModel);
+		offerView->setWalletModel(walletModel);
     }
 }
 
@@ -184,7 +230,27 @@ void WalletView::gotoSendCoinsPage(QString addr)
     if (!addr.isEmpty())
         sendCoinsPage->setAddress(addr);
 }
-
+// SYSCOIN
+void WalletView::gotoAliasListPage()
+{
+    setCurrentWidget(aliasListPage);
+}
+void WalletView::gotoMessageListPage()
+{
+    setCurrentWidget(messageListPage);
+}
+void WalletView::gotoEscrowListPage()
+{
+    setCurrentWidget(escrowListPage);
+}
+void WalletView::gotoOfferListPage()
+{
+	setCurrentWidget(offerListPage);  
+}
+void WalletView::gotoCertListPage()
+{
+    setCurrentWidget(certListPage);
+}
 void WalletView::gotoSignMessageTab(QString addr)
 {
     // calls show() in showTab_SM()
@@ -316,3 +382,4 @@ void WalletView::showProgress(const QString &title, int nProgress)
     else if (progressDialog)
         progressDialog->setValue(nProgress);
 }
+

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -83,7 +83,7 @@ public:
     static void LoadRootCAs(X509_STORE* store = NULL);
 
     // Return certificate store
-    static X509_STORE* getCertStore() { return certStore; }
+    static X509_STORE* getCertStore();
 
     // OptionsModel is used for getting proxy settings and display unit
     void setOptionsModel(OptionsModel *optionsModel);
@@ -139,9 +139,6 @@ private:
 
     bool saveURIs;                      // true during startup
     QLocalServer* uriServer;
-
-    static X509_STORE* certStore;       // Trusted root certificates
-    static void freeCertStore();
 
     QNetworkAccessManager* netManager;  // Used to fetch payment requests
 

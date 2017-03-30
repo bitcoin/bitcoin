@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Syscoin Core developers
+// Copyright (c) 2014-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,7 +11,8 @@
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(main_tests, TestingSetup)
-
+// SYSCOIN
+/*
 static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
 {
     int maxHalvings = 64;
@@ -41,19 +42,19 @@ BOOST_AUTO_TEST_CASE(block_subsidy_test)
     TestBlockSubsidyHalvings(Params(CBaseChainParams::MAIN).GetConsensus()); // As in main
     TestBlockSubsidyHalvings(150); // As in regtest
     TestBlockSubsidyHalvings(1000); // Just another interval
-}
+}*/
 
 BOOST_AUTO_TEST_CASE(subsidy_limit_test)
 {
-    const Consensus::Params& consensusParams = Params(CBaseChainParams::MAIN).GetConsensus();
+     const Consensus::Params& consensusParams = Params(CBaseChainParams::MAIN).GetConsensus();
+	// SYSCOIN snapshot
     CAmount nSum = 0;
-    for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
+    for (int nHeight = 0; nHeight < 27856853; nHeight++) {
         CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
-        BOOST_CHECK(nSubsidy <= 50 * COIN);
-        nSum += nSubsidy * 1000;
-        BOOST_CHECK(MoneyRange(nSum));
+        nSum += nSubsidy;
     }
-    BOOST_CHECK_EQUAL(nSum, 2099999997690000ULL);
+	BOOST_CHECK(MoneyRange(nSum));
+    BOOST_CHECK_EQUAL(nSum, 80013364266897596ULL);
 }
 
 bool ReturnFalse() { return false; }

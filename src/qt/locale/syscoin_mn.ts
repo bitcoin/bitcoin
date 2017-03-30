@@ -1,5 +1,23 @@
 <TS language="mn" version="2.1">
 <context>
+    <name>AcceptandPayOfferListPage</name>
+    </context>
+<context>
+    <name>AcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Сонгогдсон таб дээрхи дата-г экспортлох</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Бүгд</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Таслалаар тусгаарлагдсан хүснэгтэн файл (.csv)</translation>
+    </message>
+    </context>
+<context>
     <name>AddressBookPage</name>
     <message>
         <source>Create a new address</source>
@@ -20,10 +38,6 @@
     <message>
         <source>C&amp;lose</source>
         <translation>&amp;Хаах</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation>Хаягийг &amp;Хуулбарлах</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -70,6 +84,10 @@
         <translation>Эдгээр Биткойн хаягууд нь хүлээн авах хаягууд. Гүйлгээ болгонд шинээр хаяг үүсгэхийг бид санал болгож байна.</translation>
     </message>
     <message>
+        <source>&amp;Copy Address</source>
+        <translation>Хаягийг &amp;Хуулбарлах</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>&amp;Шошгыг хуулбарлах</translation>
     </message>
@@ -84,6 +102,14 @@
     <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Таслалаар тусгаарлагдсан хүснэгтэн файл (.csv)</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Шошго</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Хаяг</translation>
     </message>
     </context>
 <context>
@@ -101,6 +127,15 @@
         <translation>(шошгогүй)</translation>
     </message>
 </context>
+<context>
+    <name>AliasListPage</name>
+    </context>
+<context>
+    <name>AliasTableModel</name>
+    </context>
+<context>
+    <name>AliasView</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -175,123 +210,18 @@
         <source>Wallet passphrase was successfully changed.</source>
         <translation>Түрүйвчийн нууц үг амжилттай ѳѳр</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>SyscoinGUI</name>
-    <message>
-        <source>Sign &amp;message...</source>
-        <translation>&amp;Зурвас хавсаргах...</translation>
-    </message>
-    <message>
-        <source>Synchronizing with network...</source>
-        <translation>Сүлжээтэй тааруулж байна...</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>Нод</translation>
-    </message>
-    <message>
-        <source>&amp;Transactions</source>
-        <translation>Гүйлгээнүүд</translation>
-    </message>
-    <message>
-        <source>Browse transaction history</source>
-        <translation>Гүйлгээнүүдийн түүхийг харах</translation>
-    </message>
-    <message>
-        <source>E&amp;xit</source>
-        <translation>Гарах</translation>
-    </message>
-    <message>
-        <source>Quit application</source>
-        <translation>Програмаас Гарах</translation>
-    </message>
-    <message>
-        <source>About &amp;Qt</source>
-        <translation>&amp;Клиентийн тухай</translation>
-    </message>
-    <message>
-        <source>Show information about Qt</source>
-        <translation>Клиентийн тухай мэдээллийг харуул</translation>
-    </message>
-    <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;Сонголтууд...</translation>
-    </message>
-    <message>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Түрүйвчийг цоожлох...</translation>
-    </message>
-    <message>
-        <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Түрүйвчийг Жоорлох...</translation>
-    </message>
-    <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Нууц Үгийг Солих...</translation>
-    </message>
-    <message>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation>Түрүйвчийг цоожлох нууц үгийг солих</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>Оношилгоо ба засварын консолыг онгойлго</translation>
-    </message>
-    <message>
-        <source>Syscoin</source>
-        <translation>Биткойн</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Түрүйвч</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Харуул / Нуу</translation>
-    </message>
-    <message>
-        <source>&amp;File</source>
-        <translation>&amp;Файл</translation>
-    </message>
-    <message>
-        <source>&amp;Settings</source>
-        <translation>&amp;Тохиргоо</translation>
-    </message>
-    <message>
-        <source>&amp;Help</source>
-        <translation>&amp;Тусламж</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Алдаа</translation>
-    </message>
-    <message>
-        <source>Up to date</source>
-        <translation>Шинэчлэгдсэн</translation>
-    </message>
-    <message>
-        <source>Sent transaction</source>
-        <translation>Гадагшаа гүйлгээ</translation>
-    </message>
-    <message>
-        <source>Incoming transaction</source>
-        <translation>Дотогшоо гүйлгээ</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Түрүйвч &lt;b&gt;цоожтой&lt;/b&gt; ба одоогоор цоож &lt;b&gt;онгорхой&lt;/b&gt; байна</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Түрүйвч &lt;b&gt;цоожтой&lt;/b&gt; ба одоогоор цоож &lt;b&gt;хаалттай&lt;/b&gt; байна</translation>
-    </message>
-</context>
+    <name>CertListPage</name>
+    </context>
 <context>
-    <name>ClientModel</name>
+    <name>CertTableModel</name>
+    </context>
+<context>
+    <name>CertView</name>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -384,6 +314,70 @@
     </message>
 </context>
 <context>
+    <name>EditAliasDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Ерѳнхий</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Түрүйвчийн цоожийг тайлж чадсангүй</translation>
+    </message>
+</context>
+<context>
+    <name>EditCertDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Түрүйвчийн цоожийг тайлж чадсангүй</translation>
+    </message>
+</context>
+<context>
+    <name>EditOfferDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Ерѳнхий</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Түрүйвчийн цоожийг тайлж чадсангүй</translation>
+    </message>
+</context>
+<context>
+    <name>EditWhitelistOfferDialog</name>
+    <message>
+        <source>Remove</source>
+        <translation>Устгах</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Сонгогдсон таб дээрхи дата-г экспортлох</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Таслалаар тусгаарлагдсан хүснэгтэн файл (.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowInfoDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Ерѳнхий</translation>
+    </message>
+    <message>
+        <source>ID</source>
+        <translation>Тодорхойлолт</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowListPage</name>
+    </context>
+<context>
+    <name>EscrowTableModel</name>
+    </context>
+<context>
+    <name>EscrowView</name>
+    </context>
+<context>
     <name>FreespaceChecker</name>
     </context>
 <context>
@@ -398,11 +392,199 @@
     </message>
     </context>
 <context>
+    <name>InMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Таслалаар тусгаарлагдсан хүснэгтэн файл (.csv)</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Зурвас</translation>
+    </message>
+    </context>
+<context>
     <name>Intro</name>
     <message>
         <source>Error</source>
         <translation>Алдаа</translation>
     </message>
+    </context>
+<context>
+    <name>ManageEscrowDialog</name>
+    </context>
+<context>
+    <name>MessageInfoDialog</name>
+    <message>
+        <source>Message:</source>
+        <translation>Зурвас:</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Сонгогдсон таб дээрхи дата-г экспортлох</translation>
+    </message>
+</context>
+<context>
+    <name>MessageTableModel</name>
+    <message>
+        <source>Message</source>
+        <translation>Зурвас</translation>
+    </message>
+</context>
+<context>
+    <name>MessageView</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Last block time</source>
+        <translation>Сүүлийн блокийн хугацаа</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Сонгогдсон таб дээрхи дата-г экспортлох</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Бүгд</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Таслалаар тусгаарлагдсан хүснэгтэн файл (.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAliasListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Сонгогдсон таб дээрхи дата-г экспортлох</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Таслалаар тусгаарлагдсан хүснэгтэн файл (.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyCertListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Сонгогдсон таб дээрхи дата-г экспортлох</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Бүгд</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Таслалаар тусгаарлагдсан хүснэгтэн файл (.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyEscrowListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Сонгогдсон таб дээрхи дата-г экспортлох</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Бүгд</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Таслалаар тусгаарлагдсан хүснэгтэн файл (.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Сонгогдсон таб дээрхи дата-г экспортлох</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Бүгд</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Таслалаар тусгаарлагдсан хүснэгтэн файл (.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferWhitelistTableModel</name>
+    </context>
+<context>
+    <name>MyWhitelistOfferDialog</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Сонгогдсон таб дээрхи дата-г экспортлох</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Таслалаар тусгаарлагдсан хүснэгтэн файл (.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>NewMessageDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Түрүйвчийн цоожийг тайлж чадсангүй</translation>
+    </message>
+</context>
+<context>
+    <name>NewWhitelistDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Түрүйвчийн цоожийг тайлж чадсангүй</translation>
+    </message>
+</context>
+<context>
+    <name>OfferAcceptDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogBTC</name>
+    <message>
+        <source>to</source>
+        <translation>-рүү/руу</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptDialogZEC</name>
+    <message>
+        <source>to</source>
+        <translation>-рүү/руу</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptInfoDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptTableModel</name>
+    </context>
+<context>
+    <name>OfferEscrowDialog</name>
+    </context>
+<context>
+    <name>OfferFeedbackDialog</name>
+    </context>
+<context>
+    <name>OfferListPage</name>
+    </context>
+<context>
+    <name>OfferPayDialog</name>
+    </context>
+<context>
+    <name>OfferTableModel</name>
+    </context>
+<context>
+    <name>OfferView</name>
+    </context>
+<context>
+    <name>OfferWhitelistTableModel</name>
     </context>
 <context>
     <name>OpenURIDialog</name>
@@ -422,12 +604,38 @@
         <translation>проксигийн IP хаяг (жишээ нь: IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
+        <source>&amp;Network</source>
+        <translation>Сүлжээ</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>Түрүйвч</translation>
+    </message>
+    <message>
         <source>Client restart required to activate changes.</source>
         <translation>Ѳѳрчлѳлтүүдийг идэвхижүүлхийн тулд клиентийг ахин эхлүүлэх шаардлагтай</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
         <translation>Энэ ѳѳрчлѳлтийг оруулахын тулд кли1нт програмыг ахин эхлүүлэх шаардлагтай</translation>
+    </message>
+    </context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>All</source>
+        <translation>Бүгд</translation>
+    </message>
+</context>
+<context>
+    <name>OutMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Таслалаар тусгаарлагдсан хүснэгтэн файл (.csv)</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Зурвас</translation>
     </message>
     </context>
 <context>
@@ -453,7 +661,11 @@
         <source>N/A</source>
         <translation>Алга Байна</translation>
     </message>
-    </context>
+    <message>
+        <source>All</source>
+        <translation>Бүгд</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -463,10 +675,6 @@
 </context>
 <context>
     <name>RPCConsole</name>
-    <message>
-        <source>Client name</source>
-        <translation>Клиентийн нэр</translation>
-    </message>
     <message>
         <source>N/A</source>
         <translation>Алга Байна</translation>
@@ -523,8 +731,16 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>&amp;Amount:</source>
+        <translation>Хэмжээ:</translation>
+    </message>
+    <message>
         <source>&amp;Label:</source>
         <translation>&amp;Шошго:</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>Зурвас:</translation>
     </message>
     <message>
         <source>Show</source>
@@ -553,6 +769,10 @@
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>Хаягийг &amp;Хуулбарлах</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>Хаяг</translation>
@@ -585,10 +805,6 @@
         <translation>Зурвас</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>Хэмжээ</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(шошгогүй)</translation>
     </message>
@@ -596,6 +812,9 @@
         <source>(no message)</source>
         <translation>(зурвас алга)</translation>
     </message>
+    </context>
+<context>
+    <name>ResellOfferDialog</name>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -644,10 +863,6 @@
         <translation>Яв&amp;уул</translation>
     </message>
     <message>
-        <source>Confirm send coins</source>
-        <translation>Зоос явуулахыг баталгаажуулна уу</translation>
-    </message>
-    <message>
         <source>Copy amount</source>
         <translation>Хэмжээг санах</translation>
     </message>
@@ -658,6 +873,10 @@
     <message>
         <source>or</source>
         <translation>эсвэл</translation>
+    </message>
+    <message>
+        <source>Confirm send coins</source>
+        <translation>Зоос явуулахыг баталгаажуулна уу</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
@@ -679,7 +898,7 @@
         <source>(no label)</source>
         <translation>(шошгогүй)</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -689,10 +908,6 @@
     <message>
         <source>Pay &amp;To:</source>
         <translation>Тѳлѳх &amp;хаяг:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Энэ хаягийг ѳѳрийн бүртгэлдээ авахын тулд шошго оруул</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -714,18 +929,32 @@
         <source>Message:</source>
         <translation>Зурвас:</translation>
     </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>Тѳлѳх хаяг:</translation>
+    </message>
+    <message>
+        <source>Enter a label for this address to add it to your address book</source>
+        <translation>Энэ хаягийг ѳѳрийн бүртгэлдээ авахын тулд шошго оруул</translation>
+    </message>
+</context>
+<context>
+    <name>SendConfirmationDialog</name>
     </context>
 <context>
     <name>ShutdownWindow</name>
-    <message>
-        <source>Syscoin Core is shutting down...</source>
-        <translation>Биткойны цѳм хаагдаж байна...</translation>
-    </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation>Энэ цонхыг хаагдтал компьютерээ бүү унтраагаарай</translation>
     </message>
 </context>
+<context>
+    <name>SignRawTxDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Ерѳнхий</translation>
+    </message>
+    </context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
@@ -749,6 +978,125 @@
     <name>SplashScreen</name>
     </context>
 <context>
+    <name>SyscoinGUI</name>
+    <message>
+        <source>Sign &amp;message...</source>
+        <translation>&amp;Зурвас хавсаргах...</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network...</source>
+        <translation>Сүлжээтэй тааруулж байна...</translation>
+    </message>
+    <message>
+        <source>Node</source>
+        <translation>Нод</translation>
+    </message>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation>Гүйлгээнүүд</translation>
+    </message>
+    <message>
+        <source>Browse transaction history</source>
+        <translation>Гүйлгээнүүдийн түүхийг харах</translation>
+    </message>
+    <message>
+        <source>E&amp;xit</source>
+        <translation>Гарах</translation>
+    </message>
+    <message>
+        <source>Quit application</source>
+        <translation>Програмаас Гарах</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation>&amp;Клиентийн тухай</translation>
+    </message>
+    <message>
+        <source>Show information about Qt</source>
+        <translation>Клиентийн тухай мэдээллийг харуул</translation>
+    </message>
+    <message>
+        <source>&amp;Options...</source>
+        <translation>&amp;Сонголтууд...</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>&amp;Түрүйвчийг цоожлох...</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet...</source>
+        <translation>&amp;Түрүйвчийг Жоорлох...</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>&amp;Нууц Үгийг Солих...</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>Хүлээн авах хаяг</translation>
+    </message>
+    <message>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>Түрүйвчийг цоожлох нууц үгийг солих</translation>
+    </message>
+    <message>
+        <source>Open debugging and diagnostic console</source>
+        <translation>Оношилгоо ба засварын консолыг онгойлго</translation>
+    </message>
+    <message>
+        <source>Syscoin</source>
+        <translation>Биткойн</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Түрүйвч</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;Харуул / Нуу</translation>
+    </message>
+    <message>
+        <source>&amp;File</source>
+        <translation>&amp;Файл</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation>&amp;Тохиргоо</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation>&amp;Тусламж</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Алдаа</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>Мэдээллэл</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation>Шинэчлэгдсэн</translation>
+    </message>
+    <message>
+        <source>Sent transaction</source>
+        <translation>Гадагшаа гүйлгээ</translation>
+    </message>
+    <message>
+        <source>Incoming transaction</source>
+        <translation>Дотогшоо гүйлгээ</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <translation>Түрүйвч &lt;b&gt;цоожтой&lt;/b&gt; ба одоогоор цоож &lt;b&gt;онгорхой&lt;/b&gt; байна</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation>Түрүйвч &lt;b&gt;цоожтой&lt;/b&gt; ба одоогоор цоож &lt;b&gt;хаалттай&lt;/b&gt; байна</translation>
+    </message>
+</context>
+<context>
     <name>TrafficGraphWidget</name>
     </context>
 <context>
@@ -756,10 +1104,6 @@
     <message>
         <source>Open until %1</source>
         <translation>%1 хүртэл нээлттэй</translation>
-    </message>
-    <message>
-        <source>conflicted</source>
-        <translation>зѳрчилдлѳѳ</translation>
     </message>
     <message>
         <source>%1/unconfirmed</source>
@@ -770,8 +1114,16 @@
         <translation>%1 баталгаажилтууд</translation>
     </message>
     <message>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>, хараахан амжилттай цацагдаагүй байна</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>Огноо</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>үл мэдэгдэх</translation>
     </message>
     <message>
         <source>Message</source>
@@ -785,15 +1137,7 @@
         <source>Amount</source>
         <translation>Хэмжээ</translation>
     </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, хараахан амжилттай цацагдаагүй байна</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>үл мэдэгдэх</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>TransactionDescDialog</name>
     <message>
@@ -804,7 +1148,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Гүйлгээний дэлгэрэнгүйг энэ бичил цонх харуулж байна</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -816,12 +1160,24 @@
         <translation>Тѳрѳл</translation>
     </message>
     <message>
+        <source>Label</source>
+        <translation>Шошго</translation>
+    </message>
+    <message>
         <source>Open until %1</source>
         <translation>%1 хүртэл нээлттэй</translation>
     </message>
     <message>
+        <source>Unconfirmed</source>
+        <translation>Баталгаажаагүй</translation>
+    </message>
+    <message>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Баталгаажлаа (%1 баталгаажилт)</translation>
+    </message>
+    <message>
+        <source>Conflicted</source>
+        <translation>Зѳрчилдлѳѳ</translation>
     </message>
     <message>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
@@ -830,18 +1186,6 @@
     <message>
         <source>Generated but not accepted</source>
         <translation>Үүсгэгдсэн гэхдээ хүлээн авагдаагүй</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Шошго</translation>
-    </message>
-    <message>
-        <source>Unconfirmed</source>
-        <translation>Баталгаажаагүй</translation>
-    </message>
-    <message>
-        <source>Conflicted</source>
-        <translation>Зѳрчилдлѳѳ</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -866,6 +1210,10 @@
     <message>
         <source>(n/a)</source>
         <translation>(алга байна)</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(шошгогүй)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
@@ -959,10 +1307,6 @@
         <translation>Гүйлгээний дэлгэрэнгүйг харуул</translation>
     </message>
     <message>
-        <source>The transaction history was successfully saved to %1.</source>
-        <translation>Гүйлгээнүй түүхийг %1-д амжилттай хадгаллаа.</translation>
-    </message>
-    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Таслалаар тусгаарлагдсан хүснэгтэн файл (.csv)</translation>
     </message>
@@ -991,6 +1335,10 @@
         <translation>Тодорхойлолт</translation>
     </message>
     <message>
+        <source>The transaction history was successfully saved to %1.</source>
+        <translation>Гүйлгээнүй түүхийг %1-д амжилттай хадгаллаа.</translation>
+    </message>
+    <message>
         <source>to</source>
         <translation>-рүү/руу</translation>
     </message>
@@ -1011,13 +1359,9 @@
         <source>Send Coins</source>
         <translation>Зоос явуулах</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;Экспортдлох</translation>
-    </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Сонгогдсон таб дээрхи дата-г экспортлох</translation>
@@ -1034,16 +1378,12 @@
         <translation>Түрүйвчийн сонголтууд:</translation>
     </message>
     <message>
+        <source>Information</source>
+        <translation>Мэдээллэл</translation>
+    </message>
+    <message>
         <source>Loading addresses...</source>
         <translation>Хаягуудыг ачааллаж байна...</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>wallet.dat-ыг ачааллахад алдаа гарлаа: Түрүйвч эвдэрсэн байна</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat</source>
-        <translation>wallet.dat-ыг ачааллахад алдаа гарлаа</translation>
     </message>
     <message>
         <source>Invalid -proxy address: '%s'</source>

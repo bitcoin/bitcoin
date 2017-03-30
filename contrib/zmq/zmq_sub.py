@@ -1,10 +1,14 @@
 #!/usr/bin/env python2
+# Copyright (c) 2014-2016 The Syscoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import array
 import binascii
 import zmq
+import struct
 
-port = 28332
+port = 28370
 
 zmqContext = zmq.Context()
 zmqSubSocket = zmqContext.socket(zmq.SUB)
@@ -19,18 +23,21 @@ try:
         msg = zmqSubSocket.recv_multipart()
         topic = str(msg[0])
         body = msg[1]
-
+        sequence = "Unknown";
+        if len(msg[-1]) == 4:
+          msgSequence = struct.unpack('<I', msg[-1])[-1]
+          sequence = str(msgSequence)
         if topic == "hashblock":
-            print "- HASH BLOCK -"
+            print '- HASH BLOCK ('+sequence+') -'
             print binascii.hexlify(body)
         elif topic == "hashtx":
-            print '- HASH TX -'
+            print '- HASH TX  ('+sequence+') -'
             print binascii.hexlify(body)
         elif topic == "rawblock":
-            print "- RAW BLOCK HEADER -"
+            print '- RAW BLOCK HEADER ('+sequence+') -'
             print binascii.hexlify(body[:80])
         elif topic == "rawtx":
-            print '- RAW TX -'
+            print '- RAW TX ('+sequence+') -'
             print binascii.hexlify(body)
 
 except KeyboardInterrupt:

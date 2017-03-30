@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -100,10 +100,12 @@ public:
     virtual RPCTimerBase* NewTimer(boost::function<void(void)>& func, int64_t millis) = 0;
 };
 
-/** Register factory function for timers */
-void RPCRegisterTimerInterface(RPCTimerInterface *iface);
-/** Unregister factory function for timers */
-void RPCUnregisterTimerInterface(RPCTimerInterface *iface);
+/** Set the factory function for timers */
+void RPCSetTimerInterface(RPCTimerInterface *iface);
+/** Set the factory function for timer, but only, if unset */
+void RPCSetTimerInterfaceIfUnset(RPCTimerInterface *iface);
+/** Unset factory function for timers */
+void RPCUnsetTimerInterface(RPCTimerInterface *iface);
 
 /**
  * Run func nSeconds from now.
@@ -195,6 +197,9 @@ extern UniValue estimatefee(const UniValue& params, bool fHelp);
 extern UniValue estimatepriority(const UniValue& params, bool fHelp);
 extern UniValue estimatesmartfee(const UniValue& params, bool fHelp);
 extern UniValue estimatesmartpriority(const UniValue& params, bool fHelp);
+//SYSCOIN
+extern UniValue getauxblock(const UniValue& params, bool fHelp);
+extern UniValue getv2address(const UniValue& params, bool fHelp); // in rpcwallet.cpp
 
 extern UniValue getnewaddress(const UniValue& params, bool fHelp); // in rpcwallet.cpp
 extern UniValue getaccountaddress(const UniValue& params, bool fHelp);
@@ -238,17 +243,17 @@ extern UniValue resendwallettransactions(const UniValue& params, bool fHelp);
 extern UniValue aliasnew(const UniValue& params, bool fHelp);
 extern UniValue aliasupdate(const UniValue& params, bool fHelp);
 extern UniValue aliaslist(const UniValue& params, bool fHelp);
+extern UniValue aliasaffiliates(const UniValue& params, bool fHelp);
 extern UniValue aliasinfo(const UniValue& params, bool fHelp);
 extern UniValue aliashistory(const UniValue& params, bool fHelp);
 extern UniValue aliasfilter(const UniValue& params, bool fHelp);
-extern UniValue aliasscan(const UniValue& params, bool fHelp);
-extern UniValue getaliasfees(const UniValue& params, bool fHelp);
+extern UniValue aliaspay(const UniValue& params, bool fHelp);
+extern UniValue generatepublickey(const UniValue& params, bool fHelp);
 
 
 extern UniValue offernew(const UniValue& params, bool fHelp);
 extern UniValue offerupdate(const UniValue& params, bool fHelp);
 extern UniValue offeraccept(const UniValue& params, bool fHelp);
-extern UniValue offerrefund(const UniValue& params, bool fHelp);
 extern UniValue offerlink(const UniValue& params, bool fHelp);
 extern UniValue offeraddwhitelist(const UniValue& params, bool fHelp);
 extern UniValue offerremovewhitelist(const UniValue& params, bool fHelp);
@@ -259,8 +264,6 @@ extern UniValue offerlist(const UniValue& params, bool fHelp);
 extern UniValue offeracceptlist(const UniValue& params, bool fHelp);
 extern UniValue offerhistory(const UniValue& params, bool fHelp);
 extern UniValue offerfilter(const UniValue& params, bool fHelp);
-extern UniValue offerscan(const UniValue& params, bool fHelp);
-extern UniValue getofferfees(const UniValue& params, bool fHelp);
 
 extern UniValue certupdate(const UniValue& params, bool fHelp);
 extern UniValue certnew(const UniValue& params, bool fHelp);
@@ -269,8 +272,6 @@ extern UniValue certinfo(const UniValue& params, bool fHelp);
 extern UniValue certlist(const UniValue& params, bool fHelp);
 extern UniValue certhistory(const UniValue& params, bool fHelp);
 extern UniValue certfilter(const UniValue& params, bool fHelp);
-extern UniValue certscan(const UniValue& params, bool fHelp);
-extern UniValue getcertfees(const UniValue& params, bool fHelp);
 
 extern UniValue escrownew(const UniValue& params, bool fHelp);
 extern UniValue escrowrelease(const UniValue& params, bool fHelp);
@@ -282,15 +283,12 @@ extern UniValue escrowinfo(const UniValue& params, bool fHelp);
 extern UniValue escrowlist(const UniValue& params, bool fHelp);
 extern UniValue escrowhistory(const UniValue& params, bool fHelp);
 extern UniValue escrowfilter(const UniValue& params, bool fHelp);
-extern UniValue escrowscan(const UniValue& params, bool fHelp);
-extern UniValue getescrowfees(const UniValue& params, bool fHelp);
 
 extern UniValue messagenew(const UniValue& params, bool fHelp);
 extern UniValue messageinfo(const UniValue& params, bool fHelp);
 extern UniValue messagelist(const UniValue& params, bool fHelp);
 extern UniValue messagesentlist(const UniValue& params, bool fHelp);
 extern UniValue messagehistory(const UniValue& params, bool fHelp);
-extern UniValue getmessagefees(const UniValue& params, bool fHelp);
 extern UniValue getrawtransaction(const UniValue& params, bool fHelp); // in rcprawtransaction.cpp
 extern UniValue listunspent(const UniValue& params, bool fHelp);
 extern UniValue lockunspent(const UniValue& params, bool fHelp);

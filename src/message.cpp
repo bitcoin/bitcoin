@@ -6,16 +6,19 @@
 #include "util.h"
 #include "random.h"
 #include "base58.h"
-#include "rpcserver.h"
+#include "core_io.h"
+#include "rpc/server.h"
 #include "wallet/wallet.h"
 #include "chainparams.h"
 #include <boost/algorithm/hex.hpp>
 #include <boost/xpressive/xpressive_dynamic.hpp>
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
+#include <functional> 
 using namespace std;
-
-extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const string& txData="", const CWalletTx* wtxIn=NULL);
+extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInAlias=NULL, int nTxOutAlias = 0, bool syscoinMultiSigTx=false, const CCoinControl* coinControl=NULL, const CWalletTx* wtxInLinkAlias=NULL,  int nTxOutLinkAlias = 0)
+;
 void PutToMessageList(std::vector<CMessage> &messageList, CMessage& index) {
 	int i = messageList.size() - 1;
 	BOOST_REVERSE_FOREACH(CMessage &o, messageList) {
@@ -35,36 +38,13 @@ bool IsMessageOp(int op) {
     return op == OP_MESSAGE_ACTIVATE;
 }
 
-int64_t GetMessageNetworkFee(opcodetype seed, unsigned int nHeight) {
-
-	int64_t nFee = 0;
-	int64_t nRate = 0;
-	const vector<unsigned char> &vchCurrency = vchFromString("USD");
-	vector<string> rateList;
-	int precision;
-	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, nHeight, rateList, precision) != "")
-		{
-		if(seed==OP_MESSAGE_ACTIVATE) 
-		{
-			nFee = 150 * COIN;
-		}
-	}
-	else
-	{
-		// 1000 pips USD (1 cent), 10k pips = $1USD
-		nFee = nRate/10;
-	}
-	// Round up to CENT
-	nFee += CENT - 1;
-	nFee = (nFee / CENT) * CENT;
-	return nFee;
-}
-
-
-// Increase expiration to 36000 gradually starting at block 24000.
-// Use for validation purposes and pass the chain height.
-int GetMessageExpirationDepth() {
-    return 525600;
+uint64_t GetMessageExpiration(const CMessage& message) {
+	uint64_t nTime = chainActive.Tip()->nTime + 1;
+	CAliasUnprunable aliasUnprunable;
+	if (paliasdb && paliasdb->ReadAliasUnprunable(message.vchAliasTo, aliasUnprunable) && !aliasUnprunable.IsNull())
+		nTime = aliasUnprunable.nExpireTime;
+	
+	return nTime;
 }
 
 
@@ -76,47 +56,124 @@ string messageFromOp(int op) {
         return "<unknown message op>";
     }
 }
-
-bool CMessage::UnserializeFromTx(const CTransaction &tx) {
+bool CMessage::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
-        CDataStream dsMessage(vchFromString(DecodeBase64(stringFromVch(tx.data))), SER_NETWORK, PROTOCOL_VERSION);
+        CDataStream dsMessage(vchData, SER_NETWORK, PROTOCOL_VERSION);
         dsMessage >> *this;
     } catch (std::exception &e) {
+		SetNull();
         return false;
     }
+	vector<unsigned char> vchMsgData ;
+	Serialize(vchMsgData);
+	const uint256 &calculatedHash = Hash(vchMsgData.begin(), vchMsgData.end());
+	const vector<unsigned char> &vchRandMsg = vchFromValue(calculatedHash.GetHex());
+	if(vchRandMsg != vchHash)
+	{
+		SetNull();
+        return false;
+	}
+	return true;
+}
+bool CMessage::UnserializeFromTx(const CTransaction &tx) {
+	vector<unsigned char> vchData;
+	vector<unsigned char> vchHash;
+	int nOut;
+	if(!GetSyscoinData(tx, vchData, vchHash, nOut))
+	{
+		SetNull();
+		return false;
+	}
+	if(!UnserializeFromData(vchData, vchHash))
+	{
+		return false;
+	}
     return true;
 }
-
-string CMessage::SerializeToString() {
-    // serialize message UniValue
+void CMessage::Serialize(vector<unsigned char>& vchData) {
     CDataStream dsMessage(SER_NETWORK, PROTOCOL_VERSION);
     dsMessage << *this;
-    vector<unsigned char> vchData(dsMessage.begin(), dsMessage.end());
-    return EncodeBase64(vchData.data(), vchData.size());
+	vchData = vector<unsigned char>(dsMessage.begin(), dsMessage.end());
+
 }
-
-//TODO implement
-bool CMessageDB::ScanMessages(const std::vector<unsigned char>& vchMessage, unsigned int nMax,
-        std::vector<std::pair<std::vector<unsigned char>, CMessage> >& messageScan) {
-
-    CDBIterator *pcursor = pmessagedb->NewIterator();
-
-    CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
-    ssKeySet << make_pair(string("messagei"), vchMessage);
-    pcursor->Seek(ssKeySet.str());
-
+bool CMessageDB::CleanupDatabase(int &servicesCleaned)
+{
+	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+	pcursor->SeekToFirst();
+	vector<CMessage> vtxPos;
+	pair<string, vector<unsigned char> > key;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
-		pair<string, vector<unsigned char> > key;
+        try {
+			if (pcursor->GetKey(key) && key.first == "messagei") {
+            	const vector<unsigned char> &vchMyMessage= key.second;         
+				pcursor->GetValue(vtxPos);	
+				if (vtxPos.empty()){
+					servicesCleaned++;
+					EraseMessage(vchMyMessage);
+					pcursor->Next();
+					continue;
+				}
+				const CMessage &txPos = vtxPos.back();
+  				if (chainActive.Tip()->nTime >= GetMessageExpiration(txPos))
+				{
+					servicesCleaned++;
+					EraseMessage(vchMyMessage);
+				} 
+				
+            }
+            pcursor->Next();
+        } catch (std::exception &e) {
+            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+        }
+    }
+	return true;
+}
+
+bool CMessageDB::ScanRecvMessages(const std::vector<unsigned char>& vchMessage, const vector<string>& keyWordArray,unsigned int nMax,
+        std::vector<CMessage> & messageScan) {
+	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+	if(!vchMessage.empty())
+		pcursor->Seek(make_pair(string("messagei"), vchMessage));
+	else
+		pcursor->SeekToFirst();
+	pair<string, vector<unsigned char> > key;
+	 vector<CMessage> vtxPos;
+    while (pcursor->Valid()) {
+        boost::this_thread::interruption_point();
         try {
             if (pcursor->GetKey(key) && key.first == "messagei") {
-                vector<unsigned char> vchMessage = key.second;
-                vector<CMessage> vtxPos;
+                const vector<unsigned char> &vchMyMessage = key.second;     
                 pcursor->GetValue(vtxPos);
-                CMessage txPos;
-                if (!vtxPos.empty())
-                    txPos = vtxPos.back();
-                messageScan.push_back(make_pair(vchMessage, txPos));
+				if (vtxPos.empty()){
+					pcursor->Next();
+					continue;
+				}
+				const CMessage &txPos = vtxPos.back();
+  				if (chainActive.Tip()->nTime >= GetMessageExpiration(txPos))
+				{
+					pcursor->Next();
+					continue;
+				}
+
+				if(keyWordArray.size() > 0)
+				{
+					string toAliasLower = stringFromVch(txPos.vchAliasTo);
+					if (std::find(keyWordArray.begin(), keyWordArray.end(), toAliasLower) == keyWordArray.end())
+					{
+						pcursor->Next();
+						continue;
+					}
+				}
+				if(vchMessage.size() > 0)
+				{
+					if(vchMyMessage != vchMessage)
+					{
+						pcursor->Next();
+						continue;
+					}
+				}
+                messageScan.push_back(txPos);
             }
             if (messageScan.size() >= nMax)
                 break;
@@ -126,219 +183,53 @@ bool CMessageDB::ScanMessages(const std::vector<unsigned char>& vchMessage, unsi
             return error("%s() : deserialize error", __PRETTY_FUNCTION__);
         }
     }
-    delete pcursor;
     return true;
 }
-
-/**
- * [CMessageDB::ReconstructMessageIndex description]
- * @param  pindexRescan [description]
- * @return              [description]
- */
-bool CMessageDB::ReconstructMessageIndex(CBlockIndex *pindexRescan) {
-    CBlockIndex* pindex = pindexRescan;
-	if(!HasReachedMainNetForkB2())
-		return true;
-    {
-    TRY_LOCK(pwalletMain->cs_wallet, cs_trylock);
-    while (pindex) {
-
-        int nHeight = pindex->nHeight;
-        CBlock block;
-        ReadBlockFromDisk(block, pindex, Params().GetConsensus());
-        uint256 txblkhash;
-
-        BOOST_FOREACH(CTransaction& tx, block.vtx) {
-
-            if (tx.nVersion != SYSCOIN_TX_VERSION)
-                continue;
-
-            vector<vector<unsigned char> > vvchArgs;
-            int op, nOut;
-
-            // decode the message op, params, height
-            bool o = DecodeMessageTx(tx, op, nOut, vvchArgs, -1);
-            if (!o || !IsMessageOp(op)) continue;
-
-            vector<unsigned char> vchMessage = vvchArgs[0];
-
-            // get the transaction
-            if(!GetTransaction(tx.GetHash(), tx, Params().GetConsensus(), txblkhash, true))
-                continue;
-
-            // attempt to read message from txn
-            CMessage txMessage;
-            if(!txMessage.UnserializeFromTx(tx))
-                return error("ReconstructMessageIndex() : failed to unserialize message from tx");
-
-            // save serialized message
-            CMessage serializedMessage = txMessage;
-
-            // read message from DB if it exists
-            vector<CMessage> vtxPos;
-            if (ExistsMessage(vchMessage)) {
-                if (!ReadMessage(vchMessage, vtxPos))
-                    return error("ReconstructMessageIndex() : failed to read message from DB");
-            }
-
-            txMessage.txHash = tx.GetHash();
-            txMessage.nHeight = nHeight;
-            // txn-specific values to message UniValue
-            txMessage.vchRand = vvchArgs[0];
-            PutToMessageList(vtxPos, txMessage);
-
-            if (!WriteMessage(vchMessage, vtxPos))
-                return error("ReconstructMessageIndex() : failed to write to message DB");
-
-          
-            printf( "RECONSTRUCT MESSAGE: op=%s message=%s hash=%s height=%d\n",
-                    messageFromOp(op).c_str(),
-                    stringFromVch(vvchArgs[0]).c_str(),
-                    tx.GetHash().ToString().c_str(),
-                    nHeight);
-        }
-        pindex = chainActive.Next(pindex);
-        
-    }
-    }
-    return true;
-}
-
-
-
-int64_t GetMessageNetFee(const CTransaction& tx) {
-    int64_t nFee = 0;
-    for (unsigned int i = 0; i < tx.vout.size(); i++) {
-        const CTxOut& out = tx.vout[i];
-        if (out.scriptPubKey.size() == 1 && out.scriptPubKey[0] == OP_RETURN)
-            nFee += out.nValue;
-    }
-    return nFee;
-}
-
-int GetMessageHeight(vector<unsigned char> vchMessage) {
-    vector<CMessage> vtxPos;
-    if (pmessagedb->ExistsMessage(vchMessage)) {
-        if (!pmessagedb->ReadMessage(vchMessage, vtxPos))
-            return error("GetMessageHeight() : failed to read from message DB");
-        if (vtxPos.empty()) return -1;
-        CMessage& txPos = vtxPos.back();
-        return txPos.nHeight;
-    }
-    return -1;
-}
-
 
 int IndexOfMessageOutput(const CTransaction& tx) {
+	if (tx.nVersion != SYSCOIN_TX_VERSION)
+		return -1;
     vector<vector<unsigned char> > vvch;
-    int op, nOut;
-    if (!DecodeMessageTx(tx, op, nOut, vvch, -1))
-        throw runtime_error("IndexOfMessageOutput() : message output not found");
-    return nOut;
-}
-
-bool GetNameOfMessageTx(const CTransaction& tx, vector<unsigned char>& message) {
-    if (tx.nVersion != SYSCOIN_TX_VERSION)
-        return false;
-    vector<vector<unsigned char> > vvchArgs;
-    int op, nOut;
-    if (!DecodeMessageTx(tx, op, nOut, vvchArgs, -1))
-        return error("GetNameOfMessageTx() : could not decode a syscoin tx");
-
-    switch (op) {
-        case OP_MESSAGE_ACTIVATE:
-            message = vvchArgs[0];
-            return true;
-    }
-    return false;
-}
-
-bool GetValueOfMessageTx(const CTransaction& tx, vector<unsigned char>& value) {
-    vector<vector<unsigned char> > vvch;
-    int op, nOut;
-
-    if (!DecodeMessageTx(tx, op, nOut, vvch, -1))
-        return false;
-
-    switch (op) {
-    case OP_MESSAGE_ACTIVATE:
-        value = vvch[1];
-        return true;
-    default:
-        return false;
-    }
-}
-
-bool IsMessageMine(const CTransaction& tx) {
-    if (tx.nVersion != SYSCOIN_TX_VERSION)
-        return false;
-
-    vector<vector<unsigned char> > vvch;
-    int op, nOut;
-
-    bool good = DecodeMessageTx(tx, op, nOut, vvch, -1);
-    if (!good) 
-        return false;
-    
-    if(!IsMessageOp(op))
-        return false;
-
-    const CTxOut& txout = tx.vout[nOut];
-    if (pwalletMain->IsMine(txout)) {     
-        return true;
-    }
-    return false;
+	int op;
+	for (unsigned int i = 0; i < tx.vout.size(); i++) {
+		const CTxOut& out = tx.vout[i];
+		// find an output you own
+		if (pwalletMain->IsMine(out) && DecodeMessageScript(out.scriptPubKey, op, vvch)) {
+			return i;
+		}
+	}
+	return -1;
 }
 
 
-bool GetValueOfMessageTxHash(const uint256 &txHash,
-        vector<unsigned char>& vchValue, uint256& hash, int& nHeight) {
-    nHeight = GetTxHashHeight(txHash);
-    CTransaction tx;
-    uint256 blockHash;
-    if (!GetTransaction(txHash, tx, Params().GetConsensus(), blockHash, true))
-        return error("GetValueOfMessageTxHash() : could not read tx from disk");
-    if (!GetValueOfMessageTx(tx, vchValue))
-        return error("GetValueOfMessageTxHash() : could not decode value from tx");
-    hash = tx.GetHash();
-    return true;
-}
-
-bool GetValueOfMessage(CMessageDB& dbMessage, const vector<unsigned char> &vchMessage,
-        vector<unsigned char>& vchValue, int& nHeight) {
-    vector<CMessage> vtxPos;
-    if (!pmessagedb->ReadMessage(vchMessage, vtxPos) || vtxPos.empty())
-        return false;
-
-    CMessage& txPos = vtxPos.back();
-    nHeight = txPos.nHeight;
-    vchValue = txPos.vchRand;
-    return true;
-}
-
-bool GetTxOfMessage(CMessageDB& dbMessage, const vector<unsigned char> &vchMessage,
+bool GetTxOfMessage(const vector<unsigned char> &vchMessage,
         CMessage& txPos, CTransaction& tx) {
     vector<CMessage> vtxPos;
     if (!pmessagedb->ReadMessage(vchMessage, vtxPos) || vtxPos.empty())
         return false;
     txPos = vtxPos.back();
     int nHeight = txPos.nHeight;
-    if (nHeight + GetMessageExpirationDepth()
-            < chainActive.Tip()->nHeight) {
+    if (chainActive.Tip()->nTime >= GetMessageExpiration(txPos)) {
         string message = stringFromVch(vchMessage);
-        printf("GetTxOfMessage(%s) : expired", message.c_str());
+        LogPrintf("GetTxOfMessage(%s) : expired", message.c_str());
         return false;
     }
 
-    uint256 hashBlock;
-    if (!GetTransaction(txPos.txHash, tx, Params().GetConsensus(), hashBlock, true))
+    if (!GetSyscoinTransaction(nHeight, txPos.txHash, tx, Params().GetConsensus()))
         return error("GetTxOfMessage() : could not read tx from disk");
 
     return true;
 }
-
+bool DecodeAndParseMessageTx(const CTransaction& tx, int& op, int& nOut,
+		vector<vector<unsigned char> >& vvch)
+{
+	CMessage message;
+	bool decode = DecodeMessageTx(tx, op, nOut, vvch);
+	bool parse = message.UnserializeFromTx(tx);
+	return decode && parse;
+}
 bool DecodeMessageTx(const CTransaction& tx, int& op, int& nOut,
-        vector<vector<unsigned char> >& vvch, int nHeight) {
+        vector<vector<unsigned char> >& vvch) {
     bool found = false;
 
 
@@ -356,404 +247,423 @@ bool DecodeMessageTx(const CTransaction& tx, int& op, int& nOut,
 }
 
 bool DecodeMessageScript(const CScript& script, int& op,
-        vector<vector<unsigned char> > &vvch) {
-    CScript::const_iterator pc = script.begin();
-    return DecodeMessageScript(script, op, vvch, pc);
-}
-
-bool DecodeMessageScript(const CScript& script, int& op,
         vector<vector<unsigned char> > &vvch, CScript::const_iterator& pc) {
     opcodetype opcode;
 	vvch.clear();
 	if (!script.GetOp(pc, opcode)) return false;
 	if (opcode < OP_1 || opcode > OP_16) return false;
     op = CScript::DecodeOP_N(opcode);
-    for (;;) {
-        vector<unsigned char> vch;
-        if (!script.GetOp(pc, opcode, vch))
-            return false;
+	bool found = false;
+	for (;;) {
+		vector<unsigned char> vch;
+		if (!script.GetOp(pc, opcode, vch))
+			return false;
+		if (opcode == OP_DROP || opcode == OP_2DROP)
+		{
+			found = true;
+			break;
+		}
+		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
+			return false;
+		vvch.push_back(vch);
+	}
 
-        if (opcode == OP_DROP || opcode == OP_2DROP || opcode == OP_NOP)
-            break;
-        if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
-            return false;
-        vvch.push_back(vch);
-    }
+	// move the pc to after any DROP or NOP
+	while (opcode == OP_DROP || opcode == OP_2DROP) {
+		if (!script.GetOp(pc, opcode))
+			break;
+	}
 
-    // move the pc to after any DROP or NOP
-    while (opcode == OP_DROP || opcode == OP_2DROP || opcode == OP_NOP) {
-        if (!script.GetOp(pc, opcode))
-            break;
-    }
-	
-    pc--;
-
-    if ((op == OP_MESSAGE_ACTIVATE && vvch.size() == 2))
-        return true;
-
-    return false;
+	pc--;
+	return found && IsMessageOp(op);
 }
 
-bool GetMessageAddress(const CTransaction& tx, std::string& strAddress) {
-    int op, nOut = 0;
-    vector<vector<unsigned char> > vvch;
-    if (!DecodeMessageTx(tx, op, nOut, vvch, -1))
-        return error("GetMessageAddress() : could not decode message tx.");
-
-    const CTxOut& txout = tx.vout[nOut];
-
-    const CScript& scriptPubKey = RemoveMessageScriptPrefix(txout.scriptPubKey);
-	CTxDestination dest;
-	ExtractDestination(scriptPubKey, dest);
-	strAddress = CSyscoinAddress(dest).ToString();
-    return true;
+bool DecodeMessageScript(const CScript& script, int& op,
+        vector<vector<unsigned char> > &vvch) {
+    CScript::const_iterator pc = script.begin();
+    return DecodeMessageScript(script, op, vvch, pc);
 }
 
-
-CScript RemoveMessageScriptPrefix(const CScript& scriptIn) {
+bool RemoveMessageScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
     int op;
     vector<vector<unsigned char> > vvch;
     CScript::const_iterator pc = scriptIn.begin();
 
     if (!DecodeMessageScript(scriptIn, op, vvch, pc))
-	{
-        throw runtime_error("RemoveMessageScriptPrefix() : could not decode message script");
-	}
-	
-    return CScript(pc, scriptIn.end());
+		return false;
+	scriptOut = CScript(pc, scriptIn.end());
+	return true;
 }
 
-bool CheckMessageInputs(const CTransaction &tx,
-        CValidationState &state, const CCoinsViewCache &inputs, bool fBlock, bool fMiner,
-        bool fJustCheck, int nHeight) {
+bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, string &errorMessage, bool dontaddtodb) {
+	if (tx.IsCoinBase() && !fJustCheck && !dontaddtodb)
+	{
+		LogPrintf("*Trying to add message in coinbase transaction, skipping...");
+		return true;
+	}
+	if (fDebug)
+		LogPrintf("*** MESSAGE %d %d %s %s\n", nHeight,
+			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
+			fJustCheck ? "JUSTCHECK" : "BLOCK");
+    const COutPoint *prevOutput = NULL;
+    const CCoins *prevCoins;
 
-    if (!tx.IsCoinBase()) {
-			printf("*** %d %d %s %s %s %s\n", nHeight,
-				chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
-				fBlock ? "BLOCK" : "", fMiner ? "MINER" : "",
-				fJustCheck ? "JUSTCHECK" : "");
+	int prevAliasOp = 0;
+	if (tx.nVersion != SYSCOIN_TX_VERSION)
+	{
+		errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3000 - " + _("Non-Syscoin transaction found");
+		return true;
+	}
+	// unserialize msg from txn, check for valid
+	CMessage theMessage;
+	CAliasIndex alias;
+	CTransaction aliasTx;
+	vector<unsigned char> vchData;
+	vector<unsigned char> vchHash;
+	int nDataOut;
+	if(!GetSyscoinData(tx, vchData, vchHash, nDataOut) || !theMessage.UnserializeFromData(vchData, vchHash))
+	{
+		errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR ERRCODE: 3001 - " + _("Cannot unserialize data inside of this transaction relating to a message");
+		return true;
+	}
 
-        bool found = false;
-        const COutPoint *prevOutput = NULL;
-        CCoins prevCoins;
-
-        int prevOp;
-        vector<vector<unsigned char> > vvchPrevArgs;
-		vvchPrevArgs.clear();
-        // Strict check - bug disallowed
-		for (int i = 0; i < (int) tx.vin.size(); i++) {
-			vector<vector<unsigned char> > vvch;
-			prevOutput = &tx.vin[i].prevout;
-			inputs.GetCoins(prevOutput->hash, prevCoins);
-			if(DecodeMessageScript(prevCoins.vout[prevOutput->n].scriptPubKey, prevOp, vvch))
+    vector<vector<unsigned char> > vvchPrevAliasArgs;
+	if(fJustCheck)
+	{	
+		if(vvchArgs.size() != 2)
+		{
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3002 - " + _("Message arguments incorrect size");
+			return error(errorMessage.c_str());
+		}
+		if(!theMessage.IsNull())
+		{
+			if(vvchArgs.size() <= 1 || vchHash != vvchArgs[1])
 			{
-				vvchPrevArgs = vvch;
-				found = true;
-				break;
+				errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3003 - " + _("Hash provided doesn't match the calculated hash of the data");
+				return true;
 			}
-			if(!found)vvchPrevArgs.clear();
-			
 		}
 		
-        // Make sure message outputs are not spent by a regular transaction, or the message would be lost
-        if (tx.nVersion != SYSCOIN_TX_VERSION) {
-            if (found)
-                return error(
-                        "CheckMessageInputs() : a non-syscoin transaction with a syscoin input");
-			printf("CheckMessageInputs() : non-syscoin transaction\n");
-            return true;
-        }
-        vector<vector<unsigned char> > vvchArgs;
-        int op, nOut;
-        bool good = DecodeMessageTx(tx, op, nOut, vvchArgs, -1);
-        if (!good)
-            return error("CheckMessageInputs() : could not decode a syscoin tx");
-        int nDepth;
-        int64_t nNetFee;
-        // unserialize message UniValue from txn, check for valid
-        CMessage theMessage;
-        theMessage.UnserializeFromTx(tx);
-        if (theMessage.IsNull())
-            return error("CheckMessageInputs() : null message");
-		if(theMessage.vchRand.size() > MAX_ID_LENGTH)
+
+		// Strict check - bug disallowed
+		for (unsigned int i = 0; i < tx.vin.size(); i++) {
+			vector<vector<unsigned char> > vvch;
+			int pop;
+			prevOutput = &tx.vin[i].prevout;
+			if(!prevOutput)
+				continue;
+			// ensure inputs are unspent when doing consensus check to add to block
+			prevCoins = inputs.AccessCoins(prevOutput->hash);
+			if(prevCoins == NULL)
+				continue;
+			if(prevCoins->vout.size() <= prevOutput->n || !IsSyscoinScript(prevCoins->vout[prevOutput->n].scriptPubKey, pop, vvch) || pop == OP_ALIAS_PAYMENT)
+				continue;
+			if (IsAliasOp(pop))
+			{
+				prevAliasOp = pop;
+				vvchPrevAliasArgs = vvch;
+				break;
+			}
+		}	
+	}
+
+    // unserialize message UniValue from txn, check for valid
+   
+	string retError = "";
+	if(fJustCheck)
+	{
+		if (vvchArgs.empty() || vvchArgs[0].size() > MAX_GUID_LENGTH)
 		{
-			return error("message rand too big");
-		}
-        if (vvchArgs[0].size() > MAX_NAME_LENGTH)
-            return error("message tx GUID too big");
-		if (vvchArgs[1].size() > MAX_ID_LENGTH)
-			return error("message tx rand too big");
-		if(theMessage.vchPubKeyTo.size() > MAX_NAME_LENGTH)
-		{
-			return error("message public key to, too big");
-		}
-		if(theMessage.vchPubKeyFrom.size() > MAX_NAME_LENGTH)
-		{
-			return error("message public key from, too big");
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3004 - " + _("Message transaction guid too big");
+			return error(errorMessage.c_str());
 		}
 		if(theMessage.vchSubject.size() > MAX_NAME_LENGTH)
 		{
-			return error("message subject too big");
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3005 - " + _("Message subject too long");
+			return error(errorMessage.c_str());
 		}
-		if(theMessage.vchFrom.size() > MAX_NAME_LENGTH)
+		if(theMessage.vchMessageTo.size() > MAX_ENCRYPTED_MESSAGE_LENGTH)
 		{
-			return error("message from too big");
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3006 - " + _("Message too long");
+			return error(errorMessage.c_str());
 		}
-		if(theMessage.vchTo.size() > MAX_NAME_LENGTH)
+		if(theMessage.vchMessageFrom.size() > MAX_ENCRYPTED_VALUE_LENGTH)
 		{
-			return error("message to too big");
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3007 - " + _("Message too long");
+			return error(errorMessage.c_str());
 		}
-		if(theMessage.vchMessageTo.size() > MAX_MSG_LENGTH)
+		if(!theMessage.vchMessage.empty() && theMessage.vchMessage != vvchArgs[0])
 		{
-			return error("message data to too big");
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3008 - " + _("Message guid in data output does not match guid in transaction");
+			return error(errorMessage.c_str());
 		}
-		if(theMessage.vchMessageFrom.size() > MAX_MSG_LENGTH)
+		if(!IsValidAliasName(theMessage.vchAliasFrom))
 		{
-			return error("message data from too big");
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3009 - " + _("Alias name does not follow the domain name specification");
+			return error(errorMessage.c_str());
 		}
-        switch (op) {
-        case OP_MESSAGE_ACTIVATE:
-			if (fBlock && !fJustCheck) {
-
-					// check for enough fees
-				nNetFee = GetMessageNetFee(tx);
-				if (nNetFee < GetMessageNetworkFee(OP_MESSAGE_ACTIVATE, theMessage.nHeight))
-					return error(
-							"CheckMessageInputs() : OP_MESSAGE_ACTIVATE got tx %s with fee too low %lu",
-							tx.GetHash().GetHex().c_str(),
-							(long unsigned int) nNetFee);		
+		if(!IsValidAliasName(theMessage.vchAliasTo))
+		{
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3010 - " + _("Alias name does not follow the domain name specification");
+			return error(errorMessage.c_str());
+		}
+		if(op == OP_MESSAGE_ACTIVATE)
+		{
+			if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theMessage.vchAliasFrom != vvchPrevAliasArgs[0])
+			{
+				errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3011 - " + _("Alias not provided as input");
+				return error(errorMessage.c_str());
 			}
-            break;
-        default:
-            return error( "CheckMessageInputs() : message transaction has unknown op");
-        }
-
-
-
-        // these ifs are problably total bullshit except for the messagenew
-        if (fBlock || (!fBlock && !fMiner && !fJustCheck)) {
-			// save serialized message for later use
-			CMessage serializedMessage = theMessage;
-
-			// if not an messagenew, load the message data from the DB
-			vector<CMessage> vtxPos;
-			if (pmessagedb->ExistsMessage(vvchArgs[0]) && !fJustCheck) {
-				if (!pmessagedb->ReadMessage(vvchArgs[0], vtxPos))
-					return error(
-							"CheckMessageInputs() : failed to read from message DB");
+			if (theMessage.vchMessage != vvchArgs[0])
+			{
+				errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3012 - " + _("Message guid mismatch");
+				return error(errorMessage.c_str());
 			}
-            if (!fMiner && !fJustCheck && chainActive.Tip()->nHeight != nHeight) {
-                int nHeight = chainActive.Tip()->nHeight;
-                // set the message's txn-dependent values
-				theMessage.txHash = tx.GetHash();
-				theMessage.nHeight = nHeight;
-                theMessage.vchRand = vvchArgs[0];
-				PutToMessageList(vtxPos, theMessage);
-				{
-				TRY_LOCK(cs_main, cs_trymain);
-                // write message  
-                if (!pmessagedb->WriteMessage(vvchArgs[0], vtxPos))
-                    return error( "CheckMessageInputs() : failed to write to message DB");
 
-              			
-                // debug
-				if(fDebug)
-					printf( "CONNECTED MESSAGE: op=%s message=%s hash=%s height=%d\n",
-                        messageFromOp(op).c_str(),
-                        stringFromVch(vvchArgs[0]).c_str(),
-                        tx.GetHash().ToString().c_str(),
-                        nHeight);
-				}
-            }
-            
-        }
-    }
+		}
+		else{
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3013 - " + _("Message transaction has unknown op");
+			return error(errorMessage.c_str());
+		}
+	}
+	// save serialized message for later use
+	CMessage serializedMessage = theMessage;
+
+
+    if (!fJustCheck ) {
+		vector<CAliasIndex> vtxAlias;
+		bool isExpired = false;
+		if(!GetVtxOfAlias(theMessage.vchAliasTo, alias, vtxAlias, isExpired))
+		{
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3014 - " + _("Cannot find alias for the recipient of this message. It may be expired");
+			return true;
+		}
+
+		vector<CMessage> vtxPos;
+		if (pmessagedb->ExistsMessage(vvchArgs[0])) {
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3016 - " + _("This message already exists");
+			return true;
+		}      
+        // set the message's txn-dependent values
+		theMessage.txHash = tx.GetHash();
+		theMessage.nHeight = nHeight;
+		if(theMessage.bHex)
+			theMessage.vchMessageFrom.clear();
+		PutToMessageList(vtxPos, theMessage);
+        // write message  
+
+		if(!dontaddtodb && !pmessagedb->WriteMessage(vvchArgs[0], vtxPos))
+		{
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3016 - " + _("Failed to write to message DB");
+            return error(errorMessage.c_str());
+		}
+	
+		
+      			
+        // debug
+		if(fDebug)
+			LogPrintf( "CONNECTED MESSAGE: op=%s message=%s hash=%s height=%d\n",
+                messageFromOp(op).c_str(),
+                stringFromVch(vvchArgs[0]).c_str(),
+                tx.GetHash().ToString().c_str(),
+                nHeight);
+	}
     return true;
 }
 
-void rescanformessages(CBlockIndex *pindexRescan) {
-    printf("Scanning blockchain for messages to create fast index...\n");
-    pmessagedb->ReconstructMessageIndex(pindexRescan);
-}
-
-
-UniValue getmessagefees(const UniValue& params, bool fHelp) {
-    if (fHelp || 0 != params.size())
-        throw runtime_error(
-                "getmessagefees\n"
-                        "get current service fees for message transactions\n");
-    UniValue oRes(UniValue::VARR);
-    oRes.push_back(Pair("height", chainActive.Tip()->nHeight ));
-    oRes.push_back(Pair("activate_fee", ValueFromAmount(GetMessageNetworkFee(OP_MESSAGE_ACTIVATE, chainActive.Tip()->nHeight) )));
-    return oRes;
-
-}
-
 UniValue messagenew(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 4 )
+    if (fHelp || 4 > params.size() || 5 < params.size() )
         throw runtime_error(
-		"messagenew <subject> <message> <fromalias> <toalias>\n"
+		"messagenew <subject> <message> <fromalias> <toalias> [hex='No']\n"
 						"<subject> Subject of message.\n"
 						"<message> Message to send to alias.\n"
 						"<fromalias> Alias to send message from.\n"
-						"<toalias> Alias to send message to.\n"					
+						"<toalias> Alias to send message to.\n"	
+						"<hex> Is data an hex based message(only To-Message will be displayed). No by default.\n"	
                         + HelpRequiringPassphrase());
-	if(!HasReachedMainNetForkB2())
-		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");
 	vector<unsigned char> vchMySubject = vchFromValue(params[0]);
-    if (vchMySubject.size() > MAX_NAME_LENGTH)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Subject cannot exceed 255 bytes!");
-
-	vector<unsigned char> vchMyMessage = vchFromValue(params[1]);
-	vector<unsigned char> vchFromAliasOrPubKey = vchFromValue(params[2]);
-	vector<unsigned char> vchToAliasOrPubKey = vchFromValue(params[3]);
-
+	vector<unsigned char> vchMyMessage = vchFromString(params[1].get_str());
 	string strFromAddress = params[2].get_str();
+	boost::algorithm::to_lower(strFromAddress);
 	string strToAddress = params[3].get_str();
-	CSyscoinAddress fromAddress;
-	CSyscoinAddress toAddress;
-	std::vector<unsigned char> vchFromPubKey;
-	std::vector<unsigned char> vchToPubKey;
+	boost::algorithm::to_lower(strToAddress);
+	bool bHex = false;
+	if(params.size() >= 5)
+		bHex = params[4].get_str() == "Yes"? true: false;
+
 	EnsureWalletIsUnlocked();
-	// strFromAddress is a pubkey otherwise it's an alias
-	if(strFromAddress.size() == 66)
-	{
-		std::vector<unsigned char> vchPubKeyByte;
-		boost::algorithm::unhex(vchFromAliasOrPubKey.begin(), vchFromAliasOrPubKey.end(), std::back_inserter(vchPubKeyByte));
-		CPubKey PubKey(vchPubKeyByte);
-		CSyscoinAddress PublicAddress(PubKey.GetID());
-		if(!PublicAddress.IsValid())
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
-					"Invalid alias, no public key found! (fromalias)");	
-		fromAddress = PublicAddress;
-		vchFromPubKey = vchFromAliasOrPubKey;
-	}
-	else
-	{
-		fromAddress = CSyscoinAddress(strFromAddress);
-		if (!fromAddress.IsValid())
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
-					"Invalid syscoin address of fromalias");
-		if (!fromAddress.isAlias)
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
-					"Must be a valid alias (fromalias)");
-		// check for alias existence in DB
-		vector<CAliasIndex> vtxPosFrom;
-		if (!paliasdb->ReadAlias(vchFromString(fromAddress.aliasName), vtxPosFrom))
-			throw JSONRPCError(RPC_WALLET_ERROR,
-					"failed to read alias from alias DB (fromalias)");
-		if (vtxPosFrom.size() < 1)
-			throw JSONRPCError(RPC_WALLET_ERROR, "no result returned (fromalias)");
-		CAliasIndex msgFromAlias = vtxPosFrom.back();
-		vchFromPubKey = msgFromAlias.vchPubKey;
 
-	}
-	// strToAddress is a pubkey otherwise it's an alias
-	if(strToAddress.size() == 66)
-	{
-		std::vector<unsigned char> vchPubKeyByte;
-		boost::algorithm::unhex(vchToAliasOrPubKey.begin(), vchToAliasOrPubKey.end(), std::back_inserter(vchPubKeyByte));
-		CPubKey PubKey(vchPubKeyByte);
-		CSyscoinAddress PublicAddress(PubKey.GetID());
-		if(!PublicAddress.IsValid())
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
-					"Invalid alias, no public key found! (toalias)");	
-		toAddress = PublicAddress;
-		vchToPubKey = vchToAliasOrPubKey;
-	}
-	else
-	{
-		toAddress = CSyscoinAddress(strToAddress);
-		if (!toAddress.IsValid())
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
-					"Invalid syscoin address of toalias");
-		if (!toAddress.isAlias)
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
-					"Must be a valid alias (toalias)");
-		// check for alias existence in DB
-		vector<CAliasIndex> vtxPosTo;
-		if (!paliasdb->ReadAlias(vchFromString(toAddress.aliasName), vtxPosTo))
-			throw JSONRPCError(RPC_WALLET_ERROR,
-					"failed to read alias from alias DB (toalias)");
-		if (vtxPosTo.size() < 1)
-			throw JSONRPCError(RPC_WALLET_ERROR, "no result returned (toalias)");
-		CAliasIndex msgToAlias = vtxPosTo.back();
-		vchToPubKey = msgToAlias.vchPubKey;
+	CAliasIndex aliasFrom, aliasTo;
+	CTransaction aliastx;
+	if (!GetTxOfAlias(vchFromString(strFromAddress), aliasFrom, aliastx))
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3500 - " + _("Could not find an alias with this name"));
+    if(!IsMyAlias(aliasFrom)) {
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3501 - " + _("This alias is not yours"));
+    }
+	CScript scriptPubKeyAliasOrig, scriptPubKeyAlias, scriptPubKeyOrig, scriptPubKey;
+	CSyscoinAddress fromAddr;
+	GetAddress(aliasFrom, &fromAddr, scriptPubKeyAliasOrig);
 
+	// lock coins before going into aliasunspent if we are sending raw tx that uses inputs in our wallet
+	vector<COutPoint> lockedOutputs;
+	if(bHex)
+	{
+		CTransaction rawTx;
+		DecodeHexTx(rawTx,stringFromVch(vchMyMessage));
+		BOOST_FOREACH(const CTxIn& txin, rawTx.vin)
+		{
+			if(!pwalletMain->IsLockedCoin(txin.prevout.hash, txin.prevout.n))
+			{
+              LOCK2(cs_main, pwalletMain->cs_wallet);
+              pwalletMain->LockCoin(txin.prevout);
+			  lockedOutputs.push_back(txin.prevout);
+			}
+		}
 	}
-
 	
+	COutPoint outPoint;
+	int numResults  = aliasunspent(aliasFrom.vchAlias, outPoint);	
+	const CWalletTx *wtxAliasIn = pwalletMain->GetWalletTx(outPoint.hash);
+	if (wtxAliasIn == NULL)
+	{
+		BOOST_FOREACH(const COutPoint& outpoint, lockedOutputs)
+		{
+			 LOCK2(cs_main, pwalletMain->cs_wallet);
+			 pwalletMain->UnlockCoin(outpoint);
+		}
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3502 - " + _("This alias is not in your wallet"));
+	}
 
-	if (!IsMine(*pwalletMain, fromAddress.Get()))
-		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
-				"fromalias must be yours");
+
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << aliasFrom.vchAlias <<  aliasFrom.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias += scriptPubKeyAliasOrig;		
+
+
+	if(!GetTxOfAlias(vchFromString(strToAddress), aliasTo, aliastx))
+	{
+		BOOST_FOREACH(const COutPoint& outpoint, lockedOutputs)
+		{
+			 LOCK2(cs_main, pwalletMain->cs_wallet);
+			 pwalletMain->UnlockCoin(outpoint);
+		}
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3503 - " + _("Failed to read to alias from alias DB"));
+	}
+	CSyscoinAddress toAddr;
+	GetAddress(aliasTo, &toAddr, scriptPubKeyOrig);
 
 
     // gather inputs
-	int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
-	vector<unsigned char> vchRand = CScriptNum(rand).getvch();
-    vector<unsigned char> vchMessage = vchFromValue(HexStr(vchRand));
-
+	vector<unsigned char> vchMessage = vchFromString(GenerateSyscoinGuid());
     // this is a syscoin transaction
     CWalletTx wtx;
 
-	CScript scriptPubKeyOrig, scriptPubKey;
-	scriptPubKeyOrig= GetScriptForDestination(toAddress.Get());
-	scriptPubKey << CScript::EncodeOP_N(OP_MESSAGE_ACTIVATE) << vchMessage
-			<< vchRand << OP_2DROP << OP_DROP;
-	scriptPubKey += scriptPubKeyOrig;
-
+	vector<unsigned char> vchMessageByte;
+	if(bHex)
+		boost::algorithm::unhex(vchMyMessage.begin(), vchMyMessage.end(), std::back_inserter(vchMessageByte ));
+	else
+		vchMessageByte = vchMyMessage;
+	
+	
 
 	string strCipherTextTo;
-	if(!EncryptMessage(vchToPubKey, vchMyMessage, strCipherTextTo))
+	if(!EncryptMessage(aliasTo, vchMessageByte, strCipherTextTo))
 	{
-		throw JSONRPCError(RPC_WALLET_ERROR, "Could not encrypt message data for receiver!");
+		BOOST_FOREACH(const COutPoint& outpoint, lockedOutputs)
+		{
+			 LOCK2(cs_main, pwalletMain->cs_wallet);
+			 pwalletMain->UnlockCoin(outpoint);
+		}
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3504 - " + _("Could not encrypt message data for receiver"));
 	}
 	string strCipherTextFrom;
-	if(!EncryptMessage(vchFromPubKey, vchMyMessage, strCipherTextFrom))
+	if(!EncryptMessage(aliasFrom, vchMessageByte, strCipherTextFrom))
 	{
-		throw JSONRPCError(RPC_WALLET_ERROR, "Could not encrypt message data for sender!");
+		BOOST_FOREACH(const COutPoint& outpoint, lockedOutputs)
+		{
+			 LOCK2(cs_main, pwalletMain->cs_wallet);
+			 pwalletMain->UnlockCoin(outpoint);
+		}
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3505 - " + _("Could not encrypt message data for sender"));
 	}
-    if (strCipherTextFrom.size() > MAX_MSG_LENGTH)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Message data cannot exceed 16383 bytes!");
-    if (strCipherTextTo.size() > MAX_MSG_LENGTH)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Message data cannot exceed 16383 bytes!");
 
-	int64_t nNetFee = GetMessageNetworkFee(OP_MESSAGE_ACTIVATE, chainActive.Tip()->nHeight);
- 
-    // build message UniValue
+    // build message
     CMessage newMessage;
-    newMessage.vchRand = vchMessage;
-	if(fromAddress.isAlias)
-		newMessage.vchFrom = vchFromString(fromAddress.aliasName);
-	else
-		newMessage.vchFrom = vchFromString(fromAddress.ToString());
-	if(toAddress.isAlias)
-		newMessage.vchTo = vchFromString(toAddress.aliasName);
-	else
-		newMessage.vchTo = vchFromString(toAddress.ToString());
-
-	newMessage.vchMessageFrom = vchFromString(strCipherTextFrom);
+	newMessage.vchMessage = vchMessage;
+	if(!bHex)
+		newMessage.vchMessageFrom = vchFromString(strCipherTextFrom);
 	newMessage.vchMessageTo = vchFromString(strCipherTextTo);
 	newMessage.vchSubject = vchMySubject;
-	newMessage.vchPubKeyFrom = vchFromPubKey;
-	newMessage.vchPubKeyTo = vchToPubKey;
-	
-    string bdata = newMessage.SerializeToString();
+	newMessage.vchAliasFrom = aliasFrom.vchAlias;
+	newMessage.bHex = bHex;
+	newMessage.vchAliasTo = aliasTo.vchAlias;
+	newMessage.nHeight = chainActive.Tip()->nHeight;
+
+	vector<unsigned char> data;
+	newMessage.Serialize(data);
+    uint256 hash = Hash(data.begin(), data.end());
+ 	
+    vector<unsigned char> vchHashMessage = vchFromValue(hash.GetHex());
+	scriptPubKey << CScript::EncodeOP_N(OP_MESSAGE_ACTIVATE) << vchMessage << vchHashMessage << OP_2DROP << OP_DROP;
+	scriptPubKey += scriptPubKeyOrig;
+
 	// send the tranasction
 	vector<CRecipient> vecSend;
-	CRecipient recipient = {scriptPubKey, MIN_AMOUNT, false};
+	CRecipient recipient;
+	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
+	CRecipient aliasRecipient;
+	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	for(unsigned int i =numResults;i<=MAX_ALIAS_UPDATES_PER_BLOCK;i++)
+		vecSend.push_back(aliasRecipient);
 
-	CScript scriptFee;
-	scriptFee << OP_RETURN;
-	CRecipient fee = {scriptFee, nNetFee, false};
+	CScript scriptData;
+	scriptData << OP_RETURN << data;
+	CRecipient fee;
+	CreateFeeRecipient(scriptData, aliasFrom.vchAliasPeg, chainActive.Tip()->nHeight, data, fee);
 	vecSend.push_back(fee);
-
-	SendMoneySyscoin(vecSend, MIN_AMOUNT, false, wtx, bdata);
+	
+	
+	
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxAliasIn, outPoint.n, aliasFrom.multiSigInfo.vchAliases.size() > 0);
 	UniValue res(UniValue::VARR);
-	res.push_back(wtx.GetHash().GetHex());
-	res.push_back(HexStr(vchRand));
+	if(aliasFrom.multiSigInfo.vchAliases.size() > 0)
+	{
+		UniValue signParams(UniValue::VARR);
+		signParams.push_back(EncodeHexTx(wtx));
+		const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
+		const UniValue& so = resSign.get_obj();
+		string hex_str = "";
+
+		const UniValue& hex_value = find_value(so, "hex");
+		if (hex_value.isStr())
+			hex_str = hex_value.get_str();
+		const UniValue& complete_value = find_value(so, "complete");
+		bool bComplete = false;
+		if (complete_value.isBool())
+			bComplete = complete_value.get_bool();
+		if(bComplete)
+		{
+			res.push_back(wtx.GetHash().GetHex());
+			res.push_back(stringFromVch(vchMessage));
+		}
+		else
+		{
+			res.push_back(hex_str);
+			res.push_back(stringFromVch(vchMessage));
+			res.push_back("false");
+		}
+	}
+	else
+	{
+		res.push_back(wtx.GetHash().GetHex());
+		res.push_back(stringFromVch(vchMessage));
+	}
+	// once we have used correct inputs for this message unlock coins that were locked in the wallet
+	BOOST_FOREACH(const COutPoint& outpoint, lockedOutputs)
+	{
+		 LOCK2(cs_main, pwalletMain->cs_wallet);
+		 pwalletMain->UnlockCoin(outpoint);
+	}
 	return res;
 }
 
@@ -762,7 +672,7 @@ UniValue messageinfo(const UniValue& params, bool fHelp) {
         throw runtime_error("messageinfo <guid>\n"
                 "Show stored values of a single message.\n");
 
-    vector<unsigned char> vchRand = vchFromValue(params[0]);
+    vector<unsigned char> vchMessage = vchFromValue(params[0]);
 
     // look for a transaction with this key, also returns
     // an message UniValue if it is found
@@ -770,236 +680,291 @@ UniValue messageinfo(const UniValue& params, bool fHelp) {
 
 	vector<CMessage> vtxPos;
 
-	int expired = 0;
-	int expires_in = 0;
-	int expired_block = 0;
     UniValue oMessage(UniValue::VOBJ);
     vector<unsigned char> vchValue;
 
-	if (!pmessagedb->ReadMessage(vchRand, vtxPos) || vtxPos.empty())
-		  throw JSONRPCError(RPC_WALLET_ERROR, "failed to read from message DB");
-	CMessage ca = vtxPos.back();
+	if (!pmessagedb->ReadMessage(vchMessage, vtxPos) || vtxPos.empty())
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3506 - " + _("Failed to read from message DB"));
 
-    string sHeight = strprintf("%llu", ca.nHeight);
-	oMessage.push_back(Pair("GUID", stringFromVch(vchRand)));
-	string sTime;
-	CBlockIndex *pindex = chainActive[ca.nHeight];
-	if (pindex) {
-		sTime = strprintf("%llu", pindex->nTime);
-	}
-    string strAddress = "";
-	oMessage.push_back(Pair("time", sTime));
-	oMessage.push_back(Pair("from", stringFromVch(ca.vchFrom)));
-	oMessage.push_back(Pair("to", stringFromVch(ca.vchTo)));
-	oMessage.push_back(Pair("subject", stringFromVch(ca.vchSubject)));
-	string strDecrypted = "";
-	if(DecryptMessage(ca.vchPubKeyTo, ca.vchMessageTo, strDecrypted))
-		oMessage.push_back(Pair("message", strDecrypted));
-	else if(DecryptMessage(ca.vchPubKeyFrom, ca.vchMessageFrom, strDecrypted))
-		oMessage.push_back(Pair("message", strDecrypted));
-	else
-		oMessage.push_back(Pair("message", stringFromVch(ca.vchMessageTo)));
+	if(!BuildMessageJson(vtxPos.back(), oMessage))
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3507 - " + _("Could not find this message"));
 
-    oMessage.push_back(Pair("txid", ca.txHash.GetHex()));
-    oMessage.push_back(Pair("height", sHeight));
-	
     return oMessage;
 }
 
-UniValue messagelist(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 < params.size())
-        throw runtime_error("messagelist [<message>]\n"
-                "list my own messages");
-	vector<unsigned char> vchName;
-
-	if (params.size() == 1)
-		vchName = vchFromValue(params[0]);
-
-    UniValue oRes(UniValue::VARR);
-    uint256 blockHash;
-    uint256 hash;
-    CTransaction tx, dbtx;
-
-    vector<unsigned char> vchValue;
-    int nHeight;
-    BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
-    {
-        // get txn hash, read txn index
-        hash = item.second.GetHash();
-		const CWalletTx &wtx = item.second;
-
-        // skip non-syscoin txns
-        if (wtx.nVersion != SYSCOIN_TX_VERSION)
-            continue;
-		// decode txn, skip non-alias txns
-		vector<vector<unsigned char> > vvch;
-		int op, nOut;
-		if (!DecodeMessageTx(wtx, op, nOut, vvch, -1) || !IsMessageOp(op))
-			continue;
-		// get the txn height
-		nHeight = GetTxHashHeight(hash);
-
-		// get the txn message name
-		if (!GetNameOfMessageTx(wtx, vchName))
-			continue;
-
-		vector<CMessage> vtxPos;
-		if (!pmessagedb->ReadMessage(vchName, vtxPos))
-			continue;
-		CMessage message = vtxPos.back();
-		if (!GetTransaction(message.txHash, tx, Params().GetConsensus(), blockHash, true))
-			continue;
-		if(!IsMessageMine(tx))
-			continue;
-        // build the output UniValue
-        UniValue oName(UniValue::VOBJ);
-        oName.push_back(Pair("GUID", stringFromVch(vchName)));
-
-		string sTime;
-		CBlockIndex *pindex = chainActive[message.nHeight];
-		if (pindex) {
-			sTime = strprintf("%llu", pindex->nTime);
+UniValue messagereceivelist(const UniValue& params, bool fHelp) {
+    if (fHelp || 3 < params.size())
+        throw runtime_error("messagereceivelist [\"alias\",...] [<message>] [<privatekey>]\n"
+                "list received messages that an array of aliases own. Set of aliases to look up based on alias, and private key to decrypt any data found in message.");
+	UniValue aliasesValue(UniValue::VARR);
+	vector<string> aliases;
+	if(params.size() >= 1)
+	{
+		if(params[0].isArray())
+		{
+			aliasesValue = params[0].get_array();
+			for(unsigned int aliasIndex =0;aliasIndex<aliasesValue.size();aliasIndex++)
+			{
+				string lowerStr = aliasesValue[aliasIndex].get_str();
+				boost::algorithm::to_lower(lowerStr);
+				if(!lowerStr.empty())
+					aliases.push_back(lowerStr);
+			}
 		}
-        string strAddress = "";
-		oName.push_back(Pair("time", sTime));
-
-		oName.push_back(Pair("from", stringFromVch(message.vchFrom)));
-		oName.push_back(Pair("to", stringFromVch(message.vchTo)));
-		oName.push_back(Pair("subject", stringFromVch(message.vchSubject)));
-		string strDecrypted = "";
-		string strData = string("Encrypted for receiver of message");
-		if(DecryptMessage(message.vchPubKeyTo, message.vchMessageTo, strDecrypted))
-			strData = strDecrypted;
-		oName.push_back(Pair("message", strData));
-		oRes.push_back(oName);
+		else
+		{
+			string aliasName =  params[0].get_str();
+			boost::algorithm::to_lower(aliasName);
+			if(!aliasName.empty())
+				aliases.push_back(aliasName);
+		}
 	}
+	vector<unsigned char> vchNameUniq;
+    if (params.size() >= 2 && !params[1].get_str().empty())
+        vchNameUniq = vchFromValue(params[1]);
+
+	string strPrivateKey;
+	if(params.size() >= 3)
+		strPrivateKey = params[2].get_str();
+
+	UniValue oRes(UniValue::VARR);
+	map< vector<unsigned char>, int > vNamesI;
+	vector<CMessage > messageScan;
+	if(aliases.size() > 0)
+	{
+		if (!pmessagedb->ScanRecvMessages(vchNameUniq, aliases, 1000, messageScan))
+			throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3508 - " + _("Scan failed"));
+	}
+	else
+	{
+		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+		{
+			const CWalletTx &wtx = item.second; 
+			if (wtx.nVersion != SYSCOIN_TX_VERSION)
+				continue;
+			if(!IsSyscoinTxMine(wtx, "message"))
+				continue;
+			CMessage message(wtx);
+			if(!message.IsNull())
+			{
+				if (vNamesI.find(message.vchMessage) != vNamesI.end())
+					continue;
+				if (vchNameUniq.size() > 0 && vchNameUniq != message.vchMessage)
+					continue;
+				messageScan.push_back(message);
+				vNamesI[message.vchMessage] = message.nHeight;
+				UniValue oName(UniValue::VOBJ);
+				if(BuildMessageJson(message, oName, strPrivateKey))
+					oRes.push_back(oName);
+			}
+		}
+	}
+	BOOST_FOREACH(const CMessage &message, messageScan) {
+		// build the output
+		UniValue oName(UniValue::VOBJ);
+		if(BuildMessageJson(message, oName, strPrivateKey))
+			oRes.push_back(oName);
+	}
+	
 
     return oRes;
 }
+bool BuildMessageJson(const CMessage& message, UniValue& oName, const string &strPrivKey)
+{
+	CAliasIndex aliasFrom, aliasTo;
+	CTransaction aliastxtmp;
+	bool isExpired = false;
+	vector<CAliasIndex> aliasVtxPos;
+	if(GetTxAndVtxOfAlias(message.vchAliasFrom, aliasFrom, aliastxtmp, aliasVtxPos, isExpired, true))
+	{
+		aliasFrom.nHeight = message.nHeight;
+		aliasFrom.GetAliasFromList(aliasVtxPos);
+	}
+	else
+		return false;
+	aliasVtxPos.clear();
+	if(GetTxAndVtxOfAlias(message.vchAliasTo, aliasTo, aliastxtmp, aliasVtxPos, isExpired, true))
+	{
+		aliasTo.nHeight = message.nHeight;
+		aliasTo.GetAliasFromList(aliasVtxPos);
+	}
+	else
+		return false;
+	oName.push_back(Pair("GUID", stringFromVch(message.vchMessage)));
+	string sTime;
+	CBlockIndex *pindex = chainActive[message.nHeight];
+	if (pindex) {
+		sTime = strprintf("%llu", pindex->nTime);
+	}
+	string strAddress = "";
+	oName.push_back(Pair("time", sTime));
+	oName.push_back(Pair("from", stringFromVch(message.vchAliasFrom)));
+	oName.push_back(Pair("to", stringFromVch(message.vchAliasTo)));
 
+	oName.push_back(Pair("subject", stringFromVch(message.vchSubject)));
+	string strDecrypted = "";
+	string strData = _("Encrypted for recipient of message");
+	if(DecryptMessage(aliasTo, message.vchMessageTo, strDecrypted, strPrivKey))
+	{
+		if(message.bHex)
+			strData = HexStr(strDecrypted);
+		else
+			strData = strDecrypted;
+	}
+	else if(!message.bHex && DecryptMessage(aliasFrom, message.vchMessageFrom, strDecrypted, strPrivKey))
+		strData = strDecrypted;
+
+	oName.push_back(Pair("message", strData));
+	return true;
+}
 
 UniValue messagesentlist(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 < params.size())
-        throw runtime_error("messagesentlist [<message>]\n"
-                "list my sent messages");
-	vector<unsigned char> vchName;
-
-	if (params.size() == 1)
-		vchName = vchFromValue(params[0]);
-
-    UniValue oRes(UniValue::VARR);
-    uint256 blockHash;
-    uint256 hash;
-    CTransaction tx, dbtx;
-
-    vector<unsigned char> vchValue;
-    int nHeight;
-    BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
-    {
-        // get txn hash, read txn index
-        hash = item.second.GetHash();
-		const CWalletTx &wtx = item.second;        // skip non-syscoin txns
-        if (wtx.nVersion != SYSCOIN_TX_VERSION)
-            continue;
-		// decode txn, skip non-alias txns
-		vector<vector<unsigned char> > vvch;
-		int op, nOut;
-		if (!DecodeMessageTx(wtx, op, nOut, vvch, -1) || !IsMessageOp(op))
-			continue;
-		// get the txn height
-		nHeight = GetTxHashHeight(hash);
-
-		// get the txn message name
-		if (!GetNameOfMessageTx(wtx, vchName))
-			continue;
-
-		vector<CMessage> vtxPos;
-		if (!pmessagedb->ReadMessage(vchName, vtxPos) || vtxPos.empty())
-			continue;
-		CMessage message = vtxPos.back();
-		if (!GetTransaction(message.txHash, tx, Params().GetConsensus(), blockHash, true))
-			continue;
-		if(IsMessageMine(tx))
-			continue;
-        // build the output UniValue
-        UniValue oName(UniValue::VOBJ);
-        oName.push_back(Pair("GUID", stringFromVch(vchName)));
-
-		string sTime;
-		CBlockIndex *pindex = chainActive[message.nHeight];
-		if (pindex) {
-			sTime = strprintf("%llu", pindex->nTime);
-		}
-        string strAddress = "";
-		oName.push_back(Pair("time", sTime));
-		oName.push_back(Pair("from", stringFromVch(message.vchFrom)));
-		oName.push_back(Pair("to", stringFromVch(message.vchTo)));
-		oName.push_back(Pair("subject", stringFromVch(message.vchSubject)));
-		string strDecrypted = "";
-		string strData = string("Encrypted for sender of message");
-		if(DecryptMessage(message.vchPubKeyFrom, message.vchMessageFrom, strDecrypted))
-			strData = strDecrypted;
-		oName.push_back(Pair("message", strData));
-		oRes.push_back(oName);
-	}
-
-    return oRes;
-}
-UniValue messagehistory(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 != params.size())
-        throw runtime_error("messagehistory <message>\n"
-                "List all stored values of a message.\n");
-
-    UniValue oRes(UniValue::VARR);
-    vector<unsigned char> vchMessage = vchFromValue(params[0]);
-    string message = stringFromVch(vchMessage);
-
-    {
-        vector<CMessage> vtxPos;
-        if (!pmessagedb->ReadMessage(vchMessage, vtxPos) || vtxPos.empty())
-            throw JSONRPCError(RPC_WALLET_ERROR,
-                    "failed to read from message DB");
-
-        CMessage txPos2;
-        uint256 txHash;
-        uint256 blockHash;
-        BOOST_FOREACH(txPos2, vtxPos) {
-            txHash = txPos2.txHash;
-			CTransaction tx;
-			if (!GetTransaction(txHash, tx, Params().GetConsensus(), blockHash, true)) {
-				error("could not read txpos");
-				continue;
+    if (fHelp || 3 < params.size())
+        throw runtime_error("messagesentlist [\"alias\",...] [<message>] [<privatekey>]\n"
+                "list sent messages that an array of aliases own. Set of aliases to look up based on alias, and private key to decrypt any data found in message.");
+	UniValue aliasesValue(UniValue::VARR);
+	vector<string> aliases;
+	if(params.size() >= 1)
+	{
+		if(params[0].isArray())
+		{
+			aliasesValue = params[0].get_array();
+			for(unsigned int aliasIndex =0;aliasIndex<aliasesValue.size();aliasIndex++)
+			{
+				string lowerStr = aliasesValue[aliasIndex].get_str();
+				boost::algorithm::to_lower(lowerStr);
+				if(!lowerStr.empty())
+					aliases.push_back(lowerStr);
 			}
-            UniValue oMessage(UniValue::VOBJ);
-            vector<unsigned char> vchValue;
-            int nHeight;
-            uint256 hash;
-            if (GetValueOfMessageTxHash(txHash, vchValue, hash, nHeight)) {
-                oMessage.push_back(Pair("GUID", message));
-				string sTime;
-				CBlockIndex *pindex = chainActive[txPos2.nHeight];
-				if (pindex) {
-					sTime = strprintf("%llu", pindex->nTime);
+		}
+		else
+		{
+			string aliasName =  params[0].get_str();
+			boost::algorithm::to_lower(aliasName);
+			if(!aliasName.empty())
+				aliases.push_back(aliasName);
+		}
+	}
+	vector<unsigned char> vchNameUniq;
+    if (params.size() >= 2 && !params[1].get_str().empty())
+        vchNameUniq = vchFromValue(params[1]);
+
+	string strPrivateKey;
+	if(params.size() >= 3)
+		strPrivateKey = params[2].get_str();
+
+	UniValue oRes(UniValue::VARR);
+	map< vector<unsigned char>, int > vNamesI;
+	vector<CMessage> messageScan;
+	if(aliases.size() > 0)
+	{
+		for(unsigned int aliasIndex =0;aliasIndex<aliases.size();aliasIndex++)
+		{
+			string name = aliases[aliasIndex];
+			vector<unsigned char> vchAlias = vchFromString(name);
+			vector<CAliasIndex> vtxPos;
+			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
+				throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3509 - " + _("Failed to read from alias DB"));
+		
+			const CAliasIndex &alias = vtxPos.back();
+			CTransaction aliastx;
+			uint256 txHash;
+			if (!GetSyscoinTransaction(alias.nHeight, alias.txHash, aliastx, Params().GetConsensus()))
+				throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3510 - " + _("Failed to read alias transaction"));
+
+			CTransaction tx;
+
+			vector<unsigned char> vchValue;
+			BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos)
+			{
+				if(!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
+					continue;
+
+				CMessage message(tx);
+				if(!message.IsNull() && message.vchAliasFrom == vchAlias)
+				{
+					if (vNamesI.find(message.vchMessage) != vNamesI.end())
+						continue;
+					if (vchNameUniq.size() > 0 && vchNameUniq != message.vchMessage)
+						continue;
+					messageScan.push_back(message);
+					vNamesI[message.vchMessage] = message.nHeight;
 				}
-				oMessage.push_back(Pair("time", sTime));
-
-				oMessage.push_back(Pair("from", stringFromVch(txPos2.vchFrom)));
-				oMessage.push_back(Pair("to", stringFromVch(txPos2.vchTo)));
-				oMessage.push_back(Pair("subject", stringFromVch(txPos2.vchSubject)));
-				string strDecrypted = "";
-				string strData = string("Encrypted for owner of message");
-				if(DecryptMessage(txPos2.vchPubKeyTo, txPos2.vchMessageTo, strDecrypted))
-					strData = strDecrypted;
-				else if(DecryptMessage(txPos2.vchPubKeyFrom, txPos2.vchMessageFrom, strDecrypted))
-					strData = strDecrypted;
-
-				oMessage.push_back(Pair("message", strData));
-                oRes.push_back(oMessage);
-            }
-        }
-    }
+			}
+		}
+	}
+	else
+	{
+		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+		{
+			const CWalletTx &wtx = item.second; 
+			if (wtx.nVersion != SYSCOIN_TX_VERSION)
+				continue;
+			if(IsSyscoinTxMine(wtx, "message"))
+				continue;
+			CMessage message(wtx);
+			if(!message.IsNull())
+			{
+				if (vNamesI.find(message.vchMessage) != vNamesI.end())
+					continue;
+				if (vchNameUniq.size() > 0 && vchNameUniq != message.vchMessage)
+					continue;
+				messageScan.push_back(message);
+				vNamesI[message.vchMessage] = message.nHeight;
+			}
+		}
+	}
+	BOOST_FOREACH(const CMessage &message, messageScan) {
+		// build the output
+		UniValue oName(UniValue::VOBJ);
+		if(BuildMessageJson(message, oName, strPrivateKey))
+			oRes.push_back(oName);
+	}
     return oRes;
 }
 
+void MessageTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
+{
+	string opName = messageFromOp(op);
+	CMessage message;
+	if(!message.UnserializeFromData(vchData, vchHash))
+		return;
+
+	bool isExpired = false;
+	vector<CAliasIndex> aliasVtxPosFrom;
+	vector<CAliasIndex> aliasVtxPosTo;
+	CTransaction aliastx;
+	CAliasIndex dbAliasFrom, dbAliasTo;
+	if(GetTxAndVtxOfAlias(message.vchAliasFrom, dbAliasFrom, aliastx, aliasVtxPosFrom, isExpired, true))
+	{
+		dbAliasFrom.nHeight = message.nHeight;
+		dbAliasFrom.GetAliasFromList(aliasVtxPosFrom);
+	}
+	if(GetTxAndVtxOfAlias(message.vchAliasTo, dbAliasTo, aliastx, aliasVtxPosTo, isExpired, true))
+	{
+		dbAliasTo.nHeight = message.nHeight;
+		dbAliasTo.GetAliasFromList(aliasVtxPosTo);
+	}
+	entry.push_back(Pair("txtype", opName));
+	entry.push_back(Pair("GUID", stringFromVch(message.vchMessage)));
+
+	string aliasFromValue = stringFromVch(message.vchAliasFrom);
+	entry.push_back(Pair("from", aliasFromValue));
+
+	string aliasToValue = stringFromVch(message.vchAliasTo);
+	entry.push_back(Pair("to", aliasToValue));
+
+	string subjectValue = stringFromVch(message.vchSubject);
+	entry.push_back(Pair("subject", subjectValue));
+
+	string strMessage =_("Encrypted for recipient of message");
+	string strDecrypted = "";
+	if(DecryptMessage(dbAliasTo, message.vchMessageTo, strDecrypted))
+		strMessage = strDecrypted;
+	else if(DecryptMessage(dbAliasFrom, message.vchMessageFrom, strDecrypted))
+		strMessage = strDecrypted;	
+
+	entry.push_back(Pair("message", strMessage));
 
 
+}

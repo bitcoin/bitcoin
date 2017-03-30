@@ -2,25 +2,43 @@ Contents
 ========
 This directory contains tools for developers working on this repository.
 
+check-doc.py
+============
+
+Check if all command line args are documented. The return value indicates the
+number of undocumented args.
+
 clang-format.py
 ===============
 
 A script to format cpp source code according to [.clang-format](../../src/.clang-format). This should only be applied to new files or files which are currently not actively developed on. Also, git subtrees are not subject to formatting.
 
+clang-format-diff.py
+===================
+
+A script to format unified git diffs according to [.clang-format](../../src/.clang-format).
+
+For instance, to format the last commit with 0 lines of context,
+the script should be called from the git root folder as follows.
+
+```
+git diff -U0 HEAD~1.. | ./contrib/devtools/clang-format-diff.py -p1 -i -v
+```
+
 fix-copyright-headers.py
 ========================
 
 Every year newly updated files need to have its copyright headers updated to reflect the current year.
-If you run this script from src/ it will automatically update the year on the copyright header for all
-.cpp and .h files if these have a git commit from the current year.
+If you run this script from the root folder it will automatically update the year on the copyright header for all
+source files if these have a git commit from the current year.
 
-For example a file changed in 2014 (with 2014 being the current year):
+For example a file changed in 2015 (with 2015 being the current year):
 
 ```// Copyright (c) 2009-2013 The Syscoin Core developers```
 
 would be changed to:
 
-```// Copyright (c) 2009-2014 The Syscoin Core developers```
+```// Copyright (c) 2009-2015 The Syscoin Core developers```
 
 git-subtree-check.sh
 ====================
@@ -30,22 +48,23 @@ the commit it claims to have been updated to.
 
 To use, make sure that you have fetched the upstream repository branch in which the subtree is
 maintained:
-* for `src/secp256k1`: https://github.com/syscoin/secp256k1.git (branch master)
-* for `src/leveldb`: https://github.com/syscoin/leveldb.git (branch syscoin-fork)
-* for `src/univalue`: https://github.com/syscoin/univalue.git (branch master)
+* for `src/secp256k1`: https://github.com/syscoin-core/secp256k1.git (branch master)
+* for `src/leveldb`: https://github.com/syscoin-core/leveldb.git (branch syscoin-fork)
+* for `src/univalue`: https://github.com/syscoin-core/univalue.git (branch master)
+* for `src/crypto/ctaes`: https://github.com/syscoin-core/ctaes.git (branch master)
 
-Usage: `git-subtree-check.sh DIR COMMIT`
+Usage: `git-subtree-check.sh DIR (COMMIT)`
 
 `COMMIT` may be omitted, in which case `HEAD` is used.
 
-github-merge.sh
+github-merge.py
 ===============
 
 A small script to automate merging pull-requests securely and sign them with GPG.
 
 For example:
 
-  ./github-merge.sh syscoin/syscoin 3077
+  ./github-merge.py 3077
 
 (in any git repository) will help you merge pull request #3077 for the
 syscoin/syscoin repository.

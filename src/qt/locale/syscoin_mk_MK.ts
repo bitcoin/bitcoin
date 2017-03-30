@@ -1,5 +1,15 @@
 <TS language="mk_MK" version="2.1">
 <context>
+    <name>AcceptandPayOfferListPage</name>
+    </context>
+<context>
+    <name>AcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Експортирај ги податоците од активното јазиче во датотека</translation>
+    </message>
+    </context>
+<context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
@@ -24,10 +34,6 @@
     <message>
         <source>C&amp;lose</source>
         <translation>З&amp;атвори</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;Копирај Адреса</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -66,6 +72,10 @@
         <translation>Адреси за примање</translation>
     </message>
     <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Копирај Адреса</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>Копирај &amp;Етикета</translation>
     </message>
@@ -78,8 +88,12 @@
         <translation>Експортирај Листа со Адреси</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>Експортирањето не Успеа</translation>
+        <source>Label</source>
+        <translation>Етикета</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Адреса</translation>
     </message>
     </context>
 <context>
@@ -97,6 +111,15 @@
         <translation>(без етикета)</translation>
     </message>
 </context>
+<context>
+    <name>AliasListPage</name>
+    </context>
+<context>
+    <name>AliasTableModel</name>
+    </context>
+<context>
+    <name>AliasView</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -140,10 +163,6 @@
         <translation>Дали сте сигурни дека сакате да криптирате вашиот паричник?</translation>
     </message>
     <message>
-        <source>Warning: The Caps Lock key is on!</source>
-        <translation>Предупредување: Caps Lock копчето е активно!</translation>
-    </message>
-    <message>
         <source>Wallet encrypted</source>
         <translation>Паричникот е криптиран</translation>
     </message>
@@ -175,217 +194,22 @@
         <source>Wallet passphrase was successfully changed.</source>
         <translation>Тајната фраза е успешно променета.</translation>
     </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Предупредување: Caps Lock копчето е активно!</translation>
+    </message>
 </context>
 <context>
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>SyscoinGUI</name>
-    <message>
-        <source>Sign &amp;message...</source>
-        <translation>Потпиши &amp;порака...</translation>
-    </message>
-    <message>
-        <source>Synchronizing with network...</source>
-        <translation>Синхронизација со мрежата...</translation>
-    </message>
-    <message>
-        <source>&amp;Overview</source>
-        <translation>&amp;Преглед</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>Јазол</translation>
-    </message>
-    <message>
-        <source>&amp;Transactions</source>
-        <translation>&amp;Трансакции</translation>
-    </message>
-    <message>
-        <source>Browse transaction history</source>
-        <translation>Преглед на историјата на трансакции</translation>
-    </message>
-    <message>
-        <source>E&amp;xit</source>
-        <translation>И&amp;злез</translation>
-    </message>
-    <message>
-        <source>Quit application</source>
-        <translation>Напушти ја апликацијата</translation>
-    </message>
-    <message>
-        <source>About &amp;Qt</source>
-        <translation>За &amp;Qt</translation>
-    </message>
-    <message>
-        <source>Show information about Qt</source>
-        <translation>Прикажи информации за Qt</translation>
-    </message>
-    <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;Опции...</translation>
-    </message>
-    <message>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Криптирање на Паричник...</translation>
-    </message>
-    <message>
-        <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Бекап на Паричник...</translation>
-    </message>
-    <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Измени Тајна Фраза...</translation>
-    </message>
-    <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Адреси за Испраќање...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Адреси за Примање...</translation>
-    </message>
-    <message>
-        <source>Open &amp;URI...</source>
-        <translation>Отвори &amp;URI...</translation>
-    </message>
-    <message>
-        <source>Syscoin Core client</source>
-        <translation>Биткоин Core софтверот</translation>
-    </message>
-    <message>
-        <source>Importing blocks from disk...</source>
-        <translation>Внесување на блокови од дискот...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation>Повторно индексирање на блокови од дискот...</translation>
-    </message>
-    <message>
-        <source>Send coins to a Syscoin address</source>
-        <translation>Испрати биткоини на Биткоин адреса</translation>
-    </message>
-    <message>
-        <source>&amp;Verify message...</source>
-        <translation>&amp;Потврди порака...</translation>
-    </message>
-    <message>
-        <source>Syscoin</source>
-        <translation>Биткоин</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Паричник</translation>
-    </message>
-    <message>
-        <source>&amp;Send</source>
-        <translation>&amp;Испрати</translation>
-    </message>
-    <message>
-        <source>&amp;Receive</source>
-        <translation>&amp;Прими</translation>
-    </message>
-    <message>
-        <source>Show information about Syscoin Core</source>
-        <translation>Прикажи информации за Биткоин Core</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Прикажи / Сокриј</translation>
-    </message>
-    <message>
-        <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Криптирај ги приватните клучеви кои припаѓаат на твојот паричник</translation>
-    </message>
-    <message>
-        <source>&amp;Settings</source>
-        <translation>&amp;Подесувања</translation>
-    </message>
-    <message>
-        <source>&amp;Help</source>
-        <translation>&amp;Помош</translation>
-    </message>
-    <message>
-        <source>Syscoin Core</source>
-        <translation>Биткоин Core</translation>
-    </message>
-    <message>
-        <source>&amp;About Syscoin Core</source>
-        <translation>&amp;За Биткоин Core</translation>
-    </message>
-    <message numerus="yes">
-        <source>Processed %n block(s) of transaction history.</source>
-        <translation><numerusform>Обработен %n блок од историјата на трансакции.</numerusform><numerusform>Обработени %n блокови од историјата на трансакции.</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n час</numerusform><numerusform>%n часови</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n ден</numerusform><numerusform>%n денови</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n недела</numerusform><numerusform>%n недели</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 и %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n година</numerusform><numerusform>%n години</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 behind</source>
-        <translation>%1 позади</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Грешка</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Предупредување</translation>
-    </message>
-    <message>
-        <source>Up to date</source>
-        <translation>Во тек</translation>
-    </message>
-    <message>
-        <source>Date: %1
-</source>
-        <translation>Дата: %1
-</translation>
-    </message>
-    <message>
-        <source>Amount: %1
-</source>
-        <translation>Сума: %1
-</translation>
-    </message>
-    <message>
-        <source>Type: %1
-</source>
-        <translation>Тип: %1
-</translation>
-    </message>
-    <message>
-        <source>Label: %1
-</source>
-        <translation>Етикета: %1
-</translation>
-    </message>
-    <message>
-        <source>Address: %1
-</source>
-        <translation>Адреса: %1
-</translation>
-    </message>
+    <name>CertListPage</name>
     </context>
 <context>
-    <name>ClientModel</name>
+    <name>CertTableModel</name>
+    </context>
+<context>
+    <name>CertView</name>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -396,10 +220,6 @@
     <message>
         <source>Amount:</source>
         <translation>Сума:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Приоритет:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -424,10 +244,6 @@
     <message>
         <source>Date</source>
         <translation>Дата</translation>
-    </message>
-    <message>
-        <source>Priority</source>
-        <translation>Приоритет</translation>
     </message>
     <message>
         <source>Copy address</source>
@@ -466,10 +282,6 @@
         <translation>Копирај бајти</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>Копирај приоритет</translation>
-    </message>
-    <message>
         <source>Copy dust</source>
         <translation>Копирај прашина</translation>
     </message>
@@ -478,68 +290,12 @@
         <translation>Копирај кусур</translation>
     </message>
     <message>
-        <source>highest</source>
-        <translation>највисок</translation>
-    </message>
-    <message>
-        <source>higher</source>
-        <translation>повисок</translation>
-    </message>
-    <message>
-        <source>high</source>
-        <translation>висок</translation>
-    </message>
-    <message>
-        <source>medium-high</source>
-        <translation>средно-висок</translation>
-    </message>
-    <message>
-        <source>medium</source>
-        <translation>среден</translation>
-    </message>
-    <message>
-        <source>low-medium</source>
-        <translation>ниско-среден</translation>
-    </message>
-    <message>
-        <source>low</source>
-        <translation>низок</translation>
-    </message>
-    <message>
-        <source>lower</source>
-        <translation>понизок</translation>
-    </message>
-    <message>
-        <source>lowest</source>
-        <translation>најнизок</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>нема</translation>
-    </message>
-    <message>
-        <source>This label turns red if the transaction size is greater than 1000 bytes.</source>
-        <translation>Оваа етикета станува црвена ако големината на трансакцијата е поголема од 1000 бајти.</translation>
-    </message>
-    <message>
-        <source>This label turns red if the priority is smaller than "medium".</source>
-        <translation>Оваа етикета станува црвена ако приоритетот е помал од "среден".</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than %1.</source>
-        <translation>Оваа етикета станува црвена ако примачот прими сума помала од %1.</translation>
-    </message>
-    <message>
         <source>yes</source>
         <translation>да</translation>
     </message>
     <message>
         <source>no</source>
         <translation>не</translation>
-    </message>
-    <message>
-        <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation>Трансакциите со повисок приоритет имаат поголеми шанси да бидат вклучени во блок.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -566,6 +322,38 @@
     </message>
     </context>
 <context>
+    <name>EditAliasDialog</name>
+    </context>
+<context>
+    <name>EditCertDialog</name>
+    </context>
+<context>
+    <name>EditOfferDialog</name>
+    </context>
+<context>
+    <name>EditWhitelistOfferDialog</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Експортирај ги податоците од активното јазиче во датотека</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowInfoDialog</name>
+    <message>
+        <source>Total:</source>
+        <translation>Вкупно:</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowListPage</name>
+    </context>
+<context>
+    <name>EscrowTableModel</name>
+    </context>
+<context>
+    <name>EscrowView</name>
+    </context>
+<context>
     <name>FreespaceChecker</name>
     <message>
         <source>name</source>
@@ -575,10 +363,6 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Биткоин Core</translation>
-    </message>
-    <message>
         <source>version</source>
         <translation>верзија</translation>
     </message>
@@ -586,21 +370,145 @@
         <source>(%1-bit)</source>
         <translation>(%1-бит)</translation>
     </message>
+    </context>
+<context>
+    <name>InMessageListPage</name>
     <message>
-        <source>About Syscoin Core</source>
-        <translation>За Биткоин Core</translation>
+        <source>Message</source>
+        <translation>Порака</translation>
     </message>
     </context>
 <context>
     <name>Intro</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Биткоин Core</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Грешка</translation>
     </message>
+    </context>
+<context>
+    <name>ManageEscrowDialog</name>
+    <message>
+        <source>none</source>
+        <translation>нема</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageInfoDialog</name>
+    <message>
+        <source>Message:</source>
+        <translation>Порака:</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Експортирај ги податоците од активното јазиче во датотека</translation>
+    </message>
+</context>
+<context>
+    <name>MessageTableModel</name>
+    <message>
+        <source>Message</source>
+        <translation>Порака</translation>
+    </message>
+</context>
+<context>
+    <name>MessageView</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    </context>
+<context>
+    <name>MyAcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Експортирај ги податоците од активното јазиче во датотека</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAliasListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Експортирај ги податоците од активното јазиче во датотека</translation>
+    </message>
+    </context>
+<context>
+    <name>MyCertListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Експортирај ги податоците од активното јазиче во датотека</translation>
+    </message>
+    </context>
+<context>
+    <name>MyEscrowListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Експортирај ги податоците од активното јазиче во датотека</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Експортирај ги податоците од активното јазиче во датотека</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferWhitelistTableModel</name>
+    </context>
+<context>
+    <name>MyWhitelistOfferDialog</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Експортирај ги податоците од активното јазиче во датотека</translation>
+    </message>
+    </context>
+<context>
+    <name>NewMessageDialog</name>
+    </context>
+<context>
+    <name>NewWhitelistDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogBTC</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogZEC</name>
+    </context>
+<context>
+    <name>OfferAcceptInfoDialog</name>
+    <message>
+        <source>Total:</source>
+        <translation>Вкупно:</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptTableModel</name>
+    </context>
+<context>
+    <name>OfferEscrowDialog</name>
+    </context>
+<context>
+    <name>OfferFeedbackDialog</name>
+    </context>
+<context>
+    <name>OfferListPage</name>
+    </context>
+<context>
+    <name>OfferPayDialog</name>
+    </context>
+<context>
+    <name>OfferTableModel</name>
+    </context>
+<context>
+    <name>OfferView</name>
+    </context>
+<context>
+    <name>OfferWhitelistTableModel</name>
     </context>
 <context>
     <name>OpenURIDialog</name>
@@ -649,6 +557,16 @@
     </message>
     </context>
 <context>
+    <name>OptionsModel</name>
+    </context>
+<context>
+    <name>OutMessageListPage</name>
+    <message>
+        <source>Message</source>
+        <translation>Порака</translation>
+    </message>
+    </context>
+<context>
     <name>OverviewPage</name>
     <message>
         <source>Total:</source>
@@ -687,7 +605,11 @@
         <source>%1 ms</source>
         <translation>%1 мс</translation>
     </message>
-</context>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 и %2</translation>
+    </message>
+    </context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -835,13 +757,12 @@
         <translation>Порака</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>Сума</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(без етикета)</translation>
     </message>
+    </context>
+<context>
+    <name>ResellOfferDialog</name>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -852,10 +773,6 @@
     <message>
         <source>Amount:</source>
         <translation>Сума:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Приоритет:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -894,8 +811,8 @@
         <translation>Копирај бајти</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>Копирај приоритет</translation>
+        <source>Copy dust</source>
+        <translation>Копирај прашина</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -905,29 +822,192 @@
         <source>(no label)</source>
         <translation>(без етикета)</translation>
     </message>
-    <message>
-        <source>Copy dust</source>
-        <translation>Копирај прашина</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>SendCoinsEntry</name>
+    <message>
+        <source>A&amp;mount:</source>
+        <translation>Сума:</translation>
+    </message>
     <message>
         <source>&amp;Label:</source>
         <translation>&amp;Етикета:</translation>
     </message>
+    <message>
+        <source>Message:</source>
+        <translation>Порака:</translation>
+    </message>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
     </context>
 <context>
     <name>ShutdownWindow</name>
+    </context>
+<context>
+    <name>SignRawTxDialog</name>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
     </context>
 <context>
     <name>SplashScreen</name>
+    </context>
+<context>
+    <name>SyscoinGUI</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Биткоин Core</translation>
+        <source>Sign &amp;message...</source>
+        <translation>Потпиши &amp;порака...</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network...</source>
+        <translation>Синхронизација со мрежата...</translation>
+    </message>
+    <message>
+        <source>Node</source>
+        <translation>Јазол</translation>
+    </message>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation>&amp;Трансакции</translation>
+    </message>
+    <message>
+        <source>Browse transaction history</source>
+        <translation>Преглед на историјата на трансакции</translation>
+    </message>
+    <message>
+        <source>E&amp;xit</source>
+        <translation>И&amp;злез</translation>
+    </message>
+    <message>
+        <source>Quit application</source>
+        <translation>Напушти ја апликацијата</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation>За &amp;Qt</translation>
+    </message>
+    <message>
+        <source>Show information about Qt</source>
+        <translation>Прикажи информации за Qt</translation>
+    </message>
+    <message>
+        <source>&amp;Options...</source>
+        <translation>&amp;Опции...</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>&amp;Криптирање на Паричник...</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet...</source>
+        <translation>&amp;Бекап на Паричник...</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>&amp;Измени Тајна Фраза...</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>&amp;Адреси за Испраќање...</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>&amp;Адреси за Примање...</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI...</source>
+        <translation>Отвори &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk...</source>
+        <translation>Повторно индексирање на блокови од дискот...</translation>
+    </message>
+    <message>
+        <source>Send coins to a Syscoin address</source>
+        <translation>Испрати биткоини на Биткоин адреса</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message...</source>
+        <translation>&amp;Потврди порака...</translation>
+    </message>
+    <message>
+        <source>Syscoin</source>
+        <translation>Биткоин</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Паричник</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;Прикажи / Сокриј</translation>
+    </message>
+    <message>
+        <source>Encrypt the private keys that belong to your wallet</source>
+        <translation>Криптирај ги приватните клучеви кои припаѓаат на твојот паричник</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation>&amp;Подесувања</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation>&amp;Помош</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation><numerusform>Обработен %n блок од историјата на трансакции.</numerusform><numerusform>Обработени %n блокови од историјата на трансакции.</numerusform></translation>
+    </message>
+    <message>
+        <source>%1 behind</source>
+        <translation>%1 позади</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Грешка</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>Предупредување</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation>Во тек</translation>
+    </message>
+    <message>
+        <source>&amp;About Syscoin Core</source>
+        <translation>&amp;За Биткоин Core</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>Дата: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>Сума: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>Тип: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>Етикета: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>Адреса: %1
+</translation>
     </message>
     </context>
 <context>
@@ -961,6 +1041,10 @@
         <source>Label</source>
         <translation>Етикета</translation>
     </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(без етикета)</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
@@ -977,10 +1061,6 @@
         <translation>Копирај сума</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>Експортирањето не Успеа</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation>Дата</translation>
     </message>
@@ -991,6 +1071,10 @@
     <message>
         <source>Address</source>
         <translation>Адреса</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Експортирањето не Успеа</translation>
     </message>
     </context>
 <context>
@@ -1005,16 +1089,20 @@
 <context>
     <name>WalletView</name>
     <message>
-        <source>&amp;Export</source>
-        <translation>&amp;Експорт</translation>
-    </message>
-    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Експортирај ги податоците од активното јазиче во датотека</translation>
     </message>
     </context>
 <context>
     <name>syscoin-core</name>
+    <message>
+        <source>Options:</source>
+        <translation>Опции:</translation>
+    </message>
+    <message>
+        <source>Syscoin Core</source>
+        <translation>Биткоин Core</translation>
+    </message>
     <message>
         <source>Warning</source>
         <translation>Предупредување</translation>

@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -63,6 +63,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendmany", 1 },
     { "sendmany", 2 },
     { "sendmany", 4 },
+    { "aliaspay", 1 },
+    { "aliaspay", 2 },
     { "addmultisigaddress", 0 },
     { "addmultisigaddress", 1 },
     { "createmultisig", 0 },
@@ -102,6 +104,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "prioritisetransaction", 2 },
     { "setban", 2 },
     { "setban", 3 },
+    { "aliasnew", 9 },
+    { "aliasupdate", 10 },
 };
 
 class CRPCConvertTable
