@@ -1859,7 +1859,6 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
             int nDepth = pcoin->GetDepthInMainChain();
             if (nDepth < 0)
                 continue;
-
             // We should not consider coins which aren't at least in our mempool
             // It's possible for these to be conflicted via ancestors which we may never be able to detect
             if (nDepth == 0 && !pcoin->InMempool())
@@ -1926,7 +1925,7 @@ static void ApproximateBestSubset(vector<pair<CAmount, pair<const CWalletTx*,uns
 }
 
 bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMine, const int nConfTheirs, const uint64_t nMaxAncestors, vector<COutput> vCoins,
-                                 set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet) const
+                                 set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, bool bAliasPay) const
 {
     setCoinsRet.clear();
     nValueRet = 0;
@@ -1960,8 +1959,12 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 		{
 			int op;
 			vector<vector<unsigned char> > vvchArgs;
-			if (pcoin->vout.size() >= i && IsSyscoinScript(pcoin->vout[i].scriptPubKey, op, vvchArgs) && op != OP_ALIAS_PAYMENT)
-				continue;
+			if (pcoin->vout.size() >= i && IsSyscoinScript(pcoin->vout[i].scriptPubKey, op, vvchArgs))
+			{
+				// allow alias payment if bAliasPay is set to true
+				if(!(bAliasPay && op == OP_ALIAS_PAYMENT))
+					continue;
+			}
 		}
         pair<CAmount,pair<const CWalletTx*,unsigned int> > coin = make_pair(n,make_pair(pcoin, i));
 
@@ -2037,7 +2040,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
     return true;
 }
 
-bool CWallet::SelectCoins(const vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl) const
+bool CWallet::SelectCoins(const vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl, bool bAliasPay) const
 {
     vector<COutput> vCoins(vAvailableCoins);
 
@@ -2074,8 +2077,12 @@ bool CWallet::SelectCoins(const vector<COutput>& vAvailableCoins, const CAmount&
 				int op;
 				vector<vector<unsigned char> > vvchArgs;
 				// anything but a payment can't spend it
-				if (pcoin->vout.size() >= outpoint.n && IsSyscoinScript(pcoin->vout[outpoint.n].scriptPubKey, op, vvchArgs) && op != OP_ALIAS_PAYMENT)
-					continue;
+				if (pcoin->vout.size() >= outpoint.n && IsSyscoinScript(pcoin->vout[outpoint.n].scriptPubKey, op, vvchArgs))
+				{
+					// allow alias payment if bAliasPay is set to true
+					if(!(bAliasPay && op == OP_ALIAS_PAYMENT))
+						continue;
+				}
 			}
             // Clearly invalid input, fail
             if (pcoin->vout.size() <= outpoint.n)
@@ -2099,13 +2106,13 @@ bool CWallet::SelectCoins(const vector<COutput>& vAvailableCoins, const CAmount&
     bool fRejectLongChains = GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS);
 
     bool res = nTargetValue <= nValueFromPresetInputs ||
-        SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 6, 0, vCoins, setCoinsRet, nValueRet) ||
-        SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 1, 0, vCoins, setCoinsRet, nValueRet) ||
-        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, 2, vCoins, setCoinsRet, nValueRet)) ||
-        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, std::min((size_t)4, nMaxChainLength/3), vCoins, setCoinsRet, nValueRet)) ||
-        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, nMaxChainLength/2, vCoins, setCoinsRet, nValueRet)) ||
-        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, nMaxChainLength, vCoins, setCoinsRet, nValueRet)) ||
-        (bSpendZeroConfChange && !fRejectLongChains && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, std::numeric_limits<uint64_t>::max(), vCoins, setCoinsRet, nValueRet));
+        SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 6, 0, vCoins, setCoinsRet, nValueRet, bAliasPay) ||
+        SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 1, 0, vCoins, setCoinsRet, nValueRet, bAliasPay) ||
+        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, 2, vCoins, setCoinsRet, nValueRet, bAliasPay)) ||
+        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, std::min((size_t)4, nMaxChainLength/3), vCoins, setCoinsRet, nValueRet, bAliasPay)) ||
+        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, nMaxChainLength/2, vCoins, setCoinsRet, nValueRet, bAliasPay)) ||
+        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, nMaxChainLength, vCoins, setCoinsRet, nValueRet, bAliasPay)) ||
+        (bSpendZeroConfChange && !fRejectLongChains && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, std::numeric_limits<uint64_t>::max(), vCoins, setCoinsRet, nValueRet, bAliasPay));
 
     // because SelectCoinsMinConf clears the setCoinsRet, we now add the possible inputs to the coinset
     setCoinsRet.insert(setPresetCoins.begin(), setPresetCoins.end());
@@ -2165,7 +2172,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool ov
 
 // SYSCOIN
 bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
-                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl* coinControl, bool sign, const CWalletTx* wtxInAlias, int nTxOutAlias, bool sysTx, const CWalletTx* wtxInLinkAlias, int nTxOutLinkAlias)
+                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl* coinControl, bool sign, const CWalletTx* wtxInAlias, int nTxOutAlias, bool sysTx, const CWalletTx* wtxInLinkAlias, int nTxOutLinkAlias, bool bAliasPay)
 {
     CAmount nValue = 0;
 	// SYSCOIN: get output amount of input transactions for syscoin service calls
@@ -2197,8 +2204,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
         }
         nValue += recipient.nAmount;
 
-        if (recipient.fSubtractFeeFromAmount)
-            nSubtractFeeFromAmount++;
+       /* if (recipient.fSubtractFeeFromAmount)
+            nSubtractFeeFromAmount++;*/
     }
     if (vecSend.empty() || nValue < 0)
     {
@@ -2286,7 +2293,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 								CScript scriptPubKey;
 								scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchFromString(address.aliasName) << OP_2DROP;
 								scriptPubKey += myrecipient.scriptPubKey;
-								myrecipient = {scriptPubKey, myrecipient.nAmount, myrecipient.fSubtractFeeFromAmount};
+								myrecipient = {scriptPubKey, myrecipient.nAmount, false/*myrecipient.fSubtractFeeFromAmount*/};
 								txNew.nVersion = GetSyscoinTxVersion();				
 							}
 						}
@@ -2320,7 +2327,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 set<pair<const CWalletTx*,unsigned int> > setCoins;
                 CAmount nValueIn = 0;
 				// SYSCOIN add input credit to current coin selection
-                if ((nValueToSelect-nWtxinCredit) > 0 && !SelectCoins(vAvailableCoins, nValueToSelect-nWtxinCredit, setCoins, nValueIn, coinControl))
+                if ((nValueToSelect-nWtxinCredit) > 0 && !SelectCoins(vAvailableCoins, nValueToSelect-nWtxinCredit, setCoins, nValueIn, coinControl, bAliasPay))
                 {
                     strFailReason = _("Insufficient funds");
                     return false;
@@ -2476,14 +2483,15 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 else
                     reservekey.ReturnKey();
 
+				// SYSCOIN use max-2 because we want RBF replacement to be on by default on this wallet
                 // Fill vin
                 //
-                // Note how the sequence number is set to max()-1 so that the
+                // Note how the sequence number is set to max()-2 so that the
                 // nLockTime set above actually works.
-				// SYSCOIN
-                BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, vecCoins)
+                BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) coin, vecCoins)
                     txNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second,CScript(),
-                                              std::numeric_limits<unsigned int>::max()-1));
+                                              std::numeric_limits<unsigned int>::max()-2));
+
 
                 // Sign
                 int nIn = 0;
@@ -2591,17 +2599,6 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
 {
     {
         LOCK2(cs_main, cs_wallet);
-		// SYSCOIN
-        if (fBroadcastTransactions)
-        {
-            // Broadcast
-			CValidationState state;
-            if (!wtxNew.AcceptToMemoryPool(false, maxTxFee, state))
-            {
-                LogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", state.GetRejectReason());
-                return false;
-            }
-        }
         LogPrintf("CommitTransaction:\n%s", wtxNew.ToString());
         {
             // This is only to keep the database open to defeat the auto-flush for the
@@ -2631,10 +2628,17 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
 
         // Track how many getdata requests our transaction gets
         mapRequestCount[wtxNew.GetHash()] = 0;
-		// SYSCOIN
+
         if (fBroadcastTransactions)
         {
-            wtxNew.RelayWalletTransaction();
+            CValidationState state;
+            // Broadcast
+            if (!wtxNew.AcceptToMemoryPool(false, maxTxFee, state)) {
+                LogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", state.GetRejectReason());
+                // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
+            } else {
+                wtxNew.RelayWalletTransaction();
+            }
         }
     }
     return true;
