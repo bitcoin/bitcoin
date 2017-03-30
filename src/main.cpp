@@ -1164,6 +1164,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, const CCoinsViewCache& inputs, b
 				break;
 			if(DecodeAliasScript(tx.vout[j].scriptPubKey, op, vvchArgs))
 			{
+				errorMessage.clear();
 				good = CheckAliasInputs(tx, op, j, vvchArgs, inputs, fJustCheck, nHeight, errorMessage);
 				if(fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
@@ -1173,24 +1174,28 @@ bool CheckSyscoinInputs(const CTransaction& tx, const CCoinsViewCache& inputs, b
 		{
 			if(DecodeCertTx(tx, op, nOut, vvchArgs))
 			{
+				errorMessage.clear();
 				good = CheckCertInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, errorMessage);	
 				if(fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
 			else if(DecodeEscrowTx(tx, op, nOut, vvchArgs))
 			{
+				errorMessage.clear();
 				good = CheckEscrowInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, errorMessage);		
 				if(fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
 			else if(DecodeMessageTx(tx, op, nOut, vvchArgs))
 			{
+				errorMessage.clear();
 				good = CheckMessageInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, errorMessage);	
 				if(fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 			}
 			else if(DecodeOfferTx(tx, op, nOut, vvchArgs))
 			{	
+				errorMessage.clear();
 				good = CheckOfferInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, errorMessage);	 
 				if(fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
@@ -3100,6 +3105,9 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
         int nUpgraded = 0;
         const CBlockIndex* pindex = chainActive.Tip();
         for (int bit = 0; bit < VERSIONBITS_NUM_BITS; bit++) {
+			// SYSCOIN, skip auxpow bit 8 or dummy bit 28
+			if(bit == 8 || bit == 28)
+				continue;
             WarningBitsConditionChecker checker(bit);
             ThresholdState state = checker.GetStateFor(pindex, chainParams.GetConsensus(), warningcache[bit]);
             if (state == THRESHOLD_ACTIVE || state == THRESHOLD_LOCKED_IN) {
@@ -3956,11 +3964,12 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
 
 
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
-	// SYSCOIN use GetBaseVersion() because of CBlockVersion
+	// SYSCOIN
+	/*
     for (int32_t version = 2; version < 5; ++version) // check for version 2, 3 and 4 upgrades
         if (block.GetBaseVersion() < version && IsSuperMajority(version, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
             return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", version - 1),
-                                 strprintf("rejected nVersion=0x%08x block", version - 1));
+                                 strprintf("rejected nVersion=0x%08x block", version - 1));*/
 
     return true;
 }
