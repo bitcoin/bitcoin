@@ -6165,17 +6165,28 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
         vRecv >> thinBlockTx;
 
         // Message consistency checking
-        if (thinBlockTx.vMissingTx.empty() || thinBlockTx.blockhash.IsNull())
+        CInv inv(MSG_XTHINBLOCK, thinBlockTx.blockhash);
+        if (thinBlockTx.vMissingTx.empty() || thinBlockTx.blockhash.IsNull() || pfrom->xThinBlockHashes.size() != pfrom->thinBlock.vtx.size())
         {
-            LogPrintf("ERROR: incorrectly constructed xblocktx received.  Banning peer=%d\n", pfrom->id);
+            {
+                LOCK(cs_vNodes);
+                pfrom->mapThinBlocksInFlight.erase(inv.hash);
+                pfrom->thinBlockWaitingForTxns = -1;
+                pfrom->thinBlock.SetNull();
+            }
+
+            // Clear the thinblock timer used for preferential download
+            thindata.ClearThinBlockTimer(inv.hash);
+
+            LogPrintf("ERROR: incorrectly constructed xblocktx or inconsistent thinblock data received.  Banning peer=%d\n", pfrom->id);
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 100);
             return false;
         }
 
-        CInv inv(MSG_XTHINBLOCK, thinBlockTx.blockhash);
         LogPrint("net", "received blocktxs for %s peer=%d\n", inv.hash.ToString(), pfrom->id);
-        if (!pfrom->mapThinBlocksInFlight.count(inv.hash)) {
+        if (!pfrom->mapThinBlocksInFlight.count(inv.hash))
+        {
             LogPrint("thin", "xblocktx received but it was either not requested or it was beaten by another block %s  peer=%d\n", inv.hash.ToString(), pfrom->id);
             requester.Received(inv, pfrom, msgSize); // record the bytes received from the message
             return true;
@@ -6188,35 +6199,23 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
 
         int count=0;
         size_t i;
-        if (pfrom->xThinBlockHashes.size() != pfrom->thinBlock.vtx.size())  // Because the next loop assumes this
-          {
-            LogPrint("thin", "Inconsistent thin block data.  Aborting the thin block\n");
+        for (i = 0; i < pfrom->thinBlock.vtx.size(); i++)
+        {
+            if (pfrom->thinBlock.vtx[i].IsNull())
             {
-                LOCK(cs_vNodes);
-                pfrom->mapThinBlocksInFlight.erase(inv.hash);
-                pfrom->thinBlockWaitingForTxns = -1;
-                pfrom->thinBlock.SetNull();
+	        std::map<uint64_t, CTransaction>::iterator val = mapMissingTx.find(pfrom->xThinBlockHashes[i]);
+                if (val != mapMissingTx.end())
+                {
+                    pfrom->thinBlock.vtx[i] = val->second;
+                    pfrom->thinBlockWaitingForTxns--;
+                }
+                count++;
             }
-
-            // Clear the thinblock timer used for preferential download
-            thindata.ClearThinBlockTimer(inv.hash);
-            return true;
-          }
-        
-        for (i = 0; i < pfrom->thinBlock.vtx.size(); i++) {
-             if (pfrom->thinBlock.vtx[i].IsNull()) {
-	         std::map<uint64_t, CTransaction>::iterator val = mapMissingTx.find(pfrom->xThinBlockHashes[i]);
-                 if (val != mapMissingTx.end())
-		   {
-                   pfrom->thinBlock.vtx[i] = val->second;
-                   pfrom->thinBlockWaitingForTxns--;
-		   }
-                 count++;
-             }
         }
         LogPrint("thin", "Got %d Re-requested txs, needed %d of them\n", thinBlockTx.vMissingTx.size(), count);
 
-        if (pfrom->thinBlockWaitingForTxns == 0) {
+        if (pfrom->thinBlockWaitingForTxns == 0)
+        {
             // We have all the transactions now that are in this block: try to reassemble and process.
             pfrom->thinBlockWaitingForTxns = -1;
             requester.Received(inv, pfrom, msgSize);
@@ -6240,7 +6239,8 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
 
             PV.HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
         }
-        else {
+        else
+        {
             LogPrint("thin", "Failed to retrieve all transactions for block\n");
             // An expedited block may request transactions that we don't have
             //LOCK(cs_main);
