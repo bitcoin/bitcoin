@@ -9,6 +9,7 @@
 #include "primitives/transaction.h"
 #include "validation.h"
 #include "httpserver.h"
+#include "rpc/blockchain.h"
 #include "rpc/server.h"
 #include "streams.h"
 #include "sync.h"
@@ -58,12 +59,9 @@ struct CCoin {
     }
 };
 
-extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
-extern UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails = false);
-extern UniValue mempoolInfoToJSON();
-extern UniValue mempoolToJSON(bool fVerbose = false);
-extern void ScriptPubKeyToJSON(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
-extern UniValue blockheaderToJSON(const CBlockIndex* blockindex);
+/* Defined in rawtransaction.cpp */
+void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
+void ScriptPubKeyToJSON(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
 
 static bool RESTERR(HTTPRequest* req, enum HTTPStatusCode status, std::string message)
 {
