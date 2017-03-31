@@ -26,7 +26,7 @@ static constexpr int DB_PEAK_USAGE_FACTOR = 2;
 //! No need to flush if at least this much space still available.
 static constexpr int MAX_BLOCK_COINSDB_USAGE = 100 * DB_PEAK_USAGE_FACTOR;
 //! -dbcache default (MiB)
-static const int64_t nDefaultDbCache = 600;
+static const int64_t nDefaultDbCache = 450;
 //! max. -dbcache (MiB)
 static const int64_t nMaxDbCache = sizeof(void*) > 4 ? 16384 : 1024;
 //! min. -dbcache (MiB)
