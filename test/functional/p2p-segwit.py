@@ -61,16 +61,6 @@ class TestNode(NodeConnCB):
             self.send_message(msg)
         self.wait_for_getdata()
 
-    def announce_block(self, block, use_header):
-        with mininode_lock:
-            self.last_message.pop("getdata", None)
-        if use_header:
-            msg = msg_headers()
-            msg.headers = [ CBlockHeader(block) ]
-            self.send_message(msg)
-        else:
-            self.send_message(msg_inv(inv=[CInv(2, block.sha256)]))
-
     def request_block(self, blockhash, inv_type, timeout=60):
         with mininode_lock:
             self.last_message.pop("block", None)
@@ -1029,13 +1019,18 @@ class SegWitTest(BitcoinTestFramework):
             block4 = self.build_next_block(nVersion=4)
             block4.solve()
             self.old_node.getdataset = set()
+
             # Blocks can be requested via direct-fetch (immediately upon processing the announcement)
             # or via parallel download (with an indeterminate delay from processing the announcement)
             # so to test that a block is NOT requested, we could guess a time period to sleep for,
             # and then check. We can avoid the sleep() by taking advantage of transaction getdata's
             # being processed after block getdata's, and announce a transaction as well,
             # and then check to see if that particular getdata has been received.
-            self.old_node.announce_block(block4, use_header=False)
+            # Since 0.14, inv's will only be responded to with a getheaders, so send a header
+            # to announce this block.
+            msg = msg_headers()
+            msg.headers = [ CBlockHeader(block4) ]
+            self.old_node.send_message(msg)
             self.old_node.announce_tx_and_wait_for_getdata(block4.vtx[0])
             assert(block4.sha256 not in self.old_node.getdataset)
 
