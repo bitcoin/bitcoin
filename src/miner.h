@@ -177,8 +177,10 @@ private:
     // Methods for how to add transactions to a block.
     /** Add transactions based on tx "priority" */
     void addPriorityTxs();
-    /** Add transactions based on feerate including unconfirmed ancestors */
-    void addPackageTxs();
+    /** Add transactions based on feerate including unconfirmed ancestors
+      * Increments nPackagesSelected / nDescendantsUpdated with corresponding
+      * statistics from the package selection (for logging statistics). */
+    void addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated);
 
     // helper function for addPriorityTxs
     /** Test if tx will still "fit" in the block */
@@ -202,8 +204,9 @@ private:
     /** Sort the package in an order that is valid to appear in a block */
     void SortForBlock(const CTxMemPool::setEntries& package, CTxMemPool::txiter entry, std::vector<CTxMemPool::txiter>& sortedEntries);
     /** Add descendants of given transactions to mapModifiedTx with ancestor
-      * state updated assuming given transactions are inBlock. */
-    void UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded, indexed_modified_transaction_set &mapModifiedTx);
+      * state updated assuming given transactions are inBlock. Returns number
+      * of updated descendants. */
+    int UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded, indexed_modified_transaction_set &mapModifiedTx);
 };
 
 /** Modify the extranonce in a block */
