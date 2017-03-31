@@ -5948,24 +5948,27 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
             pfrom->nGetXthinLastTime = nNow;
             pfrom->nGetXthinCount += 1;
             LogPrint("thin", "nGetXthinCount is %f\n", pfrom->nGetXthinCount);
-            if (chainparams.NetworkIDString()=="main") // other networks have variable mining rates
-	      {
-		if (pfrom->nGetXthinCount >= 20)
+            if (chainparams.NetworkIDString() == "main") // other networks have variable mining rates
+	    {
+                if (pfrom->nGetXthinCount >= 20)
                 {
-		  LogPrintf("DOS: Misbehaving - requesting too many get_xthin - disconnecting\n");
-		  LOCK(cs_main);
-		  Misbehaving(pfrom->GetId(), 100);  // If they exceed the limit then disconnect them
-		}
-	      }
+                    LOCK(cs_main);
+                    Misbehaving(pfrom->GetId(), 100);  // If they exceed the limit then disconnect them
+                    return error("requesting too many get_xthin");                
+                }
+            }
         }
 
         CBloomFilter filterMemPool;
         CInv inv;
         vRecv >> inv >> filterMemPool;
-        if (!((inv.type == MSG_XTHINBLOCK)||(inv.type == MSG_THINBLOCK)))
+
+        // Consistency checking for get_xthin
+        if (!((inv.type == MSG_XTHINBLOCK) || (inv.type == MSG_THINBLOCK)) || inv.hash.IsNull() || !filterMemPool.IsWithinSizeConstraints())
         {
-            Misbehaving(pfrom->GetId(), 20);
-            return error("message inv invalid type = %u", inv.type);                
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("invalid get_xthin type=%u hash=%s", inv.type, inv.hash.ToString());                
         }
         
 
@@ -5975,10 +5978,10 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
         {
             LOCK(cs_main);
             BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
-            if (mi == mapBlockIndex.end()) {  // This block does not even exist
-                LogPrint("thin", "Peer %s (%d) requested nonexistent block %s\n", pfrom->addrName.c_str(), pfrom->id, inv.hash.ToString());
+            if (mi == mapBlockIndex.end())  // This block does not even exist
+            {
                 Misbehaving(pfrom->GetId(), 100);
-                return false;
+                return error("Peer %s (%d) requested nonexistent block %s\n", pfrom->addrName.c_str(), pfrom->id, inv.hash.ToString());
             }
 
             CBlock block;
@@ -5986,8 +5989,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
             if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
             {
                 // We don't have the block yet, although we know about it.
-                LogPrint("thin", "Peer %s (%d) requested block %s that cannot be read\n", pfrom->addrName.c_str(), pfrom->id, inv.hash.ToString());
-                return false;
+                return error("Peer %s (%d) requested block %s that cannot be read\n", pfrom->addrName.c_str(), pfrom->id, inv.hash.ToString());
             }
             else
             {
