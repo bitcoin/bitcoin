@@ -3,6 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "rpc/blockchain.h"
+
 #include "amount.h"
 #include "chain.h"
 #include "chainparams.h"
@@ -42,13 +44,6 @@ static CUpdatedBlock latestblock;
 extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
 
-/**
- * Get the difficulty of the net wrt to the given block index, or the chain tip if
- * not provided.
- *
- * @return A floating point number that is a multiple of the main net minimum
- * difficulty (4295032833 hashes).
- */
 double GetDifficulty(const CBlockIndex* blockindex)
 {
     if (blockindex == NULL)
@@ -106,7 +101,7 @@ UniValue blockheaderToJSON(const CBlockIndex* blockindex)
     return result;
 }
 
-UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails = false)
+UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails)
 {
     UniValue result(UniValue::VOBJ);
     result.push_back(Pair("hash", blockindex->GetBlockHash().GetHex()));
@@ -383,7 +378,7 @@ void entryToJSON(UniValue &info, const CTxMemPoolEntry &e)
     info.push_back(Pair("depends", depends));
 }
 
-UniValue mempoolToJSON(bool fVerbose = false)
+UniValue mempoolToJSON(bool fVerbose)
 {
     if (fVerbose)
     {
