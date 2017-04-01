@@ -26,7 +26,7 @@ static CCheckQueue<CScriptCheck> scriptcheckqueue4(128);
 using namespace std;
 
 
-void AddScriptCheckThreads(int i, CCheckQueue<CScriptCheck>* pqueue)
+void AddScriptCheckThreads(int i, CCheckQueue<CScriptCheck> *pqueue)
 {
     ostringstream tName;
     tName << "bitcoin-scriptchk" << i;
@@ -34,9 +34,9 @@ void AddScriptCheckThreads(int i, CCheckQueue<CScriptCheck>* pqueue)
     pqueue->Thread();
 }
 
-void AddAllScriptCheckQueuesAndThreads(int nScriptCheckThreads, boost::thread_group* threadGroup)
+void AddAllScriptCheckQueuesAndThreads(int nScriptCheckThreads, boost::thread_group *threadGroup)
 {
-    CCheckQueue<CScriptCheck>* pqueue[MAX_SCRIPT_CHECK_QUEUES] = {
+    CCheckQueue<CScriptCheck> *pqueue[MAX_SCRIPT_CHECK_QUEUES] = {
         &scriptcheckqueue1, &scriptcheckqueue2, &scriptcheckqueue3, &scriptcheckqueue4};
 
     for (int i = 0; i < MAX_SCRIPT_CHECK_QUEUES; i++)
@@ -48,7 +48,7 @@ void AddAllScriptCheckQueuesAndThreads(int nScriptCheckThreads, boost::thread_gr
 }
 
 CParallelValidation::CParallelValidation() { mapBlockValidationThreads.clear(); }
-bool CParallelValidation::Initialize(const boost::thread::id this_id, const CBlockIndex* pindex, const bool fParallel)
+bool CParallelValidation::Initialize(const boost::thread::id this_id, const CBlockIndex *pindex, const bool fParallel)
 {
     AssertLockHeld(cs_main);
 
@@ -64,7 +64,7 @@ bool CParallelValidation::Initialize(const boost::thread::id this_id, const CBlo
 
         LOCK(cs_blockvalidationthread);
         assert(mapBlockValidationThreads.count(this_id) > 0);
-        CHandleBlockMsgThreads* pValidationThread = &mapBlockValidationThreads[this_id];
+        CHandleBlockMsgThreads *pValidationThread = &mapBlockValidationThreads[this_id];
         pValidationThread->hash = pindex->GetBlockHash();
 
         // We need to place a Quit here because we do not want to assign a script queue to a thread of activity
@@ -104,7 +104,7 @@ bool CParallelValidation::Initialize(const boost::thread::id this_id, const CBlo
     return true;
 }
 
-void CParallelValidation::Cleanup(const CBlock& block, CBlockIndex* pindex)
+void CParallelValidation::Cleanup(const CBlock &block, CBlockIndex *pindex)
 {
     // Swap the block index sequence id's such that the winning block has the lowest id and all other id's
     // are still in their same order relative to each other.
@@ -150,7 +150,7 @@ void CParallelValidation::Cleanup(const CBlock& block, CBlockIndex* pindex)
     }
 }
 
-void CParallelValidation::QuitCompetingThreads(const uint256& prevBlockHash)
+void CParallelValidation::QuitCompetingThreads(const uint256 &prevBlockHash)
 {
     // Kill other competing threads but not this one.
     LOCK(cs_blockvalidationthread);
@@ -215,7 +215,7 @@ void CParallelValidation::StopAllValidationThreads(const boost::thread::id this_
         {
             if ((*mi).second.pScriptQueue != NULL)
                 (*mi).second.pScriptQueue->Quit(); // quit any active script queue threads
-            (*mi).second.fQuit = true;             // quit the PV thread
+            (*mi).second.fQuit = true; // quit the PV thread
         }
         mi++;
     }
@@ -236,7 +236,7 @@ void CParallelValidation::StopAllValidationThreads(const uint32_t nChainWork)
         {
             if ((*mi).second.pScriptQueue != NULL)
                 (*mi).second.pScriptQueue->Quit(); // quit any active script queue threads
-            (*mi).second.fQuit = true;             // quit the PV thread
+            (*mi).second.fQuit = true; // quit the PV thread
         }
         mi++;
     }
@@ -260,9 +260,9 @@ void CParallelValidation::WaitForAllValidationThreadsToStop()
 
 bool CParallelValidation::Enabled() { return GetBoolArg("-parallel", true); }
 void CParallelValidation::InitThread(const boost::thread::id this_id,
-    const CNode* pfrom,
-    const CBlock& block,
-    const CInv& inv)
+    const CNode *pfrom,
+    const CBlock &block,
+    const CInv &inv)
 {
     LOCK(cs_blockvalidationthread);
     assert(mapBlockValidationThreads.count(this_id) == 0); // this id should not already be in use
@@ -305,7 +305,7 @@ bool CParallelValidation::QuitReceived(const boost::thread::id this_id, const bo
     return false;
 }
 
-bool CParallelValidation::ChainWorkHasChanged(const arith_uint256& nStartingChainWork)
+bool CParallelValidation::ChainWorkHasChanged(const arith_uint256 &nStartingChainWork)
 {
     LOCK(cs_main);
     if (chainActive.Tip()->nChainWork != nStartingChainWork)
@@ -353,7 +353,7 @@ bool CParallelValidation::IsReorgInProgress()
     return false;
 }
 
-void CParallelValidation::ClearOrphanCache(const CBlock& block)
+void CParallelValidation::ClearOrphanCache(const CBlock &block)
 {
     if (!IsInitialBlockDownload())
     {
@@ -384,10 +384,10 @@ void CParallelValidation::ClearOrphanCache(const CBlock& block)
 //  updates
 //  the UTXO if the block has been accepted and the tip updated. We cleanup and release the semaphore after the thread
 //  has finished.
-void CParallelValidation::HandleBlockMessage(CNode* pfrom,
-    const string& strCommand,
-    const CBlock& block,
-    const CInv& inv)
+void CParallelValidation::HandleBlockMessage(CNode *pfrom,
+    const string &strCommand,
+    const CBlock &block,
+    const CInv &inv)
 {
     uint64_t nBlockSize = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
     uint8_t nScriptCheckQueues = allScriptCheckQueues.Size();
@@ -448,7 +448,7 @@ void CParallelValidation::HandleBlockMessage(CNode* pfrom,
                         return; // new block is rejected and does not enter PV
                     }
                     else if (miLargestBlock != mapBlockValidationThreads.end())
-                    {                                                  // terminate the chosen PV thread
+                    { // terminate the chosen PV thread
                         (*miLargestBlock).second.pScriptQueue->Quit(); // terminate the script queue threads
                         LogPrint("parallel", "Sending Quit() to scriptcheckqueue\n");
                         (*miLargestBlock).second.fQuit = true; // terminate the PV thread
@@ -489,7 +489,7 @@ void CParallelValidation::HandleBlockMessage(CNode* pfrom,
     }
 }
 
-void HandleBlockMessageThread(CNode* pfrom, const string& strCommand, const CBlock& block, const CInv& inv)
+void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlock &block, const CInv &inv)
 {
     int64_t startTime = GetTimeMicros();
     CValidationState state;
@@ -503,7 +503,7 @@ void HandleBlockMessageThread(CNode* pfrom, const string& strCommand, const CBlo
     // Such an unrequested block may still be processed, subject to the
     // conditions in AcceptBlock().
     bool forceProcessing = pfrom->fWhitelisted && !IsInitialBlockDownload();
-    const CChainParams& chainparams = Params();
+    const CChainParams &chainparams = Params();
     if (PV.Enabled())
     {
         ProcessNewBlock(state, chainparams, pfrom, &block, forceProcessing, NULL, true);
@@ -553,7 +553,7 @@ void HandleBlockMessageThread(CNode* pfrom, const string& strCommand, const CBlo
         int nTotalThinBlocksInFlight = 0;
         {
             LOCK(cs_vNodes);
-            BOOST_FOREACH (CNode* pnode, vNodes)
+            BOOST_FOREACH (CNode *pnode, vNodes)
             {
                 if (pnode->mapThinBlocksInFlight.erase(inv.hash))
                 {
@@ -602,10 +602,10 @@ void HandleBlockMessageThread(CNode* pfrom, const string& strCommand, const CBlo
 }
 
 
-CCheckQueue<CScriptCheck>* CAllScriptCheckQueues::GetScriptCheckQueue()
+CCheckQueue<CScriptCheck> *CAllScriptCheckQueues::GetScriptCheckQueue()
 {
     // for newly mined block validation, return the first queue not in use.
-    CCheckQueue<CScriptCheck>* pqueue = NULL;
+    CCheckQueue<CScriptCheck> *pqueue = NULL;
     if (Size() > 0)
     {
         while (true)

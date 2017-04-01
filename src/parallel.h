@@ -27,12 +27,12 @@ extern CCriticalSection cs_blockvalidationthread;
 
 // adds all the script check queues into the "allScriptCheckQueues" global variable and creates nScriptCheckThreads per
 // check queue
-void AddAllScriptCheckQueuesAndThreads(int nScriptCheckThreads, boost::thread_group* threadGroup);
+void AddAllScriptCheckQueuesAndThreads(int nScriptCheckThreads, boost::thread_group *threadGroup);
 // Entry point for the script check queue threads.
-void AddScriptCheckThreads(int i, CCheckQueue<CScriptCheck>* pqueue);
+void AddScriptCheckThreads(int i, CCheckQueue<CScriptCheck> *pqueue);
 
 extern CCriticalSection cs_semPV;
-extern CSemaphore* semPV; // semaphore for parallel validation threads
+extern CSemaphore *semPV; // semaphore for parallel validation threads
 
 /**
  * Closure representing one script verification
@@ -41,9 +41,9 @@ extern CSemaphore* semPV; // semaphore for parallel validation threads
 class CScriptCheck
 {
 private:
-    ValidationResourceTracker* resourceTracker;
+    ValidationResourceTracker *resourceTracker;
     CScript scriptPubKey;
-    const CTransaction* ptxTo;
+    const CTransaction *ptxTo;
     unsigned int nIn;
     unsigned int nFlags;
     bool cacheStore;
@@ -54,9 +54,9 @@ public:
         : resourceTracker(NULL), ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR)
     {
     }
-    CScriptCheck(ValidationResourceTracker* resourceTrackerIn,
-        const CCoins& txFromIn,
-        const CTransaction& txToIn,
+    CScriptCheck(ValidationResourceTracker *resourceTrackerIn,
+        const CCoins &txFromIn,
+        const CTransaction &txToIn,
         unsigned int nInIn,
         unsigned int nFlagsIn,
         bool cacheIn)
@@ -67,7 +67,7 @@ public:
 
     bool operator()();
 
-    void swap(CScriptCheck& check)
+    void swap(CScriptCheck &check)
     {
         std::swap(resourceTracker, check.resourceTracker);
         scriptPubKey.swap(check.scriptPubKey);
@@ -87,13 +87,13 @@ public:
 class CAllScriptCheckQueues
 {
 private:
-    std::vector<CCheckQueue<CScriptCheck>*> vScriptCheckQueues;
+    std::vector<CCheckQueue<CScriptCheck> *> vScriptCheckQueues;
 
     CCriticalSection cs;
 
 public:
     CAllScriptCheckQueues() {}
-    void Add(CCheckQueue<CScriptCheck>* pqueueIn)
+    void Add(CCheckQueue<CScriptCheck> *pqueueIn)
     {
         LOCK(cs);
         vScriptCheckQueues.push_back(pqueueIn);
@@ -105,7 +105,7 @@ public:
         return vScriptCheckQueues.size();
     }
 
-    CCheckQueue<CScriptCheck>* GetScriptCheckQueue();
+    CCheckQueue<CScriptCheck> *GetScriptCheckQueue();
 };
 extern CAllScriptCheckQueues allScriptCheckQueues; // Singleton class
 
@@ -120,7 +120,7 @@ private:
 public:
     struct CHandleBlockMsgThreads
     {
-        CCheckQueue<CScriptCheck>* pScriptQueue;
+        CCheckQueue<CScriptCheck> *pScriptQueue;
         uint256 hash;
         uint256 hashPrevBlock;
         uint32_t nChainWork;
@@ -129,7 +129,7 @@ public:
         uint64_t nBlockSize;
         bool fQuit;
         NodeId nodeid;
-        bool fIsValidating;      // is the block currently in connectblock() and validating inputs
+        bool fIsValidating; // is the block currently in connectblock() and validating inputs
         bool fIsReorgInProgress; // has a re-org to another chain been triggered.
     };
     CCriticalSection cs_blockvalidationthread;
@@ -141,16 +141,16 @@ public:
 
 
     /* Initialize mapBlockValidationThreads*/
-    void InitThread(const boost::thread::id this_id, const CNode* pfrom, const CBlock& block, const CInv& inv);
+    void InitThread(const boost::thread::id this_id, const CNode *pfrom, const CBlock &block, const CInv &inv);
 
     /* Initialize a PV session */
-    bool Initialize(const boost::thread::id this_id, const CBlockIndex* pindex, const bool fParallel);
+    bool Initialize(const boost::thread::id this_id, const CBlockIndex *pindex, const bool fParallel);
 
     /* Cleanup PV threads after one has finished and won the validation race */
-    void Cleanup(const CBlock& block, CBlockIndex* pindex);
+    void Cleanup(const CBlock &block, CBlockIndex *pindex);
 
     /* Send quit to competing threads */
-    void QuitCompetingThreads(const uint256& prevBlockHash);
+    void QuitCompetingThreads(const uint256 &prevBlockHash);
 
     /* Is this block already running a validation thread? */
     bool IsAlreadyValidating(const NodeId id);
@@ -172,7 +172,7 @@ public:
     bool QuitReceived(const boost::thread::id this_id, const bool fParallel);
 
     /* Used to determine if another thread has already updated the utxo and advance the chain tip */
-    bool ChainWorkHasChanged(const arith_uint256& nStartingChainWork);
+    bool ChainWorkHasChanged(const arith_uint256 &nStartingChainWork);
 
     /* Set the correct locks and locking order before returning from a PV session */
     void SetLocks(const bool fParallel);
@@ -182,14 +182,14 @@ public:
     bool IsReorgInProgress();
 
     /* Clear orphans from the orphan cache that are no longer needed*/
-    void ClearOrphanCache(const CBlock& block);
+    void ClearOrphanCache(const CBlock &block);
 
     /* Process a block message */
-    void HandleBlockMessage(CNode* pfrom, const std::string& strCommand, const CBlock& block, const CInv& inv);
+    void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, const CBlock &block, const CInv &inv);
 };
 extern CParallelValidation PV; // Singleton class
 
 
-void HandleBlockMessageThread(CNode* pfrom, const std::string& strCommand, const CBlock& block, const CInv& inv);
+void HandleBlockMessageThread(CNode *pfrom, const std::string &strCommand, const CBlock &block, const CInv &inv);
 
 #endif // BITCOIN_PARALLEL_H
