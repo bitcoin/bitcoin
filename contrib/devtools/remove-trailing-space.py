@@ -2,7 +2,7 @@
 '''
 This tool removes trailing whitespace from files passed on command line.
 
-Usage:  remove_trailing_space.py [filepath ...]
+Usage:  remove-trailing-space.py [filepath ...]
 
 Limitations:
 - makes no backups of modified files
