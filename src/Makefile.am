@@ -102,6 +102,12 @@ BITCOIN_CORE_H = \
   httpserver.h \
   indirectmap.h \
   init.h \
+  interruptible/condition_variable.h \
+  interruptible/lock.h  \
+  interruptible/this_thread.h \
+  interruptible/thread.h \
+  interruptible/thread_data.h \
+  interruptible/thread_group.h \
   key.h \
   keystore.h \
   dbwrapper.h \
@@ -326,6 +332,9 @@ libbitcoin_util_a_SOURCES = \
   compat/glibc_sanity.cpp \
   compat/glibcxx_sanity.cpp \
   compat/strnlen.cpp \
+  interruptible/this_thread.cpp \
+  interruptible/thread.cpp \
+  interruptible/thread_group.cpp \
   random.cpp \
   rpc/protocol.cpp \
   support/cleanse.cpp \
