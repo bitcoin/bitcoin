@@ -71,6 +71,7 @@ BASE_SCRIPTS= [
     'decodescript.py',
     'blockchain.py',
     'disablewallet.py',
+    'net.py',
     'keypool.py',
     'p2p-mempool.py',
     'prioritise_transaction.py',
