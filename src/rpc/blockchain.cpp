@@ -127,7 +127,7 @@ UniValue blockToDeltasJSON(const CBlock& block, const CBlockIndex* blockindex)
     UniValue deltas(UniValue::VARR);
 
     for (unsigned int i = 0; i < block.vtx.size(); i++) {
-        const CTransaction &tx = block.vtx[i];
+        const CTransaction &tx = *(block.vtx[i]);
         const uint256 txhash = tx.GetHash();
 
         UniValue entry(UniValue::VOBJ);
@@ -711,12 +711,12 @@ UniValue getmempoolentry(const JSONRPCRequest& request)
     return info;
 }
 
-UniValue getblockdeltas(const UniValue& params, bool fHelp)
+UniValue getblockdeltas(const JSONRPCRequest& request)
 {
-    if (fHelp || params.size() != 1)
+    if (request.fHelp || request.params.size() != 1)
         throw runtime_error("");
 
-    std::string strHash = params[0].get_str();
+    std::string strHash = request.params[0].get_str();
     uint256 hash(uint256S(strHash));
 
     if (mapBlockIndex.count(hash) == 0)
@@ -734,9 +734,9 @@ UniValue getblockdeltas(const UniValue& params, bool fHelp)
     return blockToDeltasJSON(block, pblockindex);
 }
 
-UniValue getblockhashes(const UniValue& params, bool fHelp)
+UniValue getblockhashes(const JSONRPCRequest& request)
 {
-    if (fHelp || params.size() < 2)
+    if (request.fHelp || request.params.size() < 2)
         throw runtime_error(
             "getblockhashes timestamp\n"
             "\nReturns array of hashes of blocks within the timestamp range provided.\n"
@@ -764,15 +764,15 @@ UniValue getblockhashes(const UniValue& params, bool fHelp)
             + HelpExampleCli("getblockhashes", "1231614698 1231024505 '{\"noOrphans\":false, \"logicalTimes\":true}'")
             );
 
-    unsigned int high = params[0].get_int();
-    unsigned int low = params[1].get_int();
+    unsigned int high = request.params[0].get_int();
+    unsigned int low = request.params[1].get_int();
     bool fActiveOnly = false;
     bool fLogicalTS = false;
 
-    if (params.size() > 2) {
-        if (params[2].isObject()) {
-            UniValue noOrphans = find_value(params[2].get_obj(), "noOrphans");
-            UniValue returnLogical = find_value(params[2].get_obj(), "logicalTimes");
+    if (request.params.size() > 2) {
+        if (request.params[2].isObject()) {
+            UniValue noOrphans = find_value(request.params[2].get_obj(), "noOrphans");
+            UniValue returnLogical = find_value(request.params[2].get_obj(), "logicalTimes");
 
             if (noOrphans.isBool())
                 fActiveOnly = noOrphans.get_bool();
@@ -1697,8 +1697,8 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getbestblockhash",       &getbestblockhash,       true,  {} },
     { "blockchain",         "getblockcount",          &getblockcount,          true,  {} },
     { "blockchain",         "getblock",               &getblock,               true,  {"blockhash","verbose"} },
-    { "blockchain",         "getblockdeltas",         &getblockdeltas,         false },
-    { "blockchain",         "getblockhashes",         &getblockhashes,         true  },
+    { "blockchain",         "getblockdeltas",         &getblockdeltas,         false, {} },
+    { "blockchain",         "getblockhashes",         &getblockhashes,         true,  {}  },
     { "blockchain",         "getblockhash",           &getblockhash,           true,  {"height"} },
     { "blockchain",         "getblockheader",         &getblockheader,         true,  {"blockhash","verbose"} },
     { "blockchain",         "getchaintips",           &getchaintips,           true,  {} },

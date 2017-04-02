@@ -6,7 +6,6 @@
 #ifndef BITCOIN_TXDB_H
 #define BITCOIN_TXDB_H
 
-#include "main.h"
 #include "coins.h"
 #include "dbwrapper.h"
 #include "chain.h"
