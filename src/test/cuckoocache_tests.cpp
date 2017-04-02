@@ -60,7 +60,8 @@ BOOST_AUTO_TEST_CASE(test_cuckoocache_no_fakes)
 {
     insecure_rand = FastRandomContext(true);
     CuckooCache::cache<uint256, uint256Hasher> cc{};
-    cc.setup_bytes(32 << 20);
+    size_t megabytes = 4;
+    cc.setup_bytes(megabytes << 20);
     uint256 v;
     for (int x = 0; x < 100000; ++x) {
         insecure_GetRandHash(v);
@@ -135,7 +136,7 @@ BOOST_AUTO_TEST_CASE(cuckoocache_hit_rate_ok)
      * as a lower bound on performance.
      */
     double HitRateThresh = 0.98;
-    size_t megabytes = 32;
+    size_t megabytes = 4;
     for (double load = 0.1; load < 2; load *= 2) {
         double hits = test_cache<CuckooCache::cache<uint256, uint256Hasher>>(megabytes, load);
         BOOST_CHECK(normalize_hit_rate(hits, load) > HitRateThresh);
@@ -204,7 +205,7 @@ void test_cache_erase(size_t megabytes)
 
 BOOST_AUTO_TEST_CASE(cuckoocache_erase_ok)
 {
-    size_t megabytes = 32;
+    size_t megabytes = 4;
     test_cache_erase<CuckooCache::cache<uint256, uint256Hasher>>(megabytes);
 }
 
@@ -291,7 +292,7 @@ void test_cache_erase_parallel(size_t megabytes)
 }
 BOOST_AUTO_TEST_CASE(cuckoocache_erase_parallel_ok)
 {
-    size_t megabytes = 32;
+    size_t megabytes = 4;
     test_cache_erase_parallel<CuckooCache::cache<uint256, uint256Hasher>>(megabytes);
 }
 
@@ -342,13 +343,13 @@ void test_cache_generations()
         }
     };
 
-    const uint32_t BLOCK_SIZE = 10000;
+    const uint32_t BLOCK_SIZE = 1000;
     // We expect window size 60 to perform reasonably given that each epoch
     // stores 45% of the cache size (~472k).
     const uint32_t WINDOW_SIZE = 60;
     const uint32_t POP_AMOUNT = (BLOCK_SIZE / WINDOW_SIZE) / 2;
     const double load = 10;
-    const size_t megabytes = 32;
+    const size_t megabytes = 4;
     const size_t bytes = megabytes * (1 << 20);
     const uint32_t n_insert = static_cast<uint32_t>(load * (bytes / sizeof(uint256)));
 
