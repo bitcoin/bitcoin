@@ -1555,14 +1555,15 @@ bool CMasternodeMan::IsWatchdogActive()
     return (GetTime() - nLastWatchdogVoteTime) <= MASTERNODE_WATCHDOG_MAX_SECONDS;
 }
 
-void CMasternodeMan::AddGovernanceVote(const CTxIn& vin, uint256 nGovernanceObjectHash)
+bool CMasternodeMan::AddGovernanceVote(const CTxIn& vin, uint256 nGovernanceObjectHash)
 {
     LOCK(cs);
     CMasternode* pMN = Find(vin);
     if(!pMN)  {
-        return;
+        return false;
     }
     pMN->AddGovernanceVote(nGovernanceObjectHash);
+    return true;
 }
 
 void CMasternodeMan::RemoveGovernanceObject(uint256 nGovernanceObjectHash)

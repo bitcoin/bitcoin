@@ -178,9 +178,17 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         governance.AddInvalidVote(vote);
         return false;
     }
+    if(!mnodeman.AddGovernanceVote(vote.GetVinMasternode(), vote.GetParentHash())) {
+        std::ostringstream ostr;
+        ostr << "CGovernanceObject::ProcessVote -- Unable to add governance vote "
+             << ", MN outpoint = " << vote.GetVinMasternode().prevout.ToStringShort()
+             << ", governance object hash = " << GetHash().ToString() << "\n";
+        LogPrint("gobject", ostr.str().c_str());
+        exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_PERMANENT_ERROR);
+        return false;
+    }
     voteInstance = vote_instance_t(vote.GetOutcome(), nVoteTimeUpdate, vote.GetTimestamp());
     fileVotes.AddVote(vote);
-    mnodeman.AddGovernanceVote(vote.GetVinMasternode(), vote.GetParentHash());
     fDirtyCache = true;
     return true;
 }
