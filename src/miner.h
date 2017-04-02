@@ -37,7 +37,7 @@ private:
     // The constructed block template
     std::unique_ptr<CBlockTemplate> pblocktemplate;
     // A convenience pointer that always refers to the CBlock in pblocktemplate
-    CBlock* pblock;
+    CBlock *pblock;
 
     // Configuration parameters for the block size
     uint64_t nBlockMaxSize, nBlockMinSize;
@@ -52,21 +52,21 @@ private:
     // Chain context for the block
     int nHeight;
     int64_t nLockTimeCutoff;
-    const CChainParams& chainparams;
+    const CChainParams &chainparams;
 
     // Variables used for addScoreTxs and addPriorityTxs
     int lastFewTxs;
     bool blockFinished;
 
 public:
-    BlockAssembler(const CChainParams& chainparams);
+    BlockAssembler(const CChainParams &chainparams);
     /** Construct a new block template with coinbase to scriptPubKeyIn */
-    CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn);
+    CBlockTemplate *CreateNewBlock(const CScript &scriptPubKeyIn);
 
 private:
     // utility functions
     /** Clear the block's state and prepare for assembling a new block */
-    void resetBlock(const CScript& scriptPubKeyIn);
+    void resetBlock(const CScript &scriptPubKeyIn);
     /** Add a tx to the block */
     void AddToBlock(CTxMemPool::txiter iter);
 
@@ -82,12 +82,12 @@ private:
     /** Test if tx still has unconfirmed parents not yet in block */
     bool isStillDependent(CTxMemPool::txiter iter);
     /** Bytes to reserve for coinbase and block header */
-    uint64_t reserveBlockSize(const CScript& scriptPubKeyIn);
+    uint64_t reserveBlockSize(const CScript &scriptPubKeyIn);
     /** Internal method to construct a new block template */
-    CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, bool blockstreamCoreCompatible);
+    CBlockTemplate *CreateNewBlock(const CScript &scriptPubKeyIn, bool blockstreamCoreCompatible);
     /** Constructs a coinbase transaction */
-    CMutableTransaction coinbaseTx(const CScript& scriptPubKeyIn, int nHeight, CAmount nValue);
-  };
+    CMutableTransaction coinbaseTx(const CScript &scriptPubKeyIn, int nHeight, CAmount nValue);
+};
 
 /** Modify the extranonce in a block */
 void IncrementExtraNonce(CBlock* pblock, unsigned int& nExtraNonce);

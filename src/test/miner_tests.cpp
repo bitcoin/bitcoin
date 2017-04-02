@@ -166,25 +166,28 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         hash = tx.GetHash();
         bool spendsCoinbase = (i == 0) ? true : false; // only first tx spends coinbase
         // If we do set the # of sig ops in the CTxMemPoolEntry, template creation passes
-        mempool.addUnchecked(hash, entry.Fee(1000000).Time(GetTime()).SpendsCoinbase(spendsCoinbase).SigOps(20).FromTx(tx));
+        mempool.addUnchecked(
+            hash, entry.Fee(1000000).Time(GetTime()).SpendsCoinbase(spendsCoinbase).SigOps(20).FromTx(tx));
         tx.vin[0].prevout.hash = hash;
     }
     BOOST_CHECK(pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey));
     delete pblocktemplate;
 
-    // Now generate lots of full size blocks and verify that none exceed the maxGeneratedBlock value, the mempool has 65k bytes of tx in it so this code will test both saturated and unsaturated blocks.
-    for (unsigned int i = 2000; i <= 80000; i+=2000)
+    // Now generate lots of full size blocks and verify that none exceed the maxGeneratedBlock value, the mempool has
+    // 65k bytes of tx in it so this code will test both saturated and unsaturated blocks.
+    for (unsigned int i = 2000; i <= 80000; i += 2000)
     {
-      maxGeneratedBlock = i;
+        maxGeneratedBlock = i;
 
-      pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
-      BOOST_CHECK(pblocktemplate);
-      BOOST_CHECK(pblocktemplate->block.fExcessive == false);
-      BOOST_CHECK(pblocktemplate->block.nBlockSize <= maxGeneratedBlock);
-      unsigned int blockSize = pblocktemplate->block.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
-      BOOST_CHECK(blockSize <= maxGeneratedBlock);
-      //printf("%lu %lu <= %lu\n", (long unsigned int) blockSize, (long unsigned int) pblocktemplate->block.nBlockSize, (long unsigned int) maxGeneratedBlock);
-      delete pblocktemplate;
+        pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
+        BOOST_CHECK(pblocktemplate);
+        BOOST_CHECK(pblocktemplate->block.fExcessive == false);
+        BOOST_CHECK(pblocktemplate->block.nBlockSize <= maxGeneratedBlock);
+        unsigned int blockSize = pblocktemplate->block.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+        BOOST_CHECK(blockSize <= maxGeneratedBlock);
+        // printf("%lu %lu <= %lu\n", (long unsigned int) blockSize, (long unsigned int)
+        // pblocktemplate->block.nBlockSize, (long unsigned int) maxGeneratedBlock);
+        delete pblocktemplate;
     }
 
     BOOST_CHECK(chainActive.Tip()->nHeight == 110);
@@ -194,20 +197,21 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     coinbaseReserve.value = 0;
     minerComment = "I am a meat popsicle.";
 
-     // Now generate lots of full size blocks and verify that none exceed the maxGeneratedBlock value
-    for (unsigned int i = 2000; i <= 30000; i+=67)
+    // Now generate lots of full size blocks and verify that none exceed the maxGeneratedBlock value
+    for (unsigned int i = 2000; i <= 30000; i += 67)
     {
-      maxGeneratedBlock = i;
+        maxGeneratedBlock = i;
 
-      pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
-      BOOST_CHECK(pblocktemplate);
-      BOOST_CHECK(pblocktemplate->block.fExcessive == false);
-      BOOST_CHECK(pblocktemplate->block.nBlockSize <= maxGeneratedBlock - 4);
-      unsigned int blockSize = pblocktemplate->block.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
-      BOOST_CHECK(blockSize <= maxGeneratedBlock - 4);
-      minRoom = std::min(minRoom, maxGeneratedBlock - blockSize);
-      //printf("%lu %lu <= %lu\n", (long unsigned int) blockSize, (long unsigned int) pblocktemplate->block.nBlockSize, (long unsigned int) maxGeneratedBlock);
-      delete pblocktemplate;
+        pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
+        BOOST_CHECK(pblocktemplate);
+        BOOST_CHECK(pblocktemplate->block.fExcessive == false);
+        BOOST_CHECK(pblocktemplate->block.nBlockSize <= maxGeneratedBlock - 4);
+        unsigned int blockSize = pblocktemplate->block.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+        BOOST_CHECK(blockSize <= maxGeneratedBlock - 4);
+        minRoom = std::min(minRoom, maxGeneratedBlock - blockSize);
+        // printf("%lu %lu <= %lu\n", (long unsigned int) blockSize, (long unsigned int)
+        // pblocktemplate->block.nBlockSize, (long unsigned int) maxGeneratedBlock);
+        delete pblocktemplate;
     }
 
     // Assert we went right up to the limit.  We reserved 4 bytes for height but only use 2 as height is 110.
@@ -215,24 +219,28 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     BOOST_CHECK(minRoom == 4);
 
     minRoom = 1000;
-    std::string testMinerComment("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM__________");
-     // Now generate lots of full size blocks and verify that none exceed the maxGeneratedBlock value
-    //printf("test mining with different sized miner comments");
-    for (unsigned int i = 2000; i <= 40000; i+=89)
+    std::string testMinerComment("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvw"
+                                 "xyzABCDEFGHIJKLM__________");
+    // Now generate lots of full size blocks and verify that none exceed the maxGeneratedBlock value
+    // printf("test mining with different sized miner comments");
+    for (unsigned int i = 2000; i <= 40000; i += 89)
     {
-      maxGeneratedBlock = i;
-      if ((i%100) > 0) minerComment = testMinerComment.substr(0,i%100);
-      else minerComment = "";
-      //minerComment = testMinerComment.substr(0,i%100);
-      pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
-      BOOST_CHECK(pblocktemplate);
-      BOOST_CHECK(pblocktemplate->block.fExcessive == false);
-      BOOST_CHECK(pblocktemplate->block.nBlockSize <= maxGeneratedBlock - 2);
-      unsigned int blockSize = pblocktemplate->block.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
-      BOOST_CHECK(blockSize <= maxGeneratedBlock - 2);
-      minRoom = std::min(minRoom, maxGeneratedBlock - blockSize);
-      //printf("%lu %lu (miner comment is %d) <= %lu\n", (long unsigned int) blockSize, (long unsigned int) pblocktemplate->block.nBlockSize, i%100, (long unsigned int) maxGeneratedBlock);
-      delete pblocktemplate;
+        maxGeneratedBlock = i;
+        if ((i % 100) > 0)
+            minerComment = testMinerComment.substr(0, i % 100);
+        else
+            minerComment = "";
+        // minerComment = testMinerComment.substr(0,i%100);
+        pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
+        BOOST_CHECK(pblocktemplate);
+        BOOST_CHECK(pblocktemplate->block.fExcessive == false);
+        BOOST_CHECK(pblocktemplate->block.nBlockSize <= maxGeneratedBlock - 2);
+        unsigned int blockSize = pblocktemplate->block.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+        BOOST_CHECK(blockSize <= maxGeneratedBlock - 2);
+        minRoom = std::min(minRoom, maxGeneratedBlock - blockSize);
+        // printf("%lu %lu (miner comment is %d) <= %lu\n", (long unsigned int) blockSize, (long unsigned int)
+        // pblocktemplate->block.nBlockSize, i%100, (long unsigned int) maxGeneratedBlock);
+        delete pblocktemplate;
     }
 
     // Assert we went right up to the limit.  We reserved 4 bytes for height but only use 2 as height is 110.
