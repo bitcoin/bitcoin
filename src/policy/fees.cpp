@@ -165,7 +165,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
         }
     }
 
-    LogPrint("estimatefee", "%3d: For conf success %s %4.2f need feerate %s: %12.5g from buckets %8g - %8g  Cur Bucket stats %6.2f%%  %8.1f/(%.1f+%d mempool)\n",
+    LogPrint(BCLog::ESTIMATEFEE, "%3d: For conf success %s %4.2f need feerate %s: %12.5g from buckets %8g - %8g  Cur Bucket stats %6.2f%%  %8.1f/(%.1f+%d mempool)\n",
              confTarget, requireGreater ? ">" : "<", successBreakPoint,
              requireGreater ? ">" : "<", median, buckets[minBucket], buckets[maxBucket],
              100 * nConf / (totalNum + extraNum), nConf, totalNum, extraNum);
@@ -241,7 +241,7 @@ void TxConfirmStats::Read(CAutoFile& filein)
     for (unsigned int i = 0; i < buckets.size(); i++)
         bucketMap[buckets[i]] = i;
 
-    LogPrint("estimatefee", "Reading estimates: %u buckets counting confirms up to %u blocks\n",
+    LogPrint(BCLog::ESTIMATEFEE, "Reading estimates: %u buckets counting confirms up to %u blocks\n",
              numBuckets, maxConfirms);
 }
 
@@ -260,24 +260,26 @@ void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHe
     if (nBestSeenHeight == 0)  // the BlockPolicyEstimator hasn't seen any blocks yet
         blocksAgo = 0;
     if (blocksAgo < 0) {
-        LogPrint("estimatefee", "Blockpolicy error, blocks ago is negative for mempool tx\n");
+        LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy error, blocks ago is negative for mempool tx\n");
         return;  //This can't happen because we call this with our best seen height, no entries can have higher
     }
 
     if (blocksAgo >= (int)unconfTxs.size()) {
-        if (oldUnconfTxs[bucketindex] > 0)
+        if (oldUnconfTxs[bucketindex] > 0) {
             oldUnconfTxs[bucketindex]--;
-        else
-            LogPrint("estimatefee", "Blockpolicy error, mempool tx removed from >25 blocks,bucketIndex=%u already\n",
+        } else {
+            LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy error, mempool tx removed from >25 blocks,bucketIndex=%u already\n",
                      bucketindex);
+        }
     }
     else {
         unsigned int blockIndex = entryHeight % unconfTxs.size();
-        if (unconfTxs[blockIndex][bucketindex] > 0)
+        if (unconfTxs[blockIndex][bucketindex] > 0) {
             unconfTxs[blockIndex][bucketindex]--;
-        else
-            LogPrint("estimatefee", "Blockpolicy error, mempool tx removed from blockIndex=%u,bucketIndex=%u already\n",
+        } else {
+            LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy error, mempool tx removed from blockIndex=%u,bucketIndex=%u already\n",
                      blockIndex, bucketindex);
+        }
     }
 }
 
@@ -316,7 +318,7 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     unsigned int txHeight = entry.GetHeight();
     uint256 hash = entry.GetTx().GetHash();
     if (mapMemPoolTxs.count(hash)) {
-        LogPrint("estimatefee", "Blockpolicy error mempool tx %s already being tracked\n",
+        LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy error mempool tx %s already being tracked\n",
                  hash.ToString().c_str());
 	return;
     }
@@ -358,7 +360,7 @@ bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxM
     if (blocksToConfirm <= 0) {
         // This can't happen because we don't process transactions from a block with a height
         // lower than our greatest seen height
-        LogPrint("estimatefee", "Blockpolicy error Transaction had negative blocksToConfirm\n");
+        LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy error Transaction had negative blocksToConfirm\n");
         return false;
     }
 
@@ -399,7 +401,7 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
     // Update all exponential averages with the current block state
     feeStats.UpdateMovingAverages();
 
-    LogPrint("estimatefee", "Blockpolicy after updating estimates for %u of %u txs in block, since last block %u of %u tracked, new mempool map size %u\n",
+    LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy after updating estimates for %u of %u txs in block, since last block %u of %u tracked, new mempool map size %u\n",
              countedTxs, entries.size(), trackedTxs, trackedTxs + untrackedTxs, mapMemPoolTxs.size());
 
     trackedTxs = 0;

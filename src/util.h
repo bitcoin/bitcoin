@@ -42,7 +42,6 @@ public:
 };
 
 extern const std::map<std::string, std::vector<std::string> >& mapMultiArgs;
-extern bool fDebug;
 extern bool fPrintToConsole;
 extern bool fPrintToDebugLog;
 
@@ -54,6 +53,8 @@ extern CTranslationInterface translationInterface;
 
 extern const char * const BITCOIN_CONF_FILENAME;
 extern const char * const BITCOIN_PID_FILENAME;
+
+extern std::atomic<uint32_t> logCategories;
 
 /**
  * Translation function: Call Translate signal on UI interface, which returns a boost::optional result.
@@ -68,8 +69,45 @@ inline std::string _(const char* psz)
 void SetupEnvironment();
 bool SetupNetworking();
 
+namespace BCLog {
+    enum LogFlags : uint32_t {
+        NONE        = 0,
+        NET         = (1 <<  0),
+        TOR         = (1 <<  1),
+        MEMPOOL     = (1 <<  2),
+        HTTP        = (1 <<  3),
+        BENCH       = (1 <<  4),
+        ZMQ         = (1 <<  5),
+        DB          = (1 <<  6),
+        RPC         = (1 <<  7),
+        ESTIMATEFEE = (1 <<  8),
+        ADDRMAN     = (1 <<  9),
+        SELECTCOINS = (1 << 10),
+        REINDEX     = (1 << 11),
+        CMPCTBLOCK  = (1 << 12),
+        RAND        = (1 << 13),
+        PRUNE       = (1 << 14),
+        PROXY       = (1 << 15),
+        MEMPOOLREJ  = (1 << 16),
+        LIBEVENT    = (1 << 17),
+        COINDB      = (1 << 18),
+        QT          = (1 << 19),
+        LEVELDB     = (1 << 20),
+        ALL         = ~(uint32_t)0,
+    };
+}
 /** Return true if log accepts specified category */
-bool LogAcceptCategory(const char* category);
+static inline bool LogAcceptCategory(uint32_t category)
+{
+    return (logCategories.load(std::memory_order_relaxed) & category) != 0;
+}
+
+/** Returns a string with the supported log categories */
+std::string ListLogCategories();
+
+/** Return true if str parses as a log category and set the flags in f */
+bool GetLogCategory(uint32_t *f, const std::string *str);
+
 /** Send a string to the log output */
 int LogPrintStr(const std::string &str);
 
