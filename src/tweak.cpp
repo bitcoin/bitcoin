@@ -13,7 +13,7 @@ using namespace std;
 // http://www.geeksforgeeks.org/wildcard-character-matching/
 // This function checks if two given strings
 // match. The first string may contain wildcard characters
-bool match(const char* first, const char* second)
+bool match(const char *first, const char *second)
 {
     // If we reach at the end of both strings, we are done
     if (*first == '\0' && *second == '\0')
@@ -53,21 +53,20 @@ void LoadTweaks()
 }
 
 // RPC Get a particular tweak
-UniValue gettweak(const UniValue& params, bool fHelp)
+UniValue gettweak(const UniValue &params, bool fHelp)
 {
     if (fHelp)
     {
-        throw runtime_error(
-            "get"
-            "\nReturns the value of a configuration setting\n"
-            "\nArguments: configuration setting name\n"
-            "\nResult:\n"
-            "  {\n"
-            "    \"setting name\" : value of the setting\n"
-            "    ...\n"
-            "  }\n"
-            "\nExamples:\n" +
-            HelpExampleCli("get a b", "") + HelpExampleRpc("get a b", ""));
+        throw runtime_error("get"
+                            "\nReturns the value of a configuration setting\n"
+                            "\nArguments: configuration setting name\n"
+                            "\nResult:\n"
+                            "  {\n"
+                            "    \"setting name\" : value of the setting\n"
+                            "    ...\n"
+                            "  }\n"
+                            "\nExamples:\n" +
+                            HelpExampleCli("get a b", "") + HelpExampleRpc("get a b", ""));
     }
 
     UniValue ret(UniValue::VOBJ);
@@ -102,13 +101,14 @@ UniValue gettweak(const UniValue& params, bool fHelp)
     return ret;
 }
 // RPC Set a particular tweak
-UniValue settweak(const UniValue& params, bool fHelp)
+UniValue settweak(const UniValue &params, bool fHelp)
 {
     if (fHelp)
     {
         throw runtime_error(
             "set"
-            "\nSets the value of a configuration option.  Parameters must be of the format name=value, with no spaces (use name=\"the value\" for strings)\n"
+            "\nSets the value of a configuration option.  Parameters must be of the format name=value, with no spaces "
+            "(use name=\"the value\" for strings)\n"
             "\nArguments: <configuration setting name>=<value> <configuration setting name2>=<value2>...\n"
             "\nResult:\n"
             "nothing or error string\n"
@@ -178,14 +178,14 @@ UniValue settweak(const UniValue& params, bool fHelp)
 
 std::string TweakCmdLineHelp()
 {
-  std::string ret;
-  CTweakMap::iterator i;
-  for (i=tweaks.begin(); i != tweaks.end(); ++i)
+    std::string ret;
+    CTweakMap::iterator i;
+    for (i = tweaks.begin(); i != tweaks.end(); ++i)
     {
-      std::string optname("-");
-      optname += i->second->GetName();
-      optname += "=<val>";
-      ret += HelpMessageOpt(optname,i->second->GetHelp());
+        std::string optname("-");
+        optname += i->second->GetName();
+        optname += "=<val>";
+        ret += HelpMessageOpt(optname, i->second->GetHelp());
     }
-  return ret;
+    return ret;
 }
