@@ -391,6 +391,18 @@
     <ClCompile Include="src\chainparamsbase.cpp">
       <Filter>Source Files\env</Filter>
     </ClCompile>
+    <ClCompile Include="src\chainparams_1_mainnet.cpp">
+      <Filter>Source Files\env</Filter>
+    </ClCompile>
+    <ClCompile Include="src\chainparams_2_testnet.cpp">
+      <Filter>Source Files\env</Filter>
+    </ClCompile>
+    <ClCompile Include="src\chainparams_3_regtest.cpp">
+      <Filter>Source Files\env</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ChainParamsUtil.cpp">
+      <Filter>Source Files\env</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\addrdb.h">
@@ -806,6 +818,9 @@
       <Filter>Source Files\env</Filter>
     </ClInclude>
     <ClInclude Include="src\chainparamsseeds.h">
+      <Filter>Source Files\env</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ChainParamsUtil.h">
       <Filter>Source Files\env</Filter>
     </ClInclude>
   </ItemGroup>
