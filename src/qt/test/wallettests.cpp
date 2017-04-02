@@ -1,6 +1,7 @@
 #include "wallettests.h"
 
 #include "qt/bitcoinamountfield.h"
+#include "qt/callback.h"
 #include "qt/optionsmodel.h"
 #include "qt/platformstyle.h"
 #include "qt/qvalidatedlineedit.h"
@@ -22,9 +23,7 @@ namespace
 //! Press "Yes" button in modal send confirmation dialog.
 void ConfirmSend()
 {
-    QTimer* timer = new QTimer;
-    timer->setSingleShot(true);
-    QObject::connect(timer, &QTimer::timeout, []() {
+    QTimer::singleShot(0, makeCallback([](Callback* callback) {
         for (QWidget* widget : QApplication::topLevelWidgets()) {
             if (widget->inherits("SendConfirmationDialog")) {
                 SendConfirmationDialog* dialog = qobject_cast<SendConfirmationDialog*>(widget);
@@ -33,8 +32,8 @@ void ConfirmSend()
                 button->click();
             }
         }
-    });
-    timer->start(0);
+        delete callback;
+    }), SLOT(call()));
 }
 
 //! Send coins to address and return txid.
