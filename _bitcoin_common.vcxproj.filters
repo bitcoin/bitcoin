@@ -34,15 +34,12 @@
     <Filter Include="Source Files\script">
       <UniqueIdentifier>{f2ba9646-f13a-4fef-a436-2dea8b72f42e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\env">
+      <UniqueIdentifier>{7116b201-9887-41fb-850a-6b90e927c283}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\chainparams.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\init.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\chainparamsbase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\noui.cpp">
@@ -388,6 +385,24 @@
     <ClCompile Include="src\wallet\WalletAccount.cpp">
       <Filter>Source Files\wallet</Filter>
     </ClCompile>
+    <ClCompile Include="src\chainparams.cpp">
+      <Filter>Source Files\env</Filter>
+    </ClCompile>
+    <ClCompile Include="src\chainparamsbase.cpp">
+      <Filter>Source Files\env</Filter>
+    </ClCompile>
+    <ClCompile Include="src\chainparams_1_mainnet.cpp">
+      <Filter>Source Files\env</Filter>
+    </ClCompile>
+    <ClCompile Include="src\chainparams_2_testnet.cpp">
+      <Filter>Source Files\env</Filter>
+    </ClCompile>
+    <ClCompile Include="src\chainparams_3_regtest.cpp">
+      <Filter>Source Files\env</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ChainParamsUtil.cpp">
+      <Filter>Source Files\env</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\addrdb.h">
@@ -418,15 +433,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\chain.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\chainparams.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\chainparamsbase.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\chainparamsseeds.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\checkpoints.h">
@@ -804,6 +810,18 @@
     </ClInclude>
     <ClInclude Include="src\wallet\WalletAccount.h">
       <Filter>Source Files\wallet</Filter>
+    </ClInclude>
+    <ClInclude Include="src\chainparams.h">
+      <Filter>Source Files\env</Filter>
+    </ClInclude>
+    <ClInclude Include="src\chainparamsbase.h">
+      <Filter>Source Files\env</Filter>
+    </ClInclude>
+    <ClInclude Include="src\chainparamsseeds.h">
+      <Filter>Source Files\env</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ChainParamsUtil.h">
+      <Filter>Source Files\env</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

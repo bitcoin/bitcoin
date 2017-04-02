@@ -176,6 +176,10 @@
     <ClCompile Include="src\chain.cpp" />
     <ClCompile Include="src\chainparams.cpp" />
     <ClCompile Include="src\chainparamsbase.cpp" />
+    <ClCompile Include="src\ChainParamsUtil.cpp" />
+    <ClCompile Include="src\chainparams_1_mainnet.cpp" />
+    <ClCompile Include="src\chainparams_3_regtest.cpp" />
+    <ClCompile Include="src\chainparams_2_testnet.cpp" />
     <ClCompile Include="src\checkpoints.cpp" />
     <ClCompile Include="src\clientversion.cpp" />
     <ClCompile Include="src\coins.cpp" />
@@ -302,6 +306,7 @@
     <ClInclude Include="src\chainparams.h" />
     <ClInclude Include="src\chainparamsbase.h" />
     <ClInclude Include="src\chainparamsseeds.h" />
+    <ClInclude Include="src\ChainParamsUtil.h" />
     <ClInclude Include="src\checkpoints.h" />
     <ClInclude Include="src\checkqueue.h" />
     <ClInclude Include="src\clientversion.h" />

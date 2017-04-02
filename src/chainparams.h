@@ -13,6 +13,8 @@
 
 #include <vector>
 
+enum NetworkType;
+
 struct CDNSSeedData {
     std::string name, host;
     bool supportsServiceBitsFiltering;
@@ -83,7 +85,7 @@ public:
     const CCheckpointData& Checkpoints() const { return checkpointData; }
     const ChainTxData& TxData() const { return chainTxData; }
 protected:
-    CChainParams() {}
+    CChainParams(NetworkType networkType);
 
     Consensus::Params consensus;
     CMessageHeader::MessageStartChars pchMessageStart;
