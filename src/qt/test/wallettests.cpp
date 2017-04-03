@@ -68,6 +68,18 @@ QModelIndex FindTx(const QAbstractItemModel& model, const uint256& txid)
 }
 
 //! Simple qt wallet tests.
+//
+// Test widgets can be debugged interactively calling show() on them and
+// manually running the event loop, e.g.:
+//
+//     sendCoinsDialog.show();
+//     QEventLoop().exec();
+//
+// This also requires overriding the default minimal Qt platform:
+//
+//     src/qt/test/test_bitcoin-qt -platform xcb      # Linux
+//     src/qt/test/test_bitcoin-qt -platform windows  # Windows
+//     src/qt/test/test_bitcoin-qt -platform cocoa    # macOS
 void WalletTests::walletTests()
 {
     // Set up wallet and chain with 101 blocks (1 mature block for spending).
