@@ -21,16 +21,11 @@ class BIP68Test(BitcoinTestFramework):
         super().__init__()
         self.num_nodes = 2
         self.setup_clean_chain = False
-
-    def setup_network(self):
-        self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-acceptnonstdtxn=0"]))
-        self.is_network_split = False
-        self.relayfee = self.nodes[0].getnetworkinfo()["relayfee"]
-        connect_nodes(self.nodes[0], 1)
+        self.extra_args = [[], ["-acceptnonstdtxn=0"]]
 
     def run_test(self):
+        self.relayfee = self.nodes[0].getnetworkinfo()["relayfee"]
+
         # Generate some coins
         self.nodes[0].generate(110)
 
