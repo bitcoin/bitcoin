@@ -240,6 +240,16 @@ extern const char *GETBLOCKTXN;
  * @since protocol version 70014 as described by BIP 152
  */
 extern const char *BLOCKTXN;
+/**
+ * Contains a CBlockLocator.
+ * @since BIP 180
+ */
+extern const char *GETFRAUD;
+/**
+ * Contains a block hash, varint, and optionally a fraud proof.
+ * @since BIP 180
+ */
+extern const char *FRAUD;
 };
 
 /* Get a vector of all valid message types (see above) */

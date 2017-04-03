@@ -116,6 +116,10 @@ public:
         return block;
     }
 
+    // Compute at which vout of the block's coinbase transaction the witness
+    // commitment occurs, or -1 if not found.
+    int GetWitnessCommitmentIndex() const;
+
     std::string ToString() const;
 };
 
