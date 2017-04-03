@@ -5964,7 +5964,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
         vRecv >> inv >> filterMemPool;
 
         // Consistency checking for get_xthin
-        if (!((inv.type == MSG_XTHINBLOCK) || (inv.type == MSG_THINBLOCK)) || inv.hash.IsNull() || !filterMemPool.IsWithinSizeConstraints())
+        if (!((inv.type == MSG_XTHINBLOCK) || (inv.type == MSG_THINBLOCK)) || inv.hash.IsNull())
         {
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 100);
