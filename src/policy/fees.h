@@ -82,6 +82,7 @@ struct EstimationResult
     EstimatorBucket pass;
     EstimatorBucket fail;
     double decay;
+    unsigned int scale;
 };
 
 /**
@@ -93,11 +94,14 @@ class CBlockPolicyEstimator
 {
 private:
     /** Track confirm delays up to 12 blocks medium decay */
-    static constexpr unsigned int SHORT_BLOCK_CONFIRMS = 12;
+    static constexpr unsigned int SHORT_BLOCK_PERIODS = 12;
+    static constexpr unsigned int SHORT_SCALE = 1;
     /** Track confirm delays up to 48 blocks medium decay */
-    static constexpr unsigned int MED_BLOCK_CONFIRMS = 48;
+    static constexpr unsigned int MED_BLOCK_PERIODS = 24;
+    static constexpr unsigned int MED_SCALE = 2;
     /** Track confirm delays up to 1008 blocks for longer decay */
-    static constexpr unsigned int LONG_BLOCK_CONFIRMS = 1008;
+    static constexpr unsigned int LONG_BLOCK_PERIODS = 42;
+    static constexpr unsigned int LONG_SCALE = 24;
     /** Historical estimates that are older than this aren't valid */
     static const unsigned int OLDEST_ESTIMATE_HISTORY = 6 * 1008;
 
