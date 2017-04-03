@@ -188,7 +188,9 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         return false;
     }
     voteInstance = vote_instance_t(vote.GetOutcome(), nVoteTimeUpdate, vote.GetTimestamp());
-    fileVotes.AddVote(vote);
+    if(!fileVotes.HasVote(vote.GetHash())) {
+        fileVotes.AddVote(vote);
+    }
     fDirtyCache = true;
     return true;
 }
