@@ -141,26 +141,24 @@ std::atomic<bool> fReopenDebugLog(false);
 CTranslationInterface translationInterface;
 
 /** Init OpenSSL library multithreading support */
-static CCriticalSection** ppmutexOpenSSL;
+static std::unique_ptr<CCriticalSection[]> ppmutexOpenSSL;
 void locking_callback(int mode, int i, const char* file, int line) NO_THREAD_SAFETY_ANALYSIS
 {
     if (mode & CRYPTO_LOCK) {
-        ENTER_CRITICAL_SECTION(*ppmutexOpenSSL[i]);
+        ENTER_CRITICAL_SECTION(ppmutexOpenSSL[i]);
     } else {
-        LEAVE_CRITICAL_SECTION(*ppmutexOpenSSL[i]);
+        LEAVE_CRITICAL_SECTION(ppmutexOpenSSL[i]);
     }
 }
 
-// Init
+// Singleton for wrapping OpenSSL setup/teardown.
 class CInit
 {
 public:
     CInit()
     {
         // Init OpenSSL library multithreading support
-        ppmutexOpenSSL = (CCriticalSection**)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(CCriticalSection*));
-        for (int i = 0; i < CRYPTO_num_locks(); i++)
-            ppmutexOpenSSL[i] = new CCriticalSection();
+        ppmutexOpenSSL.reset(new CCriticalSection[CRYPTO_num_locks()]);
         CRYPTO_set_locking_callback(locking_callback);
 
         // OpenSSL can optionally load a config file which lists optional loadable modules and engines.
@@ -184,9 +182,8 @@ public:
         RAND_cleanup();
         // Shutdown OpenSSL library multithreading support
         CRYPTO_set_locking_callback(NULL);
-        for (int i = 0; i < CRYPTO_num_locks(); i++)
-            delete ppmutexOpenSSL[i];
-        OPENSSL_free(ppmutexOpenSSL);
+        // Clear the set of locks now to maintain symmetry with the constructor.
+        ppmutexOpenSSL.reset();
     }
 }
 instance_of_cinit;
