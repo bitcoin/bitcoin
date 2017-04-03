@@ -99,12 +99,9 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             BOOST_CHECK(origFeeEst[i-1] <= origFeeEst[i-2]);
         }
         int mult = 11-i;
-        if (i > 1) {
+        if (i % 2 == 0) { //At scale 2, test logic is only correct for even targets
             BOOST_CHECK(origFeeEst[i-1] < mult*baseRate.GetFeePerK() + deltaFee);
             BOOST_CHECK(origFeeEst[i-1] > mult*baseRate.GetFeePerK() - deltaFee);
-        }
-        else {
-            BOOST_CHECK(origFeeEst[i-1] == CFeeRate(0).GetFeePerK());
         }
     }
     // Fill out rest of the original estimates
@@ -177,7 +174,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
         block.clear();
     }
     BOOST_CHECK(feeEst.estimateFee(1) == CFeeRate(0));
-    for (int i = 2; i < 10; i++) {
+    for (int i = 2; i < 9; i++) { // At 9, the original estimate was already at the bottom (b/c scale = 2)
         BOOST_CHECK(feeEst.estimateFee(i).GetFeePerK() < origFeeEst[i-1] - deltaFee);
     }
 
