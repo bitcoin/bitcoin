@@ -20,12 +20,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         super().__init__()
         self.num_nodes = 2
         self.setup_clean_chain = False
-
-    def setup_network(self):
-        self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-minrelaytxfee=0.00001"]))
-        self.nodes.append(start_node(1, self.options.tmpdir))
-        connect_nodes(self.nodes[0], 1)
+        self.extra_args = [["-minrelaytxfee=0.00001"], []]
 
     def run_test(self):
         self.nodes[1].generate(100)

@@ -98,16 +98,8 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         # Node0 = pre-segwit, node1 = segwit-aware
         self.num_nodes = 2
+        self.extra_args = [["-bip9params=segwit:0:0"], ["-txindex"]]
         self.utxos = []
-
-    def setup_network(self):
-        self.nodes = []
-
-        # Start up node0 to be a version 1, pre-segwit node.
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, 
-                [["-bip9params=segwit:0:0"], 
-                 ["-txindex"]])
-        connect_nodes(self.nodes[0], 1)
 
     def build_block_on_tip(self, node, segwit=False):
         height = node.getblockcount()

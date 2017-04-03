@@ -16,14 +16,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         super().__init__()
         self.num_nodes = 2
         self.setup_clean_chain = False
-
-    def setup_network(self):
-        self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-maxorphantx=1000"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-maxorphantx=1000", "-limitancestorcount=5"]))
-        connect_nodes(self.nodes[0], 1)
-        self.is_network_split = False
-        self.sync_all()
+        self.extra_args = [["-maxorphantx=1000"], ["-maxorphantx=1000", "-limitancestorcount=5"]]
 
     # Build a transaction that spends parent_txid:vout
     # Return amount sent

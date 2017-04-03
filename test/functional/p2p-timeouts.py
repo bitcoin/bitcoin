@@ -38,12 +38,6 @@ class TimeoutsTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
-    def setup_network(self):
-        self.nodes = []
-
-        # Start up node0 to be a version 1, pre-segwit node.
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
-
     def run_test(self):
         # Setup the p2p connections and start up the network thread.
         self.no_verack_node = TestNode() # never send verack
