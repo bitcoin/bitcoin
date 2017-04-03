@@ -895,6 +895,7 @@ UniValue estimaterawfee(const JSONRPCRequest& request)
             "{\n"
             "  \"feerate\" : x.x,        (numeric) estimate fee-per-kilobyte (in BTC)\n"
             "  \"decay\" : x.x,          (numeric) exponential decay (per block) for historical moving average of confirmation data\n"
+            "  \"scale\" : x,            (numeric) The resolution of confirmation targets at this time horizon\n"
             "  \"pass.\"                 information about the lowest range of feerates to succeed in meeting the threshold\n"
             "  \"fail.\"                 information about the highest range of feerates to fail to meet the threshold\n"
             "  \"startrange\" : x.x,     (numeric) start of feerate range\n"
@@ -932,6 +933,7 @@ UniValue estimaterawfee(const JSONRPCRequest& request)
 
     result.push_back(Pair("feerate", feeRate == CFeeRate(0) ? -1.0 : ValueFromAmount(feeRate.GetFeePerK())));
     result.push_back(Pair("decay", buckets.decay));
+    result.push_back(Pair("scale", (int)buckets.scale));
     result.push_back(Pair("pass.startrange", round(buckets.pass.start)));
     result.push_back(Pair("pass.endrange", round(buckets.pass.end)));
     result.push_back(Pair("pass.withintarget", round(buckets.pass.withinTarget * 100.0) / 100.0));
