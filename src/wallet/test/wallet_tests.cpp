@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 
+#include "chainparams.h"
 #include "rpc/server.h"
 #include "test/test_bitcoin.h"
 #include "validation.h"
@@ -361,6 +362,7 @@ BOOST_AUTO_TEST_CASE(ApproximateBestSubset)
 
 BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
 {
+    const CChainParams& chainParams = Params();
     LOCK(cs_main);
 
     // Cap last block file size, and mine new block in a new block file.
@@ -375,7 +377,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         CWallet wallet;
         LOCK(wallet.cs_wallet);
         wallet.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
-        BOOST_CHECK_EQUAL(oldTip, wallet.ScanForWalletTransactions(oldTip));
+        BOOST_CHECK_EQUAL(oldTip, wallet.ScanForWalletTransactions(chainParams.GetConsensus(), chainParams.TxData(), oldTip));
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 100 * COIN);
     }
 
@@ -389,7 +391,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         CWallet wallet;
         LOCK(wallet.cs_wallet);
         wallet.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
-        BOOST_CHECK_EQUAL(newTip, wallet.ScanForWalletTransactions(oldTip));
+        BOOST_CHECK_EQUAL(newTip, wallet.ScanForWalletTransactions(chainParams.GetConsensus(), chainParams.TxData(), oldTip));
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 50 * COIN);
     }
 

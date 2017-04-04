@@ -149,7 +149,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
         pwallet->UpdateTimeFirstKey(1);
 
         if (fRescan) {
-            pwallet->ScanForWalletTransactions(chainActive.Genesis(), true);
+            pwallet->ScanForWalletTransactions(Params().GetConsensus(), Params().TxData(), chainActive.Genesis(), true);
         }
     }
 
@@ -279,7 +279,7 @@ UniValue importaddress(const JSONRPCRequest& request)
 
     if (fRescan)
     {
-        pwallet->ScanForWalletTransactions(chainActive.Genesis(), true);
+        pwallet->ScanForWalletTransactions(Params().GetConsensus(), Params().TxData(), chainActive.Genesis(), true);
         pwallet->ReacceptWalletTransactions();
     }
 
@@ -437,7 +437,7 @@ UniValue importpubkey(const JSONRPCRequest& request)
 
     if (fRescan)
     {
-        pwallet->ScanForWalletTransactions(chainActive.Genesis(), true);
+        pwallet->ScanForWalletTransactions(Params().GetConsensus(), Params().TxData(), chainActive.Genesis(), true);
         pwallet->ReacceptWalletTransactions();
     }
 
@@ -544,7 +544,7 @@ UniValue importwallet(const JSONRPCRequest& request)
     pwallet->UpdateTimeFirstKey(nTimeBegin);
 
     LogPrintf("Rescanning last %i blocks\n", chainActive.Height() - pindex->nHeight + 1);
-    pwallet->ScanForWalletTransactions(pindex);
+    pwallet->ScanForWalletTransactions(Params().GetConsensus(), Params().TxData(), pindex);
     pwallet->MarkDirty();
 
     if (!fGood)
@@ -1123,7 +1123,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
         CBlockIndex* pindex = nLowestTimestamp > minimumTimestamp ? chainActive.FindEarliestAtLeast(std::max<int64_t>(nLowestTimestamp - TIMESTAMP_WINDOW, 0)) : chainActive.Genesis();
         CBlockIndex* scannedRange = nullptr;
         if (pindex) {
-            scannedRange = pwallet->ScanForWalletTransactions(pindex, true);
+            scannedRange = pwallet->ScanForWalletTransactions(Params().GetConsensus(), Params().TxData(), pindex, true);
             pwallet->ReacceptWalletTransactions();
         }
 

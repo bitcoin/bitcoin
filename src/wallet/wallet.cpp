@@ -1545,11 +1545,10 @@ void CWalletTx::GetAccountAmounts(const std::string& strAccount, CAmount& nRecei
  * successfully scanned.
  *
  */
-CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
+CBlockIndex* CWallet::ScanForWalletTransactions(const Consensus::Params& consensusParams, const ChainTxData& chainTxData, CBlockIndex* pindexStart, bool fUpdate)
 {
     CBlockIndex* ret = nullptr;
     int64_t nNow = GetTime();
-    const CChainParams& chainParams = Params();
 
     CBlockIndex* pindex = pindexStart;
     {
@@ -1563,15 +1562,15 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool f
             pindex = chainActive.Next(pindex);
 
         ShowProgress(_("Rescanning..."), 0); // show rescan progress in GUI as dialog or on splashscreen, if -rescan on startup
-        double dProgressStart = GuessVerificationProgress(chainParams.TxData(), pindex);
-        double dProgressTip = GuessVerificationProgress(chainParams.TxData(), chainActive.Tip());
+        double dProgressStart = GuessVerificationProgress(chainTxData, pindex);
+        double dProgressTip = GuessVerificationProgress(chainTxData, chainActive.Tip());
         while (pindex && !fAbortRescan)
         {
             if (pindex->nHeight % 100 == 0 && dProgressTip - dProgressStart > 0.0)
-                ShowProgress(_("Rescanning..."), std::max(1, std::min(99, (int)((GuessVerificationProgress(chainParams.TxData(), pindex) - dProgressStart) / (dProgressTip - dProgressStart) * 100))));
+                ShowProgress(_("Rescanning..."), std::max(1, std::min(99, (int)((GuessVerificationProgress(chainTxData, pindex) - dProgressStart) / (dProgressTip - dProgressStart) * 100))));
 
             CBlock block;
-            if (ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
+            if (ReadBlockFromDisk(block, pindex, consensusParams)) {
                 for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
                     AddToWalletIfInvolvingMe(block.vtx[posInBlock], pindex, posInBlock, fUpdate);
                 }
@@ -1584,11 +1583,11 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool f
             pindex = chainActive.Next(pindex);
             if (GetTime() >= nNow + 60) {
                 nNow = GetTime();
-                LogPrintf("Still rescanning. At block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainParams.TxData(), pindex));
+                LogPrintf("Still rescanning. At block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainTxData, pindex));
             }
         }
         if (pindex && fAbortRescan) {
-            LogPrintf("Rescan aborted at block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainParams.TxData(), pindex));
+            LogPrintf("Rescan aborted at block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainTxData, pindex));
         }
         ShowProgress(_("Rescanning..."), 100); // hide progress dialog in GUI
 
@@ -3696,7 +3695,7 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
     return strUsage;
 }
 
-CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
+CWallet* CWallet::CreateWalletFromFile(const Consensus::Params& consensusParams, const ChainTxData& chainTxData, const std::string walletFile)
 {
     // needed to restore wallet transaction meta data after -zapwallettxes
     std::vector<CWalletTx> vWtx;
@@ -3835,7 +3834,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
         uiInterface.InitMessage(_("Rescanning..."));
         LogPrintf("Rescanning last %i blocks (from block %i)...\n", chainActive.Height() - pindexRescan->nHeight, pindexRescan->nHeight);
         nStart = GetTimeMillis();
-        walletInstance->ScanForWalletTransactions(pindexRescan, true);
+        walletInstance->ScanForWalletTransactions(consensusParams, chainTxData, pindexRescan, true);
         LogPrintf(" rescan      %15dms\n", GetTimeMillis() - nStart);
         walletInstance->SetBestChain(chainActive.GetLocator());
         CWalletDB::IncrementUpdateCounter();
@@ -3877,7 +3876,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
     return walletInstance;
 }
 
-bool CWallet::InitLoadWallet()
+bool CWallet::InitLoadWallet(const Consensus::Params& consensusParams, const ChainTxData& chainTxData)
 {
     if (GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         pwalletMain = NULL;
@@ -3893,7 +3892,7 @@ bool CWallet::InitLoadWallet()
         return InitError(_("Invalid characters in -wallet filename"));
     }
 
-    CWallet * const pwallet = CreateWalletFromFile(walletFile);
+    CWallet * const pwallet = CreateWalletFromFile(consensusParams, chainTxData, walletFile);
     if (!pwallet) {
         return false;
     }

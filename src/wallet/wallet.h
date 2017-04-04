@@ -66,8 +66,10 @@ static const bool DEFAULT_USE_HD_WALLET = true;
 
 extern const char * DEFAULT_WALLET_DAT;
 
+namespace Consensus { struct Params; };
 class CBlockIndex;
 class CCoinControl;
+class ChainTxData;
 class COutput;
 class CReserveKey;
 class CScript;
@@ -719,6 +721,9 @@ private:
     // the next block comes in
     uint256 hashPrevBestCoinbase;
 
+    /* Initializes the wallet, returns a new CWallet instance or a null pointer in case of an error */
+    static CWallet* CreateWalletFromFile(const Consensus::Params& consensusParams, const ChainTxData& chainTxData, const std::string walletFile);
+
 public:
     /*
      * Main wallet lock.
@@ -897,7 +902,7 @@ public:
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex, const std::vector<CTransactionRef>& vtxConflicted) override;
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) override;
     bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate);
-    CBlockIndex* ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
+    CBlockIndex* ScanForWalletTransactions(const Consensus::Params& consensusParams, const ChainTxData& chainTxData, CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
     void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) override;
     std::vector<uint256> ResendWalletTransactionsBefore(int64_t nTime, CConnman* connman);
@@ -1070,9 +1075,7 @@ public:
     /* Returns the wallets help message */
     static std::string GetWalletHelpString(bool showDebug);
 
-    /* Initializes the wallet, returns a new CWallet instance or a null pointer in case of an error */
-    static CWallet* CreateWalletFromFile(const std::string walletFile);
-    static bool InitLoadWallet();
+    static bool InitLoadWallet(const Consensus::Params& consensusParams, const ChainTxData& chainTxData);
 
     /**
      * Wallet post-init setup
