@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -29,26 +29,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -478,17 +478,13 @@
     <Import Project="packages\boost_zlib-vc140.1.63.0.0\build\native\boost_zlib-vc140.targets" Condition="Exists('packages\boost_zlib-vc140.1.63.0.0\build\native\boost_zlib-vc140.targets')" />
     <Import Project="packages\boost-vc140.1.63.0.0\build\native\boost-vc140.targets" Condition="Exists('packages\boost-vc140.1.63.0.0\build\native\boost-vc140.targets')" />
     <Import Project="packages\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.targets" Condition="Exists('packages\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.targets')" />
-    <Import Project="packages\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x64.targets" Condition="Exists('packages\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x64.targets')" />
-    <Import Project="packages\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x86.targets" Condition="Exists('packages\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x86.targets')" />
     <Import Project="packages\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.targets" Condition="Exists('packages\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.targets')" />
-    <Import Project="packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.targets" Condition="Exists('packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.targets')" />
-    <Import Project="packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.targets" Condition="Exists('packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.targets')" />
-    <Import Project="packages\secp256k1_vc140.0.1.0.15\build\native\secp256k1_vc140.targets" Condition="Exists('packages\secp256k1_vc140.0.1.0.15\build\native\secp256k1_vc140.targets')" />
     <Import Project="packages\libevent2-vc140.2.1.8\build\native\libevent2-vc140.targets" Condition="Exists('packages\libevent2-vc140.2.1.8\build\native\libevent2-vc140.targets')" />
     <Import Project="packages\leveldb-vc140.1.16.0.5\build\native\leveldb-vc140.targets" Condition="Exists('packages\leveldb-vc140.1.16.0.5\build\native\leveldb-vc140.targets')" />
-    <Import Project="packages\libzmq-nightly.redist.4.2.2.4\build\native\libzmq-nightly.redist.targets" Condition="Exists('packages\libzmq-nightly.redist.4.2.2.4\build\native\libzmq-nightly.redist.targets')" />
-    <Import Project="packages\libzmq-nightly.4.2.2.4\build\native\libzmq-nightly.targets" Condition="Exists('packages\libzmq-nightly.4.2.2.4\build\native\libzmq-nightly.targets')" />
     <Import Project="packages\miniupnpc-vc140.2.0.0.1\build\native\miniupnpc-vc140.targets" Condition="Exists('packages\miniupnpc-vc140.2.0.0.1\build\native\miniupnpc-vc140.targets')" />
+    <Import Project="packages\openssl-vc141.1.1.0\build\native\openssl-vc141.targets" Condition="Exists('packages\openssl-vc141.1.1.0\build\native\openssl-vc141.targets')" />
+    <Import Project="packages\secp256k1-vc141.0.1.0.15\build\native\secp256k1-vc141.targets" Condition="Exists('packages\secp256k1-vc141.0.1.0.15\build\native\secp256k1-vc141.targets')" />
+    <Import Project="packages\libzmq-vc141.4.2.2\build\native\libzmq-vc141.targets" Condition="Exists('packages\libzmq-vc141.4.2.2\build\native\libzmq-vc141.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -534,16 +530,12 @@
     <Error Condition="!Exists('packages\boost_zlib-vc140.1.63.0.0\build\native\boost_zlib-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_zlib-vc140.1.63.0.0\build\native\boost_zlib-vc140.targets'))" />
     <Error Condition="!Exists('packages\boost-vc140.1.63.0.0\build\native\boost-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost-vc140.1.63.0.0\build\native\boost-vc140.targets'))" />
     <Error Condition="!Exists('packages\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.targets'))" />
-    <Error Condition="!Exists('packages\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x64.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x64.targets'))" />
-    <Error Condition="!Exists('packages\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x86.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x86.targets'))" />
     <Error Condition="!Exists('packages\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.targets'))" />
-    <Error Condition="!Exists('packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.targets'))" />
-    <Error Condition="!Exists('packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.targets'))" />
-    <Error Condition="!Exists('packages\secp256k1_vc140.0.1.0.15\build\native\secp256k1_vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\secp256k1_vc140.0.1.0.15\build\native\secp256k1_vc140.targets'))" />
     <Error Condition="!Exists('packages\libevent2-vc140.2.1.8\build\native\libevent2-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\libevent2-vc140.2.1.8\build\native\libevent2-vc140.targets'))" />
     <Error Condition="!Exists('packages\leveldb-vc140.1.16.0.5\build\native\leveldb-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\leveldb-vc140.1.16.0.5\build\native\leveldb-vc140.targets'))" />
-    <Error Condition="!Exists('packages\libzmq-nightly.redist.4.2.2.4\build\native\libzmq-nightly.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\libzmq-nightly.redist.4.2.2.4\build\native\libzmq-nightly.redist.targets'))" />
-    <Error Condition="!Exists('packages\libzmq-nightly.4.2.2.4\build\native\libzmq-nightly.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\libzmq-nightly.4.2.2.4\build\native\libzmq-nightly.targets'))" />
     <Error Condition="!Exists('packages\miniupnpc-vc140.2.0.0.1\build\native\miniupnpc-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\miniupnpc-vc140.2.0.0.1\build\native\miniupnpc-vc140.targets'))" />
+    <Error Condition="!Exists('packages\openssl-vc141.1.1.0\build\native\openssl-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\openssl-vc141.1.1.0\build\native\openssl-vc141.targets'))" />
+    <Error Condition="!Exists('packages\secp256k1-vc141.0.1.0.15\build\native\secp256k1-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\secp256k1-vc141.0.1.0.15\build\native\secp256k1-vc141.targets'))" />
+    <Error Condition="!Exists('packages\libzmq-vc141.4.2.2\build\native\libzmq-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\libzmq-vc141.4.2.2\build\native\libzmq-vc141.targets'))" />
   </Target>
 </Project>
