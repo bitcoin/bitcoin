@@ -390,7 +390,7 @@ def make_change(from_node, amount_in, amount_out, fee):
         outputs[from_node.getnewaddress()] = change
     return outputs
 
-def random_transaction(nodes, amount, min_fee, fee_increment, fee_variants):
+def random_transaction(nodes, amount, min_fee, fee_increment, fee_variants, confirmations_required=1):
     """
     Create a random transaction.
     Returns (txid, hex-encoded-transaction-data, fee)
@@ -399,7 +399,7 @@ def random_transaction(nodes, amount, min_fee, fee_increment, fee_variants):
     to_node = random.choice(nodes)
     fee = min_fee + fee_increment * random.randint(0, fee_variants)
 
-    (total_in, inputs) = gather_inputs(from_node, amount + fee)
+    (total_in, inputs) = gather_inputs(from_node, amount + fee, confirmations_required)
     outputs = make_change(from_node, total_in, amount, fee)
     outputs[to_node.getnewaddress()] = float(amount)
 
