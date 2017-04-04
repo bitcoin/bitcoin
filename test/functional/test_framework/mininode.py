@@ -1789,17 +1789,20 @@ class NetworkThread(Thread):
         self.test_running = True
 
     def run(self):
-        while mininode_socket_map or self.test_running:
-            # We check for whether to disconnect outside of the asyncore
-            # loop to workaround the behavior of asyncore when using
-            # select
-            disconnected = []
-            for fd, obj in mininode_socket_map.items():
-                if obj.disconnect:
-                    disconnected.append(obj)
-            [ obj.handle_close() for obj in disconnected ]
-            asyncore.loop(0.1, use_poll=True, map=mininode_socket_map, count=1)
-
+        while True:
+            with mininode_lock:
+                # We check for whether to disconnect outside of the asyncore
+                # loop to workaround the behavior of asyncore when using
+                # select
+                disconnected = []
+                for fd, obj in mininode_socket_map.items():
+                    if obj.disconnect:
+                        disconnected.append(obj)
+                [obj.handle_close() for obj in disconnected]
+                asyncore.loop(0.1, use_poll=True, map=mininode_socket_map, count=1)
+                if not self.test_running:
+                    break
+            time.sleep(0.1)
 
 # An exception we can raise if we detect a potential disconnect
 # (p2p or rpc) before the test is complete
