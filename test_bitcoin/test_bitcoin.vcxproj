@@ -295,6 +295,7 @@
     <Import Project="..\packages\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.targets" Condition="Exists('..\packages\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.targets')" />
     <Import Project="..\packages\miniupnpc-vc140.2.0.0.1\build\native\miniupnpc-vc140.targets" Condition="Exists('..\packages\miniupnpc-vc140.2.0.0.1\build\native\miniupnpc-vc140.targets')" />
     <Import Project="..\packages\openssl-vc141.1.1.0\build\native\openssl-vc141.targets" Condition="Exists('..\packages\openssl-vc141.1.1.0\build\native\openssl-vc141.targets')" />
+    <Import Project="..\packages\secp256k1-vc141.0.1.0.15\build\native\secp256k1-vc141.targets" Condition="Exists('..\packages\secp256k1-vc141.0.1.0.15\build\native\secp256k1-vc141.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -347,5 +348,6 @@
     <Error Condition="!Exists('..\packages\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.targets'))" />
     <Error Condition="!Exists('..\packages\miniupnpc-vc140.2.0.0.1\build\native\miniupnpc-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\miniupnpc-vc140.2.0.0.1\build\native\miniupnpc-vc140.targets'))" />
     <Error Condition="!Exists('..\packages\openssl-vc141.1.1.0\build\native\openssl-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\openssl-vc141.1.1.0\build\native\openssl-vc141.targets'))" />
+    <Error Condition="!Exists('..\packages\secp256k1-vc141.0.1.0.15\build\native\secp256k1-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\secp256k1-vc141.0.1.0.15\build\native\secp256k1-vc141.targets'))" />
   </Target>
 </Project>
