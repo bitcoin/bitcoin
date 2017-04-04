@@ -390,7 +390,7 @@ def make_change(from_node, amount_in, amount_out, fee):
         outputs[from_node.getnewaddress()] = change
     return outputs
 
-def random_transaction(nodes, amount, min_fee, fee_increment, fee_variants, confirmations_required=1):
+def random_transaction(nodes, amount, min_fee, fee_increment, fee_variants, confirmations_required=1, allow_segwit=False):
     """
     Create a random transaction.
     Returns (txid, hex-encoded-transaction-data, fee)
@@ -401,7 +401,10 @@ def random_transaction(nodes, amount, min_fee, fee_increment, fee_variants, conf
 
     (total_in, inputs) = gather_inputs(from_node, amount + fee, confirmations_required)
     outputs = make_change(from_node, total_in, amount, fee)
-    outputs[to_node.getnewaddress()] = float(amount)
+    if (allow_segwit and random.randint(0, 1)):
+        outputs[to_node.addwitnessaddress(to_node.getnewaddress())] = float(amount)
+    else:
+        outputs[to_node.getnewaddress()] = float(amount)
 
     rawtx = from_node.createrawtransaction(inputs, outputs)
     signresult = from_node.signrawtransaction(rawtx)
