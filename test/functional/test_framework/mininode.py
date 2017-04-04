@@ -1469,6 +1469,7 @@ class msg_witness_blocktxn(msg_blocktxn):
 # Reimplement the on_* functions to provide handling for events
 class NodeConnCB(object):
     def __init__(self):
+        self.version_received = False
         self.verack_received = False
         # deliver_sleep_time is helpful for debugging race conditions in p2p
         # tests; it causes message delivery to sleep for the specified time
@@ -1541,6 +1542,7 @@ class NodeConnCB(object):
         self.verack_received = True
 
     def on_version(self, conn, message):
+        self.version_received = True
         if message.nVersion >= 209:
             conn.send_message(msg_verack())
         conn.ver_send = min(MY_VERSION, message.nVersion)
@@ -1554,10 +1556,15 @@ class NodeConnCB(object):
     def add_connection(self, conn, wait_for_verack=True):
         """Add a P2P connection to the node, wait for it to open and (optionally) wait for a verack."""
         self.connection = conn
-        while conn.state != "connected":
+        while conn.state != "connected" and not self.version_received:
             time.sleep(0.1)
         if wait_for_verack:
             self.wait_for_verack()
+            # at this point we've already received a version
+            # message. Sync-ping to make sure that our verack
+            # has been processed and that the node considers
+            # us fully connected.
+            self.sync_with_ping()
 
     # Wrapper for the NodeConn's send_message function
     def send_message(self, message):
