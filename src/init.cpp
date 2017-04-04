@@ -913,9 +913,10 @@ bool AppInitParameterInteraction()
 
         if (!(GetBoolArg("-nodebug", false) || find(categories.begin(), categories.end(), std::string("0")) != categories.end())) {
             for (const auto& cat : categories) {
-                uint32_t flag;
+                uint32_t flag = 0;
                 if (!GetLogCategory(&flag, &cat)) {
                     InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debug", cat));
+                    continue;
                 }
                 logCategories |= flag;
             }
@@ -926,9 +927,10 @@ bool AppInitParameterInteraction()
     if (mapMultiArgs.count("-debugexclude") > 0) {
         const std::vector<std::string>& excludedCategories = mapMultiArgs.at("-debugexclude");
         for (const auto& cat : excludedCategories) {
-            uint32_t flag;
+            uint32_t flag = 0;
             if (!GetLogCategory(&flag, &cat)) {
                 InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat));
+                continue;
             }
             logCategories &= ~flag;
         }
