@@ -56,14 +56,14 @@ bool IsTrafficShapingEnabled();
 bool MiningAndExcessiveBlockValidatorRule(const unsigned int newExcessiveBlockSize, const unsigned int newMiningBlockSize)
 {
     // The mined block size must be less then or equal too the excessive block size.
-    return ( newMiningBlockSize <= newExcessiveBlockSize );
+    return (newMiningBlockSize <= newExcessiveBlockSize);
 }
 
 std::string ExcessiveBlockValidator(const unsigned int &value, unsigned int *item, bool validate)
 {
     if (validate)
     {
-        if ( ! MiningAndExcessiveBlockValidatorRule(value, maxGeneratedBlock))
+        if (!MiningAndExcessiveBlockValidatorRule(value, maxGeneratedBlock))
         {
             std::ostringstream ret;
             ret << "Sorry, your maximum mined block (" << maxGeneratedBlock
@@ -83,7 +83,7 @@ std::string MiningBlockSizeValidator(const uint64_t &value, uint64_t *item, bool
 {
     if (validate)
     {
-        if ( ! MiningAndExcessiveBlockValidatorRule(excessiveBlockSize, value))
+        if (!MiningAndExcessiveBlockValidatorRule(excessiveBlockSize, value))
         {
             std::ostringstream ret;
             ret << "Sorry, your excessive block size (" << excessiveBlockSize
@@ -1247,7 +1247,7 @@ UniValue setexcessiveblock(const UniValue &params, bool fHelp)
     }
 
     std::string estr = ebTweak.Validate(ebs);
-    if (! estr.empty())
+    if (!estr.empty())
         throw runtime_error(estr);
     ebTweak.Set(ebs);
 
