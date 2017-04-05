@@ -31,7 +31,6 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "validationinterface.h"
-#include "alert.h"
 #include "version.h"
 #include "stat.h"
 #include "tweak.h"
@@ -71,9 +70,6 @@ CConditionVariable cvBlockChange;
 proxyType proxyInfo[NET_MAX];
 proxyType nameProxy;
 CCriticalSection cs_proxyInfos;
-
-map<uint256, CAlert> mapAlerts;
-CCriticalSection cs_mapAlerts;
 
 set<uint256> setPreVerifiedTxHash;
 set<uint256> setUnVerifiedOrphanTxHash;
@@ -180,6 +176,8 @@ CTweakRef<unsigned int> briTweak("net.blockRetryInterval","How long to wait in m
 
 CTweakRef<std::string> subverOverrideTweak("net.subversionOverride","If set, this field will override the normal subversion field.  This is useful if you need to hide your node.",&subverOverride,&SubverValidator);
 
+CTweak<CAmount> maxTxFee("wallet.maxTxFee","Maximum total fees to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions.",DEFAULT_TRANSACTION_MAXFEE);
+
 /** Number of blocks that can be requested at any given time from a single peer. */
 CTweak<unsigned int> maxBlocksInTransitPerPeer("net.maxBlocksInTransitPerPeer","Number of blocks that can be requested at any given time from a single peer. 0 means use algorithm.",0);
 /** Size of the "block download window": how far ahead of our current height do we fetch?
@@ -217,6 +215,7 @@ CStatHistory<uint64_t > recvAmt;
 CStatHistory<uint64_t > sendAmt; 
 CStatHistory<uint64_t> nTxValidationTime("txValidationTime", STAT_OP_MAX | STAT_INDIVIDUAL);
 CStatHistory<uint64_t> nBlockValidationTime("blockValidationTime", STAT_OP_MAX | STAT_INDIVIDUAL);
+CCriticalSection cs_blockvalidationtime;
 
 CThinBlockData thindata; // Singleton class
 

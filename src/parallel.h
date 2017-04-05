@@ -25,22 +25,23 @@ using namespace std;
 
 extern CCriticalSection cs_blockvalidationthread;
 
-// adds all the script check queues into the "allScriptCheckQueues" global variable and creates nScriptCheckThreads per check queue
-void AddAllScriptCheckQueuesAndThreads(int nScriptCheckThreads, boost::thread_group* threadGroup);
+// adds all the script check queues into the "allScriptCheckQueues" global variable and creates nScriptCheckThreads per
+// check queue
+void AddAllScriptCheckQueuesAndThreads(int nScriptCheckThreads, boost::thread_group *threadGroup);
 // Entry point for the script check queue threads.
-void AddScriptCheckThreads(int i, CCheckQueue<CScriptCheck>* pqueue);
+void AddScriptCheckThreads(int i, CCheckQueue<CScriptCheck> *pqueue);
 
 extern CCriticalSection cs_semPV;
 extern CSemaphore *semPV; // semaphore for parallel validation threads
 
 /**
  * Closure representing one script verification
- * Note that this stores references to the spending transaction 
+ * Note that this stores references to the spending transaction
  */
 class CScriptCheck
 {
 private:
-    ValidationResourceTracker* resourceTracker;
+    ValidationResourceTracker *resourceTracker;
     CScript scriptPubKey;
     const CTransaction *ptxTo;
     unsigned int nIn;
@@ -49,14 +50,25 @@ private:
     ScriptError error;
 
 public:
-    CScriptCheck(): resourceTracker(NULL), ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR) {}
-    CScriptCheck(ValidationResourceTracker* resourceTrackerIn, const CCoins& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn) :
-        resourceTracker(resourceTrackerIn), scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
-        ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR) { }
+    CScriptCheck()
+        : resourceTracker(NULL), ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR)
+    {
+    }
+    CScriptCheck(ValidationResourceTracker *resourceTrackerIn,
+        const CCoins &txFromIn,
+        const CTransaction &txToIn,
+        unsigned int nInIn,
+        unsigned int nFlagsIn,
+        bool cacheIn)
+        : resourceTracker(resourceTrackerIn), scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
+          ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR)
+    {
+    }
 
     bool operator()();
 
-    void swap(CScriptCheck &check) {
+    void swap(CScriptCheck &check)
+    {
         std::swap(resourceTracker, check.resourceTracker);
         scriptPubKey.swap(check.scriptPubKey);
         std::swap(ptxTo, check.ptxTo);
@@ -70,19 +82,18 @@ public:
 };
 
 /**
- * Hold pointers to all script check queues in one vector 
+ * Hold pointers to all script check queues in one vector
  */
 class CAllScriptCheckQueues
 {
 private:
-    std::vector< CCheckQueue<CScriptCheck>*> vScriptCheckQueues;
+    std::vector<CCheckQueue<CScriptCheck> *> vScriptCheckQueues;
 
     CCriticalSection cs;
 
 public:
     CAllScriptCheckQueues() {}
-
-    void Add(CCheckQueue<CScriptCheck>* pqueueIn)
+    void Add(CCheckQueue<CScriptCheck> *pqueueIn)
     {
         LOCK(cs);
         vScriptCheckQueues.push_back(pqueueIn);
@@ -94,23 +105,22 @@ public:
         return vScriptCheckQueues.size();
     }
 
-    CCheckQueue<CScriptCheck>* GetScriptCheckQueue();
+    CCheckQueue<CScriptCheck> *GetScriptCheckQueue();
 };
 extern CAllScriptCheckQueues allScriptCheckQueues; // Singleton class
 
 class CParallelValidation
 {
-
 private:
-
     // txn hashes that are in the previous block
     CCriticalSection cs_previousblock;
     vector<uint256> vPreviousBlock;
 
 
 public:
-    struct CHandleBlockMsgThreads {
-        CCheckQueue<CScriptCheck>* pScriptQueue;
+    struct CHandleBlockMsgThreads
+    {
+        CCheckQueue<CScriptCheck> *pScriptQueue;
         uint256 hash;
         uint256 hashPrevBlock;
         uint32_t nChainWork;
@@ -127,7 +137,6 @@ public:
 
 
 public:
-
     CParallelValidation();
 
 
@@ -135,20 +144,21 @@ public:
     void InitThread(const boost::thread::id this_id, const CNode *pfrom, const CBlock &block, const CInv &inv);
 
     /* Initialize a PV session */
-    bool Initialize(const boost::thread::id this_id, const CBlockIndex* pindex, const bool fParallel);
+    bool Initialize(const boost::thread::id this_id, const CBlockIndex *pindex, const bool fParallel);
 
     /* Cleanup PV threads after one has finished and won the validation race */
-    void Cleanup(const CBlock& block, CBlockIndex* pindex);
+    void Cleanup(const CBlock &block, CBlockIndex *pindex);
 
     /* Send quit to competing threads */
-    void QuitCompetingThreads(const uint256& prevBlockHash);
+    void QuitCompetingThreads(const uint256 &prevBlockHash);
 
     /* Is this block already running a validation thread? */
     bool IsAlreadyValidating(const NodeId id);
 
-    /* Terminate all currently running Block Validation threads, except the passed thread */    
+    /* Terminate all currently running Block Validation threads, except the passed thread */
     void StopAllValidationThreads(const boost::thread::id this_id = boost::thread::id());
-    /* Terminate all currently running Block Validation threads whose chainWork is <= the passed parameter, except the calling thread  */
+    /* Terminate all currently running Block Validation threads whose chainWork is <= the passed parameter, except the
+     * calling thread  */
     void StopAllValidationThreads(const uint32_t nChainWork);
     void WaitForAllValidationThreadsToStop();
 
@@ -162,7 +172,7 @@ public:
     bool QuitReceived(const boost::thread::id this_id, const bool fParallel);
 
     /* Used to determine if another thread has already updated the utxo and advance the chain tip */
-    bool ChainWorkHasChanged(const arith_uint256& nStartingChainWork);
+    bool ChainWorkHasChanged(const arith_uint256 &nStartingChainWork);
 
     /* Set the correct locks and locking order before returning from a PV session */
     void SetLocks(const bool fParallel);
@@ -176,9 +186,8 @@ public:
 
     /* Process a block message */
     void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, const CBlock &block, const CInv &inv);
-
 };
-extern CParallelValidation PV;  // Singleton class
+extern CParallelValidation PV; // Singleton class
 
 
 void HandleBlockMessageThread(CNode *pfrom, const std::string &strCommand, const CBlock &block, const CInv &inv);

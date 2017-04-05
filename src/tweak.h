@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2017 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#pragma once
+
 #ifndef TWEAK_H
 #define TWEAK_H
 
@@ -14,7 +14,7 @@
 class CTweakBase;
 
 typedef std::string CTweakKey;
-typedef std::map<CTweakKey, CTweakBase*> CTweakMap;
+typedef std::map<CTweakKey, CTweakBase *> CTweakMap;
 extern CTweakMap tweaks;
 
 // Create a help string for all the ctweaks entries, as they would be used as command line options
@@ -24,29 +24,32 @@ class CTweakBase
 {
 public:
     CTweakBase(){};
-    virtual std::string GetName() const = 0;                                     // Returns the name of this statistic
-    virtual std::string GetHelp() const = 0;                                     // Returns the help for this statistic
-    virtual UniValue Get() const = 0;                                            // Returns the current value of this statistic
-    virtual UniValue Set(const UniValue& val) = 0;                               // Returns NullUnivalue or an error string
-    virtual std::string Validate(const UniValue& val) { return std::string(); }; // Returns NullUnivalue or an error string
+    virtual std::string GetName() const = 0; // Returns the name of this statistic
+    virtual std::string GetHelp() const = 0; // Returns the help for this statistic
+    virtual UniValue Get() const = 0; // Returns the current value of this statistic
+    virtual UniValue Set(const UniValue &val) = 0; // Returns NullUnivalue or an error string
+    virtual std::string Validate(const UniValue &val)
+    {
+        return std::string();
+    }; // Returns NullUnivalue or an error string
 };
 
 
-inline void fill(const UniValue& v, double& output)
+inline void fill(const UniValue &v, double &output)
 {
     if (v.isStr())
         output = boost::lexical_cast<double>(v.get_str());
     else
         output = v.get_real();
 }
-inline void fill(const UniValue& v, float& output)
+inline void fill(const UniValue &v, float &output)
 {
     if (v.isStr())
         output = boost::lexical_cast<float>(v.get_str());
     else
         output = v.get_real();
 }
-inline void fill(const UniValue& v, int& output)
+inline void fill(const UniValue &v, int &output)
 {
     if (v.isStr())
         output = boost::lexical_cast<int>(v.get_str());
@@ -54,7 +57,7 @@ inline void fill(const UniValue& v, int& output)
         output = v.get_int();
 }
 
-inline void fill(const UniValue& v, unsigned int& output)
+inline void fill(const UniValue &v, unsigned int &output)
 {
     if (v.isStr())
         output = boost::lexical_cast<unsigned int>(v.get_str());
@@ -62,7 +65,7 @@ inline void fill(const UniValue& v, unsigned int& output)
         output = v.get_int();
 }
 
-inline void fill(const UniValue& v, uint64_t& output)
+inline void fill(const UniValue &v, uint64_t &output)
 {
     if (v.isStr())
         output = boost::lexical_cast<uint64_t>(v.get_str());
@@ -70,7 +73,7 @@ inline void fill(const UniValue& v, uint64_t& output)
         output = v.get_int64();
 }
 
-inline void fill(const UniValue& v, int64_t& output)
+inline void fill(const UniValue &v, int64_t &output)
 {
     if (v.isStr())
         output = boost::lexical_cast<int64_t>(v.get_str());
@@ -78,12 +81,8 @@ inline void fill(const UniValue& v, int64_t& output)
         output = v.get_int64();
 }
 
-inline void fill(const UniValue& v, std::string& output)
-{
-    output = v.get_str();
-}
-
-inline void fill(const UniValue& v, bool& output)
+inline void fill(const UniValue &v, std::string &output) { output = v.get_str(); }
+inline void fill(const UniValue &v, bool &output)
 {
     if (v.isStr())
     {
@@ -95,8 +94,8 @@ inline void fill(const UniValue& v, bool& output)
 }
 
 // Checks if two given strings match. The first string may contain wildcard characters
-bool match(const char* first, const char* second);
-  
+bool match(const char *first, const char *second);
+
 /** A configuration parameter that is automatically hooked up to
  * bitcoin.conf, bitcoin-cli, and is available as a command line argument
  */
@@ -111,11 +110,11 @@ public:
     // If "validate" is false, this is a notification that this item has been set
     // (value parameter contains the old value).  You can return a string if you
     // want to give some kind of ACK message to the user.
-    typedef std::string (*EventFn)(const DataType& value, DataType* item, bool validate);
+    typedef std::string (*EventFn)(const DataType &value, DataType *item, bool validate);
 
     std::string name;
     std::string help;
-    DataType* value;
+    DataType *value;
     EventFn eventCb;
 
     ~CTweakRef()
@@ -124,31 +123,22 @@ public:
             tweaks.erase(CTweakKey(name));
     }
 
-    CTweakRef(const char* namep, const char* helpp, DataType* val, EventFn callback = NULL) : name(namep), help(helpp), value(val), eventCb(callback)
+    CTweakRef(const char *namep, const char *helpp, DataType *val, EventFn callback = NULL)
+        : name(namep), help(helpp), value(val), eventCb(callback)
     {
         tweaks[CTweakKey(name)] = this;
     }
 
-    CTweakRef(const std::string& namep, const std::string& helpp, DataType* val, EventFn callback = NULL) : name(namep), help(helpp), value(val), eventCb(callback)
+    CTweakRef(const std::string &namep, const std::string &helpp, DataType *val, EventFn callback = NULL)
+        : name(namep), help(helpp), value(val), eventCb(callback)
     {
         tweaks[CTweakKey(name)] = this;
     }
 
-    virtual std::string GetName() const
-    {
-        return name;
-    }
-    virtual std::string GetHelp() const
-    {
-        return help;
-    }
-
-    virtual UniValue Get() const
-    {
-        return UniValue(*value);
-    }
-
-    virtual std::string Validate(const UniValue& val)
+    virtual std::string GetName() const { return name; }
+    virtual std::string GetHelp() const { return help; }
+    virtual UniValue Get() const { return UniValue(*value); }
+    virtual std::string Validate(const UniValue &val)
     {
         if (eventCb)
         {
@@ -161,7 +151,7 @@ public:
         return std::string();
     };
 
-    virtual UniValue Set(const UniValue& v) // Returns NullUnivalue or an error string
+    virtual UniValue Set(const UniValue &v) // Returns NullUnivalue or an error string
     {
         DataType prior = *value;
         fill(v, *value);
@@ -192,31 +182,21 @@ public:
             tweaks.erase(CTweakKey(name));
     }
 
-    CTweak(const char* namep, const char* helpp, DataType v = DataType()) : name(namep), help(helpp), value(v)
+    CTweak(const char *namep, const char *helpp, DataType v = DataType()) : name(namep), help(helpp), value(v)
     {
         tweaks[CTweakKey(name)] = this;
     }
 
-    CTweak(const std::string& namep, const std::string& helpp, DataType v = DataType()) : name(namep), help(helpp), value(v)
+    CTweak(const std::string &namep, const std::string &helpp, DataType v = DataType())
+        : name(namep), help(helpp), value(v)
     {
         tweaks[CTweakKey(name)] = this;
     }
 
-    virtual std::string GetName() const
-    {
-        return name;
-    }
-    virtual std::string GetHelp() const
-    {
-        return help;
-    }
-
-    virtual UniValue Get() const
-    {
-        return UniValue(value);
-    }
-
-    virtual UniValue Set(const UniValue& v)
+    virtual std::string GetName() const { return name; }
+    virtual std::string GetHelp() const { return help; }
+    virtual UniValue Get() const { return UniValue(value); }
+    virtual UniValue Set(const UniValue &v)
     {
         fill(v, value);
 
