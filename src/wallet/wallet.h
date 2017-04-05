@@ -68,6 +68,7 @@ extern const char * DEFAULT_WALLET_DAT;
 
 namespace Consensus { struct Params; };
 class CBlockIndex;
+class CChainParams;
 class CCoinControl;
 class ChainTxData;
 class COutput;
@@ -249,7 +250,7 @@ public:
     bool IsInMainChain() const { const CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet) > 0; }
     int GetBlocksToMaturity() const;
     /** Pass this transaction to the mempool. Fails if absolute fee exceeds absurd fee. */
-    bool AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& state);
+    bool AcceptToMemoryPool(const CChainParams& chainparams, const CAmount& nAbsurdFee, CValidationState& state);
     bool hashUnset() const { return (hashBlock.IsNull() || hashBlock == ABANDON_HASH); }
     bool isAbandoned() const { return (hashBlock == ABANDON_HASH); }
     void setAbandoned() { hashBlock = ABANDON_HASH; }
