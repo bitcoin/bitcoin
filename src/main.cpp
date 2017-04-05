@@ -5978,7 +5978,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
         {
             LOCK(cs_main);
             BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
-            if (mi == mapBlockIndex.end())  // This block does not even exist
+            if (mi == mapBlockIndex.end())
             {
                 Misbehaving(pfrom->GetId(), 100);
                 return error("Peer %s (%d) requested nonexistent block %s\n", pfrom->addrName.c_str(), pfrom->id, inv.hash.ToString());
