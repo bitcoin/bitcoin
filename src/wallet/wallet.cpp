@@ -1596,9 +1596,8 @@ CBlockIndex* CWallet::ScanForWalletTransactions(const Consensus::Params& consens
     return ret;
 }
 
-void CWallet::ReacceptWalletTransactions()
+void CWallet::ReacceptWalletTransactions(const CChainParams& chainparams)
 {
-    const CChainParams& chainparams = Params();
     // If transactions aren't being broadcasted, don't let them into local mempool either
     if (!fBroadcastTransactions)
         return;
@@ -3908,9 +3907,10 @@ std::atomic<bool> CWallet::fFlushScheduled(false);
 
 void CWallet::postInitProcess(CScheduler& scheduler)
 {
+    const CChainParams& chainparams = Params();
     // Add wallet transactions that aren't already in a block to mempool
     // Do this here as mempool requires genesis block to be loaded
-    ReacceptWalletTransactions();
+    ReacceptWalletTransactions(chainparams);
 
     // Run a thread to flush wallet periodically
     if (!CWallet::fFlushScheduled.exchange(true)) {

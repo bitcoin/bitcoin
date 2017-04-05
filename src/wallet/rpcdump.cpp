@@ -280,7 +280,7 @@ UniValue importaddress(const JSONRPCRequest& request)
     if (fRescan)
     {
         pwallet->ScanForWalletTransactions(Params().GetConsensus(), Params().TxData(), chainActive.Genesis(), true);
-        pwallet->ReacceptWalletTransactions();
+        pwallet->ReacceptWalletTransactions(Params());
     }
 
     return NullUniValue;
@@ -438,7 +438,7 @@ UniValue importpubkey(const JSONRPCRequest& request)
     if (fRescan)
     {
         pwallet->ScanForWalletTransactions(Params().GetConsensus(), Params().TxData(), chainActive.Genesis(), true);
-        pwallet->ReacceptWalletTransactions();
+        pwallet->ReacceptWalletTransactions(Params());
     }
 
     return NullUniValue;
@@ -1124,7 +1124,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
         CBlockIndex* scannedRange = nullptr;
         if (pindex) {
             scannedRange = pwallet->ScanForWalletTransactions(Params().GetConsensus(), Params().TxData(), pindex, true);
-            pwallet->ReacceptWalletTransactions();
+            pwallet->ReacceptWalletTransactions(Params());
         }
 
         if (!scannedRange || scannedRange->nHeight > pindex->nHeight) {

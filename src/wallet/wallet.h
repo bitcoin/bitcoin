@@ -904,7 +904,7 @@ public:
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) override;
     bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate);
     CBlockIndex* ScanForWalletTransactions(const Consensus::Params& consensusParams, const ChainTxData& chainTxData, CBlockIndex* pindexStart, bool fUpdate = false);
-    void ReacceptWalletTransactions();
+    void ReacceptWalletTransactions(const CChainParams& chainparams);
     void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) override;
     std::vector<uint256> ResendWalletTransactionsBefore(int64_t nTime, CConnman* connman);
     CAmount GetBalance() const;
