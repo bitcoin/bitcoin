@@ -22,6 +22,7 @@ License: GPL-3+
 
 Files: src/qt/res/icons/add.png
        src/qt/res/icons/address-book.png
+       src/qt/res/icons/chevron.png
        src/qt/res/icons/configure.png
        src/qt/res/icons/debugwindow.png
        src/qt/res/icons/edit.png
@@ -57,6 +58,8 @@ Comment: Inspired by Stephan Hutchings Typicons
 
 Files: src/qt/res/icons/tx_mined.png
        src/qt/res/src/mine.svg
+       src/qt/res/icons/fontbigger.png
+       src/qt/res/icons/fontsmaller.png
 Copyright: Jonas Schnelli
 License: Expat
 Comment:

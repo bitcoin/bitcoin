@@ -204,11 +204,6 @@ QString ClientModel::formatSubVersion() const
     return QString::fromStdString(strSubVersion);
 }
 
-QString ClientModel::formatBuildDate() const
-{
-    return QString::fromStdString(CLIENT_DATE);
-}
-
 bool ClientModel::isReleaseVersion() const
 {
     return CLIENT_VERSION_IS_RELEASE;
@@ -223,6 +218,11 @@ QString ClientModel::formatClientStartupTime() const
 {
     QString time_format = "MMM  d yyyy, HH:mm:ss";
     return QDateTime::fromTime_t(nClientStartupTime).toString(time_format);
+}
+
+QString ClientModel::dataDir() const
+{
+    return QString::fromStdString(GetDataDir().string());
 }
 
 void ClientModel::updateBanlist()

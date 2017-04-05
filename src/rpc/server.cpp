@@ -14,9 +14,6 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
-#ifdef ENABLE_WALLET
-#include "wallet/wallet.h"
-#endif
 #include "unlimited.h"
 
 #include <univalue.h>
@@ -39,7 +36,7 @@ static bool fRPCInWarmup = true;
 static std::string rpcWarmupStatus("RPC server started");
 extern CCriticalSection cs_rpcWarmup;
 /* Timer-creating functions */
-static std::vector<RPCTimerInterface*> timerInterfaces;
+static RPCTimerInterface* timerInterface = NULL;
 /* Map of name to timer.
  * @note Can be changed to std::unique_ptr when C++11 */
 static std::map<std::string, boost::shared_ptr<RPCTimerBase> > deadlineTimers;
@@ -440,6 +437,17 @@ UniValue CRPCTable::execute(const std::string &strMethod, const UniValue &params
     g_rpcSignals.PostCommand(*pcmd);
 }
 
+std::vector<std::string> CRPCTable::listCommands() const
+{
+    std::vector<std::string> commandList;
+    typedef std::map<std::string, const CRPCCommand*> commandMap;
+
+    std::transform( mapCommands.begin(), mapCommands.end(),
+                   std::back_inserter(commandList),
+                   boost::bind(&commandMap::value_type::first,_1) );
+    return commandList;
+}
+
 std::string HelpExampleCli(const std::string& methodname, const std::string& args)
 {
     return "> bitcoin-cli " + methodname + " " + args + "\n";
@@ -451,24 +459,28 @@ std::string HelpExampleRpc(const std::string& methodname, const std::string& arg
         "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
 }
 
-void RPCRegisterTimerInterface(RPCTimerInterface *iface)
+void RPCSetTimerInterfaceIfUnset(RPCTimerInterface *iface)
 {
-    timerInterfaces.push_back(iface);
+    if (!timerInterface)
+        timerInterface = iface;
 }
 
-void RPCUnregisterTimerInterface(RPCTimerInterface *iface)
+void RPCSetTimerInterface(RPCTimerInterface *iface)
 {
-    std::vector<RPCTimerInterface*>::iterator i = std::find(timerInterfaces.begin(), timerInterfaces.end(), iface);
-    DbgAssert(i != timerInterfaces.end(), return);  // already removed, so ignore the problem in production
-    timerInterfaces.erase(i);
+    timerInterface = iface;
+}
+
+void RPCUnsetTimerInterface(RPCTimerInterface *iface)
+{
+    if (timerInterface == iface)
+        timerInterface = NULL;
 }
 
 void RPCRunLater(const std::string& name, boost::function<void(void)> func, int64_t nSeconds)
 {
-    if (timerInterfaces.empty())
+    if (!timerInterface)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No timer handler registered for RPC");
     deadlineTimers.erase(name);
-    RPCTimerInterface* timerInterface = timerInterfaces.back();
     LogPrint("rpc", "queue run of timer %s in %i seconds (using %s)\n", name, nSeconds, timerInterface->Name());
     deadlineTimers.insert(std::make_pair(name, boost::shared_ptr<RPCTimerBase>(timerInterface->NewTimer(func, nSeconds*1000))));
 }
