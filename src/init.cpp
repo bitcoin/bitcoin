@@ -553,8 +553,6 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-debug=<category>", strprintf(_("Output debugging information (default: %u, supplying <category> is optional)"), 0) + ". " +
         _("If <category> is not supplied or if <category> = 1, output all debugging information.") + " " + _("<category> can be:") + " " + ListLogCategories() + ".");
     strUsage += HelpMessageOpt("-debugexclude=<category>", strprintf(_("Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.")));
-    if (showDebug)
-        strUsage += HelpMessageOpt("-nodebug", "Turn off debugging messages, same as -debug=0");
     strUsage += HelpMessageOpt("-help-debug", _("Show all debugging options (usage: --help -help-debug)"));
     strUsage += HelpMessageOpt("-logips", strprintf(_("Include IP addresses in debug output (default: %u)"), DEFAULT_LOGIPS));
     strUsage += HelpMessageOpt("-logtimestamps", strprintf(_("Prepend debug output with timestamp (default: %u)"), DEFAULT_LOGTIMESTAMPS));
@@ -1110,12 +1108,11 @@ bool AppInitParameterInteraction()
         InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
 
     // ********************************************************* Step 3: parameter-to-internal-flags
-
-    if (gArgs.IsArgSet("-debug")) {
+    if (gArgs.IsArgSet("-debug") > 0) {
         // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
         const std::vector<std::string> categories = gArgs.GetArgs("-debug");
 
-        if (!(gArgs.GetBoolArg("-nodebug", false) || find(categories.begin(), categories.end(), std::string("0")) != categories.end())) {
+        if (find(categories.begin(), categories.end(), std::string("0")) != categories.end())) {
             for (const auto& cat : categories) {
                 uint64_t flag;
                 if (!GetLogCategory(&flag, &cat)) {
