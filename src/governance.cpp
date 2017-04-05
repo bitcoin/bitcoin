@@ -186,7 +186,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         }
 
         bool fRateCheckBypassed = false;
-        if(!MasternodeRateCheck(govobj, true, false, fRateCheckBypassed)) {
+        if(!MasternodeRateCheck(govobj, UPDATE_FAIL_ONLY, false, fRateCheckBypassed)) {
             LogPrintf("MNGOVERNANCEOBJECT -- masternode rate check failed - %s - (current block height %d) \n", strHash, nCachedBlockHeight);
             return;
         }
@@ -209,7 +209,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         }
 
         if(fRateCheckBypassed) {
-            if(!MasternodeRateCheck(govobj, true, true, fRateCheckBypassed)) {
+            if(!MasternodeRateCheck(govobj, UPDATE_FAIL_ONLY, true, fRateCheckBypassed)) {
                 LogPrintf("MNGOVERNANCEOBJECT -- masternode rate check failed (after signature verification) - %s - (current block height %d) \n", strHash, nCachedBlockHeight);
                 return;
             }
@@ -229,6 +229,8 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         if(fAddToSeen) {
             // UPDATE THAT WE'VE SEEN THIS OBJECT
             mapSeenGovernanceObjects.insert(std::make_pair(nHash, SEEN_OBJECT_IS_VALID));
+            // Update the rate buffer
+            MasternodeRateCheck(govobj, UPDATE_TRUE, true, fRateCheckBypassed);
         }
 
         masternodeSync.AddedGovernanceItem();
@@ -814,13 +816,13 @@ void CGovernanceManager::Sync(CNode* pfrom, const uint256& nProp, const CBloomFi
     LogPrintf("CGovernanceManager::Sync -- sent %d objects and %d votes to peer=%d\n", nObjCount, nVoteCount, pfrom->id);
 }
 
-bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bool fUpdateLast)
+bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, update_mode_enum_t eUpdateLast)
 {
     bool fRateCheckBypassed = false;
-    return MasternodeRateCheck(govobj, fUpdateLast, true, fRateCheckBypassed);
+    return MasternodeRateCheck(govobj, eUpdateLast, true, fRateCheckBypassed);
 }
 
-bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bool fUpdateLast, bool fForce, bool& fRateCheckBypassed)
+bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, update_mode_enum_t eUpdateLast, bool fForce, bool& fRateCheckBypassed)
 {
     LOCK(cs);
 
@@ -848,7 +850,7 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
     txout_m_it it  = mapLastMasternodeObject.find(vin.prevout);
 
     if(it == mapLastMasternodeObject.end()) {
-        if(fUpdateLast) {
+        if(eUpdateLast == UPDATE_TRUE) {
             it = mapLastMasternodeObject.insert(txout_m_t::value_type(vin.prevout, last_object_rec(true))).first;
             switch(nObjectType) {
             case GOVERNANCE_OBJECT_TRIGGER:
@@ -886,44 +888,54 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
     double dMaxRate = 1.1 / nSuperblockCycleSeconds;
     double dRate = 0.0;
     CRateCheckBuffer buffer;
+    CRateCheckBuffer* pBuffer = NULL;
     switch(nObjectType) {
     case GOVERNANCE_OBJECT_TRIGGER:
         // Allow 1 trigger per mn per cycle, with a small fudge factor
+        pBuffer = &it->second.triggerBuffer;
         dMaxRate = 2 * 1.1 / double(nSuperblockCycleSeconds);
-        buffer = it->second.triggerBuffer;
-        buffer.AddTimestamp(nTimestamp);
-        dRate = buffer.GetRate();
-        if(fUpdateLast) {
-            it->second.triggerBuffer.AddTimestamp(nTimestamp);
-        }
         break;
     case GOVERNANCE_OBJECT_WATCHDOG:
+        pBuffer = &it->second.watchdogBuffer;
         dMaxRate = 2 * 1.1 / 3600.;
-        buffer = it->second.watchdogBuffer;
-        buffer.AddTimestamp(nTimestamp);
-        dRate = buffer.GetRate();
-        if(fUpdateLast) {
-            it->second.watchdogBuffer.AddTimestamp(nTimestamp);
-        }
         break;
     default:
         break;
     }
 
-    if(dRate < dMaxRate) {
-        if(fUpdateLast) {
-            it->second.fStatusOK = true;
+    if(!pBuffer) {
+        LogPrintf("CGovernanceManager::MasternodeRateCheck -- Internal Error returning false, NULL ptr found for object %s masternode vin = %s, timestamp = %d, current time = %d\n",
+                  strHash, vin.prevout.ToStringShort(), nTimestamp, nNow);
+        return false;
+    }
+
+    buffer = *pBuffer;
+    buffer.AddTimestamp(nTimestamp);
+    dRate = buffer.GetRate();
+
+    bool fRateOK = ( dRate < dMaxRate );
+
+    switch(eUpdateLast) {
+    case UPDATE_TRUE:
+        pBuffer->AddTimestamp(nTimestamp);
+        it->second.fStatusOK = fRateOK;
+        break;
+    case UPDATE_FAIL_ONLY:
+        if(!fRateOK) {
+            pBuffer->AddTimestamp(nTimestamp);
+            it->second.fStatusOK = false;
         }
+    default:
+        return true;
+    }
+
+    if(fRateOK) {
         return true;
     }
     else {
-        if(fUpdateLast) {
-            it->second.fStatusOK = false;
-        }
+        LogPrintf("CGovernanceManager::MasternodeRateCheck -- Rate too high: object hash = %s, masternode vin = %s, object timestamp = %d, rate = %f, max rate = %f\n",
+                  strHash, vin.prevout.ToStringShort(), nTimestamp, dRate, dMaxRate);
     }
-
-    LogPrintf("CGovernanceManager::MasternodeRateCheck -- Rate too high: object hash = %s, masternode vin = %s, object timestamp = %d, rate = %f, max rate = %f\n",
-              strHash, vin.prevout.ToStringShort(), nTimestamp, dRate, dMaxRate);
     return false;
 }
 
