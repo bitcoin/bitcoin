@@ -41,14 +41,21 @@ using namespace std;
 extern CTxMemPool mempool; // from main.cpp
 static boost::atomic<uint64_t> nLargestBlockSeen(BLOCKSTREAM_CORE_MAX_BLOCK_SIZE); // track the largest block we've seen
 extern CTweakRef<uint64_t> miningBlockSize;
+extern CTweakRef<unsigned int> ebTweak;
 
 bool IsTrafficShapingEnabled();
+
+bool MiningAndExcessiveBlockValidatorRule(const unsigned int newExcessiveBlockSize, const unsigned int newMiningBlockSize)
+{
+    // The mined block size must be less then or equal too the excessive block size.
+    return ( newMiningBlockSize <= newExcessiveBlockSize );
+}
 
 std::string ExcessiveBlockValidator(const unsigned int& value,unsigned int* item,bool validate)
 {
   if (validate)
     {
-      if (value < maxGeneratedBlock) 
+      if (!MiningAndExcessiveBlockValidatorRule(value, maxGeneratedBlock))
 	{
         std::ostringstream ret;
         ret << "Sorry, your maximum mined block (" << maxGeneratedBlock << ") is larger than your proposed excessive size (" << value << ").  This would cause you to orphan your own blocks.";    
@@ -66,7 +73,7 @@ std::string MiningBlockSizeValidator(const uint64_t& value,uint64_t* item,bool v
 {
   if (validate)
     {
-      if (value > excessiveBlockSize) 
+      if (!MiningAndExcessiveBlockValidatorRule(excessiveBlockSize, value))
 	{
         std::ostringstream ret;
         ret << "Sorry, your excessive block size (" << excessiveBlockSize << ") is smaller than your proposed mined block size (" << value << ").  This would cause you to orphan your own blocks.";    
@@ -832,13 +839,10 @@ UniValue setexcessiveblock(const UniValue& params, bool fHelp)
         ebs = boost::lexical_cast<unsigned int>(temp);
     }
 
-    if (ebs < maxGeneratedBlock) 
-      {
-      std::ostringstream ret;
-      ret << "Sorry, your maximum mined block (" << maxGeneratedBlock << ") is larger than your proposed excessive size (" << ebs << ").  This would cause you to orphan your own blocks.";    
-      throw runtime_error(ret.str());
-      }
-    excessiveBlockSize = ebs;
+    std::string estr = ebTweak.Validate(ebs);
+    if (! estr.empty())
+      throw runtime_error(estr);
+    ebTweak.Set(ebs);
 
     if (params[1].isNum())
         excessiveAcceptDepth = params[1].get_int64();
