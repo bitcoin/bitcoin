@@ -7,28 +7,12 @@
 
 #if defined(HAVE_CONFIG_H)
 #include "config/bitcoin-config.h"
-#else
-
-/**
- * client versioning and copyright year
- */
-
-//! These need to be macros, as clientversion.cpp's and bitcoin*-res.rc's voodoo requires it
-#define CLIENT_VERSION_MAJOR 0
-#define CLIENT_VERSION_MINOR 14
-#define CLIENT_VERSION_REVISION 99
-#define CLIENT_VERSION_BUILD 0
-
-//! Set to true for release, false for prerelease or test build
-#define CLIENT_VERSION_IS_RELEASE false
-
-/**
- * Copyright year (2009-this)
- * Todo: update this when changing our copyright comments in the source
- */
-#define COPYRIGHT_YEAR 2017
-
 #endif //HAVE_CONFIG_H
+
+// Check that required client information is defined
+#if !defined(CLIENT_VERSION_MAJOR) || !defined(CLIENT_VERSION_MINOR) || !defined(CLIENT_VERSION_REVISION) || !defined(CLIENT_VERSION_BUILD) || !defined(CLIENT_VERSION_IS_RELEASE) || !defined(COPYRIGHT_YEAR)
+#error Client version information missing: wasn't defined by bitcoin-config.h nor defined any other way
+#endif
 
 /**
  * Converts the parameter X to a string after macro replacement on X has been performed.
