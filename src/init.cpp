@@ -496,6 +496,8 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-blockmaxweight=<n>", strprintf(_("Set maximum BIP141 block weight (default: %d)"), DEFAULT_BLOCK_MAX_WEIGHT));
     strUsage += HelpMessageOpt("-blockmaxsize=<n>", strprintf(_("Set maximum block size in bytes (default: %d)"), DEFAULT_BLOCK_MAX_SIZE));
     strUsage += HelpMessageOpt("-blockmintxfee=<amt>", strprintf(_("Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)"), CURRENCY_UNIT, FormatMoney(DEFAULT_BLOCK_MIN_TX_FEE)));
+    strUsage += HelpMessageOpt("-recenttxwindow=<n>", strprintf(_("Set window size in milliseconds for defining transactions as 'recently received' (default: %d)"), DEFAULT_RECENT_TX_WINDOW));
+    strUsage += HelpMessageOpt("-recenttxstalerate=<n>", strprintf(_("Set stale (orphan) rate for blocks that contain 'recently received' transactions. This is the probability that block income will be lost given that a recently received transaction was included; transaction selection skips over recently received transactions (defined by -recenttxwindow) unless doing so would result in a decrease of block income exceeding this rate (default: %f)"), DEFAULT_RECENT_TX_STALE_RATE));
     if (showDebug)
         strUsage += HelpMessageOpt("-blockversion=<n>", "Override block version to test forking scenarios");
 
@@ -1050,6 +1052,16 @@ bool AppInitParameterInteraction()
         CAmount n = 0;
         if (!ParseMoney(gArgs.GetArg("-blockmintxfee", ""), n))
             return InitError(AmountErrMsg("blockmintxfee", gArgs.GetArg("-blockmintxfee", "")));
+    }
+
+    // Sanity check -recenttxstalerate
+    if (gArgs.IsArgSet("-recenttxstalerate")) {
+        double dummy;
+        if (!ParseDouble(gArgs.GetArg("-recenttxstalerate", ""), &dummy)) {
+            return InitError("-recenttxstalerate is invalid");
+        } else if (dummy < 0.0 || dummy > 1.0) {
+            LogPrintf("Warning: -recenttxstalerate (%f) will be bounded between 0 and 1\n", dummy);
+        }
     }
 
     // Feerate used to define dust.  Shouldn't be changed lightly as old

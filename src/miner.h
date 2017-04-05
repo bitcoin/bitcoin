@@ -189,9 +189,13 @@ private:
     // Configuration parameters for the block size
     bool fIncludeWitness;
     unsigned int nBlockMaxWeight, nBlockMaxSize;
+    // Exclude transactions received in nRecentTxWindow if the income
+    // reduction from doing so is below (1-dRecentTxStaleRate).
+    // See comment above CreateNewBlock().
+    int64_t nRecentTxWindow;
+    double dIncomeThreshold;
     bool fNeedSizeAccounting;
     CFeeRate blockMinFeeRate;
-    int64_t nRecentTxWindow;
 
     // Chain context for the block
     int nHeight;
@@ -205,6 +209,7 @@ public:
         size_t nBlockMaxSize;
         CFeeRate blockMinFeeRate;
         int64_t nRecentTxWindow;
+        double dRecentTxStaleRate;
     };
 
     BlockAssembler(const CChainParams& params);

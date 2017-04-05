@@ -25,6 +25,7 @@
 #include "txmempool.h"
 #include "util.h"
 #include "utilmoneystr.h"
+#include "utilstrencodings.h"
 #include "validationinterface.h"
 
 #include <algorithm>
@@ -65,7 +66,8 @@ BlockAssembler::Options::Options() {
     blockMinFeeRate = CFeeRate(DEFAULT_BLOCK_MIN_TX_FEE);
     nBlockMaxWeight = DEFAULT_BLOCK_MAX_WEIGHT;
     nBlockMaxSize = DEFAULT_BLOCK_MAX_SIZE;
-    nRecentTxWindow = 10; // TODO: make this configurable
+    nRecentTxWindow = DEFAULT_RECENT_TX_WINDOW;
+    dRecentTxStaleRate = DEFAULT_RECENT_TX_STALE_RATE;
 }
 
 BlockAssembler::BlockAssembler(const CChainParams& params, const Options& options) : chainparams(params)
@@ -75,9 +77,13 @@ BlockAssembler::BlockAssembler(const CChainParams& params, const Options& option
     nBlockMaxWeight = std::max<size_t>(4000, std::min<size_t>(MAX_BLOCK_WEIGHT - 4000, options.nBlockMaxWeight));
     // Limit size to between 1K and MAX_BLOCK_SERIALIZED_SIZE-1K for sanity:
     nBlockMaxSize = std::max<size_t>(1000, std::min<size_t>(MAX_BLOCK_SERIALIZED_SIZE - 1000, options.nBlockMaxSize));
+    nRecentTxWindow = options.nRecentTxWindow;
+    // 1 - stale rate is the income threshold we want to use for our comparison
+    // in CreateNewBlock. Bound it between 0 and 1.
+    dIncomeThreshold = std::max<double>(0.0, std::min<double>(1.0, 1 - options.dRecentTxStaleRate));
+
     // Whether we need to account for byte usage (in addition to weight usage)
     fNeedSizeAccounting = (nBlockMaxSize < MAX_BLOCK_SERIALIZED_SIZE - 1000);
-    nRecentTxWindow = options.nRecentTxWindow;
 }
 
 static BlockAssembler::Options DefaultOptions(const CChainParams& params)
@@ -108,7 +114,14 @@ static BlockAssembler::Options DefaultOptions(const CChainParams& params)
     } else {
         options.blockMinFeeRate = CFeeRate(DEFAULT_BLOCK_MIN_TX_FEE);
     }
-    options.nRecentTxWindow = 10;
+    // Convert -recenttxwindow to seconds, since that's what the mempool stores (rounding up).
+    options.nRecentTxWindow = (gArgs.GetArg("-recenttxwindow", DEFAULT_RECENT_TX_WINDOW) + 999)/1000;
+    // If the user specified a parseable stale rate to use, use it.
+    if (!gArgs.IsArgSet("-recenttxstalerate") ||
+            !ParseDouble(gArgs.GetArg("-recenttxstalerate", ""), &options.dRecentTxStaleRate)) {
+        options.dRecentTxStaleRate = DEFAULT_RECENT_TX_STALE_RATE;
+    }
+
     return options;
 }
 
@@ -190,7 +203,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // transactions from the block.
     WorkingState noRecentWorkState(workState);
 
-    // TODO: allow the time window to be configurable
     int64_t nTimeCutoff = GetTime() - nRecentTxWindow;
     RemoveRecentTransactionsFromBlockAndUpdatePackages(noRecentWorkState, nTimeCutoff, mapModifiedTx);
 
@@ -201,9 +213,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     // Now compare and decide which block to use
     WorkingState *winner = &workState;
-    // TODO: replace this with a configurable threshold
     CAmount blockSubsidy = GetBlockSubsidy(nHeight, chainparams.GetConsensus());
-    if (blockSubsidy + noRecentWorkState.nModifiedFees >= 1.0 * (workState.nModifiedFees + blockSubsidy)) {
+    if (blockSubsidy + noRecentWorkState.nModifiedFees >= dIncomeThreshold * (workState.nModifiedFees + blockSubsidy)) {
         winner = &noRecentWorkState;
     }
 
