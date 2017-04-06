@@ -6,6 +6,7 @@
 
 #include "chainparams.h"
 #include "consensus/validation.h"
+#include "fs.h"
 #include "validation.h"
 #include "rpc/register.h"
 #include "rpc/server.h"
@@ -19,8 +20,6 @@
 
 #include <QDir>
 #include <QtGlobal>
-
-#include <boost/filesystem.hpp>
 
 static UniValue rpcNestedTest_rpc(const JSONRPCRequest& request)
 {
@@ -168,5 +167,5 @@ void RPCNestedTests::rpcNestedTests()
     delete evoDb;
     evoDb = nullptr;
 
-    boost::filesystem::remove_all(boost::filesystem::path(path));
+    fs::remove_all(fs::path(path));
 }
