@@ -31,6 +31,8 @@
 
 /** Default control port */
 const std::string DEFAULT_TOR_CONTROL = "127.0.0.1:9051";
+/** Default listen mode */
+const std::string DEFAULT_LISTEN_ONION = "0";
 /** Tor cookie size (from control-spec.txt) */
 static const int TOR_COOKIE_SIZE = 32;
 /** Size of client/server nonce for SAFECOOKIE */
@@ -352,10 +354,17 @@ static bool WriteBinaryFile(const std::string &filename, const std::string &data
 /** Controller that connects to Tor control socket, authenticate, then create
  * and maintain a ephemeral hidden service.
  */
+
+enum ListenOnionMode {
+    LISTEN_ONION_DISABLED,
+    LISTEN_ONION_NORMAL,
+    LISTEN_ONION_NON_ANONYMOUS
+};
+
 class TorController
 {
 public:
-    TorController(struct event_base* base, const std::string& target);
+    TorController(struct event_base* base, const std::string& target, ListenOnionMode mode);
     ~TorController();
 
     /** Get name fo file to store private key in */
@@ -372,6 +381,8 @@ private:
     bool reconnect;
     struct event *reconnect_ev;
     float reconnect_timeout;
+    /** Flag for Single Onion Service */
+    ListenOnionMode listen_onion_mode;
     CService service;
     /** Cookie for SAFECOOKIE auth */
     std::vector<uint8_t> cookie;
@@ -395,10 +406,11 @@ private:
     static void reconnect_cb(evutil_socket_t fd, short what, void *arg);
 };
 
-TorController::TorController(struct event_base* _base, const std::string& _target):
+TorController::TorController(struct event_base* _base, const std::string& _target, ListenOnionMode mode):
     base(_base),
     target(_target), conn(base), reconnect(true), reconnect_ev(0),
-    reconnect_timeout(RECONNECT_TIMEOUT_START)
+    reconnect_timeout(RECONNECT_TIMEOUT_START),
+    listen_onion_mode(mode)
 {
     reconnect_ev = event_new(base, -1, 0, reconnect_cb, this);
     if (!reconnect_ev)
@@ -475,8 +487,11 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& 
         // Request hidden service, redirect port.
         // Note that the 'virtual' port doesn't have to be the same as our internal port, but this is just a convenient
         // choice.  TODO; refactor the shutdown sequence some day.
-        _conn.Command(strprintf("ADD_ONION %s Port=%i,127.0.0.1:%i", private_key, GetListenPort(), GetListenPort()),
-            boost::bind(&TorController::add_onion_cb, this, _1, _2));
+        std::string cmd =
+            strprintf("ADD_ONION %s Port=%i,127.0.0.1:%i %s", private_key,
+                      GetListenPort(), GetListenPort(),
+                      (listen_onion_mode == LISTEN_ONION_NON_ANONYMOUS) ? "flags=NonAnonymous" : "");
+        _conn.Command(cmd, boost::bind(&TorController::add_onion_cb, this, _1, _2));
     } else {
         LogPrintf("tor: Authentication failed\n");
     }
@@ -668,8 +683,15 @@ static boost::thread torControlThread;
 
 static void TorControlThread()
 {
-    TorController ctrl(gBase, GetArg("-torcontrol", DEFAULT_TOR_CONTROL));
-
+    std::string listen_onion_flag = GetArg("-listenonion", DEFAULT_LISTEN_ONION);
+    ListenOnionMode listen_onion_mode;
+    if (listen_onion_flag == "1")
+        listen_onion_mode = LISTEN_ONION_NORMAL;
+    else if (listen_onion_flag == "2")
+        listen_onion_mode = LISTEN_ONION_NON_ANONYMOUS;
+    else
+        listen_onion_mode = LISTEN_ONION_DISABLED;
+    TorController ctrl(gBase, GetArg("-torcontrol", DEFAULT_TOR_CONTROL), listen_onion_mode);
     event_base_dispatch(gBase);
 }
 
