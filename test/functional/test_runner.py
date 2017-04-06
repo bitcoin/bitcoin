@@ -291,7 +291,7 @@ def run_tests(test_list, src_dir, build_dir, exeext, jobs=1, enable_coverage=Fal
     sys.exit(not all_passed)
 
 def print_results(test_results, max_len_name, runtime):
-    results = "\n" + BOLD[1] + "%s | %s | %s\n\n" % ("TEST".ljust(max_len_name), "STATUS ", "DURATION") + BOLD[0]
+    results = "\n" + BOLD[1] + "%s | %s | %s\n\n" % ("TEST".ljust(max_len_name), "STATUS   ", "DURATION") + BOLD[0]
 
     test_results.sort(key=lambda result: result.name.lower())
     all_passed = True
@@ -384,7 +384,15 @@ class TestResult():
             elif self.status == "Skipped":
                 COLOR = ('\033[0m', '\033[1;30m')
 
-        return COLOR[1] + "%s | %s | %s s\n" % (self.name.ljust(self.padding), self.status.ljust(7), self.time) + COLOR[0]
+        SYMBOL = "  "
+        if self.status == "Passed":
+            SYMBOL = "✓ "
+        elif self.status == "Failed":
+            SYMBOL = "✖ "
+        elif self.status == "Skipped":
+            SYMBOL = "○ "
+
+        return COLOR[1] + "%s | %s%s | %s s\n" % (self.name.ljust(self.padding), SYMBOL, self.status.ljust(7), self.time) + COLOR[0]
 
 
 def check_script_list(src_dir):
