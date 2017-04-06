@@ -3,7 +3,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 bin_PROGRAMS += qt/test/test_bitcoin-qt
-TESTS += qt/test/test_bitcoin-qt
+AM_TESTS_ENVIRONMENT += \
+    if test "$(TEST_BITCOIN_QT_ARGS)" = --skip-gui-tests; then \
+        echo "Warning: Skipping GUI tests. To enable, either install xvfb-run or set the DISPLAY environment variable, then rerun the configure script."; \
+    fi;
+TESTS += qt/test/test_bitcoin-qt.sh
 
 TEST_QT_MOC_CPP = \
   qt/test/moc_compattests.cpp \

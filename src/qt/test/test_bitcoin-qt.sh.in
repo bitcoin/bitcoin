@@ -1,0 +1,3 @@
+#!/bin/sh
+
+exec @XVFB_RUN@ qt/test/test_bitcoin-qt@EXEEXT@ @TEST_BITCOIN_QT_ARGS@

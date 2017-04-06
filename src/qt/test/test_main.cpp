@@ -46,6 +46,7 @@ extern void noui_connect();
 // This is all you need to run all the tests
 int main(int argc, char *argv[])
 {
+    ParseParameters(argc, argv);
     SetupEnvironment();
     SetupNetworking();
     SelectParams(CBaseChainParams::MAIN);
@@ -55,8 +56,8 @@ int main(int argc, char *argv[])
 
     // Don't remove this, it's needed to access
     // QApplication:: and QCoreApplication:: in the tests
-    QApplication app(argc, argv);
-    app.setApplicationName("Bitcoin-Qt-test");
+    std::unique_ptr<QCoreApplication> app(GetBoolArg("-skip-gui-tests", false) ? new QCoreApplication(argc, argv) : new QApplication(argc, argv));
+    app->setApplicationName("Bitcoin-Qt-test");
 
     SSL_library_init();
 

@@ -70,6 +70,10 @@ QModelIndex FindTx(const QAbstractItemModel& model, const uint256& txid)
 //! Simple qt wallet tests.
 void WalletTests::walletTests()
 {
+    if (GetBoolArg("-skip-gui-tests", false)) {
+        return;
+    }
+
     // Set up wallet and chain with 101 blocks (1 mature block for spending).
     TestChain100Setup test;
     test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
