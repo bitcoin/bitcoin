@@ -5260,22 +5260,25 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     {
         vector<CInv> vInv;
         vRecv >> vInv;
-        // BU check size == 0 to be intolerant of an empty and useless request
-        if ((vInv.size() > MAX_INV_SZ)||(vInv.size() == 0))
+
+        // Message Consistency Checking
+        //   Check size == 0 to be intolerant of an empty and useless request.
+        //   Validate that INVs are a valid type and not null.
+        if (vInv.size() > MAX_INV_SZ || vInv.empty())
         {
+            LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 20);
             return error("message inv size() = %u", vInv.size());
         }
-        
-        for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)  // Validate that INVs are a valid type
+        for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
         {
             const CInv &inv = vInv[nInv];
-            if (!((inv.type == MSG_TX) || (inv.type == MSG_BLOCK)))
+            if (!((inv.type == MSG_TX) || (inv.type == MSG_BLOCK)) || inv.hash.IsNull())
             {
+                LOCK(cs_main);
                 Misbehaving(pfrom->GetId(), 20);
-                return error("message inv invalid type = %u", inv.type);                
+                return error("message inv invalid type = %u or is null hash %s", inv.type, inv.hash.ToString());
             }
-            // inv.hash does not need validation, since SHA2556 hash can be any value
         }
         
         bool fBlocksOnly = GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
@@ -6099,16 +6102,16 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         CInv inv(MSG_BLOCK, block.GetHash());
         LogPrint("blk", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
-        UnlimitedLogBlock(block,inv.hash.ToString(),receiptTime);
+        UnlimitedLogBlock(block, inv.hash.ToString(), receiptTime);
 
         pfrom->AddInventoryKnown(inv);
 
         if (IsChainNearlySyncd()) // BU send the received block out expedited channels quickly
-          {
-          CValidationState state;
-          if (CheckBlockHeader(block, state, true))  // block header is fine
-            SendExpeditedBlock(block, pfrom); 
-          }
+        {
+            CValidationState state;
+            if (CheckBlockHeader(block, state, true))  // block header is fine
+                SendExpeditedBlock(block, pfrom);
+        }
         requester.Received(inv, pfrom, msgSize);
         // BUIP010 Extreme Thinblocks: Handle Block Message
         HandleBlockMessage(pfrom, strCommand, block, inv);
