@@ -37,6 +37,20 @@ The first positional argument of `createrawtransaction` was renamed.
 This interface change breaks compatibility with 0.14.0, when the named
 arguments functionality, introduced in 0.14.0, is used.
 
+
+Mining
+------
+
+Getblocktemplate sets the segwit version bit even when the downstream
+client has not been updated to include the segwit commitment.  Ability
+to enforce the rule is the only required criteria for safe activation,
+but previously signaling was only requested if the miner could include
+transactions in order to avoid a potential outcome where segwit would
+activate at a time when no segwit transactions could be included.
+Since many miners are now including the segwit commitment this concern
+no longer applies.
+
+
 0.14.1 Change log
 =================
 
@@ -48,7 +62,7 @@ git merge commit are mentioned.
 ### RPC and other APIs
 - #10084 `142fbb2` Rename first named arg of createrawtransaction (MarcoFalke)
 - #10139 `f15268d` Remove auth cookie on shutdown (practicalswift)
-- #10146 `2fea10a` Better error handling for submitblock (gmaxwell)
+- #10146 `2fea10a` Better error handling for submitblock (rawodb, gmaxwell)
 - #10144 `d947afc` Prioritisetransaction wasn't always updating ancestor fee (sdaftuar)
 
 ### Block and transaction handling
@@ -90,6 +104,7 @@ Thanks to everyone who directly contributed to this release:
 - Matt Corallo
 - Pieter Wuille
 - practicalswift
+- rawodb
 - Suhas Daftuar
 - Wladimir J. van der Laan
 
