@@ -17,16 +17,24 @@ file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
 import pdb
 import sys
+import types
 
 TAB_SIZE = 8
 
 def main(files, cutoff,verbose=False):
+    if not files:
+        files.append(sys.stdin)
     for f in files:
         changed = False
-        if verbose:
-            print("Processing %s" % f)
-        fo = open(f,"r")
-        lines = fo.readlines()
+        if type(f) in types.StringTypes:
+            fo = open(f,"r")
+            if verbose:
+                print("Processing %s" % f)
+        else:
+            fo = f
+            verbose = False # if using stdin/stdout, don't clutter it with logging
+            
+        lines = fo.readlines()      
         output = []
         for line in lines:
             #print len(line), "//" in line, line
@@ -62,14 +70,17 @@ def main(files, cutoff,verbose=False):
                     output.append(line)
             else:
                 output.append(line)
-        if changed:
-            print("%s changed" % f)        
-            fo = open(f,"w")
-            fo.writelines(output)
+        if type(f) in types.StringTypes:
+            if changed:
+                print("%s changed" % f)        
+                fo = open(f,"w")
+                fo.writelines(output)
+        else:
+            sys.stdout.writelines(output)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 2:
         print("usage: trailing-comment.py <max columns> [files]")
         sys.exit(-1)
     main(sys.argv[2:],int(sys.argv[1]))
