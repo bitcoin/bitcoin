@@ -475,7 +475,38 @@ public:
 };
 
 
-using CInputCoin = std::pair<const CWalletTx*, unsigned int>;
+class CInputCoin {
+public:
+    CInputCoin()
+    {
+    }
+    CInputCoin(const CWalletTx* walletTx, unsigned int i)
+    {
+        if (walletTx != nullptr && i < walletTx->tx->vout.size())
+        {
+            outpoint = COutPoint(walletTx->GetHash(), i);
+            txout = walletTx->tx->vout[i];
+        }
+    }
+    bool IsNull() const
+    {
+        return outpoint.IsNull() && txout.IsNull();
+    }
+    COutPoint outpoint;
+    CTxOut txout;
+
+    bool operator<(const CInputCoin& rhs) const {
+        return outpoint < rhs.outpoint;
+    }
+
+    bool operator!=(const CInputCoin& rhs) const {
+        return outpoint != rhs.outpoint;
+    }
+
+    bool operator==(const CInputCoin& rhs) const {
+        return outpoint == rhs.outpoint;
+    }
+};
 
 class COutput
 {
@@ -1132,7 +1163,7 @@ bool CWallet::DummySignTx(CMutableTransaction &txNew, const ContainerType &coins
     int nIn = 0;
     for (const auto& coin : coins)
     {
-        const CScript& scriptPubKey = coin.first->tx->vout[coin.second].scriptPubKey;
+        const CScript& scriptPubKey = coin.txout.scriptPubKey;
         SignatureData sigdata;
 
         if (!ProduceSignature(DummySignatureCreator(this), scriptPubKey, sigdata))
