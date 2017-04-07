@@ -92,7 +92,6 @@ enum WalletFeature
     FEATURE_LATEST = FEATURE_COMPRPUBKEY // HD is optional, use FEATURE_COMPRPUBKEY as latest version
 };
 
-
 /** A key pool entry */
 class CKeyPool
 {
@@ -474,8 +473,38 @@ public:
     std::set<uint256> GetConflicts() const;
 };
 
+class CInputCoin {
+public:
+    CInputCoin()
+    {
+    }
+    CInputCoin(const CWalletTx* walletTx, unsigned int i)
+    {
+        if (walletTx != nullptr && i < walletTx->tx->vout.size())
+        {
+            outpoint = COutPoint(walletTx->GetHash(), i);
+            txout = walletTx->tx->vout[i];
+        }
+    }
+    bool IsNull() const
+    {
+        return outpoint.IsNull() && txout.IsNull();
+    }
+    COutPoint outpoint;
+    CTxOut txout;
 
+    bool operator<(const CInputCoin& rhs) const {
+        return outpoint < rhs.outpoint;
+    }
 
+    bool operator!=(const CInputCoin& rhs) const {
+        return outpoint != rhs.outpoint;
+    }
+
+    bool operator==(const CInputCoin& rhs) const {
+        return outpoint == rhs.outpoint;
+    }
+};
 
 class COutput
 {
@@ -632,7 +661,7 @@ private:
      * all coins from coinControl are selected; Never select unconfirmed coins
      * if they are not ours
      */
-    bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = NULL) const;
+    bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = NULL) const;
 
     CWalletDB *pwalletdbEncryption;
 
@@ -780,7 +809,7 @@ public:
      * completion the coin set and corresponding actual target value is
      * assembled
      */
-    bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, uint64_t nMaxAncestors, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet) const;
+    bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, uint64_t nMaxAncestors, std::vector<COutput> vCoins, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet) const;
 
     bool IsSpent(const uint256& hash, unsigned int n) const;
 
@@ -862,11 +891,13 @@ public:
     CAmount GetUnconfirmedWatchOnlyBalance() const;
     CAmount GetImmatureWatchOnlyBalance() const;
 
+    bool FindCoin(const COutPoint& outpoint, CInputCoin& foundCoin);
+
     /**
      * Insert additional inputs into the transaction by
      * calling CreateTransaction();
      */
-    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool overrideEstimatedFeeRate, const CFeeRate& specificFeeRate, int& nChangePosInOut, std::string& strFailReason, bool includeWatching, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, bool keepReserveKey = true, const CTxDestination& destChange = CNoDestination());
+    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, CCoinControl& coinControl, int& nChangePosInOut, std::string& strFailReason, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, bool keepReserveKey = true);
 
     /**
      * Create a new transaction paying the recipients with a set of coins
@@ -1122,7 +1153,7 @@ public:
 };
 
 // Helper for producing a bunch of max-sized low-S signatures (eg 72 bytes)
-// ContainerType is meant to hold pair<CWalletTx *, int>, and be iterable
+// ContainerType is meant to hold CInputCoin, and be iterable
 // so that each entry corresponds to each vIn, in order.
 template <typename ContainerType>
 bool CWallet::DummySignTx(CMutableTransaction &txNew, const ContainerType &coins)
@@ -1131,16 +1162,18 @@ bool CWallet::DummySignTx(CMutableTransaction &txNew, const ContainerType &coins
     int nIn = 0;
     for (const auto& coin : coins)
     {
-        const CScript& scriptPubKey = coin.first->tx->vout[coin.second].scriptPubKey;
+        const CScript& scriptPubKey = coin.txout.scriptPubKey;
         SignatureData sigdata;
-
-        if (!ProduceSignature(DummySignatureCreator(this), scriptPubKey, sigdata))
-        {
-            return false;
-        } else {
-            UpdateTransaction(txNew, nIn, sigdata);
+        auto ismine = IsMine(coin.txout);
+        if (ismine == ISMINE_SPENDABLE || ismine == ISMINE_WATCH_SOLVABLE)
+        { 
+            if (!ProduceSignature(DummySignatureCreator(this), scriptPubKey, sigdata))
+            {
+                return false;
+            } else {
+                UpdateTransaction(txNew, nIn, sigdata);
+            }
         }
-
         nIn++;
     }
     return true;

@@ -19,6 +19,7 @@
 #include "util.h"
 #include "utilmoneystr.h"
 #include "wallet.h"
+#include "coincontrol.h"
 #include "walletdb.h"
 
 #include <stdint.h>
@@ -2620,6 +2621,21 @@ UniValue listunspent(const JSONRPCRequest& request)
     return results;
 }
 
+bool FindInCoinView(const COutPoint& outpoint, CInputCoin& outputCoin)
+{
+    LOCK2(cs_main, mempool.cs);
+    CCoinsViewMemPool coinsTipMempool(pcoinsTip, mempool);
+    CCoinsViewCache view(&coinsTipMempool);
+    CCoins coins;
+    if (!view.GetCoins(outpoint.hash, coins))
+        return false;
+    if (outpoint.n >= coins.vout.size())
+        return false;
+    outputCoin.outpoint = outpoint;
+    outputCoin.txout = coins.vout[outpoint.n];
+    return !outputCoin.IsNull();
+}
+
 UniValue fundrawtransaction(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -2766,7 +2782,26 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     CAmount nFeeOut;
     std::string strFailReason;
 
-    if (!pwallet->FundTransaction(tx, nFeeOut, overrideEstimatedFeerate, feeRate, changePosition, strFailReason, includeWatching, lockUnspents, setSubtractFeeFromOutputs, reserveChangeKey, changeAddress)) {
+    CCoinControl coinControl;
+    coinControl.destChange = changeAddress;
+    coinControl.fAllowOtherInputs = true;
+    coinControl.fAllowWatchOnly = includeWatching;
+    coinControl.fOverrideFeeRate = overrideEstimatedFeerate;
+    coinControl.nFeeRate = feeRate;
+
+    for(const CTxIn& txin: tx.vin)
+    {
+        CInputCoin coin;
+        if (!pwallet->FindCoin(txin.prevout, coin) &&
+            !FindInCoinView(txin.prevout, coin))
+        {
+            throw JSONRPCError(RPC_WALLET_ERROR, "unknown-input");
+        }
+        coinControl.AddKnownCoins(coin);
+        coinControl.Select(txin.prevout);
+    }
+
+    if (!pwallet->FundTransaction(tx, nFeeOut, coinControl, changePosition, strFailReason, lockUnspents, setSubtractFeeFromOutputs, reserveChangeKey)) {
         throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
     }
 
@@ -2788,14 +2823,14 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
 int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, CWallet &wallet)
 {
     CMutableTransaction txNew(tx);
-    std::vector<std::pair<CWalletTx*, unsigned int>> vCoins;
+    std::vector<CInputCoin> vCoins;
     // Look up the inputs.  We should have already checked that this transaction
     // IsAllFromMe(ISMINE_SPENDABLE), so every input should already be in our
     // wallet, with a valid index into the vout array.
     for (auto& input : tx.vin) {
         const auto mi = wallet.mapWallet.find(input.prevout.hash);
         assert(mi != wallet.mapWallet.end() && input.prevout.n < mi->second.tx->vout.size());
-        vCoins.emplace_back(std::make_pair(&(mi->second), input.prevout.n));
+        vCoins.emplace_back(CInputCoin(&(mi->second), input.prevout.n));
     }
     if (!wallet.DummySignTx(txNew, vCoins)) {
         // This should never happen, because IsAllFromMe(ISMINE_SPENDABLE)
