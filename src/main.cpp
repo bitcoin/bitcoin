@@ -6074,7 +6074,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
         vRecv >> thinBlock;
 
         // Message consistency checking
-        if(!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
+        if (!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
         {
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 100);
