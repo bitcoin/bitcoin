@@ -32,7 +32,7 @@ public:
 
     /* signs the new transaction,
      * returns false if the tx couldn't be found or if it was
-     * improssible to create the signature(s)
+     * impossible to create the signature(s)
      */
     bool signTransaction(CWallet *pWallet);
 
