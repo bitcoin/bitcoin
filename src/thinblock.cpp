@@ -1101,7 +1101,7 @@ void SendXThinBlock(CBlock &block, CNode *pfrom, const CInv &inv)
     pfrom->blocksSent += 1;
 }
 
-bool IsThinBlockValid(const CNode* pfrom, const std::vector<CTransaction>& vMissingTx, const CBlockHeader& header)
+bool IsThinBlockValid(const CNode *pfrom, const std::vector<CTransaction> &vMissingTx, const CBlockHeader &header)
 {
     // Check that that there is at least one txn in the xthin and that the first txn is the coinbase
     if(vMissingTx.size() <= 0)
