@@ -121,6 +121,8 @@ public:
 /**
  * Used to relay blocks as header + vector<merkle branch>
  * to filtered nodes.
+ *
+ * NOTE: The class assumes that the given CBlock has *at least* 1 transaction. If the CBlock has 0 txs, it will hit an assertion.
  */
 class CMerkleBlock
 {
