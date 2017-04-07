@@ -1104,13 +1104,13 @@ void SendXThinBlock(CBlock &block, CNode *pfrom, const CInv &inv)
 bool IsThinBlockValid(const CNode *pfrom, const std::vector<CTransaction> &vMissingTx, const CBlockHeader &header)
 {
     // Check that that there is at least one txn in the xthin and that the first txn is the coinbase
-    if(vMissingTx.size() <= 0)
+    if (vMissingTx.empty())
     {
         LogPrintf("No Transactions found in thinblock or xthinblock %s from peer %s (id=%d).\n",
             header.GetHash().ToString(), pfrom->addrName.c_str(), pfrom->id);
         return false;
     }
-    if(!vMissingTx[0].IsCoinBase())
+    if (!vMissingTx[0].IsCoinBase())
     {
         LogPrintf("First txn is not coinbase for thinblock or xthinblock %s from peer %s (id=%d).\n",
             header.GetHash().ToString(), pfrom->addrName.c_str(), pfrom->id);
