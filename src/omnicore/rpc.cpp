@@ -1527,6 +1527,8 @@ UniValue omni_getactivedexsells(const UniValue& params, bool fHelp)
 
     UniValue response(UniValue::VARR);
 
+    int curBlock = GetHeight();
+
     LOCK(cs_tally);
 
     for (OfferMap::iterator it = my_offers.begin(); it != my_offers.end(); ++it) {
@@ -1581,7 +1583,7 @@ UniValue omni_getactivedexsells(const UniValue& params, bool fHelp)
                 // split acceptCombo out to get the buyer address
                 std::string buyer = acceptCombo.substr((acceptCombo.find("+") + 1), (acceptCombo.size()-(acceptCombo.find("+") + 1)));
                 int blockOfAccept = accept.getAcceptBlock();
-                int blocksLeftToPay = (blockOfAccept + selloffer.getBlockTimeLimit()) - GetHeight();
+                int blocksLeftToPay = (blockOfAccept + selloffer.getBlockTimeLimit()) - curBlock;
                 int64_t amountAccepted = accept.getAcceptAmountRemaining();
                 // TODO: don't recalculate!
                 int64_t amountToPayInBTC = calculateDesiredBTC(accept.getOfferAmountOriginal(), accept.getBTCDesiredOriginal(), amountAccepted);
