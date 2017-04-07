@@ -63,8 +63,8 @@ class CAliasUnprunable
         return !(a == b);
     }
 
-    inline void SetNull() { txHash.SetNull(); nOut = 0;}
-    inline bool IsNull() const { return (txHash.IsNull() && nOut == 0); }
+    inline void SetNull() { vchGUID.clear(); nExpireTime=0;}
+    inline bool IsNull() const { return (vchGUID.empty() && nExpireTime == 0); }
 };
 class CAliasPayment {
 public:
