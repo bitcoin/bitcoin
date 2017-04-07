@@ -224,7 +224,7 @@ bool CEscrowDB::GetDBEscrows(std::vector<CEscrow>& escrows, const uint64_t &nExp
 	return true;
 }
 bool CEscrowDB::ScanEscrows(const std::vector<unsigned char>& vchEscrow, const string& strRegexp, const vector<string>& aliasArray, unsigned int nMax,
-							std::vector<std::pair<CEscrow, CEscrow> >& escrowScan) {
+							std::vector<CEscrow>& escrowScan) {
 	string strSearchLower = strRegexp;
 	boost::algorithm::to_lower(strSearchLower);
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
@@ -278,7 +278,7 @@ bool CEscrowDB::ScanEscrows(const std::vector<unsigned char>& vchEscrow, const s
 					pcursor->Next();
 					continue;
 				}
-                escrowScan.push_back(make_pair(txPos, vtxPos.front()));
+                escrowScan.push_back(txPos);
             }
             if (escrowScan.size() >= nMax)
                 break;
@@ -3664,15 +3664,14 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 
 	UniValue oRes(UniValue::VARR);
 
-	vector<pair<CEscrow, CEscrow> > escrowScan;
+	vector<CEscrow> escrowScan;
 	vector<string> aliases;
 	if (!pescrowdb->ScanEscrows(vchEscrow, strRegexp, aliases, 1000, escrowScan))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4607 - " + _("Scan failed"));
 
-	pair<CEscrow, CEscrow> pairScan;
-	BOOST_FOREACH(pairScan, escrowScan) {
+	BOOST_FOREACH(const CEscrow& escrow, escrowScan) {
 		UniValue oEscrow(UniValue::VOBJ);
-		if(BuildEscrowJson(pairScan.first, pairScan.second, oEscrow))
+		if(BuildEscrowJson(escrow, oEscrow))
 			oRes.push_back(oEscrow);
 	}
 

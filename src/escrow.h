@@ -172,7 +172,7 @@ public:
     bool ScanEscrows(
 		const std::vector<unsigned char>& vchEscrow, const std::string& strRegExp, const std::vector<std::string>& aliasArray,
             unsigned int nMax,
-            std::vector<std::pair<CEscrow, CEscrow> >& escrowScan);
+            std::vector<CEscrow>& escrowScan);
 	bool GetDBEscrows(std::vector<CEscrow>& escrows, const uint64_t& nExpireFilter, const std::vector<std::string>& aliasArray);
 	bool CleanupDatabase(int &servicesCleaned);
 };
