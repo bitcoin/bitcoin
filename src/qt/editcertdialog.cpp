@@ -36,10 +36,10 @@ EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
 	ui->transferEdit->setVisible(false);
 	ui->transferDisclaimer->setText(QString("<font color='blue'>") + tr("Enter the alias of the recipient of this certificate") + QString("</font>"));
     ui->transferDisclaimer->setVisible(false);
-	ui->viewOnlyDisclaimer->setText(QString("<font color='blue'>") + tr("Select Yes if you do not want this certificate to be editable/transferable by the recipient") + QString("</font>"));
-	ui->viewOnlyBox->setVisible(false);
-	ui->viewOnlyLabel->setVisible(false);
-	ui->viewOnlyDisclaimer->setVisible(false);
+	ui->accessFlagsDisclaimer->setText(QString("<font color='blue'>") + tr("Enter access flags for new recipient of the certificate. 0 - read-only, 1 - read/write, 2 - read/write/transfer") + QString("</font>"));
+	ui->accessFlags->setVisible(false);
+	ui->accessFlagsLabel->setVisible(false);
+	ui->accessFlagsDisclaimer->setVisible(false);
 	loadAliases();
 	loadCategories();
 	connect(ui->aliasEdit,SIGNAL(currentIndexChanged(const QString&)),this,SLOT(aliasChanged(const QString&)));
@@ -74,9 +74,9 @@ EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
 		ui->transferDisclaimer->setVisible(true);
 		ui->aliasDisclaimer->setVisible(false);
 		ui->aliasEdit->setEnabled(false);
-		ui->viewOnlyBox->setVisible(true);
-		ui->viewOnlyLabel->setVisible(true);
-		ui->viewOnlyDisclaimer->setVisible(true);
+		ui->accessFlags->setVisible(true);
+		ui->accessFlagsLabel->setVisible(true);
+		ui->accessFlagsDisclaimer->setVisible(true);
         break;
     }
     mapper = new QDataWidgetMapper(this);
@@ -619,7 +619,7 @@ bool EditCertDialog::saveCurrentRow()
 			params.push_back(strCipherPrivateData);
 			params.push_back(strCipherEncryptionPublicKey);
 			params.push_back(strCipherEncryptionPrivateKey);
-			params.push_back(ui->viewOnlyBox->currentText().toStdString());
+			params.push_back(ui->accessFlags->text().toStdString());
 			try {
 				UniValue result = tableRPC.execute(strMethod, params);
 				if (result.type() != UniValue::VNULL)

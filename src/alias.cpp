@@ -952,12 +952,30 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 								errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("An alias already exists with that address, try another public key");
 								theAlias = dbAlias;
 							}
-						}	
+						}
+						if(dbAlias.nAccessFlags < 1)
+						{
+							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("Cannot edit this alias. It is view-only.");
+							theAlias = dbAlias;
+						}
 						// let old address be re-occupied by a new alias
-						if (!dontaddtodb)
+						if (!dontaddtodb && errorMessage.empty())
 						{
 							paliasdb->EraseAddress(dbAlias.vchAddress)
 						}
+					}
+					else
+					{
+						if(dbAlias.nAccessFlags < 2)
+						{
+							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("Cannot transfer this alias. Insufficient privileges.");
+							theAlias = dbAlias;
+						}
+					}
+					if(theAlias.nAccessFlags > dbAlias.nAccessFlags)
+					{
+						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot modify for more lenient access. Only tighter access level can be granted.");
+						theAlias = dbAlias;
 					}
 				}
 			}

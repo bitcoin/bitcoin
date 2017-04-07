@@ -719,17 +719,26 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 						theCert = dbCert;	
 					}
 				}
+				if(dbCert.nAccessFlags < 2)
+				{
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot transfer this certificate. Insufficient privileges.");
+					theCert = dbCert;
+				}
 			}
-			else
+			else if(op == OP_CERT_UPDATE)
 			{
-				theCert.bTransferViewOnly = dbCert.bTransferViewOnly;
+				if(dbCert.nAccessFlags < 1)
+				{
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this certificate. It is view-only.");
+					theCert = dbCert;
+				}
 			}
-			theCert.vchLinkAlias.clear();
-			if(dbCert.bTransferViewOnly)
+			if(theCert.nAccessFlags > dbCert.nAccessFlags)
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit or transfer this certificate. It is view-only.");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot modify for more lenient access. Only tighter access level can be granted.");
 				theCert = dbCert;
 			}
+			theCert.vchLinkAlias.clear();
 		}
 		else
 		{
@@ -1043,7 +1052,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 UniValue certtransfer(const UniValue& params, bool fHelp) {
  if (fHelp || params.size() < 2 || params.size() > 7)
         throw runtime_error(
-		"certtransfer <guid> <alias> [public] [private] [encryption_publickey] [encryption_privatekey] [viewonly=No]\n"
+		"certtransfer <guid> <alias> [public] [private] [encryption_publickey] [encryption_privatekey] [accessflags=2]\n"
 						"Transfer a certificate you own to another alias.\n"
 						"<guid> certificate guidkey.\n"
 						"<alias> alias to transfer to.\n"
@@ -1051,7 +1060,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 						"<private> private data, 256 characters max.\n"
 						"<encryption_publickey> Encryption public key. Certificate private data is encrypted to this key, anyone who has access to private key can read message.\n"	
 						"<encryption_privatekey> Encrypted private key to alias used for encryption/decryption of this message. Should be encrypted to encryption_publickey of alias.\n"					
-						"<viewonly> Transfer the certificate as view-only. Recipient cannot edit, transfer or sell this certificate in the future.\n"
+						"<accessflags> Set new access flags for new owner for this certificate, 0 for read-only, 1 for edit, 2 for edit and transfer access.\n"
 						+ HelpRequiringPassphrase());
 
     // gather & validate inputs
@@ -1062,7 +1071,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	string strEncryptionPrivateKey = "";
 	string strData = "";
 	string strPubData = "";
-	string strViewOnly = "";
+	string strAccessFlags = "";
 	if(CheckParam(params, 2))
 		strPubData = params[2].get_str();
 	if(CheckParam(params, 3))
@@ -1072,7 +1081,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	if(CheckParam(params, 5))
 		strEncryptionPrivateKey = params[5].get_str();
 	if(CheckParam(params, 6))
-		strViewOnly = params[6].get_str();
+		strAccessFlags = params[6].get_str();
 
 
 	if(CheckParam(params, 3))
@@ -1121,10 +1130,10 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 		theCert.vchEncryptionPrivateKey = ParseHex(strEncryptionPrivateKey);
 
 
-	if(strViewOnly.empty())
-		theCert.bTransferViewOnly = copyCert.bTransferViewOnly;
+	if(strAccessFlags.empty())
+		theCert.nAccessFlags = copyCert.nAccessFlags;
 	else
-		theCert.bTransferViewOnly = strViewOnly == "Yes"? true:false;
+		theCert.nAccessFlags = boost::lexical_cast<unsigned char>(params[7].get_str());
 
 	vector<unsigned char> data;
 	theCert.Serialize(data);
@@ -1336,7 +1345,7 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert,
 	unsigned char safetyLevel = max(cert.safetyLevel, alias.safetyLevel );
 	oCert.push_back(Pair("safetylevel", safetyLevel));
 	oCert.push_back(Pair("alias", stringFromVch(cert.vchAlias)));
-	oCert.push_back(Pair("transferviewonly", cert.bTransferViewOnly? "true": "false"));
+	oCert.push_back(Pair("access_flags", cert.nAccessFlags));
 	int64_t expired_time = GetCertExpiration(cert);
 	bool expired = false;
     if(expired_time <= chainActive.Tip()->nTime)
@@ -1496,8 +1505,8 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 	else if(cert.vchAlias != dbCert.vchAlias)
 		entry.push_back(Pair("alias", stringFromVch(cert.vchAlias)));
 
-	if(cert.bTransferViewOnly != dbCert.bTransferViewOnly)
-		entry.push_back(Pair("transferviewonly", cert.bTransferViewOnly));
+	if(cert.nAccessFlags != dbCert.nAccessFlags)
+		entry.push_back(Pair("access_flags", cert.nAccessFlags));
 
 	if(cert.safetyLevel != dbCert.safetyLevel)
 		entry.push_back(Pair("safetylevel", cert.safetyLevel));

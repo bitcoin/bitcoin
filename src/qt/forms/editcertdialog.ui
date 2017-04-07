@@ -114,28 +114,14 @@
       </widget>
      </item>
      <item row="9" column="0">
-      <widget class="QLabel" name="viewOnlyLabel">
+      <widget class="QLabel" name="accessFlagsLabel">
        <property name="text">
-        <string>View-Only After Transfer:</string>
+        <string>Access Flags:</string>
        </property>
       </widget>
      </item>
-     <item row="9" column="1">
-      <widget class="QComboBox" name="viewOnlyBox">
-       <item>
-        <property name="text">
-         <string>No</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Yes</string>
-        </property>
-       </item>
-      </widget>
-     </item>
      <item row="10" column="1">
-      <widget class="QLabel" name="viewOnlyDisclaimer">
+      <widget class="QLabel" name="accessFlagsDisclaimer">
        <property name="text">
         <string/>
        </property>
@@ -201,6 +187,9 @@
         </widget>
        </item>
       </layout>
+     </item>
+     <item row="9" column="1">
+      <widget class="QLineEdit" name="accessFlags"/>
      </item>
     </layout>
    </item>
