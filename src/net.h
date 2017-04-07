@@ -11,7 +11,6 @@
 #include "amount.h"
 #include "bloom.h"
 #include "compat.h"
-#include "fs.h"
 #include "hash.h"
 #include "limitedmap.h"
 #include "netaddress.h"
@@ -36,7 +35,6 @@
 #include <boost/foreach.hpp>
 #include <boost/signals2/signal.hpp>
 
-class CAddrMan;
 class CScheduler;
 class CNode;
 
