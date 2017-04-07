@@ -585,7 +585,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			op==OP_OFFER_ACCEPT && vvchArgs.size() > 1? stringFromVch(vvchArgs[1]).c_str(): "",
 			fJustCheck ? "JUSTCHECK" : "BLOCK", " VVCH SIZE: ", vvchArgs.size());
 	bool foundAlias = false;
-	bool foundAliasLink = false;
 	const COutPoint *prevOutput = NULL;
 	const CCoins *prevCoins;
 	int prevAliasOp = 0;
@@ -1507,9 +1506,9 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	}
 	// payment options - and convert payment options string to a bitmask for the txn
 	unsigned char paymentOptionsMask = (unsigned char) GetPaymentOptionsMaskFromString(paymentOptions);
-	string strGeolocation = "";
+	string strGeoLocation = "";
 	if(CheckParam(params, 9))
-		strGeolocation = params[9].get_str();
+		strGeoLocation = params[9].get_str();
 	string strSafeSearch = "Yes";
 	if(CheckParam(params, 10))
 		strSafeSearch = params[10].get_str();
@@ -1541,7 +1540,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 		{
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 1506 - " + _("Creating an offer with a cert that does not exist"));
 		}
-		else if(!boost::algorithm::starts_with(stringFromVch(vchCat), "certificates"))
+		else if(!boost::algorithm::starts_with(stringFromVch(vchCategory), "certificates"))
 		{
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 1507 - " + _("Offer selling a certificate must use a certificate category"));
 		}
@@ -1550,7 +1549,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 1508 - " + _("Cannot create this offer because the certificate alias does not match the offer alias"));
 		}
 	}
-	else if(boost::algorithm::starts_with(stringFromVch(vchCat), "certificates"))
+	else if(boost::algorithm::starts_with(stringFromVch(vchCategory), "certificates"))
 	{
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 1509 - " + _("Offer not selling a certificate cannot use a certificate category"));
 	}
@@ -1666,7 +1665,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
  
 
 	vector<unsigned char> vchLinkOffer = vchFromValue(params[1]);
-	vector<unsigned char> vchDetails;
+	vector<unsigned char> vchDescription;
 	// look for a transaction with this key
 	CTransaction tx;
 	COffer linkOffer;
@@ -1677,15 +1676,15 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	if(params.size() >= 4)
 	{
 
-		vchDesc = vchFromValue(params[3]);
-		if(vchDesc.empty())
+		vchDescription = vchFromValue(params[3]);
+		if(vchDescription.empty())
 		{
-			vchDesc = linkOffer.sDescription;
+			vchDescription = linkOffer.sDescription;
 		}
 	}
 	else
 	{
-		vchDesc = linkOffer.sDescription;
+		vchDescription = linkOffer.sDescription;
 	}
 	COfferLinkWhitelistEntry entry;
 	if(linkOffer.linkWhitelist.GetLinkEntryByHash(vchAlias, entry))
@@ -1723,7 +1722,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	COffer newOffer;
 	newOffer.vchOffer = vchOffer;
 	newOffer.vchAlias = alias.vchAlias;
-	newOffer.sDescription = vchDesc;
+	newOffer.sDescription = vchDescription;
 	newOffer.SetPrice(linkOffer.GetPrice());
 	newOffer.paymentOptions = linkOffer.paymentOptions;
 	newOffer.nCommission = commissionInteger;
@@ -2287,13 +2286,13 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 
 	CAmount nPricePerUnit = offerCopy.GetPrice();
 	if(!strCurrency.empty())
-		theOffer.sCurrencyCode = strCurrency;
+		theOffer.sCurrencyCode = vchFromString(strCurrency);
 	if(!strTitle.empty())
-		theOffer.vchTitle = vchFromString(strTitle);
+		theOffer.sTitle = vchFromString(strTitle);
 	if(!strCategory.empty())
-		theOffer.vchCategory = vchFromString(strCategory);
+		theOffer.sCategory = vchFromString(strCategory);
 	if(!strDescription.empty())
-		theOffer.vchDescription = vchFromString(strDescription);
+		theOffer.sDescription = vchFromString(strDescription);
 	if(!strGeoLocation.empty())
 		theOffer.vchGeoLocation = vchFromString(strGeoLocation);
 	float fPrice = 1;
@@ -2305,7 +2304,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		if(!strCert.empty())
 			theOffer.vchCert = vchFromString(strCert);
 		int precision = 2;
-		nPricePerUnit = convertCurrencyCodeToSyscoin(alias.vchAliasPeg, strCurrency.empty()? offerCopy.sCurrencyCode: strCurrency, fPrice, chainActive.Tip()->nHeight, precision);
+		nPricePerUnit = convertCurrencyCodeToSyscoin(alias.vchAliasPeg, strCurrency.empty()? offerCopy.sCurrencyCode: vchFromString(strCurrency), fPrice, chainActive.Tip()->nHeight, precision);
 		if(nPricePerUnit == 0)
 		{
 			string err = "SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1549 - " + _("Could not find currency in the peg alias");
