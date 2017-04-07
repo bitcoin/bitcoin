@@ -25,6 +25,19 @@ import tempfile
 import re
 import logging
 
+# Formatting. Default colors to empty strings.
+BOLD, BLUE, RED, GREY = ("", ""), ("", ""), ("", ""), ("", "")
+TICK = "✓ "
+CROSS = "✖ "
+CIRCLE = "○ "
+if os.name == 'posix':
+    # primitive formatting on supported
+    # terminal via ANSI escape sequences:
+    BOLD = ('\033[0m', '\033[1m')
+    BLUE = ('\033[0m', '\033[0;34m')
+    RED = ('\033[0m', '\033[0;31m')
+    GREY = ('\033[0m', '\033[1;30m')
+
 TEST_EXIT_PASSED = 0
 TEST_EXIT_SKIPPED = 77
 
@@ -245,11 +258,6 @@ def run_tests(test_list, src_dir, build_dir, exeext, jobs=1, enable_coverage=Fal
     if os.path.isdir(cache_dir):
         print("%sWARNING!%s There is a cache directory here: %s. If tests fail unexpectedly, try deleting the cache directory." % (BOLD[1], BOLD[0], cache_dir))
 
-    BOLD = ("","")
-    if os.name == 'posix':
-        # primitive formatting on supported
-        # terminal via ANSI escape sequences:
-        BOLD = ('\033[0m', '\033[1m')
 
     #Set env vars
     if "BITCOIND" not in os.environ:
@@ -272,33 +280,26 @@ def run_tests(test_list, src_dir, build_dir, exeext, jobs=1, enable_coverage=Fal
         subprocess.check_output([tests_dir + 'create_cache.py'] + flags)
 
     #Run Tests
-    all_passed = True
-    time_sum = 0
-    time0 = time.time()
-
     job_queue = TestHandler(jobs, tests_dir, test_list, flags)
+    time0 = time.time()
+    test_results = []
 
     max_len_name = len(max(test_list, key=len))
-    results = "\n" + BOLD[1] + "%s | %s | %s\n\n" % ("TEST".ljust(max_len_name), "STATUS ", "DURATION") + BOLD[0]
-    for _ in range(len(test_list)):
-        (name, stdout, stderr, status, duration) = job_queue.get_next()
-        all_passed = all_passed and status != "Failed"
-        time_sum += duration
 
-        if status == "Passed":
-            logging.debug("\n%s%s%s passed, Duration: %s s" % (BOLD[1], name, BOLD[0], duration))
-        elif status == "Skipped":
-            logging.debug("\n%s%s%s skipped" % (BOLD[1], name, BOLD[0]))
+    for _ in range(len(test_list)):
+        test_result, stdout, stderr = job_queue.get_next()
+        test_results.append(test_result)
+
+        if test_result.status == "Passed":
+            logging.debug("\n%s%s%s passed, Duration: %s s" % (BOLD[1], test_result.name, BOLD[0], test_result.time))
+        elif test_result.status == "Skipped":
+            logging.debug("\n%s%s%s skipped" % (BOLD[1], test_result.name, BOLD[0]))
         else:
-            print("\n%s%s%s failed, Duration: %s s\n" % (BOLD[1], name, BOLD[0], duration))
+            print("\n%s%s%s failed, Duration: %s s\n" % (BOLD[1], test_result.name, BOLD[0], test_result.time))
             print(BOLD[1] + 'stdout:\n' + BOLD[0] + stdout + '\n')
             print(BOLD[1] + 'stderr:\n' + BOLD[0] + stderr + '\n')
 
-        results += "%s | %s | %s s\n" % (name.ljust(max_len_name), status.ljust(7), duration)
-
-    results += BOLD[1] + "\n%s | %s | %s s (accumulated)" % ("ALL".ljust(max_len_name), str(all_passed).ljust(7), time_sum) + BOLD[0]
-    print(results)
-    print("\nRuntime: %s s" % (int(time.time() - time0)))
+    print_results(test_results, max_len_name, (int(time.time() - time0)))
 
     if coverage:
         coverage.report_rpc_coverage()
@@ -306,7 +307,27 @@ def run_tests(test_list, src_dir, build_dir, exeext, jobs=1, enable_coverage=Fal
         logging.debug("Cleaning up coverage data")
         coverage.cleanup()
 
+    all_passed = all(map(lambda test_result: test_result.status == "Passed", test_results))
+
     sys.exit(not all_passed)
+
+def print_results(test_results, max_len_name, runtime):
+    results = "\n" + BOLD[1] + "%s | %s | %s\n\n" % ("TEST".ljust(max_len_name), "STATUS   ", "DURATION") + BOLD[0]
+
+    test_results.sort(key=lambda result: result.name.lower())
+    all_passed = True
+    time_sum = 0
+
+    for test_result in test_results:
+        all_passed = all_passed and test_result.status != "Failed"
+        time_sum += test_result.time
+        test_result.padding = max_len_name
+        results += str(test_result)
+
+    status = TICK + "Passed" if all_passed else CROSS + "Failed"
+    results += BOLD[1] + "\n%s | %s | %s s (accumulated) \n" % ("ALL".ljust(max_len_name), status.ljust(9), time_sum) + BOLD[0]
+    results += "Runtime: %s s\n" % (runtime)
+    print(results)
 
 class TestHandler:
     """
@@ -362,8 +383,30 @@ class TestHandler:
                         status = "Failed"
                     self.num_running -= 1
                     self.jobs.remove(j)
-                    return name, stdout, stderr, status, int(time.time() - time0)
+
+                    return TestResult(name, status, int(time.time() - time0)), stdout, stderr
             print('.', end='', flush=True)
+
+class TestResult():
+    def __init__(self, name, status, time):
+        self.name = name
+        self.status = status
+        self.time = time
+        self.padding = 0
+
+    def __repr__(self):
+        if self.status == "Passed":
+            color = BLUE
+            glyph = TICK
+        elif self.status == "Failed":
+            color = RED
+            glyph = CROSS
+        elif self.status == "Skipped":
+            color = GREY
+            glyph = CIRCLE
+
+        return color[1] + "%s | %s%s | %s s\n" % (self.name.ljust(self.padding), glyph, self.status.ljust(7), self.time) + color[0]
+
 
 def check_script_list(src_dir):
     """Check scripts directory.
