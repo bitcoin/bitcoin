@@ -5949,7 +5949,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
             pfrom->nGetXthinCount += 1;
             LogPrint("thin", "nGetXthinCount is %f\n", pfrom->nGetXthinCount);
             if (chainparams.NetworkIDString() == "main") // other networks have variable mining rates
-	    {
+            {
                 if (pfrom->nGetXthinCount >= 20)
                 {
                     LOCK(cs_main);
@@ -5963,7 +5963,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
         CInv inv;
         vRecv >> inv >> filterMemPool;
 
-        // Consistency checking for get_xthin
+        // Message consistency checking
         if (!((inv.type == MSG_XTHINBLOCK) || (inv.type == MSG_THINBLOCK)) || inv.hash.IsNull())
         {
             LOCK(cs_main);
@@ -5981,7 +5981,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
             if (mi == mapBlockIndex.end())
             {
                 Misbehaving(pfrom->GetId(), 100);
-                return error("Peer %s (%d) requested nonexistent block %s\n", pfrom->addrName.c_str(), pfrom->id, inv.hash.ToString());
+                return error("Peer %s (%d) requested nonexistent block %s", pfrom->addrName.c_str(), pfrom->id, inv.hash.ToString());
             }
 
             CBlock block;
@@ -5989,7 +5989,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
             if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
             {
                 // We don't have the block yet, although we know about it.
-                return error("Peer %s (%d) requested block %s that cannot be read\n", pfrom->addrName.c_str(), pfrom->id, inv.hash.ToString());
+                return error("Peer %s (%d) requested block %s that cannot be read", pfrom->addrName.c_str(), pfrom->id, inv.hash.ToString());
             }
             else
             {
@@ -6038,8 +6038,8 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
         CXThinBlock thinBlock;
         vRecv >> thinBlock;
 
-        // Check that that there is at least one txn in the xthin and that the first txn is the coinbase
-        if(!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
+        // Message consistency checking
+        if (!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
         {
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 100);
@@ -6073,7 +6073,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
         CThinBlock thinBlock;
         vRecv >> thinBlock;
 
-        // Check that that there is at least one txn in the thinblock and that the first txn is the coinbase
+        // Message consistency checking
         if(!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
         {
             LOCK(cs_main);
@@ -6102,7 +6102,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
         {
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 100);
-            return error("incorrectly constructed get_xblocktx received.  Banning peer=%d\n", pfrom->id);
+            return error("incorrectly constructed get_xblocktx received.  Banning peer=%d", pfrom->id);
         }
 
         // We use MSG_TX here even though we refer to blockhash because we need to track
@@ -6181,7 +6181,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
 
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 100);
-            return error("incorrectly constructed xblocktx or inconsistent thinblock data received.  Banning peer=%d\n", pfrom->id);
+            return error("incorrectly constructed xblocktx or inconsistent thinblock data received.  Banning peer=%d", pfrom->id);
         }
 
         LogPrint("net", "received blocktxs for %s peer=%d\n", inv.hash.ToString(), pfrom->id);
@@ -6197,9 +6197,8 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
         BOOST_FOREACH(CTransaction tx, thinBlockTx.vMissingTx)
             mapMissingTx[tx.GetHash().GetCheapHash()] = tx;
 
-        int count=0;
-        size_t i;
-        for (i = 0; i < pfrom->thinBlock.vtx.size(); i++)
+        int count = 0;
+        for (size_t i = 0; i < pfrom->thinBlock.vtx.size(); i++)
         {
             if (pfrom->thinBlock.vtx[i].IsNull())
             {
