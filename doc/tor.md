@@ -102,7 +102,9 @@ affect the number of available .onion nodes.
 This new feature is enabled by default if Bitcoin Core is listening (`-listen`), and
 requires a Tor connection to work. It can be explicitly disabled with `-listenonion=0`
 and, if not disabled, configured using the `-torcontrol` and `-torpassword` settings.
-To show verbose debugging information, pass `-debug=tor`.
+To show verbose debugging information, pass `-debug=tor`. Hidden service can also be
+run in Single Onion Service mode which was introduced in Tor version 0.2.9.8 and exchanges
+service anonymity for connection speed up. This can be enabled with `-listenonion=2`.
 
 Connecting to Tor's control socket API requires one of two authentication methods to be 
 configured. For cookie authentication the user running bitcoind must have write access 
