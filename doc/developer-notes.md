@@ -94,6 +94,10 @@ make check-formatting
 ;;   You may need to comment this out when editing some files
 (add-hook 'c-mode-hook
                 (lambda () (add-to-list 'write-file-functions 'delete-trailing-whitespace)))
+
+;; Import clang-format functionality into emacs (ctrl-tab to format the selected region)
+(load "clang-format-3.8/clang-format.el")
+(global-set-key [C-tab] 'clang-format-region)
 ```
 
 
