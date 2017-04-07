@@ -3727,7 +3727,7 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 		if(offer.linkWhitelist.entries[0].nDiscountPct == 127)
 			entry.push_back(Pair("whitelist", _("Whitelist was cleared")));
 		else
-			entry.push_back(Pair("whitelist", _("Whitelist entries were added or removed"));
+			entry.push_back(Pair("whitelist", _("Whitelist entries were added or removed")));
 	}
 
 
