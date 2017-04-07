@@ -937,7 +937,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theAlias.vchGUID = dbAlias.vchGUID;
 					theAlias.vchAlias = dbAlias.vchAlias;
 					// if transfer
-					if(dbAlias.vchAddress != theAlias.vchAddress && theAlias.bTransfer)
+					if(dbAlias.vchAddress != theAlias.vchAddress)
 					{
 						// if transfer clear pw
 						if(!pwChange)
@@ -953,9 +953,9 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 								theAlias = dbAlias;
 							}
 						}
-						if(dbAlias.nAccessFlags < 1)
+						if(dbAlias.nAccessFlags < 2)
 						{
-							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("Cannot edit this alias. It is view-only.");
+							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("Cannot edit this alias. Insufficient privileges.");
 							theAlias = dbAlias;
 						}
 						// let old address be re-occupied by a new alias
@@ -966,9 +966,9 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 					else
 					{
-						if(dbAlias.nAccessFlags < 2)
+						if(dbAlias.nAccessFlags < 1)
 						{
-							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("Cannot transfer this alias. Insufficient privileges.");
+							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 - " + _("Cannot edit this alias. It is view-only.");
 							theAlias = dbAlias;
 						}
 					}
@@ -2018,7 +2018,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		DecodeBase58(strAddress, theAlias.vchAddress);
 	theAlias.vchAliasPeg = vchAliasPeg;
 	theAlias.nExpireTime = nTime;
-	
+	theAlias.nAccessFlags = copyAlias.nAccessFlags;
 	if(strAcceptCertTransfers.empty())
 		theAlias.acceptCertTransfers = copyAlias.acceptCertTransfers;
 	else

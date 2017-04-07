@@ -3226,7 +3226,6 @@ bool BuildOfferJson(const COffer& theOffer, const CAliasIndex &alias, UniValue& 
 	oOffer.push_back(Pair("paymentoptions_display", GetPaymentOptionsString(paymentOptions)));
 	oOffer.push_back(Pair("alias_peg", stringFromVch(alias.vchAliasPeg)));
 	oOffer.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
-	oOffer.push_back(Pair("details", stringFromVch(theOffer.sDetails)));
 	oOffer.push_back(Pair("alias", stringFromVch(theOffer.vchAlias)));
 	oOffer.push_back(Pair("encryption_publickey", HexStr(vchEncryptionPublicKey)));
 	oOffer.push_back(Pair("address", EncodeBase58(alias.vchAddress)));
@@ -3751,8 +3750,14 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 	if(offer.accept.bPaymentAck && offer.accept.bPaymentAck != dbOffer.accept.bPaymentAck)
 		entry.push_back(Pair("paymentacknowledge", offer.accept.bPaymentAck);
 
-	if(!offer.sDetails.empty() && offer.sDetails != dbOffer.sDetails)
-		entry.push_back(Pair("details", stringFromVch(offer.sDetails)));
+	if(!offer.sDescription.empty() && offer.sDescription != dbOffer.sDescription)
+		entry.push_back(Pair("description", stringFromVch(offer.sDescription)));
+
+	if(!offer.sTitle.empty() && offer.sTitle != dbOffer.sTitle)
+		entry.push_back(Pair("title", stringFromVch(offer.sTitle)));
+
+	if(!offer.sCategory.empty() && offer.sCategory != dbOffer.sCategory)
+		entry.push_back(Pair("category", stringFromVch(offer.sCategory)));
 
 	if(offer.nQty != dbOffer.nQty)
 		entry.push_back(Pair("quantity", boost::lexical_cast<string>(offer.nQty)));
