@@ -23,7 +23,7 @@
 int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *pWallet)
 {
     CMutableTransaction txNew(tx);
-    std::vector<std::pair<const CWalletTx *, unsigned int>> vCoins;
+    std::vector<CInputCoin> vCoins;
     // Look up the inputs.  We should have already checked that this transaction
     // IsAllFromMe(ISMINE_SPENDABLE), so every input should already be in our
     // wallet, with a valid index into the vout array.
