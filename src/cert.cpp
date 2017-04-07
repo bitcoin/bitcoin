@@ -983,7 +983,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	else
 		theCert.safeSearch = copyCert.safeSearch;
 	if(!strCategory.empty())
-		theCert.vchCategory = vchFromString(strCategory);
+		theCert.sCategory = vchFromString(strCategory);
 	if(!strTitle.empty())
 		theCert.vchTitle = vchFromString(strTitle);
 	if(!strEncryptionPublicKey.empty())
@@ -1083,9 +1083,6 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	if(CheckParam(params, 6))
 		strAccessFlags = params[6].get_str();
 
-
-	if(CheckParam(params, 3))
-		strViewOnly = params[3].get_str();
 	// check for alias existence in DB
 	CTransaction tx;
 	CAliasIndex toAlias;
@@ -1491,8 +1488,7 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 	entry.push_back(Pair("cert", stringFromVch(cert.vchCert)));
 
 	if(!cert.vchTitle.empty() && cert.vchTitle != dbCert.vchTitle)
-		titleValue = stringFromVch(cert.vchTitle);
-	entry.push_back(Pair("title", titleValue));
+		entry.push_back(Pair("title", stringFromVch(cert.vchTitle)));
 
 	if(!cert.vchData.empty() && cert.vchData != dbCert.vchData)
 		entry.push_back(Pair("privatedata", HexStr(cert.vchData)));
