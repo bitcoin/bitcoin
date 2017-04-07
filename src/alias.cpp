@@ -22,6 +22,7 @@
 #include "policy/policy.h"
 #include "utiltime.h"
 #include "coincontrol.h"
+#include "messagecrypter.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/xpressive/xpressive_dynamic.hpp>
@@ -961,7 +962,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						// let old address be re-occupied by a new alias
 						if (!dontaddtodb && errorMessage.empty())
 						{
-							paliasdb->EraseAddress(dbAlias.vchAddress)
+							paliasdb->EraseAddress(dbAlias.vchAddress);
 						}
 					}
 					else
@@ -1858,7 +1859,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
-	CreateFeeRecipient(scriptData, data, fee);
+	CreateFeeRecipient(scriptData, newAlias.vchAliasPeg, chainActive.Tip()->nHeight, data, fee);
 	// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
 	uint64_t nTimeExpiry = nTime - chainActive.Tip()->nTime;
 	float fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
@@ -2048,7 +2049,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
-	CreateFeeRecipient(scriptData, data, fee);
+	CreateFeeRecipient(scriptData, copyAlias.vchAliasPeg, chainActive.Tip()->nHeight, data, fee);
 	// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
 	uint64_t nTimeExpiry = nTime - chainActive.Tip()->nTime;
 	float fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
