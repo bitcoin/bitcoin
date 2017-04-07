@@ -9,6 +9,7 @@
 #include "guiutil.h"
 #include "peertablemodel.h"
 
+#include "chain.h"
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "clientversion.h"
