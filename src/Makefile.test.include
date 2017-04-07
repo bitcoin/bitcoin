@@ -105,7 +105,8 @@ SYSCOIN_TESTS += \
   wallet/test/wallet_test_fixture.h \
   wallet/test/accounting_tests.cpp \
   wallet/test/wallet_tests.cpp \
-  wallet/test/crypto_tests.cpp
+  wallet/test/crypto_tests.cpp \
+  wallet/test/rpc_wallet_tests.cpp
 endif
 
 test_test_syscoin_SOURCES = $(SYSCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
@@ -114,7 +115,7 @@ test_test_syscoin_LDADD = $(LIBSYSCOIN_SERVER) $(LIBSYSCOIN_CLI) $(LIBSYSCOIN_CO
   $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(LIBCRYPTOPP)
 test_test_syscoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 if ENABLE_WALLET
-test_test_syscoin_LDADD += $(LIBSYSCOIN_WALLET)
+test_test_syscoin_LDADD += $(LIBSYSCOIN_WALLET) $(LIBSCRYPT)
 endif
 
 test_test_syscoin_LDADD += $(LIBSYSCOIN_CONSENSUS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)

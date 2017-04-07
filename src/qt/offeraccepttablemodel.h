@@ -22,7 +22,7 @@ public:
     enum ColumnIndex {
         Name = 0,   /**< offer name */
         GUID = 1,  /**< Offer value */
-		Title = 2,  /**< Offer value */
+		Title = 2,
 		Height = 3,
 		Price = 4,
 		Currency = 5,

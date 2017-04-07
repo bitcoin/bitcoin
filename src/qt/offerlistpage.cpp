@@ -418,7 +418,7 @@ void OfferListPage::on_searchOffer_clicked(string GUID)
 	string aliasRating_str;
 	int sold = 0;
 
-	int expired = 0;
+	bool expired = false;
 	int index;
     params.push_back(ui->lineEditOfferSearch->text().toStdString());
 	params.push_back(GUID);
@@ -479,7 +479,7 @@ void OfferListPage::on_searchOffer_clicked(string GUID)
 			safesearch_str = "";
 			aliasRating_str = "";
 			geolocation_str = "";
-			expired = 0;
+			expired = false;
 			sold = 0;
 
 
@@ -526,8 +526,8 @@ void OfferListPage::on_searchOffer_clicked(string GUID)
 			if (alias_peg_value.type() == UniValue::VSTR)
 				alias_peg_str = alias_peg_value.get_str();
 			const UniValue& expired_value = find_value(o, "expired");
-			if (expired_value.type() == UniValue::VNUM)
-				expired = expired_value.get_int();
+			if (expired_value.type() == UniValue::VBOOL)
+				expired = expired_value.get_bool();
 			const UniValue& safesearch_value = find_value(o, "safesearch");
 			if (safesearch_value.type() == UniValue::VSTR)
 				safesearch_str = safesearch_value.get_str();
@@ -537,7 +537,7 @@ void OfferListPage::on_searchOffer_clicked(string GUID)
 			const UniValue& paymentoptions_value = find_value(o, "paymentoptions_display");
 			if (paymentoptions_value.type() == UniValue::VSTR)
 				paymentoptions_str = paymentoptions_value.get_str();
-			if(expired == 1)
+			if(expired)
 			{
 				expired_str = "Expired";
 			}

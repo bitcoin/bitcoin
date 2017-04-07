@@ -72,15 +72,17 @@ public:
     {
         cachedOfferTable.clear();
         {
-			string strMethod = string("offeracceptlist");
+			string strMethod = string("offerlist");
 	        UniValue params(UniValue::VARR); 
 			UniValue listAliases(UniValue::VARR);
 			appendListAliases(listAliases);
 			params.push_back(listAliases);
+			params.push_back("\"\"");
+			params.push_back("Yes");
 			UniValue result ;
 			string name_str;
-			string value_str;
 			string title_str;
+			string value_str;
 			string height_str;
 			string qty_str;
 			string currency_str;
@@ -111,12 +113,12 @@ public:
 						const UniValue& value_value = find_value(o, "id");
 						if (value_value.type() == UniValue::VSTR)
 							value_str = value_value.get_str();
-						const UniValue& height_value = find_value(o, "height");
-						if (height_value.type() == UniValue::VSTR)
-							height_str = height_value.get_str();
 						const UniValue& title_value = find_value(o, "title");
 						if (title_value.type() == UniValue::VSTR)
 							title_str = title_value.get_str();
+						const UniValue& height_value = find_value(o, "height");
+						if (height_value.type() == UniValue::VSTR)
+							height_str = height_value.get_str();
 						const UniValue& price_value = find_value(o, "price");
 						if (price_value.type() == UniValue::VSTR)
 							price_str = price_value.get_str();
@@ -132,9 +134,6 @@ public:
 						const UniValue& status_value = find_value(o, "status");
 						if (status_value.type() == UniValue::VSTR)
 							status_str = status_value.get_str();
-						const UniValue& ismine_value = find_value(o, "ismine");
-						if (ismine_value.type() == UniValue::VSTR)
-							ismine_str = ismine_value.get_str();
 						const UniValue& buyer_value = find_value(o, "buyer");
 						if (buyer_value.type() == UniValue::VSTR)
 							buyer_str = buyer_value.get_str();
@@ -284,10 +283,10 @@ QVariant OfferAcceptTableModel::data(const QModelIndex &index, int role) const
             return rec->guid;
         case Name:
             return rec->offer;
-        case Title:
-            return rec->title;
         case Height:
             return rec->height;
+        case Title:
+            return rec->title;
         case Price:
             return rec->price;
         case Currency:
@@ -497,7 +496,7 @@ void OfferAcceptTableModel::updateEntry(const QString &offer, const QString &val
     priv->updateEntry(offer, value, title, height, price, currency, qty, total, alias, status, buyer, type, statusi);
 }
 
-QString OfferAcceptTableModel::addRow(const QString &type, const QString &offer, const QString &title, const QString &value, const QString &height,const QString &price, const QString &currency, const QString &qty, const QString &total, const QString &alias, const QString &status, const QString &buyer)
+QString OfferAcceptTableModel::addRow(const QString &type, const QString &offer, const QString &value, const QString &title, const QString &height,const QString &price, const QString &currency, const QString &qty, const QString &total, const QString &alias, const QString &status, const QString &buyer)
 {
     editStatus = OK;
     // Check for duplicate offer

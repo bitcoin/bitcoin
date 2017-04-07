@@ -28,7 +28,7 @@ public:
 
     void setModel(WalletModel*,MessageTableModel *model);
     void loadRow(int row);
-
+	void GetEncryptionKeys(const QString& fromalias, const QString& toalias);
 
 public Q_SLOTS:
     void accept();
@@ -42,6 +42,8 @@ private:
     MessageTableModel *model;
 	WalletModel* walletModel;
     QString message;
+	QString m_encryptionkeyto;
+	QString m_encryptionkeyfrom;
 };
 
 #endif // NEWMESSAGEDIALOG_H

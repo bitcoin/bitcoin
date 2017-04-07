@@ -88,7 +88,7 @@ public:
 			UniValue result ;
 			string guid_str;
 			string time_str;
-			string subject_str;
+			string pub_str;
 			string message_str;
 			string from_str;
 			string to_str;
@@ -100,7 +100,6 @@ public:
 				{
 					guid_str = "";
 					time_str = "";
-					subject_str = "";
 					message_str = "";
 					from_str = "";
 					to_str = "";
@@ -113,7 +112,7 @@ public:
 						const UniValue& o = input.get_obj();
 						guid_str = "";
 						time_str = "";
-						subject_str = "";
+						pub_str = "";
 						message_str = "";
 						from_str = "";
 						to_str = "";
@@ -136,14 +135,14 @@ public:
 						time_str = dateTime.toString().toStdString();
 
 
-						const UniValue& subject_value = find_value(o, "subject");
-						if (subject_value.type() == UniValue::VSTR)
-							subject_str = subject_value.get_str();
-						const UniValue& message_value = find_value(o, "message");
+						const UniValue& pub_value = find_value(o, "publicvalue");
+						if (pub_value.type() == UniValue::VSTR)
+							pub_str = pub_value.get_str();
+						const UniValue& message_value = find_value(o, "privatevalue");
 						if (message_value.type() == UniValue::VSTR)
 							message_str = message_value.get_str();
 				
-						updateEntry(QString::fromStdString(guid_str), unixTime, QString::fromStdString(time_str), QString::fromStdString(from_str), QString::fromStdString(to_str), QString::fromStdString(subject_str), QString::fromStdString(message_str), type, CT_NEW); 
+						updateEntry(QString::fromStdString(guid_str), unixTime, QString::fromStdString(time_str), QString::fromStdString(from_str), QString::fromStdString(to_str), QString::fromStdString(pub_str), QString::fromStdString(message_str), type, CT_NEW); 
 					}
 				}
  			}

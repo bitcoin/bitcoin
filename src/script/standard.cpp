@@ -210,22 +210,6 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         addressRet = CScriptID(uint160(vSolutions[0]));
         return true;
     }
-	// SYSCOIN
-    else if (whichType == TX_MULTISIG)
-    {
-		vector<CPubKey> pubKeys;
-        int nRequired = vSolutions.front()[0];
-        for (unsigned int i = 1; i < vSolutions.size()-1; i++)
-        {
-            CPubKey pubKey(vSolutions[i]);
-            if (!pubKey.IsValid())
-                continue;
-			pubKeys.push_back(pubKey);
-        }
-		CScript inner = GetScriptForMultisig(nRequired,pubKeys);
-		addressRet = CScriptID(inner);
-        return true;
-    }
     // Multisig txns have more than one address...
     return false;
 }

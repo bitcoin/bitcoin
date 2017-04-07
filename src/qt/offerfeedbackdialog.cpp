@@ -43,12 +43,12 @@ OfferFeedbackDialog::OfferFeedbackDialog(WalletModel* model, const QString &offe
 	if(offerType == Buyer)
 	{
 		ui->primaryLabel->setText("Choose a rating for the merchant (1-5) or leave at 0 for no rating. Below please give feedback to the merchant.");
-		ui->manageInfo2->setText(tr("You are the 'buyer' of this offer, please send feedback and rate the merchant once you have confirmed that you have recieved the item as per the description of the offer."));
+		ui->manageInfo2->setText(tr("You are the 'buyer' of this offer, please send feedback and rate the merchant once you have confirmed that you have received the item as per the description of the offer."));
 	}
 	else if(offerType == Seller)
 	{
 		ui->primaryLabel->setText("Choose a rating for the buyer (1-5) or leave at 0 for no rating. Below please give feedback to the buyer.");
-		ui->manageInfo2->setText(tr("You are the 'merchant' of this offer, you may leave feedback and rate the buyer once you confirmed you have recieved full payment from buyer and you have ship the goods (if its for a physical good)."));
+		ui->manageInfo2->setText(tr("You are the 'merchant' of this offer, you may leave feedback and rate the buyer once you confirmed you have received full payment from buyer and you have ship the goods (if its for a physical good)."));
 	}
 }
 bool OfferFeedbackDialog::lookup(const QString &offer, const QString &acceptGuid, QString &buyer, QString &seller, QString &offertitle, QString &currency, QString &total, QString &systotal)
@@ -77,10 +77,11 @@ bool OfferFeedbackDialog::lookup(const QString &offer, const QString &acceptGuid
 		return false;
 	}
 	string strError;
-	strMethod = string("offeracceptlist");
+	strMethod = string("offerlist");
 	UniValue params(UniValue::VARR);
 	params.push_back(seller.toStdString());
 	params.push_back(acceptGuid.toStdString());
+	params.push_back("Yes");
 	UniValue offerAcceptsValue;
     try {
         offerAcceptsValue = tableRPC.execute(strMethod, params);

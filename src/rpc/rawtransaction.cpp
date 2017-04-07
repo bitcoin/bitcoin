@@ -384,7 +384,8 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
     UniValue sendTo = params[1].get_obj();
 
     CMutableTransaction rawTx;
-
+	// SYSCOIN
+	rawTx.nLockTime = chainActive.Height();
     if (params.size() > 2 && !params[2].isNull()) {
         int64_t nLockTime = params[2].get_int64();
         if (nLockTime < 0 || nLockTime > std::numeric_limits<uint32_t>::max())
@@ -409,7 +410,8 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
         if (nOutput < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout must be positive");
 
-        uint32_t nSequence = (rawTx.nLockTime ? std::numeric_limits<uint32_t>::max() - 1 : std::numeric_limits<uint32_t>::max());
+		// SYSCOIN
+        uint32_t nSequence = (rawTx.nLockTime ? std::numeric_limits<uint32_t>::max() - 2 : std::numeric_limits<uint32_t>::max());
 
         // set the sequence number if passed in the parameters object
         const UniValue& sequenceObj = find_value(o, "sequence");
@@ -446,8 +448,6 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
 
 			// SYSCOIN
 			CScript scriptPubKey =  GetScriptForDestination(address.Get());
-			if(!address.vchRedeemScript.empty())
-				scriptPubKey = CScript(address.vchRedeemScript.begin(), address.vchRedeemScript.end());
 			if(address.isAlias && bSyscoinBlockchainTx)
 			{
 				CScript scriptPubKeyOrig;

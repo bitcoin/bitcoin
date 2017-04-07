@@ -3,6 +3,9 @@
 #include "rpc/server.h"
 #include <boost/test/unit_test.hpp>
 #include "feedback.h"
+#include "alias.h"
+#include "cert.h"
+#include "base58.h"
 BOOST_FIXTURE_TEST_SUITE (syscoin_escrow_tests, BasicSyscoinTestingSetup)
 
 BOOST_AUTO_TEST_CASE (generate_escrow_release)
@@ -18,6 +21,8 @@ BOOST_AUTO_TEST_CASE (generate_escrow_release)
 	string qty = "3";
 	string message = "paymentmessage";
 	string offerguid = OfferNew("node2", "selleralias", "category", "title", "100", "0.05", "description", "USD");
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeralias 500"), runtime_error);
+	GenerateBlocks(10);
 	string guid = EscrowNew("node1", "node2", "buyeralias", offerguid, qty, message, "arbiteralias", "selleralias");
 	EscrowRelease("node1", "buyer", guid);	
 	EscrowClaimRelease("node2", guid);
@@ -41,8 +46,19 @@ BOOST_AUTO_TEST_CASE (generate_escrow_big)
 	string qty = "3";
 
 	string offerguid = OfferNew("node2", goodname2, "category", "title", "100", "0.05", "description", "USD");
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress " + goodname1 + " 600"), runtime_error);
+	GenerateBlocks(10);
 	// payment message too long
-	BOOST_CHECK_THROW(r = CallRPC("node1", "escrownew " + goodname1 + " " + offerguid + " " + qty + " " + baddata + " " + goodname3), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo " + goodname2));
+	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
+
+	string strCipherPrivateData = "";
+	BOOST_CHECK_EQUAL(EncryptMessage(ParseHex(encryptionkey), baddata, strCipherPrivateData), true);
+	if(strCipherPrivateData.empty())
+		strCipherPrivateData = "\"\"";
+	else
+		strCipherPrivateData = HexStr(strCipherPrivateData);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "escrownew " + goodname1 + " " + offerguid + " " + qty + " " + strCipherPrivateData + " " + goodname3), runtime_error);
 	string guid = EscrowNew("node1", "node2", goodname1, offerguid, qty, gooddata, goodname3, goodname2);
 	EscrowRelease("node1", "buyer", guid);	
 	EscrowClaimRelease("node2", guid);
@@ -56,6 +72,12 @@ BOOST_AUTO_TEST_CASE (generate_escrowrefund_seller)
 	string qty = "4";
 	string message = "paymentmessage";
 	string offerguid = OfferNew("node2", "selleraliasrefund", "category", "title", "100", "1.22", "description", "CAD");
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeraliasrefund 5000"), runtime_error);
+	GenerateBlocks(10);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeraliasrefund 5000"), runtime_error);
+	GenerateBlocks(10);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeraliasrefund 5000"), runtime_error);
+	GenerateBlocks(10);
 	string guid = EscrowNew("node1", "node2", "buyeraliasrefund", offerguid, qty, message, "arbiteraliasrefund", "selleraliasrefund");
 	EscrowRefund("node2", "seller", guid);
 	EscrowClaimRefund("node1", guid);
@@ -65,6 +87,8 @@ BOOST_AUTO_TEST_CASE (generate_escrowrefund_arbiter)
 	printf("Running generate_escrowrefund_arbiter...\n");
 	string qty = "5";
 	string offerguid = OfferNew("node2", "selleraliasrefund", "category", "title", "100", "0.25", "description", "EUR");
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeraliasrefund 2000"), runtime_error);
+	GenerateBlocks(10);
 	string message = "paymentmessage";
 	string guid = EscrowNew("node1", "node2", "buyeraliasrefund", offerguid, qty, message, "arbiteraliasrefund", "selleraliasrefund");
 	EscrowRefund("node3", "arbiter", guid);
@@ -79,6 +103,8 @@ BOOST_AUTO_TEST_CASE (generate_escrowrefund_invalid)
 	AliasNew("node3", "arbiteraliasrefund2", "password", "changeddata3");
 	string qty = "2";
 	string offerguid = OfferNew("node2", "selleraliasrefund2", "category", "title", "100", "1.45", "description", "EUR");
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeraliasrefund2 10000"), runtime_error);
+	GenerateBlocks(10);
 	string guid = EscrowNew("node1", "node2", "buyeraliasrefund2", offerguid, qty, "message", "arbiteraliasrefund2", "selleraliasrefund2");
 	// try to claim refund even if not refunded
 	BOOST_CHECK_THROW(CallRPC("node2", "escrowclaimrefund " + guid), runtime_error);
@@ -87,10 +113,11 @@ BOOST_AUTO_TEST_CASE (generate_escrowrefund_invalid)
 	EscrowRefund("node2", "seller", guid);
 	// cant refund already refunded escrow
 	BOOST_CHECK_THROW(CallRPC("node2", "escrowrefund " + guid + " seller"), runtime_error);
-	// arbiter can also send claim refund to buyer
-	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "escrowclaimrefund " + guid));
 	// seller cannot
 	BOOST_CHECK_THROW(r = CallRPC("node2", "escrowclaimrefund " + guid), runtime_error);
+	// arbiter can also send claim refund to buyer
+	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "escrowclaimrefund " + guid));
+	EscrowRefund("node3", "arbiter", guid);
 
 	EscrowClaimRefund("node1", guid);
 	// cant inititate another refund after claimed already
@@ -114,10 +141,11 @@ BOOST_AUTO_TEST_CASE (generate_escrowrelease_invalid)
 	EscrowRelease("node1", "buyer", guid);
 	// cant release already released escrow
 	BOOST_CHECK_THROW(CallRPC("node1", "escrowrelease " + guid + " buyer"), runtime_error);
-	// arbiter can send release
-	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "escrowclaimrelease " + guid));
 	// buyer cant
 	BOOST_CHECK_THROW(r = CallRPC("node1", "escrowclaimrelease " + guid), runtime_error);
+	// arbiter can send release
+	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "escrowclaimrelease " + guid));
+	EscrowRelease("node3", "arbiter", guid);
 
 	EscrowClaimRelease("node2", guid);
 	// cant inititate another release after claimed already
@@ -136,22 +164,11 @@ BOOST_AUTO_TEST_CASE (generate_escrowrelease_arbiter)
 	UniValue r;
 	string qty = "1";
 	string offerguid = OfferNew("node2", "selleralias111", "category", "title", "100", "0.05", "description", "GBP");
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeralias1 1000"), runtime_error);
+	GenerateBlocks(10);
 	string guid = EscrowNew("node1", "node2", "buyeralias1", offerguid, qty, "message", "arbiteralias1", "selleralias111");
 	EscrowRelease("node3", "arbiter", guid);
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
-	CAmount escrowfee = find_value(r.get_obj(), "sysfee").get_int64();
-	// get arbiter balance (ensure he gets escrow fees, since he stepped in and released)
-	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasinfo arbiteralias1"));
-	CAmount balanceBeforeArbiter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	EscrowClaimRelease("node2", guid);
-	// get arbiter balance after release
-	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasinfo arbiteralias1"));
-	balanceBeforeArbiter += escrowfee;
-	CAmount balanceAfterArbiter = AmountFromValue(find_value(r.get_obj(), "balance"));
-	BOOST_CHECK_EQUAL(balanceBeforeArbiter, balanceAfterArbiter);
-	
-
-
 }
 BOOST_AUTO_TEST_CASE (generate_escrowfeedback)
 {
@@ -168,18 +185,16 @@ BOOST_AUTO_TEST_CASE (generate_escrowfeedback)
 
 	string qty = "1";
 	string offerguid = OfferNew("node1", "sellerescrowfeedback", "category", "title", "100", "0.05", "description", "GBP");
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyerescrowfeedback 1000"), runtime_error);
+	GenerateBlocks(10);
 	string guid = EscrowNew("node2", "node1", "buyerescrowfeedback", offerguid, qty, "message", "arbiterescrowfeedback", "sellerescrowfeedback");
 	EscrowRelease("node3", "arbiter", guid);
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
 	EscrowClaimRelease("node1", guid);
-	GenerateBlocks(5);
 	// seller leaves feedback first
 	EscrowFeedback("node1", "seller", guid,"feedbackbuyer", "1", FEEDBACKBUYER, "feedbackarbiter", "2", FEEDBACKARBITER, true);
 	// he can more if he wishes to
 	EscrowFeedback("node1", "seller", guid, "feedbackbuyer", "1", FEEDBACKBUYER, "feedbackarbiter", "2", FEEDBACKARBITER, false);
 	EscrowFeedback("node1", "seller", guid, "feedbackbuyer", "1", FEEDBACKBUYER, "feedbackarbiter", "2", FEEDBACKARBITER, false);
-
-
 	// then buyer can leave feedback
 	EscrowFeedback("node2", "buyer", guid, "feedbackseller", "1", FEEDBACKSELLER, "feedbackarbiter", "3", FEEDBACKARBITER, true);
 	// he can more if he wishes to
@@ -212,6 +227,8 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release)
 	offerguid = OfferNew("node2", "selleralias22", "category", "title", "100", "0.04", "description", "EUR", "nocert");
 	OfferAddWhitelist("node2", offerguid, "arbiteralias2", "5");
 	string offerlinkguid = OfferLink("node3", "arbiteralias2", offerguid, commission, description);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeralias2 1000"), runtime_error);
+	GenerateBlocks(10);
 	string guid = EscrowNew("node1", "node2", "buyeralias2", offerlinkguid, qty, message, "arbiteralias2", "selleralias22");
 	EscrowRelease("node1", "buyer", guid);
 	// arbiter can send release
@@ -274,48 +291,35 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 	AliasNew("node1", "selleraliasprune", "password", "changeddata2");
 	AliasNew("node2", "buyeraliasprune", "password", "changeddata2");
 	string offerguid = OfferNew("node1", "selleraliasprune", "category", "title", "100", "0.05", "description", "USD");
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeraliasprune 200"), runtime_error);
+	GenerateBlocks(10);
 	// stop node3
 	StopNode("node3");
 	// create a new service
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrownew buyeraliasprune " + offerguid + " 1 message selleraliasprune"));
-	const UniValue &arr1 = r.get_array();
-	string guid1 = arr1[1].get_str();
-	GenerateBlocks(5, "node2");
-	GenerateBlocks(5, "node1");
-
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate selleraliasprune " + offerguid + " category title 100 0.05 description"));
-	GenerateBlocks(5, "node1");
+	string guid1 = EscrowNew("node2", "node1", "buyeraliasprune", offerguid, "1", "message", "selleraliasprune", "selleraliasprune");
+	OfferUpdate("node1", "selleraliasprune", offerguid, "certificates", "titlenew", "100", "0.05", "descriptionnew");
 	// stop and start node1
 	StopNode("node1");
 	StartNode("node1");
 	GenerateBlocks(5, "node1");
 	// ensure you can still update because escrow hasn't been completed yet
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg selleraliasprune data"));
-	BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate sysrates.peg buyeraliasprune data"));
-	GenerateBlocks(5, "node1");
-	GenerateBlocks(5, "node2");
-	BOOST_CHECK_NO_THROW(CallRPC("node2", "escrowrelease " + guid1 + " buyer"));
-	GenerateBlocks(5, "node2");
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate selleraliasprune " + offerguid + " category title 100 0.05 description"));
-	GenerateBlocks(5, "node1");
+	AliasUpdate("node1", "selleraliasprune");
+	AliasUpdate("node2", "buyeraliasprune");
 
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowclaimrelease " + guid1));
-	UniValue retArray = r.get_array();
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "escrowcompleterelease " + guid1 + " " + retArray[0].get_str()));
-	GenerateBlocks(5, "node1");
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate selleraliasprune " + offerguid + " category title 100 0.05 description"));
+	EscrowRelease("node2", "buyer", guid1);
+	OfferUpdate("node1", "selleraliasprune", offerguid);
+	EscrowClaimRelease("node1", guid1);
+	OfferUpdate("node1", "selleraliasprune", offerguid);
 	GenerateBlocks(5, "node1");
 	
 	// leave some feedback (escrow is complete but not expired yet)
-	BOOST_CHECK_NO_THROW(CallRPC("node1",  "escrowfeedback " + guid1 + " seller 1 2 3 4"));
-	GenerateBlocks(5, "node1");
+	EscrowFeedback("node1", "seller", guid1,"feedbackbuyer", "1", FEEDBACKBUYER, "feedbackarbiter", "2", FEEDBACKARBITER, true);
 
 	// try to leave feedback it should let you because aliases not expired
-	BOOST_CHECK_NO_THROW(CallRPC("node2",  "escrowfeedback " + guid1 + " buyer 1 2 3 4"));
-	GenerateBlocks(5, "node2");
+	EscrowFeedback("node2", "buyer", guid1,"feedbackseller", "1", FEEDBACKSELLER, "feedbackarbiter", "2", FEEDBACKARBITER, true);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrowinfo " + guid1));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_int(), 0);	
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 0);	
 	ExpireAlias("buyeraliasprune");
 	StartNode("node3");
 	ExpireAlias("buyeraliasprune");
@@ -325,6 +329,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 	BOOST_CHECK_EQUAL(EscrowFilter("node3", guid1), false);
 	// cannot leave feedback on expired escrow
 	BOOST_CHECK_THROW(CallRPC("node2",  "escrowfeedback " + guid1 + " buyer 1 2 3 4"), runtime_error);
+	ECC_Stop();
 }
 
 BOOST_AUTO_TEST_SUITE_END ()

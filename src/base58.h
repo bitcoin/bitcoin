@@ -108,7 +108,6 @@ public:
 	unsigned char safetyLevel;
 	bool safeSearch;
 	std::string aliasName;
-	std::vector<unsigned char> vchRedeemScript;
 	std::vector<unsigned char> vchPubKey;
 
     bool Set(const CKeyID &id, CChainParams::AddressType sysVer = CChainParams::ADDRESS_SYS);

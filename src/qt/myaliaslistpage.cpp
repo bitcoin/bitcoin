@@ -124,12 +124,11 @@ void MyAliasListPage::setModel(WalletModel *walletModel, AliasTableModel *model)
 
     // Set column widths
     ui->tableView->setColumnWidth(0, 500); //alias name
-	ui->tableView->setColumnWidth(1, 100); //multisig
-    ui->tableView->setColumnWidth(2, 150); //expires on
-    ui->tableView->setColumnWidth(3, 75); //expired status
-	ui->tableView->setColumnWidth(4, 150); //buyerrating
-	ui->tableView->setColumnWidth(5, 150); //sellerrrating
-	ui->tableView->setColumnWidth(6, 0); //arbiterrating
+    ui->tableView->setColumnWidth(1, 150); //expires on
+    ui->tableView->setColumnWidth(2, 75); //expired status
+	ui->tableView->setColumnWidth(3, 150); //buyerrating
+	ui->tableView->setColumnWidth(4, 150); //sellerrrating
+	ui->tableView->setColumnWidth(5, 0); //arbiterrating
 	
 
     ui->tableView->horizontalHeader()->setStretchLastSection(true);
@@ -308,9 +307,10 @@ void MyAliasListPage::on_exportButton_clicked()
     // name, column, role
     writer.setModel(proxyModel);
     writer.addColumn(tr("Alias"), AliasTableModel::Name, Qt::EditRole);
-	writer.addColumn(tr("Multisignature"), AliasTableModel::Multisig, Qt::EditRole);
 	writer.addColumn(tr("Expires On"), AliasTableModel::ExpiresOn, Qt::EditRole);
 	writer.addColumn(tr("Expired"), AliasTableModel::Expired, Qt::EditRole);
+	writer.addColumn(tr("Private Profile"), AliasTableModel::RatingAsArbiter, AliasTableModel::PrivateRole);
+	writer.addColumn(tr("Public Profile"), AliasTableModel::RatingAsArbiter, AliasTableModel::PublicRole);
 	writer.addColumn(tr("Buyer Rating"), AliasTableModel::RatingAsBuyer, AliasTableModel::BuyerRatingRole);
 	writer.addColumn(tr("Seller Rating"), AliasTableModel::RatingAsSeller, AliasTableModel::SellerRatingRole);
 	writer.addColumn(tr("Arbiter Rating"), AliasTableModel::RatingAsArbiter, AliasTableModel::ArbiterRatingRole);

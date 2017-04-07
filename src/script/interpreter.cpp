@@ -14,7 +14,8 @@
 #include "uint256.h"
 
 using namespace std;
-
+// SYSCOIN services
+extern void RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut);
 typedef vector<unsigned char> valtype;
 
 namespace {
@@ -1405,9 +1406,12 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
         return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
     return true;
 }
-
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
+// SYSCOIN
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKeyIn, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
 {
+	// SYSCOIN
+	CScript scriptPubKey = scriptPubKeyIn;
+	RemoveSyscoinScript(scriptPubKeyIn, scriptPubKey);
     static const CScriptWitness emptyWitness;
     if (witness == NULL) {
         witness = &emptyWitness;

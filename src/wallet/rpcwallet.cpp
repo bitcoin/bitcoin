@@ -18,7 +18,6 @@
 #include "utilmoneystr.h"
 #include "wallet.h"
 #include "walletdb.h"
-
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
@@ -27,6 +26,7 @@
 
 using namespace std;
 // SYSCOIN
+#include "coincontrol.h"
 extern bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch, bool payment);
 extern bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
@@ -218,19 +218,9 @@ UniValue getzaddress(const UniValue& params, bool fHelp)
 
 	if(!sysAddress.isAlias)
 		throw JSONRPCError(RPC_INVALID_PARAMS, "Error: Please provide an alias or an address belonging to an alias");
-    
-	if(!sysAddress.vchRedeemScript.empty())
-	{
-		CScript inner(sysAddress.vchRedeemScript.begin(), sysAddress.vchRedeemScript.end());
-		CScriptID innerID(inner);
-		sysAddress = CSyscoinAddress(innerID, CChainParams::ADDRESS_ZEC);
-		return sysAddress.ToString();
-	}
-	else
-	{
-		CPubKey pubkey(sysAddress.vchPubKey);
-		return CSyscoinAddress(pubkey.GetID(), CChainParams::ADDRESS_ZEC).ToString();
-	}
+	CSyscoinAddress zecAddress;
+	zecAddress.Set(sysAddress.Get(), CChainParams::ADDRESS_ZEC);
+	return zecAddress.ToString();
 }
 CSyscoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
 {
@@ -424,28 +414,153 @@ UniValue getaddressesbyaccount(const UniValue& params, bool fHelp)
     return ret;
 }
 // SYSCOIN: Send service transactions
-void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxAliasIn=NULL, int nTxOutAlias = 0, bool syscoinMultiSigTx=false, const CCoinControl* coinControl=NULL, const CWalletTx* wtxLinkAliasIn=NULL, int nTxOutLinkAlias = 0)
+/*There are three modes of payments with aliases:
+
+Pay with alias balance (utxo's are stored in alias payment db)
+When to pay with this method:
+	- Anything that pays money to someone (escrow, offer accept), or changing an alias address (alias transfer, multisig updates, alias renewal)
+	- When alias fee placeholders run out
+	- if fee placeholder was used to create up to 5 fee placeholders, create minimum of 1
+Pay with alias fee placeholders (utxo's that are stored in alias payment db but are only used as fees for allowing multiple updates to an alias per block)
+When to pay with this method:
+	- When not paying with alias balance
+Pay with alias utxo (stored in the alias db and transaction db, used to prove that you own an alias)
+When to pay with this method:
+	- every time
+
+1) pay with utxo, create up to 5 total new outputs
+2) If not escrow, offer accept(useOnlyAliasPaymentToFund) or alias transfer
+	2a) Get fee placeholders, if transaction is is not funded save amount required and goto step 3.
+	2b) transaction completely funded
+3) if alias balance is non zero
+	3a) if fee placeholders was used, create outputs(1 minimum) up to 5 total and save new total amount summing all outputs
+	3b) use total amount + required amount from 2a (if non zero) to find outputs in alias balance, if not enough balance throw error
+	3c) transaction completely funded
+4) if transaction completely funded, try to sign and send to network*/
+void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &aliasRecipient, const CRecipient &aliasFeePlaceholderRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=false, bool transferAlias=false)
 {
-    CAmount curBalance = pwalletMain->GetBalance();
 
-    // Check amount
-    if (nValue <= 0)
-        throw runtime_error("Invalid amount");
-
-    if (nValue > curBalance)
-        throw runtime_error(strprintf("Insufficient funds. Amount requested %f, wallet balance %f", ValueFromAmount(nValue).get_real(), ValueFromAmount(curBalance).get_real()));
-
-    // Create and send the transaction
     CReserveKey reservekey(pwalletMain);
     CAmount nFeeRequired;
     std::string strError;
     int nChangePosRet = -1;
-    if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, !syscoinMultiSigTx, wtxAliasIn, nTxOutAlias, true, wtxLinkAliasIn, nTxOutLinkAlias)) {
-        if (!fSubtractFeeFromAmount && nValue + nFeeRequired > pwalletMain->GetBalance())
-            strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", FormatMoney(nFeeRequired));
+	// step 1
+	COutPoint aliasOutPoint;
+	unsigned int numResults = aliasunspent(vchAlias, aliasOutPoint);
+	if(numResults > 0 && numResults >= MAX_ALIAS_UPDATES_PER_BLOCK)
+		numResults = MAX_ALIAS_UPDATES_PER_BLOCK-1;
+	if(transferAlias)
+		numResults = 0;
+	// for the alias utxo (1 per transaction is used)
+	for(unsigned int i =numResults;i<MAX_ALIAS_UPDATES_PER_BLOCK;i++)
+		vecSend.push_back(aliasRecipient);
+	if(!aliasOutPoint.IsNull())
+		coinControl->Select(aliasOutPoint);
+
+	CWalletTx wtxNew1, wtxNew2;
+	// get total output required
+	if (!pwalletMain->CreateTransaction(vecSend, wtxNew1, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false,true)) {
+		throw runtime_error(strError);
+	}
+
+	CAmount nTotal = nFeeRequired;
+	BOOST_FOREACH(const CRecipient& recp, vecSend)
+	{
+		nTotal += recp.nAmount;
+	}
+
+	// step 2
+	CAmount nRequiredFeePlaceholderFunds = 0;
+	CAmount nRequiredPaymentFunds=0;
+	bool bAreFeePlaceholdersFunded = false;
+	bool bIsAliasPaymentFunded = false;
+	int numFeeCoinsLeft = -1;
+	if(!useOnlyAliasPaymentToFund)
+	{
+		vector<COutPoint> outPoints;
+		// select all if alias transfer
+		numFeeCoinsLeft = aliasselectpaymentcoins(vchAlias, nTotal, outPoints, bAreFeePlaceholdersFunded, nRequiredFeePlaceholderFunds, true, transferAlias);
+		BOOST_FOREACH(const COutPoint& outpoint, outPoints)
+		{
+			coinControl->Select(outpoint);	
+		}
+	}
+	// step 3
+	UniValue param(UniValue::VARR);
+	param.push_back(stringFromVch(vchAlias));
+	const UniValue &result = tableRPC.execute("aliasbalance", param);
+	CAmount nBalance = AmountFromValue(result);
+	// if fee placement utxo's have been used up (or we are creating a new alias) use balance(alias or wallet) for funding as well as create more fee placeholders
+	bool bNeedAliasPaymentInputs = numFeeCoinsLeft == 0 || numResults <= 0;
+	if(bNeedAliasPaymentInputs)
+	{
+		for(unsigned int i =0;i<MAX_ALIAS_UPDATES_PER_BLOCK;i++)
+		{
+			vecSend.push_back(aliasFeePlaceholderRecipient);
+		}	
+	}
+	if(nBalance > 0)
+	{
+		// get total output required
+		if (!pwalletMain->CreateTransaction(vecSend, wtxNew2, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false,true)) {
+			throw runtime_error(strError);
+		}
+		nTotal = nFeeRequired+nRequiredFeePlaceholderFunds;
+		BOOST_FOREACH(const CRecipient& recp, vecSend)
+		{
+			nTotal += recp.nAmount;
+		}
+		// if transferring alias, move entire balance of alias to new address
+		if(transferAlias)
+		{
+			CTxDestination aliasDest;
+			if (ExtractDestination(aliasRecipient.scriptPubKey, aliasDest)) 
+			{
+				CScript scriptChangeOrig;
+				scriptChangeOrig << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchAlias << OP_2DROP;
+				scriptChangeOrig += GetScriptForDestination(aliasDest);
+				CRecipient recipient  = {scriptChangeOrig, nBalance-nTotal-nFeeRequired, false};
+				if(recipient.nAmount > 0)
+				{
+					bNeedAliasPaymentInputs = true;
+					vecSend.push_back(recipient);
+					nTotal += recipient.nAmount;
+				}
+			}
+		}
+		if(bNeedAliasPaymentInputs || useOnlyAliasPaymentToFund)
+		{
+			vector<COutPoint> outPoints;
+			// select all if alias transferred
+			aliasselectpaymentcoins(vchAlias, nTotal, outPoints, bIsAliasPaymentFunded, nRequiredPaymentFunds, false, transferAlias);
+			if(!bIsAliasPaymentFunded && !coinControl->fAllowOtherInputs)
+			{
+				// if using only alias payments, (accept and escrow) then if not enough funds (alias has 10 sys and your paying out 10 sys) then try to pay the fees with the alias fees
+				if(useOnlyAliasPaymentToFund)
+				{
+					vector<COutPoint> feeOutPoints;
+					aliasselectpaymentcoins(vchAlias, nRequiredPaymentFunds, feeOutPoints, bAreFeePlaceholdersFunded, nRequiredFeePlaceholderFunds, true);
+					if(!bAreFeePlaceholdersFunded)
+						throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("The Syscoin Alias does not have enough funds to complete this transaction. You need to deposit the following amount of coins in order for the transaction to succeed: ") + ValueFromAmount(nRequiredFeePlaceholderFunds).write());
+					BOOST_FOREACH(const COutPoint& outpoint, feeOutPoints)
+					{
+						coinControl->Select(outpoint);	
+					}
+				}
+				
+			}
+			BOOST_FOREACH(const COutPoint& outpoint, outPoints)
+			{
+				coinControl->Select(outpoint);
+			}
+		}
+	}
+	// now create the transaction and fake sign with enough funding from alias utxo's (if coinControl specified fAllowOtherInputs(true) then and only then are wallet inputs are allowed)
+    // actual signing happens in syscoinsignrawtransaction outside of this function call after the wtxNew raw transaction is returned back to it
+	if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false,true)) {
         throw runtime_error(strError);
     }
-	// run a check on the inputs without putting them into the db, just to ensure it will go into the mempool without issues and cause wallet annoyance
+	// run a check on the inputs without putting them into the db, just to ensure it will go into the mempool without issues
 	vector<vector<unsigned char> > vvch;
 	int op, nOut;
 	bool fJustCheck = true;
@@ -500,9 +615,6 @@ void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fS
 		if(!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
 	}
-	
-    if (!syscoinMultiSigTx && !pwalletMain->CommitTransaction(wtxNew, reservekey))
-        throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("The Syscoin alias you are trying to use for this transaction is invalid or has been updated and not confirmed yet! Please wait a block and try again..."));
 }
 static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew)
 {
@@ -731,10 +843,7 @@ UniValue getreceivedbyaddress(const UniValue& params, bool fHelp)
     CSyscoinAddress address = CSyscoinAddress(params[0].get_str());
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Syscoin address");
-	// SYSCOIN
 	CScript scriptPubKey =  GetScriptForDestination(address.Get());
-	if(!address.vchRedeemScript.empty())
-		scriptPubKey = CScript(address.vchRedeemScript.begin(), address.vchRedeemScript.end());
     if (!IsMine(*pwalletMain, scriptPubKey))
         return ValueFromAmount(0);
 
@@ -2769,6 +2878,9 @@ extern UniValue aliasbalance(const UniValue& params, bool fHelp);
 extern UniValue aliashistory(const UniValue& params, bool fHelp);
 extern UniValue aliasfilter(const UniValue& params, bool fHelp);
 extern UniValue aliaspay(const UniValue& params, bool fHelp);
+extern UniValue aliasstats(const UniValue& params, bool fHelp);
+extern UniValue aliasdecodemultisigredeemscript(const UniValue& params, bool fHelp);
+extern UniValue aliasaddscript(const UniValue& params, bool fHelp);
 extern UniValue generatepublickey(const UniValue& params, bool fHelp);
 extern UniValue syscoinsignrawtransaction(const UniValue& params, bool fHelp);
 extern UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp);
@@ -2784,8 +2896,8 @@ extern UniValue offerremovewhitelist(const UniValue& params, bool fHelp);
 extern UniValue offerclearwhitelist(const UniValue& params, bool fHelp);
 extern UniValue offerwhitelist(const UniValue& params, bool fHelp);
 extern UniValue offerinfo(const UniValue& params, bool fHelp);
+extern UniValue offerstats(const UniValue& params, bool fHelp);
 extern UniValue offerlist(const UniValue& params, bool fHelp);
-extern UniValue offeracceptlist(const UniValue& params, bool fHelp);
 extern UniValue offerhistory(const UniValue& params, bool fHelp);
 extern UniValue offerfilter(const UniValue& params, bool fHelp);
 
@@ -2796,6 +2908,8 @@ extern UniValue certinfo(const UniValue& params, bool fHelp);
 extern UniValue certlist(const UniValue& params, bool fHelp);
 extern UniValue certhistory(const UniValue& params, bool fHelp);
 extern UniValue certfilter(const UniValue& params, bool fHelp);
+extern UniValue certstats(const UniValue& params, bool fHelp);
+
 extern UniValue generateescrowmultisig(const UniValue& params, bool fHelp);
 extern UniValue escrownew(const UniValue& params, bool fHelp);
 extern UniValue escrowrelease(const UniValue& params, bool fHelp);
@@ -2810,11 +2924,13 @@ extern UniValue escrowhistory(const UniValue& params, bool fHelp);
 extern UniValue escrowfilter(const UniValue& params, bool fHelp);
 extern UniValue escrowfeedback(const UniValue& params, bool fHelp);
 extern UniValue escrowacknowledge(const UniValue& params, bool fHelp);
+extern UniValue escrowstats(const UniValue& params, bool fHelp);
 
 extern UniValue messagenew(const UniValue& params, bool fHelp);
 extern UniValue messageinfo(const UniValue& params, bool fHelp);
 extern UniValue messagereceivelist(const UniValue& params, bool fHelp);
 extern UniValue messagesentlist(const UniValue& params, bool fHelp);
+extern UniValue messagestats(const UniValue& params, bool fHelp);
 static const CRPCCommand commands[] =
 { //  category              name                        actor (function)           okSafeMode
     //  --------------------- ------------------------    -----------------------    ----------
@@ -2878,6 +2994,9 @@ static const CRPCCommand commands[] =
     { "wallet", "aliashistory",      &aliashistory,      false },
     { "wallet", "aliasfilter",       &aliasfilter,       false },
 	{ "wallet", "aliaspay",       &aliaspay,       false },
+	{ "wallet", "aliasstats",        &aliasstats,       false },
+	{ "wallet", "aliasdecodemultisigredeemscript",        &aliasdecodemultisigredeemscript,       false },
+	{ "wallet", "aliasaddscript",        &aliasaddscript,       false },
 	{ "wallet", "generatepublickey", &generatepublickey, false },
 	{ "wallet", "syscoinsignrawtransaction",		 &syscoinsignrawtransaction,	false },
 	{ "wallet", "syscoindecoderawtransaction",		 &syscoindecoderawtransaction,	false },
@@ -2894,10 +3013,10 @@ static const CRPCCommand commands[] =
 	{ "wallet", "offerclearwhitelist",	&offerclearwhitelist,  false },
 	{ "wallet", "offerwhitelist",		&offerwhitelist,	   false },
     { "wallet", "offerlist",            &offerlist,            false },
-	{ "wallet", "offeracceptlist",      &offeracceptlist,      false },
     { "wallet", "offerinfo",            &offerinfo,            false },
     { "wallet", "offerhistory",         &offerhistory,         false },
-    { "wallet", "offerfilter",          &offerfilter,          false },
+	{ "wallet", "offerstats",           &offerstats,           false },
+	{ "wallet", "offerfilter",          &offerfilter,          false },
 
 	// use the blockchain as a certificate issuance platform
 	{ "wallet", "certnew",         &certnew,     false },
@@ -2907,6 +3026,7 @@ static const CRPCCommand commands[] =
 	{ "wallet", "certinfo",              &certinfo,          false },
 	{ "wallet", "certhistory",     &certhistory, false },
 	{ "wallet", "certfilter",      &certfilter,  false },
+	{ "wallet", "certstats",      &certstats,  false },
 
 	// use the blockchain for escrow linked to offers
 	{ "wallet", "generateescrowmultisig",         &generateescrowmultisig,     false },
@@ -2923,12 +3043,14 @@ static const CRPCCommand commands[] =
 	{ "wallet", "escrowfilter",      &escrowfilter,  false },
 	{ "wallet", "escrowfeedback",      &escrowfeedback,  false },
 	{ "wallet", "escrowacknowledge",      &escrowacknowledge,  false },
+	{ "wallet", "escrowstats",           &escrowstats,           false },
 
 	// use the blockchain for encrypted messaging
 	{ "wallet", "messagenew",         &messagenew,     false },
 	{ "wallet", "messagereceivelist",              &messagereceivelist,          false },
 	{ "wallet", "messagesentlist",              &messagesentlist,          false },
 	{ "wallet", "messageinfo",              &messageinfo,          false },
+	{ "wallet", "messagestats",      &messagestats,  false },
 };
 
 void RegisterWalletRPCCommands(CRPCTable &tableRPC)

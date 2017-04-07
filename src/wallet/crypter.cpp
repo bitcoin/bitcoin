@@ -13,6 +13,18 @@
 #include <string>
 #include <vector>
 #include <boost/foreach.hpp>
+// SYSCOIN
+/**
+ * crypto_scrypt(passwd, passwdlen, salt, saltlen, N, r, p, buf, buflen):
+ * Compute scrypt(passwd[0 .. passwdlen - 1], salt[0 .. saltlen - 1], N, r,
+ * p, buflen) and write the result into buf.  The parameters r, p, and buflen
+ * must satisfy r * p < 2^30 and buflen <= (2^32 - 1) * 32.  The parameter N
+ * must be a power of 2 greater than 1.
+ *
+ * Return 0 on success; or -1 on error.
+ */
+#include <libscrypt.h>
+
 
 int CCrypter::BytesToKeySHA512AES(const std::vector<unsigned char>& chSalt, const SecureString& strKeyData, int count, unsigned char *key,unsigned char *iv) const
 {
@@ -43,14 +55,20 @@ int CCrypter::BytesToKeySHA512AES(const std::vector<unsigned char>& chSalt, cons
 
 bool CCrypter::SetKeyFromPassphrase(const SecureString& strKeyData, const std::vector<unsigned char>& chSalt, const unsigned int nRounds, const unsigned int nDerivationMethod)
 {
-    if (nRounds < 1 || chSalt.size() != WALLET_CRYPTO_SALT_SIZE)
+	// SYSCOIN
+    if (nRounds < 1 || (nDerivationMethod == 0 && chSalt.size() != WALLET_CRYPTO_SALT_SIZE))
         return false;
 
     int i = 0;
     if (nDerivationMethod == 0)
         i = BytesToKeySHA512AES(chSalt, strKeyData, nRounds, chKey, chIV);
-
-    if (i != (int)WALLET_CRYPTO_KEY_SIZE)
+	// SYSCOIN
+	else if(nDerivationMethod == 1)
+		i = libscrypt_scrypt((const unsigned char*)strKeyData.c_str(), strKeyData.size(), &chSalt[0], chSalt.size(), 16384, 16, 2, chKey, WALLET_CRYPTO_KEY_SIZE);
+	else if(nDerivationMethod == 2)
+		i = libscrypt_scrypt((const unsigned char*)strKeyData.c_str(), strKeyData.size(), &chSalt[0], chSalt.size(), 16, 1, 1, chKey, WALLET_CRYPTO_KEY_SIZE);
+	// SYSCOIN
+    if ((nDerivationMethod == 0 && i != (int)WALLET_CRYPTO_KEY_SIZE) || (nDerivationMethod >= 1 && i < 0) )
     {
         memory_cleanse(chKey, sizeof(chKey));
         memory_cleanse(chIV, sizeof(chIV));

@@ -1,6 +1,9 @@
 #include "editcertdialog.h"
 #include "ui_editcertdialog.h"
-
+#include "cert.h"
+#include "alias.h"
+#include "wallet/crypter.h"
+#include "random.h"
 #include "certtablemodel.h"
 #include "guiutil.h"
 #include "walletmodel.h"
@@ -84,8 +87,7 @@ EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
 		ui->safeSearchEdit->setEnabled(false);
 		ui->safeSearchDisclaimer->setVisible(false);
 		ui->categoryEdit->setEnabled(false);
-	}
-	
+	}	
 }
 	
 void EditCertDialog::addParentItem( QStandardItemModel * model, const QString& text, const QVariant& data )
@@ -148,8 +150,7 @@ void EditCertDialog::loadCategories()
 	}
     ui->categoryEdit->setModel(model);
     ui->categoryEdit->setItemDelegate(new ComboBoxDelegate);
-}
-
+}	
 void EditCertDialog::aliasChanged(const QString& alias)
 {
 	string strMethod = string("aliasinfo");
@@ -157,7 +158,7 @@ void EditCertDialog::aliasChanged(const QString& alias)
 	params.push_back(alias.toStdString());
 	UniValue result ;
 	string name_str;
-	int expired = 0;
+	bool expired = false;
 	bool safeSearch;
 	int safetyLevel;
 	try {
@@ -173,17 +174,15 @@ void EditCertDialog::aliasChanged(const QString& alias)
 			safeSearch = false;
 			expired = safetyLevel = 0;
 
-
-	
 			const UniValue& name_value = find_value(o, "name");
 			if (name_value.type() == UniValue::VSTR)
 				name_str = name_value.get_str();		
 			const UniValue& expired_value = find_value(o, "expired");
-			if (expired_value.type() == UniValue::VNUM)
-				expired = expired_value.get_int();
+			if (expired_value.type() == UniValue::VBOOL)
+				expired = expired_value.get_bool();
 			const UniValue& ss_value = find_value(o, "safesearch");
 			if (ss_value.type() == UniValue::VSTR)
-				safeSearch = ss_value.get_str() == "Yes";	
+				safeSearch = ss_value.get_str() == "Yes";
 			const UniValue& sl_value = find_value(o, "safetylevel");
 			if (sl_value.type() == UniValue::VNUM)
 				safetyLevel = sl_value.get_int();
@@ -193,13 +192,16 @@ void EditCertDialog::aliasChanged(const QString& alias)
 			}
 			else
 				resetSafeSearch();
-
-			if(expired != 0)
+			const UniValue& encryption_value = find_value(o, "encryption_publickey");
+			if (encryption_value.type() == UniValue::VSTR)
+				m_encryptionkey = QString::fromStdString(encryption_value.get_str());
+			if(expired)
 			{
 				ui->aliasDisclaimer->setText(QString("<font color='red'>") + tr("This alias has expired, please choose another one") + QString("</font>"));				
 			}
 			else
 				ui->aliasDisclaimer->setText(QString("<font color='blue'>") + tr("Select an alias to own this certificate") + QString("</font>"));
+			
 		}
 		else
 		{
@@ -237,14 +239,14 @@ void EditCertDialog::loadAliases()
     UniValue params(UniValue::VARR); 
 	UniValue result ;
 	string name_str;
-	int expired = 0;
+	bool expired = false;
 	try {
 		result = tableRPC.execute(strMethod, params);
 
 		if (result.type() == UniValue::VARR)
 		{
 			name_str = "";
-			expired = 0;
+			expired = false;
 
 
 	
@@ -261,9 +263,9 @@ void EditCertDialog::loadAliases()
 				if (name_value.type() == UniValue::VSTR)
 					name_str = name_value.get_str();		
 				const UniValue& expired_value = find_value(o, "expired");
-				if (expired_value.type() == UniValue::VNUM)
-					expired = expired_value.get_int();
-				if(expired == 0)
+				if (expired_value.type() == UniValue::VBOOL)
+					expired = expired_value.get_bool();
+				if(expired == false)
 				{
 					QString name = QString::fromStdString(name_str);
 					ui->aliasEdit->addItem(name);					
@@ -299,7 +301,7 @@ void EditCertDialog::setModel(WalletModel* walletModel, CertTableModel *model)
 
     mapper->setModel(model);
 	mapper->addMapping(ui->certEdit, CertTableModel::Name);
-    mapper->addMapping(ui->nameEdit, CertTableModel::Title);
+	mapper->addMapping(ui->nameEdit, CertTableModel::Title);
 	mapper->addMapping(ui->certDataEdit, CertTableModel::Data);
 	mapper->addMapping(ui->certPubDataEdit, CertTableModel::PubData);
 	mapper->addMapping(ui->categoryEdit, CertTableModel::Category);
@@ -343,12 +345,21 @@ void EditCertDialog::loadRow(int row)
 			}
 		}
 	}
-
+	m_oldprivatevalue = ui->certDataEdit->toPlainText();
+	m_oldpubdata = ui->certPubDataEdit->toPlainText();
+	m_oldsafesearch = ui->safeSearchEdit->currentText();
+	m_oldtitle = ui->nameEdit->text();
 }
 
 bool EditCertDialog::saveCurrentRow()
 {
-
+	string privdata = "";
+	string pubData = "";
+	string strCipherEncryptionPrivateKey = "";
+	string strSafeSearch = "";
+	string strTitle = "";
+	string strCipherEncryptionPublicKey = "";
+	string strCipherPrivateData = "";
     if(!model || !walletModel) return false;
     WalletModel::UnlockContext ctx(walletModel->requestUnlock());
     if(!ctx.isValid())
@@ -369,20 +380,53 @@ bool EditCertDialog::saveCurrentRow()
 	UniValue params(UniValue::VARR);
 	string strMethod;
 	QVariant currentCategory;
+	CKey privEncryptionKey;
+	CPubKey pubEncryptionKey;
+	vector<unsigned char> vchPrivEncryptionKey, vchPubEncryptionKey;
     switch(mode)
     {
     case NewCert:
-        if (ui->nameEdit->text().trimmed().isEmpty()) {
-            ui->nameEdit->setText("");
-            QMessageBox::information(this, windowTitle(),
-            tr("Empty name for Cert not allowed. Please try again"),
-                QMessageBox::Ok, QMessageBox::Ok);
-            return false;
-        }
+		privEncryptionKey.MakeNewKey(true);
+		pubEncryptionKey = privEncryptionKey.GetPubKey();
+		vchPrivEncryptionKey = vector<unsigned char>(privEncryptionKey.begin(), privEncryptionKey.end());
+		vchPubEncryptionKey = vector<unsigned char>(pubEncryptionKey.begin(), pubEncryptionKey.end());
+		
+		privdata = ui->certDataEdit->toPlainText().toStdString();
+		if(privdata != m_oldprivatevalue.toStdString())
+		{
+			if(!EncryptMessage(vchPubEncryptionKey, privdata, strCipherPrivateData))
+			{
+					QMessageBox::critical(this, windowTitle(),
+						tr("Could not encrypt private certificate data!"),
+						QMessageBox::Ok, QMessageBox::Ok);
+					return false;
+			}
+			if(!EncryptMessage(ParseHex(m_encryptionkey.toStdString()), stringFromVch(vchPrivEncryptionKey), strCipherEncryptionPrivateKey))
+			{
+					QMessageBox::critical(this, windowTitle(),
+						tr("Could not encrypt certificate private encryption key!"),
+						QMessageBox::Ok, QMessageBox::Ok);
+					return false;
+			}
+		}
+
+		if(strCipherPrivateData.empty())
+			strCipherPrivateData = "\"\"";
+		else
+			strCipherPrivateData = HexStr(vchFromString(strCipherPrivateData));
+		if(strCipherEncryptionPrivateKey.empty())
+		{
+			strCipherEncryptionPrivateKey = "\"\"";
+			strCipherEncryptionPublicKey = "\"\"";
+		}
+		else
+		{
+			strCipherEncryptionPrivateKey = HexStr(vchFromString(strCipherEncryptionPrivateKey));
+			strCipherEncryptionPublicKey = HexStr(vchPubEncryptionKey);
+		}
 		strMethod = string("certnew");
 		params.push_back(ui->aliasEdit->currentText().toStdString());
 		params.push_back(ui->nameEdit->text().toStdString());
-		params.push_back(ui->certDataEdit->toPlainText().toStdString());
 		params.push_back(ui->certPubDataEdit->toPlainText().toStdString());
 		params.push_back(ui->safeSearchEdit->currentText().toStdString());
 		currentCategory = ui->categoryEdit->itemData(ui->categoryEdit->currentIndex(), Qt::UserRole);
@@ -390,11 +434,14 @@ bool EditCertDialog::saveCurrentRow()
 			params.push_back(currentCategory.toString().toStdString());
 		else
 			params.push_back(ui->categoryEdit->currentText().toStdString());
+		params.push_back(strCipherPrivateData);
+		params.push_back(strCipherEncryptionPublicKey);
+		params.push_back(strCipherEncryptionPrivateKey);
 		try {
             UniValue result = tableRPC.execute(strMethod, params);
 			if (result.type() != UniValue::VNULL)
 			{
-				cert = ui->nameEdit->text();
+				cert = ui->nameEdit->currentText();
 					
 			}
 			const UniValue& resArray = result.get_array();
@@ -435,23 +482,61 @@ bool EditCertDialog::saveCurrentRow()
     case EditCert:
         if(mapper->submit())
         {
+			privdata = ui->certDataEdit->toPlainText().toStdString();
+			if(privdata != m_oldprivatevalue.toStdString())
+			{
+				if(!EncryptMessage(vchPubEncryptionKey, privdata, strCipherPrivateData))
+				{
+						QMessageBox::critical(this, windowTitle(),
+							tr("Could not encrypt private certificate data!"),
+							QMessageBox::Ok, QMessageBox::Ok);
+						return false;
+				}
+				if(!EncryptMessage(ParseHex(m_encryptionkey.toStdString()), stringFromVch(vchPrivEncryptionKey), strCipherEncryptionPrivateKey))
+				{
+						QMessageBox::critical(this, windowTitle(),
+							tr("Could not encrypt certificate private encryption key!"),
+							QMessageBox::Ok, QMessageBox::Ok);
+						return false;
+				}
+			}
+			if(strCipherPrivateData.empty())
+				strCipherPrivateData = "\"\"";
+			else
+				strCipherPrivateData = HexStr(vchFromString(strCipherPrivateData));
+			if(strCipherEncryptionPrivateKey.empty())
+			{
+				strCipherEncryptionPrivateKey = "\"\"";
+				strCipherEncryptionPublicKey = "\"\"";
+			}
+			else
+			{
+				strCipherEncryptionPrivateKey = HexStr(vchFromString(strCipherEncryptionPrivateKey));
+				strCipherEncryptionPublicKey = HexStr(vchPubEncryptionKey);
+			}
+			pubData = "\"\"";
+			if(ui->certPubDataEdit->toPlainText() != m_oldpubdata)
+				pubData = ui->certPubDataEdit->toPlainText().toStdString();
+			strSafeSearch = "\"\"";
+			if(ui->safeSearchEdit->currentText() != m_oldsafesearch)
+				strSafeSearch = ui->safeSearchEdit->currentText().toStdString();
+			strTitle = "\"\"";
+			if(ui->nameEdit->text() != m_oldtitle)
+				strTitle = ui->nameEdit->text().toStdString();
+
 			strMethod = string("certupdate");
 			params.push_back(ui->certEdit->text().toStdString());
-			params.push_back(ui->aliasEdit->currentText().toStdString());
-			params.push_back(ui->nameEdit->text().toStdString());
-			params.push_back(ui->certDataEdit->toPlainText().toStdString());
-			params.push_back(ui->certPubDataEdit->toPlainText().toStdString());
-			params.push_back(ui->safeSearchEdit->currentText().toStdString());
-			currentCategory = ui->categoryEdit->itemData(ui->categoryEdit->currentIndex(), Qt::UserRole);
-			if(ui->categoryEdit->currentIndex() > 0 &&  currentCategory != QVariant::Invalid)
-				params.push_back(currentCategory.toString().toStdString());
-			else
-				params.push_back(ui->categoryEdit->currentText().toStdString());
+			params.push_back(strTitle);
+			params.push_back(pubData);
+			params.push_back(strCipherPrivateData);
+			params.push_back(strSafeSearch);
+			params.push_back(strCipherEncryptionPublicKey);
+			params.push_back(strCipherEncryptionPrivateKey);
 			try {
 				UniValue result = tableRPC.execute(strMethod, params);
 				if (result.type() != UniValue::VNULL)
 				{
-					cert = ui->nameEdit->text() + ui->certEdit->text();
+					cert = ui->certEdit->text();
 
 				}
 				const UniValue& resArray = result.get_array();
@@ -492,10 +577,49 @@ bool EditCertDialog::saveCurrentRow()
     case TransferCert:
         if(mapper->submit())
         {
+			privdata = ui->certDataEdit->toPlainText().toStdString();
+			if(privdata != m_oldprivatevalue.toStdString())
+			{
+				if(!EncryptMessage(vchPubEncryptionKey, privdata, strCipherPrivateData))
+				{
+						QMessageBox::critical(this, windowTitle(),
+							tr("Could not encrypt private certificate data!"),
+							QMessageBox::Ok, QMessageBox::Ok);
+						return false;
+				}
+				if(!EncryptMessage(ParseHex(m_encryptionkey.toStdString()), stringFromVch(vchPrivEncryptionKey), strCipherEncryptionPrivateKey))
+				{
+						QMessageBox::critical(this, windowTitle(),
+							tr("Could not encrypt certificate private encryption key!"),
+							QMessageBox::Ok, QMessageBox::Ok);
+						return false;
+				}
+			}
+			if(strCipherPrivateData.empty())
+				strCipherPrivateData = "\"\"";
+			else
+				strCipherPrivateData = HexStr(vchFromString(strCipherPrivateData));
+			if(strCipherEncryptionPrivateKey.empty())
+			{
+				strCipherEncryptionPrivateKey = "\"\"";
+				strCipherEncryptionPublicKey = "\"\"";
+			}
+			else
+			{
+				strCipherEncryptionPrivateKey = HexStr(vchFromString(strCipherEncryptionPrivateKey));
+				strCipherEncryptionPublicKey = HexStr(vchPubEncryptionKey);
+			}
+			pubData = "\"\"";
+			if(ui->certPubDataEdit->toPlainText() != m_oldpubdata)
+				pubData = ui->certPubDataEdit->toPlainText().toStdString();
 			strMethod = string("certtransfer");
 			params.push_back(ui->certEdit->text().toStdString());
 			params.push_back(ui->transferEdit->text().toStdString());
-			params.push_back(ui->viewOnlyBox->currentText() == QString("Yes")? "1": "0");
+			params.push_back(pubData);
+			params.push_back(strCipherPrivateData);
+			params.push_back(strCipherEncryptionPublicKey);
+			params.push_back(strCipherEncryptionPrivateKey);
+			params.push_back(ui->viewOnlyBox->currentText().toStdString());
 			try {
 				UniValue result = tableRPC.execute(strMethod, params);
 				if (result.type() != UniValue::VNULL)

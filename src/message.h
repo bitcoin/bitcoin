@@ -22,19 +22,22 @@ bool ExtractMessageAddress(const CScript& script, std::string& address);
 bool RemoveMessageScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
 void MessageTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 std::string messageFromOp(int op);
-static const unsigned int MAX_MESSAGE_LENGTH = 1024*4;
-static const unsigned int MAX_ENCRYPTED_MESSAGE_LENGTH = MAX_MESSAGE_LENGTH + 85;
 
 class CMessage {
 public:
 	std::vector<unsigned char> vchMessage;
 	std::vector<unsigned char> vchAliasTo;
 	std::vector<unsigned char> vchAliasFrom;
-	std::vector<unsigned char> vchSubject;
-	std::vector<unsigned char> vchMessageTo;
-	std::vector<unsigned char> vchMessageFrom;
+	std::vector<unsigned char> vchPubData;
+	std::vector<unsigned char> vchData;
+	// message private data encrypted to this public key
+	std::vector<unsigned char> vchEncryptionPublicKey;
+	// secret key encrypted to vchAliasFrom(sender) private key
+	std::vector<unsigned char> vchEncryptionPrivateKeyFrom;
+	// secret key encrypted to vchAliasTo(recipient) private key
+	std::vector<unsigned char> vchEncryptionPrivateKeyTo;
+
     uint256 txHash;
-	bool bHex;
     uint64_t nHeight;
     CMessage() {
         SetNull();
@@ -46,42 +49,41 @@ public:
 	ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-		READWRITE(vchSubject);
-		READWRITE(vchMessageTo);
-		READWRITE(vchMessageFrom);
+		READWRITE(vchEncryptionPrivateKeyTo);
+		READWRITE(vchEncryptionPrivateKeyFrom);
 		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
 		READWRITE(vchMessage);
         READWRITE(vchAliasTo);
 		READWRITE(vchAliasFrom);
-		READWRITE(bHex);
-		
+		READWRITE(vchData);
+		READWRITE(vchPubData);
 	}
 
     friend bool operator==(const CMessage &a, const CMessage &b) {
         return (
         a.vchAliasTo == b.vchAliasTo
 		&& a.vchAliasFrom == b.vchAliasFrom
-		&& a.vchSubject == b.vchSubject
-		&& a.vchMessageTo == b.vchMessageTo
-		&& a.vchMessageFrom == b.vchMessageFrom
+		&& a.vchEncryptionPrivateKeyTo == b.vchEncryptionPrivateKeyTo
+		&& a.vchEncryptionPrivateKeyFrom == b.vchEncryptionPrivateKeyFrom
 		&& a.txHash == b.txHash
 		&& a.nHeight == b.nHeight
 		&& a.vchMessage == b.vchMessage
-		&& a.bHex == b.bHex
+		&& a.vchData == b.vchData
+		&& a.vchPubData == b.vchPubData
         );
     }
 
     CMessage operator=(const CMessage &b) {
         vchAliasTo = b.vchAliasTo;
 		vchAliasFrom = b.vchAliasFrom;
-		vchSubject = b.vchSubject;
-		vchMessageTo = b.vchMessageTo;
-		vchMessageFrom = b.vchMessageFrom;
+		vchEncryptionPrivateKeyTo = b.vchEncryptionPrivateKeyTo;
+		vchEncryptionPrivateKeyFrom = b.vchEncryptionPrivateKeyFrom;
 		txHash = b.txHash;
 		nHeight = b.nHeight;
 		vchMessage = b.vchMessage;
-		bHex = b.bHex;
+		vchData = b.vchData;
+		vchPubData = b.vchPubData;
         return *this;
     }
 
@@ -89,8 +91,8 @@ public:
         return !(a == b);
     }
 
-    void SetNull() {bHex = false; vchMessage.clear(); txHash.SetNull(); nHeight = 0; vchAliasTo.clear(); vchAliasFrom.clear(); vchSubject.clear(); vchMessageTo.clear();vchMessageFrom.clear();}
-    bool IsNull() const { return (bHex && vchMessage.empty() && txHash.IsNull() && nHeight == 0 && vchAliasTo.empty() && vchAliasFrom.empty()); }
+    void SetNull() {vchPubData.clear(); vchData.clear(); vchMessage.clear(); txHash.SetNull(); nHeight = 0; vchAliasTo.clear(); vchAliasFrom.clear(); vchEncryptionPrivateKeyFrom.clear();vchEncryptionPrivateKeyTo.clear();}
+    bool IsNull() const { return (vchPubData.empty() && vchData.empty() && vchMessage.empty() && txHash.IsNull() && nHeight == 0 && vchAliasTo.empty() && vchAliasFrom.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);
@@ -116,14 +118,13 @@ public:
     bool ExistsMessage(const std::vector<unsigned char>& name) {
         return Exists(make_pair(std::string("messagei"), name));
     }
-
-	bool ScanRecvMessages(const std::vector<unsigned char>& vchMessage, const std::vector<std::string>& keyWordArray,unsigned int nMax,
-        std::vector<CMessage> & messageScan);
+	bool GetDBMessages(std::vector<CMessage>& message, const uint64_t& nExpireFilter, const std::vector<std::string>& aliasArray);
 	bool CleanupDatabase(int &servicesCleaned);
 
 };
 
 bool GetTxOfMessage(const std::vector<unsigned char> &vchMessage, CTransaction& tx);
-bool BuildMessageJson(const CMessage& message, UniValue& oName, const std::string &strPrivKey="");
+bool BuildMessageJson(const CMessage& message, UniValue& oName, const std::string &strWalletless="");
 uint64_t GetMessageExpiration(const CMessage& message);
+bool BuildMessageStatsJson(const std::vector<CMessage> &messages, UniValue& oMessageStats);
 #endif // MESSAGE_H

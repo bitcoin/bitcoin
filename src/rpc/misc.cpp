@@ -210,9 +210,6 @@ UniValue validateaddress(const UniValue& params, bool fHelp)
 		ret.push_back(Pair("alias", address.aliasName));	
 
         CScript scriptPubKey = GetScriptForDestination(dest);
-		// SYSCOIN
-		if(!address.vchRedeemScript.empty())
-			scriptPubKey = CScript(address.vchRedeemScript.begin(), address.vchRedeemScript.end());
         ret.push_back(Pair("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
 
 #ifdef ENABLE_WALLET
@@ -259,7 +256,10 @@ CScript _createmultisig_redeemScript(const UniValue& params)
 #ifdef ENABLE_WALLET
         // Case 1: Syscoin address and we have full public key:
         CSyscoinAddress address(ks);
-        if (pwalletMain && address.IsValid())
+		// SYSCOIN
+		if(address.isAlias && address.IsValid())
+			pubkeys[i] = address.vchPubKey;
+        else if (pwalletMain && address.IsValid())
         {
             CKeyID keyID;
             if (!address.GetKeyID(keyID))

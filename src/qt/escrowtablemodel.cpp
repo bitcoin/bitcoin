@@ -101,7 +101,8 @@ public:
 			string total_str;
 			string buyer_str;
 			string rating_str;
-			int unixTime, expired;
+			int unixTime;
+			bool expired;
 			QDateTime dateTime;	
 			try {
 				result = tableRPC.execute(strMethod, params);
@@ -116,7 +117,7 @@ public:
 					offertitle_str = "";
 					total_str = "";	
 					buyer_str = "";
-					expired = 0;
+					expired = false;
 					rating_str = "";
 					const UniValue &arr = result.get_array();
 				    for (unsigned int idx = 0; idx < arr.size(); idx++) {
@@ -131,7 +132,7 @@ public:
 						status_str = "";
 						offer_str = "";
 						total_str = "";
-						expired = 0;
+						expired = false;
 						rating_str = "";
 			
 				
@@ -170,15 +171,15 @@ public:
 						if (rating_value.type() == UniValue::VSTR)
 							rating_str = rating_value.get_str();
 						const UniValue& expired_value = find_value(o, "expired");
-						if (expired_value.type() == UniValue::VNUM)
-							expired = expired_value.get_int();
-						if((expired == 1 || status_str.find("complete") != std::string::npos ) && !showComplete)
+						if (expired_value.type() == UniValue::VBOOL)
+							expired = expired_value.get_bool();
+						if((expired || status_str.find("complete") != std::string::npos ) && !showComplete)
 							continue;
 						unixTime = atoi(time_str.c_str());
 						dateTime.setTime_t(unixTime);
 						time_str = dateTime.toString().toStdString();	
 
-						updateEntry(QString::fromStdString(name_str), unixTime, QString::fromStdString(time_str), QString::fromStdString(seller_str), QString::fromStdString(arbiter_str), QString::fromStdString(offer_str), QString::fromStdString(offertitle_str), QString::fromStdString(total_str), QString::fromStdString(rating_str), QString::fromStdString(status_str), QString::fromStdString(buyer_str), type, CT_NEW); 
+						updateEntry(QString::fromStdString(name_str), unixTime, QString::fromStdString(time_str), QString::fromStdString(seller_str), QString::fromStdString(arbiter_str), QString::fromStdString(offer_str), QString::fromStdString(offertitle_str),QString::fromStdString(total_str), QString::fromStdString(rating_str), QString::fromStdString(status_str), QString::fromStdString(buyer_str), type, CT_NEW); 
 					}
 				}
  			}

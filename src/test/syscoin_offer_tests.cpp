@@ -2,6 +2,7 @@
 #include "utiltime.h"
 #include "rpc/server.h"
 #include "alias.h"
+#include "cert.h"
 #include "feedback.h"
 #include <boost/test/unit_test.hpp>
 BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
@@ -127,7 +128,7 @@ BOOST_AUTO_TEST_CASE (generate_offerwhitelists)
 	AliasNew("node2", "selleraddwhitelistalias1", "password", "changeddata1");
 
 	// generate a good offer
-	string offerguid = OfferNew("node1", "sellerwhitelistalias", "category", "title", "100", "10.00", "description", "SYS", "nocert");
+	string offerguid = OfferNew("node1", "sellerwhitelistalias", "category", "title", "100", "10.00", "description", "SYS");
 	// add to whitelist
 	OfferAddWhitelist("node1", offerguid, "selleraddwhitelistalias", "5");
 	BOOST_CHECK_THROW(CallRPC("node1", "offeraddwhitelist " + offerguid + " selleraddwhitelistalias 5"), runtime_error);
@@ -149,6 +150,9 @@ BOOST_AUTO_TEST_CASE (generate_offerwhitelists)
 	OfferAddWhitelist("node1", offerguid, "selleraddwhitelistalias", "6");
 
 	OfferAccept("node1", "node2", "selleraddwhitelistalias1", offerguid, "1", "message");
+
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress selleraddwhitelistalias1 100"), runtime_error);
+	GenerateBlocks(10);
 
 	AliasUpdate("node1", "sellerwhitelistalias", "changeddata2", "privdata2");
 	AliasUpdate("node2", "selleraddwhitelistalias", "changeddata2", "privdata2");
@@ -179,7 +183,7 @@ BOOST_AUTO_TEST_CASE (generate_offernew_linkedoffer)
 	AliasNew("node2", "selleralias6", "password", "changeddata1");
 
 	// generate a good offer
-	string offerguid = OfferNew("node1", "selleralias5", "category", "title", "100", "10.00", "description", "USD", "nocert");
+	string offerguid = OfferNew("node1", "selleralias5", "category", "title", "100", "10.00", "description", "USD");
 	OfferAddWhitelist("node1", offerguid, "selleralias6", "5");
 	string lofferguid = OfferLink("node2", "selleralias6", offerguid, "5", "newdescription");
 
@@ -246,7 +250,7 @@ BOOST_AUTO_TEST_CASE (generate_offernew_linkedlinkedoffer)
 	AliasNew("node3", "selleralias14", "password", "changeddata1");
 
 	// generate a good offer
-	string offerguid = OfferNew("node1", "selleralias12", "category", "title", "100", "0.05", "description", "USD", "nocert");
+	string offerguid = OfferNew("node1", "selleralias12", "category", "title", "100", "0.05", "description", "USD");
 	OfferAddWhitelist("node1", offerguid, "selleralias13", "5");
 
 	string lofferguid = OfferLink("node2", "selleralias13", offerguid, "5", "newdescription");
@@ -307,6 +311,8 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 
 	// generate a good offer
 	string offerguid = OfferNew("node1", "selleraliascurrency", "category", "title", "100", "0.05", "description", "USD");
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeraliascurrency 10000"), runtime_error);
+	GenerateBlocks(10);
 	// accept and confirm payment is accurate with usd
 	string acceptguid = OfferAccept("node1", "node2", "buyeraliascurrency", offerguid, "2", "message");
 	UniValue acceptRet = FindOfferAcceptList("node1", "selleraliascurrency", offerguid, acceptguid);
@@ -381,21 +387,30 @@ BOOST_AUTO_TEST_CASE (generate_offeraccept)
 
 	// generate a good offer
 	string offerguid = OfferNew("node1", "selleralias3", "category", "title", "100", "0.01", "description", "USD");
-
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeralias3 10000"), runtime_error);
+	GenerateBlocks(10);
 	// perform a valid accept
 	string acceptguid = OfferAccept("node1", "node2", "buyeralias3", offerguid, "1", "message");
+
 	// should fail: generate an offer accept with too-large message
 	string s1024bytes =   "asdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfssdsfsdfsdfsdfsdfsdsdfdfsdfsdfsdfsdz";
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 1 " + s1024bytes), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo selleralias3"));
+	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
+	string strCipherData = "";
+
+	BOOST_CHECK_EQUAL(EncryptMessage(ParseHex(encryptionkey), s1024bytes, strCipherData), true);
+	
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 1 " + HexStr(vchFromString(strCipherData))), runtime_error);
 
 	// perform an accept on negative quantity
-	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " -1 message"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " -1 " + HexStr(vchFromString("message"))), runtime_error);
 
 	// perform an accept on zero quantity
-	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 0 message"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 0 " +  HexStr(vchFromString("message"))), runtime_error);
 
 	// perform an accept on more items than available
-	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 100 message"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 100 " +  HexStr(vchFromString("message"))), runtime_error);
 
 
 }
@@ -412,10 +427,11 @@ BOOST_AUTO_TEST_CASE (generate_linkedaccept)
 	AliasNew("node2", "node2aliaslinked", "password", "node2aliasdata");
 	AliasNew("node3", "node3aliaslinked", "password", "node2aliasdata");
 
-	string offerguid = OfferNew("node1", "node1aliaslinked", "category", "title", "10", "0.05", "description", "USD", "nocert");
+	string offerguid = OfferNew("node1", "node1aliaslinked", "category", "title", "10", "0.05", "description", "USD");
 	OfferAddWhitelist("node1", offerguid, "node2aliaslinked", "0");
 	string lofferguid = OfferLink("node2", "node2aliaslinked", offerguid, "5", "newdescription");
-
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3aliaslinked 850"), runtime_error);
+	GenerateBlocks(10);
 	LinkOfferAccept("node1", "node3", "node3aliaslinked", lofferguid, "6", "message", "node2");
 }
 BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
@@ -443,6 +459,8 @@ BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
 	AliasUpdate("node1", "node1alias", "changeddata2", "privdata2");
 	AliasUpdate("node2", "node2alias", "changeddata2", "privdata2");
 	AliasUpdate("node3", "node3alias", "changeddata3", "privdata3");
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node3alias 135"), runtime_error);
+	GenerateBlocks(10);
 	LinkOfferAccept("node1", "node3", "node3alias", lofferguid, "1", "message", "node2");
 	GenerateBlocks(5, "node1");
 	GenerateBlocks(5, "node3");
@@ -465,7 +483,8 @@ BOOST_AUTO_TEST_CASE (generate_offeracceptfeedback)
 
 	// generate a good offer
 	string offerguid = OfferNew("node1", "selleraliasfeedback", "category", "title", "100", "0.01", "description", "USD");
-
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeraliasfeedback 50"), runtime_error);
+	GenerateBlocks(10);
 	// perform a valid accept
 	string acceptguid = OfferAccept("node1", "node2", "buyeraliasfeedback", offerguid, "1", "message");
 	// seller leaves feedback first
@@ -527,7 +546,7 @@ BOOST_AUTO_TEST_CASE (generate_offerexpired)
 	ExpireAlias("buyeralias4");
 
 	// should fail: perform an accept on expired offer
-	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias4 " + offerguid + " 1 message"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias4 " + offerguid + " 1 " + HexStr(vchFromString("message"))), runtime_error);
 
 	// should fail: offer update on an expired offer
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate selleralias4 " + offerguid + " category title 90 0.15 description"), runtime_error);
@@ -551,7 +570,7 @@ BOOST_AUTO_TEST_CASE (generate_offerexpiredexmode)
 	AliasNew("node2", "selleralias11", "password", "changeddata1");
 
 	// generate a good offer 
-	string offerguid = OfferNew("node1", "selleralias10", "category", "title", "100", "0.05", "description", "USD", "nocert");
+	string offerguid = OfferNew("node1", "selleralias10", "category", "title", "100", "0.05", "description", "USD");
 
 	// should succeed: offer seller adds affiliate to whitelist
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offeraddwhitelist " + offerguid + " selleralias11 10"));
@@ -584,14 +603,14 @@ BOOST_AUTO_TEST_CASE (generate_certofferexpired)
 
 	// generate a good cert offer
 	string offerguid = OfferNew("node1", "node1alias2", "certificates", "title", "1", "0.05", "description", "USD", certguid);
-
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress node2alias2 125"), runtime_error);
+	GenerateBlocks(10);
 	// updates the alias which updates the offer and cert using this alias
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offeraccept node2alias2 " + offerguid + " 1 message"));
-	GenerateBlocks(5, "node2");
+	OfferAccept("node1", "node2", "node2alias2", offerguid, "1", "message");
 	offerguid = OfferNew("node1", "node1alias2", "certificates", "title", "1", "0.05", "description", "USD", certguid);
 	ExpireAlias("node2alias2");
 	// should fail: accept an offer with expired alias
-	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept node2alias2 " + offerguid + " 1 message"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept node2alias2 " + offerguid + " 1 " +  HexStr(vchFromString("message"))), runtime_error);
 	// should fail: generate a cert offer using an expired cert
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew node1alias2 certificates title 1 0.05 description USD " + certguid1), runtime_error);
 	/// should fail: generate a cert offer using an expired cert
@@ -607,9 +626,9 @@ BOOST_AUTO_TEST_CASE (generate_offersafesearch)
 	GenerateBlocks(10, "node2");
 	AliasNew("node2", "selleralias15", "changeddata2", "privdata2");
 	// offer is safe to search
-	string offerguidsafe = OfferNew("node2", "selleralias15", "category", "title", "100", "10.00", "description", "USD", "nocert", "NONE", "location", "Yes");
+	string offerguidsafe = OfferNew("node2", "selleralias15", "category", "title", "100", "10.00", "description", "USD", "\"\"", "\"\"", "\"\"", "Yes");
 	// not safe to search
-	string offerguidnotsafe = OfferNew("node2", "selleralias15", "category", "title", "100", "10.00", "description", "USD", "nocert", "NONE", "location", "No");
+	string offerguidnotsafe = OfferNew("node2", "selleralias15", "category", "title", "100", "10.00", "description", "USD", "\"\"", "\""", "\"\"", "No");
 	// should include result in both safe search mode on and off
 	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguidsafe, "On"), true);
 	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguidsafe, "Off"), true);
@@ -623,8 +642,8 @@ BOOST_AUTO_TEST_CASE (generate_offersafesearch)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + offerguidnotsafe));
 
 	// reverse the rolls
-	OfferUpdate("node2", "selleralias15", offerguidsafe, "category", "titlenew", "90", "0.15", "descriptionnew", "USD", false, "nocert", "location", "No");
-	OfferUpdate("node2", "selleralias15", offerguidnotsafe, "category", "titlenew", "90", "0.15", "descriptionnew", "USD", false, "nocert", "location", "Yes");
+	OfferUpdate("node2", "selleralias15", offerguidsafe, "category", "titlenew", "90", "0.15", "descriptionnew", "\"\"", "\"\"", "\"\"", "\"\"", "No");
+	OfferUpdate("node2", "selleralias15", offerguidnotsafe, "category", "titlenew", "90", "0.15", "descriptionnew", "\"\"", "\"\"", "\"\"", "\"\"", "Yes");
 
 
 	// should include result in both safe search mode on and off
@@ -649,9 +668,9 @@ BOOST_AUTO_TEST_CASE (generate_offerban)
 	GenerateBlocks(10, "node2");
 	AliasNew("node2", "selleralias15ban", "changeddata2", "privdata2");
 	// offer is safe to search
-	string offerguidsafe = OfferNew("node2", "selleralias15ban", "category", "title", "100", "10.00", "description", "USD", "nocert", "NONE", "location", "Yes");
+	string offerguidsafe = OfferNew("node2", "selleralias15ban", "category", "title", "100", "10.00", "description", "USD", "\"\"", "\"\"", "\"\"", "Yes");
 	// not safe to search
-	string offerguidnotsafe = OfferNew("node2", "selleralias15ban", "category", "title", "100", "10.00", "description", "USD", "nocert", "NONE", "location", "No");
+	string offerguidnotsafe = OfferNew("node2", "selleralias15ban", "category", "title", "100", "10.00", "description", "USD", "\"\"", "\"\"", "\"\"", "No");
 	// can't ban on any other node than one that created sysban
 	BOOST_CHECK_THROW(OfferBan("node2",offerguidnotsafe,SAFETY_LEVEL1), runtime_error);
 	BOOST_CHECK_THROW(OfferBan("node3",offerguidsafe,SAFETY_LEVEL1), runtime_error);
@@ -704,10 +723,8 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	AliasNew("node1", "pruneoffer", "password", "changeddata1");
 	// stop node2 create a service,  mine some blocks to expire the service, when we restart the node the service data won't be synced with node2
 	StopNode("node2");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew pruneoffer category title 1 0.05 description USD"));
-	const UniValue &arr = r.get_array();
-	string guid = arr[1].get_str();
-	GenerateBlocks(5, "node1");
+	string guid = OfferNew("node1", "pruneoffer", "category", "title", "1", "0.05", "description", "USD");
+	
 	// we can find it as normal first
 	BOOST_CHECK_EQUAL(OfferFilter("node1", guid, "Off"), true);
 	GenerateBlocks(5, "node1");
@@ -720,7 +737,7 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	BOOST_CHECK_EQUAL(OfferFilter("node1", guid, "Off"), false);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + guid));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_int(), 1);	
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 1);	
 
 	// should be pruned
 	BOOST_CHECK_THROW(CallRPC("node2", "offerinfo " + guid), runtime_error);
@@ -731,25 +748,23 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg pruneoffer newdata privdata"), runtime_error);
 	GenerateBlocks(5, "node1");
 	// create a new service
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg pruneoffer password1 temp data"));
-	GenerateBlocks(5, "node1");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew pruneoffer category title 1 0.05 description USD"));
-	const UniValue &arr1 = r.get_array();
-	string guid1 = arr1[1].get_str();
-	GenerateBlocks(5, "node1");
+	AliasNew("node1", "pruneoffer", "password1", "data");
+	string guid1 = OfferNew("node1", "pruneoffer", "1", "0.05", "category", "title", "1", "0.05", "description", "USD");
+	
+	
 	// stop and start node1
 	StopNode("node1");
 	StartNode("node1");
 	GenerateBlocks(5, "node1");
 	// ensure you can still update before expiry
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate pruneoffer " + guid1 + " category title 1 0.05 description"));
+	OfferUpdate("node1", "pruneoffer", guid1, "1", "0.05", "category", "title", "1", "0.05", "description", "USD");
 	// you can search it still on node1/node2
 	BOOST_CHECK_EQUAL(OfferFilter("node1", guid1, "Off"), true);
 	BOOST_CHECK_EQUAL(OfferFilter("node2", guid1, "Off"), true);
+	
 	GenerateBlocks(5, "node1");
 	// make sure our offer alias doesn't expire
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg pruneoffer newdata privdata"));
-	GenerateBlocks(5, "node1");
+	AliasUpdate("node1", "pruneoffer");
 	ExpireAlias("pruneoffer");
 	// now it should be expired
 	BOOST_CHECK_THROW(CallRPC("node1", "offerupdate pruneoffer " + guid1 + " category title 1 0.05 description"), runtime_error);
@@ -757,14 +772,14 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	BOOST_CHECK_EQUAL(OfferFilter("node2", guid1, "Off"), false);
 	// and it should say its expired
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerinfo " + guid1));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_int(), 1);	
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 1);	
 	GenerateBlocks(5, "node1");
 	StartNode("node3");
-	ExpireAlias("pruneoffer");
+	ExpireAlias("pruneoffer");  
 	GenerateBlocks(5, "node3");
 	// node3 shouldn't find the service at all (meaning node3 doesn't sync the data)
 	BOOST_CHECK_THROW(CallRPC("node3", "offerinfo " + guid1), runtime_error);
-	BOOST_CHECK_EQUAL(OfferFilter("node3", guid1, "Off"), false);
+ 	BOOST_CHECK_EQUAL(OfferFilter("node3", guid1, "Off"), false);
 
 }
 

@@ -2,6 +2,8 @@
 #include "utiltime.h"
 #include "rpc/server.h"
 #include "alias.h"
+#include "cert.h"
+#include "base58.h"
 #include <boost/test/unit_test.hpp>
 BOOST_FIXTURE_TEST_SUITE (syscoin_cert_tests, BasicSyscoinTestingSetup)
 
@@ -14,14 +16,24 @@ BOOST_AUTO_TEST_CASE (generate_big_certdata)
 	string gooddata = "dasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfssdsfsdfsdfsdfsdfsdsdfdfsdfsdfsdfsd";
 	// 1025 bytes long
 	string baddata =  "dasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfssdsfsdfsdfsdfsdfsdsdfdfsdfsdfsdfsdz";
-	string guid = CertNew("node1", "jagcertbig1", "jag", gooddata, gooddata);
-	// unencrypted 1025 bytes should cause us to trip 1108 bytes once encrypted
-	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig1 jag1 " + baddata + " " + gooddata), runtime_error);
+	string strCipherBadData = "";
+	string strCipherGoodData = "";
+	CKey privKey;
+	privKey.MakeNewKey(true);
+	CPubKey pubKey = privKey.GetPubKey();
+	vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
+	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, baddata, strCipherBadData), true);	
+	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, gooddata, strCipherGoodData), true);	
+	string guid = CertNew("node1", "jagcertbig1", gooddata, gooddata);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "certnew jagcertbig1 \"\" " + HexStr(vchFromString(strCipherGoodData))));
+	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig1 \"\" " + HexStr(vchFromString(strCipherBadData))), runtime_error);
+	// unencrypted 1025 bytes should cause us to trip 1025+80 bytes once encrypted
+	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig1 " + gooddata + " " + HexStr(vchFromString(strCipherBadData))), runtime_error);
 	// update cert with long pub data
-	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + guid + " jagcertbig1 jag1 " + gooddata + " " + baddata), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + guid + " " + baddata + " " + HexStr(vchFromString(strCipherGoodData))), runtime_error);
 	MilliSleep(2500);
 	// trying to update to bad data for pub and priv
-	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + guid + " jagcertbig1 jag1 " + baddata + " " + baddata), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + guid + " " + baddata + " " + HexStr(vchFromString(strCipherBadData))), runtime_error);
 
 }
 BOOST_AUTO_TEST_CASE (generate_big_certtitle)
@@ -44,10 +56,10 @@ BOOST_AUTO_TEST_CASE (generate_certupdate)
 	AliasNew("node1", "jagcertupdate", "password", "data");
 	string guid = CertNew("node1", "jagcertupdate", "password", "title", "data");
 	// update an cert that isn't yours
-	BOOST_CHECK_THROW(CallRPC("node2", "certupdate " + guid + " jagcertupdate title data pubdata"), runtime_error);
-	CertUpdate("node1", guid, "jagcertupdate", "changedtitle", "changeddata", "pub1");
+	BOOST_CHECK_THROW(CallRPC("node2", "certupdate " + guid + " pubdata data"), runtime_error);
+	CertUpdate("node1", guid, "pub1");
 	// shouldnt update data, just uses prev data because it hasnt changed
-	CertUpdate("node1", guid, "jagcertupdate", "changedtitle", "changeddata", "pub2");
+	CertUpdate("node1", guid);
 
 }
 BOOST_AUTO_TEST_CASE (generate_certtransfer)
@@ -63,21 +75,12 @@ BOOST_AUTO_TEST_CASE (generate_certtransfer)
 	certdata = "certdata";
 	guid = CertNew("node1", "jagcert1", certtitle, certdata, "pubdata");
 	// private cert
-	pvtguid = CertNew("node1", "jagcert1", certtitle, certdata, "pubdata");
-	CertUpdate("node1", pvtguid, "jagcert1", certtitle, certdata, "pub3");
+	pvtguid = CertNew("node1", certtitle, certdata, "pubdata");
+	CertUpdate("node1", pvtguid, certtitle, certdata, "pub3");
 	UniValue r;
-	CertTransfer("node1", guid, "jagcert2");
-	CertTransfer("node1", pvtguid, "jagcert3");
-	// it got xferred to right person
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "certinfo " + guid));
-	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "true");
-	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == "jagcert2");
-	BOOST_CHECK(find_value(r.get_obj(), "data").get_str() == certdata);
+	CertTransfer("node1", "node2", guid, "jagcert2");
+	CertTransfer("node1", "node3", pvtguid, "jagcert3");
 
-	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "certinfo " + pvtguid));
-	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "true");
-	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == "jagcert3");
-	BOOST_CHECK(find_value(r.get_obj(), "data").get_str() == certdata);
 	// xfer an cert that isn't yours
 	BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + guid + " jagcert2"), runtime_error);
 
@@ -87,7 +90,7 @@ BOOST_AUTO_TEST_CASE (generate_certtransfer)
 	CertUpdate("node2", guid, "jagcert2", certtitle, certdata, "public");
 
 	// retransfer cert
-	CertTransfer("node2", guid, "jagcert3");
+	CertTransfer("node2","node3", guid, "jagcert3");
 }
 BOOST_AUTO_TEST_CASE (generate_certsafesearch)
 {
@@ -96,9 +99,9 @@ BOOST_AUTO_TEST_CASE (generate_certsafesearch)
 	GenerateBlocks(1);
 	AliasNew("node1", "jagsafesearch1", "password", "changeddata1");
 	// cert is safe to search
-	string certguidsafe = CertNew("node1", "jagsafesearch1", "certtitle", "certdata", "public", "Yes");
+	string certguidsafe = CertNew("node1", "certtitle", "certdata", "public", "Yes");
 	// not safe to search
-	string certguidnotsafe = CertNew("node1", "jagsafesearch1", "certtitle", "certdata", "public", "No");
+	string certguidnotsafe = CertNew("node1", "certtitle", "certdata", "public", "No");
 	// should include result in both safe search mode on and off
 	BOOST_CHECK_EQUAL(CertFilter("node1", certguidsafe, "On"), true);
 	BOOST_CHECK_EQUAL(CertFilter("node1", certguidsafe, "Off"), true);
@@ -112,8 +115,8 @@ BOOST_AUTO_TEST_CASE (generate_certsafesearch)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + certguidnotsafe));
 
 	// reverse the rolls
-	CertUpdate("node1", certguidsafe, "jagsafesearch1", "certtitle", "certdata", "pub", "No");
-	CertUpdate("node1", certguidnotsafe,  "jagsafesearch1", "certtitle", "certdata", "pub1", "Yes");
+	CertUpdate("node1", certguidsafe, "certtitle", "certdata", "pub", "No");
+	CertUpdate("node1", certguidnotsafe,  "certtitle", "certdata", "pub1", "Yes");
 
 	// should include result in both safe search mode on and off
 	BOOST_CHECK_EQUAL(CertFilter("node1", certguidsafe, "Off"), true);
@@ -190,14 +193,11 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	AliasNew("node1", "jagprune1", "password", "changeddata1");
 	// stop node2 create a service,  mine some blocks to expire the service, when we restart the node the service data won't be synced with node2
 	StopNode("node2");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certnew jagprune1 jag1 data pub"));
-	const UniValue &arr = r.get_array();
-	string guid = arr[1].get_str();
-	GenerateBlocks(5, "node1");
+	string guid = CertNew("node1", "jagprune1", "jag1", "pub", "data");
 	// we can find it as normal first
 	BOOST_CHECK_EQUAL(CertFilter("node1", guid, "Off"), true);
 	// make sure our offer alias doesn't expire
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg jagprune1 newdata privdata"));
+	AliasUpdate("node1", "jagprune1");
 	GenerateBlocks(5, "node1");
 	ExpireAlias("jagprune1");
 	StartNode("node2");
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	BOOST_CHECK_EQUAL(CertFilter("node1", guid, "Off"), false);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + guid));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_int(), 1);	
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 1);	
 
 	// should be pruned
 	BOOST_CHECK_THROW(CallRPC("node2", "offerinfo " + guid), runtime_error);
@@ -215,37 +215,32 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	// stop node3
 	StopNode("node3");
 	// should fail: already expired alias
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg jagprune1 newdata privdata"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg jagprune1 newdata \"\""), runtime_error);
 	GenerateBlocks(5, "node1");
 	// create a new service
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jagprune1 password1 temp data"));
-	GenerateBlocks(5, "node1");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certnew jagprune1 jag1 data pub"));
-	const UniValue &arr1 = r.get_array();
-	string guid1 = arr1[1].get_str();
-	GenerateBlocks(5, "node1");
+	AliasNew("node1", "jagprune1", "password1", "temp", "data");
+	string guid1 = CertNew("node1", "jagprune1", "pub", "data");
 	// stop and start node1
 	StopNode("node1");
 	StartNode("node1");
 	GenerateBlocks(5, "node1");
 	// ensure you can still update before expiry
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + guid1 + " jagprune1 newdata privdata pubdata1"));
-	GenerateBlocks(5, "node1");
+	CertUpdate("node1", guid1, "pubdata1", "privdata");
 	// you can search it still on node1/node2
 	BOOST_CHECK_EQUAL(CertFilter("node1", guid1, "Off"), true);
 	BOOST_CHECK_EQUAL(CertFilter("node2", guid1, "Off"), true);
 	// make sure our offer alias doesn't expire
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg jagprune1 newdata privdata"));
+	AliasUpdate("node1", "jagprune1");
 	GenerateBlocks(5, "node1");
 	ExpireAlias("jagprune1");
 	// now it should be expired
-	BOOST_CHECK_THROW(CallRPC("node1",  "certupdate " + guid1 + " jagprune1 newdata1 privdata1 pubdata3"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1",  "certupdate " + guid1 + " pubdata3 newdata1"), runtime_error);
 	GenerateBlocks(5, "node1");
 	BOOST_CHECK_EQUAL(CertFilter("node1", guid1, "Off"), false);
 	BOOST_CHECK_EQUAL(CertFilter("node2", guid1, "Off"), false);
 	// and it should say its expired
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "certinfo " + guid1));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_int(), 1);	
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 1);	
 	GenerateBlocks(5, "node1");
 	StartNode("node3");
 	ExpireAlias("jagprune1");

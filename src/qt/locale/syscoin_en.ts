@@ -212,12 +212,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
+        <source>Cannot purchase a wanted offer!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Waiting for confirmation on the purchase of this offer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+71"/>
+        <location line="+73"/>
         <source>Could not find this offer, please ensure the offer has been confirmed by the blockchain: </source>
         <translation type="unfinished"></translation>
     </message>
@@ -232,12 +237,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+34"/>
-        <source>Stars</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+37"/>
         <source>unlimited</source>
         <translation type="unfinished"></translation>
     </message>
@@ -902,7 +902,7 @@
     </message>
     <message>
         <location line="+7"/>
-        <source>General exception when searching certficiates</source>
+        <source>General exception when searching certificates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1454,7 +1454,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Warning: transferring your alias will transfer ownership all of your syscoin services that use this alias.</source>
+        <source>Warning: Transferring your alias will transfer ownership of all your Syscoin services that use this alias.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1778,19 +1778,19 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+16"/>
         <source>Empty name for Cert not allowed. Please try again</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+33"/>
-        <location line="+56"/>
+        <location line="+34"/>
+        <location line="+57"/>
         <location line="+49"/>
         <source>This transaction requires more signatures. Transaction hex has been copied to your clipboard for your reference. Please provide it to a signee that has not yet signed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-95"/>
+        <location line="-96"/>
         <source>Error creating new Cert: </source>
         <translation type="unfinished"></translation>
     </message>
@@ -1800,7 +1800,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+50"/>
         <source>Error updating Cert: </source>
         <translation type="unfinished"></translation>
     </message>
@@ -1834,7 +1834,7 @@
     <name>EditOfferDialog</name>
     <message>
         <location filename="../forms/editofferdialog.ui" line="+14"/>
-        <location filename="../editofferdialog.cpp" line="+79"/>
+        <location filename="../editofferdialog.cpp" line="+80"/>
         <source>Edit Offer</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1951,7 +1951,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../editofferdialog.cpp" line="-46"/>
+        <location filename="../editofferdialog.cpp" line="-47"/>
         <source>You may change the alias rate peg through your alias settings</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1972,11 +1972,11 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Choose which crypto-currency you want to allow as a payment method for this offer. Your choices are any combination of SYS, BTC or ZEC. An example setting for all three: &apos;SYS+BTC+ZEC&apos;. For SYS and ZEC: &apos;SYS+ZEC&apos;. Please note that in order spend coins paid to you via Syscoin Marketplace, you will need to import your Syscoin private key in external wallet(s) if BTC or ZEC are chosen.</source>
+        <source>Choose which crypto-currency you want to allow as a payment method for this offer. Your choices are any combination of SYS, BTC or ZEC. An example setting for all three: &apos;SYS+BTC+ZEC&apos;. For SYS and ZEC: &apos;SYS+ZEC&apos;. Please note that in order to spend coins paid to you via Syscoin Marketplace, you will need to import your Syscoin private key in external wallet(s) if BTC or ZEC are chosen.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <location line="+312"/>
         <source>Select Certificate (optional)</source>
         <translation type="unfinished"></translation>
@@ -2062,7 +2062,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+67"/>
+        <location line="+75"/>
         <source>Could not refresh alias list: </source>
         <translation type="unfinished"></translation>
     </message>
@@ -2092,30 +2092,30 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+19"/>
         <source>Empty name for Offer not allowed. Please try again</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+74"/>
+        <location line="+75"/>
         <source>Confirm Alias Peg</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-73"/>
-        <location line="+74"/>
+        <location line="-74"/>
+        <location line="+75"/>
         <source>Warning: Are you sure you wish to choose this alias as your offer peg? By default the system peg is</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="-28"/>
-        <location line="+83"/>
+        <location line="+84"/>
         <source>This transaction requires more signatures. Transaction hex has been copied to your clipboard for your reference. Please provide it to a signee that has not yet signed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-72"/>
+        <location line="-73"/>
         <source>Error creating new Offer: </source>
         <translation type="unfinished"></translation>
     </message>
@@ -2125,7 +2125,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+76"/>
         <source>Error updating Offer: </source>
         <translation type="unfinished"></translation>
     </message>
@@ -2774,7 +2774,7 @@
     <name>InMessageListPage</name>
     <message>
         <location filename="../inmessagelistpage.cpp" line="+47"/>
-        <source>These are Syscoin messages you have received. You can choose which aliases to view related messages using the dropdown to the right.</source>
+        <source>These are Syscoin messages you have received.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2991,12 +2991,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
-        <source>You are the &apos;buyer&apos; of the offer held in escrow, you may release the coins to the merchant once you have confirmed that you have recieved the item as per the description of the offer.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+13"/>
         <source>You are the &apos;merchant&apos; of the offer held in escrow, you may refund the coins back to the buyer.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3029,12 +3024,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-631"/>
-        <source>You are the &apos;arbiter&apos; of the offer held in escrow. The escrow has been released to the merchant. You may re-release this escrow if there are any problems claiming the coins by the merchant. If you were the one to release the coins you will recieve a commission as soon as the merchant claims his payment. You may leave feedback after the money is claimed by the merchant.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="-630"/>
         <source>Warning: Payment has already been released, are you sure you wish to re-release payment to the merchant?</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3062,8 +3052,18 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>You are the &apos;arbiter&apos; of the offer held in escrow. The escrow has been refunded back to the buyer. You may re-issue a refund if there are any problems claiming the coins by the buyer. If you were the one to refund the coins you will recieve a commission as soon as the buyer claims his refund. You may leave feedback after the money is claimed by the buyer.</source>
+        <location line="-46"/>
+        <source>You are the &apos;buyer&apos; of the offer held in escrow, you may release the coins to the merchant once you have confirmed that you have received the item as per the description of the offer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>You are the &apos;arbiter&apos; of the offer held in escrow. The escrow has been released to the merchant. You may re-release this escrow if there are any problems claiming the coins by the merchant. If you were the one to release the coins you will receive a commission as soon as the merchant claims his payment. You may leave feedback after the money is claimed by the merchant.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>You are the &apos;arbiter&apos; of the offer held in escrow. The escrow has been refunded back to the buyer. You may re-issue a refund if there are any problems claiming the coins by the buyer. If you were the one to refund the coins you will receive a commission as soon as the buyer claims his refund. You may leave feedback after the money is claimed by the buyer.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4008,7 +4008,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+42"/>
         <source>You cannot sell this certificate because it has expired</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4415,7 +4415,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+135"/>
+        <location line="+136"/>
         <source>You cannot edit this offer because it has expired</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4843,17 +4843,22 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../offeracceptdialog.cpp" line="+57"/>
+        <location filename="../offeracceptdialog.cpp" line="+60"/>
+        <source>Unit is not defined or is invalid in this coin offer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
         <source>Could not find currency in the rates peg for this offer. Currency: </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+9"/>
         <source>Enter a Syscoin arbiter that is mutally trusted between yourself and the merchant</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+7"/>
         <source>Are you sure you want to purchase</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4878,7 +4883,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+10"/>
         <source>Pay For Item</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4962,7 +4967,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../offeracceptdialogbtc.cpp" line="+61"/>
+        <location filename="../offeracceptdialogbtc.cpp" line="+62"/>
+        <source>Unit is not defined or is invalid in this coin offer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Could not find BTC currency in the rates peg for this offer</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4973,18 +4983,18 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+143"/>
+        <location line="+146"/>
         <source>Enter a Syscoin arbiter that is mutally trusted between yourself and the merchant. Then enable the &apos;Use Escrow&apos; checkbox</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-111"/>
-        <location line="+411"/>
+        <location line="-114"/>
+        <location line="+414"/>
         <source>Payment on Syscoin Decentralized Marketplace. Offer ID: </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-397"/>
+        <location line="-400"/>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4994,7 +5004,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+49"/>
         <source>Failed to generate multisig address: </source>
         <translation type="unfinished"></translation>
     </message>
@@ -5015,71 +5025,71 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Are you sure you want to purchase</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-8"/>
-        <location line="+8"/>
+        <location line="-10"/>
+        <location line="+10"/>
         <source>of</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-8"/>
-        <location line="+8"/>
+        <location line="-10"/>
+        <location line="+10"/>
         <source>from merchant</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-8"/>
-        <location line="+8"/>
+        <location line="-10"/>
+        <location line="+10"/>
         <source>Follow the steps below to successfully pay via Bitcoin:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-8"/>
-        <location line="+8"/>
+        <location line="-10"/>
+        <location line="+10"/>
         <source>1. If you are using escrow, please enter your escrow arbiter in the input box below and check the &apos;Use Escrow&apos; checkbox. Leave the escrow checkbox unchecked if you do not wish to use escrow.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-8"/>
-        <location line="+8"/>
+        <location line="-10"/>
+        <location line="+10"/>
         <source>2. Open your Bitcoin wallet. You may use the QR Code to the left to scan the payment request into your wallet or click on &apos;Open BTC Wallet&apos; if you are on the desktop and have Bitcoin Core installed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-8"/>
-        <location line="+8"/>
+        <location line="-10"/>
+        <location line="+10"/>
         <source>3. Pay</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-8"/>
-        <location line="+8"/>
+        <location line="-10"/>
+        <location line="+10"/>
         <source>to</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-8"/>
-        <location line="+8"/>
+        <location line="-10"/>
+        <location line="+10"/>
         <source>using your Bitcoin wallet. Please enable dynamic fees in your BTC wallet upon payment for confirmation in a timely manner.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-8"/>
-        <location line="+8"/>
+        <location line="-10"/>
+        <location line="+10"/>
         <source>4. Enter the Transaction ID and then click on the &apos;Confirm Payment&apos; button once you have paid.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-7"/>
+        <location line="-9"/>
         <source>Escrow created successfully! Please fund using BTC address </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+25"/>
         <source>Error making request: </source>
         <translation type="unfinished"></translation>
     </message>
@@ -5193,7 +5203,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../offeracceptdialogzec.cpp" line="+60"/>
+        <location filename="../offeracceptdialogzec.cpp" line="+61"/>
+        <source>Unit is not defined or is invalid in this coin offer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Could not find ZEC currency in the rates peg for this offer</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5204,18 +5219,18 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+144"/>
+        <location line="+146"/>
         <source>Enter a Syscoin arbiter that is mutally trusted between yourself and the merchant. Then enable the &apos;Use Escrow&apos; checkbox</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-111"/>
-        <location line="+433"/>
+        <location line="-113"/>
+        <location line="+435"/>
         <source>Payment on Syscoin Decentralized Marketplace. Offer ID: </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-419"/>
+        <location line="-421"/>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5246,71 +5261,71 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+9"/>
+        <location line="+11"/>
         <source>Are you sure you want to purchase</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-9"/>
-        <location line="+9"/>
+        <location line="-11"/>
+        <location line="+11"/>
         <source>of</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-9"/>
-        <location line="+9"/>
+        <location line="-11"/>
+        <location line="+11"/>
         <source>from merchant</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-9"/>
-        <location line="+9"/>
+        <location line="-11"/>
+        <location line="+11"/>
         <source>Follow the steps below to successfully pay via ZCash:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-9"/>
-        <location line="+9"/>
+        <location line="-11"/>
+        <location line="+11"/>
         <source>1. If you are using escrow, please enter your escrow arbiter in the input box below and check the &apos;Use Escrow&apos; checkbox. Leave the escrow checkbox unchecked if you do not wish to use escrow.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-9"/>
-        <location line="+9"/>
+        <location line="-11"/>
+        <location line="+11"/>
         <source>2. Open your ZCash wallet. You may use the QR Code to the left to scan the payment request into your wallet or click on &apos;Open ZEC Wallet&apos; if you are on the desktop and have ZCash Core installed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-9"/>
-        <location line="+9"/>
+        <location line="-11"/>
+        <location line="+11"/>
         <source>3. Pay</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-9"/>
-        <location line="+9"/>
+        <location line="-11"/>
+        <location line="+11"/>
         <source>to</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-9"/>
-        <location line="+9"/>
+        <location line="-11"/>
+        <location line="+11"/>
         <source>using your ZCash wallet. Please enable dynamic fees in your ZEC wallet upon payment for confirmation in a timely manner.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-9"/>
-        <location line="+9"/>
+        <location line="-11"/>
+        <location line="+11"/>
         <source>4. Enter the Transaction ID and then click on the &apos;Confirm Payment&apos; button once you have paid.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-8"/>
+        <location line="-10"/>
         <source>Escrow created successfully! Please fund using ZEC address </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+30"/>
         <source>Failed to generate ZCash address, please close this screen and try again</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5784,12 +5799,12 @@
     </message>
     <message>
         <location line="+9"/>
-        <source>You are the &apos;buyer&apos; of this offer, please send feedback and rate the merchant once you have confirmed that you have recieved the item as per the description of the offer.</source>
+        <source>You are the &apos;buyer&apos; of this offer, please send feedback and rate the merchant once you have confirmed that you have received the item as per the description of the offer.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+5"/>
-        <source>You are the &apos;merchant&apos; of this offer, you may leave feedback and rate the buyer once you confirmed you have recieved full payment from buyer and you have ship the goods (if its for a physical good).</source>
+        <source>You are the &apos;merchant&apos; of this offer, you may leave feedback and rate the buyer once you confirmed you have received full payment from buyer and you have ship the goods (if its for a physical good).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6578,7 +6593,7 @@
     <name>OutMessageListPage</name>
     <message>
         <location filename="../outmessagelistpage.cpp" line="+48"/>
-        <source>These are Syscoin messages you have sent. You can choose which aliases to view related messages using the dropdown to the right.</source>
+        <source>These are Syscoin messages you have sent.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -8832,7 +8847,7 @@
         <translation>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</translation>
     </message>
@@ -9732,7 +9747,7 @@
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
-        <location filename="../syscoingui.cpp" line="+116"/>
+        <location filename="../syscoingui.cpp" line="+117"/>
         <source>Unit to show amounts in. Click to select another unit.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9999,7 +10014,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+15"/>
+        <source>Wallet will not create transactions that violate mempool chain limits (default: %u)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</translation>
     </message>
@@ -10044,7 +10064,12 @@
         <translation>Block creation options:</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+34"/>
+        <source>Cannot leave more than one feedback per transaction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Cannot resolve -%s address: &apos;%s&apos;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10054,7 +10079,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
+        <source>Commission percentage must be between -90 and 100</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Connect only to the specified node(s)</source>
         <translation>Connect only to the specified node(s)</translation>
     </message>
@@ -10069,7 +10099,12 @@
         <translation>Corrupted block database detected</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+32"/>
+        <source>Could not find buyer alias</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+20"/>
         <source>Debugging/Testing options:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10209,7 +10244,12 @@
         <translation>Not enough file descriptors available.</translation>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+8"/>
+        <source>Offer currency code too long</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+31"/>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10339,7 +10379,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+26"/>
+        <source>Cannot update multisig alias because the number of signatures required is greater than the number of signatures provided</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+26"/>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10734,12 +10779,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Cannot update multisig alias because required signatures is greator than the amount of signatures provided</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+5"/>
         <source>Cannot update this offer because the certificate alias does not match the offer alias</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10934,12 +10974,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>Wallet will not create transactions that violate mempool chain limits (default: %u</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+6"/>
+        <location line="+10"/>
         <source>Warning: This transaction sends coins to an address or alias you do not own</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11229,18 +11264,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Cannot link to a wanted offer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Cannot link to an offer that is already linked to another offer</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Cannot only leave one feedback per transaction</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -11349,22 +11379,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Commission must between -90 and 100</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Copyright (C) 2009-%i The Syscoin Core Developers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>Could not buyer alias</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Could not create escrow transaction: Invalid response from createescrow</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11519,7 +11539,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Could not find currency in the peg alias</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11560,6 +11580,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Could not find this certificate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Could not find this escrow</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11581,11 +11606,6 @@
     <message>
         <location line="+1"/>
         <source>Could not get linked offer</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Could not merchant alias</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -12109,12 +12129,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Offer curreny too long</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Offer description too long</source>
         <translation type="unfinished"></translation>
     </message>

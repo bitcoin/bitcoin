@@ -2,7 +2,6 @@
 #define EDITALIASDIALOG_H
 
 #include <QDialog>
-
 namespace Ui {
     class EditAliasDialog;
 }
@@ -46,6 +45,7 @@ public Q_SLOTS:
 	void reqSigsChanged();
 	void expiryChanged(const QString& alias);
 	void onCustomExpireCheckBoxChanged(bool toggled);
+	void on_showPasswordButton_clicked();
 private:
     bool saveCurrentRow();
 
@@ -56,6 +56,13 @@ private:
 	WalletModel* walletModel;
     QString alias;
 	QString expiredStr;
+	QString m_oldPassword;
+	QString m_oldvalue;
+	QString m_oldprivatevalue;
+	QString m_encryptionkey;
+	QString m_oldsafesearch;
+	QString m_encryptionprivkey;
+	QString m_oldAcceptCertTransfers;
 };
 
 #endif // EDITALIASDIALOG_H

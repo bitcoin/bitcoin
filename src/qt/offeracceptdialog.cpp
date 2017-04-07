@@ -9,6 +9,7 @@
 #include "offerescrowdialog.h"
 #include "offer.h"
 #include "alias.h"
+#include "cert.h"
 #include "guiutil.h"
 #include "syscoingui.h"
 #include <QMessageBox>
@@ -19,10 +20,10 @@
 using namespace std;
 
 extern CRPCTable tableRPC;
-OfferAcceptDialog::OfferAcceptDialog(WalletModel* model, const PlatformStyle *platformStyle, QString aliaspeg, QString alias, QString offer, QString quantity, QString notes, QString title, QString currencyCode, QString qstrPrice, QString sellerAlias, QString address, unsigned char paymentOptions, QWidget *parent) :
+OfferAcceptDialog::OfferAcceptDialog(WalletModel* model, const PlatformStyle *platformStyle, QString aliaspeg, QString alias, QString encryptionkey, QString offer, QString quantity, QString notes, QString title, QString currencyCode, QString qstrPrice, QString sellerAlias, QString address, unsigned char paymentOptions, float nQtyUnits,bool bCoinOffer,QWidget *parent) :
     QDialog(parent),
 	walletModel(model),
-    ui(new Ui::OfferAcceptDialog), platformStyle(platformStyle), aliaspeg(aliaspeg), qstrPrice(qstrPrice), alias(alias), offer(offer), notes(notes), quantity(quantity), title(title), currency(currencyCode), seller(sellerAlias), address(address)
+    ui(new Ui::OfferAcceptDialog), platformStyle(platformStyle), aliaspeg(aliaspeg), qstrPrice(qstrPrice), alias(alias), m_encryptionkey(encryptionkey), offer(offer), notes(notes), quantity(quantity), title(title), (currencyCode), seller(sellerAlias), address(address),  nQtyUnits(nQtyUnits)
 {
     ui->setupUi(this);
 	QString theme = GUIUtil::getThemeName();
@@ -51,19 +52,41 @@ OfferAcceptDialog::OfferAcceptDialog(WalletModel* model, const PlatformStyle *pl
 	ui->acceptZecButton->setEnabled(false);
 	ui->acceptZecButton->setVisible(false);
 	CAmount sysPrice = convertCurrencyCodeToSyscoin(vchFromString(strAliasPeg), vchFromString(strCurrencyCode), dblPrice, chainActive.Tip()->nHeight, sysprecision);
-	if(sysPrice == 0)
+	if(bCoinOffer)
 	{
-        QMessageBox::critical(this, windowTitle(),
-			tr("Could not find currency in the rates peg for this offer. Currency: ") + QString::fromStdString(strCurrencyCode)
-                ,QMessageBox::Ok, QMessageBox::Ok);
-		reject();
-		return;
+		sysPrice = nQtyUnits*COIN;
+		if(sysPrice == 0)
+		{
+			QMessageBox::critical(this, windowTitle(),
+				tr("Unit is not defined or is invalid in this offer")
+					,QMessageBox::Ok, QMessageBox::Ok);
+			reject();
+			return;
+		}
 	}
+	else
+	{
+		
+		if(sysPrice == 0)
+		{
+			QMessageBox::critical(this, windowTitle(),
+				tr("Could not find currency in the rates peg for this offer. Currency: ") + QString::fromStdString(strCurrencyCode)
+					,QMessageBox::Ok, QMessageBox::Ok);
+			reject();
+			return;
+		}
+	}
+
 	strSYSPrice = QString::fromStdString(strprintf("%.*f", 8, ValueFromAmount(sysPrice).get_real()));
 	QString strTotalSYSPrice = QString::fromStdString(strprintf("%.*f", sysprecision, ValueFromAmount(sysPrice).get_real()*quantity.toUInt()));
 	ui->escrowDisclaimer->setText(QString("<font color='blue'>") + tr("Enter a Syscoin arbiter that is mutally trusted between yourself and the merchant") + QString("</font>"));
-		
-	ui->acceptMessage->setText(tr("Are you sure you want to purchase") + QString(" <b>%1</b> ").arg(quantity) + tr("of") +  QString(" <b>%1</b> ").arg(title) + tr("from merchant") + QString(" <b>%1</b>").arg(sellerAlias) + QString("? ") + tr("You will be charged") + QString(" <b>%1 %2 (%3 SYS)</b>").arg(qstrPrice).arg(currencyCode).arg(strTotalSYSPrice));
+	QString priceStr;
+	if(bCoinOffer)
+		priceStr = QString(" <b>%1 SYS</b>").arg(strTotalSYSPrice);
+	else
+		priceStr = QString(" <b>%1 %2 (%3 SYS)</b>").arg(qstrPrice).arg(currencyCode).arg(strTotalSYSPrice);
+	
+	ui->acceptMessage->setText(tr("Are you sure you want to purchase") + QString(" <b>%1</b> ").arg(quantity) + tr("of") +  QString(" <b>%1</b> ").arg(title) + tr("from merchant") + QString(" <b>%1</b>").arg(sellerAlias) + QString("? ") + tr("You will be charged") + priceStr);
 	if(IsPaymentOptionInMask(paymentOptions, PAYMENTOPTION_ZEC))
 	{
 		ui->acceptZecButton->setEnabled(true);
@@ -97,6 +120,10 @@ void OfferAcceptDialog::setupEscrowCheckboxState()
 		ui->escrowDisclaimer->setVisible(true);
 		ui->escrowEdit->setEnabled(true);
 		ui->acceptButton->setText(tr("Pay Escrow"));
+		if(ui->checkBox->isChecked())
+			ui->acceptButton->setEnabled(true);
+		else
+			ui->acceptButton->setEnabled(false);
 	}
 	else
 	{
@@ -115,7 +142,7 @@ void OfferAcceptDialog::acceptZECPayment()
 {
 	if(!walletModel)
 		return;
-	OfferAcceptDialogZEC dlg(walletModel, platformStyle, this->aliaspeg, this->alias, this->offer, this->quantity, this->notes, this->title, this->currency, this->strSYSPrice, this->seller, this->address, ui->checkBox->isChecked()? ui->escrowEdit->text(): "", this);
+	OfferAcceptDialogZEC dlg(walletModel, platformStyle, this->aliaspeg, this->alias, this->m_encryptionkey, this->offer, this->quantity, this->notes, this->title, this->currency, this->strSYSPrice, this->seller, this->address, ui->checkBox->isChecked()? ui->escrowEdit->text(): "", nQtyUnits,bCoinOffer,this);
 	if(dlg.exec())
 	{
 		this->offerPaid = dlg.getPaymentStatus();
@@ -129,7 +156,7 @@ void OfferAcceptDialog::acceptBTCPayment()
 {
 	if(!walletModel)
 		return;
-	OfferAcceptDialogBTC dlg(walletModel, platformStyle, this->aliaspeg, this->alias, this->offer, this->quantity, this->notes, this->title, this->currency, this->strSYSPrice, this->seller, this->address, ui->checkBox->isChecked()? ui->escrowEdit->text(): "", this);
+	OfferAcceptDialogBTC dlg(walletModel, platformStyle, this->aliaspeg, this->alias, this->m_encryptionkey, this->offer, this->quantity, this->notes, this->title, this->currency, this->strSYSPrice, this->seller, this->address, ui->checkBox->isChecked()? ui->escrowEdit->text(): "",nQtyUnits,bCoinOffer,this);
 	if(dlg.exec())
 	{
 		this->offerPaid = dlg.getPaymentStatus();
@@ -162,6 +189,22 @@ void OfferAcceptDialog::acceptOffer()
 		UniValue result;
 		string strReply;
 		string strError;
+		string strPrivateHex;
+		string strCipherPrivateData;
+		string privdata = this->notes.toStdString();
+		if(privdata != "\"\"")
+		{
+			if(!EncryptMessage(ParseHex(m_encryptionkey.toStdString()), privdata, strCipherPrivateData))
+			{
+				QMessageBox::critical(this, windowTitle(),
+					tr("Could not encrypt private shipping notes!"),
+					QMessageBox::Ok, QMessageBox::Ok);
+				return;
+			}
+		}
+		strPrivateHex = HexStr(vchFromString(strCipherPrivateData));
+		if(strCipherPrivateData.empty())
+			strPrivateHex = "\"\"";
 
 		string strMethod = string("offeraccept");
 		if(this->quantity.toLong() <= 0)
@@ -175,7 +218,7 @@ void OfferAcceptDialog::acceptOffer()
 		params.push_back(this->alias.toStdString());
 		params.push_back(this->offer.toStdString());
 		params.push_back(this->quantity.toStdString());
-		params.push_back(this->notes.toStdString());
+		params.push_back(strPrivateHex);
 
 
 	    try {
@@ -247,7 +290,22 @@ void OfferAcceptDialog::acceptEscrow()
 		UniValue result ;
 		string strReply;
 		string strError;
-
+		string strPrivateHex;
+		string strCipherPrivateData;
+		string privdata = this->notes.toStdString();
+		if(privdata != "\"\"")
+		{
+			if(!EncryptMessage(ParseHex(m_encryptionkey.toStdString()), privdata, strCipherPrivateData))
+			{
+				QMessageBox::critical(this, windowTitle(),
+					tr("Could not encrypt private shipping notes!"),
+					QMessageBox::Ok, QMessageBox::Ok);
+				return;
+			}
+		}
+		strPrivateHex = HexStr(vchFromString(strCipherPrivateData));
+		if(strCipherPrivateData.empty())
+			strPrivateHex = "\"\"";
 		string strMethod = string("escrownew");
 		if(this->quantity.toLong() <= 0)
 		{
@@ -260,7 +318,7 @@ void OfferAcceptDialog::acceptEscrow()
 		params.push_back(this->alias.toStdString());
 		params.push_back(this->offer.toStdString());
 		params.push_back(this->quantity.toStdString());
-		params.push_back(this->notes.toStdString());
+		params.push_back(strPrivateHex);
 		params.push_back(ui->escrowEdit->text().toStdString());
 
 	    try {

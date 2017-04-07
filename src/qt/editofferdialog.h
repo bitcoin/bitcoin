@@ -27,7 +27,7 @@ public:
 		NewCertOffer
     };
 
-    explicit EditOfferDialog(Mode mode, const QString &offer="", const QString &cert="", const QString &alias="", const QString &cat="", QWidget *parent = 0);
+    explicit EditOfferDialog(Mode mode, const QString &offer="", const QString &cert="", const QString &alias="", const QString &cat="",QWidget *parent = 0);
     ~EditOfferDialog();
 
     void setModel(WalletModel*,OfferTableModel *model);
@@ -47,6 +47,7 @@ public Q_SLOTS:
 	void on_okButton_clicked();
 	void on_cancelButton_clicked();
 private:
+	bool overrideSafeSearch;
 	bool isLinkedOffer(const QString& offerGUID);
     bool saveCurrentRow();
 	void loadCerts(const QString& alias);
@@ -61,8 +62,18 @@ private:
 	QString cert;
 	QString alias;
 	QString commission;
-	bool overrideSafeSearch;
 	QString expiredStr;
+	QString m_oldqty;
+	QString m_oldprice;
+	QString m_olddetails;
+	QString m_oldcurrency;
+	QString m_oldprivate;
+	QString m_oldcert;
+	QString m_oldcommission;
+	QString m_oldpaymentoptions;
+	QString m_oldsafesearch;
+	QString m_oldcategory;
+	QString m_oldgeolocation;
 };
 
 #endif // EDITOFFERDIALOG_H

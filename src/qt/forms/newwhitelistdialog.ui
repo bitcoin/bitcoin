@@ -44,7 +44,7 @@
         <widget class="QLineEdit" name="aliasEdit"/>
       </item> 
      <item row="4" column="0">
-      <widget class="QLabel" name="categoryLabel">
+      <widget class="QLabel" name="discountLabel">
        <property name="text">
         <string>Discount</string>
        </property>

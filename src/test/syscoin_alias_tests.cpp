@@ -1,7 +1,11 @@
 #include "test/test_syscoin_services.h"
 #include "utiltime.h"
+#include "util.h"
 #include "rpc/server.h"
 #include "alias.h"
+#include "cert.h"
+#include "base58.h"
+#include "chainparams.h"
 #include <boost/test/unit_test.hpp>
 BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 
@@ -10,6 +14,7 @@ BOOST_FIXTURE_TEST_SUITE (syscoin_alias_tests, BasicSyscoinTestingSetup)
 BOOST_AUTO_TEST_CASE (generate_sysrates_alias)
 {
 	printf("Running generate_sysrates_alias...\n");
+	ECC_Start();
 	CreateSysRatesIfNotExist();
 	CreateSysBanIfNotExist();
 	CreateSysCategoryIfNotExist();
@@ -22,8 +27,19 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	string gooddata = "dasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfssdsfsdfsdfsdfsdfsdsdfdfsdfsdfsdfsd";
 	// 1025 bytes long
 	string baddata =   "dasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfssdsfsdfsdfsdfsdfsdsdfdfsdfsdfsdfsdz";
-	AliasNew("node1", "jag",  "password", gooddata);
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg jag1 password temp " + baddata), runtime_error);
+	string strCipherBadPrivData = "";
+	string strCipherGoodPrivData = "";
+	CKey privKey;
+	privKey.MakeNewKey(true);
+	CPubKey pubKey = privKey.GetPubKey();
+	vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
+	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, baddata, strCipherBadPrivData), true);		
+	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, gooddata, strCipherGoodPrivData), true);	
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag1 " + HexStr(vchFromString("password")) +  " " + s256bytes + " " + HexStr(vchFromString(strCipherGoodPrivData))));
+	GenerateBlocks(5);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 " + HexStr(vchFromString("password")) +  " " + s256bytes + " " + HexStr(vchFromString(strCipherBadPrivData))), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 " + HexStr(vchFromString("password")) +  " " + s257bytes + " " + HexStr(vchFromString(strCipherGoodPrivData))), runtime_error);
+	
 }
 BOOST_AUTO_TEST_CASE (generate_big_aliasname)
 {
@@ -35,31 +51,43 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasname)
 	string gooddata = "dasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfssdsfsdfsdfsdfsdfsdsdfdfsdfsdfsdfsd";	
 	// 65 bytes long
 	string badname =  "sfsdfdfsdsfsfsdfdfsdsfdsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdsfsddfda";
-	AliasNew("node1", goodname, "password", "a");
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg " + badname + " password 3d"), runtime_error);
+	AliasNew("node1", goodname, goodname, gooddata);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg " + badname + " " + HexStr(vchFromString("password")) +  " 3d"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE (generate_big_aliaspassword)
 {
 	printf("Running generate_big_aliaspassword...\n");
 	GenerateBlocks(5);
+	CKey privKey;
+	privKey.MakeNewKey(true);
+	CPubKey pubKey = privKey.GetPubKey();
+	vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
 	// 256 bytes long
 	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";	
 	// 257 bytes long
 	string baddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddz";	
 		
+	string strCipherBadPassword = "";
+	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, baddata, strCipherBadPassword), true);	
 	AliasNew("node1", "aliasname", gooddata, "a");
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasname1 " + baddata + " 3d"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasname1 " + HexStr(vchFromString(strCipherBadPassword)) + " pubdata"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE (generate_aliasupdate)
 {
 	printf("Running generate_aliasupdate...\n");
 	GenerateBlocks(1);
 	AliasNew("node1", "jagupdate", "password", "data");
+	AliasNew("node1", "jagupdate1", "password", "data");
 	// update an alias that isn't yours
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg jagupdate test"), runtime_error);
-	AliasUpdate("node1", "jagupdate", "changeddata", "privdata");
-	// shouldnt update data, just uses prev data because it hasnt changed
-	AliasUpdate("node1", "jagupdate", "changeddata", "privdata");
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg jagupdate " + HexStr(vchFromString("pass"))), runtime_error);
+	// only update alias, no data
+	AliasUpdate("node1", "jagupdate");
+	AliasUpdate("node1", "jagupdate1");
+	// update password only
+	AliasUpdate("node1", "jagupdate", "\"\"", "\"\"", "newpass");
+	AliasUpdate("node1", "jagupdate", "\"\"", "\"\"", "newpass1");
+	AliasUpdate("node1", "jagupdate1", "\"\"", "\"\"","newpass");
+	AliasUpdate("node1", "jagupdate1", "\"\"", "\"\"","newpass1");
 
 }
 BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
@@ -69,50 +97,42 @@ BOOST_AUTO_TEST_CASE (generate_aliasmultiupdate)
 	UniValue r;
 	AliasNew("node1", "jagmultiupdate", "password", "data");
 	AliasUpdate("node1", "jagmultiupdate", "changeddata", "privdata");
+	// can do 5 free updates, 1 above and 4 below
 	for(unsigned int i=0;i<MAX_ALIAS_UPDATES_PER_BLOCK-1;i++)
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg jagmultiupdate changedata1 pvtdata"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg jagmultiupdate changedata1"));
 
 	GenerateBlocks(10, "node1");
 	GenerateBlocks(10, "node1");
 
-	AliasTransfer("node1", "jagmultiupdate", "node2", "changeddata5", "pvtdata2");
+	AliasTransfer("node1", "jagmultiupdate", "node2", "changeddata2", "pvtdata2");
 
 	// after transfer it can't update alias even though there are utxo's available from old owner
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg jagmultiupdate changedata1 pvtdata"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg jagmultiupdate changedata3"), runtime_error);
 
 	// new owner can update
-	BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate sysrates.peg jagmultiupdate changedata1b pvtdata"));
-	// on transfer only 1 utxo available, to create more you have to run through an update first with a confirmation
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg jagmultiupdate changedata1b pvtdata"), runtime_error);
+	for(unsigned int i=0;i<MAX_ALIAS_UPDATES_PER_BLOCK;i++)
+		BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate sysrates.peg jagmultiupdate changedata4"));
+
 	// after generation MAX_ALIAS_UPDATES_PER_BLOCK utxo's should be available
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node2");
 	for(unsigned int i=0;i<MAX_ALIAS_UPDATES_PER_BLOCK;i++)
-		BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate sysrates.peg jagmultiupdate changedata1b pvtdata"));
+		BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate sysrates.peg jagmultiupdate changedata5"));
 
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg jagmultiupdate changedata10b pvtdata"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg jagmultiupdate changedata6"), runtime_error);
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node2");
-	// try transfers and updates in parallel
-	UniValue pkr = CallRPC("node1", "generatepublickey");
-	BOOST_CHECK(pkr.type() == UniValue::VARR);
-	const UniValue &resultArray = pkr.get_array();
-	string newPubkey = resultArray[0].get_str();	
+	// transfer sends utxo's to new owner
+	AliasTransfer("node2", "jagmultiupdate", "node1", "changeddata7", "");
+	// ensure can't update after transfer
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg jagmultiupdate changedata8"), runtime_error);
 	for(unsigned int i=0;i<MAX_ALIAS_UPDATES_PER_BLOCK;i++)
-	{
-		if((i%2) == 0)
-		{
-			BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate sysrates.peg jagmultiupdate changedata1 pvtdata"));
-		}
-		else
-		{
-			BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate sysrates.peg jagmultiupdate changedata1 pvtdata Yes " + newPubkey));
-		}
-
-	}
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg jagmultiupdate changedata10b pvtdata"), runtime_error);
-	GenerateBlocks(10, "node2");
-	GenerateBlocks(10, "node2");
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg jagmultiupdate changedata9"));
+	
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg jagmultiupdate changedata10"), runtime_error);
+	GenerateBlocks(10, "node1");
+	GenerateBlocks(10, "node1");
+	AliasUpdate("node1", "jagmultiupdate", "changeddata11", "privdata");
 }
 
 BOOST_AUTO_TEST_CASE (generate_sendmoneytoalias)
@@ -120,12 +140,17 @@ BOOST_AUTO_TEST_CASE (generate_sendmoneytoalias)
 	printf("Running generate_sendmoneytoalias...\n");
 	GenerateBlocks(5, "node2");
 	AliasNew("node2", "sendnode2", "password", "changeddata2");
+	AliasNew("node3", "sendnode3", "password", "changeddata2");
 	UniValue r;
 	// get balance of node2 first to know we sent right amount oater
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo sendnode2"));
 	CAmount balanceBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
+	string node2address = find_value(r.get_obj(), "address").get_str();
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress sendnode2 1.335"), runtime_error);
 	GenerateBlocks(1);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo sendnode3"));
+	string node3address = find_value(r.get_obj(), "address").get_str();
+
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo sendnode2"));
 	balanceBefore += 1.335*COIN;
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
@@ -139,6 +164,11 @@ BOOST_AUTO_TEST_CASE (generate_sendmoneytoalias)
 	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK_EQUAL(balanceBefore, balanceAfter);
 
+	// pay to node2/node3 wallets for alias funding for tests
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress " + node2address + " 500000"), runtime_error);
+	GenerateBlocks(10);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress " + node3address + " 500000"), runtime_error);
+	GenerateBlocks(10);
 
 }
 BOOST_AUTO_TEST_CASE (generate_alias_offerexpiry_resync)
@@ -168,15 +198,11 @@ BOOST_AUTO_TEST_CASE (generate_alias_offerexpiry_resync)
 	StopNode("node3");
 	GenerateBlocks(5, "node1");
 
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew aliasnew category title 1 0.05 description USD"));
-	const UniValue &arr = r.get_array();
-	string offerguid = arr[1].get_str();
-	GenerateBlocks(5, "node1");
-	GenerateBlocks(5, "node2");
+	OfferNew("node1", "offernew", "aliasnew", "category", "title", "1", "0.05", "description", "USD");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + offerguid));
-	BOOST_CHECK_EQUAL(aliasnewexpiry ,  find_value(r.get_obj(), "expires_on").get_int64());
 	
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate aliasold " + offerguid + " category title 1 0.05 description"));
+	BOOST_CHECK_EQUAL(aliasnewexpiry ,  find_value(r.get_obj(), "expires_on").get_int64());
+	OfferUpdate("node1", "aliasold", offerguid, "1", "0.05", "category", "title", "1", "0.05", "description", "USD");
 	GenerateBlocks(5, "node1");
 	GenerateBlocks(5, "node2");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + offerguid));
@@ -187,7 +213,7 @@ BOOST_AUTO_TEST_CASE (generate_alias_offerexpiry_resync)
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "alias").get_str(), "aliasold");	
 	
 	ExpireAlias("aliasold");
-	GenerateBlocks(5, "node1");
+	GenerateBlocks(1, "node1");
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
 	mediantime = find_value(r.get_obj(), "mediantime").get_int64();	
@@ -222,11 +248,11 @@ BOOST_AUTO_TEST_CASE (generate_alias_offerexpiry_resync)
 	BOOST_CHECK(aliasnewexpiry > mediantime);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo aliasnew"));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_int(), 0);	
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 0);	
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo aliasnew"));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_int(), 0);	
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 0);	
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasinfo aliasnew"));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_int(), 0);	
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 0);	
 
 
 	// node 3 doesn't download the offer since it expired while node 3 was offline
@@ -235,7 +261,7 @@ BOOST_AUTO_TEST_CASE (generate_alias_offerexpiry_resync)
 	BOOST_CHECK_EQUAL(OfferFilter("node3", offerguid, "On"), false);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerinfo " + offerguid));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_int(), 1);	
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 1);	
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "alias").get_str(), "aliasold");	
 	BOOST_CHECK_EQUAL(aliasoldexpiry ,  find_value(r.get_obj(), "expires_on").get_int64());
 
@@ -248,14 +274,19 @@ BOOST_AUTO_TEST_CASE (generate_aliastransfer)
 	UniValue r;
 	string strPubKey1 = AliasNew("node1", "jagnode1", "password", "changeddata1");
 	string strPubKey2 = AliasNew("node2", "jagnode2", "password", "changeddata2");
-	UniValue pkr = CallRPC("node2", "generatepublickey");
-	BOOST_CHECK(pkr.type() == UniValue::VARR);
-	const UniValue &resultArray = pkr.get_array();
-	string newPubkey = resultArray[0].get_str();	
+	CKey privKey;
+	privKey.MakeNewKey(true);
+	CPubKey pubKey = privKey.GetPubKey();
+	vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
+	vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
+	
+	BOOST_CHECK(pubKey.IsFullyValid());
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));	
+
 	AliasTransfer("node1", "jagnode1", "node2", "changeddata1", "pvtdata");
 
 	// xfer an alias that isn't yours
-	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate sysrates.peg jagnode1 changedata1 pvtdata Yes " + newPubkey), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate sysrates.peg jagnode1 changedata1 \"\" " + HexStr(vchPubKey)), runtime_error);
 
 	// xfer alias and update it at the same time
 	AliasTransfer("node2", "jagnode2", "node3", "changeddata4", "pvtdata");
@@ -267,7 +298,7 @@ BOOST_AUTO_TEST_CASE (generate_aliastransfer)
 	AliasTransfer("node2", "jagnode1", "node3", "changeddata5", "pvtdata2");
 
 	// xfer an alias to another alias is prohibited
-	BOOST_CHECK_THROW(r = CallRPC("node2", "aliasupdate sysrates.peg jagnode2 changedata1 pvtdata Yes " + strPubKey1), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "aliasupdate sysrates.peg jagnode2 changedata1 \"\" " + strPubKey1), runtime_error);
 	
 }
 BOOST_AUTO_TEST_CASE (generate_aliasbalance)
@@ -278,7 +309,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasbalance)
 	AliasNew("node2", "jagnodebalance1", "password", "changeddata1");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodebalance1"));
 	CAmount balanceBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
-	BOOST_CHECK_EQUAL(balanceBefore, 0);
+	BOOST_CHECK_EQUAL(balanceBefore, 10*COIN);
 
 	// send money to alias and check balance is updated
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress jagnodebalance1 1.5"), runtime_error);
@@ -306,18 +337,17 @@ BOOST_AUTO_TEST_CASE (generate_aliasbalance)
 	BOOST_CHECK_EQUAL(balanceBefore, balanceAfter);
 
 	// edit password and see balance is same
-	AliasUpdate("node2", "jagnodebalance1", "pubdata1", "privdata1", "No", "newpassword");
+	AliasUpdate("node2", "jagnodebalance1", "pubdata1", "privdata1", "newpassword");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo jagnodebalance1"));
 	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK(abs(balanceBefore -  balanceAfter) < COIN);
 	GenerateBlocks(5);
 	ExpireAlias("jagnodebalance1");
-	// renew alias, should transfer balances
+	// renew alias, should clear balance
 	AliasNew("node2", "jagnodebalance1", "newpassword123", "changeddata1");
-	// ensure balance is transferred on renewal
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo jagnodebalance1"));
 	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
-	BOOST_CHECK(abs(balanceBefore -  balanceAfter) < COIN);
+	BOOST_CHECK_EQUAL(balanceAfter, 10*COIN);
 }
 BOOST_AUTO_TEST_CASE (generate_aliasbalancewithtransfer)
 {
@@ -326,7 +356,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasbalancewithtransfer)
 	AliasNew("node2", "jagnodebalance2", "password", "changeddata1");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodebalance2"));
 	CAmount balanceBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
-	BOOST_CHECK_EQUAL(balanceBefore, 0);
+	BOOST_CHECK_EQUAL(balanceBefore, 10*COIN);
 
 	// send money to alias and check balance
 
@@ -338,11 +368,11 @@ BOOST_AUTO_TEST_CASE (generate_aliasbalancewithtransfer)
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK_EQUAL(balanceBefore, balanceAfter);
 
-	// transfer alias to someone else and balance should be 0
+	// transfer alias to someone else and balance should be same
 	AliasTransfer("node2", "jagnodebalance2", "node3", "changeddata4", "pvtdata");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo jagnodebalance2"));
 	CAmount balanceAfterTransfer = AmountFromValue(find_value(r.get_obj(), "balance"));
-	BOOST_CHECK_EQUAL(balanceAfterTransfer, 0);
+	BOOST_CHECK(balanceAfterTransfer >= (balanceBefore-COIN));
 
 	// send money to alias and balance updates
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress jagnodebalance2 12.1"), runtime_error);
@@ -350,37 +380,136 @@ BOOST_AUTO_TEST_CASE (generate_aliasbalancewithtransfer)
 	GenerateBlocks(5, "node2");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasinfo jagnodebalance2"));
 	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
-	BOOST_CHECK_EQUAL(balanceAfter, 12.1*COIN);
+	BOOST_CHECK_EQUAL(balanceAfter, 12.1*COIN+balanceAfterTransfer);
 
 	// edit and balance should remain the same
-	AliasUpdate("node3", "jagnodebalance2", "pubdata1", "privdata1", "No", "newpassword");
+	AliasUpdate("node3", "jagnodebalance2", "pubdata1", "privdata1", "newpassword");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo jagnodebalance2"));
 	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
-	BOOST_CHECK(abs(12.1*COIN -  balanceAfter) < COIN);
+	BOOST_CHECK(abs((12.1*COIN+balanceAfterTransfer) -  balanceAfter) < COIN);
 
-	// transfer again and balance is 0 again
+	// transfer again and balance is same
 	AliasTransfer("node3", "jagnodebalance2", "node2", "changeddata4", "pvtdata");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo jagnodebalance2"));
 	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
-	BOOST_CHECK_EQUAL(balanceAfter, 0);
+	BOOST_CHECK(balanceAfter >= (12.1*COIN+balanceAfterTransfer)-COIN);
 
 }
 BOOST_AUTO_TEST_CASE (generate_multisigalias)
 {
 	printf("Running generate_multisigalias...\n");
+	UniValue r;
+	AliasNew("node1", "jagnodemultisig1", "password", "changeddata1");
 	AliasNew("node2", "jagnodemultisig2", "password", "changeddata1");
 	AliasNew("node3", "jagnodemultisig3", "password", "changeddata1");
-	// create 2 of 2
-	//UniValue v(UniValue::VARR);
-	//v.push_back("jagnodemultisig2");
-	//AliasNew("node1", "jagnodemultisig1", "password", "changeddata1", "privdata", "Yes", "2", v.write());
-	//AliasNew("node1", "jagnodemultisig1", "password", "changeddata1", "privdata", "Yes", "2", "[{\\\"jagnodemultisig1\\\",\\\"jagnodemultisig2\\\"}]");
-	// create 1 of 2
-	// create 2 of 3
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
+	// used for when setting multisig alias back to normal alias
+	string oldAddressStr = find_value(r, "address").get_str();
+	UniValue arrayParams(UniValue::VARR);
+	UniValue arrayOfKeys(UniValue::VARR);
 
-	// change the multisigs pw
+	// create 2 of 2
+	UniValue resCreate;
+	string redeemScript, addressStr;
+	BOOST_CHECK_NO_THROW(resCreate = CallRPC("node1", "createmultisig 2 \"[\\\"jagnodemultisig1\\\",\\\"jagnodemultisig2\\\"]\""));	
+	UniValue redeemScript_value = find_value(resCreate, "redeemScript");
+	UniValue address_value = find_value(resCreate, "address");
+	BOOST_CHECK(redeemScript_value.isStr());
+	BOOST_CHECK(address_value.isStr());
+	redeemScript = redeemScript_value.get_str();
+	addressStr = address_value.get_str();
+		
+	string tmp = AliasUpdate("node1", "jagnodemultisig1", "pubdata", "privdata", "password", addressStr);
+	BOOST_CHECK_EQUAL(tmp, "");
+	// change the multisigs pw and public data
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasaddscript " + redeemScript));
+	string hex_str = AliasUpdate("node1", "jagnodemultisig1", "pubdata1", "\"\"", "newpassword");
+	
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasaddscript " + redeemScript));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "syscoinsignrawtransaction " + hex_str));
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5);
 	// pay to multisig and check balance
-	// remove multisig and update as normal
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
+	// make sure alias was updated with new public data
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), "pubdata1");
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress jagnodemultisig1 9"), runtime_error);
+	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
+	CAmount balanceBefore = 19*COIN;
+	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
+	BOOST_CHECK(abs(balanceBefore - balanceAfter) < COIN);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), addressStr);
+	hex_str = AliasUpdate("node2", "jagnodemultisig1", "\"\"", "\"\"", "newpassword1");
+	BOOST_CHECK(hex_str != "");
+
+	// create 1 of 2
+	BOOST_CHECK_NO_THROW(resCreate = CallRPC("node1", "createmultisig 1 \"[\\\"jagnodemultisig1\\\",\\\"jagnodemultisig2\\\"]\""));	
+	redeemScript_value = find_value(resCreate, "redeemScript");
+	address_value = find_value(resCreate, "address");
+	BOOST_CHECK(redeemScript_value.isStr());
+	BOOST_CHECK(address_value.isStr());
+	redeemScript = redeemScript_value.get_str();
+	addressStr = address_value.get_str();
+	hex_str = AliasUpdate("node1", "jagnodemultisig1", "pubdata", "privdata", "password", addressStr);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "syscoinsignrawtransaction " + hex_str));
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), addressStr);
+	// ensure only one signature is needed
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasaddscript " + redeemScript));
+	hex_str = AliasUpdate("node1", "jagnodemultisig1", "\"\"", "\"\"", "newpassword");
+	BOOST_CHECK_EQUAL(hex_str, "");
+	// pay to multisig and check balance
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress jagnodemultisig1 8"), runtime_error);
+	GenerateBlocks(5);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
+	balanceBefore += 8*COIN;
+	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
+	BOOST_CHECK(abs(balanceBefore - balanceAfter) < COIN);
+	// create 2 of 3
+	BOOST_CHECK_NO_THROW(resCreate = CallRPC("node1", "createmultisig 2 \"[\\\"jagnodemultisig1\\\",\\\"jagnodemultisig2\\\", \\\"jagnodemultisig3\\\"]\""));	
+	redeemScript_value = find_value(resCreate, "redeemScript");
+	address_value = find_value(resCreate, "address");
+	BOOST_CHECK(redeemScript_value.isStr());
+	BOOST_CHECK(address_value.isStr());
+	redeemScript = redeemScript_value.get_str();
+	addressStr = address_value.get_str();
+	tmp = AliasUpdate("node1", "jagnodemultisig1", "pubdata", "privdata", "password", addressStr);
+	BOOST_CHECK_EQUAL(tmp, "");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), addressStr);
+	// 2 sigs needed, remove redeemScript to make it a normal alias
+	BOOST_CHECK_NO_THROW(CallRPC("node3", "aliasaddscript " + redeemScript));
+	hex_str = AliasUpdate("node3", "jagnodemultisig1", "\"\"", "\"\"", "\"\"", oldAddressStr);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasaddscript " + redeemScript));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsignrawtransaction " + hex_str));
+	GenerateBlocks(5, "node3");
+	GenerateBlocks(5);
+	// pay to multisig and check balance
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), oldAddressStr);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress jagnodemultisig1 7"), runtime_error);
+	GenerateBlocks(5);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
+	balanceBefore += 7*COIN;
+	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
+	BOOST_CHECK(abs(balanceBefore - balanceAfter) < COIN);
+
+	// no multisig so update as normal
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg jagnodemultisig1 changedata1 " + HexStr(vchFromString("pvtdata"))), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node3", "aliasupdate sysrates.peg jagnodemultisig1 changedata1 " + HexStr(vchFromString("pvtdata"))), runtime_error);
+	hex_str = AliasUpdate("node1", "jagnodemultisig1", "\"\"", "\"\"", "newpassword1");
+	BOOST_CHECK_EQUAL(hex_str, "");
+	// pay to multisig and check balance
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress jagnodemultisig1 6"), runtime_error);
+	GenerateBlocks(5);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
+	balanceBefore += 6*COIN;
+	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
+	BOOST_CHECK(abs(balanceBefore - balanceAfter) < COIN);
 }
 BOOST_AUTO_TEST_CASE (generate_aliasbalancewithtransfermultisig)
 {
@@ -459,7 +588,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	
 	AliasNew("node1", "aliasexpirebuyback", "passwordnew1", "somedata", "data");
 	// can't renew aliases that aren't expired
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback password data"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback " + HexStr(vchFromString("password")) + " data"), runtime_error);
 	ExpireAlias("aliasexpirebuyback");
 	// expired aliases shouldnt be searchable
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback", "On"), false);
@@ -476,7 +605,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	// run the test with node3 offline to test pruning with renewing alias
 	StopNode("node3");
 	MilliSleep(500);
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback1 passwordnew4 data"));
+	AliasNew("node1", "aliasexpirebuyback1", "passwordnew3", "somedata1", "data1");
 	GenerateBlocks(5, "node1");
 	ExpireAlias("aliasexpirebuyback1");
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback1", "On"), false);
@@ -493,14 +622,16 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 
 	// run the test with node3 offline to test pruning with renewing alias twice
 	StopNode("node3");
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback2 passwordnew5 data"));
-	GenerateBlocks(5, "node1");
+	AliasNew("node1", "aliasexpirebuyback2", "passwordnew5", "data", "data1");
+	GenerateBlocks(10, "node1");
+	GenerateBlocks(10, "node1");
 	ExpireAlias("aliasexpirebuyback2");
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback2", "On"), false);
 	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback2", "On"), false);
 	// renew second time
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback2 passwordnew6 data"));
-	GenerateBlocks(5, "node1");
+	AliasNew("node1", "aliasexpirebuyback2", "passwordnew6", "data2", "data2");
+	GenerateBlocks(10, "node1");
+	GenerateBlocks(10, "node1");
 	ExpireAlias("aliasexpirebuyback2");
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback2", "On"), false);
 	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback2", "On"), false);
@@ -516,10 +647,12 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	// steal alias after expiry and original node try to recreate or update should fail
 	AliasNew("node1", "aliasexpirebuyback", "passwordnew7", "somedata", "data");
 	ExpireAlias("aliasexpirebuyback");
+	GenerateBlocks(10, "node1");
+	GenerateBlocks(10, "node2");
 	AliasNew("node2", "aliasexpirebuyback", "passwordnew8", "somedata", "data");
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasnew sysrates.peg aliasexpirebuyback passwordnew9 data"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback passwordnew10 data"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpirebuyback changedata1 pvtdata"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasnew sysrates.peg aliasexpirebuyback " + HexStr(vchFromString("passwordnew9")) + " data"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback " + HexStr(vchFromString("password10")) + " data"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpirebuyback changedata1 " + HexStr(vchFromString("pvtdata"))), runtime_error);
 
 	// this time steal the alias and try to recreate at the same time
 	ExpireAlias("aliasexpirebuyback");
@@ -527,7 +660,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	ExpireAlias("aliasexpirebuyback");
 	AliasNew("node2", "aliasexpirebuyback", "passwordnew12", "somedata", "data");
 	GenerateBlocks(5,"node2");
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback passwordnew13 data2"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback " + HexStr(vchFromString("passwordnew13")) + " data2"), runtime_error);
 	GenerateBlocks(5);
 }
 
@@ -537,8 +670,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasban)
 	UniValue r;
 	GenerateBlocks(10);
 	// 2 aliases, one will be banned that is safe searchable other is banned that is not safe searchable
-	AliasNew("node1", "jagbansafesearch", "password", "pubdata", "privdata", "Yes");
-	AliasNew("node1", "jagbannonsafesearch", "password", "pubdata", "privdata", "No");
+	AliasNew("node1", "jagbansafesearch", "password", "pubdata", "privdata");
+	AliasNew("node1", "jagbannonsafesearch", "password", "pubdata", "privdata");
 	// can't ban on any other node than one that created sysban
 	BOOST_CHECK_THROW(AliasBan("node2","jagbansafesearch",SAFETY_LEVEL1), runtime_error);
 	BOOST_CHECK_THROW(AliasBan("node3","jagbansafesearch",SAFETY_LEVEL1), runtime_error);
@@ -591,12 +724,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasbanwithoffers)
 	UniValue r;
 	GenerateBlocks(10);
 	// 2 aliases, one will be banned that is safe searchable other is banned that is not safe searchable
-	AliasNew("node1", "jagbansafesearchoffer", "password", "pubdata", "privdata", "Yes");
-	AliasNew("node1", "jagbannonsafesearchoffer", "password", "pubdata", "privdata", "No");
-	BOOST_CHECK_EQUAL(AliasFilter("node1", "jagbansafesearchoffer", "On"), true);
-	BOOST_CHECK_EQUAL(AliasFilter("node1", "jagbansafesearchoffer", "Off"), true);
-	BOOST_CHECK_EQUAL(AliasFilter("node1", "jagbannonsafesearchoffer", "On"), false);
-	BOOST_CHECK_EQUAL(AliasFilter("node1", "jagbannonsafesearchoffer", "Off"), true);
+	AliasNew("node1", "jagbansafesearchoffer", "password", "pubdata", "privdata");
+	AliasNew("node1", "jagbannonsafesearchoffer", "password", "pubdata", "privdata");
 
 	// good case, safe offer with safe alias
 	string offerguidsafe1 = OfferNew("node1", "jagbansafesearchoffer", "category", "title", "100", "1.00", "description", "USD", "nocert", "NONE", "location", "Yes");
@@ -622,8 +751,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasbanwithoffers)
 	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguidunsafe, "Off"), true);
 
 	// swap safe search fields on the aliases
-	AliasUpdate("node1", "jagbansafesearchoffer", "pubdata1", "privatedata1", "No");	
-	AliasUpdate("node1", "jagbannonsafesearchoffer", "pubdata1", "privatedata1", "Yes");
+	AliasUpdate("node1", "jagbansafesearchoffer", "pubdata1", "privatedata1");	
+	AliasUpdate("node1", "jagbannonsafesearchoffer", "pubdata1", "privatedata1");
 
 	// safe offer with unsafe alias should show only in safe search off mode
 	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguidsafe1, "On"), false);
@@ -639,8 +768,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasbanwithoffers)
 	OfferUpdate("node1", "jagbansafesearchoffer", offerguidsafe1, "category", "titlenew", "10", "1.00", "descriptionnew", "USD", false, "nocert", "location", "Yes");
 	OfferUpdate("node1", "jagbansafesearchoffer", offerguidsafe2, "category", "titlenew", "90", "0.15", "descriptionnew", "USD", false, "nocert", "location", "No");
 	// swap them back and check filters again
-	AliasUpdate("node1", "jagbansafesearchoffer", "pubdata1", "privatedata1", "Yes");	
-	AliasUpdate("node1", "jagbannonsafesearchoffer", "pubdata1", "privatedata1", "No");
+	AliasUpdate("node1", "jagbansafesearchoffer", "pubdata1", "privatedata1");	
+	AliasUpdate("node1", "jagbannonsafesearchoffer", "pubdata1", "privatedata1");
 
 	// safe offer with safe alias should show regardless of safe search
 	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguidsafe1, "On"), true);
@@ -669,8 +798,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasbanwithoffers)
 
 	// keep alive and revert settings
 	OfferUpdate("node1", "jagbansafesearchoffer", offerguidsafe1, "category", "titlenew", "10", "1.00", "descriptionnew", "USD", false, "nocert", "location", "Yes");
-	AliasUpdate("node1", "jagbansafesearchoffer", "pubdata1", "privatedata1", "Yes");	
-	AliasUpdate("node1", "jagbannonsafesearchoffer", "pubdata1", "privatedata1", "No");
+	AliasUpdate("node1", "jagbansafesearchoffer", "pubdata1", "privatedata1");	
+	AliasUpdate("node1", "jagbannonsafesearchoffer", "pubdata1", "privatedata1");
 
 	// unsafe offer with safe alias should show in safe off mode only
 	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguidsafe3, "On"), false);
@@ -739,7 +868,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspruning)
 	printf("Running generate_aliaspruning...\n");
 	// stop node2 create a service,  mine some blocks to expire the service, when we restart the node the service data won't be synced with node2
 	StopNode("node2");
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasprune password data"));
+	AliasNew("node1", "aliasprune", "password", "pubdata", "privdata");
 	GenerateBlocks(5, "node1");
 	// we can find it as normal first
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune", "Off"), true);
@@ -752,7 +881,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspruning)
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune", "Off"), false);
 	// and it should say its expired
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo aliasprune"));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_int(), 1);	
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 1);	
 
 	// node2 shouldn't find the service at all (meaning node2 doesn't sync the data)
 	BOOST_CHECK_THROW(CallRPC("node2", "aliasinfo aliasprune"), runtime_error);
@@ -761,31 +890,34 @@ BOOST_AUTO_TEST_CASE (generate_aliaspruning)
 	// stop node3
 	StopNode("node3");
 	// create a new service
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasprune1 password data"));
+	AliasNew("node1", "aliasprune1", "password", "pubdata", "privdata");
 	GenerateBlocks(5, "node1");
 	// stop and start node1
 	StopNode("node1");
 	StartNode("node1");
 	GenerateBlocks(5, "node1");
 	// ensure you can still update before expiry
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasprune1 newdata privdata"));
+	AliasUpdate("node1", "aliasprune1", "newdata", "privdata");
+
 	// you can search it still on node1/node2
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune1", "Off"), true);
 	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune1", "Off"), true);
 	GenerateBlocks(5, "node1");
 	// ensure service is still active since its supposed to expire at 100 blocks of non updated services
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasprune1 newdata1 privdata"));
+	AliasUpdate("node1", "aliasprune1", "newdata1", "privdata1");
+
 	// you can search it still on node1/node2
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune1", "Off"), true);
 	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune1", "Off"), true);
 	ExpireAlias("aliasprune1");
 	// now it should be expired
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasprune1 newdata2 privdata"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasprune1 newdata2 " + HexStr(vchFromString("privatedata"))), runtime_error);
+
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune1", "Off"), false);
 	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune1", "Off"), false);
 	// and it should say its expired
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo aliasprune1"));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_int(), 1);	
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 1);	
 
 	StartNode("node3");
 	ExpireAlias("aliasprune");
@@ -803,25 +935,13 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithoffer)
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
 	StopNode("node3");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew sysrates.peg aliasprunewithoffer password somedata"));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew sysrates.peg aliasprunewithoffer1 password somedata"));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasnew sysrates.peg aliasprunewithoffer2 password somedata"));
-	GenerateBlocks(5, "node1");
-	GenerateBlocks(5, "node2");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew aliasprunewithoffer category title 1 0.05 description USD"));
-	const UniValue &arr = r.get_array();
-	string offerguid = arr[1].get_str();
-	GenerateBlocks(5, "node1");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrownew aliasprunewithoffer2 " + offerguid + " 1 message aliasprunewithoffer1"));
-	const UniValue &array = r.get_array();
-	string escrowguid = array[1].get_str();	
-	GenerateBlocks(5, "node2");
-	BOOST_CHECK_NO_THROW(CallRPC("node2", "escrowrelease " + escrowguid + " buyer"));
-	GenerateBlocks(5, "node2");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowclaimrelease " + escrowguid));
-	UniValue retArray = r.get_array();
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "escrowcompleterelease " + escrowguid + " " + retArray[0].get_str()));
-	GenerateBlocks(5, "node1");
+	AliasNew("node1", "aliasprunewithoffer", "password", "pubdata", "privdata");
+	AliasNew("node1", "aliasprunewithoffer1", "password", "pubdata", "privdata");
+	AliasNew("node2", "aliasprunewithoffer2", "password", "pubdata", "privdata");
+	string offerguid = OfferNew("node1", "aliasprunewithoffer", "category", "title", "1", "0.05", "description", "SYS");
+	string escrowguid = EscrowNew("node2", "node1", "aliasprunewithoffer2", offerguid, "1", "message", "aliasprunewithoffer1", "aliasprunewithoffer");
+	EscrowRelease("node2", "buyer", escrowguid);
+	EscrowClaimRelease("node1", escrowguid);
 	// last created alias should have furthest expiry
 	ExpireAlias("aliasprunewithoffer2");
 	StartNode("node3");
@@ -840,31 +960,16 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithcertoffer)
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
 	StopNode("node3");
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasprunewithcertoffer password somedata"));
-	BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasnew sysrates.peg aliasprunewithcertoffer2 password somedata"));
-	GenerateBlocks(5, "node1");
-	GenerateBlocks(5, "node2");
-	MilliSleep(2500);
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certnew aliasprunewithcertoffer jag1 data pubdata"));
-	const UniValue &arr = r.get_array();
-	string certguid = arr[1].get_str();
-	GenerateBlocks(5, "node1");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew aliasprunewithcertoffer certificates title 1 0.05 description USD " + certguid));
-	const UniValue &arr1 = r.get_array();
-	string certofferguid = arr1[1].get_str();
-	GenerateBlocks(5, "node1");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew aliasprunewithcertoffer category title 1 0.05 description USD"));
-	const UniValue &arr2 = r.get_array();
-	string offerguid = arr2[1].get_str();
-	GenerateBlocks(5, "node1");
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate aliasprunewithcertoffer " + offerguid + " category title 1 0.05 description"));
-	GenerateBlocks(5, "node1");
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate aliasprunewithcertoffer " + certofferguid + " certificates title 1 0.05 description USD 0 " + certguid));
-	GenerateBlocks(5, "node1");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offeraccept aliasprunewithcertoffer2 " + certofferguid + " 1 message"));
-	GenerateBlocks(5, "node2");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offeraccept aliasprunewithcertoffer2 " + offerguid + " 1 message"));
-	GenerateBlocks(5, "node2");
+	AliasNew("node1", "aliasprunewithcertoffer", "password", "pubdata", "privdata");
+	AliasNew("node2", "aliasprunewithcertoffer2", "password", "pubdata", "privdata");
+	string certguid = CertNew("node1", "aliasprunewithcertoffer", "jag1", "pubdata", "data");
+	string certofferguid = OfferNew("node1", "aliasprunewithcertoffer", "category", "title", "1", "0.05", "description", "SYS", certguid);	
+	string offerguid = OfferNew("node1", "aliasprunewithcertoffer", "category", "title", "1", "0.05", "description", "SYS");
+	
+	OfferUpdate("node1", "aliasprunewithcertoffer", offerguid, "certificates", "titlenew", "1", "0.05", "descriptionnew", "USD");
+	OfferUpdate("node1", "aliasprunewithcertoffer", certofferguid, "certificates", "titlenew", "1", "0.05", "descriptionnew", "USD", "No", certguid);
+	OfferAccept("node1", "node2", "aliasprunewithcertoffer2", certofferguid, "1", "message");
+	OfferAccept("node1", "node2", "aliasprunewithcertoffer2", offerguid, "1", "message");
 	ExpireAlias("aliasprunewithcertoffer2");
 	StartNode("node3");
 	ExpireAlias("aliasprunewithcertoffer2");
@@ -883,17 +988,11 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithcert)
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
 	StopNode("node3");
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasprunewithcert password somedata"));
-	BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasnew sysrates.peg aliasprunewithcert2 password somedata"));
-	GenerateBlocks(5, "node1");
-	GenerateBlocks(5, "node2");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certnew aliasprunewithcert jag1 data pubdata"));
-	const UniValue &arr = r.get_array();
-	string certguid = arr[1].get_str();
-	GenerateBlocks(5, "node1");
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certguid + " aliasprunewithcert newdata privdata pubdata"));
-	GenerateBlocks(5, "node1");
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "certtransfer " + certguid + " aliasprunewithcert2"));
+	AliasNew("node1", "aliasprunewithcert", "password", "pubdata", "privdata");
+	AliasNew("node2", "aliasprunewithcert2", "password", "pubdata", "privdata");
+	string certguid = CertNew("node1", "aliasprunewithcert", "jag1", "pubdata", "data");
+	CertUpdate("node1", certguid, "\"\"", "\"\"", "newdata");
+	CertTransfer("node1", "node2", certguid, "aliasprunewithcert2");
 	GenerateBlocks(5, "node1");
 	ExpireAlias("aliasprunewithcert2");
 	StartNode("node3");
@@ -920,74 +1019,56 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	OfferAddWhitelist("node1", offerguid, "aliasexpirednode2", "5");
 	string certguid = CertNew("node1", "aliasexpire", "certtitle", "certdata", "pubdata", "Yes");
 	StopNode("node3");
-
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew sysrates.peg aliasexpire2 passwordnew somedata"));
-	const UniValue &array1 = r.get_array();
-	string aliasexpire2pubkey = array1[1].get_str();
-	GenerateBlocks(5, "node1");
-	GenerateBlocks(5, "node2");
-
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrownew aliasexpirednode2 " + offerguid + " 1 message aliasexpire0"));
-	const UniValue &array = r.get_array();
-	string escrowguid = array[1].get_str();	
-	GenerateBlocks(5, "node2");
-
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasnew sysrates.peg aliasexpire2node2 passwordnew somedata"));
-	const UniValue &array2 = r.get_array();
-	string aliasexpire2node2pubkey = array2[1].get_str();	
-	GenerateBlocks(5, "node2");
-
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certnew aliasexpire2 certtitle certdata pubdata"));
-	const UniValue &array3 = r.get_array();
-	string certgoodguid = array3[1].get_str();	
-	// expire aliasexpirednode2 and everything before
+	string aliasexpire2pubkey = AliasNew("node1", "aliasexpire2", "password", "pubdata", "privdata");
+	string escrowguid = EscrowNew("node2", "node1", "aliasexpirednode2", offerguid, "1", "message", "aliasexpire", "aliasexpire0", "5");
+	string aliasexpire2node2pubkey = AliasNew("node2", "aliasexpire2node2", "password", "pubdata", "privdata");
+	string certgoodguid = CertNew("node1", "aliasexpire2", "certtitle", "pubdata", "certdata");
 	ExpireAlias("aliasexpirednode2");
 	GenerateBlocks(5, "node2");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew sysrates.peg aliasexpire passwordnew somedata"));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew sysrates.peg aliasexpire0 passwordnew somedata"));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasnew sysrates.peg aliasexpire1 passwordnew somedata"));
-	GenerateBlocks(5, "node1");
-	GenerateBlocks(5, "node2");
-	UniValue pkr = CallRPC("node2", "generatepublickey");
-	if (pkr.type() != UniValue::VARR)
-		throw runtime_error("Could not parse rpc results");
 
-	const UniValue &resultArray = pkr.get_array();
-	string pubkey = resultArray[0].get_str();		
+	AliasNew("node1", "aliasexpire", "passwordnew", "pubdata", "privdata");
+	AliasNew("node1", "aliasexpire0", "passwordnew", "pubdata", "privdata");
+	AliasNew("node2", "aliasexpire1", "passwordnew", "pubdata", "privdata");
+	CKey privKey;
+	privKey.MakeNewKey(true);
+	CPubKey pubKey = privKey.GetPubKey();
+	vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
+	vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());	
+	BOOST_CHECK(pubKey.IsFullyValid());
 
 	// should fail: alias update on expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasexpirednode2 newdata1 privdata"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasexpirednode2 newdata1"), runtime_error);
 	// should fail: alias transfer from expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasexpirednode2 changedata1 pvtdata Yes " + pubkey), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasexpirednode2 changedata1 \"\" " + HexStr(vchPubKey)), runtime_error);
 	// should fail: alias transfer to another alias
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 changedata1 pvtdata Yes " + aliasexpirenode2pubkey), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 changedata1 \"\" " + aliasexpirenode2pubkey), runtime_error);
 
 	// should fail: link to an expired alias in offer
-	BOOST_CHECK_THROW(CallRPC("node2", "offerlink aliasexpirednode2 " + offerguid + " 5 newdescription"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "offerlink aliasexpirednode2 " + offerguid + " 5 newdetails"), runtime_error);
 	// should fail: generate an offer using expired alias
 	BOOST_CHECK_THROW(CallRPC("node2", "offernew aliasexpirednode2 category title 1 0.05 description USD nocert"), runtime_error);
 
 	// should fail: send message from expired alias to expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "messagenew subject title aliasexpirednode2 aliasexpirednode2"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "messagenew " + HexStr(vchFromString("message")) + " pubdata aliasexpirednode2 aliasexpirednode2 01 01 01"), runtime_error);
 	// should fail: send message from expired alias to non-expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "messagenew subject title aliasexpirednode2 aliasexpire"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "messagenew " + HexStr(vchFromString("message")) + " pubdata aliasexpirednode2 aliasexpire 01 01 01"), runtime_error);
 	// should fail: send message from non-expired alias to expired alias
-	BOOST_CHECK_THROW(CallRPC("node1", "messagenew subject title aliasexpire aliasexpirednode2"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "messagenew " + HexStr(vchFromString("message")) + " pubdata aliasexpire aliasexpirednode2 01 01 01"), runtime_error);
 
 	// should fail: new escrow with expired arbiter alias
-	BOOST_CHECK_THROW(CallRPC("node2", "escrownew aliasexpire2node2 " + offerguid + " 1 message aliasexpirednode2"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "escrownew aliasexpire2node2 " + offerguid + " 1 " + HexStr(vchFromString("message")) + " aliasexpirednode2"), runtime_error);
 	// should fail: new escrow with expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "escrownew aliasexpirednode2 " + offerguid + " 1 message aliasexpire"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "escrownew aliasexpirednode2 " + offerguid + " 1 " + HexStr(vchFromString("message")) + " aliasexpire"), runtime_error);
 
-	// keep alive for later calls
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire newdata1 privdata"));
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 newdata1 privdata"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "messagenew " + HexStr(vchFromString("message")) + " pubdata aliasexpire aliasexpire2 01 01 01"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire newdata1"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 newdata1"));
 	GenerateBlocks(5, "node1");
 	
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " aliasexpire2 newdata privdata pubdata"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " newdata privdata pubdata"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate aliasexpire0 " + offerguid + " category title 100 0.05 description"));
 	GenerateBlocks(5, "node1");
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certguid + " aliasexpire jag1 data pubdata"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certguid + " jag1 data pubdata"));
 	GenerateBlocks(5, "node1");
 
 	StartNode("node3");
@@ -1002,14 +1083,14 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "escrowinfo " + escrowguid));
 	// this will recreate the alias and give it a new pubkey.. we need to use the old pubkey to sign the multisig, the escrow rpc call must check for the right pubkey
 	BOOST_CHECK(aliasexpirenode2pubkey != AliasNew("node2", "aliasexpirednode2", "passwordnew3", "somedata"));
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " aliasexpire2 newdata privdata pubdata"));
+	CertUpdate("node1", certgoodguid, "pubdata", "newdata");
 	// able to release and claim release on escrow with non-expired aliases with new pubkeys
 	EscrowRelease("node2", "buyer", escrowguid);	 
 	EscrowClaimRelease("node1", escrowguid); 
 
 	ExpireAlias("aliasexpire2");
 	// should fail: update cert with expired alias
-	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + certguid + " aliasexpire jag1 data pubdata"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + certguid + " pubdata"), runtime_error);
 	// should fail: xfer an cert with expired alias
 	BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + certguid + " aliasexpire2"), runtime_error);
 	// should fail: xfer an cert to an expired alias even though transferring cert is good
@@ -1022,8 +1103,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	AliasNew("node2", "aliasexpirednode2", "passwordnew3a", "somedataa");
 	AliasNew("node1", "aliasexpire2", "passwordnew3b", "somedatab");
 	// should pass: confirm that the transferring cert is good by transferring to a good alias
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpirednode2"));
-	GenerateBlocks(5, "node1");
+	CertTransfer("node1", "node2", certgoodguid, "aliasexpirednode2");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + certgoodguid));
 	// ensure it got transferred
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "alias").get_str(), "aliasexpirednode2");

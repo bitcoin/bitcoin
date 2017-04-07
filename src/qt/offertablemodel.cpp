@@ -100,7 +100,7 @@ public:
 			string safesearch_str;
 			string geolocation_str;
 			string aliasRating_str;
-			int expired = 0;
+			bool expired = false;
 
 			
 
@@ -116,7 +116,7 @@ public:
 					desc_str = "";
 					safesearch_str = "";
 					geolocation_str = "";
-					expired = 0;
+					expired = false;
 					aliasRating_str = "";
 
 
@@ -135,7 +135,7 @@ public:
 						alias_peg_str = "";
 						safesearch_str = "";
 						geolocation_str = "";
-						expired = 0;
+						expired = false;
 						sold = 0;
 						aliasRating_str = "";
 
@@ -167,8 +167,8 @@ public:
 						if (qty_value.type() == UniValue::VSTR)
 							qty_str = qty_value.get_str();
 						const UniValue& expired_value = find_value(o, "expired");
-						if (expired_value.type() == UniValue::VNUM)
-							expired = expired_value.get_int();
+						if (expired_value.type() == UniValue::VBOOL)
+							expired = expired_value.get_bool();
 						if((qty_str == "0" || expired == 1) && !showSoldOut)
 							continue;
 						const UniValue& private_value = find_value(o, "private");
@@ -196,7 +196,7 @@ public:
 						if (geolocation_value.type() == UniValue::VSTR)
 							geolocation_str = geolocation_value.get_str();
 						
-						if(expired == 1)
+						if(expired)
 						{
 							expired_str = "Expired";
 						}

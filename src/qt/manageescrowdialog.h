@@ -36,7 +36,7 @@ public:
 	void onRefund();
 	void doRefund(const QString &rawTx="");
 	void doRelease(const QString &rawTx="");
-	bool loadEscrow(const QString &escrow, QString &buyer, QString &seller, QString &reseller, QString &arbiter, QString &status, QString &offertitle, QString &total, QString &exttxid, QString &paymentOption, QString &redeemtxid);
+	bool loadEscrow(const QString &escrow, QString &buyer, QString &seller, QString &reseller, QString &arbiter, QString &status, QString &offertitle,QString &total, QString &exttxid, QString &paymentOption, QString &redeemtxid);
 	QString EscrowRoleTypeToString(const EscrowRoleType& escrowType);
 	EscrowRoleType findYourEscrowRoleFromAliases(const QString &buyer, const QString &seller, const QString &reseller, const QString &arbiter);
 	EscrowRoleType escrowRoleType;

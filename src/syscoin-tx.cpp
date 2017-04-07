@@ -242,11 +242,7 @@ static void MutateTxAddOutAddr(CMutableTransaction& tx, const string& strInput)
     CSyscoinAddress addr(strAddr);
     if (!addr.IsValid())
         throw runtime_error("invalid TX output address");
-	// SYSCOIN
 	CScript scriptPubKey =  GetScriptForDestination(addr.Get());
-	if(!addr.vchRedeemScript.empty())
-		scriptPubKey = CScript(addr.vchRedeemScript.begin(), addr.vchRedeemScript.end());
-
     // construct TxOut, append to transaction output list
     CTxOut txout(value, scriptPubKey);
     tx.vout.push_back(txout);

@@ -31,7 +31,7 @@ public:
 
     void setModel(WalletModel*,CertTableModel *model);
     void loadRow(int row);
-    void addParentItem(QStandardItemModel * model, const QString& text, const QVariant& data );
+	void addParentItem(QStandardItemModel * model, const QString& text, const QVariant& data );
     void addChildItem( QStandardItemModel * model, const QString& text, const QVariant& data );
 	void setCertNotSafeBecauseOfAlias(const QString &alias);
 	void resetSafeSearch();
@@ -53,6 +53,11 @@ private:
 	WalletModel* walletModel;
     QString cert;
 	QString expiredStr;
+	QString m_oldprivatevalue;
+	QString m_oldsafesearch;
+	QString m_oldtitle;
+	QString m_encryptionkey;
+	QString m_oldpubdata;
 };
 
 #endif // EDITCERTDIALOG_H

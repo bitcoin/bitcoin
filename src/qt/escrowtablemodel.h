@@ -43,8 +43,8 @@ public:
 		SellerRole,
 		ArbiterRole,
 		StatusRole,
-		OfferTitleRole,
 		TotalRole,
+		OfferTitleRole,
 		RatingRole
     };
 
@@ -73,7 +73,7 @@ public:
     /* Add an escrow to the model.
        Returns the added escrow on success, and an empty string otherwise.
      */
-    QString addRow(const QString &escrow, const int itime, const QString &time, const QString &seller, const QString &arbiter, const QString &offer,const QString &offertitle, const QString &total, const QString &rating, const QString &status, const QString &buyer);
+    QString addRow(const QString &escrow, const int itime, const QString &time, const QString &seller, const QString &arbiter, const QString &offer, const QString &offertitle, const QString &total, const QString &rating, const QString &status, const QString &buyer);
 
     /* Look up row index of an escrow in the model.
        Return -1 if not found.

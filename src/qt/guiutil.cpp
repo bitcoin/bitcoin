@@ -337,12 +337,8 @@ QString formatSyscoinURI(const SendCoinsRecipient &info)
 
 bool isDust(const QString& address, const CAmount& amount)
 {
-	// SYSCOIN
-	CSyscoinAddress addr = CSyscoinAddress(address.toStdString());
-    CScript script = GetScriptForDestination(addr.Get());
-	CScript scriptPubKey =  GetScriptForDestination(addr.Get());
-	if(!addr.vchRedeemScript.empty())
-		scriptPubKey = CScript(addr.vchRedeemScript.begin(), addr.vchRedeemScript.end());
+    CTxDestination dest = CSyscoinAddress(address.toStdString()).Get();
+    CScript script = GetScriptForDestination(dest);
     CTxOut txOut(amount, script);
     return txOut.IsDust(::minRelayTxFee);
 }

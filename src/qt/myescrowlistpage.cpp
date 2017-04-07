@@ -157,7 +157,7 @@ bool MyEscrowListPage::lookup(const QString &escrow, QString& address, QString& 
 			if (address_value.type() == UniValue::VSTR)
 				address = QString::fromStdString(address_value.get_str());
 		
-			const UniValue& total_value = find_value(o, "totalwithfee");
+			const UniValue& total_value = find_value(o, "systotalwithfee");
 			if (total_value.type() == UniValue::VNUM)
 				price = QString::number(ValueFromAmount(total_value.get_int64()).get_real());
 
@@ -230,9 +230,9 @@ void MyEscrowListPage::setModel(WalletModel *walletModel, EscrowTableModel *mode
     ui->tableView->setColumnWidth(4, 150); //buyer
     ui->tableView->setColumnWidth(5, 80); //offer
 	ui->tableView->setColumnWidth(6, 250); //offer title
-	ui->tableView->setColumnWidth(7, 80); //total
-	ui->tableView->setColumnWidth(8, 150); //rating
-    ui->tableView->setColumnWidth(9, 50); //status
+	ui->tableView->setColumnWidth(6, 80); //total
+	ui->tableView->setColumnWidth(7, 150); //rating
+    ui->tableView->setColumnWidth(8, 50); //status
 	
 
     ui->tableView->horizontalHeader()->setStretchLastSection(true);
