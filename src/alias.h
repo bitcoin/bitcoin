@@ -25,6 +25,7 @@ static const unsigned int MAX_VALUE_LENGTH = 1024;
 static const unsigned int MAX_ID_LENGTH = 20;
 static const unsigned int MAX_ENCRYPTED_VALUE_LENGTH = MAX_VALUE_LENGTH + 85;
 static const unsigned int MAX_ENCRYPTED_NAME_LENGTH = MAX_NAME_LENGTH + 85;
+static const unsigned int MAX_ENCRYPTED_GUID_LENGTH = MAX_GUID_LENGTH + 85;
 static const unsigned int MAX_ALIAS_UPDATES_PER_BLOCK = 5;
 static const uint64_t ONE_YEAR_IN_SECONDS = 31536000;
 static const unsigned int SAFETY_LEVEL1 = 1;

@@ -782,7 +782,21 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5009 - " + _("Bad alias height");
 			return error(errorMessage.c_str());
 		}
-
+		if(theAlias.vchEncryptionPrivateKey.size() > MAX_ENCRYPTED_GUID_LENGTH)
+		{
+			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 3006 - " + _("Encryption private key too long");
+			return error(errorMessage.c_str());
+		}
+		if(theAlias.vchEncryptionPublicKey.size() > MAX_GUID_LENGTH)
+		{
+			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 3006 - " + _("Encryption public key too long");
+			return error(errorMessage.c_str());
+		}
+		if(theAlias.vchPasswordSalt.size() > MAX_GUID_LENGTH)
+		{
+			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 3006 - " + _("Password salt too long");
+			return error(errorMessage.c_str());
+		}
 		switch (op) {
 			case OP_ALIAS_PAYMENT:
 				break;
