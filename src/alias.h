@@ -110,7 +110,7 @@ class CAliasIndex {
 public:
 	std::vector<unsigned char> vchAlias;
 	std::vector<unsigned char> vchGUID;
-    uint256 txid;
+    uint256 txHash;
     uint64_t nHeight;
 	uint64_t nExpireTime;
 	std::vector<unsigned char> vchAliasPeg;
