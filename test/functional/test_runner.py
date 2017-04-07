@@ -25,11 +25,18 @@ import tempfile
 import re
 import logging
 
-BOLD = ("", "")
+# Formatting. Default colors to empty strings.
+BOLD, BLUE, RED, GREY = ("", ""), ("", ""), ("", ""), ("", "")
+TICK = "✓ "
+CROSS = "✖ "
+CIRCLE = "○ "
 if os.name == 'posix':
     # primitive formatting on supported
     # terminal via ANSI escape sequences:
     BOLD = ('\033[0m', '\033[1m')
+    BLUE = ('\033[0m', '\033[0;34m')
+    RED = ('\033[0m', '\033[0;31m')
+    GREY = ('\033[0m', '\033[1;30m')
 
 TEST_EXIT_PASSED = 0
 TEST_EXIT_SKIPPED = 77
@@ -303,7 +310,8 @@ def print_results(test_results, max_len_name, runtime):
         test_result.padding = max_len_name
         results += str(test_result)
 
-    results += BOLD[1] + "\n%s | %s | %s s (accumulated) \n" % ("ALL".ljust(max_len_name), str(all_passed).ljust(7), time_sum) + BOLD[0]
+    status = TICK + "Passed" if all_passed else CROSS + "Failed"
+    results += BOLD[1] + "\n%s | %s | %s s (accumulated) \n" % ("ALL".ljust(max_len_name), status.ljust(9), time_sum) + BOLD[0]
     results += "Runtime: %s s\n" % (runtime)
     print(results)
 
@@ -373,26 +381,17 @@ class TestResult():
         self.padding = 0
 
     def __repr__(self):
-        COLOR = ("", "")
-        if os.name == 'posix':
-            # primitive formatting on supported
-            # terminal via ANSI escape sequences:
-            if self.status == "Passed":
-                COLOR = ('\033[0m', '\033[0;34m')
-            elif self.status == "Failed":
-                COLOR = ('\033[0m', '\033[0;31m')
-            elif self.status == "Skipped":
-                COLOR = ('\033[0m', '\033[1;30m')
-
-        SYMBOL = "  "
         if self.status == "Passed":
-            SYMBOL = "✓ "
+            color = BLUE
+            glyph = TICK
         elif self.status == "Failed":
-            SYMBOL = "✖ "
+            color = RED
+            glyph = CROSS
         elif self.status == "Skipped":
-            SYMBOL = "○ "
+            color = GREY
+            glyph = CIRCLE
 
-        return COLOR[1] + "%s | %s%s | %s s\n" % (self.name.ljust(self.padding), SYMBOL, self.status.ljust(7), self.time) + COLOR[0]
+        return color[1] + "%s | %s%s | %s s\n" % (self.name.ljust(self.padding), glyph, self.status.ljust(7), self.time) + color[0]
 
 
 def check_script_list(src_dir):
