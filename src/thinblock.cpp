@@ -1106,27 +1106,27 @@ bool IsThinBlockValid(const CNode *pfrom, const std::vector<CTransaction> &vMiss
     // Check that that there is at least one txn in the xthin and that the first txn is the coinbase
     if (vMissingTx.empty())
     {
-        LogPrintf("No Transactions found in thinblock or xthinblock %s from peer %s (id=%d).\n",
+        return error("No Transactions found in thinblock or xthinblock %s from peer %s (id=%d)",
             header.GetHash().ToString(), pfrom->addrName.c_str(), pfrom->id);
-        return false;
     }
     if (!vMissingTx[0].IsCoinBase())
     {
-        LogPrintf("First txn is not coinbase for thinblock or xthinblock %s from peer %s (id=%d).\n",
+        return error("First txn is not coinbase for thinblock or xthinblock %s from peer %s (id=%d)",
             header.GetHash().ToString(), pfrom->addrName.c_str(), pfrom->id);
-        return false;
     }
 
     // check block header
     CValidationState state;
     if (!CheckBlockHeader(header, state, true))
     {
-        LogPrintf("Received invalid header for thinblock or xthinblock %s from peer %s (id=%d).\n",
+        return error("Received invalid header for thinblock or xthinblock %s from peer %s (id=%d)",
             header.GetHash().ToString(), pfrom->addrName.c_str(), pfrom->id);
-        return false;
     }
     if (state.Invalid())
-        return false;
+    {
+        return error("Received invalid header for thinblock or xthinblock %s from peer %s (id=%d)",
+            header.GetHash().ToString(), pfrom->addrName.c_str(), pfrom->id);
+    }
 
     return true;
 }
