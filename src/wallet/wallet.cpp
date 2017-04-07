@@ -75,10 +75,10 @@ const uint256 CMerkleTx::ABANDON_HASH(uint256S("00000000000000000000000000000000
 
 struct CompareValueOnly
 {
-    bool operator()(const std::pair<CAmount, CInputCoin>& t1,
-                    const std::pair<CAmount, CInputCoin>& t2) const
+    bool operator()(const CInputCoin& t1,
+                    const CInputCoin& t2) const
     {
-        return t1.first < t2.first;
+        return t1.txout.nValue < t2.txout.nValue;
     }
 };
 
@@ -2509,7 +2509,7 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
     }
 }
 
-static void ApproximateBestSubset(const std::vector<std::pair<CAmount, CInputCoin> >& vValue, const CAmount& nTotalLower, const CAmount& nTargetValue,
+static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const CAmount& nTotalLower, const CAmount& nTargetValue,
                                   std::vector<char>& vfBest, CAmount& nBest, int iterations = 1000, bool fUseInstantSend = false)
 {
     std::vector<char> vfIncluded;
@@ -2539,7 +2539,7 @@ static void ApproximateBestSubset(const std::vector<std::pair<CAmount, CInputCoi
                 //the selection random.
                 if (nPass == 0 ? insecure_rand.randbool() : !vfIncluded[i])
                 {
-                    nTotal += vValue[i].first;
+                    nTotal += vValue[i].txout.nValue;
                     vfIncluded[i] = true;
                     if (nTotal >= nTargetValue)
                     {
@@ -2549,7 +2549,7 @@ static void ApproximateBestSubset(const std::vector<std::pair<CAmount, CInputCoi
                             nBest = nTotal;
                             vfBest = vfIncluded;
                         }
-                        nTotal -= vValue[i].first;
+                        nTotal -= vValue[i].txout.nValue;
                         vfIncluded[i] = false;
                     }
                 }
@@ -2581,12 +2581,12 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
     nValueRet = 0;
 
     // List of values less than target
-    std::pair<CAmount, CInputCoin> coinLowestLarger;
+    CInputCoin coinLowestLarger;
     coinLowestLarger.first = fUseInstantSend
                                         ? INSTANTSEND_MAX_VALUE*COIN
                                         : std::numeric_limits<CAmount>::max();
     coinLowestLarger.second.first = nullptr;
-    std::vector<std::pair<CAmount, CInputCoin> > vValue;
+    std::vector<CInputCoin> vValue;
     CAmount nTotalLower = 0;
 
     random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
@@ -2618,7 +2618,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
             CAmount n = pcoin->tx->vout[i].nValue;
             if (tryDenom == 0 && IsDenominatedAmount(n)) continue; // we don't want denom values on first run
 
-            std::pair<CAmount,CInputCoin> coin = std::make_pair(n,std::make_pair(pcoin, i));
+            CInputCoin coin = CInputCoin(pcoin, i);
 
             if (n == nTargetValue)
             {
@@ -2639,17 +2639,13 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 
         if (nTotalLower == nTargetValue)
         {
-            for (unsigned int i = 0; i < vValue.size(); ++i)
-            {
-                setCoinsRet.insert(vValue[i].second);
-                nValueRet += vValue[i].first;
-            }
-            return true;
+            setCoinsRet.insert(vValue[i]);
+            nValueRet += vValue[i].txout.nValue;
         }
 
         if (nTotalLower < nTargetValue)
         {
-            if (coinLowestLarger.second.IsNull()) // there is no input larger than nTargetValue
+            if (coinLowestLarger.IsNull()) // there is no input larger than nTargetValue
             {
                 if (tryDenom == 0)
                     // we didn't look at denom yet, let's do it
@@ -2658,8 +2654,8 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
                     // we looked at everything possible and didn't find anything, no luck
                     return false;
             }
-            setCoinsRet.insert(coinLowestLarger.second);
-            nValueRet += coinLowestLarger.first;
+            setCoinsRet.insert(coinLowestLarger);
+            nValueRet += coinLowestLarger.txout.nValue;
             return true;
         }
 
@@ -2679,11 +2675,11 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 
     // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
     //                                   or the next bigger coin is closer), return the bigger coin
-    if (coinLowestLarger.second.IsNull() &&
-        ((nBest != nTargetValue && nBest < nTargetValue + MIN_CHANGE) || coinLowestLarger.first <= nBest))
+    if (!coinLowestLarger.IsNull() &&
+        ((nBest != nTargetValue && nBest < nTargetValue + MIN_CHANGE) || coinLowestLarger.txout.nValue <= nBest))
     {
-        setCoinsRet.insert(coinLowestLarger.second);
-        nValueRet += coinLowestLarger.first;
+        setCoinsRet.insert(coinLowestLarger);
+        nValueRet += coinLowestLarger.txout.nValue;
     }
     else {
         std::string s = "CWallet::SelectCoinsMinConf best subset: ";
@@ -2691,9 +2687,8 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
         {
             if (vfBest[i])
             {
-                setCoinsRet.insert(vValue[i].second);
-                nValueRet += vValue[i].first;
-                s += FormatMoney(vValue[i].first) + " ";
+                setCoinsRet.insert(vValue[i]);
+                nValueRet += vValue[i].txout.nValue;
             }
         }
 
@@ -2701,7 +2696,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
             LogPrint(BCLog::SELECTCOINS, "SelectCoins() best subset: ");
             for (unsigned int i = 0; i < vValue.size(); i++) {
                 if (vfBest[i]) {
-                    LogPrint(BCLog::SELECTCOINS, "%s ", FormatMoney(vValue[i].first));
+                    LogPrint(BCLog::SELECTCOINS, "%s ", FormatMoney(vValue[i].txout.nValue));
                 }
             }
             LogPrint(BCLog::SELECTCOINS, "total %s\n", FormatMoney(nBest));
