@@ -74,7 +74,9 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
     return nNewTime - nOldTime;
 }
 
-BlockAssembler::BlockAssembler(const CChainParams &_chainparams) : chainparams(_chainparams)
+BlockAssembler::BlockAssembler(const CChainParams &_chainparams)
+    : chainparams(_chainparams), nBlockSize(0), nBlockTx(0), nBlockSigOps(0), nFees(0), nHeight(0), nLockTimeCutoff(0),
+      lastFewTxs(0), blockFinished(false)
 {
     // Largest block you're willing to create:
     nBlockMaxSize = maxGeneratedBlock;
@@ -117,7 +119,6 @@ uint64_t BlockAssembler::reserveBlockSize(const CScript &scriptPubKeyIn)
     // This serializes with output value, a fixed-length 8 byte field, of zero and height, a serialized CScript
     // signed integer taking up 4 bytes for heights 32768-8388607 (around the year 2167) after which it will use 5.
     nCoinbaseSize = coinbaseTx(scriptPubKeyIn, 400000, 0).GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
-    // BU005 END
 
     // BU Miners take the block we give them, wipe away our coinbase and add their own.
     // So if their reserve choice is bigger then our coinbase then use that.
@@ -153,8 +154,9 @@ CMutableTransaction BlockAssembler::coinbaseTx(const CScript &scriptPubKeyIn, in
 
 CBlockTemplate *BlockAssembler::CreateNewBlock(const CScript &scriptPubKeyIn)
 {
-    CBlockTemplate *tmpl = NULL;
-    if (maxGeneratedBlock > BLOCKSTREAM_CORE_MAX_BLOCK_SIZE)
+    CBlockTemplate *tmpl = nullptr;
+
+    if (nBlockMaxSize > BLOCKSTREAM_CORE_MAX_BLOCK_SIZE)
         tmpl = CreateNewBlock(scriptPubKeyIn, false);
 
     // If the block is too small we need to drop back to the 1MB ruleset
@@ -170,10 +172,10 @@ CBlockTemplate *BlockAssembler::CreateNewBlock(const CScript &scriptPubKeyIn, bo
 {
     resetBlock(scriptPubKeyIn);
 
-    pblocktemplate.reset(new CBlockTemplate());
-    if (!pblocktemplate.get())
-        return NULL;
-    pblock = &pblocktemplate->block; // pointer for convenience
+    // The constructed block template
+    std::unique_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
+
+    CBlock *pblock = &pblocktemplate->block;
 
     // Add dummy coinbase tx as first transaction
     pblock->vtx.push_back(CTransaction());
@@ -196,13 +198,13 @@ CBlockTemplate *BlockAssembler::CreateNewBlock(const CScript &scriptPubKeyIn, bo
     nLockTimeCutoff =
         (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST) ? nMedianTimePast : pblock->GetBlockTime();
 
-    addPriorityTxs();
-    addScoreTxs();
+    addPriorityTxs(pblocktemplate.get());
+    addScoreTxs(pblocktemplate.get());
 
     nLastBlockTx = nBlockTx;
     nLastBlockSize = nBlockSize;
-    LogPrintf(
-        "CreateNewBlock(): total size %u txs: %u fees: %ld sigops %d\n", nBlockSize, nBlockTx, nFees, nBlockSigOps);
+    LogPrintf("CreateNewBlock(): total size %llu txs: %llu fees: %lld sigops %u\n",
+              nBlockSize, nBlockTx, nFees, nBlockSigOps);
 
     // Create coinbase transaction.
     pblock->vtx[0] = coinbaseTx(scriptPubKeyIn, nHeight, nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus()));
@@ -310,9 +312,9 @@ bool BlockAssembler::TestForBlock(CTxMemPool::txiter iter)
     return true;
 }
 
-void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
+void BlockAssembler::AddToBlock(CBlockTemplate *pblocktemplate, CTxMemPool::txiter iter)
 {
-    pblock->vtx.push_back(iter->GetTx());
+    pblocktemplate->block.vtx.push_back(iter->GetTx());
     pblocktemplate->vTxFees.push_back(iter->GetFee());
     pblocktemplate->vTxSigOps.push_back(iter->GetSigOpCount());
     nBlockSize += iter->GetTxSize();
@@ -328,11 +330,12 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
         CAmount dummy;
         mempool.ApplyDeltas(iter->GetTx().GetHash(), dPriority, dummy);
         LogPrintf("priority %.1f fee %s txid %s\n", dPriority,
-            CFeeRate(iter->GetModifiedFee(), iter->GetTxSize()).ToString(), iter->GetTx().GetHash().ToString());
+                  CFeeRate(iter->GetModifiedFee(), iter->GetTxSize()).ToString().c_str(),
+                  iter->GetTx().GetHash().ToString().c_str());
     }
 }
 
-void BlockAssembler::addScoreTxs()
+void BlockAssembler::addScoreTxs(CBlockTemplate *pblocktemplate)
 {
     std::priority_queue<CTxMemPool::txiter, std::vector<CTxMemPool::txiter>, ScoreCompare> clearedTxs;
     CTxMemPool::setEntries waitSet;
@@ -380,7 +383,7 @@ void BlockAssembler::addScoreTxs()
         // If this tx fits in the block add it, otherwise keep looping
         if (TestForBlock(iter))
         {
-            AddToBlock(iter);
+            AddToBlock(pblocktemplate, iter);
 
             // This tx was successfully added, so
             // add transactions that depend on this one to the priority queue to try again
@@ -396,7 +399,7 @@ void BlockAssembler::addScoreTxs()
     }
 }
 
-void BlockAssembler::addPriorityTxs()
+void BlockAssembler::addPriorityTxs(CBlockTemplate *pblocktemplate)
 {
     // How much of the block should be dedicated to high-priority transactions,
     // included regardless of the fees they pay
@@ -436,7 +439,7 @@ void BlockAssembler::addPriorityTxs()
         // If tx already in block, skip
         if (inBlock.count(iter))
         {
-            assert(false); // shouldn't happen for priority txs
+            DbgAssert(false, ); // shouldn't happen for priority txs
             continue;
         }
 
@@ -451,7 +454,7 @@ void BlockAssembler::addPriorityTxs()
         // If this tx fits in the block add it, otherwise keep looping
         if (TestForBlock(iter))
         {
-            AddToBlock(iter);
+            AddToBlock(pblocktemplate, iter);
 
             // If now that this txs is added we've surpassed our desired priority size
             // or have dropped below the AllowFreeThreshold, then we're done adding priority txs

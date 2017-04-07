@@ -34,10 +34,7 @@ struct CBlockTemplate
 class BlockAssembler
 {
 private:
-    // The constructed block template
-    std::unique_ptr<CBlockTemplate> pblocktemplate;
-    // A convenience pointer that always refers to the CBlock in pblocktemplate
-    CBlock *pblock;
+    const CChainParams &chainparams;
 
     // Configuration parameters for the block size
     uint64_t nBlockMaxSize, nBlockMinSize;
@@ -52,7 +49,6 @@ private:
     // Chain context for the block
     int nHeight;
     int64_t nLockTimeCutoff;
-    const CChainParams &chainparams;
 
     // Variables used for addScoreTxs and addPriorityTxs
     int lastFewTxs;
@@ -68,13 +64,13 @@ private:
     /** Clear the block's state and prepare for assembling a new block */
     void resetBlock(const CScript &scriptPubKeyIn);
     /** Add a tx to the block */
-    void AddToBlock(CTxMemPool::txiter iter);
+    void AddToBlock(CBlockTemplate *, CTxMemPool::txiter iter);
 
     // Methods for how to add transactions to a block.
     /** Add transactions based on modified feerate */
-    void addScoreTxs();
+    void addScoreTxs(CBlockTemplate *);
     /** Add transactions based on tx "priority" */
-    void addPriorityTxs();
+    void addPriorityTxs(CBlockTemplate *);
 
     // helper function for addScoreTxs and addPriorityTxs
     /** Test if tx will still "fit" in the block */
