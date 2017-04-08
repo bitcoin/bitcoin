@@ -65,7 +65,7 @@ private:
 	QString expiredStr;
 	QString m_oldqty;
 	QString m_oldprice;
-	QString m_olddetails;
+	QString m_olddescription;
 	QString m_oldcurrency;
 	QString m_oldprivate;
 	QString m_oldcert;
