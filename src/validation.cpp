@@ -621,9 +621,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
             if (!setConflicts.count(ptxConflicting->GetHash()))
             {
                 // Allow opt-out of transaction replacement by setting
-                // nSequence >= maxint-1 on all inputs.
+                // nSequence >= SEQUENCE_FINAL-1 on all inputs.
                 //
-                // maxint-1 is picked to still allow use of nLockTime by
+                // SEQUENCE_FINAL-1 is picked to still allow use of nLockTime by
                 // non-replaceable transactions. All inputs rather than just one
                 // is for the sake of multi-party protocols, where we don't
                 // want a single party to be able to disable replacement.
@@ -637,7 +637,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
                 {
                     BOOST_FOREACH(const CTxIn &_txin, ptxConflicting->vin)
                     {
-                        if (_txin.nSequence < std::numeric_limits<unsigned int>::max()-1)
+                        if (_txin.nSequence < CTxIn::SEQUENCE_FINAL-1)
                         {
                             fReplacementOptOut = false;
                             break;
