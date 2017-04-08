@@ -1,17 +1,20 @@
 Developer Notes
 ===============
 
+Formatting
+-----------
+
 Various coding styles have been used during the history of the codebase,
 and the result is not very consistent. However, we're now trying to converge to
 a single style, so please use it in new code. Old code will be converted
 gradually.
-- Basic rules specified in src/.clang-format. Use a recent clang-format-3.5 to format automatically.
-  - Braces on new lines for namespaces, classes, functions, methods.
-  - Braces on the same line for everything else.
+- Basic rules are specified in src/.clang-format. See below for scripts to format automatically.
+  - "Allman" indentation: Braces on new lines for namespaces, classes, functions, methods, code blocks.
   - 4 space indentation (no tabs) for every block except namespaces.
   - No indentation for public/protected/private or for namespaces.
   - No extra spaces inside parenthesis; don't do ( this )
   - No space after function names; one space after if, for and while.
+  - 120 character column limit
 
 Block style example:
 ```c++
@@ -22,7 +25,8 @@ class Class
     bool Function(char* psz, int n)
     {
         // Comment summarising what this section of code does
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < n; i++)
+        {
             // When something fails, return early
             if (!Something())
                 return false;
@@ -35,6 +39,67 @@ class Class
 }
 }
 ```
+
+- Strict formatting is enforced all files listed in "src/.formatted-files".
+  Your pull request will fail the Travis build if one of these files is not formatted properly
+
+- To auto-format a file:
+
+   Formatting happens in two passes.  First a python script is run that finds trailing comments that exceed 120 characters
+   and moves them up to the prior line.  Second clang-format-3.8 is executed.
+
+   The first step is to install clang-format.  You likely need to install this exact version or formatting may be slightly different.
+```bash
+sudo apt-get install clang-format-3.8
+```
+
+   Next, run the wrapper script to format your files:
+
+```bash
+./contrib/devtools/clang-format.py format clang-format-3.8 <filenames...>
+```
+   Do not fix other people's formatting issues in your PR, since it distracts from the content!  Let the BitcoinUnlimitedJanitor clean up other people's mess.
+
+
+- To check proper formatting of a file:
+```bash
+./contrib/devtools/clang-format.py check clang-format-3.8 <filenames...>
+```
+
+- To check that your formatting will pass Travis:
+```bash
+make check-formatting
+```
+
+- Formatting style for emacs (add this to your .elisp file).  You can also find a full-featured emacs environment [here](https://github.com/gandrewstone/BUtools).
+```elisp
+;; Indentation style and number of spaces
+(setq c-default-style "bsd"
+      c-basic-offset 4)
+
+;; Use spaces for a tab.
+(setq c-tab-always-indent nil)
+(setq-default indent-tabs-mode nil)
+(setq tab-stop-list '(4 8 12 16 20 22 24 26 28 30 32 34 36 38 40 42 44 46 48 50))
+(setq standard-indent 1)
+
+;; Highlight a lot of style issues
+(require 'whitespace)
+(setq whitespace-line-column 120) ;; limit line length to 120 chars
+(setq whitespace-style '(face lines-tail trailing tabs))
+(add-hook 'prog-mode-hook 'whitespace-mode)
+
+;; Delete trailing whitespace on save
+;;   Be careful that this does not cause a lot of unrelated changes.
+;;   You may need to comment this out when editing some files
+(add-hook 'c-mode-hook
+                (lambda () (add-to-list 'write-file-functions 'delete-trailing-whitespace)))
+
+;; Import clang-format functionality into emacs (ctrl-tab to format the selected region)
+(load "clang-format-3.8/clang-format.el")
+(global-set-key [C-tab] 'clang-format-region)
+```
+
 
 Doxygen comments
 -----------------
