@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	GenerateBlocks(5, "node1");
 	// create a new service
 	AliasNew("node1", "jagprune1", "password1", "temp", "data");
-	string guid1 = CertNew("node1", "jagprune1", "pub", "data");
+	string guid1 = CertNew("node1", "jagprune1", "title", "pub", "data");
 	// stop and start node1
 	StopNode("node1");
 	StartNode("node1");
