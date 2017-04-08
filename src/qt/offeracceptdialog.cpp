@@ -23,7 +23,7 @@ extern CRPCTable tableRPC;
 OfferAcceptDialog::OfferAcceptDialog(WalletModel* model, const PlatformStyle *platformStyle, QString aliaspeg, QString alias, QString encryptionkey, QString offer, QString quantity, QString notes, QString title, QString currencyCode, QString qstrPrice, QString sellerAlias, QString address, unsigned char paymentOptions, float nQtyUnits,bool bCoinOffer,QWidget *parent) :
     QDialog(parent),
 	walletModel(model),
-    ui(new Ui::OfferAcceptDialog), platformStyle(platformStyle), aliaspeg(aliaspeg), qstrPrice(qstrPrice), alias(alias), m_encryptionkey(encryptionkey), offer(offer), notes(notes), quantity(quantity), title(title), (currencyCode), seller(sellerAlias), address(address),  nQtyUnits(nQtyUnits)
+    ui(new Ui::OfferAcceptDialog), platformStyle(platformStyle), aliaspeg(aliaspeg), qstrPrice(qstrPrice), alias(alias), m_encryptionkey(encryptionkey), offer(offer), notes(notes), quantity(quantity), title(title), currency(currencyCode), seller(sellerAlias), address(address),  nQtyUnits(nQtyUnits)
 {
     ui->setupUi(this);
 	QString theme = GUIUtil::getThemeName();

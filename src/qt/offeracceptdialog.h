@@ -30,7 +30,7 @@ private:
 	QString strBTCPrice;
 	QString strZECPrice;
 	QString title;
-	QString currency;
+	QString currencyCode;
 	QString seller;
 	QString address;
 	QString aliaspeg;
