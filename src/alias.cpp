@@ -1636,8 +1636,7 @@ void CreateAliasRecipient(const CScript& scriptPubKeyDest, const vector<unsigned
 	else
 		nFee = nFeePerByte * nSize;
 	// create alias payment utxo max 1500 bytes worth of fees
-	size_t nSize = 1500;
-	CAmount nPayFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
+	CAmount nPayFee = CWallet::GetMinimumFee(1500, nTxConfirmTarget, mempool);
 	nFee = std::max(nFee, nPayFee);
 	recipient.nAmount = nFee;
 }
