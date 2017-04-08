@@ -2581,11 +2581,10 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
     nValueRet = 0;
 
     // List of values less than target
-    CInputCoin coinLowestLarger;
-    coinLowestLarger.first = fUseInstantSend
+    boost::optional<CInputCoin> coinLowestLarger;
+    coinLowestLarger = fUseInstantSend
                                         ? INSTANTSEND_MAX_VALUE*COIN
                                         : std::numeric_limits<CAmount>::max();
-    coinLowestLarger.second.first = nullptr;
     std::vector<CInputCoin> vValue;
     CAmount nTotalLower = 0;
 
@@ -2607,7 +2606,6 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 
             const CWalletTx *pcoin = output.tx;
 
-//            if (fDebug) LogPrint("selectcoins", "value %s confirms %d\n", FormatMoney(pcoin->vout[output.i].nValue), output.nDepth);
             if (output.nDepth < (pcoin->IsFromMe(ISMINE_ALL) ? nConfMine : nConfTheirs))
                 continue;
 
@@ -2615,23 +2613,23 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
                 continue;
 
             int i = output.i;
-            CAmount n = pcoin->tx->vout[i].nValue;
-            if (tryDenom == 0 && IsDenominatedAmount(n)) continue; // we don't want denom values on first run
+
+            if (tryDenom == 0 && IsDenominatedAmount(pcoin->tx->vout[i].nValue)) continue; // we don't want denom values on first run
 
             CInputCoin coin = CInputCoin(pcoin, i);
 
-            if (n == nTargetValue)
+            if (coin.txout.nValue == nTargetValue)
             {
-                setCoinsRet.insert(coin.second);
-                nValueRet += coin.first;
+                setCoinsRet.insert(coin);
+                nValueRet += coin.txout.nValue;
                 return true;
             }
-            else if (n < nTargetValue + MIN_CHANGE)
+            else if (coin.txout.nValue < nTargetValue + MIN_CHANGE)
             {
                 vValue.push_back(coin);
-                nTotalLower += n;
+                nTotalLower += coin.txout.nValue;
             }
-            else if (n < coinLowestLarger.first)
+            else if (!coinLowestLarger || coin.txout.nValue < coinLowestLarger->txout.nValue)
             {
                 coinLowestLarger = coin;
             }
@@ -2639,13 +2637,17 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 
         if (nTotalLower == nTargetValue)
         {
-            setCoinsRet.insert(vValue[i]);
-            nValueRet += vValue[i].txout.nValue;
+            for (unsigned int i = 0; i < vValue.size(); ++i)
+            {
+                setCoinsRet.insert(vValue[i]);
+                nValueRet += vValue[i].txout.nValue;
+            }
+            return true;
         }
 
         if (nTotalLower < nTargetValue)
         {
-            if (coinLowestLarger.IsNull()) // there is no input larger than nTargetValue
+            if (!coinLowestLarger) // there is no input larger than nTargetValue
             {
                 if (tryDenom == 0)
                     // we didn't look at denom yet, let's do it
@@ -2654,8 +2656,8 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
                     // we looked at everything possible and didn't find anything, no luck
                     return false;
             }
-            setCoinsRet.insert(coinLowestLarger);
-            nValueRet += coinLowestLarger.txout.nValue;
+            setCoinsRet.insert(coinLowestLarger.get());
+            nValueRet += coinLowestLarger->txout.nValue;
             return true;
         }
 
@@ -2675,22 +2677,19 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 
     // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
     //                                   or the next bigger coin is closer), return the bigger coin
-    if (!coinLowestLarger.IsNull() &&
-        ((nBest != nTargetValue && nBest < nTargetValue + MIN_CHANGE) || coinLowestLarger.txout.nValue <= nBest))
+    if (coinLowestLarger &&
+        ((nBest != nTargetValue && nBest < nTargetValue + MIN_CHANGE) || coinLowestLarger->txout.nValue <= nBest))
     {
-        setCoinsRet.insert(coinLowestLarger);
-        nValueRet += coinLowestLarger.txout.nValue;
+        setCoinsRet.insert(coinLowestLarger.get());
+        nValueRet += coinLowestLarger->txout.nValue;
     }
     else {
-        std::string s = "CWallet::SelectCoinsMinConf best subset: ";
         for (unsigned int i = 0; i < vValue.size(); i++)
-        {
             if (vfBest[i])
             {
                 setCoinsRet.insert(vValue[i]);
                 nValueRet += vValue[i].txout.nValue;
             }
-        }
 
         if (LogAcceptCategory(BCLog::SELECTCOINS)) {
             LogPrint(BCLog::SELECTCOINS, "SelectCoins() best subset: ");
@@ -2750,7 +2749,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
                     // make sure it's actually anonymized
                     if(nRounds < privateSendClient.nPrivateSendRounds) continue;
                     nValueRet += nDenom;
-                    setCoinsRet.insert(make_pair(out.tx, out.i));
+                    setCoinsRet.insert(std::make_pair(out.tx, out.i));
                 }
             }
         }
