@@ -1629,6 +1629,8 @@ void CreateAliasRecipient(const CScript& scriptPubKeyDest, const vector<unsigned
 	CRecipient recp = {scriptChangeOrig, 0, false};
 	recipient = recp;
 	int nFeePerByte = getFeePerByte(vchAliasPeg, vchFromString("SYS"), nHeight, precision);
+	CTxOut txout(0,	recipient.scriptPubKey);
+	size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
 	if(nFeePerByte <= 0)
 		nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
 	else
