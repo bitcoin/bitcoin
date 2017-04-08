@@ -477,21 +477,17 @@ public:
 
 class CInputCoin {
 public:
-    CInputCoin()
-    {
-    }
     CInputCoin(const CWalletTx* walletTx, unsigned int i)
     {
-        if (walletTx != nullptr && i < walletTx->tx->vout.size())
-        {
-            outpoint = COutPoint(walletTx->GetHash(), i);
-            txout = walletTx->tx->vout[i];
-        }
+        if (!walletTx)
+            throw std::invalid_argument("walletTx should not be null");
+        if (i >= walletTx->tx->vout.size())
+            throw std::out_of_range("The output index is out of range");
+
+        outpoint = COutPoint(walletTx->GetHash(), i);
+        txout = walletTx->tx->vout[i];
     }
-    bool IsNull() const
-    {
-        return outpoint.IsNull() && txout.IsNull();
-    }
+
     COutPoint outpoint;
     CTxOut txout;
 
