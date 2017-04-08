@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE (generate_big_certdata)
 	vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
 	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, baddata, strCipherBadData), true);	
 	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, gooddata, strCipherGoodData), true);	
-	string guid = CertNew("node1", "jagcertbig1", gooddata, gooddata);
+	string guid = CertNew("node1", "jagcertbig1", "title", gooddata, gooddata);
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "certnew jagcertbig1 \"\" " + HexStr(vchFromString(strCipherGoodData))));
 	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig1 \"\" " + HexStr(vchFromString(strCipherBadData))), runtime_error);
 	// unencrypted 1025 bytes should cause us to trip 1025+80 bytes once encrypted
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE (generate_certtransfer)
 	certdata = "certdata";
 	guid = CertNew("node1", "jagcert1", certtitle, certdata, "pubdata");
 	// private cert
-	pvtguid = CertNew("node1", certtitle, certdata, "pubdata");
+	pvtguid = CertNew("node1", "jagcert1", certtitle, certdata, "pubdata");
 	CertUpdate("node1", pvtguid, certtitle, certdata, "pub3");
 	UniValue r;
 	CertTransfer("node1", "node2", guid, "jagcert2");
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE (generate_certtransfer)
 	// update xferred cert
 	certdata = "newdata";
 	certtitle = "newtitle";
-	CertUpdate("node2", guid, "jagcert2", certtitle, certdata, "public");
+	CertUpdate("node2", guid, certtitle, certdata, "public");
 
 	// retransfer cert
 	CertTransfer("node2","node3", guid, "jagcert3");

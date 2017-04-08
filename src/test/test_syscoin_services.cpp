@@ -1026,7 +1026,7 @@ const string CertNew(const string& node, const string& alias, const string& titl
 	}
 	return guid;
 }
-void CertUpdate(const string& node, const string& guid, const string& title, const string& data, const string& pubdata, string safesearch)
+void CertUpdate(const string& node, const string& guid, const string& title, const string& data, const string& pubdata, const string& safesearch)
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
