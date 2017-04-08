@@ -593,7 +593,7 @@ bool EditAliasDialog::saveCurrentRow()
 			if(m_oldAcceptCertTransfers != ui->acceptCertTransfersEdit->currentText())
 				acceptCertTransfers = ui->acceptCertTransfersEdit->currentText().toStdString();
 			strSafeSearch = "\"\"";
-			if(m_oldsafesearch != ui->safeSearchEdit->currentText().toStdString())
+			if(m_oldsafesearch != ui->safeSearchEdit->currentText())
 				strSafeSearch = ui->safeSearchEdit->currentText().toStdString();
 			pubData = "\"\"";
 			if(ui->nameEdit->toPlainText() != m_oldvalue)
