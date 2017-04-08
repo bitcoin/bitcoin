@@ -254,11 +254,11 @@ bool BlockAssembler::isStillDependent(CTxMemPool::txiter iter)
     return false;
 }
 
-bool BlockAssembler::TestForBlock(CTxMemPool::txiter iter)
+// Return true if incremental tx or txs in the block with the given size and sigop count would be
+// valid, and false otherwise.  If false, blockFinished and lastFewTxs are updated if appropriate.
+bool BlockAssembler::IsIncrementallyGood(uint64_t nExtraSize, unsigned int nExtraSigOps)
 {
-    uint64_t nTxSize = iter->GetTxSize();
-
-    if (nBlockSize + nTxSize > nBlockMaxSize)
+    if (nBlockSize + nExtraSize > nBlockMaxSize)
     {
         // If the block is so close to full that no more txs will fit
         // or if we've tried more than 50 times to fill remaining space
@@ -277,11 +277,11 @@ bool BlockAssembler::TestForBlock(CTxMemPool::txiter iter)
         return false;
     }
 
-    uint64_t nTxSigOps = iter->GetSigOpCount();
-    if (nBlockSize + nTxSize <= BLOCKSTREAM_CORE_MAX_BLOCK_SIZE) // Enforce the "old" sigops for <= 1MB blocks
+    // Enforce the "old" sigops for <= 1MB blocks
+    if (nBlockSize + nExtraSize <= BLOCKSTREAM_CORE_MAX_BLOCK_SIZE)
     {
         // BU: be conservative about what is generated
-        if (nBlockSigOps + nTxSigOps >= BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS)
+        if (nBlockSigOps + nExtraSigOps >= BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS)
         {
             // BU: so a block that is near the sigops limit might be shorter than it could be if
             // the high sigops tx was backed out and other tx added.
@@ -292,8 +292,8 @@ bool BlockAssembler::TestForBlock(CTxMemPool::txiter iter)
     }
     else
     {
-        uint64_t blockMbSize = 1 + ((nBlockSize + nTxSize - 1) / 1000000);
-        if (nBlockSigOps + nTxSigOps > blockMiningSigopsPerMb.value * blockMbSize)
+        uint64_t blockMbSize = 1 + (nBlockSize + nExtraSize - 1) / 1000000;
+        if (nBlockSigOps + nExtraSigOps > blockMiningSigopsPerMb.value * blockMbSize)
         {
             if (nBlockSigOps > blockMiningSigopsPerMb.value * blockMbSize - 2)
                 // very close to the limit, so the block is finished.  So a block that is near the sigops limit
@@ -302,6 +302,14 @@ bool BlockAssembler::TestForBlock(CTxMemPool::txiter iter)
             return false;
         }
     }
+
+    return true;
+}
+
+bool BlockAssembler::TestForBlock(CTxMemPool::txiter iter)
+{
+    if (!IsIncrementallyGood(iter->GetTxSize(), iter->GetSigOpCount()))
+        return false;
 
     // Must check that lock times are still valid
     // This can be removed once MTP is always enforced
