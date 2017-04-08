@@ -221,8 +221,6 @@ std::vector<PrevTxsEntry> ParsePrevTxs(const UniValue& value)
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"txid\",\"vout\",\"scriptPubKey\",\"value\":n.nnnnnnnn}");
         }
         UniValue prevOut = p.get_obj();
-        RPCTypeCheck(prevOut, boost::assign::list_of(UniValue::VSTR)(UniValue::VNUM)(UniValue::VSTR)(UniValue::VNUM));
-        //RPCTypeCheck(prevOut, boost::assign::map_list_of("txid", UniValue::VSTR)("vout", UniValue::VNUM)("scriptPubKey", UniValue::VSTR)("value", UniValue::VNUM));
 
         uint256 txid = ParseHashO(prevOut, "txid");
         UniValue outputIndex = find_value(prevOut, "vout");
