@@ -955,7 +955,7 @@ bool EscrowFilter(const string& node, const string& regex)
 	const UniValue &arr = r.get_array();
 	return !arr.empty();
 }
-const string CertNew(const string& node, const string& alias, const string& title, const string& data, const string& pubdata, const string& safesearch)
+const string CertNew(const string& node, const string& alias, const string& title, const string& privdata, const string& pubdata, const string& safesearch)
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
@@ -1026,7 +1026,7 @@ const string CertNew(const string& node, const string& alias, const string& titl
 	}
 	return guid;
 }
-void CertUpdate(const string& node, const string& guid, const string& title, const string& data, const string& pubdata, const string& safesearch)
+void CertUpdate(const string& node, const string& guid, const string& title, const string& privdata, const string& pubdata, const string& safesearch)
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
@@ -1302,7 +1302,6 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	string oldqty = find_value(r.get_obj(), "quantity").get_str();
 	string oldprice = find_value(r.get_obj(), "price").get_str();
 	string oldcurrency = find_value(r.get_obj(), "currency").get_str();
-	string oldprivate = find_value(r.get_obj(), "private").get_str();
 	string oldcert = find_value(r.get_obj(), "cert").get_str();
 	string oldcommission = find_value(r.get_obj(), "commission").get_str();
 	string oldpaymentoptions = find_value(r.get_obj(), "paymentoptions_display").get_str();
@@ -1326,27 +1325,26 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_str(), price != "\"\""? price: oldprice);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_str() , commission != "\"\""? commission: oldcommission);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions_display").get_str() , paymentoptions != "\"\""? paymentoptions: oldpaymentoptions);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_str() , isprivate != "\"\""? isprivate: oldprivate);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_str() , privatetmp);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "description").get_str(), description != "\"\""? description: olddescription);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "geolocation").get_str(), geolocation != "\"\""? geolocation: oldgeolocation);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), title != "\"\""? title: oldtitle);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "category").get_str(), category title != "\"\""? category: oldcategory);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "category").get_str(), category != "\"\""? category: oldcategory);
 	if(!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "offerinfo " + offerguid));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "offer").get_str() , offerguid);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "cert").get_str() , certguid != "\"\""? certguid: oldcert);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_str() , qty != "\"\""? qty: oldqty);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "details").get_str() , details != "\"\""? details: olddetails);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "currency").get_str() , currency != "\"\""? currency: oldcurrency);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_str(), price != "\"\""? price: oldprice);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_str() , commission != "\"\""? commission: oldcommission);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions_display").get_str() , paymentoptions != "\"\""? paymentoptions: oldpaymentoptions);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_str() , isprivate != "\"\""? isprivate: oldprivate);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_str() , privatetmp);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "description").get_str(), description != "\"\""? description: olddescription);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "geolocation").get_str(), geolocation != "\"\""? geolocation: oldgeolocation);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), title != "\"\""? title: oldtitle);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "category").get_str(), category title != "\"\""? category: oldcategory);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "category").get_str(), category != "\"\""? category: oldcategory);
 	}
 	if(!otherNode2.empty())
 	{
@@ -1354,16 +1352,15 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "offer").get_str() , offerguid);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "cert").get_str() , certguid != "\"\""? certguid: oldcert);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_str() , qty != "\"\""? qty: oldqty);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "details").get_str() , details != "\"\""? details: olddetails);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "currency").get_str() , currency != "\"\""? currency: oldcurrency);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_str(), price != "\"\""? price: oldprice);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_str() , commission != "\"\""? commission: oldcommission);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions_display").get_str() , paymentoptions != "\"\""? paymentoptions: oldpaymentoptions);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_str() , isprivate != "\"\""? isprivate: oldprivate);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_str() , privatetmp);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "description").get_str(), description != "\"\""? description: olddescription);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "geolocation").get_str(), geolocation != "\"\""? geolocation: oldgeolocation);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), title != "\"\""? title: oldtitle);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "category").get_str(), category title != "\"\""? category: oldcategory);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "category").get_str(), category != "\"\""? category: oldcategory);
 	}
 }
 
