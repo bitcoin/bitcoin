@@ -354,17 +354,9 @@ void AliasListPage::on_searchAlias_clicked(string GUID)
 				{
 					expired_str = "Valid";
 				}
-				const UniValue& multisigValue = find_value(o, "multisiginfo");
-				if (multisigValue.type() == UniValue::VOBJ)
-				{
-					const UniValue& reqsigsValue = find_value(multisigValue.get_obj(), "reqsigs");
-					int reqsigs = reqsigsValue.get_int();
-					multisig_str = reqsigs > 0? "Yes": "No";
-				}
 				const QString& dateTimeString = GUIUtil::dateTimeStr(expires_on);		
 				model->addRow(AliasTableModel::Alias,
 						QString::fromStdString(name_str),
-						QString::fromStdString(multisig_str),
 						QString::fromStdString(value_str),
 						QString::fromStdString(privvalue_str),
 						dateTimeString,
@@ -375,7 +367,6 @@ void AliasListPage::on_searchAlias_clicked(string GUID)
 						QString::fromStdString(arbiter_rating_str)
 						);
 					this->model->updateEntry(QString::fromStdString(name_str),
-						QString::fromStdString(multisig_str),
 						QString::fromStdString(value_str),
 						QString::fromStdString(privvalue_str),
 						dateTimeString,
