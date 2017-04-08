@@ -762,7 +762,7 @@ bool EditOfferDialog::saveCurrentRow()
 
 			description = "\"\"";
 			if(ui->descriptionEdit->toPlainText() != m_olddescription)
-				description = ui->descriptionsEdit->toPlainText().toStdString();
+				description = ui->descriptionEdit->toPlainText().toStdString();
 
 			currency = "\"\"";
 			if(ui->currencyEdit->currentText() != m_oldcurrency)
@@ -795,7 +795,7 @@ bool EditOfferDialog::saveCurrentRow()
 
 			safesearch = "\"\"";
 			if(ui->safeSearchEdit->currentText() != m_oldsafesearch)
-				safesearch = ui->safeSearchEdit->text().toStdString();
+				safesearch = ui->safeSearchEdit->currentText().toStdString();
 
 			commission = "\"\"";
 			if(ui->commissionEdit->text() != m_oldcommission)
