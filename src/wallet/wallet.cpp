@@ -2085,7 +2085,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
     nValueRet = 0;
 
     // List of values less than target
-    CInputCoin coinLowestLarger;
+    boost::optional<CInputCoin> coinLowestLarger;
     std::vector<CInputCoin> vValue;
     CAmount nTotalLower = 0;
 
@@ -2119,7 +2119,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
             vValue.push_back(coin);
             nTotalLower += coin.txout.nValue;
         }
-        else if (coinLowestLarger.IsNull() || coin.txout.nValue < coinLowestLarger.txout.nValue)
+        else if (!coinLowestLarger || coin.txout.nValue < coinLowestLarger->txout.nValue)
         {
             coinLowestLarger = coin;
         }
@@ -2137,10 +2137,10 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 
     if (nTotalLower < nTargetValue)
     {
-        if (coinLowestLarger.IsNull())
+        if (!coinLowestLarger)
             return false;
-        setCoinsRet.insert(coinLowestLarger);
-        nValueRet += coinLowestLarger.txout.nValue;
+        setCoinsRet.insert(coinLowestLarger.get());
+        nValueRet += coinLowestLarger->txout.nValue;
         return true;
     }
 
@@ -2156,11 +2156,11 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 
     // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
     //                                   or the next bigger coin is closer), return the bigger coin
-    if (!coinLowestLarger.IsNull() &&
-        ((nBest != nTargetValue && nBest < nTargetValue + MIN_CHANGE) || coinLowestLarger.txout.nValue <= nBest))
+    if (coinLowestLarger &&
+        ((nBest != nTargetValue && nBest < nTargetValue + MIN_CHANGE) || coinLowestLarger->txout.nValue <= nBest))
     {
-        setCoinsRet.insert(coinLowestLarger);
-        nValueRet += coinLowestLarger.txout.nValue;
+        setCoinsRet.insert(coinLowestLarger.get());
+        nValueRet += coinLowestLarger->txout.nValue;
     }
     else {
         for (unsigned int i = 0; i < vValue.size(); i++)
