@@ -628,7 +628,7 @@ BOOST_AUTO_TEST_CASE (generate_offersafesearch)
 	// offer is safe to search
 	string offerguidsafe = OfferNew("node2", "selleralias15", "category", "title", "100", "10.00", "description", "USD", "\"\"", "\"\"", "\"\"", "Yes");
 	// not safe to search
-	string offerguidnotsafe = OfferNew("node2", "selleralias15", "category", "title", "100", "10.00", "description", "USD", "\"\"", "\""", "\"\"", "No");
+	string offerguidnotsafe = OfferNew("node2", "selleralias15", "category", "title", "100", "10.00", "description", "USD", "\"\"", "\"\"", "\"\"", "No");
 	// should include result in both safe search mode on and off
 	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguidsafe, "On"), true);
 	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguidsafe, "Off"), true);
