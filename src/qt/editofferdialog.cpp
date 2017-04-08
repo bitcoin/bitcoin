@@ -617,7 +617,7 @@ void EditOfferDialog::loadRow(int row)
 	}
 	m_oldqty = ui->qtyEdit->text();
 	m_oldprice = ui->priceEdit->text();
-	m_olddetails = ui->detailsEdit->toPlainText();
+	m_olddescription = ui->descriptionEdit->toPlainText();
 	m_oldcurrency = ui->currencyEdit->currentText();
 	m_oldprivate = ui->privateEdit->currentText();
 	if(ui->certEdit->currentIndex() > 0)
@@ -761,7 +761,7 @@ bool EditOfferDialog::saveCurrentRow()
 				price = ui->priceEdit->text().toStdString();
 
 			description = "\"\"";
-			if(ui->deScriptionEdit->toPlainText() != m_olddescription)
+			if(ui->descriptionEdit->toPlainText() != m_olddescription)
 				description = ui->descriptionsEdit->toPlainText().toStdString();
 
 			currency = "\"\"";
