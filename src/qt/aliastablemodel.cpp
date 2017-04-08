@@ -30,9 +30,10 @@ struct AliasTableEntry
 	QString buyer_rating;
 	QString seller_rating;
 	QString arbiter_rating;
+	QString safesearch;
     AliasTableEntry() {}
-    AliasTableEntry(Type type, const QString &alias, const QString &value,  const QString &privvalue, const QString &expires_on,const QString &expired, const QString &buyer_rating, const QString &seller_rating, const QString &arbiter_rating):
-        type(type), alias(alias), value(value), privvalue(privvalue), expires_on(expires_on), expired(expired), buyer_rating(buyer_rating), seller_rating(seller_rating), arbiter_rating(arbiter_rating) {}
+    AliasTableEntry(Type type, const QString &alias, const QString &value,  const QString &privvalue, const QString &expires_on,const QString &expired, const QString &safesearch, const QString &buyer_rating, const QString &seller_rating, const QString &arbiter_rating):
+        type(type), alias(alias), value(value), privvalue(privvalue), expires_on(expires_on), expired(expired), safesearch(safesearch), buyer_rating(buyer_rating), seller_rating(seller_rating), arbiter_rating(arbiter_rating) {}
 };
 
 struct AliasTableEntryLessThan
