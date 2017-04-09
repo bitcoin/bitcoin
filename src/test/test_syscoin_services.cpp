@@ -1292,7 +1292,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	return guid;
 }
 
-void OfferUpdate(const string& node, const string& aliasname, const string& offerguid, const string& category, const string& title, const string& qty, const string& price, const string& description, const string& currency, const bool isPrivate, const string& certguid, const string& geolocation, const string& safesearch, const string& commission, const string& paymentoptions) {
+void OfferUpdate(const string& node, const string& aliasname, const string& offerguid, const string& category, const string& title, const string& qty, const string& price, const string& description, const string& currency, const string &isprivate, const string& certguid, const string& geolocation, const string& safesearch, const string& commission, const string& paymentoptions) {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
 	
@@ -1302,6 +1302,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	string oldqty = find_value(r.get_obj(), "quantity").get_str();
 	string oldprice = find_value(r.get_obj(), "price").get_str();
 	string oldcurrency = find_value(r.get_obj(), "currency").get_str();
+	string oldprivate = find_value(r.get_obj(), "private").get_str();
 	string oldcert = find_value(r.get_obj(), "cert").get_str();
 	string oldcommission = find_value(r.get_obj(), "commission").get_str();
 	string oldpaymentoptions = find_value(r.get_obj(), "paymentoptions_display").get_str();
@@ -1310,8 +1311,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	string oldgeolocation = find_value(r.get_obj(), "geolocation").get_str();
 	string oldcategory = find_value(r.get_obj(), "category").get_str();
 
-	string privatetmp = isPrivate ? "1" : "0";
-	string offerupdatestr = "offerupdate " + aliasname + " " + offerguid + " " + category + " " + title + " " + qty + " " + price + " " + description + " " + currency + " " + privatetmp + " " + certguid + " " +  geolocation + " " + safesearch + " " + commission + " " + paymentoptions;
+	string offerupdatestr = "offerupdate " + aliasname + " " + offerguid + " " + category + " " + title + " " + qty + " " + price + " " + description + " " + currency + " " + isprivate + " " + certguid + " " +  geolocation + " " + safesearch + " " + commission + " " + paymentoptions;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, offerupdatestr));
 	GenerateBlocks(10, node);
 
@@ -1325,7 +1325,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_str(), price != "\"\""? price: oldprice);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_str() , commission != "\"\""? commission: oldcommission);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions_display").get_str() , paymentoptions != "\"\""? paymentoptions: oldpaymentoptions);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_str() , privatetmp);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_str() , isprivate != "\"\""? isprivate: oldprivate);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "description").get_str(), description != "\"\""? description: olddescription);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "geolocation").get_str(), geolocation != "\"\""? geolocation: oldgeolocation);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), title != "\"\""? title: oldtitle);
@@ -1340,7 +1340,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_str(), price != "\"\""? price: oldprice);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_str() , commission != "\"\""? commission: oldcommission);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions_display").get_str() , paymentoptions != "\"\""? paymentoptions: oldpaymentoptions);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_str() , privatetmp);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_str() , isprivate != "\"\""? isprivate: oldprivate);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "description").get_str(), description != "\"\""? description: olddescription);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "geolocation").get_str(), geolocation != "\"\""? geolocation: oldgeolocation);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), title != "\"\""? title: oldtitle);
@@ -1356,7 +1356,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_str(), price != "\"\""? price: oldprice);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "commission").get_str() , commission != "\"\""? commission: oldcommission);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "paymentoptions_display").get_str() , paymentoptions != "\"\""? paymentoptions: oldpaymentoptions);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_str() , privatetmp);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "private").get_str() , isprivate != "\"\""? isprivate: oldprivate);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "description").get_str(), description != "\"\""? description: olddescription);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "geolocation").get_str(), geolocation != "\"\""? geolocation: oldgeolocation);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), title != "\"\""? title: oldtitle);
