@@ -3370,6 +3370,9 @@ void CWallet::UpdatedTransaction(const uint256 &hashTx)
 
 void CWallet::GetScriptForMining(boost::shared_ptr<CReserveScript> &script)
 {
+    if (script && script->reserveScript.size() > 0)
+        return;
+
     boost::shared_ptr<CReserveKey> rKey(new CReserveKey(this));
     CPubKey pubkey;
     if (!rKey->GetReservedKey(pubkey))
