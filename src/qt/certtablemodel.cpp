@@ -207,7 +207,7 @@ public:
                 break;
             }
             lower->type = newEntryType;
-            lower->title = title; 
+            lower->title = title;
 			lower->data = data;
 			lower->pubdata = pubdata;
 			lower->category = category;
