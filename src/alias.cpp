@@ -704,9 +704,9 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return error(errorMessage.c_str());
 			}
 		}
-		else if(vvchArgs.size() != 1)
+		else if(vvchArgs.size() <= 0 || vvchArgs.size() > 2)
 		{
-			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5002 - " + _("Alias arguments incorrect size");
+			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5002 - " + _("Alias payment arguments incorrect size");
 			return error(errorMessage.c_str());
 		}
 		if(op != OP_ALIAS_PAYMENT)
