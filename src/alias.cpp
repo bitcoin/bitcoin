@@ -2650,7 +2650,10 @@ bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oNam
 				strEncryptionPrivateKey = HexStr(strKey);	
 		}
 		if(strWalletless == "Yes")
+		{
 			strData = HexStr(alias.vchPrivateValue);
+			strPassword = HexStr(alias.vchPassword);
+		}
 		else
 		{
 			CMessageCrypter crypter;
@@ -2658,21 +2661,13 @@ bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oNam
 			{
 				if(crypter.Decrypt(stringFromVch(ParseHex(strEncryptionPrivateKey)), stringFromVch(alias.vchPrivateValue), strDecrypted))
 					strData = strDecrypted;
+				strDecrypted = "";
+				if(crypter.Decrypt(stringFromVch(ParseHex(strEncryptionPrivateKey)), stringFromVch(alias.vchPassword), strDecrypted))
+					strPassword = strDecrypted;
 			}
 		}
 	}
-	if(strWalletless == "Yes")
-		strPassword = HexStr(alias.vchPassword);
-	else
-	{
-		string strDecrypted = "";
-		CMessageCrypter crypter;
-		if(!strEncryptionPrivateKey.empty())
-		{
-			if(crypter.Decrypt(stringFromVch(ParseHex(strEncryptionPrivateKey)), stringFromVch(alias.vchPassword), strDecrypted))
-				strPassword = strDecrypted;
-		}
-	}
+
 	oName.push_back(Pair("password", strPassword));
 	oName.push_back(Pair("passwordsalt", HexStr(alias.vchPasswordSalt)));
 	oName.push_back(Pair("encryption_privatekey", strEncryptionPrivateKey));
