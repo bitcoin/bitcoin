@@ -5250,13 +5250,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     else if (strCommand == NetMsgType::SENDHEADERS)
     {
         LOCK(cs_main);
-        // BUIP010 Xtreme Thinblocks: We only do inv/getdata for xthinblocks and so we must have headersfirst turned off
-        if (IsThinBlocksEnabled())
-            State(pfrom->GetId())->fPreferHeaders = false;
-        else
-            State(pfrom->GetId())->fPreferHeaders = true;
+        State(pfrom->GetId())->fPreferHeaders = true;
     }
-
 
     else if (strCommand == NetMsgType::INV)
     {
