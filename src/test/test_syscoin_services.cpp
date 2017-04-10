@@ -635,7 +635,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "privatevalue").get_str() , privdata == "\"\""? "": privdata);
 	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_bool() == true);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 0);
-	BOOST_CHECK(find_value(r.get_obj(), "safesearch").get_str() == safesearch);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "safesearch").get_str() , safesearch == "\"\""? "": safesearch);
 	if(!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasinfo " + aliasname));
@@ -648,7 +648,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "privatevalue").get_str() , "");
 		BOOST_CHECK(find_value(r.get_obj(), "ismine").get_bool() == false);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 0);
-		BOOST_CHECK(find_value(r.get_obj(), "safesearch").get_str() == safesearch);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "safesearch").get_str() , safesearch == "\"\""? "": safesearch);
 	}
 	if(!otherNode2.empty())
 	{
@@ -662,7 +662,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "privatevalue").get_str() , "");
 		BOOST_CHECK(find_value(r.get_obj(), "ismine").get_bool() == false);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 0);
-		BOOST_CHECK(find_value(r.get_obj(), "safesearch").get_str() == safesearch);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "safesearch").get_str() , safesearch == "\"\""? "": safesearch);
 	}
 	return HexStr(vchPubKey);
 }
