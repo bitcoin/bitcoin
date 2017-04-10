@@ -79,7 +79,7 @@ void ResellOfferDialog::loadAliases()
     UniValue params(UniValue::VARR); 
 	UniValue result ;
 	string name_str;
-	bool expired = false;
+	int expired = 0;
 	
 	try {
 		result = tableRPC.execute(strMethod, params);
@@ -87,7 +87,7 @@ void ResellOfferDialog::loadAliases()
 		if (result.type() == UniValue::VARR)
 		{
 			name_str = "";
-			expired = false;
+			expired = 0;
 
 
 	
@@ -99,18 +99,18 @@ void ResellOfferDialog::loadAliases()
 				const UniValue& o = input.get_obj();
 				name_str = "";
 
-				expired = false;
+				expired = 0;
 
 
 		
-				const UniValue& name_value = find_value(o, "name");
+				const UniValue& name_value = find_value(o, "alias");
 				if (name_value.type() == UniValue::VSTR)
 					name_str = name_value.get_str();		
 				const UniValue& expired_value = find_value(o, "expired");
-				if (expired_value.type() == UniValue::VBOOL)
-					expired = expired_value.get_bool();
+				if (expired_value.type() == UniValue::VNUM)
+					expired = expired_value.get_int();
 				
-				if(expired == false)
+				if(expired == 0)
 				{
 					QString name = QString::fromStdString(name_str);
 					ui->aliasEdit->addItem(name);					

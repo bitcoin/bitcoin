@@ -257,7 +257,7 @@ void AliasListPage::on_searchAlias_clicked(string GUID)
 		string privvalue_str;
 		string multisig_str;
 		string expired_str;
-		bool expired = false;
+		int expired = 0;
 		string buyer_rating_str = "";
 		
 		string seller_rating_str = "";
@@ -309,7 +309,7 @@ void AliasListPage::on_searchAlias_clicked(string GUID)
 				multisig_str = "";
 				value_str = "";
 				privvalue_str = "";
-				expired = false;
+				expired = 0;
 				buyer_rating_str = "";
 				
 				seller_rating_str = "";
@@ -318,7 +318,7 @@ void AliasListPage::on_searchAlias_clicked(string GUID)
 				
 				expires_on = 0;
 
-				const UniValue& name_value = find_value(o, "name");
+				const UniValue& name_value = find_value(o, "alias");
 				if (name_value.type() == UniValue::VSTR)
 					name_str = name_value.get_str();
 				if(firstAlias == "")
@@ -334,8 +334,8 @@ void AliasListPage::on_searchAlias_clicked(string GUID)
 				if (expires_on_value.type() == UniValue::VNUM)
 					expires_on = expires_on_value.get_int64();
 				const UniValue& expired_value = find_value(o, "expired");
-				if (expired_value.type() == UniValue::VBOOL)
-					expired = expired_value.get_bool();
+				if (expired_value.type() == UniValue::VNUM)
+					expired = expired_value.get_int();
 				const UniValue& buyer_rating_value = find_value(o, "buyer_rating_display");
 				if (buyer_rating_value.type() == UniValue::VSTR)
 					buyer_rating_str = buyer_rating_value.get_str();
@@ -346,7 +346,7 @@ void AliasListPage::on_searchAlias_clicked(string GUID)
 				if (arbiter_rating_value.type() == UniValue::VSTR)
 					arbiter_rating_str = arbiter_rating_value.get_str();
 				
-				if(expired)
+				if(expired == 1)
 				{
 					expired_str = "Expired";
 				}
@@ -354,9 +354,17 @@ void AliasListPage::on_searchAlias_clicked(string GUID)
 				{
 					expired_str = "Valid";
 				}
+				const UniValue& multisigValue = find_value(o, "multisiginfo");
+				if (multisigValue.type() == UniValue::VOBJ)
+				{
+					const UniValue& reqsigsValue = find_value(multisigValue.get_obj(), "reqsigs");
+					int reqsigs = reqsigsValue.get_int();
+					multisig_str = reqsigs > 0? "Yes": "No";
+				}
 				const QString& dateTimeString = GUIUtil::dateTimeStr(expires_on);		
 				model->addRow(AliasTableModel::Alias,
 						QString::fromStdString(name_str),
+						QString::fromStdString(multisig_str),
 						QString::fromStdString(value_str),
 						QString::fromStdString(privvalue_str),
 						dateTimeString,
@@ -367,6 +375,7 @@ void AliasListPage::on_searchAlias_clicked(string GUID)
 						QString::fromStdString(arbiter_rating_str)
 						);
 					this->model->updateEntry(QString::fromStdString(name_str),
+						QString::fromStdString(multisig_str),
 						QString::fromStdString(value_str),
 						QString::fromStdString(privvalue_str),
 						dateTimeString,

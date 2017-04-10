@@ -110,7 +110,7 @@ void appendListAliases(UniValue& defaultAliasArray, bool allAliases)
 						continue;
 					const UniValue& o = input.get_obj();
 					name_str = "";
-					const UniValue& name_value = find_value(o, "name");
+					const UniValue& name_value = find_value(o, "alias");
 					if (name_value.type() == UniValue::VSTR)
 					{
 						name_str = name_value.get_str();
@@ -605,8 +605,8 @@ bool WalletModel::setWalletEncrypted(bool encrypted, const SecureString &passphr
     }
     else
     {
-		// SYSCOIN
-		return wallet->Unlock(passphrase);
+        // Decrypt -- TODO; not supported yet
+        return false;
     }
 }
 
