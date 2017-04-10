@@ -166,7 +166,7 @@ QVariant PeerTableModel::data(const QModelIndex &index, int role) const
         switch(index.column())
         {
         case NetNodeId:
-            return rec->nodeStats.nodeid;
+            return (qint64)rec->nodeStats.nodeid;
         case Address:
             return QString::fromStdString(rec->nodeStats.addrName);
         case Subversion:
