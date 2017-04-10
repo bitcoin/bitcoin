@@ -503,6 +503,9 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
 /** Check whether witness commitments are required for block. */
 bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params);
 
+/** Check if Segregated Witness is Locked In */
+bool IsWitnessLockedIn(const CBlockIndex* pindexPrev, const Consensus::Params& params);
+
 /** When there are blocks in the active chain with missing data, rewind the chainstate and remove them from the block index */
 bool RewindBlockIndex(const CChainParams& params);
 
