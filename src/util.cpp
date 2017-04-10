@@ -118,7 +118,7 @@ bool fLogIPs = DEFAULT_LOGIPS;
 std::atomic<bool> fReopenDebugLog(false);
 CTranslationInterface translationInterface;
 
-/** Log categories bitfield. libevent needs special handling if their flags are changed at runtime. */
+/** Log categories bitfield. */
 std::atomic<uint32_t> logCategories(0);
 
 /** Init OpenSSL library multithreading support */
