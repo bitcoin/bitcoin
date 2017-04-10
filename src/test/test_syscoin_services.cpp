@@ -629,7 +629,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 		BOOST_CHECK_NO_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + password + " " + passwordSalt + " Yes"));
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK(balanceAfter >= 10*COIN);
-	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == aliasname);
+	BOOST_CHECK(find_value(r.get_obj(), "name").get_str() == aliasname);
 	if(aliasname != "sysrates.peg" && aliasname != "sysban" && aliasname != "syscategory")
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), pubdata);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "privatevalue").get_str() , privdata == "\"\""? "": privdata);
@@ -642,7 +642,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 		if(password != "\"\"")
 			BOOST_CHECK_NO_THROW(CallRPC(otherNode1, "aliasauthenticate " + aliasname + " " + password + " " + passwordSalt + " Yes"));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str() , password == "\"\""? "": password);
-		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == aliasname);
+		BOOST_CHECK(find_value(r.get_obj(), "name").get_str() == aliasname);
 		if(aliasname != "sysrates.peg" && aliasname != "sysban" && aliasname != "syscategory")
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), pubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "privatevalue").get_str() , "");
@@ -656,7 +656,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 		if(password != "\"\"")
 			BOOST_CHECK_NO_THROW(CallRPC(otherNode2, "aliasauthenticate " + aliasname + " " + password + " " + passwordSalt + " Yes"));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str() , password == "\"\""? "": password);
-		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == aliasname);
+		BOOST_CHECK(find_value(r.get_obj(), "name").get_str() == aliasname);
 		if(aliasname != "sysrates.peg" && aliasname != "sysban" && aliasname != "syscategory")
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), pubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "privatevalue").get_str() , "");
@@ -842,7 +842,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , addressStr != "\"\""? addressStr: oldAddressStr);
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK(abs(balanceBefore-balanceAfter) < COIN);
-	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == aliasname);
+	BOOST_CHECK(find_value(r.get_obj(), "name").get_str() == aliasname);
 
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "privatevalue").get_str() , privdata != "\"\""? privdata: oldprivatevalue);
 	if(aliasname != "sysrates.peg" && aliasname != "sysban" && aliasname != "syscategory")
@@ -876,7 +876,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , addressStr != "\"\""? addressStr: oldAddressStr);
 		balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 		BOOST_CHECK(abs(balanceBefore-balanceAfter) < COIN);	
-		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == aliasname);
+		BOOST_CHECK(find_value(r.get_obj(), "name").get_str() == aliasname);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 0);
 
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "privatevalue").get_str() , "");
@@ -907,7 +907,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , addressStr != "\"\""? addressStr: oldAddressStr);
 		balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 		BOOST_CHECK(abs(balanceBefore-balanceAfter) < COIN);
-		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == aliasname);
+		BOOST_CHECK(find_value(r.get_obj(), "name").get_str() == aliasname);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 0);
 
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "privatevalue").get_str() , "");
