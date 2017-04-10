@@ -4,6 +4,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "validationinterface.h"
+#include "init.h"
+#include "scheduler.h"
+#include "sync.h"
+#include "util.h"
+
+#include <list>
+#include <atomic>
 
 #include <boost/signals2/signal.hpp>
 
@@ -18,12 +25,24 @@ struct MainSignalsInstance {
     boost::signals2::signal<void (const CBlock&, const CValidationState&)> BlockChecked;
     boost::signals2::signal<void (const CBlockIndex *, const std::shared_ptr<const CBlock>&)> NewPoWValidBlock;
     boost::signals2::signal<void (const CTransactionRef &)> NotifyTransactionLock;
+
+    // We are not allowed to assume the scheduler only runs in one thread,
+    // but must ensure all callbacks happen in-order, so we end up creating
+    // our own queue here :(
+    SingleThreadedSchedulerClient m_schedulerClient;
+
+    MainSignalsInstance(CScheduler *pscheduler) : m_schedulerClient(pscheduler) {}
 };
 
 static CMainSignals g_signals;
 
-CMainSignals::CMainSignals() {
-    m_internals.reset(new MainSignalsInstance());
+void CMainSignals::RegisterBackgroundSignalScheduler(CScheduler& scheduler) {
+    assert(!m_internals);
+    m_internals.reset(new MainSignalsInstance(&scheduler));
+}
+
+void CMainSignals::UnregisterBackgroundSignalScheduler() {
+    m_internals.reset(nullptr);
 }
 
 CMainSignals& GetMainSignals()
