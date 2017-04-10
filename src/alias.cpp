@@ -2182,7 +2182,7 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 		dbAlias.GetAliasFromList(aliasVtxPos);
 	}
 	entry.push_back(Pair("txtype", opName));
-	entry.push_back(Pair("name", stringFromVch(alias.vchAlias)));
+	entry.push_back(Pair("alias", stringFromVch(alias.vchAlias)));
 
 	if(!alias.vchAliasPeg.empty() && alias.vchAliasPeg != dbAlias.vchAliasPeg)
 		entry.push_back(Pair("aliaspeg", stringFromVch(alias.vchAliasPeg)));
