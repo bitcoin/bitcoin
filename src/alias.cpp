@@ -2638,7 +2638,7 @@ bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oNam
 	string strEncryptionPrivateKey = "";
 	string strData = "";
 	string strPassword = "";
-	if(!alias.vchPrivateValue.empty())
+	if(!alias.vchPrivateValue.empty() || !alias.vchPassword.empty())
 	{
 		string strKey = "";
 		string strDecrypted = "";
