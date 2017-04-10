@@ -115,7 +115,7 @@ public:
 						lastupdate_height = 0;
 						safesearch_str = "";
 				
-						const UniValue& name_value = find_value(o, "alias");
+						const UniValue& name_value = find_value(o, "name");
 						if (name_value.type() == UniValue::VSTR)
 							name_str = name_value.get_str();
 						const UniValue& value_value = find_value(o, "publicvalue");

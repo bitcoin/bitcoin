@@ -110,7 +110,7 @@ void appendListAliases(UniValue& defaultAliasArray, bool allAliases)
 						continue;
 					const UniValue& o = input.get_obj();
 					name_str = "";
-					const UniValue& name_value = find_value(o, "alias");
+					const UniValue& name_value = find_value(o, "name");
 					if (name_value.type() == UniValue::VSTR)
 					{
 						name_str = name_value.get_str();

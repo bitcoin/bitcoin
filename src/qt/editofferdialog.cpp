@@ -225,7 +225,7 @@ void EditOfferDialog::aliasChanged(const QString& alias)
 
 
 	
-			const UniValue& name_value = find_value(o, "alias");
+			const UniValue& name_value = find_value(o, "name");
 			if (name_value.type() == UniValue::VSTR)
 				name_str = name_value.get_str();
 			const UniValue& ss_value = find_value(o, "safesearch");
@@ -484,7 +484,7 @@ void EditOfferDialog::loadAliases()
 
 
 		
-				const UniValue& name_value = find_value(o, "alias");
+				const UniValue& name_value = find_value(o, "name");
 				if (name_value.type() == UniValue::VSTR)
 					name_str = name_value.get_str();		
 				const UniValue& expired_value = find_value(o, "expired");
