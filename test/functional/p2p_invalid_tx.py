@@ -5,58 +5,49 @@
 """Test node responses to invalid transactions.
 
 In this test we connect to one node over p2p, and test tx requests."""
-import time
-
 from test_framework.blocktools import create_block, create_coinbase, create_transaction
-from test_framework.comptool import RejectResult, TestInstance, TestManager
 from test_framework.messages import COIN
-from test_framework.mininode import network_thread_start
-from test_framework.test_framework import ComparisonTestFramework
+from test_framework.mininode import network_thread_start, P2PDataStore
+from test_framework.test_framework import BitcoinTestFramework
 
-class InvalidTxRequestTest(ComparisonTestFramework):
+class InvalidTxRequestTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
+        self.extra_args = [["-whitelist=127.0.0.1"]]
 
     def run_test(self):
-        test = TestManager(self, self.options.tmpdir)
-        test.add_all_connections(self.nodes)
-        self.tip = None
-        self.block_time = None
-        network_thread_start()
-        test.run()
+        # Add p2p connection to node0
+        node = self.nodes[0]  # convenience reference to the node
+        node.add_p2p_connection(P2PDataStore())
 
-    def get_tests(self):
-        self.tip = int("0x" + self.nodes[0].getbestblockhash(), 0)
-        self.block_time = int(time.time()) + 1
+        network_thread_start()
+        node.p2p.wait_for_verack()
+
+        best_block = self.nodes[0].getbestblockhash()
+        tip = int(best_block, 16)
+        best_block_time = self.nodes[0].getblock(best_block)['time']
+        block_time = best_block_time + 1
 
         self.log.info("Create a new block with an anyone-can-spend coinbase.")
         height = 1
-        block = create_block(self.tip, create_coinbase(height), self.block_time)
-        self.block_time += 1
+        block = create_block(tip, create_coinbase(height), block_time)
+        block_time += 1
         block.solve()
         # Save the coinbase for later
-        self.block1 = block
-        self.tip = block.sha256
+        block1 = block
+        tip = block.sha256
         height += 1
-        yield TestInstance([[block, True]])
+        node.p2p.send_blocks_and_test([block], node, success=True)
 
         self.log.info("Mature the block.")
-        test = TestInstance(sync_every_block=False)
-        for i in range(100):
-            block = create_block(self.tip, create_coinbase(height), self.block_time)
-            block.solve()
-            self.tip = block.sha256
-            self.block_time += 1
-            test.blocks_and_transactions.append([block, True])
-            height += 1
-        yield test
+        self.nodes[0].generate(100)
 
         # b'\x64' is OP_NOTIF
         # Transaction will be rejected with code 16 (REJECT_INVALID)
-        tx1 = create_transaction(self.block1.vtx[0], 0, b'\x64', 50 * COIN - 12000)
-        yield TestInstance([[tx1, RejectResult(16, b'mandatory-script-verify-flag-failed')]])
+        tx1 = create_transaction(block1.vtx[0], 0, b'\x64', 50 * COIN - 12000)
+        node.p2p.send_txs_and_test([tx1], node, success=False, reject_code=16, reject_reason=b'mandatory-script-verify-flag-failed (Invalid OP_IF construction)')
 
         # TODO: test further transactions...
 
