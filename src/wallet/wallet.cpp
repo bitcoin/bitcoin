@@ -2277,6 +2277,8 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
 
 bool CWallet::SignTransaction(CMutableTransaction &tx)
 {
+    AssertLockHeld(cs_wallet); // mapWallet
+
     // sign the new tx
     CTransaction txNewConst(tx);
     int nIn = 0;
