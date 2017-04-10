@@ -855,14 +855,17 @@ void restoreWindowGeometry(const QString& strSetting, const QSize& defaultSize, 
     QPoint pos = settings.value(strSetting + "Pos").toPoint();
     QSize size = settings.value(strSetting + "Size", defaultSize).toSize();
 
-    if (!pos.x() && !pos.y()) {
-        QRect screen = QApplication::desktop()->screenGeometry();
-        pos.setX((screen.width() - size.width()) / 2);
-        pos.setY((screen.height() - size.height()) / 2);
-    }
-
     parent->resize(size);
     parent->move(pos);
+
+    if ((!pos.x() && !pos.y()) || (QApplication::desktop()->screenNumber(parent) == -1))
+    {
+        QRect screen = QApplication::desktop()->screenGeometry();
+        QPoint defaultPos((screen.width() - defaultSize.width()) / 2,
+                          (screen.height() - defaultSize.height()) / 2);
+        parent->resize(defaultSize);
+        parent->move(defaultPos);
+    }
 }
 
 void setClipboard(const QString& str)
