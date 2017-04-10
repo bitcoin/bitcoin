@@ -449,8 +449,9 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-maxsigcachesize=<n>", strprintf("Limit size of signature cache to <n> MiB (default: %u)", DEFAULT_MAX_SIG_CACHE_SIZE));
         strUsage += HelpMessageOpt("-maxtipage=<n>", strprintf("Maximum tip age in seconds to consider node in initial block download (default: %u)", DEFAULT_MAX_TIP_AGE));
     }
-    strUsage += HelpMessageOpt("-minrelaytxfee=<amt>", strprintf(_("Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)"),
-        CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)));
+    //BU: we don't use minrelayxfee, we use minlimtertxfee instead!
+    //strUsage += HelpMessageOpt("-minrelaytxfee=<amt>", strprintf(_("Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)"),
+    //    CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)));
     strUsage += HelpMessageOpt("-maxtxfee=<amt>", strprintf(_("Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)"),
         CURRENCY_UNIT, FormatMoney(DEFAULT_TRANSACTION_MAXFEE)));
     strUsage += HelpMessageOpt("-printtoconsole", _("Send trace/debug info to console instead of debug.log file"));
@@ -942,21 +943,39 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (nConnectTimeout <= 0)
         nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
 
-    // Fee-per-kilobyte amount considered the same as "free"
+    // Fee in satoshi per byte amount considered the same as "free"
     // If you are mining, be careful setting this:
     // if you set it to zero then
     // a transaction spammer can cheaply fill blocks using
     // 1-satoshi-fee transactions. It should be set above the real
     // cost to you of processing a transaction.
-    if (mapArgs.count("-minrelaytxfee"))
+    if (mapArgs.count("-minlimitertxfee"))
     {
         CAmount n = 0;
-        if (ParseMoney(mapArgs["-minrelaytxfee"], n) && n > 0)
+        double minrelaytxfee;
+        try {
+            minrelaytxfee = boost::lexical_cast<double>(mapArgs["-minlimitertxfee"]) / 100000;
+        }
+        catch (boost::bad_lexical_cast&) {
+            return InitError(_("ERROR: an incorrect value was specified for -minlimitertxfee.  Please check value and restart."));
+        }
+        
+        ostringstream ss;
+        ss << fixed << setprecision(8);
+        ss << minrelaytxfee;
+        if (ParseMoney(ss.str(), n))
             ::minRelayTxFee = CFeeRate(n);
         else
-            return InitError(strprintf(_("Invalid amount for -minrelaytxfee=<amount>: '%s'"), mapArgs["-minrelaytxfee"]));
+            return InitError(strprintf(_("Invalid amount for -minlimitertxfee=<amount>: '%s'"), mapArgs["-minlimitertxfee"]));
+    }
+    // -minrelaytxfee is no longer a command line option however it is still used in Bitcon Core so we want to tell
+    // any users that migrate from Core to BU that this option is not used.
+    if (mapArgs.count("-minrelaytxfee"))
+    {
+        InitWarning(_("Config option -minrelaytxfee is no longer supported.  To set the limit below which a transaction is considered zero fee please use -minlimitertxfee.  To convert -minrelaytxfee, which is specified  in BTC/KB, to -minlimtertxfee, which is specified in Satoshi/Byte, simply multiply the original -minrelaytxfee by 100,000. For example, a -minrelaytxfee=0.00001000 will become -minlimitertxfee=1.000"));
     }
 
+ 
     fRequireStandard = !GetBoolArg("-acceptnonstdtxn", !Params().RequireStandard());
     if (Params().RequireStandard() && !fRequireStandard)
         return InitError(strprintf("acceptnonstdtxn is not currently supported for %s chain", chainparams.NetworkIDString()));
