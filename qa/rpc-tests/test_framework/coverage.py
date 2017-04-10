@@ -46,14 +46,7 @@ class AuthServiceProxyWrapper(object):
         called to a file.
 
         """
-        while 1:
-            try:
-                return_val = self.auth_service_proxy_instance.__call__(*args, **kwargs)
-                break
-            except BrokenPipeError as e: # BU handle connection drops
-                print("Connection broken: ", str(e))
-                self.auth_service_proxy_instance.reconnect()
-            
+        return_val = self.auth_service_proxy_instance.__call__(*args, **kwargs)
         rpc_method = self.auth_service_proxy_instance._service_name
 
         if self.coverage_logfile:
