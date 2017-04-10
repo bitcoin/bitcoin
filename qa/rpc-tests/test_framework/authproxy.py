@@ -104,14 +104,14 @@ class AuthServiceProxy(object):
             port = 80
         else:
             port = self.__url.port
-       
+
         if self.__url.scheme == 'https':
             self.__conn = httplib.HTTPSConnection(self.__url.hostname, port,
                                                   timeout=self.__timeout)
         else:
             self.__conn = httplib.HTTPConnection(self.__url.hostname, port,
                                                  timeout=self.__timeout)
-                    
+
     def __getattr__(self, name):
         if name.startswith('__') and name.endswith('__'):
             # Python internal stuff
@@ -143,7 +143,7 @@ class AuthServiceProxy(object):
                 return self._get_response()
             else:
                 raise
-          except BrokenPipeError:
+          except (BrokenPipeError, ConnectionResetError):
             # Python 3.5+ raises this instead of BadStatusLine when the connection was reset
             self.__conn.close()
             self.__conn.request(method, path, postdata, headers)
