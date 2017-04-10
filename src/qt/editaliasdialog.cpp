@@ -357,30 +357,6 @@ bool EditAliasDialog::saveCurrentRow()
 		}
 		try {
 			UniValue keyparams(UniValue::VARR);
-			keyparams.push_back(CSyscoinSecret(privEncryptionKey).ToString());
-			keyparams.push_back("");
-			UniValue value(UniValue::VBOOL);
-			value.setBool(false);
-			keyparams.push_back(value);
-            tableRPC.execute("importprivkey", keyparams);	
-		}
-		catch (UniValue& objError)
-		{
-			string strError = find_value(objError, "message").get_str();
-			QMessageBox::critical(this, windowTitle(),
-			tr("Error importing encryption key into wallet: ") + QString::fromStdString(strError),
-				QMessageBox::Ok, QMessageBox::Ok);
-			return false;
-		}
-		catch(std::exception& e)
-		{
-			QMessageBox::critical(this, windowTitle(),
-				tr("General exception importing encryption key into wallet"),
-				QMessageBox::Ok, QMessageBox::Ok);
-			return false;
-		}
-		try {
-			UniValue keyparams(UniValue::VARR);
 			UniValue value(UniValue::VBOOL);
 			value.setBool(false);
 			keyparams.push_back(CSyscoinSecret(privKey).ToString());
