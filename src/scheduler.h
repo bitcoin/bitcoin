@@ -14,6 +14,8 @@
 #include <boost/thread.hpp>
 #include <map>
 
+#include "sync.h"
+
 //
 // Simple class for background tasks that should be run
 // periodically or once "after a while"
@@ -77,6 +79,28 @@ private:
     bool stopRequested;
     bool stopWhenEmpty;
     bool shouldStop() { return stopRequested || (stopWhenEmpty && taskQueue.empty()); }
+};
+
+/**
+ * Class used by CScheduler clients which may schedule multiple jobs
+ * which are required to be run serially. Does not require such jobs
+ * to be executed on the same thread, but no two jobs will be executed
+ * at the same time.
+ */
+class SingleThreadedSchedulerClient {
+private:
+    CScheduler *m_pscheduler;
+
+    CCriticalSection m_cs_callbacks_pending;
+    std::list<std::function<void (void)>> m_callbacks_pending;
+    bool m_are_callbacks_running = false;
+
+    void MaybeScheduleProcessQueue();
+    void ProcessQueue();
+
+public:
+    SingleThreadedSchedulerClient(CScheduler *pschedulerIn) : m_pscheduler(pschedulerIn) {}
+    void AddToProcessQueue(std::function<void (void)> func);
 };
 
 #endif
