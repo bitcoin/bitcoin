@@ -1,8 +1,7 @@
-#ifndef INCLUDE_SIPHASH_H
-#define INCLUDE_SIPHASH_H
+#ifndef BITCOIN_POW_CUCKOO_CYCLE_SIPHASH_H
+#define BITCOIN_POW_CUCKOO_CYCLE_SIPHASH_H
 #include <stdint.h> // for types uint32_t,uint64_t
-#include <openssl/sha.h> // if openssl absent, use #include "sha256.c"
-#include <immintrin.h>
+#include "hash.h"
 
 namespace powa {
 
@@ -30,16 +29,11 @@ typedef struct {
    ((u64)((p)[6]) << 48) | ((u64)((p)[7]) << 56))
 
 #ifndef SHA256
-#define SHA256(d, n, md) do { \
-    SHA256_CTX c; \
-    SHA256_Init(&c); \
-    SHA256_Update(&c, d, n); \
-    SHA256_Final(md, &c); \
-  } while (0)
+#define SHA256(d, n, md) CSHA256().Write(d, n).Finalize(md)
 #endif
 
 // derive siphash key from fixed length header
-void setheader(siphash_keys *keys, const char *header) {
+inline void setheader(siphash_keys *keys, const char *header) {
   unsigned char hdrkey[32];
   SHA256((unsigned char *)header, HEADERLEN, hdrkey);
   keys->k0 = U8TO64_LE(hdrkey);
@@ -57,7 +51,7 @@ void setheader(siphash_keys *keys, const char *header) {
   } while(0)
 
 // SipHash-2-4 specialized to precomputed key and 8 byte nonces
-u64 siphash24(const siphash_keys *keys, const u64 nonce) {
+inline u64 siphash24(const siphash_keys *keys, const u64 nonce) {
   u64 v0 = keys->k0 ^ 0x736f6d6570736575ULL, v1 = keys->k1 ^ 0x646f72616e646f6dULL,
       v2 = keys->k0 ^ 0x6c7967656e657261ULL, v3 = keys->k1 ^ 0x7465646279746573ULL ^ nonce;
   SIPROUND; SIPROUND;
@@ -77,4 +71,4 @@ inline void siphash24xN(const siphash_keys *keys, const u64 *indices, u64 * hash
 
 }  // namespace powa
 
-#endif // ifdef INCLUDE_SIPHASH_H
+#endif // BITCOIN_POW_CUCKOO_CYCLE_SIPHASH_H
