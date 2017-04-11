@@ -826,6 +826,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		}
 	}
 	GenerateBlocks(5, node);
+	GenerateBlocks(5, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
 	string newPassword = find_value(r.get_obj(), "password").get_str();
 	string newPasswordSalt = find_value(r.get_obj(), "passwordsalt").get_str();
