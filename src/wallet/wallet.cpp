@@ -3020,11 +3020,14 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
         }
         bool internal = false;
         CWalletDB walletdb(strWalletFile);
-        for (int64_t i = missingInternal + missingExternal; i--;)
+        for (int64_t i = 0; missingInternal != 0 || missingExternal != 0; i++)
         {
+            internal = (i % 2 == 0 && missingInternal != 0) || missingExternal == 0;
+            if (internal)
+                missingInternal--;
+            else
+                missingExternal--;
             int64_t nEnd = 1;
-            if (i < missingInternal)
-                internal = true;
             if (!setKeyPool.empty())
                 nEnd = *(--setKeyPool.end()) + 1;
             if (!walletdb.WritePool(nEnd, CKeyPool(GenerateNewKey(internal), internal)))
