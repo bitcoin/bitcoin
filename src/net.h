@@ -177,7 +177,8 @@ extern CAddrMan addrman;
 
 /** Maximum number of connections to simultaneously allow (aka connection slots) */
 extern int nMaxConnections;
-
+/** The minimum number of xthin nodes to connect to */
+extern int nMinXthinNodes;
 extern std::vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;
 extern std::map<CInv, CDataStream> mapRelay;
