@@ -293,7 +293,7 @@ def run_tests(test_list, src_dir, build_dir, exeext, jobs=1, enable_coverage=Fal
         logging.debug("Cleaning up coverage data")
         coverage.cleanup()
 
-    all_passed = all(map(lambda test_result: test_result.status == "Passed", test_results))
+    all_passed = all(map(lambda test_result: test_result.was_successful, test_results))
 
     sys.exit(not all_passed)
 
@@ -305,7 +305,7 @@ def print_results(test_results, max_len_name, runtime):
     time_sum = 0
 
     for test_result in test_results:
-        all_passed = all_passed and test_result.status != "Failed"
+        all_passed = all_passed and test_result.was_successful
         time_sum += test_result.time
         test_result.padding = max_len_name
         results += str(test_result)
@@ -392,6 +392,10 @@ class TestResult():
             glyph = CIRCLE
 
         return color[1] + "%s | %s%s | %s s\n" % (self.name.ljust(self.padding), glyph, self.status.ljust(7), self.time) + color[0]
+
+    @property
+    def was_successful(self):
+        return self.status != "Failed"
 
 
 def check_script_list(src_dir):
