@@ -1619,7 +1619,7 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
 	CAmount nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
 	recipient.nAmount = nFee;
 }
-void CreateRecipient(const CScript& scriptPubKeyDest,  const vector<unsigned char>& vchAlias, const vector<unsigned char>& vchAliasPeg, const uint64_t& nHeight, CRecipient& recipient)
+void CreateRecipient(const CScript& scriptPubKey,  const vector<unsigned char>& vchAlias, const vector<unsigned char>& vchAliasPeg, const uint64_t& nHeight, CRecipient& recipient)
 {
 	int precision = 0;
 	CAmount nFee = 0;
