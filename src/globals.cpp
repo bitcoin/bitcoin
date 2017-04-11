@@ -188,7 +188,10 @@ CTweakRef<int> maxOutConnectionsTweak("net.maxOutboundConnections",
     "Maximum number of outbound connections",
     &nMaxOutConnections,
     &OutboundConnectionValidator);
-CTweakRef<int> maxConnectionsTweak("net.maxConnections", "Maximum number of connections connections", &nMaxConnections);
+CTweakRef<int> maxConnectionsTweak("net.maxConnections", "Maximum number of connections", &nMaxConnections);
+CTweakRef<int> minXthinNodesTweak("net.minXthinNodes",
+    "Minimum number of outbound xthin capable nodes to connect to",
+    &nMinXthinNodes);
 // When should I request a tx from someone else (in microseconds). cmdline/bitcoin.conf: -txretryinterval
 CTweakRef<unsigned int> triTweak("net.txRetryInterval",
     "How long to wait in microseconds before requesting a transaction from another source",

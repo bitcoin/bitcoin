@@ -88,6 +88,8 @@ uint64_t nLocalHostNonce = 0;
 static std::vector<ListenSocket> vhListenSocket;
 extern CAddrMan addrman;
 int nMaxConnections = DEFAULT_MAX_PEER_CONNECTIONS;
+int nMinXthinNodes = MIN_XTHIN_NODES;
+
 bool fAddressesInitialized = false;
 std::string strSubVersion;
 
@@ -1782,7 +1784,7 @@ void ThreadOpenConnections()
             }
             // Disconnect a node that is not XTHIN capable if all outbound slots are full and we
             // have not yet connected to enough XTHIN nodes.
-            int nMinXthinNodes = GetArg("-min-xthin-nodes", MIN_XTHIN_NODES);
+            nMinXthinNodes = GetArg("-min-xthin-nodes", MIN_XTHIN_NODES);
             if (nOutbound >= nMaxOutConnections &&
                 nThinBlockCapable <= min(nMinXthinNodes, nMaxOutConnections) &&
                 nDisconnects < MAX_DISCONNECTS && IsThinBlocksEnabled() && IsChainNearlySyncd())
