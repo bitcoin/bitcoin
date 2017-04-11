@@ -19,7 +19,7 @@ file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import sys
 
-SPACES_PER_TAB=8
+SPACES_PER_TAB = 8
 
 if __name__ == "__main__":
     for filename in sys.argv[1:]:
@@ -28,7 +28,7 @@ if __name__ == "__main__":
         # read it in, strip off trailing whitespace
         with open(filename, mode='U') as f:
             for line in f.readlines():
-                lines.append(line.rstrip().replace("\t"," "*SPACES_PER_TAB))
+                lines.append(line.rstrip().replace("\t", " " * SPACES_PER_TAB))
 
         # overwrite with stripped content
         with open(filename, mode='w') as f:
