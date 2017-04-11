@@ -41,7 +41,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
                 "  get                - Get governance object by hash\n"
                 "  getvotes           - Get all votes for a governance object hash (including old votes)\n"
                 "  getcurrentvotes    - Get only current (tallying) votes for a governance object hash (does not include old votes)\n"
-                "  list               - List governance objects (can be filtered by validity and/or object type)\n"
+                "  list               - List governance objects (can be filtered by signal and/or object type)\n"
                 "  diff               - List differences since last diff\n"
                 "  vote-alias         - Vote on a governance object by masternode alias (using masternode.conf setup)\n"
                 "  vote-conf          - Vote on a governance object by masternode configured in dash.conf\n"
@@ -540,14 +540,14 @@ UniValue gobject(const UniValue& params, bool fHelp)
     if(strCommand == "list" || strCommand == "diff")
     {
         if (params.size() > 3)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject [list|diff] [valid] [type]'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject [list|diff] ( signal type )'");
 
         // GET MAIN PARAMETER FOR THIS MODE, VALID OR ALL?
 
-        std::string strShow = "valid";
-        if (params.size() >= 2) strShow = params[1].get_str();
-        if (strShow != "valid" && strShow != "all")
-            return "Invalid mode, should be 'valid' or 'all'";
+        std::string strCachedSignal = "valid";
+        if (params.size() >= 2) strCachedSignal = params[1].get_str();
+        if (strCachedSignal != "valid" && strCachedSignal != "funding" && strCachedSignal != "delete" && strCachedSignal != "endorsed" && strCachedSignal != "all")
+            return "Invalid signal, should be 'valid', 'funding', 'delete', 'endorsed' or 'all'";
 
         std::string strType = "all";
         if (params.size() == 3) strType = params[2].get_str();
@@ -574,7 +574,10 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
         BOOST_FOREACH(CGovernanceObject* pGovObj, objs)
         {
-            if(strShow == "valid" && !pGovObj->IsSetCachedValid()) continue;
+            if(strCachedSignal == "valid" && !pGovObj->IsSetCachedValid()) continue;
+            if(strCachedSignal == "funding" && !pGovObj->IsSetCachedFunding()) continue;
+            if(strCachedSignal == "delete" && !pGovObj->IsSetCachedDelete()) continue;
+            if(strCachedSignal == "endorsed" && !pGovObj->IsSetCachedEndorsed()) continue;
 
             if(strType == "proposals" && pGovObj->GetObjectType() != GOVERNANCE_OBJECT_PROPOSAL) continue;
             if(strType == "triggers" && pGovObj->GetObjectType() != GOVERNANCE_OBJECT_TRIGGER) continue;
@@ -592,11 +595,13 @@ UniValue gobject(const UniValue& params, bool fHelp)
                 bObj.push_back(Pair("SigningMasternode", masternodeVin.prevout.ToStringShort()));
             }
 
-            // REPORT STATUS FOR FUNDING VOTES SPECIFICALLY
-            bObj.push_back(Pair("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING)));
-            bObj.push_back(Pair("YesCount",  pGovObj->GetYesCount(VOTE_SIGNAL_FUNDING)));
-            bObj.push_back(Pair("NoCount",  pGovObj->GetNoCount(VOTE_SIGNAL_FUNDING)));
-            bObj.push_back(Pair("AbstainCount",  pGovObj->GetAbstainCount(VOTE_SIGNAL_FUNDING)));
+            // REPORT STATUS FOR FUNDING VOTES SPECIFICALLY, EXCEPT WATCHDOGS
+            if(pGovObj->GetObjectType() != GOVERNANCE_OBJECT_WATCHDOG) {
+                bObj.push_back(Pair("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING)));
+                bObj.push_back(Pair("YesCount",  pGovObj->GetYesCount(VOTE_SIGNAL_FUNDING)));
+                bObj.push_back(Pair("NoCount",  pGovObj->GetNoCount(VOTE_SIGNAL_FUNDING)));
+                bObj.push_back(Pair("AbstainCount",  pGovObj->GetAbstainCount(VOTE_SIGNAL_FUNDING)));
+            }
 
             // REPORT VALIDITY AND CACHING FLAGS FOR VARIOUS SETTINGS
             std::string strError = "";
