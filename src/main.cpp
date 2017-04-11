@@ -5222,7 +5222,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
     }
 }
 
-bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t nTimeReceived)
+bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t nTimeReceived)
 {
     int64_t receiptTime = GetTime();
     const CChainParams& chainparams = Params();
@@ -5948,24 +5948,27 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->nGetXthinLastTime = nNow;
             pfrom->nGetXthinCount += 1;
             LogPrint("thin", "nGetXthinCount is %f\n", pfrom->nGetXthinCount);
-            if (chainparams.NetworkIDString()=="main") // other networks have variable mining rates
-	      {
-		if (pfrom->nGetXthinCount >= 20)
+            if (chainparams.NetworkIDString() == "main") // other networks have variable mining rates
+            {
+                if (pfrom->nGetXthinCount >= 20)
                 {
-		  LogPrintf("DOS: Misbehaving - requesting too many get_xthin - disconnecting\n");
-		  LOCK(cs_main);
-		  Misbehaving(pfrom->GetId(), 100);  // If they exceed the limit then disconnect them
-		}
-	      }
+                    LOCK(cs_main);
+                    Misbehaving(pfrom->GetId(), 100);  // If they exceed the limit then disconnect them
+                    return error("requesting too many get_xthin");                
+                }
+            }
         }
 
         CBloomFilter filterMemPool;
         CInv inv;
         vRecv >> inv >> filterMemPool;
-        if (!((inv.type == MSG_XTHINBLOCK)||(inv.type == MSG_THINBLOCK)))
+
+        // Message consistency checking
+        if (!((inv.type == MSG_XTHINBLOCK) || (inv.type == MSG_THINBLOCK)) || inv.hash.IsNull())
         {
-            Misbehaving(pfrom->GetId(), 20);
-            return error("message inv invalid type = %u", inv.type);                
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("invalid get_xthin type=%u hash=%s", inv.type, inv.hash.ToString());                
         }
         
 
@@ -5975,10 +5978,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         {
             LOCK(cs_main);
             BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
-            if (mi == mapBlockIndex.end()) {  // This block does not even exist
-                LogPrint("thin", "Peer %s (%d) requested nonexistent block %s\n", pfrom->addrName.c_str(), pfrom->id, inv.hash.ToString());
+            if (mi == mapBlockIndex.end())
+            {
                 Misbehaving(pfrom->GetId(), 100);
-                return false;
+                return error("Peer %s (%d) requested nonexistent block %s", pfrom->addrName.c_str(), pfrom->id, inv.hash.ToString());
             }
 
             CBlock block;
@@ -5986,8 +5989,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
             {
                 // We don't have the block yet, although we know about it.
-                LogPrint("thin", "Peer %s (%d) requested block %s that cannot be read\n", pfrom->addrName.c_str(), pfrom->id, inv.hash.ToString());
-                return false;
+                return error("Peer %s (%d) requested block %s that cannot be read", pfrom->addrName.c_str(), pfrom->id, inv.hash.ToString());
             }
             else
             {
@@ -6035,15 +6037,18 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     {
         CXThinBlock thinBlock;
         vRecv >> thinBlock;
-        CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
-        // Send expedited ASAP
-        CValidationState state;
-        if (!CheckBlockHeader(thinBlock.header, state, true)) { // block header is bad
-            LogPrint("thin", "Thinblock %s received with bad header from peer %s (%d)\n", inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id);
-            Misbehaving(pfrom->GetId(), 20);
-            return false;
+
+        // Message consistency checking
+        if (!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("Invalid xthinblock received");
         }
-        else if (!IsRecentlyExpeditedAndStore(inv.hash))
+
+        // Send expedited block ASAP
+        CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
+        if (!IsRecentlyExpeditedAndStore(inv.hash))
             SendExpeditedBlock(thinBlock, 0, pfrom);
 
         int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
@@ -6068,6 +6073,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CThinBlock thinBlock;
         vRecv >> thinBlock;
 
+        // Message consistency checking
+        if (!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("Invalid thinblock received");
+        }
+
         CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
         int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
         LogPrint("thin", "received thinblock %s from peer %s (%d) of %d bytes\n", inv.hash.ToString(), pfrom->addrName.c_str(),pfrom->id, nSizeThinBlock);
@@ -6083,6 +6096,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     {
         CXRequestThinBlockTx thinRequestBlockTx;
         vRecv >> thinRequestBlockTx;
+
+        // Message consistency checking
+        if (thinRequestBlockTx.setCheapHashesToRequest.empty() || thinRequestBlockTx.blockhash.IsNull())
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("incorrectly constructed get_xblocktx received.  Banning peer=%d", pfrom->id);
+        }
 
         // We use MSG_TX here even though we refer to blockhash because we need to track
         // how many xblocktx requests we make in case of DOS
@@ -6101,9 +6122,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->nGetXBlockTxCount += 1;
             LogPrint("thin", "nGetXBlockTxCount is %f\n", pfrom->nGetXBlockTxCount);
             if (pfrom->nGetXBlockTxCount >= 20) {
-                LogPrintf("DOS: Misbehaving - requesting too many xblocktx: %s\n", inv.hash.ToString());
                 LOCK(cs_main);
                 Misbehaving(pfrom->GetId(), 100);  // If they exceed the limit then disconnect them
+                return error("DOS: Misbehaving - requesting too many xblocktx: %s\n", inv.hash.ToString());
             }
         }
 
@@ -6113,7 +6134,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
             if (mi == mapBlockIndex.end())
             {
-                LogPrint("thin", "Requested block is not available");
+                return error("Requested block is not available");
             }
             else
             {
@@ -6121,7 +6142,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 const Consensus::Params& consensusParams = Params().GetConsensus();
                 if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
                 {
-                    LogPrint("thin", "Cannot load block from disk -- Block txn request before assembled");
+                    return error("Cannot load block from disk -- Block txn request before assembled");
                 }
                 else
                 {
@@ -6144,9 +6165,28 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CXThinBlockTx thinBlockTx;
         vRecv >> thinBlockTx;
 
+        // Message consistency checking
         CInv inv(MSG_XTHINBLOCK, thinBlockTx.blockhash);
+        if (thinBlockTx.vMissingTx.empty() || thinBlockTx.blockhash.IsNull() || pfrom->xThinBlockHashes.size() != pfrom->thinBlock.vtx.size())
+        {
+            {
+                LOCK(cs_vNodes);
+                pfrom->mapThinBlocksInFlight.erase(inv.hash);
+                pfrom->thinBlockWaitingForTxns = -1;
+                pfrom->thinBlock.SetNull();
+            }
+
+            // Clear the thinblock timer used for preferential download
+            thindata.ClearThinBlockTimer(inv.hash);
+
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("incorrectly constructed xblocktx or inconsistent thinblock data received.  Banning peer=%d", pfrom->id);
+        }
+
         LogPrint("net", "received blocktxs for %s peer=%d\n", inv.hash.ToString(), pfrom->id);
-        if (!pfrom->mapThinBlocksInFlight.count(inv.hash)) {
+        if (!pfrom->mapThinBlocksInFlight.count(inv.hash))
+        {
             LogPrint("thin", "xblocktx received but it was either not requested or it was beaten by another block %s  peer=%d\n", inv.hash.ToString(), pfrom->id);
             requester.Received(inv, pfrom, msgSize); // record the bytes received from the message
             return true;
@@ -6157,37 +6197,24 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         BOOST_FOREACH(CTransaction tx, thinBlockTx.vMissingTx)
             mapMissingTx[tx.GetHash().GetCheapHash()] = tx;
 
-        int count=0;
-        size_t i;
-        if (pfrom->xThinBlockHashes.size() != pfrom->thinBlock.vtx.size())  // Because the next loop assumes this
-          {
-            LogPrint("thin", "Inconsistent thin block data.  Aborting the thin block\n");
+        int count = 0;
+        for (size_t i = 0; i < pfrom->thinBlock.vtx.size(); i++)
+        {
+            if (pfrom->thinBlock.vtx[i].IsNull())
             {
-                LOCK(cs_vNodes);
-                pfrom->mapThinBlocksInFlight.erase(inv.hash);
-                pfrom->thinBlockWaitingForTxns = -1;
-                pfrom->thinBlock.SetNull();
+	        std::map<uint64_t, CTransaction>::iterator val = mapMissingTx.find(pfrom->xThinBlockHashes[i]);
+                if (val != mapMissingTx.end())
+                {
+                    pfrom->thinBlock.vtx[i] = val->second;
+                    pfrom->thinBlockWaitingForTxns--;
+                }
+                count++;
             }
-
-            // Clear the thinblock timer used for preferential download
-            thindata.ClearThinBlockTimer(inv.hash);
-            return true;
-          }
-        
-        for (i = 0; i < pfrom->thinBlock.vtx.size(); i++) {
-             if (pfrom->thinBlock.vtx[i].IsNull()) {
-	         std::map<uint64_t, CTransaction>::iterator val = mapMissingTx.find(pfrom->xThinBlockHashes[i]);
-                 if (val != mapMissingTx.end())
-		   {
-                   pfrom->thinBlock.vtx[i] = val->second;
-                   pfrom->thinBlockWaitingForTxns--;
-		   }
-                 count++;
-             }
         }
         LogPrint("thin", "Got %d Re-requested txs, needed %d of them\n", thinBlockTx.vMissingTx.size(), count);
 
-        if (pfrom->thinBlockWaitingForTxns == 0) {
+        if (pfrom->thinBlockWaitingForTxns == 0)
+        {
             // We have all the transactions now that are in this block: try to reassemble and process.
             pfrom->thinBlockWaitingForTxns = -1;
             requester.Received(inv, pfrom, msgSize);
@@ -6211,7 +6238,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
             PV.HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
         }
-        else {
+        else
+        {
             LogPrint("thin", "Failed to retrieve all transactions for block\n");
             // An expedited block may request transactions that we don't have
             //LOCK(cs_main);
@@ -6478,8 +6506,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         // Ignore unknown commands for extensibility
         LogPrint("net", "Unknown command \"%s\" from peer=%d\n", SanitizeString(strCommand), pfrom->id);
     }
-
-
 
     return true;
 }
