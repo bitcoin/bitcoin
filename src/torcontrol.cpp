@@ -1,4 +1,5 @@
 // Copyright (c) 2015-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -291,17 +292,61 @@ static std::map<std::string,std::string> ParseTorReplyMapping(const std::string 
             ++ptr; // skip opening '"'
             bool escape_next = false;
             while (ptr < s.size() && (escape_next || s[ptr] != '"')) {
-                escape_next = (s[ptr] == '\\');
+                // Repeated backslashes must be interpreted as pairs
+                escape_next = (s[ptr] == '\\' && !escape_next);
                 value.push_back(s[ptr]);
                 ++ptr;
             }
             if (ptr == s.size()) // unexpected end of line
                 return std::map<std::string,std::string>();
             ++ptr; // skip closing '"'
-            /* TODO: unescape value - according to the spec this depends on the
-             * context, some strings use C-LogPrintf style escape codes, some
-             * don't. So may be better handled at the call site.
+            /**
+             * Unescape value. Per https://spec.torproject.org/control-spec section 2.1.1:
+             *
+             *   For future-proofing, controller implementors MAY use the following
+             *   rules to be compatible with buggy Tor implementations and with
+             *   future ones that implement the spec as intended:
+             *
+             *     Read \n \t \r and \0 ... \377 as C escapes.
+             *     Treat a backslash followed by any other character as that character.
              */
+            std::string escaped_value;
+            for (size_t i = 0; i < value.size(); ++i) {
+                if (value[i] == '\\') {
+                    // This will always be valid, because if the QuotedString
+                    // ended in an odd number of backslashes, then the parser
+                    // would already have returned above, due to a missing
+                    // terminating double-quote.
+                    ++i;
+                    if (value[i] == 'n') {
+                        escaped_value.push_back('\n');
+                    } else if (value[i] == 't') {
+                        escaped_value.push_back('\t');
+                    } else if (value[i] == 'r') {
+                        escaped_value.push_back('\r');
+                    } else if ('0' <= value[i] && value[i] <= '7') {
+                        size_t j;
+                        // Octal escape sequences have a limit of three octal digits,
+                        // but terminate at the first character that is not a valid
+                        // octal digit if encountered sooner.
+                        for (j = 1; j < 3 && (i+j) < value.size() && '0' <= value[i+j] && value[i+j] <= '7'; ++j) {}
+                        // Tor restricts first digit to 0-3 for three-digit octals.
+                        // A leading digit of 4-7 would therefore be interpreted as
+                        // a two-digit octal.
+                        if (j == 3 && value[i] > '3') {
+                            j--;
+                        }
+                        escaped_value.push_back(strtol(value.substr(i, j).c_str(), NULL, 8));
+                        // Account for automatic incrementing at loop end
+                        i += j - 1;
+                    } else {
+                        escaped_value.push_back(value[i]);
+                    }
+                } else {
+                    escaped_value.push_back(value[i]);
+                }
+            }
+            value = escaped_value;
         } else { // Unquoted value. Note that values can contain '=' at will, just no spaces
             while (ptr < s.size() && s[ptr] != ' ') {
                 value.push_back(s[ptr]);

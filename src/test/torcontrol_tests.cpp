@@ -119,28 +119,59 @@ BOOST_AUTO_TEST_CASE(util_ParseTorReplyMapping)
             {"Foo", "Bar Baz"},
         });
 
-    // Escapes (which are left escaped by the parser)
+    // Escapes
     CheckParseTorReplyMapping(
         "Foo=\"Bar\\ Baz\"", {
-            {"Foo", "Bar\\ Baz"},
+            {"Foo", "Bar Baz"},
         });
     CheckParseTorReplyMapping(
         "Foo=\"Bar\\Baz\"", {
-            {"Foo", "Bar\\Baz"},
+            {"Foo", "BarBaz"},
         });
     CheckParseTorReplyMapping(
         "Foo=\"Bar\\@Baz\"", {
-            {"Foo", "Bar\\@Baz"},
+            {"Foo", "Bar@Baz"},
         });
     CheckParseTorReplyMapping(
         "Foo=\"Bar\\\"Baz\" Spam=\"\\\"Eggs\\\"\"", {
-            {"Foo", "Bar\\\"Baz"},
-            {"Spam", "\\\"Eggs\\\""},
+            {"Foo", "Bar\"Baz"},
+            {"Spam", "\"Eggs\""},
         });
     CheckParseTorReplyMapping(
         "Foo=\"Bar\\\\Baz\"", {
-            {"Foo", "Bar\\\\Baz"},
+            {"Foo", "Bar\\Baz"},
         });
+
+    // C escapes
+    CheckParseTorReplyMapping(
+        "Foo=\"Bar\\nBaz\\t\" Spam=\"\\rEggs\" Octals=\"\\1a\\11\\17\\18\\81\\377\\378\\400\\2222\" Final=Check", {
+            {"Foo", "Bar\nBaz\t"},
+            {"Spam", "\rEggs"},
+            {"Octals", "\1a\11\17\1" "881\377\37" "8\40" "0\222" "2"},
+            {"Final", "Check"},
+        });
+    CheckParseTorReplyMapping(
+        "Valid=Mapping Escaped=\"Escape\\\\\"", {
+            {"Valid", "Mapping"},
+            {"Escaped", "Escape\\"},
+        });
+    CheckParseTorReplyMapping(
+        "Valid=Mapping Bare=\"Escape\\\"", {});
+    CheckParseTorReplyMapping(
+        "OneOctal=\"OneEnd\\1\" TwoOctal=\"TwoEnd\\11\"", {
+            {"OneOctal", "OneEnd\1"},
+            {"TwoOctal", "TwoEnd\11"},
+        });
+
+    // Special handling for null case
+    // (needed because string comparison reads the null as end-of-string)
+    BOOST_TEST_MESSAGE(std::string("CheckParseTorReplyMapping(Null=\"\\0\")"));
+    auto ret = ParseTorReplyMapping("Null=\"\\0\"");
+    BOOST_CHECK_EQUAL(ret.size(), 1);
+    auto r_it = ret.begin();
+    BOOST_CHECK_EQUAL(r_it->first, "Null");
+    BOOST_CHECK_EQUAL(r_it->second.size(), 1);
+    BOOST_CHECK_EQUAL(r_it->second[0], '\0');
 
     // A more complex valid grammar. PROTOCOLINFO accepts a VersionLine that
     // takes a key=value pair followed by an OptArguments, making this valid.
