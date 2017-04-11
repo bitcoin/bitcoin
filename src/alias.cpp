@@ -2546,14 +2546,13 @@ int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount
 	numCoinsLeft = numResults - (int)outPoints.size();
 	return numCoinsLeft;
 }
-int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
+bool aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
 {
 	LOCK2(cs_main, mempool.cs);
 	vector<CAliasIndex> vtxPos;
 	CAliasIndex theAlias;
 	CTransaction aliasTx;
 	bool isExpired = false;
-	if (!GetTxAndVtxOfAlias(vchAlias, theAlias, aliasTx, vtxPos, isExpired))
 		return 0;
 	const string &strAddressDest = EncodeBase58(theAlias.vchAddress);
 	CTxDestination aliasDest;
@@ -2584,20 +2583,9 @@ int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
 			prevaddy = CSyscoinAddress(aliasDest);
 			if(strAddressDest != prevaddy.ToString())
 				continue;
-
-			numResults++;
-			if(!funded)
 			{
-				auto it = mempool.mapNextTx.find(COutPoint(alias.txHash, j));
-				if (it != mempool.mapNextTx.end())
 					continue;
-				outpoint = COutPoint(alias.txHash, j);
-				funded = true;
 			}
-			
-		 }	
-    }
-	return numResults;
 }
 /**
  * [aliasinfo description]
