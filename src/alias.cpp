@@ -2551,8 +2551,8 @@ bool aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
 	LOCK2(cs_main, mempool.cs);
 	vector<CAliasIndex> vtxPos;
 	CAliasIndex theAlias;
-	CTransaction aliasTx;
 	bool isExpired = false;
+	if (!GetVtxOfAlias(vchAlias, theAlias, vtxPos, isExpired))
 		return 0;
 	const string &strAddressDest = EncodeBase58(theAlias.vchAddress);
 	CTxDestination aliasDest;
@@ -2583,9 +2583,39 @@ bool aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
 			prevaddy = CSyscoinAddress(aliasDest);
 			if(strAddressDest != prevaddy.ToString())
 				continue;
+			outpoint = COutPoint(alias.txHash, j);
+			return true;
+		 }	
+    }
+	if(!funded)
+	{
+        BOOST_FOREACH(const CTxMemPoolEntry& e, mempool.mapTx)
+        {
+			const uint256& hash = e.GetTx().GetHash();
+			coins = view.AccessCoins(alias.txHash);
+			if(coins == NULL)
+				continue;
+			for (unsigned int j = 0;j<coins->vout.size();j++)
 			{
+				int op;
+				vector<vector<unsigned char> > vvch;
+
+				if(!coins->IsAvailable(j))
 					continue;
+				if(!DecodeAliasScript(coins->vout[j].scriptPubKey, op, vvch) || vvch[0] != theAlias.vchAlias || vvch[1] != theAlias.vchGUID || op == OP_ALIAS_PAYMENT)
+					continue;
+				if (!ExtractDestination(coins->vout[j].scriptPubKey, aliasDest))
+					continue;
+				prevaddy = CSyscoinAddress(aliasDest);
+				if(strAddressDest != prevaddy.ToString())
+					continue;
+				outpoint = COutPoint(hash, j);
+				funded = true;	
+				return true;
 			}
+		}
+	}
+	return false;
 }
 /**
  * [aliasinfo description]
