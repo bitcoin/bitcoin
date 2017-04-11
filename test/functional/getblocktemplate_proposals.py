@@ -50,6 +50,9 @@ class GetBlockTemplateProposalTest(BitcoinTestFramework):
         block.nNonce = 0
         block.vtx = [coinbase_tx]
 
+        self.log.info("getblocktemplate: Test valid block")
+        assert_template(node, block, None)
+
         self.log.info("getblocktemplate: Test bad input hash for coinbase transaction")
         bad_block = copy.deepcopy(block)
         bad_block.vtx[0].vin[0].prevout.hash += 1
@@ -103,9 +106,6 @@ class GetBlockTemplateProposalTest(BitcoinTestFramework):
         assert_template(node, bad_block, 'time-too-new')
         bad_block.nTime = 0
         assert_template(node, bad_block, 'time-too-old')
-
-        self.log.info("getblocktemplate: Test valid block")
-        assert_template(node, block, None)
 
         self.log.info("getblocktemplate: Test not best block")
         bad_block = copy.deepcopy(block)
