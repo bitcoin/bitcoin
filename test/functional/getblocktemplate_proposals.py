@@ -43,7 +43,7 @@ def genmrklroot(leaflist):
         if len(cur) & 1:
             cur.append(cur[-1])
         for i in range(0, len(cur), 2):
-            n.append(dblsha(cur[i] + cur[i+1]))
+            n.append(dblsha(cur[i] + cur[i + 1]))
         cur = n
     return cur[0]
 
@@ -62,7 +62,7 @@ def template_to_hex(tmpl, txlist):
     return b2x(template_to_bytearray(tmpl, txlist))
 
 def assert_template(node, tmpl, txlist, expect):
-    rsp = node.getblocktemplate({'data':template_to_hex(tmpl, txlist),'mode':'proposal'})
+    rsp = node.getblocktemplate({'data': template_to_hex(tmpl, txlist), 'mode': 'proposal'})
     if rsp != expect:
         raise AssertionError('unexpected: %s' % (rsp,))
 
@@ -75,7 +75,8 @@ class GetBlockTemplateProposalTest(BitcoinTestFramework):
 
     def run_test(self):
         node = self.nodes[0]
-        node.generate(1) # Mine a block to leave initial block download
+        # Mine a block to leave initial block download
+        node.generate(1)
         tmpl = node.getblocktemplate()
         if 'coinbasetxn' not in tmpl:
             rawcoinbase = encodeUNum(tmpl['height'])
@@ -88,16 +89,10 @@ class GetBlockTemplateProposalTest(BitcoinTestFramework):
         # Test 0: Capability advertised
         assert('proposal' in tmpl['capabilities'])
 
-        # NOTE: This test currently FAILS (regtest mode doesn't enforce block height in coinbase)
-        ## Test 1: Bad height in coinbase
-        #txlist[0][4+1+36+1+1] += 1
-        #assert_template(node, tmpl, txlist, 'FIXME')
-        #txlist[0][4+1+36+1+1] -= 1
-
         # Test 2: Bad input hash for gen tx
-        txlist[0][4+1] += 1
+        txlist[0][4 + 1] += 1
         assert_template(node, tmpl, txlist, 'bad-cb-missing')
-        txlist[0][4+1] -= 1
+        txlist[0][4 + 1] -= 1
 
         # Test 3: Truncated final tx
         lastbyte = txlist[-1].pop()
@@ -111,7 +106,7 @@ class GetBlockTemplateProposalTest(BitcoinTestFramework):
 
         # Test 5: Add an invalid tx to the end (non-duplicate)
         txlist.append(bytearray(txlist[0]))
-        txlist[-1][4+1] = 0xff
+        txlist[-1][4 + 1] = 0xff
         assert_template(node, tmpl, txlist, 'bad-txns-inputs-missingorspent')
         txlist.pop()
 
@@ -133,8 +128,8 @@ class GetBlockTemplateProposalTest(BitcoinTestFramework):
 
         # Test 9: Bad merkle root
         rawtmpl = template_to_bytearray(tmpl, txlist)
-        rawtmpl[4+32] = (rawtmpl[4+32] + 1) % 0x100
-        rsp = node.getblocktemplate({'data':b2x(rawtmpl),'mode':'proposal'})
+        rawtmpl[4 + 32] = (rawtmpl[4 + 32] + 1) % 0x100
+        rsp = node.getblocktemplate({'data': b2x(rawtmpl), 'mode': 'proposal'})
         if rsp != 'bad-txnmrklroot':
             raise AssertionError('unexpected: %s' % (rsp,))
 
