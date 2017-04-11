@@ -37,7 +37,7 @@ COfferDB *pofferdb = NULL;
 CCertDB *pcertdb = NULL;
 CEscrowDB *pescrowdb = NULL;
 CMessageDB *pmessagedb = NULL;
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &aliasRecipient,  vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=false, bool transferAlias=false);
+extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=false, bool transferAlias=false);
 bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut, const Consensus::Params& consensusParams)
 {
 	if(nHeight < 0 || nHeight > chainActive.Height())
@@ -1619,7 +1619,7 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
 	CAmount nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
 	recipient.nAmount = nFee;
 }
-void CreateRecipient(const CScript& scriptPubKey,  const vector<unsigned char>& vchAlias, const vector<unsigned char>& vchAliasPeg, const uint64_t& nHeight, CRecipient& recipient)
+void CreateAliasRecipient(const CScript& scriptPubKey,  const vector<unsigned char>& vchAlias, const vector<unsigned char>& vchAliasPeg, const uint64_t& nHeight, CRecipient& recipient)
 {
 	int precision = 0;
 	CAmount nFee = 0;
@@ -1868,8 +1868,9 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
     vector<CRecipient> vecSend;
 	CRecipient recipient;
-	CreateRecipient(scriptPubKey, vchAlias, newAlias.vchAliasPeg, chainActive.Tip()->nHeight, recipient);
-	recipient.nAmount *= 3;
+	CreateRecipient(scriptPubKey, recipient);
+	CRecipient recipientPayment;
+	CreateAliasRecipient(scriptPubKeyOrig, vchAlias, newAlias.vchAliasPeg, chainActive.Tip()->nHeight, recipientPayment);
 	CScript scriptData;
 	
 	scriptData << OP_RETURN << data;
@@ -1889,7 +1890,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	coinControl.fAllowWatchOnly = true;
 	bool useOnlyAliasPaymentToFund = false;
 
-	SendMoneySyscoin(vchAlias, recipient, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund);
+	SendMoneySyscoin(vchAlias, recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund);
 	UniValue res(UniValue::VARR);
 
 	UniValue signParams(UniValue::VARR);
@@ -2058,8 +2059,9 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 
     vector<CRecipient> vecSend;
 	CRecipient recipient;
-	CreateRecipient(scriptPubKey, copyAlias.vchAlias, copyAlias.vchAliasPeg, chainActive.Tip()->nHeight, recipient);
-	recipient.nAmount *= 3;
+	CreateRecipient(scriptPubKey, recipient);
+	CRecipient recipientPayment;
+	CreateAliasRecipient(scriptPubKeyOrig, copyAlias.vchAlias, copyAlias.vchAliasPeg, chainActive.Tip()->nHeight, recipientPayment);
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -2080,7 +2082,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(newAddress.ToString() != EncodeBase58(copyAlias.vchAddress))
 		transferAlias = true;
 	
-	SendMoneySyscoin(vchAlias, recipient, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund, transferAlias);
+	SendMoneySyscoin(vchAlias, recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund, transferAlias);
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
 	signParams.push_back(EncodeHexTx(wtx));
@@ -2540,13 +2542,14 @@ int aliasselectpaymentcoins(const vector<unsigned char> &vchAlias, const CAmount
 	numCoinsLeft = numResults - (int)outPoints.size();
 	return numCoinsLeft;
 }
-bool aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
+int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
 {
 	LOCK2(cs_main, mempool.cs);
 	vector<CAliasIndex> vtxPos;
 	CAliasIndex theAlias;
+	CTransaction aliasTx;
 	bool isExpired = false;
-	if (!GetVtxOfAlias(vchAlias, theAlias, vtxPos, isExpired))
+	if (!GetTxAndVtxOfAlias(vchAlias, theAlias, aliasTx, vtxPos, isExpired))
 		return 0;
 	const string &strAddressDest = EncodeBase58(theAlias.vchAddress);
 	CTxDestination aliasDest;
@@ -2556,59 +2559,41 @@ bool aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
 	CCoinsViewCache view(pcoinsTip);
 	const CCoins *coins;
 	bool funded = false;
+    for (unsigned int i = 0;i<vtxPos.size();i++)
+    {
+		const CAliasIndex& alias = vtxPos[i];
+		coins = view.AccessCoins(alias.txHash);
 
-	coins = view.AccessCoins(theAlias.txHash);
+		if(coins == NULL)
+			continue;
+         for (unsigned int j = 0;j<coins->vout.size();j++)
+		 {
+			int op;
+			vector<vector<unsigned char> > vvch;
 
-	if(coins != NULL)
-	{
-     for (unsigned int j = 0;j<coins->vout.size();j++)
-	 {
-		int op;
-		vector<vector<unsigned char> > vvch;
-
-		if(!coins->IsAvailable(j))
-			continue;
-		if(!DecodeAliasScript(coins->vout[j].scriptPubKey, op, vvch) || vvch[0] != theAlias.vchAlias || vvch[1] != theAlias.vchGUID || op == OP_ALIAS_PAYMENT)
-			continue;
-		if (!ExtractDestination(coins->vout[j].scriptPubKey, aliasDest))
-			continue;
-		prevaddy = CSyscoinAddress(aliasDest);
-		if(strAddressDest != prevaddy.ToString())
-			continue;
-		outpoint = COutPoint(theAlias.txHash, j);
-		return true;
-	 }	
-	}
-    
-	if(!funded)
-	{
-        BOOST_FOREACH(const CTxMemPoolEntry& e, mempool.mapTx)
-        {
-			const uint256& hash = e.GetTx().GetHash();
-			coins = view.AccessCoins(hash);
-			if(coins == NULL)
+			if(!coins->IsAvailable(j))
 				continue;
-			for (unsigned int j = 0;j<coins->vout.size();j++)
-			{
-				int op;
-				vector<vector<unsigned char> > vvch;
+			if(!DecodeAliasScript(coins->vout[j].scriptPubKey, op, vvch) || vvch[0] != theAlias.vchAlias || vvch[1] != theAlias.vchGUID || op == OP_ALIAS_PAYMENT)
+				continue;
+			if (!ExtractDestination(coins->vout[j].scriptPubKey, aliasDest))
+				continue;
+			prevaddy = CSyscoinAddress(aliasDest);
+			if(strAddressDest != prevaddy.ToString())
+				continue;
 
-				if(!coins->IsAvailable(j))
+			numResults++;
+			if(!funded)
+			{
+				auto it = mempool.mapNextTx.find(COutPoint(alias.txHash, j));
+				if (it != mempool.mapNextTx.end())
 					continue;
-				if(!DecodeAliasScript(coins->vout[j].scriptPubKey, op, vvch) || vvch[0] != theAlias.vchAlias || vvch[1] != theAlias.vchGUID || op == OP_ALIAS_PAYMENT)
-					continue;
-				if (!ExtractDestination(coins->vout[j].scriptPubKey, aliasDest))
-					continue;
-				prevaddy = CSyscoinAddress(aliasDest);
-				if(strAddressDest != prevaddy.ToString())
-					continue;
-				outpoint = COutPoint(hash, j);
-				funded = true;	
-				return true;
+				outpoint = COutPoint(alias.txHash, j);
+				funded = true;
 			}
-		}
-	}
-	return false;
+			
+		 }	
+    }
+	return numResults;
 }
 /**
  * [aliasinfo description]

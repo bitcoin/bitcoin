@@ -437,7 +437,7 @@ When to pay with this method:
 	3b) use total amount + required amount from 2a (if non zero) to find outputs in alias balance, if not enough balance throw error
 	3c) transaction completely funded
 4) if transaction completely funded, try to sign and send to network*/
-void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &aliasRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=false, bool transferAlias=false)
+void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &aliasRecipient, const CRecipient &aliasFeePlaceholderRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=false, bool transferAlias=false)
 {
 
     CReserveKey reservekey(pwalletMain);
@@ -445,10 +445,15 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &a
     std::string strError;
     int nChangePosRet = -1;
 	// step 1
-	vecSend.push_back(aliasRecipient);
 	COutPoint aliasOutPoint;
-	bool inputfound = aliasunspent(vchAlias, aliasOutPoint);
-	
+	unsigned int numResults = aliasunspent(vchAlias, aliasOutPoint);
+	if(numResults > 0 && numResults >= MAX_ALIAS_UPDATES_PER_BLOCK)
+		numResults = MAX_ALIAS_UPDATES_PER_BLOCK-1;
+	if(transferAlias)
+		numResults = 0;
+	// for the alias utxo (1 per transaction is used)
+	for(unsigned int i =numResults;i<MAX_ALIAS_UPDATES_PER_BLOCK;i++)
+		vecSend.push_back(aliasRecipient);
 	if(!aliasOutPoint.IsNull())
 		coinControl->Select(aliasOutPoint);
 
@@ -469,11 +474,12 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &a
 	CAmount nRequiredPaymentFunds=0;
 	bool bAreFeePlaceholdersFunded = false;
 	bool bIsAliasPaymentFunded = false;
+	int numFeeCoinsLeft = -1;
 	if(!useOnlyAliasPaymentToFund)
 	{
 		vector<COutPoint> outPoints;
 		// select all if alias transfer
-		aliasselectpaymentcoins(vchAlias, nTotal, outPoints, bAreFeePlaceholdersFunded, nRequiredFeePlaceholderFunds, true, transferAlias);
+		numFeeCoinsLeft = aliasselectpaymentcoins(vchAlias, nTotal, outPoints, bAreFeePlaceholdersFunded, nRequiredFeePlaceholderFunds, true, transferAlias);
 		BOOST_FOREACH(const COutPoint& outpoint, outPoints)
 		{
 			coinControl->Select(outpoint);	
@@ -484,7 +490,15 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &a
 	param.push_back(stringFromVch(vchAlias));
 	const UniValue &result = tableRPC.execute("aliasbalance", param);
 	CAmount nBalance = AmountFromValue(result);
-	bool bNeedAliasPaymentInputs = !inputfound;
+	// if fee placement utxo's have been used up (or we are creating a new alias) use balance(alias or wallet) for funding as well as create more fee placeholders
+	bool bNeedAliasPaymentInputs = numFeeCoinsLeft == 0 || numResults <= 0;
+	if(bNeedAliasPaymentInputs)
+	{
+		for(unsigned int i =0;i<MAX_ALIAS_UPDATES_PER_BLOCK;i++)
+		{
+			vecSend.push_back(aliasFeePlaceholderRecipient);
+		}	
+	}
 	if(nBalance > 0)
 	{
 		// get total output required
@@ -514,7 +528,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &a
 				}
 			}
 		}
-		/*if(inputfound && (bNeedAliasPaymentInputs || useOnlyAliasPaymentToFund))
+		if(bNeedAliasPaymentInputs || useOnlyAliasPaymentToFund)
 		{
 			vector<COutPoint> outPoints;
 			// select all if alias transferred
@@ -539,7 +553,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &a
 			{
 				coinControl->Select(outpoint);
 			}
-		}*/
+		}
 	}
 	// now create the transaction and fake sign with enough funding from alias utxo's (if coinControl specified fAllowOtherInputs(true) then and only then are wallet inputs are allowed)
     // actual signing happens in syscoinsignrawtransaction outside of this function call after the wtxNew raw transaction is returned back to it
