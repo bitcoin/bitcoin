@@ -86,54 +86,54 @@ class GetBlockTemplateProposalTest(BitcoinTestFramework):
             tmpl['coinbasetxn'] = {'data': '01000000' + '01' + '0000000000000000000000000000000000000000000000000000000000000000ffffffff' + ('%02x' % (len(rawcoinbase),)) + hexcoinbase + 'fffffffe' + '01' + hexoutval + '00' + '00000000'}
         txlist = list(bytearray(a2b_hex(a['data'])) for a in (tmpl['coinbasetxn'],) + tuple(tmpl['transactions']))
 
-        # Test 0: Capability advertised
+        self.log.info("getblocktemplate: Test capability advertised")
         assert('proposal' in tmpl['capabilities'])
 
-        # Test 2: Bad input hash for gen tx
+        self.log.info("getblocktemplate: Test bad input hash for coinbase transaction")
         txlist[0][4 + 1] += 1
         assert_template(node, tmpl, txlist, 'bad-cb-missing')
         txlist[0][4 + 1] -= 1
 
-        # Test 3: Truncated final tx
+        self.log.info("getblocktemplate: Test truncated final transaction")
         lastbyte = txlist[-1].pop()
         assert_raises_jsonrpc(-22, "Block decode failed", assert_template, node, tmpl, txlist, 'n/a')
         txlist[-1].append(lastbyte)
 
-        # Test 4: Add an invalid tx to the end (duplicate of gen tx)
+        self.log.info("getblocktemplate: Test duplicate transaction")
         txlist.append(txlist[0])
         assert_template(node, tmpl, txlist, 'bad-txns-duplicate')
         txlist.pop()
 
-        # Test 5: Add an invalid tx to the end (non-duplicate)
+        self.log.info("getblocktemplate: Test invalid transaction")
         txlist.append(bytearray(txlist[0]))
         txlist[-1][4 + 1] = 0xff
         assert_template(node, tmpl, txlist, 'bad-txns-inputs-missingorspent')
         txlist.pop()
 
-        # Test 6: Future tx lock time
+        self.log.info("getblocktemplate: Test nonfinal transaction")
         txlist[0][-4:] = b'\xff\xff\xff\xff'
         assert_template(node, tmpl, txlist, 'bad-txns-nonfinal')
         txlist[0][-4:] = b'\0\0\0\0'
 
-        # Test 7: Bad tx count
+        self.log.info("getblocktemplate: Test bad tx count")
         txlist.append(b'')
         assert_raises_jsonrpc(-22, 'Block decode failed', assert_template, node, tmpl, txlist, 'n/a')
         txlist.pop()
 
-        # Test 8: Bad bits
+        self.log.info("getblocktemplate: Test bad bits")
         realbits = tmpl['bits']
         tmpl['bits'] = '1c0000ff'  # impossible in the real world
         assert_template(node, tmpl, txlist, 'bad-diffbits')
         tmpl['bits'] = realbits
 
-        # Test 9: Bad merkle root
+        self.log.info("getblocktemplate: Test bad merkle root")
         rawtmpl = template_to_bytearray(tmpl, txlist)
         rawtmpl[4 + 32] = (rawtmpl[4 + 32] + 1) % 0x100
         rsp = node.getblocktemplate({'data': b2x(rawtmpl), 'mode': 'proposal'})
         if rsp != 'bad-txnmrklroot':
             raise AssertionError('unexpected: %s' % (rsp,))
 
-        # Test 10: Bad timestamps
+        self.log.info("getblocktemplate: Test bad timestamps")
         realtime = tmpl['curtime']
         tmpl['curtime'] = 0x7fffffff
         assert_template(node, tmpl, txlist, 'time-too-new')
@@ -141,10 +141,10 @@ class GetBlockTemplateProposalTest(BitcoinTestFramework):
         assert_template(node, tmpl, txlist, 'time-too-old')
         tmpl['curtime'] = realtime
 
-        # Test 11: Valid block
+        self.log.info("getblocktemplate: Test valid block")
         assert_template(node, tmpl, txlist, None)
 
-        # Test 12: Orphan block
+        self.log.info("getblocktemplate: Test not best block")
         tmpl['previousblockhash'] = 'ff00' * 16
         assert_template(node, tmpl, txlist, 'inconclusive-not-best-prevblk')
 
