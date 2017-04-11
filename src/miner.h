@@ -73,6 +73,7 @@ private:
     void addPriorityTxs(CBlockTemplate *);
 
     // helper function for addScoreTxs and addPriorityTxs
+    bool IsIncrementallyGood(uint64_t nExtraSize, unsigned int nExtraSigOps);
     /** Test if tx will still "fit" in the block */
     bool TestForBlock(CTxMemPool::txiter iter);
     /** Test if tx still has unconfirmed parents not yet in block */
