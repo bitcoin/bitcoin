@@ -2646,7 +2646,7 @@ bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oNam
 			strEncryptionPrivateKey = HexStr(alias.vchEncryptionPrivateKey);
 		else
 		{
-			if(DecryptPrivateKey(alias.vchPubKey, alias.vchEncryptionPrivateKey, strKey))
+			if(DecryptPrivateKey(alias, strKey))
 				strEncryptionPrivateKey = HexStr(strKey);	
 		}
 		if(strWalletless == "Yes")
