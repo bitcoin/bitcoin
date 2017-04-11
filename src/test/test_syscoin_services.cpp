@@ -641,7 +641,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasinfo " + aliasname));
 		if(password != "\"\"")
 			BOOST_CHECK_NO_THROW(CallRPC(otherNode1, "aliasauthenticate " + aliasname + " " + password + " " + passwordSalt + " Yes"));
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str() , password == "\"\""? "": password);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str() , "");
 		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == aliasname);
 		if(aliasname != "sysrates.peg" && aliasname != "sysban" && aliasname != "syscategory")
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), pubdata);
@@ -655,7 +655,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "aliasinfo " + aliasname));
 		if(password != "\"\"")
 			BOOST_CHECK_NO_THROW(CallRPC(otherNode2, "aliasauthenticate " + aliasname + " " + password + " " + passwordSalt + " Yes"));
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str() , password == "\"\""? "": password);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str() , "");
 		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == aliasname);
 		if(aliasname != "sysrates.peg" && aliasname != "sysban" && aliasname != "syscategory")
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), pubdata);
