@@ -214,14 +214,15 @@ UniValue gobject(const UniValue& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Object creation rate limit exceeded");
         }
         // This check should always pass, update buffer
-        if(!governance.MasternodeRateCheck(govobj, true)) {
+        if(!governance.MasternodeRateCheck(govobj, UPDATE_TRUE)) {
             LogPrintf("gobject(submit) -- Object submission rejected because of rate check failure (buffer updated) - hash = %s\n", strHash);
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Object creation rate limit exceeded");
         }
         governance.AddSeenGovernanceObject(govobj.GetHash(), SEEN_OBJECT_IS_VALID);
         govobj.Relay();
         LogPrintf("gobject(submit) -- Adding locally created governance object - %s\n", strHash);
-        governance.AddGovernanceObject(govobj);
+        bool fAddToSeen = true;
+        governance.AddGovernanceObject(govobj, fAddToSeen);
 
         return govobj.GetHash().ToString();
     }

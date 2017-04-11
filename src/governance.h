@@ -134,6 +134,12 @@ public:
     }
 };
 
+enum update_mode_enum_t {
+    UPDATE_FALSE,
+    UPDATE_TRUE,
+    UPDATE_FAIL_ONLY
+};
+
 //
 // Governance Manager : Contains all proposals for the budget
 //
@@ -288,7 +294,7 @@ public:
     std::vector<CGovernanceObject*> GetAllNewerThan(int64_t nMoreThanTime);
 
     bool IsBudgetPaymentBlock(int nBlockHeight);
-    bool AddGovernanceObject(CGovernanceObject& govobj, CNode* pfrom = NULL);
+    bool AddGovernanceObject(CGovernanceObject& govobj, bool& fAddToSeen, CNode* pfrom = NULL);
 
     std::string GetRequiredPaymentsString(int nBlockHeight);
 
@@ -362,9 +368,9 @@ public:
 
     void AddSeenVote(uint256 nHash, int status);
 
-    bool MasternodeRateCheck(const CGovernanceObject& govobj, bool fUpdateLast = false);
+    bool MasternodeRateCheck(const CGovernanceObject& govobj, update_mode_enum_t eUpdateLast = UPDATE_FALSE);
 
-    bool MasternodeRateCheck(const CGovernanceObject& govobj, bool fUpdateLast, bool fForce, bool& fRateCheckBypassed);
+    bool MasternodeRateCheck(const CGovernanceObject& govobj, update_mode_enum_t eUpdateLast, bool fForce, bool& fRateCheckBypassed);
 
     bool ProcessVoteAndRelay(const CGovernanceVote& vote, CGovernanceException& exception) {
         bool fOK = ProcessVote(NULL, vote, exception);
