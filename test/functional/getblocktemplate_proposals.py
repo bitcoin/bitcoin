@@ -4,66 +4,21 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test block proposals with getblocktemplate."""
 
-from binascii import a2b_hex, b2a_hex
-from hashlib import sha256
-from struct import pack
+from binascii import b2a_hex
+import copy
 
 from test_framework.blocktools import create_coinbase
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.mininode import CBlock
 from test_framework.util import *
 
 def b2x(b):
     return b2a_hex(b).decode('ascii')
 
-# NOTE: This does not work for signed numbers (set the high bit) or zero (use b'\0')
-def encodeUNum(n):
-    s = bytearray(b'\1')
-    while n > 127:
-        s[0] += 1
-        s.append(n % 256)
-        n //= 256
-    s.append(n)
-    return bytes(s)
-
-def varlenEncode(n):
-    if n < 0xfd:
-        return pack('<B', n)
-    if n <= 0xffff:
-        return b'\xfd' + pack('<H', n)
-    if n <= 0xffffffff:
-        return b'\xfe' + pack('<L', n)
-    return b'\xff' + pack('<Q', n)
-
-def dblsha(b):
-    return sha256(sha256(b).digest()).digest()
-
-def genmrklroot(leaflist):
-    cur = leaflist
-    while len(cur) > 1:
-        n = []
-        if len(cur) & 1:
-            cur.append(cur[-1])
-        for i in range(0, len(cur), 2):
-            n.append(dblsha(cur[i] + cur[i + 1]))
-        cur = n
-    return cur[0]
-
-def template_to_bytearray(tmpl, txlist):
-    blkver = pack('<L', tmpl['version'])
-    mrklroot = genmrklroot(list(dblsha(a) for a in txlist))
-    timestamp = pack('<L', tmpl['curtime'])
-    nonce = b'\0\0\0\0'
-    blk = blkver + a2b_hex(tmpl['previousblockhash'])[::-1] + mrklroot + timestamp + a2b_hex(tmpl['bits'])[::-1] + nonce
-    blk += varlenEncode(len(txlist))
-    for tx in txlist:
-        blk += tx
-    return bytearray(blk)
-
-def template_to_hex(tmpl, txlist):
-    return b2x(template_to_bytearray(tmpl, txlist))
-
-def assert_template(node, tmpl, txlist, expect):
-    rsp = node.getblocktemplate({'data': template_to_hex(tmpl, txlist), 'mode': 'proposal'})
+def assert_template(node, block, expect, rehash=True):
+    if rehash:
+        block.hashMerkleRoot = block.calc_merkle_root()
+    rsp = node.getblocktemplate({'data': b2x(block.serialize()), 'mode': 'proposal'})
     assert_equal(rsp, expect)
 
 class GetBlockTemplateProposalTest(BitcoinTestFramework):
@@ -78,74 +33,84 @@ class GetBlockTemplateProposalTest(BitcoinTestFramework):
         # Mine a block to leave initial block download
         node.generate(1)
         tmpl = node.getblocktemplate()
+        self.log.info("getblocktemplate: Test capability advertised")
+        assert 'proposal' in tmpl['capabilities']
         assert 'coinbasetxn' not in tmpl
 
         coinbase_tx = create_coinbase(height=int(tmpl["height"]) + 1)
         # sequence numbers must not be max for nLockTime to have effect
         coinbase_tx.vin[0].nSequence = 2 ** 32 - 2
-        tmpl['coinbasetxn'] = {'data': coinbase_tx.serialize()}
-        txlist = [bytearray(coinbase_tx.serialize())]
+        coinbase_tx.rehash()
 
-        self.log.info("getblocktemplate: Test capability advertised")
-        assert 'proposal' in tmpl['capabilities']
+        block = CBlock()
+        block.nVersion = tmpl["version"]
+        block.hashPrevBlock = int(tmpl["previousblockhash"], 16)
+        block.nTime = tmpl["curtime"]
+        block.nBits = int(tmpl["bits"], 16)
+        block.nNonce = 0
+        block.vtx = [coinbase_tx]
 
         self.log.info("getblocktemplate: Test bad input hash for coinbase transaction")
-        txlist[0][4 + 1] += 1
-        assert_template(node, tmpl, txlist, 'bad-cb-missing')
-        txlist[0][4 + 1] -= 1
+        bad_block = copy.deepcopy(block)
+        bad_block.vtx[0].vin[0].prevout.hash += 1
+        bad_block.vtx[0].rehash()
+        assert_template(node, bad_block, 'bad-cb-missing')
+
 
         self.log.info("getblocktemplate: Test truncated final transaction")
-        lastbyte = txlist[-1].pop()
-        assert_raises_jsonrpc(-22, "Block decode failed", assert_template, node, tmpl, txlist, 'n/a')
-        txlist[-1].append(lastbyte)
+        assert_raises_jsonrpc(-22, "Block decode failed", node.getblocktemplate, {'data': b2x(block.serialize()[:-1]), 'mode': 'proposal'})
 
         self.log.info("getblocktemplate: Test duplicate transaction")
-        txlist.append(txlist[0])
-        assert_template(node, tmpl, txlist, 'bad-txns-duplicate')
-        txlist.pop()
+        bad_block = copy.deepcopy(block)
+        bad_block.vtx.append(bad_block.vtx[0])
+        assert_template(node, bad_block, 'bad-txns-duplicate')
 
         self.log.info("getblocktemplate: Test invalid transaction")
-        txlist.append(bytearray(txlist[0]))
-        txlist[-1][4 + 1] = 0xff
-        assert_template(node, tmpl, txlist, 'bad-txns-inputs-missingorspent')
-        txlist.pop()
+        bad_block = copy.deepcopy(block)
+        bad_tx = copy.deepcopy(bad_block.vtx[0])
+        bad_tx.vin[0].prevout.hash = 255
+        bad_tx.rehash()
+        bad_block.vtx.append(bad_tx)
+        assert_template(node, bad_block, 'bad-txns-inputs-missingorspent')
 
         self.log.info("getblocktemplate: Test nonfinal transaction")
-        txlist[0][-4:] = b'\xff\xff\xff\xff'
-        assert_template(node, tmpl, txlist, 'bad-txns-nonfinal')
-        txlist[0][-4:] = b'\0\0\0\0'
+        bad_block = copy.deepcopy(block)
+        bad_block.vtx[0].nLockTime = 2 ** 32 - 1
+        bad_block.vtx[0].rehash()
+        assert_template(node, bad_block, 'bad-txns-nonfinal')
 
         self.log.info("getblocktemplate: Test bad tx count")
-        txlist.append(b'')
-        assert_raises_jsonrpc(-22, 'Block decode failed', assert_template, node, tmpl, txlist, 'n/a')
-        txlist.pop()
+        # The tx count is immediately after the block header
+        TX_COUNT_OFFSET = 80
+        bad_block_sn = bytearray(block.serialize())
+        assert_equal(bad_block_sn[TX_COUNT_OFFSET], 1)
+        bad_block_sn[TX_COUNT_OFFSET] += 1
+        assert_raises_jsonrpc(-22, "Block decode failed", node.getblocktemplate, {'data': b2x(bad_block_sn), 'mode': 'proposal'})
 
         self.log.info("getblocktemplate: Test bad bits")
-        realbits = tmpl['bits']
-        tmpl['bits'] = '1c0000ff'  # impossible in the real world
-        assert_template(node, tmpl, txlist, 'bad-diffbits')
-        tmpl['bits'] = realbits
+        bad_block = copy.deepcopy(block)
+        bad_block.nBits = 469762303  # impossible in the real world
+        assert_template(node, bad_block, 'bad-diffbits')
 
         self.log.info("getblocktemplate: Test bad merkle root")
-        rawtmpl = template_to_bytearray(tmpl, txlist)
-        rawtmpl[4 + 32] = (rawtmpl[4 + 32] + 1) % 0x100
-        rsp = node.getblocktemplate({'data': b2x(rawtmpl), 'mode': 'proposal'})
-        assert_equal(rsp, 'bad-txnmrklroot')
+        bad_block = copy.deepcopy(block)
+        bad_block.hashMerkleRoot += 1
+        assert_template(node, bad_block, 'bad-txnmrklroot', False)
 
         self.log.info("getblocktemplate: Test bad timestamps")
-        realtime = tmpl['curtime']
-        tmpl['curtime'] = 0x7fffffff
-        assert_template(node, tmpl, txlist, 'time-too-new')
-        tmpl['curtime'] = 0
-        assert_template(node, tmpl, txlist, 'time-too-old')
-        tmpl['curtime'] = realtime
+        bad_block = copy.deepcopy(block)
+        bad_block.nTime = 2 ** 31 - 1
+        assert_template(node, bad_block, 'time-too-new')
+        bad_block.nTime = 0
+        assert_template(node, bad_block, 'time-too-old')
 
         self.log.info("getblocktemplate: Test valid block")
-        assert_template(node, tmpl, txlist, None)
+        assert_template(node, block, None)
 
         self.log.info("getblocktemplate: Test not best block")
-        tmpl['previousblockhash'] = 'ff00' * 16
-        assert_template(node, tmpl, txlist, 'inconclusive-not-best-prevblk')
+        bad_block = copy.deepcopy(block)
+        bad_block.hashPrevBlock = 123
+        assert_template(node, bad_block, 'inconclusive-not-best-prevblk')
 
 if __name__ == '__main__':
     GetBlockTemplateProposalTest().main()
