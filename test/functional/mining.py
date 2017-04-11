@@ -2,7 +2,10 @@
 # Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test block proposals with getblocktemplate."""
+"""Test mining RPCs
+
+- getblocktemplate proposal mode
+- submitblock"""
 
 from binascii import b2a_hex
 import copy
@@ -21,7 +24,7 @@ def assert_template(node, block, expect, rehash=True):
     rsp = node.getblocktemplate({'data': b2x(block.serialize()), 'mode': 'proposal'})
     assert_equal(rsp, expect)
 
-class GetBlockTemplateProposalTest(BitcoinTestFramework):
+class MiningTest(BitcoinTestFramework):
 
     def __init__(self):
         super().__init__()
@@ -118,4 +121,4 @@ class GetBlockTemplateProposalTest(BitcoinTestFramework):
         assert_template(node, bad_block, 'inconclusive-not-best-prevblk')
 
 if __name__ == '__main__':
-    GetBlockTemplateProposalTest().main()
+    MiningTest().main()
