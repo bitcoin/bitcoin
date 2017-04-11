@@ -121,6 +121,7 @@ BITCOIN_CORE_H = \
   policy/fees.h \
   policy/policy.h \
   policy/rbf.h \
+  pow/cuckoo_cycle/cuckoo_cycle.h \
   pow/cuckoo_cycle/cuckoo_miner.h \
   pow/cuckoo_cycle/cuckoo.h \
   pow/cuckoo_cycle/siphash.h \
@@ -322,6 +323,7 @@ libbitcoin_common_a_SOURCES = \
   netaddress.cpp \
   netbase.cpp \
   policy/feerate.cpp \
+  pow/cuckoo_cycle/cuckoo_cycle.cpp \
   protocol.cpp \
   scheduler.cpp \
   script/sign.cpp \
