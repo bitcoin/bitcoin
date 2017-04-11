@@ -58,6 +58,7 @@ void CGovernanceObjectVoteFile::RemoveVotesFromMasternode(const CTxIn& vinMaster
     vote_l_it it = listVotes.begin();
     while(it != listVotes.end()) {
         if(it->GetVinMasternode() == vinMasternode) {
+            --nMemoryVotes;
             mapVoteIndex.erase(it->GetHash());
             listVotes.erase(it++);
         }
@@ -78,8 +79,18 @@ CGovernanceObjectVoteFile& CGovernanceObjectVoteFile::operator=(const CGovernanc
 void CGovernanceObjectVoteFile::RebuildIndex()
 {
     mapVoteIndex.clear();
-    for(vote_l_it it = listVotes.begin(); it != listVotes.end(); ++it) {
+    nMemoryVotes = 0;
+    vote_l_it it = listVotes.begin();
+    while(it != listVotes.end()) {
         CGovernanceVote& vote = *it;
-        mapVoteIndex[vote.GetHash()] = it;
+        uint256 nHash = vote.GetHash();
+        if(mapVoteIndex.find(nHash) == mapVoteIndex.end()) {
+            mapVoteIndex[nHash] = it;
+            ++nMemoryVotes;
+            ++it;
+        }
+        else {
+            listVotes.erase(it++);
+        }
     }
 }
