@@ -20,7 +20,7 @@
 #include <functional> 
 #include <boost/range/adaptor/reversed.hpp>
 using namespace std;
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=false, bool transferAlias=false);
+extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &aliasRecipient,  vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=false, bool transferAlias=false);
 void PutToMessageList(std::vector<CMessage> &messageList, CMessage& index) {
 	int i = messageList.size() - 1;
 	BOOST_REVERSE_FOREACH(CMessage &o, messageList) {
@@ -491,9 +491,7 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 	CRecipient aliasRecipient;
-	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
-	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyAliasOrig, aliasFrom.vchAlias, aliasFrom.vchAliasPeg, chainActive.Tip()->nHeight, aliasPaymentRecipient);
+	CreateRecipient(scriptPubKeyAlias, aliasFrom.vchAlias, aliasFrom.vchAliasPeg, chainActive.Tip()->nHeight, aliasRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;

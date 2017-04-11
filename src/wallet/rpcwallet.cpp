@@ -437,7 +437,7 @@ When to pay with this method:
 	3b) use total amount + required amount from 2a (if non zero) to find outputs in alias balance, if not enough balance throw error
 	3c) transaction completely funded
 4) if transaction completely funded, try to sign and send to network*/
-void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &aliasRecipient, const CRecipient &aliasFeePlaceholderRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=false, bool transferAlias=false)
+void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &aliasRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=false, bool transferAlias=false)
 {
 
     CReserveKey reservekey(pwalletMain);

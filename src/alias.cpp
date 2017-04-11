@@ -37,7 +37,7 @@ COfferDB *pofferdb = NULL;
 CCertDB *pcertdb = NULL;
 CEscrowDB *pescrowdb = NULL;
 CMessageDB *pmessagedb = NULL;
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=false, bool transferAlias=false);
+extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &aliasRecipient,  vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=false, bool transferAlias=false);
 bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut, const Consensus::Params& consensusParams)
 {
 	if(nHeight < 0 || nHeight > chainActive.Height())
@@ -1616,19 +1616,14 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
 	recipient = recp;
 	CTxOut txout(recipient.nAmount,	recipient.scriptPubKey);
     size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
-	if(nSize < 1500)
-		nSize = 1500;
 	CAmount nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
 	recipient.nAmount = nFee;
 }
-void CreateAliasRecipient(const CScript& scriptPubKeyDest,  const vector<unsigned char>& vchAlias, const vector<unsigned char>& vchAliasPeg, const uint64_t& nHeight, CRecipient& recipient)
+void CreateRecipient(const CScript& scriptPubKeyDest,  const vector<unsigned char>& vchAlias, const vector<unsigned char>& vchAliasPeg, const uint64_t& nHeight, CRecipient& recipient)
 {
 	int precision = 0;
 	CAmount nFee = 0;
-	CScript scriptChangeOrig;
-	scriptChangeOrig << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchAlias << vchFromString("1") << OP_DROP << OP_2DROP;
-	scriptChangeOrig += scriptPubKeyDest;
-	CRecipient recp = {scriptChangeOrig, 0, false};
+	CRecipient recp = {scriptPubKey, recipient.nAmount, false};
 	recipient = recp;
 	int nFeePerByte = getFeePerByte(vchAliasPeg, vchFromString("SYS"), nHeight, precision);
 	CTxOut txout(0,	recipient.scriptPubKey);
@@ -1637,7 +1632,7 @@ void CreateAliasRecipient(const CScript& scriptPubKeyDest,  const vector<unsigne
 		nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
 	else
 		nFee = nFeePerByte * nSize;
-	// create alias payment utxo max 1500 bytes worth of fees
+	// create utxo min 1500 bytes worth of fees
 	CAmount nPayFee = CWallet::GetMinimumFee(1500, nTxConfirmTarget, mempool);
 	nFee = std::max(nFee, nPayFee);
 	recipient.nAmount = nFee;
@@ -1873,9 +1868,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
     vector<CRecipient> vecSend;
 	CRecipient recipient;
-	CreateRecipient(scriptPubKey, recipient);
-	CRecipient recipientPayment;
-	CreateAliasRecipient(scriptPubKeyOrig, vchAlias, newAlias.vchAliasPeg, chainActive.Tip()->nHeight, recipientPayment);
+	CreateRecipient(scriptPubKey, vchAlias, newAlias.vchAliasPeg, chainActive.Tip()->nHeight, recipient);
 	
 	CScript scriptData;
 	
@@ -1896,7 +1889,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	coinControl.fAllowWatchOnly = true;
 	bool useOnlyAliasPaymentToFund = false;
 
-	SendMoneySyscoin(vchAlias, recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund);
+	SendMoneySyscoin(vchAlias, recipient, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund);
 	UniValue res(UniValue::VARR);
 
 	UniValue signParams(UniValue::VARR);
@@ -2065,9 +2058,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 
     vector<CRecipient> vecSend;
 	CRecipient recipient;
-	CreateRecipient(scriptPubKey, recipient);
-	CRecipient recipientPayment;
-	CreateAliasRecipient(scriptPubKeyOrig, copyAlias.vchAlias, copyAlias.vchAliasPeg, chainActive.Tip()->nHeight, recipientPayment);
+	CreateRecipient(scriptPubKey, copyAlias.vchAlias, copyAlias.vchAliasPeg, chainActive.Tip()->nHeight, recipient);
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -2088,7 +2079,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(newAddress.ToString() != EncodeBase58(copyAlias.vchAddress))
 		transferAlias = true;
 	
-	SendMoneySyscoin(vchAlias, recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund, transferAlias);
+	SendMoneySyscoin(vchAlias, recipient, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund, transferAlias);
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
 	signParams.push_back(EncodeHexTx(wtx));
