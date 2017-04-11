@@ -2592,7 +2592,7 @@ bool aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
         BOOST_FOREACH(const CTxMemPoolEntry& e, mempool.mapTx)
         {
 			const uint256& hash = e.GetTx().GetHash();
-			coins = view.AccessCoins(alias.txHash);
+			coins = view.AccessCoins(hash);
 			if(coins == NULL)
 				continue;
 			for (unsigned int j = 0;j<coins->vout.size();j++)
