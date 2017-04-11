@@ -121,6 +121,9 @@ BITCOIN_CORE_H = \
   policy/fees.h \
   policy/policy.h \
   policy/rbf.h \
+  pow/cuckoo_cycle/cuckoo_miner.h \
+  pow/cuckoo_cycle/cuckoo.h \
+  pow/cuckoo_cycle/siphash.h \
   pow/pow.h \
   pow.h \
   protocol.h \
