@@ -1616,6 +1616,8 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
 	recipient = recp;
 	CTxOut txout(recipient.nAmount,	recipient.scriptPubKey);
     size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
+	if(nSize < 1500)
+		nSize = 1500;
 	CAmount nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
 	recipient.nAmount = nFee;
 }
@@ -2565,8 +2567,8 @@ bool aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
 
 	coins = view.AccessCoins(theAlias.txHash);
 
-	if(coins == NULL)
-		continue;
+	if(coins != NULL)
+	{
      for (unsigned int j = 0;j<coins->vout.size();j++)
 	 {
 		int op;
@@ -2584,6 +2586,7 @@ bool aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
 		outpoint = COutPoint(theAlias.txHash, j);
 		return true;
 	 }	
+	}
     
 	if(!funded)
 	{

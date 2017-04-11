@@ -484,7 +484,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &a
 	param.push_back(stringFromVch(vchAlias));
 	const UniValue &result = tableRPC.execute("aliasbalance", param);
 	CAmount nBalance = AmountFromValue(result);
-	bool bNeedAliasPaymentInputs = false;
+	bool bNeedAliasPaymentInputs = !inputfound;
 	if(nBalance > 0)
 	{
 		// get total output required
