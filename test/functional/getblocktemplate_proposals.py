@@ -8,6 +8,7 @@ from binascii import a2b_hex, b2a_hex
 from hashlib import sha256
 from struct import pack
 
+from test_framework.blocktools import create_coinbase
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
@@ -78,13 +79,13 @@ class GetBlockTemplateProposalTest(BitcoinTestFramework):
         # Mine a block to leave initial block download
         node.generate(1)
         tmpl = node.getblocktemplate()
-        if 'coinbasetxn' not in tmpl:
-            rawcoinbase = encodeUNum(tmpl['height'])
-            rawcoinbase += b'\x01-'
-            hexcoinbase = b2x(rawcoinbase)
-            hexoutval = b2x(pack('<Q', tmpl['coinbasevalue']))
-            tmpl['coinbasetxn'] = {'data': '01000000' + '01' + '0000000000000000000000000000000000000000000000000000000000000000ffffffff' + ('%02x' % (len(rawcoinbase),)) + hexcoinbase + 'fffffffe' + '01' + hexoutval + '00' + '00000000'}
-        txlist = list(bytearray(a2b_hex(a['data'])) for a in (tmpl['coinbasetxn'],) + tuple(tmpl['transactions']))
+        assert 'coinbasetxn' not in tmpl
+
+        coinbase_tx = create_coinbase(height=int(tmpl["height"]) + 1)
+        # sequence numbers must not be max for nLockTime to have effect
+        coinbase_tx.vin[0].nSequence = 2 ** 32 - 2
+        tmpl['coinbasetxn'] = {'data': coinbase_tx.serialize()}
+        txlist = [bytearray(coinbase_tx.serialize())]
 
         self.log.info("getblocktemplate: Test capability advertised")
         assert('proposal' in tmpl['capabilities'])
