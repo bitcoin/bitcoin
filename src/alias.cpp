@@ -2562,31 +2562,29 @@ bool aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
 	CCoinsViewCache view(pcoinsTip);
 	const CCoins *coins;
 	bool funded = false;
-    for (unsigned int i = 0;i<vtxPos.size();i++)
-    {
-		const CAliasIndex& alias = vtxPos[i];
-		coins = view.AccessCoins(alias.txHash);
 
-		if(coins == NULL)
+	coins = view.AccessCoins(theAlias.txHash);
+
+	if(coins == NULL)
+		continue;
+     for (unsigned int j = 0;j<coins->vout.size();j++)
+	 {
+		int op;
+		vector<vector<unsigned char> > vvch;
+
+		if(!coins->IsAvailable(j))
 			continue;
-         for (unsigned int j = 0;j<coins->vout.size();j++)
-		 {
-			int op;
-			vector<vector<unsigned char> > vvch;
-
-			if(!coins->IsAvailable(j))
-				continue;
-			if(!DecodeAliasScript(coins->vout[j].scriptPubKey, op, vvch) || vvch[0] != theAlias.vchAlias || vvch[1] != theAlias.vchGUID || op == OP_ALIAS_PAYMENT)
-				continue;
-			if (!ExtractDestination(coins->vout[j].scriptPubKey, aliasDest))
-				continue;
-			prevaddy = CSyscoinAddress(aliasDest);
-			if(strAddressDest != prevaddy.ToString())
-				continue;
-			outpoint = COutPoint(alias.txHash, j);
-			return true;
-		 }	
-    }
+		if(!DecodeAliasScript(coins->vout[j].scriptPubKey, op, vvch) || vvch[0] != theAlias.vchAlias || vvch[1] != theAlias.vchGUID || op == OP_ALIAS_PAYMENT)
+			continue;
+		if (!ExtractDestination(coins->vout[j].scriptPubKey, aliasDest))
+			continue;
+		prevaddy = CSyscoinAddress(aliasDest);
+		if(strAddressDest != prevaddy.ToString())
+			continue;
+		outpoint = COutPoint(theAlias.txHash, j);
+		return true;
+	 }	
+    
 	if(!funded)
 	{
         BOOST_FOREACH(const CTxMemPoolEntry& e, mempool.mapTx)
