@@ -295,14 +295,14 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
 
         if(netfulfilledman.HasFulfilledRequest(pfrom->addr, NetMsgType::MASTERNODEPAYMENTSYNC)) {
             // Asking for the payments list multiple times in a short period of time is no good
-            LogPrintf("MASTERNODEPAYMENTSYNC -- peer already asked me for the list, peer=%d\n", pfrom->id);
+            LogPrintf("MASTERNODEPAYMENTSYNC -- peer already asked me for the list, peer=%d\n", pfrom->GetId());
             Misbehaving(pfrom->GetId(), 20);
             return;
         }
         netfulfilledman.AddFulfilledRequest(pfrom->addr, NetMsgType::MASTERNODEPAYMENTSYNC);
 
         Sync(pfrom, connman);
-        LogPrintf("MASTERNODEPAYMENTSYNC -- Sent Masternode payment votes to peer=%d\n", pfrom->id);
+        LogPrintf("MASTERNODEPAYMENTSYNC -- Sent Masternode payment votes to peer=%d\n", pfrom->GetId());
 
     } else if (strCommand == NetMsgType::MASTERNODEPAYMENTVOTE) { // Masternode Payments Vote for the Winner
 
@@ -889,7 +889,7 @@ void CMasternodePayments::Sync(CNode* pnode, CConnman& connman)
         }
     }
 
-    LogPrintf("CMasternodePayments::Sync -- Sent %d votes to peer=%d\n", nInvCount, pnode->id);
+    LogPrintf("CMasternodePayments::Sync -- Sent %d votes to peer=%d\n", nInvCount, pnode->GetID());
     CNetMsgMaker msgMaker(pnode->GetSendVersion());
     connman.PushMessage(pnode, msgMaker.Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_MNW, nInvCount));
 }
@@ -913,7 +913,7 @@ void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode, CConnman& co
             vToFetch.push_back(CInv(MSG_MASTERNODE_PAYMENT_BLOCK, pindex->GetBlockHash()));
             // We should not violate GETDATA rules
             if(vToFetch.size() == MAX_INV_SZ) {
-                LogPrintf("CMasternodePayments::SyncLowDataPaymentBlocks -- asking peer=%d for %d blocks\n", pnode->id, MAX_INV_SZ);
+                LogPrintf("CMasternodePayments::SyncLowDataPaymentBlocks -- asking peer=%d for %d blocks\n", pnode->GetID(), MAX_INV_SZ);
                 connman.PushMessage(pnode, msgMaker.Make(NetMsgType::GETDATA, vToFetch));
                 // Start filling new batch
                 vToFetch.clear();
@@ -961,7 +961,7 @@ void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode, CConnman& co
         }
         // We should not violate GETDATA rules
         if(vToFetch.size() == MAX_INV_SZ) {
-            LogPrintf("CMasternodePayments::SyncLowDataPaymentBlocks -- asking peer=%d for %d payment blocks\n", pnode->id, MAX_INV_SZ);
+            LogPrintf("CMasternodePayments::SyncLowDataPaymentBlocks -- asking peer=%d for %d payment blocks\n", pnode->GetID(), MAX_INV_SZ);
             connman.PushMessage(pnode, msgMaker.Make(NetMsgType::GETDATA, vToFetch));
             // Start filling new batch
             vToFetch.clear();
@@ -970,7 +970,7 @@ void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode, CConnman& co
     }
     // Ask for the rest of it
     if(!vToFetch.empty()) {
-        LogPrintf("CMasternodePayments::SyncLowDataPaymentBlocks -- asking peer=%d for %d payment blocks\n", pnode->id, vToFetch.size());
+        LogPrintf("CMasternodePayments::SyncLowDataPaymentBlocks -- asking peer=%d for %d payment blocks\n", pnode->GetID(), vToFetch.size());
         connman.PushMessage(pnode, msgMaker.Make(NetMsgType::GETDATA, vToFetch));
     }
 }

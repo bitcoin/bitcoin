@@ -127,7 +127,7 @@ void CMasternodeSync::ProcessMessage(CNode* pfrom, const std::string& strCommand
         int nCount;
         vRecv >> nItemID >> nCount;
 
-        LogPrintf("SYNCSTATUSCOUNT -- got inventory count: nItemID=%d  nCount=%d  peer=%d\n", nItemID, nCount, pfrom->id);
+        LogPrintf("SYNCSTATUSCOUNT -- got inventory count: nItemID=%d  nCount=%d  peer=%d\n", nItemID, nCount, pfrom->GetId());
     }
 }
 
@@ -217,7 +217,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
                 // We already fully synced from this node recently,
                 // disconnect to free this connection slot for another peer.
                 pnode->fDisconnect = true;
-                LogPrintf("CMasternodeSync::ProcessTick -- disconnecting from recently synced peer %d\n", pnode->id);
+                LogPrintf("CMasternodeSync::ProcessTick -- disconnecting from recently synced peer %d\n", pnode->GetID());
                 continue;
             }
 
