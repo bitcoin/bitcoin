@@ -126,6 +126,7 @@ BITCOIN_CORE_H = \
   pow/cuckoo_cycle/cuckoo.h \
   pow/cuckoo_cycle/siphash.h \
   pow/pow.h \
+  pow/sha256/sha256.h \
   pow.h \
   protocol.h \
   random.h \
