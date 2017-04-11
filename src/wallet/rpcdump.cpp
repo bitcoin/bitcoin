@@ -1041,7 +1041,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
     const UniValue& requests = mainRequest.params[0];
 
     //Default options
-    bool fRescan = false;
+    bool fRescan = true;
 
     if (mainRequest.params.size() > 1) {
         const UniValue& options = mainRequest.params[1];
