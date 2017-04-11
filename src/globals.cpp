@@ -186,16 +186,16 @@ CTweak<unsigned int> maxBlocksInTransitPerPeer("net.maxBlocksInTransitPerPeer","
  *  harder). We'll probably want to make this a per-peer adaptive value at some point. */
 CTweak<unsigned int> blockDownloadWindow("net.blockDownloadWindow","How far ahead of our current height do we fetch? 0 means use algorithm.",0);
 
-/** This is the initial size of CFileBuffer's RAM buffer during reindex.  A 
-larger size will result in a tiny bit better performance if blocks are that 
+/** This is the initial size of CFileBuffer's RAM buffer during reindex.  A
+larger size will result in a tiny bit better performance if blocks are that
 size.
 The real purpose of this parameter is to exhaustively test dynamic buffer resizes
 during reindexing by allowing the size to be set to low and random values.
 */
 CTweak<uint64_t> reindexTypicalBlockSize("reindex.typicalBlockSize","Set larger than the typical block size.  The block data file's RAM buffer will initally be 2x this size.",TYPICAL_BLOCK_SIZE);
 
-/** This is the initial size of CFileBuffer's RAM buffer during reindex.  A 
-larger size will result in a tiny bit better performance if blocks are that 
+/** This is the initial size of CFileBuffer's RAM buffer during reindex.  A
+larger size will result in a tiny bit better performance if blocks are that
 size.
 The real purpose of this parameter is to exhaustively test dynamic buffer resizes
 during reindexing by allowing the size to be set to low and random values.
@@ -211,8 +211,8 @@ CAllScriptCheckQueues allScriptCheckQueues; // Singleton class
 
 CStatHistory<unsigned int> txAdded; //"memPool/txAdded");
 CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize; // "memPool/size",STAT_OP_AVE);
-CStatHistory<uint64_t > recvAmt; 
-CStatHistory<uint64_t > sendAmt; 
+CStatHistory<uint64_t > recvAmt;
+CStatHistory<uint64_t > sendAmt;
 CStatHistory<uint64_t> nTxValidationTime("txValidationTime", STAT_OP_MAX | STAT_INDIVIDUAL);
 CStatHistory<uint64_t> nBlockValidationTime("blockValidationTime", STAT_OP_MAX | STAT_INDIVIDUAL);
 CCriticalSection cs_blockvalidationtime;
@@ -222,6 +222,6 @@ CThinBlockData thindata; // Singleton class
 // Expedited blocks
 std::vector<CNode*> xpeditedBlk; // (256,(CNode*)NULL);    // Who requested expedited blocks from us
 std::vector<CNode*> xpeditedBlkUp; //(256,(CNode*)NULL);  // Who we requested expedited blocks from
-std::vector<CNode*> xpeditedTxn; // (256,(CNode*)NULL);  
+std::vector<CNode*> xpeditedTxn; // (256,(CNode*)NULL);
 
 

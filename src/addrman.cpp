@@ -338,16 +338,16 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
         return CAddrInfo();
 
     // BU: select is stuck never finding an address in vvNew, if network connectivity drops.  It is interesting because dumping
-    // vvNew shows there there are one or two valid entries.  However, breakpoints set outside of the 
-    // loop are never hit.  Could there be an issue with pseudo-random # generation?  
+    // vvNew shows there there are one or two valid entries.  However, breakpoints set outside of the
+    // loop are never hit.  Could there be an issue with pseudo-random # generation?
     // The chosen approach (aborting after a time) is a compromise between
     // quality and changing the code as little as possible.  Higher layer code does handle invalid addreses with a
     // delay loop.
-    int nTries=0;  
+    int nTries=0;
 
     // Use a 50% chance for choosing between tried and new table entries.
     if (!newOnly &&
-       (nTried > 0 && (nNew == 0 || RandomInt(2) == 0))) { 
+       (nTried > 0 && (nNew == 0 || RandomInt(2) == 0))) {
         // use a tried node
         double fChanceFactor = 1.0;
         while (1) {

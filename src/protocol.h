@@ -235,19 +235,19 @@ extern const char *REJECT;
 extern const char *SENDHEADERS;
 
 /**
- * Indicates that a node prefers to receive new block announcements 
+ * Indicates that a node prefers to receive new block announcements
  * and transactions directly without INVs
  * @since protocol version 80000.
  */
 extern const char *XPEDITEDREQUEST;
 
 /**
- * Block or transactions sent without explicit solicitation 
+ * Block or transactions sent without explicit solicitation
  * @since protocol version 80000.
  */
 extern const char *XPEDITEDBLK;
 /**
- * Block or transactions sent without explicit solicitation 
+ * Block or transactions sent without explicit solicitation
  * @since protocol version 80000.
  */
 extern const char *XPEDITEDTXN;
@@ -290,7 +290,7 @@ enum {
 
     // BUIP010 - Xtreme Thinblocks - begin section
     // NODE_XTHIN means the node supports Xtreme Thinblocks
-    // If this is turned off then the node will not service xthin requests nor  
+    // If this is turned off then the node will not service xthin requests nor
     // make xthin requests
     NODE_XTHIN = (1 << 4),
     // BUIP010 - Xtreme Thinblocks - end section
@@ -376,7 +376,7 @@ enum {
     // BUIP010 Xtreme Thinblocks: a thin block contains all the transactions hashes in a block
     // and also provides the missing transactions that are needed at the other end to reconstruct the block
     MSG_THINBLOCK,
-    // BUIP010 Xtreme Thinblocks: an Xtreme thin block contains the first 8 bytes of all the tx hashes 
+    // BUIP010 Xtreme Thinblocks: an Xtreme thin block contains the first 8 bytes of all the tx hashes
     // and also provides the missing transactions that are needed at the other end to reconstruct the block
     MSG_XTHINBLOCK,
 };

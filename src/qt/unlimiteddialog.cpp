@@ -108,7 +108,7 @@ UnlimitedDialog::UnlimitedDialog(QWidget* parent,UnlimitedModel* mdl):
     ui.miningMaxBlock->setValidator(new QIntValidator(0, INT_MAX, this));
     ui.excessiveBlockSize->setValidator(new QIntValidator(0, INT_MAX, this));
     ui.excessiveAcceptDepth->setValidator(new QIntValidator(0, INT_MAX, this));
-}  
+}
 
 
 
@@ -147,17 +147,17 @@ void UnlimitedDialog::setOkButtonState(bool fState)
 
 void UnlimitedDialog::on_resetButton_clicked()
 {
-  if (model) 
+  if (model)
     {
       // confirmation dialog
-      QMessageBox::StandardButton btnRetVal 
-         = QMessageBox::question(this, 
-            tr("Confirm options reset"), 
-            tr("This is a global reset of all settings!") + 
-            "<br>" + 
-            tr("Client restart required to activate changes.") + 
-            "<br><br>" + 
-            tr("Client will be shut down. Do you want to proceed?"), 
+      QMessageBox::StandardButton btnRetVal
+         = QMessageBox::question(this,
+            tr("Confirm options reset"),
+            tr("This is a global reset of all settings!") +
+            "<br>" +
+            tr("Client restart required to activate changes.") +
+            "<br><br>" +
+            tr("Client will be shut down. Do you want to proceed?"),
             QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
 
       if (btnRetVal == QMessageBox::Cancel)
@@ -172,7 +172,7 @@ void UnlimitedDialog::on_resetButton_clicked()
 void UnlimitedDialog::on_okButton_clicked()
 {
   if (!mapper.submit())
-    {    
+    {
       assert(0);
     }
 
