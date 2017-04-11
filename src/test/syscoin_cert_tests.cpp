@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	// stop node3
 	StopNode("node3");
 	// should fail: already expired alias
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg jagprune1 newdata \"\""), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg jagprune1 newdata"), runtime_error);
 	GenerateBlocks(5, "node1");
 	// create a new service
 	AliasNew("node1", "jagprune1", "password1", "temp", "data");

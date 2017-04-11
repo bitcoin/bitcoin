@@ -739,7 +739,7 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , "");
 	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_bool() == true);
 }
-string AliasUpdate(const string& node, const string& aliasname, const string& pubdata, const string& privdata, string safesearch, string password, string addressStr)
+string AliasUpdate(const string& node, const string& aliasname, const string& pubdata, const string& privdata, string password, string safesearch, string addressStr)
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
