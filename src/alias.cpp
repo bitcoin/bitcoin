@@ -2659,7 +2659,7 @@ bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oNam
 			CMessageCrypter crypter;
 			if(!strEncryptionPrivateKey.empty())
 			{
-				if(!alias.vchPrivateValue.empty && crypter.Decrypt(stringFromVch(ParseHex(strEncryptionPrivateKey)), stringFromVch(alias.vchPrivateValue), strDecrypted))
+				if(!alias.vchPrivateValue.empty() && crypter.Decrypt(stringFromVch(ParseHex(strEncryptionPrivateKey)), stringFromVch(alias.vchPrivateValue), strDecrypted))
 					strData = strDecrypted;
 				strDecrypted = "";
 				if(!alias.vchPassword.empty() && crypter.Decrypt(stringFromVch(ParseHex(strEncryptionPrivateKey)), stringFromVch(alias.vchPassword), strDecrypted))
