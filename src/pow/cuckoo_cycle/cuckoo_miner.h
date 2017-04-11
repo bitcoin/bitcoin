@@ -225,14 +225,18 @@ public:
   shrinkingset *alive;
   twice_set *nonleaf;
   cuckoo_hash *cuckoo;
-  nonce_t (*sols)[PROOFSIZE];
+  nonce_t **sols;
   u32 maxsols;
   au32 nsols;
   u32 nthreads;
   u32 ntrims;
+  uint16_t proofsize_min;
+  uint16_t proofsize_max;
   pthread_barrier_t barry;
 
-  cuckoo_ctx(u32 n_threads, u32 n_trims, u32 max_sols) {
+  cuckoo_ctx(u32 n_threads, u32 n_trims, u32 max_sols, uint16_t proofsize_min_in, uint16_t proofsize_max_in) {
+    proofsize_min = proofsize_min_in;
+    proofsize_max = proofsize_max_in;
     nthreads = n_threads;
     alive = new shrinkingset(nthreads);
     cuckoo = 0;
@@ -240,7 +244,8 @@ public:
     ntrims = n_trims;
     int err = pthread_barrier_init(&barry, NULL, nthreads);
     assert(err == 0);
-    sols = (nonce_t (*)[PROOFSIZE])calloc(maxsols = max_sols, PROOFSIZE*sizeof(nonce_t));
+    sols = (nonce_t**)calloc(maxsols = max_sols, sizeof(nonce_t*));
+    for (u32 i = 0; i < max_sols; i++) sols[i] = (nonce_t*)calloc(proofsize_max + 1, sizeof(nonce_t));
     assert(sols != 0);
     nsols = 0;
   }
@@ -254,6 +259,8 @@ public:
     delete alive;
     delete nonleaf;
     delete cuckoo;
+    for (u32 i = 0; i < maxsols; i++) free(sols[i]);
+    free(sols);
   }
   void prefetch(const u64 *hashes, const u32 part) const {
     for (u32 i=0; i < NSIPHASH; i++) {
@@ -336,7 +343,7 @@ public:
     const u32 nnsip = pnsip + NSIPHASH;
     kill(hashes+nnsip, indices+nnsip, NPREFETCH-nnsip, part, id);
   }
-  void solution(node_t *us, u32 nu, node_t *vs, u32 nv) {
+  void solution(node_t *us, u32 nu, node_t *vs, u32 nv, uint16_t proofsize) {
     typedef std::pair<node_t,node_t> edge;
     std::set<edge> cycle;
     u32 n = 0;
@@ -359,15 +366,16 @@ public:
         if (cycle.find(e) != cycle.end()) {
           sols[soli][n++] = nonce;
   #ifdef SHOWSOL
-          printf("e(%x)=(%x,%x)%c", nonce, e.first, e.second, n==PROOFSIZE?'\n':' ');
+          printf("e(%x)=(%x,%x)%c", nonce, e.first, e.second, n == proofsize?'\n':' ');
   #endif
-          if (PROOFSIZE > 2)
+          if (proofsize_min > 2)
             cycle.erase(e);
         }
         if (ffs & 64) break; // can't shift by 64
       }
     }
-    assert(n==PROOFSIZE);
+    assert(n == proofsize);
+    sols[soli][proofsize_max] = n; // store actual proofsize as last entry in solution
   }
 };
 
@@ -377,7 +385,7 @@ typedef struct {
   cuckoo_ctx *ctx;
 } thread_ctx;
 
-void barrier(pthread_barrier_t *barry) {
+inline void barrier(pthread_barrier_t *barry) {
   int rc = pthread_barrier_wait(barry);
   if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
     printf("Could not wait on barrier\n");
@@ -385,7 +393,7 @@ void barrier(pthread_barrier_t *barry) {
   }
 }
 
-u32 path(cuckoo_hash &cuckoo, node_t u, node_t *us) {
+inline u32 path(cuckoo_hash &cuckoo, node_t u, node_t *us) {
   u32 nu;
   for (nu = 0; u; u = cuckoo[u]) {
     if (nu >= MAXCCPATHLEN) {
@@ -400,7 +408,7 @@ u32 path(cuckoo_hash &cuckoo, node_t u, node_t *us) {
   return nu-1;
 }
 
-void *worker(void *vp) {
+inline void *worker(void *vp) {
   thread_ctx *tp = (thread_ctx *)vp;
   cuckoo_ctx *ctx = tp->ctx;
 
@@ -460,8 +468,8 @@ void *worker(void *vp) {
           for (nu -= min, nv -= min; us[nu] != vs[nv]; nu++, nv++) ;
           u32 len = nu + nv + 1;
           // printf("%4d-cycle found at %d:%d%%\n", len, tp->id, (u32)(nonce*100LL/HALFSIZE));
-          if (len == PROOFSIZE && ctx->nsols < ctx->maxsols)
-            ctx->solution(us, nu, vs, nv);
+          if (len >= ctx->proofsize_min && len <= ctx->proofsize_max && ctx->nsols < ctx->maxsols)
+            ctx->solution(us, nu, vs, nv, len);
         } else if (nu < nv) {
           while (nu--)
             cuckoo.set(us[nu+1], us[nu]);
