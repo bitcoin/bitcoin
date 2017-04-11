@@ -64,8 +64,7 @@ def template_to_hex(tmpl, txlist):
 
 def assert_template(node, tmpl, txlist, expect):
     rsp = node.getblocktemplate({'data': template_to_hex(tmpl, txlist), 'mode': 'proposal'})
-    if rsp != expect:
-        raise AssertionError('unexpected: %s' % (rsp,))
+    assert_equal(rsp, expect)
 
 class GetBlockTemplateProposalTest(BitcoinTestFramework):
 
@@ -88,7 +87,7 @@ class GetBlockTemplateProposalTest(BitcoinTestFramework):
         txlist = [bytearray(coinbase_tx.serialize())]
 
         self.log.info("getblocktemplate: Test capability advertised")
-        assert('proposal' in tmpl['capabilities'])
+        assert 'proposal' in tmpl['capabilities']
 
         self.log.info("getblocktemplate: Test bad input hash for coinbase transaction")
         txlist[0][4 + 1] += 1
@@ -131,8 +130,7 @@ class GetBlockTemplateProposalTest(BitcoinTestFramework):
         rawtmpl = template_to_bytearray(tmpl, txlist)
         rawtmpl[4 + 32] = (rawtmpl[4 + 32] + 1) % 0x100
         rsp = node.getblocktemplate({'data': b2x(rawtmpl), 'mode': 'proposal'})
-        if rsp != 'bad-txnmrklroot':
-            raise AssertionError('unexpected: %s' % (rsp,))
+        assert_equal(rsp, 'bad-txnmrklroot')
 
         self.log.info("getblocktemplate: Test bad timestamps")
         realtime = tmpl['curtime']
