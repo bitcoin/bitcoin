@@ -1616,7 +1616,7 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
 	recipient = recp;
 	CTxOut txout(recipient.nAmount,	recipient.scriptPubKey);
     size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
-	CAmount nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
+	CAmount nFee = 3*minRelayTxFee.GetFee(nSize);
 	recipient.nAmount = nFee;
 }
 void CreateAliasRecipient(const CScript& scriptPubKey,  const vector<unsigned char>& vchAlias, const vector<unsigned char>& vchAliasPeg, const uint64_t& nHeight, CRecipient& recipient)
@@ -1632,7 +1632,7 @@ void CreateAliasRecipient(const CScript& scriptPubKey,  const vector<unsigned ch
 	if(nSize < 1500)
 		nSize = 1500;
 	if(nFeePerByte <= 0)
-		nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
+		nFee = 3*minRelayTxFee.GetFee(nSize);
 	else
 		nFee = nFeePerByte * nSize;
 	recipient.nAmount = nFee;
@@ -1651,7 +1651,7 @@ void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& vchA
 	size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
 	int nFeePerByte = getFeePerByte(vchAliasPeg, vchFromString("SYS"), nHeight, precision);
 	if(nFeePerByte <= 0)
-		nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
+		nFee = 3*minRelayTxFee.GetFee(nSize);
 	else
 		nFee = nFeePerByte * nSize;
 
@@ -1668,7 +1668,7 @@ CAmount GetDataFee(const CScript& scriptPubKey, const vector<unsigned char>& vch
     size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
 	int nFeePerByte = getFeePerByte(vchAliasPeg, vchFromString("SYS"), nHeight, precision);
 	if(nFeePerByte <= 0)
-		nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
+		nFee = 3*minRelayTxFee.GetFee(nSize);
 	else
 		nFee = nFeePerByte * nSize;
 
