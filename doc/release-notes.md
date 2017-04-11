@@ -50,6 +50,24 @@ activate at a time when no segwit transactions could be included.
 Since many miners are now including the segwit commitment this concern
 no longer applies.
 
+UTXO memory accounting
+----------------------
+
+Memory usage for the UTXO cache is being calculated more accurately, so that
+the configured limit (`-dbcache`) will be respected when memory usage peaks
+during cache flushes.  The memory accounting in prior releases is estimated to
+only account for half the actual peak utilization.
+
+The default `-dbcache` has also been changed in this release to 450MiB.  Users
+who currently set `-dbcache` to a high value (e.g. to keep the UTXO more fully
+cached in memory) should consider increasing this setting in order to achieve
+the same cache performance as prior releases.  Users on low-memory systems
+(such as systems with 1GB or less) should consider specifying a lower value for
+this parameter.
+
+Additional information relating to running on low-memory systems can be found
+here:
+[reducing-bitcoind-memory-usage.md](https://gist.github.com/laanwj/efe29c7661ce9b6620a7).
 
 0.14.1 Change log
 =================
