@@ -110,7 +110,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
         strLabel = request.params[1].get_str();
 
     // Whether to perform rescan after import
-    bool fRescan = true;
+    bool fRescan = false;
     if (request.params.size() > 2)
         fRescan = request.params[2].get_bool();
 
@@ -224,7 +224,7 @@ UniValue importaddress(const JSONRPCRequest& request)
         strLabel = request.params[1].get_str();
 
     // Whether to perform rescan after import
-    bool fRescan = true;
+    bool fRescan = false;
     if (request.params.size() > 2)
         fRescan = request.params[2].get_bool();
 
@@ -389,7 +389,7 @@ UniValue importpubkey(const JSONRPCRequest& request)
         strLabel = request.params[1].get_str();
 
     // Whether to perform rescan after import
-    bool fRescan = true;
+    bool fRescan = false;
     if (request.params.size() > 2)
         fRescan = request.params[2].get_bool();
 
@@ -1041,7 +1041,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
     const UniValue& requests = mainRequest.params[0];
 
     //Default options
-    bool fRescan = true;
+    bool fRescan = false;
 
     if (mainRequest.params.size() > 1) {
         const UniValue& options = mainRequest.params[1];
