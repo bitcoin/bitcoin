@@ -2778,7 +2778,6 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 	string opName;
 	for(int i =0;i<vtxTx.size();i++)
 	{
-		UniValue oName(UniValue::VOBJ);
 		const CTransaction& tx = vtxTx[i];
 		if(DecodeOfferTx(tx, op, nOut, vvch) )
 		{
@@ -2805,7 +2804,8 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		else if(DecodeAliasTx(tx, op, nOut, vvch) )
 		{
 			opName = aliasFromOp(op);
-			oName.push_back(Pair("type", opName));
+			vNamesO[tx.GetHash()] = UniValue(UniValue::VOBJ);
+			vNamesO[tx.GetHash()].push_back(Pair("type", opName));
 			CAliasIndex alias(tx);
 			if(!alias.IsNull())
 				BuildAliasJson(alias, false, vNamesO[tx.GetHash()], strWalletless);
