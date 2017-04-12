@@ -134,14 +134,14 @@ public:
     }
 
     //! equality test
-    bool operator==(const CCoins &a, const CCoins &b) {
+    bool operator==(const CCoins &rhs) {
          // Empty CCoins objects are always equal.
-         if (a.IsPruned() && b.IsPruned())
+         if (IsPruned() && rhs.IsPruned())
              return true;
-         return a.fCoinBase == b.fCoinBase &&
-                a.nHeight == b.nHeight &&
-                a.nVersion == b.nVersion &&
-                a.vout == b.vout;
+         return fCoinBase == rhs.fCoinBase &&
+                nHeight == rhs.nHeight &&
+                nVersion == rhs.nVersion &&
+                vout == rhs.vout;
     }
     
     bool operator!=(const CCoins &a, const CCoins &b) {
