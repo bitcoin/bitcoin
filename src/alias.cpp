@@ -2776,7 +2776,6 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
     vector<vector<unsigned char> > vvch;
     int op, nOut;
 	string opName;
-	for(int i =0;i,vtxTx.size();i++)
 	{
 		UniValue oName(UniValue::VOBJ);
 		const CTransaction& tx = vtxTx[i];
