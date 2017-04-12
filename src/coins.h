@@ -134,7 +134,7 @@ public:
     }
 
     //! equality test
-    friend bool operator==(const CCoins &a, const CCoins &b) {
+    bool operator==(const CCoins &a, const CCoins &b) {
          // Empty CCoins objects are always equal.
          if (a.IsPruned() && b.IsPruned())
              return true;
@@ -143,7 +143,8 @@ public:
                 a.nVersion == b.nVersion &&
                 a.vout == b.vout;
     }
-    friend bool operator!=(const CCoins &a, const CCoins &b) {
+    
+    bool operator!=(const CCoins &a, const CCoins &b) {
         return !(a == b);
     }
 
