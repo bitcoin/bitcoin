@@ -2789,7 +2789,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		else if(DecodeAliasTx(tx, op, nOut, vvch, false) )
 		{
 			opName = aliasFromOp(op);
-			UniValue oName(UniValue::VOBJ)
+			UniValue oName(UniValue::VOBJ);
 			oName.push_back(Pair("type", opName));
 			CAliasIndex alias(tx);
 			if(!alias.IsNull())
@@ -2830,7 +2830,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		else if(DecodeAliasTx(tx, op, nOut, vvch, true) )
 		{
 			opName = aliasFromOp(op);
-			UniValue oName(UniValue::VOBJ)
+			UniValue oName(UniValue::VOBJ);
 			oName.push_back(Pair("type", opName));
 			CAliasIndex alias(tx);
 			if(!alias.IsNull())
