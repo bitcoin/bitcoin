@@ -1622,6 +1622,7 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
 void CreateAliasRecipient(const CScript& scriptPubKeyDest, const vector<unsigned char>& vchAlias, CRecipient& recipient)
 {
 	int precision = 0;
+	CAmount nFee = 0;
 	CScript scriptChangeOrig;
 	scriptChangeOrig << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchAlias << vchFromString("1") << OP_DROP << OP_2DROP;
 	scriptChangeOrig += scriptPubKeyDest;
@@ -1629,7 +1630,8 @@ void CreateAliasRecipient(const CScript& scriptPubKeyDest, const vector<unsigned
 	recipient = recp;
 	// create alias payment utxo max 1500 bytes worth of fees
 	size_t nSize = 1500;
-	recipient.nAmount = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
+	CAmount nPayFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
+	recipient.nAmount = nFee;
 }
 void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& vchAliasPeg, const uint64_t& nHeight, const vector<unsigned char>& data, CRecipient& recipient)
 {
