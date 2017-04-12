@@ -2758,10 +2758,8 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
     vector<vector<unsigned char> > vvch;
     int op, nOut;
 	string opName;
-	UniValue oUpdates(UniValue::VOBJ);
-	UniValue oPayments(UniValue::VOBJ);
-	map<uint256, UniValue> oUpdateDetails;
-	map<uint256, UniValue> oPaymentDetails;
+	UniValue oUpdates(UniValue::VARR);
+	UniValue oPayments(UniValue::VARR);
 	BOOST_FOREACH(txPos, vtxPos) {
 		CTransaction tx;
 		if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
@@ -2791,12 +2789,13 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		else if(DecodeAliasTx(tx, op, nOut, vvch, false) )
 		{
 			opName = aliasFromOp(op);
-			oUpdateDetails[tx.GetHash()].push_back(Pair("type", opName));
+			UniValue oName(UniValue::VOBJ)
+			oName.push_back(Pair("type", opName));
 			CAliasIndex alias(tx);
 			if(!alias.IsNull())
 			{
-				if(BuildAliasJson(alias, false, oUpdateDetails[tx.GetHash()], strWalletless))
-					oUpdates.push_back(oUpdateDetails[tx.GetHash()]);
+				if(BuildAliasJson(alias, false, oName, strWalletless))
+					oUpdates.push_back(oName);
 			}
 		}
 		else
@@ -2831,12 +2830,13 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		else if(DecodeAliasTx(tx, op, nOut, vvch, true) )
 		{
 			opName = aliasFromOp(op);
-			oPaymentDetails[tx.GetHash()].push_back(Pair("type", opName));
+			UniValue oName(UniValue::VOBJ)
+			oName.push_back(Pair("type", opName));
 			CAliasIndex alias(tx);
 			if(!alias.IsNull())
 			{
-				if(BuildAliasJson(alias, false, oPaymentDetails[tx.GetHash()], strWalletless))
-					oPayments.push_back(oPaymentDetails[tx.GetHash()]);
+				if(BuildAliasJson(alias, false, oName, strWalletless))
+					oPayments.push_back(oName);
 			}
 		}
 		else
