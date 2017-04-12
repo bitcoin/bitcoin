@@ -2770,7 +2770,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
 			continue;
 		vtxMapTx[txPaymentPos.txHash] = 1;
-		vtxTx[txPos.nHeight] = tx;
+		vtxTx[txPaymentPos.nHeight] = tx;
 	}
 	map<uint256, UniValue> vNamesO;
     vector<vector<unsigned char> > vvch;
