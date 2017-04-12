@@ -3,11 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "activemasternode.h"
-#include "darksend.h"
 #include "governance-classes.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
+#include "messagesigner.h"
 #include "netfulfilledman.h"
 #include "spork.h"
 #include "util.h"
@@ -421,12 +421,12 @@ bool CMasternodePaymentVote::Sign()
                 boost::lexical_cast<std::string>(nBlockHeight) +
                 ScriptToAsmStr(payee);
 
-    if(!darkSendSigner.SignMessage(strMessage, vchSig, activeMasternode.keyMasternode)) {
+    if(!CMessageSigner::SignMessage(strMessage, vchSig, activeMasternode.keyMasternode)) {
         LogPrintf("CMasternodePaymentVote::Sign -- SignMessage() failed\n");
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(activeMasternode.pubKeyMasternode, vchSig, strMessage, strError)) {
+    if(!CMessageSigner::VerifyMessage(activeMasternode.pubKeyMasternode, vchSig, strMessage, strError)) {
         LogPrintf("CMasternodePaymentVote::Sign -- VerifyMessage() failed, error: %s\n", strError);
         return false;
     }
@@ -793,7 +793,7 @@ bool CMasternodePaymentVote::CheckSignature(const CPubKey& pubKeyMasternode, int
                 ScriptToAsmStr(payee);
 
     std::string strError = "";
-    if (!darkSendSigner.VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
+    if (!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
         // Only ban for future block vote when we are already synced.
         // Otherwise it could be the case when MN which signed this vote is using another key now
         // and we have no idea about the old one.

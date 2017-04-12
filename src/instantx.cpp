@@ -3,12 +3,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "activemasternode.h"
-#include "darksend.h"
 #include "instantx.h"
 #include "key.h"
 #include "main.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
+#include "messagesigner.h"
 #include "net.h"
 #include "protocol.h"
 #include "spork.h"
@@ -1031,7 +1031,7 @@ bool CTxLockVote::CheckSignature() const
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(infoMn.pubKeyMasternode, vchMasternodeSignature, strMessage, strError)) {
+    if(!CMessageSigner::VerifyMessage(infoMn.pubKeyMasternode, vchMasternodeSignature, strMessage, strError)) {
         LogPrintf("CTxLockVote::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
         return false;
     }
@@ -1044,12 +1044,12 @@ bool CTxLockVote::Sign()
     std::string strError;
     std::string strMessage = txHash.ToString() + outpoint.ToStringShort();
 
-    if(!darkSendSigner.SignMessage(strMessage, vchMasternodeSignature, activeMasternode.keyMasternode)) {
+    if(!CMessageSigner::SignMessage(strMessage, vchMasternodeSignature, activeMasternode.keyMasternode)) {
         LogPrintf("CTxLockVote::Sign -- SignMessage() failed\n");
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(activeMasternode.pubKeyMasternode, vchMasternodeSignature, strMessage, strError)) {
+    if(!CMessageSigner::VerifyMessage(activeMasternode.pubKeyMasternode, vchMasternodeSignature, strMessage, strError)) {
         LogPrintf("CTxLockVote::Sign -- VerifyMessage() failed, error: %s\n", strError);
         return false;
     }

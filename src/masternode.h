@@ -290,6 +290,9 @@ public:
         return false;
     }
 
+    /// Is the input associated with collateral public key? (and there is 1000 DASH - checking if valid masternode)
+    bool IsInputAssociatedWithPubkey();
+
     bool IsValidNetAddr();
     static bool IsValidNetAddr(CService addrIn);
 

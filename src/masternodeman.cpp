@@ -9,6 +9,7 @@
 #include "masternode-payments.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
+#include "messagesigner.h"
 #include "netfulfilledman.h"
 #include "util.h"
 
@@ -1134,14 +1135,14 @@ void CMasternodeMan::SendVerifyReply(CNode* pnode, CMasternodeVerification& mnv)
 
     std::string strMessage = strprintf("%s%d%s", activeMasternode.service.ToString(false), mnv.nonce, blockHash.ToString());
 
-    if(!darkSendSigner.SignMessage(strMessage, mnv.vchSig1, activeMasternode.keyMasternode)) {
+    if(!CMessageSigner::SignMessage(strMessage, mnv.vchSig1, activeMasternode.keyMasternode)) {
         LogPrintf("MasternodeMan::SendVerifyReply -- SignMessage() failed\n");
         return;
     }
 
     std::string strError;
 
-    if(!darkSendSigner.VerifyMessage(activeMasternode.pubKeyMasternode, mnv.vchSig1, strMessage, strError)) {
+    if(!CMessageSigner::VerifyMessage(activeMasternode.pubKeyMasternode, mnv.vchSig1, strMessage, strError)) {
         LogPrintf("MasternodeMan::SendVerifyReply -- VerifyMessage() failed, error: %s\n", strError);
         return;
     }
@@ -1200,7 +1201,7 @@ void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& m
         std::string strMessage1 = strprintf("%s%d%s", pnode->addr.ToString(false), mnv.nonce, blockHash.ToString());
         while(it != vMasternodes.end()) {
             if((CAddress)it->addr == pnode->addr) {
-                if(darkSendSigner.VerifyMessage(it->pubKeyMasternode, mnv.vchSig1, strMessage1, strError)) {
+                if(CMessageSigner::VerifyMessage(it->pubKeyMasternode, mnv.vchSig1, strMessage1, strError)) {
                     // found it!
                     prealMasternode = &(*it);
                     if(!it->IsPoSeVerified()) {
@@ -1217,14 +1218,14 @@ void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& m
                     std::string strMessage2 = strprintf("%s%d%s%s%s", mnv.addr.ToString(false), mnv.nonce, blockHash.ToString(),
                                             mnv.vin1.prevout.ToStringShort(), mnv.vin2.prevout.ToStringShort());
                     // ... and sign it
-                    if(!darkSendSigner.SignMessage(strMessage2, mnv.vchSig2, activeMasternode.keyMasternode)) {
+                    if(!CMessageSigner::SignMessage(strMessage2, mnv.vchSig2, activeMasternode.keyMasternode)) {
                         LogPrintf("MasternodeMan::ProcessVerifyReply -- SignMessage() failed\n");
                         return;
                     }
 
                     std::string strError;
 
-                    if(!darkSendSigner.VerifyMessage(activeMasternode.pubKeyMasternode, mnv.vchSig2, strMessage2, strError)) {
+                    if(!CMessageSigner::VerifyMessage(activeMasternode.pubKeyMasternode, mnv.vchSig2, strMessage2, strError)) {
                         LogPrintf("MasternodeMan::ProcessVerifyReply -- VerifyMessage() failed, error: %s\n", strError);
                         return;
                     }
@@ -1330,12 +1331,12 @@ void CMasternodeMan::ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerif
             return;
         }
 
-        if(darkSendSigner.VerifyMessage(pmn1->pubKeyMasternode, mnv.vchSig1, strMessage1, strError)) {
+        if(CMessageSigner::VerifyMessage(pmn1->pubKeyMasternode, mnv.vchSig1, strMessage1, strError)) {
             LogPrintf("MasternodeMan::ProcessVerifyBroadcast -- VerifyMessage() for masternode1 failed, error: %s\n", strError);
             return;
         }
 
-        if(darkSendSigner.VerifyMessage(pmn2->pubKeyMasternode, mnv.vchSig2, strMessage2, strError)) {
+        if(CMessageSigner::VerifyMessage(pmn2->pubKeyMasternode, mnv.vchSig2, strMessage2, strError)) {
             LogPrintf("MasternodeMan::ProcessVerifyBroadcast -- VerifyMessage() for masternode2 failed, error: %s\n", strError);
             return;
         }

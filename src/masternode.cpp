@@ -4,13 +4,13 @@
 
 #include "activemasternode.h"
 #include "consensus/validation.h"
-#include "darksend.h"
 #include "init.h"
 #include "governance.h"
 #include "masternode.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
+#include "messagesigner.h"
 #include "util.h"
 
 #include <boost/lexical_cast.hpp>
@@ -282,6 +282,21 @@ void CMasternode::Check(bool fForce)
     }
 }
 
+bool CMasternode::IsInputAssociatedWithPubkey()
+{
+    CScript payee;
+    payee = GetScriptForDestination(pubKeyCollateralAddress.GetID());
+
+    CTransaction tx;
+    uint256 hash;
+    if(GetTransaction(vin.prevout.hash, tx, Params().GetConsensus(), hash, true)) {
+        BOOST_FOREACH(CTxOut out, tx.vout)
+            if(out.nValue == 1000*COIN && out.scriptPubKey == payee) return true;
+    }
+
+    return false;
+}
+
 bool CMasternode::IsValidNetAddr()
 {
     return IsValidNetAddr(addr);
@@ -415,7 +430,7 @@ bool CMasternodeBroadcast::Create(std::string strService, std::string strKeyMast
         return false;
     }
 
-    if(!darkSendSigner.GetKeysFromSecret(strKeyMasternode, keyMasternodeNew, pubKeyMasternodeNew)) {
+    if(!CMessageSigner::GetKeysFromSecret(strKeyMasternode, keyMasternodeNew, pubKeyMasternodeNew)) {
         strErrorRet = strprintf("Invalid masternode key %s", strKeyMasternode);
         LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorRet);
         return false;
@@ -639,9 +654,9 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
 
     LogPrint("masternode", "CMasternodeBroadcast::CheckOutpoint -- Masternode UTXO verified\n");
 
-    // make sure the vout that was signed is related to the transaction that spawned the Masternode
-    //  - this is expensive, so it's only done once per Masternode
-    if(!darkSendSigner.IsVinAssociatedWithPubkey(vin, pubKeyCollateralAddress)) {
+    // make sure the input that was signed in masternode broadcast message is related to the transaction
+    // that spawned the Masternode - this is expensive, so it's only done once per Masternode
+    if(!IsInputAssociatedWithPubkey()) {
         LogPrintf("CMasternodeMan::CheckOutpoint -- Got mismatched pubKeyCollateralAddress and vin\n");
         nDos = 33;
         return false;
@@ -680,12 +695,12 @@ bool CMasternodeBroadcast::Sign(CKey& keyCollateralAddress)
                     pubKeyCollateralAddress.GetID().ToString() + pubKeyMasternode.GetID().ToString() +
                     boost::lexical_cast<std::string>(nProtocolVersion);
 
-    if(!darkSendSigner.SignMessage(strMessage, vchSig, keyCollateralAddress)) {
+    if(!CMessageSigner::SignMessage(strMessage, vchSig, keyCollateralAddress)) {
         LogPrintf("CMasternodeBroadcast::Sign -- SignMessage() failed\n");
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(pubKeyCollateralAddress, vchSig, strMessage, strError)) {
+    if(!CMessageSigner::VerifyMessage(pubKeyCollateralAddress, vchSig, strMessage, strError)) {
         LogPrintf("CMasternodeBroadcast::Sign -- VerifyMessage() failed, error: %s\n", strError);
         return false;
     }
@@ -705,7 +720,7 @@ bool CMasternodeBroadcast::CheckSignature(int& nDos)
 
     LogPrint("masternode", "CMasternodeBroadcast::CheckSignature -- strMessage: %s  pubKeyCollateralAddress address: %s  sig: %s\n", strMessage, CBitcoinAddress(pubKeyCollateralAddress.GetID()).ToString(), EncodeBase64(&vchSig[0], vchSig.size()));
 
-    if(!darkSendSigner.VerifyMessage(pubKeyCollateralAddress, vchSig, strMessage, strError)){
+    if(!CMessageSigner::VerifyMessage(pubKeyCollateralAddress, vchSig, strMessage, strError)){
         LogPrintf("CMasternodeBroadcast::CheckSignature -- Got bad Masternode announce signature, error: %s\n", strError);
         nDos = 100;
         return false;
@@ -739,12 +754,12 @@ bool CMasternodePing::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
     sigTime = GetAdjustedTime();
     std::string strMessage = vin.ToString() + blockHash.ToString() + boost::lexical_cast<std::string>(sigTime);
 
-    if(!darkSendSigner.SignMessage(strMessage, vchSig, keyMasternode)) {
+    if(!CMessageSigner::SignMessage(strMessage, vchSig, keyMasternode)) {
         LogPrintf("CMasternodePing::Sign -- SignMessage() failed\n");
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
+    if(!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
         LogPrintf("CMasternodePing::Sign -- VerifyMessage() failed, error: %s\n", strError);
         return false;
     }
@@ -758,7 +773,7 @@ bool CMasternodePing::CheckSignature(CPubKey& pubKeyMasternode, int &nDos)
     std::string strError = "";
     nDos = 0;
 
-    if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
+    if(!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
         LogPrintf("CMasternodePing::CheckSignature -- Got bad Masternode ping signature, masternode=%s, error: %s\n", vin.prevout.ToStringShort(), strError);
         nDos = 33;
         return false;

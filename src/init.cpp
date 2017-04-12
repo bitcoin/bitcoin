@@ -56,6 +56,7 @@
 #include "masternode-sync.h"
 #include "masternodeman.h"
 #include "masternodeconfig.h"
+#include "messagesigner.h"
 #include "netfulfilledman.h"
 #include "spork.h"
 
@@ -1807,7 +1808,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
         std::string strMasterNodePrivKey = GetArg("-masternodeprivkey", "");
         if(!strMasterNodePrivKey.empty()) {
-            if(!darkSendSigner.GetKeysFromSecret(strMasterNodePrivKey, activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode))
+            if(!CMessageSigner::GetKeysFromSecret(strMasterNodePrivKey, activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode))
                 return InitError(_("Invalid masternodeprivkey. Please see documenation."));
 
             LogPrintf("  pubKeyMasternode: %s\n", CBitcoinAddress(activeMasternode.pubKeyMasternode.GetID()).ToString());
