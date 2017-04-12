@@ -177,7 +177,6 @@ public:
     void FlushUnconfirmed(CTxMemPool& pool);
 
 private:
-    CFeeRate minTrackedFee;    //!< Passed to constructor to avoid dependency on main
     unsigned int nBestSeenHeight;
     unsigned int firstRecordedHeight;
     unsigned int historicalFirst;
