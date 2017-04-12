@@ -2755,16 +2755,17 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5537 - " + _("Failed to read from alias payment DB"));
 	map<uint256, int> vtxMapTx;
 	map<int, CTransaction> vtxTx;
-	CTransaction tx;
 	CAliasIndex txPos;
 	CAliasPayment txPaymentPos;
 	BOOST_FOREACH(txPos, vtxPos) {
+		CTransaction tx;
 		if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
 			continue;
 		vtxMapTx[txPos.txHash] = 1;
 		vtxTx[txPos.nHeight] = tx;
 	}
 	BOOST_FOREACH(txPaymentPos, vtxPaymentPos) {
+		CTransaction tx;
 		if(vtxMapTx[txPaymentPos.txHash] == 1)
 			continue;
 		if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
@@ -2807,7 +2808,10 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			vNamesO[tx.GetHash()].push_back(Pair("type", opName));
 			CAliasIndex alias(tx);
 			if(!alias.IsNull())
+			{
+				alias.nHeight = txit.first;
 				BuildAliasJson(alias, false, vNamesO[tx.GetHash()], strWalletless);
+			}
 		}
 		else
 			continue;
