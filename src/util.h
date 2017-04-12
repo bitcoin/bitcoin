@@ -69,6 +69,12 @@ inline std::string _(const char* psz)
 void SetupEnvironment();
 bool SetupNetworking();
 
+struct CLogCategoryActive
+{
+    std::string category;
+    bool active;
+};
+
 namespace BCLog {
     enum LogFlags : uint32_t {
         NONE        = 0,
@@ -102,8 +108,11 @@ static inline bool LogAcceptCategory(uint32_t category)
     return (logCategories.load(std::memory_order_relaxed) & category) != 0;
 }
 
-/** Returns a string with the supported log categories */
+/** Returns a string with the log categories. */
 std::string ListLogCategories();
+
+/** Returns a vector of the active log categories. */
+std::vector<CLogCategoryActive> ListActiveLogCategories();
 
 /** Return true if str parses as a log category and set the flags in f */
 bool GetLogCategory(uint32_t *f, const std::string *str);
