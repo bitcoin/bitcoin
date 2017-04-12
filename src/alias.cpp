@@ -2637,17 +2637,17 @@ bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oNam
 	string strEncryptionPrivateKey = "";
 	string strData = "";
 	string strPassword = "";
+	string strKey = "";
+	string strDecrypted = "";
+	if(strWalletless == "Yes")
+		strEncryptionPrivateKey = HexStr(alias.vchEncryptionPrivateKey);
+	else
+	{
+		if(DecryptPrivateKey(alias, strKey))
+			strEncryptionPrivateKey = HexStr(strKey);	
+	}
 	if(!alias.vchPrivateValue.empty() || !alias.vchPassword.empty())
 	{
-		string strKey = "";
-		string strDecrypted = "";
-		if(strWalletless == "Yes")
-			strEncryptionPrivateKey = HexStr(alias.vchEncryptionPrivateKey);
-		else
-		{
-			if(DecryptPrivateKey(alias, strKey))
-				strEncryptionPrivateKey = HexStr(strKey);	
-		}
 		if(strWalletless == "Yes")
 		{
 			strData = HexStr(alias.vchPrivateValue);

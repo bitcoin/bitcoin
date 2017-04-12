@@ -404,8 +404,6 @@ bool EditAliasDialog::saveCurrentRow()
 		if(strCipherPrivateData.empty())
 			strPrivateHex = "\"\"";
 		strEncryptionPrivateKeyHex = HexStr(vchFromString(strCipherEncryptionPrivateKey));
-		if(strCipherEncryptionPrivateKey.empty())
-			strEncryptionPrivateKeyHex = "\"\"";
 	
 		strMethod = string("aliasnew");
 		params.push_back(ui->aliasPegEdit->text().trimmed().toStdString());
