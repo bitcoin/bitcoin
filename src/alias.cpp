@@ -2829,6 +2829,9 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			opName = certFromOp(op);
 		else if(DecodeAliasTx(tx, op, nOut, vvch, true) )
 		{
+			// only show payments >= COIN
+			if(tx.vout[nOut] < COIN)
+				continue;
 			opName = aliasFromOp(op);
 			UniValue oName(UniValue::VOBJ);
 			oName.push_back(Pair("type", opName));
@@ -2842,8 +2845,8 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		else
 			continue;
 	}
-	oRes.push_back(Pair("updates", oUpdates));	
-	oRes.push_back(Pair("payments", oPayments));	
+	oRes.push_back(oUpdates);	
+	oRes.push_back(oPayments);	
 	return oRes;
 }
 UniValue generatepublickey(const UniValue& params, bool fHelp) {
