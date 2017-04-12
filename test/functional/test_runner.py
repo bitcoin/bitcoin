@@ -244,6 +244,17 @@ def main():
     run_tests(test_list, config["environment"]["SRCDIR"], config["environment"]["BUILDDIR"], config["environment"]["EXEEXT"], args.jobs, args.coverage, passon_args)
 
 def run_tests(test_list, src_dir, build_dir, exeext, jobs=1, enable_coverage=False, args=[]):
+    # Warn if bitcoind is already running (unix only)
+    try:
+        if subprocess.check_output(["pidof", "bitcoind"]) is not None:
+            print("%sWARNING!%s There is already a bitcoind process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
+    except (OSError, subprocess.SubprocessError):
+        pass
+
+    # Warn if there is a cache directory
+    cache_dir = "%s/test/cache" % build_dir
+    if os.path.isdir(cache_dir):
+        print("%sWARNING!%s There is a cache directory here: %s. If tests fail unexpectedly, try deleting the cache directory." % (BOLD[1], BOLD[0], cache_dir))
 
     #Set env vars
     if "BITCOIND" not in os.environ:
@@ -252,7 +263,7 @@ def run_tests(test_list, src_dir, build_dir, exeext, jobs=1, enable_coverage=Fal
     tests_dir = src_dir + '/test/functional/'
 
     flags = ["--srcdir={}/src".format(build_dir)] + args
-    flags.append("--cachedir=%s/test/cache" % build_dir)
+    flags.append("--cachedir=%s" % cache_dir)
 
     if enable_coverage:
         coverage = RPCCoverage()
@@ -407,9 +418,10 @@ def check_script_list(src_dir):
     python_files = set([t for t in os.listdir(script_dir) if t[-3:] == ".py"])
     missed_tests = list(python_files - set(map(lambda x: x.split()[0], ALL_SCRIPTS + NON_SCRIPTS)))
     if len(missed_tests) != 0:
-        print("The following scripts are not being run:" + str(missed_tests))
-        print("Check the test lists in test_runner.py")
-        sys.exit(1)
+        print("%sWARNING!%s The following scripts are not being run: %s. Check the test lists in test_runner.py." % (BOLD[1], BOLD[0], str(missed_tests)))
+        if os.getenv('TRAVIS') == 'true':
+            # On travis this warning is an error to prevent merging incomplete commits into master
+            sys.exit(1)
 
 class RPCCoverage(object):
     """
