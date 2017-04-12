@@ -38,6 +38,22 @@ CCertDB *pcertdb = NULL;
 CEscrowDB *pescrowdb = NULL;
 CMessageDB *pmessagedb = NULL;
 extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=false, bool transferAlias=false);
+
+namespace {
+class AliasHistoryComparator
+{
+public:
+    bool operator()(const CAliasIndex& a, const CAliasIndex& b)
+    {
+        uint64_t counta = a->GetCountWithAncestors();
+        uint64_t countb = b->GetCountWithAncestors();
+        if (counta == countb) {
+            return CompareTxMemPoolEntryByScore()(*a, *b);
+        }
+        return counta < countb;
+    }
+};
+}
 bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut, const Consensus::Params& consensusParams)
 {
 	if(nHeight < 0 || nHeight > chainActive.Height())
@@ -2754,7 +2770,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 	if (!paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos) || vtxPaymentPos.empty())
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5537 - " + _("Failed to read from alias payment DB"));
 	map<uint256, int> vtxMapTx;
-	vector<CTransaction> vtxTx;
+	map<int, CTransaction> vtxTx;
 	CTransaction tx;
 	CAliasIndex txPos;
 	CAliasPayment txPaymentPos;
@@ -2762,23 +2778,23 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
 			continue;
 		vtxMapTx[txPos.txHash] = 1;
-		vtxTx.push_back(tx);
+		vtxTx[txPos.nHeight] = tx;
 	}
 	BOOST_FOREACH(txPaymentPos, vtxPaymentPos) {
-		if(vtxMapTx.find(txPaymentPos.txHash) != vtxMapTx.end())
+		if(vtxMapTx[txPaymentPos.txHash] == 1)
 			continue;
 		if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
 			continue;
 		vtxMapTx[txPaymentPos.txHash] = 1;
-		vtxTx.push_back(tx);
+		vtxTx[txPos.nHeight] = tx;
 	}
 	map<uint256, UniValue> vNamesO;
     vector<vector<unsigned char> > vvch;
     int op, nOut;
 	string opName;
-	for(int i =0;i<vtxTx.size();i++)
+	BOOST_FOREACH(const PAIRTYPE(uint256, CTransaction)& txIt, vtxTx) {
 	{
-		const CTransaction& tx = vtxTx[i];
+		const CTransaction& tx = txIt.second;
 		if(DecodeOfferTx(tx, op, nOut, vvch) )
 		{
 			opName = offerFromOp(op);
