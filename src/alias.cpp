@@ -2833,7 +2833,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			opName = certFromOp(op);
 		else if(DecodeAliasTx(tx, op, nOut, vvch, true) )
 		{
-			if(oPaymentDetails[tx.GetHash()] == 1 || (vvch.size() >= 2 && vvch[1] == "1"))
+			if(oPaymentDetails[tx.GetHash()] == 1 || (vvch.size() >= 2 && vvch[1] == vchFromString("1")))
 				continue;
 			oPaymentDetails[tx.GetHash()] = 1;
 			opName = aliasFromOp(op);
