@@ -1848,7 +1848,6 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		newAlias.vchPassword = ParseHex(strPassword);
 	if(!strPasswordSalt.empty())
 		newAlias.vchPasswordSalt = ParseHex(strPasswordSalt);
-	newAlias.safetyLevel = 0;
 	newAlias.safeSearch = strSafeSearch == "Yes"? true: false;
 	newAlias.acceptCertTransfers = strAcceptCertTransfers == "Yes"? true: false;
 	DecodeBase58(desiredAddress.ToString(), newAlias.vchAddress);
@@ -2776,7 +2775,6 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 	string opName;
 	BOOST_FOREACH(const PAIRTYPE(uint256, CTransaction)& txIt, vtxTx) {
 		UniValue oName(UniValue::VOBJ);
-		UniValue oDetails(UniValue::VOBJ);
 		const CTransaction& tx = txIt.second;
 		if(DecodeOfferTx(tx, op, nOut, vvch) )
 		{
@@ -2805,7 +2803,8 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			opName = aliasFromOp(op);
 			oName.push_back(Pair("type", opName));
 			CAliasIndex alias(tx);
-			if(!alias.IsNull() && BuildAliasJson(alias, false, oDetails))
+			UniValue oDetails(UniValue::VOBJ);
+			if(!alias.IsNull() && BuildAliasJson(alias, false, oDetails, strWalletless))
 				oName.push_back(oDetails);
 		}
 		else
