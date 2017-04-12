@@ -15,7 +15,6 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include <boost/foreach.hpp>
 
 namespace memusage
 {

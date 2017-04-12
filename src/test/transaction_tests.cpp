@@ -27,7 +27,6 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/foreach.hpp>
 
 #include <univalue.h>
 

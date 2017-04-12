@@ -10,7 +10,6 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
-#include <boost/foreach.hpp>
 
 typedef std::vector<unsigned char> valtype;
 

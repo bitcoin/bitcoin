@@ -11,7 +11,6 @@
 #include "script/standard.h"
 #include "script/sign.h"
 
-#include <boost/foreach.hpp>
 
 typedef std::vector<unsigned char> valtype;
 

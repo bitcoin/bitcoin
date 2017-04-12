@@ -14,7 +14,6 @@
 #include "test/test_bitcoin.h"
 
 
-#include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
 typedef std::vector<unsigned char> valtype;
