@@ -1619,7 +1619,7 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
 	CAmount nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
 	recipient.nAmount = nFee;
 }
-void CreateAliasRecipient(const CScript& scriptPubKeyDest, const vector<unsigned char>& vchAlias, const vector<unsigned char>& vchAliasPeg, const uint64_t& nHeight, CRecipient& recipient)
+void CreateAliasRecipient(const CScript& scriptPubKeyDest, const vector<unsigned char>& vchAlias, CRecipient& recipient)
 {
 	int precision = 0;
 	CAmount nFee = 0;
@@ -1867,7 +1867,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	CRecipient recipientPayment;
-	CreateAliasRecipient(scriptPubKeyOrig, vchAlias, newAlias.vchAliasPeg, chainActive.Tip()->nHeight, recipientPayment);
+	CreateAliasRecipient(scriptPubKeyOrig, vchAlias, recipientPayment);
 	CScript scriptData;
 	
 	scriptData << OP_RETURN << data;
@@ -2058,7 +2058,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	CRecipient recipientPayment;
-	CreateAliasRecipient(scriptPubKeyOrig, copyAlias.vchAlias, copyAlias.vchAliasPeg, chainActive.Tip()->nHeight, recipientPayment);
+	CreateAliasRecipient(scriptPubKeyOrig, copyAlias.vchAlias, recipientPayment);
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;

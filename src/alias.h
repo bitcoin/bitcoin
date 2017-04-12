@@ -331,7 +331,7 @@ bool IsValidAliasName(const std::vector<unsigned char> &vchAlias);
 bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, std::string &errorMessage, bool dontaddtodb=false);
 void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateFeeRecipient(CScript& scriptPubKey, const std::vector<unsigned char>& vchAliasPeg, const uint64_t& nHeight, const std::vector<unsigned char>& data, CRecipient& recipient);
-void CreateAliasRecipient(const CScript& scriptPubKey, const std::vector<unsigned char>& vchAlias, const std::vector<unsigned char>& vchAliasPeg, const uint64_t& nHeight, CRecipient& recipient);
+void CreateAliasRecipient(const CScript& scriptPubKey, const std::vector<unsigned char>& vchAlias, CRecipient& recipient);
 int aliasselectpaymentcoins(const std::vector<unsigned char> &vchAlias, const CAmount &nAmount, std::vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacementOnly, bool bSelectAll=false);
 CAmount GetDataFee(const CScript& scriptPubKey, const std::vector<unsigned char>& vchAliasPeg, const uint64_t& nHeight);
 bool IsSyscoinTxMine(const CTransaction& tx,const std::string &type);

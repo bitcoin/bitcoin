@@ -493,7 +493,7 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyAliasOrig, aliasFrom.vchAlias, aliasFrom.vchAliasPeg, chainActive.Tip()->nHeight, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyAliasOrig, aliasFrom.vchAlias, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;

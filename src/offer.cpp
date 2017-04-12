@@ -1603,7 +1603,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyOrig, alias.vchAlias, alias.vchAliasPeg, chainActive.Tip()->nHeight, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyOrig, alias.vchAlias, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -1753,7 +1753,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyOrig, alias.vchAlias, alias.vchAliasPeg, chainActive.Tip()->nHeight, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyOrig, alias.vchAlias, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -1870,7 +1870,7 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, theAlias.vchAliasPeg, chainActive.Tip()->nHeight, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -1971,7 +1971,7 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, theAlias.vchAliasPeg, chainActive.Tip()->nHeight, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -2067,7 +2067,7 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, theAlias.vchAliasPeg, chainActive.Tip()->nHeight, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -2358,7 +2358,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyOrig, alias.vchAlias, alias.vchAliasPeg, chainActive.Tip()->nHeight, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyOrig, alias.vchAlias, aliasPaymentRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -2616,7 +2616,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CRecipient aliasLinkedRecipient;
 	CreateRecipient(scriptPubKeyAcceptLinked, aliasLinkedRecipient);
 	CRecipient aliasPaymentRecipient;
-	CreateAliasRecipient(scriptPubKeyAliasOrig, buyerAlias.vchAlias, buyerAlias.vchAliasPeg, chainActive.Tip()->nHeight, aliasPaymentRecipient);
+	CreateAliasRecipient(scriptPubKeyAliasOrig, buyerAlias.vchAlias, aliasPaymentRecipient);
 
 	if(vchExtTxId.empty())
 	{
@@ -2923,7 +2923,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	scriptPubKey += sellerScript;
 	CreateRecipient(scriptPubKey, recipient);
 	CreateRecipient(scriptPubKeyAlias, recipientAlias);
-	CreateAliasRecipient(scriptPubKeyAliasOrig, theAlias.vchAlias, theAlias.vchAliasPeg, chainActive.Tip()->nHeight, recipientPaymentAlias);
+	CreateAliasRecipient(scriptPubKeyAliasOrig, theAlias.vchAlias, recipientPaymentAlias);
 
 	vecSend.push_back(recipient);
 
@@ -3057,7 +3057,7 @@ UniValue offeracceptacknowledge(const UniValue& params, bool fHelp) {
 	scriptPubKeyBuyer += buyerScript;
 	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
 	CreateRecipient(scriptPubKeyAlias, recipientAlias);
-	CreateAliasRecipient(sellerScript, sellerAlias.vchAlias, sellerAlias.vchAliasPeg, chainActive.Tip()->nHeight, recipientPaymentAlias);
+	CreateAliasRecipient(sellerScript, sellerAlias.vchAlias, recipientPaymentAlias);
 
 	vecSend.push_back(recipientBuyer);
 
