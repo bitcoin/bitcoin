@@ -2751,34 +2751,19 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 	if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5537 - " + _("Failed to read from alias DB"));
 	vector<CAliasPayment> vtxPaymentPos;
-	if (!paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos) || vtxPaymentPos.empty())
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5537 - " + _("Failed to read from alias payment DB"));
-	map<uint256, int> vtxMapTx;
-	map<int, CTransaction> vtxTx;
+	paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos);
+	
 	CAliasIndex txPos;
 	CAliasPayment txPaymentPos;
-	BOOST_FOREACH(txPos, vtxPos) {
-		CTransaction tx;
-		if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
-			continue;
-		vtxMapTx[txPos.txHash] = 1;
-		vtxTx[txPos.nHeight] = tx;
-	}
-	BOOST_FOREACH(txPaymentPos, vtxPaymentPos) {
-		CTransaction tx;
-		if(vtxMapTx[txPaymentPos.txHash] == 1)
-			continue;
-		if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
-			continue;
-		vtxMapTx[txPaymentPos.txHash] = 1;
-		vtxTx[txPaymentPos.nHeight] = tx;
-	}
-	map<uint256, UniValue> vNamesO;
     vector<vector<unsigned char> > vvch;
     int op, nOut;
 	string opName;
-	BOOST_FOREACH(const PAIRTYPE(int, CTransaction)& txIt, vtxTx) {
-		const CTransaction& tx = txIt.second;
+	BOOST_FOREACH(txPos, vtxPos) {
+		CTransaction tx;
+		UniValue oName(UniValue::VOBJ);
+		UniValue oDetails(UniValue::VOBJ);
+		if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
+			continue;
 		if(DecodeOfferTx(tx, op, nOut, vvch) )
 		{
 			opName = offerFromOp(op);
@@ -2801,23 +2786,66 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		}
 		else if(DecodeCertTx(tx, op, nOut, vvch) )
 			opName = certFromOp(op);
-		else if(DecodeAliasTx(tx, op, nOut, vvch) )
+		else if(DecodeAliasTx(tx, op, nOut, vvch, false) )
 		{
 			opName = aliasFromOp(op);
-			vNamesO[tx.GetHash()] = UniValue(UniValue::VOBJ);
-			vNamesO[tx.GetHash()].push_back(Pair("type", opName));
+			oName.push_back(Pair("type", opName));
 			CAliasIndex alias(tx);
 			if(!alias.IsNull())
 			{
-				alias.nHeight = txIt.first;
-				BuildAliasJson(alias, false, vNamesO[tx.GetHash()], strWalletless);
+				if(BuildAliasJson(alias, false, oDetails, strWalletless))
+					oName.push_back(oDetails);
 			}
 		}
 		else
 			continue;
+		oUpdates.push_back(oName);
 	}
-	BOOST_FOREACH(const PAIRTYPE(uint256, UniValue)& item, vNamesO)
-		oRes.push_back(item.second);	
+	BOOST_FOREACH(txPaymentPos, vtxPaymentPos) {
+		CTransaction tx;
+		UniValue oName(UniValue::VOBJ);
+		UniValue oDetails(UniValue::VOBJ);
+		if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
+			continue;
+		if(DecodeOfferTx(tx, op, nOut, vvch) )
+		{
+			opName = offerFromOp(op);
+			COffer offer(tx);
+			if(offer.accept.bPaymentAck)
+				opName += "("+_("acknowledged")+")";
+			else if(!offer.accept.feedback.empty())
+				opName += "("+_("feedback")+")";
+		}
+		else if(DecodeMessageTx(tx, op, nOut, vvch) )
+			opName = messageFromOp(op);
+		else if(DecodeEscrowTx(tx, op, nOut, vvch) )
+		{
+			CEscrow escrow(tx);
+			opName = escrowFromOp(escrow.op);
+			if(escrow.bPaymentAck)
+				opName += "("+_("acknowledged")+")";
+			else if(!escrow.feedback.empty())
+				opName += "("+_("feedback")+")";
+		}
+		else if(DecodeCertTx(tx, op, nOut, vvch) )
+			opName = certFromOp(op);
+		else if(DecodeAliasTx(tx, op, nOut, vvch, true) )
+		{
+			opName = aliasFromOp(op);
+			oName.push_back(Pair("type", opName));
+			CAliasIndex alias(tx);
+			if(!alias.IsNull())
+			{
+				if(BuildAliasJson(alias, false, oDetails, strWalletless))
+					oName.push_back(oDetails);
+			}
+		}
+		else
+			continue;
+		oPayments.push_back(oName);
+	}
+	oRes.push_back(Pair("updates", oUpdates));	
+	oRes.push_back(Pair("payments", oPayments));	
 	return oRes;
 }
 UniValue generatepublickey(const UniValue& params, bool fHelp) {
