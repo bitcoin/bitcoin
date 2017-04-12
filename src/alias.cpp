@@ -1623,7 +1623,10 @@ void CreateAliasRecipient(const CScript& scriptPubKey,  const vector<unsigned ch
 {
 	int precision = 0;
 	CAmount nFee = 0;
-	CRecipient recp = {scriptPubKey, recipient.nAmount, false};
+	CScript scriptChangeOrig;
+	scriptChangeOrig << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchAlias << vchFromString("1") << OP_DROP << OP_2DROP;
+	scriptChangeOrig += scriptPubKeyDest;
+	CRecipient recp = {scriptChangeOrig, 0, false};
 	recipient = recp;
 	int nFeePerByte = getFeePerByte(vchAliasPeg, vchFromString("SYS"), nHeight, precision);
 	CTxOut txout(0,	recipient.scriptPubKey);
@@ -2760,6 +2763,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 	string opName;
 	UniValue oUpdates(UniValue::VARR);
 	UniValue oPayments(UniValue::VARR);
+	map<uint256, int> oPaymentDetails;
 	BOOST_FOREACH(txPos, vtxPos) {
 		CTransaction tx;
 		if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
@@ -2829,9 +2833,9 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			opName = certFromOp(op);
 		else if(DecodeAliasTx(tx, op, nOut, vvch, true) )
 		{
-			// only show payments >= COIN
-			if(tx.vout[nOut].nValue < COIN)
+			if(oPaymentDetails[tx.GetHash()] == 1 || (vvch.size() >= 2 && vvch[1] == "1"))
 				continue;
+			oPaymentDetails[tx.GetHash()] = 1;
 			opName = aliasFromOp(op);
 			UniValue oName(UniValue::VOBJ);
 			oName.push_back(Pair("type", opName));
