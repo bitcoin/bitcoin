@@ -2830,7 +2830,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		else if(DecodeAliasTx(tx, op, nOut, vvch, true) )
 		{
 			// only show payments >= COIN
-			if(tx.vout[nOut].nAmount < COIN)
+			if(tx.vout[nOut].nValue < COIN)
 				continue;
 			opName = aliasFromOp(op);
 			UniValue oName(UniValue::VOBJ);
