@@ -2753,29 +2753,33 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 	vector<CAliasPayment> vtxPaymentPos;
 	if (!paliasdb->ReadAliasPayment(vchAlias, vtxPaymentPos) || vtxPaymentPos.empty())
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5537 - " + _("Failed to read from alias payment DB"));
-	map<uint256, CTransaction> vtxTx;
+	map<uint256, int> vtxMapTx;
+	vector<CTransaction> vtxTx;
 	CTransaction tx;
 	CAliasIndex txPos;
 	CAliasPayment txPaymentPos;
 	BOOST_FOREACH(txPos, vtxPos) {
 		if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
 			continue;
-		vtxTx[txPos.txHash] = tx;
+		vtxMapTx[txPos.txHash] = 1;
+		vtxTx.push_back(tx);
 	}
 	BOOST_FOREACH(txPaymentPos, vtxPaymentPos) {
-		if(vtxTx.find(txPaymentPos.txHash) != vtxTx.end())
+		if(vtxMapTx.find(txPaymentPos.txHash) != vtxMapTx.end())
 			continue;
 		if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
 			continue;
-		vtxTx[txPaymentPos.txHash] = tx;
+		vtxMapTx[txPaymentPos.txHash] = 1;
+		vtxTx.push_back(tx);
 	}
-	
+	map<uint256, UniValue> vNamesO;
     vector<vector<unsigned char> > vvch;
     int op, nOut;
 	string opName;
-	BOOST_FOREACH(const PAIRTYPE(uint256, CTransaction)& txIt, vtxTx) {
+	for(int i =0;i,vtxTx.size();i++)
+	{
 		UniValue oName(UniValue::VOBJ);
-		const CTransaction& tx = txIt.second;
+		const CTransaction& tx = vtxTx[i];
 		if(DecodeOfferTx(tx, op, nOut, vvch) )
 		{
 			opName = offerFromOp(op);
@@ -2803,16 +2807,14 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			opName = aliasFromOp(op);
 			oName.push_back(Pair("type", opName));
 			CAliasIndex alias(tx);
-			UniValue oDetails(UniValue::VOBJ);
-			if(!alias.IsNull() && BuildAliasJson(alias, false, oDetails, strWalletless))
-				oName.push_back(oDetails);
+			if(!alias.IsNull())
+				BuildAliasJson(alias, false, vNamesO[tx.GetHash()], strWalletless);
 		}
 		else
 			continue;
-
-		oRes.push_back(oName);
 	}
-	
+	BOOST_FOREACH(const PAIRTYPE(uint256, UniValue)& item, vNamesO)
+		oRes.push_back(item.second);	
 	return oRes;
 }
 UniValue generatepublickey(const UniValue& params, bool fHelp) {
@@ -2873,7 +2875,7 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 
 	BOOST_FOREACH(const CAliasIndex &alias, nameScan) {
 		UniValue oName(UniValue::VOBJ);
-		if(BuildAliasJson(alias, 0, oName))
+		if(BuildAliasJson(alias, false, oName))
 			oRes.push_back(oName);
 	}
 
