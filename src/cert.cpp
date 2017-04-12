@@ -719,7 +719,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 						theCert = dbCert;	
 					}
 				}
-				if(dbCert.nAccessFlags < 2)
+				// the original owner can modify certificate regardless of access flags, new owners must adhere to access flags
+				if(dbCert.nAccessFlags < 2 && dbCert.vchAlias != vtxPos.front().vchAlias)
 				{
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot transfer this certificate. Insufficient privileges.");
 					theCert = dbCert;
@@ -727,13 +728,13 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			}
 			else if(op == OP_CERT_UPDATE)
 			{
-				if(dbCert.nAccessFlags < 1)
+				if(dbCert.nAccessFlags < 1 && dbCert.vchAlias != vtxPos.front().vchAlias)
 				{
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot edit this certificate. It is view-only.");
 					theCert = dbCert;
 				}
 			}
-			if(theCert.nAccessFlags > dbCert.nAccessFlags)
+			if(theCert.nAccessFlags > dbCert.nAccessFlags && dbCert.vchAlias != vtxPos.front().vchAlias)
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot modify for more lenient access. Only tighter access level can be granted.");
 				theCert = dbCert;
