@@ -2776,7 +2776,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
     vector<vector<unsigned char> > vvch;
     int op, nOut;
 	string opName;
-	BOOST_FOREACH(const PAIRTYPE(uint256, CTransaction)& txIt, vtxTx) {
+	BOOST_FOREACH(const PAIRTYPE(int, CTransaction)& txIt, vtxTx) {
 	{
 		const CTransaction& tx = txIt.second;
 		if(DecodeOfferTx(tx, op, nOut, vvch) )
