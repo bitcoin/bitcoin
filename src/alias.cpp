@@ -2809,7 +2809,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			CAliasIndex alias(tx);
 			if(!alias.IsNull())
 			{
-				alias.nHeight = txit.first;
+				alias.nHeight = txIt.first;
 				BuildAliasJson(alias, false, vNamesO[tx.GetHash()], strWalletless);
 			}
 		}
