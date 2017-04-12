@@ -1235,7 +1235,7 @@
         <bool>false</bool>
        </property>
        <property name="default">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
       </widget>
      </item>
