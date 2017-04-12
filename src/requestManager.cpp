@@ -87,7 +87,7 @@ void CRequestManager::cleanup(OdMap::iterator &itemIt)
         if (node)
         {
             i->clear();
-            LogPrint("req", "ReqMgr: %s removed ref to %d count %d.\n", item.obj.ToString(), node->GetId(),
+            LogPrint("req", "ReqMgr: %s cleanup - removed ref to %d count %d.\n", item.obj.ToString(), node->GetId(),
                 node->GetRefCount());
             node->Release();
         }
@@ -490,7 +490,7 @@ void CRequestManager::SendRequests()
                         if (next.node->fDisconnect || (!IsChainNearlySyncd() && !IsNodePingAcceptable(next.node)))
                         {
                             LOCK(cs_vNodes);
-                            LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n",
+                            LogPrint("req", "ReqMgr: %s removed block ref to %d count %d (on disconnect).\n",
                                 item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
                             next.node->Release();
                             next.node = NULL; // force the loop to get another node
@@ -524,7 +524,7 @@ void CRequestManager::SendRequests()
                     // Instead we'll forget about it -- the node is already popped of of the available list so now we'll
                     // release our reference.
                     LOCK(cs_vNodes);
-                    LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(),
+                    LogPrint("req", "ReqMgr: %s removed block ref to %d count %d\n", item.obj.ToString(),
                         next.node->GetId(), next.node->GetRefCount());
                     next.node->Release();
                     next.node = NULL;
@@ -540,7 +540,7 @@ void CRequestManager::SendRequests()
                 // There can be no block sources because a node dropped out.  In this case, nothing can be done so
                 // remove the item.
                 LogPrint("req", "Block %s has no available sources. Removing\n", item.obj.ToString());
-                cleanup(itemIter); // node should never be null... but if it is then there's nothing to do.
+                cleanup(itemIter);
             }
         }
     }
@@ -593,7 +593,7 @@ void CRequestManager::SendRequests()
                             if (next.node->fDisconnect) // Node was disconnected so we can't request from it
                             {
                                 LOCK(cs_vNodes);
-                                LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n",
+                                LogPrint("req", "ReqMgr: %s removed tx ref to %d count %d (on disconnect).\n",
                                     item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
                                 next.node->Release();
                                 next.node = NULL; // force the loop to get another node
@@ -621,7 +621,7 @@ void CRequestManager::SendRequests()
                         }
                         {
                             LOCK(cs_vNodes);
-                            LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n",
+                            LogPrint("req", "ReqMgr: %s removed tx ref to %d count %d\n",
                                 item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
                             next.node->Release();
                             next.node = NULL;
