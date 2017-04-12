@@ -180,8 +180,10 @@ private:
     // Methods for how to add transactions to a block.
     /** Add transactions based on feerate including unconfirmed ancestors
       * Increments nPackagesSelected / nDescendantsUpdated with corresponding
-      * statistics from the package selection (for logging statistics). */
-    void addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated);
+      * statistics from the package selection (for logging statistics).
+     *  mapModifiedTx will track the updated ancestor feerate score of
+     *  not-in-block transactions that have parents in the block */
+    void addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated, indexed_modified_transaction_set &mapModifiedTx);
 
     // helper functions for addPackageTxs()
     /** Remove confirmed (inBlock) entries from given set */
