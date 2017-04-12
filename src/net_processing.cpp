@@ -22,6 +22,7 @@
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "random.h"
+#include "reverse_iterator.h"
 #include "tinyformat.h"
 #include "txmempool.h"
 #include "ui_interface.h"
