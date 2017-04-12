@@ -1628,8 +1628,6 @@ void CreateAliasRecipient(const CScript& scriptPubKeyDest, const vector<unsigned
 	scriptChangeOrig += scriptPubKeyDest;
 	CRecipient recp = {scriptChangeOrig, 0, false};
 	recipient = recp;
-	CTxOut txout(0,	recipient.scriptPubKey);
-	size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
 	// create alias payment utxo max 1500 bytes worth of fees
 	size_t nSize = 1500;
 	CAmount nPayFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
