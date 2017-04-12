@@ -535,7 +535,7 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 }
 
 UniValue messageinfo(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 < params.size() || 2 < params.size())
+    if (fHelp || 1 > params.size() || 2 < params.size())
         throw runtime_error("messageinfo <guid> [walletless=No]\n"
                 "Show stored values of a single message.\n");
 

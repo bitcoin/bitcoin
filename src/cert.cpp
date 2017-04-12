@@ -1192,7 +1192,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 
 
 UniValue certinfo(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 < params.size() || 2 < params.size())
+    if (fHelp || 1 > params.size() || 2 < params.size())
         throw runtime_error("certinfo <guid> [walletless=No]\n"
                 "Show stored values of a single certificate and its .\n");
 
@@ -1414,7 +1414,7 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 	return oRes;
 }
 UniValue certhistory(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 < params.size() || 2 < params.size())
+    if (fHelp || 1 > params.size() || 2 < params.size())
         throw runtime_error("certhistory <guid> [walletless=No]\n"
                  "List all stored values of an cert.\n");
 

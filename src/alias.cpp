@@ -2605,7 +2605,7 @@ int aliasunspent(const vector<unsigned char> &vchAlias, COutPoint& outpoint)
  * @return        [description]
  */
 UniValue aliasinfo(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 < params.size() || 2 < params.size())
+	if (fHelp || 1 > params.size() || 2 < params.size())
 		throw runtime_error("aliasinfo <aliasname> [walletless=No]\n"
 				"Show values of an alias.\n");
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
@@ -2743,7 +2743,7 @@ bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oNam
  * @return        [description]
  */
 UniValue aliashistory(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 < params.size() || 2 < params.size())
+	if (fHelp || 1 > params.size() || 2 < params.size())
 		throw runtime_error("aliashistory <aliasname> [walletless=No]\n"
 				"List all stored values of an alias.\n");
 	UniValue oRes(UniValue::VARR);

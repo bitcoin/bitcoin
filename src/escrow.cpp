@@ -3291,7 +3291,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowinfo(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 < params.size() || 2 < params.size())
+    if (fHelp || 1 > params.size() || 2 < params.size())
         throw runtime_error("escrowinfo <guid> [walletless=No]\n"
                 "Show stored values of a single escrow\n");
 
@@ -3678,7 +3678,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 	return oRes;
 }
 UniValue escrowhistory(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 < params.size() || 2 < params.size())
+    if (fHelp || 1 > params.size() || 2 < params.size())
         throw runtime_error("escrowhistory <escrow> [walletless=No]\n"
                 "List all stored values of an escrow.\n");
 

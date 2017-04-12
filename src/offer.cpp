@@ -3099,7 +3099,7 @@ UniValue offeracceptacknowledge(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue offerinfo(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 < params.size() || 2 < params.size())
+	if (fHelp || 1 > params.size() || 2 < params.size())
 		throw runtime_error("offerinfo <guid> [walletless=No]\n"
 				"Show offer details\n");
 
@@ -3550,7 +3550,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
     return oRes;
 }
 UniValue offerhistory(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 < params.size() || 2 < params.size())
+	if (fHelp || 1 > params.size() || 2 < params.size())
 		throw runtime_error("offerhistory <offer> [walletless=No]\n"
 				"List all stored values of an offer.\n");
 
