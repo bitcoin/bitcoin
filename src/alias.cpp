@@ -2758,6 +2758,8 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
     vector<vector<unsigned char> > vvch;
     int op, nOut;
 	string opName;
+	UniValue oUpdates(UniValue::VOBJ);
+	UniValue oPayments(UniValue::VOBJ);
 	BOOST_FOREACH(txPos, vtxPos) {
 		CTransaction tx;
 		UniValue oName(UniValue::VOBJ);
