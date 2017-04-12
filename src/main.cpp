@@ -5436,7 +5436,19 @@ bool AlreadyHave(const CInv &inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return rrc || mempool.exists(inv.hash) || AlreadyHaveOrphan(inv.hash) || pcoinsTip->HaveCoins(inv.hash);
     }
     case MSG_BLOCK:
-        return mapBlockIndex.count(inv.hash);
+    case MSG_XTHINBLOCK:
+    case MSG_THINBLOCK:
+        {
+            // The Request Manager functionality requires that we return true only when we actually have received
+            // the block and not when we have received the header only.  Otherwise the request manager may not
+            // be able to update its block source in order to make re-requests.
+            BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
+            if (mi == mapBlockIndex.end())
+                return false;
+            if (!(mi->second->nStatus & BLOCK_HAVE_DATA))
+                return false;
+            return true;
+        }
     }
     // Don't know what it is, just say we already got one
     return true;
@@ -5861,10 +5873,7 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
             // non-NODE NETWORK peers can announce blocks (such as pruning
             // nodes)
 
-            // BUIP010 Extreme Thinblocks: We only do inv/getdata for xthinblocks and so we must have headersfirst
-            // turned off
-            if (!IsThinBlocksEnabled())
-                pfrom->PushMessage(NetMsgType::SENDHEADERS);
+            pfrom->PushMessage(NetMsgType::SENDHEADERS);
         }
 
         // BU expedited procecessing requires the exchange of the listening port id but we have to send it in a separate
@@ -6396,73 +6405,83 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
             // Headers message had its maximum size; the peer may have more headers.
             // TODO: optimize: if pindexLast is an ancestor of chainActive.Tip or pindexBestHeader, continue
             // from there instead.
-            LogPrint("net", "more getheaders (%d) to end to peer=%d (startheight:%d)\n", pindexLast->nHeight, pfrom->id,
-                pfrom->nStartingHeight);
+            LogPrint("net", "more getheaders (%d) to end to peer=%d (startheight:%d)\n",
+                    pindexLast->nHeight, pfrom->id,
+                    pfrom->nStartingHeight);
             pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexLast), uint256());
         }
 
         bool fCanDirectFetch = CanDirectFetch(chainparams.GetConsensus());
         CNodeState *nodestate = State(pfrom->GetId());
         nodestate->fFirstHeadersReceived = true;
+
+        // update the syncd status.  This should come before we make calls to requester.AskFor().
+        IsChainNearlySyncdInit();
+        IsInitialBlockDownloadInit();
+
         // If this set of headers is valid and ends in a block with at least as
         // much work as our tip, download as much as possible.
         if (fCanDirectFetch && pindexLast && pindexLast->IsValid(BLOCK_VALID_TREE) &&
             chainActive.Tip()->nChainWork <= pindexLast->nChainWork)
         {
-            vector<CBlockIndex *> vToFetch;
+            // Set tweak value.  Mostly used in testing direct fetch.
+            if (maxBlocksInTransitPerPeer.value != 0)
+                MAX_BLOCKS_IN_TRANSIT_PER_PEER = maxBlocksInTransitPerPeer.value;
+
+            std::vector<CBlockIndex *> vToFetch;
             CBlockIndex *pindexWalk = pindexLast;
-            // Calculate all the blocks we'd need to switch to pindexLast, up to a limit.
-            while (pindexWalk && !chainActive.Contains(pindexWalk) && vToFetch.size() <= MAX_BLOCKS_IN_TRANSIT_PER_PEER)
+            // Calculate all the blocks we'd need to switch to pindexLast.
+            while (pindexWalk && !chainActive.Contains(pindexWalk))
             {
-                if (!(pindexWalk->nStatus & BLOCK_HAVE_DATA) && !mapBlocksInFlight.count(pindexWalk->GetBlockHash()))
-                {
-                    // We don't have this block, and it's not yet in flight.
-                    vToFetch.push_back(pindexWalk);
-                }
+                vToFetch.push_back(pindexWalk);
                 pindexWalk = pindexWalk->pprev;
             }
+
             // If pindexWalk still isn't on our main chain, we're looking at a
             // very large reorg at a time we think we're close to caught up to
             // the main chain -- this shouldn't really happen.  Bail out on the
             // direct fetch and rely on parallel download instead.
             if (pindexWalk && !chainActive.Contains(pindexWalk))
             {
-                LogPrint("net", "Large reorg, won't direct fetch to %s (%d)\n", pindexLast->GetBlockHash().ToString(),
-                    pindexLast->nHeight);
-                //} else {   BU: We don't support headers first for XThinblocks.
+                LogPrint("net", "Large reorg, won't direct fetch to %s (%d)\n",
+                        pindexLast->GetBlockHash().ToString(),
+                        pindexLast->nHeight);
             }
-            else if (!IsThinBlocksEnabled())
+            else
             {
-                vector<CInv> vGetData;
                 // Download as much as possible, from earliest to latest.
-                BOOST_REVERSE_FOREACH (CBlockIndex *pindex, vToFetch)
+                unsigned int nAskFor = 0;
+                BOOST_REVERSE_FOREACH(CBlockIndex *pindex, vToFetch)
                 {
-                    if (nodestate->nBlocksInFlight >= (int)MAX_BLOCKS_IN_TRANSIT_PER_PEER)
+                    // pindex must be nonnull because we populated vToFetch a few lines above
+                    CInv inv(MSG_BLOCK, pindex->GetBlockHash());
+                    if (!AlreadyHave(inv))
                     {
-                        // Can't download any more from this peer
+		        requester.AskFor(inv, pfrom);
+                        LogPrint("req", "AskFor block via headers direct fetch %s (%d) peer=%d\n",
+                                pindex->GetBlockHash().ToString(),
+                                pindex->nHeight, pfrom->id);
+                        nAskFor++;
+                    }
+                    // We don't care about how many blocks are in flight.  We just need to make sure we don't
+                    // ask for more than the maximum allowed per peer because the request manager will take care
+                    // of any duplicate requests.
+                    if (nAskFor >= MAX_BLOCKS_IN_TRANSIT_PER_PEER)
+                    {
+                        LogPrint("net", "Large reorg, could only direct fetch %d blocks\n", nAskFor);
                         break;
                     }
-                    // pindex must be nonnull because we populated vToFetch a few lines above
-                    vGetData.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash()));
-                    MarkBlockAsInFlight(pfrom->GetId(), pindex->GetBlockHash(), chainparams.GetConsensus(), pindex);
-                    LogPrint(
-                        "net", "Requesting block %s from  peer=%d\n", pindex->GetBlockHash().ToString(), pfrom->id);
                 }
-                if (vGetData.size() > 1)
+                if (nAskFor > 1)
                 {
                     LogPrint("net", "Downloading blocks toward %s (%d) via headers direct fetch\n",
-                        pindexLast->GetBlockHash().ToString(), pindexLast->nHeight);
-                }
-                if (vGetData.size() > 0)
-                {
-                    pfrom->PushMessage(NetMsgType::GETDATA, vGetData);
+                            pindexLast->GetBlockHash().ToString(),
+                            pindexLast->nHeight);
                 }
             }
         }
 
         CheckBlockIndex(chainparams.GetConsensus());
-
-        IsChainNearlySyncdInit(); // BUIP010 XTHIN
     }
 
     // BUIP010 Xtreme Thinblocks: begin section
@@ -7586,88 +7605,22 @@ bool SendMessages(CNode *pto)
         //
         // Message: getdata (blocks)
         //
-        vector<CInv> vGetData;
+        std::vector<CInv> vGetData;
         if (!pto->fDisconnect && !pto->fClient && (fFetch || !IsInitialBlockDownload()) &&
             state.nBlocksInFlight < (int)MAX_BLOCKS_IN_TRANSIT_PER_PEER)
         {
-            vector<CBlockIndex *> vToDownload;
+            vector<CBlockIndex*> vToDownload;
             NodeId staller = -1;
-            FindNextBlocksToDownload(
-                pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller);
-            BOOST_FOREACH (CBlockIndex *pindex, vToDownload)
+            FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller);
+            BOOST_FOREACH(CBlockIndex *pindex, vToDownload)
             {
-                // BUIP010 Xtreme Thinblocks: begin section
-                if (IsThinBlocksEnabled() && IsChainNearlySyncd())
+                CInv inv(MSG_BLOCK, pindex->GetBlockHash());
+                if (!AlreadyHave(inv))
                 {
-                    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                    CBloomFilter filterMemPool;
-                    if (HaveConnectThinblockNodes() ||
-                        (HaveThinblockNodes() && thindata.CheckThinblockTimer(pindex->GetBlockHash())))
-                    {
-                        // Must download a block from a ThinBlock peer
-                        // We can only send one thinblock per peer at a time
-                        if (pto->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pto))
-                        {
-                            pto->mapThinBlocksInFlight[pindex->GetBlockHash()] = GetTime();
-                            std::vector<uint256> vOrphanHashes;
-                            {
-                                LOCK(cs_orphancache);
-                                for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin();
-                                     mi != mapOrphanTransactions.end(); ++mi)
-                                    vOrphanHashes.push_back((*mi).first);
-                            }
-                            BuildSeededBloomFilter(filterMemPool, vOrphanHashes, pindex->GetBlockHash());
-                            ss << CInv(MSG_XTHINBLOCK, pindex->GetBlockHash());
-                            ss << filterMemPool;
-                            pto->PushMessage(NetMsgType::GET_XTHIN, ss);
-                            MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), consensusParams, pindex);
-                            LogPrint("thin", "Requesting Thinblock %s (%d) from peer %s (%d) pingtime(ms) %d\n",
-                                pindex->GetBlockHash().ToString(), pindex->nHeight, pto->addrName.c_str(), pto->id,
-                                pto->nPingUsecTime / 1000);
-                        }
-                    }
-                    else
-                    {
-                        // Try to download a thinblock if possible otherwise just download a regular block
-                        // We can only send one thinblock per peer at a time
-                        if (pto->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pto))
-                        {
-                            pto->mapThinBlocksInFlight[pindex->GetBlockHash()] = GetTime();
-                            std::vector<uint256> vOrphanHashes;
-                            {
-                                LOCK(cs_orphancache);
-                                for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin();
-                                     mi != mapOrphanTransactions.end(); ++mi)
-                                    vOrphanHashes.push_back((*mi).first);
-                            }
-                            BuildSeededBloomFilter(filterMemPool, vOrphanHashes, pindex->GetBlockHash());
-                            ss << CInv(MSG_XTHINBLOCK, pindex->GetBlockHash());
-                            ss << filterMemPool;
-                            pto->PushMessage(NetMsgType::GET_XTHIN, ss);
-                            LogPrint("thin", "Requesting Thinblock %s (%d) from peer %s (%d) pingtime(ms) %d\n",
-                                pindex->GetBlockHash().ToString(), pindex->nHeight, pto->addrName.c_str(), pto->id,
-                                pto->nPingUsecTime / 1000);
-                        }
-                        else
-                        {
-                            vGetData.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash()));
-                            LogPrint("net", "Requesting block %s (%d) from peer %s (%d)\n",
-                                pindex->GetBlockHash().ToString(), pindex->nHeight, pto->addrName.c_str(), pto->id);
-                        }
-                        MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), consensusParams, pindex);
-                    }
-                }
-                else
-                {
-                    // vGetData.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash()));
-                    // MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), consensusParams, pindex);
-                    // LogPrint("net", "Requesting block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
-                    //                 pindex->nHeight, pto->id);
-                    requester.AskFor(CInv(MSG_BLOCK, pindex->GetBlockHash()), pto);
+                    requester.AskFor(inv, pto);
                     LogPrint("req", "AskFor block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
-                        pindex->nHeight, pto->id);
+                            pindex->nHeight, pto->id);
                 }
-                // BUIP010 Xtreme Thinblocks: end section
             }
             if (state.nBlocksInFlight == 0 && staller != -1)
             {

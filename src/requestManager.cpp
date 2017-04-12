@@ -81,10 +81,11 @@ void CRequestManager::cleanup(OdMap::iterator& itemIt)
       CNode* node = i->node;
       if (node)
         {
-	  i->clear();
-          LogPrint("req", "ReqMgr: %s removed ref to %d count %d.\n", item.obj.ToString(), node->GetId(), node->GetRefCount());
-          node->Release();     
-	}
+            i->clear();
+            LogPrint("req", "ReqMgr: %s cleanup - removed ref to %d count %d.\n", item.obj.ToString(), node->GetId(),
+                node->GetRefCount());
+            node->Release();
+        }
     }
   item.availableFrom.clear();
 
@@ -498,8 +499,8 @@ void CRequestManager::SendRequests()
                         if (release)
                         {
                             LOCK(cs_vNodes);
-                            LogPrint("req", "ReqMgr: %s removed block ref to %s count %d (%s).\n", item.obj.ToString(),
-                                next.node->GetLogName(), next.node->GetRefCount(), reason);
+                            LogPrint("req", "ReqMgr: %s removed block ref to %d count %d (on disconnect).\n",
+                                item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
                             next.node->Release();
                             next.node = NULL; // force the loop to get another node
                         }

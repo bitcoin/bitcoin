@@ -187,7 +187,7 @@ testScripts = [ RpcTest(t) for t in [
     Disabled('p2p-fullblocktest', "TODO"),
     'blockchain',
     'disablewallet',
-    Disabled('sendheaders', "BU requests INVs not headers -- in the future we may add support for headers, at least by treating them like INVs)"),
+    'sendheaders',
     'keypool',
     Disabled('prioritise_transaction', "TODO"),
     Disabled('invalidblockrequest', "TODO"),
