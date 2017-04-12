@@ -144,8 +144,8 @@ public:
                 vout == rhs.vout;
     }
     
-    bool operator!=(const CCoins &a, const CCoins &b) {
-        return !(a == b);
+    bool operator!=(const CCoins &rhs) {
+        return !(*this == rhs);
     }
 
     void CalcMaskSize(unsigned int &nBytes, unsigned int &nNonzeroBytes) const;
