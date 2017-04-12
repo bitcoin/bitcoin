@@ -2841,7 +2841,6 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		}
 		else
 			continue;
-		oPayments.push_back(oName);
 	}
 	oRes.push_back(Pair("updates", oUpdates));	
 	oRes.push_back(Pair("payments", oPayments));	
