@@ -2760,10 +2760,10 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 	string opName;
 	UniValue oUpdates(UniValue::VOBJ);
 	UniValue oPayments(UniValue::VOBJ);
+	map<uint256, UniValue> oUpdateDetails;
+	map<uint256, UniValue> oPaymentDetails;
 	BOOST_FOREACH(txPos, vtxPos) {
 		CTransaction tx;
-		UniValue oName(UniValue::VOBJ);
-		UniValue oDetails(UniValue::VOBJ);
 		if (!GetSyscoinTransaction(txPos.nHeight, txPos.txHash, tx, Params().GetConsensus()))
 			continue;
 		if(DecodeOfferTx(tx, op, nOut, vvch) )
@@ -2791,22 +2791,19 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		else if(DecodeAliasTx(tx, op, nOut, vvch, false) )
 		{
 			opName = aliasFromOp(op);
-			oName.push_back(Pair("type", opName));
+			oUpdateDetails[tx.GetHash()].push_back(Pair("type", opName));
 			CAliasIndex alias(tx);
 			if(!alias.IsNull())
 			{
-				if(BuildAliasJson(alias, false, oDetails, strWalletless))
-					oName.push_back(oDetails);
+				if(BuildAliasJson(alias, false, oUpdateDetails[tx.GetHash()], strWalletless))
+					oUpdates.push_back(oUpdateDetails[tx.GetHash()]);
 			}
 		}
 		else
 			continue;
-		oUpdates.push_back(oName);
 	}
 	BOOST_FOREACH(txPaymentPos, vtxPaymentPos) {
-		CTransaction tx;
-		UniValue oName(UniValue::VOBJ);
-		UniValue oDetails(UniValue::VOBJ);
+		CTransaction tx;		
 		if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
 			continue;
 		if(DecodeOfferTx(tx, op, nOut, vvch) )
@@ -2834,12 +2831,12 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		else if(DecodeAliasTx(tx, op, nOut, vvch, true) )
 		{
 			opName = aliasFromOp(op);
-			oName.push_back(Pair("type", opName));
+			oPaymentDetails[tx.GetHash()].push_back(Pair("type", opName));
 			CAliasIndex alias(tx);
 			if(!alias.IsNull())
 			{
-				if(BuildAliasJson(alias, false, oDetails, strWalletless))
-					oName.push_back(oDetails);
+				if(BuildAliasJson(alias, false, oPaymentDetails[tx.GetHash()], strWalletless))
+					oPayments.push_back(oPaymentDetails[tx.GetHash()]);
 			}
 		}
 		else
