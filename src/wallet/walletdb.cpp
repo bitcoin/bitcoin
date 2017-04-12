@@ -18,7 +18,6 @@
 
 #include <atomic>
 
-#include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 
 //

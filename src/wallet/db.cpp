@@ -18,7 +18,6 @@
 #include <sys/stat.h>
 #endif
 
-#include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 
 //
