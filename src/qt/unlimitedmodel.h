@@ -48,21 +48,21 @@ public:
 
     /* Options setters */
     void setMaxGeneratedBlock(const QVariant& value);
-    
+
 
     /* Explicit getters */
-    uint64_t getMaxGeneratedBlock() 
+    uint64_t getMaxGeneratedBlock()
     {
         return ::maxGeneratedBlock;
     }
-    
-    
+
+
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
 
     /* Restart flag helper */
     void setRestartRequired(bool fRequired);
     bool isRestartRequired();
-    
+
 private:
     /* settings that were overriden by command-line */
     QString strOverriddenByCommandLine;

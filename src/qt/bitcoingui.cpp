@@ -102,7 +102,7 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *platformStyle, const NetworkStyle *n
     receiveCoinsAction(0),
     receiveCoinsMenuAction(0),
     optionsAction(0),
-    unlimitedAction(0),             
+    unlimitedAction(0),
     toggleHideAction(0),
     encryptWalletAction(0),
     backupWalletAction(0),
@@ -834,7 +834,7 @@ void BitcoinGUI::message(const QString &title, const QString &message, unsigned 
         case CClientUIInterface::MSG_INFORMATION:
             showTime = infoShowTime.available();
             if (showTime >= NOTIFY_MIN_SHOW_TIME) infoShowTime.try_leak(std::min(showTime,1000));  // BU: If we are going to show this notification, leak a second or more out of the bucket
-            msgType = tr("Information");            
+            msgType = tr("Information");
             break;
         default:
             break;

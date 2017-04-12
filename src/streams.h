@@ -348,8 +348,8 @@ private:
 
     int nType;
     int nVersion;
-	
-    FILE* file;	
+
+    FILE* file;
 
 public:
     CAutoFile(FILE* filenew, int nTypeIn, int nVersionIn)
@@ -523,8 +523,8 @@ public:
             LogPrint("reindex","Large read, growing buffer\n", nSize);
             GrowTo(nSize + nRewind + RESIZE_EXTRA);
             if (nSize + nRewind > vchBuf.size())  // make sure it worked
-	      throw std::ios_base::failure("Read larger than buffer size");
-	  }
+              throw std::ios_base::failure("Read larger than buffer size");
+          }
         while (nSize > 0) {
             if (nReadPos == nSrcPos)
                 Fill();
@@ -551,11 +551,11 @@ public:
     bool SetPos(uint64_t nPos) {
         nReadPos = nPos;
         if (nReadPos + nRewind < nSrcPos) {
-	    LogPrint("reindex","Short SetPos: desired %lld actual %lld srcpos %lld buffer size %lld, rewind %lld\n", nPos, nReadPos, nSrcPos, vchBuf.size(), nRewind);
+            LogPrint("reindex","Short SetPos: desired %lld actual %lld srcpos %lld buffer size %lld, rewind %lld\n", nPos, nReadPos, nSrcPos, vchBuf.size(), nRewind);
             nReadPos = nSrcPos - nRewind;
             return false;
         } else if (nReadPos > nSrcPos) {
-	    LogPrint("reindex","Long SetPos: desired %lld actual %lld srcpos %lld buffer size %lld, rewind %lld\n", nPos, nReadPos, nSrcPos, vchBuf.size(), nRewind);
+            LogPrint("reindex","Long SetPos: desired %lld actual %lld srcpos %lld buffer size %lld, rewind %lld\n", nPos, nReadPos, nSrcPos, vchBuf.size(), nRewind);
             nReadPos = nSrcPos;
             return false;
         } else {
@@ -608,7 +608,7 @@ public:
     void GrowTo(uint64_t amt)
     {
       if (vchBuf.size() < amt)  // We want as much data as we are currently saving, plus the new data
-	{
+        {
           amt = std::max(amt, ((uint64_t)vchBuf.size())*2);  // Resize is inefficient, so at a minimum double the buffer to make # resizes log(n)
           vchBuf.resize(amt,0);
           LogPrint("reindex","File buffer resize to %s\n", vchBuf.size());
@@ -618,13 +618,13 @@ public:
           if (nRewind < nReadPos)
             readPos = nReadPos - nRewind;
 
-          // Now expand the rewind         
+          // Now expand the rewind
           nRewind = amt/2;
 
           if (fseek(src, readPos, SEEK_SET))
-	    {
+            {
             throw std::ios_base::failure("CBufferedFile::GrowTo: fseek error");
-	    }
+            }
           unsigned int pos = readPos % vchBuf.size();
           unsigned int readNow = std::min((uint64_t)(vchBuf.size() - pos), nRewind);  // the amount to read is the minimum of what's left over or the max we can read
           size_t read = fread((void*)&vchBuf[pos], 1, readNow, src);
@@ -632,16 +632,16 @@ public:
           nSrcPos = readPos + read;
           if ((nReadPos > nSrcPos)&&(read==readNow))  // I filled to the buffer end, but that wasn't enough
             {
-	      readNow = std::min(pos,(unsigned int) (nRewind-read));  // The limit of this read is the prior start position in the buffer, or the maximum ahead the read is allowed to get
+              readNow = std::min(pos,(unsigned int) (nRewind-read));  // The limit of this read is the prior start position in the buffer, or the maximum ahead the read is allowed to get
               read = fread((void*)&vchBuf[0], 1, readNow, src);
-              if (read == 0) 
+              if (read == 0)
                 {
                 throw std::ios_base::failure(feof(src) ? "CBufferedFile::GrowTo: end of file" : "CBufferedFile::GrowTo: fread failed");
                 }
               nSrcPos += read;
             }
           assert(nReadPos <= nSrcPos);  // By the end of the above logic, we must have filled the buffer up to the current read position.
-	}
+        }
     }
 };
 

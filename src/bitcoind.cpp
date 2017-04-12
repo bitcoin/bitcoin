@@ -168,7 +168,7 @@ bool AppInit(int argc, char* argv[])
     }
 
     UnlimitedSetup();
-    
+
     if (!fRet)
     {
         Interrupt(threadGroup);
