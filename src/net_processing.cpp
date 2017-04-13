@@ -3148,8 +3148,8 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                     pto->filterInventoryKnown.insert(hash);
                 }
             }
-            LogPrintf("About to send %d Dandelion messages.\n", dandVInv.size());
             if (!dandVInv.empty()) {
+                LogPrintf("About to send %d Dandelion messages.\n", dandVInv.size());
                 connman.PushMessage(pto, msgMaker.Make(NetMsgType::D_INV, dandVInv));
             }
 
