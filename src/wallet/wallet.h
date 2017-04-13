@@ -713,8 +713,9 @@ private:
 
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
 
-    /* Used by TransactionAddedToMemorypool/BlockConnected/Disconnected */
-    void SyncTransaction(const CTransactionRef& tx, const CBlockIndex *pindexBlockConnected, int posInBlock);
+    /* Used by TransactionAddedToMemorypool/BlockConnected/Disconnected.
+     * Should be called with pindexBlock and posInBlock if this is for a transaction that is included in a block. */
+    void SyncTransaction(const CTransactionRef& tx, const CBlockIndex *pindex = NULL, int posInBlock = 0);
 
     /* HD derive new child key (on internal or external chain) */
     void DeriveNewChildKey(const CKeyMetadata& metadata, CKey& secretRet, uint32_t nAccountIndex, bool fInternal /*= false*/);
