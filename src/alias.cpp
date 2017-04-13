@@ -3041,18 +3041,35 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
     if (totalAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Alias has insufficient funds");
 
-    // Send
-    CReserveKey keyChange(pwalletMain);
-    CAmount nFeeRequired = 0;
-    int nChangePosRet = -1;
-    string strFailReason;
-    bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePosRet, strFailReason, NULL, true/*sign*/, true/*sysTx*/, true/*bAliasPay*/);
-    if (!fCreated)
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
-    if (!pwalletMain->CommitTransaction(wtx, keyChange))
-        throw JSONRPCError(RPC_WALLET_ERROR, "Transaction commit failed");
+	CRecipient recipientPayment, recipientPayment;
+	CCoinControl coinControl;
+	coinControl.fAllowOtherInputs = false;
+	coinControl.fAllowWatchOnly = false;
+	bool useOnlyAliasPaymentToFund = true;
+	
+	SendMoneySyscoin(vchAlias, recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund);
+	
+	UniValue res(UniValue::VARR);
+	UniValue signParams(UniValue::VARR);
+	signParams.push_back(EncodeHexTx(wtx));
+	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
+	const UniValue& so = resSign.get_obj();
+	string hex_str = "";
 
-    return wtx.GetHash().GetHex();
+	const UniValue& hex_value = find_value(so, "hex");
+	if (hex_value.isStr())
+		hex_str = hex_value.get_str();
+	const UniValue& complete_value = find_value(so, "complete");
+	bool bComplete = false;
+	if (complete_value.isBool())
+		bComplete = complete_value.get_bool();
+	if(bComplete)
+		res.push_back(wtx.GetHash().GetHex());
+	else
+	{
+		res.push_back(hex_str);
+		res.push_back("false");
+	}
 }
 UniValue aliasdecodemultisigredeemscript(const UniValue& params, bool fHelp) {
 	if (fHelp || 1 != params.size())

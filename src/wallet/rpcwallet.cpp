@@ -452,10 +452,13 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &a
 	if(transferAlias)
 		numResults = 0;
 	// for the alias utxo (1 per transaction is used)
-	for(unsigned int i =numResults;i<MAX_ALIAS_UPDATES_PER_BLOCK;i++)
-		vecSend.push_back(aliasRecipient);
-	if(!aliasOutPoint.IsNull())
-		coinControl->Select(aliasOutPoint);
+	if(!aliasRecipient.scriptPubKey.empty())
+	{
+		for(unsigned int i =numResults;i<MAX_ALIAS_UPDATES_PER_BLOCK;i++)
+			vecSend.push_back(aliasRecipient);
+		if(!aliasOutPoint.IsNull())
+			coinControl->Select(aliasOutPoint);
+	}
 
 	CWalletTx wtxNew1, wtxNew2;
 	// get total output required
@@ -492,7 +495,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &a
 	CAmount nBalance = AmountFromValue(result);
 	// if fee placement utxo's have been used up (or we are creating a new alias) use balance(alias or wallet) for funding as well as create more fee placeholders
 	bool bNeedAliasPaymentInputs = numFeeCoinsLeft == 0 || numResults <= 0;
-	if(bNeedAliasPaymentInputs)
+	if(bNeedAliasPaymentInputs && !aliasFeePlaceholderRecipient.scriptPubKey.empty())
 	{
 		for(unsigned int i =0;i<MAX_ALIAS_UPDATES_PER_BLOCK;i++)
 		{
