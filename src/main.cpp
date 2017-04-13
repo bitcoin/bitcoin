@@ -5252,8 +5252,9 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
         if (pfrom->nVersion != 0)
         {
             pfrom->PushMessage(NetMsgType::REJECT, strCommand, REJECT_DUPLICATE, std::string("Duplicate version message"));
-            Misbehaving(pfrom->GetId(), 1);
-            return false;
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("Duplicate version message received - banning peer=%d", pfrom->GetId());
         }
 
         int64_t nTime;
@@ -5266,12 +5267,12 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
 
         if (pfrom->nVersion < MIN_PEER_PROTO_VERSION)
         {
-            // disconnect from peers older than this proto version
-            LogPrintf("peer=%d using obsolete version %i; disconnecting\n", pfrom->id, pfrom->nVersion);
+            // ban peers older than this proto version
             pfrom->PushMessage(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
-                               strprintf("Version must be %d or greater", MIN_PEER_PROTO_VERSION));
-            pfrom->fDisconnect = true;
-            return false;
+                               strprintf("Protocol Version must be %d or greater", MIN_PEER_PROTO_VERSION));
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("Using obsolete protocol version %i - banning peer=%d", pfrom->nVersion, pfrom->id);
         }
 
         if (pfrom->nVersion == 10300)
@@ -5312,8 +5313,11 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
         // Potentially mark this peer as a preferred download peer.
         UpdatePreferredDownload(pfrom, State(pfrom->GetId()));
 
-        // Change version
+        // Send VERACK handshake message
         pfrom->PushMessage(NetMsgType::VERACK);
+        pfrom->fVerackSent = true;
+
+        // Change version
         pfrom->ssSend.SetVersion(std::min(pfrom->nVersion, PROTOCOL_VERSION));
 
         if (!pfrom->fInbound)
@@ -5348,9 +5352,7 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
             }
         }
 
-        pfrom->fSuccessfullyConnected = true;
-
-        std::string remoteAddr;
+        string remoteAddr;
         if (fLogIPs)
             remoteAddr = ", peeraddr=" + pfrom->addr.ToString();
 
@@ -5365,17 +5367,24 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
     }
 
 
-    else if (pfrom->nVersion == 0)
-    {
-        // Must have a version message before anything else
-        Misbehaving(pfrom->GetId(), 1);
-        return false;
-    }
-
-
     else if (strCommand == NetMsgType::VERACK)
     {
+        // If we never sent a VERSION message then we should not get a VERACK message.
+        if (!pfrom->fVersionSent)
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("VERACK received but we never sent a VERSION message - banning peer=%d", pfrom->GetId());
+        }
+        if (pfrom->fSuccessfullyConnected)
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("duplicate VERACK received - banning peer=%d", pfrom->GetId());
+        }
+
         pfrom->SetRecvVersion(std::min(pfrom->nVersion, PROTOCOL_VERSION));
+        pfrom->fSuccessfullyConnected = true;
 
         // Mark this node as currently connected, so we update its timestamp later.
         if (pfrom->fNetworkNode) {
@@ -5398,8 +5407,11 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
         // message because we don't know if in the future Core will append more data to the end of the current VERSION message.
         // The BUVERSION should be after the VERACK message otherwise Core may flag an error if another messaged shows up before the VERACK is received.
         // The BUVERSION message is active from the protocol EXPEDITED_VERSION onwards.
-        if( pfrom->nVersion >= EXPEDITED_VERSION)
+        if (pfrom->nVersion >= EXPEDITED_VERSION)
+        {
             pfrom->PushMessage(NetMsgType::BUVERSION, GetListenPort());
+            pfrom->fBUVersionSent = true;
+        }
     }
 
 
@@ -5972,7 +5984,6 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
 
         // Validates that the filter is reasonably sized.
         LoadFilter(pfrom, &filterMemPool);
-
         {
             LOCK(cs_main);
             BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
@@ -5995,38 +6006,57 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
             }
         }
     }
+
     else if (strCommand == NetMsgType::XPEDITEDREQUEST)  // BU
-      {
-	HandleExpeditedRequest(vRecv,pfrom);
-      }
+    {
+	HandleExpeditedRequest(vRecv, pfrom);
+    }
     else if (strCommand == NetMsgType::XPEDITEDBLK)  // BU
-      {
-	if (!HandleExpeditedBlock(vRecv,pfrom))
+    {
+	if (!HandleExpeditedBlock(vRecv, pfrom))
         {
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 5);
             return false;            
         }
-      }
-    // BU - used to pass BU specific version information similar to NetMsgType::VERSION
+    }
+
+    // BUVERSION is used to pass BU specific version information similar to NetMsgType::VERSION
+    // and is exchanged after the VERSION and VERACK are both sent and received.
     else if (strCommand == NetMsgType::BUVERSION)
     {
+        // If we never sent a VERACK message then we should not get a BUVERSION message.
+        if (!pfrom->fVerackSent)
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("BUVERSION received but we never sent a VERACK message - banning peer=%d", pfrom->GetId());
+        }
         // Each connection can only send one version message
         if (pfrom->addrFromPort != 0)
         {
             pfrom->PushMessage(NetMsgType::REJECT, strCommand, REJECT_DUPLICATE, std::string("Duplicate BU version message"));
             LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 5);
-            return false;
+            Misbehaving(pfrom->GetId(), 100);
+            return error("Duplicate BU version message received from peer=%d", pfrom->GetId());
         }
 
-        vRecv >> pfrom->addrFromPort; // needed for connecting and initializing Xpedited forwarding.
+        // addrFromPort is needed for connecting and initializing Xpedited forwarding.
+        vRecv >> pfrom->addrFromPort;
         pfrom->PushMessage(NetMsgType::BUVERACK);
     }
-    // BU - final handshake for BU specific version information similar to NetMsgType::VERACK
+    // Final handshake for BU specific version information similar to NetMsgType::VERACK
     else if (strCommand == NetMsgType::BUVERACK)
     {
-        // BU: this step done here after final handshake
+        // If we never sent a BUVERSION message then we should not get a VERACK message.
+        if (!pfrom->fBUVersionSent)
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("BUVERACK received but we never sent a BUVERSION message - banning peer=%d", pfrom->GetId());
+        }
+
+        // This step done after final handshake
         CheckAndRequestExpeditedBlocks(pfrom);
     }
 
