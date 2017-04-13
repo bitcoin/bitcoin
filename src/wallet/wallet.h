@@ -475,6 +475,16 @@ public:
 
 class CInputCoin {
 public:
+
+    CInputCoin(const CTxOut& txoutIn, const COutPoint& outpointIn)
+    {
+        if(txoutIn.IsNull())
+            throw std::invalid_argument("txoutIn should not be null");
+        if (outpointIn.IsNull())
+            throw std::invalid_argument("outpointIn should not be null");
+        outpoint = outpointIn;
+        txout = txoutIn;
+    }
     CInputCoin(const CWalletTx* walletTx, unsigned int i)
     {
         if (!walletTx)
@@ -1163,11 +1173,15 @@ bool CWallet::DummySignTx(CMutableTransaction &txNew, const ContainerType &coins
         const CScript& scriptPubKey = coin.txout.scriptPubKey;
         SignatureData sigdata;
 
-        if (!ProduceSignature(DummySignatureCreator(this), scriptPubKey, sigdata))
+        auto ismine = IsMine(coin.txout);
+        if (ismine == ISMINE_SPENDABLE || ismine == ISMINE_WATCH_SOLVABLE)
         {
-            return false;
-        } else {
-            UpdateTransaction(txNew, nIn, sigdata);
+            if (!ProduceSignature(DummySignatureCreator(this), scriptPubKey, sigdata))
+            {
+                return false;
+            } else {
+                UpdateTransaction(txNew, nIn, sigdata);
+            }
         }
 
         nIn++;
