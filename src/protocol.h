@@ -240,10 +240,18 @@ extern const char *GETBLOCKTXN;
  * @since protocol version 70014 as described by BIP 152
  */
 extern const char *BLOCKTXN;
+/**
+ * The Dandelion inv message indicates that the message
+ * is in the stem phase of Dandelion spreading.
+ */
+extern const char *D_INV;
 };
 
 /* Get a vector of all valid message types (see above) */
 const std::vector<std::string> &getAllNetMessageTypes();
+
+/* Dandelion forwarding probability */
+const float DANDELION_PROB = 0.2;
 
 /** nServices flags */
 enum ServiceFlags : uint64_t {

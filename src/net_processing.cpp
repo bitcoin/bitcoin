@@ -31,6 +31,8 @@
 #include "validationinterface.h"
 
 #include <boost/thread.hpp>
+#include <stdlib.h> 
+#include <unordered_set>
 
 #if defined(NDEBUG)
 # error "Bitcoin cannot be compiled without assertions."
@@ -122,6 +124,10 @@ namespace {
     MapRelay mapRelay;
     /** Expiration-time ordered list of (expire time, relay map entry) pairs, protected by cs_main). */
     std::deque<std::pair<int64_t, MapRelay::iterator>> vRelayExpiration;
+
+    /** Set of hashes for transactions that are in the Dandelion stem. */
+    std::set<uint256> stemSet;
+    
 } // anon namespace
 
 //////////////////////////////////////////////////////////////////////////////
@@ -925,9 +931,43 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 static void RelayTransaction(const CTransaction& tx, CConnman& connman)
 {
     CInv inv(MSG_TX, tx.GetHash());
-    connman.ForEachNode([&inv](CNode* pnode)
+    bool stemRelay = false;
+    CNode* stemNode;
+    // 1) Check if inv is in the stem
+    if (stemSet.find(inv.hash) != stemSet.end()) {
+        /* Pick a dandelion relay at random from outgoing edges
+           (in principle, this should be the same for all messages
+           but for our prototype, we will choose relays independently
+           across transactions)
+        */ 
+        stemRelay = true;
+        // Track the outgoing connections with dandelion enabled
+        std::vector<CNode*> outgoing;
+        connman.ForEachNode( [&outgoing](CNode* pnode)
+        {
+            if (!pnode->fInbound && pnode->GetSendVersion() >= DANDELION_VERSION_NUM) {
+                outgoing.push_back(pnode);
+            }
+        });
+
+        // If there are no connected Dandelion nodes, go to fluff phase
+        if (outgoing.empty()) {
+            stemSet.erase(inv.hash);
+        } else {
+            /* Choose a random element from outgoing (this isn't exactly pseudorandom, 
+            depending on the size of RAND_MAX, but it's close enough) */
+            std::vector<CNode*>::iterator randIt = outgoing.begin();
+            std::advance(randIt, std::rand() % outgoing.size());
+            stemNode = *randIt;
+        }
+
+    }
+    connman.ForEachNode([&inv,&stemRelay,&stemNode](CNode* pnode)
     {
-        pnode->PushInventory(inv);
+        // Then add inv to the node's queue, if it's supposed to receive the message
+        if (!stemRelay || stemNode == pnode) {
+            pnode->PushInventory(inv);
+        }
     });
 }
 
@@ -1513,7 +1553,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     }
 
 
-    else if (strCommand == NetMsgType::INV)
+    else if (strCommand == NetMsgType::INV || strCommand == NetMsgType::D_INV)
     {
         std::vector<CInv> vInv;
         vRecv >> vInv;
@@ -1548,6 +1588,17 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
             if (inv.type == MSG_TX) {
                 inv.type |= nFetchFlags;
+
+                // If the transaction is in the stem, decide if it should remain in the stem
+                if (strCommand == NetMsgType::D_INV)
+                {
+                    float rand_prob = ((float) rand() / (float) RAND_MAX);
+                    if (rand_prob < DANDELION_PROB)
+                    {
+                        // Add the hash to the set of ongoing stem transactions
+                        stemSet.insert(inv.hash);
+                    }
+                }
             }
 
             if (inv.type == MSG_BLOCK) {
@@ -1955,7 +2006,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
         }
     }
-
 
     else if (strCommand == NetMsgType::CMPCTBLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
     {
@@ -3042,16 +3092,51 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
         {
             LOCK(pto->cs_inventory);
             vInv.reserve(std::max<size_t>(pto->vInventoryBlockToSend.size(), INVENTORY_BROADCAST_MAX));
-
+            
             // Add blocks
             BOOST_FOREACH(const uint256& hash, pto->vInventoryBlockToSend) {
+                
                 vInv.push_back(CInv(MSG_BLOCK, hash));
+
                 if (vInv.size() == MAX_INV_SZ) {
                     connman.PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
                     vInv.clear();
                 }
+
             }
             pto->vInventoryBlockToSend.clear();
+
+            /* -------------Process all Dandelion transactions ----------------- 
+            We do this here because the Dandelion inv messages should not be sent
+            with the usual exponential delay. */
+
+            std::vector<CInv> dandVInv;
+            // Add only the elements that are in the Dandelion stem
+            dandVInv.reserve(pto->setInventoryTxToSend.size());
+            for (std::set<uint256>::iterator it = pto->setInventoryTxToSend.begin(); it != pto->setInventoryTxToSend.end(); it++) {
+                uint256 hash = *it;
+                // Check if the hash is in the dandelion stem
+                if (stemSet.find(hash) != stemSet.end()) {
+                    // remove the hash from the dandelion stem set
+                    stemSet.erase(hash);
+                    // remove the iterator from pto's to-send list
+                    pto->setInventoryTxToSend.erase(it);
+                    // Add the item to the queue to be sent
+                    dandVInv.push_back(CInv(MSG_TX, hash));
+                    if (vInv.size() == MAX_INV_SZ) {
+                        connman.PushMessage(pto, msgMaker.Make(NetMsgType::D_INV, vInv));
+                        vInv.clear();
+                    }
+                    pto->filterInventoryKnown.insert(hash);
+                }
+            }
+            if (!vInv.empty()) {
+                connman.PushMessage(pto, msgMaker.Make(NetMsgType::D_INV, vInv));
+            }
+
+            /*-------------------------------------------------------------------------------*/
+
+
 
             // Check whether periodic sends should happen
             bool fSendTrickle = pto->fWhitelisted;
