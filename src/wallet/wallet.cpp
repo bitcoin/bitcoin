@@ -2439,7 +2439,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 						}
                     }
 					// SYSCOIN change as a alias payment				
-					if(address.isAlias && (!sysTx || setCoins.size() > 1))
+					if(address.isAlias && bAliasPay)
 					{
   						int op;
 						vector<vector<unsigned char> > vvch;
@@ -2448,6 +2448,14 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 						scriptChangeOrig += scriptChange;
 						scriptChange = scriptChangeOrig;
 						txNew.nVersion = GetSyscoinTxVersion();				
+					}
+					else
+					{
+						CPubKey vchPubKey;
+						bool ret;
+						ret = reservekey.GetReservedKey(vchPubKey);
+						assert(ret); // should never fail, as we just unlocked
+						scriptChange = GetScriptForDestination(vchPubKey.GetID());
 					}
 
                     CTxOut newTxOut(nChange, scriptChange);
