@@ -506,13 +506,13 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &a
 		if (!pwalletMain->CreateTransaction(vecSend, wtxNew2, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false,true, useOnlyAliasPaymentToFund)) {
 			throw runtime_error(strError);
 		}
-		nTotal = nFeeRequired+nRequiredFeePlaceholderFunds;
+		nTotal = nFeeRequired;
 		BOOST_FOREACH(const CRecipient& recp, vecSend)
 		{
 			nTotal += recp.nAmount;
 		}
 		// if transferring alias, move entire balance of alias to new address
-		if(transferAlias)
+		if(transferAlias && !aliasRecipient.scriptPubKey.empty())
 		{
 			CTxDestination aliasDest;
 			if (ExtractDestination(aliasRecipient.scriptPubKey, aliasDest)) 
