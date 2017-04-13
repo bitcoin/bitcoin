@@ -2798,7 +2798,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
         if(!foundCoin)
             foundCoin = FindInCoinView(txin.prevout);
         if(!foundCoin)
-            throw JSONRPCError(RPC_WALLET_ERROR, _("Insufficient funds"));
+            throw JSONRPCError(RPC_WALLET_ERROR, "unknown-input");
         coinControl.AddKnownCoins(*foundCoin);
     }
 
