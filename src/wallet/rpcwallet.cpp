@@ -2622,6 +2622,21 @@ UniValue listunspent(const JSONRPCRequest& request)
     return results;
 }
 
+boost::optional<CInputCoin> FindInCoinView(const COutPoint& outpoint)
+{
+    LOCK2(cs_main, mempool.cs);
+    boost::optional<CInputCoin> foundCoin;
+    CCoinsViewMemPool coinsTipMempool(pcoinsTip, mempool);
+    CCoinsViewCache view(&coinsTipMempool);
+    CCoins coins;
+    if (!view.GetCoins(outpoint.hash, coins))
+        return foundCoin;
+    if (!coins.IsAvailable(outpoint.n))
+        return foundCoin;
+    foundCoin = CInputCoin(coins.vout[outpoint.n], outpoint);
+    return foundCoin;
+}
+
 UniValue fundrawtransaction(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -2780,6 +2795,8 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
         coinControl.Select(txin.prevout);
         boost::optional<CInputCoin> foundCoin;
         foundCoin = pwallet->FindCoin(txin.prevout);
+        if(!foundCoin)
+            foundCoin = FindInCoinView(txin.prevout);
         if(!foundCoin)
             throw JSONRPCError(RPC_WALLET_ERROR, _("Insufficient funds"));
         coinControl.AddKnownCoins(*foundCoin);
