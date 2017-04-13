@@ -2414,11 +2414,10 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 							nLastIndex = 0;
 						std::set<pair<const CWalletTx*,unsigned int> >::iterator it = setCoins.begin();
 						std::advance(it, nLastIndex);
-						if (ExtractDestination(it->first->vout[it->second].scriptPubKey, payDest)) 
+						if (bAliasPay && ExtractDestination(it->first->vout[it->second].scriptPubKey, payDest)) 
 						{
 							address = CSyscoinAddress(payDest);
 							address = CSyscoinAddress(address.ToString());
-							scriptChange = GetScriptForDestination(payDest);
 							// if not paying from an alias fall back to pay to new change address
 							if(!address.isAlias)
 							{
@@ -2428,6 +2427,9 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 								assert(ret); // should never fail, as we just unlocked
 								scriptChange = GetScriptForDestination(vchPubKey.GetID());
 							}
+							else
+								scriptChange = GetScriptForDestination(payDest);
+
 						}
 						else
 						{
@@ -2439,7 +2441,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 						}
                     }
 					// SYSCOIN change as a alias payment				
-					if(address.isAlias && bAliasPay)
+					if(address.isAlias)
 					{
   						int op;
 						vector<vector<unsigned char> > vvch;
@@ -2448,14 +2450,6 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 						scriptChangeOrig += scriptChange;
 						scriptChange = scriptChangeOrig;
 						txNew.nVersion = GetSyscoinTxVersion();				
-					}
-					else
-					{
-						CPubKey vchPubKey;
-						bool ret;
-						ret = reservekey.GetReservedKey(vchPubKey);
-						assert(ret); // should never fail, as we just unlocked
-						scriptChange = GetScriptForDestination(vchPubKey.GetID());
 					}
 
                     CTxOut newTxOut(nChange, scriptChange);
