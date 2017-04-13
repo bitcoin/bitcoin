@@ -31,7 +31,7 @@ extern UniValue importwallet(const JSONRPCRequest& request);
 
 std::vector<std::unique_ptr<CWalletTx>> wtxn;
 
-typedef std::set<std::pair<const CWalletTx*,unsigned int> > CoinSet;
+typedef std::set<CInputCoin> CoinSet;
 
 BOOST_FIXTURE_TEST_SUITE(wallet_tests, WalletTestingSetup)
 
