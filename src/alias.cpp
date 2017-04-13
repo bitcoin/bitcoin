@@ -3041,13 +3041,13 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
     if (totalAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Alias has insufficient funds");
 
-	CRecipient recipientPayment, recipientPayment;
+	CRecipient recipient, recipientPayment;
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
 	bool useOnlyAliasPaymentToFund = true;
 	
-	SendMoneySyscoin(vchAlias, recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund);
+	SendMoneySyscoin(theAlias.vchAlias, recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund);
 	
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
