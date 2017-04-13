@@ -2776,7 +2776,14 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     coinControl.nFeeRate = feeRate;
 
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
+    {
         coinControl.Select(txin.prevout);
+        boost::optional<CInputCoin> foundCoin;
+        foundCoin = pwallet->FindCoin(txin.prevout);
+        if(!foundCoin)
+            throw JSONRPCError(RPC_WALLET_ERROR, _("Insufficient funds"));
+        coinControl.AddKnownCoins(*foundCoin);
+    }
 
     if (!pwallet->FundTransaction(tx, nFeeOut, coinControl, changePosition, strFailReason, lockUnspents, setSubtractFeeFromOutputs, reserveChangeKey)) {
         throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);

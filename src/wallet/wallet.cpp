@@ -2247,6 +2247,8 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
         coinControl->ListSelected(vPresetInputs);
     BOOST_FOREACH(const COutPoint& outpoint, vPresetInputs)
     {
+        // TODO: This is kept to not break QT Wallet which does not feed the KnownCoins before making the transaction
+        // This should probably be removed once QT Wallet is aware of it.
         std::map<uint256, CWalletTx>::const_iterator it = mapWallet.find(outpoint.hash);
         if (it != mapWallet.end())
         {
@@ -2256,8 +2258,15 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
                 return false;
             nValueFromPresetInputs += pcoin->tx->vout[outpoint.n].nValue;
             setPresetCoins.insert(CInputCoin(pcoin, outpoint.n));
-        } else
-            return false; // TODO: Allow non-wallet inputs
+        }
+        else
+        {
+            auto foundCoin = coinControl->FindKnownCoin(outpoint);
+            if (!foundCoin)
+                return false;
+            nValueFromPresetInputs += foundCoin->txout.nValue;
+            setPresetCoins.insert(*foundCoin);
+        }
     }
 
     // remove preset inputs from vCoins
@@ -2356,6 +2365,16 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, const C
         reservekey.KeepKey();
 
     return true;
+}
+
+boost::optional<CInputCoin> CWallet::FindCoin(const COutPoint& outpoint)
+{
+    LOCK(cs_wallet);
+    boost::optional<CInputCoin> foundCoin;
+    std::map<uint256, CWalletTx>::const_iterator it = mapWallet.find(outpoint.hash);
+    if (it != mapWallet.end())
+        foundCoin = CInputCoin(&it->second, outpoint.n);
+    return foundCoin;
 }
 
 bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
