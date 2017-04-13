@@ -514,6 +514,127 @@ WId BitcoinApplication::getMainWinId() const
     return window->winId();
 }
 
+const char* APP_SETTINGS_MIGRATED_FLAG = "fMigrated";
+/**
+* Checks to see if Qt App Settings have already had migration performed, based
+* on the presence of setting `fMigrated` with a value of true.
+* @param[in] to      App settings to check for prior migration and writability
+* @param[in] from    App settings to check for keys to migrate
+* @return true if migration is possible and not yet performed, otherwise false
+*/
+bool CanMigrateQtAppSettings(const QSettings &to, const QSettings &from)
+{
+    //first check to see if the desired settings are already marked as migrated
+    if (to.value(APP_SETTINGS_MIGRATED_FLAG, false).toBool())
+        return false;
+
+    //next verify that the source settings actually exist/have values
+    if (from.allKeys().size() <= 0)
+        return false;
+
+    //last verify that the desired settings are writable
+    if (!to.isWritable())
+        return error("%s: App Settings are not writable, migration skipped.", __func__);
+
+    return true;
+}
+
+/**
+* Create a backup of Qt App Settings
+* Backup will only be performed if there are settings to backup and the backup
+* location is writable.
+* @param[in] source      App settings to be backed up
+* @param[in] backupName  Backup location name
+* @return true if backup was successful or there were no settings to backup, otherwise false
+*/
+bool BackupQtAppSettings(const QSettings &source, const QString &backupName)
+{
+    //parameter saftey check
+    if (backupName.trimmed().size() <= 0)
+        return error("%s: Parameter backupName must contain a non-whitespace value.", __func__);
+
+    //verify there are settings to actually backup (if not just return true)
+    if (source.allKeys().size() <= 0)
+        return true;
+
+    //The backup settings location
+    QSettings backup(backupName, QAPP_APP_NAME_DEFAULT);
+
+    //verify that the backup location is writable
+    if (!backup.isWritable())
+        return error("%s: Unable to backup existing App Settings, backup location is not writable.", __func__);
+
+    //Get the list of all keys in the source location
+    QStringList keys = source.allKeys();
+
+    //Loop through all keys in the source location
+    //NOTE: Loop may not handle sub-keys correctly w/o modification (though currently there aren't any sub-keys)
+    Q_FOREACH(const QString& key, keys)
+    {
+        //copy every setting in source to backukp
+        backup.setValue(key, source.value(key));
+    }
+
+    LogPrintf("APP SETTINGS: Settings successfully backed up to '%s'\n", backupName.toStdString());
+
+    //NOTE: backup will go out of scope upon return so we don't need to manually call sync()
+
+    return true;
+}
+
+/**
+* Migrates Qt App Settings from a previously installed alternate client
+* implementation (Core, XT, Classic, pre-1.0.1 BU).
+* Migration will only be performed if there are alternate settings and a prior
+* migration has not been performed.
+* @param[in] oldOrg    Org name to migrate settings from
+* @param[in] newOrg    Org name to migrate settings to
+* @return true if migration was performed, otherwise false
+* @see CanMigrateQtAppSettings()
+* @see BackupQtAppSettings()
+*/
+bool TryMigrateQtAppSettings(const QString &oldOrg, const QString &newOrg)
+{
+    //parameter saftey checks
+    if (oldOrg.trimmed().size() <= 0)
+        return error("%s: Parameter oldOrg must contain a non-whitespace value.", __func__);
+    if (newOrg.trimmed().size() <= 0)
+        return error("%s: Parameter newOrg must contain a non-whitespace value.", __func__);
+
+    //The desired settings location
+    QSettings sink(newOrg, QAPP_APP_NAME_DEFAULT);
+    //The previous settings location
+    QSettings source(oldOrg, QAPP_APP_NAME_DEFAULT);
+
+    //Check to see if we actually can/need to migrate
+    if (!CanMigrateQtAppSettings(sink, source))
+        return false;
+
+    //as a saftey precaution save a backup copy of the current settings prior to overwriting
+    if (!BackupQtAppSettings(sink, newOrg + ".bak"))
+        return false;
+
+    //Get the list of all keys in the source location
+    QStringList keys = source.allKeys();
+
+    //Loop through all keys in the source location
+    //NOTE: Loop may not handle sub-keys correctly w/o modification (though currently there aren't any sub-keys)
+    Q_FOREACH(const QString& key, keys)
+    {
+        //copy every setting in source to sink, even if the key is empty
+        sink.setValue(key, source.value(key));
+    }
+
+    //lastly we need to add the flag which indicates we have performed a migration
+    sink.setValue(APP_SETTINGS_MIGRATED_FLAG, true);
+
+    LogPrintf("APP SETTINGS: Settings successfully migrated from '%s' to '%s'\n", oldOrg.toStdString(), newOrg.toStdString());
+
+    //NOTE: sink will go out of scope upon return so we don't need to manually call sync()
+
+    return true;
+}
+
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
@@ -560,7 +681,14 @@ int main(int argc, char *argv[])
     //   IMPORTANT if it is no longer a typedef use the normal variant above
     qRegisterMetaType< CAmount >("CAmount");
 
-    /// 3. Application identification
+    /// 3. Migrate application settings, if necessary
+    // BU changed the QAPP_ORG_NAME and since this is used for reading the app settings
+    // from the registry (Windows) or a configuration file (Linux/OSX)
+    // we need to check to see if we need to migrate old settings to the new location
+    TryMigrateQtAppSettings("Bitcoin", QAPP_ORG_NAME);
+
+
+    /// 4. Application identification
     // must be set before OptionsModel is initialized or translations are loaded,
     // as it is used to locate QSettings
     QApplication::setOrganizationName(QAPP_ORG_NAME);
@@ -568,7 +696,7 @@ int main(int argc, char *argv[])
     QApplication::setApplicationName(QAPP_APP_NAME_DEFAULT);
     GUIUtil::SubstituteFonts(GetLangTerritory());
 
-    /// 4. Initialization of translations, so that intro dialog is in user's language
+    /// 5. Initialization of translations, so that intro dialog is in user's language
     // Now that QSettings are accessible, initialize translations
     QTranslator qtTranslatorBase, qtTranslator, translatorBase, translator;
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
@@ -583,12 +711,12 @@ int main(int argc, char *argv[])
         return EXIT_SUCCESS;
     }
 
-    /// 5. Now that settings and translations are available, ask user for data directory
+    /// 6. Now that settings and translations are available, ask user for data directory
     // User language is set up: pick a data directory
     if (!Intro::pickDataDirectory())
         return EXIT_FAILURE;
 
-    /// 6. Determine availability of data directory and parse bitcoin.conf
+    /// 7. Determine availability of data directory and parse bitcoin.conf
     /// - Do not call GetDataDir(true) before this step finishes
     if (!boost::filesystem::is_directory(GetDataDir(false)))
     {
@@ -604,7 +732,7 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    /// 7. Determine network (and switch to network specific options)
+    /// 8. Determine network (and switch to network specific options)
     // - Do not call Params() before this step
     // - Do this after parsing the configuration file, as the network can be switched there
     // - QSettings() will use the new application name after this, resulting in network-specific settings
@@ -630,7 +758,7 @@ int main(int argc, char *argv[])
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
 
 #ifdef ENABLE_WALLET
-    /// 8. URI IPC sending
+    /// 9. URI IPC sending
     // - Do this early as we don't want to bother initializing if we are just calling IPC
     // - Do this *after* setting up the data directory, as the data directory hash is used in the name
     // of the server.
@@ -644,7 +772,7 @@ int main(int argc, char *argv[])
     app.createPaymentServer();
 #endif
 
-    /// 9. Main GUI initialization
+    /// 10. Main GUI initialization
     // Install global event filter that makes sure that long tooltips can be word-wrapped
     app.installEventFilter(new GUIUtil::ToolTipToRichTextFilter(TOOLTIP_WRAP_THRESHOLD, &app));
 #if QT_VERSION < 0x050000
