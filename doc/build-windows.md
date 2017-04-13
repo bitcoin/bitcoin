@@ -62,4 +62,3 @@ To build executables for Windows 64-bit:
     ./configure --prefix=`pwd`/depends/x86_64-w64-mingw32
     make
 
-For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
