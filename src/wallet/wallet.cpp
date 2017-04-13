@@ -1867,12 +1867,12 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
                 continue;
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
-				// SYSCOIN txs are unspendable by wallet unless using coincontrol(and the tx is selected by CC) and not allowing other wallet inputs (fAllowOtherInputs)
+				// SYSCOIN txs are unspendable by wallet unless using coincontrol(and the tx is selected)
 				if(pcoin->nVersion == GetSyscoinTxVersion())
 				{
 					int op;
 					vector<vector<unsigned char> > vvchArgs;
-					if(!coinControl || !coinControl->IsSelected(COutPoint((*it).first, i)) || coinControl->fAllowOtherInputs)
+					if(!coinControl || !coinControl->IsSelected(COutPoint((*it).first, i)))
 					{
 						if (IsSyscoinScript(pcoin->vout[i].scriptPubKey, op, vvchArgs))
 							continue;
