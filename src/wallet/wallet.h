@@ -893,6 +893,8 @@ public:
     CAmount GetUnconfirmedWatchOnlyBalance() const;
     CAmount GetImmatureWatchOnlyBalance() const;
 
+    boost::optional<CInputCoin> FindCoin(const COutPoint& outpoint);
+
     /**
      * Insert additional inputs into the transaction by
      * calling CreateTransaction();
