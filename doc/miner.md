@@ -179,3 +179,15 @@ When you restart bitcoind, the memory pool starts empty.  If a block is found qu
 `bitcoin-cli addnode <new node's IP:port> onetry`
 `bitcoin-cli pushtx <new node's IP:port>`
 ```
+
+Validating unsolved blocks
+--------------------------
+
+Bitcoin Unlimited can be used to validate block templates received from other Bitcoin Unlimited releases or other bitcoin clients.  This ensures that Bitcoin Unlimited will accept the block once it is mined, allowing miners to deploy multiple clients in their mining networks.  Note that this API will return an error if the block is not built off of the chain tip seen by this client.  So it is important that the client be fully synchronized with the client that creates the block template.  You can do this by explicitly connecting them via "addnode".
+
+The block validation RPC uses the same call syntax as the "submitblock" RPC, and returns a JSONRPCException if the block validation fails.  See "qa/rpc-tests/validateblocktemplate.py" for detailed python examples.
+
+```sh
+`bitcoin-cli validateblocktemplate <hex encoded block>`
+```
+

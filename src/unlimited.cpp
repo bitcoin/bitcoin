@@ -10,6 +10,7 @@
 #include "consensus/consensus.h"
 #include "consensus/params.h"
 #include "consensus/validation.h"
+#include "core_io.h"
 #include "hash.h"
 #include "leakybucket.h"
 #include "main.h"
@@ -52,6 +53,7 @@ extern CTweakRef<unsigned int> ebTweak;
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 
 bool IsTrafficShapingEnabled();
+UniValue validateblocktemplate(const UniValue& params, bool fHelp);
 
 bool MiningAndExcessiveBlockValidatorRule(const unsigned int newExcessiveBlockSize, const unsigned int newMiningBlockSize)
 {
@@ -1824,31 +1826,115 @@ UniValue getstat(const UniValue &params, bool fHelp)
     return ret;
 }
 
+
+/* clang-format off */
 static const CRPCCommand commands[] = {
     //  category              name                      actor (function)         okSafeMode
     //  --------------------- ------------------------  -----------------------  ----------
     /* P2P networking */
     {"network", "settrafficshaping", &settrafficshaping, true},
-    {"network", "gettrafficshaping", &gettrafficshaping, true}, {"network", "pushtx", &pushtx, true},
+    {"network", "gettrafficshaping", &gettrafficshaping, true},
+    {"network", "pushtx", &pushtx, true},
     {"network", "getexcessiveblock", &getexcessiveblock, true},
-    {"network", "setexcessiveblock", &setexcessiveblock, true}, {"network", "expedited", &expedited, true},
+    {"network", "setexcessiveblock", &setexcessiveblock, true},
+    {"network", "expedited", &expedited, true},
 
     /* Mining */
     {"mining", "getminingmaxblock", &getminingmaxblock, true},
-    {"mining", "setminingmaxblock", &setminingmaxblock, true}, {"mining", "getminercomment", &getminercomment, true},
-    {"mining", "setminercomment", &setminercomment, true}, {"mining", "getblockversion", &getblockversion, true},
+    {"mining", "setminingmaxblock", &setminingmaxblock, true},
+    {"mining", "getminercomment", &getminercomment, true},
+    {"mining", "setminercomment", &setminercomment, true},
+    {"mining", "getblockversion", &getblockversion, true},
     {"mining", "setblockversion", &setblockversion, true},
+    {"mining", "validateblocktemplate",  &validateblocktemplate, true},
 
     /* Utility functions */
-    {"util", "getstatlist", &getstatlist, true}, {"util", "getstat", &getstat, true}, {"util", "get", &gettweak, true},
+    {"util", "getstatlist", &getstatlist, true},
+    {"util", "getstat", &getstat, true},
+    {"util", "get", &gettweak, true},
     {"util", "set", &settweak, true},
 
     /* Coin generation */
-    {"generating", "getgenerate", &getgenerate, true}, {"generating", "setgenerate", &setgenerate, true},
+    {"generating", "getgenerate", &getgenerate, true},
+    {"generating", "setgenerate", &setgenerate, true},
+
 };
+/* clang-format on */
 
 void RegisterUnlimitedRPCCommands(CRPCTable &tableRPC)
 {
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         tableRPC.appendCommand(commands[vcidx].name, &commands[vcidx]);
+}
+
+
+UniValue validateblocktemplate(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 1)
+        throw runtime_error(
+            "validateblocktemplate \"hexdata\"\n"
+            "\nReturns whether this block template will be accepted if a hash solution is found.\n"
+            "The 'jsonparametersobject' parameter is currently ignored.\n"
+            "See https://en.bitcoin.it/wiki/BIP_0022 for full specification.\n"
+
+            "\nArguments\n"
+            "1. \"hexdata\"    (string, required) the hex-encoded block to validate (same format as submitblock)\n"
+            "\nResult:\n"
+            "true (boolean) submitted block template is valid\n"
+            "JSONRPCException if submitted block template is invalid\n"
+            "\nExamples:\n"
+            + HelpExampleCli("validateblocktemplate", "\"mydata\"")
+            + HelpExampleRpc("validateblocktemplate", "\"mydata\"")
+        );
+
+    UniValue ret(UniValue::VARR);
+    CBlock block;
+    if (!DecodeHexBlk(block, params[0].get_str()))
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
+
+    if (block.nBlockSize == 0) block.nBlockSize = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
+
+    CBlockIndex *pindexPrev=NULL;
+    {
+        LOCK(cs_main);
+
+        BlockMap::iterator i = mapBlockIndex.find(block.hashPrevBlock);
+        if (i == mapBlockIndex.end())
+        {
+            throw runtime_error("invalid block: unknown parent");
+        }
+
+        pindexPrev = i->second;
+
+        if (pindexPrev != chainActive.Tip())
+        {
+            throw runtime_error("invalid block: does not build on chain tip");
+        }
+
+        DbgAssert(pindexPrev, throw runtime_error("invalid block: unknown parent"));
+
+        const CChainParams &chainparams = Params();
+        CValidationState state;
+        if (block.nBlockSize <= BLOCKSTREAM_CORE_MAX_BLOCK_SIZE)
+        {
+            if (!TestConservativeBlockValidity(state, chainparams, block, pindexPrev, false, true))
+            {
+                throw runtime_error(std::string("invalid block: ") + state.GetRejectReason());
+            }
+        }
+        else
+        {
+            if (!TestBlockValidity(state, chainparams, block, pindexPrev, false, true))
+            {
+                throw runtime_error(std::string("invalid block: ") + state.GetRejectReason());
+            }
+        }
+
+        if (block.fExcessive)
+        {
+            throw runtime_error("invalid block: excessive");
+        }
+    }
+
+    return UniValue(true);
 }
