@@ -1971,8 +1971,12 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		strAcceptCertTransfers = params[7].get_str();
 	
 	uint64_t nTime = chainActive.Tip()->nTime+ONE_YEAR_IN_SECONDS;
+	bool timeSet = false;
 	if(CheckParam(params, 8))
+	{
 		nTime = boost::lexical_cast<uint64_t>(params[8].get_str());
+		timeSet = true;
+	}
 	// sanity check set to 1 hr
 	if(nTime < chainActive.Tip()->nTime+3600)
 		nTime = chainActive.Tip()->nTime+3600;
@@ -2039,7 +2043,10 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(!strAddress.empty())
 		DecodeBase58(strAddress, theAlias.vchAddress);
 	theAlias.vchAliasPeg = vchAliasPeg;
-	theAlias.nExpireTime = nTime;
+	if(timeSet)
+		theAlias.nExpireTime = nTime;
+	else
+		theAlias.nExpireTime = copyAlias.nExpireTime;
 	theAlias.nAccessFlags = copyAlias.nAccessFlags;
 	if(strAcceptCertTransfers.empty())
 		theAlias.acceptCertTransfers = copyAlias.acceptCertTransfers;
