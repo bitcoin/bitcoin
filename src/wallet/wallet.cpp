@@ -65,10 +65,10 @@ const uint256 CMerkleTx::ABANDON_HASH(uint256S("00000000000000000000000000000000
 
 struct CompareValueOnly
 {
-    bool operator()(const std::pair<CAmount, std::pair<const CWalletTx*, unsigned int> >& t1,
-                    const std::pair<CAmount, std::pair<const CWalletTx*, unsigned int> >& t2) const
+    bool operator()(const CInputCoin& t1,
+                    const CInputCoin& t2) const
     {
-        return t1.first < t2.first;
+        return t1.txout.nValue < t2.txout.nValue;
     }
 };
 
@@ -2061,7 +2061,7 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
     }
 }
 
-static void ApproximateBestSubset(const std::vector<std::pair<CAmount, std::pair<const CWalletTx*,unsigned int> > >& vValue, const CAmount& nTotalLower, const CAmount& nTargetValue,
+static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const CAmount& nTotalLower, const CAmount& nTargetValue,
                                   std::vector<char>& vfBest, CAmount& nBest, int iterations = 1000)
 {
     std::vector<char> vfIncluded;
@@ -2088,7 +2088,7 @@ static void ApproximateBestSubset(const std::vector<std::pair<CAmount, std::pair
                 //the selection random.
                 if (nPass == 0 ? insecure_rand.rand32()&1 : !vfIncluded[i])
                 {
-                    nTotal += vValue[i].first;
+                    nTotal += vValue[i].txout.nValue;
                     vfIncluded[i] = true;
                     if (nTotal >= nTargetValue)
                     {
@@ -2098,7 +2098,7 @@ static void ApproximateBestSubset(const std::vector<std::pair<CAmount, std::pair
                             nBest = nTotal;
                             vfBest = vfIncluded;
                         }
-                        nTotal -= vValue[i].first;
+                        nTotal -= vValue[i].txout.nValue;
                         vfIncluded[i] = false;
                     }
                 }
@@ -2108,16 +2108,14 @@ static void ApproximateBestSubset(const std::vector<std::pair<CAmount, std::pair
 }
 
 bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMine, const int nConfTheirs, const uint64_t nMaxAncestors, std::vector<COutput> vCoins,
-                                 std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet) const
+                                 std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet) const
 {
     setCoinsRet.clear();
     nValueRet = 0;
 
     // List of values less than target
-    std::pair<CAmount, std::pair<const CWalletTx*,unsigned int> > coinLowestLarger;
-    coinLowestLarger.first = std::numeric_limits<CAmount>::max();
-    coinLowestLarger.second.first = NULL;
-    std::vector<std::pair<CAmount, std::pair<const CWalletTx*,unsigned int> > > vValue;
+    boost::optional<CInputCoin> coinLowestLarger;
+    std::vector<CInputCoin> vValue;
     CAmount nTotalLower = 0;
 
     random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
@@ -2136,22 +2134,21 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
             continue;
 
         int i = output.i;
-        CAmount n = pcoin->tx->vout[i].nValue;
 
-        std::pair<CAmount,std::pair<const CWalletTx*,unsigned int> > coin = std::make_pair(n,std::make_pair(pcoin, i));
+        CInputCoin coin = CInputCoin(pcoin, i);
 
-        if (n == nTargetValue)
+        if (coin.txout.nValue == nTargetValue)
         {
-            setCoinsRet.insert(coin.second);
-            nValueRet += coin.first;
+            setCoinsRet.insert(coin);
+            nValueRet += coin.txout.nValue;
             return true;
         }
-        else if (n < nTargetValue + MIN_CHANGE)
+        else if (coin.txout.nValue < nTargetValue + MIN_CHANGE)
         {
             vValue.push_back(coin);
-            nTotalLower += n;
+            nTotalLower += coin.txout.nValue;
         }
-        else if (n < coinLowestLarger.first)
+        else if (!coinLowestLarger || coin.txout.nValue < coinLowestLarger->txout.nValue)
         {
             coinLowestLarger = coin;
         }
@@ -2161,18 +2158,18 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
     {
         for (unsigned int i = 0; i < vValue.size(); ++i)
         {
-            setCoinsRet.insert(vValue[i].second);
-            nValueRet += vValue[i].first;
+            setCoinsRet.insert(vValue[i]);
+            nValueRet += vValue[i].txout.nValue;
         }
         return true;
     }
 
     if (nTotalLower < nTargetValue)
     {
-        if (coinLowestLarger.second.first == NULL)
+        if (!coinLowestLarger)
             return false;
-        setCoinsRet.insert(coinLowestLarger.second);
-        nValueRet += coinLowestLarger.first;
+        setCoinsRet.insert(coinLowestLarger.get());
+        nValueRet += coinLowestLarger->txout.nValue;
         return true;
     }
 
@@ -2188,25 +2185,25 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 
     // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
     //                                   or the next bigger coin is closer), return the bigger coin
-    if (coinLowestLarger.second.first &&
-        ((nBest != nTargetValue && nBest < nTargetValue + MIN_CHANGE) || coinLowestLarger.first <= nBest))
+    if (coinLowestLarger &&
+        ((nBest != nTargetValue && nBest < nTargetValue + MIN_CHANGE) || coinLowestLarger->txout.nValue <= nBest))
     {
-        setCoinsRet.insert(coinLowestLarger.second);
-        nValueRet += coinLowestLarger.first;
+        setCoinsRet.insert(coinLowestLarger.get());
+        nValueRet += coinLowestLarger->txout.nValue;
     }
     else {
         for (unsigned int i = 0; i < vValue.size(); i++)
             if (vfBest[i])
             {
-                setCoinsRet.insert(vValue[i].second);
-                nValueRet += vValue[i].first;
+                setCoinsRet.insert(vValue[i]);
+                nValueRet += vValue[i].txout.nValue;
             }
 
         if (LogAcceptCategory(BCLog::SELECTCOINS)) {
             LogPrint(BCLog::SELECTCOINS, "SelectCoins() best subset: ");
             for (unsigned int i = 0; i < vValue.size(); i++) {
                 if (vfBest[i]) {
-                    LogPrint(BCLog::SELECTCOINS, "%s ", FormatMoney(vValue[i].first));
+                    LogPrint(BCLog::SELECTCOINS, "%s ", FormatMoney(vValue[i].txout.nValue));
                 }
             }
             LogPrint(BCLog::SELECTCOINS, "total %s\n", FormatMoney(nBest));
@@ -2216,7 +2213,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
     return true;
 }
 
-bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl) const
+bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl) const
 {
     std::vector<COutput> vCoins(vAvailableCoins);
 
@@ -2228,13 +2225,13 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             if (!out.fSpendable)
                  continue;
             nValueRet += out.tx->tx->vout[out.i].nValue;
-            setCoinsRet.insert(std::make_pair(out.tx, out.i));
+            setCoinsRet.insert(CInputCoin(out.tx, out.i));
         }
         return (nValueRet >= nTargetValue);
     }
 
     // calculate value from preset inputs and store them
-    std::set<std::pair<const CWalletTx*, uint32_t> > setPresetCoins;
+    std::set<CInputCoin> setPresetCoins;
     CAmount nValueFromPresetInputs = 0;
 
     std::vector<COutPoint> vPresetInputs;
@@ -2250,7 +2247,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             if (pcoin->tx->vout.size() <= outpoint.n)
                 return false;
             nValueFromPresetInputs += pcoin->tx->vout[outpoint.n].nValue;
-            setPresetCoins.insert(std::make_pair(pcoin, outpoint.n));
+            setPresetCoins.insert(CInputCoin(pcoin, outpoint.n));
         } else
             return false; // TODO: Allow non-wallet inputs
     }
@@ -2258,7 +2255,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     // remove preset inputs from vCoins
     for (std::vector<COutput>::iterator it = vCoins.begin(); it != vCoins.end() && coinControl && coinControl->HasSelected();)
     {
-        if (setPresetCoins.count(std::make_pair(it->tx, it->i)))
+        if (setPresetCoins.count(CInputCoin(it->tx, it->i)))
             it = vCoins.erase(it);
         else
             ++it;
@@ -2424,7 +2421,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
     assert(txNew.nLockTime < LOCKTIME_THRESHOLD);
 
     {
-        std::set<std::pair<const CWalletTx*,unsigned int> > setCoins;
+        std::set<CInputCoin> setCoins;
         LOCK2(cs_main, cs_wallet);
         {
             std::vector<COutput> vAvailableCoins;
@@ -2583,7 +2580,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 // behavior."
                 bool rbf = coinControl ? coinControl->signalRbf : fWalletRbf;
                 for (const auto& coin : setCoins)
-                    txNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second,CScript(),
+                    txNew.vin.push_back(CTxIn(coin.outpoint,CScript(),
                                               std::numeric_limits<unsigned int>::max() - (rbf ? 2 : 1)));
 
                 // Fill in dummy signatures for fee calculation.
@@ -2666,10 +2663,10 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
             int nIn = 0;
             for (const auto& coin : setCoins)
             {
-                const CScript& scriptPubKey = coin.first->tx->vout[coin.second].scriptPubKey;
+                const CScript& scriptPubKey = coin.txout.scriptPubKey;
                 SignatureData sigdata;
 
-                if (!ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, coin.first->tx->vout[coin.second].nValue, SIGHASH_ALL), scriptPubKey, sigdata))
+                if (!ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, coin.txout.nValue, SIGHASH_ALL), scriptPubKey, sigdata))
                 {
                     strFailReason = _("Signing transaction failed");
                     return false;
