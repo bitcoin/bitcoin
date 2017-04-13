@@ -704,7 +704,7 @@ Value sendfrom(const Array& params, bool fHelp)
 
     // Parse address
     CScript scriptPubKey;
-    string strAddress = params[0].get_str();
+    string strAddress = params[1].get_str();
 
     CBitcoinAddress address(strAddress);
     if (address.IsValid())
