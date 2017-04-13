@@ -3070,6 +3070,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 		res.push_back(hex_str);
 		res.push_back("false");
 	}
+	return res;
 }
 UniValue aliasdecodemultisigredeemscript(const UniValue& params, bool fHelp) {
 	if (fHelp || 1 != params.size())
