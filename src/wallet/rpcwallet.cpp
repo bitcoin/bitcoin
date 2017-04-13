@@ -523,7 +523,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &a
 				CRecipient recipient  = {scriptChangeOrig, nBalance-nTotal-nFeeRequired, false};
 				if(recipient.nAmount > 0)
 				{
-					bNeedAliasPaymentInputs = true;
+					bNeedNewAliasPaymentInputs = true;
 					vecSend.push_back(recipient);
 					nTotal += recipient.nAmount;
 				}
