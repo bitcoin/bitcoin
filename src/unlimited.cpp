@@ -53,7 +53,8 @@ int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 
 bool IsTrafficShapingEnabled();
 
-bool MiningAndExcessiveBlockValidatorRule(const unsigned int newExcessiveBlockSize, const unsigned int newMiningBlockSize)
+bool MiningAndExcessiveBlockValidatorRule(const unsigned int newExcessiveBlockSize,
+    const unsigned int newMiningBlockSize)
 {
     // The mined block size must be less then or equal too the excessive block size.
     return (newMiningBlockSize <= newExcessiveBlockSize);
@@ -911,7 +912,8 @@ void static BitcoinMiner(const CChainParams &chainparams)
                 pindexPrev = chainActive.Tip();
             }
 
-            unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(chainparams).CreateNewBlock(coinbaseScript->reserveScript));
+            unique_ptr<CBlockTemplate> pblocktemplate(
+                BlockAssembler(chainparams).CreateNewBlock(coinbaseScript->reserveScript));
             if (!pblocktemplate.get())
             {
                 LogPrintf("Error in BitcoinMiner: Keypool ran out, please call keypoolrefill before restarting the "
@@ -1824,28 +1826,37 @@ UniValue getstat(const UniValue &params, bool fHelp)
     return ret;
 }
 
-static const CRPCCommand commands[] = {
-    //  category              name                      actor (function)         okSafeMode
-    //  --------------------- ------------------------  -----------------------  ----------
+/* clang-format off */
+static const CRPCCommand commands[] =
+{ //  category              name                      actor (function)         okSafeMode
+  //  --------------------- ------------------------  -----------------------  ----------
     /* P2P networking */
-    {"network", "settrafficshaping", &settrafficshaping, true},
-    {"network", "gettrafficshaping", &gettrafficshaping, true}, {"network", "pushtx", &pushtx, true},
-    {"network", "getexcessiveblock", &getexcessiveblock, true},
-    {"network", "setexcessiveblock", &setexcessiveblock, true}, {"network", "expedited", &expedited, true},
+    { "network",            "settrafficshaping",      &settrafficshaping,      true  },
+    { "network",            "gettrafficshaping",      &gettrafficshaping,      true  },
+    { "network",            "pushtx",                 &pushtx,                 true  },
+    { "network",            "getexcessiveblock",      &getexcessiveblock,      true  },
+    { "network",            "setexcessiveblock",      &setexcessiveblock,      true  },
+    { "network",            "expedited",              &expedited,              true  },
 
     /* Mining */
-    {"mining", "getminingmaxblock", &getminingmaxblock, true},
-    {"mining", "setminingmaxblock", &setminingmaxblock, true}, {"mining", "getminercomment", &getminercomment, true},
-    {"mining", "setminercomment", &setminercomment, true}, {"mining", "getblockversion", &getblockversion, true},
-    {"mining", "setblockversion", &setblockversion, true},
+    { "mining",             "getminingmaxblock",      &getminingmaxblock,      true  },
+    { "mining",             "setminingmaxblock",      &setminingmaxblock,      true  },
+    { "mining",             "getminercomment",        &getminercomment,        true  },
+    { "mining",             "setminercomment",        &setminercomment,        true  },
+    { "mining",             "getblockversion",        &getblockversion,        true  },
+    { "mining",             "setblockversion",        &setblockversion,        true  },
 
     /* Utility functions */
-    {"util", "getstatlist", &getstatlist, true}, {"util", "getstat", &getstat, true}, {"util", "get", &gettweak, true},
-    {"util", "set", &settweak, true},
+    { "util",               "getstatlist",            &getstatlist,            true  },
+    { "util",               "getstat",                &getstat,                true  },
+    { "util",               "get",                    &gettweak,               true  },
+    { "util",               "set",                    &settweak,               true  },
 
     /* Coin generation */
-    {"generating", "getgenerate", &getgenerate, true}, {"generating", "setgenerate", &setgenerate, true},
+    { "generating",         "getgenerate",            &getgenerate,            true  },
+    { "generating",         "setgenerate",            &setgenerate,            true  },
 };
+/* clang-format on */
 
 void RegisterUnlimitedRPCCommands(CRPCTable &tableRPC)
 {
