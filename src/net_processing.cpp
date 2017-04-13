@@ -3141,15 +3141,16 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                     pto->setInventoryTxToSend.erase(it);
                     // Add the item to the queue to be sent
                     dandVInv.push_back(CInv(MSG_TX, hash));
-                    if (vInv.size() == MAX_INV_SZ) {
-                        connman.PushMessage(pto, msgMaker.Make(NetMsgType::D_INV, vInv));
-                        vInv.clear();
+                    if (dandVInv.size() == MAX_INV_SZ) {
+                        connman.PushMessage(pto, msgMaker.Make(NetMsgType::D_INV, dandVInv));
+                        dandVInv.clear();
                     }
                     pto->filterInventoryKnown.insert(hash);
                 }
             }
-            if (!vInv.empty()) {
-                connman.PushMessage(pto, msgMaker.Make(NetMsgType::D_INV, vInv));
+            LogPrintf("About to send %d Dandelion messages.\n", dandVInv.size());
+            if (!dandVInv.empty()) {
+                connman.PushMessage(pto, msgMaker.Make(NetMsgType::D_INV, dandVInv));
             }
 
             /*-------------------------------------------------------------------------------*/
