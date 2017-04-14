@@ -81,6 +81,8 @@ Then build using:
     CONFIG_SITE=$PWD/depends/i686-w64-mingw32/share/config.site ./configure --prefix=/
     make
 
+For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
+
 Installation
 -------------
 
