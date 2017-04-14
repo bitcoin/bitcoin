@@ -37,8 +37,8 @@ fixes or code moves with actual code changes.
 
 Commit messages should be verbose by default consisting of a short subject line
 (50 chars max), a blank line and detailed explanatory text as separate
-paragraph(s); unless the title alone is self-explanatory (like "Corrected typo
-in init.cpp") then a single title line is sufficient. Commit messages should be
+paragraph(s), unless the title alone is self-explanatory (like "Corrected typo
+in init.cpp") in which case a single title line is sufficient. Commit messages should be
 helpful to people reading your code in the future, so explain the reasoning for
 your decisions. Further explanation [here](http://chris.beams.io/posts/git-commit/).
 
