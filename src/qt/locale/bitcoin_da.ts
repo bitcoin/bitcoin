@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Højreklik for at redigere adresse eller mærke</translation>
+        <translation>Højreklik for at redigere adresse eller mærkat</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -604,7 +604,7 @@
     </message>
     <message>
         <source>Received with label</source>
-        <translation>Modtaget med mærke</translation>
+        <translation>Modtaget med mærkat</translation>
     </message>
     <message>
         <source>Received with address</source>
