@@ -414,6 +414,27 @@ UniValue getaddressesbyaccount(const UniValue& params, bool fHelp)
     return ret;
 }
 // SYSCOIN: Send service transactions
+CAmount GetCoinControlInputTotal(const CCoinControl* coinControl)
+{
+	if(coinControl == NULL)
+		return 0;
+	CCoinsViewCache view(pcoinsTip);
+	const CCoins *coins;
+	CAmount nValueRet = 0;
+	std::vector<COutPoint> vInputs;
+	coinControl->ListSelected(vInputs);
+	BOOST_FOREACH(const COutPoint& outpoint, vInputs)
+	{
+		coins = view.AccessCoins(outpoint.hash);
+		if(coins == NULL)
+			continue;
+		// Clearly invalid input, fail
+		if (coins->vout.size() <= outpoint.n)
+			return false;
+		nValueRet += coins->vout[outpoint.n].nValue;
+	}
+	return nValueRet;
+}
 /*There are three modes of payments with aliases:
 
 Pay with alias balance (utxo's are stored in alias payment db)
@@ -506,11 +527,11 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &a
 		if (!pwalletMain->CreateTransaction(vecSend, wtxNew2, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false,true, useOnlyAliasPaymentToFund)) {
 			throw runtime_error(strError);
 		}
-		nTotal = nFeeRequired;
 		BOOST_FOREACH(const CRecipient& recp, vecSend)
 		{
 			nTotal += recp.nAmount;
 		}
+		nTotal = (GetCoinControlInputTotal(coinControl) - nTotal) + nFeeRequired;
 		// if transferring alias, move entire balance of alias to new address
 		if(transferAlias && !aliasRecipient.scriptPubKey.empty())
 		{
@@ -520,35 +541,29 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &a
 				CScript scriptChangeOrig;
 				scriptChangeOrig << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchAlias << OP_2DROP;
 				scriptChangeOrig += GetScriptForDestination(aliasDest);
-				CRecipient recipient  = {scriptChangeOrig, nBalance-nTotal-nFeeRequired, false};
+				CRecipient recipient  = {scriptChangeOrig, nBalance, false};
 				if(recipient.nAmount > 0)
 				{
-					bNeedNewAliasPaymentInputs = true;
 					vecSend.push_back(recipient);
 					nTotal += recipient.nAmount;
 				}
 			}
 		}
-		if(bNeedNewAliasPaymentInputs || useOnlyAliasPaymentToFund)
+		if(nTotal > 0)
 		{
 			vector<COutPoint> outPoints;
 			// select all if alias transferred
 			aliasselectpaymentcoins(vchAlias, nTotal, outPoints, bIsAliasPaymentFunded, nRequiredPaymentFunds, false, transferAlias);
-			if(!bIsAliasPaymentFunded && !coinControl->fAllowOtherInputs)
+			if(!bIsAliasPaymentFunded)
 			{
-				// if using only alias payments, (accept and escrow) then if not enough funds (alias has 10 sys and your paying out 10 sys) then try to pay the fees with the alias fees
-				if(useOnlyAliasPaymentToFund)
+				vector<COutPoint> feeOutPoints;
+				aliasselectpaymentcoins(vchAlias, nRequiredPaymentFunds, feeOutPoints, bAreFeePlaceholdersFunded, nRequiredFeePlaceholderFunds, true);
+				if(!bAreFeePlaceholdersFunded)
+					throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("The Syscoin Alias does not have enough funds to complete this transaction. You need to deposit the following amount of coins in order for the transaction to succeed: ") + ValueFromAmount(nRequiredFeePlaceholderFunds).write());
+				BOOST_FOREACH(const COutPoint& outpoint, feeOutPoints)
 				{
-					vector<COutPoint> feeOutPoints;
-					aliasselectpaymentcoins(vchAlias, nRequiredPaymentFunds, feeOutPoints, bAreFeePlaceholdersFunded, nRequiredFeePlaceholderFunds, true);
-					if(!bAreFeePlaceholdersFunded)
-						throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("The Syscoin Alias does not have enough funds to complete this transaction. You need to deposit the following amount of coins in order for the transaction to succeed: ") + ValueFromAmount(nRequiredFeePlaceholderFunds).write());
-					BOOST_FOREACH(const COutPoint& outpoint, feeOutPoints)
-					{
-						coinControl->Select(outpoint);	
-					}
-				}
-				
+					coinControl->Select(outpoint);	
+				}	
 			}
 			BOOST_FOREACH(const COutPoint& outpoint, outPoints)
 			{
