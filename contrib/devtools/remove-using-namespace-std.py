@@ -50,6 +50,7 @@ keywords = r"(?<!::)".join((      # Ignore keywords already prefixed with ::
 			r"vector",
 			r")\b"                # End with word break
 ))
+usingNamespace = r"(^\s*)?using(\s+)namespace(\s+)std(\s*;)?"
 
 # Use capture group 1 to replace keyword with std::<keyword>
 replacement = r"std::\1"
@@ -119,11 +120,23 @@ if __name__ == "__main__":
 		# replace std:: types within these areas
 		noComment = remove_includes_comments_and_strings(file)
 		
+		# Before we continue with replacement, and while all the comments and
+		# strings are removed, check to make sure the `using namespace std` line
+		# is actually in this code file.  If it is not then changing the
+		# keywords to std:: is changing the definition of working non-std
+		# references, which isn't what we want.
+		if re.search(usingNamespace, noComment) is None:
+			print 'SKIPPED:  %s' % filename
+			continue
+		
 		# Now perform std:: replacement
 		replaced = re.sub(keywords, replacement, noComment)
 		
+		# Also remove the `using namespace std;` line
+		replacedNamespace = re.sub(usingNamespace, "", replaced)
+		
 		# Now we need to restore the comments and strings
-		reComment = re.sub(commentTemp, callback_comments, replaced)
+		reComment = re.sub(commentTemp, callback_comments, replacedNamespace)
 		reString =  re.sub(stringTemp, callback_strings, reComment)
 		reInclude =  re.sub(includeTemp, callback_includes, reString)
 
@@ -131,3 +144,4 @@ if __name__ == "__main__":
 		with open(filename, mode='w') as f:
 			f.seek(0)
 			f.write(reInclude)
+		print 'COMPLETE: %s' % filename
