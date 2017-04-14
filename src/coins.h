@@ -22,7 +22,7 @@
 #include <boost/thread/locks.hpp>
 #include <boost/thread/shared_mutex.hpp>
 
-/** 
+/**
  * Pruned version of CTransaction: only retains metadata and unspent transaction outputs
  *
  * Serialized format:
@@ -363,10 +363,10 @@ public:
 
 class CCoinsViewCache;
 
-/** 
+/**
  * A reference to a mutable cache entry. Encapsulating it allows us to run
  *  cleanup code after the modification is finished, and keeping track of
- *  concurrent modifications. 
+ *  concurrent modifications.
  */
 class CCoinsModifier
 {
@@ -393,7 +393,7 @@ protected:
 
     /**
      * Make mutable so that we can "fill the cache" even from Get-methods
-     * declared as "const".  
+     * declared as "const".
      */
     mutable uint256 hashBlock;
     mutable CCoinsMap cacheCoins;
@@ -463,13 +463,13 @@ public:
     //! Calculate the size of the cache (in bytes)
     size_t DynamicMemoryUsage() const;
 
-    /** 
+    /**
      * Amount of bitcoins coming in to a transaction
      * Note that lightweight clients may not know anything besides the hash of previous transactions,
      * so may not be able to calculate this.
      *
-     * @param[in] tx	transaction for which we are checking input total
-     * @return	Sum of value of all inputs (scriptSigs)
+     * @param[in] tx        transaction for which we are checking input total
+     * @return        Sum of value of all inputs (scriptSigs)
      */
     CAmount GetValueIn(const CTransaction& tx) const;
 

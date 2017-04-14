@@ -370,7 +370,7 @@ bool OptionsModel::setData(const QModelIndex& index, const QVariant& value, int 
         }
 
     }
-    
+
     Q_EMIT dataChanged(index, index);
 
     return successful;

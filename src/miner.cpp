@@ -503,7 +503,7 @@ void IncrementExtraNonce(CBlock* pblock, unsigned int& nExtraNonce)
     CScript script = (CScript() << nHeight << CScriptNum(nExtraNonce));
     if (script.size() + COINBASE_FLAGS.size() > MAX_COINBASE_SCRIPTSIG_SIZE)
       {
-	COINBASE_FLAGS.resize(MAX_COINBASE_SCRIPTSIG_SIZE - script.size());
+        COINBASE_FLAGS.resize(MAX_COINBASE_SCRIPTSIG_SIZE - script.size());
       }
     txCoinbase.vin[0].scriptSig = script + COINBASE_FLAGS;
     assert(txCoinbase.vin[0].scriptSig.size() <= MAX_COINBASE_SCRIPTSIG_SIZE);

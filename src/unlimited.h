@@ -238,7 +238,8 @@ extern CStatHistory<unsigned int> txAdded;
 extern CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize;
 
 // Configuration variable validators
-bool MiningAndExcessiveBlockValidatorRule(const unsigned int newExcessiveBlockSize, const unsigned int newMiningBlockSize);
+bool MiningAndExcessiveBlockValidatorRule(const unsigned int newExcessiveBlockSize,
+    const unsigned int newMiningBlockSize);
 std::string ExcessiveBlockValidator(const unsigned int &value, unsigned int *item, bool validate);
 std::string OutboundConnectionValidator(const int &value, int *item, bool validate);
 std::string SubverValidator(const std::string &value, std::string *item, bool validate);
