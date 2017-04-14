@@ -527,12 +527,12 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &a
 		if (!pwalletMain->CreateTransaction(vecSend, wtxNew2, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false,true, useOnlyAliasPaymentToFund)) {
 			throw runtime_error(strError);
 		}
-		nTotal = 0;
+		CAmount nOutputTotal = 0;
 		BOOST_FOREACH(const CRecipient& recp, vecSend)
 		{
-			nTotal += recp.nAmount;
+			nOutputTotal += recp.nAmount;
 		}
-		nTotal = (nTotal - GetCoinControlInputTotal(coinControl)) + nFeeRequired;
+		nTotal = (nOutputTotal - GetCoinControlInputTotal(coinControl)) + nFeeRequired;
 		// if transferring alias, move entire balance of alias to new address
 		if(transferAlias && !aliasRecipient.scriptPubKey.empty())
 		{
@@ -542,7 +542,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &a
 				CScript scriptChangeOrig;
 				scriptChangeOrig << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchAlias << OP_2DROP;
 				scriptChangeOrig += GetScriptForDestination(aliasDest);
-				CRecipient recipient  = {scriptChangeOrig, nBalance-nFeeRequired, false};
+				CRecipient recipient  = {scriptChangeOrig, nBalance-nOutputTotal-nFeeRequired, false};
 				if(recipient.nAmount > 0)
 					vecSend.push_back(recipient);	
 			}
