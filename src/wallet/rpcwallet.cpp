@@ -506,7 +506,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &a
 		if (!pwalletMain->CreateTransaction(vecSend, wtxNew2, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false,true, useOnlyAliasPaymentToFund)) {
 			throw runtime_error(strError);
 		}
-		nTotal = nFeeRequired;
+		nTotal = nFeeRequired+nRequiredFeePlaceholderFunds;
 		BOOST_FOREACH(const CRecipient& recp, vecSend)
 		{
 			nTotal += recp.nAmount;
