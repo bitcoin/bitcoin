@@ -29,11 +29,11 @@ class client
             : socket_(io_service, context)
         {
             socket_.set_verify_mode(boost::asio::ssl::verify_peer);
-            
-            // Use custom verifier as default rfc2818_verification does not appear to handle SNI 
-            //socket_.set_verify_callback(boost::asio::ssl::rfc2818_verification(cert_hostname)); 
+
+            // Use custom verifier as default rfc2818_verification does not appear to handle SNI
+            //socket_.set_verify_callback(boost::asio::ssl::rfc2818_verification(cert_hostname));
             socket_.set_verify_callback(boost::bind(&client::verify_certificate, this, _1, _2));
-            
+
             boost::asio::async_connect(socket_.lowest_layer(), endpoint_iterator, boost::bind(&client::handle_connect, this, boost::asio::placeholders::error));
 
             timer_.reset(new boost::asio::deadline_timer( io_service, boost::posix_time::seconds(timeout_seconds)));
@@ -43,7 +43,7 @@ class client
             cert_hostname_ = cert_hostname;
             found_cert_ = false;
         }
-        
+
         // Custom verifier to search for a CN name and set member variable if found.
         bool verify_certificate(bool preverified,
                                 boost::asio::ssl::verify_context& ctx)
@@ -98,10 +98,10 @@ class client
                 socket_.lowest_layer().cancel();
                 throw runtime_error(strprintf("Bitnodes cert failure: could not match CN: %s\n", cert_hostname_.c_str()));
             }
-            
+
             if(!error){
                 std::stringstream request_;
-                // we don't want HTTP/1.1 chunked encoding 
+                // we don't want HTTP/1.1 chunked encoding
                 request_ << "GET " << url_path_ << " HTTP/1.0\r\n";
                 request_ << "Host: " << url_host_ << "\r\n";
                 request_ << "Accept: */*\r\n";
@@ -212,15 +212,15 @@ bool GetLeaderboardFromBitnodes(vector<string>& vIPs)
         boost::asio::ip::tcp::resolver resolver(io_service);
         boost::asio::ip::tcp::resolver::query query(url_host, url_port);
         boost::asio::ip::tcp::resolver::iterator iterator = resolver.resolve(query);
-        
+
         // Force TLS 1.2
         boost::asio::ssl::context ctx(boost::asio::ssl::context::sslv23);
         ctx.set_options( boost::asio::ssl::context::default_workarounds |
         boost::asio::ssl::context::no_sslv2 |
         boost::asio::ssl::context::no_sslv3 |
-        boost::asio::ssl::context::no_tlsv1 
-#if (BOOST_VERSON >= 105900) 
-        | boost::asio::ssl::context::no_tlsv1_1 
+        boost::asio::ssl::context::no_tlsv1
+#if (BOOST_VERSON >= 105900)
+        | boost::asio::ssl::context::no_tlsv1_1
 #endif
         );
 

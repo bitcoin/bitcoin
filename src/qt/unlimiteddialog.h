@@ -28,7 +28,7 @@ public:
     LessThanValidator(int minimum, int maximum, QObject* parent = 0) : QIntValidator(minimum, maximum, parent), other(NULL), errorDisplay(NULL)
     {
     }
-    
+
     // This cannot be part of the constructor because these widgets may not be created at construction time.
     void initialize(QLineEdit* otherp, QLabel* errorDisplayp)
     {
@@ -49,7 +49,7 @@ public:
     explicit UnlimitedDialog(QWidget* parent,UnlimitedModel* model);
     virtual ~UnlimitedDialog();
     void setMapper();
-    
+
 private Q_SLOTS:
     void setOkButtonState(bool fState);
     void on_resetButton_clicked();
@@ -60,9 +60,9 @@ private Q_SLOTS:
     void shapingMaxEditFinished(void);   // auto-corrects cases where max is lower then average
     void shapingAveEditFinished(void);   // auto-corrects cases where max is lower then average
     void shapingEnableChanged(bool val); // Pushes the traffic shaping slider changes into the traffic shaping edit boxes
- 
+
 Q_SIGNALS:
-   
+
 private:
     Ui_UnlimitedDialog ui;
     QDataWidgetMapper mapper;
@@ -70,7 +70,7 @@ private:
 
     QIntValidator burstValidator;
     LessThanValidator sendAveValidator;
-    LessThanValidator recvAveValidator;    
+    LessThanValidator recvAveValidator;
 };
 
 #endif

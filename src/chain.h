@@ -88,7 +88,7 @@ enum BlockStatus: uint32_t {
     BLOCK_HAVE_DATA          =    8, //! full block available in blk*.dat
     BLOCK_HAVE_UNDO          =   16, //! undo data available in rev*.dat
     BLOCK_HAVE_MASK          =   BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO,
- 
+
     BLOCK_EXCESSIVE          =   32, // BU: This block is bigger than what we really want to accept.
 
     BLOCK_FAILED_VALID       =   64, //! stage after last reached validness failed

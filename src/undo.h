@@ -7,7 +7,7 @@
 #ifndef BITCOIN_UNDO_H
 #define BITCOIN_UNDO_H
 
-#include "compressor.h" 
+#include "compressor.h"
 #include "primitives/transaction.h"
 #include "serialize.h"
 

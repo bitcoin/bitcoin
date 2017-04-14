@@ -174,7 +174,7 @@ void DeleteCritical(const void* cs)
           }
         prev = i;
       }
-    dd_mutex.unlock();  
+    dd_mutex.unlock();
 }
 
 
@@ -206,13 +206,13 @@ CCriticalSection::CCriticalSection(const char* n):name(n)
 
 CCriticalSection::~CCriticalSection()
 {
-  if (name) 
-    { 
+  if (name)
+    {
       printf("Destructing %s\n", name);
       fflush(stdout);
     }
   DeleteCritical((void*) this);
 }
-#endif 
+#endif
 
 #endif /* DEBUG_LOCKORDER */

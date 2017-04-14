@@ -142,9 +142,9 @@ private:
 #endif
         lockedTime = GetTimeMillis();
         if (lockedTime - startWait > 500)
-	  {
+          {
             LogPrint("lck", "Lock %s at %s:%d waited for %d ms\n", pszName, pszFile, nLine,(lockedTime - startWait));
-	  }
+          }
     }
 
     bool TryEnter(const char* pszName, const char* pszFile, int nLine)
@@ -155,10 +155,10 @@ private:
         EnterCritical(pszName, pszFile, nLine, (void*)(lock.mutex()), true);
         lock.try_lock();
         if (!lock.owns_lock())
-	  {
+          {
             lockedTime = 0;
             LeaveCritical();
-	  }
+          }
         else lockedTime = GetTimeMillis();
         return lock.owns_lock();
     }
@@ -186,14 +186,14 @@ public:
     ~CMutexLock() UNLOCK_FUNCTION()
     {
         if (lock.owns_lock())
-	  {
+          {
             LeaveCritical();
             int64_t doneTime = GetTimeMillis();
             if (doneTime - lockedTime > 500)
-	      {
-		LogPrint("lck", "Lock %s at %s:%d remained locked for %d ms\n", name, file, line,doneTime - lockedTime);
-	      }            
-	  }
+              {
+                LogPrint("lck", "Lock %s at %s:%d remained locked for %d ms\n", name, file, line,doneTime - lockedTime);
+              }
+          }
     }
 
     operator bool()
@@ -320,7 +320,7 @@ public:
 };
 
 // BU move from sync.c because I need to create these in globals.cpp
-struct CLockLocation 
+struct CLockLocation
 {
     CLockLocation(const char* pszName, const char* pszFile, int nLine, bool fTryIn);
     std::string ToString() const;

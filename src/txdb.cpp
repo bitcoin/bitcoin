@@ -28,7 +28,7 @@ static const char DB_REINDEX_FLAG = 'R';
 static const char DB_LAST_BLOCK = 'l';
 
 
-CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe, true) 
+CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe, true)
 {
 }
 
@@ -105,7 +105,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
     // does not have a moment to update the utxo set between our grabbing the
     // hash and the height, and our utxo tally.
     // But there is not reason to keep cs_main locked while we look at the utxo
-    try 
+    try
     {
         ENTER_CRITICAL_SECTION(cs_main);
         stats.hashBlock = GetBestBlock();

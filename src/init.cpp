@@ -959,7 +959,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         catch (boost::bad_lexical_cast&) {
             return InitError(_("ERROR: an incorrect value was specified for -minlimitertxfee.  Please check value and restart."));
         }
-        
+
         ostringstream ss;
         ss << fixed << setprecision(8);
         ss << minrelaytxfee;
@@ -975,7 +975,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         InitWarning(_("Config option -minrelaytxfee is no longer supported.  To set the limit below which a transaction is considered zero fee please use -minlimitertxfee.  To convert -minrelaytxfee, which is specified  in BTC/KB, to -minlimtertxfee, which is specified in Satoshi/Byte, simply multiply the original -minrelaytxfee by 100,000. For example, a -minrelaytxfee=0.00001000 will become -minlimitertxfee=1.000"));
     }
 
- 
+
     fRequireStandard = !GetBoolArg("-acceptnonstdtxn", !Params().RequireStandard());
     if (Params().RequireStandard() && !fRequireStandard)
         return InitError(strprintf("acceptnonstdtxn is not currently supported for %s chain", chainparams.NetworkIDString()));
