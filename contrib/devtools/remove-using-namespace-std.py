@@ -39,11 +39,14 @@ keywords = r"(?<!::)".join((      # Ignore keywords already prefixed with ::
 			r"\b(",               # Start with word break
 			r"cin|",
 			r"cout|",
+			r"deque|",
 			r"list|",
+			r"make_pair|",
 			r"map|",
 			r"max|",
 			r"min|",
 			r"multimap|",
+			r"ostringstream|",
 			r"pair|",
 			r"set|",
 			r"string|",
@@ -113,6 +116,14 @@ callback_includes.v=iter(includes)
 
 if __name__ == "__main__":
 	for filename in sys.argv[1:]:
+		# Reset the temp lists and iterators (necessary for multi-file processing)
+		includes[:] = []
+		callback_includes.v=iter(includes)
+		strings[:] = []
+		callback_strings.v=iter(strings)
+		comments[:] = []
+		callback_comments.v=iter(comments)
+		
 		# Read in file content as one string
 		file = open(filename, mode='r').read()
 		
