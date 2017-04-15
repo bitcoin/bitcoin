@@ -69,7 +69,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # Open and close to create zero-length file
         with open(self.alert_filename, 'w') as f:
             pass
-        self.node_options = ["-debug", "-logtimemicros=1", "-alertnotify=echo %s >> \"" + self.alert_filename + "\""]
+        self.node_options = ["-debug", "-logtimemicros=1", "-whitelist=127.0.0.1", "-alertnotify=echo %s >> \"" + self.alert_filename + "\""]
         self.nodes.append(start_node(0, self.options.tmpdir, self.node_options))
 
         import re

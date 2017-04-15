@@ -85,6 +85,8 @@ static const int MAX_SCRIPTCHECK_THREADS = 16;
 static const int DEFAULT_SCRIPTCHECK_THREADS = 0;
 /** Number of blocks that can be requested at any given time from a single peer. */
 //static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16;
+/** Timeout in seconds during which we must receive a VERACK message after having first sent a VERSION message */
+static const unsigned int VERACK_TIMEOUT = 60;
 /** Number of headers sent in one getheaders result. We rely on the assumption that if a peer sends
  *  less than this number, we reached its tip. Changing this value is a protocol upgrade. */
 static const unsigned int MAX_HEADERS_RESULTS = 2000;

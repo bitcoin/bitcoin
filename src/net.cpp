@@ -500,7 +500,7 @@ void CNode::PushVersion()
     PushMessage(NetMsgType::VERSION, PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
                 nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, BUComments),
                 nBestHeight, !GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY));
-    fVersionSent = true;
+    tVersionSent = GetTime();
 }
 
 
@@ -2690,7 +2690,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     fInbound = fInboundIn;
     fAutoOutbound = false;
     fNetworkNode = false;
-    fVersionSent = false;
+    tVersionSent = -1;
     fVerackSent = false;
     fBUVersionSent = false;
     fSuccessfullyConnected = false;
