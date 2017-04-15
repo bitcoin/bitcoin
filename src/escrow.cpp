@@ -836,7 +836,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						}
 						if(nQty != -1)
 						{
-							nQty += theEscrow.nQty;
+							if(theEscrow.extTxId.IsNull())
+								nQty += theEscrow.nQty;
 							if (!myLinkOffer.IsNull())
 							{
 								myLinkOffer.nQty = nQty;
@@ -1065,7 +1066,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4074 - " + _("Not enough quantity left in this offer for this purchase");
 						return true;
 					}
-					nQty -= theEscrow.nQty;
+					if(theEscrow.extTxId.IsNull())
+						nQty -= theEscrow.nQty;
 					if (!myLinkOffer.IsNull())
 					{
 						myLinkOffer.nQty = nQty;
@@ -1888,13 +1890,14 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 1)
+    if (fHelp || params.size() != 2)
         throw runtime_error(
-		"escrowacknowledge <escrow guid>\n"
-                        "Acknowledge escrow payment as seller of offer. Deducts qty of offer and increases number of sold inventory.\n"
+		"escrowacknowledge <escrow guid> <message>\n"
+                        "Acknowledge escrow payment as seller of offer. Include some information like tracking number, and a hash and URL of video for proof-of-shipment.\n"
                         + HelpRequiringPassphrase());
     // gather & validate inputs
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
+	vector<unsigned char> vchMessage = vchFromValue(params[1]);
 
 
 	
@@ -1967,6 +1970,7 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 	escrow.bPaymentAck = true;
 	escrow.nHeight = chainActive.Tip()->nHeight;
 	escrow.vchLinkAlias = sellerAliasLatest.vchAlias;
+	escrow.vchPaymentMessage = vchMessage;
 
 	vector<unsigned char> data;
 	escrow.Serialize(data);

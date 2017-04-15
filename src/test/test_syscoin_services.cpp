@@ -1548,10 +1548,10 @@ const string OfferAccept(const string& ownernode, const string& buyernode, const
 	balanceBefore += nSellerTotal;
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK_EQUAL(balanceBefore, balanceAfter);
-	BOOST_CHECK_THROW(r = CallRPC(buyernode, "offeracceptacknowledge " + offerguid + " " +  acceptguid), runtime_error);
-	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "offeracceptacknowledge " + offerguid + " " +  acceptguid));
+	BOOST_CHECK_THROW(r = CallRPC(buyernode, "offeracceptacknowledge " + offerguid + " " +  acceptguid + " message"), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "offeracceptacknowledge " + offerguid + " " +  acceptguid + " message"));
 	GenerateBlocks(5, ownernode);
-	BOOST_CHECK_THROW(r = CallRPC(ownernode, "offeracceptacknowledge " + offerguid + " " +  acceptguid), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC(ownernode, "offeracceptacknowledge " + offerguid + " " +  acceptguid + " message"), runtime_error);
 	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "offerinfo " + offerguid));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_str(),sTargetQty);
 	return acceptguid;
@@ -1631,13 +1631,13 @@ const string LinkOfferAccept(const string& ownernode, const string& buyernode, c
 	GenerateBlocks(2, "node3");
 
 	BOOST_CHECK_EQUAL(nSellerTotal, nTotal);
-	BOOST_CHECK_THROW(r = CallRPC(buyernode, "offeracceptacknowledge " + offerguid + " " + acceptguid), runtime_error);
-	BOOST_CHECK_THROW(r = CallRPC(resellernode, "offeracceptacknowledge " + offerguid + " " +  acceptguid), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC(buyernode, "offeracceptacknowledge " + offerguid + " " + acceptguid + " message"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC(resellernode, "offeracceptacknowledge " + offerguid + " " +  acceptguid + " message"), runtime_error);
 	GenerateBlocks(2,ownernode);
-	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "offeracceptacknowledge " + offerguid + " " +  acceptguid));
+	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "offeracceptacknowledge " + offerguid + " " +  acceptguid + " message"));
 	GenerateBlocks(2,ownernode);
-	BOOST_CHECK_THROW(r = CallRPC(ownernode, "offeracceptacknowledge " + rootofferguid + " " +  acceptguid), runtime_error);
-	BOOST_CHECK_THROW(r = CallRPC(ownernode, "offeracceptacknowledge " + offerguid + " " +  acceptguid), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC(ownernode, "offeracceptacknowledge " + rootofferguid + " " +  acceptguid + " message"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC(ownernode, "offeracceptacknowledge " + offerguid + " " +  acceptguid + " message"), runtime_error);
 	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "offerinfo " + offerguid));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_str(),sTargetQty);
 	return acceptguid;

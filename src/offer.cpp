@@ -1334,7 +1334,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1089 - " + _("Not enough quantity left in this offer for this purchase");
 					return true;
 				}
-				nQty -= theOfferAccept.nQty;
+				if(theOfferAccept.txExtId.IsNull())
+					nQty -= theOfferAccept.nQty;
 			}
 			theOffer.nSold++;
 			theOffer.nQty = nQty;
@@ -2964,14 +2965,15 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue offeracceptacknowledge(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 2)
+    if (fHelp || params.size() != 3)
         throw runtime_error(
 		"offeracceptacknowledge <offer guid> <offeraccept guid> \n"
-                        "Acknowledge offer payment as seller of offer. Deducts qty of offer and increases number of sold inventory.\n"
+                        "Acknowledge offer payment as seller of offer. Include some information like tracking number, and a hash and URL of video for proof-of-shipment.\n"
                         + HelpRequiringPassphrase());
    // gather & validate inputs
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
 	vector<unsigned char> vchAcceptRand = vchFromValue(params[1]);
+	vector<unsigned char> vchMessage = vchFromValue(params[2]);
 
     // this is a syscoin transaction
     CWalletTx wtx;
@@ -3036,6 +3038,7 @@ UniValue offeracceptacknowledge(const UniValue& params, bool fHelp) {
 	theOffer.accept.bPaymentAck = true;
 	theOffer.accept.vchBuyerAlias = sellerAlias.vchAlias;
 	theOffer.accept.nPaymentOption = theOfferAccept.nPaymentOption;
+	theOffer.accept.vchMessage = vchMessage;
 	theOffer.nHeight = chainActive.Tip()->nHeight;
 
 	scriptPubKeyAlias = CScript() <<  CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAlias.vchAlias << sellerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
