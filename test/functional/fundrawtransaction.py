@@ -336,12 +336,15 @@ class RawTransactionsTest(BitcoinTestFramework):
         # test a fundrawtransaction with invalid vin #
         ##############################################
         listunspent = self.nodes[2].listunspent()
-        inputs  = [ {'txid' : "1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1", 'vout' : 0} ] #invalid vin!
+        fakeTx = "0100000001aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa0000000000ffffffff0100e1f505000000001600149e74df90b0544a8c8e9337896bb5578f8dd5a70900000000"
+        fakeTxId = "fc5a4367363cf10dc6f2badf709d3691b88acd853dee3b50c4bef080c2760273"
+        inputs  = [ {'txid' : "fc5a4367363cf10dc6f2badf709d3691b88acd853dee3b50c4bef080c2760273", 'vout' : 0} ] #invalid vin!
         outputs = { self.nodes[0].getnewaddress() : 1.0}
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
-
         assert_raises_jsonrpc(-4, "unknown-input", self.nodes[2].fundrawtransaction, rawtx)
+        rawtxfund = self.nodes[0].fundrawtransaction(rawtx, {}, { 'parentTransactions' : [ fakeTx ], 'previousOutputs' : [ { "txid" : fakeTxId, "n" : 0, "amount" : "1.0", "scriptPubKey" : "00149e74df90b0544a8c8e9337896bb5578f8dd5a709"  } ] })
+        assert_raises_jsonrpc(-8, "Invalid amount for output", self.nodes[2].fundrawtransaction, rawtx, {}, { 'parentTransactions' : [ fakeTx ], 'previousOutputs' : [ { "txid" : fakeTxId, "n" : 0, "amount" : "1.1", "scriptPubKey" : "00149e74df90b0544a8c8e9337896bb5578f8dd5a709"  } ] })
 
         ############################################################
         #compare fee of a standard pubkeyhash transaction
