@@ -52,6 +52,8 @@ std::map<std::pair<void*, void*>, LockStack> lockorders;
 boost::thread_specific_ptr<LockStack> lockstack;
 #endif
 
+
+
 // main.cpp CriticalSections:
 CCriticalSection cs_LastBlockFile;
 CCriticalSection cs_nBlockSequenceId;

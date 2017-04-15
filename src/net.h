@@ -383,7 +383,7 @@ public:
     bool fInbound;
     bool fAutoOutbound; // any outbound node not connected with -addnode, connect-thinblock or -connect
     bool fNetworkNode; // any outbound node
-    bool fVersionSent;
+    int64_t tVersionSent;
     bool fVerackSent;
     bool fBUVersionSent;
     bool fSuccessfullyConnected;

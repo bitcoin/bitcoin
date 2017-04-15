@@ -497,7 +497,7 @@ void CNode::PushVersion()
     PushMessage(NetMsgType::VERSION, PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
                 nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, BUComments),
                 nBestHeight, !GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY));
-    fVersionSent = true;
+    tVersionSent = GetTime();
 }
 
 
@@ -1806,7 +1806,7 @@ void ThreadOpenConnections()
         int nOutbound = 0;
         int nThinBlockCapable = 0;
         set<vector<unsigned char> > setConnected;
-        CNode* ptemp = nullptr;
+        CNode* ptemp = NULL;
         bool fDisconnected = false;
         {
             LOCK(cs_vNodes);
@@ -1830,7 +1830,7 @@ void ThreadOpenConnections()
                 nThinBlockCapable <= min(nMinXthinNodes, nMaxOutConnections) &&
                 nDisconnects < MAX_DISCONNECTS && IsThinBlocksEnabled() && IsChainNearlySyncd())
             {
-                if (ptemp != nullptr)
+                if (ptemp != NULL)
                 {
                     ptemp->fDisconnect = true;
                     fDisconnected = true;
@@ -2726,7 +2726,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     fInbound = fInboundIn;
     fAutoOutbound = false;
     fNetworkNode = false;
-    fVersionSent = false;
+    tVersionSent = -1;
     fVerackSent = false;
     fBUVersionSent = false;
     fSuccessfullyConnected = false;

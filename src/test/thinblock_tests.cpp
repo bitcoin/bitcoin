@@ -19,6 +19,10 @@
 #include <sstream>
 #include <string.h>
 
+#include "test/test_bitcoin.h"
+
+#include <boost/test/unit_test.hpp>
+
 extern void BuildSeededBloomFilter(CBloomFilter& memPoolFilter, std::vector<uint256>& vOrphanHashes, uint256 hash);
 
 CBlock TestBlock() { //Thanks dagurval :)

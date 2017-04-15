@@ -40,6 +40,7 @@ using namespace std;
 
 extern CTxMemPool mempool; // from main.cpp
 static boost::atomic<uint64_t> nLargestBlockSeen(BLOCKSTREAM_CORE_MAX_BLOCK_SIZE); // track the largest block we've seen
+static boost::atomic<bool> fIsChainNearlySyncd(false);
 extern CTweakRef<uint64_t> miningBlockSize;
 extern CTweakRef<unsigned int> ebTweak;
 
@@ -449,9 +450,6 @@ std::string UnlimitedCmdLineHelp()
     strUsage += HelpMessageOpt("-genproclimit=<n>",
         strprintf(_("Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)"),
                                    DEFAULT_GENERATE_THREADS));
-    strUsage += HelpMessageOpt("-ophanpoolexpiry=<n>",
-        strprintf(_("Do not keep transactions in the orphanpool longer than <n> hours (default: %u)"),
-                                   DEFAULT_ORPHANPOOL_EXPIRY));
     strUsage += TweakCmdLineHelp();
     return strUsage;
 }

@@ -140,12 +140,10 @@ extern CLeakyBucket sendShaper;
 // Test to determine if traffic shaping is enabled
 extern bool IsTrafficShapingEnabled();
 
-extern bool fIsChainNearlySyncd;
 extern CCriticalSection cs_ischainnearlysyncd;
 
 extern bool IsChainNearlySyncd();
 extern void IsChainNearlySyncdInit();
-extern bool fIsChainNearlySyncd;
 extern uint64_t LargestBlockSeen(uint64_t nBlockSize = 0);
 extern void LoadFilter(CNode *pfrom, CBloomFilter *filter);
 extern void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, CBlock &block, const CInv &inv);
