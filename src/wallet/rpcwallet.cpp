@@ -2644,7 +2644,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
                             "fundrawtransaction \"hexstring\" ( options )\n"
                             "\nAdd inputs to a transaction until it has enough in value to meet its out value.\n"
@@ -2675,6 +2675,19 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                             "                                  [vout_index,...]\n"
                             "   }\n"
                             "                         for backward compatibility: passing in a true instead of an object will result in {\"includeWatching\":true}\n"
+                            "3. previousOutputs              (object, optional)\n"
+                            "   {\n"
+                            "     \"parentTransactions\"     (array, optional) An array or the parent transactions used to verify the nValue of non segwit previousOutputs in hex\n"
+                            "     \"previousOutputs\"        (array required) An array of previous outputs\n"
+                            "       [\n"
+                            "         {\n"
+                            "           \"txid\"             (string) The transaction Id\n"
+                            "           \"n\"                (numeric) The output index\n"
+                            "           \"amount\"           (decimal) The output amount in BTC\n"
+                            "           \"scriptPubKey\"     (string) The scriptPubKey\n"
+                            "         }\n"
+                            "       ]\n"
+                            "   }\n"
                             "\nResult:\n"
                             "{\n"
                             "  \"hex\":       \"value\", (string)  The resulting raw transaction (hex-encoded string)\n"
@@ -2703,6 +2716,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     bool overrideEstimatedFeerate = false;
     UniValue subtractFeeFromOutputs;
     std::set<int> setSubtractFeeFromOutputs;
+    std::map<COutPoint, CInputCoin> inputCoins;
 
     if (request.params.size() > 1) {
       if (request.params[1].type() == UniValue::VBOOL) {
@@ -2710,7 +2724,11 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
         includeWatching = request.params[1].get_bool();
       }
       else {
-        RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VSTR)(UniValue::VOBJ));
+        if (request.params.size() == 2)
+            RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VSTR)(UniValue::VOBJ));
+        if (request.params.size() > 2)
+            RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VSTR)(UniValue::VOBJ)(UniValue::VOBJ));
+
 
         UniValue options = request.params[1];
 
@@ -2755,6 +2773,98 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
 
         if (options.exists("subtractFeeFromOutputs"))
             subtractFeeFromOutputs = options["subtractFeeFromOutputs"].get_array();
+
+        if (request.params.size() > 2)
+        {
+            UniValue previousOutputs = request.params[2];
+            RPCTypeCheckObj(previousOutputs,
+            {
+                { "parentTransactions", UniValueType(UniValue::VARR) },
+                { "previousOutputs", UniValueType(UniValue::VARR) }
+            },
+            true, true);
+
+            bool segwitEnabled;
+            {
+                LOCK(cs_main);
+                segwitEnabled = IsWitnessEnabled(chainActive.Tip(), Params().GetConsensus());
+            }
+            std::map<uint256, CTransaction> knownTransactions;
+            if (previousOutputs.exists("parentTransactions"))
+            {
+                CMutableTransaction tx;
+                auto& parentTransactionsArray = previousOutputs["parentTransactions"].get_array();
+                for (unsigned int idx = 0; idx < parentTransactionsArray.size(); idx++) {
+                    auto& strHexTx = parentTransactionsArray[idx].get_str();
+                    if (!IsHex(strHexTx))
+                        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+                    std::vector<unsigned char> txData(ParseHex(strHexTx));
+                    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
+                    try {
+                        ssData >> tx;
+                        if (!ssData.empty())
+                            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+                    }
+                    catch (const std::exception&) {
+                        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+                    }
+                    uint256 txHash = tx.GetHash();
+                    if (!knownTransactions.count(txHash))
+                        knownTransactions.insert(std::make_pair(txHash, tx));
+                }
+            }
+            if (!previousOutputs.exists("previousOutputs"))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "previousOutputs is required");
+
+            auto& previousOutputsArray = previousOutputs["previousOutputs"].get_array();
+            for (unsigned int idx = 0; idx < previousOutputsArray.size(); idx++) {
+                const auto& previousOutputsObj = previousOutputsArray[idx];
+                RPCTypeCheckObj(previousOutputsObj,
+                {
+                    { "txid", UniValueType(UniValue::VSTR) },
+                    { "n", UniValueType(UniValue::VNUM) },
+                    { "scriptPubKey", UniValueType(UniValue::VSTR) },
+                },
+                false, false);
+                if (!previousOutputsObj.exists("amount"))
+                    throw JSONRPCError(RPC_INVALID_PARAMS, "amount is required if previousOutputs");
+                CAmount nAmount = AmountFromValue(previousOutputsObj["amount"]);
+                if (nAmount <= 0)
+                    throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
+                int64_t n = previousOutputsObj["n"].get_int64();
+                if (n < 0 || n > std::numeric_limits<uint32_t>::max())
+                    throw JSONRPCError(RPC_TYPE_ERROR, "Invalid output index");
+                auto& txIdStr = previousOutputsObj["txid"].get_str();
+                if (!IsHex(txIdStr) || txIdStr.size() != 64)
+                    throw JSONRPCError(RPC_TYPE_ERROR, "Invalid txid");
+                uint256 txId;
+                txId.SetHex(txIdStr);
+                const auto& scriptPubKeyStr = previousOutputsObj["scriptPubKey"].get_str();
+                if (!IsHex(txIdStr))
+                    throw JSONRPCError(RPC_TYPE_ERROR, "Invalid scriptPubKey");
+                auto scriptPubKeyHex = ParseHex(scriptPubKeyStr);
+                CScript scriptPubKey(scriptPubKeyHex);
+                COutPoint outpoint(txId, n);
+                CTxOut txOut(nAmount, scriptPubKey);
+
+                int witVersion;
+                std::vector<unsigned char> witProgram;
+                if (!segwitEnabled || !scriptPubKey.IsWitnessProgram(witVersion, witProgram))
+                {
+                    if (!knownTransactions.count(txId))
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "Missing parent transaction");
+                    auto& parentTx = knownTransactions.at(txId);
+                    if (n < 0)
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, negative position: %d", n));
+                    if (n >= int(parentTx.vout.size()))
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, position too large: %d", n));
+                    if (parentTx.vout[n].nValue != nAmount)
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid amount for output");
+                }
+                if (!inputCoins.count(outpoint))
+                    inputCoins.insert(std::make_pair(outpoint, CInputCoin(txOut, outpoint)));
+            }
+        }
       }
     }
 
@@ -2797,6 +2907,8 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
         foundCoin = pwallet->FindCoin(txin.prevout);
         if(!foundCoin)
             foundCoin = FindInCoinView(txin.prevout);
+        if (inputCoins.count(txin.prevout))
+            foundCoin = inputCoins.at(txin.prevout);
         if(!foundCoin)
             throw JSONRPCError(RPC_WALLET_ERROR, "unknown-input");
         coinControl.AddKnownCoins(*foundCoin);
