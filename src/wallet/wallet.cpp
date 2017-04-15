@@ -1958,6 +1958,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 		if(pcoin->nVersion == GetSyscoinTxVersion())
 		{
 			int op;
+			vector<vector<unsigned char> > vvchArgs;
 			if (pcoin->vout.size() >= i && IsSyscoinScript(pcoin->vout[i].scriptPubKey, op, vvchArgs) && op != OP_ALIAS_PAYMENT)
 				continue;
 		}
