@@ -123,7 +123,7 @@ share/BitcoindComparisonTool.jar
 .autotools
 /doc/doxygen/
 
-libbitcoinconsensus.pc
+libdashconsensus.pc
 src/qt/dash-qt.bash
 qa/pull-tester/tests-config.sh
 
