@@ -1958,13 +1958,8 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 		if(pcoin->nVersion == GetSyscoinTxVersion())
 		{
 			int op;
-			vector<vector<unsigned char> > vvchArgs;
-			if (pcoin->vout.size() >= i && IsSyscoinScript(pcoin->vout[i].scriptPubKey, op, vvchArgs))
-			{
-				// allow alias payment if bAliasPay is set to true
-				if(!(bAliasPay && op == OP_ALIAS_PAYMENT))
-					continue;
-			}
+			if (pcoin->vout.size() >= i && IsSyscoinScript(pcoin->vout[i].scriptPubKey, op, vvchArgs) && op != OP_ALIAS_PAYMENT)
+				continue;
 		}
         pair<CAmount,pair<const CWalletTx*,unsigned int> > coin = make_pair(n,make_pair(pcoin, i));
 
@@ -2076,13 +2071,8 @@ bool CWallet::SelectCoins(const vector<COutput>& vAvailableCoins, const CAmount&
 			{
 				int op;
 				vector<vector<unsigned char> > vvchArgs;
-				// anything but a payment can't spend it
-				if (pcoin->vout.size() >= outpoint.n && IsSyscoinScript(pcoin->vout[outpoint.n].scriptPubKey, op, vvchArgs))
-				{
-					// allow alias payment if bAliasPay is set to true
-					if(!(bAliasPay && op == OP_ALIAS_PAYMENT))
-						continue;
-				}
+				if (pcoin->vout.size() >= outpoint.n && IsSyscoinScript(pcoin->vout[outpoint.n].scriptPubKey, op, vvchArgs) && op != OP_ALIAS_PAYMENT)
+					continue;
 			}
             // Clearly invalid input, fail
             if (pcoin->vout.size() <= outpoint.n)
