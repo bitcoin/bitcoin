@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasupdate)
 	AliasNew("node1", "jagupdate", "password", "data");
 	AliasNew("node1", "jagupdate1", "password", "data");
 	// update an alias that isn't yours
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg jagupdate " + HexStr(vchFromString("pass"))), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg jagupdate"), runtime_error);
 	// only update alias, no data
 	AliasUpdate("node1", "jagupdate");
 	AliasUpdate("node1", "jagupdate1");

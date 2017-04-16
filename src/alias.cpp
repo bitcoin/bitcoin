@@ -2054,16 +2054,17 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		theAlias.acceptCertTransfers = strAcceptCertTransfers == "Yes"? true: false;
 	
 	CSyscoinAddress newAddress;
+	// if address was not passed in use old address
+	if(theAlias.vchAddress.empty())
+		theAlias.vchAddress = copyAlias.vchAddress;
+	GetAddress(theAlias, &newAddress, scriptPubKeyOrig);
+
 	CScript scriptPubKeyOrig;
 	
 	vector<unsigned char> data;
 	theAlias.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
     vector<unsigned char> vchHashAlias = vchFromValue(hash.GetHex());
-	// if address was not passed in use old address
-	if(theAlias.vchAddress.empty())
-		theAlias.vchAddress = copyAlias.vchAddress;
-	GetAddress(theAlias, &newAddress, scriptPubKeyOrig);
 
 	CScript scriptPubKey;
 	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << copyAlias.vchAlias << copyAlias.vchGUID << vchHashAlias << OP_2DROP << OP_2DROP;
