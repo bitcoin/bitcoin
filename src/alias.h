@@ -203,7 +203,7 @@ public:
 		READWRITE(vchPasswordSalt);
 		READWRITE(vchAddress);
 		READWRITE(vchWitnessAlias);
-		READWRITE(nAccessFlags);
+		READWRITE(VARINT(nAccessFlags));
 		
 	}
     friend bool operator==(const CAliasIndex &a, const CAliasIndex &b) {
