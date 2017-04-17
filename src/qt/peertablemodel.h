@@ -16,6 +16,10 @@
 class ClientModel;
 class PeerTablePriv;
 
+namespace interface {
+class Node;
+}
+
 QT_BEGIN_NAMESPACE
 class QTimer;
 QT_END_NAMESPACE
@@ -47,7 +51,7 @@ class PeerTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit PeerTableModel(ClientModel *parent = 0);
+    explicit PeerTableModel(interface::Node& node, ClientModel *parent = 0);
     ~PeerTableModel();
     const CNodeCombinedStats *getNodeStats(int idx);
     int getRowByNodeId(NodeId nodeid);
@@ -78,6 +82,7 @@ public Q_SLOTS:
     void refresh();
 
 private:
+    interface::Node& m_node;
     ClientModel *clientModel;
     QStringList columns;
     std::unique_ptr<PeerTablePriv> priv;
