@@ -10,6 +10,7 @@
 #include <interface/handler.h>
 #include <interface/wallet.h>
 #include <net.h>
+#include <net_processing.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <primitives/block.h>
@@ -78,6 +79,31 @@ class NodeImpl : public Node
     size_t getNodeCount(CConnman::NumConnections flags) override
     {
         return g_connman ? g_connman->GetNodeCount(flags) : 0;
+    }
+    bool getNodesStats(NodesStats& stats) override
+    {
+        stats.clear();
+
+        if (g_connman) {
+            std::vector<CNodeStats> stats_temp;
+            g_connman->GetNodeStats(stats_temp);
+
+            stats.reserve(stats_temp.size());
+            for (auto& node_stats_temp : stats_temp) {
+                stats.emplace_back(std::move(node_stats_temp), false, CNodeStateStats());
+            }
+
+            // Try to retrieve the CNodeStateStats for each node.
+            TRY_LOCK(::cs_main, lockMain);
+            if (lockMain) {
+                for (auto& node_stats : stats) {
+                    std::get<1>(node_stats) =
+                        GetNodeStateStats(std::get<0>(node_stats).nodeid, std::get<2>(node_stats));
+                }
+            }
+            return true;
+        }
+        return false;
     }
     int64_t getTotalBytesRecv() override { return g_connman ? g_connman->GetTotalBytesRecv() : 0; }
     int64_t getTotalBytesSent() override { return g_connman ? g_connman->GetTotalBytesSent() : 0; }
