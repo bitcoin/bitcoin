@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	AliasNew("node1", "jagprune1", "password", "changeddata1");
 	// stop node2 create a service,  mine some blocks to expire the service, when we restart the node the service data won't be synced with node2
 	StopNode("node2");
-	string guid = CertNew("node1", "jagprune1", "jag1", "pub", "data");
+	string guid = CertNew("node1", "jagprune1", "jag1", "privdata", "pubdata");
 	// we can find it as normal first
 	BOOST_CHECK_EQUAL(CertFilter("node1", guid, "Off"), true);
 	// make sure our offer alias doesn't expire
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	GenerateBlocks(5, "node1");
 	// create a new service
 	AliasNew("node1", "jagprune1", "password1", "temp", "data");
-	string guid1 = CertNew("node1", "jagprune1", "title", "pub", "data");
+	string guid1 = CertNew("node1", "jagprune1", "title", "privdata", "pubdata");
 	// stop and start node1
 	StopNode("node1");
 	StartNode("node1");

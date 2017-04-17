@@ -962,8 +962,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithcertoffer)
 	StopNode("node3");
 	AliasNew("node1", "aliasprunewithcertoffer", "password", "pubdata", "privdata");
 	AliasNew("node2", "aliasprunewithcertoffer2", "password", "pubdata", "privdata");
-	string certguid = CertNew("node1", "aliasprunewithcertoffer", "jag1", "pubdata", "data");
-	string certofferguid = OfferNew("node1", "aliasprunewithcertoffer", "category", "title", "1", "0.05", "description", "SYS", certguid);	
+	string certguid = CertNew("node1", "aliasprunewithcertoffer", "jag1", "privdata", "pubdata");
+	string certofferguid = OfferNew("node1", "aliasprunewithcertoffer", "certificates", "title", "1", "0.05", "description", "SYS", certguid);	
 	string offerguid = OfferNew("node1", "aliasprunewithcertoffer", "category", "title", "1", "0.05", "description", "SYS");
 	
 	OfferUpdate("node1", "aliasprunewithcertoffer", offerguid, "certificates", "titlenew", "1", "0.05", "descriptionnew", "USD");
@@ -990,7 +990,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithcert)
 	StopNode("node3");
 	AliasNew("node1", "aliasprunewithcert", "password", "pubdata", "privdata");
 	AliasNew("node2", "aliasprunewithcert2", "password", "pubdata", "privdata");
-	string certguid = CertNew("node1", "aliasprunewithcert", "jag1", "pubdata", "data");
+	string certguid = CertNew("node1", "aliasprunewithcert", "jag1", "privdata", "pubdata");
 	CertUpdate("node1", certguid, "\"\"", "\"\"", "newdata");
 	CertTransfer("node1", "node2", certguid, "aliasprunewithcert2");
 	GenerateBlocks(5, "node1");
@@ -1017,12 +1017,12 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	string aliasexpirenode2pubkey = AliasNew("node2", "aliasexpirednode2", "password", "somedata");
 	string offerguid = OfferNew("node1", "aliasexpire0", "category", "title", "100", "0.01", "description", "USD");
 	OfferAddWhitelist("node1", offerguid, "aliasexpirednode2", "5");
-	string certguid = CertNew("node1", "aliasexpire", "certtitle", "certdata", "pubdata", "Yes");
+	string certguid = CertNew("node1", "aliasexpire", "certtitle", "privdata", "pubdata", "Yes");
 	StopNode("node3");
 	string aliasexpire2pubkey = AliasNew("node1", "aliasexpire2", "password", "pubdata", "privdata");
 	string escrowguid = EscrowNew("node2", "node1", "aliasexpirednode2", offerguid, "1", "message", "aliasexpire", "aliasexpire0", "5");
 	string aliasexpire2node2pubkey = AliasNew("node2", "aliasexpire2node2", "password", "pubdata", "privdata");
-	string certgoodguid = CertNew("node1", "aliasexpire2", "certtitle", "pubdata", "certdata");
+	string certgoodguid = CertNew("node1", "aliasexpire2", "certtitle", "privdata", "pubdata");
 	ExpireAlias("aliasexpirednode2");
 	GenerateBlocks(5, "node2");
 

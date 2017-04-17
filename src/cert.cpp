@@ -1319,7 +1319,7 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert,
 			strEncryptionPrivateKey = HexStr(cert.vchEncryptionPrivateKey);
 		else
 		{
-			if(DecryptPrivateKey(alias, strKey))
+			if(DecryptPrivateKey(alias.vchPubKey, cert.vchEncryptionPrivateKey, strKey))
 				strEncryptionPrivateKey = HexStr(strKey);	
 		}
 		if(strWalletless == "Yes")
@@ -1329,7 +1329,7 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert,
 			CMessageCrypter crypter;
 			if(!strEncryptionPrivateKey.empty())
 			{
-				if(crypter.Decrypt(stringFromVch(ParseHex(strEncryptionPrivateKey)), stringFromVch(cert.vchData), strDecrypted))
+				if(crypter.Decrypt(strKey, stringFromVch(cert.vchData), strDecrypted))
 					strData = strDecrypted;
 			}
 		}
