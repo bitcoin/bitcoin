@@ -1512,7 +1512,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex || fReindexChainState);
                 pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
-                pcoinsTip = new CCoinsViewCache(pcoinscatcher);
 
                 if (fReindex) {
                     pblocktree->WriteReindexing(true);
@@ -1560,7 +1559,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     strLoadError = _("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.");
                     break;
                 }
-                pcoinsTip->SetBestBlock(pcoinsdbview->GetBestBlock()); // TODO: only initialize pcoinsTip after ReplayBlocks
+                pcoinsTip = new CCoinsViewCache(pcoinscatcher);
                 LoadChainTip(chainparams);
 
                 if (!fReindex && chainActive.Tip() != nullptr) {
