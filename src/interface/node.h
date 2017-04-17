@@ -19,10 +19,13 @@
 #include <tuple>
 #include <vector>
 
+class CCoinControl;
+class CFeeRate;
 class CNodeStats;
 class RPCTimerInterface;
 class UniValue;
 class proxyType;
+enum class FeeReason;
 struct CNodeStateStats;
 
 namespace interface {
@@ -145,8 +148,26 @@ public:
     //! Get tx confirm target.
     virtual unsigned int getTxConfirmTarget() = 0;
 
+    //! Get required fee.
+    virtual CAmount getRequiredFee(unsigned int tx_bytes) = 0;
+
+    //! Get minimum fee.
+    virtual CAmount getMinimumFee(unsigned int tx_bytes,
+        const CCoinControl& coin_control,
+        int* returned_target,
+        FeeReason* reason) = 0;
+
     //! Get max tx fee.
     virtual CAmount getMaxTxFee() = 0;
+
+    //! Estimate smart fee.
+    virtual CFeeRate estimateSmartFee(int num_blocks, bool conservative, int* returned_target = nullptr) = 0;
+
+    //! Get dust relay fee.
+    virtual CFeeRate getDustRelayFee() = 0;
+
+    //! Get pay tx fee.
+    virtual CFeeRate getPayTxFee() = 0;
 
     //! Execute rpc command.
     virtual UniValue executeRpc(const std::string& command, const UniValue& params, const std::string& uri) = 0;

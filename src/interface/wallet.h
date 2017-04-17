@@ -16,6 +16,7 @@
 #include <memory>
 #include <stdint.h>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -30,6 +31,7 @@ namespace interface {
 class Handler;
 class PendingWalletTx;
 struct WalletBalances;
+struct WalletTxOut;
 
 using WalletOrderForm = std::vector<std::pair<std::string, std::string>>;
 using WalletValueMap = std::map<std::string, std::string>;
@@ -153,6 +155,14 @@ public:
     //! Get available balance.
     virtual CAmount getAvailableBalance(const CCoinControl& coin_control) = 0;
 
+    //! Return AvailableCoins + LockedCoins grouped by wallet address.
+    //! (put change in one group with wallet address)
+    using CoinsList = std::map<CTxDestination, std::vector<std::tuple<COutPoint, WalletTxOut>>>;
+    virtual CoinsList listCoins() = 0;
+
+    //! Return wallet transaction output information.
+    virtual std::vector<WalletTxOut> getCoins(const std::vector<COutPoint>& outputs) = 0;
+
     // Return whether HD enabled.
     virtual bool hdEnabled() = 0;
 
@@ -224,6 +234,15 @@ struct WalletBalances
                unconfirmed_watch_only_balance != prev.unconfirmed_watch_only_balance ||
                immature_watch_only_balance != prev.immature_watch_only_balance;
     }
+};
+
+//! Wallet transaction output.
+struct WalletTxOut
+{
+    CTxOut txout;
+    int64_t time;
+    int depth_in_main_chain = -1;
+    bool is_spent = false;
 };
 
 //! Return implementation of Wallet interface. This function will be undefined
