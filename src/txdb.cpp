@@ -85,6 +85,7 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
     size_t changed = 0;
     size_t batch_size = (size_t)GetArg("-dbbatchsize", nDefaultDbBatchSize);
     int crash_simulate = GetArg("-dbcrashratio", 0);
+    assert(!hashBlock.IsNull());
 
     uint256 old_tip = GetBestBlock();
     if (old_tip.IsNull()) {
@@ -94,13 +95,6 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
             assert(old_heads[0] == hashBlock);
             old_tip = old_heads[1];
         }
-    }
-
-    if (hashBlock.IsNull()) {
-        // Initial flush, nothing to write.
-        assert(mapCoins.empty());
-        assert(old_tip.IsNull());
-        return true;
     }
 
     // In the first batch, mark the database as being in the middle of a
