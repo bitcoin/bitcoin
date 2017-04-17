@@ -737,7 +737,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel)
         connect(_clientModel, SIGNAL(networkActiveChanged(bool)), this, SLOT(setNetworkActive(bool)));
 
         modalOverlay->setKnownBestHeight(_clientModel->getHeaderTipHeight(), QDateTime::fromTime_t(_clientModel->getHeaderTipTime()));
-        setNumBlocks(_clientModel->getNumBlocks(), _clientModel->getLastBlockDate(), _clientModel->getLastBlockHash(), _clientModel->getVerificationProgress(nullptr), false);
+        setNumBlocks(m_node.getNumBlocks(), QDateTime::fromTime_t(m_node.getLastBlockTime()), QString::fromStdString(m_node.getLastBlockHash()), m_node.getVerificationProgress(), false);
         connect(_clientModel, SIGNAL(numBlocksChanged(int,QDateTime,QString,double,bool)), this, SLOT(setNumBlocks(int,QDateTime,QString,double,bool)));
 
         connect(_clientModel, SIGNAL(additionalDataSyncProgressChanged(double)), this, SLOT(setAdditionalDataSyncProgress(double)));
@@ -1073,10 +1073,14 @@ void BitcoinGUI::gotoVerifyMessageTab(QString addr)
 
 void BitcoinGUI::updateNetworkState()
 {
+    if (clientModel == nullptr) {
+        return;
+    }
+
     static int nCountPrev{0};
     static bool fNetworkActivePrev{false};
     int count = clientModel->getNumConnections();
-    bool fNetworkActive = clientModel->getNetworkActive();
+    bool fNetworkActive = m_node.getNetworkActive();
     QString icon;
     GUIUtil::ThemedColor color = GUIUtil::ThemedColor::ORANGE;
     switch(count)
@@ -1110,7 +1114,7 @@ void BitcoinGUI::updateNetworkState()
     }
 
     if (fNetworkBecameActive || fNetworkBecameInactive) {
-        setNumBlocks(clientModel->getNumBlocks(), clientModel->getLastBlockDate(), clientModel->getLastBlockHash(), clientModel->getVerificationProgress(nullptr), false);
+        setNumBlocks(m_node.getNumBlocks(), QDateTime::fromTime_t(m_node.getLastBlockTime()), QString::fromStdString(m_node.getLastBlockHash()), m_node.getVerificationProgress(), false);
     }
 
     nCountPrev = count;
@@ -1158,11 +1162,11 @@ void BitcoinGUI::updateProgressBarVisibility()
         return;
     }
     // Show the progress bar label if the network is active + we are out of sync or we have no connections.
-    bool fShowProgressBarLabel = clientModel->getNetworkActive() && (!masternodeSync.IsSynced() || clientModel->getNumConnections() == 0);
+    bool fShowProgressBarLabel = m_node.getNetworkActive() && (!masternodeSync.IsSynced() || clientModel->getNumConnections() == 0);
     // Show the progress bar only if the the network active + we are not synced + we have any connection. Unlike with the label
     // which gives an info text about the connecting phase there is no reason to show the progress bar if we don't have connections
     // since it will not get any updates in this case.
-    bool fShowProgressBar = clientModel->getNetworkActive() && !masternodeSync.IsSynced() && clientModel->getNumConnections() > 0;
+    bool fShowProgressBar = m_node.getNetworkActive() && !masternodeSync.IsSynced() && clientModel->getNumConnections() > 0;
     progressBarLabel->setVisible(fShowProgressBarLabel);
     progressBar->setVisible(fShowProgressBar);
 }
@@ -1344,7 +1348,7 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
 
     // If masternodeSync.Reset() has been called make sure status bar shows the correct information.
     if (nSyncProgress == -1) {
-        setNumBlocks(clientModel->getNumBlocks(), clientModel->getLastBlockDate(), clientModel->getLastBlockHash(), clientModel->getVerificationProgress(nullptr), false);
+        setNumBlocks(m_node.getNumBlocks(), QDateTime::fromTime_t(m_node.getLastBlockTime()), QString::fromStdString(m_node.getLastBlockHash()), m_node.getVerificationProgress(), false);
         if (clientModel->getNumConnections()) {
             labelBlocksIcon->show();
             startSpinner();
@@ -1823,9 +1827,7 @@ void BitcoinGUI::unsubscribeFromCoreSignals()
 
 void BitcoinGUI::toggleNetworkActive()
 {
-    if (clientModel) {
-        clientModel->setNetworkActive(!clientModel->getNetworkActive());
-    }
+    m_node.setNetworkActive(!m_node.getNetworkActive());
 }
 
 /** Get restart command-line parameters and request restart */

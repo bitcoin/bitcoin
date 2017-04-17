@@ -500,7 +500,7 @@ void OverviewPage::privateSendStatus(bool fForce)
     };
 
     static int64_t nLastDSProgressBlockTime = 0;
-    int nBestHeight = clientModel->getNumBlocks();
+    int nBestHeight = clientModel->node().getNumBlocks();
 
     auto it = privateSendClientManagers.find(walletModel->getWallet()->GetName());
     if (it == privateSendClientManagers.end()) {

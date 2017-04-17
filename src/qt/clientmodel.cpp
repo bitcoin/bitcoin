@@ -14,6 +14,8 @@
 #include <chainparams.h>
 #include <checkpoints.h>
 #include <clientversion.h>
+#include <interface/handler.h>
+#include <interface/node.h>
 #include <validation.h>
 #include <net.h>
 #include <txmempool.h>
@@ -36,8 +38,9 @@ class CBlockIndex;
 static int64_t nLastHeaderTipUpdateNotification = 0;
 static int64_t nLastBlockTipUpdateNotification = 0;
 
-ClientModel::ClientModel(OptionsModel *_optionsModel, QObject *parent) :
+ClientModel::ClientModel(interface::Node& node, OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent),
+    m_node(node),
     optionsModel(_optionsModel),
     peerTableModel(0),
     banTableModel(0),
@@ -70,9 +73,7 @@ int ClientModel::getNumConnections(unsigned int flags) const
     else if (flags == CONNECTIONS_ALL)
         connections = CConnman::CONNECTIONS_ALL;
 
-    if(g_connman)
-         return g_connman->GetNodeCount(connections);
-    return 0;
+    return m_node.getNodeCount(connections);
 }
 
 void ClientModel::setMasternodeList(const CDeterministicMNList& mnList)
@@ -97,21 +98,16 @@ void ClientModel::refreshMasternodeList()
     setMasternodeList(deterministicMNManager->GetListAtChainTip());
 }
 
-int ClientModel::getNumBlocks() const
-{
-    LOCK(cs_main);
-    return chainActive.Height();
-}
-
 int ClientModel::getHeaderTipHeight() const
 {
     if (cachedBestHeaderHeight == -1) {
         // make sure we initially populate the cache via a cs_main lock
         // otherwise we need to wait for a tip update
-        LOCK(cs_main);
-        if (pindexBestHeader) {
-            cachedBestHeaderHeight = pindexBestHeader->nHeight;
-            cachedBestHeaderTime = pindexBestHeader->GetBlockTime();
+        int height;
+        int64_t blockTime;
+        if (m_node.getHeaderTip(height, blockTime)) {
+            cachedBestHeaderHeight = height;
+            cachedBestHeaderTime = blockTime;
         }
     }
     return cachedBestHeaderHeight;
@@ -120,57 +116,14 @@ int ClientModel::getHeaderTipHeight() const
 int64_t ClientModel::getHeaderTipTime() const
 {
     if (cachedBestHeaderTime == -1) {
-        LOCK(cs_main);
-        if (pindexBestHeader) {
-            cachedBestHeaderHeight = pindexBestHeader->nHeight;
-            cachedBestHeaderTime = pindexBestHeader->GetBlockTime();
+        int height;
+        int64_t blockTime;
+        if (m_node.getHeaderTip(height, blockTime)) {
+            cachedBestHeaderHeight = height;
+            cachedBestHeaderTime = blockTime;
         }
     }
     return cachedBestHeaderTime;
-}
-
-quint64 ClientModel::getTotalBytesRecv() const
-{
-    if(!g_connman)
-        return 0;
-    return g_connman->GetTotalBytesRecv();
-}
-
-quint64 ClientModel::getTotalBytesSent() const
-{
-    if(!g_connman)
-        return 0;
-    return g_connman->GetTotalBytesSent();
-}
-
-QDateTime ClientModel::getLastBlockDate() const
-{
-    LOCK(cs_main);
-
-    if (chainActive.Tip())
-        return QDateTime::fromTime_t(chainActive.Tip()->GetBlockTime());
-
-    return QDateTime::fromTime_t(Params().GenesisBlock().GetBlockTime()); // Genesis block's time of current network
-}
-
-QString ClientModel::getLastBlockHash() const
-{
-    LOCK(cs_main);
-
-    if (chainActive.Tip())
-        return QString::fromStdString(chainActive.Tip()->GetBlockHash().ToString());
-
-    return QString::fromStdString(Params().GenesisBlock().GetHash().ToString()); // Genesis block's hash of current network
-}
-
-long ClientModel::getMempoolSize() const
-{
-    return mempool.size();
-}
-
-size_t ClientModel::getMempoolDynamicUsage() const
-{
-    return mempool.DynamicMemoryUsage();
 }
 
 size_t ClientModel::getInstantSentLockCount() const
@@ -181,22 +134,11 @@ size_t ClientModel::getInstantSentLockCount() const
     return llmq::quorumInstantSendManager->GetInstantSendLockCount();
 }
 
-double ClientModel::getVerificationProgress(const CBlockIndex *tipIn) const
-{
-    CBlockIndex *tip = const_cast<CBlockIndex *>(tipIn);
-    LOCK(cs_main);
-    if (!tip)
-    {
-        tip = chainActive.Tip();
-    }
-    return GuessVerificationProgress(Params().TxData(), tip);
-}
-
 void ClientModel::updateTimer()
 {
     // no locking required at this point
     // the following calls will acquire the required lock
-    Q_EMIT mempoolSizeChanged(getMempoolSize(), getMempoolDynamicUsage());
+    Q_EMIT mempoolSizeChanged(m_node.getMempoolSize(), m_node.getMempoolDynamicUsage());
     Q_EMIT islockCountChanged(getInstantSentLockCount());
 }
 
@@ -215,16 +157,11 @@ void ClientModel::updateAlert()
     Q_EMIT alertsChanged(getStatusBarWarnings());
 }
 
-bool ClientModel::inInitialBlockDownload() const
-{
-    return IsInitialBlockDownload();
-}
-
 enum BlockSource ClientModel::getBlockSource() const
 {
-    if (fReindex)
+    if (m_node.getReindex())
         return BlockSource::REINDEX;
-    else if (fImporting)
+    else if (m_node.getImporting())
         return BlockSource::DISK;
     else if (getNumConnections() > 0)
         return BlockSource::NETWORK;
@@ -232,24 +169,9 @@ enum BlockSource ClientModel::getBlockSource() const
     return BlockSource::NONE;
 }
 
-void ClientModel::setNetworkActive(bool active)
-{
-    if (g_connman) {
-         g_connman->SetNetworkActive(active);
-    }
-}
-
-bool ClientModel::getNetworkActive() const
-{
-    if (g_connman) {
-        return g_connman->GetNetworkActive();
-    }
-    return false;
-}
-
 QString ClientModel::getStatusBarWarnings() const
 {
-    return QString::fromStdString(GetWarnings("gui"));
+    return QString::fromStdString(m_node.getWarnings("gui"));
 }
 
 OptionsModel *ClientModel::getOptionsModel()
@@ -331,7 +253,7 @@ static void BannedListChanged(ClientModel *clientmodel)
     QMetaObject::invokeMethod(clientmodel, "updateBanlist", Qt::QueuedConnection);
 }
 
-static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, const CBlockIndex *pIndex, bool fHeader)
+static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int height, int64_t blockTime, const std::string& strBlockHash, double verificationProgress, bool fHeader)
 {
     // lock free async UI updates in case we have a new block tip
     // during initial sync, only update the UI if the last update
@@ -344,17 +266,17 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, const CB
 
     if (fHeader) {
         // cache best headers time and height to reduce future cs_main locks
-        clientmodel->cachedBestHeaderHeight = pIndex->nHeight;
-        clientmodel->cachedBestHeaderTime = pIndex->GetBlockTime();
+        clientmodel->cachedBestHeaderHeight = height;
+        clientmodel->cachedBestHeaderTime = blockTime;
     }
     // if we are in-sync, update the UI regardless of last update time
     if (!initialSync || now - nLastUpdateNotification > MODEL_UPDATE_DELAY) {
         //pass an async signal to the UI thread
         QMetaObject::invokeMethod(clientmodel, "numBlocksChanged", Qt::QueuedConnection,
-                                  Q_ARG(int, pIndex->nHeight),
-                                  Q_ARG(QDateTime, QDateTime::fromTime_t(pIndex->GetBlockTime())),
-                                  Q_ARG(QString, QString::fromStdString(pIndex->GetBlockHash().ToString())),
-                                  Q_ARG(double, clientmodel->getVerificationProgress(pIndex)),
+                                  Q_ARG(int, height),
+                                  Q_ARG(QDateTime, QDateTime::fromTime_t(blockTime)),
+                                  Q_ARG(QString, QString::fromStdString(strBlockHash)),
+                                  Q_ARG(double, verificationProgress),
                                   Q_ARG(bool, fHeader));
         nLastUpdateNotification = now;
     }
@@ -374,27 +296,27 @@ static void NotifyAdditionalDataSyncProgressChanged(ClientModel *clientmodel, do
 void ClientModel::subscribeToCoreSignals()
 {
     // Connect signals to client
-    uiInterface.ShowProgress.connect(boost::bind(ShowProgress, this, _1, _2));
-    uiInterface.NotifyNumConnectionsChanged.connect(boost::bind(NotifyNumConnectionsChanged, this, _1));
-    uiInterface.NotifyNetworkActiveChanged.connect(boost::bind(NotifyNetworkActiveChanged, this, _1));
-    uiInterface.NotifyAlertChanged.connect(boost::bind(NotifyAlertChanged, this));
-    uiInterface.BannedListChanged.connect(boost::bind(BannedListChanged, this));
-    uiInterface.NotifyBlockTip.connect(boost::bind(BlockTipChanged, this, _1, _2, false));
-    uiInterface.NotifyHeaderTip.connect(boost::bind(BlockTipChanged, this, _1, _2, true));
-    uiInterface.NotifyMasternodeListChanged.connect(boost::bind(NotifyMasternodeListChanged, this, _1));
-    uiInterface.NotifyAdditionalDataSyncProgressChanged.connect(boost::bind(NotifyAdditionalDataSyncProgressChanged, this, _1));
+    m_handler_show_progress = m_node.handleShowProgress(boost::bind(ShowProgress, this, _1, _2));
+    m_handler_notify_num_connections_changed = m_node.handleNotifyNumConnectionsChanged(boost::bind(NotifyNumConnectionsChanged, this, _1));
+    m_handler_notify_network_active_changed = m_node.handleNotifyNetworkActiveChanged(boost::bind(NotifyNetworkActiveChanged, this, _1));
+    m_handler_notify_alert_changed = m_node.handleNotifyAlertChanged(boost::bind(NotifyAlertChanged, this));
+    m_handler_banned_list_changed = m_node.handleBannedListChanged(boost::bind(BannedListChanged, this));
+    m_handler_notify_block_tip = m_node.handleNotifyBlockTip(boost::bind(BlockTipChanged, this, _1, _2,_3, _4, _5, false));
+    m_handler_notify_header_tip = m_node.handleNotifyHeaderTip(boost::bind(BlockTipChanged, this, _1, _2, _3, _4, _5, true));
+    m_handler_notify_masternodelist_changed = m_node.handleNotifyMasternodeListChanged(boost::bind(NotifyMasternodeListChanged, this, _1));
+    m_handler_notify_additional_data_sync_progess_changed = m_node.handleNotifyAdditionalDataSyncProgressChanged(boost::bind(NotifyAdditionalDataSyncProgressChanged, this, _1));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
 {
     // Disconnect signals from client
-    uiInterface.ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
-    uiInterface.NotifyNumConnectionsChanged.disconnect(boost::bind(NotifyNumConnectionsChanged, this, _1));
-    uiInterface.NotifyNetworkActiveChanged.disconnect(boost::bind(NotifyNetworkActiveChanged, this, _1));
-    uiInterface.NotifyAlertChanged.disconnect(boost::bind(NotifyAlertChanged, this));
-    uiInterface.BannedListChanged.disconnect(boost::bind(BannedListChanged, this));
-    uiInterface.NotifyBlockTip.disconnect(boost::bind(BlockTipChanged, this, _1, _2, false));
-    uiInterface.NotifyHeaderTip.disconnect(boost::bind(BlockTipChanged, this, _1, _2, true));
-    uiInterface.NotifyMasternodeListChanged.disconnect(boost::bind(NotifyMasternodeListChanged, this, _1));
-    uiInterface.NotifyAdditionalDataSyncProgressChanged.disconnect(boost::bind(NotifyAdditionalDataSyncProgressChanged, this, _1));
+    m_handler_show_progress->disconnect();
+    m_handler_notify_num_connections_changed->disconnect();
+    m_handler_notify_network_active_changed->disconnect();
+    m_handler_notify_alert_changed->disconnect();
+    m_handler_banned_list_changed->disconnect();
+    m_handler_notify_block_tip->disconnect();
+    m_handler_notify_header_tip->disconnect();
+    m_handler_notify_masternodelist_changed->disconnect();
+    m_handler_notify_additional_data_sync_progess_changed->disconnect();
 }
