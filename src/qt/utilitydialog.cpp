@@ -16,6 +16,7 @@
 
 #include <clientversion.h>
 #include <init.h>
+#include <interface/node.h>
 #include <util.h>
 
 #include <stdio.h>
@@ -28,13 +29,13 @@
 #include <QVBoxLayout>
 
 /** "Help message" or "About" dialog box */
-HelpMessageDialog::HelpMessageDialog(QWidget *parent, HelpMode helpMode) :
+HelpMessageDialog::HelpMessageDialog(interface::Node& node, QWidget *parent, HelpMode helpMode) :
     QDialog(parent),
     ui(new Ui::HelpMessageDialog)
 {
     ui->setupUi(this);
 
-    QString version = tr("Chaincoin Core") + " " + tr("version") + " " + QString::fromStdString(FormatFullVersion());
+    QString version = tr(PACKAGE_NAME) + " " + tr("version") + " " + QString::fromStdString(FormatFullVersion());
     /* On x86 add a bit specifier to the version so that users can distinguish between
      * 32 and 64 bit builds. On other architectures, 32/64 bit may be more ambiguous.
      */
@@ -75,7 +76,7 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, HelpMode helpMode) :
         cursor.insertText(header);
         cursor.insertBlock();
 
-        std::string strUsage = HelpMessage(HelpMessageMode::BITCOIN_QT);
+        std::string strUsage = node.helpMessage(HelpMessageMode::BITCOIN_QT);
         const bool showDebug = gArgs.GetBoolArg("-help-debug", false);
         strUsage += HelpMessageGroup(tr("UI Options:").toStdString());
         if (showDebug) {

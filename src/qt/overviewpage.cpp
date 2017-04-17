@@ -590,8 +590,8 @@ void OverviewPage::privateSendReset(){
         QMessageBox::Ok, QMessageBox::Ok);
 }
 
-void OverviewPage::privateSendInfo(){
-    HelpMessageDialog dlg(this, HelpMessageDialog::pshelp);
+void OverviewPage::privateSendInfo(interface::Node& dummy){
+    HelpMessageDialog dlg(dummy, this, HelpMessageDialog::pshelp);
     dlg.exec();
 }
 

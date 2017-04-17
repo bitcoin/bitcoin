@@ -20,6 +20,10 @@ namespace Ui {
     class OverviewPage;
 }
 
+namespace interface {
+class Node;
+}
+
 QT_BEGIN_NAMESPACE
 class QModelIndex;
 QT_END_NAMESPACE
@@ -71,7 +75,7 @@ private Q_SLOTS:
     void togglePrivateSend();
     void privateSendAuto();
     void privateSendReset();
-    void privateSendInfo();
+    void privateSendInfo(interface::Node& dummy);
     void updateDisplayUnit();
     void updatePrivateSendProgress();
     void updateAdvancedPSUI(bool fShowAdvancedPSUI);
