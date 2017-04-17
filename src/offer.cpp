@@ -1517,10 +1517,13 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	if(CheckParam(params, 11))
 		bPrivate = params[11].get_str() == "Yes"? true: false;
 	float fUnits=1.0f;
-	try {
-		fUnits =  boost::lexical_cast<float>(params[12].get_str());
-	} catch (std::exception &e) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1503 - " + _("Invalid units value"));
+	if(CheckParam(params, 12))
+	{
+		try {
+			fUnits =  boost::lexical_cast<float>(params[12].get_str());
+		} catch (std::exception &e) {
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1503 - " + _("Invalid units value"));
+		}
 	}
 	bool bCoinOffer = false;
 	if(CheckParam(params, 13))
