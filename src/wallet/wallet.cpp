@@ -1554,6 +1554,7 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool f
     CBlockIndex* pindex = pindexStart;
     {
         LOCK2(cs_main, cs_wallet);
+	fAbortRescan = false;
 
         // no need to read and scan block, if block was created before
         // our wallet birthday (as adjusted for block time variability)
@@ -1584,10 +1585,21 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool f
                 nNow = GetTime();
                 LogPrintf("Still rescanning. At block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainParams.TxData(), pindex));
             }
+	    if (fAbortRescan) {
+	        LogPrintf("Aborted rescanning. At block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainParams.TxData(), pindex));
+	        fAbortRescan = false;
+		break;
+	    }
         }
         ShowProgress(_("Rescanning..."), 100); // hide progress dialog in GUI
     }
     return ret;
+}
+
+bool CWallet::AbortScanForWalletTransactions(bool fAbort)
+{
+	fAbortRescan = fAbort;
+	return fAbortRescan;
 }
 
 void CWallet::ReacceptWalletTransactions()

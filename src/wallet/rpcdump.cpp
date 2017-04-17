@@ -1127,3 +1127,26 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
 
     return response;
 }
+UniValue abortrescan(const JSONRPCRequest& request)
+{
+    if (request.fHelp) {
+        throw std::runtime_error("abortrescan\n\n"
+	"Aborts the current running rescan.\n\n"
+	"Examples:\n" +
+	HelpExampleCli("abortrescan", "") +
+	HelpExampleRpc("abortrescan", "")
+	);
+    }
+
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    pwallet->AbortScanForWalletTransactions(true);
+    LogPrintf("abortrescan command received from rpc\n");
+
+    LOCK2(cs_main, pwallet->cs_wallet); // Wait for lock to release
+
+    return NullUniValue;
+}
