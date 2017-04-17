@@ -475,38 +475,6 @@ void WalletModel::UnlockContext::CopyFrom(const UnlockContext& rhs)
     rhs.relock = false;
 }
 
-// returns a list of COutputs from COutPoints
-void WalletModel::getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs)
-{
-    LOCK2(cs_main, cwallet->cs_wallet);
-    for (const COutPoint& outpoint : vOutpoints)
-    {
-        auto it = cwallet->mapWallet.find(outpoint.hash);
-        if (it == cwallet->mapWallet.end()) continue;
-        int nDepth = it->second.GetDepthInMainChain();
-        if (nDepth < 0) continue;
-        COutput out(&it->second, outpoint.n, nDepth, true /* spendable */, true /* solvable */, true /* safe */);
-        vOutputs.push_back(out);
-    }
-}
-
-bool WalletModel::isSpent(const COutPoint& outpoint) const
-{
-    LOCK2(cs_main, cwallet->cs_wallet);
-    return cwallet->IsSpent(outpoint.hash, outpoint.n);
-}
-
-// AvailableCoins + LockedCoins grouped by wallet address (put change in one group with wallet address)
-void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const
-{
-    for (auto& group : cwallet->ListCoins()) {
-        auto& resultGroup = mapCoins[QString::fromStdString(EncodeDestination(group.first))];
-        for (auto& coin : group.second) {
-            resultGroup.emplace_back(std::move(coin));
-        }
-    }
-}
-
 void WalletModel::loadReceiveRequests(std::vector<std::string>& vReceiveRequests)
 {
     vReceiveRequests = m_wallet->getDestValues("rr"); // receive request
