@@ -13,6 +13,7 @@
 
 #include <qt/guiutil.h>
 
+#include <interface/node.h>
 #include <util.h>
 
 #include <QFileDialog>
@@ -187,7 +188,7 @@ QString Intro::getDefaultDataDirectory()
     return GUIUtil::boostPathToQString(GetDefaultDataDir());
 }
 
-bool Intro::pickDataDirectory()
+bool Intro::pickDataDirectory(interface::Node& node)
 {
     QSettings settings;
     /* If data directory provided on command line, no need to look at settings
@@ -238,8 +239,9 @@ bool Intro::pickDataDirectory()
      * override -datadir in the dash.conf file in the default data directory
      * (to be consistent with dashd behavior)
      */
-    if(dataDir != dataDirDefaultCurrent)
-        gArgs.SoftSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting
+    if(dataDir != dataDirDefaultCurrent) {
+        node.softSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting
+    }
     return true;
 }
 
