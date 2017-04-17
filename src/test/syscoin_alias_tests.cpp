@@ -751,8 +751,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasbanwithoffers)
 	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguidunsafe, "Off"), true);
 
 	// swap safe search fields on the aliases
-	AliasUpdate("node1", "jagbansafesearchoffer", "pubdata1", "privatedata1");	
-	AliasUpdate("node1", "jagbannonsafesearchoffer", "pubdata1", "privatedata1");
+	AliasUpdate("node1", "jagbansafesearchoffer", "pubdata1", "privatedata1", "No");	
+	AliasUpdate("node1", "jagbannonsafesearchoffer", "pubdata1", "privatedata1", "Yes");
 
 	// safe offer with unsafe alias should show only in safe search off mode
 	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguidsafe1, "On"), false);
@@ -768,8 +768,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasbanwithoffers)
 	OfferUpdate("node1", "jagbansafesearchoffer", offerguidsafe1, "category", "titlenew", "10", "1.00", "descriptionnew", "USD", "\"\"", "\"\"", "\"\"", "Yes");
 	OfferUpdate("node1", "jagbansafesearchoffer", offerguidsafe2, "category", "titlenew", "90", "0.15", "descriptionnew", "USD", "\"\"", "\"\"", "\"\"", "No");
 	// swap them back and check filters again
-	AliasUpdate("node1", "jagbansafesearchoffer", "pubdata1", "privatedata1");	
-	AliasUpdate("node1", "jagbannonsafesearchoffer", "pubdata1", "privatedata1");
+	AliasUpdate("node1", "jagbansafesearchoffer", "pubdata1", "privatedata1", "Yes");	
+	AliasUpdate("node1", "jagbannonsafesearchoffer", "pubdata1", "privatedata1", "No");
 
 	// safe offer with safe alias should show regardless of safe search
 	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguidsafe1, "On"), true);
@@ -798,8 +798,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasbanwithoffers)
 
 	// keep alive and revert settings
 	OfferUpdate("node1", "jagbansafesearchoffer", offerguidsafe1, "category", "titlenew", "10", "1.00", "descriptionnew", "USD", "\"\"", "\"\"", "\"\"", "Yes");
-	AliasUpdate("node1", "jagbansafesearchoffer", "pubdata1", "privatedata1");	
-	AliasUpdate("node1", "jagbannonsafesearchoffer", "pubdata1", "privatedata1");
+	AliasUpdate("node1", "jagbansafesearchoffer", "pubdata1", "privatedata1", "Yes");	
+	AliasUpdate("node1", "jagbannonsafesearchoffer", "pubdata1", "privatedata1", "No");
 
 	// unsafe offer with safe alias should show in safe off mode only
 	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguidsafe3, "On"), false);
