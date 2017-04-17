@@ -96,6 +96,8 @@ public:
     bool isRestartRequired() const;
     bool resetSettingsOnShutdown{false};
 
+    interface::Node& node() const { return m_node; }
+
 private:
     interface::Node& m_node;
     /* Qt-only settings */
