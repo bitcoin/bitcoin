@@ -2195,9 +2195,9 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if(CheckParam(params, 10))
 		strGeoLocation = params[10].get_str();
 	if(CheckParam(params, 11))
-		strCommission = params[11].get_str();
+		strSafeSearch = params[11].get_str();
 	if(CheckParam(params, 12))
-		strSafeSearch = params[12].get_str();
+		strCommission = params[12].get_str();
 	if(CheckParam(params, 13))
 	{
 		paymentOptions = params[13].get_str();	

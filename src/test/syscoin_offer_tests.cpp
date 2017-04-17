@@ -757,7 +757,7 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	StartNode("node1");
 	GenerateBlocks(5, "node1");
 	// ensure you can still update before expiry
-	OfferUpdate("node1", "pruneoffer", guid1, "1", "0.05", "category", "title", "1", "0.05", "description", "USD");
+	OfferUpdate("node1", "pruneoffer", guid1, "category", "title", "1", "0.05", "description", "USD");
 	// you can search it still on node1/node2
 	BOOST_CHECK_EQUAL(OfferFilter("node1", guid1, "Off"), true);
 	BOOST_CHECK_EQUAL(OfferFilter("node2", guid1, "Off"), true);

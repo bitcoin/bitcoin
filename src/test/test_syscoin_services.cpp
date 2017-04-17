@@ -1246,6 +1246,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	GetOtherNodes(node, otherNode1, otherNode2);
 	CreateSysRatesIfNotExist();
 	UniValue r;
+	//						"offernew <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [payment options=SYS] [geolocation] [safe search=Yes] [private=No] [units] [coinoffer=No]\n"
 	string offercreatestr = "offernew " + aliasname + " " + category + " " + title + " " + qty + " " + price + " " + description + " " + currency  + " " + certguid + " " + paymentoptions + " " + geolocation + " " + safesearch;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, offercreatestr));
 	const UniValue &arr = r.get_array();
@@ -1311,7 +1312,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	string oldtitle = find_value(r.get_obj(), "title").get_str();
 	string oldgeolocation = find_value(r.get_obj(), "geolocation").get_str();
 	string oldcategory = find_value(r.get_obj(), "category").get_str();
-
+	//						"offerupdate <alias> <guid> [category] [title] [quantity] [price] [description] [currency] [private=No] [cert. guid] [geolocation] [safesearch=Yes] [commission] [paymentOptions]\n"
 	string offerupdatestr = "offerupdate " + aliasname + " " + offerguid + " " + category + " " + title + " " + qty + " " + price + " " + description + " " + currency + " " + isprivate + " " + certguid + " " +  geolocation + " " + safesearch + " " + commission + " " + paymentoptions;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, offerupdatestr));
 	GenerateBlocks(10, node);
