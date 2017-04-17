@@ -358,7 +358,7 @@ void BitcoinApplication::createOptionsModel(bool resetSettings)
 
 void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
 {
-    window = new BitcoinGUI(networkStyle, 0);
+    window = new BitcoinGUI(m_node, networkStyle, 0);
 
     GUIUtil::loadTheme(window);
 
