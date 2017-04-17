@@ -51,6 +51,17 @@ public:
     CReserveKey m_key;
 };
 
+//! Construct wallet TxOut struct.
+WalletTxOut MakeWalletTxOut(CWallet& wallet, const CWalletTx& wtx, int n, int depth)
+{
+    WalletTxOut result;
+    result.txout = wtx.tx->vout[n];
+    result.time = wtx.GetTxTime();
+    result.depth_in_main_chain = depth;
+    result.is_spent = wallet.IsSpent(wtx.GetHash(), n);
+    return result;
+}
+
 class WalletImpl : public Wallet
 {
 public:
@@ -219,6 +230,36 @@ public:
         } else {
             return m_wallet.GetAvailableBalance(&coin_control);
         }
+    }
+    CoinsList listCoins() override
+    {
+        LOCK2(::cs_main, m_wallet.cs_wallet);
+        CoinsList result;
+        for (const auto& entry : m_wallet.ListCoins()) {
+            auto& group = result[entry.first];
+            for (const auto& coin : entry.second) {
+                group.emplace_back(
+                    COutPoint(coin.tx->GetHash(), coin.i), MakeWalletTxOut(m_wallet, *coin.tx, coin.i, coin.nDepth));
+            }
+        }
+        return result;
+    }
+    std::vector<WalletTxOut> getCoins(const std::vector<COutPoint>& outputs) override
+    {
+        LOCK2(::cs_main, m_wallet.cs_wallet);
+        std::vector<WalletTxOut> result;
+        result.reserve(outputs.size());
+        for (const auto& output : outputs) {
+            result.emplace_back();
+            auto it = m_wallet.mapWallet.find(output.hash);
+            if (it != m_wallet.mapWallet.end()) {
+                int depth = it->second.GetDepthInMainChain();
+                if (depth >= 0) {
+                    result.back() = MakeWalletTxOut(m_wallet, it->second, output.n, depth);
+                }
+            }
+        }
+        return result;
     }
     bool hdEnabled() override { return m_wallet.IsHDEnabled(); }
     std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) override
