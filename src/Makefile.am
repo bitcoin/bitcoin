@@ -105,6 +105,7 @@ BITCOIN_CORE_H = \
   httpserver.h \
   indirectmap.h \
   init.h \
+  blind.h \
   key.h \
   key/stealth.h \
   key/extkey.h \
@@ -334,6 +335,7 @@ libparticl_common_a_SOURCES = \
   compressor.cpp \
   core_read.cpp \
   core_write.cpp \
+  blind.cpp \
   key.cpp \
   key/keyutil.cpp \
   key/extkey.cpp \

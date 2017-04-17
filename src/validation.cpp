@@ -3673,7 +3673,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
                 memcpy(&voteToken, &vData[5], 4);
                 
                 if (fDebug)
-                    LogPrintf(_("Block %d casts vote for option %u of issue %u.\n"),
+                    LogPrintf(_("Block %d casts vote for option %u of proposal %u.\n"),
                     nHeight, voteToken >> 16, voteToken & 0xFFFF);
             };
             

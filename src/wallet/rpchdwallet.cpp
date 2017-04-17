@@ -2534,13 +2534,13 @@ UniValue setvote(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() != 4)
         throw std::runtime_error(
-            "setvote <issue> <option> <height_start> <height_end>\n"
+            "setvote <proposal> <option> <height_start> <height_end>\n"
             "Set voting token.\n"
-            "Issue is the issue to vote on.\n"
+            "Proposal is the proposal to vote on.\n"
             "Option is the option to vote for.\n"
             "The last added option valid for a range will be applied.\n"
             "Wallet will include this token in staked blocks from height_start to height_end.\n"
-            "Set issue and/or option to 0 to stop voting.\n");
+            "Set proposal and/or option to 0 to stop voting.\n");
     
     CHDWallet *pwallet = GetHDWallet();
     EnsureWalletIsUnlocked(pwallet);
@@ -2549,7 +2549,7 @@ UniValue setvote(const JSONRPCRequest &request)
     uint32_t option = request.params[1].get_int();
     
     if (issue > 0xFFFF)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Issue out of range."));
+        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Proposal out of range."));
     if (option > 0xFFFF)
         throw JSONRPCError(RPC_INVALID_PARAMETER, _("Option out of range."));
 
@@ -2576,16 +2576,15 @@ UniValue setvote(const JSONRPCRequest &request)
         if (!wdb.WriteVoteTokens(vVoteTokens))
             throw JSONRPCError(RPC_WALLET_ERROR, "WriteVoteTokens failed.");
         
-        
         pwallet->LoadVoteTokens(&wdb);
     }
     
     UniValue result(UniValue::VOBJ);
     
     if (issue < 1)
-        result.push_back(Pair("result", strprintf(_("Cleared vote token."))));
+        result.push_back(Pair("result", _("Cleared vote token.")));
     else
-        result.push_back(Pair("result", strprintf(_("Voting for option %u on issue %u"), issue, option)));
+        result.push_back(Pair("result", strprintf(_("Voting for option %u on proposal %u"), issue, option)));
     
     result.push_back(Pair("from_height", nStartHeight));
     result.push_back(Pair("to_height", nEndHeight));
@@ -2624,7 +2623,7 @@ UniValue votehistory(const JSONRPCRequest &request)
                     || (v.nToken & 0xFFFF) < 1)
                     continue;
                 UniValue vote(UniValue::VOBJ);
-                vote.push_back(Pair("issue", (int)(v.nToken & 0xFFFF)));
+                vote.push_back(Pair("proposal", (int)(v.nToken & 0xFFFF)));
                 vote.push_back(Pair("option", (int)(v.nToken >> 16)));
                 vote.push_back(Pair("from_height", v.nStart));
                 vote.push_back(Pair("to_height", v.nEnd));
@@ -2646,7 +2645,7 @@ UniValue votehistory(const JSONRPCRequest &request)
     {
         auto &v = vVoteTokens[i];
         UniValue vote(UniValue::VOBJ);
-        vote.push_back(Pair("issue", (int)(v.nToken & 0xFFFF)));
+        vote.push_back(Pair("proposal", (int)(v.nToken & 0xFFFF)));
         vote.push_back(Pair("option", (int)(v.nToken >> 16)));
         vote.push_back(Pair("from_height", v.nStart));
         vote.push_back(Pair("to_height", v.nEnd));
@@ -2661,12 +2660,12 @@ UniValue tallyvotes(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() != 3)
         throw std::runtime_error(
-            "tallyvotes <issue> <height_start> <height_end>\n"
+            "tallyvotes <proposal> <height_start> <height_end>\n"
             "count votes.\n");
     
     int issue = request.params[0].get_int();
     if (issue < 1 || issue >= (1 << 16))
-        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Issue out of range."));
+        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Proposal out of range."));
     
     int nStartHeight = request.params[1].get_int();
     int nEndHeight = request.params[2].get_int();
@@ -2717,7 +2716,7 @@ UniValue tallyvotes(const JSONRPCRequest &request)
     } while ((pindex = pindex->pprev));
     
     UniValue result(UniValue::VOBJ);
-    result.push_back(Pair("issue", issue));
+    result.push_back(Pair("proposal", issue));
     result.push_back(Pair("height_start", nStartHeight));
     result.push_back(Pair("height_end", nEndHeight));
     result.push_back(Pair("blocks_counted", nBlocks));
@@ -2954,9 +2953,9 @@ static const CRPCCommand commands[] =
     { "wallet",             "filtertransactions",       &filtertransactions,       false,  {"offset","count","sort_code"} },
     { "wallet",             "filteraddresses",          &filteraddresses,          false,  {"offset","count","sort_code"} },
     
-    { "wallet",             "setvote",                  &setvote,                  false,  {"issue","option","height_start","height_end"} },
+    { "wallet",             "setvote",                  &setvote,                  false,  {"proposal","option","height_start","height_end"} },
     { "wallet",             "votehistory",              &votehistory,              false,  {"current_only"} },
-    { "wallet",             "tallyvotes",               &tallyvotes,               false,  {"issue","height_start","height_end"} },
+    { "wallet",             "tallyvotes",               &tallyvotes,               false,  {"proposal","height_start","height_end"} },
     
     
     

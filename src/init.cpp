@@ -11,6 +11,7 @@
 
 #include "addrman.h"
 #include "amount.h"
+#include "blind.h"
 #include "chain.h"
 #include "chainparams.h"
 #include "checkpoints.h"
@@ -272,6 +273,7 @@ void Shutdown()
     globalVerifyHandle.reset();
     ECC_Stop();
     ECC_Stop_Stealth();
+    ECC_Stop_Blinding();
     LogPrintf("%s: done\n", __func__);
 }
 
@@ -1175,6 +1177,7 @@ bool AppInitSanityChecks()
     // Initialize elliptic curve code
     ECC_Start();
     ECC_Start_Stealth();
+    ECC_Start_Blinding();
     globalVerifyHandle.reset(new ECCVerifyHandle());
 
     // Sanity check

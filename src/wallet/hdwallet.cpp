@@ -193,9 +193,9 @@ bool CHDWallet::LoadVoteTokens(CHDWalletDB *pwdb)
                 if ((v.nToken >> 16) < 1
                     || (v.nToken & 0xFFFF) < 1)
                     LogPrint("hdwallet", _("Clearing vote from block %d to %d."),
-                        v.nToken >> 16, v.nToken & 0xFFFF, v.nStart, v.nEnd);
+                        v.nStart, v.nEnd);
                 else
-                    LogPrint("hdwallet", _("Voting for option %u on issue %u from block %d to %d."),
+                    LogPrint("hdwallet", _("Voting for option %u on proposal %u from block %d to %d."),
                         v.nToken >> 16, v.nToken & 0xFFFF, v.nStart, v.nEnd);
             };
         };

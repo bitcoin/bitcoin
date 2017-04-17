@@ -1,11 +1,11 @@
 Particl Core integration/staging tree
 =====================================
 
-[![Build Status](https://travis-ci.org/bitcoin/bitcoin.svg?branch=master)](https://travis-ci.org/bitcoin/bitcoin)
+[![Build Status](https://travis-ci.org/particl/particl-core.svg?branch=master)](https://travis-ci.org/particl/particl-core)
 
-https://bitcoincore.org
+https://particl.io
 
-What is Bitcoin?
+What is Particl?
 ----------------
 
 Bitcoin is an experimental digital currency that enables instant payments to
@@ -21,15 +21,15 @@ the Bitcoin Core software, see https://bitcoin.org/en/download, or read the
 License
 -------
 
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+Particl Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see https://opensource.org/licenses/MIT.
 
 Development Process
 -------------------
 
 The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
-regularly to indicate new official, stable release versions of Bitcoin Core.
+completely stable. [Tags](https://github.com/particl/particl-core/tags) are created
+regularly to indicate new official, stable release versions of Particl Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
