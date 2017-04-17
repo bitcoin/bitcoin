@@ -6,7 +6,6 @@
 #include <init.h>
 #include <qt/guiutil.h>
 #include <masternode-sync.h>
-#include <masternodeconfig.h>
 #include <masternodeman.h>
 #include <qt/qrdialog.h>
 #include <sync.h>
