@@ -13,6 +13,10 @@ static const bool DEFAULT_CHOOSE_DATADIR = false;
 
 class FreespaceChecker;
 
+namespace interface {
+    class Node;
+}
+
 namespace Ui {
     class Intro;
 }
@@ -41,7 +45,7 @@ public:
      * @note do NOT call global GetDataDir() before calling this function, this
      * will cause the wrong path to be cached.
      */
-    static bool pickDataDirectory();
+    static bool pickDataDirectory(interface::Node& node);
 
     /**
      * Determine default data directory for operating system.
