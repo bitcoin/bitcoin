@@ -55,7 +55,7 @@ UnlimitedDialog::UnlimitedDialog(QWidget* parent,UnlimitedModel* mdl):
 
     int64_t max, ave;
     sendShaper.get(&max, &ave);
-    int64_t longMax = std::numeric_limits<int64_t>::max();
+    auto longMax = std::numeric_limits<int64_t>::max();
     bool enabled = (ave != longMax);
     ui.sendShapingEnable->setChecked(enabled);
     ui.sendBurstSlider->setRange(0, 1000); // The slider is just for convenience so setting their ranges to what is commonly chosen
