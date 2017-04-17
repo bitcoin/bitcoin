@@ -349,11 +349,13 @@ void EditCertDialog::loadRow(int row)
 	m_oldpubdata = ui->certPubDataEdit->toPlainText();
 	m_oldsafesearch = ui->safeSearchEdit->currentText();
 	m_oldtitle = ui->nameEdit->text();
+	m_oldcategory = ui->categoryEdit->itemData(ui->categoryEdit->currentIndex(), Qt::UserRole).toString();
 }
 
 bool EditCertDialog::saveCurrentRow()
 {
 	string privdata = "";
+	string category = "";
 	string pubData = "";
 	string strCipherEncryptionPrivateKey = "";
 	string strSafeSearch = "";
@@ -500,6 +502,12 @@ bool EditCertDialog::saveCurrentRow()
 						return false;
 				}
 			}
+			currentCategory = ui->categoryEdit->itemData(ui->categoryEdit->currentIndex(), Qt::UserRole);
+			if(ui->categoryEdit->currentIndex() > 0 &&  currentCategory != QVariant::Invalid && currentCategory.toString() != m_oldcategory)
+				category = currentCategory.toString().toStdString();
+			else
+				category = "\"\"";
+
 			if(strCipherPrivateData.empty())
 				strCipherPrivateData = "\"\"";
 			else

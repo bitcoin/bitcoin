@@ -963,7 +963,7 @@ const string CertNew(const string& node, const string& alias, const string& titl
 		strCipherEncryptionPublicKey = HexStr(vchPubEncryptionKey);
 	}
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certnew " + alias + " " + title + " " + pubdata + " " + strCipherPrivateData + " " + safesearch + " " + strCipherEncryptionPublicKey + " " + strCipherEncryptionPrivateKey));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certnew " + alias + " " + title + " " + pubdata + " " + strCipherPrivateData + " " + safesearch + " certificates " + strCipherEncryptionPublicKey + " " + strCipherEncryptionPrivateKey));
 	const UniValue &arr = r.get_array();
 	string guid = arr[1].get_str();
 	GenerateBlocks(10, node);
@@ -1039,7 +1039,7 @@ void CertUpdate(const string& node, const string& guid, const string& title, con
 		strCipherEncryptionPublicKey = HexStr(vchPubEncryptionKey);
 	}
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certupdate " + guid + " " + title + " " + pubdata + " " + strCipherPrivateData + " " + safesearch + " " + strCipherEncryptionPublicKey + " " + strCipherEncryptionPrivateKey));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certupdate " + guid + " " + title + " " + pubdata + " " + strCipherPrivateData + " " + safesearch + " certificates " + strCipherEncryptionPublicKey + " " + strCipherEncryptionPrivateKey));
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "certinfo " + guid));
 	BOOST_CHECK(find_value(r.get_obj(), "cert").get_str() == guid);

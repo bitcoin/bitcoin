@@ -58,6 +58,7 @@ private:
 	QString m_oldtitle;
 	QString m_encryptionkey;
 	QString m_oldpubdata;
+	QString m_oldcategory;
 };
 
 #endif // EDITCERTDIALOG_H
