@@ -1734,6 +1734,8 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool f
     CBlockIndex* ret = pindexStart;
     {
         LOCK2(cs_main, cs_wallet);
+        fAbortRescan = false;
+        fScanningWallet = true;
 
         // no need to read and scan block, if block was created before
         // our wallet birthday (as adjusted for block time variability)
@@ -1741,9 +1743,9 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool f
             pindex = chainActive.Next(pindex);
 
         ShowProgress(_("Rescanning..."), 0); // show rescan progress in GUI as dialog or on splashscreen, if -rescan on startup
-        double dProgressStart = Checkpoints::GuessVerificationProgress(chainParams.Checkpoints(), pindex, false);
-        double dProgressTip = Checkpoints::GuessVerificationProgress(chainParams.Checkpoints(), chainActive.Tip(), false);
-        while (pindex)
+        double dProgressStart = GuessVerificationProgress(chainParams.TxData(), pindex);
+        double dProgressTip = GuessVerificationProgress(chainParams.TxData(), chainActive.Tip());
+        while (pindex && !fAbortRescan)
         {
             if (pindex->nHeight % 100 == 0 && dProgressTip - dProgressStart > 0.0)
                 ShowProgress(_("Rescanning..."), std::max(1, std::min(99, (int)((Checkpoints::GuessVerificationProgress(chainParams.Checkpoints(), pindex, false) - dProgressStart) / (dProgressTip - dProgressStart) * 100))));
@@ -1765,7 +1767,12 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool f
                 LogPrintf("Still rescanning. At block %d. Progress=%f\n", pindex->nHeight, Checkpoints::GuessVerificationProgress(chainParams.Checkpoints(), pindex));
             }
         }
+        if (pindex && fAbortRescan) {
+            LogPrintf("Rescan aborted at block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainParams.TxData(), pindex));
+        }
         ShowProgress(_("Rescanning..."), 100); // hide progress dialog in GUI
+
+        fScanningWallet = false;
     }
     return ret;
 }
