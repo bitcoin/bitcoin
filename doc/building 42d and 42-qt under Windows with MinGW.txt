@@ -126,12 +126,12 @@ mingw32-make
 
 
 Qt4:
--Скачайте http://download.qt-project.org/official_releases/qt/4.8/4.8.6/qt-everywhere-opensource-src-4.8.6.zip
+-Скачайте http://download.qt-project.org/official_releases/qt/4.8/4.8.7/qt-everywhere-opensource-src-4.8.7.zip
 -Распакуйте в C:\Qt
--Переименуйте папку qt-everywhere-opensource-src-4.8.6 в 4.8.6
+-Переименуйте папку qt-everywhere-opensource-src-4.8.7 в 4.8.7
 -Откройте командную строку Windows и выполните следующий код:
 
-cd C:\Qt\4.8.6
+cd C:\Qt\4.8.7
 
 configure -release -opensource -confirm-license -static -no-sql-sqlite -no-qt3support -no-opengl -qt-zlib -no-gif -qt-libpng -qt-libmng -no-libtiff -qt-libjpeg -no-dsp -no-vcproj -no-openssl -no-dbus -no-phonon -no-phonon-backend -no-multimedia -no-audio-backend -no-webkit -no-script -no-scripttools -no-declarative -no-declarative-debug -qt-style-windows -qt-style-windowsxp -qt-style-windowsvista -no-style-plastique -no-style-cleanlooks -no-style-motif -no-style-cde -nomake demos -nomake examples
 
@@ -239,14 +239,14 @@ mingw32-make -f Makefile.Release
 
 Qt4 + транзакционный индекс BDB
 
-set PATH=%PATH%;C:\Qt\4.8.6\bin
+set PATH=%PATH%;C:\Qt\4.8.7\bin
 cd C:\MyProjects\42-master
 qmake "USE_IPV6=1" "USE_ASM=1" 42-qt.pro
 mingw32-make -f Makefile.Release
 
 Qt4 + транзакционный индекс LevelDB
 
-set PATH=%PATH%;C:\Qt\4.8.6\bin
+set PATH=%PATH%;C:\Qt\4.8.7\bin
 cd C:\MyProjects\42-master
 qmake "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" 42-qt.pro
 mingw32-make -f Makefile.Release
@@ -354,9 +354,9 @@ qmake qttranslations.pro
 mingw32-make
 
 Qt4:
--Скачайте http://download.qt-project.org/official_releases/qt/4.8/4.8.6/qt-everywhere-opensource-src-4.8.6.zip
+-Скачайте http://download.qt-project.org/official_releases/qt/4.8/4.8.7/qt-everywhere-opensource-src-4.8.7.zip
 -Распакуйте в C:\Qt
--Переименуйте папку qt-everywhere-opensource-src-4.8.6 в 4.8.6-x64
+-Переименуйте папку qt-everywhere-opensource-src-4.8.7 в 4.8.7-x64
 -Откройте командную строку Windows и выполните следующий код:
 
 configure -release -opensource -confirm-license -static -no-sql-sqlite -no-qt3support -no-opengl -qt-zlib -no-gif -qt-libpng -qt-libmng -no-libtiff -qt-libjpeg -no-dsp -no-vcproj -no-openssl -no-dbus -no-phonon -no-phonon-backend -no-multimedia -no-audio-backend -no-webkit -no-script -no-scripttools -no-declarative -no-declarative-debug -qt-style-windows -qt-style-windowsxp -qt-style-windowsvista -no-style-plastique -no-style-cleanlooks -no-style-motif -no-style-cde -nomake demos -nomake examples
@@ -434,14 +434,14 @@ mingw32-make -f Makefile.Release
 
 Qt4 + транзакционный индекс BDB
 
-set PATH=%PATH%;C:\Qt\4.8.6-x64\bin
+set PATH=%PATH%;C:\Qt\4.8.7-x64\bin
 cd C:\MyProjects\42-master
 qmake "USE_IPV6=1" "USE_ASM=1" 42-qt64.pro
 mingw32-make -f Makefile.Release
 
 Qt4 + транзакционный индекс LevelDB
 
-set PATH=%PATH%;C:\Qt\4.8.6-x64\bin
+set PATH=%PATH%;C:\Qt\4.8.7-x64\bin
 cd C:\MyProjects\42-master
 qmake "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" 42-qt64.pro
 mingw32-make -f Makefile.Release
