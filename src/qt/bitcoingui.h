@@ -19,6 +19,8 @@
 #include <QPushButton>
 #include <QSystemTrayIcon>
 
+#include <memory>
+
 class ClientModel;
 class NetworkStyle;
 class Notificator;
@@ -33,6 +35,11 @@ class HelpMessageDialog;
 class ModalOverlay;
 class MasternodeList;
 class ProposalList;
+
+namespace interface {
+class Handler;
+class Node;
+}
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -52,7 +59,7 @@ class BitcoinGUI : public QMainWindow
 public:
     static const std::string DEFAULT_UIPLATFORM;
 
-    explicit BitcoinGUI(const PlatformStyle *platformStyle, const NetworkStyle *networkStyle, QWidget *parent = 0);
+    explicit BitcoinGUI(interface::Node& node, const PlatformStyle *platformStyle, const NetworkStyle *networkStyle, QWidget *parent = 0);
     ~BitcoinGUI();
 
     /** Set the client model.
@@ -79,6 +86,9 @@ protected:
     bool eventFilter(QObject *object, QEvent *event);
 
 private:
+    interface::Node& m_node;
+    std::unique_ptr<interface::Handler> m_handler_message_box;
+    std::unique_ptr<interface::Handler> m_handler_question;
     ClientModel *clientModel;
     WalletFrame *walletFrame;
 
