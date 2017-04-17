@@ -670,12 +670,12 @@ BOOST_AUTO_TEST_CASE (generate_aliasban)
 	UniValue r;
 	GenerateBlocks(10);
 	// 2 aliases, one will be banned that is safe searchable other is banned that is not safe searchable
-	AliasNew("node1", "jagbansafesearch", "password", "pubdata", "privdata");
-	AliasNew("node1", "jagbannonsafesearch", "password", "pubdata", "privdata");
+	AliasNew("node1", "jagbansafesearch", "password", "pubdata", "privdata", "Yes");
+	AliasNew("node1", "jagbannonsafesearch", "password", "pubdata", "privdata", "No");
 	// can't ban on any other node than one that created sysban
 	BOOST_CHECK_THROW(AliasBan("node2","jagbansafesearch",SAFETY_LEVEL1), runtime_error);
 	BOOST_CHECK_THROW(AliasBan("node3","jagbansafesearch",SAFETY_LEVEL1), runtime_error);
-	// ban both aliases level 1 (only owner of syscategory can do this)
+	// ban both aliases level 1 (only owner of sysban can do this)
 	BOOST_CHECK_NO_THROW(AliasBan("node1","jagbansafesearch",SAFETY_LEVEL1));
 	BOOST_CHECK_NO_THROW(AliasBan("node1","jagbannonsafesearch",SAFETY_LEVEL1));
 	// should only show level 1 banned if safe search filter is not used
@@ -687,7 +687,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasban)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagbansafesearch"));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagbannonsafesearch"));
 	
-	// ban both aliases level 2 (only owner of syscategory can do this)
+	// ban both aliases level 2 (only owner of sysban can do this)
 	BOOST_CHECK_NO_THROW(AliasBan("node1","jagbansafesearch",SAFETY_LEVEL2));
 	BOOST_CHECK_NO_THROW(AliasBan("node1","jagbannonsafesearch",SAFETY_LEVEL2));
 	// no matter what filter won't show banned aliases
@@ -700,7 +700,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasban)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasinfo jagbansafesearch"), runtime_error);
 	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasinfo jagbannonsafesearch"), runtime_error);
 
-	// unban both aliases (only owner of syscategory can do this)
+	// unban both aliases (only owner of sysban can do this)
 	BOOST_CHECK_NO_THROW(AliasBan("node1","jagbansafesearch",0));
 	BOOST_CHECK_NO_THROW(AliasBan("node1","jagbannonsafesearch",0));
 	// safe to search regardless of filter
@@ -724,8 +724,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasbanwithoffers)
 	UniValue r;
 	GenerateBlocks(10);
 	// 2 aliases, one will be banned that is safe searchable other is banned that is not safe searchable
-	AliasNew("node1", "jagbansafesearchoffer", "password", "pubdata", "privdata");
-	AliasNew("node1", "jagbannonsafesearchoffer", "password", "pubdata", "privdata");
+	AliasNew("node1", "jagbansafesearchoffer", "password", "pubdata", "privdata", "Yes");
+	AliasNew("node1", "jagbannonsafesearchoffer", "password", "pubdata", "privdata", "No");
 
 	// good case, safe offer with safe alias
 	string offerguidsafe1 = OfferNew("node1", "jagbansafesearchoffer", "category", "title", "100", "1.00", "description", "USD", "\"\"", "\"\"", "\"\"", "Yes");

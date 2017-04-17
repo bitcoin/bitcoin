@@ -1674,10 +1674,10 @@ const string EscrowNew(const string& node, const string& sellernode, const strin
 		BOOST_CHECK(find_value(r.get_obj(), "pay_message").get_str() == message);
 	}
 
-	BOOST_CHECK_THROW(r = CallRPC(node, "escrowacknowledge " + guid), runtime_error);
-	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid));
+	BOOST_CHECK_THROW(r = CallRPC(node, "escrowacknowledge " + guid + " message"), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid + " message"));
 	GenerateBlocks(10, sellernode);
-	BOOST_CHECK_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC(sellernode, "escrowacknowledge " + guid + " message"), runtime_error);
 	BOOST_CHECK_NO_THROW(r = CallRPC(sellernode, "offerinfo " + offerguid));
 	nQtyAfter = atoi(find_value(r.get_obj(), "quantity").get_str().c_str());
 	BOOST_CHECK_EQUAL(nQtyAfter, nQtyBefore-nQty);

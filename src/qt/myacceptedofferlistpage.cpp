@@ -256,7 +256,7 @@ void MyAcceptedOfferListPage::on_ackButton_clicked()
 		string strMethod = string("offeracceptacknowledge");
 		params.push_back(offerid.toStdString());
 		params.push_back(acceptid.toStdString());
-
+		params.push_back("message");
 		try {
 			UniValue result = tableRPC.execute(strMethod, params);
 			const UniValue& resArray = result.get_array();

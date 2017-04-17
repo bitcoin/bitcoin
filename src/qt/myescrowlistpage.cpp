@@ -469,7 +469,7 @@ void MyEscrowListPage::on_ackButton_clicked()
 		UniValue params(UniValue::VARR);
 		string strMethod = string("escrowacknowledge");
 		params.push_back(escrow.toStdString());
-
+		params.push_back("message");
 		try {
 			UniValue result = tableRPC.execute(strMethod, params);
 			const UniValue& resArray = result.get_array();
