@@ -1319,7 +1319,7 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert,
 			strEncryptionPrivateKey = HexStr(cert.vchEncryptionPrivateKey);
 		else
 		{
-			if(DecryptPrivateKey(alias.vchPubKey, cert.vchEncryptionPrivateKey, strKey))
+			if(DecryptMessage(alias, cert.vchEncryptionPrivateKey, strKey))
 				strEncryptionPrivateKey = HexStr(strKey);	
 		}
 		if(strWalletless == "Yes")

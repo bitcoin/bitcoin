@@ -678,9 +678,9 @@ bool BuildMessageJson(const CMessage& message, UniValue& oName, const string &st
 		}
 		else
 			return false;
-		if(DecryptPrivateKey(aliasFrom.vchPubKey, message.vchEncryptionPrivateKeyFrom, strKey))
+		if(DecryptMessage(aliasFrom, message.vchEncryptionPrivateKeyFrom, strKey))
 			strEncryptionPrivateKeyFrom = HexStr(strKey);	
-		else if(DecryptPrivateKey(aliasTo.vchPubKey, message.vchEncryptionPrivateKeyTo, strKey))
+		else if(DecryptMessage(aliasTo, message.vchEncryptionPrivateKeyTo, strKey))
 			strEncryptionPrivateKeyTo = HexStr(strKey);	
 	}
 	oName.push_back(Pair("encryption_privatekey_from", strEncryptionPrivateKeyFrom));

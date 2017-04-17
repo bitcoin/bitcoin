@@ -966,7 +966,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithcertoffer)
 	string certofferguid = OfferNew("node1", "aliasprunewithcertoffer", "certificates", "title", "1", "0.05", "description", "SYS", certguid);	
 	string offerguid = OfferNew("node1", "aliasprunewithcertoffer", "category", "title", "1", "0.05", "description", "SYS");
 	
-	OfferUpdate("node1", "aliasprunewithcertoffer", offerguid, "certificates", "titlenew", "1", "0.05", "descriptionnew", "USD");
+	OfferUpdate("node1", "aliasprunewithcertoffer", offerguid, "category", "titlenew", "1", "0.05", "descriptionnew", "USD");
 	OfferUpdate("node1", "aliasprunewithcertoffer", certofferguid, "certificates", "titlenew", "1", "0.05", "descriptionnew", "USD", "No", certguid);
 	OfferAccept("node1", "node2", "aliasprunewithcertoffer2", certofferguid, "1", "message");
 	OfferAccept("node1", "node2", "aliasprunewithcertoffer2", offerguid, "1", "message");
