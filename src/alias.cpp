@@ -882,15 +882,14 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				int nHeightTmp = nHeight;
 				if(nHeightTmp > chainActive.Height())
 					nHeightTmp = chainActive.Height();
-				const uint64_t &nTimeExpiry = theAlias.nExpireTime - chainActive[nHeightTmp]->nTime;
+				const int64_t &nTimeExpiry = theAlias.nExpireTime - chainActive[nHeightTmp]->nTime;
+				// ensure aliases are good for atleast an hour
+				if(nTimeExpiry < 3600)
+					theAlias.nExpireTime = chainActive[nHeightTmp]->nTime+3600;
 				float fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
 				if(fYears < 1)
 					fYears = 1;
 				fee *= powf(2.88,fYears);
-
-				// ensure aliases are good for atleast an hour
-				if(nTimeExpiry < 3600)
-					theAlias.nExpireTime = chainActive[nHeightTmp]->nTime+3600;
 			}
 			if ((fee-10000) > tx.vout[nDataOut].nValue) 
 			{
@@ -2048,7 +2047,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(!strAddress.empty())
 		DecodeBase58(strAddress, theAlias.vchAddress);
 	theAlias.vchAliasPeg = vchAliasPeg;
-	if(timeSet)
+	if(timeSet || copyAlias.nExpireTime <= chainActive.Tip()->nTime)
 		theAlias.nExpireTime = nTime;
 	else
 		theAlias.nExpireTime = copyAlias.nExpireTime;
