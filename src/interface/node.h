@@ -5,6 +5,7 @@
 #ifndef BITCOIN_INTERFACE_NODE_H
 #define BITCOIN_INTERFACE_NODE_H
 
+#include <init.h>       // For HelpMessageMode
 #include <netaddress.h> // For Network
 
 #include <functional>
@@ -61,6 +62,9 @@ public:
 
     //! Return whether shutdown was requested.
     virtual bool shutdownRequested() = 0;
+
+    //! Get help message string.
+    virtual std::string helpMessage(HelpMessageMode mode) = 0;
 
     //! Map port.
     virtual void mapPort(bool use_upnp) = 0;
