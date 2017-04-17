@@ -8,7 +8,7 @@ from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.script import *
-from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment, WITNESS_COMMITMENT_HEADER
+from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment, get_witness_script, WITNESS_COMMITMENT_HEADER
 from test_framework.key import CECKey, CPubKey
 import time
 import random
@@ -1721,15 +1721,10 @@ class SegWitTest(BitcoinTestFramework):
                 assert('default_witness_commitment' in gbt_results)
                 witness_commitment = gbt_results['default_witness_commitment']
 
-                # TODO: this duplicates some code from blocktools.py, would be nice
-                # to refactor.
                 # Check that default_witness_commitment is present.
-                block = CBlock()
-                witness_root = block.get_merkle_root([ser_uint256(0), ser_uint256(txid)])
-                check_commitment = uint256_from_str(hash256(ser_uint256(witness_root)+ser_uint256(0)))
-                from test_framework.blocktools import WITNESS_COMMITMENT_HEADER
-                output_data = WITNESS_COMMITMENT_HEADER + ser_uint256(check_commitment)
-                script = CScript([OP_RETURN, output_data])
+                witness_root = CBlock.get_merkle_root([ser_uint256(0),
+                                                       ser_uint256(txid)])
+                script = get_witness_script(witness_root, 0)
                 assert_equal(witness_commitment, bytes_to_hex_str(script))
 
         # undo mocktime
