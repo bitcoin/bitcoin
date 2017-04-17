@@ -12,6 +12,7 @@
 #include "script/standard.h"
 #include "uint256.h"
 
+
 #include <boost/foreach.hpp>
 
 using namespace std;
@@ -76,7 +77,7 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
     vector<valtype> vSolutions;
     if (!Solver(scriptPubKey, whichTypeRet, vSolutions))
         return false;
-
+    
     CKeyID keyID;
     switch (whichTypeRet)
     {
@@ -109,10 +110,14 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
         return (SignN(vSolutions, creator, scriptPubKey, ret, sigversion));
 
     case TX_WITNESS_V0_KEYHASH:
+        if (creator.IsParticlVersion())
+            return false;
         ret.push_back(vSolutions[0]);
         return true;
 
     case TX_WITNESS_V0_SCRIPTHASH:
+        if (creator.IsParticlVersion())
+            return false;
         CRIPEMD160().Write(&vSolutions[0][0], vSolutions[0].size()).Finalize(h160.begin());
         if (creator.KeyStore().GetCScript(h160, scriptRet)) {
             ret.push_back(std::vector<unsigned char>(scriptRet.begin(), scriptRet.end()));
@@ -150,7 +155,9 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
     bool P2SH = false;
     CScript subscript;
     sigdata.scriptWitness.stack.clear();
-
+    
+    
+    
     if (solved && whichType == TX_SCRIPTHASH)
     {
         // Solver returns the subscript that needs to be evaluated;
@@ -163,6 +170,8 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
 
     if (solved && whichType == TX_WITNESS_V0_KEYHASH)
     {
+        if (creator.IsParticlVersion())
+            return false;
         CScript witnessscript;
         witnessscript << OP_DUP << OP_HASH160 << ToByteVector(result[0]) << OP_EQUALVERIFY << OP_CHECKSIG;
         txnouttype subType;
@@ -172,6 +181,8 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
     }
     else if (solved && whichType == TX_WITNESS_V0_SCRIPTHASH)
     {
+        if (creator.IsParticlVersion())
+            return false;
         CScript witnessscript(result[0].begin(), result[0].end());
         txnouttype subType;
         solved = solved && SignStep(creator, witnessscript, result, subType, SIGVERSION_WITNESS_V0) && subType != TX_SCRIPTHASH && subType != TX_WITNESS_V0_SCRIPTHASH && subType != TX_WITNESS_V0_KEYHASH;
@@ -179,14 +190,27 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
         sigdata.scriptWitness.stack = result;
         result.clear();
     }
+    
 
     if (P2SH) {
         result.push_back(std::vector<unsigned char>(subscript.begin(), subscript.end()));
     }
-    sigdata.scriptSig = PushAll(result);
-
+    
+    if (creator.IsParticlVersion())
+    {
+        sigdata.scriptWitness.stack = result;
+    } else
+    {
+        sigdata.scriptSig = PushAll(result);
+    };
+    
+    
+    ScriptError serror = SCRIPT_ERR_OK;
+    
     // Test solution
-    return solved && VerifyScript(sigdata.scriptSig, fromPubKey, &sigdata.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, creator.Checker());
+    bool rv = solved && VerifyScript(sigdata.scriptSig, fromPubKey, &sigdata.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, creator.Checker(), &serror);
+    
+    return rv;
 }
 
 SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn)
@@ -201,6 +225,12 @@ SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nI
 void UpdateTransaction(CMutableTransaction& tx, unsigned int nIn, const SignatureData& data)
 {
     assert(tx.vin.size() > nIn);
+    
+    if (tx.IsParticlVersion())
+    {
+        assert(data.scriptSig.empty());
+    };
+    
     tx.vin[nIn].scriptSig = data.scriptSig;
     tx.vin[nIn].scriptWitness = data.scriptWitness;
 }
@@ -309,7 +339,21 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
                                  const txnouttype txType, const vector<valtype>& vSolutions,
                                  Stacks sigs1, Stacks sigs2, SigVersion sigversion)
 {
-    switch (txType)
+    /*  TODO, when stripping out legacy code later, TX_PUBKEYHASH follows
+        TX_WITNESS_V0_KEYHASH code and TX_WITNESS_V0_KEYHASH gets removed.
+        Same for TX_WITNESS_V0_SCRIPTHASH and TX_SCRIPTHASH
+    */
+    txnouttype txHackType = txType;
+    if (checker.IsParticlVersion())
+    {
+        if (txHackType == TX_PUBKEY || txHackType == TX_PUBKEYHASH)
+            txHackType = TX_WITNESS_V0_KEYHASH;
+        else
+        if (txHackType == TX_SCRIPTHASH)
+            txHackType = TX_WITNESS_V0_SCRIPTHASH;
+    };
+    
+    switch (txHackType)
     {
     case TX_NONSTANDARD:
     case TX_NULL_DATA:
@@ -322,6 +366,7 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
         // Signatures are bigger than placeholders or empty scripts:
         if (sigs1.script.empty() || sigs1.script[0].empty())
             return sigs2;
+        
         return sigs1;
     case TX_WITNESS_V0_KEYHASH:
         // Signatures are bigger than placeholders or empty scripts:
@@ -402,11 +447,31 @@ public:
     }
 };
 const DummySignatureChecker dummyChecker;
+
+class DummySignatureCheckerParticl : public BaseSignatureChecker
+{
+// IsParticlVersion() must return true to skip stack evaluation
+public:
+    DummySignatureCheckerParticl() {}
+    
+    bool IsParticlVersion() const { return true; }
+
+    bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const
+    {
+        return true;
+    }
+};
+const DummySignatureCheckerParticl dummyCheckerParticl;
 }
 
 const BaseSignatureChecker& DummySignatureCreator::Checker() const
 {
     return dummyChecker;
+}
+
+const BaseSignatureChecker& DummySignatureCreatorParticl::Checker() const
+{
+    return dummyCheckerParticl;
 }
 
 bool DummySignatureCreator::CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const

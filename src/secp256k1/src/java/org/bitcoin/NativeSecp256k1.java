@@ -32,7 +32,7 @@ import static org.bitcoin.NativeSecp256k1Util.*;
  * <p>You can find an example library that can be used for this at https://github.com/bitcoin/secp256k1</p>
  *
  * <p>To build secp256k1 for use with bitcoinj, run
- * `./configure --enable-jni --enable-experimental --enable-module-ecdh`
+ * `./configure --enable-jni --enable-experimental --enable-module-schnorr --enable-module-ecdh`
  * and `make` then copy `.libs/libsecp256k1.so` to your system library path
  * or point the JVM to the folder containing it with -Djava.library.path
  * </p>
@@ -417,6 +417,36 @@ public class NativeSecp256k1 {
         }
     }
 
+    public static byte[] schnorrSign(byte[] data, byte[] sec) throws AssertFailException {
+        Preconditions.checkArgument(data.length == 32 && sec.length <= 32);
+
+        ByteBuffer byteBuff = nativeECDSABuffer.get();
+        if (byteBuff == null) {
+            byteBuff = ByteBuffer.allocateDirect(32 + 32);
+            byteBuff.order(ByteOrder.nativeOrder());
+            nativeECDSABuffer.set(byteBuff);
+        }
+        byteBuff.rewind();
+        byteBuff.put(data);
+        byteBuff.put(sec);
+
+        byte[][] retByteArray;
+
+        r.lock();
+        try {
+          retByteArray = secp256k1_schnorr_sign(byteBuff, Secp256k1Context.getContext());
+        } finally {
+          r.unlock();
+        }
+
+        byte[] sigArr = retByteArray[0];
+        int retVal = new BigInteger(new byte[] { retByteArray[1][0] }).intValue();
+
+        assertEquals(sigArr.length, 64, "Got bad signature length.");
+
+        return retVal == 0 ? new byte[0] : sigArr;
+    }
+
     private static native long secp256k1_ctx_clone(long context);
 
     private static native int secp256k1_context_randomize(ByteBuffer byteBuff, long context);
@@ -440,6 +470,8 @@ public class NativeSecp256k1 {
     private static native byte[][] secp256k1_ec_pubkey_create(ByteBuffer byteBuff, long context);
 
     private static native byte[][] secp256k1_ec_pubkey_parse(ByteBuffer byteBuff, long context, int inputLen);
+
+    private static native byte[][] secp256k1_schnorr_sign(ByteBuffer byteBuff, long context);
 
     private static native byte[][] secp256k1_ecdh(ByteBuffer byteBuff, long context, int inputLen);
 

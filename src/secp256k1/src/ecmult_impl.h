@@ -7,29 +7,15 @@
 #ifndef _SECP256K1_ECMULT_IMPL_H_
 #define _SECP256K1_ECMULT_IMPL_H_
 
-#include <string.h>
-
 #include "group.h"
 #include "scalar.h"
 #include "ecmult.h"
 
-#if defined(EXHAUSTIVE_TEST_ORDER)
-/* We need to lower these values for exhaustive tests because
- * the tables cannot have infinities in them (this breaks the
- * affine-isomorphism stuff which tracks z-ratios) */
-#  if EXHAUSTIVE_TEST_ORDER > 128
-#    define WINDOW_A 5
-#    define WINDOW_G 8
-#  elif EXHAUSTIVE_TEST_ORDER > 8
-#    define WINDOW_A 4
-#    define WINDOW_G 4
-#  else
-#    define WINDOW_A 2
-#    define WINDOW_G 2
-#  endif
-#else
+#include <string.h>
+
 /* optimal for 128-bit and 256-bit exponents. */
 #define WINDOW_A 5
+
 /** larger numbers may result in slightly better performance, at the cost of
     exponentially larger precomputed tables. */
 #ifdef USE_ENDOMORPHISM
@@ -38,7 +24,6 @@
 #else
 /** One table for window size 16: 1.375 MiB. */
 #define WINDOW_G 16
-#endif
 #endif
 
 /** The number of entries a table with precomputed multiples needs to have. */

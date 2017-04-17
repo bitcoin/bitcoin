@@ -29,6 +29,7 @@
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
 #include "validationinterface.h"
+#include "smsg/smessage.h"
 
 #include <boost/thread.hpp>
 
@@ -726,7 +727,22 @@ void Misbehaving(NodeId pnode, int howmuch)
         LogPrintf("%s: %s peer=%d (%d -> %d)\n", __func__, state->name, pnode, state->nMisbehavior-howmuch, state->nMisbehavior);
 }
 
+void DecMisbehaving(NodeId nodeid, int howmuch)
+{
+    if (howmuch == 0)
+        return;
 
+    CNodeState *state = State(nodeid);
+    if (state == NULL)
+        return;
+    
+    //LogPrintf("%s: %s peer=%d (%d -> %d)\n", __func__, state->name, nodeid, state->nMisbehavior, state->nMisbehavior - howmuch < 0 ? 0 : state->nMisbehavior - howmuch);
+    
+    
+    state->nMisbehavior -= howmuch;
+    if (state->nMisbehavior < 0)
+        state->nMisbehavior = 0;
+};
 
 
 
@@ -808,8 +824,16 @@ void PeerLogicValidation::NewPoWValidBlock(const CBlockIndex *pindex, const std:
         if (state.fPreferHeaderAndIDs && (!fWitnessEnabled || state.fWantsCmpctWitness) &&
                 !PeerHasHeader(&state, pindex) && PeerHasHeader(&state, pindex->pprev)) {
 
-            LogPrint("net", "%s sending header-and-ids %s to peer=%d\n", "PeerLogicValidation::NewPoWValidBlock",
+            if (fParticlMode)
+            {
+                 LogPrint("net", "%s sending header-and-ids %s to peer=%d\n", "PeerLogicValidation::NewValidBlock",
                     hashBlock.ToString(), pnode->id);
+            } else
+            {
+                LogPrint("net", "%s sending header-and-ids %s to peer=%d\n", "PeerLogicValidation::NewPoWValidBlock",
+                    hashBlock.ToString(), pnode->id);
+            };
+            
             connman->PushMessage(pnode, msgMaker.Make(NetMsgType::CMPCTBLOCK, *pcmpctblock));
             state.pindexBestHeaderSent = pindex;
         }
@@ -847,7 +871,8 @@ void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CB
     nTimeBestReceived = GetTime();
 }
 
-void PeerLogicValidation::BlockChecked(const CBlock& block, const CValidationState& state) {
+void PeerLogicValidation::BlockChecked(const CBlock& block, CValidationState& state) {
+    
     LOCK(cs_main);
 
     const uint256 hash(block.GetHash());
@@ -859,6 +884,7 @@ void PeerLogicValidation::BlockChecked(const CBlock& block, const CValidationSta
             assert (state.GetRejectCode() < REJECT_INTERNAL); // Blocks are never rejected with internal reject codes
             CBlockReject reject = {(unsigned char)state.GetRejectCode(), state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), hash};
             State(it->second.first)->rejects.push_back(reject);
+            state.nodeId = it->second.first;
             if (nDoS > 0 && it->second.second)
                 Misbehaving(it->second.first, nDoS);
         }
@@ -1295,7 +1321,13 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             PushNodeVersion(pfrom, connman, GetAdjustedTime());
 
         connman.PushMessage(pfrom, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERACK));
-
+        
+        pfrom->nStartingHeight = nStartingHeight;
+        pfrom->nChainHeight = nStartingHeight;
+        {
+            LOCK(cs_main);
+            connman.cPeerBlockCounts.input(pfrom->nChainHeight);
+        }
         pfrom->nServices = nServices;
         pfrom->SetAddrLocal(addrMe);
         {
@@ -1303,7 +1335,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             pfrom->strSubVer = strSubVer;
             pfrom->cleanSubVer = cleanSubVer;
         }
-        pfrom->nStartingHeight = nStartingHeight;
         pfrom->fClient = !(nServices & NODE_NETWORK);
         {
             LOCK(pfrom->cs_filter);
@@ -1491,6 +1522,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         bool fAnnounceUsingCMPCTBLOCK = false;
         uint64_t nCMPCTBLOCKVersion = 0;
         vRecv >> fAnnounceUsingCMPCTBLOCK >> nCMPCTBLOCKVersion;
+        
         if (nCMPCTBLOCKVersion == 1 || ((pfrom->GetLocalServices() & NODE_WITNESS) && nCMPCTBLOCKVersion == 2)) {
             LOCK(cs_main);
             // fProvidesHeaderAndIDs is used to "lock in" version of compact blocks we send (fWantsCmpctWitness)
@@ -1740,8 +1772,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 pindex = chainActive.Next(pindex);
         }
 
-        // we must use CBlocks, as CBlockHeaders won't include the 0x00 nTx count at the end
-        std::vector<CBlock> vHeaders;
+        // we must use CBlockGetHeader, as CBlockHeaders won't include the 0x00 nTx count at the end
+        std::vector<CBlockGetHeader> vHeaders;
         int nLimit = MAX_HEADERS_RESULTS;
         LogPrint("net", "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom->id);
         for (; pindex; pindex = chainActive.Next(pindex))
@@ -1970,6 +2002,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         const CBlockIndex *pindex = NULL;
         CValidationState state;
+        state.nodeId = pfrom->GetId();
         if (!ProcessNewBlockHeaders({cmpctblock.header}, state, chainparams, &pindex)) {
             int nDoS;
             if (state.IsInvalid(nDoS)) {
@@ -2028,7 +2061,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             return true;
 
         CNodeState *nodestate = State(pfrom->GetId());
-
+        
         if (IsWitnessEnabled(pindex->pprev, chainparams.GetConsensus()) && !nodestate->fSupportsDesiredCmpctVersion) {
             // Don't bother trying to process compact blocks from v1 peers
             // after segwit activates.
@@ -2145,7 +2178,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 MarkBlockAsReceived(pblock->GetHash());
             }
         }
-
     }
 
     else if (strCommand == NetMsgType::BLOCKTXN && !fImporting && !fReindex) // Ignore blocks received while importing
@@ -2219,7 +2251,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     else if (strCommand == NetMsgType::HEADERS && !fImporting && !fReindex) // Ignore headers received while importing
     {
         std::vector<CBlockHeader> headers;
-
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
         unsigned int nCount = ReadCompactSize(vRecv);
         if (nCount > MAX_HEADERS_RESULTS) {
@@ -2281,6 +2312,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         }
 
         CValidationState state;
+        state.nodeId = pfrom->GetId();
         if (!ProcessNewBlockHeaders(headers, state, chainparams, &pindexLast)) {
             int nDoS;
             if (state.IsInvalid(nDoS)) {
@@ -2377,6 +2409,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         // Such an unrequested block may still be processed, subject to the
         // conditions in AcceptBlock().
         bool forceProcessing = pfrom->fWhitelisted && !IsInitialBlockDownload();
+
         const uint256 hash(pblock->GetHash());
         {
             LOCK(cs_main);
@@ -2445,23 +2478,31 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
     else if (strCommand == NetMsgType::PING)
     {
-        if (pfrom->nVersion > BIP0031_VERSION)
+        //BIP0031_VERSION
+        uint64_t nonce = 0;
+        vRecv >> nonce;
+        
+        int nChainHeight;
+        vRecv >> nChainHeight;
+        pfrom->nChainHeight = nChainHeight;
         {
-            uint64_t nonce = 0;
-            vRecv >> nonce;
-            // Echo the message back with the nonce. This allows for two useful features:
-            //
-            // 1) A remote node can quickly check if the connection is operational
-            // 2) Remote nodes can measure the latency of the network thread. If this node
-            //    is overloaded it won't respond to pings quickly and the remote node can
-            //    avoid sending us more work, like chain download requests.
-            //
-            // The nonce stops the remote getting confused between different pings: without
-            // it, if the remote node sends a ping once per second and this node takes 5
-            // seconds to respond to each, the 5th ping the remote sends would appear to
-            // return very quickly.
-            connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::PONG, nonce));
+            LOCK(cs_main);
+            connman.cPeerBlockCounts.input(nChainHeight);
         }
+        
+        
+        // Echo the message back with the nonce. This allows for two useful features:
+        //
+        // 1) A remote node can quickly check if the connection is operational
+        // 2) Remote nodes can measure the latency of the network thread. If this node
+        //    is overloaded it won't respond to pings quickly and the remote node can
+        //    avoid sending us more work, like chain download requests.
+        //
+        // The nonce stops the remote getting confused between different pings: without
+        // it, if the remote node sends a ping once per second and this node takes 5
+        // seconds to respond to each, the 5th ping the remote sends would appear to
+        // return very quickly.
+        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::PONG, nonce));
     }
 
 
@@ -2596,7 +2637,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         // message would be undesirable as we transmit it ourselves.
     }
 
-    else {
+    else if (2 != SecureMsgReceiveData(pfrom, strCommand, vRecv))
+    {
+        
+    } else
+    {
         // Ignore unknown commands for extensibility
         LogPrint("net", "Unknown command \"%s\" from peer=%d\n", SanitizeString(strCommand), pfrom->id);
     }
@@ -2803,14 +2848,14 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
             }
             pto->fPingQueued = false;
             pto->nPingUsecStart = GetTimeMicros();
-            if (pto->nVersion > BIP0031_VERSION) {
-                pto->nPingNonceSent = nonce;
-                connman.PushMessage(pto, msgMaker.Make(NetMsgType::PING, nonce));
-            } else {
-                // Peer is too old to support ping command with nonce, pong will never arrive.
-                pto->nPingNonceSent = 0;
-                connman.PushMessage(pto, msgMaker.Make(NetMsgType::PING));
+            int nChainHeight;
+            {
+                LOCK(cs_main);
+                nChainHeight = (int)chainActive.Height();
             }
+            // BIP0031_VERSION
+            pto->nPingNonceSent = nonce;
+            connman.PushMessage(pto, msgMaker.Make(NetMsgType::PING, nonce, nChainHeight));
         }
 
         TRY_LOCK(cs_main, lockMain); // Acquire cs_main for IsInitialBlockDownload() and CNodeState()
@@ -2901,7 +2946,7 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
             // blocks, or if the peer doesn't want headers, just
             // add all to the inv queue.
             LOCK(pto->cs_inventory);
-            std::vector<CBlock> vHeaders;
+            std::vector<CBlockGetHeader> vHeaders;
             bool fRevertToInv = ((!state.fPreferHeaders &&
                                  (!state.fPreferHeaderAndIDs || pto->vBlockHashesToAnnounce.size() > 1)) ||
                                 pto->vBlockHashesToAnnounce.size() > MAX_BLOCKS_TO_ANNOUNCE);
@@ -3265,6 +3310,12 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                 pto->nextSendTimeFeeFilter = timeNow + GetRandInt(MAX_FEEFILTER_CHANGE_DELAY) * 1000000;
             }
         }
+    }
+    
+    if (fSecMsgEnabled)
+    {
+        bool fSendTrickle = pto->fWhitelisted;
+        SecureMsgSendData(pto, fSendTrickle);
     }
     return true;
 }

@@ -33,6 +33,18 @@ public:
         vValues.push_back(initial_value);
         vSorted = vValues;
     }
+    
+    CMedianFilter() : nSize(0)
+    {
+    }
+    
+    void set(unsigned int size, T initial_value)
+    {
+        nSize = size;
+        vValues.reserve(nSize);
+        vValues.push_back(initial_value);
+        vSorted = vValues;
+    }
 
     void input(T value)
     {

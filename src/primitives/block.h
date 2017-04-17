@@ -24,9 +24,11 @@ public:
     int32_t nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
+    uint256 hashWitnessMerkleRoot;
     uint32_t nTime;
     uint32_t nBits;
     uint32_t nNonce;
+    
 
     CBlockHeader()
     {
@@ -37,9 +39,14 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(this->nVersion);
+        READWRITE(nVersion);
         READWRITE(hashPrevBlock);
         READWRITE(hashMerkleRoot);
+        
+        if (IsParticlVersion())
+        {
+            READWRITE(hashWitnessMerkleRoot);
+        }
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
@@ -50,6 +57,7 @@ public:
         nVersion = 0;
         hashPrevBlock.SetNull();
         hashMerkleRoot.SetNull();
+        hashWitnessMerkleRoot.SetNull();
         nTime = 0;
         nBits = 0;
         nNonce = 0;
@@ -61,6 +69,12 @@ public:
     }
 
     uint256 GetHash() const;
+    
+    bool IsParticlVersion()
+    {
+        // NOTE: Be very careful matching the version here: qa tests can fail silently
+        return this->nVersion == PARTICL_BLOCK_VERSION;
+    }
 
     int64_t GetBlockTime() const
     {
@@ -68,12 +82,31 @@ public:
     }
 };
 
+/**
+    see GETHEADERS message, vtx collapses to a single 0 byte
+*/
+class CBlockGetHeader : public CBlockHeader
+{
+    public:
+        CBlockGetHeader() {};
+        CBlockGetHeader(const CBlockHeader &header) { *((CBlockHeader*)this) = header; };
+        std::vector<CTransactionRef> vtx;
+        ADD_SERIALIZE_METHODS;
+        template <typename Stream, typename Operation>
+        inline void SerializationOp(Stream& s, Operation ser_action) {
+            READWRITE(*(CBlockHeader*)this);
+            READWRITE(vtx);
+        }
+};
 
 class CBlock : public CBlockHeader
 {
 public:
     // network and disk
     std::vector<CTransactionRef> vtx;
+    
+    // pos block signature - signed by one of the coin stake txout[N]'s owner
+    std::vector<uint8_t> vchBlockSig;
 
     // memory only
     mutable bool fChecked;
@@ -88,6 +121,17 @@ public:
         SetNull();
         *((CBlockHeader*)this) = header;
     }
+    
+    bool IsProofOfStake() const
+    {
+        return (vtx.size() > 0 && vtx[0]->IsCoinStake());
+    }
+    
+
+    bool IsProofOfWork() const
+    {
+        return !IsProofOfStake();
+    }
 
     ADD_SERIALIZE_METHODS;
 
@@ -95,6 +139,9 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(*(CBlockHeader*)this);
         READWRITE(vtx);
+        
+        if (nVersion == PARTICL_BLOCK_VERSION)
+            READWRITE(vchBlockSig);
     }
 
     void SetNull()
@@ -107,12 +154,13 @@ public:
     CBlockHeader GetBlockHeader() const
     {
         CBlockHeader block;
-        block.nVersion       = nVersion;
-        block.hashPrevBlock  = hashPrevBlock;
-        block.hashMerkleRoot = hashMerkleRoot;
-        block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
+        block.nVersion              = nVersion;
+        block.hashPrevBlock         = hashPrevBlock;
+        block.hashMerkleRoot        = hashMerkleRoot;
+        block.hashWitnessMerkleRoot = hashWitnessMerkleRoot;
+        block.nTime                 = nTime;
+        block.nBits                 = nBits;
+        block.nNonce                = nNonce;
         return block;
     }
 

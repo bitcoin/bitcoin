@@ -187,7 +187,7 @@ void RPCNotifyBlockChange(bool ibd, const CBlockIndex * pindex)
         latestblock.hash = pindex->GetBlockHash();
         latestblock.height = pindex->nHeight;
     }
-	cond_blockchange.notify_all();
+    cond_blockchange.notify_all();
 }
 
 UniValue waitfornewblock(const JSONRPCRequest& request)
@@ -589,6 +589,7 @@ UniValue getmempoolentry(const JSONRPCRequest& request)
     }
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    
 
     LOCK(mempool.cs);
 
@@ -923,8 +924,8 @@ UniValue gettxout(const JSONRPCRequest& request)
             "     \"hex\" : \"hex\",        (string) \n"
             "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
             "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
-            "     \"addresses\" : [          (array of string) array of bitcoin addresses\n"
-            "        \"address\"     (string) bitcoin address\n"
+            "     \"addresses\" : [          (array of string) array of particl addresses\n"
+            "        \"address\"           (string) particl address\n"
             "        ,...\n"
             "     ]\n"
             "  },\n"

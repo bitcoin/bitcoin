@@ -153,6 +153,7 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     rpcConsole = new RPCConsole(_platformStyle, 0);
     helpMessageDialog = new HelpMessageDialog(this, false);
 #ifdef ENABLE_WALLET
+
     if(enableWallet)
     {
         /** Create wallet frame and make it the central widget */

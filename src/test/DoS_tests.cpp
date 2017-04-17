@@ -5,6 +5,8 @@
 // Unit tests for denial-of-service detection/prevention code
 
 #include "chainparams.h"
+#include "key/extkey.h"
+#include "key/stealth.h"
 #include "keystore.h"
 #include "net.h"
 #include "net_processing.h"
@@ -14,7 +16,7 @@
 #include "util.h"
 #include "validation.h"
 
-#include "test/test_bitcoin.h"
+#include "test/test_particl.h"
 
 #include <stdint.h>
 

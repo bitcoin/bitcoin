@@ -28,6 +28,7 @@ import sys
 import subprocess
 import tempfile
 import re
+import random
 
 sys.path.append("qa/pull-tester/")
 from tests_config import *
@@ -60,12 +61,15 @@ PARALLEL_REGEX = re.compile('^-parallel=')
 
 print_help = False
 run_parallel = 4
+WITH_STDOUT = False
 
 for arg in sys.argv[1:]:
     if arg == "--help" or arg == "-h" or arg == "-?":
         print_help = True
         break
-    if arg == '--coverage':
+    if arg == '--withstdout':
+        WITH_STDOUT = True
+    elif arg == '--coverage':
         ENABLE_COVERAGE = 1
     elif PASSON_REGEX.match(arg):
         passon_args.append(arg)
@@ -76,7 +80,7 @@ for arg in sys.argv[1:]:
 
 #Set env vars
 if "BITCOIND" not in os.environ:
-    os.environ["BITCOIND"] = BUILDDIR + '/src/bitcoind' + EXEEXT
+    os.environ["BITCOIND"] = BUILDDIR + '/src/particld' + EXEEXT
 
 if EXEEXT == ".exe" and "-win" not in opts:
     # https://github.com/bitcoin/bitcoin/commit/d52802551752140cf41f0d9a225a43e84404d3e9
@@ -189,15 +193,43 @@ testScriptsExt = [
     'replace-by-fee.py',
 ]
 
+testScriptsParticl = [
+    'fork.py',
+    'pos.py',
+    'extkey.py',
+    'stealth.py',
+    'blind.py',
+    'anon.py',
+    'wallet-particl.py',
+    'mnemonic.py',
+    'smsg.py',
+    'multisig.py',
+]
+
+
 
 def runtests():
     test_list = []
     if '-extended' in opts:
-        test_list = testScripts + testScriptsExt
+        test_list = testScripts + testScriptsExt + testScriptsParticl
+    elif '-particl' in opts:
+        test_list = testScriptsParticl
     elif len(opts) == 0 or (len(opts) == 1 and "-win" in opts):
-        test_list = testScripts
+        test_list = testScripts + testScriptsParticl
+    elif any(opt.startswith('-r') for opt in opts): # -rn
+        nR = 1
+        for opt in opts:
+            if opt.startswith('-r'):
+                opt = opt[2:]
+                if opt.isdigit():
+                    nR = int(opt)
+        
+        pickFrom = testScripts + testScriptsExt + testScriptsParticl
+        for n in range(nR):
+            test_list.append(pickFrom[random.randrange(len(pickFrom))])
+        print("Running tests: ", test_list)
     else:
-        for t in testScripts + testScriptsExt:
+        for t in testScripts + testScriptsExt + testScriptsParticl:
             if t in opts or re.sub(".py$", "", t) in opts:
                 test_list.append(t)
 
@@ -218,7 +250,11 @@ def runtests():
 
     if len(test_list) > 1 and run_parallel > 1:
         # Populate cache
-        subprocess.check_output([RPC_TESTS_DIR + 'create_cache.py'] + flags)
+        
+        output = subprocess.check_output([RPC_TESTS_DIR + 'create_cache.py'] + flags)
+        print('output:', output)
+        
+            
 
     #Run Tests
     max_len_name = len(max(test_list, key=len))
@@ -234,6 +270,10 @@ def runtests():
 
         print('\n' + BOLD[1] + name + BOLD[0] + ":")
         print('' if passed else stdout + '\n', end='')
+        
+        if passed and WITH_STDOUT:
+            print("Passed: ", stdout + '\n', end='')
+        
         print('' if stderr == '' else 'stderr:\n' + stderr + '\n', end='')
         results += "%s | %s | %s s\n" % (name.ljust(max_len_name), str(passed).ljust(6), duration)
         print("Pass: %s%s%s, Duration: %s s\n" % (BOLD[1], passed, BOLD[0], duration))

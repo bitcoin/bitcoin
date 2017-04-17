@@ -19,6 +19,9 @@
 #include <boost/foreach.hpp>
 #include <boost/unordered_map.hpp>
 
+
+extern bool fParticlMode;
+
 /** 
  * Pruned version of CTransaction: only retains metadata and unspent transaction outputs
  *
@@ -74,11 +77,12 @@
 class CCoins
 {
 public:
-    //! whether transaction is a coinbase
+    //! whether transaction is a coinbase (or coinstake, need to check COINBASE_MATURITY)
     bool fCoinBase;
 
     //! unspent transaction outputs; spent outputs are .IsNull(); spent outputs at the end of the array are dropped
     std::vector<CTxOut> vout;
+    std::vector<CTxOutBaseRef> vpout;
 
     //! at which height this transaction was included in the active block chain
     int nHeight;
@@ -88,8 +92,9 @@ public:
     int nVersion;
 
     void FromTx(const CTransaction &tx, int nHeightIn) {
-        fCoinBase = tx.IsCoinBase();
+        fCoinBase = tx.IsCoinBase() || tx.IsCoinStake(); // mark to check COINBASE_MATURITY
         vout = tx.vout;
+        vpout = tx.vpout;
         nHeight = nHeightIn;
         nVersion = tx.nVersion;
         ClearUnspendable();
@@ -103,6 +108,7 @@ public:
     void Clear() {
         fCoinBase = false;
         std::vector<CTxOut>().swap(vout);
+        std::vector<CTxOutBaseRef>().swap(vpout);
         nHeight = 0;
         nVersion = 0;
     }
@@ -116,6 +122,11 @@ public:
             vout.pop_back();
         if (vout.empty())
             std::vector<CTxOut>().swap(vout);
+        
+        while (vpout.size() > 0 && !vpout.back())
+            vpout.pop_back();
+        if (vpout.empty())
+            std::vector<CTxOutBaseRef>().swap(vpout);
     }
 
     void ClearUnspendable() {
@@ -123,12 +134,22 @@ public:
             if (txout.scriptPubKey.IsUnspendable())
                 txout.SetNull();
         }
+        
+        for (auto &txout : vpout) {
+            if (txout != nullptr && txout->nVersion == OUTPUT_DATA)
+                txout.reset();
+            
+            // TODO:
+            //if (txout.scriptPubKey.IsUnspendable())
+            //    txout.SetNull();
+        }
         Cleanup();
     }
 
     void swap(CCoins &to) {
         std::swap(to.fCoinBase, fCoinBase);
         to.vout.swap(vout);
+        to.vpout.swap(vpout);
         std::swap(to.nHeight, nHeight);
         std::swap(to.nVersion, nVersion);
     }
@@ -136,12 +157,42 @@ public:
     //! equality test
     friend bool operator==(const CCoins &a, const CCoins &b) {
          // Empty CCoins objects are always equal.
-         if (a.IsPruned() && b.IsPruned())
-             return true;
-         return a.fCoinBase == b.fCoinBase &&
-                a.nHeight == b.nHeight &&
-                a.nVersion == b.nVersion &&
-                a.vout == b.vout;
+        if (a.IsPruned() && b.IsPruned())
+            return true;
+        
+        if (!(a.fCoinBase == b.fCoinBase &&
+            a.nHeight == b.nHeight &&
+            a.nVersion == b.nVersion &&
+            a.vout == b.vout &&
+            a.vpout.size() == b.vpout.size()))
+            return false;
+        
+        for (size_t k = 0; k < a.vpout.size(); ++k)
+        {
+            if (!a.vpout[k] && !b.vpout[k])
+                continue;
+            if ((!a.vpout[k] && b.vpout[k] != nullptr)
+                || (!b.vpout[k] && a.vpout[k] != nullptr))
+                return false;
+            
+            const CTxOutBaseRef &oa = a.vpout[k];
+            const CTxOutBaseRef &ob = b.vpout[k];
+            
+            if (oa->nVersion != ob->nVersion)
+                return false;
+            // TODO: add other types?
+            switch (oa->nVersion)
+            {
+                case OUTPUT_STANDARD:
+                    const CTxOutStandard *sa = (CTxOutStandard*)oa.get();
+                    const CTxOutStandard *sb = (CTxOutStandard*)ob.get();
+                    if (sa->nValue != sb->nValue
+                        || sa->scriptPubKey != sb->scriptPubKey)
+                        return false;
+                    break;
+            }
+        };
+        return true;
     }
     friend bool operator!=(const CCoins &a, const CCoins &b) {
         return !(a == b);
@@ -157,27 +208,61 @@ public:
     void Serialize(Stream &s) const {
         unsigned int nMaskSize = 0, nMaskCode = 0;
         CalcMaskSize(nMaskSize, nMaskCode);
-        bool fFirst = vout.size() > 0 && !vout[0].IsNull();
-        bool fSecond = vout.size() > 1 && !vout[1].IsNull();
+        bool fFirst, fSecond;
+        
+        if (IsParticlTxVersion(nVersion))
+        {
+            fFirst = vpout.size() > 0 && vpout[0] != nullptr;
+            fSecond = vpout.size() > 1 && vpout[1] != nullptr;
+        } else
+        {
+            fFirst = vout.size() > 0 && !vout[0].IsNull();
+            fSecond = vout.size() > 1 && !vout[1].IsNull();
+        }
+        
         assert(fFirst || fSecond || nMaskCode);
         unsigned int nCode = 8*(nMaskCode - (fFirst || fSecond ? 0 : 1)) + (fCoinBase ? 1 : 0) + (fFirst ? 2 : 0) + (fSecond ? 4 : 0);
         // version
         ::Serialize(s, VARINT(this->nVersion));
+        
         // header code
         ::Serialize(s, VARINT(nCode));
         // spentness bitmask
         for (unsigned int b = 0; b<nMaskSize; b++) {
             unsigned char chAvail = 0;
-            for (unsigned int i = 0; i < 8 && 2+b*8+i < vout.size(); i++)
-                if (!vout[2+b*8+i].IsNull())
-                    chAvail |= (1 << i);
+            
+            if (IsParticlTxVersion(nVersion))
+            {
+                for (unsigned int i = 0; i < 8 && 2+b*8+i < vpout.size(); i++)
+                {
+                    if (vpout[2+b*8+i] != nullptr)
+                        chAvail |= (1 << i);
+                };
+            } else
+            {
+                for (unsigned int i = 0; i < 8 && 2+b*8+i < vout.size(); i++)
+                    if (!vout[2+b*8+i].IsNull())
+                        chAvail |= (1 << i);
+            };
+            
             ::Serialize(s, chAvail);
         }
         // txouts themself
-        for (unsigned int i = 0; i < vout.size(); i++) {
-            if (!vout[i].IsNull())
-                ::Serialize(s, CTxOutCompressor(REF(vout[i])));
+        if (!fParticlMode)
+        {
+            for (unsigned int i = 0; i < vout.size(); i++) {
+                if (!vout[i].IsNull())
+                    ::Serialize(s, CTxOutCompressor(REF(vout[i])));
+            }
+        } else
+        {
+            for (unsigned int i = 0; i < vpout.size(); i++)
+            {
+                if (vpout[i] != nullptr)
+                    ::Serialize(s, CTxOutBaseCompressor(REF(vpout[i])));
+            };
         }
+        
         // coinbase height
         ::Serialize(s, VARINT(nHeight));
     }
@@ -206,11 +291,24 @@ public:
                 nMaskCode--;
         }
         // txouts themself
-        vout.assign(vAvail.size(), CTxOut());
-        for (unsigned int i = 0; i < vAvail.size(); i++) {
-            if (vAvail[i])
-                ::Unserialize(s, REF(CTxOutCompressor(vout[i])));
+        if (!fParticlMode)
+        {
+            vout.assign(vAvail.size(), CTxOut());
+            for (unsigned int i = 0; i < vAvail.size(); i++) {
+                if (vAvail[i])
+                    ::Unserialize(s, REF(CTxOutCompressor(vout[i])));
+            }
+        } else
+        {
+            vpout.assign(vAvail.size(), CTxOutBaseRef());
+            
+            for (unsigned int i = 0; i < vAvail.size(); i++)
+            {
+                if (vAvail[i])
+                    ::Unserialize(s, REF(CTxOutBaseCompressor(vpout[i])));
+            };
         }
+        
         // coinbase height
         ::Unserialize(s, VARINT(nHeight));
         Cleanup();
@@ -221,7 +319,10 @@ public:
 
     //! check whether a particular output is still available
     bool IsAvailable(unsigned int nPos) const {
-        return (nPos < vout.size() && !vout[nPos].IsNull());
+        if (IsParticlTxVersion(nVersion))
+            return (nPos < vpout.size() && vpout[nPos] != nullptr);
+        else
+            return (nPos < vout.size() && !vout[nPos].IsNull());
     }
 
     //! check whether the entire CCoins is spent
@@ -230,6 +331,12 @@ public:
         BOOST_FOREACH(const CTxOut &out, vout)
             if (!out.IsNull())
                 return false;
+        
+        for (size_t k = 0; k < vpout.size(); ++k)
+        {
+            if (vpout[k] != nullptr)
+                return false;
+        };
         return true;
     }
 
@@ -238,6 +345,13 @@ public:
         BOOST_FOREACH(const CTxOut &out, vout) {
             ret += RecursiveDynamicUsage(out.scriptPubKey);
         }
+        for (size_t k = 0; k < vpout.size(); ++k)
+            if (vpout[k] != nullptr && vpout[k]->nVersion == OUTPUT_STANDARD)
+            {
+                const CScript &scriptPubKey = vpout[k]->GetStandardOutput()->scriptPubKey;
+                ret += RecursiveDynamicUsage(scriptPubKey);
+            }
+                
         return ret;
     }
 };
@@ -370,10 +484,13 @@ public:
 /** CCoinsView that adds a memory cache for transactions to another CCoinsView */
 class CCoinsViewCache : public CCoinsViewBacked
 {
-protected:
+public:
+//protected:
+    bool fParticlMode;
     /* Whether this cache has an active modifier. */
     bool hasModifier;
-
+    
+    
 
     /**
      * Make mutable so that we can "fill the cache" even from Get-methods
@@ -386,7 +503,9 @@ protected:
     mutable size_t cachedCoinsUsage;
 
 public:
-    CCoinsViewCache(CCoinsView *baseIn);
+    
+    
+    CCoinsViewCache(CCoinsView *baseIn, bool fParticlModeIn);
     ~CCoinsViewCache();
 
     // Standard CCoinsView methods
@@ -468,6 +587,8 @@ public:
     double GetPriority(const CTransaction &tx, int nHeight, CAmount &inChainInputValue) const;
 
     const CTxOut &GetOutputFor(const CTxIn& input) const;
+    
+    const CTxOutBase *GetBaseOutputFor(const CTxIn& input) const;
 
     friend class CCoinsModifier;
 

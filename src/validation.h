@@ -131,7 +131,7 @@ static const int64_t MAX_FEE_ESTIMATION_TIP_AGE = 3 * 60 * 60;
 /** Default for -permitbaremultisig */
 static const bool DEFAULT_PERMIT_BAREMULTISIG = true;
 static const bool DEFAULT_CHECKPOINTS_ENABLED = true;
-static const bool DEFAULT_TXINDEX = false;
+static const bool DEFAULT_TXINDEX = true; // for staking
 static const unsigned int DEFAULT_BANSCORE_THRESHOLD = 100;
 
 /** Default for -mempoolreplacement */
@@ -147,16 +147,33 @@ static const int MAX_UNCONNECTING_HEADERS = 10;
 
 static const bool DEFAULT_PEERBLOOMFILTERS = true;
 
+inline int64_t FutureDrift(int64_t nTime) { return nTime + 15; } // FutureDriftV2
+
 struct BlockHasher
 {
     size_t operator()(const uint256& hash) const { return hash.GetCheapHash(); }
 };
 
+typedef int NodeId;
+class StakeConflict
+{
+public:
+    int64_t nLastUpdated = 0;
+    //COutPoint kernel;
+    std::map<NodeId, int> peerCount;
+    
+    //int SetKernel(const COutPoint &kernel_);
+    int Add(NodeId id);
+};
+
+extern std::map<uint256, StakeConflict> mapStakeConflict;
 extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
 extern CTxMemPool mempool;
 typedef boost::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
 extern BlockMap mapBlockIndex;
+extern std::map<COutPoint, uint256> mapStakeSeen;
+extern std::list<COutPoint> listStakeSeen;
 extern uint64_t nLastBlockTx;
 extern uint64_t nLastBlockSize;
 extern uint64_t nLastBlockWeight;
@@ -263,6 +280,8 @@ bool LoadBlockIndex(const CChainParams& chainparams);
 void UnloadBlockIndex();
 /** Run an instance of the script checking thread */
 void ThreadScriptCheck();
+/** Return the average number of blocks that other nodes claim to have */
+int GetNumBlocksOfPeers();
 /** Check whether we are doing an initial block download (synchronizing from disk or network) */
 bool IsInitialBlockDownload();
 /** Format a string that describes several potential problems detected by the core.
@@ -274,7 +293,12 @@ bool IsInitialBlockDownload();
  */
 std::string GetWarnings(const std::string& strFor);
 /** Retrieve a transaction (from memory pool, or from disk, if possible) */
-bool GetTransaction(const uint256 &hash, CTransactionRef &tx, const Consensus::Params& params, uint256 &hashBlock, bool fAllowSlow = false);
+bool GetTransaction(const uint256 &hash, CTransactionRef &txOut, const Consensus::Params& params, uint256 &hashBlock, bool fAllowSlow = false);
+
+/** Retrieve a transaction and block header from disk */
+bool GetTransaction(const uint256 &hash, CTransactionRef &txOut, const Consensus::Params& consensusParams, CBlock &block, bool fAllowSlow = false);
+
+
 /** Find the best known block, and make it the tip of the block chain */
 bool ActivateBestChain(CValidationState& state, const CChainParams& chainparams, std::shared_ptr<const CBlock> pblock = std::shared_ptr<const CBlock>());
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
@@ -315,6 +339,10 @@ CBlockIndex * InsertBlockIndex(uint256 hash);
 void FlushStateToDisk();
 /** Prune block files and flush state to disk. */
 void PruneAndFlush();
+
+/** Update chainActive and related internal data structures. */
+void UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams);
+
 /** Prune block files up to a given height */
 void PruneBlockFilesManual(int nPruneUpToHeight);
 
@@ -390,6 +418,23 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 
 } // namespace Consensus
 
+
+
+enum FlushStateMode {
+    FLUSH_STATE_NONE,
+    FLUSH_STATE_IF_NEEDED,
+    FLUSH_STATE_PERIODIC,
+    FLUSH_STATE_ALWAYS
+};
+
+/**
+ * Update the on-disk chain state.
+ * The caches and indexes are flushed depending on the mode we're called with
+ * if they're too large, if it's been a while since the last write,
+ * or always and in all cases if we're in prune mode and are deleting files.
+ */
+bool FlushStateToDisk(CValidationState &state, FlushStateMode mode, int nManualPruneHeight=0);
+
 /**
  * Check if transaction is final and can be included in a block with the
  * specified height and time. Consensus critical.
@@ -447,10 +492,9 @@ private:
 
 public:
     CScriptCheck(): amount(0), ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR) {}
-    CScriptCheck(const CCoins& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn, PrecomputedTransactionData* txdataIn) :
-        scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey), amount(txFromIn.vout[txToIn.vin[nInIn].prevout.n].nValue),
-        ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR), txdata(txdataIn) { }
-
+    
+    CScriptCheck(const CCoins& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn, PrecomputedTransactionData* txdataIn);
+    
     bool operator()();
 
     void swap(CScriptCheck &check) {
@@ -475,15 +519,22 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
 
 /** Functions for validating blocks and updating the block tree */
 
+bool AddToMapStakeSeen(const COutPoint &kernel, const uint256 &blockHash);
+bool CheckStakeUnused(const COutPoint &kernel);
+bool CheckStakeUnique(const CBlock &block, bool fUpdate=true);
+
 /** Context-independent validity checks */
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true);
 bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
+
+unsigned int GetNextTargetRequired(const CBlockIndex *pindexLast);
 
 /** Context-dependent validity checks.
  *  By "context", we mean only the previous block headers, but not the UTXO
  *  set; UTXO-related validity checks are done in ConnectBlock(). */
 bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, int64_t nAdjustedTime);
 bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
+
 
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()

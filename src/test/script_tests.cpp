@@ -5,6 +5,8 @@
 #include "data/script_tests.json.h"
 
 #include "core_io.h"
+#include "key/extkey.h"
+#include "key/stealth.h"
 #include "key.h"
 #include "keystore.h"
 #include "script/script.h"
@@ -12,7 +14,7 @@
 #include "script/sign.h"
 #include "util.h"
 #include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
+#include "test/test_particl.h"
 #include "rpc/server.h"
 
 #if defined(HAVE_CONSENSUS_LIB)

@@ -14,13 +14,19 @@
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 
+#if BOOST_VERSION > 105300
+#ifndef BOOST_MESSAGE
+#define BOOST_MESSAGE(msg) BOOST_TEST_MESSAGE(msg)
+#endif
+#endif
+
 /** Basic testing setup.
  * This just configures logging and chain parameters.
  */
 struct BasicTestingSetup {
     ECCVerifyHandle globalVerifyHandle;
 
-    BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
+    BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN, bool fParticlModeIn = false);
     ~BasicTestingSetup();
 };
 
@@ -34,7 +40,7 @@ struct TestingSetup: public BasicTestingSetup {
     boost::thread_group threadGroup;
     CConnman* connman;
 
-    TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
+    TestingSetup(const std::string& chainName = CBaseChainParams::MAIN, bool fParticlModeIn = false);
     ~TestingSetup();
 };
 

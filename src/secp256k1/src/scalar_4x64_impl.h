@@ -7,6 +7,8 @@
 #ifndef _SECP256K1_SCALAR_REPR_IMPL_H_
 #define _SECP256K1_SCALAR_REPR_IMPL_H_
 
+#include "scalar.h"
+
 /* Limbs of the secp256k1 order. */
 #define SECP256K1_N_0 ((uint64_t)0xBFD25E8CD0364141ULL)
 #define SECP256K1_N_1 ((uint64_t)0xBAAEDCE6AF48A03BULL)
@@ -32,6 +34,13 @@ SECP256K1_INLINE static void secp256k1_scalar_clear(secp256k1_scalar *r) {
 }
 
 SECP256K1_INLINE static void secp256k1_scalar_set_int(secp256k1_scalar *r, unsigned int v) {
+    r->d[0] = v;
+    r->d[1] = 0;
+    r->d[2] = 0;
+    r->d[3] = 0;
+}
+
+SECP256K1_INLINE static void secp256k1_scalar_set_u64(secp256k1_scalar *r, uint64_t v) {
     r->d[0] = v;
     r->d[1] = 0;
     r->d[2] = 0;

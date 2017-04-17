@@ -32,7 +32,9 @@ private:
     bool corruptionPossible;
     std::string strDebugMessage;
 public:
-    CValidationState() : mode(MODE_VALID), nDoS(0), chRejectCode(0), corruptionPossible(false) {}
+    int nodeId;
+    
+    CValidationState() : mode(MODE_VALID), nDoS(0), chRejectCode(0), corruptionPossible(false) { nodeId = -1; }
     bool DoS(int level, bool ret = false,
              unsigned int chRejectCodeIn=0, const std::string &strRejectReasonIn="",
              bool corruptionIn=false,
@@ -47,6 +49,7 @@ public:
         mode = MODE_INVALID;
         return ret;
     }
+    
     bool Invalid(bool ret = false,
                  unsigned int _chRejectCode=0, const std::string &_strRejectReason="",
                  const std::string &_strDebugMessage="") {

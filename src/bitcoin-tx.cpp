@@ -48,16 +48,17 @@ static int AppInitRawTx(int argc, char* argv[])
         fprintf(stderr, "Error: %s\n", e.what());
         return EXIT_FAILURE;
     }
-
+    
+    fParticlMode = !GetBoolArg("-genfirstkey", false); // qa tests 
     fCreateBlank = GetBoolArg("-create", false);
 
     if (argc<2 || IsArgSet("-?") || IsArgSet("-h") || IsArgSet("-help"))
     {
         // First part of help message is specific to this utility
-        std::string strUsage = strprintf(_("%s bitcoin-tx utility version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n\n" +
+        std::string strUsage = strprintf(_("%s particl-tx utility version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n\n" +
             _("Usage:") + "\n" +
-              "  bitcoin-tx [options] <hex-tx> [commands]  " + _("Update hex-encoded bitcoin transaction") + "\n" +
-              "  bitcoin-tx [options] -create [commands]   " + _("Create hex-encoded bitcoin transaction") + "\n" +
+              "  particl-tx [options] <hex-tx> [commands]  " + _("Update hex-encoded particl transaction") + "\n" +
+              "  particl-tx [options] -create [commands]   " + _("Create hex-encoded particl transaction") + "\n" +
               "\n";
 
         fprintf(stdout, "%s", strUsage.c_str());
@@ -242,9 +243,6 @@ static void MutateTxAddOutAddr(CMutableTransaction& tx, const std::string& strIn
     std::vector<std::string> vStrInputParts;
     boost::split(vStrInputParts, strInput, boost::is_any_of(":"));
 
-    if (vStrInputParts.size() != 2)
-        throw std::runtime_error("TX output missing or too many separators");
-
     // Extract and validate VALUE
     CAmount value = ExtractAndValidateValue(vStrInputParts[0]);
 
@@ -266,9 +264,6 @@ static void MutateTxAddOutPubKey(CMutableTransaction& tx, const std::string& str
     // Separate into VALUE:PUBKEY[:FLAGS]
     std::vector<std::string> vStrInputParts;
     boost::split(vStrInputParts, strInput, boost::is_any_of(":"));
-
-    if (vStrInputParts.size() < 2 || vStrInputParts.size() > 3)
-        throw std::runtime_error("TX output missing or too many separators");
 
     // Extract and validate VALUE
     CAmount value = ExtractAndValidateValue(vStrInputParts[0]);
@@ -533,7 +528,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
     CMutableTransaction mergedTx(txVariants[0]);
     bool fComplete = true;
     CCoinsView viewDummy;
-    CCoinsViewCache view(&viewDummy);
+    CCoinsViewCache view(&viewDummy, fParticlMode);
 
     if (!registers.count("privatekeys"))
         throw std::runtime_error("privatekeys register variable must be set.");

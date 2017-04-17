@@ -246,7 +246,7 @@ CDB::CDB(const std::string& strFilename, const char* pszMode, bool fFlushOnClose
         return;
 
     bool fCreate = strchr(pszMode, 'c') != NULL;
-    unsigned int nFlags = DB_THREAD;
+    unsigned int nFlags = DB_READ_UNCOMMITTED | DB_THREAD; // get must be called with DB_READ_UNCOMMITTED also for it to apply
     if (fCreate)
         nFlags |= DB_CREATE;
 
@@ -401,8 +401,10 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                                 ssValue.clear();
                                 ssValue << CLIENT_VERSION;
                             }
+                            
                             Dbt datKey(ssKey.data(), ssKey.size());
                             Dbt datValue(ssValue.data(), ssValue.size());
+                            
                             int ret2 = pdbCopy->put(NULL, &datKey, &datValue, DB_NOOVERWRITE);
                             if (ret2 > 0)
                                 fSuccess = false;

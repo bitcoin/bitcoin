@@ -10,8 +10,8 @@
 #include "script/script.h"
 #include "serialize.h"
 #include "streams.h"
-#include "test/test_bitcoin.h"
 #include "test/test_random.h"
+#include "test/test_particl.h"
 #include "util.h"
 #include "utilstrencodings.h"
 #include "version.h"
@@ -96,7 +96,9 @@ void static RandomScript(CScript &script) {
 }
 
 void static RandomTransaction(CMutableTransaction &tx, bool fSingle) {
-    tx.nVersion = insecure_rand();
+    
+    tx.nVersion = ((uint32_t)insecure_rand()) % (PARTICL_TXN_VERSION-1);
+    
     tx.vin.clear();
     tx.vout.clear();
     tx.nLockTime = (insecure_rand() % 2) ? insecure_rand() : 0;
@@ -186,7 +188,8 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
         uint256 sh;
         CTransactionRef tx;
         CScript scriptCode = CScript();
-
+        
+        bool fExpectHashFailure = false; // adjusting test vectors >= PARTICL_TXN_VERSION
         try {
           // deserialize test data
           raw_tx = test[0].get_str();
@@ -194,6 +197,17 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
           nIn = test[2].get_int();
           nHashType = test[3].get_int();
           sigHashHex = test[4].get_str();
+          
+          
+            char strHex[2];
+            strHex[0] = raw_tx[0];
+            strHex[1] = raw_tx[1];
+            if (std::strtoul(strHex, 0, 16) >= PARTICL_TXN_VERSION)
+            {
+                raw_tx[0] = '0';
+                raw_tx[1] = '0';
+                fExpectHashFailure = true;
+            };
 
           CDataStream stream(ParseHex(raw_tx), SER_NETWORK, PROTOCOL_VERSION);
           stream >> tx;
@@ -210,7 +224,8 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
         }
 
         sh = SignatureHash(scriptCode, *tx, nIn, nHashType, 0, SIGVERSION_BASE);
-        BOOST_CHECK_MESSAGE(sh.GetHex() == sigHashHex, strTest);
+        if (!fExpectHashFailure)
+            BOOST_CHECK_MESSAGE(sh.GetHex() == sigHashHex, strTest);
     }
 }
 BOOST_AUTO_TEST_SUITE_END()

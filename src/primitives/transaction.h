@@ -10,10 +10,49 @@
 #include "script/script.h"
 #include "serialize.h"
 #include "uint256.h"
+#include "pubkey.h"
+
+#include <secp256k1_rangeproof.h>
 
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
 
 static const int WITNESS_SCALE_FACTOR = 4;
+
+static const uint8_t PARTICL_BLOCK_VERSION = 0xA0;
+static const uint8_t PARTICL_TXN_VERSION = 0xA0;
+static const uint8_t MAX_PARTICL_TXN_VERSION = 0xBF;
+
+
+enum OutputTypes
+{
+    OUTPUT_NULL             = 0, // marker for CCoinsView
+    OUTPUT_STANDARD         = 1,
+    OUTPUT_CT               = 2,
+    OUTPUT_RINGCT           = 3,
+    OUTPUT_DATA             = 4,
+};
+
+enum TransactionTypes
+{
+    TXN_STANDARD            = 0,
+    TXN_COINBASE            = 1,
+    TXN_COINSTAKE           = 2,
+};
+
+enum DataOutputTypes
+{
+    DO_NULL                 = 0, // reserved
+    DO_NARR_PLAIN           = 1,
+    DO_NARR_CRYPT           = 2,
+    DO_STEALTH              = 3,
+    DO_STEALTH_PREFIX       = 4,
+    DO_VOTE                 = 5,
+};
+
+inline bool IsParticlTxVersion(int nVersion)
+{
+    return (nVersion & 0xFF) >= PARTICL_TXN_VERSION;
+}
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
@@ -126,6 +165,238 @@ public:
     std::string ToString() const;
 };
 
+class CTxOutStandard;
+class CTxOutCT;
+class CTxOutRingCT;
+class CTxOutData;
+
+class CTxOutBase
+{
+public:
+    CTxOutBase(uint8_t v) : nVersion(v) {};
+    uint8_t nVersion;
+    
+    template<typename Stream>
+    void Serialize(Stream &s) const
+    {
+        switch (nVersion)
+        {
+            case OUTPUT_STANDARD:
+                s << *((CTxOutStandard*) this);
+                break;
+            case OUTPUT_CT:
+                s << *((CTxOutCT*) this);
+                break;
+            case OUTPUT_RINGCT:
+                s << *((CTxOutRingCT*) this);
+                break;
+            case OUTPUT_DATA:
+                s << *((CTxOutData*) this);
+                break;
+            default:
+                assert(false);
+        };
+    };
+    
+    template<typename Stream>
+    void Unserialize(Stream &s)
+    {
+        switch (nVersion)
+        {
+            case OUTPUT_STANDARD:
+                s >> *((CTxOutStandard*) this);
+                break;
+            case OUTPUT_CT:
+                s >> *((CTxOutCT*) this);
+                break;
+            case OUTPUT_RINGCT:
+                s >> *((CTxOutRingCT*) this);
+                break;
+            case OUTPUT_DATA:
+                s >> *((CTxOutData*) this);
+                break;
+            default:
+                assert(false);
+        };
+    };
+    
+    uint8_t GetType() const
+    {
+        return nVersion;
+    };
+    
+    bool IsStandardOutput() const
+    {
+        return nVersion == OUTPUT_STANDARD;
+    };
+    
+    const CTxOutStandard *GetStandardOutput() const
+    {
+        assert(nVersion == OUTPUT_STANDARD);
+        return (CTxOutStandard*)this;
+    };
+    
+    
+    virtual bool IsEmpty() const { return false;}
+    
+    void SetValue(CAmount value);
+    
+    CAmount GetValue() const;
+    
+    std::string ToString() const;
+};
+
+
+typedef std::shared_ptr<CTxOutBase> CTxOutBaseRef;
+#define OUTPUT_PTR std::shared_ptr
+#define MAKE_OUTPUT std::make_shared
+
+typedef OUTPUT_PTR<CTxOutBase> CTxOutBaseRef;
+
+
+class CTxOutStandard : public CTxOutBase
+{
+public:
+    CTxOutStandard() : CTxOutBase(OUTPUT_STANDARD) {};
+    CTxOutStandard(const CAmount& nValueIn, CScript scriptPubKeyIn);
+    
+    CAmount nValue;
+    CScript scriptPubKey;
+    
+    
+    CAmount GetDustThreshold(const CFeeRate &minRelayTxFee) const
+    {
+        // "Dust" is defined in terms of CTransaction::minRelayTxFee,
+        // which has units satoshis-per-kilobyte.
+        // If you'd pay more than 1/3 in fees
+        // to spend something, then we consider it dust.
+        // A typical spendable non-segwit txout is 34 bytes big, and will
+        // need a CTxIn of at least 148 bytes to spend:
+        // so dust is a spendable txout less than
+        // 546*minRelayTxFee/1000 (in satoshis).
+        // A typical spendable segwit txout is 31 bytes big, and will
+        // need a CTxIn of at least 67 bytes to spend:
+        // so dust is a spendable txout less than
+        // 294*minRelayTxFee/1000 (in satoshis).
+        if (scriptPubKey.IsUnspendable())
+            return 0;
+
+        size_t nSize = GetSerializeSize(*this, SER_DISK, 0);
+        int witnessversion = 0;
+        std::vector<unsigned char> witnessprogram;
+
+        if (scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
+            // sum the sizes of the parts of a transaction input
+            // with 75% segwit discount applied to the script size.
+            nSize += (32 + 4 + 1 + (107 / WITNESS_SCALE_FACTOR) + 4);
+        } else {
+            nSize += (32 + 4 + 1 + 107 + 4); // the 148 mentioned above
+        }
+
+        return 3 * minRelayTxFee.GetFee(nSize);
+    }
+
+    bool IsDust(const CFeeRate &minRelayTxFee) const
+    {
+        return (nValue < GetDustThreshold(minRelayTxFee));
+    }
+    
+    virtual bool IsEmpty() const
+    {
+        return (nValue == 0 && scriptPubKey.empty());
+    }
+    
+    template<typename Stream>
+    void Serialize(Stream &s) const
+    {
+        s << nValue;
+        s << *(CScriptBase*)(&scriptPubKey);
+    };
+    
+    template<typename Stream>
+    void Unserialize(Stream &s)
+    {
+        s >> nValue;
+        s >> *(CScriptBase*)(&scriptPubKey);
+    };
+};
+
+class CTxOutCT : public CTxOutBase
+{
+public:
+    CTxOutCT() : CTxOutBase(OUTPUT_CT) {};
+    secp256k1_pedersen_commitment commitment;
+    std::vector<uint8_t> vData; // first 33 bytes is always ephemeral pubkey, can contain token for stealth prefix matching
+    //CPubKey pkEphemeral;
+    CScript scriptPubKey;
+    
+    std::vector<uint8_t> vchRangeproof;
+    
+    template<typename Stream>
+    void Serialize(Stream &s) const
+    {
+        const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_WITNESS);
+        s.write((char*)&commitment.data[0], 33);
+        s << vData;
+        s << *(CScriptBase*)(&scriptPubKey);
+        
+        if (fAllowWitness)
+            s << vchRangeproof;
+    };
+    
+    template<typename Stream>
+    void Unserialize(Stream &s)
+    {
+        s.read((char*)&commitment.data[0], 33);
+        s >> vData;
+        s >> *(CScriptBase*)(&scriptPubKey);
+        
+        s >> vchRangeproof;
+    };
+};
+
+class CTxOutRingCT : public CTxOutBase
+{
+public:
+    CTxOutRingCT() : CTxOutBase(OUTPUT_RINGCT) {};
+    CPubKey pk;
+    secp256k1_pedersen_commitment commitment;
+    std::vector<uint8_t> vchRangeproof;
+    std::vector<uint8_t> vchNonceCommitment;
+    
+    template<typename Stream>
+    void Serialize(Stream &s) const
+    {
+        
+    };
+    
+    template<typename Stream>
+    void Unserialize(Stream &s)
+    {
+        
+    };
+};
+
+class CTxOutData : public CTxOutBase
+{
+public:
+    CTxOutData() : CTxOutBase(OUTPUT_DATA) {};
+    std::vector<uint8_t> vData;
+    
+    template<typename Stream>
+    void Serialize(Stream &s) const
+    {
+        s << vData;
+    };
+    
+    template<typename Stream>
+    void Unserialize(Stream &s)
+    {
+        s >> vData;
+    };
+};
+
+
 /** An output of a transaction.  It contains the public key that the next input
  * must be able to sign with to claim it.
  */
@@ -161,6 +432,11 @@ public:
         return (nValue == -1);
     }
 
+    bool IsEmpty() const
+    {
+        return (nValue == 0 && scriptPubKey.empty());
+    }
+    
     CAmount GetDustThreshold(const CFeeRate &minRelayTxFee) const
     {
         // "Dust" is defined in terms of CTransaction::minRelayTxFee,
@@ -235,7 +511,66 @@ template<typename Stream, typename TxType>
 inline void UnserializeTransaction(TxType& tx, Stream& s) {
     const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_WITNESS);
 
-    s >> tx.nVersion;
+    uint8_t bv;
+    tx.nVersion = 0;
+    s >> bv;
+    
+    if (bv >= PARTICL_TXN_VERSION)
+    {
+        tx.nVersion = bv;
+        
+        s >> bv;
+        tx.nVersion |= bv<<8; // TransactionTypes
+        
+        //s >> tx.nTime;
+        tx.nLockTime = ReadCompactSize(s);
+        
+        tx.vin.clear();
+        s >> tx.vin;
+        
+        size_t nOutputs = ReadCompactSize(s);
+        tx.vpout.resize(nOutputs);
+        for (size_t k = 0; k < tx.vpout.size(); ++k)
+        {
+            s >> bv;
+            
+            switch (bv)
+            {
+                case OUTPUT_STANDARD:
+                    tx.vpout[k] = MAKE_OUTPUT<CTxOutStandard>();
+                    break;
+                case OUTPUT_CT:
+                    tx.vpout[k] = MAKE_OUTPUT<CTxOutCT>();
+                    break;
+                case OUTPUT_RINGCT:
+                    tx.vpout[k] = MAKE_OUTPUT<CTxOutRingCT>();
+                    break;
+                case OUTPUT_DATA:
+                    tx.vpout[k] = MAKE_OUTPUT<CTxOutData>();
+                    break;
+                default:
+                    return;
+                    //assert(false);
+            };
+            
+            tx.vpout[k]->nVersion = bv;
+            s >> *tx.vpout[k];
+        }
+        
+        for (auto &txin : tx.vin)
+            s >> txin.scriptWitness.stack;
+        return;
+    };
+    
+    tx.nVersion |= bv;
+    s >> bv;
+    tx.nVersion |= bv<<8;
+    s >> bv;
+    tx.nVersion |= bv<<16;
+    s >> bv;
+    tx.nVersion |= bv<<24;
+    
+    
     unsigned char flags = 0;
     tx.vin.clear();
     tx.vout.clear();
@@ -269,8 +604,33 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
 template<typename Stream, typename TxType>
 inline void SerializeTransaction(const TxType& tx, Stream& s) {
     const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_WITNESS);
-
+    
+    if (IsParticlTxVersion(tx.nVersion))
+    {
+        uint8_t bv = tx.nVersion & 0xFF;
+        s << bv;
+        
+        bv = (tx.nVersion>>8) & 0xFF;
+        s << bv; // TransactionType
+        
+        //s << tx.nTime;
+        WriteCompactSize(s, tx.nLockTime);
+        s << tx.vin;
+        
+        WriteCompactSize(s, tx.vpout.size());
+        for (size_t k = 0; k < tx.vpout.size(); ++k)
+        {
+            s << tx.vpout[k]->nVersion;
+            s << *tx.vpout[k];
+        };
+        
+        for (auto &txin : tx.vin)
+            s << txin.scriptWitness.stack;
+        return;
+    };
+    
     s << tx.nVersion;
+    
     unsigned char flags = 0;
     // Consistency check
     if (fAllowWitness) {
@@ -310,6 +670,8 @@ public:
     // bumping the default CURRENT_VERSION at which point both CURRENT_VERSION and
     // MAX_STANDARD_VERSION will be equal.
     static const int32_t MAX_STANDARD_VERSION=2;
+    
+    //static const int32_t CURRENT_PARTICL_VERSION=2;
 
     // The local variables are made const to prevent unintended modification
     // without updating the cached hash value. However, CTransaction is not
@@ -319,6 +681,7 @@ public:
     const int32_t nVersion;
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
+    const std::vector<CTxOutBaseRef> vpout;
     const uint32_t nLockTime;
 
 private:
@@ -330,6 +693,10 @@ private:
 public:
     /** Construct a CTransaction that qualifies as IsNull() */
     CTransaction();
+    
+    ~CTransaction()
+    {
+    };
 
     /** Convert a CMutableTransaction into a CTransaction. */
     CTransaction(const CMutableTransaction &tx);
@@ -346,9 +713,17 @@ public:
     CTransaction(deserialize_type, Stream& s) : CTransaction(CMutableTransaction(deserialize, s)) {}
 
     bool IsNull() const {
-        return vin.empty() && vout.empty();
+        return vin.empty() && vout.empty() && vpout.empty();
     }
-
+    
+    bool IsParticlVersion() const {
+        return IsParticlTxVersion(nVersion);
+    }
+    
+    int GetType() const {
+        return (nVersion >> 8) & 0xFF;
+    }
+    
     const uint256& GetHash() const {
         return hash;
     }
@@ -376,7 +751,22 @@ public:
 
     bool IsCoinBase() const
     {
+        if (IsParticlVersion())
+            return (GetType() == TXN_COINBASE
+                && vin.size() == 1 && vin[0].prevout.IsNull()); // TODO [rm]?
+        
         return (vin.size() == 1 && vin[0].prevout.IsNull());
+    }
+
+    bool IsCoinStake() const
+    {
+        return GetType() == TXN_COINSTAKE
+            && vin.size() > 0;
+        
+        
+        // TODO: check output version [rm]
+        // The coin stake transaction is marked with the first output empty
+        //return (vin.size() > 0 && (!vin[0].prevout.IsNull()) && vout.size() >= 2 && vout[0].IsEmpty());
     }
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)
@@ -408,6 +798,7 @@ struct CMutableTransaction
     int32_t nVersion;
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
+    std::vector<CTxOutBaseRef> vpout;
     uint32_t nLockTime;
 
     CMutableTransaction();
@@ -427,6 +818,14 @@ struct CMutableTransaction
     template <typename Stream>
     CMutableTransaction(deserialize_type, Stream& s) {
         Unserialize(s);
+    }
+    
+    void SetType(int type) {
+        nVersion |= (type & 0xFF) << 8;
+    }
+    
+    bool IsParticlVersion() const {
+        return IsParticlTxVersion(nVersion);
     }
 
     /** Compute the hash of this CMutableTransaction. This is computed on the

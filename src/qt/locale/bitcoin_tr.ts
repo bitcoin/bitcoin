@@ -295,15 +295,15 @@
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Cüzdanı Şifrele...</translation>
+        <translation>Cüzdanı &amp;Şifrele...</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Cüzdanı Yedekle...</translation>
+        <translation>Cüzdanı &amp;Yedekle...</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Parolayı Değiştir...</translation>
+        <translation>Parolayı &amp;Değiştir...</translation>
     </message>
     <message>
         <source>&amp;Sending addresses...</source>

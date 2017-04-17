@@ -13,9 +13,7 @@
 #include "libsecp256k1-config.h"
 #endif
 
-#if defined(EXHAUSTIVE_TEST_ORDER)
-#include "scalar_low.h"
-#elif defined(USE_SCALAR_4X64)
+#if defined(USE_SCALAR_4X64)
 #include "scalar_4x64.h"
 #elif defined(USE_SCALAR_8X32)
 #include "scalar_8x32.h"
@@ -37,6 +35,9 @@ static void secp256k1_scalar_set_b32(secp256k1_scalar *r, const unsigned char *b
 
 /** Set a scalar to an unsigned integer. */
 static void secp256k1_scalar_set_int(secp256k1_scalar *r, unsigned int v);
+
+/** Set a scalar to an unsigned 64-bit integer */
+static void secp256k1_scalar_set_u64(secp256k1_scalar *r, uint64_t v);
 
 /** Convert a scalar to a byte array. */
 static void secp256k1_scalar_get_b32(unsigned char *bin, const secp256k1_scalar* a);

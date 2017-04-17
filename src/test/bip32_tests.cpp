@@ -6,10 +6,11 @@
 
 #include "base58.h"
 #include "key.h"
+#include "key/extkey.h"
 #include "uint256.h"
 #include "util.h"
 #include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
+#include "test/test_particl.h"
 
 #include <string>
 #include <vector>
@@ -38,44 +39,44 @@ struct TestVector {
 
 TestVector test1 =
   TestVector("000102030405060708090a0b0c0d0e0f")
-    ("xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8",
-     "xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi",
+    ("PPARTKMMf4AUDYzRSCijXD2q3gcT5KwjATBsPXMEDbu2Vi6GvpMD8AjJiEQobuJwbqNxDRjCS2ar17bCGBB6Zucp8o3N6SQ4vzdam6gaSyhErU4U",
+     "XPARHAr37YxmFP8wykrnN4tBUuFyfYbnB6gLntLsPbLpN8qfbAbkmz5nZRqEWcJc2SHY2VRzoo3Tg4X8epvmq4odD6HLvP4UjAje1SSr7C7Y6HXx",
      0x80000000)
-    ("xpub68Gmy5EdvgibQVfPdqkBBCHxA5htiqg55crXYuXoQRKfDBFA1WEjWgP6LHhwBZeNK1VTsfTFUHCdrfp1bgwQ9xv5ski8PX9rL2dZXvgGDnw",
-     "xprv9uHRZZhk6KAJC1avXpDAp4MDc3sQKNxDiPvvkX8Br5ngLNv1TxvUxt4cV1rGL5hj6KCesnDYUhd7oWgT11eZG7XnxHrnYeSvkzY7d2bhkJ7",
+    ("PPARTKPd53smgeFYRMKsEQnhgZeZBemHWqGMQCxf7ZzQcgHUDBdWJaxqoMZA1gaWJagrkRwUztpPRrEGM9a4hreYWrvppe2sBuwUycci1HQ7x3vN",
+     "XPARHAtJXYg4iUQ4xuTv5Ge47nJ5msRLXUkpoZxJHZSCV72rsXt3xQKKeYyavPZxMqzuzCUtWALnYSsyXYgoYiPuPtMRSSw9sQhLu9TUxdJxX8f6",
      1)
-    ("xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ",
-     "xprv9wTYmMFdV23N2TdNG573QoEsfRrWKQgWeibmLntzniatZvR9BmLnvSxqu53Kw1UmYPxLgboyZQaXwTCg8MSY3H2EU4pWcQDnRnrVA1xe8fs",
+    ("PPARTKRoCFfKa2xRVBmug93bZAPSqi9GcqJ5h9HKxAGBRcvGRRB1SJmG7K84F6exszda6Pf73gEqXxpkpjsoXKyiQYaekwEi3PaVFFMEnaHGuhY6",
+     "XPARHAvUekTcbs6x2juxWztwzP2yRvoKdUnZ6WGy89hyJ3ff5mRZ687jxWYV9od9RSvh2eZeByANyXavwgdKmqjhNfWusxi7bUT7kpFoLAEK5JMq",
      0x80000002)
-    ("xpub6D4BDPcP2GT577Vvch3R8wDkScZWzQzMMUm3PWbmWvVJrZwQY4VUNgqFJPMM3No2dFDFGTsxxpG5uJh7n7epu4trkrX7x7DogT5Uv6fcLW5",
-     "xprv9z4pot5VBttmtdRTWfWQmoH1taj2axGVzFqSb8C9xaxKymcFzXBDptWmT7FwuEzG3ryjH4ktypQSAewRiNMjANTtpgP4mLTj34bhnZX7UiM",
+    ("PPARTKUQUJC9RjqGu3whmPdzvXPUywJ996qfgUpZdQbUanndrq2CZ7X6YDZcAeg9iSW1QkBCnHcp9LmKoCCwp35Fwc2obX8gBUXYvy39vfZyjuCg",
+     "XPARHAy5vnzSTZyoSc5kcFVMMk31a9xC9kL95qpCoQ3GTDY2XBGkCvsaPQz35MfN3RACXA2faZdKtwzkquq4XRkcZncMYKKg9dPMhRXYYnpG9F4R",
      2)
-    ("xpub6FHa3pjLCk84BayeJxFW2SP4XRrFd1JYnxeLeU8EqN3vDfZmbqBqaGJAyiLjTAwm6ZLRQUMv1ZACTj37sR62cfN7fe5JnJ7dh8zL4fiyLHV",
-     "xprvA2JDeKCSNNZky6uBCviVfJSKyQ1mDYahRjijr5idH2WwLsEd4Hsb2Tyh8RfQMuPh7f7RtyzTtdrbdqqsunu5Mm3wDvUAKRHSC34sJ7in334",
+    ("PPARTKWds8dGNvJwt8RBV5uD1QteJ27RsjRysvJSvfZ147ECUC7pvBHnuR956L196rJA9DVKxRdJ6PWDukdHp8Nh9KdGrRvENJiSkyj4mpAghRTg",
+     "XPARHB1KKdRZQkTURgZEKwkZSdYAtEmUtNvTHHJ66eznvXyb8YNNZzeGkcZW12ymVspbxDpoHBYZTrpD1P1xydB9uyzwaiZmFBUBQaW1iJEhoWbQ",
      1000000000)
-    ("xpub6H1LXWLaKsWFhvm6RVpEL9P4KfRZSW7abD2ttkWP3SSQvnyA8FSVqNTEcYFgJS2UaFcxupHiYkro49S8yGasTvXEYBVPamhGW6cFJodrTHy",
-     "xprvA41z7zogVVwxVSgdKUHDy1SKmdb533PjDz7J6N6mV6uS3ze1ai8FHa8kmHScGpWmj4WggLyQjgPie1rFSruoUihUZREPSL39UNdE3BBDu76",
+    ("PPARTKYMdcJsd3SL5ekxwCSmjibeHpM1BYvnuiYqUuqPCKJaxuFEJhi3ZgFE9xq43hZErhBcVvyDtvhvWM3gqEEBzAtRyJTeT7C2Pnggh4LwtqoA",
+     "XPARHB33677AesardCu1n4J8AwFAt314CCRGK5YUeuHB4k3ydFVmxX4XQsff4fqYhnjj2qECXxuYQhrk8PByMAFAe6xb844XUJNw7rqa53Pi4eQg",
      0);
 
 TestVector test2 =
   TestVector("fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542")
-    ("xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB",
-     "xprv9s21ZrQH143K31xYSDQpPDxsXRTUcvj2iNHm5NUtrGiGG5e2DtALGdso3pGz6ssrdK4PFmM8NSpSBHNqPqm55Qn3LqFtT2emdEXVYsCzC2U",
+    ("PPARTKMMf4AUDYzRSCLErKBuL8pAqa8sb8p8DCw1wtqmKgUPo7LEKLt5efJyCFR2aYdKBLHSDwFWAWfhWtxpo2ojHvxN3JLGPq85RR4FZFfwSWHQ",
+     "XPARHAr37YxmFP8wykUHhB3FmMThRnnvbnJbcZvf7tHZC7DnTTamyAEZVrjQ6xNP5co67jUkEYKv8LdAqvTVw7E1uhefgqUYyK5Yk1hULZ65k6Dp",
      0)
-    ("xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH",
-     "xprv9vHkqa6EV4sPZHYqZznhT2NPtPCjKuDKGY38FBWLvgaDx45zo9WQRUT3dKYnjwih2yJD9mkrocEZXo1ex8G81dwSM1fwqWpWkeS3v86pgKt",
+    ("PPARTKQdQKtAB31FWibq9SyHDCcaMw6cqqncVm6mK4enmktFkoJgHv9Rip9YSpszULiKcYbvPoUVuukYV48FUuxRiGZ2KaP14jUDoYYNDgsBefuk",
+     "XPARHAuJrpgTCs9n4GjszJpdeRG6x9kfrVH5u86QV46aeBdeR9ZDwjVua1ZyMXsetFrvx98z4SLKrmnayGy8kfWWxdsq5qey2hZiV97NtvLUxQeP",
      0xFFFFFFFF)
-    ("xpub6ASAVgeehLbnwdqV6UKMHVzgqAG8Gr6riv3Fxxpj8ksbH9ebxaEyBLZ85ySDhKiLDBrQSARLq1uNRts8RuJiHjaDMBU4Zn9h8LZNnBC5y4a",
-     "xprv9wSp6B7kry3Vj9m1zSnLvN3xH8RdsPP1Mh7fAaR7aRLcQMKTR2vidYEeEg2mUCTAwCd6vnxVrcjfy2kRgVsFawNzmjuHc2YmYRmagcEPdU9",
+    ("PPARTKRnTaVBhQuRctU3KsRGrfxFvKqqkPGnBrFqqz3hYQd29FbukY2r32DL3SGEb6SviL7qwTKMXCxy5io7pgrupzhUx7Td86CUpQvdpXbRBaXT",
+     "XPARHAvTv5HUjF3xASc6AjGdHtbnWYVtm2mFbDFV1yVVQqNQobrTQMPKtDdkx9E8rz7fS3NJxDMXVpo65iCsXPt86DBGeGPCNU5SjvtiRgjV3aym",
      1)
-    ("xpub6DF8uhdarytz3FWdA8TvFSvvAh8dP3283MY7p2V4SeE2wyWmG5mg5EwVvmdMVCQcoNJxGoWaU9DCWh89LojfZ537wTfunKau47EL2dhHKon",
-     "xprv9zFnWC6h2cLgpmSA46vutJzBcfJ8yaJGg8cX1e5StJh45BBciYTRXSd25UEPVuesF9yog62tGAQtHjXajPPdbRCHuWS6T8XA2ECKADdw4Ef",
+    ("PPARTKUbRzWAdaYioz5iTw5RRduC9fNiFVThTAhLhq7MsiWNavRmuqYNjv7iRH4RitKczvJJVHxSkr6GuobNqbmLnG2wrhjpyJjv2LhJmn53fSDC",
+     "XPARHAyGtVJTfQhFMYDmJnvmrrYijt2mG8xArXgyspZ9k9FmFGgKZetrb7Y9Kz2LV1ps8MKfexebtELmJ2uegSmeUDf5wQ9jBKBR8Qh9AAP4eG4E",
      0xFFFFFFFE)
-    ("xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL",
-     "xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc",
+    ("PPARTKVmTuU6zBwgXH2x4fZEy1QtLa7BcYSKxCQ4bMq4HZGdqNn6qwDJkSe5WuiZE5h9Ssjx86TWTthbmTEYEHeTHyPeJye9Ts31SCvPMK2wwixe",
+     "XPARHAzSvQGQ226D4qAzuXQbQE4QvnmEdBvoMZPhmMGr9z22Vj2eVkZnbe4WRcj4seFFQttxMGUNsciLsr2k3xiYxuVm7E6GVTPSkkH9gE9T3hqH",
      2)
-    ("xpub6FnCn6nSzZAw5Tw7cgR9bi15UV96gLZhjDstkXXxvCLsUXBGXPdSnLFbdpq8p9HmGsApME5hQTZ3emM2rnY5agb9rXpVGyy3bdW6EEgAtqt",
-     "xprvA2nrNbFZABcdryreWet9Ea4LvTJcGsqrMzxHx98MMrotbir7yrKCEXw7nadnHM8Dq38EGfSh6dqA9QWTyefMLEcBYJUuekgW4BYPJcr9E7j",
+    ("PPARTKX8VruKVi7zm2J8xPdNezAGJyAiinmF2rZgUmcQnC4VRSySR6rEWdD2Wz7dWDGW9PoAMNP1snQckwfbj7k9CHeVtcoyYoQJAtDaXyh2twFh",
+     "XPARHB1oxMhcXYGXJaSBoFUj6ConuBpmjSFiSDZKem4Cecot5oDz4vCiMpdTRh8jsoGLUwCp5ZE1h4pBZtadZh2vBxUVq2wmzWoaUSeVEJjizfsx",
      0);
 
 void RunTest(const TestVector &test) {
@@ -83,7 +84,7 @@ void RunTest(const TestVector &test) {
     CExtKey key;
     CExtPubKey pubkey;
     key.SetMaster(&seed[0], seed.size());
-    pubkey = key.Neuter();
+    pubkey = key.Neutered();
     BOOST_FOREACH(const TestDerivation &derive, test.vDerive) {
         unsigned char data[74];
         key.Encode(data);
@@ -91,10 +92,12 @@ void RunTest(const TestVector &test) {
 
         // Test private key
         CBitcoinExtKey b58key; b58key.SetKey(key);
+        
         BOOST_CHECK(b58key.ToString() == derive.prv);
 
         CBitcoinExtKey b58keyDecodeCheck(derive.prv);
         CExtKey checkKey = b58keyDecodeCheck.GetKey();
+        
         assert(checkKey == key); //ensure a base58 decoded key also matches
 
         // Test public key
@@ -108,7 +111,7 @@ void RunTest(const TestVector &test) {
         // Derive new keys
         CExtKey keyNew;
         BOOST_CHECK(key.Derive(keyNew, derive.nChild));
-        CExtPubKey pubkeyNew = keyNew.Neuter();
+        CExtPubKey pubkeyNew = keyNew.Neutered();
         if (!(derive.nChild & 0x80000000)) {
             // Compare with public derivation
             CExtPubKey pubkeyNew2;
@@ -124,7 +127,9 @@ void RunTest(const TestVector &test) {
 
         CDataStream ssPriv(SER_DISK, CLIENT_VERSION);
         ssPriv << keyNew;
-        BOOST_CHECK(ssPriv.size() == 75);
+        //BOOST_MESSAGE("ssPriv.size() " << ssPriv.size());
+        //BOOST_CHECK(ssPriv.size() == 75);
+        BOOST_CHECK(ssPriv.size() == 74);
 
         CExtPubKey pubCheck;
         CExtKey privCheck;

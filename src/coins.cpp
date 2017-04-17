@@ -16,27 +16,56 @@
  */
 void CCoins::CalcMaskSize(unsigned int &nBytes, unsigned int &nNonzeroBytes) const {
     unsigned int nLastUsedByte = 0;
-    for (unsigned int b = 0; 2+b*8 < vout.size(); b++) {
-        bool fZero = true;
-        for (unsigned int i = 0; i < 8 && 2+b*8+i < vout.size(); i++) {
-            if (!vout[2+b*8+i].IsNull()) {
-                fZero = false;
-                continue;
+    
+    if (IsParticlTxVersion(nVersion))
+    {
+        for (unsigned int b = 0; 2+b*8 < vpout.size(); b++) {
+            bool fZero = true;
+            for (unsigned int i = 0; i < 8 && 2+b*8+i < vpout.size(); i++) {
+                if (vpout[2+b*8+i]) {
+                    fZero = false;
+                    continue;
+                }
+            }
+            if (!fZero) {
+                nLastUsedByte = b + 1;
+                nNonzeroBytes++;
             }
         }
-        if (!fZero) {
-            nLastUsedByte = b + 1;
-            nNonzeroBytes++;
+    } else
+    {
+        for (unsigned int b = 0; 2+b*8 < vout.size(); b++) {
+            bool fZero = true;
+            for (unsigned int i = 0; i < 8 && 2+b*8+i < vout.size(); i++) {
+                if (!vout[2+b*8+i].IsNull()) {
+                    fZero = false;
+                    continue;
+                }
+            }
+            if (!fZero) {
+                nLastUsedByte = b + 1;
+                nNonzeroBytes++;
+            }
         }
     }
+    
     nBytes += nLastUsedByte;
 }
 
 bool CCoins::Spend(uint32_t nPos) 
 {
-    if (nPos >= vout.size() || vout[nPos].IsNull())
-        return false;
-    vout[nPos].SetNull();
+    if (IsParticlTxVersion(nVersion))
+    {
+        if (nPos >= vpout.size() || !vpout[nPos])
+            return false;
+        vpout[nPos].reset();
+    } else
+    {
+        if (nPos >= vout.size() || vout[nPos].IsNull())
+            return false;
+        vout[nPos].SetNull();
+    };
+    
     Cleanup();
     return true;
 }
@@ -58,7 +87,7 @@ CCoinsViewCursor *CCoinsViewBacked::Cursor() const { return base->Cursor(); }
 
 SaltedTxidHasher::SaltedTxidHasher() : k0(GetRand(std::numeric_limits<uint64_t>::max())), k1(GetRand(std::numeric_limits<uint64_t>::max())) {}
 
-CCoinsViewCache::CCoinsViewCache(CCoinsView *baseIn) : CCoinsViewBacked(baseIn), hasModifier(false), cachedCoinsUsage(0) { }
+CCoinsViewCache::CCoinsViewCache(CCoinsView *baseIn, bool fParticlModeIn) : CCoinsViewBacked(baseIn), fParticlMode(fParticlModeIn), hasModifier(false), cachedCoinsUsage(0) { }
 
 CCoinsViewCache::~CCoinsViewCache()
 {
@@ -167,7 +196,7 @@ bool CCoinsViewCache::HaveCoins(const uint256 &txid) const {
     // as we only care about the case where a transaction was replaced entirely
     // in a reorganization (which wipes vout entirely, as opposed to spending
     // which just cleans individual outputs).
-    return (it != cacheCoins.end() && !it->second.coins.vout.empty());
+    return (it != cacheCoins.end() && (!it->second.coins.vout.empty() || !it->second.coins.vpout.empty()));
 }
 
 bool CCoinsViewCache::HaveCoinsInCache(const uint256 &txid) const {
@@ -269,6 +298,14 @@ const CTxOut &CCoinsViewCache::GetOutputFor(const CTxIn& input) const
     return coins->vout[input.prevout.n];
 }
 
+const CTxOutBase *CCoinsViewCache::GetBaseOutputFor(const CTxIn& input) const
+{
+    const CCoins* coins = AccessCoins(input.prevout.hash);
+    assert(coins && coins->IsAvailable(input.prevout.n));
+    return coins->vpout[input.prevout.n].get();
+}
+
+
 CAmount CCoinsViewCache::GetValueIn(const CTransaction& tx) const
 {
     if (tx.IsCoinBase())
@@ -276,8 +313,18 @@ CAmount CCoinsViewCache::GetValueIn(const CTransaction& tx) const
 
     CAmount nResult = 0;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
-        nResult += GetOutputFor(tx.vin[i]).nValue;
-
+    {
+        if (fParticlMode)
+        {
+            const CTxOutBase *o = GetBaseOutputFor(tx.vin[i]);
+            if (o->nVersion == OUTPUT_STANDARD)
+                nResult += o->GetValue();
+        } else
+        {
+            nResult += GetOutputFor(tx.vin[i]).nValue;
+        }
+    }
+    
     return nResult;
 }
 
@@ -301,14 +348,32 @@ double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight, CAmount
     if (tx.IsCoinBase())
         return 0.0;
     double dResult = 0.0;
-    BOOST_FOREACH(const CTxIn& txin, tx.vin)
+    
+    if (tx.IsParticlVersion())
     {
-        const CCoins* coins = AccessCoins(txin.prevout.hash);
-        assert(coins);
-        if (!coins->IsAvailable(txin.prevout.n)) continue;
-        if (coins->nHeight <= nHeight) {
-            dResult += (double)(coins->vout[txin.prevout.n].nValue) * (nHeight-coins->nHeight);
-            inChainInputValue += coins->vout[txin.prevout.n].nValue;
+        for (auto &txin : tx.vin)
+        {
+            const CCoins *coins = AccessCoins(txin.prevout.hash);
+            assert(coins);
+            if (!coins->IsAvailable(txin.prevout.n))
+                continue;
+            
+            if (coins->nHeight <= nHeight) {
+                dResult += (double)(coins->vpout[txin.prevout.n]->GetValue()) * (nHeight-coins->nHeight);
+                inChainInputValue += coins->vpout[txin.prevout.n]->GetValue();
+            }
+        };
+    } else
+    {
+        BOOST_FOREACH(const CTxIn& txin, tx.vin)
+        {
+            const CCoins* coins = AccessCoins(txin.prevout.hash);
+            assert(coins);
+            if (!coins->IsAvailable(txin.prevout.n)) continue;
+            if (coins->nHeight <= nHeight) {
+                dResult += (double)(coins->vout[txin.prevout.n].nValue) * (nHeight-coins->nHeight);
+                inChainInputValue += coins->vout[txin.prevout.n].nValue;
+            }
         }
     }
     return tx.ComputePriority(dResult);

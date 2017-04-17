@@ -4,6 +4,8 @@
 
 #include "bench.h"
 #include "key.h"
+#include "key/extkey.h"
+#include "key/stealth.h"
 #if defined(HAVE_CONSENSUS_LIB)
 #include "script/bitcoinconsensus.h"
 #endif

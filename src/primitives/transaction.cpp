@@ -54,8 +54,60 @@ std::string CTxOut::ToString() const
     return strprintf("CTxOut(nValue=%d.%08d, scriptPubKey=%s)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30));
 }
 
+void CTxOutBase::SetValue(int64_t value)
+{
+    // convenience function intended for use with CTxOutStandard only
+    assert(nVersion == OUTPUT_STANDARD);
+    ((CTxOutStandard*) this)->nValue = value;
+};
+
+CAmount CTxOutBase::GetValue() const
+{
+    // convenience function intended for use with CTxOutStandard only
+    /*
+    switch (nVersion)
+    {
+        case OUTPUT_STANDARD:
+            return ((CTxOutStandard*) this)->nValue;
+        case OUTPUT_DATA:
+            return 0;
+        default:
+            assert(false);
+            
+    };
+    */
+    assert(nVersion == OUTPUT_STANDARD);
+    return ((CTxOutStandard*) this)->nValue;
+};
+
+std::string CTxOutBase::ToString() const
+{
+    switch (nVersion)
+    {
+        case OUTPUT_STANDARD:
+            {
+            CTxOutStandard *so = (CTxOutStandard*)this;
+            return strprintf("CTxOutStandard(nValue=%d.%08d, scriptPubKey=%s)", so->nValue / COIN, so->nValue % COIN, HexStr(so->scriptPubKey).substr(0, 30));
+            }
+        case OUTPUT_DATA:
+            {
+            CTxOutData *dout = (CTxOutData*)this;
+            return strprintf("CTxOutData(data=%s)", HexStr(dout->vData).substr(0, 30));
+            }
+        default:
+            break;
+    };
+    return strprintf("CTxOutBase unknown version %d", nVersion);
+}
+
+CTxOutStandard::CTxOutStandard(const CAmount& nValueIn, CScript scriptPubKeyIn) : CTxOutBase(OUTPUT_STANDARD)
+{
+    nValue = nValueIn;
+    scriptPubKey = scriptPubKeyIn;
+};
+
 CMutableTransaction::CMutableTransaction() : nVersion(CTransaction::CURRENT_VERSION), nLockTime(0) {}
-CMutableTransaction::CMutableTransaction(const CTransaction& tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), nLockTime(tx.nLockTime) {}
+CMutableTransaction::CMutableTransaction(const CTransaction& tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), vpout(tx.vpout), nLockTime(tx.nLockTime) {}
 
 uint256 CMutableTransaction::GetHash() const
 {
@@ -69,16 +121,13 @@ uint256 CTransaction::ComputeHash() const
 
 uint256 CTransaction::GetWitnessHash() const
 {
-    if (!HasWitness()) {
-        return GetHash();
-    }
     return SerializeHash(*this, SER_GETHASH, 0);
 }
 
 /* For backward compatibility, the hash is initialized to 0. TODO: remove the need for this default constructor entirely. */
-CTransaction::CTransaction() : nVersion(CTransaction::CURRENT_VERSION), vin(), vout(), nLockTime(0), hash() {}
-CTransaction::CTransaction(const CMutableTransaction &tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), nLockTime(tx.nLockTime), hash(ComputeHash()) {}
-CTransaction::CTransaction(CMutableTransaction &&tx) : nVersion(tx.nVersion), vin(std::move(tx.vin)), vout(std::move(tx.vout)), nLockTime(tx.nLockTime), hash(ComputeHash()) {}
+CTransaction::CTransaction() : nVersion(CTransaction::CURRENT_VERSION), vin(), vout(), vpout(), nLockTime(0), hash() {}
+CTransaction::CTransaction(const CMutableTransaction &tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), vpout(tx.vpout), nLockTime(tx.nLockTime), hash(ComputeHash()) {}
+CTransaction::CTransaction(CMutableTransaction &&tx) : nVersion(tx.nVersion), vin(std::move(tx.vin)), vout(std::move(tx.vout)), vpout(tx.vpout), nLockTime(tx.nLockTime), hash(ComputeHash()) {}
 
 CAmount CTransaction::GetValueOut() const
 {
@@ -89,6 +138,18 @@ CAmount CTransaction::GetValueOut() const
         if (!MoneyRange(it->nValue) || !MoneyRange(nValueOut))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
     }
+        
+    for (auto &txout : vpout)
+    {
+        if (!txout->IsStandardOutput())
+            continue;
+        
+        CAmount nValue = txout->GetValue();
+        nValueOut += txout->GetValue();
+        if (!MoneyRange(nValue) || !MoneyRange(nValueOut))
+            throw std::runtime_error(std::string(__func__) + ": value out of range");
+    };
+    
     return nValueOut;
 }
 
@@ -130,7 +191,7 @@ std::string CTransaction::ToString() const
         GetHash().ToString().substr(0,10),
         nVersion,
         vin.size(),
-        vout.size(),
+        (nVersion & 0xFF) < PARTICL_TXN_VERSION ? vout.size() : vpout.size(),
         nLockTime);
     for (unsigned int i = 0; i < vin.size(); i++)
         str += "    " + vin[i].ToString() + "\n";
@@ -138,6 +199,8 @@ std::string CTransaction::ToString() const
         str += "    " + vin[i].scriptWitness.ToString() + "\n";
     for (unsigned int i = 0; i < vout.size(); i++)
         str += "    " + vout[i].ToString() + "\n";
+    for (unsigned int i = 0; i < vpout.size(); i++)
+        str += "    " + vpout[i]->ToString() + "\n";
     return str;
 }
 

@@ -144,6 +144,7 @@ protected:
 
 public:
     CBlockHeader header;
+    std::vector<uint8_t> vchBlockSig;
 
     // Dummy for deserialization
     CBlockHeaderAndShortTxIDs() {}
@@ -159,6 +160,9 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(header);
+        
+        if (header.IsParticlVersion())
+            READWRITE(vchBlockSig);
         READWRITE(nonce);
 
         uint64_t shorttxids_size = (uint64_t)shorttxids.size();
@@ -198,6 +202,7 @@ protected:
     CTxMemPool* pool;
 public:
     CBlockHeader header;
+    std::vector<uint8_t> vchBlockSig;
     PartiallyDownloadedBlock(CTxMemPool* poolIn) : pool(poolIn) {}
 
     // extra_txn is a list of extra transactions to look at, in <witness hash, reference> form

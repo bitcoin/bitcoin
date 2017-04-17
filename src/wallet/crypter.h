@@ -67,6 +67,9 @@ public:
 
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CKeyingMaterial;
 
+bool EncryptSecret(const CKeyingMaterial& vMasterKey, const CKeyingMaterial &vchPlaintext, const uint256& nIV, std::vector<unsigned char> &vchCiphertext);
+bool DecryptSecret(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCiphertext, const uint256& nIV, CKeyingMaterial& vchPlaintext);
+
 namespace wallet_crypto
 {
     class TestCrypter;
@@ -114,6 +117,7 @@ public:
  */
 class CCryptoKeyStore : public CBasicKeyStore
 {
+friend class CHDWallet;
 private:
     CryptedKeyMap mapCryptedKeys;
 
@@ -156,7 +160,7 @@ public:
         return result;
     }
 
-    bool Lock();
+    virtual bool Lock();
 
     virtual bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);

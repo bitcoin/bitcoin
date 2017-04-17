@@ -4,12 +4,14 @@
 
 #include "data/tx_invalid.json.h"
 #include "data/tx_valid.json.h"
-#include "test/test_bitcoin.h"
+#include "test/test_particl.h"
 
 #include "clientversion.h"
 #include "checkqueue.h"
 #include "consensus/validation.h"
 #include "core_io.h"
+#include "key/extkey.h"
+#include "key/stealth.h"
 #include "key.h"
 #include "keystore.h"
 #include "validation.h" // For CheckTransaction
@@ -320,7 +322,7 @@ BOOST_AUTO_TEST_CASE(test_Get)
 {
     CBasicKeyStore keystore;
     CCoinsView coinsDummy;
-    CCoinsViewCache coins(&coinsDummy);
+    CCoinsViewCache coins(&coinsDummy, false);
     std::vector<CMutableTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);
 
     CMutableTransaction t1;
@@ -672,7 +674,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     LOCK(cs_main);
     CBasicKeyStore keystore;
     CCoinsView coinsDummy;
-    CCoinsViewCache coins(&coinsDummy);
+    CCoinsViewCache coins(&coinsDummy, false);
     std::vector<CMutableTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);
 
     CMutableTransaction t;

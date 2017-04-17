@@ -10,6 +10,8 @@
 #include "primitives/transaction.h"
 #include "serialize.h"
 
+extern bool fParticlMode;
+
 /** Undo information for a CTxIn
  *
  *  Contains the prevout's CTxOut being spent, and if this was the
@@ -20,19 +22,26 @@ class CTxInUndo
 {
 public:
     CTxOut txout;         // the txout data before being spent
+    CTxOutBaseRef txoutBase;
     bool fCoinBase;       // if the outpoint was the last unspent: whether it belonged to a coinbase
     unsigned int nHeight; // if the outpoint was the last unspent: its height
     int nVersion;         // if the outpoint was the last unspent: its version
 
     CTxInUndo() : txout(), fCoinBase(false), nHeight(0), nVersion(0) {}
     CTxInUndo(const CTxOut &txoutIn, bool fCoinBaseIn = false, unsigned int nHeightIn = 0, int nVersionIn = 0) : txout(txoutIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nVersion(nVersionIn) { }
+    
+    CTxInUndo(const CTxOutBaseRef txoutIn, bool fCoinBaseIn = false, unsigned int nHeightIn = 0, int nVersionIn = 0) : txoutBase(txoutIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nVersion(nVersionIn) { }
 
     template<typename Stream>
     void Serialize(Stream &s) const {
         ::Serialize(s, VARINT(nHeight*2+(fCoinBase ? 1 : 0)));
         if (nHeight > 0)
             ::Serialize(s, VARINT(this->nVersion));
-        ::Serialize(s, CTxOutCompressor(REF(txout)));
+        
+        if (fParticlMode)
+            ::Serialize(s, CTxOutBaseCompressor(REF(txoutBase)));
+        else
+            ::Serialize(s, CTxOutCompressor(REF(txout)));
     }
 
     template<typename Stream>
@@ -43,7 +52,11 @@ public:
         fCoinBase = nCode & 1;
         if (nHeight > 0)
             ::Unserialize(s, VARINT(this->nVersion));
-        ::Unserialize(s, REF(CTxOutCompressor(REF(txout))));
+        
+        if (fParticlMode)
+            ::Unserialize(s, REF(CTxOutBaseCompressor(txoutBase)));
+        else
+            ::Unserialize(s, REF(CTxOutCompressor(REF(txout))));
     }
 };
 

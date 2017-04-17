@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#define BOOST_TEST_MODULE Bitcoin Test Suite
+#define BOOST_TEST_MODULE Particl Test Suite
 
-#include "test_bitcoin.h"
+#include "test_particl.h"
 
 #include "chainparams.h"
 #include "consensus/consensus.h"
@@ -35,64 +35,74 @@ FastRandomContext insecure_rand_ctx(true);
 
 extern bool fPrintToConsole;
 extern void noui_connect();
+extern bool fParticlMode;
 
-BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
+
+BasicTestingSetup::BasicTestingSetup(const std::string& chainName, bool fParticlModeIn)
 {
-        ECC_Start();
-        SetupEnvironment();
-        SetupNetworking();
-        InitSignatureCache();
-        fPrintToDebugLog = false; // don't want to write to debug.log file
-        fCheckBlockIndex = true;
-        SelectParams(chainName);
-        noui_connect();
+    fParticlMode = fParticlModeIn;
+    ResetParams(fParticlMode);
+    
+    fPrintToDebugLog = false; // don't want to write to debug.log file
+    //fDebug = true;
+    //fPrintToConsole = true; // [rm], remember to comment out
+    
+    ECC_Start();
+    SetupEnvironment();
+    SetupNetworking();
+    InitSignatureCache();
+    
+    fCheckBlockIndex = true;
+    SelectParams(chainName);
+    noui_connect();
 }
 
 BasicTestingSetup::~BasicTestingSetup()
 {
-        ECC_Stop();
-        g_connman.reset();
+    ECC_Stop();
+    g_connman.reset();
 }
 
-TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)
+TestingSetup::TestingSetup(const std::string& chainName, bool fParticlModeIn) : BasicTestingSetup(chainName, fParticlModeIn)
 {
     const CChainParams& chainparams = Params();
-        // Ideally we'd move all the RPC tests to the functional testing framework
-        // instead of unit tests, but for now we need these here.
-
-        RegisterAllCoreRPCCommands(tableRPC);
-        ClearDatadirCache();
-        pathTemp = GetTempPath() / strprintf("test_bitcoin_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
-        boost::filesystem::create_directories(pathTemp);
-        ForceSetArg("-datadir", pathTemp.string());
-        mempool.setSanityCheck(1.0);
-        pblocktree = new CBlockTreeDB(1 << 20, true);
-        pcoinsdbview = new CCoinsViewDB(1 << 23, true);
-        pcoinsTip = new CCoinsViewCache(pcoinsdbview);
-        InitBlockIndex(chainparams);
-        {
-            CValidationState state;
-            bool ok = ActivateBestChain(state, chainparams);
-            BOOST_CHECK(ok);
-        }
-        nScriptCheckThreads = 3;
-        for (int i=0; i < nScriptCheckThreads-1; i++)
-            threadGroup.create_thread(&ThreadScriptCheck);
-        g_connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337)); // Deterministic randomness for tests.
-        connman = g_connman.get();
-        RegisterNodeSignals(GetNodeSignals());
+    // Ideally we'd move all the RPC tests to the functional testing framework
+    // instead of unit tests, but for now we need these here.
+    
+    RegisterAllCoreRPCCommands(tableRPC);
+    ClearDatadirCache();
+    pathTemp = GetTempPath() / strprintf("test_particl_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
+    boost::filesystem::create_directories(pathTemp);
+    ForceSetArg("-datadir", pathTemp.string());
+    mempool.setSanityCheck(1.0);
+    pblocktree = new CBlockTreeDB(1 << 20, true);
+    pcoinsdbview = new CCoinsViewDB(1 << 23, true);
+    pcoinsTip = new CCoinsViewCache(pcoinsdbview, false);
+    InitBlockIndex(chainparams);
+    {
+        CValidationState state;
+        bool ok = ActivateBestChain(state, chainparams);
+        BOOST_CHECK(ok);
+    }
+    //nScriptCheckThreads = 3; // TODO: check 
+    nScriptCheckThreads = 0;
+    for (int i=0; i < nScriptCheckThreads-1; i++)
+        threadGroup.create_thread(&ThreadScriptCheck);
+    g_connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337)); // Deterministic randomness for tests.
+    connman = g_connman.get();
+    RegisterNodeSignals(GetNodeSignals());
 }
 
 TestingSetup::~TestingSetup()
 {
-        UnregisterNodeSignals(GetNodeSignals());
-        threadGroup.interrupt_all();
-        threadGroup.join_all();
-        UnloadBlockIndex();
-        delete pcoinsTip;
-        delete pcoinsdbview;
-        delete pblocktree;
-        boost::filesystem::remove_all(pathTemp);
+    UnregisterNodeSignals(GetNodeSignals());
+    threadGroup.interrupt_all();
+    threadGroup.join_all();
+    UnloadBlockIndex();
+    delete pcoinsTip;
+    delete pcoinsdbview;
+    delete pblocktree;
+    boost::filesystem::remove_all(pathTemp);
 }
 
 TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)
@@ -156,15 +166,15 @@ CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CTransaction &txn, CTxMemPo
 
 void Shutdown(void* parg)
 {
-  exit(0);
+    exit(0);
 }
 
 void StartShutdown()
 {
-  exit(0);
+    exit(0);
 }
 
 bool ShutdownRequested()
 {
-  return false;
+    return false;
 }

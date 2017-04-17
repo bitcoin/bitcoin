@@ -92,7 +92,11 @@ static const ServiceFlags REQUIRED_SERVICES = NODE_NETWORK;
 // NOTE: When adjusting this, update rpcnet:setban's help ("24h")
 static const unsigned int DEFAULT_MISBEHAVING_BANTIME = 60 * 60 * 24;  // Default 24-hour ban
 
-typedef int64_t NodeId;
+typedef int NodeId;
+
+
+extern CCriticalSection cs_main;
+extern void DecMisbehaving(NodeId nodeid, int howmuch);
 
 struct AddedNodeInfo
 {
@@ -252,6 +256,7 @@ public:
     void AddWhitelistedRange(const CSubNet &subnet);
 
     ServiceFlags GetLocalServices() const;
+    void SetLocalServices(ServiceFlags f);
 
     //!set the max outbound target in bytes
     void SetMaxOutboundTarget(uint64_t limit);
@@ -286,7 +291,6 @@ public:
     unsigned int GetReceiveFloodSize() const;
 
     void WakeMessageHandler();
-private:
     struct ListenSocket {
         SOCKET socket;
         bool whitelisted;
@@ -370,6 +374,7 @@ private:
     std::list<CNode*> vNodesDisconnected;
     mutable CCriticalSection cs_vNodes;
     std::atomic<NodeId> nLastNodeId;
+    CMedianFilter<int> cPeerBlockCounts;
 
     /** Services this instance offers */
     ServiceFlags nLocalServices;
@@ -499,6 +504,7 @@ public:
     bool fInbound;
     bool fAddnode;
     int nStartingHeight;
+    int nChainHeight; // updated from ping messages
     uint64_t nSendBytes;
     mapMsgCmdSize mapSendBytesPerMsgCmd;
     uint64_t nRecvBytes;
@@ -557,6 +563,29 @@ public:
     int readData(const char *pch, unsigned int nBytes);
 };
 
+
+class SecMsgNode
+{
+public:
+    SecMsgNode()
+    {
+        lastSeen        = 0;
+        lastMatched     = 0;
+        ignoreUntil     = 0;
+        nWakeCounter    = 0;
+        fEnabled        = false;
+    };
+    
+    ~SecMsgNode() {};
+    
+    CCriticalSection            cs_smsg_net;
+    int64_t                     lastSeen;
+    int64_t                     lastMatched;
+    int64_t                     ignoreUntil;
+    uint32_t                    nWakeCounter;
+    bool                        fEnabled;
+    
+};
 
 /** Information about a peer */
 class CNode
@@ -628,6 +657,7 @@ protected:
 public:
     uint256 hashContinue;
     std::atomic<int> nStartingHeight;
+    std::atomic<int> nChainHeight; // updated from ping messages
 
     // flood relay
     std::vector<CAddress> vAddrToSend;
@@ -663,6 +693,8 @@ public:
     std::atomic<int64_t> nLastBlockTime;
     std::atomic<int64_t> nLastTXTime;
 
+    SecMsgNode smsgData;
+
     // Ping time measurement:
     // The pong reply we're expecting, or 0 if no pong expected.
     std::atomic<uint64_t> nPingNonceSent;
@@ -695,13 +727,12 @@ private:
     int nSendVersion;
     std::list<CNetMessage> vRecvMsg;  // Used only by SocketHandler thread
 
-    mutable CCriticalSection cs_addrName;
-    std::string addrName;
-
     CService addrLocal;
     mutable CCriticalSection cs_addrLocal;
 public:
-
+    mutable CCriticalSection cs_addrName;
+    std::string addrName;
+    
     NodeId GetId() const {
       return id;
     }

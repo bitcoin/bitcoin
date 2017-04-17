@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "key/extkey.h"
+#include "key/stealth.h"
 #include "key.h"
 #include "keystore.h"
 #include "policy/policy.h"
@@ -11,7 +13,7 @@
 #include "script/sign.h"
 #include "script/ismine.h"
 #include "uint256.h"
-#include "test/test_bitcoin.h"
+#include "test/test_particl.h"
 
 
 #include <boost/foreach.hpp>

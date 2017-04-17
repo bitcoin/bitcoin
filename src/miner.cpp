@@ -129,8 +129,6 @@ void BlockAssembler::resetBlock()
 
 std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn, bool fMineWitnessTx)
 {
-    int64_t nTimeStart = GetTimeMicros();
-
     resetBlock();
 
     pblocktemplate.reset(new CBlockTemplate());
@@ -170,11 +168,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     fIncludeWitness = IsWitnessEnabled(pindexPrev, chainparams.GetConsensus()) && fMineWitnessTx;
 
     addPriorityTxs();
-    int nPackagesSelected = 0;
-    int nDescendantsUpdated = 0;
-    addPackageTxs(nPackagesSelected, nDescendantsUpdated);
-
-    int64_t nTime1 = GetTimeMicros();
+    addPackageTxs();
 
     nLastBlockTx = nBlockTx;
     nLastBlockSize = nBlockSize;
@@ -188,12 +182,14 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
     coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
+    
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;
 
     uint64_t nSerializeSize = GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION);
-    LogPrintf("CreateNewBlock(): total size: %u block weight: %u txs: %u fees: %ld sigops %d\n", nSerializeSize, GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
+    //LogPrintf("CreateNewBlock(): total size: %u block weight: %u txs: %u fees: %ld sigops %d\n", nSerializeSize, GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
+    LogPrint("pos", "CreateNewBlock(): total size: %u block weight: %u txs: %u fees: %ld sigops %d\n", nSerializeSize, GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
 
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
@@ -201,14 +197,12 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
     pblock->nNonce         = 0;
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
-
     CValidationState state;
+    
+    if (!fParticlMode) // block won't be valid until after SignBlock
     if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false)) {
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
     }
-    int64_t nTime2 = GetTimeMicros();
-
-    LogPrint("bench", "CreateNewBlock() packages: %.2fms (%d packages, %d updated descendants), validity: %.2fms (total %.2fms)\n", 0.001 * (nTime1 - nTimeStart), nPackagesSelected, nDescendantsUpdated, 0.001 * (nTime2 - nTime1), 0.001 * (nTime2 - nTimeStart));
 
     return std::move(pblocktemplate);
 }
@@ -349,10 +343,9 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
     }
 }
 
-int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded,
+void BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded,
         indexed_modified_transaction_set &mapModifiedTx)
 {
-    int nDescendantsUpdated = 0;
     BOOST_FOREACH(const CTxMemPool::txiter it, alreadyAdded) {
         CTxMemPool::setEntries descendants;
         mempool.CalculateDescendants(it, descendants);
@@ -360,7 +353,6 @@ int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& already
         BOOST_FOREACH(CTxMemPool::txiter desc, descendants) {
             if (alreadyAdded.count(desc))
                 continue;
-            ++nDescendantsUpdated;
             modtxiter mit = mapModifiedTx.find(desc);
             if (mit == mapModifiedTx.end()) {
                 CTxMemPoolModifiedEntry modEntry(desc);
@@ -373,7 +365,6 @@ int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& already
             }
         }
     }
-    return nDescendantsUpdated;
 }
 
 // Skip entries in mapTx that are already in a block or are present
@@ -414,7 +405,7 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, CTxMemP
 // Each time through the loop, we compare the best transaction in
 // mapModifiedTxs with the next transaction in the mempool to decide what
 // transaction package to work on next.
-void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated)
+void BlockAssembler::addPackageTxs()
 {
     // mapModifiedTx will store sorted packages after they are modified
     // because some of their txs are already in the block
@@ -428,13 +419,6 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
 
     CTxMemPool::indexed_transaction_set::index<ancestor_score>::type::iterator mi = mempool.mapTx.get<ancestor_score>().begin();
     CTxMemPool::txiter iter;
-
-    // Limit the number of attempts to add transactions to the block when it is
-    // close to full; this is just a simple heuristic to finish quickly if the
-    // mempool has a lot of entries.
-    const int64_t MAX_CONSECUTIVE_FAILURES = 1000;
-    int64_t nConsecutiveFailed = 0;
-
     while (mi != mempool.mapTx.get<ancestor_score>().end() || !mapModifiedTx.empty())
     {
         // First try to find a new transaction in mapTx to evaluate.
@@ -496,14 +480,6 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
                 mapModifiedTx.get<ancestor_score>().erase(modit);
                 failedTx.insert(iter);
             }
-
-            ++nConsecutiveFailed;
-
-            if (nConsecutiveFailed > MAX_CONSECUTIVE_FAILURES && nBlockWeight >
-                    nBlockMaxWeight - 4000) {
-                // Give up if we're close to full and haven't succeeded in a while
-                break;
-            }
             continue;
         }
 
@@ -524,9 +500,6 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
             continue;
         }
 
-        // This transaction will make it in; reset the failed counter.
-        nConsecutiveFailed = 0;
-
         // Package can be added. Sort the entries in a valid order.
         std::vector<CTxMemPool::txiter> sortedEntries;
         SortForBlock(ancestors, iter, sortedEntries);
@@ -537,10 +510,8 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
             mapModifiedTx.erase(sortedEntries[i]);
         }
 
-        ++nPackagesSelected;
-
         // Update transactions that depend on each of these
-        nDescendantsUpdated += UpdatePackagesForAdded(ancestors, mapModifiedTx);
+        UpdatePackagesForAdded(ancestors, mapModifiedTx);
     }
 }
 

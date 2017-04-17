@@ -188,8 +188,10 @@ public:
 
     //! Derive BIP32 child pubkey.
     bool Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const;
+    
+    bool Derive(CPubKey& pubkeyChild, unsigned char ccChild[32], unsigned int nChild, const unsigned char cc[32]) const;
 };
-
+/*
 struct CExtPubKey {
     unsigned char nDepth;
     unsigned char vchFingerprint[4];
@@ -235,7 +237,7 @@ struct CExtPubKey {
         Decode(code);
     }
 };
-
+*/
 /** Users of this module must hold an ECCVerifyHandle. The constructor and
  *  destructor of these are not allowed to run in parallel, though. */
 class ECCVerifyHandle

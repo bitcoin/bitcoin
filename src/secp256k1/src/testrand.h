@@ -35,4 +35,7 @@ static void secp256k1_rand256_test(unsigned char *b32);
 /** Generate pseudorandom bytes with long sequences of zero and one bits. */
 static void secp256k1_rand_bytes_test(unsigned char *bytes, size_t len);
 
+/** Generate a pseudorandom 64-bit integer in the range min..max, inclusive. */
+static int64_t secp256k1_rands64(uint64_t min, uint64_t max);
+
 #endif

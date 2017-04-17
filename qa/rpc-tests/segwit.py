@@ -46,7 +46,7 @@ def create_witnessprogram(version, node, utxo, pubkey, encode_p2sh, amount):
     inputs = []
     outputs = {}
     inputs.append({ "txid" : utxo["txid"], "vout" : utxo["vout"]} )
-    DUMMY_P2SH = "2MySexEGVzZpRgNQ1JdjdP5bRETznm3roQ2" # P2SH of "OP_1 OP_DROP"
+    DUMMY_P2SH = "rCS26CDBTDXbAJ5bVb63VoTCf8vzA8Z7US" # P2SH of "OP_1 OP_DROP"
     outputs[DUMMY_P2SH] = amount
     tx_to_witness = node.createrawtransaction(inputs,outputs)
     #replace dummy output with our own
@@ -304,20 +304,20 @@ class SegWitTest(BitcoinTestFramework):
 
         # Some public keys to be used later
         pubkeys = [
-            "0363D44AABD0F1699138239DF2F042C3282C0671CC7A76826A55C8203D90E39242", # cPiM8Ub4heR9NBYmgVzJQiUH1if44GSBGiqaeJySuL2BKxubvgwb
-            "02D3E626B3E616FC8662B489C123349FECBFC611E778E5BE739B257EAE4721E5BF", # cPpAdHaD6VoYbW78kveN2bsvb45Q7G5PhaPApVUGwvF8VQ9brD97
-            "04A47F2CBCEFFA7B9BCDA184E7D5668D3DA6F9079AD41E422FA5FD7B2D458F2538A62F5BD8EC85C2477F39650BD391EA6250207065B2A81DA8B009FC891E898F0E", # 91zqCU5B9sdWxzMt1ca3VzbtVm2YM6Hi5Rxn4UDtxEaN9C9nzXV
-            "02A47F2CBCEFFA7B9BCDA184E7D5668D3DA6F9079AD41E422FA5FD7B2D458F2538", # cPQFjcVRpAUBG8BA9hzr2yEzHwKoMgLkJZBBtK9vJnvGJgMjzTbd
-            "036722F784214129FEB9E8129D626324F3F6716555B603FFE8300BBCB882151228", # cQGtcm34xiLjB1v7bkRa4V3aAc9tS2UTuBZ1UnZGeSeNy627fN66
-            "0266A8396EE936BF6D99D17920DB21C6C7B1AB14C639D5CD72B300297E416FD2EC", # cTW5mR5M45vHxXkeChZdtSPozrFwFgmEvTNnanCW6wrqwaCZ1X7K
-            "0450A38BD7F0AC212FEBA77354A9B036A32E0F7C81FC4E0C5ADCA7C549C4505D2522458C2D9AE3CEFD684E039194B72C8A10F9CB9D4764AB26FCC2718D421D3B84", # 92h2XPssjBpsJN5CqSP7v9a7cf2kgDunBC6PDFwJHMACM1rrVBJ
+            "0363D44AABD0F1699138239DF2F042C3282C0671CC7A76826A55C8203D90E39242", # 7qoenL3SuybcJJzWwsowm8DGyrt9wW6srTcRee7B8yZoz5VsnHxB
+            "02D3E626B3E616FC8662B489C123349FECBFC611E778E5BE739B257EAE4721E5BF", # 7quUH92bJpz1XdYt2JU1P1cvZCJVzVk6HKA1ppc1BZnm9WgqctJi
+            "04A47F2CBCEFFA7B9BCDA184E7D5668D3DA6F9079AD41E422FA5FD7B2D458F2538A62F5BD8EC85C2477F39650BD391EA6250207065B2A81DA8B009FC891E898F0E", # 2YqA9iT1gm6owfCm3jnCR6tRkkAwtBeiD5HzyZTt6mHWu52zBJ8
+            "02A47F2CBCEFFA7B9BCDA184E7D5668D3DA6F9079AD41E422FA5FD7B2D458F2538", # 7qVZPTwp2VeeCFcuR5pVPNyzG5YuEv1StHx2teHeYSTtxo1Mws6Z
+            "036722F784214129FEB9E8129D626324F3F6716555B603FFE8300BBCB882151228", # 7rNCGcVTB3XC79Mrs8FDQtna8kNzKG9AUvKrV7gzt6C1dCdwMkWa
+            "0266A8396EE936BF6D99D17920DB21C6C7B1AB14C639D5CD72B300297E416FD2EC", # 7ubPRGXjGR6ktfCPU5PHEr8oxzV38vRwWC9db7LELbQUbgpAypUp
+            "0450A38BD7F0AC212FEBA77354A9B036A32E0F7C81FC4E0C5ADCA7C549C4505D2522458C2D9AE3CEFD684E039194B72C8A10F9CB9D4764AB26FCC2718D421D3B84", # 2ZXMUeFiG5JAH2v5sZbGqFreseBADKGnJqRc8MBHRssM6xPA2vN
         ]
 
         # Import a compressed key and an uncompressed key, generate some multisig addresses
-        self.nodes[0].importprivkey("92e6XLo5jVAVwrQKPNTs93oQco8f8sDNBcpv73Dsrs397fQtFQn")
-        uncompressed_spendable_address = ["mvozP4UwyGD2mGZU4D2eMvMLPB9WkMmMQu"]
-        self.nodes[0].importprivkey("cNC8eQ5dg3mFAVePDX4ddmPYpPbw41r9bm2jd1nLJT77e6RrzTRR")
-        compressed_spendable_address = ["mmWQubrDomqpgSYekvsU7HWEVjLFHAakLe"]
+        self.nodes[0].importprivkey("2ZURUbAvGNdnvXFCRVg24A5wsnH4fxaNKGA928Ts1PkHsgiyrQm")
+        uncompressed_spendable_address = ["pkBDGpZxwXTAVJY5E9MskoFqnhx7f1E3aD"]
+        self.nodes[0].importprivkey("7pHSJFY1tNwi6d68UttGzB8YnXq2wFWrBVoadLv4Y6ekJD3L1iKs")
+        compressed_spendable_address = ["pasdoMwEn35xQUXFvsChWAQjuG8rEKJQW9"]
         assert ((self.nodes[0].validateaddress(uncompressed_spendable_address[0])['iscompressed'] == False))
         assert ((self.nodes[0].validateaddress(compressed_spendable_address[0])['iscompressed'] == True))
 
@@ -326,6 +326,7 @@ class SegWitTest(BitcoinTestFramework):
         self.nodes[0].importpubkey(pubkeys[1])
         compressed_solvable_address.append(key_to_p2pkh(pubkeys[1]))
         self.nodes[0].importpubkey(pubkeys[2])
+        
         uncompressed_solvable_address = [key_to_p2pkh(pubkeys[2])]
 
         spendable_anytime = []                      # These outputs should be seen anytime after importprivkey and addmultisigaddress
@@ -339,9 +340,10 @@ class SegWitTest(BitcoinTestFramework):
         uncompressed_spendable_address.append(self.nodes[0].addmultisigaddress(2, [uncompressed_spendable_address[0], uncompressed_spendable_address[0]]))
         compressed_spendable_address.append(self.nodes[0].addmultisigaddress(2, [compressed_spendable_address[0], compressed_spendable_address[0]]))
         uncompressed_solvable_address.append(self.nodes[0].addmultisigaddress(2, [compressed_spendable_address[0], uncompressed_solvable_address[0]]))
+        
         compressed_solvable_address.append(self.nodes[0].addmultisigaddress(2, [compressed_spendable_address[0], compressed_solvable_address[0]]))
         compressed_solvable_address.append(self.nodes[0].addmultisigaddress(2, [compressed_solvable_address[0], compressed_solvable_address[1]]))
-        unknown_address = ["mtKKyoHabkk6e4ppT7NaM7THqPUt7AzPrT", "2NDP3jLWAFT8NDAiUa9qiE6oBt2awmMq7Dx"]
+        unknown_address = ["phgYsZNba1zEN6oRd3hojzMoEvHV4RSHjT", "rSNQsJSqi6qXh6Q4m7C8LpeyJhX9AuvSvP"]
 
         # Test multisig_without_privkey
         # We have 2 public keys without private keys, use addmultisigaddress to add to wallet.
@@ -416,7 +418,7 @@ class SegWitTest(BitcoinTestFramework):
         op1 = CScript([OP_1])
         op0 = CScript([OP_0])
         # 2N7MGY19ti4KDMSzRfPAssP6Pxyuxoi6jLe is the P2SH(P2PKH) version of mjoE3sSrb8ByYEvgnC3Aox86u1CHnfJA4V
-        unsolvable_address = ["mjoE3sSrb8ByYEvgnC3Aox86u1CHnfJA4V", "2N7MGY19ti4KDMSzRfPAssP6Pxyuxoi6jLe", script_to_p2sh(op1), script_to_p2sh(op0)]
+        unsolvable_address = ["pZASwdXsZPS7GGuHx8NQCq2cJXztmRQJyS", "rLLdfy6aAi2NqNg1rLXHz6xBPerADifjuc", script_to_p2sh(op1), script_to_p2sh(op0)]
         unsolvable_address_key = hex_str_to_bytes("02341AEC7587A51CDE5279E0630A531AEA2615A9F80B17E8D9376327BAEAA59E3D")
         unsolvablep2pkh = CScript([OP_DUP, OP_HASH160, hash160(unsolvable_address_key), OP_EQUALVERIFY, OP_CHECKSIG])
         unsolvablep2wshp2pkh = CScript([OP_0, sha256(unsolvablep2pkh)])
@@ -495,10 +497,10 @@ class SegWitTest(BitcoinTestFramework):
 
         # Repeat some tests. This time we don't add witness scripts with importaddress
         # Import a compressed key and an uncompressed key, generate some multisig addresses
-        self.nodes[0].importprivkey("927pw6RW8ZekycnXqBQ2JS5nPyo1yRfGNN8oq74HeddWSpafDJH")
-        uncompressed_spendable_address = ["mguN2vNSCEUh6rJaXoAVwY3YZwZvEmf5xi"]
-        self.nodes[0].importprivkey("cMcrXaaUC48ZKpcyydfFo8PxHAjpsYLhdsp6nmtB3E2ER9UUHWnw")
-        compressed_spendable_address = ["n1UNmpmbVUJ9ytXYXiurmGPQ3TRrXqPWKL"]
+        self.nodes[0].importprivkey("2Yx9tLoLfT83xHdQsJcBDYNKexwRWX2GW1U2kCJGoALfCnUsLdT")
+        uncompressed_spendable_address = ["pWGavgTTAVipptHBhjVjLQx3yUNXBN5Ktt"]
+        self.nodes[0].importprivkey("7oiABS2rQPK2Fx4jF1Uu9Y8xFJxvkn1QDcawo71uGsZs5G5BGsPq")
+        compressed_spendable_address = ["ppqbfarcTjYHhvW9hfF6A9HuSzETX6g66Y"]
 
         self.nodes[0].importpubkey(pubkeys[5])
         compressed_solvable_address = [key_to_p2pkh(pubkeys[5])]
@@ -582,12 +584,12 @@ class SegWitTest(BitcoinTestFramework):
         self.create_and_mine_tx_from_txids(spendable_txid)
 
         # import all the private keys so solvable addresses become spendable
-        self.nodes[0].importprivkey("cPiM8Ub4heR9NBYmgVzJQiUH1if44GSBGiqaeJySuL2BKxubvgwb")
-        self.nodes[0].importprivkey("cPpAdHaD6VoYbW78kveN2bsvb45Q7G5PhaPApVUGwvF8VQ9brD97")
-        self.nodes[0].importprivkey("91zqCU5B9sdWxzMt1ca3VzbtVm2YM6Hi5Rxn4UDtxEaN9C9nzXV")
-        self.nodes[0].importprivkey("cPQFjcVRpAUBG8BA9hzr2yEzHwKoMgLkJZBBtK9vJnvGJgMjzTbd")
-        self.nodes[0].importprivkey("cQGtcm34xiLjB1v7bkRa4V3aAc9tS2UTuBZ1UnZGeSeNy627fN66")
-        self.nodes[0].importprivkey("cTW5mR5M45vHxXkeChZdtSPozrFwFgmEvTNnanCW6wrqwaCZ1X7K")
+        self.nodes[0].importprivkey("7qoenL3SuybcJJzWwsowm8DGyrt9wW6srTcRee7B8yZoz5VsnHxB")
+        self.nodes[0].importprivkey("7quUH92bJpz1XdYt2JU1P1cvZCJVzVk6HKA1ppc1BZnm9WgqctJi")
+        self.nodes[0].importprivkey("2YqA9iT1gm6owfCm3jnCR6tRkkAwtBeiD5HzyZTt6mHWu52zBJ8")
+        self.nodes[0].importprivkey("7qVZPTwp2VeeCFcuR5pVPNyzG5YuEv1StHx2teHeYSTtxo1Mws6Z")
+        self.nodes[0].importprivkey("7rNCGcVTB3XC79Mrs8FDQtna8kNzKG9AUvKrV7gzt6C1dCdwMkWa")
+        self.nodes[0].importprivkey("7ubPRGXjGR6ktfCPU5PHEr8oxzV38vRwWC9db7LELbQUbgpAypUp")
         self.create_and_mine_tx_from_txids(solvable_txid)
 
     def mine_and_test_listunspent(self, script_list, ismine):

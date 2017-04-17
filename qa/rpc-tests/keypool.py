@@ -21,9 +21,15 @@ class KeyPoolTest(BitcoinTestFramework):
         nodes[0].encryptwallet('test')
         bitcoind_processes[0].wait()
         # Restart node 0
-        nodes[0] = start_node(0, self.options.tmpdir)
+        nodes[0] = start_node(0, self.options.tmpdir, genfirstkey=True)
         # Keep creating keys
-        addr = nodes[0].getnewaddress()
+        
+        try:
+            addr = nodes[0].getnewaddress()
+        except JSONRPCException as e:
+            print("e.error['message']", e.error['message'])
+            assert(False)
+        
         addr_data = nodes[0].validateaddress(addr)
         wallet_info = nodes[0].getwalletinfo()
         assert(addr_before_encrypting_data['hdmasterkeyid'] != wallet_info['hdmasterkeyid'])
@@ -79,7 +85,8 @@ class KeyPoolTest(BitcoinTestFramework):
         self.num_nodes = 1
 
     def setup_network(self):
-        self.nodes = self.setup_nodes()
+        #self.nodes = self.setup_nodes()
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, genfirstkey=True)
 
 if __name__ == '__main__':
     KeyPoolTest().main()

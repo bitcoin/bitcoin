@@ -518,14 +518,27 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
             // be sure to remove any children that are in the pool. This can
             // happen during chain re-orgs if origTx isn't re-accepted into
             // the mempool for any reason.
-            for (unsigned int i = 0; i < origTx.vout.size(); i++) {
-                auto it = mapNextTx.find(COutPoint(origTx.GetHash(), i));
-                if (it == mapNextTx.end())
-                    continue;
-                txiter nextit = mapTx.find(it->second->GetHash());
-                assert(nextit != mapTx.end());
-                txToRemove.insert(nextit);
-            }
+            if (fParticlMode)
+            {
+                for (unsigned int i = 0; i < origTx.vpout.size(); i++) {
+                    auto it = mapNextTx.find(COutPoint(origTx.GetHash(), i));
+                    if (it == mapNextTx.end())
+                        continue;
+                    txiter nextit = mapTx.find(it->second->GetHash());
+                    assert(nextit != mapTx.end());
+                    txToRemove.insert(nextit);
+                }
+            } else
+            {
+                for (unsigned int i = 0; i < origTx.vout.size(); i++) {
+                    auto it = mapNextTx.find(COutPoint(origTx.GetHash(), i));
+                    if (it == mapNextTx.end())
+                        continue;
+                    txiter nextit = mapTx.find(it->second->GetHash());
+                    assert(nextit != mapTx.end());
+                    txToRemove.insert(nextit);
+                }
+            };
         }
         setEntries setAllRemoves;
         BOOST_FOREACH(txiter it, txToRemove) {
@@ -654,7 +667,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
     uint64_t checkTotal = 0;
     uint64_t innerUsage = 0;
 
-    CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(pcoins));
+    CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(pcoins), pcoins->fParticlMode);
     const int64_t nSpendHeight = GetSpendHeight(mempoolDuplicate);
 
     LOCK(cs);
@@ -677,7 +690,12 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             indexed_transaction_set::const_iterator it2 = mapTx.find(txin.prevout.hash);
             if (it2 != mapTx.end()) {
                 const CTransaction& tx2 = it2->GetTx();
-                assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
+                
+                if (fParticlMode)
+                    assert(tx2.vpout.size() > txin.prevout.n && tx2.vpout[txin.prevout.n] != nullptr && tx2.vpout[txin.prevout.n]->IsStandardOutput());
+                else
+                    assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
+                
                 fDependsWait = true;
                 if (setParentCheck.insert(it2).second) {
                     parentSizes += it2->GetTxSize();
@@ -937,13 +955,6 @@ void CTxMemPool::PrioritiseTransaction(const uint256 hash, const std::string str
             CalculateMemPoolAncestors(*it, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy, false);
             BOOST_FOREACH(txiter ancestorIt, setAncestors) {
                 mapTx.modify(ancestorIt, update_descendant_state(0, nFeeDelta, 0));
-            }
-            // Now update all descendants' modified fees with ancestors
-            setEntries setDescendants;
-            CalculateDescendants(it, setDescendants);
-            setDescendants.erase(it);
-            BOOST_FOREACH(txiter descendantIt, setDescendants) {
-                mapTx.modify(descendantIt, update_ancestor_state(0, nFeeDelta, 0, 0));
             }
         }
     }

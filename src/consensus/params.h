@@ -38,6 +38,9 @@ struct BIP9Deployment {
  */
 struct Params {
     uint256 hashGenesisBlock;
+    
+    int64_t nBlockTargetSpacing;
+    
     int nSubsidyHalvingInterval;
     /** Block height and hash at which BIP34 becomes active */
     int BIP34Height;

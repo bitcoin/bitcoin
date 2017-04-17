@@ -88,10 +88,6 @@
         <translation>Sisestatud paroolid ei kattu.</translation>
     </message>
     <message>
-        <source>Wallet unlock failed</source>
-        <translation>Rahakoti lahtilukustamine ebaõnnestus</translation>
-    </message>
-    <message>
         <source>Wallet decryption failed</source>
         <translation>Rahakoti dekrüpteerimine ebaõnnestus</translation>
     </message>
@@ -114,14 +110,6 @@
         <translation>&amp;Ülevaade</translation>
     </message>
     <message>
-        <source>Quit application</source>
-        <translation>Välju rakendusest</translation>
-    </message>
-    <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;Valikud...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Ava &amp;URI...</translation>
     </message>
@@ -138,28 +126,12 @@
         <translation>Rahakott</translation>
     </message>
     <message>
-        <source>&amp;Send</source>
-        <translation>&amp;Saada</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Näita / Peida</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;Fail</translation>
     </message>
     <message>
-        <source>&amp;Settings</source>
-        <translation>&amp;Seaded</translation>
-    </message>
-    <message>
         <source>&amp;Help</source>
         <translation>&amp;Abi</translation>
-    </message>
-    <message>
-        <source>&amp;Command-line options</source>
-        <translation>&amp;Käsurea valikud</translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -231,10 +203,6 @@
     </context>
 <context>
     <name>EditAddressDialog</name>
-    <message>
-        <source>&amp;Address</source>
-        <translation>&amp;Aadress</translation>
-    </message>
     <message>
         <source>New key generation failed.</source>
         <translation>Uue võtme genereerimine ebaõnnestus.</translation>

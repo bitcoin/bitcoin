@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "core_io.h"
+#include "key/extkey.h"
+#include "key/stealth.h"
 #include "key.h"
 #include "keystore.h"
 #include "validation.h"
@@ -11,7 +13,7 @@
 #include "script/script_error.h"
 #include "script/sign.h"
 #include "script/ismine.h"
-#include "test/test_bitcoin.h"
+#include "test/test_particl.h"
 
 #include <vector>
 
@@ -258,7 +260,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
 {
     LOCK(cs_main);
     CCoinsView coinsDummy;
-    CCoinsViewCache coins(&coinsDummy);
+    CCoinsViewCache coins(&coinsDummy, false);
     CBasicKeyStore keystore;
     CKey key[6];
     std::vector<CPubKey> keys;

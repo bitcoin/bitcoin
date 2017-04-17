@@ -28,6 +28,7 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated = NULL);
  */
 uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated = NULL);
 
+
 /*
  * Compute the Merkle branch for the tree of transactions in a block, for a
  * given position.

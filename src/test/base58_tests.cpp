@@ -13,7 +13,7 @@
 #include "uint256.h"
 #include "util.h"
 #include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
+#include "test/test_particl.h"
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
@@ -87,6 +87,14 @@ public:
     bool operator()(const CScriptID &id) const
     {
         return (exp_addrType == "script");
+    }
+    bool operator()(const CExtKeyPair &ekp) const
+    {
+        return (exp_addrType == "bip32Address");
+    }
+    bool operator()(const CStealthAddress &ekp) const
+    {
+        return (exp_addrType == "stealthaddress");
     }
     bool operator()(const CNoDestination &no) const
     {

@@ -81,10 +81,10 @@ static int AppInitRPC(int argc, char* argv[])
         std::string strUsage = strprintf(_("%s RPC client version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n";
         if (!IsArgSet("-version")) {
             strUsage += "\n" + _("Usage:") + "\n" +
-                  "  bitcoin-cli [options] <command> [params]  " + strprintf(_("Send command to %s"), _(PACKAGE_NAME)) + "\n" +
-                  "  bitcoin-cli [options] -named <command> [name=value] ... " + strprintf(_("Send command to %s (with named arguments)"), _(PACKAGE_NAME)) + "\n" +
-                  "  bitcoin-cli [options] help                " + _("List commands") + "\n" +
-                  "  bitcoin-cli [options] help <command>      " + _("Get help for a command") + "\n";
+                  "  particl-cli [options] <command> [params]  " + strprintf(_("Send command to %s"), _(PACKAGE_NAME)) + "\n" +
+                  "  particl-cli [options] -named <command> [name=value] ... " + strprintf(_("Send command to %s (with named arguments)"), _(PACKAGE_NAME)) + "\n" +
+                  "  particl-cli [options] help                " + _("List commands") + "\n" +
+                  "  particl-cli [options] help <command>      " + _("Get help for a command") + "\n";
 
             strUsage += "\n" + HelpMessageCli();
         }
@@ -282,6 +282,33 @@ int CommandLineRPC(int argc, char *argv[])
             throw std::runtime_error("too few parameters (need at least command)");
         std::string strMethod = args[0];
         args.erase(args.begin()); // Remove trailing method name from arguments vector
+        
+        
+        if (strMethod == "extkeyimportmaster"
+            || strMethod == "extkeygenesisimport")
+        {
+            std::string sTemp;
+            
+            if (args.size() == 0)
+            {
+                args.resize(1);
+                printf("Please enter a mnemonic or private extkey and press return:\n");
+                std::getline(std::cin, args[0]);
+            } else
+            {
+                if (args.size() > 0 && (args[0] == "-stdin" || args[0] == ""))
+                {
+                    printf("Please enter a mnemonic or private extkey and press return:\n");
+                    std::getline(std::cin, args[0]);
+                };
+                
+                if (args.size() > 1 && args[1] == "-stdin")
+                {
+                    printf("Please enter a passphrase and press return:\n");
+                    std::getline(std::cin, args[1]);
+                };
+            }
+        };
 
         UniValue params;
         if(GetBoolArg("-named", DEFAULT_NAMED)) {

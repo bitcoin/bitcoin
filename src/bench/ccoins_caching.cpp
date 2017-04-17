@@ -6,6 +6,8 @@
 #include "coins.h"
 #include "policy/policy.h"
 #include "wallet/crypter.h"
+#include "key/extkey.h"
+#include "key/stealth.h"
 
 #include <vector>
 
@@ -57,7 +59,7 @@ static void CCoinsCaching(benchmark::State& state)
 {
     CBasicKeyStore keystore;
     CCoinsView coinsDummy;
-    CCoinsViewCache coins(&coinsDummy);
+    CCoinsViewCache coins(&coinsDummy, false);
     std::vector<CMutableTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);
 
     CMutableTransaction t1;

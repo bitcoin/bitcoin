@@ -23,6 +23,7 @@
 #include <pthread_np.h>
 #endif
 
+
 #ifndef WIN32
 // for posix_fallocate
 #ifdef __linux__
@@ -72,10 +73,6 @@
 #include <sys/prctl.h>
 #endif
 
-#ifdef HAVE_MALLOPT_ARENA_MAX
-#include <malloc.h>
-#endif
-
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()
@@ -103,14 +100,16 @@ namespace boost {
 
 using namespace std;
 
-const char * const BITCOIN_CONF_FILENAME = "bitcoin.conf";
-const char * const BITCOIN_PID_FILENAME = "bitcoind.pid";
+const char * const BITCOIN_CONF_FILENAME = "particl.conf";
+const char * const BITCOIN_PID_FILENAME = "particl.pid";
 
 CCriticalSection cs_args;
 map<string, string> mapArgs;
 static map<string, vector<string> > _mapMultiArgs;
 const map<string, vector<string> >& mapMultiArgs = _mapMultiArgs;
 bool fDebug = false;
+bool fParticlMode = true;
+bool fParticlWallet = false;
 bool fPrintToConsole = false;
 bool fPrintToDebugLog = true;
 
@@ -392,6 +391,129 @@ bool IsArgSet(const std::string& strArg)
     return mapArgs.count(strArg);
 }
 
+namespace part
+{
+void *memrchr(const void *s, int c, size_t n)
+{
+    if (n < 1)
+        return NULL;
+    
+    unsigned char *cp = (unsigned char*) s + n;
+    
+    do {
+        if (*(--cp) == (unsigned char) c)
+            return (void*) cp;
+    } while (--n != 0);
+    
+    return NULL;
+};
+
+// memcmp_nta - memcmp that is secure against timing attacks
+// returns 0 if both areas are equal to each other, non-zero otherwise
+int memcmp_nta(const void *cs, const void *ct, size_t count)
+{
+    const unsigned char *su1, *su2;
+    int res = 0;
+    
+    for (su1 = (unsigned char*)cs, su2 = (unsigned char*)ct;
+        0 < count; ++su1, ++su2, count--)
+        res |= (*su1 ^ *su2);
+    
+    return res;
+};
+
+void ReplaceStrInPlace(std::string &subject, const std::string search, const std::string replace)
+{
+    size_t pos = 0;
+    while ((pos = subject.find(search, pos)) != std::string::npos)
+    {
+         subject.replace(pos, search.length(), replace);
+         pos += replace.length();
+    };
+};
+
+bool IsStringBoolPositive(const std::string &value)
+{
+    return (value == "+" || value == "on"  || value == "true"  || value == "1" || value == "yes");
+};
+
+bool IsStringBoolNegative(const std::string &value)
+{
+    return (value == "-" || value == "off" || value == "false" || value == "0" || value == "no" || value == "n");
+};
+
+bool GetStringBool(const std::string &value, bool &fOut)
+{
+    if (IsStringBoolPositive(value))
+    {
+        fOut = true;
+        return true;
+    };
+    
+    if (IsStringBoolNegative(value))
+    {
+        fOut = false;
+        return true;
+    };
+    
+    return false;
+};
+
+bool IsStrOnlyDigits(const std::string &s)
+{
+    return s.find_first_not_of("0123456789") == std::string::npos;
+};
+
+std::string GetTimeString(int64_t timestamp, char *buffer, size_t nBuffer)
+{
+    struct tm* dt;
+    time_t t = timestamp;
+    dt = localtime(&t);
+
+    strftime(buffer, nBuffer, "%Y-%m-%dT%H:%M:%S%z", dt); // %Z shows long strings on windows
+    return std::string(buffer); // copies the null-terminated character sequence
+};
+
+std::string BytesReadable(uint64_t nBytes)
+{
+    if (nBytes >= 1024ll*1024ll*1024ll*1024ll)
+        return strprintf("%.2f TB", nBytes/1024.0/1024.0/1024.0/1024.0);
+    if (nBytes >= 1024*1024*1024)
+        return strprintf("%.2f GB", nBytes/1024.0/1024.0/1024.0);
+    if (nBytes >= 1024*1024)
+        return strprintf("%.2f MB", nBytes/1024.0/1024.0);
+    if (nBytes >= 1024)
+        return strprintf("%.2f KB", nBytes/1024.0);
+    
+    return strprintf("%d B", nBytes);
+};
+
+static bool icompare_pred(unsigned char a, unsigned char b)
+{
+    return std::tolower(a) == std::tolower(b);
+};
+bool stringsMatchI(const std::string &sString, const std::string &sFind, int type)
+{
+    // case insensitive
+    
+    switch (type)
+    {
+        case 0: // full match
+            return sString.length() == sFind.length()
+                && std::equal(sFind.begin(), sFind.end(), sString.begin(), icompare_pred);
+        case 1: // startswith
+            return sString.length() >= sFind.length()
+                && std::equal(sFind.begin(), sFind.end(), sString.begin(), icompare_pred);
+        case 2: // endswith
+            return sString.length() >= sFind.length()
+                && std::equal(sFind.begin(), sFind.end(), sString.begin(), icompare_pred);
+    };
+    
+    return 0; // unknown type
+};
+} // namespace part
+
+
 std::string GetArg(const std::string& strArg, const std::string& strDefault)
 {
     LOCK(cs_args);
@@ -462,7 +584,7 @@ static std::string FormatException(const std::exception* pex, const char* pszThr
     char pszModule[MAX_PATH] = "";
     GetModuleFileNameA(NULL, pszModule, sizeof(pszModule));
 #else
-    const char* pszModule = "bitcoin";
+    const char* pszModule = "particl";
 #endif
     if (pex)
         return strprintf(
@@ -482,13 +604,13 @@ void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
 boost::filesystem::path GetDefaultDataDir()
 {
     namespace fs = boost::filesystem;
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Bitcoin
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Bitcoin
-    // Mac: ~/Library/Application Support/Bitcoin
-    // Unix: ~/.bitcoin
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Particl
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Particl
+    // Mac: ~/Library/Application Support/Particl
+    // Unix: ~/.particl
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Bitcoin";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "Particl";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -498,10 +620,10 @@ boost::filesystem::path GetDefaultDataDir()
         pathRet = fs::path(pszHome);
 #ifdef MAC_OSX
     // Mac
-    return pathRet / "Library/Application Support/Bitcoin";
+    return pathRet / "Library/Application Support/Particl";
 #else
     // Unix
-    return pathRet / ".bitcoin";
+    return pathRet / ".particl";
 #endif
 #endif
 }
@@ -561,7 +683,7 @@ void ReadConfigFile(const std::string& confPath)
 {
     boost::filesystem::ifstream streamConfig(GetConfigFile(confPath));
     if (!streamConfig.good())
-        return; // No bitcoin.conf file is OK
+        return; // No particl.conf file is OK
 
     {
         LOCK(cs_args);
@@ -576,6 +698,7 @@ void ReadConfigFile(const std::string& confPath)
             InterpretNegativeSetting(strKey, strValue);
             if (mapArgs.count(strKey) == 0)
                 mapArgs[strKey] = strValue;
+            
             _mapMultiArgs[strKey].push_back(strValue);
         }
     }
@@ -796,16 +919,6 @@ void RenameThread(const char* name)
 
 void SetupEnvironment()
 {
-#ifdef HAVE_MALLOPT_ARENA_MAX
-    // glibc-specific: On 32-bit systems set the number of arenas to 1.
-    // By default, since glibc 2.10, the C library will create up to two heap
-    // arenas per core. This is known to cause excessive virtual address space
-    // usage in our usage. Work around it by setting the maximum number of
-    // arenas to 1.
-    if (sizeof(void*) == 4) {
-        mallopt(M_ARENA_MAX, 1);
-    }
-#endif
     // On most POSIX systems (e.g. Linux, but not BSD) the environment's locale
     // may be invalid, in which case the "C" locale is used as fallback.
 #if !defined(WIN32) && !defined(MAC_OSX) && !defined(__FreeBSD__) && !defined(__OpenBSD__)

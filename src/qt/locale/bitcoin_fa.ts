@@ -116,10 +116,6 @@
         <translation>رمزگشایی کیف پول</translation>
     </message>
     <message>
-        <source>Change passphrase</source>
-        <translation>تغییر گذرواژه</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>تأیید رمزنگاری کیف پول</translation>
     </message>
@@ -511,10 +507,6 @@
         <translation>تأیید شده</translation>
     </message>
     <message>
-        <source>Copy address</source>
-        <translation>کپی ادرس</translation>
-    </message>
-    <message>
         <source>Copy label</source>
         <translation>کپی برچسب</translation>
     </message>
@@ -537,10 +529,6 @@
     <message>
         <source>Copy quantity</source>
         <translation>کپی تعداد</translation>
-    </message>
-    <message>
-        <source>Copy fee</source>
-        <translation>رونوشت کارمزد</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
@@ -708,10 +696,6 @@
     <message>
         <source>Form</source>
         <translation>فرم</translation>
-    </message>
-    <message>
-        <source>Unknown...</source>
-        <translation>مشخص نیست</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1345,10 +1329,6 @@
         <translation>کپی مقدار</translation>
     </message>
     <message>
-        <source>Copy fee</source>
-        <translation>رونوشت کارمزد</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(بدون برچسب)</translation>
     </message>
@@ -1534,10 +1514,6 @@
     </context>
 <context>
     <name>TransactionView</name>
-    <message>
-        <source>Copy address</source>
-        <translation>کپی ادرس</translation>
-    </message>
     <message>
         <source>Copy label</source>
         <translation>کپی برچسب</translation>

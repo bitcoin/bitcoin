@@ -43,6 +43,8 @@ public:
 
 extern const std::map<std::string, std::vector<std::string> >& mapMultiArgs;
 extern bool fDebug;
+extern bool fParticlMode;
+extern bool fParticlWallet;
 extern bool fPrintToConsole;
 extern bool fPrintToDebugLog;
 
@@ -90,6 +92,22 @@ bool error(const char* fmt, const Args&... args)
     return false;
 }
 
+template<typename... Args>
+int errorN(int n, const char *fmt, const Args&... args)
+{
+    LogPrintStr("ERROR: " + tfm::format(fmt, args...) + "\n");
+    return n;
+}
+
+template<typename... Args>
+int errorN(int n, std::string &s, const char *func, const char *fmt, const Args&... args)
+{
+    s = tfm::format(fmt, args...);
+    LogPrintStr(_("ERROR, ") + func + ":" + s + "\n");
+    return n;
+}
+
+
 void PrintExceptionContinue(const std::exception *pex, const char* pszThread);
 void ParseParameters(int argc, const char*const argv[]);
 void FileCommit(FILE *file);
@@ -110,6 +128,7 @@ void ReadConfigFile(const std::string& confPath);
 #ifdef WIN32
 boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
+
 void OpenDebugLog();
 void ShrinkDebugFile();
 void runCommand(const std::string& strCommand);
@@ -121,6 +140,22 @@ inline bool IsSwitchChar(char c)
 #else
     return c == '-';
 #endif
+}
+
+namespace part
+{
+    void *memrchr(const void *s, int c, size_t n);
+    
+    int memcmp_nta(const void *cs, const void *ct, size_t count);
+    
+    void ReplaceStrInPlace(std::string &subject, const std::string search, const std::string replace);
+    bool IsStringBoolPositive(const std::string &value);
+    bool IsStringBoolNegative(const std::string &value);
+    bool GetStringBool(const std::string &value, bool &fOut);
+    bool IsStrOnlyDigits(const std::string &s);
+    std::string GetTimeString(int64_t timestamp, char *buffer, size_t nBuffer);
+    std::string BytesReadable(uint64_t nBytes);
+    bool stringsMatchI(const std::string &sString, const std::string &sFind, int type);
 }
 
 /**
@@ -210,7 +245,7 @@ void RenameThread(const char* name);
  */
 template <typename Callable> void TraceThread(const char* name,  Callable func)
 {
-    std::string s = strprintf("bitcoin-%s", name);
+    std::string s = strprintf("particl-%s", name);
     RenameThread(s.c_str());
     try
     {

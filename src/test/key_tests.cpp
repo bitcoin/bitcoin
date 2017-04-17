@@ -9,24 +9,23 @@
 #include "uint256.h"
 #include "util.h"
 #include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
+#include "test/test_particl.h"
 
 #include <string>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
 
-static const std::string strSecret1     ("5HxWvvfubhXpYYpS3tJkw6fq9jE9j18THftkZjHHfmFiWtmAbrj");
-static const std::string strSecret2     ("5KC4ejrDjv152FGwP386VD1i2NYc5KkfSMyv1nGy1VGDxGHqVY3");
-static const std::string strSecret1C    ("Kwr371tjA9u2rFSMZjTNun2PXXP3WPZu2afRHTcta6KxEUdm1vEw");
-static const std::string strSecret2C    ("L3Hq7a8FEQwJkW1M2GNKDW28546Vp5miewcCzSqUD9kCAXrJdS3g");
-static const CBitcoinAddress addr1 ("1QFqqMUD55ZV3PJEJZtaKCsQmjLT6JkjvJ");
-static const CBitcoinAddress addr2 ("1F5y5E5FMc5YzdJtB9hLaUe43GDxEKXENJ");
-static const CBitcoinAddress addr1C("1NoJrossxPBKfCHuJXT4HadJrXRE9Fxiqs");
-static const CBitcoinAddress addr2C("1CRj2HyM1CXWzHAXLQtiGLyggNT9WQqsDs");
+static const std::string strSecret1     ("4d5dQHhGZC1Hr9CKvHtmrggLqSunivGwYtUbgjXMnf7xeTbdAj2");
+static const std::string strSecret2     ("4eKB86sahQUYKqeqFSi7Qo2Di6EF5Eu9haZm8nX38P8U5qxWKvn");
+static const std::string strSecret1C    ("GzFRfngjf5aHMuAzWDZWzJ8eYqMzp29MmkCp6NgzkXFibrh45tTc");
+static const std::string strSecret2C    ("H5hDgLvFjLcZG9jyxkUTJ28P6N5T7iMBQ79boMuaPafxXuy8hb9n");
+static const CBitcoinAddress addr1      ("PwBcySALqBWYqf75g4YRUE7U1ymGvbuThA");
+static const CBitcoinAddress addr2      ("Pn1kDJmP7i2cnu7jYeMBjVt7HWen2AvWFc");
+static const CBitcoinAddress addr1C     ("Puj5zta1iV8PTU6kg26uSbsN6mr3xSfmrt");
+static const CBitcoinAddress addr2C     ("PjMWANfUmJUanYyNhuYZRNDjvcsyMAfXy6");
 
-
-static const std::string strAddressBad("1HV9Lc3sNHZxwj4Zk6fB38tEmBryq2cBiF");
+static const std::string strAddressBad("PpQvUgk18PX2jzsR7bK2CA8J1SHobbFVMF");
 
 
 #ifdef KEY_TESTS_DUMPINFO

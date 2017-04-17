@@ -10,6 +10,7 @@
 #include "script/script.h"
 #include "serialize.h"
 
+
 class CKeyID;
 class CPubKey;
 class CScriptID;
@@ -89,15 +90,22 @@ public:
     }
 };
 
+class CTxCompressorMethods
+{
+public:
+    static uint64_t CompressAmount(uint64_t nAmount);
+    static uint64_t DecompressAmount(uint64_t nAmount);
+};
+
 /** wrapper for CTxOut that provides a more compact serialization */
-class CTxOutCompressor
+class CTxOutCompressor : public CTxCompressorMethods
 {
 private:
     CTxOut &txout;
 
 public:
-    static uint64_t CompressAmount(uint64_t nAmount);
-    static uint64_t DecompressAmount(uint64_t nAmount);
+    //static uint64_t CompressAmount(uint64_t nAmount);
+    //static uint64_t DecompressAmount(uint64_t nAmount);
 
     CTxOutCompressor(CTxOut &txoutIn) : txout(txoutIn) { }
 
@@ -115,6 +123,81 @@ public:
         }
         CScriptCompressor cscript(REF(txout.scriptPubKey));
         READWRITE(cscript);
+    }
+};
+
+/** wrapper for CTxOutBase that provides a more compact serialization */
+class CTxOutBaseCompressor: public CTxCompressorMethods
+{
+private:
+    CTxOutBaseRef &txout;
+
+public:
+
+    CTxOutBaseCompressor(CTxOutBaseRef &txoutIn) : txout(txoutIn) { }
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        if (!ser_action.ForRead())
+        {
+            if (txout == nullptr)
+            {
+                uint8_t bv = OUTPUT_NULL;
+                READWRITE(bv);
+                return;
+            };
+            
+            uint8_t bv = txout->nVersion & 0xFF;
+            READWRITE(bv);
+            
+            switch (bv)
+            {
+                case OUTPUT_STANDARD:
+                    {
+                    std::shared_ptr<CTxOutStandard> p = std::dynamic_pointer_cast<CTxOutStandard>(txout);
+                    
+                    uint64_t nVal = CompressAmount(p->nValue);
+                    READWRITE(VARINT(nVal));
+                    
+                    CScriptCompressor cscript(REF(p->scriptPubKey));
+                    READWRITE(cscript);
+                    }
+                    break;
+                
+                default:
+                    assert(false);
+            };
+        } else
+        {
+            uint8_t bv;
+            READWRITE(bv);
+            
+            switch (bv)
+            {
+                case OUTPUT_NULL:
+                    // do nothing
+                    return;
+                case OUTPUT_STANDARD:
+                    {
+                    std::shared_ptr<CTxOutStandard> p;
+                    txout = p = MAKE_OUTPUT<CTxOutStandard>();
+                    
+                    uint64_t nVal = 0;
+                    READWRITE(VARINT(nVal));
+                    p->nValue = DecompressAmount(nVal);
+                    
+                    CScriptCompressor cscript(REF(p->scriptPubKey));
+                    READWRITE(cscript);
+                    }
+                    break;
+                
+                default:
+                    assert(false);
+            };
+            txout->nVersion = bv;
+        };
     }
 };
 

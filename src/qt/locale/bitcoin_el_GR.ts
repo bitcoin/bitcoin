@@ -41,14 +41,6 @@
         <source>&amp;Delete</source>
         <translation>&amp;Διαγραφή</translation>
     </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation>Διευθύνσεις αποστολής</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation>Διευθύνσεις λήψης</translation>
-    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
@@ -70,10 +62,6 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Επανέλαβε τον νέο κωδικό πρόσβασης</translation>
-    </message>
-    <message>
-        <source>Unlock wallet</source>
-        <translation>Ξεκλειδωσε το πορτοφολι</translation>
     </message>
     </context>
 <context>

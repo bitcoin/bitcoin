@@ -95,6 +95,7 @@ UniValue getpeerinfo(const JSONRPCRequest& request)
             "    \"inbound\": true|false,     (boolean) Inbound (true) or Outbound (false)\n"
             "    \"addnode\": true|false,     (boolean) Whether connection was due to addnode and is using an addnode slot\n"
             "    \"startingheight\": n,       (numeric) The starting height (block) of the peer\n"
+            "    \"currentheight\": n,        (numeric) The current height (block) reported by the peer\n"
             "    \"banscore\": n,             (numeric) The ban score\n"
             "    \"synced_headers\": n,       (numeric) The last header we have in common with this peer\n"
             "    \"synced_blocks\": n,        (numeric) The last block we have in common with this peer\n"
@@ -102,7 +103,7 @@ UniValue getpeerinfo(const JSONRPCRequest& request)
             "       n,                        (numeric) The heights of blocks we're currently asking from this peer\n"
             "       ...\n"
             "    ],\n"
-            "    \"whitelisted\": true|false, (boolean) Whether the peer is whitelisted\n"					
+            "    \"whitelisted\": true|false, (boolean) Whether the peer is whitelisted\n"
             "    \"bytessent_per_msg\": {\n"
             "       \"addr\": n,              (numeric) The total bytes sent aggregated by message type\n"
             "       ...\n"
@@ -157,6 +158,7 @@ UniValue getpeerinfo(const JSONRPCRequest& request)
         obj.push_back(Pair("inbound", stats.fInbound));
         obj.push_back(Pair("addnode", stats.fAddnode));
         obj.push_back(Pair("startingheight", stats.nStartingHeight));
+        obj.push_back(Pair("currentheight", stats.nChainHeight));
         if (fStateStats) {
             obj.push_back(Pair("banscore", statestats.nMisbehavior));
             obj.push_back(Pair("synced_headers", statestats.nSyncHeight));
@@ -204,8 +206,8 @@ UniValue addnode(const JSONRPCRequest& request)
             "1. \"node\"     (string, required) The node (see getpeerinfo for nodes)\n"
             "2. \"command\"  (string, required) 'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once\n"
             "\nExamples:\n"
-            + HelpExampleCli("addnode", "\"192.168.0.6:8333\" \"onetry\"")
-            + HelpExampleRpc("addnode", "\"192.168.0.6:8333\", \"onetry\"")
+            + HelpExampleCli("addnode", "\"192.168.0.6:51737\" \"onetry\"")
+            + HelpExampleRpc("addnode", "\"192.168.0.6:51737\", \"onetry\"")
         );
 
     if(!g_connman)
@@ -237,14 +239,14 @@ UniValue addnode(const JSONRPCRequest& request)
 UniValue disconnectnode(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
-            "disconnectnode \"address\" \n"
+        throw runtime_error(
+            "disconnectnode \"node\" \n"
             "\nImmediately disconnects from the specified node.\n"
             "\nArguments:\n"
-            "1. \"address\"     (string, required) The IP address/port of the node\n"
+            "1. \"node\"     (string, required) The node (see getpeerinfo for nodes)\n"
             "\nExamples:\n"
-            + HelpExampleCli("disconnectnode", "\"192.168.0.6:8333\"")
-            + HelpExampleRpc("disconnectnode", "\"192.168.0.6:8333\"")
+            + HelpExampleCli("disconnectnode", "\"192.168.0.6:51737\"")
+            + HelpExampleRpc("disconnectnode", "\"192.168.0.6:51737\"")
         );
 
     if(!g_connman)
@@ -273,7 +275,7 @@ UniValue getaddednodeinfo(const JSONRPCRequest& request)
             "    \"connected\" : true|false,          (boolean) If connected\n"
             "    \"addresses\" : [                    (list of objects) Only when connected = true\n"
             "       {\n"
-            "         \"address\" : \"192.168.0.201:8333\",  (string) The bitcoin server IP and port we're connected to\n"
+            "         \"address\" : \"192.168.0.201:51737\", (string) The particl server IP and port we're connected to\n"
             "         \"connected\" : \"outbound\"           (string) connection, inbound or outbound\n"
             "       }\n"
             "     ]\n"
@@ -609,7 +611,7 @@ static const CRPCCommand commands[] =
     { "network",            "ping",                   &ping,                   true,  {} },
     { "network",            "getpeerinfo",            &getpeerinfo,            true,  {} },
     { "network",            "addnode",                &addnode,                true,  {"node","command"} },
-    { "network",            "disconnectnode",         &disconnectnode,         true,  {"address"} },
+    { "network",            "disconnectnode",         &disconnectnode,         true,  {"node"} },
     { "network",            "getaddednodeinfo",       &getaddednodeinfo,       true,  {"node"} },
     { "network",            "getnettotals",           &getnettotals,           true,  {} },
     { "network",            "getnetworkinfo",         &getnetworkinfo,         true,  {} },

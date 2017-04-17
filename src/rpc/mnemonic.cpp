@@ -1,0 +1,304 @@
+// Copyright (c) 2015 The ShadowCoin developers
+// Copyright (c) 2017 The Particl developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include "rpc/server.h"
+
+#include <string>
+
+#include "util.h"
+#include "utilstrencodings.h"
+#include "key.h"
+#include "key/extkey.h"
+#include "base58.h"
+#include "random.h"
+#include "chainparams.h"
+#include "support/cleanse.h"
+#include "key/mnemonic.h"
+
+#include <univalue.h>
+
+//typedef std::basic_string<char, std::char_traits<char>, secure_allocator<char> > SecureString;
+
+static const char *planguages = "\nenglish\nfrench\njapanese\nspanish\nchinese_s\nchinese_t\n";
+
+int GetLanguageOffset(std::string sIn)
+{
+    int nLanguage = -1;
+    std::transform(sIn.begin(), sIn.end(), sIn.begin(), ::tolower);
+    
+    if (GetWordOffset(sIn.c_str(), planguages, strlen(planguages), nLanguage) != 0)
+        throw std::runtime_error("Unknown language.");
+    
+    if (nLanguage < 1 || nLanguage >= WLL_MAX)
+        throw std::runtime_error("Unknown language.");
+    
+    return nLanguage;
+};
+
+UniValue mnemonic(const JSONRPCRequest &request)
+{
+    static const char *help = ""
+        "mnemonic <new|decode|addchecksum>\n" 
+        "mnemonic new [password] [language] [nBytesEntropy] [bip44]\n"
+        "    Generate a new extended key and mnemonic\n"
+        "    password, can be blank "", default blank\n"
+        "    language, english|french|japanese|spanish|chinese_s|chinese_t, default english\n"
+        "    nBytesEntropy, 16 -> 64, default 32\n"
+        "    bip44, true|false, default true\n"
+        "mnemonic decode <password> <mnemonic> [bip44]\n"
+        "    Decode mnemonic\n"
+        "    bip44, true|false, default true\n"
+        "mnemonic addchecksum <mnemonic>\n"
+        "    Add checksum words to mnemonic.\n"
+        "    Final no of words in mnemonic must be divisible by three.\n"
+        "mnemonic dumpwords [language]\n"
+        "    Print list of words.\n"
+        "    language, default english\n"
+         "mnemonic listlanguages\n"
+        "    Print list of supported languages.\n"
+        "\n";
+    
+    if (request.fHelp || request.params.size() > 5) // defaults to info, will always take at least 1 parameter
+        throw std::runtime_error(help);
+    
+    std::string mode = "";
+    
+    if (request.params.size() > 0)
+    {
+        std::string s = request.params[0].get_str();
+        std::string st = " " + s + " "; // Note the spaces
+        std::transform(st.begin(), st.end(), st.begin(), ::tolower);
+        static const char *pmodes = " new decode addchecksum dumpwords listlanguages ";
+        if (strstr(pmodes, st.c_str()) != NULL)
+        {
+            st.erase(std::remove(st.begin(), st.end(), ' '), st.end());
+            mode = st;
+        } else
+        {
+            throw std::runtime_error("Unknown mode.");
+        };
+    };
+    
+    
+    
+    UniValue result(UniValue::VOBJ);
+    
+    if (mode == "new")
+    {
+        int nLanguage = WLL_ENGLISH;
+        int nBytesEntropy = 32;
+        bool fBip44 = true;
+        std::string sPassword = "";
+        std::string sError;
+        
+        if (request.params.size() > 1)
+            sPassword = request.params[1].get_str();
+        
+        if (request.params.size() > 2)
+            nLanguage = GetLanguageOffset(request.params[2].get_str());
+        
+        if (request.params.size() > 3)
+        {
+            std::stringstream sstr(request.params[3].get_str());
+            
+            sstr >> nBytesEntropy;
+            if (!sstr)
+                throw std::runtime_error("Invalid num bytes entropy");
+            
+            if (nBytesEntropy < 16 || nBytesEntropy > 64)
+                throw std::runtime_error("Num bytes entropy out of range [16,64].");
+        };
+        
+        if (request.params.size() > 4)
+        {
+            std::string s = request.params[4].get_str();
+            
+            if (!part::GetStringBool(s, fBip44))
+                throw std::runtime_error("Unknown argument for bip44 flag.");
+        };
+        
+        if (request.params.size() > 5)
+            throw std::runtime_error("Too many parameters");
+        
+        std::vector<uint8_t> vEntropy;
+        std::vector<uint8_t> vSeed;
+        vEntropy.resize(nBytesEntropy);
+        
+        std::string sMnemonic;
+        CExtKey ekMaster;
+        
+        for (uint32_t i = 0; i < MAX_DERIVE_TRIES; ++i)
+        {
+            GetStrongRandBytes2(&vEntropy[0], nBytesEntropy);
+            
+            if (0 != MnemonicEncode(nLanguage, vEntropy, sMnemonic, sError))
+                throw std::runtime_error(strprintf("MnemonicEncode failed %s.", sError.c_str()).c_str());
+            
+            if (0 != MnemonicToSeed(sMnemonic, sPassword, vSeed))
+                throw std::runtime_error("MnemonicToSeed failed.");
+            
+            ekMaster.SetMaster(&vSeed[0], vSeed.size());
+            
+            if (!ekMaster.IsValid())
+                continue;
+            break;
+        };
+        
+        CExtKey58 eKey58;
+        result.push_back(Pair("mnemonic", sMnemonic));
+        
+        if (fBip44)
+        {
+            eKey58.SetKey(ekMaster, CChainParams::EXT_SECRET_KEY_BTC);
+            result.push_back(Pair("master", eKey58.ToString()));
+            
+            // m / purpose' / coin_type' / account' / change / address_index
+            // path "44' Params().BIP44ID()
+        } else
+        {
+            eKey58.SetKey(ekMaster, CChainParams::EXT_SECRET_KEY);
+            result.push_back(Pair("master", eKey58.ToString()));
+        };
+        
+        // - in c++11 strings are definitely contiguous, and before they're very unlikely not to be
+        memory_cleanse(&sMnemonic[0], sMnemonic.size());
+        memory_cleanse(&sPassword[0], sPassword.size());
+    } else
+    if (mode == "decode")
+    {
+        bool fBip44 = true;
+        std::string sPassword;
+        std::string sMnemonic;
+        std::string sError;
+        
+        if (request.params.size() > 1)
+            sPassword = request.params[1].get_str();
+        else
+            throw std::runtime_error("Must specify password.");
+        
+        if (request.params.size() > 2)
+            sMnemonic = request.params[2].get_str();
+        else
+            throw std::runtime_error("Must specify mnemonic.");
+        
+        if (request.params.size() > 3)
+        {
+            if (!part::GetStringBool(request.params[3].get_str(), fBip44))
+                throw std::runtime_error("Unknown argument for bip44 flag.");
+        };
+        
+        if (request.params.size() > 4)
+            throw std::runtime_error("Too many parameters");
+        
+        if (sMnemonic.empty())
+            throw std::runtime_error("Mnemonic can't be blank.");
+        
+        std::vector<uint8_t> vEntropy;
+        std::vector<uint8_t> vSeed;
+        
+        // - decode to determine validity of mnemonic
+        if (0 != MnemonicDecode(-1, sMnemonic, vEntropy, sError))
+            throw std::runtime_error(strprintf("MnemonicDecode failed %s.", sError.c_str()).c_str());
+        
+        if (0 != MnemonicToSeed(sMnemonic, sPassword, vSeed))
+            throw std::runtime_error("MnemonicToSeed failed.");
+        
+        CExtKey ekMaster;
+        CExtKey58 eKey58;
+        ekMaster.SetMaster(&vSeed[0], vSeed.size());
+        
+        if (!ekMaster.IsValid())
+            throw std::runtime_error("Invalid key.");
+        
+        if (fBip44)
+        {
+            eKey58.SetKey(ekMaster, CChainParams::EXT_SECRET_KEY_BTC);
+            result.push_back(Pair("master", eKey58.ToString()));
+            
+            // m / purpose' / coin_type' / account' / change / address_index
+            CExtKey ekDerived;
+            ekMaster.Derive(ekDerived, BIP44_PURPOSE);
+            ekDerived.Derive(ekDerived, Params().BIP44ID());
+            
+            eKey58.SetKey(ekDerived, CChainParams::EXT_SECRET_KEY);
+            result.push_back(Pair("derived", eKey58.ToString()));
+        } else
+        {
+            eKey58.SetKey(ekMaster, CChainParams::EXT_SECRET_KEY);
+            result.push_back(Pair("master", eKey58.ToString()));
+        };
+        
+        // - in c++11 strings are definitely contiguous, and before they're very unlikely not to be
+        memory_cleanse(&sMnemonic[0], sMnemonic.size());
+        memory_cleanse(&sPassword[0], sPassword.size());
+    } else
+    if (mode == "addchecksum")
+    {
+        std::string sMnemonicIn;
+        std::string sMnemonicOut;
+        std::string sError;
+        if (request.params.size() != 2)
+            throw std::runtime_error("Must provide input mnemonic.");
+            
+        sMnemonicIn = request.params[1].get_str();
+        
+        if (0 != MnemonicAddChecksum(-1, sMnemonicIn, sMnemonicOut, sError))
+            throw std::runtime_error(strprintf("MnemonicAddChecksum failed %s", sError.c_str()).c_str());
+        result.push_back(Pair("result", sMnemonicOut));
+    } else
+    if (mode == "dumpwords")
+    {
+        int nLanguage = WLL_ENGLISH;
+        
+        if (request.params.size() > 1)
+            nLanguage = GetLanguageOffset(request.params[1].get_str());
+        
+        int nWords = 0;
+        UniValue arrayWords(UniValue::VARR);
+        
+        std::string sWord, sError;
+        while (0 == MnemonicGetWord(nLanguage, nWords, sWord, sError))
+        {
+            arrayWords.push_back(sWord);
+            nWords++;
+        };
+        
+        result.push_back(Pair("words", arrayWords));
+        result.push_back(Pair("num_words", nWords));
+    } else
+    if (mode == "listlanguages")
+    {
+        size_t nNamesLen = strlen(planguages);
+        for (size_t k = 1; k < WLL_MAX; ++k)
+        {
+            std::string sName;
+            if (0 != GetWord(k, planguages, nNamesLen, sName))
+                throw std::runtime_error("GetWord failed.");
+            
+            std::string sDesc(mnLanguagesDesc[k]);
+            result.push_back(Pair(sName, sDesc));
+        }
+    } else
+    {
+        throw std::runtime_error(help);
+    };
+    
+    return result;
+};
+
+static const CRPCCommand commands[] =
+{ //  category              name                      actor (function)         okSafeMode
+  //  --------------------- ------------------------  -----------------------  ----------
+    { "mnemonic",           "mnemonic",               &mnemonic,               true,  {} },
+
+    /* Not shown in help */
+    //{ "hidden",             "setmocktime",            &setmocktime,            true  },
+};
+
+void RegisterMnemonicRPCCommands(CRPCTable &tableRPC)
+{
+    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
+        tableRPC.appendCommand(commands[vcidx].name, &commands[vcidx]);
+}

@@ -184,22 +184,44 @@ bool CBlockTreeDB::LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256
             if (pcursor->GetValue(diskindex)) {
                 // Construct block index object
                 CBlockIndex* pindexNew = insertBlockIndex(diskindex.GetBlockHash());
-                pindexNew->pprev          = insertBlockIndex(diskindex.hashPrev);
-                pindexNew->nHeight        = diskindex.nHeight;
-                pindexNew->nFile          = diskindex.nFile;
-                pindexNew->nDataPos       = diskindex.nDataPos;
-                pindexNew->nUndoPos       = diskindex.nUndoPos;
-                pindexNew->nVersion       = diskindex.nVersion;
-                pindexNew->hashMerkleRoot = diskindex.hashMerkleRoot;
-                pindexNew->nTime          = diskindex.nTime;
-                pindexNew->nBits          = diskindex.nBits;
-                pindexNew->nNonce         = diskindex.nNonce;
-                pindexNew->nStatus        = diskindex.nStatus;
-                pindexNew->nTx            = diskindex.nTx;
-
+                pindexNew->pprev                    = insertBlockIndex(diskindex.hashPrev);
+                pindexNew->nHeight                  = diskindex.nHeight;
+                pindexNew->nFile                    = diskindex.nFile;
+                pindexNew->nDataPos                 = diskindex.nDataPos;
+                pindexNew->nUndoPos                 = diskindex.nUndoPos;
+                pindexNew->nVersion                 = diskindex.nVersion;
+                pindexNew->hashMerkleRoot           = diskindex.hashMerkleRoot;
+                pindexNew->hashWitnessMerkleRoot    = diskindex.hashWitnessMerkleRoot;
+                pindexNew->nTime                    = diskindex.nTime;
+                pindexNew->nBits                    = diskindex.nBits;
+                pindexNew->nNonce                   = diskindex.nNonce;
+                pindexNew->nStatus                  = diskindex.nStatus;
+                pindexNew->nTx                      = diskindex.nTx;
+                
+                pindexNew->nFlags                   = diskindex.nFlags;
+                pindexNew->bnStakeModifier          = diskindex.bnStakeModifier;
+                pindexNew->prevoutStake             = diskindex.prevoutStake;
+                //pindexNew->nStakeTime               = diskindex.nStakeTime;
+                //pindexNew->hashProof                = diskindex.hashProof;
+        
+                pindexNew->nMoneySupply             = diskindex.nMoneySupply;
+        
+                
+                if (pindexNew->nHeight == 0
+                    && pindexNew->GetBlockHash() != Params().GetConsensus().hashGenesisBlock)
+                    return error("LoadBlockIndex(): Genesis block hash incorrect: %s", pindexNew->ToString());
+                
+                if (fParticlMode)
+                {
+                    // only CheckProofOfWork for genesis blocks
+                    if (diskindex.hashPrev.IsNull() && !CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, Params().GetConsensus()))
+                        return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
+                } else
                 if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, Params().GetConsensus()))
+                {
                     return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
-
+                };
+                
                 pcursor->Next();
             } else {
                 return error("LoadBlockIndex() : failed to read value");

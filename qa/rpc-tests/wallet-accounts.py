@@ -21,7 +21,7 @@ class WalletAccountsTest(BitcoinTestFramework):
         self.node_args = [[]]
 
     def setup_network(self):
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.node_args)
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.node_args, genfirstkey=True)
         self.is_network_split = False
 
     def run_test (self):

@@ -12,6 +12,7 @@
 
 #include <secp256k1.h>
 #include <secp256k1_recovery.h>
+#include <secp256k1_ecdh.h>
 
 static secp256k1_context* secp256k1_context_sign = NULL;
 
@@ -165,6 +166,15 @@ CPubKey CKey::GetPubKey() const {
     return result;
 }
 
+uint256 CKey::ECDH(const CPubKey& pubkey) const {
+    assert(fValid);
+    uint256 result;
+    secp256k1_pubkey pkey;
+    assert(secp256k1_ec_pubkey_parse(secp256k1_context_sign, &pkey, pubkey.begin(), pubkey.size()));
+    assert(secp256k1_ecdh(secp256k1_context_sign, result.begin(), &pkey, begin()));
+    return result;
+}
+
 bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, uint32_t test_case) const {
     if (!fValid)
         return false;
@@ -241,7 +251,32 @@ bool CKey::Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const
     return ret;
 }
 
-bool CExtKey::Derive(CExtKey &out, unsigned int _nChild) const {
+bool CKey::Derive(CKey& keyChild, unsigned char ccChild[32], unsigned int nChild, const unsigned char cc[32]) const
+{
+    assert(IsValid());
+    assert(IsCompressed());
+    std::vector<unsigned char, secure_allocator<unsigned char>> vout(64);
+    if ((nChild >> 31) == 0)
+    {
+        CPubKey pubkey = GetPubKey();
+        assert(pubkey.begin() + 33 == pubkey.end());
+        BIP32Hash(cc, nChild, *pubkey.begin(), pubkey.begin()+1, vout.data());
+    } else
+    {
+        assert(begin() + 32 == end());
+        BIP32Hash(cc, nChild, 0, begin(), vout.data());
+    };
+    
+    memcpy(ccChild, vout.data()+32, 32);
+    //bool ret = TweakSecret((unsigned char*)keyChild.begin(), begin(), out);
+    memcpy((unsigned char*)keyChild.begin(), begin(), 32);
+    bool ret = secp256k1_ec_privkey_tweak_add(secp256k1_context_sign, (unsigned char*)keyChild.begin(), vout.data());
+    keyChild.fCompressed = true;
+    keyChild.fValid = ret;
+    return ret;
+}
+/*
+bool CExtKey::Derive(CExtKey &out, unsigned int nChild) const {
     out.nDepth = nDepth + 1;
     CKeyID id = key.GetPubKey().GetID();
     memcpy(&out.vchFingerprint[0], &id, 4);
@@ -288,7 +323,7 @@ void CExtKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
     memcpy(chaincode.begin(), code+9, 32);
     key.Set(code+42, code+BIP32_EXTKEY_SIZE, true);
 }
-
+*/
 bool ECC_InitSanityCheck() {
     CKey key;
     key.MakeNewKey(true);

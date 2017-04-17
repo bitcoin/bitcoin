@@ -14,6 +14,15 @@
 
 #include <vector>
 
+enum eBlockFlags
+{
+    BLOCK_PROOF_OF_STAKE            = (1 << 0), // is proof-of-stake block
+    BLOCK_STAKE_ENTROPY             = (1 << 1), // entropy bit for stake modifier
+    BLOCK_STAKE_MODIFIER            = (1 << 2), // regenerated stake modifier
+    
+    BLOCK_FAILED_DUPLICATE_STAKE    = (1 << 3),
+};
+
 class CBlockFileInfo
 {
 public:
@@ -188,6 +197,18 @@ public:
     //! This value will be non-zero only if and only if transactions for this block and all its parents are available.
     //! Change to 64-bit type when necessary; won't happen before 2030
     unsigned int nChainTx;
+    
+    
+    // proof-of-stake specific fields
+    unsigned int nFlags;  // pos: block index flags
+    uint256 bnStakeModifier; // hash modifier for proof-of-stake
+    COutPoint prevoutStake;
+    //unsigned int nStakeTime;
+    //uint256 hashProof;
+    
+    CAmount nMoneySupply;
+    
+    
 
     //! Verification status of this block. See enum BlockStatus
     unsigned int nStatus;
@@ -195,6 +216,7 @@ public:
     //! block header
     int nVersion;
     uint256 hashMerkleRoot;
+    uint256 hashWitnessMerkleRoot;
     unsigned int nTime;
     unsigned int nBits;
     unsigned int nNonce;
@@ -220,12 +242,21 @@ public:
         nStatus = 0;
         nSequenceId = 0;
         nTimeMax = 0;
+        
+        nFlags = 0;
+        bnStakeModifier = uint256();
+        prevoutStake.SetNull();
+        //nStakeTime = 0;
+        //hashProof = uint256();
+        
+        nMoneySupply = 0;
 
-        nVersion       = 0;
-        hashMerkleRoot = uint256();
-        nTime          = 0;
-        nBits          = 0;
-        nNonce         = 0;
+        nVersion                = 0;
+        hashMerkleRoot          = uint256();
+        hashWitnessMerkleRoot   = uint256();
+        nTime                   = 0;
+        nBits                   = 0;
+        nNonce                  = 0;
     }
 
     CBlockIndex()
@@ -237,11 +268,12 @@ public:
     {
         SetNull();
 
-        nVersion       = block.nVersion;
-        hashMerkleRoot = block.hashMerkleRoot;
-        nTime          = block.nTime;
-        nBits          = block.nBits;
-        nNonce         = block.nNonce;
+        nVersion                = block.nVersion;
+        hashMerkleRoot          = block.hashMerkleRoot;
+        hashWitnessMerkleRoot   = block.hashWitnessMerkleRoot;
+        nTime                   = block.nTime;
+        nBits                   = block.nBits;
+        nNonce                  = block.nNonce;
     }
 
     CDiskBlockPos GetBlockPos() const {
@@ -265,13 +297,14 @@ public:
     CBlockHeader GetBlockHeader() const
     {
         CBlockHeader block;
-        block.nVersion       = nVersion;
+        block.nVersion              = nVersion;
         if (pprev)
-            block.hashPrevBlock = pprev->GetBlockHash();
-        block.hashMerkleRoot = hashMerkleRoot;
-        block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
+            block.hashPrevBlock     = pprev->GetBlockHash();
+        block.hashMerkleRoot        = hashMerkleRoot;
+        block.hashWitnessMerkleRoot = hashWitnessMerkleRoot;
+        block.nTime                 = nTime;
+        block.nBits                 = nBits;
+        block.nNonce                = nNonce;
         return block;
     }
 
@@ -289,6 +322,40 @@ public:
     {
         return (int64_t)nTimeMax;
     }
+    
+    int64_t GetPastTimeLimit() const
+    {
+        return GetBlockTime();
+    }
+    
+    bool IsProofOfWork() const
+    {
+        return !(nFlags & BLOCK_PROOF_OF_STAKE);
+    }
+
+    bool IsProofOfStake() const
+    {
+        return (nFlags & BLOCK_PROOF_OF_STAKE);
+    }
+
+    void SetProofOfStake()
+    {
+        nFlags |= BLOCK_PROOF_OF_STAKE;
+    }
+
+    unsigned int GetStakeEntropyBit() const
+    {
+        return ((nFlags & BLOCK_STAKE_ENTROPY) >> 1);
+    }
+
+    bool SetStakeEntropyBit(unsigned int nEntropyBit)
+    {
+        if (nEntropyBit > 1)
+            return false;
+        nFlags |= (nEntropyBit? BLOCK_STAKE_ENTROPY : 0);
+        return true;
+    }
+    
 
     enum { nMedianTimeSpan=11 };
 
@@ -380,11 +447,23 @@ public:
             READWRITE(VARINT(nDataPos));
         if (nStatus & BLOCK_HAVE_UNDO)
             READWRITE(VARINT(nUndoPos));
+        
+        
+        READWRITE(nFlags);
+        READWRITE(bnStakeModifier);
+        READWRITE(prevoutStake);
+        //READWRITE(nStakeTime);
+        //READWRITE(hashProof);
+        READWRITE(nMoneySupply);
+        
 
         // block header
         READWRITE(this->nVersion);
         READWRITE(hashPrev);
         READWRITE(hashMerkleRoot);
+        // NOTE: Careful matching the version, qa tests use different versions
+        if (this->nVersion == PARTICL_BLOCK_VERSION)
+            READWRITE(hashWitnessMerkleRoot);
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
@@ -393,12 +472,13 @@ public:
     uint256 GetBlockHash() const
     {
         CBlockHeader block;
-        block.nVersion        = nVersion;
-        block.hashPrevBlock   = hashPrev;
-        block.hashMerkleRoot  = hashMerkleRoot;
-        block.nTime           = nTime;
-        block.nBits           = nBits;
-        block.nNonce          = nNonce;
+        block.nVersion              = nVersion;
+        block.hashPrevBlock         = hashPrev;
+        block.hashMerkleRoot        = hashMerkleRoot;
+        block.hashWitnessMerkleRoot = hashWitnessMerkleRoot;
+        block.nTime                 = nTime;
+        block.nBits                 = nBits;
+        block.nNonce                = nNonce;
         return block.GetHash();
     }
 

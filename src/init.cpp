@@ -38,8 +38,10 @@
 #include "util.h"
 #include "utilmoneystr.h"
 #include "validationinterface.h"
+#include "smsg/smessage.h"
+#include "pos/miner.h"
 #ifdef ENABLE_WALLET
-#include "wallet/wallet.h"
+#include "wallet/hdwallet.h"
 #endif
 #include "warnings.h"
 #include <stdint.h>
@@ -192,14 +194,18 @@ void Shutdown()
     /// for example if the data directory was found to be locked.
     /// Be sure that anything that writes files or flushes caches only does this if the respective
     /// module was initialized.
-    RenameThread("bitcoin-shutoff");
+    RenameThread("particl-shutoff");
     mempool.AddTransactionsUpdated(1);
-
+    
+    
     StopHTTPRPC();
     StopREST();
     StopRPC();
     StopHTTPServer();
+    SecureMsgShutdown();
 #ifdef ENABLE_WALLET
+    ShutdownThreadStakeMiner();
+    
     if (pwalletMain)
         pwalletMain->Flush(false);
 #endif
@@ -265,6 +271,7 @@ void Shutdown()
 #endif
     globalVerifyHandle.reset();
     ECC_Stop();
+    ECC_Stop_Stealth();
     LogPrintf("%s: done\n", __func__);
 }
 
@@ -360,6 +367,8 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-txindex", strprintf(_("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)"), DEFAULT_TXINDEX));
 
     strUsage += HelpMessageGroup(_("Connection options:"));
+    
+    strUsage += HelpMessageOpt("-findpeers", _("Node will search for peers (default: 1)"));
     strUsage += HelpMessageOpt("-addnode=<ip>", _("Add a node to connect to and attempt to keep the connection open"));
     strUsage += HelpMessageOpt("-banscore=<n>", strprintf(_("Threshold for disconnecting misbehaving peers (default: %u)"), DEFAULT_BANSCORE_THRESHOLD));
     strUsage += HelpMessageOpt("-bantime=<n>", strprintf(_("Number of seconds to keep misbehaving peers from reconnecting (default: %u)"), DEFAULT_MISBEHAVING_BANTIME));
@@ -500,14 +509,21 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE));
         strUsage += HelpMessageOpt("-rpcservertimeout=<n>", strprintf("Timeout during HTTP requests (default: %d)", DEFAULT_HTTP_SERVER_TIMEOUT));
     }
-
+    
+#ifdef ENABLE_WALLET
+    strUsage += "  -staking                 " + _("Stake your coins to support network and gain reward (default: 1)") + "\n";
+    strUsage += "  -minstakeinterval=<n>    " + _("Minimum time in seconds between successful stakes (default: 30)") + "\n";
+    strUsage += "  -minersleep=<n>          " + _("Milliseconds between stake attempts. Lowering this param will not result in more stakes. (default: 500)") + "\n";
+    strUsage += "  -reservebalance=<amount> " + _("Ensure available balance remains above reservebalance. (default: 0)") + "\n";
+#endif
+    
     return strUsage;
 }
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/bitcoin/bitcoin>";
-    const std::string URL_WEBSITE = "<https://bitcoincore.org>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/particl/particl-core>";
+    const std::string URL_WEBSITE = "<https://particl.io/>";
 
     return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2009, COPYRIGHT_YEAR) + " ") + "\n" +
            "\n" +
@@ -610,7 +626,7 @@ void CleanupBlockRevFiles()
 void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
 {
     const CChainParams& chainparams = Params();
-    RenameThread("bitcoin-loadblk");
+    RenameThread("particl-loadblk");
 
     {
     CImportingNow imp;
@@ -660,7 +676,12 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
             LogPrintf("Warning: Could not open blocks file %s\n", path.string());
         }
     }
-
+    
+    } // End scope of CImportingNow (set fImporting to false)
+    
+    assert(fImporting == false);
+    assert(fReindex == false);
+    
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
     CValidationState state;
     if (!ActivateBestChain(state, chainparams)) {
@@ -672,7 +693,7 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
         LogPrintf("Stopping after block import\n");
         StartShutdown();
     }
-    } // End scope of CImportingNow
+    
     LoadMempool();
     fDumpMempoolLater = !fRequestShutdown;
 }
@@ -788,7 +809,7 @@ void InitLogging()
     fLogIPs = GetBoolArg("-logips", DEFAULT_LOGIPS);
 
     LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    LogPrintf("Bitcoin version %s\n", FormatFullVersion());
+    LogPrintf("Particl version %s\n", FormatFullVersion());
 }
 
 namespace { // Variables internal to initialization process only
@@ -903,7 +924,8 @@ bool AppInitParameterInteraction()
         InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
 
     // ********************************************************* Step 3: parameter-to-internal-flags
-
+    
+    fParticlMode = !GetBoolArg("-genfirstkey", false); // qa tests
     fDebug = mapMultiArgs.count("-debug");
     // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
     if (fDebug) {
@@ -911,6 +933,11 @@ bool AppInitParameterInteraction()
         if (GetBoolArg("-nodebug", false) || find(categories.begin(), categories.end(), std::string("0")) != categories.end())
             fDebug = false;
     }
+    
+    if (fDebug) {
+        SoftSetBoolArg("-debugsmsg", true);
+    }
+    fDebugSmsg = GetBoolArg("-debugsmsg", false);
 
     // Check for -debugnet
     if (GetBoolArg("-debugnet", false))
@@ -930,7 +957,10 @@ bool AppInitParameterInteraction()
 
     if (IsArgSet("-blockminsize"))
         InitWarning("Unsupported argument -blockminsize ignored.");
-
+    
+    nMinStakeInterval = GetArg("-minstakeinterval", 0);
+    nMinerSleep = GetArg("-minersleep", 500);
+    
     // Checkmempool and checkblockindex default to true in regtest mode
     int ratio = std::min<int>(std::max<int>(GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
     if (ratio != 0) {
@@ -959,7 +989,11 @@ bool AppInitParameterInteraction()
             return InitError(AmountErrMsg("incrementalrelayfee", GetArg("-incrementalrelayfee", "")));
         incrementalRelayFee = CFeeRate(n);
     }
-
+    
+    /*
+    TODO: Confirm control.Wait() is functioning correctly.
+    std::vector<PrecomputedTransactionData> txdata going out of scope before thread ends!?
+    
     // -par=0 means autodetect, but nScriptCheckThreads==0 means no concurrency
     nScriptCheckThreads = GetArg("-par", DEFAULT_SCRIPTCHECK_THREADS);
     if (nScriptCheckThreads <= 0)
@@ -968,7 +1002,9 @@ bool AppInitParameterInteraction()
         nScriptCheckThreads = 0;
     else if (nScriptCheckThreads > MAX_SCRIPTCHECK_THREADS)
         nScriptCheckThreads = MAX_SCRIPTCHECK_THREADS;
-
+    */
+    
+    
     // block pruning; get the amount of disk space (in MiB) to allot for block & undo files
     int64_t nPruneArg = GetArg("-prune", 0);
     if (nPruneArg < 0) {
@@ -990,6 +1026,7 @@ bool AppInitParameterInteraction()
     RegisterAllCoreRPCCommands(tableRPC);
 #ifdef ENABLE_WALLET
     RegisterWalletRPCCommands(tableRPC);
+    RegisterHDWalletRPCCommands(tableRPC);
 #endif
 
     nConnectTimeout = GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
@@ -1137,6 +1174,7 @@ bool AppInitSanityChecks()
 
     // Initialize elliptic curve code
     ECC_Start();
+    ECC_Start_Stealth();
     globalVerifyHandle.reset(new ECCVerifyHandle());
 
     // Sanity check
@@ -1368,33 +1406,10 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     fReindex = GetBoolArg("-reindex", false);
     bool fReindexChainState = GetBoolArg("-reindex-chainstate", false);
-
-    // Upgrading to 0.8; hard-link the old blknnnn.dat files into /blocks/
+    
     boost::filesystem::path blocksDir = GetDataDir() / "blocks";
     if (!boost::filesystem::exists(blocksDir))
-    {
         boost::filesystem::create_directories(blocksDir);
-        bool linked = false;
-        for (unsigned int i = 1; i < 10000; i++) {
-            boost::filesystem::path source = GetDataDir() / strprintf("blk%04u.dat", i);
-            if (!boost::filesystem::exists(source)) break;
-            boost::filesystem::path dest = blocksDir / strprintf("blk%05u.dat", i-1);
-            try {
-                boost::filesystem::create_hard_link(source, dest);
-                LogPrintf("Hardlinked %s -> %s\n", source.string(), dest.string());
-                linked = true;
-            } catch (const boost::filesystem::filesystem_error& e) {
-                // Note: hardlink creation failing is not a disaster, it just means
-                // blocks will get re-downloaded from peers.
-                LogPrintf("Error hardlinking blk%04u.dat: %s\n", i, e.what());
-                break;
-            }
-        }
-        if (linked)
-        {
-            fReindex = true;
-        }
-    }
 
     // cache size calculations
     int64_t nTotalCache = (GetArg("-dbcache", nDefaultDbCache) << 20);
@@ -1432,7 +1447,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex || fReindexChainState);
                 pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
-                pcoinsTip = new CCoinsViewCache(pcoinscatcher);
+                pcoinsTip = new CCoinsViewCache(pcoinscatcher, fParticlMode);
 
                 if (fReindex) {
                     pblocktree->WriteReindexing(true);
@@ -1488,12 +1503,16 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     LOCK(cs_main);
                     CBlockIndex* tip = chainActive.Tip();
                     RPCNotifyBlockChange(true, tip);
-                    if (tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
+                    
+                    if (tip
+                        && tip != chainActive.Genesis() // genesis block can be set in the future
+                        && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
                         strLoadError = _("The block database contains a block which appears to be from the future. "
                                 "This may be due to your computer's date and time being set incorrectly. "
                                 "Only rebuild the block database if you are sure that your computer's date and time are correct");
                         break;
                     }
+                    
                 }
 
                 if (!CVerifyDB().VerifyDB(chainparams, pcoinsdbview, GetArg("-checklevel", DEFAULT_CHECKLEVEL),
@@ -1549,8 +1568,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 8: load wallet
 #ifdef ENABLE_WALLET
-    if (!CWallet::InitLoadWallet())
-        return false;
+    if (!CHDWallet::InitLoadWallet())
+        return InitError(_("Load wallet failed. Exiting."));
+    
 #else
     LogPrintf("No wallet support compiled in!\n");
 #endif
@@ -1613,6 +1633,12 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
         uiInterface.NotifyBlockTip.disconnect(BlockNotifyGenesisWait);
     }
+    
+    // ********************************************************* Step 10.1: start secure messaging
+
+#ifdef ENABLE_WALLET
+    SecureMsgStart(pwalletMain, GetBoolArg("-nosmsg", false), GetBoolArg("-smsgscanchain", false));
+#endif
 
     // ********************************************************* Step 11: start node
 
@@ -1645,10 +1671,22 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     if (!connman.Start(scheduler, strNodeError, connOptions))
         return InitError(strNodeError);
+    
+    // ********************************************************* Step 11.1: start staking
+    #ifdef ENABLE_WALLET
+    if (fParticlWallet)
+    {
+        if (!GetBoolArg("-staking", true))
+            LogPrintf("Staking disabled\n");
+        else
+            threadStakeMiner = std::thread(&TraceThread<std::function<void()> >, "miner", std::function<void()>(std::bind(&ThreadStakeMiner, (CHDWallet*)pwalletMain)));
+    };
+    #endif
 
     // ********************************************************* Step 12: finished
 
     SetRPCWarmupFinished();
+    
     uiInterface.InitMessage(_("Done loading"));
 
 #ifdef ENABLE_WALLET

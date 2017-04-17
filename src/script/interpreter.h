@@ -142,6 +142,8 @@ public:
     {
          return false;
     }
+    
+    virtual bool IsParticlVersion() const { return false; }
 
     virtual ~BaseSignatureChecker() {}
 };
@@ -163,6 +165,11 @@ public:
     bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const;
     bool CheckLockTime(const CScriptNum& nLockTime) const;
     bool CheckSequence(const CScriptNum& nSequence) const;
+    
+    bool IsParticlVersion() const
+    {
+        return txTo && txTo->IsParticlVersion();
+    }
 };
 
 class MutableTransactionSignatureChecker : public TransactionSignatureChecker

@@ -6,6 +6,8 @@
 #include "ismine.h"
 
 #include "key.h"
+#include "key/extkey.h"
+#include "key/stealth.h"
 #include "keystore.h"
 #include "script/script.h"
 #include "script/standard.h"
@@ -43,6 +45,12 @@ isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, SigVers
 
 isminetype IsMine(const CKeyStore &keystore, const CTxDestination& dest, bool& isInvalid, SigVersion sigversion)
 {
+    if (dest.type() == typeid(CStealthAddress))
+    {
+        const CStealthAddress &sxAddr = boost::get<CStealthAddress>(dest);
+        return sxAddr.scan_secret.size() == EC_SECRET_SIZE ? ISMINE_SPENDABLE : ISMINE_NO; // TODO: watch only?
+    };
+    
     CScript script = GetScriptForDestination(dest);
     return IsMine(keystore, script, isInvalid, sigversion);
 }

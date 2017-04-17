@@ -1,15 +1,15 @@
 *.tar.gz
 
 *.exe
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/bitcoin-tx
-src/test/test_bitcoin
-src/test/test_bitcoin_fuzzy
+src/particl
+src/particld
+src/particl-cli
+src/particl-tx
+src/test/test_particl
 src/qt/test/test_bitcoin-qt
 
 # autoreconf
+src/Makefile.in
 Makefile.in
 aclocal.m4
 autom4te.cache/
@@ -108,5 +108,5 @@ qa/cache/*
 
 /doc/doxygen/
 
-libbitcoinconsensus.pc
+libparticlconsensus.pc
 contrib/devtools/split-debug.sh

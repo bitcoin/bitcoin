@@ -32,7 +32,7 @@ public:
 
     virtual void SyncTransaction(const CTransaction& tx, const CBlockIndex* pindex, int nPosInBlock);
     virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload);
-    virtual void BlockChecked(const CBlock& block, const CValidationState& state);
+    virtual void BlockChecked(const CBlock& block, CValidationState& state);
     virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock);
 };
 
@@ -47,6 +47,8 @@ struct CNodeStateStats {
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 /** Increase a node's misbehavior score. */
 void Misbehaving(NodeId nodeid, int howmuch);
+/** Decrease a node's misbehavior score. */
+void DecMisbehaving(NodeId nodeid, int howmuch);
 
 /** Process protocol messages received from a given node */
 bool ProcessMessages(CNode* pfrom, CConnman& connman, const std::atomic<bool>& interrupt);

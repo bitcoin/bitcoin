@@ -9,6 +9,8 @@
 #include "consensus/validation.h"
 #include "validation.h"
 #include "miner.h"
+#include "key/extkey.h"
+#include "key/stealth.h"
 #include "policy/policy.h"
 #include "pubkey.h"
 #include "script/standard.h"
@@ -17,7 +19,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
-#include "test/test_bitcoin.h"
+#include "test/test_particl.h"
 
 #include <memory>
 

@@ -25,6 +25,8 @@ public:
     const CKeyStore& KeyStore() const { return *keystore; };
     virtual ~BaseSignatureCreator() {}
     virtual const BaseSignatureChecker& Checker() const =0;
+    
+    virtual bool IsParticlVersion() const { return false; }
 
     /** Create a singular (non-script) signature. */
     virtual bool CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const =0;
@@ -41,6 +43,9 @@ class TransactionSignatureCreator : public BaseSignatureCreator {
 public:
     TransactionSignatureCreator(const CKeyStore* keystoreIn, const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn=SIGHASH_ALL);
     const BaseSignatureChecker& Checker() const { return checker; }
+    
+    bool IsParticlVersion() const { return txTo && txTo->IsParticlVersion(); }
+    
     bool CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const;
 };
 
@@ -48,6 +53,9 @@ class MutableTransactionSignatureCreator : public TransactionSignatureCreator {
     CTransaction tx;
 
 public:
+    
+    bool IsParticlVersion() const { return tx.IsParticlVersion(); }
+    
     MutableTransactionSignatureCreator(const CKeyStore* keystoreIn, const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amount, int nHashTypeIn) : TransactionSignatureCreator(keystoreIn, &tx, nInIn, amount, nHashTypeIn), tx(*txToIn) {}
 };
 
@@ -57,6 +65,13 @@ public:
     DummySignatureCreator(const CKeyStore* keystoreIn) : BaseSignatureCreator(keystoreIn) {}
     const BaseSignatureChecker& Checker() const;
     bool CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const;
+};
+
+class DummySignatureCreatorParticl : public DummySignatureCreator {
+public:
+    DummySignatureCreatorParticl(const CKeyStore* keystoreIn) : DummySignatureCreator(keystoreIn) {}
+    const BaseSignatureChecker& Checker() const;
+    bool IsParticlVersion() const { return true; }
 };
 
 struct SignatureData {
@@ -73,6 +88,8 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& script
 /** Produce a script signature for a transaction. */
 bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, const CAmount& amount, int nHashType);
 bool SignSignature(const CKeyStore& keystore, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType);
+
+
 
 /** Combine two script signatures using a generic signature checker, intelligently, possibly with OP_0 placeholders. */
 SignatureData CombineSignatures(const CScript& scriptPubKey, const BaseSignatureChecker& checker, const SignatureData& scriptSig1, const SignatureData& scriptSig2);

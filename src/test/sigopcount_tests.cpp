@@ -4,11 +4,13 @@
 
 #include "validation.h"
 #include "pubkey.h"
+#include "key/extkey.h"
+#include "key/stealth.h"
 #include "key.h"
 #include "script/script.h"
 #include "script/standard.h"
 #include "uint256.h"
-#include "test/test_bitcoin.h"
+#include "test/test_particl.h"
 
 #include <vector>
 
@@ -115,7 +117,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
 
     // Create utxo set
     CCoinsView coinsDummy;
-    CCoinsViewCache coins(&coinsDummy);
+    CCoinsViewCache coins(&coinsDummy, false);
     // Create key
     CKey key;
     key.MakeNewKey(true);
