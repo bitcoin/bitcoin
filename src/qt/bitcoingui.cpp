@@ -162,7 +162,7 @@ BitcoinGUI::BitcoinGUI(interface::Node& node, const PlatformStyle *_platformStyl
     setUnifiedTitleAndToolBarOnMac(true);
 #endif
 
-    rpcConsole = new RPCConsole(_platformStyle, 0);
+    rpcConsole = new RPCConsole(node, _platformStyle, 0);
     helpMessageDialog = new HelpMessageDialog(node, this, HelpMessageDialog::cmdline);
 #ifdef ENABLE_WALLET
     if(enableWallet)
