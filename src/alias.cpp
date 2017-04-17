@@ -937,6 +937,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theAlias.vchEncryptionPrivateKey = dbAlias.vchEncryptionPrivateKey;
 					if(theAlias.vchEncryptionPublicKey.empty())
 						theAlias.vchEncryptionPublicKey = dbAlias.vchEncryptionPublicKey;
+					if(theAlias.vchPasswordSalt.empty())
+						theAlias.vchPasswordSalt = dbAlias.vchPasswordSalt;
 					if(theAlias.vchPassword.empty())
 						theAlias.vchPassword = dbAlias.vchPassword;
 					else
@@ -958,7 +960,10 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					{
 						// if transfer clear pw
 						if(!pwChange)
+						{
 							theAlias.vchPassword.clear();
+							theAlias.vchPasswordSalt.clear();
+						}
 						// make sure xfer to pubkey doesn't point to an alias already, otherwise don't assign pubkey to alias
 						// we want to avoid aliases with duplicate addresses
 						if (paliasdb->ExistsAddress(theAlias.vchAddress))
