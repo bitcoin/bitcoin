@@ -27,9 +27,17 @@ import logging
 
 # Formatting. Default colors to empty strings.
 BOLD, BLUE, RED, GREY = ("", ""), ("", ""), ("", ""), ("", "")
-TICK = "✓ "
-CROSS = "✖ "
-CIRCLE = "○ "
+try:
+    # Make sure python thinks it can write unicode to its stdout
+    "\u2713".encode("utf_8").decode(sys.stdout.encoding)
+    TICK = "✓ "
+    CROSS = "✖ "
+    CIRCLE = "○ "
+except UnicodeDecodeError:
+    TICK = "P "
+    CROSS = "x "
+    CIRCLE = "o "
+
 if os.name == 'posix':
     # primitive formatting on supported
     # terminal via ANSI escape sequences:
