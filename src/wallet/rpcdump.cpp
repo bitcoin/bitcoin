@@ -95,6 +95,8 @@ UniValue importprivkey(const JSONRPCRequest& request)
             + HelpExampleCli("importprivkey", "\"mykey\"") +
             "\nImport using a label and without rescan\n"
             + HelpExampleCli("importprivkey", "\"mykey\" \"testing\" false") +
+            "\nImport using default blank label and without rescan\n"
+            + HelpExampleCli("importprivkey", "\"mykey\" \"\" false") +
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("importprivkey", "\"mykey\", \"testing\", false")
         );
