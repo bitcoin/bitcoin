@@ -19,6 +19,8 @@
 #include <vector>
 
 class CNodeStats;
+class RPCTimerInterface;
+class UniValue;
 class proxyType;
 struct CNodeStateStats;
 
@@ -91,6 +93,15 @@ public:
     //! Get ban map entries.
     virtual bool getBanned(banmap_t& banmap) = 0;
 
+    //! Ban node.
+    virtual bool ban(const CNetAddr& net_addr, BanReason reason, int64_t ban_time_offset) = 0;
+
+    //! Unban node.
+    virtual bool unban(const CSubNet& ip) = 0;
+
+    //! Disconnect node.
+    virtual bool disconnect(NodeId id) = 0;
+
     //! Get total bytes recv.
     virtual int64_t getTotalBytesRecv() = 0;
 
@@ -129,6 +140,18 @@ public:
 
     //! Get network active.
     virtual bool getNetworkActive() = 0;
+
+    //! Execute rpc command.
+    virtual UniValue executeRpc(const std::string& command, const UniValue& params, const std::string& uri) = 0;
+
+    //! List rpc commands.
+    virtual std::vector<std::string> listRpcCommands() = 0;
+
+    //! Set RPC timer interface if unset.
+    virtual void rpcSetTimerInterfaceIfUnset(RPCTimerInterface* iface) = 0;
+
+    //! Unset RPC timer interface.
+    virtual void rpcUnsetTimerInterface(RPCTimerInterface* iface) = 0;
 
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;
