@@ -5,6 +5,7 @@
 #ifndef BITCOIN_INTERFACE_NODE_H
 #define BITCOIN_INTERFACE_NODE_H
 
+#include <addrdb.h>     // For banmap_t
 #include <init.h>       // For HelpMessageMode
 #include <net.h>        // For CConnman::NumConnections
 #include <netaddress.h> // For Network
@@ -87,6 +88,9 @@ public:
     //! Get stats for connected nodes.
     using NodesStats = std::vector<std::tuple<CNodeStats, bool, CNodeStateStats>>;
     virtual bool getNodesStats(NodesStats& stats) = 0;
+
+    //! Get ban map entries.
+    virtual bool getBanned(banmap_t& banmap) = 0;
 
     //! Get total bytes recv.
     virtual int64_t getTotalBytesRecv() = 0;
