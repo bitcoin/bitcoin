@@ -17,6 +17,7 @@ class proxyType;
 namespace interface {
 
 class Handler;
+class Wallet;
 
 //! Top-level interface for a bitcoin node (bitcoind process).
 class Node
@@ -87,6 +88,14 @@ public:
         const std::string& caption,
         unsigned int style)>;
     virtual std::unique_ptr<Handler> handleQuestion(QuestionFn fn) = 0;
+
+    //! Register handler for progress messages.
+    using ShowProgressFn = std::function<void(const std::string& title, int progress, bool resume_possible)>;
+    virtual std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) = 0;
+
+    //! Register handler for load wallet messages.
+    using LoadWalletFn = std::function<void(std::unique_ptr<Wallet> wallet)>;
+    virtual std::unique_ptr<Handler> handleLoadWallet(LoadWalletFn fn) = 0;
 };
 
 //! Return implementation of Node interface.
