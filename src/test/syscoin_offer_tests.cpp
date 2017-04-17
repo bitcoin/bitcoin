@@ -399,7 +399,7 @@ BOOST_AUTO_TEST_CASE (generate_offeraccept)
 	string strCipherDataBad = "";
 	BOOST_CHECK_EQUAL(EncryptMessage(ParseHex(encryptionkey), s1024bytes+"a", strCipherDataBad), true);
 
-	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 1 " + HexStr(vchFromString(strCipherDataBad)))), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 1 " + HexStr(vchFromString(strCipherDataBad))), runtime_error);
 	string strCipherData = "";
 
 	BOOST_CHECK_EQUAL(EncryptMessage(ParseHex(encryptionkey), s1024bytes, strCipherData), true);
