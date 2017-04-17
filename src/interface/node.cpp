@@ -5,6 +5,7 @@
 #include <interface/node.h>
 
 #include <addrdb.h>
+#include <amount.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <init.h>
@@ -28,6 +29,7 @@
 #include <config/bitcoin-config.h>
 #endif
 #ifdef ENABLE_WALLET
+#include <wallet/wallet.h>
 #define CHECK_WALLET(x) x
 #else
 #define CHECK_WALLET(x) throw std::logic_error("Wallet function called in non-wallet build.")
@@ -36,8 +38,6 @@
 #include <atomic>
 #include <boost/thread/thread.hpp>
 #include <univalue.h>
-
-class CWallet;
 
 namespace interface {
 namespace {
@@ -185,6 +185,8 @@ class NodeImpl : public Node
         }
     }
     bool getNetworkActive() override { return g_connman && g_connman->GetNetworkActive(); }
+    unsigned int getTxConfirmTarget() override { CHECK_WALLET(return ::nTxConfirmTarget); }
+    CAmount getMaxTxFee() override { return ::maxTxFee; }
     UniValue executeRpc(const std::string& command, const UniValue& params, const std::string& uri) override
     {
         JSONRPCRequest req;
@@ -196,6 +198,18 @@ class NodeImpl : public Node
     std::vector<std::string> listRpcCommands() override { return ::tableRPC.listCommands(); }
     void rpcSetTimerInterfaceIfUnset(RPCTimerInterface* iface) override { RPCSetTimerInterfaceIfUnset(iface); }
     void rpcUnsetTimerInterface(RPCTimerInterface* iface) override { RPCUnsetTimerInterface(iface); }
+    std::vector<std::unique_ptr<Wallet>> getWallets() override
+    {
+#ifdef ENABLE_WALLET
+        std::vector<std::unique_ptr<Wallet>> wallets;
+        for (CWalletRef wallet : ::vpwallets) {
+            wallets.emplace_back(MakeWallet(*wallet));
+        }
+        return wallets;
+#else
+        throw std::logic_error("Node::getWallets() called in non-wallet build.");
+#endif
+    }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
         return MakeHandler(::uiInterface.InitMessage.connect(fn));

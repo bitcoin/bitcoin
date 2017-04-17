@@ -465,8 +465,10 @@ void BitcoinApplication::initializeResult(bool success)
 
 #ifdef ENABLE_WALLET
         bool fFirstWallet = true;
-        for (CWalletRef pwallet : vpwallets) {
-            WalletModel * const walletModel = new WalletModel(platformStyle, pwallet, optionsModel);
+        auto wallets = m_node.getWallets();
+        auto cwallet = ::vpwallets.begin();
+        for (auto& wallet : wallets) {
+            WalletModel * const walletModel = new WalletModel(std::move(wallet), m_node, platformStyle, *cwallet++, optionsModel);
 
             window->addWallet(walletModel);
             if (fFirstWallet) {
