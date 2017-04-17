@@ -59,6 +59,9 @@ public:
     //! Start shutdown.
     virtual void startShutdown() = 0;
 
+    //! Return whether shutdown was requested.
+    virtual bool shutdownRequested() = 0;
+
     //! Map port.
     virtual void mapPort(bool use_upnp) = 0;
 
@@ -68,6 +71,18 @@ public:
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;
     virtual std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) = 0;
+
+    //! Register handler for message box messages.
+    using MessageBoxFn =
+        std::function<bool(const std::string& message, const std::string& caption, unsigned int style)>;
+    virtual std::unique_ptr<Handler> handleMessageBox(MessageBoxFn fn) = 0;
+
+    //! Register handler for question messages.
+    using QuestionFn = std::function<bool(const std::string& message,
+        const std::string& non_interactive_message,
+        const std::string& caption,
+        unsigned int style)>;
+    virtual std::unique_ptr<Handler> handleQuestion(QuestionFn fn) = 0;
 };
 
 //! Return implementation of Node interface.
