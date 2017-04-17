@@ -797,7 +797,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	if(strPubKey.empty())
 		strPubKey = "\"\"";
 	string strPasswordSalt = HexStr(vchPasswordSalt);
-	if(strPasswordSalt.empty())
+	if(vchPasswordSalt.empty())
 		strPasswordSalt = "\"\"";
 	string strPasswordHex = HexStr(vchFromString(strCipherPassword));
 	if(strCipherPassword.empty())
