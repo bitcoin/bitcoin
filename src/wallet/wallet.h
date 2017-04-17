@@ -753,10 +753,6 @@ private:
     /** Internal database handle. */
     std::unique_ptr<WalletDatabase> database;
 
-    // Used to NotifyTransactionChanged of the previous block's coinbase when
-    // the next block comes in
-    uint256 hashPrevBestCoinbase;
-
     // A helper function which loops through wallet UTXOs
     std::unordered_set<const CWalletTx*, WalletTxHasher> GetSpendableTXs() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 

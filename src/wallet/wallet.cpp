@@ -1451,33 +1451,6 @@ void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const 
 
     m_last_block_processed = pindex->GetBlockHash();
 
-    // The GUI expects a NotifyTransactionChanged when a coinbase tx
-    // which is in our wallet moves from in-the-best-block to
-    // 2-confirmations (as it only displays them at that time).
-    // We do that here.
-    if (hashPrevBestCoinbase.IsNull()) {
-        // Immediately after restart we have no idea what the coinbase
-        // transaction from the previous block is.
-        // For correctness we scan over the entire wallet, looking for
-        // the previous block's coinbase, just in case it is ours, so
-        // that we can notify the UI that it should now be displayed.
-        if (pindex->pprev) {
-            for (const std::pair<const uint256, CWalletTx>& p : mapWallet) {
-                if (p.second.IsCoinBase() && p.second.hashBlock == pindex->pprev->GetBlockHash()) {
-                    NotifyTransactionChanged(this, p.first, CT_UPDATED);
-                    break;
-                }
-            }
-        }
-    } else {
-        std::map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(hashPrevBestCoinbase);
-        if (mi != mapWallet.end()) {
-            NotifyTransactionChanged(this, hashPrevBestCoinbase, CT_UPDATED);
-        }
-    }
-
-    hashPrevBestCoinbase = pblock->vtx[0]->GetHash();
-
     // reset cache to make sure no longer immature coins are included
     fAnonymizableTallyCached = false;
     fAnonymizableTallyCachedNonDenom = false;
