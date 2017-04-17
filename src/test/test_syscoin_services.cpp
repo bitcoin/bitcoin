@@ -1263,7 +1263,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_str(), price);
 	BOOST_CHECK(find_value(r.get_obj(), "title").get_str() == title);
 	BOOST_CHECK(find_value(r.get_obj(), "description").get_str() == description);
-	BOOST_CHECK(find_value(r.get_obj(), "geolocation").get_str() == geolocation);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "geolocation").get_str() , geolocation != "\"\""? geolocation: "");
 	if(!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "offerinfo " + guid));
@@ -1274,7 +1274,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 		BOOST_CHECK(find_value(r.get_obj(), "quantity").get_str() == qty);
 		BOOST_CHECK(find_value(r.get_obj(), "title").get_str() == title);
 		BOOST_CHECK(find_value(r.get_obj(), "description").get_str() == description);
-		BOOST_CHECK(find_value(r.get_obj(), "geolocation").get_str() == geolocation);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "geolocation").get_str() , geolocation != "\"\""? geolocation: "");
 		BOOST_CHECK(find_value(r.get_obj(), "currency").get_str() == currency);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_str(), price);
 	}
@@ -1287,7 +1287,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 		BOOST_CHECK(find_value(r.get_obj(), "quantity").get_str() == qty);
 		BOOST_CHECK(find_value(r.get_obj(), "title").get_str() == title);
 		BOOST_CHECK(find_value(r.get_obj(), "description").get_str() == description);
-		BOOST_CHECK(find_value(r.get_obj(), "geolocation").get_str() == geolocation);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "geolocation").get_str() , geolocation != "\"\""? geolocation: "");
 		BOOST_CHECK(find_value(r.get_obj(), "currency").get_str() == currency);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_str(), price);
 	}
