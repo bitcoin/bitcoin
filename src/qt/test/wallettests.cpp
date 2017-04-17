@@ -1,5 +1,6 @@
 #include <qt/test/wallettests.h>
 
+#include <interface/node.h>
 #include <qt/bitcoinamountfield.h>
 #include <qt/callback.h>
 #include <qt/optionsmodel.h>
@@ -134,7 +135,8 @@ void TestGUI()
     // Create widgets for sending coins and listing transactions.
     SendCoinsDialog sendCoinsDialog;
     TransactionView transactionView;
-    OptionsModel optionsModel;
+    auto node = interface::MakeNode();
+    OptionsModel optionsModel(*node);
     WalletModel walletModel(&wallet, &optionsModel);
     sendCoinsDialog.setModel(&walletModel);
     transactionView.setModel(&walletModel);

@@ -7,6 +7,9 @@
 #include <chainparams.h>
 #include <init.h>
 #include <interface/handler.h>
+#include <net.h>
+#include <netaddress.h>
+#include <netbase.h>
 #include <scheduler.h>
 #include <ui_interface.h>
 #include <util.h>
@@ -24,6 +27,8 @@ class NodeImpl : public Node
         gArgs.ParseParameters(argc, argv);
     }
     void readConfigFile(const std::string& conf_path) override { gArgs.ReadConfigFile(conf_path); }
+    bool softSetArg(const std::string& arg, const std::string& value) override { return gArgs.SoftSetArg(arg, value); }
+    bool softSetBoolArg(const std::string& arg, bool value) override { return gArgs.SoftSetBoolArg(arg, value); }
     void selectParams(const std::string& network) override { SelectParams(network); }
     void initLogging() override { InitLogging(); }
     void initParameterInteraction() override { InitParameterInteraction(); }
@@ -40,6 +45,16 @@ class NodeImpl : public Node
         Shutdown();
     }
     void startShutdown() override { StartShutdown(); }
+    void mapPort(bool use_upnp) override
+    {
+        if (use_upnp) {
+            StartMapPort();
+        } else {
+            InterruptMapPort();
+            StopMapPort();
+        }
+    }
+    bool getProxy(Network net, proxyType& proxy_info) override { return GetProxy(net, proxy_info); }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
         return MakeHandler(::uiInterface.InitMessage.connect(fn));
