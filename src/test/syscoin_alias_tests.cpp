@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE (generate_alias_offerexpiry_resync)
 	StopNode("node3");
 	GenerateBlocks(5, "node1");
 
-	string offerguid = OfferNew("node1", "offernew", "aliasnew", "category", "title", "1", "0.05", "description", "USD");
+	string offerguid = OfferNew("node1", "aliasnew", "category", "title", "1", "0.05", "description", "USD");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + offerguid));
 	
 	BOOST_CHECK_EQUAL(aliasnewexpiry ,  find_value(r.get_obj(), "expires_on").get_int64());
