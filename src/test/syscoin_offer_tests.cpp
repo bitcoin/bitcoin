@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE (generate_offerwhitelists)
 	AliasNew("node2", "selleraddwhitelistalias1", "password", "changeddata1");
 
 	// generate a good offer
-	string offerguid = OfferNew("node1", "sellerwhitelistalias", "category", "title", "100", "10.00", "description", "SYS");
+	string offerguid = OfferNew("node1", "sellerwhitelistalias", "category", "title", "100", "9.00", "description", "SYS");
 	// add to whitelist
 	OfferAddWhitelist("node1", offerguid, "selleraddwhitelistalias", "5");
 	BOOST_CHECK_THROW(CallRPC("node1", "offeraddwhitelist " + offerguid + " selleraddwhitelistalias 5"), runtime_error);
