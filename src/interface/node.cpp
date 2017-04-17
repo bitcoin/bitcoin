@@ -4,6 +4,7 @@
 
 #include <interface/node.h>
 
+#include <chain.h>
 #include <chainparams.h>
 #include <init.h>
 #include <interface/handler.h>
@@ -11,9 +12,13 @@
 #include <net.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <primitives/block.h>
 #include <scheduler.h>
+#include <sync.h>
+#include <txmempool.h>
 #include <ui_interface.h>
 #include <util.h>
+#include <validation.h>
 #include <warnings.h>
 
 #if defined(HAVE_CONFIG_H)
@@ -25,6 +30,7 @@
 #define CHECK_WALLET(x) throw std::logic_error("Wallet function called in non-wallet build.")
 #endif
 
+#include <atomic>
 #include <boost/thread/thread.hpp>
 
 class CWallet;
@@ -69,6 +75,56 @@ class NodeImpl : public Node
     }
     std::string helpMessage(HelpMessageMode mode) override { return HelpMessage(mode); }
     bool getProxy(Network net, proxyType& proxy_info) override { return GetProxy(net, proxy_info); }
+    size_t getNodeCount(CConnman::NumConnections flags) override
+    {
+        return g_connman ? g_connman->GetNodeCount(flags) : 0;
+    }
+    int64_t getTotalBytesRecv() override { return g_connman ? g_connman->GetTotalBytesRecv() : 0; }
+    int64_t getTotalBytesSent() override { return g_connman ? g_connman->GetTotalBytesSent() : 0; }
+    size_t getMempoolSize() override { return ::mempool.size(); }
+    size_t getMempoolDynamicUsage() override { return ::mempool.DynamicMemoryUsage(); }
+    bool getHeaderTip(int& height, int64_t& block_time) override
+    {
+        LOCK(::cs_main);
+        if (::pindexBestHeader) {
+            height = ::pindexBestHeader->nHeight;
+            block_time = ::pindexBestHeader->GetBlockTime();
+            return true;
+        }
+        return false;
+    }
+    int getNumBlocks() override
+    {
+        LOCK(::cs_main);
+        return ::chainActive.Height();
+    }
+    int64_t getLastBlockTime() override
+    {
+        LOCK(::cs_main);
+        if (::chainActive.Tip()) {
+            return ::chainActive.Tip()->GetBlockTime();
+        }
+        return Params().GenesisBlock().GetBlockTime(); // Genesis block's time of current network
+    }
+    double getVerificationProgress() override
+    {
+        const CBlockIndex* tip;
+        {
+            LOCK(::cs_main);
+            tip = ::chainActive.Tip();
+        }
+        return GuessVerificationProgress(::Params().TxData(), tip);
+    }
+    bool isInitialBlockDownload() override { return IsInitialBlockDownload(); }
+    bool getReindex() override { return ::fReindex; }
+    bool getImporting() override { return ::fImporting; }
+    void setNetworkActive(bool active) override
+    {
+        if (g_connman) {
+            g_connman->SetNetworkActive(active);
+        }
+    }
+    bool getNetworkActive() override { return g_connman && g_connman->GetNetworkActive(); }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
         return MakeHandler(::uiInterface.InitMessage.connect(fn));
@@ -89,6 +145,37 @@ class NodeImpl : public Node
     {
         CHECK_WALLET(
             return MakeHandler(::uiInterface.LoadWallet.connect([fn](CWallet* wallet) { fn(MakeWallet(*wallet)); })));
+    }
+    std::unique_ptr<Handler> handleNotifyNumConnectionsChanged(NotifyNumConnectionsChangedFn fn) override
+    {
+        return MakeHandler(::uiInterface.NotifyNumConnectionsChanged.connect(fn));
+    }
+    std::unique_ptr<Handler> handleNotifyNetworkActiveChanged(NotifyNetworkActiveChangedFn fn) override
+    {
+        return MakeHandler(::uiInterface.NotifyNetworkActiveChanged.connect(fn));
+    }
+    std::unique_ptr<Handler> handleNotifyAlertChanged(NotifyAlertChangedFn fn) override
+    {
+        return MakeHandler(::uiInterface.NotifyAlertChanged.connect(fn));
+    }
+    std::unique_ptr<Handler> handleBannedListChanged(BannedListChangedFn fn) override
+    {
+        return MakeHandler(::uiInterface.BannedListChanged.connect(fn));
+    }
+    std::unique_ptr<Handler> handleNotifyBlockTip(NotifyBlockTipFn fn) override
+    {
+        return MakeHandler(::uiInterface.NotifyBlockTip.connect([fn](bool initial_download, const CBlockIndex* block) {
+            fn(initial_download, block->nHeight, block->GetBlockTime(),
+                GuessVerificationProgress(::Params().TxData(), block));
+        }));
+    }
+    std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) override
+    {
+        return MakeHandler(
+            ::uiInterface.NotifyHeaderTip.connect([fn](bool initial_download, const CBlockIndex* block) {
+                fn(initial_download, block->nHeight, block->GetBlockTime(),
+                    GuessVerificationProgress(::Params().TxData(), block));
+            }));
     }
 };
 
