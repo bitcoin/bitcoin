@@ -11,6 +11,7 @@
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <init.h>
+#include <interface/node.h>
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
 #include <qt/transactionfilterproxy.h>
@@ -463,7 +464,8 @@ void OverviewPage::privateSendStatus()
     if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
     CWalletRef pwallet = vpwallets.empty() ? nullptr : vpwallets[0];
     static int64_t nLastDSProgressBlockTime = 0;
-    int nBestHeight = clientModel->getNumBlocks();
+
+    int nBestHeight = clientModel->node().getNumBlocks();
 
     // We are processing more then 1 block per second, we'll just leave
     if(((nBestHeight - privateSendClient.nCachedNumBlocks) / (GetTimeMillis() - nLastDSProgressBlockTime + 1) > 1)) return;
@@ -590,8 +592,9 @@ void OverviewPage::privateSendReset(){
         QMessageBox::Ok, QMessageBox::Ok);
 }
 
-void OverviewPage::privateSendInfo(interface::Node& dummy){
-    HelpMessageDialog dlg(dummy, this, HelpMessageDialog::pshelp);
+void OverviewPage::privateSendInfo(){
+    interface::Node& node = clientModel->node();
+    HelpMessageDialog dlg(node, this, HelpMessageDialog::pshelp);
     dlg.exec();
 }
 

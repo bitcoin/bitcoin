@@ -6,10 +6,13 @@
 #define BITCOIN_INTERFACE_NODE_H
 
 #include <init.h>       // For HelpMessageMode
+#include <net.h>        // For CConnman::NumConnections
 #include <netaddress.h> // For Network
 
 #include <functional>
 #include <memory>
+#include <stddef.h>
+#include <stdint.h>
 #include <string>
 
 class proxyType;
@@ -73,6 +76,48 @@ public:
     //! Get proxy.
     virtual bool getProxy(Network net, proxyType& proxy_info) = 0;
 
+    //! Get number of connections.
+    virtual size_t getNodeCount(CConnman::NumConnections flags) = 0;
+
+    //! Get total bytes recv.
+    virtual int64_t getTotalBytesRecv() = 0;
+
+    //! Get total bytes sent.
+    virtual int64_t getTotalBytesSent() = 0;
+
+    //! Get mempool size.
+    virtual size_t getMempoolSize() = 0;
+
+    //! Get mempool dynamic usage.
+    virtual size_t getMempoolDynamicUsage() = 0;
+
+    //! Get header tip height and time.
+    virtual bool getHeaderTip(int& height, int64_t& block_time) = 0;
+
+    //! Get num blocks.
+    virtual int getNumBlocks() = 0;
+
+    //! Get last block time.
+    virtual int64_t getLastBlockTime() = 0;
+
+    //! Get verification progress.
+    virtual double getVerificationProgress() = 0;
+
+    //! Is initial block download.
+    virtual bool isInitialBlockDownload() = 0;
+
+    //! Get reindex.
+    virtual bool getReindex() = 0;
+
+    //! Get importing.
+    virtual bool getImporting() = 0;
+
+    //! Set network active.
+    virtual void setNetworkActive(bool active) = 0;
+
+    //! Get network active.
+    virtual bool getNetworkActive() = 0;
+
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;
     virtual std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) = 0;
@@ -96,6 +141,32 @@ public:
     //! Register handler for load wallet messages.
     using LoadWalletFn = std::function<void(std::unique_ptr<Wallet> wallet)>;
     virtual std::unique_ptr<Handler> handleLoadWallet(LoadWalletFn fn) = 0;
+
+    //! Register handler for number of connections changed messages.
+    using NotifyNumConnectionsChangedFn = std::function<void(int new_num_connections)>;
+    virtual std::unique_ptr<Handler> handleNotifyNumConnectionsChanged(NotifyNumConnectionsChangedFn fn) = 0;
+
+    //! Register handler for network active messages.
+    using NotifyNetworkActiveChangedFn = std::function<void(bool network_active)>;
+    virtual std::unique_ptr<Handler> handleNotifyNetworkActiveChanged(NotifyNetworkActiveChangedFn fn) = 0;
+
+    //! Register handler for notify alert messages.
+    using NotifyAlertChangedFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleNotifyAlertChanged(NotifyAlertChangedFn fn) = 0;
+
+    //! Register handler for ban list messages.
+    using BannedListChangedFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleBannedListChanged(BannedListChangedFn fn) = 0;
+
+    //! Register handler for block tip messages.
+    using NotifyBlockTipFn =
+        std::function<void(bool initial_download, int height, int64_t block_time, double verification_progress)>;
+    virtual std::unique_ptr<Handler> handleNotifyBlockTip(NotifyBlockTipFn fn) = 0;
+
+    //! Register handler for header tip messages.
+    using NotifyHeaderTipFn =
+        std::function<void(bool initial_download, int height, int64_t block_time, double verification_progress)>;
+    virtual std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) = 0;
 };
 
 //! Return implementation of Node interface.
