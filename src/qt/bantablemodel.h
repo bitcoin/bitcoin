@@ -13,6 +13,10 @@
 class ClientModel;
 class BanTablePriv;
 
+namespace interface {
+    class Node;
+}
+
 struct CCombinedBan {
     CSubNet subnet;
     CBanEntry banEntry;
@@ -39,7 +43,7 @@ class BanTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit BanTableModel(ClientModel *parent = 0);
+    explicit BanTableModel(interface::Node& node, ClientModel *parent = 0);
     ~BanTableModel();
     void startAutoRefresh();
     void stopAutoRefresh();
@@ -65,6 +69,7 @@ public Q_SLOTS:
     void refresh();
 
 private:
+    interface::Node& m_node;
     ClientModel *clientModel;
     QStringList columns;
     std::unique_ptr<BanTablePriv> priv;
