@@ -1054,7 +1054,7 @@ public:
      * @note passing nChangePosInOut as -1 will result in setting a random position
      */
     bool CreateTransaction(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
-                           std::string& strFailReason, const CCoinControl& coin_control, bool sign = true, AvailableCoinsType nCoinType=ALL_COINS);
+                           std::string& strFailReason, const CCoinControl& coin_control, bool sign = true, AvailableCoinsType _nCoinType = ALL_COINS, bool fPrivateSend = false);
     bool CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm, std::string fromAccount, CReserveKey& reservekey, CConnman* connman, CValidationState& state, bool fPrivateSend = false);
 
     bool CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason);
