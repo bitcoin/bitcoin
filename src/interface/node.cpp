@@ -55,6 +55,7 @@ class NodeImpl : public Node
             StopMapPort();
         }
     }
+    std::string helpMessage(HelpMessageMode mode) override { return HelpMessage(mode); }
     bool getProxy(Network net, proxyType& proxy_info) override { return GetProxy(net, proxy_info); }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
