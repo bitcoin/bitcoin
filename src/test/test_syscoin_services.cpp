@@ -398,55 +398,22 @@ void CreateSysCategoryIfNotExist()
 void AliasBan(const string& node, const string& alias, int severity)
 {
 	string pubdata = "{\\\"aliases\\\":[{\\\"id\\\":\\\"" + alias + "\\\",\\\"severity\\\":" + boost::lexical_cast<string>(severity) + "}]}";
-	string strPasswordHex =  "\"\"";
-	string strPrivateHex = "\"\"";
-	string strEncryptionPrivateKeyHex = "\"\"";
-	string strEncryptionPublicKeyHex = "\"\"";
-	string acceptTransfers = "\"\"";
-	string expires = "\"\"";
-	string safesearch = "\"\"";
-	string aliases = "\"\"";
-	string address = "\"\"";
-	string pubkey = "\"\"";
-	string salt = "\"\"";
 	string aliasname = "sysban";
-	CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex + " " + safesearch + " " + pubkey + " " + strPasswordHex + " " + acceptTransfers + " " + expires + " " + address + " " + salt + " " + strEncryptionPrivateKeyHex + " " + strEncryptionPublicKeyHex);
+	CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata);
 	GenerateBlocks(5, node);
 }
 void OfferBan(const string& node, const string& offer, int severity)
 {
 	string pubdata = "{\\\"offers\\\":[{\\\"id\\\":\\\"" + offer + "\\\",\\\"severity\\\":" + boost::lexical_cast<string>(severity) + "}]}";
-	string strPasswordHex =  "\"\"";
-	string strPrivateHex = "\"\"";
-	string strEncryptionPrivateKeyHex = "\"\"";
-	string strEncryptionPublicKeyHex = "\"\"";
-	string acceptTransfers = "\"\"";
-	string expires = "\"\"";
-	string safesearch = "\"\"";
-	string aliases = "\"\"";
-	string address = "\"\"";
-	string pubkey = "\"\"";
-	string salt = "\"\"";
 	string aliasname = "sysban";
-	CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex + " " + safesearch + " " + pubkey + " " + strPasswordHex + " " + acceptTransfers + " " + expires + " " + address + " " + salt + " " + strEncryptionPrivateKeyHex + " " + strEncryptionPublicKeyHex);
+	CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata);
  	GenerateBlocks(5, node);
 }
 void CertBan(const string& node, const string& cert, int severity)
 {
 	string pubdata = "{\\\"certs\\\":[{\\\"id\\\":\\\"" + cert + "\\\",\\\"severity\\\":" + boost::lexical_cast<string>(severity) + "}]}";
-	string strPasswordHex =  "\"\"";
-	string strPrivateHex = "\"\"";
-	string strEncryptionPrivateKeyHex = "\"\"";
-	string strEncryptionPublicKeyHex = "\"\"";
-	string acceptTransfers = "\"\"";
-	string expires = "\"\"";
-	string safesearch = "\"\"";
-	string aliases = "\"\"";
-	string address = "\"\"";
-	string pubkey = "\"\"";
-	string salt = "\"\"";
 	string aliasname = "sysban";
-	CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex + " " + safesearch + " " + pubkey + " " + strPasswordHex + " " + acceptTransfers + " " + expires + " " + address + " " + salt + " " + strEncryptionPrivateKeyHex + " " + strEncryptionPublicKeyHex);
+	CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata);
  	GenerateBlocks(5, node);
 }
 void ExpireAlias(const string& alias)
