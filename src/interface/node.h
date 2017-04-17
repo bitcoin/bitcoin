@@ -6,6 +6,7 @@
 #define BITCOIN_INTERFACE_NODE_H
 
 #include <addrdb.h>     // For banmap_t
+#include <amount.h>     // For CAmount
 #include <init.h>       // For HelpMessageMode
 #include <net.h>        // For CConnman::NumConnections
 #include <netaddress.h> // For Network
@@ -145,6 +146,12 @@ public:
     //! Get network active.
     virtual bool getNetworkActive() = 0;
 
+    //! Get tx confirm target.
+    virtual unsigned int getTxConfirmTarget() = 0;
+
+    //! Get max tx fee.
+    virtual CAmount getMaxTxFee() = 0;
+
     //! Execute rpc command.
     virtual UniValue executeRpc(const std::string& command, const UniValue& params, const std::string& uri) = 0;
 
@@ -156,6 +163,9 @@ public:
 
     //! Unset RPC timer interface.
     virtual void rpcUnsetTimerInterface(RPCTimerInterface* iface) = 0;
+
+    //! Return interfaces for accessing wallets (if any).
+    virtual std::vector<std::unique_ptr<Wallet>> getWallets() = 0;
 
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;

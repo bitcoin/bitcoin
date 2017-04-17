@@ -37,6 +37,7 @@
 #include <utility>
 #include <vector>
 
+typedef CWallet* CWalletRef;
 bool AddWallet(CWallet* wallet);
 bool RemoveWallet(CWallet* wallet);
 bool HasWallets();

@@ -271,12 +271,14 @@ void OverviewPage::setWalletModel(WalletModel *model)
         // update the display unit, to not use the default ("DASH")
         updateDisplayUnit();
         // Keep up to date with wallet
-        setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(), model->getAnonymizedBalance(),
-                   model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
+        interface::Wallet& wallet = model->wallet();
+        interface::WalletBalances balances = wallet.getBalances();
+        setBalance(balances.balance, balances.unconfirmed_balance, balances.immature_balance, balances.anonymized_balance,
+                   balances.watch_only_balance, balances.unconfirmed_watch_only_balance, balances.immature_watch_only_balance);
         connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
-        updateWatchOnlyLabels(model->haveWatchOnly() || gArgs.GetBoolArg("-debug-ui", false));
+        updateWatchOnlyLabels(wallet.haveWatchOnly() || gArgs.GetBoolArg("-debug-ui", false));
         connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
 
         // explicitly update PS frame and transaction list to reflect actual settings
@@ -348,7 +350,7 @@ void OverviewPage::updatePrivateSendProgress()
         return;
     }
 
-    CAmount nAnonymizableBalance = walletModel->getAnonymizableBalance(false, false);
+    CAmount nAnonymizableBalance = walletModel->wallet().getAnonymizableBalance(false, false);
 
     CAmount nMaxToAnonymize = nAnonymizableBalance + currentAnonymizedBalance;
 
@@ -383,10 +385,10 @@ void OverviewPage::updatePrivateSendProgress()
     CAmount nNormalizedAnonymizedBalance;
     float nAverageAnonymizedRounds;
 
-    nDenominatedConfirmedBalance = walletModel->getDenominatedBalance(false);
-    nDenominatedUnconfirmedBalance = walletModel->getDenominatedBalance(true);
-    nNormalizedAnonymizedBalance = walletModel->getNormalizedAnonymizedBalance();
-    nAverageAnonymizedRounds = walletModel->getAverageAnonymizedRounds();
+    nDenominatedConfirmedBalance = walletModel->wallet().getDenominatedBalance(false);
+    nDenominatedUnconfirmedBalance = walletModel->wallet().getDenominatedBalance(true);
+    nNormalizedAnonymizedBalance = walletModel->wallet().getNormalizedAnonymizedBalance();
+    nAverageAnonymizedRounds = walletModel->wallet().getAverageAnonymizedRounds();
 
     // calculate parts of the progress, each of them shouldn't be higher than 1
     // progress of denominating
@@ -502,7 +504,7 @@ void OverviewPage::privateSendStatus(bool fForce)
     static int64_t nLastDSProgressBlockTime = 0;
     int nBestHeight = clientModel->node().getNumBlocks();
 
-    auto it = privateSendClientManagers.find(walletModel->getWallet()->GetName());
+    auto it = privateSendClientManagers.find(walletModel->getWalletName().toStdString());
     if (it == privateSendClientManagers.end()) {
         // nothing to do
         return;
@@ -626,7 +628,7 @@ void OverviewPage::togglePrivateSend(){
         settings.setValue("hasMixed", "hasMixed");
     }
 
-    auto it = privateSendClientManagers.find(walletModel->getWallet()->GetName());
+    auto it = privateSendClientManagers.find(walletModel->getWalletName().toStdString());
     if (it == privateSendClientManagers.end()) {
         // nothing to do
         return;
@@ -669,7 +671,8 @@ void OverviewPage::togglePrivateSend(){
         privateSendClientManager->StopMixing();
     } else {
         ui->togglePrivateSend->setText(tr("Stop Mixing"));
-        privateSendClientManager->StartMixing(walletModel->getWallet());
+        // TODO: Refactor PS code to make that work again. This doesn't fit in this commit.
+        //privateSendClientManager->StartMixing(walletModel->getWallet());
     }
 }
 
@@ -704,7 +707,7 @@ void OverviewPage::DisablePrivateSendCompletely() {
     if (nWalletBackups <= 0) {
         ui->labelPrivateSendEnabled->setText("<span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'>(" + tr("Disabled") + ")</span>");
     }
-    auto it = privateSendClientManagers.find(walletModel->getWallet()->GetName());
+    auto it = privateSendClientManagers.find(walletModel->getWalletName().toStdString());
     if (it == privateSendClientManagers.end()) {
         // nothing to do
         return;

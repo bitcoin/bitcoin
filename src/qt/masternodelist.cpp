@@ -199,7 +199,7 @@ void MasternodeList::updateDIP3List()
     std::set<COutPoint> setOutpts;
     if (walletModel && ui->checkBoxMyMasternodesOnly->isChecked()) {
         std::vector<COutPoint> vOutpts;
-        walletModel->listProTxCoins(vOutpts);
+        walletModel->wallet().listProTxCoins(vOutpts);
         for (const auto& outpt : vOutpts) {
             setOutpts.emplace(outpt);
         }
@@ -208,10 +208,10 @@ void MasternodeList::updateDIP3List()
     mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
         if (walletModel && ui->checkBoxMyMasternodesOnly->isChecked()) {
             bool fMyMasternode = setOutpts.count(dmn->collateralOutpoint) ||
-                walletModel->IsSpendable(dmn->pdmnState->keyIDOwner) ||
-                walletModel->IsSpendable(dmn->pdmnState->keyIDVoting) ||
-                walletModel->IsSpendable(dmn->pdmnState->scriptPayout) ||
-                walletModel->IsSpendable(dmn->pdmnState->scriptOperatorPayout);
+                walletModel->wallet().isSpendable(dmn->pdmnState->keyIDOwner) ||
+                walletModel->wallet().isSpendable(dmn->pdmnState->keyIDVoting) ||
+                walletModel->wallet().isSpendable(dmn->pdmnState->scriptPayout) ||
+                walletModel->wallet().isSpendable(dmn->pdmnState->scriptOperatorPayout);
             if (!fMyMasternode) return;
         }
         // populate list

@@ -4,11 +4,10 @@
 
 #include <qt/walletmodeltransaction.h>
 
-#include <wallet/wallet.h>
+#include <interface/node.h>
 
 WalletModelTransaction::WalletModelTransaction(const QList<SendCoinsRecipient> &_recipients) :
     recipients(_recipients),
-    walletTransaction(0),
     fee(0)
 {
 }
@@ -18,14 +17,14 @@ QList<SendCoinsRecipient> WalletModelTransaction::getRecipients() const
     return recipients;
 }
 
-CTransactionRef& WalletModelTransaction::getTransaction()
+std::unique_ptr<interface::PendingWalletTx>& WalletModelTransaction::getWtx()
 {
-    return walletTransaction;
+    return wtx;
 }
 
 unsigned int WalletModelTransaction::getTransactionSize()
 {
-    return (!walletTransaction ? 0 : (::GetSerializeSize(*walletTransaction, SER_NETWORK, PROTOCOL_VERSION)));
+    return wtx != nullptr ? ::GetSerializeSize(wtx->get(), SER_NETWORK, PROTOCOL_VERSION) : 0;
 }
 
 CAmount WalletModelTransaction::getTransactionFee() const
@@ -55,7 +54,7 @@ void WalletModelTransaction::reassignAmounts()
                 if (out.amount() <= 0) continue;
                 const unsigned char* scriptStr = (const unsigned char*)out.script().data();
                 CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
-                for (const auto& txout : walletTransaction->vout) {
+                for (const auto& txout : wtx->get().vout) {
                     if (txout.scriptPubKey == scriptPubKey) {
                         subtotal += txout.nValue;
                         break;
@@ -66,7 +65,7 @@ void WalletModelTransaction::reassignAmounts()
         }
         else // normal recipient (no payment request)
         {
-            for (const auto& txout : walletTransaction->vout) {
+            for (const auto& txout : wtx->get().vout) {
                 CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
                 if (txout.scriptPubKey == scriptPubKey) {
                     rcp.amount = txout.nValue;
@@ -85,14 +84,4 @@ CAmount WalletModelTransaction::getTotalTransactionAmount() const
         totalTransactionAmount += rcp.amount;
     }
     return totalTransactionAmount;
-}
-
-void WalletModelTransaction::newPossibleKeyChange(CWallet *wallet)
-{
-    keyChange.reset(new CReserveKey(wallet));
-}
-
-CReserveKey *WalletModelTransaction::getPossibleKeyChange()
-{
-    return keyChange.get();
 }

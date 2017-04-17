@@ -137,7 +137,9 @@ void TestGUI()
     TransactionView transactionView;
     auto node = interface::MakeNode();
     OptionsModel optionsModel(*node);
-    WalletModel walletModel(&wallet, &optionsModel);
+    vpwallets.insert(vpwallets.begin(), &wallet);
+    WalletModel walletModel(std::move(node->getWallets()[0]), *node, &wallet, &optionsModel);
+    vpwallets.erase(vpwallets.begin());
     sendCoinsDialog.setModel(&walletModel);
     transactionView.setModel(&walletModel);
 
@@ -156,7 +158,7 @@ void TestGUI()
     QLabel* balanceLabel = overviewPage.findChild<QLabel*>("labelBalance");
     QString balanceText = balanceLabel->text();
     int unit = walletModel.getOptionsModel()->getDisplayUnit();
-    CAmount balance = walletModel.getBalance();
+    CAmount balance = walletModel.wallet().getBalance();
     QString balanceComparison = BitcoinUnits::floorHtmlWithUnit(unit, balance, false, BitcoinUnits::separatorAlways);
     QCOMPARE(balanceText, balanceComparison);
 
