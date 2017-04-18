@@ -60,6 +60,7 @@ class NodeImpl : public Node
     void initLogging() override { InitLogging(); }
     void initParameterInteraction() override { InitParameterInteraction(); }
     std::string getWarnings(const std::string& type) override { return GetWarnings(type); }
+    uint32_t getLogCategories() override { return ::logCategories; }
     bool baseInitialize() override
     {
         return AppInitBasicSetup() && AppInitParameterInteraction() && AppInitSanityChecks() &&
@@ -227,6 +228,11 @@ class NodeImpl : public Node
     std::vector<std::string> listRpcCommands() override { return ::tableRPC.listCommands(); }
     void rpcSetTimerInterfaceIfUnset(RPCTimerInterface* iface) override { RPCSetTimerInterfaceIfUnset(iface); }
     void rpcUnsetTimerInterface(RPCTimerInterface* iface) override { RPCUnsetTimerInterface(iface); }
+    bool getUnspentOutput(const COutPoint& output, Coin& coin) override
+    {
+        LOCK(::cs_main);
+        return ::pcoinsTip->GetCoin(output, coin);
+    }
     std::vector<std::unique_ptr<Wallet>> getWallets() override
     {
 #ifdef ENABLE_WALLET
