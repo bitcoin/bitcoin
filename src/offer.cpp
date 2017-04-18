@@ -3547,11 +3547,11 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 					
 					COffer theOffer = vtxOfferPos.back();
 					UniValue oOffer(UniValue::VOBJ);
+					vector<CAliasIndex> vtxAliasPos;
+					if (!paliasdb->ReadAlias(theOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
+						continue;
 					if(strAccepts == "No")
 					{
-						vector<CAliasIndex> vtxAliasPos;
-						if (!paliasdb->ReadAlias(theOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
-							continue;
 						if(BuildOfferJson(theOffer, vtxAliasPos.back(), oOffer, strWalletless))
 							oRes.push_back(oOffer);
 					}
