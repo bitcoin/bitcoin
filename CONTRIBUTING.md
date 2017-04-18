@@ -37,8 +37,8 @@ fixes or code moves with actual code changes.
 
 Commit messages should be verbose by default consisting of a short subject line
 (50 chars max), a blank line and detailed explanatory text as separate
-paragraph(s); unless the title alone is self-explanatory (like "Corrected typo
-in init.cpp") then a single title line is sufficient. Commit messages should be
+paragraph(s), unless the title alone is self-explanatory (like "Corrected typo
+in init.cpp") in which case a single title line is sufficient. Commit messages should be
 helpful to people reading your code in the future, so explain the reasoning for
 your decisions. Further explanation [here](http://chris.beams.io/posts/git-commit/).
 
@@ -224,6 +224,37 @@ Where a patch set proposes to change the Bitcoin consensus, it must have been
 discussed extensively on the mailing list and IRC, be accompanied by a widely
 discussed BIP and have a generally widely perceived technical consensus of being
 a worthwhile change based on the judgement of the maintainers.
+
+### Finding Reviewers
+
+As most reviewers are themselves developers with their own projects, the review
+process can be quite lengthy, and some amount of patience is required. If you find
+that you've been waiting for a pull request to be given attention for several
+months, there may be a number of reasons for this, some of which you can do something
+about:
+
+  - It may be because of a feature freeze due to an upcoming release. During this time,
+    only bug fixes are taken into consideration. If your pull request is a new feature,
+    it will not be prioritized until the release is over. Wait for release.
+  - It may be because the changes you are suggesting do not appeal to people. Rather than
+    nits and critique, which require effort and means they care enough to spend time on your
+    contribution, thundering silence is a good sign of widespread (mild) dislike of a given change
+    (because people don't assume *others* won't actually like the proposal). Don't take
+    that personally, though! Instead, take another critical look at what you are suggesting
+    and see if it: changes too much, is too broad, doesn't adhere to the
+    [developer notes](doc/developer-notes.md), is dangerous or insecure, is messily written, etc.
+    Identify and address any of the issues you find. Then ask e.g. on IRC if someone could give
+    their opinion on the concept itself.
+  - It may be because your code is too complex for all but a few people. And those people
+    may not have realized your pull request even exists. A great way to find people who
+    are qualified and care about the code you are touching is the
+    [Git Blame feature](https://help.github.com/articles/tracing-changes-in-a-file/). Simply
+    find the person touching the code you are touching before you and see if you can find
+    them and give them a nudge. Don't be incessant about the nudging though.
+  - Finally, if all else fails, ask on IRC or elsewhere for someone to give your pull request
+    a look. If you think you've been waiting an unreasonably long amount of time (month+) for
+    no particular reason (few lines changed, etc), this is totally fine. Try to return the favor
+    when someone else is asking for feedback on their code, and universe balances out.
 
 
 Release Policy
