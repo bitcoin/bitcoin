@@ -355,12 +355,12 @@ def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None
     if extra_args is None: extra_args = [ None for _ in range(num_nodes) ]
     if binary is None: binary = [ None for _ in range(num_nodes) ]
     rpcs = []
-    try:
-        for i in range(num_nodes):
+    for i in range(num_nodes):
+        try:
             rpcs.append(start_node(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i]))
-    except: # If one node failed to start, stop the others
-        stop_nodes(rpcs)
-        raise
+        except: # If one node failed to start, stop the others
+            [stop_node(rpcs[j], j) for j in range(i)]
+            raise
     return rpcs
 
 def log_filename(dirname, n_node, logname):

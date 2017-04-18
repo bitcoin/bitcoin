@@ -148,7 +148,11 @@ EXTENDED_SCRIPTS = [
     'replace-by-fee.py',
 ]
 
-ALL_SCRIPTS = BASE_SCRIPTS + ZMQ_SCRIPTS + EXTENDED_SCRIPTS
+MANUAL_SCRIPTS = [
+    'compatibility.py',
+]
+
+ALL_SCRIPTS = BASE_SCRIPTS + ZMQ_SCRIPTS + EXTENDED_SCRIPTS + MANUAL_SCRIPTS 
 
 NON_SCRIPTS = [
     # These are python files that live in the functional tests directory, but are not test scripts.
