@@ -233,12 +233,9 @@ Value throne(const Array& params, bool fHelp)
         CTxIn vin = CTxIn();
         CPubKey pubkey = CScript();
         CKey key;
-        bool found = activeThrone.GetThroNeVin(vin, pubkey, key);
-        if(!found){
+        if(!pwalletMain || !pwalletMain->GetThroneVinAndKeys(vin, pubkey, key))
             throw runtime_error("Missing throne input, please look at the documentation for instructions on throne creation\n");
-        } else {
-            return activeThrone.GetStatus();
-        }
+        return activeThrone.GetStatus();
     }
 
     if(strCommand == "enforce")
@@ -308,7 +305,7 @@ Value throne(const Array& params, bool fHelp)
                 std::string errorMessage;
                 CThroneBroadcast mnb;
 
-                bool result = activeThrone.CreateBroadcast(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
+                bool result = CThroneBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
 
                 statusObj.push_back(Pair("result", result ? "successful" : "failed"));
                 if(result) {
@@ -372,7 +369,7 @@ Value throne(const Array& params, bool fHelp)
             if(strCommand == "start-missing" && pmn) continue;
             if(strCommand == "start-disabled" && pmn && pmn->IsEnabled()) continue;
 
-            bool result = activeThrone.CreateBroadcast(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
+            bool result = CThroneBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
 
             Object statusObj;
             statusObj.push_back(Pair("alias", mne.getAlias()));
@@ -440,12 +437,12 @@ Value throne(const Array& params, bool fHelp)
 
     if (strCommand == "outputs"){
         // Find possible candidates
-        vector<COutput> possibleCoins = activeThrone.SelectCoinsThrone();
+        std::vector<COutput> vPossibleCoins;
+        pwalletMain->AvailableCoins(vPossibleCoins, true, NULL, ONLY_10000);
 
         Object obj;
-        BOOST_FOREACH(COutput& out, possibleCoins) {
+        BOOST_FOREACH(COutput& out, vPossibleCoins)
             obj.push_back(Pair(out.tx->GetHash().ToString(), strprintf("%d", out.i)));
-        }
 
         return obj;
 
@@ -695,7 +692,7 @@ Value thronebroadcast(const Array& params, bool fHelp)
                 std::string errorMessage;
                 CThroneBroadcast mnb;
 
-                bool result = activeThrone.CreateBroadcast(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb, true);
+                bool result = CThroneBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb, true);
 
                 statusObj.push_back(Pair("result", result ? "successful" : "failed"));
                 if(result) {
@@ -756,7 +753,7 @@ Value thronebroadcast(const Array& params, bool fHelp)
             CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
             CThroneBroadcast mnb;
 
-            bool result = activeThrone.CreateBroadcast(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb, true);
+            bool result = CThroneBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb, true);
 
             Object statusObj;
             statusObj.push_back(Pair("alias", mne.getAlias()));
