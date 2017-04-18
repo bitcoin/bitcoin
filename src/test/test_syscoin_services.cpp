@@ -1564,7 +1564,7 @@ const string LinkOfferAccept(const string& ownernode, const string& buyernode, c
 	GenerateBlocks(5, "node1");
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
-	const UniValue &acceptSellerValue = FindOfferAcceptList(ownernode, rootalias, rootofferguid, acceptguid);
+	const UniValue &acceptSellerValue = FindOfferAcceptList(ownernode, rootalias, offerguid, acceptguid);
 	
 	int discount = atoi(find_value(acceptSellerValue, "offer_discount_percentage").get_str().c_str());
 	int lMarkup = 100 - discount;
