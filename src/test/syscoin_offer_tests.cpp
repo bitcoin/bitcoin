@@ -745,7 +745,7 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	GenerateBlocks(5, "node1");
 	// create a new service
 	AliasNew("node1", "pruneoffer", "password1", "data");
-	string guid1 = OfferNew("node1", "pruneoffer", "1", "0.05", "category", "title", "1", "0.05", "description", "USD");
+	string guid1 = OfferNew("node1", "pruneoffer", "category", "title", "1", "0.05", "description", "USD");
 	
 	
 	// stop and start node1
