@@ -37,7 +37,6 @@
 
 #ifdef ENABLE_WALLET
 #include <wallet/init.h>
-#include <wallet/wallet.h>
 #endif
 #include <walletinitinterface.h>
 
@@ -466,9 +465,8 @@ void BitcoinApplication::initializeResult(bool success)
 #ifdef ENABLE_WALLET
         bool fFirstWallet = true;
         auto wallets = m_node.getWallets();
-        auto cwallet = ::vpwallets.begin();
         for (auto& wallet : wallets) {
-            WalletModel * const walletModel = new WalletModel(std::move(wallet), m_node, platformStyle, *cwallet++, optionsModel);
+            WalletModel * const walletModel = new WalletModel(std::move(wallet), m_node, platformStyle, optionsModel);
 
             window->addWallet(walletModel);
             if (fFirstWallet) {
