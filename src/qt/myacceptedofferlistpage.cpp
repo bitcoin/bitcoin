@@ -151,6 +151,8 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acc
 			extTxId = QString::fromStdString(find_value(acceptObj, "exttxid").get_str());	
 			paymentOption = QString::fromStdString(find_value(acceptObj, "paymentoption_display").get_str());	
 			const string &strPrice = find_value(acceptObj, "total").get_str();
+			const string &strAddress = find_value(acceptObj, "address").get_str();				
+			address = QString::fromStdString(strAddress);
 			price = QString::fromStdString(strPrice);
 			break;
 		}
@@ -172,35 +174,6 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acc
 	{
 		QMessageBox::critical(this, windowTitle(),
 			tr("There was an exception trying to locate this offer purchase, please ensure it has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
-				QMessageBox::Ok, QMessageBox::Ok);
-		return true;
-	}
-	UniValue result(UniValue::VOBJ);
-	strMethod = string("offerinfo");
-	UniValue params1(UniValue::VARR);
-	params1.push_back(lookupid.toStdString());
-    try {
-        result = tableRPC.execute(strMethod, params1);
-
-		if (result.type() == UniValue::VOBJ)
-		{
-			const string &strAddress = find_value(result, "address").get_str();				
-			address = QString::fromStdString(strAddress);
-			return true;
-		}
-	}
-	catch (UniValue& objError)
-	{
-		QMessageBox::critical(this, windowTitle(),
-			tr("Could not find this offer, please ensure the offer has been confirmed by the blockchain: ") + lookupid,
-				QMessageBox::Ok, QMessageBox::Ok);
-		return true;
-
-	}
-	catch(std::exception& e)
-	{
-		QMessageBox::critical(this, windowTitle(),
-			tr("There was an exception trying to locate this offer, please ensure the has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
 				QMessageBox::Ok, QMessageBox::Ok);
 		return true;
 	}

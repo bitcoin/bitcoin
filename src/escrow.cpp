@@ -3300,7 +3300,7 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
 	string strWalletless = "No";
-	if(params.size() >= 2)
+	if(CheckParam(params, 1))
 		strWalletless = params[1].get_str();
 	vector<CEscrow> vtxPos;
 
@@ -3548,7 +3548,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
                 "list escrows that an array of aliases are involved in. Set of aliases to look up based on alias.");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
-	if(params.size() >= 1)
+	if(CheckParam(params, 0))
 	{
 		if(params[0].isArray())
 		{
@@ -3570,11 +3570,11 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		}
 	}
 	vector<unsigned char> vchNameUniq;
-    if (params.size() >= 2 && !params[1].get_str().empty())
+    if(CheckParam(params, 1))
         vchNameUniq = vchFromValue(params[1]);
 
 	string strWalletless = "No";
-	if(params.size() >= 3)
+	if(CheckParam(params, 2))
 		strWalletless = params[2].get_str();
 	map<uint256, CTransaction> vtxTx;
 	map<uint256, uint64_t> vtxHeight;
@@ -3659,10 +3659,10 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchEscrow;
 	string strRegexp;
 
-	if (params.size() > 0)
+	if(CheckParam(params, 0))
 		strRegexp = params[0].get_str();
 
-	if (params.size() > 1)
+	if(CheckParam(params, 1))
 		vchEscrow = vchFromValue(params[1]);
 
 	UniValue oRes(UniValue::VARR);
@@ -3688,7 +3688,7 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
     UniValue oRes(UniValue::VARR);
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
 	string strWalletless = "No";
-	if(params.size() >= 2)
+	if(CheckParam(params, 1))
 		strWalletless = params[1].get_str();
 
     vector<CEscrow> vtxPos;
@@ -3735,9 +3735,9 @@ UniValue escrowstats(const UniValue& params, bool fHelp) {
 				"Show statistics for all non-expired escrows. Only escrows created or updated after unixtime are returned. Set of escrows to look up based on array of aliases passed in. Leave empty for all escrows.\n");
 	vector<string> aliases;
 	uint64_t nExpireFilter = 0;
-	if(params.size() >= 1)
+	if(CheckParam(params, 0))
 		nExpireFilter = params[0].get_int64();
-	if(params.size() >= 2)
+	if(CheckParam(params, 1))
 	{
 		if(params[1].isArray())
 		{

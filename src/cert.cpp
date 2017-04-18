@@ -1199,7 +1199,7 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchCert = vchFromValue(params[0]);
 
 	string strWalletless = "No";
-	if(params.size() >= 2)
+	if(CheckParam(params, 1))
 		strWalletless = params[1].get_str();
 
 	vector<CCert> vtxPos;
@@ -1226,7 +1226,7 @@ UniValue certlist(const UniValue& params, bool fHelp) {
                 "list certs that an array of aliases own. Set of aliases to look up based on alias.");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
-	if(params.size() >= 1)
+	if(CheckParam(params, 1))
 	{
 		if(params[0].isArray())
 		{
@@ -1248,11 +1248,11 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 		}
 	}
 	vector<unsigned char> vchNameUniq;
-    if (params.size() >= 2 && !params[1].get_str().empty())
+    if(CheckParam(params, 1))
         vchNameUniq = vchFromValue(params[1]);
 
 	string strWalletless = "No";
-	if(params.size() >= 3)
+	if(CheckParam(params, 2))
 		strWalletless = params[2].get_str();
 
 	UniValue oRes(UniValue::VARR);
@@ -1379,16 +1379,16 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 	bool safeSearch = true;
 
 
-	if (params.size() > 0)
+	if(CheckParam(params, 0))
 		strRegexp = params[0].get_str();
 
-	if (params.size() > 1)
+	if(CheckParam(params, 1))
 		vchCert = vchFromValue(params[1]);
 
-	if (params.size() > 2)
+	if(CheckParam(params, 2))
 		safeSearch = params[2].get_str()=="On"? true: false;
 
-	if (params.size() > 3)
+	if(CheckParam(params, 3))
 		strCategory = params[3].get_str();
 
     UniValue oRes(UniValue::VARR);
@@ -1421,7 +1421,7 @@ UniValue certhistory(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchCert = vchFromValue(params[0]);
 
 	string strWalletless = "No";
-	if(params.size() >= 2)
+	if(CheckParam(params, 1))
 		strWalletless = params[1].get_str();
 
     UniValue oRes(UniValue::VARR);
@@ -1517,9 +1517,9 @@ UniValue certstats(const UniValue& params, bool fHelp) {
 				"Show statistics for all non-expired certificates. Only certificates created or updated after unixtime are returned. Set of certificates to look up based on array of aliases passed in. Leave empty for all certificates.\n");
 	vector<string> aliases;
 	uint64_t nExpireFilter = 0;
-	if(params.size() >= 1)
+	if(CheckParam(params, 0))
 		nExpireFilter = params[0].get_int64();
-	if(params.size() >= 2)
+	if(CheckParam(params, 1))
 	{
 		if(params[1].isArray())
 		{

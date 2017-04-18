@@ -2282,7 +2282,7 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 				"<aliasname> alias name to use as filter.\n");
 
 	vector<unsigned char> vchAlias;
-	if (params.size() >= 1)
+	if(CheckParam(params, 0))
 		vchAlias = vchFromValue(params[0]);
 
 
@@ -2623,7 +2623,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 				"Show values of an alias.\n");
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	string strWalletless = "No";
-	if(params.size() >= 2)
+	if(CheckParam(params, 1))
 		strWalletless = params[1].get_str();
 
 	vector<CAliasIndex> vtxPos;
@@ -2760,7 +2760,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 	UniValue oRes(UniValue::VARR);
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	string strWalletless = "No";
-	if(params.size() >= 2)
+	if(CheckParam(params, 1))
 		strWalletless = params[1].get_str();	
 	vector<CAliasIndex> vtxPos;
 	if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
@@ -2901,16 +2901,16 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 	bool safeSearch = true;
 
 
-	if (params.size() > 0)
+	if(CheckParam(params, 0))
 		strRegexp = params[0].get_str();
 
-	if (params.size() > 1)
+	if(CheckParam(params, 1))
 	{
 		vchAlias = vchFromValue(params[1]);
 		strName = params[1].get_str();
 	}
 
-	if (params.size() > 2)
+	if(CheckParam(params, 2))
 		safeSearch = params[2].get_str()=="On"? true: false;
 
 	UniValue oRes(UniValue::VARR);
@@ -2941,7 +2941,7 @@ UniValue aliasstats(const UniValue& params, bool fHelp) {
 		throw runtime_error("aliasstats unixtime=0\n"
 				"Show statistics for all non-expired aliases. Only aliases created or updated after unixtime are returned.\n");
 	uint64_t nExpireFilter = 0;
-	if(params.size() >= 1)
+	if(CheckParam(params, 0))
 		nExpireFilter = params[0].get_int64();
 	
 	UniValue oAliasStats(UniValue::VOBJ);
@@ -3006,10 +3006,10 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid alias");
     UniValue sendTo = params[1].get_obj();
     int nMinDepth = 1;
-    if (params.size() > 2)
+    if(CheckParam(params, 2))
         nMinDepth = params[2].get_int();
     CWalletTx wtx;
-    if (params.size() > 3 && !params[3].isNull() && !params[3].get_str().empty())
+    if(CheckParam(params, 3))
         wtx.mapValue["comment"] = params[3].get_str();
 
     set<CSyscoinAddress> setAddress;

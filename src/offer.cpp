@@ -1677,7 +1677,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1513 - " + _("Could not find an offer with this guid"));
 
 	int commissionInteger = boost::lexical_cast<int>(params[2].get_str());
-	if(params.size() >= 4)
+	if(CheckParam(params, 3))
 	{
 
 		vchDescription = vchFromValue(params[3]);
@@ -1814,7 +1814,7 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchAlias =  vchFromValue(params[1]);
 	int nDiscountPctInteger = 0;
 
-	if(params.size() >= 3)
+	if(CheckParam(params, 2))
 		nDiscountPctInteger = boost::lexical_cast<int>(params[2].get_str());
 
 	CWalletTx wtx;
@@ -3116,7 +3116,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	UniValue oOffer(UniValue::VOBJ);
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
 	string strWalletless = "No";
-	if(params.size() >= 2)
+	if(CheckParam(params, 1))
 		strWalletless = params[1].get_str();
 	vector<COffer> vtxPos;
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos) || vtxPos.empty())
@@ -3257,7 +3257,7 @@ bool BuildOfferJson(const COffer& theOffer, const CAliasIndex &alias, UniValue& 
 	oOffer.push_back(Pair("offer_units", theOffer.fUnits));
 	return true;
 }
-bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, UniValue& oOfferAccept, const string &strWalletless)
+bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, const CAliasIndex& offerAlias, UniValue& oOfferAccept, const string &strWalletless)
 {
 	COffer linkOffer;
 	CTransaction linkTx;
@@ -3354,6 +3354,7 @@ bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, U
 	oOfferAccept.push_back(Pair("time", sTime));
 	oOfferAccept.push_back(Pair("quantity", strprintf("%d", theOffer.accept.nQty)));
 	oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
+	oOfferAccept.push_back(Pair("address", EncodeBase58(offerAlias.vchAddress)));
 	if(theOffer.GetPrice() > 0)
 		oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*((float)theOffer.accept.nPrice/(float)theOffer.nPrice))));
 	else
@@ -3362,10 +3363,10 @@ bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, U
 	int precision = 2;
 	int extprecision = 2;
 
-	CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theAlias.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOffer.accept.nAcceptHeight, precision);
+	CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offerAlias.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOffer.accept.nAcceptHeight, precision);
 	CAmount nPricePerUnitExt = 0;
 	if(theOffer.accept.nPaymentOption != PAYMENTOPTION_SYS)
-		nPricePerUnitExt = convertSyscoinToCurrencyCode(theAlias.vchAliasPeg, vchFromString(GetPaymentOptionsString(theOffer.accept.nPaymentOption)), priceAtTimeOfAccept, theOffer.accept.nAcceptHeight, extprecision);
+		nPricePerUnitExt = convertSyscoinToCurrencyCode(offerAlias.vchAliasPeg, vchFromString(GetPaymentOptionsString(theOffer.accept.nPaymentOption)), priceAtTimeOfAccept, theOffer.accept.nAcceptHeight, extprecision);
 	CAmount sysTotal = priceAtTimeOfAccept * theOffer.accept.nQty;
 	oOfferAccept.push_back(Pair("systotal", sysTotal));
 	oOfferAccept.push_back(Pair("sysprice", priceAtTimeOfAccept));
@@ -3447,7 +3448,7 @@ bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, U
 	{
 		if(strWalletless == "Yes")
 			strData = HexStr(theOffer.accept.vchMessage);		
-		else if(DecryptMessage(theAlias, theOffer.accept.vchMessage, strDecrypted))
+		else if(DecryptMessage(offerAlias, theOffer.accept.vchMessage, strDecrypted))
 			strData = strDecrypted;			
 	}
 	oOfferAccept.push_back(Pair("pay_message", strData));
@@ -3459,7 +3460,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
                 "list offers that an array of aliases own. Set of aliases to look up based on alias.");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
-	if(params.size() >= 1)
+	if(CheckParam(params, 0))
 	{
 		if(params[0].isArray())
 		{
@@ -3481,15 +3482,15 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 		}
 	}
 	vector<unsigned char> vchNameUniq;
-    if (params.size() >= 2 && !params[1].get_str().empty())
+    if(CheckParam(params, 1))
         vchNameUniq = vchFromValue(params[1]);
 
 	string strAccepts = "No";
-	if(params.size() >= 3)
+	if(CheckParam(params, 2))
 		strAccepts = params[2].get_str();
 
 	string strWalletless = "No";
-	if(params.size() >= 4)
+	if(CheckParam(params, 3))
 		strWalletless = params[3].get_str();
 	map<uint256, CTransaction> vtxTx;
 	map<uint256, uint64_t> vtxHeight;
@@ -3557,7 +3558,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 					else if(strAccepts == "Yes")
 					{
 						theOffer.accept = offer.accept;
-						if(BuildOfferAcceptJson(theOffer, vtxPos.back(), oOffer, strWalletless))
+						if(BuildOfferAcceptJson(theOffer, vtxPos.back(), vtxAliasPos.back(), oOffer, strWalletless))
 							oRes.push_back(oOffer);
 					}
 					// for accepts its the same as acceptheight because its the height from transaction
@@ -3576,7 +3577,7 @@ UniValue offerhistory(const UniValue& params, bool fHelp) {
 	UniValue oRes(UniValue::VARR);
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
 	string strWalletless = "No";
-	if(params.size() >= 2)
+	if(CheckParam(params, 1))
 		strWalletless = params[1].get_str();
 	vector<COffer> vtxPos;
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos) || vtxPos.empty())
@@ -3638,16 +3639,16 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 	string strCategory;
 	bool safeSearch = true;
 
-	if (params.size() > 0)
+	if(CheckParam(params, 0))
 		strRegexp = params[0].get_str();
 
-	if (params.size() > 1)
+	if(CheckParam(params, 1))
 		vchOffer = vchFromValue(params[1]);
 
-	if (params.size() > 2)
+	if(CheckParam(params, 2))
 		safeSearch = params[2].get_str()=="On"? true: false;
 
-	if (params.size() > 3)
+	if(CheckParam(params, 3))
 		strCategory = params[3].get_str();
 
 	UniValue oRes(UniValue::VARR);
@@ -3798,9 +3799,9 @@ UniValue offerstats(const UniValue& params, bool fHelp) {
 				"Show statistics for all non-expired offers. Only offers created or updated after unixtime are returned. Set of offers to look up based on array of aliases passed in. Leave empty for all offers.\n");
 	vector<string> aliases;
 	uint64_t nExpireFilter = 0;
-	if(params.size() >= 1)
+	if(CheckParam(params, 0))
 		nExpireFilter = params[0].get_int64();
-	if(params.size() >= 2)
+	if(CheckParam(params, 1))
 	{
 		if(params[1].isArray())
 		{

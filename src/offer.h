@@ -454,7 +454,7 @@ bool GetTxAndVtxOfOffer(const std::vector<unsigned char> &vchOffer,
 				  COffer& txPos, CTransaction& tx, std::vector<COffer> &vtxPos, bool skipExpiresCheck=false);
 bool GetVtxOfOffer(const std::vector<unsigned char> &vchOffer,
 				  COffer& txPos, std::vector<COffer> &vtxPos, bool skipExpiresCheck=false);
-bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex &alias, UniValue& oOfferAccept, const std::string &strWalletless="");
+bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex &alias, const CAliasIndex &offeralias, UniValue& oOfferAccept, const std::string &strWalletless="");
 bool BuildOfferJson(const COffer& theOffer, const CAliasIndex &alias, UniValue& oOffer, const std::string &strWalletless="");
 bool BuildOfferStatsJson(const std::vector<std::vector<COffer> > &offers, UniValue& oOfferStats);
 uint64_t GetOfferExpiration(const COffer& offer);

@@ -541,7 +541,7 @@ UniValue messageinfo(const UniValue& params, bool fHelp) {
 
     vector<unsigned char> vchMessage = vchFromValue(params[0]);
 	string strWalletless = "No";
-	if(params.size() >= 2)
+	if(CheckParam(params, 1))
 		strWalletless = params[1].get_str();
 
 	vector<CMessage> vtxPos;
@@ -564,7 +564,7 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
                 "list messages that an array of aliases has recieved. Set of aliases to look up based on alias.");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
-	if(params.size() >= 1)
+	if(CheckParam(params, 0))
 	{
 		if(params[0].isArray())
 		{
@@ -586,11 +586,11 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 		}
 	}
 	vector<unsigned char> vchNameUniq;
-    if (params.size() >= 2 && !params[1].get_str().empty())
+    if(CheckParam(params, 1))
         vchNameUniq = vchFromValue(params[1]);
 
 	string strWalletless = "No";
-	if(params.size() >= 3)
+	if(CheckParam(params, 2))
 		strWalletless = params[2].get_str();
 
 	UniValue oRes(UniValue::VARR);
@@ -717,7 +717,7 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
                 "list messages that an array of aliases has sent. Set of aliases to look up based on alias.");
 	UniValue aliasesValue(UniValue::VARR);
 	vector<string> aliases;
-	if(params.size() >= 1)
+	if(CheckParam(params, 0))
 	{
 		if(params[0].isArray())
 		{
@@ -739,11 +739,11 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 		}
 	}
 	vector<unsigned char> vchNameUniq;
-    if (params.size() >= 2 && !params[1].get_str().empty())
+   if(CheckParam(params, 1))
         vchNameUniq = vchFromValue(params[1]);
 
 	string strWalletless = "No";
-	if(params.size() >= 3)
+	if(CheckParam(params, 2))
 		strWalletless = params[2].get_str();
 
 	UniValue oRes(UniValue::VARR);
@@ -848,9 +848,9 @@ UniValue messagestats(const UniValue& params, bool fHelp) {
 				"Show statistics for all non-expired messages. Only messages created after unixtime are returned. Set of messages to look up based on array of aliases passed in. Leave empty for all messages.\n");
 	vector<string> aliases;
 	uint64_t nExpireFilter = 0;
-	if(params.size() >= 1)
+	if(CheckParam(params, 0))
 		nExpireFilter = params[0].get_int64();
-	if(params.size() >= 2)
+	if(CheckParam(params, 1))
 	{
 		if(params[1].isArray())
 		{
