@@ -3540,7 +3540,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 					vector<COffer> vtxOfferPos;
 					if (!pofferdb->ReadOffer(offer.vchOffer, vtxOfferPos) || vtxOfferPos.empty())
 						continue;
-					const COffer &theOffer = vtxOfferPos.back();
+					COffer theOffer = vtxOfferPos.back();
 					vector<CAliasIndex> vtxAliasPos;
 					if (!paliasdb->ReadAlias(theOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
 						continue;
@@ -3548,6 +3548,8 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 					UniValue oOffer(UniValue::VOBJ);
 					// for accepts its the same as acceptheight because its the height from transaction
 					vNamesI[vchKey] = nHeight;
+					if(strAccepts == "Yes")
+						theOffer.accept = offer.accept;
 					if((strAccepts == "Yes" && BuildOfferAcceptJson(theOffer, theAlias, oOffer, strWalletless)) ||
 						(strAccepts == "No" && BuildOfferJson(theOffer, theAlias, oOffer, strWalletless)))
 					{
