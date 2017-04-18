@@ -6377,11 +6377,21 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
         // Check all headers to make sure they are continuous before attempting to accept them.
         // This prevents and attacker from keeping us from doing direct fetch by giving us out
         // of order headers.
+
+
         uint256 hashLastBlock;
         hashLastBlock.SetNull();
         for (const CBlockHeader &header : headers)
         {
-            if (!hashLastBlock.IsNull() && header.hashPrevBlock != hashLastBlock)
+            // check that the first header has a previous block in the blockindex.
+            if (hashLastBlock.IsNull())
+            {
+                BlockMap::iterator mi = mapBlockIndex.find(header.hashPrevBlock);
+                if (mi != mapBlockIndex.end())
+                    hashLastBlock = header.hashPrevBlock;
+            }
+
+            if (header.hashPrevBlock != hashLastBlock)
             {
                 Misbehaving(pfrom->GetId(), 20);
                 return error("non-continuous headers sequence");
