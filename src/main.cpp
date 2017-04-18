@@ -5862,6 +5862,7 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
         // This prevents and attacker from keeping us from doing direct fetch by giving us out
         // of order headers.
         uint256 hashLastBlock;
+        hashLastBlock.SetNull();
         for (const CBlockHeader &header : headers)
         {
             if (!hashLastBlock.IsNull() && header.hashPrevBlock != hashLastBlock)
