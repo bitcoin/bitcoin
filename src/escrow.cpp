@@ -1872,7 +1872,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	signParams.push_back(EncodeHexTx(wtx));
 	const UniValue &resSign1 = tableRPC.execute("syscoinsignrawtransaction", signParams);
 	const UniValue& so = resSign1.get_obj();
-	string hex_str = "";
+	hex_str = "";
 	string txid_str = "";
 	const UniValue& hex_value1 = find_value(so, "hex");
 	const UniValue& txid_value = find_value(so, "txid");
