@@ -27,9 +27,17 @@ import logging
 
 # Formatting. Default colors to empty strings.
 BOLD, BLUE, RED, GREY = ("", ""), ("", ""), ("", ""), ("", "")
-TICK = "✓ "
-CROSS = "✖ "
-CIRCLE = "○ "
+try:
+    # Make sure python thinks it can write unicode to its stdout
+    "\u2713".encode("utf_8").decode(sys.stdout.encoding)
+    TICK = "✓ "
+    CROSS = "✖ "
+    CIRCLE = "○ "
+except UnicodeDecodeError:
+    TICK = "P "
+    CROSS = "x "
+    CIRCLE = "o "
+
 if os.name == 'posix':
     # primitive formatting on supported
     # terminal via ANSI escape sequences:
@@ -140,7 +148,8 @@ EXTENDED_SCRIPTS = [
     'replace-by-fee.py',
 ]
 
-ALL_SCRIPTS = BASE_SCRIPTS + ZMQ_SCRIPTS + EXTENDED_SCRIPTS
+# Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
+ALL_SCRIPTS = EXTENDED_SCRIPTS + BASE_SCRIPTS + ZMQ_SCRIPTS
 
 NON_SCRIPTS = [
     # These are python files that live in the functional tests directory, but are not test scripts.
@@ -163,6 +172,7 @@ def main():
     parser.add_argument('--force', '-f', action='store_true', help='run tests even on platforms where they are disabled by default (e.g. windows).')
     parser.add_argument('--help', '-h', '-?', action='store_true', help='print help text and exit')
     parser.add_argument('--jobs', '-j', type=int, default=4, help='how many test scripts to run in parallel. Default=4.')
+    parser.add_argument('--keepcache', '-k', action='store_true', help='the default behavior is to flush the cache directory on startup. --keepcache retains the cache from the previous testrun.')
     parser.add_argument('--quiet', '-q', action='store_true', help='only print results summary and failure logs')
     parser.add_argument('--nozmq', action='store_true', help='do not run the zmq tests')
     args, unknown_args = parser.parse_known_args()
@@ -217,10 +227,9 @@ def main():
         if enable_zmq:
             test_list += ZMQ_SCRIPTS
         if args.extended:
-            test_list += EXTENDED_SCRIPTS
-            # TODO: BASE_SCRIPTS and EXTENDED_SCRIPTS are sorted by runtime
-            # (for parallel running efficiency). This combined list will is no
-            # longer sorted.
+            # place the EXTENDED_SCRIPTS first since the three longest ones
+            # are there and the list is shorter
+            test_list = EXTENDED_SCRIPTS + test_list
 
     # Remove the test cases that the user has explicitly asked to exclude.
     if args.exclude:
@@ -241,9 +250,23 @@ def main():
 
     check_script_list(config["environment"]["SRCDIR"])
 
+    if not args.keepcache:
+        shutil.rmtree("%s/test/cache" % config["environment"]["BUILDDIR"], ignore_errors=True)
+
     run_tests(test_list, config["environment"]["SRCDIR"], config["environment"]["BUILDDIR"], config["environment"]["EXEEXT"], args.jobs, args.coverage, passon_args)
 
 def run_tests(test_list, src_dir, build_dir, exeext, jobs=1, enable_coverage=False, args=[]):
+    # Warn if bitcoind is already running (unix only)
+    try:
+        if subprocess.check_output(["pidof", "bitcoind"]) is not None:
+            print("%sWARNING!%s There is already a bitcoind process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
+    except (OSError, subprocess.SubprocessError):
+        pass
+
+    # Warn if there is a cache directory
+    cache_dir = "%s/test/cache" % build_dir
+    if os.path.isdir(cache_dir):
+        print("%sWARNING!%s There is a cache directory here: %s. If tests fail unexpectedly, try deleting the cache directory." % (BOLD[1], BOLD[0], cache_dir))
 
     #Set env vars
     if "BITCOIND" not in os.environ:
@@ -252,7 +275,7 @@ def run_tests(test_list, src_dir, build_dir, exeext, jobs=1, enable_coverage=Fal
     tests_dir = src_dir + '/test/functional/'
 
     flags = ["--srcdir={}/src".format(build_dir)] + args
-    flags.append("--cachedir=%s/test/cache" % build_dir)
+    flags.append("--cachedir=%s" % cache_dir)
 
     if enable_coverage:
         coverage = RPCCoverage()
@@ -407,9 +430,10 @@ def check_script_list(src_dir):
     python_files = set([t for t in os.listdir(script_dir) if t[-3:] == ".py"])
     missed_tests = list(python_files - set(map(lambda x: x.split()[0], ALL_SCRIPTS + NON_SCRIPTS)))
     if len(missed_tests) != 0:
-        print("The following scripts are not being run:" + str(missed_tests))
-        print("Check the test lists in test_runner.py")
-        sys.exit(1)
+        print("%sWARNING!%s The following scripts are not being run: %s. Check the test lists in test_runner.py." % (BOLD[1], BOLD[0], str(missed_tests)))
+        if os.getenv('TRAVIS') == 'true':
+            # On travis this warning is an error to prevent merging incomplete commits into master
+            sys.exit(1)
 
 class RPCCoverage(object):
     """
