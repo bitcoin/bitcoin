@@ -1723,7 +1723,17 @@ UniValue aliasauthenticate(const UniValue& params, bool fHelp) {
 }
 bool CheckParam(const UniValue& params, const unsigned int index)
 {
-	return (params.size() > index && params[index].get_str().size() > 0 && params[index].get_str() != "\"\"");
+	if(params.size() > index)
+	{
+		if(params[index].isStr())
+		{
+			if( params[index].get_str().size() > 0 && params[index].get_str() != "\"\"")
+				return true;
+		}
+		else if(params[index].isArray())
+			return params[index].get_array().size() > 0;
+	}
+	return false;
 }
 UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if (fHelp || 4 > params.size() || 12 < params.size())
