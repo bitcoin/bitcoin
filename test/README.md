@@ -25,6 +25,8 @@ The ZMQ functional test requires a python ZMQ library. To install it:
 Running tests locally
 =====================
 
+Build for your system first. Be sure to enable wallet, utils and daemon when you configure. Tests will not run otherwise.
+
 Functional tests
 ----------------
 
