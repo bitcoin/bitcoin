@@ -190,7 +190,7 @@ void AcceptandPayOfferListPage::loadAliases()
 				const UniValue& o = input.get_obj();
 				name_str = "";
 				expired = false;
-				const UniValue& name_value = find_value(o, "name");
+				const UniValue& name_value = find_value(o, "alias");
 				if (name_value.type() == UniValue::VSTR)
 					name_str = name_value.get_str();		
 				const UniValue& expired_value = find_value(o, "expired");
