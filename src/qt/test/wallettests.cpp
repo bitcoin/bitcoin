@@ -84,6 +84,7 @@ void WalletTests::walletTests()
 {
     // Set up wallet and chain with 101 blocks (1 mature block for spending).
     TestChain100Setup test;
+    const CChainParams& chainParams = Params();
     test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
     bitdb.MakeMock();
     CWallet wallet("wallet_test.dat");
@@ -94,7 +95,7 @@ void WalletTests::walletTests()
         wallet.SetAddressBook(test.coinbaseKey.GetPubKey().GetID(), "", "receive");
         wallet.AddKeyPubKey(test.coinbaseKey, test.coinbaseKey.GetPubKey());
     }
-    wallet.ScanForWalletTransactions(chainActive.Genesis(), true);
+    wallet.ScanForWalletTransactions(chainParams.GetConsensus(), chainParams.TxData(), chainActive.Genesis(), true);
     wallet.SetBroadcastTransactions(true);
 
     // Create widgets for sending coins and listing transactions.

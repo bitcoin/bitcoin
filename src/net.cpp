@@ -93,7 +93,8 @@ void CConnman::AddOneShot(const std::string& strDest)
 
 unsigned short GetListenPort()
 {
-    return (unsigned short)(GetArg("-port", Params().GetDefaultPort()));
+    const CChainParams& chainparams = Params(); // TODO make parameter
+    return (unsigned short)(GetArg("-port", chainparams.GetDefaultPort()));
 }
 
 // find 'best' local address for a particular peer
@@ -342,6 +343,7 @@ bool CConnman::CheckIncomingNonce(uint64_t nonce)
 
 CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure)
 {
+    const CChainParams& chainparams = Params(); // TODO make parameter
     if (pszDest == NULL) {
         if (IsLocal(addrConnect))
             return NULL;
@@ -363,7 +365,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     // Connect
     SOCKET hSocket;
     bool proxyConnectionFailed = false;
-    if (pszDest ? ConnectSocketByName(addrConnect, hSocket, pszDest, Params().GetDefaultPort(), nConnectTimeout, &proxyConnectionFailed) :
+    if (pszDest ? ConnectSocketByName(addrConnect, hSocket, pszDest, chainparams.GetDefaultPort(), nConnectTimeout, &proxyConnectionFailed) :
                   ConnectSocket(addrConnect, hSocket, nConnectTimeout, &proxyConnectionFailed))
     {
         if (!IsSelectableSocket(hSocket)) {
@@ -686,6 +688,7 @@ void CNode::copyStats(CNodeStats &stats)
 
 bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete)
 {
+    const CChainParams& chainparams = Params(); // TODO make parameter
     complete = false;
     int64_t nTimeMicros = GetTimeMicros();
     LOCK(cs_vRecv);
@@ -696,7 +699,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
         // get current incomplete message, or create a new one
         if (vRecvMsg.empty() ||
             vRecvMsg.back().complete())
-            vRecvMsg.push_back(CNetMessage(Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
+            vRecvMsg.push_back(CNetMessage(chainparams.MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
 
         CNetMessage& msg = vRecvMsg.back();
 
@@ -1559,6 +1562,7 @@ static std::string GetDNSHost(const CDNSSeedData& data, ServiceFlags* requiredSe
 
 void CConnman::ThreadDNSAddressSeed()
 {
+    const CChainParams& chainparams = Params(); // TODO make parameter
     // goal: only query DNS seeds if address need is acute
     // Avoiding DNS seeds when we don't need them improves user privacy by
     //  creating fewer identifying DNS requests, reduces trust by giving seeds
@@ -1579,7 +1583,7 @@ void CConnman::ThreadDNSAddressSeed()
         }
     }
 
-    const std::vector<CDNSSeedData> &vSeeds = Params().DNSSeeds();
+    const std::vector<CDNSSeedData> &vSeeds = chainparams.DNSSeeds();
     int found = 0;
 
     LogPrintf("Loading addresses from DNS seeds (could take a while)\n");
@@ -1599,7 +1603,7 @@ void CConnman::ThreadDNSAddressSeed()
                 BOOST_FOREACH(const CNetAddr& ip, vIPs)
                 {
                     int nOneDay = 24*3600;
-                    CAddress addr = CAddress(CService(ip, Params().GetDefaultPort()), requiredServiceBits);
+                    CAddress addr = CAddress(CService(ip, chainparams.GetDefaultPort()), requiredServiceBits);
                     addr.nTime = GetTime() - 3*nOneDay - GetRand(4*nOneDay); // use a random age between 3 and 7 days old
                     vAdd.push_back(addr);
                     found++;
@@ -1671,6 +1675,7 @@ void CConnman::ProcessOneShot()
 
 void CConnman::ThreadOpenConnections()
 {
+    const CChainParams& chainparams = Params(); // TODO make parameter
     // Connect to specific addresses
     if (mapMultiArgs.count("-connect") && mapMultiArgs.at("-connect").size() > 0)
     {
@@ -1715,7 +1720,7 @@ void CConnman::ThreadOpenConnections()
                 LogPrintf("Adding fixed seed nodes as DNS doesn't seem to be available.\n");
                 CNetAddr local;
                 LookupHost("127.0.0.1", local, false);
-                addrman.Add(convertSeed6(Params().FixedSeeds()), local);
+                addrman.Add(convertSeed6(chainparams.FixedSeeds()), local);
                 done = true;
             }
         }
@@ -1800,7 +1805,7 @@ void CConnman::ThreadOpenConnections()
                 continue;
 
             // do not allow non-default ports, unless after 50 invalid addresses selected already
-            if (addr.GetPort() != Params().GetDefaultPort() && nTries < 50)
+            if (addr.GetPort() != chainparams.GetDefaultPort() && nTries < 50)
                 continue;
 
             addrConnect = addr;
@@ -1824,6 +1829,7 @@ void CConnman::ThreadOpenConnections()
 
 std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo()
 {
+    const CChainParams& chainparams = Params(); // TODO make parameter
     std::vector<AddedNodeInfo> ret;
 
     std::list<std::string> lAddresses(0);
@@ -1852,7 +1858,7 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo()
     }
 
     BOOST_FOREACH(const std::string& strAddNode, lAddresses) {
-        CService service(LookupNumeric(strAddNode.c_str(), Params().GetDefaultPort()));
+        CService service(LookupNumeric(strAddNode.c_str(), chainparams.GetDefaultPort()));
         if (service.IsValid()) {
             // strAddNode is an IP:port
             auto it = mapConnected.find(service);
@@ -1877,6 +1883,7 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo()
 
 void CConnman::ThreadOpenAddedConnections()
 {
+    const CChainParams& chainparams = Params(); // TODO make parameter
     {
         LOCK(cs_vAddedNodes);
         if (mapMultiArgs.count("-addnode"))
@@ -1898,7 +1905,7 @@ void CConnman::ThreadOpenAddedConnections()
                 // If strAddedNode is an IP/port, decode it immediately, so
                 // OpenNetworkConnection can detect existing connections to that IP/port.
                 tried = true;
-                CService service(LookupNumeric(info.strAddedNode.c_str(), Params().GetDefaultPort()));
+                CService service(LookupNumeric(info.strAddedNode.c_str(), chainparams.GetDefaultPort()));
                 OpenNetworkConnection(CAddress(service, NODE_NONE), false, &grant, info.strAddedNode.c_str(), false, false, true);
                 if (!interruptNet.sleep_for(std::chrono::milliseconds(500)))
                     return;
@@ -2744,6 +2751,7 @@ bool CConnman::NodeFullyConnected(const CNode* pnode)
 
 void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 {
+    const CChainParams& chainparams = Params(); // TODO make parameter
     size_t nMessageSize = msg.data.size();
     size_t nTotalSize = nMessageSize + CMessageHeader::HEADER_SIZE;
     LogPrint(BCLog::NET, "sending %s (%d bytes) peer=%d\n",  SanitizeString(msg.command.c_str()), nMessageSize, pnode->id);
@@ -2751,7 +2759,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
     std::vector<unsigned char> serializedHeader;
     serializedHeader.reserve(CMessageHeader::HEADER_SIZE);
     uint256 hash = Hash(msg.data.data(), msg.data.data() + nMessageSize);
-    CMessageHeader hdr(Params().MessageStart(), msg.command.c_str(), nMessageSize);
+    CMessageHeader hdr(chainparams.MessageStart(), msg.command.c_str(), nMessageSize);
     memcpy(hdr.pchChecksum, hash.begin(), CMessageHeader::CHECKSUM_SIZE);
 
     CVectorWriter{SER_NETWORK, INIT_PROTO_VERSION, serializedHeader, 0, hdr};

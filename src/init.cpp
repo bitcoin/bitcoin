@@ -1555,7 +1555,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 8: load wallet
 #ifdef ENABLE_WALLET
-    if (!CWallet::InitLoadWallet())
+    if (!CWallet::InitLoadWallet(chainparams.GetConsensus(), chainparams.TxData()))
         return false;
 #else
     LogPrintf("No wallet support compiled in!\n");

@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "chainparams.h"
 #include "consensus/validation.h"
 #include "key.h"
 #include "validation.h"
@@ -23,7 +24,7 @@ ToMemPool(CMutableTransaction& tx)
     LOCK(cs_main);
 
     CValidationState state;
-    return AcceptToMemoryPool(mempool, state, MakeTransactionRef(tx), false, NULL, NULL, true, 0);
+    return AcceptToMemoryPool(Params(), mempool, state, MakeTransactionRef(tx), false, NULL, NULL, true, 0);
 }
 
 BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)

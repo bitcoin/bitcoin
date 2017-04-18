@@ -1545,11 +1545,10 @@ void CWalletTx::GetAccountAmounts(const std::string& strAccount, CAmount& nRecei
  * successfully scanned.
  *
  */
-CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
+CBlockIndex* CWallet::ScanForWalletTransactions(const Consensus::Params& consensusParams, const ChainTxData& chainTxData, CBlockIndex* pindexStart, bool fUpdate)
 {
     CBlockIndex* ret = nullptr;
     int64_t nNow = GetTime();
-    const CChainParams& chainParams = Params();
 
     CBlockIndex* pindex = pindexStart;
     {
@@ -1563,15 +1562,15 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool f
             pindex = chainActive.Next(pindex);
 
         ShowProgress(_("Rescanning..."), 0); // show rescan progress in GUI as dialog or on splashscreen, if -rescan on startup
-        double dProgressStart = GuessVerificationProgress(chainParams.TxData(), pindex);
-        double dProgressTip = GuessVerificationProgress(chainParams.TxData(), chainActive.Tip());
+        double dProgressStart = GuessVerificationProgress(chainTxData, pindex);
+        double dProgressTip = GuessVerificationProgress(chainTxData, chainActive.Tip());
         while (pindex && !fAbortRescan)
         {
             if (pindex->nHeight % 100 == 0 && dProgressTip - dProgressStart > 0.0)
-                ShowProgress(_("Rescanning..."), std::max(1, std::min(99, (int)((GuessVerificationProgress(chainParams.TxData(), pindex) - dProgressStart) / (dProgressTip - dProgressStart) * 100))));
+                ShowProgress(_("Rescanning..."), std::max(1, std::min(99, (int)((GuessVerificationProgress(chainTxData, pindex) - dProgressStart) / (dProgressTip - dProgressStart) * 100))));
 
             CBlock block;
-            if (ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
+            if (ReadBlockFromDisk(block, pindex, consensusParams)) {
                 for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
                     AddToWalletIfInvolvingMe(block.vtx[posInBlock], pindex, posInBlock, fUpdate);
                 }
@@ -1584,11 +1583,11 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool f
             pindex = chainActive.Next(pindex);
             if (GetTime() >= nNow + 60) {
                 nNow = GetTime();
-                LogPrintf("Still rescanning. At block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainParams.TxData(), pindex));
+                LogPrintf("Still rescanning. At block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainTxData, pindex));
             }
         }
         if (pindex && fAbortRescan) {
-            LogPrintf("Rescan aborted at block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainParams.TxData(), pindex));
+            LogPrintf("Rescan aborted at block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainTxData, pindex));
         }
         ShowProgress(_("Rescanning..."), 100); // hide progress dialog in GUI
 
@@ -1597,7 +1596,7 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool f
     return ret;
 }
 
-void CWallet::ReacceptWalletTransactions()
+void CWallet::ReacceptWalletTransactions(const CChainParams& chainparams)
 {
     // If transactions aren't being broadcasted, don't let them into local mempool either
     if (!fBroadcastTransactions)
@@ -1626,18 +1625,19 @@ void CWallet::ReacceptWalletTransactions()
 
         LOCK(mempool.cs);
         CValidationState state;
-        wtx.AcceptToMemoryPool(maxTxFee, state);
+        wtx.AcceptToMemoryPool(chainparams, maxTxFee, state);
     }
 }
 
 bool CWalletTx::RelayWalletTransaction(CConnman* connman)
 {
+    const CChainParams& chainparams = Params();
     assert(pwallet->GetBroadcastTransactions());
     if (!IsCoinBase() && !isAbandoned() && GetDepthInMainChain() == 0)
     {
         CValidationState state;
         /* GetDepthInMainChain already catches known conflicts. */
-        if (InMempool() || AcceptToMemoryPool(maxTxFee, state)) {
+        if (InMempool() || AcceptToMemoryPool(chainparams, maxTxFee, state)) {
             LogPrintf("Relaying wtx %s\n", GetHash().ToString());
             if (connman) {
                 CInv inv(MSG_TX, GetHash());
@@ -2746,6 +2746,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
  */
 bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CConnman* connman, CValidationState& state)
 {
+    const CChainParams& chainparams = Params();
     {
         LOCK2(cs_main, cs_wallet);
         LogPrintf("CommitTransaction:\n%s", wtxNew.tx->ToString());
@@ -2772,7 +2773,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CCon
         if (fBroadcastTransactions)
         {
             // Broadcast
-            if (!wtxNew.AcceptToMemoryPool(maxTxFee, state)) {
+            if (!wtxNew.AcceptToMemoryPool(chainparams, maxTxFee, state)) {
                 LogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", state.GetRejectReason());
                 // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
             } else {
@@ -3696,7 +3697,7 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
     return strUsage;
 }
 
-CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
+CWallet* CWallet::CreateWalletFromFile(const Consensus::Params& consensusParams, const ChainTxData& chainTxData, const std::string walletFile)
 {
     // needed to restore wallet transaction meta data after -zapwallettxes
     std::vector<CWalletTx> vWtx;
@@ -3835,7 +3836,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
         uiInterface.InitMessage(_("Rescanning..."));
         LogPrintf("Rescanning last %i blocks (from block %i)...\n", chainActive.Height() - pindexRescan->nHeight, pindexRescan->nHeight);
         nStart = GetTimeMillis();
-        walletInstance->ScanForWalletTransactions(pindexRescan, true);
+        walletInstance->ScanForWalletTransactions(consensusParams, chainTxData, pindexRescan, true);
         LogPrintf(" rescan      %15dms\n", GetTimeMillis() - nStart);
         walletInstance->SetBestChain(chainActive.GetLocator());
         CWalletDB::IncrementUpdateCounter();
@@ -3877,7 +3878,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
     return walletInstance;
 }
 
-bool CWallet::InitLoadWallet()
+bool CWallet::InitLoadWallet(const Consensus::Params& consensusParams, const ChainTxData& chainTxData)
 {
     if (GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         pwalletMain = NULL;
@@ -3893,7 +3894,7 @@ bool CWallet::InitLoadWallet()
         return InitError(_("Invalid characters in -wallet filename"));
     }
 
-    CWallet * const pwallet = CreateWalletFromFile(walletFile);
+    CWallet * const pwallet = CreateWalletFromFile(consensusParams, chainTxData, walletFile);
     if (!pwallet) {
         return false;
     }
@@ -3906,9 +3907,10 @@ std::atomic<bool> CWallet::fFlushScheduled(false);
 
 void CWallet::postInitProcess(CScheduler& scheduler)
 {
+    const CChainParams& chainparams = Params();
     // Add wallet transactions that aren't already in a block to mempool
     // Do this here as mempool requires genesis block to be loaded
-    ReacceptWalletTransactions();
+    ReacceptWalletTransactions(chainparams);
 
     // Run a thread to flush wallet periodically
     if (!CWallet::fFlushScheduled.exchange(true)) {
@@ -4092,7 +4094,7 @@ int CMerkleTx::GetBlocksToMaturity() const
 }
 
 
-bool CMerkleTx::AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& state)
+bool CMerkleTx::AcceptToMemoryPool(const CChainParams& chainparams, const CAmount& nAbsurdFee, CValidationState& state)
 {
-    return ::AcceptToMemoryPool(mempool, state, tx, true, NULL, NULL, false, nAbsurdFee);
+    return ::AcceptToMemoryPool(chainparams, mempool, state, tx, true, NULL, NULL, false, nAbsurdFee);
 }
