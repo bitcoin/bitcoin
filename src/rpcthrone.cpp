@@ -247,25 +247,14 @@ Value throne(const Array& params, bool fHelp)
     {
         if(!fThroNe) throw runtime_error("you must set throne=1 in the configuration\n");
 
-        if(pwalletMain->IsLocked()) {
-            SecureString strWalletPass;
-            strWalletPass.reserve(100);
-
-            if (params.size() == 2){
-                strWalletPass = params[1].get_str().c_str();
-            } else {
-                throw runtime_error("Your wallet is locked, passphrase is required\n");
-            }
-
-            if(!pwalletMain->Unlock(strWalletPass)){
-                throw runtime_error("incorrect passphrase\n");
-            }
+        {
+            LOCK(pwalletMain->cs_wallet);
+            EnsureWalletIsUnlocked();
         }
 
         if(activeThrone.status != ACTIVE_THRONE_STARTED){
             activeThrone.status = ACTIVE_THRONE_INITIAL; // TODO: consider better way
             activeThrone.ManageStatus();
-            pwalletMain->Lock();
         }
 
         return activeThrone.GetStatus();
@@ -277,22 +266,12 @@ Value throne(const Array& params, bool fHelp)
             throw runtime_error("command needs at least 2 parameters\n");
         }
 
-        std::string alias = params[1].get_str();
-
-        if(pwalletMain->IsLocked()) {
-            SecureString strWalletPass;
-            strWalletPass.reserve(100);
-
-            if (params.size() == 3){
-                strWalletPass = params[2].get_str().c_str();
-            } else {
-                throw runtime_error("Your wallet is locked, passphrase is required\n");
-            }
-
-            if(!pwalletMain->Unlock(strWalletPass)){
-                throw runtime_error("incorrect passphrase\n");
-            }
+        {
+            LOCK(pwalletMain->cs_wallet);
+            EnsureWalletIsUnlocked();
         }
+
+        std::string alias = params[1].get_str();
 
         bool found = false;
 
@@ -323,26 +302,16 @@ Value throne(const Array& params, bool fHelp)
             statusObj.push_back(Pair("errorMessage", "could not find alias in config. Verify with list-conf."));
         }
 
-        pwalletMain->Lock();
         return statusObj;
 
     }
 
     if (strCommand == "start-many" || strCommand == "start-all" || strCommand == "start-missing" || strCommand == "start-disabled")
     {
-        if(pwalletMain->IsLocked()) {
-            SecureString strWalletPass;
-            strWalletPass.reserve(100);
 
-            if (params.size() == 2){
-                strWalletPass = params[1].get_str().c_str();
-            } else {
-                throw runtime_error("Your wallet is locked, passphrase is required\n");
-            }
-
-            if(!pwalletMain->Unlock(strWalletPass)){
-                throw runtime_error("incorrect passphrase\n");
-            }
+        {
+            LOCK(pwalletMain->cs_wallet);
+            EnsureWalletIsUnlocked();
         }
 
         if((strCommand == "start-missing" || strCommand == "start-disabled") &&
@@ -386,7 +355,6 @@ Value throne(const Array& params, bool fHelp)
 
             resultsObj.push_back(Pair("status", statusObj));
         }
-        pwalletMain->Lock();
 
         Object returnObj;
         returnObj.push_back(Pair("overall", strprintf("Successfully started %d thrones, failed to start %d, total %d", successful, failed, successful + failed)));
@@ -662,22 +630,12 @@ Value thronebroadcast(const Array& params, bool fHelp)
         if (params.size() < 2)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Command needs at least 2 parameters");
 
-        std::string alias = params[1].get_str();
-
-        if(pwalletMain->IsLocked()) {
-            SecureString strWalletPass;
-            strWalletPass.reserve(100);
-
-            if (params.size() == 3){
-                strWalletPass = params[2].get_str().c_str();
-            } else {
-                throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Your wallet is locked, passphrase is required");
-            }
- 
-            if(!pwalletMain->Unlock(strWalletPass)){
-                throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "The wallet passphrase entered was incorrect");
-            }
+        {
+            LOCK(pwalletMain->cs_wallet);
+            EnsureWalletIsUnlocked();
         }
+
+        std::string alias = params[1].get_str();
 
         bool found = false;
 
@@ -712,7 +670,6 @@ Value thronebroadcast(const Array& params, bool fHelp)
             statusObj.push_back(Pair("errorMessage", "Could not find alias in config. Verify with list-conf."));
         }
 
-        pwalletMain->Lock();
         return statusObj;
 
     }
@@ -723,19 +680,9 @@ Value thronebroadcast(const Array& params, bool fHelp)
         if (fImporting || fReindex)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Wait for reindex and/or import to finish");
 
-        if(pwalletMain->IsLocked()) {
-            SecureString strWalletPass;
-            strWalletPass.reserve(100);
-
-            if (params.size() == 2){
-                strWalletPass = params[1].get_str().c_str();
-            } else {
-                throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Your wallet is locked, passphrase is required");
-            }
-
-            if(!pwalletMain->Unlock(strWalletPass)){
-                throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "The wallet passphrase entered was incorrect");
-            }
+        {
+            LOCK(pwalletMain->cs_wallet);
+            EnsureWalletIsUnlocked();
         }
 
         std::vector<CThroneConfig::CThroneEntry> mnEntries;
@@ -769,7 +716,6 @@ Value thronebroadcast(const Array& params, bool fHelp)
 
             resultsObj.push_back(Pair("status", statusObj));
         }
-        pwalletMain->Lock();
 
         CDataStream ssVecMnb(SER_NETWORK, PROTOCOL_VERSION);
         ssVecMnb << vecMnb;
