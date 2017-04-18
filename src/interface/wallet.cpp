@@ -15,6 +15,7 @@
 #include <script/standard.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
+#include <timedata.h>
 #include <ui_interface.h>
 #include <uint256.h>
 #include <validation.h>
@@ -50,6 +51,67 @@ public:
     CWallet& m_wallet;
     CReserveKey m_key;
 };
+
+//! Construct wallet tx struct.
+WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
+{
+    WalletTx result;
+    bool fInputDenomFound{false}, fOutputDenomFound{false};
+    result.tx = wtx.tx;
+    result.txin_is_mine.reserve(wtx.tx->vin.size());
+    for (const auto& txin : wtx.tx->vin) {
+        result.txin_is_mine.emplace_back(wallet.IsMine(txin));
+        if (!fInputDenomFound && result.txin_is_mine.back() && wallet.IsDenominated(txin.prevout)) {
+            fInputDenomFound = true;
+        }
+    }
+    result.txout_is_mine.reserve(wtx.tx->vout.size());
+    result.txout_address.reserve(wtx.tx->vout.size());
+    result.txout_address_is_mine.reserve(wtx.tx->vout.size());
+    for (const auto& txout : wtx.tx->vout) {
+        result.txout_is_mine.emplace_back(wallet.IsMine(txout));
+        result.txout_address.emplace_back();
+        result.txout_address_is_mine.emplace_back(ExtractDestination(txout.scriptPubKey, result.txout_address.back()) ?
+                                                      IsMine(wallet, result.txout_address.back()) :
+                                                      ISMINE_NO);
+        if (!fOutputDenomFound && result.txout_address_is_mine.back() && CPrivateSend::IsDenominatedAmount(txout.nValue)) {
+            fOutputDenomFound = true;
+        }
+    }
+    result.credit = wtx.GetCredit(ISMINE_ALL);
+    result.debit = wtx.GetDebit(ISMINE_ALL);
+    result.change = wtx.GetChange();
+    result.time = wtx.GetTxTime();
+    result.value_map = wtx.mapValue;
+    result.is_coinbase = wtx.IsCoinBase();
+    // The determination of is_denominate is based on simplified checks here because in this part of the code
+    // we only want to know about mixing transactions belonging to this specific wallet.
+    result.is_denominate = wtx.tx->vin.size() == wtx.tx->vout.size() && // Number of inputs is same as number of outputs
+                           (result.credit - result.debit) == 0 && // Transaction pays no tx fee
+                           fInputDenomFound && fOutputDenomFound; // At least 1 input and 1 output are denominated belonging to the provided wallet
+    return result;
+}
+
+//! Construct wallet tx status struct.
+WalletTxStatus MakeWalletTxStatus(const CWalletTx& wtx)
+{
+    WalletTxStatus result;
+    auto mi = ::mapBlockIndex.find(wtx.hashBlock);
+    CBlockIndex* block = mi != ::mapBlockIndex.end() ? mi->second : nullptr;
+    result.block_height = (block ? block->nHeight : std::numeric_limits<int>::max()),
+    result.blocks_to_maturity = wtx.GetBlocksToMaturity();
+    result.depth_in_main_chain = wtx.GetDepthInMainChain();
+    result.time_received = wtx.nTimeReceived;
+    result.lock_time = wtx.tx->nLockTime;
+    result.is_final = CheckFinalTx(*wtx.tx);
+    result.is_trusted = wtx.IsTrusted();
+    result.is_abandoned = wtx.isAbandoned();
+    result.is_coinbase = wtx.IsCoinBase();
+    result.is_in_main_chain = wtx.IsInMainChain();
+    result.is_chainlocked = wtx.IsChainLocked();
+    result.is_islocked = wtx.IsLockedByInstantSend();
+    return result;
+}
 
 //! Construct wallet TxOut struct.
 WalletTxOut MakeWalletTxOut(CWallet& wallet, const CWalletTx& wtx, int n, int depth)
@@ -187,6 +249,75 @@ public:
         LOCK2(cs_main, m_wallet.cs_wallet);
         return m_wallet.AbandonTransaction(txid);
     }
+    CTransactionRef getTx(const uint256& txid) override
+    {
+        LOCK2(::cs_main, m_wallet.cs_wallet);
+        auto mi = m_wallet.mapWallet.find(txid);
+        if (mi != m_wallet.mapWallet.end()) {
+            return mi->second.tx;
+        }
+        return {};
+    }
+    WalletTx getWalletTx(const uint256& txid) override
+    {
+        LOCK2(::cs_main, m_wallet.cs_wallet);
+        auto mi = m_wallet.mapWallet.find(txid);
+        if (mi != m_wallet.mapWallet.end()) {
+            return MakeWalletTx(m_wallet, mi->second);
+        }
+        return {};
+    }
+    std::vector<WalletTx> getWalletTxs() override
+    {
+        LOCK2(::cs_main, m_wallet.cs_wallet);
+        std::vector<WalletTx> result;
+        result.reserve(m_wallet.mapWallet.size());
+        for (const auto& entry : m_wallet.mapWallet) {
+            result.emplace_back(MakeWalletTx(m_wallet, entry.second));
+        }
+        return result;
+    }
+    bool tryGetTxStatus(const uint256& txid,
+        interface::WalletTxStatus& tx_status,
+        int& num_blocks,
+        int64_t& adjusted_time) override
+    {
+        TRY_LOCK(::cs_main, locked_chain);
+        if (!locked_chain) {
+            return false;
+        }
+        TRY_LOCK(m_wallet.cs_wallet, locked_wallet);
+        if (!locked_wallet) {
+            return false;
+        }
+        auto mi = m_wallet.mapWallet.find(txid);
+        if (mi == m_wallet.mapWallet.end()) {
+            return false;
+        }
+        num_blocks = ::chainActive.Height();
+        adjusted_time = GetAdjustedTime();
+        tx_status = MakeWalletTxStatus(mi->second);
+        return true;
+    }
+    WalletTx getWalletTxDetails(const uint256& txid,
+        WalletTxStatus& tx_status,
+        WalletOrderForm& order_form,
+        bool& in_mempool,
+        int& num_blocks,
+        int64_t& adjusted_time) override
+    {
+        LOCK2(::cs_main, m_wallet.cs_wallet);
+        auto mi = m_wallet.mapWallet.find(txid);
+        if (mi != m_wallet.mapWallet.end()) {
+            num_blocks = ::chainActive.Height();
+            adjusted_time = GetAdjustedTime();
+            in_mempool = mi->second.InMempool();
+            order_form = mi->second.vOrderForm;
+            tx_status = MakeWalletTxStatus(mi->second);
+            return MakeWalletTx(m_wallet, mi->second);
+        }
+        return {};
+    }
     int getRealOutpointPrivateSendRounds(const COutPoint& outpoint) override { return m_wallet.GetRealOutpointPrivateSendRounds(outpoint); }
     bool isFullyMixed(const COutPoint& outpoint) override { return m_wallet.IsFullyMixed(outpoint); }
     WalletBalances getBalances() override
@@ -247,6 +378,26 @@ public:
         } else {
             return m_wallet.GetAvailableBalance(&coin_control);
         }
+    }
+    isminetype txinIsMine(const CTxIn& txin) override
+    {
+        LOCK2(::cs_main, m_wallet.cs_wallet);
+        return m_wallet.IsMine(txin);
+    }
+    isminetype txoutIsMine(const CTxOut& txout) override
+    {
+        LOCK2(::cs_main, m_wallet.cs_wallet);
+        return m_wallet.IsMine(txout);
+    }
+    CAmount getDebit(const CTxIn& txin, isminefilter filter) override
+    {
+        LOCK2(::cs_main, m_wallet.cs_wallet);
+        return m_wallet.GetDebit(txin, filter);
+    }
+    CAmount getCredit(const CTxOut& txout, isminefilter filter) override
+    {
+        LOCK2(::cs_main, m_wallet.cs_wallet);
+        return m_wallet.GetCredit(txout, filter);
     }
     CoinsList listCoins() override
     {

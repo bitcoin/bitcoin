@@ -6,26 +6,19 @@
 #include <qt/walletmodel.h>
 
 #include <qt/addresstablemodel.h>
-#include <consensus/validation.h>
 #include <qt/guiconstants.h>
-#include <qt/guiutil.h>
+#include <qt/optionsmodel.h>
 #include <qt/paymentserver.h>
 #include <qt/recentrequeststablemodel.h>
 #include <qt/transactiontablemodel.h>
 
 #include <base58.h>
-#include <chain.h>
 #include <interface/handler.h>
 #include <interface/node.h>
-#include <keystore.h>
-#include <validation.h>
-#include <net.h> // for g_connman
-#include <sync.h>
-#include <txmempool.h>
 #include <ui_interface.h>
 #include <util.h> // for GetBoolArg
 #include <wallet/coincontrol.h>
-#include <wallet/walletdb.h> // for BackupWallet
+#include <wallet/wallet.h>
 
 #include <spork.h>
 #include <privatesend/privatesend-client.h>
@@ -38,8 +31,8 @@
 #include <QTimer>
 
 
-WalletModel::WalletModel(std::unique_ptr<interface::Wallet> wallet, interface::Node& node, CWallet *_wallet, OptionsModel *_optionsModel, QObject *parent) :
-    QObject(parent), m_wallet(std::move(wallet)), m_node(node), cwallet(_wallet), optionsModel(_optionsModel), addressTableModel(0),
+WalletModel::WalletModel(std::unique_ptr<interface::Wallet> wallet, interface::Node& node, OptionsModel *_optionsModel, QObject *parent) :
+    QObject(parent), m_wallet(std::move(wallet)), m_node(node), optionsModel(_optionsModel), addressTableModel(0),
     transactionTableModel(0),
     recentRequestsTableModel(0),
     cachedEncryptionStatus(Unencrypted),
@@ -51,8 +44,8 @@ WalletModel::WalletModel(std::unique_ptr<interface::Wallet> wallet, interface::N
     fForceCheckBalanceChanged = false;
 
     addressTableModel = new AddressTableModel(this);
-    transactionTableModel = new TransactionTableModel(cwallet, this);
-    recentRequestsTableModel = new RecentRequestsTableModel(cwallet, this);
+    transactionTableModel = new TransactionTableModel(this);
+    recentRequestsTableModel = new RecentRequestsTableModel(this);
 
     // This timer will be fired repeatedly to update the balance
     pollTimer = new QTimer(this);

@@ -10,11 +10,15 @@
 #include <QAbstractTableModel>
 #include <QStringList>
 
+#include <memory>
+
+namespace interface {
+class Handler;
+}
+
 class TransactionRecord;
 class TransactionTablePriv;
 class WalletModel;
-
-class CWallet;
 
 /** UI model for the transaction table of a wallet.
  */
@@ -23,7 +27,7 @@ class TransactionTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit TransactionTableModel(CWallet* wallet, WalletModel* parent = 0);
+    explicit TransactionTableModel(WalletModel *parent = 0);
     ~TransactionTableModel();
 
     enum ColumnIndex {
@@ -83,8 +87,10 @@ public:
     int getChainLockHeight() const;
 
 private:
-    CWallet* wallet;
     WalletModel *walletModel;
+    std::unique_ptr<interface::Handler> m_handler_transaction_changed;
+    std::unique_ptr<interface::Handler> m_handler_address_book_changed;
+    std::unique_ptr<interface::Handler> m_handler_show_progress;
     QStringList columns;
     TransactionTablePriv *priv;
     bool fProcessingQueuedTransactions;

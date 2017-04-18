@@ -138,7 +138,7 @@ void TestGUI()
     auto node = interface::MakeNode();
     OptionsModel optionsModel(*node);
     vpwallets.insert(vpwallets.begin(), &wallet);
-    WalletModel walletModel(std::move(node->getWallets()[0]), *node, &wallet, &optionsModel);
+    WalletModel walletModel(std::move(node->getWallets()[0]), *node, &optionsModel);
     vpwallets.erase(vpwallets.begin());
     sendCoinsDialog.setModel(&walletModel);
     transactionView.setModel(&walletModel);
