@@ -3451,7 +3451,7 @@ bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, c
 	{
 		if(strWalletless == "Yes")
 			strData = HexStr(theOffer.accept.vchMessage);		
-		else if(DecryptMessage(offerAlias, theOffer.accept.vchMessage, strDecrypted))
+		else if(DecryptMessage(theAlias, theOffer.accept.vchMessage, strDecrypted))
 			strData = strDecrypted;			
 	}
 	oOfferAccept.push_back(Pair("pay_message", strData));

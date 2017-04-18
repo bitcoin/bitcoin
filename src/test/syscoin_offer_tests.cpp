@@ -447,7 +447,6 @@ BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
 
 	string certguid  = CertNew("node1", "node1alias", "title", "privdata", "pubdata");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + certguid));
-	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "true");	
 	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == "node1alias");
 	// generate a good cert offer
 	string offerguid = OfferNew("node1", "node1alias", "certificates", "title", "1", "0.05", "description", "USD", certguid);
@@ -464,7 +463,6 @@ BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
 	GenerateBlocks(5, "node3");
 	// cert does not get transferred, need to do it manually after the sale
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "certinfo " + certguid));
-	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "false");	
 	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == "node1alias");
 }
 BOOST_AUTO_TEST_CASE (generate_offeracceptfeedback)
