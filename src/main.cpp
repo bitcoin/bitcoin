@@ -6446,17 +6446,6 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
                 pindexWalk = pindexWalk->pprev;
             }
 
-            // If pindexWalk still isn't on our main chain, we're looking at a
-            // very large reorg at a time we think we're close to caught up to
-            // the main chain -- this shouldn't really happen.  Bail out on the
-            // direct fetch and rely on parallel download instead.
-            if (pindexWalk && !chainActive.Contains(pindexWalk))
-            {
-                LogPrint("net", "Large reorg, won't direct fetch to %s (%d)\n",
-                        pindexLast->GetBlockHash().ToString(),
-                        pindexLast->nHeight);
-            }
-            else
             {
                 // Download as much as possible, from earliest to latest.
                 unsigned int nAskFor = 0;
