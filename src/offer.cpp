@@ -2961,13 +2961,9 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	bool bComplete = false;
 	if (complete_value.isBool())
 		bComplete = complete_value.get_bool();
-	if(bComplete)
+	res.push_back(hex_str);
+	if(!bComplete)
 	{
-		res.push_back(wtx.GetHash().GetHex());
-	}
-	else
-	{
-		res.push_back(hex_str);
 		res.push_back("false");
 	}
 	return res;
