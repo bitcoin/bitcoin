@@ -81,7 +81,7 @@ bool OfferFeedbackDialog::lookup(const QString &offer, const QString &acceptGuid
 	UniValue params(UniValue::VARR);
 	UniValue listAliases(UniValue::VARR);
 	listAliases.push_back(seller.toStdString());
-	params1.push_back(listAliases);
+	params.push_back(listAliases);
 	params.push_back(acceptGuid.toStdString());
 	params.push_back("Yes");
 	UniValue offerAcceptsValue;
