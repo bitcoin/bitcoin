@@ -2277,6 +2277,7 @@ UniValue syscoinsignrawtransaction(const UniValue& params, bool fHelp) {
 		}
 		if (!returnRes.isStr())
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Could not send raw transaction: Invalid response from sendrawtransaction"));
+		res.push_back(Pair("txid", returnRes.get_str()));
 	}
 	return res;
 }
