@@ -148,7 +148,8 @@ EXTENDED_SCRIPTS = [
     'replace-by-fee.py',
 ]
 
-ALL_SCRIPTS = BASE_SCRIPTS + ZMQ_SCRIPTS + EXTENDED_SCRIPTS
+# Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
+ALL_SCRIPTS = EXTENDED_SCRIPTS + BASE_SCRIPTS + ZMQ_SCRIPTS
 
 NON_SCRIPTS = [
     # These are python files that live in the functional tests directory, but are not test scripts.
@@ -226,10 +227,9 @@ def main():
         if enable_zmq:
             test_list += ZMQ_SCRIPTS
         if args.extended:
-            test_list += EXTENDED_SCRIPTS
-            # TODO: BASE_SCRIPTS and EXTENDED_SCRIPTS are sorted by runtime
-            # (for parallel running efficiency). This combined list will is no
-            # longer sorted.
+            # place the EXTENDED_SCRIPTS first since the three longest ones
+            # are there and the list is shorter
+            test_list = EXTENDED_SCRIPTS + test_list
 
     # Remove the test cases that the user has explicitly asked to exclude.
     if args.exclude:
