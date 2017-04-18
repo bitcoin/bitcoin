@@ -198,7 +198,9 @@ bool OfferAcceptInfoDialog::lookup()
 	}
 	strMethod = string("offerlist");
 	UniValue params1(UniValue::VARR);
-	params1.push_back(sellerStr.toStdString());
+	UniValue listAliases(UniValue::VARR);
+	listAliases.push_back(sellerStr.toStdString());
+	params1.push_back(listAliases);
 	params1.push_back(offerAcceptGUID.toStdString());
 	params1.push_back("Yes");
 	UniValue offerAcceptsValue;
