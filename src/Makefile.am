@@ -73,7 +73,6 @@ BITCOIN_CORE_H = \
   activethrone.h \
   addrman.h \
   alert.h \
-  alertkeys.h \
   amount.h \
   auxpow.h \
   arith_uint256.h \
