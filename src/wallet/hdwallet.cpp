@@ -483,6 +483,7 @@ bool CHDWallet::ImportStealthAddress(const CStealthAddress &sxAddr, const CKey &
 {
     if (fDebug)
         LogPrint("hdwallet", "%s: %s.\n", __func__, sxAddr.Encoded());
+
     LOCK(cs_wallet);
 
     // - must add before changing spend_secret
@@ -513,13 +514,41 @@ bool CHDWallet::ImportStealthAddress(const CStealthAddress &sxAddr, const CKey &
         return error("%s: WriteStealthAddress failed.", __func__);
     };
 
-    NotifyAddressBookChanged(this, sxAddr, sxAddr.label, fOwned, "", CT_NEW);
+    return true;
+};
 
+bool CHDWallet::AddressBookChangedNotify(const CTxDestination &address, ChangeType nMode)
+{
+    // Must run without cs_wallet locked
+    
+    CAddressBookData entry;
+    isminetype tIsMine;
+    
+    {
+        LOCK(cs_wallet);
+       
+        std::map<CTxDestination, CAddressBookData>::const_iterator mi = mapAddressBook.find(address);
+        if (mi == mapAddressBook.end())
+            return false;
+        entry = mi->second;
+        
+        tIsMine = ::IsMine(*this, address);
+    }
+    
+    NotifyAddressBookChanged(this, address, entry.name, tIsMine != ISMINE_NO, entry.purpose, nMode);
+
+    if (tIsMine == ISMINE_SPENDABLE
+        && address.type() == typeid(CKeyID))
+    {
+        CKeyID id = boost::get<CKeyID>(address);
+        SecureMsgWalletKeyChanged(id, entry.name, nMode);
+    };
+    
     return true;
 };
 
 bool CHDWallet::SetAddressBook(CHDWalletDB *pwdb, const CTxDestination &address, const std::string &strName,
-    const std::string &strPurpose, const std::vector<uint32_t> &vPath)
+    const std::string &strPurpose, const std::vector<uint32_t> &vPath, bool fNotifyChanged)
 {
     ChangeType nMode;
     isminetype tIsMine;
@@ -541,25 +570,35 @@ bool CHDWallet::SetAddressBook(CHDWalletDB *pwdb, const CTxDestination &address,
         tIsMine = ::IsMine(*this, address);
         if (!strPurpose.empty()) /* update purpose only if requested */
             entry->purpose = strPurpose;
+        
+        if (fFileBacked)
+        {
+            if (pwdb)
+            {
+                if (!pwdb->WriteAddressBookEntry(CBitcoinAddress(address).ToString(), *entry))
+                    return false;
+            } else
+            {
+                if (!CHDWalletDB(strWalletFile).WriteAddressBookEntry(CBitcoinAddress(address).ToString(), *entry))
+                    return false;
+            };
+        };
     }
     
-    NotifyAddressBookChanged(this, address, strName, tIsMine != ISMINE_NO, strPurpose, nMode);
-
-    if (tIsMine == ISMINE_SPENDABLE
-        && address.type() == typeid(CKeyID))
+    if (fNotifyChanged)
     {
-        CKeyID id = boost::get<CKeyID>(address);
-        SecureMsgWalletKeyChanged(id, strName, nMode);
+        // Must run without cs_wallet locked
+        NotifyAddressBookChanged(this, address, strName, tIsMine != ISMINE_NO, strPurpose, nMode);
+
+        if (tIsMine == ISMINE_SPENDABLE
+            && address.type() == typeid(CKeyID))
+        {
+            CKeyID id = boost::get<CKeyID>(address);
+            SecureMsgWalletKeyChanged(id, strName, nMode);
+        };
     };
     
-    if (!fFileBacked)
-        return false;
-    
-    if (pwdb)
-        return pwdb->WriteAddressBookEntry(CBitcoinAddress(address).ToString(), *entry);
-    else
-        return CHDWalletDB(strWalletFile).WriteAddressBookEntry(CBitcoinAddress(address).ToString(), *entry);
-    //return CHDWalletDB(strWalletFile).WriteAddressBookEntry(CBitcoinAddress(address).ToString(), mapAddressBook[address]))
+    return true;
 };
 
 bool CHDWallet::SetAddressBook(const CTxDestination &address, const std::string &strName, const std::string &purpose)
@@ -2767,7 +2806,7 @@ int CHDWallet::ExtKeyNewIndex(CHDWalletDB *pwdb, const CKeyID &idKey, uint32_t &
     CDataStream ssKey(SER_DISK, CLIENT_VERSION);
     ssKey << std::make_pair(sPrefix, lastId); // set to last possible key
     
-    Dbc *pcursor = pwdb->GetCursor();
+    Dbc *pcursor = pwdb->GetTxnCursor();
     if (!pcursor)
         return errorN(1, "%s: Could not get wallet database cursor\n", __func__);
     
@@ -2929,7 +2968,7 @@ int CHDWallet::NewKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount, CPu
             vPath.clear();
         };
         
-        SetAddressBook(pwdb, idKey, plabel, "receive", vPath);
+        SetAddressBook(pwdb, idKey, plabel, "receive", vPath, false);
     };
 
     return 0;
@@ -2937,21 +2976,24 @@ int CHDWallet::NewKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount, CPu
 
 int CHDWallet::NewKeyFromAccount(CPubKey &pkOut, bool fInternal, bool fHardened, const char *plabel)
 {
-    LOCK(cs_wallet);
-    CHDWalletDB wdb(strWalletFile, "r+");
-
-    if (!wdb.TxnBegin())
-        return errorN(1, "%s TxnBegin failed.", __func__);
-
-    if (0 != NewKeyFromAccount(&wdb, idDefaultAccount, pkOut, fInternal, fHardened, plabel))
     {
-        wdb.TxnAbort();
-        return 1;
-    };
+        LOCK(cs_wallet);
+        CHDWalletDB wdb(strWalletFile, "r+");
 
-    if (!wdb.TxnCommit())
-        return errorN(1, "%s TxnCommit failed.", __func__);
+        if (!wdb.TxnBegin())
+            return errorN(1, "%s TxnBegin failed.", __func__);
 
+        if (0 != NewKeyFromAccount(&wdb, idDefaultAccount, pkOut, fInternal, fHardened, plabel))
+        {
+            wdb.TxnAbort();
+            return 1;
+        };
+
+        if (!wdb.TxnCommit())
+            return errorN(1, "%s TxnCommit failed.", __func__);
+    }
+    
+    AddressBookChangedNotify(pkOut.GetID(), CT_NEW);
     return 0;
 };
 
@@ -3083,7 +3125,7 @@ int CHDWallet::NewStealthKeyFromAccount(
         return errorN(1, "%s Save account chain failed.", __func__);
     };
     
-    SetAddressBook(pwdb, sxAddr, sLabel, "receive", vPath);
+    SetAddressBook(pwdb, sxAddr, sLabel, "receive", vPath, false);
     
     akStealthOut = aks;
     return 0;
@@ -3091,21 +3133,25 @@ int CHDWallet::NewStealthKeyFromAccount(
 
 int CHDWallet::NewStealthKeyFromAccount(std::string &sLabel, CEKAStealthKey &akStealthOut, uint32_t nPrefixBits, const char *pPrefix)
 {
-    LOCK(cs_wallet);
-    CHDWalletDB wdb(strWalletFile, "r+");
-
-    if (!wdb.TxnBegin())
-        return errorN(1, "%s TxnBegin failed.", __func__);
-
-    if (0 != NewStealthKeyFromAccount(&wdb, idDefaultAccount, sLabel, akStealthOut, nPrefixBits, pPrefix))
     {
-        wdb.TxnAbort();
-        return 1;
-    };
+        LOCK(cs_wallet);
+        CHDWalletDB wdb(strWalletFile, "r+");
 
-    if (!wdb.TxnCommit())
-        return errorN(1, "%s TxnCommit failed.", __func__);
+        if (!wdb.TxnBegin())
+            return errorN(1, "%s TxnBegin failed.", __func__);
 
+        if (0 != NewStealthKeyFromAccount(&wdb, idDefaultAccount, sLabel, akStealthOut, nPrefixBits, pPrefix))
+        {
+            wdb.TxnAbort();
+            return 1;
+        };
+
+        if (!wdb.TxnCommit())
+            return errorN(1, "%s TxnCommit failed.", __func__);
+    }
+    CStealthAddress sxAddr;
+    akStealthOut.SetSxAddr(sxAddr);
+    AddressBookChangedNotify(sxAddr, CT_NEW);
     return 0;
 };
 
@@ -3184,7 +3230,7 @@ int CHDWallet::NewExtKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount,
             vPath.push_back(idIndex); // first entry is the index to the account / master key
             
         vPath.push_back(nNewChildNo);
-        SetAddressBook(pwdb, sekOut->kp, plabel, "receive", vPath);
+        SetAddressBook(pwdb, sekOut->kp, plabel, "receive", vPath, false);
     };
 
     if (!pwdb->WriteExtAccount(idAccount, *sea)
@@ -3209,21 +3255,23 @@ int CHDWallet::NewExtKeyFromAccount(CHDWalletDB *pwdb, const CKeyID &idAccount,
 int CHDWallet::NewExtKeyFromAccount(std::string &sLabel, CStoredExtKey *sekOut,
     const char *plabel, uint32_t *childNo)
 {
-    LOCK(cs_wallet);
-    CHDWalletDB wdb(strWalletFile, "r+");
-
-    if (!wdb.TxnBegin())
-        return errorN(1, "%s TxnBegin failed.", __func__);
-
-    if (0 != NewExtKeyFromAccount(&wdb, idDefaultAccount, sLabel, sekOut, plabel, childNo))
     {
-        wdb.TxnAbort();
-        return 1;
-    };
+        LOCK(cs_wallet);
+        CHDWalletDB wdb(strWalletFile, "r+");
 
-    if (!wdb.TxnCommit())
-        return errorN(1, "%s TxnCommit failed.", __func__);
+        if (!wdb.TxnBegin())
+            return errorN(1, "%s TxnBegin failed.", __func__);
 
+        if (0 != NewExtKeyFromAccount(&wdb, idDefaultAccount, sLabel, sekOut, plabel, childNo))
+        {
+            wdb.TxnAbort();
+            return 1;
+        };
+
+        if (!wdb.TxnCommit())
+            return errorN(1, "%s TxnCommit failed.", __func__);
+    }
+    AddressBookChangedNotify(sekOut->kp, CT_NEW);
     return 0;
 };
 

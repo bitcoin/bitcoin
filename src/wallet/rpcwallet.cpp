@@ -138,9 +138,14 @@ UniValue getnewaddress(const JSONRPCRequest& request)
         CPubKey newKey;
         CHDWallet *phdw = (CHDWallet*) pwalletMain;
         {
-            LOCK2(cs_main, pwalletMain->cs_wallet);
-            if (phdw->idDefaultAccount.IsNull())
-                throw JSONRPCError(RPC_WALLET_ERROR, "No default account set.");
+            //LOCK2(cs_main, pwalletMain->cs_wallet);
+            LOCK(cs_main);
+            
+            {
+                LOCK(pwalletMain->cs_wallet);
+                if (phdw->idDefaultAccount.IsNull())
+                    throw JSONRPCError(RPC_WALLET_ERROR, "No default account set.");
+            }
             if (0 != phdw->NewKeyFromAccount(newKey, false, false, strAccount.c_str()))
                 throw JSONRPCError(RPC_WALLET_ERROR, "NewKeyFromAccount failed.");
         }
@@ -512,11 +517,11 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
     
     std::string sNarr;
     if (request.params.size() > 5)
+    {
         sNarr = request.params[5].get_str();
-    
-    if (sNarr.length() < 1 || sNarr.length() > 24)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Narration can range from 1 to 24 characters.");
-    
+        if (sNarr.length() < 1 || sNarr.length() > 24)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Narration can range from 1 to 24 characters.");
+    };
     EnsureWalletIsUnlocked();
 
     SendMoney(address.Get(), nAmount, fSubtractFeeFromAmount, sNarr, wtx);

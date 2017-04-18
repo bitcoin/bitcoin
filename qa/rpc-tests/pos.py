@@ -34,7 +34,7 @@ class PosTest(ParticlTestFramework):
         #print(json.dumps(ro, indent=4))
         
         ro = node.getinfo()
-        assert(ro['balance'] == 100000)
+        assert(ro['total_balance'] == 100000)
         
         
         # test reserve balance

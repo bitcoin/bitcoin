@@ -247,14 +247,14 @@ public:
     {
     }
     
-    Dbc* GetTxnCursor()
+    Dbc *GetTxnCursor()
     {
-        if (!pdb)
+        if (!pdb || !activeTxn)
             return NULL;
 
-        DbTxn* ptxnid = activeTxn; // call TxnBegin first
+        DbTxn *ptxnid = activeTxn; // call TxnBegin first
 
-        Dbc* pcursor = NULL;
+        Dbc *pcursor = NULL;
         int ret = pdb->cursor(ptxnid, &pcursor, 0);
         if (ret != 0)
             return NULL;

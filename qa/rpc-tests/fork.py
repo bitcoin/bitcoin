@@ -48,14 +48,14 @@ class ForkTest(ParticlTestFramework):
         
         ro = nodes[0].scanchain()
         ro = nodes[0].getinfo()
-        assert(ro['balance'] == 25000)
+        assert(ro['total_balance'] == 25000)
         
         
         ro = nodes[3].extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
         
         ro = nodes[3].getinfo()
-        assert(ro['balance'] == 100000)
+        assert(ro['total_balance'] == 100000)
         
         
         

@@ -2695,7 +2695,7 @@ int SecureMsgScanMessage(uint8_t *pHeader, uint8_t *pPayload, uint32_t nPayload,
     if (fOwnMessage)
     {
         // -- save to inbox
-        SecureMessage* psmsg = (SecureMessage*) pHeader;
+        SecureMessage *psmsg = (SecureMessage*) pHeader;
         std::string sPrefix("im");
         uint8_t chKey[18];
         memcpy(&chKey[0],  sPrefix.data(),    2);
@@ -3787,11 +3787,8 @@ int SecureMsgDecrypt(bool fTestOnly, CKeyID &address, uint8_t *pHeader, uint8_t 
 
     SecureMessage *psmsg = (SecureMessage*) pHeader;
 
-
     if (psmsg->version[0] != 2)
-    {
         return errorN(2, "%s: Unknown version number.", __func__);
-    };
 
     // -- Fetch private key k, used to decrypt
     CKey keyDest;

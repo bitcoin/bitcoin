@@ -99,7 +99,14 @@ class WalletParticlTest(ParticlTestFramework):
         address0 = nodes[0].getnewaddress()
         
         ro = nodes[0].extkey("account", account0_id)
-        assert(ro["num_derives_external"] == "1")
+        
+        fFound = False
+        for c in ro['chains']:
+            if c['function'] != 'active_external' or c["num_derives"] != "1":
+                continue
+            fFound = True
+            break
+        assert(fFound)
         
         
         
@@ -122,7 +129,14 @@ class WalletParticlTest(ParticlTestFramework):
         
         # make sure info hasn't been forgotten/overwritten
         ro = nodes[0].extkey("account", account0_id)
-        assert(ro["num_derives_external"] == "1")
+        #assert(ro["num_derives_external"] == "1")
+        fFound = False
+        for c in ro['chains']:
+            if c['function'] != 'active_external' or c["num_derives"] != "1":
+                continue
+            fFound = True
+            break
+        assert(fFound)
         
         
         ro = nodes[0].extkey("deriveAccount", "Should fail", "abcd")
@@ -160,7 +174,7 @@ class WalletParticlTest(ParticlTestFramework):
             raise AssertionError("Should have failed.")
         except JSONRPCException as e:
             #print("error", e.error['message'])
-            assert("Wallet is locked." in e.error['message'])
+            assert("Wallet locked" in e.error['message'])
         
         try:
             ro = nodes[0].walletpassphrase("qwerty123", 300)
@@ -184,11 +198,24 @@ class WalletParticlTest(ParticlTestFramework):
         
         
         ro = nodes[0].extkey("account", account0_id)
-        assert(ro["num_derives_external"] == "1")
+        fFound = False
+        for c in ro['chains']:
+            if c['function'] != 'active_external' or c["num_derives"] != "1":
+                continue
+            fFound = True
+            break
+        assert(fFound)
         
         address1 = nodes[0].getnewaddress()
         ro = nodes[0].extkey("account", account0_id)
-        assert(ro["num_derives_external"] == "2")
+        #assert(ro["num_derives_external"] == "2")
+        fFound = False
+        for c in ro['chains']:
+            if c['function'] != 'active_external' or c["num_derives"] != "2":
+                continue
+            fFound = True
+            break
+        assert(fFound)
         
         
         # test encrypting empty wallet
@@ -207,7 +234,7 @@ class WalletParticlTest(ParticlTestFramework):
             ro = nodes[1].extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
         except JSONRPCException as e:
             #print("error", e.error['message'])
-            assert("Wallet is locked" in e.error['message'])
+            assert("Wallet locked" in e.error['message'])
         
         try:
             ro = nodes[1].walletpassphrase("qwerty123", 300)
@@ -376,13 +403,13 @@ class WalletParticlTest(ParticlTestFramework):
         assert(ro['owned'] == 'true')
         
         ro = nodes[2].getinfo()
-        assert(ro['balance'] == 0)
+        assert(ro['total_balance'] == 0)
         
         ro = nodes[2].scanchain()
         assert(ro['result'] == 'Scan complete.')
         
         ro = nodes[2].getinfo()
-        assert(ro['balance'] == 25000)
+        assert(ro['total_balance'] == 25000)
         
         
         # - test extkeyaltversion

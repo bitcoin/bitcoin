@@ -34,7 +34,7 @@
 void EnsureWalletIsUnlocked(CHDWallet *pwallet)
 {
     if (pwallet->IsLocked())
-        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
+        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Wallet locked, please enter the wallet passphrase with walletpassphrase first.");
 }
 
 static CHDWallet *GetHDWallet()
@@ -2797,10 +2797,11 @@ UniValue sendparttoblind(const JSONRPCRequest &request)
     
     std::string sNarr;
     if (request.params.size() > 5)
+    {
         sNarr = request.params[5].get_str();
-    
-    if (sNarr.length() < 1 || sNarr.length() > 24)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Narration can range from 1 to 24 characters.");
+        if (sNarr.length() < 1 || sNarr.length() > 24)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Narration can range from 1 to 24 characters.");
+    };
     
     
     throw std::runtime_error("TODO");

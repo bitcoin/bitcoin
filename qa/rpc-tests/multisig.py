@@ -32,18 +32,18 @@ class MultiSigTest(ParticlTestFramework):
     def run_test(self):
         nodes = self.nodes
         
+        # stop staking
+        ro = nodes[0].reservebalance(True, 10000000)
+        ro = nodes[1].reservebalance(True, 10000000)
+        
         ro = nodes[0].extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
         
         ro = nodes[0].getinfo()
-        assert(ro['balance'] == 100000)
+        assert(ro['total_balance'] == 100000)
         
         #txnHashes = []
         #assert(self.wait_for_height(node, 1))
-        
-        # stop staking
-        ro = nodes[0].reservebalance(True, 10000000)
-        ro = nodes[1].reservebalance(True, 10000000)
         
         addrs = []
         pubkeys = []
@@ -172,6 +172,8 @@ class MultiSigTest(ParticlTestFramework):
         block1_hash = nodes[0].getblockhash(1)
         ro = nodes[0].getblock(block1_hash)
         
+        print("txnid_spendMultisig ", txnid_spendMultisig)
+        print("ro ", ro)
         assert(txnid_spendMultisig in ro['tx'])
         
         #assert(False)

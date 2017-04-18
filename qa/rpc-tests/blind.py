@@ -32,6 +32,10 @@ class BlindTest(ParticlTestFramework):
     def run_test(self):
         nodes = self.nodes
         
+        # stop staking
+        ro = nodes[0].reservebalance(True, 10000000)
+        ro = nodes[1].reservebalance(True, 10000000)
+        
         ro = nodes[0].extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
         
@@ -39,15 +43,11 @@ class BlindTest(ParticlTestFramework):
         #print(json.dumps(ro, indent=4))
         
         ro = nodes[0].getinfo()
-        assert(ro['balance'] == 100000)
+        assert(ro['total_balance'] == 100000)
         
         txnHashes = []
         
         #assert(self.wait_for_height(node, 1))
-        
-        # stop staking
-        ro = nodes[0].reservebalance(True, 10000000)
-        ro = nodes[1].reservebalance(True, 10000000)
         
         ro = nodes[1].extkeyimportmaster("drip fog service village program equip minute dentist series hawk crop sphere olympic lazy garbage segment fox library good alley steak jazz force inmate")
         

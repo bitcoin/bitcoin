@@ -33,7 +33,7 @@ class ExtKeyTest(ParticlTestFramework):
         #print(json.dumps(ro, indent=4))
         
         ro = node.getinfo()
-        assert(ro['balance'] == 100000)
+        assert(ro['total_balance'] == 100000)
         
         assert(self.wait_for_height(node, 1))
         
@@ -75,7 +75,7 @@ class ExtKeyTest(ParticlTestFramework):
         assert(ro[0]['amount'] == 10)
         
         ro = node1.getinfo()
-        assert(ro['balance'] == 10)
+        assert(ro['total_balance'] == 10)
         
         
         block2_hash = node.getblockhash(2)

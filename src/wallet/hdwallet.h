@@ -86,8 +86,9 @@ public:
     
     bool ImportStealthAddress(const CStealthAddress &sxAddr, const CKey &skSpend);
     
+    bool AddressBookChangedNotify(const CTxDestination &address, ChangeType nMode);
     bool SetAddressBook(CHDWalletDB *pwdb, const CTxDestination &address, const std::string &strName,
-        const std::string &purpose, const std::vector<uint32_t> &vPath);
+        const std::string &purpose, const std::vector<uint32_t> &vPath, bool fNotifyChanged=true);
     bool SetAddressBook(const CTxDestination &address, const std::string &strName, const std::string &purpose);
     bool DelAddressBook(const CTxDestination &address);
     

@@ -179,7 +179,7 @@ int testCommitmentSum(secp256k1_context *ctx, CAmount nValueIn,
     
     rv = prepareLastRowMLSAG(txouts.size()+haveFee, txouts.size(), nCols, nRows,
         pcm_in, pcm_out, &pBlinds[0], m, blindSum);
-    BOOST_MESSAGE("prepareLastRow  " << rv);
+    BOOST_MESSAGE("prepareLastRowMLSAG  " << rv);
     BOOST_REQUIRE(0 == rv);
     
     if (memncmp(blindSum, 0, 32) == 0)

@@ -34,6 +34,10 @@ class StealthTest(ParticlTestFramework):
         node1 = self.nodes[1]
         node2 = self.nodes[2]
         
+        # stop staking
+        ro = node.reservebalance(True, 10000000)
+        ro = node1.reservebalance(True, 10000000)
+        
         ro = node.extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
         assert(ro['account_id'] == 'aaaZf2qnNr5T7PWRmqgmusuu5ACnBcX2ev')
         
@@ -41,15 +45,12 @@ class StealthTest(ParticlTestFramework):
         #print(json.dumps(ro, indent=4))
         
         ro = node.getinfo()
-        assert(ro['balance'] == 100000)
+        assert(ro['total_balance'] == 100000)
         
         txnHashes = []
         
         #assert(self.wait_for_height(node, 1))
         
-        # stop staking
-        ro = node.reservebalance(True, 10000000)
-        ro = node1.reservebalance(True, 10000000)
         
         ro = node1.extkeyimportmaster("drip fog service village program equip minute dentist series hawk crop sphere olympic lazy garbage segment fox library good alley steak jazz force inmate")
         

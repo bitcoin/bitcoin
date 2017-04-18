@@ -52,8 +52,10 @@ class SmsgTest(ParticlTestFramework):
         
         roImport1 = nodes[1].extkeyimportmaster("abandon baby cabbage dad eager fabric gadget habit ice kangaroo lab absorb")
         
-        address0 = nodes[0].getnewaddress()
+        address0 = nodes[0].getnewaddress() # will be different each run
         address1 = nodes[1].getnewaddress()
+        assert(address1 == "pX9N6S76ZtA5BfsiJmqBbjaEgLMHpt58it")
+        
         
         ro = nodes[0].smsglocalkeys()
         assert(len(ro['keys']) == 1)
@@ -67,13 +69,11 @@ class SmsgTest(ParticlTestFramework):
         ro = nodes[1].smsgsend(address1, address0, "Test 1->0.")
         assert(ro['result'] == 'Sent.')
         
-        
         self.waitForExchange(1, 1, 0)
-        
         
         ro = nodes[0].smsginbox()
         assert(len(ro['messages']) == 1)
-        assert(ro['messages'][0]['from'] == 'pngYgCSSaMAXLWUK8r54G6uXiFUD3jpGNn')
+        assert(ro['messages'][0]['from'] == address1)
         assert(ro['messages'][0]['text'] == 'Test 1->0.')
         
         # - node0 should have got pubkey for address1 by receiving msg from address1
@@ -84,9 +84,8 @@ class SmsgTest(ParticlTestFramework):
         self.waitForExchange(2, 0, 1)
         
         ro = nodes[1].smsginbox()
-        assert(ro['messages'][0]['to'] == 'pngYgCSSaMAXLWUK8r54G6uXiFUD3jpGNn')
+        assert(ro['messages'][0]['to'] == address1)
         assert(ro['messages'][0]['text'] == 'Reply 0->1.')
-        
         
         
         ro = nodes[1].smsgview()
@@ -103,24 +102,17 @@ class SmsgTest(ParticlTestFramework):
         except JSONRPCException as e:
             assert("Secure messaging is disabled." in e.error['message'])
         
-        
         ro = nodes[1].smsgenable()
-        
         
         ro = nodes[1].smsgsend(address1, address0, "Test 1->0. 2")
         assert(ro['result'] == 'Sent.')
         
-        
         self.waitForExchange(3, 1, 0)
-        
         
         ro = nodes[0].smsginbox()
         assert(len(ro['messages']) == 1)
-        assert(ro['messages'][0]['from'] == 'pngYgCSSaMAXLWUK8r54G6uXiFUD3jpGNn')
+        assert(ro['messages'][0]['from'] == address1)
         assert(ro['messages'][0]['text'] == 'Test 1->0. 2')
-        
-        
-        
         
         
         #print(json.dumps(ro, indent=4))
