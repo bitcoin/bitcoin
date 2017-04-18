@@ -887,17 +887,20 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
 	const UniValue& so = resSign.get_obj();
 	string hex_str = "";
-
+	string txid_str = "";
 	const UniValue& hex_value = find_value(so, "hex");
+	const UniValue& txid_value = find_value(so, "txid");
 	if (hex_value.isStr())
 		hex_str = hex_value.get_str();
+	if (txid_value.isStr())
+		txid_str = txid_value.get_str();
 	const UniValue& complete_value = find_value(so, "complete");
 	bool bComplete = false;
 	if (complete_value.isBool())
 		bComplete = complete_value.get_bool();
 	if(bComplete)
 	{
-		res.push_back(wtx.GetHash().GetHex());
+		res.push_back(txid_str);
 		res.push_back(stringFromVch(vchCert));
 	}
 	else
@@ -1031,16 +1034,21 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
 	const UniValue& so = resSign.get_obj();
 	string hex_str = "";
-
+	string txid_str = "";
 	const UniValue& hex_value = find_value(so, "hex");
+	const UniValue& txid_value = find_value(so, "txid");
 	if (hex_value.isStr())
 		hex_str = hex_value.get_str();
+	if (txid_value.isStr())
+		txid_str = txid_value.get_str();
 	const UniValue& complete_value = find_value(so, "complete");
 	bool bComplete = false;
 	if (complete_value.isBool())
 		bComplete = complete_value.get_bool();
 	if(bComplete)
-		res.push_back(wtx.GetHash().GetHex());
+	{
+		res.push_back(txid_str);
+	}
 	else
 	{
 		res.push_back(hex_str);
@@ -1172,16 +1180,21 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
 	const UniValue& so = resSign.get_obj();
 	string hex_str = "";
-
+	string txid_str = "";
 	const UniValue& hex_value = find_value(so, "hex");
+	const UniValue& txid_value = find_value(so, "txid");
 	if (hex_value.isStr())
 		hex_str = hex_value.get_str();
+	if (txid_value.isStr())
+		txid_str = txid_value.get_str();
 	const UniValue& complete_value = find_value(so, "complete");
 	bool bComplete = false;
 	if (complete_value.isBool())
 		bComplete = complete_value.get_bool();
 	if(bComplete)
-		res.push_back(wtx.GetHash().GetHex());
+	{
+		res.push_back(txid_str);
+	}
 	else
 	{
 		res.push_back(hex_str);

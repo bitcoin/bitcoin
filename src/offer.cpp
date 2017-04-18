@@ -1626,17 +1626,20 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
 	const UniValue& so = resSign.get_obj();
 	string hex_str = "";
-
+	string txid_str = "";
 	const UniValue& hex_value = find_value(so, "hex");
+	const UniValue& txid_value = find_value(so, "txid");
 	if (hex_value.isStr())
 		hex_str = hex_value.get_str();
+	if (txid_value.isStr())
+		txid_str = txid_value.get_str();
 	const UniValue& complete_value = find_value(so, "complete");
 	bool bComplete = false;
 	if (complete_value.isBool())
 		bComplete = complete_value.get_bool();
 	if(bComplete)
 	{
-		res.push_back(wtx.GetHash().GetHex());
+		res.push_back(txid_str);
 		res.push_back(stringFromVch(vchOffer));
 	}
 	else
@@ -1777,17 +1780,20 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
 	const UniValue& so = resSign.get_obj();
 	string hex_str = "";
-
+	string txid_str = "";
 	const UniValue& hex_value = find_value(so, "hex");
+	const UniValue& txid_value = find_value(so, "txid");
 	if (hex_value.isStr())
 		hex_str = hex_value.get_str();
+	if (txid_value.isStr())
+		txid_str = txid_value.get_str();
 	const UniValue& complete_value = find_value(so, "complete");
 	bool bComplete = false;
 	if (complete_value.isBool())
 		bComplete = complete_value.get_bool();
 	if(bComplete)
 	{
-		res.push_back(wtx.GetHash().GetHex());
+		res.push_back(txid_str);
 		res.push_back(stringFromVch(vchOffer));
 	}
 	else
@@ -1795,8 +1801,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 		res.push_back(hex_str);
 		res.push_back(stringFromVch(vchOffer));
 		res.push_back("false");
-	}
-	return res;
+	}	return res;
 }
 
 UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
@@ -1894,17 +1899,20 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
 	const UniValue& so = resSign.get_obj();
 	string hex_str = "";
-
+	string txid_str = "";
 	const UniValue& hex_value = find_value(so, "hex");
+	const UniValue& txid_value = find_value(so, "txid");
 	if (hex_value.isStr())
 		hex_str = hex_value.get_str();
+	if (txid_value.isStr())
+		txid_str = txid_value.get_str();
 	const UniValue& complete_value = find_value(so, "complete");
 	bool bComplete = false;
 	if (complete_value.isBool())
 		bComplete = complete_value.get_bool();
 	if(bComplete)
 	{
-		res.push_back(wtx.GetHash().GetHex());
+		res.push_back(txid_str);
 	}
 	else
 	{
@@ -1995,17 +2003,20 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
 	const UniValue& so = resSign.get_obj();
 	string hex_str = "";
-
+	string txid_str = "";
 	const UniValue& hex_value = find_value(so, "hex");
+	const UniValue& txid_value = find_value(so, "txid");
 	if (hex_value.isStr())
 		hex_str = hex_value.get_str();
+	if (txid_value.isStr())
+		txid_str = txid_value.get_str();
 	const UniValue& complete_value = find_value(so, "complete");
 	bool bComplete = false;
 	if (complete_value.isBool())
 		bComplete = complete_value.get_bool();
 	if(bComplete)
 	{
-		res.push_back(wtx.GetHash().GetHex());
+		res.push_back(txid_str);
 	}
 	else
 	{
@@ -2091,17 +2102,20 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
 	const UniValue& so = resSign.get_obj();
 	string hex_str = "";
-
+	string txid_str = "";
 	const UniValue& hex_value = find_value(so, "hex");
+	const UniValue& txid_value = find_value(so, "txid");
 	if (hex_value.isStr())
 		hex_str = hex_value.get_str();
+	if (txid_value.isStr())
+		txid_str = txid_value.get_str();
 	const UniValue& complete_value = find_value(so, "complete");
 	bool bComplete = false;
 	if (complete_value.isBool())
 		bComplete = complete_value.get_bool();
 	if(bComplete)
 	{
-		res.push_back(wtx.GetHash().GetHex());
+		res.push_back(txid_str);
 	}
 	else
 	{
@@ -2381,17 +2395,20 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
 	const UniValue& so = resSign.get_obj();
 	string hex_str = "";
-
+	string txid_str = "";
 	const UniValue& hex_value = find_value(so, "hex");
+	const UniValue& txid_value = find_value(so, "txid");
 	if (hex_value.isStr())
 		hex_str = hex_value.get_str();
+	if (txid_value.isStr())
+		txid_str = txid_value.get_str();
 	const UniValue& complete_value = find_value(so, "complete");
 	bool bComplete = false;
 	if (complete_value.isBool())
 		bComplete = complete_value.get_bool();
 	if(bComplete)
 	{
-		res.push_back(wtx.GetHash().GetHex());
+		res.push_back(txid_str);
 	}
 	else
 	{
@@ -2658,17 +2675,20 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
 	const UniValue& so = resSign.get_obj();
 	string hex_str = "";
-
+	string txid_str = "";
 	const UniValue& hex_value = find_value(so, "hex");
+	const UniValue& txid_value = find_value(so, "txid");
 	if (hex_value.isStr())
 		hex_str = hex_value.get_str();
+	if (txid_value.isStr())
+		txid_str = txid_value.get_str();
 	const UniValue& complete_value = find_value(so, "complete");
 	bool bComplete = false;
 	if (complete_value.isBool())
 		bComplete = complete_value.get_bool();
 	if(bComplete)
 	{
-		res.push_back(wtx.GetHash().GetHex());
+		res.push_back(txid_str);
 		res.push_back(stringFromVch(vchAccept));
 	}
 	else
@@ -2677,7 +2697,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		res.push_back(stringFromVch(vchAccept));
 		res.push_back("false");
 	}
-
 	return res;
 }
 
@@ -3092,17 +3111,20 @@ UniValue offeracceptacknowledge(const UniValue& params, bool fHelp) {
 	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
 	const UniValue& so = resSign.get_obj();
 	string hex_str = "";
-
+	string txid_str = "";
 	const UniValue& hex_value = find_value(so, "hex");
+	const UniValue& txid_value = find_value(so, "txid");
 	if (hex_value.isStr())
 		hex_str = hex_value.get_str();
+	if (txid_value.isStr())
+		txid_str = txid_value.get_str();
 	const UniValue& complete_value = find_value(so, "complete");
 	bool bComplete = false;
 	if (complete_value.isBool())
 		bComplete = complete_value.get_bool();
 	if(bComplete)
 	{
-		res.push_back(wtx.GetHash().GetHex());
+		res.push_back(txid_str);
 	}
 	else
 	{
