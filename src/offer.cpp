@@ -3276,49 +3276,52 @@ bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, U
 
 	bool detectedUser = false;
 	CAmount priceAtTimeOfAccept = theOffer.GetPrice();
-	if(theOffer.vchLinkOffer.empty())
+	// buyer
+	if(theAlias.vchAlias == theOffer.accept.vchBuyerAlias)
 	{
-		// NON-LINKED merchant
-		if(theAlias.vchAlias == theOffer.vchAlias)
-		{
-			priceAtTimeOfAccept = theOffer.accept.nPrice;
-			if(theOffer.GetPrice() != priceAtTimeOfAccept)
-				discountApplied = true;
-			detectedUser = true;
-		}
-		// NON-LINKED buyer
-		else if(theAlias.vchAlias == theOffer.accept.vchBuyerAlias)
-		{
-			priceAtTimeOfAccept = theOffer.GetPrice();
-			commissionPaid = false;
-			discountApplied = false;
-			detectedUser = true;
-		}
+		commissionPaid = false;
+		discountApplied = false;
+		detectedUser = true;
 	}
-	// linked offer
+	// merchant or affiliate
 	else
 	{
-		vector<COffer> vtxLinkPos;
-		GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkTx, vtxLinkPos, true);
-		linkOffer.nHeight = nHeight;
-		linkOffer.GetOfferFromList(vtxLinkPos);
-		// You are the merchant
-		if(theAlias.vchAlias == linkOffer.vchAlias)
+		if(theOffer.vchLinkOffer.empty())
 		{
-			commissionPaid = false;
-			priceAtTimeOfAccept = theOffer.accept.nPrice;
-			if(linkOffer.GetPrice() != priceAtTimeOfAccept)
-				discountApplied = true;
-			detectedUser = true;
+			// NON-LINKED merchant
+			if(theAlias.vchAlias == theOffer.vchAlias)
+			{
+				priceAtTimeOfAccept = theOffer.accept.nPrice;
+				if(theOffer.GetPrice() != priceAtTimeOfAccept)
+					discountApplied = true;
+				detectedUser = true;
+			}
 		}
-		// You are the affiliate
-		else if(theAlias.vchAlias == theOffer.vchAlias)
+		// linked offer
+		else
 		{
-			// full price with commission - discounted merchant price = commission + discount
-			priceAtTimeOfAccept = theOffer.GetPrice() -  theOffer.accept.nPrice;
-			commissionPaid = true;
-			discountApplied = false;
-			detectedUser = true;
+			vector<COffer> vtxLinkPos;
+			GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkTx, vtxLinkPos, true);
+			linkOffer.nHeight = nHeight;
+			linkOffer.GetOfferFromList(vtxLinkPos);
+			// You are the merchant
+			if(theAlias.vchAlias == linkOffer.vchAlias)
+			{
+				commissionPaid = false;
+				priceAtTimeOfAccept = theOffer.accept.nPrice;
+				if(linkOffer.GetPrice() != priceAtTimeOfAccept)
+					discountApplied = true;
+				detectedUser = true;
+			}
+			// You are the affiliate
+			else if(theAlias.vchAlias == theOffer.vchAlias)
+			{
+				// full price with commission - discounted merchant price = commission + discount
+				priceAtTimeOfAccept = theOffer.GetPrice() -  theOffer.accept.nPrice;
+				commissionPaid = true;
+				discountApplied = false;
+				detectedUser = true;
+			}
 		}
 	}
 	if(!detectedUser)
@@ -3548,8 +3551,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 						vector<CAliasIndex> vtxAliasPos;
 						if (!paliasdb->ReadAlias(theOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
 							continue;
-						const CAliasIndex &theAlias = vtxAliasPos.back();	
-						if(BuildOfferJson(theOffer, theAlias, oOffer, strWalletless))
+						if(BuildOfferJson(theOffer, vtxAliasPos.back(), oOffer, strWalletless))
 							oRes.push_back(oOffer);
 					}
 					else if(strAccepts == "Yes")
