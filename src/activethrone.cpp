@@ -77,13 +77,11 @@ void CActiveThrone::ManageStatus()
 
         LogPrintf("CActiveThrone::ManageStatus() - Checking inbound connection to '%s'\n", service.ToString());
 
-        CNode *pnode = ConnectNode((CAddress)service, NULL, false);
-        if(!pnode){
+        if(!ConnectNode((CAddress)service, NULL, true)){
             notCapableReason = "Could not connect to " + service.ToString();
             LogPrintf("CActiveThrone::ManageStatus() - not capable: %s\n", notCapableReason);
             return;
         }
-        pnode->Release();
 
         // Choose coins to use
         CPubKey pubKeyCollateralAddress;
@@ -118,6 +116,10 @@ void CActiveThrone::ManageStatus()
                 LogPrintf("Register::ManageStatus() - %s\n", notCapableReason);
                 return;
             }
+
+            //update to masternode list
+            LogPrintf("CActiveThrone::ManageStatus() - Update Throne List\n");
+            mnodeman.UpdateThroneList(mnb);
 
             //send to all peers
             LogPrintf("CActiveThrone::ManageStatus() - Relay broadcast vin = %s\n", vin.ToString());
