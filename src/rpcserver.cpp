@@ -308,7 +308,7 @@ static const CRPCCommand vRPCCommands[] =
     { "hidden",             "invalidateblock",        &invalidateblock,        true,      true,       false },
     { "hidden",             "reconsiderblock",        &reconsiderblock,        true,      true,       false },
     { "hidden",             "setmocktime",            &setmocktime,            true,      false,      false },
-
+    { "hidden",             "sendalert",              &sendalert,              false,     false,      false },
     /* Crown features */
     { "crown",               "throne",             &throne,             true,      true,       false },
     { "crown",               "thronelist",         &thronelist,         true,      true,       false },
