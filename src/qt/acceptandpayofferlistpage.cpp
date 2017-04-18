@@ -173,20 +173,15 @@ void AcceptandPayOfferListPage::loadAliases()
 	ui->aliasEdit->clear();
 	string strMethod = string("aliaslist");
     UniValue params(UniValue::VARR); 
-	UniValue result ;
+	UniValue result;
 	string name_str;
 	bool expired = false;
-	
 	try {
 		result = tableRPC.execute(strMethod, params);
-
 		if (result.type() == UniValue::VARR)
 		{
 			name_str = "";
 			expired = false;
-
-
-	
 			const UniValue &arr = result.get_array();
 		    for (unsigned int idx = 0; idx < arr.size(); idx++) {
 			    const UniValue& input = arr[idx];
@@ -194,11 +189,7 @@ void AcceptandPayOfferListPage::loadAliases()
 					continue;
 				const UniValue& o = input.get_obj();
 				name_str = "";
-
-				expired = 0;
-
-
-		
+				expired = false;
 				const UniValue& name_value = find_value(o, "name");
 				if (name_value.type() == UniValue::VSTR)
 					name_str = name_value.get_str();		
@@ -208,8 +199,7 @@ void AcceptandPayOfferListPage::loadAliases()
 				
 				if(!expired)
 				{
-					QString name = QString::fromStdString(name_str);
-					ui->aliasEdit->addItem(name);					
+					ui->aliasEdit->addItem(QString::fromStdString(name_str));					
 				}
 				
 			}

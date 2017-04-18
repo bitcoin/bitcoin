@@ -430,13 +430,13 @@ bool EditCertDialog::saveCurrentRow()
 		params.push_back(ui->aliasEdit->currentText().toStdString());
 		params.push_back(ui->nameEdit->text().toStdString());
 		params.push_back(ui->certPubDataEdit->toPlainText().toStdString());
+		params.push_back(strCipherPrivateData);
 		params.push_back(ui->safeSearchEdit->currentText().toStdString());
 		currentCategory = ui->categoryEdit->itemData(ui->categoryEdit->currentIndex(), Qt::UserRole);
 		if(ui->categoryEdit->currentIndex() > 0 &&  currentCategory != QVariant::Invalid)
 			params.push_back(currentCategory.toString().toStdString());
 		else
 			params.push_back(ui->categoryEdit->currentText().toStdString());
-		params.push_back(strCipherPrivateData);
 		params.push_back(strCipherEncryptionPublicKey);
 		params.push_back(strCipherEncryptionPrivateKey);
 		try {

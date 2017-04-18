@@ -2401,7 +2401,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue offeraccept(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 > params.size() || params.size() > 6)
+	if (fHelp || 2 > params.size() || params.size() > 6)
 		throw runtime_error("offeraccept <alias> <guid> [quantity] [message] [Ext TxId] [payment option]\n"
 				"Accept&Pay for a confirmed offer.\n"
 				"<alias> An alias of the buyer.\n"
@@ -2414,9 +2414,10 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CSyscoinAddress refundAddr;
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	vector<unsigned char> vchOffer = vchFromValue(params[1]);
-	vector<unsigned char> vchExtTxId = vchFromValue(params.size()>=5?params[4]:"");
+	vector<unsigned char> vchExtTxId;
 
-	string strMessage = params[3].get_str();
+
+	string strMessage;
 	int64_t nHeight = chainActive.Tip()->nHeight;
 	unsigned int nQty = 1;
 	if(CheckParam(params, 2))
@@ -2427,6 +2428,10 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1550 - " + _("Quantity must be less than 4294967296"));
 		}
 	}
+	if(CheckParam(params, 3))
+		strMessage = params[3].get_str();
+	if(CheckParam(params, 4))
+		vchExtTxId = vchFromValue(params[4]);
 	// payment options - get payment options string if specified otherwise default to SYS
 	string paymentOptions = "SYS";
 	if(CheckParam(params, 5))
