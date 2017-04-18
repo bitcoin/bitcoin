@@ -90,7 +90,7 @@ public:
 			string total_str;
 			string status_str;
 			string ismine_str;
-			string seller_str;
+			string seller_str, rootseller_str;
 			string buyer_str;
 			try {
 				result = tableRPC.execute(strMethod, params);		
@@ -140,8 +140,11 @@ public:
 						const UniValue& seller_value = find_value(o, "seller");
 						if (seller_value.type() == UniValue::VSTR)
 							seller_str = seller_value.get_str();
+						const UniValue& rootseller_value = find_value(o, "rootseller");
+						if (rootseller_value.type() == UniValue::VSTR)
+							rootseller_str = rootseller_value.get_str();
 
-						if((FindAliasInList(listAliases, buyer_str) && type == Accept) || (FindAliasInList(listAliases, seller_str) && type == MyAccept))
+						if((FindAliasInList(listAliases, buyer_str) && type == Accept) || (FindAliasInList(listAliases, seller_str) && type == MyAccept) || (FindAliasInList(listAliases, rootseller_str) && type == MyAccept))
 							updateEntry(QString::fromStdString(name_str), QString::fromStdString(value_str), QString::fromStdString(title_str), QString::fromStdString(height_str), QString::fromStdString(price_str), QString::fromStdString(currency_str), QString::fromStdString(qty_str), QString::fromStdString(total_str), QString::fromStdString(seller_str),QString::fromStdString(status_str), QString::fromStdString(buyer_str),type, CT_NEW); 
 					}
 				}
