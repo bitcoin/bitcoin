@@ -7,6 +7,7 @@
 
 #include <amount.h>                    // For CAmount
 #include <fs.h>                        // For fs::path
+#include <pubkey.h>                    // For CTxDestination (CKeyID and CScriptID)
 #include <script/ismine.h>             // For isminefilter, isminetype
 #include <script/standard.h>           // For CTxDestination
 #include <support/allocators/secure.h> // For SecureString
@@ -30,6 +31,7 @@ namespace interface {
 
 class Handler;
 class PendingWalletTx;
+struct WalletAddress;
 struct WalletBalances;
 struct WalletTxOut;
 
@@ -73,6 +75,9 @@ public:
     //! Get wallet name.
     virtual std::string getWalletName() = 0;
 
+    // Get key from pool.
+    virtual bool getKeyFromPool(bool internal, CPubKey& pub_key) = 0;
+
     //! Get public key.
     virtual bool getPubKey(const CKeyID& address, CPubKey& pub_key) = 0;
 
@@ -88,10 +93,16 @@ public:
     //! Add or update address.
     virtual bool setAddressBook(const CTxDestination& dest, const std::string& name, const std::string& purpose) = 0;
 
+    // Remove address.
+    virtual bool delAddressBook(const CTxDestination& dest) = 0;
+
     //! Look up address in wallet, return whether exists.
     virtual bool getAddress(const CTxDestination& dest,
         std::string* name = nullptr,
         isminetype* is_mine = nullptr) = 0;
+
+    //! Get wallet address list.
+    virtual std::vector<WalletAddress> getAddresses() = 0;
 
     //! Add dest data.
     virtual bool addDestData(const CTxDestination& dest, const std::string& key, const std::string& value) = 0;
@@ -222,6 +233,20 @@ public:
         WalletOrderForm order_form,
         std::string from_account,
         std::string& reject_reason) = 0;
+};
+
+//! Information about one wallet address.
+struct WalletAddress
+{
+    CTxDestination dest;
+    isminetype is_mine;
+    std::string name;
+    std::string purpose;
+
+    WalletAddress(CTxDestination dest, isminetype is_mine, std::string name, std::string purpose)
+        : dest(std::move(dest)), is_mine(is_mine), name(std::move(name)), purpose(std::move(purpose))
+    {
+    }
 };
 
 //! Collection of wallet balances.
