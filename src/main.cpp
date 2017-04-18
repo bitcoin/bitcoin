@@ -5840,33 +5840,48 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
 
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
         unsigned int nCount = ReadCompactSize(vRecv);
-        if (nCount > MAX_HEADERS_RESULTS) {
+        if (nCount > MAX_HEADERS_RESULTS)
+        {
             Misbehaving(pfrom->GetId(), 20);
             return error("headers message size = %u", nCount);
         }
         headers.resize(nCount);
-        for (unsigned int n = 0; n < nCount; n++) {
+        for (unsigned int n = 0; n < nCount; n++)
+        {
             vRecv >> headers[n];
             ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
         }
 
         LOCK(cs_main);
 
-        if (nCount == 0) {
-            // Nothing interesting. Stop asking this peers for more headers.
+        // Nothing interesting. Stop asking this peers for more headers.
+        if (nCount == 0)
             return true;
-        }
 
-        CBlockIndex *pindexLast = NULL;
-        BOOST_FOREACH(const CBlockHeader& header, headers) {
-            CValidationState state;
-            if (pindexLast != NULL && header.hashPrevBlock != pindexLast->GetBlockHash()) {
+        // Check all headers to make sure they are continuous before attempting to accept them.
+        // This prevents and attacker from keeping us from doing direct fetch by giving us out
+        // of order headers.
+        uint256 hashLastBlock;
+        for (const CBlockHeader &header : headers)
+        {
+            if (!hashLastBlock.IsNull() && header.hashPrevBlock != hashLastBlock)
+            {
                 Misbehaving(pfrom->GetId(), 20);
                 return error("non-continuous headers sequence");
             }
-            if (!AcceptBlockHeader(header, state, chainparams, &pindexLast)) {
+            hashLastBlock = header.GetHash();
+        }
+
+        // Check and accept each header in order from youngest block to oldest
+        CBlockIndex *pindexLast = NULL;
+        for (const CBlockHeader &header : headers)
+        {
+            CValidationState state;
+            if (!AcceptBlockHeader(header, state, chainparams, &pindexLast))
+            {
                 int nDoS;
-                if (state.IsInvalid(nDoS)) {
+                if (state.IsInvalid(nDoS))
+                {
                     if (nDoS > 0)
                         Misbehaving(pfrom->GetId(), nDoS);
                     return error("invalid header received");
@@ -5883,7 +5898,8 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
             // TODO: optimize: if pindexLast is an ancestor of chainActive.Tip or pindexBestHeader, continue
             // from there instead.
             LogPrint("net", "more getheaders (%d) to end to peer=%d (startheight:%d)\n",
-                    pindexLast->nHeight, pfrom->id,
+                    pindexLast->nHeight,
+                    pfrom->id,
                     pfrom->nStartingHeight);
             pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexLast), uint256());
         }
