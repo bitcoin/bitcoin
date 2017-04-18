@@ -3537,24 +3537,32 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 						continue;
 					if (vchNameUniq.size() > 0 && vchNameUniq != vchKey)
 						continue;
-					vector<COffer> vtxOfferPos;
-					if (!pofferdb->ReadOffer(offer.vchOffer, vtxOfferPos) || vtxOfferPos.empty())
-						continue;
-					
-					COffer theOffer = vtxOfferPos.back();
-					UniValue oOffer(UniValue::VOBJ);
-					vector<CAliasIndex> vtxAliasPos;
-					if (!paliasdb->ReadAlias(theOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
-						continue;
 					if(strAccepts == "No")
 					{
+						vector<COffer> vtxOfferPos;
+						if (!pofferdb->ReadOffer(offer.vchOffer, vtxOfferPos) || vtxOfferPos.empty())
+							continue;
+						
+						COffer theOffer = vtxOfferPos.back();
+						UniValue oOffer(UniValue::VOBJ);
+						vector<CAliasIndex> vtxAliasPos;
+						if (!paliasdb->ReadAlias(theOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
+							continue;
+
 						if(BuildOfferJson(theOffer, vtxAliasPos.back(), oOffer, strWalletless))
 							oRes.push_back(oOffer);
 					}
 					else if(strAccepts == "Yes")
 					{
-						theOffer.accept = offer.accept;
-						if(BuildOfferAcceptJson(theOffer, vtxPos.back(), vtxAliasPos.back(), oOffer, strWalletless))
+						COffer acceptOffer;
+						COfferAccept offerAccept;
+						if (!GetOfferAccept(offer.vchOffer, offer.accept.vchAcceptRand, acceptOffer, offerAccept))
+							continue;				
+						UniValue oOffer(UniValue::VOBJ);
+						vector<CAliasIndex> vtxAliasPos;
+						if (!paliasdb->ReadAlias(acceptOffer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
+							continue;
+						if(BuildOfferAcceptJson(acceptOffer, vtxPos.back(), vtxAliasPos.back(), oOffer, strWalletless))
 							oRes.push_back(oOffer);
 					}
 					// for accepts its the same as acceptheight because its the height from transaction
