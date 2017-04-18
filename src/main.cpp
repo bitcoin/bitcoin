@@ -6446,38 +6446,36 @@ bool ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, int64_t
                 pindexWalk = pindexWalk->pprev;
             }
 
+            // Download as much as possible, from earliest to latest.
+            unsigned int nAskFor = 0;
+            BOOST_REVERSE_FOREACH(CBlockIndex *pindex, vToFetch)
             {
-                // Download as much as possible, from earliest to latest.
-                unsigned int nAskFor = 0;
-                BOOST_REVERSE_FOREACH(CBlockIndex *pindex, vToFetch)
+                // pindex must be nonnull because we populated vToFetch a few lines above
+                CInv inv(MSG_BLOCK, pindex->GetBlockHash());
+                if (!AlreadyHave(inv))
                 {
-                    // pindex must be nonnull because we populated vToFetch a few lines above
-                    CInv inv(MSG_BLOCK, pindex->GetBlockHash());
-                    if (!AlreadyHave(inv))
-                    {
-		        requester.AskFor(inv, pfrom);
-                        LogPrint("req", "AskFor block via headers direct fetch %s (%d) peer=%d\n",
-                                pindex->GetBlockHash().ToString(),
-                                pindex->nHeight, pfrom->id);
-                        nAskFor++;
-                    }
-                    // We don't care about how many blocks are in flight.  We just need to make sure we don't
-                    // ask for more than the maximum allowed per peer because the request manager will take care
-                    // of any duplicate requests.
-                    if (nAskFor >= MAX_BLOCKS_IN_TRANSIT_PER_PEER)
-                    {
-                        LogPrint("net", "Large reorg, could only direct fetch %d blocks\n", nAskFor);
-                        break;
-                    }
+                    requester.AskFor(inv, pfrom);
+                    LogPrint("req", "AskFor block via headers direct fetch %s (%d) peer=%d\n",
+                            pindex->GetBlockHash().ToString(),
+                            pindex->nHeight, pfrom->id);
+                    nAskFor++;
                 }
-                if (nAskFor > 1)
+                // We don't care about how many blocks are in flight.  We just need to make sure we don't
+                // ask for more than the maximum allowed per peer because the request manager will take care
+                // of any duplicate requests.
+                if (nAskFor >= MAX_BLOCKS_IN_TRANSIT_PER_PEER)
                 {
-                    LogPrint("net", "Downloading blocks toward %s (%d) via headers direct fetch\n",
-                            pindexLast->GetBlockHash().ToString(),
-                            pindexLast->nHeight);
+                    LogPrint("net", "Large reorg, could only direct fetch %d blocks\n", nAskFor);
+                    break;
                 }
             }
-        }
+            if (nAskFor > 1)
+            {
+                LogPrint("net", "Downloading blocks toward %s (%d) via headers direct fetch\n",
+                        pindexLast->GetBlockHash().ToString(),
+                        pindexLast->nHeight);
+            }
+         }
 
         CheckBlockIndex(chainparams.GetConsensus());
     }
