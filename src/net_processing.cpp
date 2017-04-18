@@ -40,6 +40,8 @@
 
 std::atomic<int64_t> nTimeBestReceived(0); // Used only to inform the wallet of when we last received a block
 
+std::set<uint256> Dandelion::stemSet;
+
 struct IteratorComparator
 {
     template<typename I>
@@ -124,9 +126,6 @@ namespace {
     MapRelay mapRelay;
     /** Expiration-time ordered list of (expire time, relay map entry) pairs, protected by cs_main). */
     std::deque<std::pair<int64_t, MapRelay::iterator>> vRelayExpiration;
-
-    /** Set of hashes for transactions that are in the Dandelion stem. */
-    std::set<uint256> stemSet;
     
 } // anon namespace
 
@@ -937,7 +936,7 @@ static void RelayTransaction(const CTransaction& tx, CConnman& connman)
     bool stemRelay = false;
     CNode* stemNode;
     // 1) Check if inv is in the stem
-    if (stemSet.find(inv.hash) != stemSet.end()) {
+    if (Dandelion::stemSet.find(inv.hash) != Dandelion::stemSet.end()) {
         /* Pick a dandelion relay at random from outgoing edges
            (in principle, this should be the same for all messages
            but for our prototype, we will choose relays independently
@@ -955,7 +954,7 @@ static void RelayTransaction(const CTransaction& tx, CConnman& connman)
 
         // If there are no connected Dandelion nodes, go to fluff phase
         if (outgoing.empty()) {
-            stemSet.erase(inv.hash);
+            Dandelion::stemSet.erase(inv.hash);
         } else {
             /* Choose a random element from outgoing (this isn't exactly pseudorandom, 
             depending on the size of RAND_MAX, but it's close enough) */
@@ -1614,7 +1613,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     if (rand_prob < DANDELION_PROB)
                     {
                         // Add the hash to the set of ongoing stem transactions
-                        stemSet.insert(inv.hash);
+                        Dandelion::stemSet.insert(inv.hash);
                     }
                 }
             }
@@ -3134,9 +3133,9 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
             for (std::set<uint256>::iterator it = pto->setInventoryTxToSend.begin(); it != pto->setInventoryTxToSend.end(); it++) {
                 uint256 hash = *it;
                 // Check if the hash is in the dandelion stem
-                if (stemSet.find(hash) != stemSet.end()) {
+                if (Dandelion::stemSet.find(hash) != Dandelion::stemSet.end()) {
                     // remove the hash from the dandelion stem set
-                    stemSet.erase(hash);
+                    Dandelion::stemSet.erase(hash);
                     // remove the iterator from pto's to-send list
                     pto->setInventoryTxToSend.erase(it);
                     // Add the item to the queue to be sent

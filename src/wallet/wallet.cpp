@@ -16,6 +16,7 @@
 #include "keystore.h"
 #include "validation.h"
 #include "net.h"
+#include "net_processing.h"
 #include "policy/policy.h"
 #include "policy/rbf.h"
 #include "primitives/block.h"
@@ -1607,9 +1608,37 @@ bool CWalletTx::RelayWalletTransaction(CConnman* connman)
             LogPrintf("Relaying wtx %s\n", GetHash().ToString());
             if (connman) {
                 CInv inv(MSG_TX, GetHash());
-                connman->ForEachNode([&inv](CNode* pnode)
+                /* Only push to the Dandelion node's queue */
+                CNode* stemNode;
+                bool stemRelay = false;
+                // Find the outgoing connections with dandelion enabled
+                std::vector<CNode*> outgoing;
+                connman->ForEachNode( [&outgoing](CNode* pnode)
                 {
-                    pnode->PushInventory(inv);
+                    if (!pnode->fInbound && pnode->GetSendVersion() >= DANDELION_VERSION_NUM) {
+                        outgoing.push_back(pnode);
+                    }
+                });
+
+                // If there are no connected Dandelion nodes, go to fluff phase
+                if (!outgoing.empty()) {
+                    // Add the transaction to the stemSet
+                    Dandelion::stemSet.insert(inv.hash);
+                    stemRelay = true;
+                    /* Choose a random element from outgoing (this isn't exactly pseudorandom, 
+                    depending on the size of RAND_MAX, but it's close enough) */
+                    std::vector<CNode*>::iterator randIt = outgoing.begin();
+                    std::advance(randIt, std::rand() % outgoing.size());
+                    stemNode = *randIt;
+                }
+
+                // connman->ForEachNode([&inv](CNode* pnode)
+                connman->ForEachNode([&inv,&stemRelay,&stemNode](CNode* pnode)
+                {
+                    // Then add inv to the node's queue, if it's supposed to receive the message
+                    if (!stemRelay || stemNode == pnode) {
+                        pnode->PushInventory(inv);
+                    }
                 });
                 return true;
             }
