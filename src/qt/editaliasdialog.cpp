@@ -252,13 +252,12 @@ bool EditAliasDialog::saveCurrentRow()
 	UniValue params(UniValue::VARR);
 	UniValue arraySendParams(UniValue::VARR);
 	string strMethod;
-	CKey privEncryptionKey;
 	string strCipherPrivateData = "";
 	string privdata = "";
 	string strCipherPassword = "";
 	string strCipherEncryptionPrivateKey = "";
 	vector<unsigned char> vchPubKey;
-	CKey privKey;
+	CKey privKey, privEncryptionKey;
 	vector<unsigned char> vchPasswordSalt;
 	string password = "";
 	vector<unsigned char> vchPubEncryptionKey;
@@ -363,6 +362,13 @@ bool EditAliasDialog::saveCurrentRow()
 			keyparams.push_back("");
 			keyparams.push_back(value);
             tableRPC.execute("importprivkey", keyparams);	
+			UniValue keyparams1(UniValue::VARR);
+			UniValue value1(UniValue::VBOOL);
+			value1.setBool(false);
+			keyparams1.push_back(CSyscoinSecret(privEncryptionKey).ToString());
+			keyparams1.push_back("");
+			keyparams1.push_back(value1);
+            tableRPC.execute("importprivkey", keyparams1);	
 		}
 		catch (UniValue& objError)
 		{
@@ -514,7 +520,16 @@ bool EditAliasDialog::saveCurrentRow()
 						UniValue value(UniValue::VBOOL);
 						value.setBool(false);
 						keyparams.push_back(value);
-						tableRPC.execute("importprivkey", keyparams);		
+						tableRPC.execute("importprivkey", keyparams);	
+						vector<unsigned char> vchEncryptionPrivKey = ParseHex(m_encryptionkey.toStdString());
+						encryptionPrivKey.Set(vchEncryptionPrivKey.begin(), vchEncryptionPrivKey.end(), true);
+						UniValue keyparams1(UniValue::VARR);
+						UniValue value1(UniValue::VBOOL);
+						value1.setBool(false);
+						keyparams1.push_back(CSyscoinSecret(encryptionPrivKey).ToString());
+						keyparams1.push_back("");
+						keyparams1.push_back(value1);
+						tableRPC.execute("importprivkey", keyparams1);	
 					}
 					catch (UniValue& objError)
 					{
