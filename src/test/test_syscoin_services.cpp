@@ -650,7 +650,7 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 	CPubKey pubKey = privKey.GetPubKey();
 	vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
 	vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
-	vector<unsigned char> vchEncryptionPrivKey = ParseHex(encryptionkey);
+	vector<unsigned char> vchEncryptionPrivKey = ParseHex(encryptionprivkey);
 	encryptionPrivKey.Set(vchEncryptionPrivKey.begin(), vchEncryptionPrivKey.end(), true);
 	
 	BOOST_CHECK(pubKey.IsFullyValid());
