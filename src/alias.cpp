@@ -1864,7 +1864,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		newAlias.vchPasswordSalt = ParseHex(strPasswordSalt);
 	newAlias.safeSearch = strSafeSearch == "Yes"? true: false;
 	newAlias.acceptCertTransfers = strAcceptCertTransfers == "Yes"? true: false;
-	DecodeBase58(strAddress, theAlias.vchAddress);
+	DecodeBase58(strAddress, newAlias.vchAddress);
 	CSyscoinAddress newAddress;
 	CScript scriptPubKeyOrig;
 	GetAddress(newAlias, &newAddress, scriptPubKeyOrig);
@@ -1924,12 +1924,12 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if(bComplete)
 	{
 		res.push_back(txid_str);
-		res.push_back(strPublicKey);
+		res.push_back(strAddress);
 	}
 	else
 	{
 		res.push_back(hex_str);
-		res.push_back(strPublicKey);
+		res.push_back(strAddress);
 		res.push_back("false");
 	}
 	return res;
