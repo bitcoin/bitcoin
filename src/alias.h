@@ -377,5 +377,6 @@ void CleanupSyscoinServiceDatabases(int &servicesCleaned);
 int aliasunspent(const std::vector<unsigned char> &vchAlias, COutPoint& outPoint);
 bool IsMyAlias(const CAliasIndex& alias);
 void GetAddress(const CAliasIndex &alias, CSyscoinAddress* address, CScript& script, const uint32_t nPaymentOption=1);
+void GetEncryptionAddress(const CAliasIndex& alias, CSyscoinAddress* address,CScript& script,const uint32_t nPaymentOption=1);
 bool BuildAliasStatsJson(const std::vector<CAliasIndex> &aliases, UniValue& oAliasStats);
 #endif // ALIAS_H

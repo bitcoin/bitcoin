@@ -1143,6 +1143,15 @@ void GetAddress(const CAliasIndex& alias, CSyscoinAddress* address,CScript& scri
 	address[0] = CSyscoinAddress(addrTmp.Get(), myAddressType);
 	script = GetScriptForDestination(address[0].Get());
 }
+void GetEncryptionAddress(const CAliasIndex& alias, CSyscoinAddress* address,CScript& script,const uint32_t nPaymentOption)
+{
+	if(!address)
+		return;
+	CChainParams::AddressType myAddressType = PaymentOptionToAddressType(nPaymentOption);
+	CPubKey pubKey(alias.vchEncryptionPublicKey.begin(), vchEncryptionPublicKey.end());
+	address[0] = CSyscoinAddress(pubKey.GetID(), myAddressType);
+	script = GetScriptForDestination(address[0].Get());
+}
 bool CAliasIndex::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
         CDataStream dsAlias(vchData, SER_NETWORK, PROTOCOL_VERSION);
@@ -1462,7 +1471,7 @@ bool GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 	strAddress = EncodeBase58(alias.vchAddress);
 	safetyLevel = alias.safetyLevel;
 	safeSearch = alias.safeSearch;
-	vchPubKey = alias.vchPubKey;
+	vchPubKey = alias.vchEncryptionPublicKey;
 	return true;
 }
 
@@ -1489,7 +1498,7 @@ bool GetAliasFromAddress(const std::string& strAddress, std::string& strAlias, u
 	const CAliasIndex &alias = vtxPos.back();
 	safetyLevel = alias.safetyLevel;
 	safeSearch = alias.safeSearch;
-	vchPubKey = alias.vchPubKey;
+	vchPubKey = alias.vchEncryptionPublicKey;
 	return true;
 }
 int IndexOfAliasOutput(const CTransaction& tx) {
