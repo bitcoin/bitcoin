@@ -1717,7 +1717,7 @@ UniValue aliasauthenticate(const UniValue& params, bool fHelp) {
 	if(!defaultKey.IsFullyValid())
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5503 - " + _("Generated public key not fully valid"));
 
-	CSysocoinAddress defaultAddress(defaultKey.GetID());
+	CSyscoinAddress defaultAddress(defaultKey.GetID());
 	if(EncodeBase58(theAlias.vchAddress) != defaultAddress.ToString())
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5504 - " + _("Password is incorrect"));
 
