@@ -2058,6 +2058,7 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
             for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
                 isminetype mine = IsMine(pcoin->tx->vout[i]);
                 if (!(IsSpent(wtxid, i)) && mine != ISMINE_NO &&
+                    !IsFrozenCoin(pcoin->tx->vout[i]) &&
                     !IsLockedCoin((*it).first, i) && (pcoin->tx->vout[i].nValue > 0 || fIncludeZeroValue) &&
                     (!coinControl || !coinControl->HasSelected() || coinControl->fAllowOtherInputs || coinControl->IsSelected(COutPoint((*it).first, i))))
                         vCoins.push_back(COutput(pcoin, i, nDepth,
@@ -3438,6 +3439,19 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts)
     }
 }
 
+bool CWallet::IsFrozenCoin(const CTxOut& txout) const
+{
+    AssertLockHeld(cs_wallet); // setFrozenAddresses
+    if (0 < setFrozenAddresses.size()) {
+        CTxDestination outputDestination;
+        if(ExtractDestination(txout.scriptPubKey, outputDestination)) {
+            CBitcoinAddress outputAddress(outputDestination);
+            return setFrozenAddresses.end() != setFrozenAddresses.find(outputAddress);
+        }
+    }
+    return false;
+}
+
 /** @} */ // end of Actions
 
 class CAffectedKeysVisitor : public boost::static_visitor<void> {
@@ -3637,6 +3651,7 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
 {
     std::string strUsage = HelpMessageGroup(_("Wallet options:"));
     strUsage += HelpMessageOpt("-disablewallet", _("Do not load the wallet and disable wallet RPC calls"));
+    strUsage += HelpMessageOpt("-freezeaddress=<address>", _("Do not use this address for coin selection"));
     strUsage += HelpMessageOpt("-keypool=<n>", strprintf(_("Set key pool size to <n> (default: %u)"), DEFAULT_KEYPOOL_SIZE));
     strUsage += HelpMessageOpt("-fallbackfee=<amt>", strprintf(_("A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)"),
                                                                CURRENCY_UNIT, FormatMoney(DEFAULT_FALLBACK_FEE)));
@@ -3883,6 +3898,16 @@ void CWallet::postInitProcess(CScheduler& scheduler)
     // Add wallet transactions that aren't already in a block to mempool
     // Do this here as mempool requires genesis block to be loaded
     ReacceptWalletTransactions();
+
+    if (mapMultiArgs.count("-freezeaddress")) {
+        BOOST_FOREACH(std::string freezeString, mapMultiArgs.at("-freezeaddress"))
+        {
+            CBitcoinAddress freezeAddress(freezeString);
+            if (freezeAddress.IsValid())
+                setFrozenAddresses.insert(freezeAddress);
+        }
+        LogPrint(BCLog::SELECTCOINS, "freezeaddress count = %u\n", setFrozenAddresses.size());
+    }
 
     // Run a thread to flush wallet periodically
     if (!CWallet::fFlushScheduled.exchange(true)) {
