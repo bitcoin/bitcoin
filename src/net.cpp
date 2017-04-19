@@ -418,10 +418,10 @@ void CConnman::DumpBanlist()
 
     CBanDB bandb;
     banmap_t banmap;
-    SetBannedSetDirty(false);
     GetBanned(banmap);
-    if (!bandb.Write(banmap))
-        SetBannedSetDirty(true);
+    if (bandb.Write(banmap)) {
+        SetBannedSetDirty(false);
+    }
 
     LogPrint(BCLog::NET, "Flushed %d banned node ips/subnets to banlist.dat  %dms\n",
         banmap.size(), GetTimeMillis() - nStart);
@@ -541,6 +541,8 @@ bool CConnman::Unban(const CSubNet &subNet) {
 void CConnman::GetBanned(banmap_t &banMap)
 {
     LOCK(cs_setBanned);
+    // Sweep the banlist so expired bans are not returned
+    SweepBanned();
     banMap = setBanned; //create a thread safe copy
 }
 
