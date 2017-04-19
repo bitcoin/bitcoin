@@ -25,15 +25,15 @@ BOOST_AUTO_TEST_CASE (generate_big_certdata)
 	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, baddata, strCipherBadData), true);	
 	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, gooddata, strCipherGoodData), true);	
 	string guid = CertNew("node1", "jagcertbig1", "title", gooddata, gooddata);
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "certnew jagcertbig1 \"\" " + HexStr(vchFromString(strCipherGoodData))));
-	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig1 \"\" " + HexStr(vchFromString(strCipherBadData))), runtime_error);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "certnew jagcertbig1 title \"\" " + HexStr(vchFromString(strCipherGoodData))));
+	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig1 title \"\" " + HexStr(vchFromString(strCipherBadData))), runtime_error);
 	// unencrypted 1025 bytes should cause us to trip 1025+80 bytes once encrypted
-	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig1 " + gooddata + " " + HexStr(vchFromString(strCipherBadData))), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig1 title " + gooddata + " " + HexStr(vchFromString(strCipherBadData))), runtime_error);
 	// update cert with long pub data
-	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + guid + " " + baddata + " " + HexStr(vchFromString(strCipherGoodData))), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + guid + " title " + baddata + " " + HexStr(vchFromString(strCipherGoodData))), runtime_error);
 	MilliSleep(2500);
 	// trying to update to bad data for pub and priv
-	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + guid + " " + baddata + " " + HexStr(vchFromString(strCipherBadData))), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + guid + " title " + baddata + " " + HexStr(vchFromString(strCipherBadData))), runtime_error);
 
 }
 BOOST_AUTO_TEST_CASE (generate_big_certtitle)
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE (generate_certupdate)
 	AliasNew("node1", "jagcertupdate", "password", "data");
 	string guid = CertNew("node1", "jagcertupdate", "password", "title", "data");
 	// update an cert that isn't yours
-	BOOST_CHECK_THROW(CallRPC("node2", "certupdate " + guid + " pubdata data"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "certupdate " + guid + " title pubdata data"), runtime_error);
 	CertUpdate("node1", guid, "pub1");
 	// shouldnt update data, just uses prev data because it hasnt changed
 	CertUpdate("node1", guid);
@@ -99,9 +99,9 @@ BOOST_AUTO_TEST_CASE (generate_certsafesearch)
 	GenerateBlocks(1);
 	AliasNew("node1", "jagsafesearch1", "password", "changeddata1");
 	// cert is safe to search
-	string certguidsafe = CertNew("node1", "certtitle", "certdata", "public", "Yes");
+	string certguidsafe = CertNew("node1", "jagsafesearch1", "certtitle", "certdata", "public", "Yes");
 	// not safe to search
-	string certguidnotsafe = CertNew("node1", "certtitle", "certdata", "public", "No");
+	string certguidnotsafe = CertNew("node1", "jagsafesearch1", "certtitle", "certdata", "public", "No");
 	// should include result in both safe search mode on and off
 	BOOST_CHECK_EQUAL(CertFilter("node1", certguidsafe, "On"), true);
 	BOOST_CHECK_EQUAL(CertFilter("node1", certguidsafe, "Off"), true);
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	GenerateBlocks(5, "node1");
 	ExpireAlias("jagprune1");
 	// now it should be expired
-	BOOST_CHECK_THROW(CallRPC("node1",  "certupdate " + guid1 + " pubdata3 newdata1"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1",  "certupdate " + guid1 + " title pubdata3 newdata1"), runtime_error);
 	GenerateBlocks(5, "node1");
 	BOOST_CHECK_EQUAL(CertFilter("node1", guid1, "Off"), false);
 	BOOST_CHECK_EQUAL(CertFilter("node2", guid1, "Off"), false);
