@@ -522,11 +522,11 @@ bool EditAliasDialog::saveCurrentRow()
 						keyparams.push_back(value);
 						tableRPC.execute("importprivkey", keyparams);	
 						vector<unsigned char> vchEncryptionPrivKey = ParseHex(m_encryptionkey.toStdString());
-						encryptionPrivKey.Set(vchEncryptionPrivKey.begin(), vchEncryptionPrivKey.end(), true);
+						privEncryptionKey.Set(vchEncryptionPrivKey.begin(), vchEncryptionPrivKey.end(), true);
 						UniValue keyparams1(UniValue::VARR);
 						UniValue value1(UniValue::VBOOL);
 						value1.setBool(false);
-						keyparams1.push_back(CSyscoinSecret(encryptionPrivKey).ToString());
+						keyparams1.push_back(CSyscoinSecret(privEncryptionKey).ToString());
 						keyparams1.push_back("");
 						keyparams1.push_back(value1);
 						tableRPC.execute("importprivkey", keyparams1);	
