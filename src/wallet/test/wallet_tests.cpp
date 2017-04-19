@@ -424,6 +424,17 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         BOOST_CHECK_EQUAL(response.write(), strprintf("[{\"success\":false,\"error\":{\"code\":-1,\"message\":\"Failed to rescan before time %d, transactions may be missing.\"}},{\"success\":true}]", newTip->GetBlockTimeMax()));
         ::pwalletMain = backup;
     }
+
+    // Verify ScanForWalletTransactions does not return null when the scan is
+    // elided due to the nTimeFirstKey optimization.
+    {
+        CWallet wallet;
+        {
+            LOCK(wallet.cs_wallet);
+            wallet.UpdateTimeFirstKey(newTip->GetBlockTime() + 7200 + 1);
+        }
+        BOOST_CHECK_EQUAL(newTip, wallet.ScanForWalletTransactions(newTip));
+    }
 }
 
 // Check that GetImmatureCredit() returns a newly calculated value instead of
