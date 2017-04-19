@@ -6,9 +6,9 @@
 #
 # Test node handling
 #
-import time
 import urllib.parse
 
+from test_framework.mininode import wait_until
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (assert_equal,
                                  assert_raises_jsonrpc,
@@ -35,7 +35,7 @@ class NodeHandlingTest(BitcoinTestFramework):
         ###########################
         assert_equal(len(self.nodes[1].getpeerinfo()), 2)  # node1 should have 2 connections to node0 at this point
         self.nodes[1].setban("127.0.0.1", "add")
-        time.sleep(3)  # wait till the nodes are disconected
+        wait_until(lambda: len(self.nodes[1].getpeerinfo()) == 0)
         assert_equal(len(self.nodes[1].getpeerinfo()), 0)  # all nodes must be disconnected at this point
         assert_equal(len(self.nodes[1].listbanned()), 1)
         self.nodes[1].clearbanned()
@@ -61,10 +61,9 @@ class NodeHandlingTest(BitcoinTestFramework):
         self.nodes[1].setban("192.168.0.1", "add", 1)  # ban for 1 seconds
         self.nodes[1].setban("2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/19", "add", 1000)  # ban for 1000 seconds
         listBeforeShutdown = self.nodes[1].listbanned()
-        assert_equal("192.168.0.1/32", listBeforeShutdown[2]['address'])  # must be here
-        time.sleep(2)  # make 100% sure we expired 192.168.0.1 node time
+        assert_equal("192.168.0.1/32", listBeforeShutdown[2]['address'])
+        wait_until(lambda: len(self.nodes[1].listbanned()) == 3)
 
-        # stop node
         stop_node(self.nodes[1], 1)
 
         self.nodes[1] = start_node(1, self.options.tmpdir)
@@ -82,7 +81,7 @@ class NodeHandlingTest(BitcoinTestFramework):
         ###########################
         url = urllib.parse.urlparse(self.nodes[1].url)
         self.nodes[0].disconnectnode(url.hostname + ":" + str(p2p_port(1)))
-        time.sleep(2)  # disconnecting a node needs a little bit of time
+        wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 1)
         for node in self.nodes[0].getpeerinfo():
             assert(node['addr'] != url.hostname + ":" + str(p2p_port(1)))
 
