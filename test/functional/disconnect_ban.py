@@ -3,14 +3,12 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node disconnect and ban behavior"""
-import urllib.parse
 
 from test_framework.mininode import wait_until
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (assert_equal,
                                  assert_raises_jsonrpc,
                                  connect_nodes_bi,
-                                 p2p_port,
                                  start_node,
                                  stop_node,
                                  )
@@ -82,20 +80,15 @@ class DisconnectBanTest(BitcoinTestFramework):
 
         self.log.info("Test disconnectrnode RPCs")
 
-        self.log.info("disconnectnode: successfully disconnect node")
-        url = urllib.parse.urlparse(self.nodes[1].url)
-        self.nodes[0].disconnectnode(url.hostname + ":" + str(p2p_port(1)))
+        self.log.info("disconnectnode: successfully disconnect node by address")
+        address1 = self.nodes[0].getpeerinfo()[0]['addr']
+        self.nodes[0].disconnectnode(address=address1)
         wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 1)
-        for node in self.nodes[0].getpeerinfo():
-            assert(node['addr'] != url.hostname + ":" + str(p2p_port(1)))
+        assert not [node for node in self.nodes[0].getpeerinfo() if node['addr'] == address1]
 
         self.log.info("disconnectnode: successfully reconnect node")
         connect_nodes_bi(self.nodes, 0, 1)  # reconnect the node
-        found = False
-        for node in self.nodes[0].getpeerinfo():
-            if node['addr'] == url.hostname + ":" + str(p2p_port(1)):
-                found = True
-        assert(found)
+        assert [node for node in self.nodes[0].getpeerinfo() if node['addr'] == address1]
 
 if __name__ == '__main__':
     DisconnectBanTest().main()
