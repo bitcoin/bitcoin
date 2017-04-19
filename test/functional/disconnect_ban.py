@@ -2,7 +2,7 @@
 # Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test node handling."""
+"""Test node disconnect and ban behavior"""
 import time
 import urllib.parse
 
@@ -15,7 +15,7 @@ from test_framework.util import (assert_equal,
                                  stop_node,
                                  )
 
-class NodeHandlingTest(BitcoinTestFramework):
+class DisconnectBanTest(BitcoinTestFramework):
 
     def __init__(self):
         super().__init__()
@@ -83,4 +83,4 @@ class NodeHandlingTest(BitcoinTestFramework):
         assert(found)
 
 if __name__ == '__main__':
-    NodeHandlingTest().main()
+    DisconnectBanTest().main()

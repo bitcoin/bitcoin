@@ -80,7 +80,7 @@ BASE_SCRIPTS= [
     'multi_rpc.py',
     'proxy_test.py',
     'signrawtransactions.py',
-    'nodehandling.py',
+    'disconnect_ban.py',
     'decodescript.py',
     'blockchain.py',
     'disablewallet.py',
