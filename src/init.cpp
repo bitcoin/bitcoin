@@ -336,6 +336,9 @@ std::string HelpMessage(HelpMessageMode mode)
 #endif
     }
     strUsage += HelpMessageOpt("-datadir=<dir>", _("Specify data directory"));
+    if (showDebug) {
+        strUsage += HelpMessageOpt("-dbbatchsize", strprintf("Maximum database write batch size in bytes (default: %u)", nDefaultDbBatchSize));
+    }
     strUsage += HelpMessageOpt("-dbcache=<n>", strprintf(_("Set database cache size in megabytes (%d to %d, default: %d)"), nMinDbCache, nMaxDbCache, nDefaultDbCache));
     if (showDebug)
         strUsage += HelpMessageOpt("-feefilter", strprintf("Tell other nodes to filter invs to us by our mempool min fee (default: %u)", DEFAULT_FEEFILTER));
@@ -1425,6 +1428,13 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain");
                     break;
                 }
+
+                if (!ReplayBlocks(chainparams, pcoinsdbview)) {
+                    strLoadError = _("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.");
+                    break;
+                }
+                pcoinsTip->SetBestBlock(pcoinsdbview->GetBestBlock()); // TODO: only initialize pcoinsTip after ReplayBlocks
+                LoadChainTip(chainparams);
 
                 if (!fReindex && chainActive.Tip() != NULL) {
                     uiInterface.InitMessage(_("Rewinding blocks..."));
