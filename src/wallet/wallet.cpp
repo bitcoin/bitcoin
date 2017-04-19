@@ -4124,11 +4124,15 @@ bool CWallet::NewKeyPool()
     {
         LOCK(cs_wallet);
         CWalletDB walletdb(*dbw);
-        for (int64_t nIndex : setInternalKeyPool)
+
+        for (int64_t nIndex : setInternalKeyPool) {
             walletdb.ErasePool(nIndex);
+        }
         setInternalKeyPool.clear();
-        for(int64_t nIndex : setExternalKeyPool)
+
+        for (int64_t nIndex : setExternalKeyPool) {
             walletdb.ErasePool(nIndex);
+        }
         setExternalKeyPool.clear();
         privateSendClient.fEnablePrivateSend = false;
         nKeysLeftSinceAutoBackup = 0;
@@ -4177,12 +4181,16 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
         for (int64_t i = missingInternal + missingExternal; i--;)
         {
             int64_t nEnd = 1;
-            if (i < missingInternal)
+            if (i < missingInternal) {
                 internal = true;
-            if (!setInternalKeyPool.empty())
+            }
+
+            if (!setInternalKeyPool.empty()) {
                 nEnd = *(--setInternalKeyPool.end()) + 1;
-            if (!setExternalKeyPool.empty())
+            }
+            if (!setExternalKeyPool.empty()) {
                 nEnd = std::max(nEnd, *(--setExternalKeyPool.end()) + 1);
+            }
 
             if (!walletdb.WritePool(nEnd, CKeyPool(GenerateNewKey(internal), internal)))
                 throw std::runtime_error(std::string(__func__) + ": writing generated key failed");
@@ -4284,8 +4292,9 @@ static int64_t GetOldestKeyTimeInPool(const std::set<int64_t>& setKeyPool, CWall
 
     CKeyPool keypool;
     int64_t nIndex = *(setKeyPool.begin());
-    if (!walletdb.ReadPool(nIndex, keypool))
+    if (!walletdb.ReadPool(nIndex, keypool)) {
         throw std::runtime_error(std::string(__func__) + ": read oldest key in keypool failed");
+    }
     assert(keypool.vchPubKey.IsValid());
     return keypool.nTime;
 }
@@ -4480,8 +4489,9 @@ void CReserveKey::KeepKey()
 
 void CReserveKey::ReturnKey()
 {
-    if (nIndex != -1)
+    if (nIndex != -1) {
         pwallet->ReturnKey(nIndex, fInternal);
+    }
     nIndex = -1;
     vchPubKey = CPubKey();
 }
