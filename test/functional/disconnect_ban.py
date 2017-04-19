@@ -27,32 +27,39 @@ class DisconnectBanTest(BitcoinTestFramework):
         connect_nodes_bi(self.nodes, 0, 1)
 
     def run_test(self):
-        ###########################
-        # setban/listbanned tests #
-        ###########################
+        self.log.info("Test setban and listbanned RPCs")
+
+        self.log.info("setban: successfully ban single IP address")
         assert_equal(len(self.nodes[1].getpeerinfo()), 2)  # node1 should have 2 connections to node0 at this point
         self.nodes[1].setban("127.0.0.1", "add")
         time.sleep(3)  # wait till the nodes are disconected
         assert_equal(len(self.nodes[1].getpeerinfo()), 0)  # all nodes must be disconnected at this point
         assert_equal(len(self.nodes[1].listbanned()), 1)
+
+        self.log.info("clearbanned: successfully clear ban list")
         self.nodes[1].clearbanned()
         assert_equal(len(self.nodes[1].listbanned()), 0)
         self.nodes[1].setban("127.0.0.0/24", "add")
+
+        self.log.info("setban: fail to ban an already banned subnet")
         assert_equal(len(self.nodes[1].listbanned()), 1)
-        # This will throw an exception because 127.0.0.1 is within range 127.0.0.0/24
         assert_raises_jsonrpc(-23, "IP/Subnet already banned", self.nodes[1].setban, "127.0.0.1", "add")
-        # This will throw an exception because 127.0.0.1/42 is not a real subnet
+
+        self.log.info("setban: fail to ban an invalid subnet")
         assert_raises_jsonrpc(-30, "Error: Invalid IP/Subnet", self.nodes[1].setban, "127.0.0.1/42", "add")
         assert_equal(len(self.nodes[1].listbanned()), 1)  # still only one banned ip because 127.0.0.1 is within the range of 127.0.0.0/24
-        # This will throw an exception because 127.0.0.1 was not added above
+
+        self.log.info("setban remove: fail to unban a non-banned subnet")
         assert_raises_jsonrpc(-30, "Error: Unban failed", self.nodes[1].setban, "127.0.0.1", "remove")
         assert_equal(len(self.nodes[1].listbanned()), 1)
+
+        self.log.info("setban remove: successfully unban subnet")
         self.nodes[1].setban("127.0.0.0/24", "remove")
         assert_equal(len(self.nodes[1].listbanned()), 0)
         self.nodes[1].clearbanned()
         assert_equal(len(self.nodes[1].listbanned()), 0)
 
-        # test persisted banlist
+        self.log.info("setban: test persistence across node restart")
         self.nodes[1].setban("127.0.0.0/32", "add")
         self.nodes[1].setban("127.0.0.0/24", "add")
         self.nodes[1].setban("192.168.0.1", "add", 1)  # ban for 1 seconds
@@ -74,15 +81,16 @@ class DisconnectBanTest(BitcoinTestFramework):
         self.nodes[1].clearbanned()
         connect_nodes_bi(self.nodes, 0, 1)
 
-        ###########################
-        # RPC disconnectnode test #
-        ###########################
+        self.log.info("Test disconnectrnode RPCs")
+
+        self.log.info("disconnectnode: successfully disconnect node")
         url = urllib.parse.urlparse(self.nodes[1].url)
         self.nodes[0].disconnectnode(url.hostname + ":" + str(p2p_port(1)))
         time.sleep(2)  # disconnecting a node needs a little bit of time
         for node in self.nodes[0].getpeerinfo():
             assert(node['addr'] != url.hostname + ":" + str(p2p_port(1)))
 
+        self.log.info("disconnectnode: successfully reconnect node")
         connect_nodes_bi(self.nodes, 0, 1)  # reconnect the node
         found = False
         for node in self.nodes[0].getpeerinfo():
