@@ -49,6 +49,7 @@ public:
 	ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+		READWRITE(vchEncryptionPublicKey);
 		READWRITE(vchEncryptionPrivateKeyTo);
 		READWRITE(vchEncryptionPrivateKeyFrom);
 		READWRITE(txHash);
@@ -64,6 +65,7 @@ public:
         return (
         a.vchAliasTo == b.vchAliasTo
 		&& a.vchAliasFrom == b.vchAliasFrom
+		&& a.vchEncryptionPublicKey == b.vchEncryptionPublicKey
 		&& a.vchEncryptionPrivateKeyTo == b.vchEncryptionPrivateKeyTo
 		&& a.vchEncryptionPrivateKeyFrom == b.vchEncryptionPrivateKeyFrom
 		&& a.txHash == b.txHash
@@ -77,6 +79,7 @@ public:
     CMessage operator=(const CMessage &b) {
         vchAliasTo = b.vchAliasTo;
 		vchAliasFrom = b.vchAliasFrom;
+		vchEncryptionPublicKey = b.vchEncryptionPublicKey;
 		vchEncryptionPrivateKeyTo = b.vchEncryptionPrivateKeyTo;
 		vchEncryptionPrivateKeyFrom = b.vchEncryptionPrivateKeyFrom;
 		txHash = b.txHash;
@@ -91,8 +94,8 @@ public:
         return !(a == b);
     }
 
-    void SetNull() {vchPubData.clear(); vchData.clear(); vchMessage.clear(); txHash.SetNull(); nHeight = 0; vchAliasTo.clear(); vchAliasFrom.clear(); vchEncryptionPrivateKeyFrom.clear();vchEncryptionPrivateKeyTo.clear();}
-    bool IsNull() const { return (vchPubData.empty() && vchData.empty() && vchMessage.empty() && txHash.IsNull() && nHeight == 0 && vchAliasTo.empty() && vchAliasFrom.empty()); }
+    void SetNull() {vchEncryptionPublicKey.clear(); vchPubData.clear(); vchData.clear(); vchMessage.clear(); txHash.SetNull(); nHeight = 0; vchAliasTo.clear(); vchAliasFrom.clear(); vchEncryptionPrivateKeyFrom.clear();vchEncryptionPrivateKeyTo.clear();}
+    bool IsNull() const { return (vchEncryptionPublicKey.empty() && vchPubData.empty() && vchData.empty() && vchMessage.empty() && txHash.IsNull() && nHeight == 0 && vchAliasTo.empty() && vchAliasFrom.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);
