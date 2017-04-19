@@ -715,10 +715,6 @@ private:
      */
     bool AddWatchOnly(const CScript& dest) override;
 
-    // Used to NotifyTransactionChanged of the previous block's coinbase when
-    // the next block comes in
-    uint256 hashPrevBestCoinbase;
-
 public:
     /*
      * Main wallet lock.

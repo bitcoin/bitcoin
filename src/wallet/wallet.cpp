@@ -1155,33 +1155,6 @@ void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const 
     for (size_t i = 0; i < pblock->vtx.size(); i++) {
         SyncTransaction(pblock->vtx[i], pindex, i);
     }
-
-    // The GUI expects a NotifyTransactionChanged when a coinbase tx
-    // which is in our wallet moves from in-the-best-block to
-    // 2-confirmations (as it only displays them at that time).
-    // We do that here.
-    if (hashPrevBestCoinbase.IsNull()) {
-        // Immediately after restart we have no idea what the coinbase
-        // transaction from the previous block is.
-        // For correctness we scan over the entire wallet, looking for
-        // the previous block's coinbase, just in case it is ours, so
-        // that we can notify the UI that it should now be displayed.
-        if (pindex->pprev) {
-            for (const std::pair<uint256, CWalletTx>& p : mapWallet) {
-                if (p.second.IsCoinBase() && p.second.hashBlock == pindex->pprev->GetBlockHash()) {
-                    NotifyTransactionChanged(this, p.first, CT_UPDATED);
-                    break;
-                }
-            }
-        }
-    } else {
-        std::map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(hashPrevBestCoinbase);
-        if (mi != mapWallet.end()) {
-            NotifyTransactionChanged(this, hashPrevBestCoinbase, CT_UPDATED);
-        }
-    }
-
-    hashPrevBestCoinbase = pblock->vtx[0]->GetHash();
 }
 
 void CWallet::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) {
@@ -1542,16 +1515,17 @@ void CWalletTx::GetAccountAmounts(const std::string& strAccount, CAmount& nRecei
  * exist in the wallet will be updated.
  *
  * Returns pointer to the first block in the last contiguous range that was
- * successfully scanned.
- *
+ * successfully scanned or elided (elided if pIndexStart points at a block
+ * before CWallet::nTimeFirstKey). Returns null if there is no such range, or
+ * the range doesn't include chainActive.Tip().
  */
 CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
 {
-    CBlockIndex* ret = nullptr;
     int64_t nNow = GetTime();
     const CChainParams& chainParams = Params();
 
     CBlockIndex* pindex = pindexStart;
+    CBlockIndex* ret = pindexStart;
     {
         LOCK2(cs_main, cs_wallet);
         fAbortRescan = false;
@@ -3887,7 +3861,7 @@ bool CWallet::InitLoadWallet()
 
     std::string walletFile = GetArg("-wallet", DEFAULT_WALLET_DAT);
 
-    if (walletFile.find_first_of("/\\") != std::string::npos) {
+    if (boost::filesystem::path(walletFile).filename() != walletFile) {
         return InitError(_("-wallet parameter must only specify a filename (not a path)"));
     } else if (SanitizeString(walletFile, SAFE_CHARS_FILENAME) != walletFile) {
         return InitError(_("Invalid characters in -wallet filename"));
