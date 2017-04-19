@@ -660,7 +660,7 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 
 	string strCipherPrivateData = "";
 	if(privdata != "\"\"")
-		BOOST_CHECK_EQUAL(EncryptMessage(vchEncryptionPrivKey, privdata, strCipherPrivateData), true);
+		BOOST_CHECK_EQUAL(EncryptMessage(ParseHex(encryptionkey), privdata, strCipherPrivateData), true);
 
 	string strCipherEncryptionPrivateKey = "";
 
