@@ -1610,7 +1610,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 if (strCommand == NetMsgType::D_INV)
                 {
                     float rand_prob = ((float) rand() / (float) RAND_MAX);
-                    if (rand_prob < DANDELION_PROB)
+                    if (rand_prob > DANDELION_PROB)
                     {
                         // Add the hash to the set of ongoing stem transactions
                         Dandelion::stemSet.insert(inv.hash);
@@ -1633,6 +1633,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             else
             {
                 pfrom->AddInventoryKnown(inv);
+                LogPrintf("fAlreadyHave is %d. fImporting is %d. fReindex is %d. IsInitialBlockDownload is %d.\n",
+                    fAlreadyHave, fImporting, fReindex, IsInitialBlockDownload());
                 if (fBlocksOnly) {
                     LogPrint(BCLog::NET, "transaction (%s) inv sent in violation of protocol peer=%d\n", inv.hash.ToString(), pfrom->id);
                 } else if (!fAlreadyHave && !fImporting && !fReindex && !IsInitialBlockDownload()) {
