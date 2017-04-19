@@ -77,8 +77,8 @@ public:
     mutable std::atomic<int64_t> cachedBestHeaderTime;
 
     // get/set state about autorequesting-blocks during IBD
-    bool isAutorequestBlocks() const;
-    void setAutorequestBlocks(bool state);
+    bool isAutoRequestingBlocks() const;
+    void setAutoRequestBlocks(bool state);
 
 private:
     interfaces::Node& m_node;
@@ -120,7 +120,7 @@ public Q_SLOTS:
     void updateNetworkActive(bool networkActive);
     void updateAlert();
     void updateBanlist();
-    void toggleAutorequestBlocks();
+    void toggleAutoRequestBlocks();
 };
 
 #endif // BITCOIN_QT_CLIENTMODEL_H

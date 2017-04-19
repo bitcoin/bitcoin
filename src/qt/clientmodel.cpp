@@ -177,20 +177,20 @@ QString ClientModel::dataDir() const
     return GUIUtil::boostPathToQString(GetDataDir());
 }
 
-bool ClientModel::isAutorequestBlocks() const
+bool ClientModel::isAutoRequestingBlocks() const
 {
     return m_node.isAutorequestBlocks();
 }
 
-void ClientModel::setAutorequestBlocks(bool state)
+void ClientModel::setAutoRequestBlocks(bool state)
 {
     m_node.setAutorequestBlocks(state);
     Q_EMIT verificationProgressPauseStateHasChanged(!m_node.isAutorequestBlocks());
 }
 
-void ClientModel::toggleAutorequestBlocks()
+void ClientModel::toggleAutoRequestBlocks()
 {
-    setAutorequestBlocks(!m_node.isAutorequestBlocks());
+    setAutoRequestBlocks(!m_node.isAutorequestBlocks());
 }
 
 void ClientModel::updateBanlist()
