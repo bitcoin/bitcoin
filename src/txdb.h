@@ -25,6 +25,8 @@ static constexpr int DB_PEAK_USAGE_FACTOR = 2;
 static constexpr int MAX_BLOCK_COINSDB_USAGE = 10 * DB_PEAK_USAGE_FACTOR;
 //! -dbcache default (MiB)
 static const int64_t nDefaultDbCache = 450;
+//! -dbbatchsize default (bytes)
+static const int64_t nDefaultDbBatchSize = 16 << 20;
 //! max. -dbcache (MiB)
 static const int64_t nMaxDbCache = sizeof(void*) > 4 ? 16384 : 1024;
 //! min. -dbcache (MiB)
@@ -74,6 +76,7 @@ public:
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
+    std::vector<uint256> GetHeadBlocks() const override;
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) override;
     CCoinsViewCursor *Cursor() const override;
 
