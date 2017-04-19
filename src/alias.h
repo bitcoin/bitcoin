@@ -335,7 +335,7 @@ void CreateAliasRecipient(const CScript& scriptPubKey, const std::vector<unsigne
 int aliasselectpaymentcoins(const std::vector<unsigned char> &vchAlias, const CAmount &nAmount, std::vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacementOnly, bool bSelectAll=false);
 CAmount GetDataFee(const CScript& scriptPubKey, const std::vector<unsigned char>& vchAliasPeg, const uint64_t& nHeight);
 bool IsSyscoinTxMine(const CTransaction& tx,const std::string &type);
-bool IsAliasOp(int op);
+bool IsAliasOp(int op, bool ismine);
 bool getCategoryList(std::vector<std::string>& categoryList);
 bool getBanList(const std::vector<unsigned char> &banData, std::map<std::string, unsigned char> &banAliasList,  std::map<std::string, unsigned char>& banCertList,  std::map<std::string, unsigned char>& banOfferList);
 bool GetTxOfAlias(const std::vector<unsigned char> &vchAlias, CAliasIndex& alias, CTransaction& tx, bool skipExpiresCheck=false);
@@ -358,7 +358,6 @@ CAmount convertSyscoinToCurrencyCode(const std::vector<unsigned char> &vchAliasP
 std::string getCurrencyToSYSFromAlias(const std::vector<unsigned char> &vchAliasPeg, const std::vector<unsigned char> &vchCurrency, double &nFee, const unsigned int &nHeightToFind, std::vector<std::string>& rateList, int &precision, int &nFeePerByte, float &fEscrowFee);
 std::string aliasFromOp(int op);
 std::string GenerateSyscoinGuid();
-bool IsAliasOp(int op);
 bool RemoveAliasScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
 int GetSyscoinDataOutput(const CTransaction& tx);
 bool IsSyscoinDataOutput(const CTxOut& out);

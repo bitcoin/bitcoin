@@ -509,7 +509,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			if(foundAlias)
 				break;
 
-			else if (!foundAlias && IsAliasOp(pop))
+			else if (!foundAlias && IsAliasOp(pop, true))
 			{
 				foundAlias = true;
 				prevAliasOp = pop;
@@ -563,7 +563,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			case OP_ESCROW_ACTIVATE:
 				if (theEscrow.bPaymentAck)
 				{
-					if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0] )
+					if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0] )
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4010 - " + _("Alias input mismatch");
 						return error(errorMessage.c_str());
@@ -571,7 +571,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				else
 				{
-					if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchBuyerAlias != vvchPrevAliasArgs[0] )
+					if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theEscrow.vchBuyerAlias != vvchPrevAliasArgs[0] )
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Alias input mismatch");
 						return error(errorMessage.c_str());
@@ -644,7 +644,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 
 				break;
 			case OP_ESCROW_COMPLETE:
-				if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0] )
+				if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0] )
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4023 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
@@ -667,7 +667,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				break;
 			case OP_ESCROW_REFUND:
-				if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0] )
+				if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0] )
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4027 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
@@ -1830,7 +1830,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 
     CScript scriptPubKeyOrigSeller, scriptPubKeyOrigArbiter;
 
-    scriptPubKeyOrigSeller << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << sellerAlias.vchAlias << OP_2DROP;
+    scriptPubKeyOrigSeller << CScript::EncodeOP_N(OP_ESCROW_RELEASE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
     scriptPubKeyOrigSeller += sellerScript;
 
 	scriptPubKeyOrigArbiter << CScript::EncodeOP_N(OP_ESCROW_RELEASE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
@@ -1989,7 +1989,7 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
     scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
     scriptPubKeyOrigBuyer += buyerScript;
 
-	scriptPubKeyOrigArbiter << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << arbiterAlias.vchAlias << OP_2DROP;
+	scriptPubKeyOrigArbiter << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
     scriptPubKeyOrigArbiter += arbiterScript;
 
 	vector<CRecipient> vecSend;
@@ -2380,9 +2380,9 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
     uint256 hash = Hash(data.begin(), data.end());
 
     vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
-    scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << buyerAlias.vchAlias << OP_2DROP;
+    scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ESCROW_RELEASE) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP;
     scriptPubKeyBuyer += buyerScript;
-    scriptPubKeyArbiter << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << arbiterAlias.vchAlias << OP_2DROP;
+    scriptPubKeyArbiter << CScript::EncodeOP_N(OP_ESCROW_RELEASE) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP;
     scriptPubKeyArbiter += arbiterScript;
 	vector<CRecipient> vecSend;
 	CRecipient recipientBuyer, recipientArbiter;
@@ -2390,6 +2390,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	vecSend.push_back(recipientBuyer);
 	CreateRecipient(scriptPubKeyArbiter, recipientArbiter);
 	vecSend.push_back(recipientArbiter);
+
 
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
@@ -2662,7 +2663,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
     CScript scriptPubKeyOrigBuyer, scriptPubKeyOrigArbiter;
 
 
-    scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << buyerAlias.vchAlias << OP_2DROP;
+	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
     scriptPubKeyOrigBuyer += buyerScript;
 
 	scriptPubKeyOrigArbiter << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
@@ -2997,12 +2998,16 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
     uint256 hash = Hash(data.begin(), data.end());
 
     vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
-    scriptPubKeySeller << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << sellerAlias.vchAlias << OP_2DROP;
+    scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP;
+    scriptPubKeyBuyer += buyerScript;
+    scriptPubKeySeller << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP;
     scriptPubKeySeller += sellerScript;
-    scriptPubKeyArbiter << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << arbiterAlias.vchAlias << OP_2DROP;
+    scriptPubKeyArbiter << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP;
     scriptPubKeyArbiter += arbiterScript;
 	vector<CRecipient> vecSend;
-	CRecipient recipientSeller, recipientArbiter;
+	CRecipient recipientBuyer, recipientSeller, recipientArbiter;
+	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
+	vecSend.push_back(recipientBuyer);
 	CreateRecipient(scriptPubKeySeller, recipientSeller);
 	vecSend.push_back(recipientSeller);
 	CreateRecipient(scriptPubKeyArbiter, recipientArbiter);
@@ -3246,11 +3251,11 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	CScript scriptPubKeyBuyer, scriptPubKeySeller,scriptPubKeyArbiter;
 	vector<CRecipient> vecSend;
 	CRecipient recipientBuyer, recipientSeller, recipientArbiter;
-	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << buyerAlias.vchAlias << OP_2DROP;
+	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP;
 	scriptPubKeyBuyer += buyerScript;
-	scriptPubKeyArbiter << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << arbiterAlias.vchAlias << OP_2DROP;
+	scriptPubKeyArbiter << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP;
 	scriptPubKeyArbiter += arbiterScript;
-	scriptPubKeySeller << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << sellerAlias.vchAlias << OP_2DROP;
+	scriptPubKeySeller << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP;
 	scriptPubKeySeller += sellerScript;
 	CreateRecipient(scriptPubKeySeller, recipientSeller);
 	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
@@ -3566,7 +3571,6 @@ bool BuildEscrowJson(const CEscrow &escrow, UniValue& oEscrow, const string &str
 	oEscrow.push_back(Pair("avg_rating_display", strprintf("%.1f/5 (%d %s)", totalAvgRating, ratingCount, _("Votes"))));
 	return true;
 }
-
 UniValue escrowlist(const UniValue& params, bool fHelp) {
 	if (fHelp || 3 < params.size())
         throw runtime_error("escrowlist [\"alias\",...] [<escrow>] [walletless=No]\n"

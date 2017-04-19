@@ -532,8 +532,12 @@ void PutToAliasList(std::vector<CAliasIndex> &aliasList, CAliasIndex& index) {
     aliasList.push_back(index);
 }
 
-bool IsAliasOp(int op) {
-	return op == OP_ALIAS_ACTIVATE
+bool IsAliasOp(int op, bool ismine) {
+	if(ismine)
+		return op == OP_ALIAS_ACTIVATE
+			|| op == OP_ALIAS_UPDATE;
+	else
+		return op == OP_ALIAS_ACTIVATE
 			|| op == OP_ALIAS_UPDATE
 			|| op == OP_ALIAS_PAYMENT;
 }
@@ -734,13 +738,13 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			prevCoins = inputs.AccessCoins(prevOutput->hash);
 			if(prevCoins == NULL)
 				continue;
-			if(prevCoins->vout.size() <= prevOutput->n || !IsSyscoinScript(prevCoins->vout[prevOutput->n].scriptPubKey, pop, vvch) || pop == OP_ALIAS_PAYMENT)
+			if(prevCoins->vout.size() <= prevOutput->n || !IsSyscoinScript(prevCoins->vout[prevOutput->n].scriptPubKey, pop, vvch))
 			{
 				prevCoins = NULL;
 				continue;
 			}
 
-			if (IsAliasOp(pop) && vvchArgs[0] == vvch[0]) {
+			if (IsAliasOp(pop, true) && vvchArgs[0] == vvch[0]) {
 				prevOp = pop;
 				vvchPrevArgs = vvch;
 				break;
@@ -814,7 +818,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				break;
 			case OP_ALIAS_UPDATE:
-				if (!IsAliasOp(prevOp))
+				if (!IsAliasOp(prevOp, true))
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5012 - " + _("Alias input to this transaction not found");
 					return error(errorMessage.c_str());

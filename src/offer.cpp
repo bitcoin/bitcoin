@@ -653,7 +653,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				continue;
 			if(foundAlias)
 				break;
-			if (!foundAlias && IsAliasOp(pop) && ((theOffer.accept.IsNull() && theOffer.vchAlias == vvch[0]) || (!theOffer.accept.IsNull() && theOffer.accept.vchBuyerAlias == vvch[0])))
+			if (!foundAlias && IsAliasOp(pop, true) && ((theOffer.accept.IsNull() && theOffer.vchAlias == vvch[0]) || (!theOffer.accept.IsNull() && theOffer.accept.vchBuyerAlias == vvch[0])))
 			{
 				foundAlias = true;
 				prevAliasOp = pop;
@@ -728,7 +728,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		switch (op) {
 		case OP_OFFER_ACTIVATE:
-			if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theOffer.vchAlias != vvchPrevAliasArgs[0])
+			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theOffer.vchAlias != vvchPrevAliasArgs[0])
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
@@ -791,7 +791,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 			break;
 		case OP_OFFER_UPDATE:
-			if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theOffer.vchAlias != vvchPrevAliasArgs[0])
+			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theOffer.vchAlias != vvchPrevAliasArgs[0])
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1026 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
@@ -840,7 +840,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			break;
 		case OP_OFFER_ACCEPT:
 			theOfferAccept = theOffer.accept;
-			if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theOfferAccept.vchBuyerAlias != vvchPrevAliasArgs[0])
+			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theOfferAccept.vchBuyerAlias != vvchPrevAliasArgs[0])
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1035 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());

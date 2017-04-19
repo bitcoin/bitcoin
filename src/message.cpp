@@ -304,7 +304,7 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 				continue;
 			if(prevCoins->vout.size() <= prevOutput->n || !IsSyscoinScript(prevCoins->vout[prevOutput->n].scriptPubKey, pop, vvch) || pop == OP_ALIAS_PAYMENT)
 				continue;
-			if (IsAliasOp(pop))
+			if (IsAliasOp(pop, true))
 			{
 				prevAliasOp = pop;
 				vvchPrevAliasArgs = vvch;
@@ -360,7 +360,7 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 		}
 		if(op == OP_MESSAGE_ACTIVATE)
 		{
-			if(!IsAliasOp(prevAliasOp) || vvchPrevAliasArgs.empty() || theMessage.vchAliasFrom != vvchPrevAliasArgs[0])
+			if(!IsAliasOp(prevAliasOp, true) || vvchPrevAliasArgs.empty() || theMessage.vchAliasFrom != vvchPrevAliasArgs[0])
 			{
 				errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3011 - " + _("Alias not provided as input");
 				return error(errorMessage.c_str());
