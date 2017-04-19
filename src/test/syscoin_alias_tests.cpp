@@ -1068,7 +1068,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 newdata1"));
 	GenerateBlocks(5, "node1");
 	
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " newdata privdata pubdata"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " titlenew privdata pubdata"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate aliasexpire0 " + offerguid + " category title 100 0.05 description"));
 	GenerateBlocks(5, "node1");
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certguid + " jag1 data pubdata"));
@@ -1093,7 +1093,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 
 	ExpireAlias("aliasexpire2");
 	// should fail: update cert with expired alias
-	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + certgoodguid + " pubdata"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + certgoodguid + " title pubdata"), runtime_error);
 	// should fail: xfer an cert with expired alias
 	BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpire2"), runtime_error);
 	// should fail: xfer an cert to an expired alias even though transferring cert is good
