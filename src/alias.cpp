@@ -1148,7 +1148,7 @@ void GetEncryptionAddress(const CAliasIndex& alias, CSyscoinAddress* address,CSc
 	if(!address)
 		return;
 	CChainParams::AddressType myAddressType = PaymentOptionToAddressType(nPaymentOption);
-	CPubKey pubKey(alias.vchEncryptionPublicKey.begin(), vchEncryptionPublicKey.end());
+	CPubKey pubKey(alias.vchEncryptionPublicKey.begin(), alias.vchEncryptionPublicKey.end());
 	address[0] = CSyscoinAddress(pubKey.GetID(), myAddressType);
 	script = GetScriptForDestination(address[0].Get());
 }
