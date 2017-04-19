@@ -335,7 +335,7 @@ void CreateAliasRecipient(const CScript& scriptPubKey, const std::vector<unsigne
 int aliasselectpaymentcoins(const std::vector<unsigned char> &vchAlias, const CAmount &nAmount, std::vector<COutPoint>& outPoints, bool& bIsFunded, CAmount &nRequiredAmount, bool bSelectFeePlacementOnly, bool bSelectAll=false);
 CAmount GetDataFee(const CScript& scriptPubKey, const std::vector<unsigned char>& vchAliasPeg, const uint64_t& nHeight);
 bool IsSyscoinTxMine(const CTransaction& tx,const std::string &type);
-bool IsAliasOp(int op, bool ismine);
+bool IsAliasOp(int op, bool ismine=false);
 bool getCategoryList(std::vector<std::string>& categoryList);
 bool getBanList(const std::vector<unsigned char> &banData, std::map<std::string, unsigned char> &banAliasList,  std::map<std::string, unsigned char>& banCertList,  std::map<std::string, unsigned char>& banOfferList);
 bool GetTxOfAlias(const std::vector<unsigned char> &vchAlias, CAliasIndex& alias, CTransaction& tx, bool skipExpiresCheck=false);
