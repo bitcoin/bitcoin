@@ -53,7 +53,7 @@ extern CTweakRef<unsigned int> ebTweak;
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 
 bool IsTrafficShapingEnabled();
-UniValue validateblocktemplate(const UniValue& params, bool fHelp);
+UniValue validateblocktemplate(const UniValue &params, bool fHelp);
 
 bool MiningAndExcessiveBlockValidatorRule(const unsigned int newExcessiveBlockSize,
     const unsigned int newMiningBlockSize)
@@ -1868,7 +1868,7 @@ void RegisterUnlimitedRPCCommands(CRPCTable &tableRPC)
 }
 
 
-UniValue validateblocktemplate(const UniValue& params, bool fHelp)
+UniValue validateblocktemplate(const UniValue &params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 1)
         throw runtime_error(
@@ -1882,19 +1882,19 @@ UniValue validateblocktemplate(const UniValue& params, bool fHelp)
             "\nResult:\n"
             "true (boolean) submitted block template is valid\n"
             "JSONRPCException if submitted block template is invalid\n"
-            "\nExamples:\n"
-            + HelpExampleCli("validateblocktemplate", "\"mydata\"")
-            + HelpExampleRpc("validateblocktemplate", "\"mydata\"")
-        );
+            "\nExamples:\n" +
+            HelpExampleCli("validateblocktemplate", "\"mydata\"") +
+            HelpExampleRpc("validateblocktemplate", "\"mydata\""));
 
     UniValue ret(UniValue::VARR);
     CBlock block;
     if (!DecodeHexBlk(block, params[0].get_str()))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
 
-    if (block.nBlockSize == 0) block.nBlockSize = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
+    if (block.nBlockSize == 0)
+        block.nBlockSize = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
 
-    CBlockIndex *pindexPrev=NULL;
+    CBlockIndex *pindexPrev = NULL;
     {
         LOCK(cs_main);
 
