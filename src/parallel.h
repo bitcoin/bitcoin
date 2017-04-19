@@ -18,7 +18,6 @@
 
 #include <boost/thread.hpp>
 
-using namespace std;
 
 // The number of script check queues we have available.  For every script check queue we can run an
 // additional parallel block validation.
@@ -114,7 +113,7 @@ class CParallelValidation
 private:
     // txn hashes that are in the previous block
     CCriticalSection cs_previousblock;
-    vector<uint256> vPreviousBlock;
+    std::vector<uint256> vPreviousBlock;
 
 
 public:
@@ -133,7 +132,7 @@ public:
         bool fIsReorgInProgress; // has a re-org to another chain been triggered.
     };
     CCriticalSection cs_blockvalidationthread;
-    map<boost::thread::id, CHandleBlockMsgThreads> mapBlockValidationThreads GUARDED_BY(cs_blockvalidationthread);
+    std::map<boost::thread::id, CHandleBlockMsgThreads> mapBlockValidationThreads GUARDED_BY(cs_blockvalidationthread);
 
 
 public:
