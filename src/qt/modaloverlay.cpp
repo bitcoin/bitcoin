@@ -8,6 +8,7 @@
 #include <qt/guiutil.h>
 
 #include <chainparams.h>
+#include <net_processing.h>
 
 #include <QResizeEvent>
 #include <QPropertyAnimation>
@@ -131,6 +132,9 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
 
     // show remaining number of blocks
     ui->numberOfBlocksLeft->setText(QString::number(bestHeaderHeight - count));
+
+    // show already requested blocks (in total)
+    ui->numberBlocksRequested->setText(QString::number(getAmountOfBlocksInFlight()));
     eventuallyShowHeaderSyncing(count);
 }
 

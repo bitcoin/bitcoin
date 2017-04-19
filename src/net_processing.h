@@ -93,4 +93,7 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 void setAutoRequestBlocks(bool);
 bool isAutoRequestingBlocks();
 
+/** returns the amount of blocks in flight (in total) */
+unsigned int getAmountOfBlocksInFlight();
+
 #endif // BITCOIN_NET_PROCESSING_H

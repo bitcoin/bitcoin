@@ -224,6 +224,26 @@ QLabel { color: rgb(40,40,40);  }</string>
             </widget>
            </item>
            <item row="1" column="0">
+            <widget class="QLabel" name="labelNumberBlocksRequested">
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Blocks requested from peers</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLabel" name="numberBlocksRequested">
+             <property name="text">
+              <string>Unknown...</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
             <widget class="QLabel" name="labelLastBlockTime">
              <property name="font">
               <font>
@@ -236,7 +256,7 @@ QLabel { color: rgb(40,40,40);  }</string>
              </property>
             </widget>
            </item>
-           <item row="1" column="1">
+           <item row="2" column="1">
             <widget class="QLabel" name="newestBlockDate">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
@@ -249,7 +269,7 @@ QLabel { color: rgb(40,40,40);  }</string>
              </property>
             </widget>
            </item>
-           <item row="2" column="0">
+           <item row="3" column="0">
             <widget class="QLabel" name="labelSyncDone">
              <property name="font">
               <font>
@@ -262,7 +282,7 @@ QLabel { color: rgb(40,40,40);  }</string>
              </property>
             </widget>
            </item>
-           <item row="2" column="1">
+           <item row="3" column="1">
             <layout class="QHBoxLayout" name="horizontalLayoutSync" stretch="0,1">
              <item>
               <widget class="QLabel" name="percentageProgress">
@@ -283,7 +303,7 @@ QLabel { color: rgb(40,40,40);  }</string>
              </item>
             </layout>
            </item>
-           <item row="4" column="0">
+           <item row="5" column="0">
             <widget class="QLabel" name="labelProgressIncrease">
              <property name="font">
               <font>
@@ -296,14 +316,14 @@ QLabel { color: rgb(40,40,40);  }</string>
              </property>
             </widget>
            </item>
-           <item row="4" column="1">
+           <item row="5" column="1">
             <widget class="QLabel" name="progressIncreasePerH">
              <property name="text">
               <string>calculating...</string>
              </property>
             </widget>
            </item>
-           <item row="5" column="0">
+           <item row="6" column="0">
             <widget class="QLabel" name="labelEstimatedTimeLeft">
              <property name="font">
               <font>
@@ -316,7 +336,7 @@ QLabel { color: rgb(40,40,40);  }</string>
              </property>
             </widget>
            </item>
-           <item row="5" column="1">
+           <item row="6" column="1">
             <widget class="QLabel" name="expectedTimeLeft">
              <property name="text">
               <string>calculating...</string>

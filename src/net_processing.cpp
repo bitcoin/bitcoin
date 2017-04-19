@@ -3780,6 +3780,11 @@ bool isAutoRequestingBlocks()
     return fAutoRequestBlocks;
 }
 
+unsigned int getAmountOfBlocksInFlight() {
+    LOCK(cs_main);
+    return mapBlocksInFlight.size();
+}
+
 class CNetProcessingCleanup
 {
 public:
