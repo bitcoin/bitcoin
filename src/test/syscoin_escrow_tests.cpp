@@ -257,6 +257,7 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release_with_peg_update)
 	string description = "newdescription";
 	string offerlinkguid = OfferLink("node3", "arbiteralias333", offerguid, commission, description);
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress buyeralias33 400"), runtime_error);
+	GenerateBlocks(10);
 	string guid = EscrowNew("node1", "node2", "buyeralias33", offerlinkguid, qty, message, "arbiteralias333", "selleralias33");
 	EscrowRelease("node1", "buyer", guid);
 	// update the EUR peg twice before claiming escrow

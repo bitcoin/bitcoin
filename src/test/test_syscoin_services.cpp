@@ -1387,13 +1387,17 @@ void EscrowFeedback(const string& node, const string& role, const string& escrow
 	const UniValue &arrayArbiterFeedbackObject  = find_value(escrowObj, "arbiter_feedback");
 	if(arrayBuyerFeedbackObject.type() == UniValue::VARR)
 	{
+		printf("buyer feedback\n");
 		const UniValue &arrayBuyerFeedbackValue = arrayBuyerFeedbackObject.get_array();
 		for(int j=0;j<arrayBuyerFeedbackValue.size();j++)
 		{
+			
 			const UniValue& arrayBuyerFeedback = arrayBuyerFeedbackValue[j].get_obj();
 			const string &escrowFeedbackTxid = find_value(arrayBuyerFeedback, "txid").get_str();
+			printf("feedback %d escrowFeedbackTxid %s escrowTxid %s userprimary %d\n", j, escrowFeedbackTxid.c_str(), escrowTxid.c_str(), userprimary);
 			if(foundFeedback == 0 && escrowFeedbackTxid == escrowTxid && (userprimary == FEEDBACKBUYER || usersecondary == FEEDBACKBUYER))
 			{
+				printf("found!\n");
 				BOOST_CHECK(find_value(arrayBuyerFeedback, "feedbackuser").get_int() != FEEDBACKBUYER);
 				if(userprimary == FEEDBACKBUYER)
 				{
