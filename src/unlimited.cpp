@@ -422,7 +422,8 @@ std::string UnlimitedCmdLineHelp()
                                                      DEFAULT_MINLIMITERTXFEE));
     strUsage += HelpMessageOpt(
         "-min-xthin-nodes=<n>", strprintf(_("Minimum number of xthin nodes to automatically find and connect "
-        "(default: %d)"), 4));
+                                            "(default: %d)"),
+                                    4));
     strUsage += HelpMessageOpt("-maxlimitertxfee=<amt>",
         strprintf(_("Fees (in satoshi/byte) larger than this are always relayed (default: %s)"),
                                    DEFAULT_MAXLIMITERTXFEE));
