@@ -565,7 +565,8 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
 	
 	BOOST_CHECK(pubKey.IsFullyValid());
-	BOOST_CHECK_NO_THROW(CallRPC(node, "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));	
+	BOOST_CHECK_NO_THROW(CallRPC(node, "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));
+	BOOST_CHECK_NO_THROW(CallRPC(node, "importprivkey " + CSyscoinSecret(privEncryptionKey).ToString() + " \"\" false", true, false));
 	if(password != "\"\"")
 		BOOST_CHECK_EQUAL(EncryptMessage(vchPubEncryptionKey, password, strCipherPassword), true);
 	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, stringFromVch(vchPrivEncryptionKey), strCipherEncryptionPrivateKey), true);
@@ -644,23 +645,26 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 	string encryptionprivkey = find_value(r.get_obj(), "encryption_privatekey").get_str();
 	CAmount balanceBefore = AmountFromValue(find_value(r.get_obj(), "balance"));
 
-	CKey privKey;
+	CKey privKey, encryptionPrivKey;
 	privKey.MakeNewKey(true);
 	CPubKey pubKey = privKey.GetPubKey();
 	vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
 	vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
+	vector<unsigned char> vchEncryptionPrivKey = ParseHex(encryptionkey);
+	encryptionPrivKey.Set(vchEncryptionPrivKey, vchEncryptionPrivKey + (sizeof vchEncryptionPrivKey), true);
 	
 	BOOST_CHECK(pubKey.IsFullyValid());
 	BOOST_CHECK_NO_THROW(CallRPC(tonode, "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));	
+	BOOST_CHECK_NO_THROW(CallRPC(tonode, "importprivkey " + CSyscoinSecret(encryptionPrivKey).ToString() + " \"\" false", true, false));	
 
 
 	string strCipherPrivateData = "";
 	if(privdata != "\"\"")
-		BOOST_CHECK_EQUAL(EncryptMessage(ParseHex(encryptionkey), privdata, strCipherPrivateData), true);
+		BOOST_CHECK_EQUAL(EncryptMessage(vchEncryptionPrivKey, privdata, strCipherPrivateData), true);
 
 	string strCipherEncryptionPrivateKey = "";
 
-	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, stringFromVch(ParseHex(encryptionprivkey)), strCipherEncryptionPrivateKey), true);
+	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, stringFromVch(vchEncryptionPrivKey), strCipherEncryptionPrivateKey), true);
 	
 	string strPrivateHex = HexStr(vchFromString(strCipherPrivateData));
 	if(strCipherPrivateData.empty())
@@ -749,16 +753,19 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		string pwStr = password;
 		SecureString scpassword = pwStr.c_str();
 		BOOST_CHECK(crypt.SetKeyFromPassphrase(scpassword, vchPasswordSalt, 1, 2));
-		CKey privKey;
+		CKey privKey, encryptionPrivKey;
 		privKey.Set(crypt.chKey, crypt.chKey + (sizeof crypt.chKey), true);
 		CPubKey pubKey = privKey.GetPubKey();
 		vchPubKey = vector<unsigned char>(pubKey.begin(), pubKey.end());
 		vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
+		vector<unsigned char> vchEncryptionPrivKey = ParseHex(encryptionprivkey);
+		encryptionPrivKey.Set(vchEncryptionPrivKey, vchEncryptionPrivKey + (sizeof vchEncryptionPrivKey), true);
 		
 		BOOST_CHECK(pubKey.IsFullyValid());
 		BOOST_CHECK_NO_THROW(r = CallRPC(node, "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));	
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "importprivkey " + CSyscoinSecret(encryptionPrivKey).ToString() + " \"\" false", true, false));	
 		BOOST_CHECK_EQUAL(EncryptMessage(ParseHex(encryptionkey), password, strCipherPassword), true);
-		BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, stringFromVch(ParseHex(encryptionprivkey)), strCipherEncryptionPrivateKey), true);
+		BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, stringFromVch(vchEncryptionPrivKey), strCipherEncryptionPrivateKey), true);
 	}
 	string strPubKey = HexStr(vchPubKey);
 	if(strPubKey.empty())
