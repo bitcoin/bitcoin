@@ -3,13 +3,19 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node handling."""
-
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-
+import time
 import urllib.parse
 
-class NodeHandlingTest (BitcoinTestFramework):
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (assert_equal,
+                                 assert_raises_jsonrpc,
+                                 connect_nodes_bi,
+                                 p2p_port,
+                                 start_node,
+                                 stop_node,
+                                 )
+
+class NodeHandlingTest(BitcoinTestFramework):
 
     def __init__(self):
         super().__init__()
@@ -20,10 +26,10 @@ class NodeHandlingTest (BitcoinTestFramework):
         ###########################
         # setban/listbanned tests #
         ###########################
-        assert_equal(len(self.nodes[2].getpeerinfo()), 4) #we should have 4 nodes at this point
+        assert_equal(len(self.nodes[2].getpeerinfo()), 4)  # we should have 4 nodes at this point
         self.nodes[2].setban("127.0.0.1", "add")
-        time.sleep(3) #wait till the nodes are disconected
-        assert_equal(len(self.nodes[2].getpeerinfo()), 0) #all nodes must be disconnected at this point
+        time.sleep(3)  # wait till the nodes are disconected
+        assert_equal(len(self.nodes[2].getpeerinfo()), 0)  # all nodes must be disconnected at this point
         assert_equal(len(self.nodes[2].listbanned()), 1)
         self.nodes[2].clearbanned()
         assert_equal(len(self.nodes[2].listbanned()), 0)
@@ -33,7 +39,7 @@ class NodeHandlingTest (BitcoinTestFramework):
         assert_raises_jsonrpc(-23, "IP/Subnet already banned", self.nodes[2].setban, "127.0.0.1", "add")
         # This will throw an exception because 127.0.0.1/42 is not a real subnet
         assert_raises_jsonrpc(-30, "Error: Invalid IP/Subnet", self.nodes[2].setban, "127.0.0.1/42", "add")
-        assert_equal(len(self.nodes[2].listbanned()), 1) #still only one banned ip because 127.0.0.1 is within the range of 127.0.0.0/24
+        assert_equal(len(self.nodes[2].listbanned()), 1)  # still only one banned ip because 127.0.0.1 is within the range of 127.0.0.0/24
         # This will throw an exception because 127.0.0.1 was not added above
         assert_raises_jsonrpc(-30, "Error: Unban failed", self.nodes[2].setban, "127.0.0.1", "remove")
         assert_equal(len(self.nodes[2].listbanned()), 1)
@@ -42,16 +48,16 @@ class NodeHandlingTest (BitcoinTestFramework):
         self.nodes[2].clearbanned()
         assert_equal(len(self.nodes[2].listbanned()), 0)
 
-        ##test persisted banlist
+        # test persisted banlist
         self.nodes[2].setban("127.0.0.0/32", "add")
         self.nodes[2].setban("127.0.0.0/24", "add")
-        self.nodes[2].setban("192.168.0.1", "add", 1) #ban for 1 seconds
-        self.nodes[2].setban("2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/19", "add", 1000) #ban for 1000 seconds
+        self.nodes[2].setban("192.168.0.1", "add", 1)  # ban for 1 seconds
+        self.nodes[2].setban("2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/19", "add", 1000)  # ban for 1000 seconds
         listBeforeShutdown = self.nodes[2].listbanned()
-        assert_equal("192.168.0.1/32", listBeforeShutdown[2]['address']) #must be here
-        time.sleep(2) #make 100% sure we expired 192.168.0.1 node time
+        assert_equal("192.168.0.1/32", listBeforeShutdown[2]['address'])  # must be here
+        time.sleep(2)  # make 100% sure we expired 192.168.0.1 node time
 
-        #stop node
+        # stop node
         stop_node(self.nodes[2], 2)
 
         self.nodes[2] = start_node(2, self.options.tmpdir)
@@ -64,17 +70,17 @@ class NodeHandlingTest (BitcoinTestFramework):
         # RPC disconnectnode test #
         ###########################
         url = urllib.parse.urlparse(self.nodes[1].url)
-        self.nodes[0].disconnectnode(url.hostname+":"+str(p2p_port(1)))
-        time.sleep(2) #disconnecting a node needs a little bit of time
+        self.nodes[0].disconnectnode(url.hostname + ":" + str(p2p_port(1)))
+        time.sleep(2)  # disconnecting a node needs a little bit of time
         for node in self.nodes[0].getpeerinfo():
-            assert(node['addr'] != url.hostname+":"+str(p2p_port(1)))
+            assert(node['addr'] != url.hostname + ":" + str(p2p_port(1)))
 
-        connect_nodes_bi(self.nodes,0,1) #reconnect the node
+        connect_nodes_bi(self.nodes, 0, 1)  # reconnect the node
         found = False
         for node in self.nodes[0].getpeerinfo():
-            if node['addr'] == url.hostname+":"+str(p2p_port(1)):
+            if node['addr'] == url.hostname + ":" + str(p2p_port(1)):
                 found = True
         assert(found)
 
 if __name__ == '__main__':
-    NodeHandlingTest ().main ()
+    NodeHandlingTest().main()
