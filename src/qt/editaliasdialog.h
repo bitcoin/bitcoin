@@ -63,6 +63,7 @@ private:
 	QString m_oldsafesearch;
 	QString m_encryptionprivkey;
 	QString m_oldAcceptCertTransfers;
+	QString m_oldaddress;
 };
 
 #endif // EDITALIASDIALOG_H

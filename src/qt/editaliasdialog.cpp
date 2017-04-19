@@ -24,8 +24,8 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
 {
     ui->setupUi(this);
 
-	ui->transferEdit->setVisible(false);
-	ui->transferLabel->setVisible(false);
+	ui->addressEdit->setVisible(false);
+	ui->addressLabel->setVisible(false);
 	ui->aliasPegDisclaimer->setText(QString("<font color='blue'>") + tr("Choose an alias which has peg information. Consumers will pay conversion amounts and network fees based on this peg.") + QString("</font>"));
 	ui->expiryDisclaimer->setText(QString("<font color='blue'>") + tr("Choose a standard expiration time(in UTC) for this alias from 1 to 5 years or check the 'Use Custom Expire Time' check box to enter an expiration timestamp. It is exponentially more expensive per year, calculation is FEERATE*(2.88^years). FEERATE is the dynamic satoshi per byte fee set in the rate peg alias used for this alias.") + QString("</font>"));
 	ui->transferDisclaimer->setText(QString("<font color='red'>") + tr("Warning: Transferring your alias will transfer ownership of all your Syscoin services that use this alias.") + QString("</font>"));
@@ -93,8 +93,8 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
 		ui->safeSearchDisclaimer->setVisible(false);
 		ui->privateEdit->setEnabled(false);
 		ui->privateDisclaimer->setVisible(false);
-		ui->transferEdit->setVisible(true);
-		ui->transferLabel->setVisible(true);
+		ui->addressEdit->setVisible(true);
+		ui->addressLabel->setVisible(true);
 		ui->transferDisclaimer->setVisible(true);
 		ui->passwordDisclaimer->setVisible(false);
 		ui->passwordEdit->setEnabled(false);
@@ -146,6 +146,7 @@ void EditAliasDialog::loadAliasDetails()
 			m_oldPassword = QString::fromStdString(find_value(result.get_obj(), "password").get_str());
 			m_oldvalue = QString::fromStdString(find_value(result.get_obj(), "publicvalue").get_str());
 			m_oldsafesearch = QString::fromStdString(find_value(result.get_obj(), "safesearch").get_str());
+			m_oldaddress = QString::fromStdString(find_value(result.get_obj(), "address").get_str());
 			m_oldprivatevalue = QString::fromStdString(find_value(result.get_obj(), "privatevalue").get_str());
 			m_encryptionkey = QString::fromStdString(find_value(result.get_obj(), "encryption_publickey").get_str());
 			m_encryptionprivkey = QString::fromStdString(find_value(result.get_obj(), "encryption_privatekey").get_str());
@@ -410,7 +411,6 @@ bool EditAliasDialog::saveCurrentRow()
 		if(strCipherPrivateData.empty())
 			strPrivateHex = "\"\"";
 		strEncryptionPrivateKeyHex = HexStr(vchFromString(strCipherEncryptionPrivateKey));
-	
 		strMethod = string("aliasnew");
 		params.push_back(ui->aliasPegEdit->text().trimmed().toStdString());
         params.push_back(ui->aliasEdit->text().trimmed().toStdString());
@@ -420,7 +420,7 @@ bool EditAliasDialog::saveCurrentRow()
 		params.push_back(ui->safeSearchEdit->currentText().toStdString());
 		params.push_back(ui->acceptCertTransfersEdit->currentText().toStdString());
 		params.push_back(ui->expireTimeEdit->text().trimmed().toStdString());
-		params.push_back(HexStr(vchPubKey));
+		params.push_back(EncodeBase58(vchPubKey));
 		params.push_back(HexStr(vchPasswordSalt));
 		params.push_back(strEncryptionPrivateKeyHex);
 		params.push_back(HexStr(vchPubEncryptionKey));
@@ -481,13 +481,15 @@ bool EditAliasDialog::saveCurrentRow()
 				}
 			}
 			password = ui->passwordEdit->text().toStdString();
+			vchPubKey = vchFromString(ui->addressEdit->text().toStdString());
+			addressStr = "\"\"";
+			if(m_oldaddress != EncodeBase58(vchPubKey))
+				addressStr = EncodeBase58(vchPubKey);
 			// if pw change or xfer
-			if(password != m_oldPassword.toStdString() || !ui->transferEdit->text().toStdString().empty())
+			if(password != m_oldPassword.toStdString() || addressStr != "\"\"")
 			{
-				vchPubKey = vchFromString(ui->transferEdit->text().toStdString());
-
 				// if pw change and not xfer
-				if(vchPubKey.empty() && password != m_oldPassword.toStdString())
+				if(addressStr ==  "\"\"" && password != m_oldPassword.toStdString())
 				{
 					if(password != "")
 					{
@@ -505,7 +507,8 @@ bool EditAliasDialog::saveCurrentRow()
 					}
 					pubKey = privKey.GetPubKey();
 					vchPubKey = vector<unsigned char>(pubKey.begin(), pubKey.end());
-					
+					addressStr = EncodeBase58(vchPubKey);
+
 					if(!pubKey.IsFullyValid())
 					{
 						QMessageBox::critical(this, windowTitle(),
@@ -562,9 +565,6 @@ bool EditAliasDialog::saveCurrentRow()
 					return false;
 				}	
 			}
-			strPubKey = HexStr(vchPubKey);
-			if(strPubKey.empty())
-				strPubKey = "\"\"";
 			strPasswordSalt = HexStr(vchPasswordSalt);
 			if(strPasswordSalt.empty())
 				strPasswordSalt = "\"\"";
@@ -587,7 +587,7 @@ bool EditAliasDialog::saveCurrentRow()
 			pubData = "\"\"";
 			if(ui->nameEdit->toPlainText() != m_oldvalue)
 				pubData = ui->nameEdit->toPlainText().toStdString();
-			addressStr = "\"\"";
+
 			if(ui->multisigList->count() > 0)
 			{
 				try {
@@ -627,11 +627,10 @@ bool EditAliasDialog::saveCurrentRow()
 			params.push_back(pubData);
 			params.push_back(strPrivateHex);
 			params.push_back(strSafeSearch);
-			params.push_back(strPubKey);
+			params.push_back(addressStr);
 			params.push_back(strPasswordHex);	
 			params.push_back(acceptCertTransfers);
 			params.push_back(ui->expireTimeEdit->text().trimmed().toStdString());
-			params.push_back(addressStr);
 			params.push_back(strPasswordSalt);
 			params.push_back(strEncryptionPrivateKeyHex);
 			try {

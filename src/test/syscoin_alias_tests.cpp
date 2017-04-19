@@ -272,8 +272,8 @@ BOOST_AUTO_TEST_CASE (generate_aliastransfer)
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
 	UniValue r;
-	string strPubKey1 = AliasNew("node1", "jagnode1", "password", "changeddata1");
-	string strPubKey2 = AliasNew("node2", "jagnode2", "password", "changeddata2");
+	string strAddress1 = AliasNew("node1", "jagnode1", "password", "changeddata1");
+	string strAddress2 = AliasNew("node2", "jagnode2", "password", "changeddata2");
 	CKey privKey;
 	privKey.MakeNewKey(true);
 	CPubKey pubKey = privKey.GetPubKey();
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE (generate_aliastransfer)
 	AliasTransfer("node1", "jagnode1", "node2", "changeddata1", "pvtdata");
 
 	// xfer an alias that isn't yours
-	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate sysrates.peg jagnode1 changedata1 \"\" \"\" " + HexStr(vchPubKey)), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate sysrates.peg jagnode1 changedata1 \"\" \"\" " + EncodeBase58(vchPubKey)), runtime_error);
 
 	// xfer alias and update it at the same time
 	AliasTransfer("node2", "jagnode2", "node3", "changeddata4", "pvtdata");
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE (generate_aliastransfer)
 	AliasTransfer("node2", "jagnode1", "node3", "changeddata5", "pvtdata2");
 
 	// xfer an alias to another alias is prohibited
-	BOOST_CHECK_THROW(r = CallRPC("node2", "aliasupdate sysrates.peg jagnode2 changedata1 \"\" \"\" " + strPubKey1), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "aliasupdate sysrates.peg jagnode2 changedata1 \"\" \"\" " + strAddress1), runtime_error);
 	
 }
 BOOST_AUTO_TEST_CASE (generate_aliasbalance)
@@ -1024,7 +1024,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress aliasexpirednode2 300"), runtime_error);
 	GenerateBlocks(10);	
 	string escrowguid = EscrowNew("node2", "node1", "aliasexpirednode2", offerguid, "1", "message", "aliasexpire", "aliasexpire0", "5");
-	string aliasexpire2node2pubkey = AliasNew("node2", "aliasexpire2node2", "password", "pubdata", "privdata");
+	string aliasexpire2node2address = AliasNew("node2", "aliasexpire2node2", "password", "pubdata", "privdata");
 	string certgoodguid = CertNew("node1", "aliasexpire2", "certtitle", "privdata", "pubdata");
 	ExpireAlias("aliasexpirednode2");
 	GenerateBlocks(5, "node2");
@@ -1042,9 +1042,9 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	// should fail: alias update on expired alias
 	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasexpirednode2 newdata1"), runtime_error);
 	// should fail: alias transfer from expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasexpirednode2 changedata1 \"\" \"\" " + HexStr(vchPubKey)), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasexpirednode2 changedata1 \"\" \"\" " + EncodeBase58(vchPubKey)), runtime_error);
 	// should fail: alias transfer to another alias
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 changedata1 \"\" \"\" " + aliasexpirenode2pubkey), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 changedata1 \"\" \"\" " + aliasexpire2node2address), runtime_error);
 
 	// should fail: link to an expired alias in offer
 	BOOST_CHECK_THROW(CallRPC("node2", "offerlink aliasexpirednode2 " + offerguid + " 5 newdetails"), runtime_error);

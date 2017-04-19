@@ -111,16 +111,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="newPubKey">
-       <property name="toolTip">
-        <string>Create a new public key used for transferring aliases</string>
-       </property>
-       <property name="text">
-        <string>New Public Key</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="whitelistButton">
        <property name="toolTip">
         <string>Open list of affiliates associated with this alias</string>

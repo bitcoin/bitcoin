@@ -228,27 +228,6 @@ void MyAliasListPage::on_newAlias_clicked()
         newAliasToSelect = dlg.getAlias();
     }
 }
-void MyAliasListPage::on_newPubKey_clicked()
-{
-	UniValue params;
-	UniValue result = tableRPC.execute("generatepublickey", params);
-	if (result.type() == UniValue::VARR)
-	{
-		const UniValue &resultArray = result.get_array();
-		const QString  &resQStr = QString::fromStdString(resultArray[0].get_str());
-		QApplication::clipboard()->setText(resQStr, QClipboard::Clipboard);
-		QApplication::clipboard()->setText(resQStr, QClipboard::Selection);
-		QMessageBox::information(this, tr("New Public Key For Alias Transfer"),
-			resQStr + tr(" has been copied to your clipboard! IMPORTANT: This key is for one-time use only! Do not re-use public keys for multiple aliases or transfers."),
-			QMessageBox::Ok, QMessageBox::Ok);
-		
-	}
-	else
-	 	QMessageBox::critical(this, tr("New Public Key For Alias Transfer"),
-			tr("Could not generate a new public key!"),
-			QMessageBox::Ok, QMessageBox::Ok);
-				
-}
 void MyAliasListPage::selectionChanged()
 {
     // Set button states based on selected tab and selection

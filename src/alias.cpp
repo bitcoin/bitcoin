@@ -934,8 +934,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theAlias.vchPublicValue = dbAlias.vchPublicValue;	
 					if(theAlias.vchPrivateValue.empty())
 						theAlias.vchPrivateValue = dbAlias.vchPrivateValue;	
-					if(theAlias.vchPubKey.empty())
-						theAlias.vchPubKey = dbAlias.vchPubKey;
 					if(theAlias.vchEncryptionPrivateKey.empty())
 						theAlias.vchEncryptionPrivateKey = dbAlias.vchEncryptionPrivateKey;
 					if(theAlias.vchEncryptionPublicKey.empty())
@@ -1743,7 +1741,7 @@ bool CheckParam(const UniValue& params, const unsigned int index)
 UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if (fHelp || 4 > params.size() || 12 < params.size())
 		throw runtime_error(
-		"aliasnew <aliaspeg> <aliasname> <password> <public value> [private value] [safe search=Yes] [accept transfers=Yes] [expire_timestamp] [publickey] [password_salt] [encryption_privatekey] [encryption_publickey]\n"
+		"aliasnew <aliaspeg> <aliasname> <password> <public value> [private value] [safe search=Yes] [accept transfers=Yes] [expire_timestamp] [address] [password_salt] [encryption_privatekey] [encryption_publickey]\n"
 						"<aliasname> alias name.\n"
 						"<password> used to generate your public/private key that controls this alias. Should be encrypted to publickey.\n"
 						"<public value> alias public profile data, 1024 chars max.\n"
@@ -1751,7 +1749,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 						"<safe search> set to No if this alias should only show in the search when safe search is not selected. Defaults to Yes (alias shows with or without safe search selected in search lists).\n"
 						"<accept transfers> set to No if this alias should not allow a certificate to be transferred to it. Defaults to Yes.\n"	
 						"<expire_timestamp> String. Time in seconds. Future time when to expire alias. It is exponentially more expensive per year, calculation is FEERATE*(2.88^years). FEERATE is the dynamic satoshi per byte fee set in the rate peg alias used for this alias. Defaults to 1 year.\n"	
-						"<publickey> Public key for this alias.\n"		
+						"<address> Address for this alias.\n"		
 						"<password_salt> Salt used for key derivation if password is set.\n"
 						"<encryption_privatekey> Encrypted private key used for encryption/decryption of private data related to this alias. Should be encrypted to publickey.\n"
 						"<encryption_publickey> Public key used for encryption/decryption of private data related to this alias.\n"							
@@ -1819,9 +1817,9 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if(nTime < chainActive.Tip()->nTime+3600)
 		nTime = chainActive.Tip()->nTime+3600;
 
-	string strPublicKey = "";
+	string strAddress = "";
 	if(CheckParam(params, 8))
-		strPublicKey = params[8].get_str();
+		strAddress = params[8].get_str();
 	string strPasswordSalt = "";
 
 	if(CheckParam(params, 9))
@@ -1844,13 +1842,6 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if(aliasExists && !isExpired)
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("This alias already exists"));
 
-	CSyscoinAddress desiredAddress;
-	if(!strPublicKey.empty())
-	{
-		const vector<unsigned char> &vchPubKey = ParseHex(strPublicKey);
-		CPubKey pubKey(vchPubKey.begin(), vchPubKey.end());
-		desiredAddress = CSyscoinAddress(pubKey.GetID());
-	}
 	const vector<unsigned char> &vchRandAlias = vchFromString(GenerateSyscoinGuid());
 
     // build alias
@@ -1859,8 +1850,6 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	newAlias.vchAliasPeg = vchAliasPeg;
 	newAlias.vchAlias = vchAlias;
 	newAlias.nHeight = chainActive.Tip()->nHeight;
-	if(!strPublicKey.empty())
-		newAlias.vchPubKey = ParseHex(strPublicKey);
 	if(!strEncryptionPublicKey.empty())
 		newAlias.vchEncryptionPublicKey = ParseHex(strEncryptionPublicKey);
 	if(!strEncryptionPrivateKey.empty())
@@ -1875,8 +1864,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		newAlias.vchPasswordSalt = ParseHex(strPasswordSalt);
 	newAlias.safeSearch = strSafeSearch == "Yes"? true: false;
 	newAlias.acceptCertTransfers = strAcceptCertTransfers == "Yes"? true: false;
-	DecodeBase58(desiredAddress.ToString(), newAlias.vchAddress);
-	
+	DecodeBase58(strAddress, theAlias.vchAddress);
 	CSyscoinAddress newAddress;
 	CScript scriptPubKeyOrig;
 	GetAddress(newAlias, &newAddress, scriptPubKeyOrig);
@@ -1947,19 +1935,18 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue aliasupdate(const UniValue& params, bool fHelp) {
-	if (fHelp || 2 > params.size() || 13 < params.size())
+	if (fHelp || 2 > params.size() || 12 < params.size())
 		throw runtime_error(
-		"aliasupdate <aliaspeg> <aliasname> [public value] [private value] [safesearch=Yes] [alias_pubkey] [password] [accept_transfers=Yes] [expire_timestamp] [address] [password_salt] [encryption_privatekey] [encryption_publickey]\n"
+		"aliasupdate <aliaspeg> <aliasname> [public value] [private value] [safesearch=Yes] [address] [password] [accept_transfers=Yes] [expire_timestamp] [password_salt] [encryption_privatekey] [encryption_publickey]\n"
 						"Update and possibly transfer an alias.\n"
 						"<aliasname> alias name.\n"
 						"<public_value> alias public profile data, 1024 chars max.\n"
 						"<private_value> alias private profile data, 1024 chars max. Will be private and readable by anyone with encryption_privatekey.\n"				
-						"<alias_pubkey> Alias pub key, if transferring alias or changing password.\n"
+						"<address> Address of alias.\n"
 						"<password> used to generate your public/private key that controls this alias.\n"						
 						"<safesearch> is this alias safe to search. Defaults to Yes, No for not safe and to hide in GUI search queries\n"
 						"<accept_transfers> set to No if this alias should not allow a certificate to be transferred to it. Defaults to Yes.\n"		
 						"<expire_timestamp> String. Time in seconds. Future time when to expire alias. It is exponentially more expensive per year, calculation is 2.88^years. FEERATE is the dynamic satoshi per byte fee set in the rate peg alias used for this alias. Defaults to 1 year.\n"		
-						"<address> by default address associated to alias is based on alias_pubkey, but you can override this for example if setting a p2sh address for a smart contract alias. Coins spent services updated with this alias will be controlled by this address. If using P2SH, redeemscript should be stored in public or private data scheme.\n"	
 						"<password_salt> Salt used for key derivation if password is set.\n"
 						"<encryption_privatekey> Encrypted private key used for encryption/decryption of private data related to this alias. If transferring, the key should be encrypted to alias_pubkey.\n"
 						"<encryption_publickey> Public key used for encryption/decryption of private data related to this alias. Useful if you are changing pub/priv keypair for encryption on this alias.\n"						
@@ -1980,9 +1967,9 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		strSafeSearch = params[4].get_str();
 	CWalletTx wtx;
 	CAliasIndex updateAlias;
-	string strPublicKey = "";
+	string strAddress = "";
 	if(CheckParam(params, 5))
-		strPublicKey = params[5].get_str();
+		strAddress = params[5].get_str();
 	
 	string strPassword = "";
 	
@@ -2003,22 +1990,18 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(nTime < chainActive.Tip()->nTime+3600)
 		nTime = chainActive.Tip()->nTime+3600;
 
-    string strAddress = "";
-	if(CheckParam(params, 9))
-		strAddress = params[9].get_str();
-
 	string strPasswordSalt = "";
-	if(CheckParam(params, 10))
+	if(CheckParam(params, 9))
 		strPasswordSalt = params[10].get_str();
 	
 
 	string strEncryptionPrivateKey = "";
-	if(CheckParam(params, 11))
-		strEncryptionPrivateKey = params[11].get_str();
+	if(CheckParam(params, 10))
+		strEncryptionPrivateKey = params[10].get_str();
 	
 	string strEncryptionPublicKey = "";
-	if(CheckParam(params, 12))
-		strEncryptionPublicKey = params[12].get_str();
+	if(CheckParam(params, 11))
+		strEncryptionPublicKey = params[11].get_str();
 	
 
 	CTransaction tx;
@@ -2026,20 +2009,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if (!GetTxOfAlias(vchAlias, theAlias, tx, true))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5518 - " + _("Could not find an alias with this name"));
 
-	
-	if(!strPublicKey.empty() && strAddress.empty())
-	{
-		CPubKey pubKeyCurrent(theAlias.vchPubKey.begin(), theAlias.vchPubKey.end());
-		CSyscoinAddress currentAddress = CSyscoinAddress(pubKeyCurrent.GetID());
-		// if current pubkey and address match (not using custom address for alias) then update new address from new pubkey, only if custom address is not passed in
-		if(currentAddress.ToString() == EncodeBase58(theAlias.vchAddress))
-		{
-			const vector<unsigned char> &vchPubKeyDesired = ParseHex(strPublicKey);
-			CPubKey pubKey(vchPubKeyDesired.begin(), vchPubKeyDesired.end());
-			CSyscoinAddress desiredAddress = CSyscoinAddress(pubKey.GetID());
-			strAddress = desiredAddress.ToString();
-		}
-	}
+
 
 	CAliasIndex copyAlias = theAlias;
 	theAlias.ClearAlias();
@@ -2056,8 +2026,6 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		theAlias.vchPassword = ParseHex(strPassword);
 	if(!strPasswordSalt.empty())
 		theAlias.vchPasswordSalt = ParseHex(strPasswordSalt);
-	if(!strPublicKey.empty())
-		theAlias.vchPubKey = ParseHex(strPublicKey);
 	if(!strSafeSearch.empty())
 		theAlias.safeSearch = strSafeSearch == "Yes"? true: false;
 	else
@@ -2706,7 +2674,6 @@ bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oNam
 	oName.push_back(Pair("passwordsalt", HexStr(alias.vchPasswordSalt)));
 	oName.push_back(Pair("encryption_privatekey", HexStr(strEncryptionPrivateKey)));
 	oName.push_back(Pair("encryption_publickey", HexStr(alias.vchEncryptionPublicKey)));
-	oName.push_back(Pair("publickey", HexStr(alias.vchPubKey)));	
 	oName.push_back(Pair("alias_peg", stringFromVch(alias.vchAliasPeg)));
 	oName.push_back(Pair("publicvalue", stringFromVch(alias.vchPublicValue)));	
 	oName.push_back(Pair("privatevalue", strData));
@@ -2891,16 +2858,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 	oRes.push_back(oPayments);	
 	return oRes;
 }
-UniValue generatepublickey(const UniValue& params, bool fHelp) {
-	if(!pwalletMain)
-		throw runtime_error("No wallet defined!");
-	EnsureWalletIsUnlocked();
-	CPubKey PubKey = pwalletMain->GenerateNewKey();
-	std::vector<unsigned char> vchPubKey(PubKey.begin(), PubKey.end());
-	UniValue res(UniValue::VARR);
-	res.push_back(HexStr(vchPubKey));
-	return res;
-}
+
 /**
  * [aliasfilter description]
  * @param  params [description]

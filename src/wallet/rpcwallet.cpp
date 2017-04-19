@@ -2895,7 +2895,6 @@ extern UniValue aliaspay(const UniValue& params, bool fHelp);
 extern UniValue aliasstats(const UniValue& params, bool fHelp);
 extern UniValue aliasdecodemultisigredeemscript(const UniValue& params, bool fHelp);
 extern UniValue aliasaddscript(const UniValue& params, bool fHelp);
-extern UniValue generatepublickey(const UniValue& params, bool fHelp);
 extern UniValue syscoinsignrawtransaction(const UniValue& params, bool fHelp);
 extern UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp);
 
@@ -3011,7 +3010,6 @@ static const CRPCCommand commands[] =
 	{ "wallet", "aliasstats",        &aliasstats,       false },
 	{ "wallet", "aliasdecodemultisigredeemscript",        &aliasdecodemultisigredeemscript,       false },
 	{ "wallet", "aliasaddscript",        &aliasaddscript,       false },
-	{ "wallet", "generatepublickey", &generatepublickey, false },
 	{ "wallet", "syscoinsignrawtransaction",		 &syscoinsignrawtransaction,	false },
 	{ "wallet", "syscoindecoderawtransaction",		 &syscoindecoderawtransaction,	false },
 

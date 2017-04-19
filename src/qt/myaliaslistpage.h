@@ -62,7 +62,6 @@ private Q_SLOTS:
     /** transfer the alias to a syscoin address  */
     void on_transferButton_clicked();
 	void on_refreshButton_clicked();
-	void on_newPubKey_clicked();
 	void on_whitelistButton_clicked();
     /** Set button states based onf selected tab and selection */
     void selectionChanged();

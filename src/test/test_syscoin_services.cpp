@@ -586,7 +586,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	string expireTime = "\"\"";
 
 	UniValue r;
-	BOOST_CHECK_NO_THROW(CallRPC(node, "aliasnew sysrates.peg " + aliasname + " " + strPasswordHex + " " + pubdata + " " + strPrivateHex + " " + safesearch + " " + acceptTransfers +  " " + expireTime + " " + HexStr(vchPubKey) + " " + HexStr(vchPasswordSalt) + " " + strEncryptionPrivateKeyHex + " " + HexStr(vchPubEncryptionKey)));
+	BOOST_CHECK_NO_THROW(CallRPC(node, "aliasnew sysrates.peg " + aliasname + " " + strPasswordHex + " " + pubdata + " " + strPrivateHex + " " + safesearch + " " + acceptTransfers +  " " + expireTime + " " + EncodeBase58(vchPubKey) + " " + HexStr(vchPasswordSalt) + " " + strEncryptionPrivateKeyHex + " " + HexStr(vchPubEncryptionKey)));
 	GenerateBlocks(5, node);
 	BOOST_CHECK_THROW(CallRPC(node, "sendtoaddress " + aliasname + " 10"), runtime_error);
 	GenerateBlocks(5, node);
@@ -674,12 +674,12 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 		strEncryptionPrivateKeyHex = "\"\"";
 	string acceptTransfers = "\"\"";
 	string expires = "\"\"";
-	string address = "\"\"";
+	string address = EncodeBase58(vchPubKey);
 	string password = "\"\"";
 	string safesearch = "\"\"";
 	string passwordsalt = "\"\"";
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex + " " + safesearch + " " + HexStr(vchPubKey) + " " + password + " " + acceptTransfers + " " + expires + " " + address + " " + passwordsalt + " " + strEncryptionPrivateKeyHex));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex + " " + safesearch + " " + address + " " + password + " " + acceptTransfers + " " + expires + " " + passwordsalt + " " + strEncryptionPrivateKeyHex));
 	GenerateBlocks(5, tonode);
 	GenerateBlocks(5, node);
 	// check its not mine anymore
@@ -721,7 +721,6 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	if(password != "\"\"")
 		myPassword = password;
 	string oldPassword = find_value(r.get_obj(), "password").get_str();
-	
 	string oldvalue = find_value(r.get_obj(), "publicvalue").get_str();
 	string oldprivatevalue = find_value(r.get_obj(), "privatevalue").get_str();
 	string oldPasswordSalt = find_value(r.get_obj(), "passwordsalt").get_str();
@@ -729,7 +728,6 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string oldsafesearch = find_value(r.get_obj(), "safesearch").get_str();
 	string encryptionkey = find_value(r.get_obj(), "encryption_publickey").get_str();
 	string encryptionprivkey = find_value(r.get_obj(), "encryption_privatekey").get_str();
-	string publickey = find_value(r.get_obj(), "publickey").get_str();
 	
 	if(myPassword.empty())
 		myPassword = oldPassword;
@@ -757,6 +755,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		privKey.Set(crypt.chKey, crypt.chKey + (sizeof crypt.chKey), true);
 		CPubKey pubKey = privKey.GetPubKey();
 		vchPubKey = vector<unsigned char>(pubKey.begin(), pubKey.end());
+		addressStr = EncodeBase58(vchPubKey);
 		vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
 		vector<unsigned char> vchEncryptionPrivKey = ParseHex(encryptionprivkey);
 		encryptionPrivKey.Set(vchEncryptionPrivKey.begin(), vchEncryptionPrivKey.end(), true);
@@ -785,7 +784,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string acceptTransfers = "\"\"";
 	string expires = "\"\"";
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex +  " " + safesearch + " " + strPubKey + " " + strPasswordHex + " " + acceptTransfers + " " + expires + " " + addressStr + " " + strPasswordSalt + " " + strEncryptionPrivateKeyHex));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex +  " " + safesearch + " " + addressStr + " " + strPasswordHex + " " + acceptTransfers + " " + expires + " " + strPasswordSalt + " " + strEncryptionPrivateKeyHex));
 	const UniValue& resArray = r.get_array();
 	if(resArray.size() > 1)
 	{
@@ -808,7 +807,6 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	BOOST_CHECK_EQUAL(newPassword, myPassword);
 	if(newPassword != oldPassword)
 	{
-		BOOST_CHECK(find_value(r.get_obj(), "publickey").get_str() != publickey);
 		BOOST_CHECK_NO_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
 		/*if(addressStr == "\"\"")
 			BOOST_CHECK(find_value(r.get_obj(), "address").get_str() != oldAddressStr);*/
@@ -830,7 +828,6 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	if(password == "\"\"")
 	{
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , oldPasswordSalt);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publickey").get_str() , publickey);
 	}
 
 	
@@ -840,7 +837,6 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasinfo " + aliasname));
 		if(newPassword != oldPassword)
 		{
-			BOOST_CHECK(find_value(r.get_obj(), "publickey").get_str() != publickey);
 			BOOST_CHECK_NO_THROW(CallRPC(otherNode1, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
 			// disabled for now because multisig aliases are scripts and thus may not change on a pw change if editing alias with p2sh address
 			// TODO call validateaddress and check if not script type address
@@ -862,7 +858,6 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		if(password == "\"\"")
 		{
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , oldPasswordSalt);
-			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publickey").get_str() , publickey);
 		}
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "safesearch").get_str(), safesearch != "\"\""? safesearch: oldsafesearch);
 	}
@@ -871,7 +866,6 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "aliasinfo " + aliasname));
 		if(newPassword != oldPassword)
 		{
-			BOOST_CHECK(find_value(r.get_obj(), "publickey").get_str() != publickey);
 			BOOST_CHECK_NO_THROW(CallRPC(otherNode2, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
 			/*if(addressStr == "\"\"")
 				BOOST_CHECK(find_value(r.get_obj(), "address").get_str() != oldAddressStr);*/
@@ -890,7 +884,6 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		if(password == "\"\"")
 		{
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , oldPasswordSalt);
-			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publickey").get_str() , publickey);
 		}
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "safesearch").get_str(), safesearch != "\"\""? safesearch: oldsafesearch);
 	}
