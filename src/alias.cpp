@@ -1143,15 +1143,6 @@ void GetAddress(const CAliasIndex& alias, CSyscoinAddress* address,CScript& scri
 	address[0] = CSyscoinAddress(addrTmp.Get(), myAddressType);
 	script = GetScriptForDestination(address[0].Get());
 }
-void GetEncryptionAddress(const CAliasIndex& alias, CSyscoinAddress* address,CScript& script,const uint32_t nPaymentOption)
-{
-	if(!address)
-		return;
-	CChainParams::AddressType myAddressType = PaymentOptionToAddressType(nPaymentOption);
-	CPubKey pubKey(alias.vchEncryptionPublicKey.begin(), alias.vchEncryptionPublicKey.end());
-	address[0] = CSyscoinAddress(pubKey.GetID(), myAddressType);
-	script = GetScriptForDestination(address[0].Get());
-}
 bool CAliasIndex::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
         CDataStream dsAlias(vchData, SER_NETWORK, PROTOCOL_VERSION);
@@ -1713,7 +1704,6 @@ UniValue aliasauthenticate(const UniValue& params, bool fHelp) {
 	if (!GetTxOfAlias(vchAlias, theAlias, tx, true))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5500 - " + _("Could not find an alias with this name"));
 
-	CPubKey aliasPubKey(theAlias.vchPubKey);
 	CCrypter crypt;
 	if(strPassword.empty())
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5501 - " + _("Password cannot be empty"));
@@ -1727,8 +1717,10 @@ UniValue aliasauthenticate(const UniValue& params, bool fHelp) {
 	if(!defaultKey.IsFullyValid())
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5503 - " + _("Generated public key not fully valid"));
 
-	if(aliasPubKey != defaultKey)
+	CSysocoinAddress defaultAddress(defaultKey.GetID());
+	if(EncodeBase58(theAlias.vchAddress) != defaultAddress.ToString())
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5504 - " + _("Password is incorrect"));
+
 	UniValue res(UniValue::VOBJ);
 	res.push_back(Pair("privatekey", CSyscoinSecret(key).ToString()));
 	return res;

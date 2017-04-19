@@ -2080,28 +2080,28 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		sellerAlias.nHeight = vtxPos.front().nHeight;
 		sellerAlias.GetAliasFromList(aliasVtxPos);
 		CScript script;
-		GetEncryptionAddress(sellerAliasLatest, &sellerAddress, script, escrow.nPaymentOption);
+		GetAddress(sellerAliasLatest, &sellerAddress, script, escrow.nPaymentOption);
 	}
 	aliasVtxPos.clear();
 	CAliasIndex theAlias;
 	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, theAlias, buyeraliastx, aliasVtxPos, isExpired, true))
 	{
 		CScript script;
-		GetEncryptionAddress(theAlias, &buyerAddress, script, escrow.nPaymentOption);
+		GetAddress(theAlias, &buyerAddress, script, escrow.nPaymentOption);
 	}	
 	aliasVtxPos.clear();
 	theAlias.SetNull();
 	if(GetTxAndVtxOfAlias(escrow.vchArbiterAlias, theAlias, arbiterraliastx, aliasVtxPos, isExpired, true))
 	{
 		CScript script;
-		GetEncryptionAddress(theAlias, &arbiterAddress, script, escrow.nPaymentOption);
+		GetAddress(theAlias, &arbiterAddress, script, escrow.nPaymentOption);
 	}
 	aliasVtxPos.clear();
 	theAlias.SetNull();
 	if(GetTxAndVtxOfAlias(escrow.vchLinkSellerAlias, theAlias, linkselleraliastx, aliasVtxPos, isExpired, true))
 	{
 		CScript script;
-		GetEncryptionAddress(theAlias, &linkSellerAddress, script, escrow.nPaymentOption);
+		GetAddress(theAlias, &linkSellerAddress, script, escrow.nPaymentOption);
 	}
 	COffer theOffer, linkOffer;
 	CTransaction txOffer;
@@ -2746,9 +2746,9 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		escrow, tx, vtxPos))
         throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4576 - " + _("Could not find a escrow with this key"));
 
-	CAliasIndex sellerAlias, sellerAliasLatest, buyerAliasLatest;
+	CAliasIndex sellerAlias, sellerAliasLatest;
 	vector<CAliasIndex> aliasVtxPos;
-	CTransaction selleraliastx, buyeraliastx;
+	CTransaction selleraliastx;
 	CPubKey sellerKey;
 	bool isExpired;
 	if(GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAliasLatest, selleraliastx, aliasVtxPos, isExpired, true))
@@ -2756,13 +2756,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		sellerAlias.nHeight = vtxPos.front().nHeight;
 		sellerAlias.GetAliasFromList(aliasVtxPos);
 	}
-	CSyscoinAddress buyerPaymentAddress;
-	CScript buyerScript;
-	aliasVtxPos.clear();
-	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAliasLatest, buyeraliastx, aliasVtxPos, isExpired, true))
-	{
-		GetEncryptionAddress(buyerAliasLatest, &buyerPaymentAddress, buyerScript);
-	} 
+ 
 	COffer theOffer, linkOffer;
 	CTransaction txOffer;
 	vector<COffer> offerVtxPos;
@@ -2870,7 +2864,8 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		string strAddress = address.get_str();
 		if(!foundRefundPayment)
 		{
-			if(strAddress == buyerPaymentAddress.ToString() && iVout >= nTotal)
+			CSyscoinAddress address(strAddress);
+			if(address.aliasName == stringFromVch(escrow.vchBuyerAlias) && iVout >= nTotal)
 				foundRefundPayment = true;
 		}
 
