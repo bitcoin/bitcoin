@@ -22,7 +22,6 @@ static constexpr bool DEFAULT_ENABLE_BIP61{false};
 
 /** if disabled, blocks will not be requested automatically, useful for low-resources-available mode */
 static const bool DEFAULT_AUTOMATIC_BLOCK_REQUESTS = true;
-extern std::atomic<bool> fAutoRequestBlocks;
 
 class PeerLogicValidation final : public CValidationInterface, public NetEventsInterface {
 private:
@@ -90,5 +89,8 @@ struct CNodeStateStats {
 
 /** Get statistics from node state */
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
+
+void setAutoRequestBlocks(bool);
+bool isAutoRequestingBlocks();
 
 #endif // BITCOIN_NET_PROCESSING_H

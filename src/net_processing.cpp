@@ -93,7 +93,7 @@ static constexpr unsigned int AVG_FEEFILTER_BROADCAST_INTERVAL = 10 * 60;
 /** Maximum feefilter broadcast delay after significant change. */
 static constexpr unsigned int MAX_FEEFILTER_CHANGE_DELAY = 5 * 60;
 
-std::atomic<bool> fAutoRequestBlocks(DEFAULT_AUTOMATIC_BLOCK_REQUESTS);
+static std::atomic<bool> fAutoRequestBlocks(DEFAULT_AUTOMATIC_BLOCK_REQUESTS);
 
 // Internal stuff
 namespace {
@@ -3768,6 +3768,16 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
         }
     }
     return true;
+}
+
+void setAutoRequestBlocks(bool state)
+{
+    fAutoRequestBlocks = state;
+}
+
+bool isAutoRequestingBlocks()
+{
+    return fAutoRequestBlocks;
 }
 
 class CNetProcessingCleanup

@@ -227,8 +227,8 @@ class NodeImpl : public Node
         return wallets;
     }
 
-    bool isAutorequestBlocks() override { return fAutoRequestBlocks; }
-    void setAutorequestBlocks(bool state) override { fAutoRequestBlocks = state; }
+    bool isAutorequestBlocks() override { return ::isAutoRequestingBlocks(); }
+    void setAutorequestBlocks(bool state) override { ::setAutoRequestBlocks(state); }
 
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
