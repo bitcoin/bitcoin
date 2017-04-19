@@ -54,9 +54,16 @@ bool DecryptPrivateKey(const vector<unsigned char> &vchPubKey, const vector<unsi
 bool DecryptPrivateKey(const CAliasIndex& alias, string &strKey)
 {
 	strKey.clear();
-	if(DecryptPrivateKey(alias.vchPubKey, alias.vchEncryptionPrivateKey, strKey))
-		return !strKey.empty();
-	return !strKey.empty();
+	CKey PrivateKey;
+	CPubKey PubKey(alias.vchEncryptionPublicKey);
+	CKeyID pubKeyID = PubKey.GetID();
+	if (!pwalletMain->GetKey(pubKeyID, PrivateKey))
+		return false;
+	CSyscoinSecret Secret(PrivateKey);
+	PrivateKey = Secret.GetKey();
+	const vector<unsigned char> vchPrivateKey(PrivateKey.begin(), PrivateKey.end());
+	strKey = stringFromVch(vchPrivateKey);
+	return true;
 }
 bool DecryptMessage(const CAliasIndex& alias, const vector<unsigned char> &vchCipherText, string &strMessage)
 {
