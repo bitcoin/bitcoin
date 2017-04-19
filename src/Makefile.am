@@ -99,6 +99,7 @@ BITCOIN_CORE_H = \
   core_io.h \
   core_memusage.h \
   hash.h \
+  expedited.h \
   httprpc.h \
   httpserver.h \
   init.h \
@@ -191,6 +192,7 @@ libbitcoin_server_a_SOURCES = \
   bloom.cpp \
   chain.cpp \
   checkpoints.cpp \
+  expedited.cpp \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \

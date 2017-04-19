@@ -70,10 +70,14 @@ int32_t UnlimitedComputeBlockVersion(const CBlockIndex* pindexPrev, const Consen
 // The function also allows * or ? wildcards.
 // This is useful for the RPC calls.
 // Returns the first node that matches.
+<<<<<<< HEAD
 CNode* FindLikelyNode(const std::string& addrName);
 
 // process incoming unsolicited block
 bool HandleExpeditedBlock(CDataStream& vRecv,CNode* pfrom);
+=======
+extern CNode *FindLikelyNode(const std::string &addrName);
+>>>>>>> 65caddb... Create expedited.cpp and expedited.h
 
 // Convert the BUComments to the string client's "subversion" string
 extern void settingsToUserAgentString();
@@ -153,19 +157,9 @@ extern uint64_t LargestBlockSeen(uint64_t nBlockSize = 0);
 extern void LoadFilter(CNode *pfrom, CBloomFilter *filter);
 extern void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, CBlock &block, const CInv &inv);
 
-extern bool CheckAndRequestExpeditedBlocks(CNode* pfrom);  // Checks to see if the node is configured in bitcoin.conf to be an expedited block source and if so, request them.
-extern void SendExpeditedBlock(CXThinBlock& thinBlock,unsigned char hops, const CNode* skip=NULL);
-extern void SendExpeditedBlock(const CBlock& block,const CNode* skip=NULL);
-extern void HandleExpeditedRequest(CDataStream& vRecv,CNode* pfrom);
-extern bool IsRecentlyExpeditedAndStore(const uint256& hash);
-
-
-extern CSemaphore*  semOutboundAddNode;
-extern std::vector<CNode*> xpeditedBlk; // Who requested expedited blocks from us
-extern std::vector<CNode*> xpeditedBlkUp; // Who we requested expedited blocks from
-extern std::vector<CNode*> xpeditedTxn;
-extern CStatHistory<uint64_t > recvAmt; 
-extern CStatHistory<uint64_t > sendAmt; 
+extern CSemaphore *semOutboundAddNode;
+extern CStatHistory<uint64_t> recvAmt;
+extern CStatHistory<uint64_t> sendAmt;
 
 // Connection Slot mitigation - used to track connection attempts and evictions
 struct ConnectionHistory
@@ -198,20 +192,6 @@ extern CTweak<unsigned int> maxTxSize;
 extern CTweak<uint64_t> blockSigopsPerMb;
 extern CTweak<uint64_t> coinbaseReserve;
 extern CTweak<uint64_t> blockMiningSigopsPerMb;
-
-extern std::list<CStatBase*> mallocedStats;
-// Protocol changes:
-
-enum {
-  EXPEDITED_STOP   = 1,
-  EXPEDITED_BLOCKS = 2,
-  EXPEDITED_TXNS   = 4,
-};
-
-enum {
-  EXPEDITED_MSG_HEADER   = 1,
-  EXPEDITED_MSG_XTHIN    = 2,
-};
 
 
 #endif

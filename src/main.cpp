@@ -16,6 +16,7 @@
 #include "consensus/consensus.h"
 #include "consensus/merkle.h"
 #include "consensus/validation.h"
+#include "expedited.h"
 #include "hash.h"
 #include "init.h"
 #include "merkleblock.h"
@@ -133,6 +134,7 @@ extern CStatHistory<uint64_t> nTxValidationTime;
 extern CStatHistory<uint64_t> nBlockValidationTime;
 extern CCriticalSection cs_LastBlockFile;
 extern CCriticalSection cs_nBlockSequenceId;
+
 
 // Internal stuff
 namespace {
