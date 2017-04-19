@@ -538,7 +538,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			prevCoins = inputs.AccessCoins(prevOutput->hash);
 			if(prevCoins == NULL)
 				continue;
-			if(prevCoins->vout.size() <= prevOutput->n || !IsSyscoinScript(prevCoins->vout[prevOutput->n].scriptPubKey, pop, vvch) || pop == OP_ALIAS_PAYMENT)
+			if(prevCoins->vout.size() <= prevOutput->n || !IsSyscoinScript(prevCoins->vout[prevOutput->n].scriptPubKey, pop, vvch))
 				continue;
 			if(foundAlias)
 				break;
