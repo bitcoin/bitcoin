@@ -82,6 +82,7 @@ int ClientModel::getHeaderTipHeight() const
         LOCK(cs_main);
         if (pindexBestHeader) {
             cachedBestHeaderHeight = pindexBestHeader->nHeight;
+            cachedBestHeaderTime = pindexBestHeader->GetBlockTime();
         }
     }
     return cachedBestHeaderHeight;
@@ -92,6 +93,7 @@ int64_t ClientModel::getHeaderTipTime() const
     if (cachedBestHeaderTime == -1) {
         LOCK(cs_main);
         if (pindexBestHeader) {
+            cachedBestHeaderHeight = pindexBestHeader->nHeight;
             cachedBestHeaderTime = pindexBestHeader->GetBlockTime();
         }
     }
