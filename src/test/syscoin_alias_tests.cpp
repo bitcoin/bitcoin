@@ -421,6 +421,8 @@ BOOST_AUTO_TEST_CASE (generate_multisigalias)
 		
 	string tmp = AliasUpdate("node1", "jagnodemultisig1", "pubdata", "privdata", "password", "\"\"", addressStr);
 	BOOST_CHECK_EQUAL(tmp, "");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), addressStr);
 	// change the multisigs pw and public data
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasaddscript " + redeemScript));
 	string hex_str = AliasUpdate("node1", "jagnodemultisig1", "pubdata1", "\"\"", "newpassword");
