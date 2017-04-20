@@ -21,6 +21,11 @@
 #include <event2/keyvalq_struct.h>
 #include "support/events.h"
 
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+
 #include <univalue.h>
 
 static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
@@ -168,13 +173,42 @@ static void http_request_done(struct evhttp_request *req, void *ctx)
 
     reply->status = evhttp_request_get_response_code(req);
 
+    bool fGzip = false;
+    {
+        // Search for "Content-Encoding: gzip"
+        struct evkeyvalq *req_reply_headers = evhttp_request_get_input_headers(req);
+        struct evkeyval* kv = req_reply_headers->tqh_first;
+        while (kv)
+        {
+            if ( fGzip = (boost::iequals(kv->key, "Content-Encoding") && boost::iequals(kv->value, "gzip")) ) break;
+            kv = kv->next.tqe_next;
+        }
+    }
+
     struct evbuffer *buf = evhttp_request_get_input_buffer(req);
     if (buf)
     {
         size_t size = evbuffer_get_length(buf);
         const char *data = (const char*)evbuffer_pullup(buf, size);
-        if (data)
-            reply->body = std::string(data, size);
+        if (data) {
+            std::string strResponse = std::string(data, size);
+
+            if (fGzip)
+            {
+                // We've got a GZIP compressed response and need to uncompress it first
+                std::stringstream compressedStream(strResponse);
+                std::stringstream uncompressedStream;
+
+                boost::iostreams::filtering_streambuf<boost::iostreams::input> out;
+                out.push(boost::iostreams::gzip_decompressor());
+                out.push(compressedStream);
+                boost::iostreams::copy(out, uncompressedStream);
+
+                strResponse = uncompressedStream.str();
+            }
+
+            reply->body = strResponse;
+        }
         evbuffer_drain(buf, size);
     }
 }
@@ -226,6 +260,7 @@ UniValue CallRPC(const std::string& strMethod, const UniValue& params)
     evhttp_add_header(output_headers, "Host", host.c_str());
     evhttp_add_header(output_headers, "Connection", "close");
     evhttp_add_header(output_headers, "Authorization", (std::string("Basic ") + EncodeBase64(strRPCUserColonPass)).c_str());
+    evhttp_add_header(output_headers, "Accept-Encoding", "gzip");
 
     // Attach request data
     std::string strRequest = JSONRPCRequestObj(strMethod, params, 1).write() + "\n";
