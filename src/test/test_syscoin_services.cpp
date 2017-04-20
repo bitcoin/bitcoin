@@ -750,7 +750,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string strCipherEncryptionPrivateKey = "";
 	vector<unsigned char> vchPubKey;
 	vector<unsigned char> vchPasswordSalt;
-	if(password != "\"\"")
+	if(password != "\"\"" && addressStr.empty())
 	{
 		vchPasswordSalt.resize(WALLET_CRYPTO_KEY_SIZE);
 		GetStrongRandBytes(&vchPasswordSalt[0], WALLET_CRYPTO_KEY_SIZE);
@@ -813,7 +813,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string newPasswordSalt = find_value(r.get_obj(), "passwordsalt").get_str();
 	
 	BOOST_CHECK_EQUAL(newPassword, myPassword);
-	if(newPassword != oldPassword)
+	if(newPassword != oldPassword && addressStr.empty())
 	{
 		BOOST_CHECK_NO_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
 	}
@@ -826,12 +826,12 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "privatevalue").get_str() , privdata != "\"\""? privdata: oldprivatevalue);
 	if(aliasname != "sysrates.peg" && aliasname != "sysban" && aliasname != "syscategory")
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
-	
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str() , password != "\"\""? password: oldPassword);
+	if(addressStr.empty())
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str() , password != "\"\""? password: oldPassword);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "safesearch").get_str(), safesearch != "\"\""? safesearch: oldsafesearch);
-	if(password == "\"\"")
+	if(password == "\"\"" &&  addressStr.empty())
 	{
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , oldPasswordSalt);
 	}
@@ -841,7 +841,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	if(!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasinfo " + aliasname));
-		if(newPassword != oldPassword)
+		if(newPassword != oldPassword && addressStr.empty())
 		{
 			BOOST_CHECK_NO_THROW(CallRPC(otherNode1, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
 		}
@@ -854,9 +854,10 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		
 		if(aliasname != "sysrates.peg" && aliasname != "sysban" && aliasname != "syscategory")
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str() , "");
+		if(addressStr.empty())
+			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str() , "");
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
-		if(password == "\"\"")
+		if(password == "\"\"" && addressStr.empty())
 		{
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , oldPasswordSalt);
 		}
@@ -865,7 +866,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	if(!otherNode2.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "aliasinfo " + aliasname));
-		if(newPassword != oldPassword)
+		if(newPassword != oldPassword && addressStr.empty())
 		{
 			BOOST_CHECK_NO_THROW(CallRPC(otherNode2, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
 		}
@@ -879,7 +880,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
 		
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
-		if(password == "\"\"")
+		if(password == "\"\"" && addressStr.empty())
 		{
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , oldPasswordSalt);
 		}
