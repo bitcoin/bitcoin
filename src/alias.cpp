@@ -1717,6 +1717,7 @@ UniValue aliasauthenticate(const UniValue& params, bool fHelp) {
 	CSyscoinAddress defaultAddress(defaultKey.GetID());
 	CPubKey encryptionPubKey(theAlias.vchEncryptionPublicKey);
 	CSyscoinAddress encryptionAddress(encryptionPubKey.GetID());
+	bool readonly = false;
 	if(encryptionAddress.ToString() == defaultAddress.ToString())
 		readonly = true;
 	else if(EncodeBase58(theAlias.vchAddress) != defaultAddress.ToString())
