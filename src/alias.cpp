@@ -964,12 +964,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					// if transfer
 					if(dbAlias.vchAddress != theAlias.vchAddress)
 					{
-						// if transfer clear pw
-						if(!pwChange)
-						{
-							theAlias.vchPassword.clear();
-							theAlias.vchPasswordSalt.clear();
-						}
 						// make sure xfer to pubkey doesn't point to an alias already, otherwise don't assign pubkey to alias
 						// we want to avoid aliases with duplicate addresses
 						if (paliasdb->ExistsAddress(theAlias.vchAddress))
