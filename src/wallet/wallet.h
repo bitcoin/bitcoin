@@ -743,7 +743,7 @@ public:
 
     CAmount GetAnonymizableBalance(bool fSkipDenominated = false) const;
     CAmount GetAnonymizedBalance() const;
-    double GetAverageAnonymizedRounds() const;
+    float GetAverageAnonymizedRounds() const;
     CAmount GetNormalizedAnonymizedBalance() const;
     CAmount GetNeedsToBeAnonymizedBalance(CAmount nMinBalance = 0) const;
     CAmount GetDenominatedBalance(bool unconfirmed=false) const;

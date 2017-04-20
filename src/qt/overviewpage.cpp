@@ -350,7 +350,7 @@ void OverviewPage::updatePrivateSendProgress()
     CAmount nDenominatedUnconfirmedBalance;
     CAmount nAnonymizableBalance;
     CAmount nNormalizedAnonymizedBalance;
-    double nAverageAnonymizedRounds;
+    float nAverageAnonymizedRounds;
 
     {
         nDenominatedConfirmedBalance = pwalletMain->GetDenominatedBalance();
