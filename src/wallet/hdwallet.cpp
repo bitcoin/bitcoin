@@ -977,12 +977,12 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx,
             
             double dPriority = 0;
             
-            std::vector<uint8*> vpBlinds;
+            std::vector<uint8_t*> vpBlinds;
             
             vpBlinds.reserve(vecSend.size());
             
             // vpouts to the payees
-            for (const auto &r : vecSend)
+            for (auto &r : vecSend)
             {
                 OUTPUT_PTR<CTxOutCT> txout = MAKE_OUTPUT<CTxOutCT>();
                 //r.commitment
@@ -991,7 +991,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx,
                 
                 r.vBlind.resize(32);
                 GetStrongRandBytes(&r.vBlind[0], 32);
-                vpBlinds.push_back(r.vBlind[0]);
+                vpBlinds.push_back(&r.vBlind[0]);
             };
         };
         
