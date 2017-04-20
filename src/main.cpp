@@ -5994,19 +5994,25 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
             }
         }
     }
-    else if (strCommand == NetMsgType::XPEDITEDREQUEST)  // BU
-      {
-	HandleExpeditedRequest(vRecv,pfrom);
-      }
-    else if (strCommand == NetMsgType::XPEDITEDBLK)  // BU
-      {
-	if (!HandleExpeditedBlock(vRecv,pfrom))
+
+
+    else if (strCommand == NetMsgType::XPEDITEDREQUEST)
+    {
+        HandleExpeditedRequest(vRecv, pfrom);
+    }
+
+
+    else if (strCommand == NetMsgType::XPEDITEDBLK)
+    {
+	if (!HandleExpeditedBlock(vRecv, pfrom))
         {
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 5);
             return false;            
         }
-      }
+    }
+
+
     // BU - used to pass BU specific version information similar to NetMsgType::VERSION
     else if (strCommand == NetMsgType::BUVERSION)
     {
