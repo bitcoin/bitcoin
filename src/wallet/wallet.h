@@ -40,6 +40,7 @@ extern bool bSpendZeroConfChange;
 extern bool fWalletRbf;
 
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 100;
+static const unsigned int HD_RESTORE_KEYPOOL_SIZE_MIN = 20;
 //! -paytxfee default
 static const CAmount DEFAULT_TRANSACTION_FEE = 0;
 //! -fallbackfee default
@@ -961,6 +962,7 @@ public:
     void ReturnKey(int64_t nIndex);
     bool GetKeyFromPool(CPubKey &key, bool internal = false);
     int64_t GetOldestKeyPoolTime();
+    void MarkReserveKeysAsUsed(const CKeyID& keyId);
     void GetAllReserveKeys(std::set<CKeyID>& setAddress) const;
 
     std::set< std::set<CTxDestination> > GetAddressGroupings();
