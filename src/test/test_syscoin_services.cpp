@@ -719,6 +719,7 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 }
 string AliasUpdate(const string& node, const string& aliasname, const string& pubdata, const string& privdata, string password, string safesearch, string addressStr)
 {
+	string addressStr1 = addressStr;
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
 	UniValue r;
@@ -817,7 +818,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	if(newPassword != oldPassword)
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
-		if(addressStr != "\"\"")
+		if(addressStr1 != "\"\"")
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "readonly").get_bool(), true);
 	}
 	
@@ -844,7 +845,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		if(newPassword != oldPassword)
 		{
 			BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
-			if(addressStr != "\"\"")
+			if(addressStr1 != "\"\"")
 				BOOST_CHECK_EQUAL(find_value(r.get_obj(), "readonly").get_bool(), true);		
 		}
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , addressStr != "\"\""? addressStr: oldAddressStr);
@@ -856,7 +857,6 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		
 		if(aliasname != "sysrates.peg" && aliasname != "sysban" && aliasname != "syscategory")
 			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str() , "");
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , password != "\"\""? strPasswordSalt: oldPasswordSalt);
 	}
@@ -866,7 +866,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		if(newPassword != oldPassword)
 		{
 			BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
-			if(addressStr != "\"\"")
+			if(addressStr1 != "\"\"")
 				BOOST_CHECK_EQUAL(find_value(r.get_obj(), "readonly").get_bool(), true);		
 		}
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , addressStr != "\"\""? addressStr: oldAddressStr);
