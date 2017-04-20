@@ -1720,11 +1720,12 @@ UniValue aliasauthenticate(const UniValue& params, bool fHelp) {
 	CSyscoinSecret Secret(key);
 
 	bool readonly = false;
-	else if(EncodeBase58(theAlias.vchAddress) != defaultAddress.ToString())
+	if(EncodeBase58(theAlias.vchAddress) != defaultAddress.ToString())
 	{
 		CKey PrivateKey = Secret.GetKey();
 		const vector<unsigned char> vchPrivateKey(PrivateKey.begin(), PrivateKey.end());
 		string strPrivateKey = "";
+		CMessageCrypter crypter;
 		if(!crypter.Decrypt(stringFromVch(vchPrivateKey), stringFromVch(theAlias.vchEncryptionPrivateKey), strPrivateKey))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5504 - " + _("Password is incorrect"));	
 		readonly = true;
