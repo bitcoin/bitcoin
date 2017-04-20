@@ -120,16 +120,16 @@ public:
      */
     void Flush(bool shutdown);
 
+private:
+    /** BerkeleyDB specific */
+    CDBEnv *env;
+    std::string strFile;
+
     /** Return whether this database handle is a dummy for testing.
      * Only to be used at a low level, application should ideally not care
      * about this.
      */
     bool IsDummy() { return env == nullptr; }
-
-private:
-    /** BerkeleyDB specific */
-    CDBEnv *env;
-    std::string strFile;
 };
 
 
