@@ -224,7 +224,9 @@ class NodeImpl : public Node
         return result;
     }
     CFeeRate getDustRelayFee() override { return ::dustRelayFee; }
+    CFeeRate getFallbackFee() override { CHECK_WALLET(return CWallet::fallbackFee); }
     CFeeRate getPayTxFee() override { CHECK_WALLET(return ::payTxFee); }
+    void setPayTxFee(CFeeRate rate) override { CHECK_WALLET(::payTxFee = rate); }
     UniValue executeRpc(const std::string& command, const UniValue& params, const std::string& uri) override
     {
         JSONRPCRequest req;

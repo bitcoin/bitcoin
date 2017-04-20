@@ -177,8 +177,14 @@ public:
     //! Get dust relay fee.
     virtual CFeeRate getDustRelayFee() = 0;
 
+    //! Get fallback fee.
+    virtual CFeeRate getFallbackFee() = 0;
+
     //! Get pay tx fee.
     virtual CFeeRate getPayTxFee() = 0;
+
+    //! Set pay tx fee.
+    virtual void setPayTxFee(CFeeRate rate) = 0;
 
     //! Execute rpc command.
     virtual UniValue executeRpc(const std::string& command, const UniValue& params, const std::string& uri) = 0;
