@@ -1635,7 +1635,6 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
     if (!inputs.HaveInputs(tx))
         return state.Invalid(false, 0, "", "Inputs unavailable");
     
-    
     CAmount nValueIn = 0;
     CAmount nFees = 0;
     for (unsigned int i = 0; i < tx.vin.size(); i++)

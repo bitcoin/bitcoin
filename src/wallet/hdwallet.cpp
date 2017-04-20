@@ -20,6 +20,7 @@
 #include "script/sign.h"
 #include "policy/policy.h"
 #include "wallet/coincontrol.h"
+#include "blind.h"
 
 #include <algorithm>
 #include <random>
@@ -934,20 +935,9 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx,
         const char *message = r.sNarration.c_str();
         size_t mlen = strlen(message);
         
-        /*
-        secp256k1_rangeproof_sign(ctx,
-            &txout.vchRangeproof[0], &nRangeProofLen,
-            min_value, &txout.commitment,
-            blindptrs.back(), nonce.begin(),
-            ct_exponent, ct_bits, 
-            amount_outs[k],
-            (const unsigned char*) message, mlen,
-            NULL, 0,
-            secp256k1_generator_h
-        */
         
-        
-    }
+    };
+    
     
     wtx.fTimeReceivedIsTxTime = true;
     wtx.BindWallet(this);
@@ -974,22 +964,37 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx,
         std::vector<COutput> vAvailableCoins;
         AvailableCoins(vAvailableCoins, true);
         
+        
         // Start with no fee and loop until there is enough fee
         for (;;)
         {
             txNew.vin.clear();
             txNew.vpout.clear();
+            wtx.fFromMe = true;
             
             bool fFirst = true;
             CAmount nValueToSelect = nValue;
             
             double dPriority = 0;
             
+            std::vector<uint8*> vpBlinds;
+            
+            vpBlinds.reserve(vecSend.size());
+            
+            // vpouts to the payees
             for (const auto &r : vecSend)
             {
+                OUTPUT_PTR<CTxOutCT> txout = MAKE_OUTPUT<CTxOutCT>();
+                //r.commitment
                 
+                txNew.vpout.push_back(txout);
+                
+                r.vBlind.resize(32);
+                GetStrongRandBytes(&r.vBlind[0], 32);
+                vpBlinds.push_back(r.vBlind[0]);
             };
         };
+        
     }
     
     return 0;

@@ -35,10 +35,14 @@ public:
     CScript scriptPubKey;
     std::vector<uint8_t> vData;
     std::vector<uint8_t> vBlind;
+    std::vector<uint8_t> vRangeproof;
+    secp256k1_pedersen_commitment commitment;
+    
     CKey sEphem;
     CPubKey pkTo;
     int n;
     std::string sNarration;
+    bool fChange;
 };
 
 

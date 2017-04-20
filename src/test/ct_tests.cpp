@@ -41,8 +41,6 @@ BOOST_AUTO_TEST_CASE(ct_test)
     BOOST_CHECK(secp256k1_pedersen_commit(ctx, &txins[0].commitment, &blindsin[0][0], nValueIn, secp256k1_generator_h));
     BOOST_MESSAGE("C: " << HexStr(&txins[0].commitment.data[0], &txins[0].commitment.data[0]+33));
     
-    
-    
     std::vector<CTxOutValueTest> txouts(2);
     
     std::vector<CAmount> amount_outs(2);
@@ -122,8 +120,6 @@ BOOST_AUTO_TEST_CASE(ct_test)
         BOOST_MESSAGE("nRangeProofLen: " << nRangeProofLen);
     };
     
-    
-    
     std::vector<secp256k1_pedersen_commitment*> vpCommitsIn, vpCommitsOut;
     vpCommitsIn.push_back(&txins[0].commitment);
     BOOST_MESSAGE("Cin 1: " << HexStr(&txins[0].commitment.data[0], &txins[0].commitment.data[0]+33));
@@ -167,13 +163,11 @@ BOOST_AUTO_TEST_CASE(ct_test)
         BOOST_MESSAGE("max_value " << max_value);
         
         
-        
         CPubKey ephemeral_key(txout.vchNonceCommitment);
         BOOST_CHECK(ephemeral_key.IsValid());
         uint256 nonce = kto_outs[k].ECDH(ephemeral_key);
         CSHA256().Write(nonce.begin(), 32).Finalize(nonce.begin());
         
-        //CAmount valOut;
         uint8_t blindOut[32];
         unsigned char msg[4096];
         size_t msg_size;

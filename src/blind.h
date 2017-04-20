@@ -5,6 +5,10 @@
 #ifndef KEY_BLIND_H
 #define KEY_BLIND_H
 
+#include <secp256k1.h>
+
+extern secp256k1_context *secp256k1_ctx_blind;
+
 void ECC_Start_Blinding();
 void ECC_Stop_Blinding();
 

@@ -371,7 +371,6 @@ UniValue importpubkey(const JSONRPCRequest& request)
             + HelpExampleRpc("importpubkey", "\"mypubkey\", \"testing\", false")
         );
 
-
     string strLabel = "";
     if (request.params.size() > 1)
         strLabel = request.params[1].get_str();
