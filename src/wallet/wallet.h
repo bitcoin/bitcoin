@@ -696,7 +696,17 @@ private:
     /* HD derive new child key (on internal or external chain) */
     void DeriveNewChildKey(CKeyMetadata& metadata, CKey& secret, bool internal = false);
 
-    std::set<int64_t> setKeyPool;
+
+    // class for holding a keypool-key-entry in memory
+    class KeypoolCache {
+    public:
+        int64_t nIndex;
+        CKeyID keyId;
+        KeypoolCache(int64_t index, CKeyID id) : nIndex(index), keyId(id) {}
+        bool operator<(const KeypoolCache& rhs) const { return nIndex < rhs.nIndex; }
+    };
+
+    std::set<KeypoolCache> setKeyPool;
 
     int64_t nTimeFirstKey;
 
@@ -741,12 +751,12 @@ public:
 
     void LoadKeyPool(int nIndex, const CKeyPool &keypool)
     {
-        setKeyPool.insert(nIndex);
+        CKeyID keyid = keypool.vchPubKey.GetID();
+        setKeyPool.insert(KeypoolCache(nIndex, keyid));
 
         // If no metadata exists yet, create a default with the pool key's
         // creation time. Note that this may be overwritten by actually
         // stored metadata for that key later, which is fine.
-        CKeyID keyid = keypool.vchPubKey.GetID();
         if (mapKeyMetadata.count(keyid) == 0)
             mapKeyMetadata[keyid] = CKeyMetadata(keypool.nTime);
     }
@@ -957,7 +967,7 @@ public:
     bool TopUpKeyPool(unsigned int kpSize = 0);
     void ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool, bool internal);
     void KeepKey(int64_t nIndex);
-    void ReturnKey(int64_t nIndex);
+    void ReturnKey(int64_t nIndex, const CKeyID &keyid);
     bool GetKeyFromPool(CPubKey &key, bool internal = false);
     int64_t GetOldestKeyPoolTime();
     void GetAllReserveKeys(std::set<CKeyID>& setAddress) const;
