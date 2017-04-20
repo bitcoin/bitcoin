@@ -5834,11 +5834,11 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
 
     else if (strCommand == NetMsgType::XPEDITEDREQUEST)
     {
-	HandleExpeditedRequest(vRecv, pfrom);
+        HandleExpeditedRequest(vRecv, pfrom);
     }
 
 
-    else if (strCommand == NetMsgType::XPEDITEDBLK && !fImporting && !fReindex && IsChainNearlySyncd())
+    else if (strCommand == NetMsgType::XPEDITEDBLK)
     {
 	if (!HandleExpeditedBlock(vRecv, pfrom))
         {
@@ -5849,8 +5849,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
     }
 
 
-    // BUVERSION is used to pass BU specific version information similar to NetMsgType::VERSION
-    // and is exchanged after the VERSION and VERACK are both sent and received.
+    // BU - used to pass BU specific version information similar to NetMsgType::VERSION
     else if (strCommand == NetMsgType::BUVERSION)
     {
         // If we never sent a VERACK message then we should not get a BUVERSION message.
