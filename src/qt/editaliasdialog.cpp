@@ -483,7 +483,7 @@ bool EditAliasDialog::saveCurrentRow()
 			password = ui->passwordEdit->text().toStdString();
 			vchPubKey = vchFromString(ui->addressEdit->text().toStdString());
 			addressStr = "\"\"";
-			if(m_oldaddress != EncodeBase58(vchPubKey))
+			if(m_oldaddress.toStdString() != EncodeBase58(vchPubKey))
 				addressStr = EncodeBase58(vchPubKey);
 			// if pw change or xfer
 			if(password != m_oldPassword.toStdString() || addressStr != "\"\"")
