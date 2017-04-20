@@ -271,11 +271,11 @@ bool NewMessageDialog::saveCurrentRow()
 		params.push_back(ui->topicEdit->text().toStdString());
 		if(mode == NewMessage)
 			params.push_back(ui->aliasEdit->currentText().toStdString());
-		else if(mode == ReplyMessage);
+		else if(mode == ReplyMessage)
 			params.push_back(ui->toEdit->text().toStdString());
 		if(mode == NewMessage)
 			params.push_back(ui->toEdit->text().toStdString());
-		else if(mode == ReplyMessage);
+		else if(mode == ReplyMessage)
 			params.push_back(ui->aliasEdit->currentText().toStdString());
 		params.push_back(HexStr(vchPubEncryptionKey));
 		params.push_back(HexStr(vchFromString(strCipherEncryptionPrivateKeyFrom)));
