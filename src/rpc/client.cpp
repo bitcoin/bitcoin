@@ -158,6 +158,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getspecialtxes", 2, "count" },
     { "getspecialtxes", 3, "skip" },
     { "getspecialtxes", 4, "verbosity" },
+    { "disconnectnode", 1, "nodeid" },
     // Echo with conversion (For testing only)
     { "echojson", 0, "arg0" },
     { "echojson", 1, "arg1" },

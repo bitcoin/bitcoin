@@ -75,7 +75,7 @@ BASE_SCRIPTS= [
     'multi_rpc.py',
     'proxy_test.py',
     'signrawtransactions.py',
-    'nodehandling.py',
+    'disconnect_ban.py',
     'addressindex.py',
     'timestampindex.py',
     'spentindex.py',
