@@ -816,6 +816,11 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5011 - " + _("Guid in data output doesn't match guid in tx");
 					return error(errorMessage.c_str());
 				}
+				if(theAlias.vchAddress.empty())
+				{
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5011 - " + _("Alias address cannot be empty");
+					return error(errorMessage.c_str());
+				}	
 				break;
 			case OP_ALIAS_UPDATE:
 				if (!IsAliasOp(prevOp, true))
@@ -1864,6 +1869,16 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		newAlias.vchPasswordSalt = ParseHex(strPasswordSalt);
 	newAlias.safeSearch = strSafeSearch == "Yes"? true: false;
 	newAlias.acceptCertTransfers = strAcceptCertTransfers == "Yes"? true: false;
+	if(strAddress.empty())
+	{
+		// generate new address in this wallet if not passed in
+		CKey privKey;
+		privKey.MakeNewKey(true);
+		CPubKey pubKey = privKey.GetPubKey();
+		vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
+		CSyscoinAddress addressAlias(pubKey.GetID());
+		strAddress = addressAlias.ToString();
+	}
 	DecodeBase58(strAddress, newAlias.vchAddress);
 	CSyscoinAddress newAddress;
 	CScript scriptPubKeyOrig;
