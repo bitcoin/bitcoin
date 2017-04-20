@@ -564,7 +564,8 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	vchPubKey = vector<unsigned char>(pubKey.begin(), pubKey.end());
 	CSyscoinAddress aliasAddress(pubKey.GetID());
 	vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
-	
+	BOOST_CHECK(privKey.IsValid());
+	BOOST_CHECK(privEncryptionKey.IsValid());
 	BOOST_CHECK(pubKey.IsFullyValid());
 	BOOST_CHECK_NO_THROW(CallRPC(node, "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));
 	BOOST_CHECK_NO_THROW(CallRPC(node, "importprivkey " + CSyscoinSecret(privEncryptionKey).ToString() + " \"\" false", true, false));
@@ -657,7 +658,8 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 	vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
 	vector<unsigned char> vchEncryptionPrivKey = ParseHex(encryptionprivkey);
 	encryptionPrivKey.Set(vchEncryptionPrivKey.begin(), vchEncryptionPrivKey.end(), true);
-	
+	BOOST_CHECK(privKey.IsValid());
+	BOOST_CHECK(encryptionPrivKey.IsValid());
 	BOOST_CHECK(pubKey.IsFullyValid());
 	BOOST_CHECK_NO_THROW(CallRPC(tonode, "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));	
 	BOOST_CHECK_NO_THROW(CallRPC(tonode, "importprivkey " + CSyscoinSecret(encryptionPrivKey).ToString() + " \"\" false", true, false));	
@@ -769,7 +771,8 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
 		vector<unsigned char> vchEncryptionPrivKey = ParseHex(encryptionprivkey);
 		encryptionPrivKey.Set(vchEncryptionPrivKey.begin(), vchEncryptionPrivKey.end(), true);
-		
+		BOOST_CHECK(encryptionPrivKey.IsValid());
+		BOOST_CHECK(privKey.IsValid());
 		BOOST_CHECK(pubKey.IsFullyValid());
 		BOOST_CHECK_NO_THROW(r = CallRPC(node, "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));	
 		BOOST_CHECK_NO_THROW(r = CallRPC(node, "importprivkey " + CSyscoinSecret(encryptionPrivKey).ToString() + " \"\" false", true, false));	
@@ -1072,7 +1075,7 @@ void CertTransfer(const string& node, const string &tonode, const string& guid, 
 	privEncryptionKey.MakeNewKey(true);
 	CPubKey pubEncryptionKey = privEncryptionKey.GetPubKey();
 	vector<unsigned char> vchPrivEncryptionKey(privEncryptionKey.begin(), privEncryptionKey.end());
-	
+	BOOST_CHECK(privEncryptionKey.IsValid());
 	BOOST_CHECK(pubEncryptionKey.IsFullyValid());
 	BOOST_CHECK_NO_THROW(CallRPC(node, "importprivkey " + CSyscoinSecret(privEncryptionKey).ToString() + " \"\" false", true, false));	
 	vector<unsigned char> vchPubEncryptionKey(pubEncryptionKey.begin(), pubEncryptionKey.end());
