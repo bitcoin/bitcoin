@@ -11,6 +11,7 @@
 #include "init.h"
 #include "validation.h"
 #include "net.h"
+#include "policy/fees.h"
 #include "policy/policy.h"
 #include "policy/rbf.h"
 #include "rpc/server.h"
