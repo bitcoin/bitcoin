@@ -1715,11 +1715,16 @@ UniValue aliasauthenticate(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5503 - " + _("Generated public key not fully valid"));
 
 	CSyscoinAddress defaultAddress(defaultKey.GetID());
-	if(EncodeBase58(theAlias.vchAddress) != defaultAddress.ToString())
+	CPubKey encryptionPubKey(theAlias.vchEncryptionPubKey);
+	CSyscoinAddress encryptionAddress(encryptionPubKey.GetID());
+	if(encryptionAddress.ToString() == defaultAddress.ToString())
+		readonly = true;
+	else if(EncodeBase58(theAlias.vchAddress) != defaultAddress.ToString())
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5504 - " + _("Password is incorrect"));
 
 	UniValue res(UniValue::VOBJ);
 	res.push_back(Pair("privatekey", CSyscoinSecret(key).ToString()));
+	res.push_back(Pair("readonly", readonly));
 	return res;
 
 }

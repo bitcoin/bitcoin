@@ -687,9 +687,9 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex + " " + safesearch + " " + address + " " + password + " " + acceptTransfers + " " + expires + " " + passwordsalt + " " + strEncryptionPrivateKeyHex));
 	GenerateBlocks(5, tonode);
 	GenerateBlocks(5, node);
-	// check its not mine anymore
+
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str(), "");
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str(), oldPassword);
 
 	if(!oldPassword.empty())
 		BOOST_CHECK_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + oldPassword + " " + oldPasswordSalt + " Yes"), runtime_error);
@@ -701,19 +701,19 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , "");
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , oldPasswordSalt);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
 
 	// check xferred right person and data changed
 	BOOST_CHECK_NO_THROW(r = CallRPC(tonode, "aliasinfo " + aliasname));
 	balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK(balanceAfter >= (balanceBefore-COIN));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str(), "");
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str(), oldPassword);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "privatevalue").get_str() , privdata != "\"\""? privdata: "");
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , "");
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , oldPasswordSalt);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
 	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_bool() == true);
 }
@@ -812,9 +812,11 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string newPasswordSalt = find_value(r.get_obj(), "passwordsalt").get_str();
 
 	BOOST_CHECK_EQUAL(newPassword, myPassword);
-	if(newPassword != oldPassword && addressStr == "\"\"")
+	if(newPassword != oldPassword)
 	{
-		BOOST_CHECK_NO_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
+		if(addressStr != "\"\"")
+			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "readonly").get_bool(), true);
 	}
 	
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , addressStr != "\"\""? addressStr: oldAddressStr);
@@ -837,9 +839,11 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	if(!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasinfo " + aliasname));
-		if(newPassword != oldPassword && addressStr == "\"\"")
+		if(newPassword != oldPassword)
 		{
 			BOOST_CHECK_NO_THROW(CallRPC(otherNode1, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
+			if(addressStr != "\"\"")
+				BOOST_CHECK_EQUAL(find_value(r.get_obj(), "readonly").get_bool(), true);		
 		}
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , addressStr != "\"\""? addressStr: oldAddressStr);
 		balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
@@ -857,9 +861,11 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	if(!otherNode2.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "aliasinfo " + aliasname));
-		if(newPassword != oldPassword && addressStr == "\"\"")
+		if(newPassword != oldPassword)
 		{
 			BOOST_CHECK_NO_THROW(CallRPC(otherNode2, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
+			if(addressStr != "\"\"")
+				BOOST_CHECK_EQUAL(find_value(r.get_obj(), "readonly").get_bool(), true);		
 		}
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , addressStr != "\"\""? addressStr: oldAddressStr);
 		balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
