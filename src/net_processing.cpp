@@ -942,7 +942,6 @@ static void RelayTransaction(const CTransaction& tx, CConnman& connman)
            but for our prototype, we will choose relays independently
            across transactions)
         */ 
-        stemRelay = true;
         // Track the outgoing connections with dandelion enabled
         std::vector<CNode*> outgoing;
         connman.ForEachNode( [&outgoing](CNode* pnode)
@@ -958,6 +957,7 @@ static void RelayTransaction(const CTransaction& tx, CConnman& connman)
         } else {
             /* Choose a random element from outgoing (this isn't exactly pseudorandom, 
             depending on the size of RAND_MAX, but it's close enough) */
+            stemRelay = true;
             std::vector<CNode*>::iterator randIt = outgoing.begin();
             std::advance(randIt, std::rand() % outgoing.size());
             stemNode = *randIt;
