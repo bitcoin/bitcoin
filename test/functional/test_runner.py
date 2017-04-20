@@ -386,6 +386,8 @@ class TestHandler:
                     log_out.close(), log_err.close()
                     if proc.returncode == TEST_EXIT_PASSED and stderr == "":
                         status = "Passed"
+                    elif proc.returncode == TEST_EXIT_PASSED:
+                        status = "Passed with warnings"
                     elif proc.returncode == TEST_EXIT_SKIPPED:
                         status = "Skipped"
                     else:
@@ -406,6 +408,9 @@ class TestResult():
     def __repr__(self):
         if self.status == "Passed":
             color = BLUE
+            glyph = TICK
+        if self.status == "Passed with warnings":
+            color = ORANGE
             glyph = TICK
         elif self.status == "Failed":
             color = RED
