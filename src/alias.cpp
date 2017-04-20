@@ -2060,10 +2060,10 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	
 	CSyscoinAddress newAddress;
 	CScript scriptPubKeyOrig;
-	// if address was not passed in use old address
 	if(theAlias.vchAddress.empty())
-		theAlias.vchAddress = copyAlias.vchAddress;
-	GetAddress(theAlias, &newAddress, scriptPubKeyOrig);
+		GetAddress(copyAlias, &newAddress, scriptPubKeyOrig);
+	else
+		GetAddress(theAlias, &newAddress, scriptPubKeyOrig);
 
 	vector<unsigned char> data;
 	theAlias.Serialize(data);
