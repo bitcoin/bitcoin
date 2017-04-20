@@ -552,8 +552,8 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 		GetStrongRandBytes(&vchPasswordSalt[0], WALLET_CRYPTO_KEY_SIZE);
 		CCrypter crypt;
 		string pwStr = password;
-		SecureString password = pwStr.c_str();
-		BOOST_CHECK(crypt.SetKeyFromPassphrase(password, vchPasswordSalt, 1, 2));	
+		SecureString passwordss = pwStr.c_str();
+		BOOST_CHECK(crypt.SetKeyFromPassphrase(passwordss, vchPasswordSalt, 1, 2));	
 		privKey.Set(crypt.chKey, crypt.chKey + (sizeof crypt.chKey), true);
 	}
 	else
@@ -562,6 +562,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	}
 	CPubKey pubKey = privKey.GetPubKey();
 	vchPubKey = vector<unsigned char>(pubKey.begin(), pubKey.end());
+	CSyscoinAddress aliasAddress(pubKey.GetID());
 	vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
 	
 	BOOST_CHECK(pubKey.IsFullyValid());
@@ -586,7 +587,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	string expireTime = "\"\"";
 
 	UniValue r;
-	BOOST_CHECK_NO_THROW(CallRPC(node, "aliasnew sysrates.peg " + aliasname + " " + strPasswordHex + " " + pubdata + " " + strPrivateHex + " " + safesearch + " " + acceptTransfers +  " " + expireTime + " " + EncodeBase58(vchPubKey) + " " + HexStr(vchPasswordSalt) + " " + strEncryptionPrivateKeyHex + " " + HexStr(vchPubEncryptionKey)));
+	BOOST_CHECK_NO_THROW(CallRPC(node, "aliasnew sysrates.peg " + aliasname + " " + strPasswordHex + " " + pubdata + " " + strPrivateHex + " " + safesearch + " " + acceptTransfers +  " " + expireTime + " " + aliasAddress.ToString() + " " + HexStr(vchPasswordSalt) + " " + strEncryptionPrivateKeyHex + " " + HexStr(vchPubEncryptionKey)));
 	GenerateBlocks(5, node);
 	BOOST_CHECK_THROW(CallRPC(node, "sendtoaddress " + aliasname + " 10"), runtime_error);
 	GenerateBlocks(5, node);
@@ -632,7 +633,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 0);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "safesearch").get_str() , safesearch == "\"\""? "Yes": safesearch);
 	}
-	return HexStr(vchPubKey);
+	return aliasAddress.ToString();
 }
 void AliasTransfer(const string& node, const string& aliasname, const string& tonode, const string& pubdata, const string& privdata)
 {
@@ -649,6 +650,7 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 	privKey.MakeNewKey(true);
 	CPubKey pubKey = privKey.GetPubKey();
 	vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
+	CSyscoinAddress aliasAddress(pubKey.GetID());
 	vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
 	vector<unsigned char> vchEncryptionPrivKey = ParseHex(encryptionprivkey);
 	encryptionPrivKey.Set(vchEncryptionPrivKey.begin(), vchEncryptionPrivKey.end(), true);
@@ -674,7 +676,7 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 		strEncryptionPrivateKeyHex = "\"\"";
 	string acceptTransfers = "\"\"";
 	string expires = "\"\"";
-	string address = EncodeBase58(vchPubKey);
+	string address = aliasAddress.ToString();
 	string password = "\"\"";
 	string safesearch = "\"\"";
 	string passwordsalt = "\"\"";
@@ -755,7 +757,8 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		privKey.Set(crypt.chKey, crypt.chKey + (sizeof crypt.chKey), true);
 		CPubKey pubKey = privKey.GetPubKey();
 		vchPubKey = vector<unsigned char>(pubKey.begin(), pubKey.end());
-		addressStr = EncodeBase58(vchPubKey);
+		CSyscoinAddress aliasAddress(pubKey.GetID());
+		addressStr = aliasAddress.ToString();
 		vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
 		vector<unsigned char> vchEncryptionPrivKey = ParseHex(encryptionprivkey);
 		encryptionPrivKey.Set(vchEncryptionPrivKey.begin(), vchEncryptionPrivKey.end(), true);

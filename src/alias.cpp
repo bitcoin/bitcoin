@@ -1992,7 +1992,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 
 	string strPasswordSalt = "";
 	if(CheckParam(params, 9))
-		strPasswordSalt = params[10].get_str();
+		strPasswordSalt = params[9].get_str();
 	
 
 	string strEncryptionPrivateKey = "";

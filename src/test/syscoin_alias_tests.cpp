@@ -279,14 +279,14 @@ BOOST_AUTO_TEST_CASE (generate_aliastransfer)
 	CPubKey pubKey = privKey.GetPubKey();
 	vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
 	vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
-	
+	CSyscoinAddress aliasAddress(pubKey.GetID());
 	BOOST_CHECK(pubKey.IsFullyValid());
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));	
 
 	AliasTransfer("node1", "jagnode1", "node2", "changeddata1", "pvtdata");
 
 	// xfer an alias that isn't yours
-	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate sysrates.peg jagnode1 changedata1 \"\" \"\" " + EncodeBase58(vchPubKey)), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate sysrates.peg jagnode1 changedata1 \"\" \"\" " + aliasAddress.ToString()), runtime_error);
 
 	// xfer alias and update it at the same time
 	AliasTransfer("node2", "jagnode2", "node3", "changeddata4", "pvtdata");
@@ -1015,12 +1015,12 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	AliasNew("node1", "aliasexpire", "password", "somedata");
 	AliasNew("node1", "aliasexpire0", "password", "somedata");
 	AliasNew("node2", "aliasexpire1", "password", "somedata");
-	string aliasexpirenode2pubkey = AliasNew("node2", "aliasexpirednode2", "password", "somedata");
+	string aliasexpirenode2address = AliasNew("node2", "aliasexpirednode2", "password", "somedata");
 	string offerguid = OfferNew("node1", "aliasexpire0", "category", "title", "100", "0.01", "description", "USD");
 	OfferAddWhitelist("node1", offerguid, "aliasexpirednode2", "5");
 	string certguid = CertNew("node1", "aliasexpire", "certtitle", "privdata", "pubdata", "Yes");
 	StopNode("node3");
-	string aliasexpire2pubkey = AliasNew("node1", "aliasexpire2", "password", "pubdata", "privdata");
+	AliasNew("node1", "aliasexpire2", "password", "pubdata", "privdata");
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress aliasexpirednode2 300"), runtime_error);
 	GenerateBlocks(10);	
 	string escrowguid = EscrowNew("node2", "node1", "aliasexpirednode2", offerguid, "1", "message", "aliasexpire", "aliasexpire0", "5");
@@ -1038,11 +1038,11 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	vector<unsigned char> vchPubKey(pubKey.begin(), pubKey.end());
 	vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());	
 	BOOST_CHECK(pubKey.IsFullyValid());
-
+	CSyscoinAddress aliasAddress(pubKey.GetID());
 	// should fail: alias update on expired alias
 	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasexpirednode2 newdata1"), runtime_error);
 	// should fail: alias transfer from expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasexpirednode2 changedata1 \"\" \"\" " + EncodeBase58(vchPubKey)), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate sysrates.peg aliasexpirednode2 changedata1 \"\" \"\" " + aliasAddress.ToString()), runtime_error);
 	// should fail: alias transfer to another alias
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpire2 changedata1 \"\" \"\" " + aliasexpire2node2address), runtime_error);
 
@@ -1085,7 +1085,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	// and node2
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "escrowinfo " + escrowguid));
 	// this will recreate the alias and give it a new pubkey.. we need to use the old pubkey to sign the multisig, the escrow rpc call must check for the right pubkey
-	BOOST_CHECK(aliasexpirenode2pubkey != AliasNew("node2", "aliasexpirednode2", "passwordnew3", "somedata"));
+	BOOST_CHECK(aliasexpirenode2address != AliasNew("node2", "aliasexpirednode2", "passwordnew3", "somedata"));
 	CertUpdate("node1", certgoodguid, "pubdata", "newdata");
 	// able to release and claim release on escrow with non-expired aliases with new pubkeys
 	EscrowRelease("node2", "buyer", escrowguid);	 

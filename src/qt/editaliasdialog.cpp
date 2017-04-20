@@ -274,6 +274,7 @@ bool EditAliasDialog::saveCurrentRow()
 	string strPasswordSalt = "";
 	string addressStr = "";
 	string acceptCertTransfers = "";
+	CSyscoinAddress aliasAddress;
 	QString multisigListStr;
     if(!model || !walletModel) return false;
     WalletModel::UnlockContext ctx(walletModel->requestUnlock());
@@ -410,6 +411,7 @@ bool EditAliasDialog::saveCurrentRow()
 		strPrivateHex = HexStr(vchFromString(strCipherPrivateData));
 		if(strCipherPrivateData.empty())
 			strPrivateHex = "\"\"";
+		aliasAddress = CSyscoinAddress(pubKey.GetID());
 		strEncryptionPrivateKeyHex = HexStr(vchFromString(strCipherEncryptionPrivateKey));
 		strMethod = string("aliasnew");
 		params.push_back(ui->aliasPegEdit->text().trimmed().toStdString());
@@ -420,7 +422,7 @@ bool EditAliasDialog::saveCurrentRow()
 		params.push_back(ui->safeSearchEdit->currentText().toStdString());
 		params.push_back(ui->acceptCertTransfersEdit->currentText().toStdString());
 		params.push_back(ui->expireTimeEdit->text().trimmed().toStdString());
-		params.push_back(EncodeBase58(vchPubKey));
+		params.push_back(aliasAddress.ToString());
 		params.push_back(HexStr(vchPasswordSalt));
 		params.push_back(strEncryptionPrivateKeyHex);
 		params.push_back(HexStr(vchPubEncryptionKey));
@@ -482,9 +484,11 @@ bool EditAliasDialog::saveCurrentRow()
 			}
 			password = ui->passwordEdit->text().toStdString();
 			vchPubKey = vchFromString(ui->addressEdit->text().toStdString());
+			pubKey = CPubKey(vchPubKey);
+			aliasAddress = CSyscoinAddress(pubKey.GetID());
 			addressStr = "\"\"";
-			if(m_oldaddress.toStdString() != EncodeBase58(vchPubKey))
-				addressStr = EncodeBase58(vchPubKey);
+			if(m_oldaddress.toStdString() != aliasAddress.ToString())
+				addressStr = aliasAddress.ToString();
 			// if pw change or xfer
 			if(password != m_oldPassword.toStdString() || addressStr != "\"\"")
 			{
@@ -507,7 +511,8 @@ bool EditAliasDialog::saveCurrentRow()
 					}
 					pubKey = privKey.GetPubKey();
 					vchPubKey = vector<unsigned char>(pubKey.begin(), pubKey.end());
-					addressStr = EncodeBase58(vchPubKey);
+					aliasAddress = CSyscoinAddress(pubKey.GetID());
+					addressStr = aliasAddress.ToString();
 
 					if(!pubKey.IsFullyValid())
 					{
