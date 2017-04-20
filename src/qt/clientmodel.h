@@ -8,6 +8,8 @@
 #include <QObject>
 #include <QDateTime>
 
+#include <atomic>
+
 class AddressTableModel;
 class BanTableModel;
 class OptionsModel;
