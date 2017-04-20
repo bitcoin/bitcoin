@@ -857,7 +857,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	
 	if (!fJustCheck ) {
-		bool pwChange = false;
 		bool isExpired = false;
 		CAliasIndex dbAlias;
 		string strName = stringFromVch(vvchArgs[0]);
@@ -947,8 +946,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theAlias.vchPasswordSalt = dbAlias.vchPasswordSalt;
 					if(theAlias.vchPassword.empty())
 						theAlias.vchPassword = dbAlias.vchPassword;
-					else
-						pwChange = true;
 					if(theAlias.vchAddress.empty())
 						theAlias.vchAddress = dbAlias.vchAddress;
 					// user can't update safety level or rating after creation
