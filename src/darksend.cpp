@@ -1643,13 +1643,13 @@ bool CDarksendPool::SubmitDenominate()
     std::vector<CTxOut> vecTxOutRet;
 
     // Submit transaction to the pool if we get here
-    // Try to use only inputs with the same number of rounds starting from lowest number of rounds possible
-    for(int i = 0; i < nPrivateSendRounds; i++) {
-        if(PrepareDenominate(i, i+1, strError, vecTxInRet, vecTxOutRet)) {
+    // Try to use only inputs with the same number of rounds starting from the highest number of rounds possible
+    for(int i = nPrivateSendRounds; i > 0; i--) {
+        if(PrepareDenominate(i - 1, i, strError, vecTxInRet, vecTxOutRet)) {
             LogPrintf("CDarksendPool::SubmitDenominate -- Running PrivateSend denominate for %d rounds, success\n", i);
             return SendDenominate(vecTxInRet, vecTxOutRet);
         }
-        LogPrintf("CDarksendPool::SubmitDenominate -- Running PrivateSend denominate for %d rounds, error: %s\n", i, strError);
+        LogPrint("privatesend", "CDarksendPool::SubmitDenominate -- Running PrivateSend denominate for %d rounds, error: %s\n", i, strError);
     }
 
     // We failed? That's strange but let's just make final attempt and try to mix everything
