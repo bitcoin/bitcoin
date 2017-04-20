@@ -605,6 +605,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_bool() == true);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 0);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "safesearch").get_str() , safesearch == "\"\""? "Yes": safesearch);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
 	if(!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasinfo " + aliasname));
@@ -618,6 +619,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 		BOOST_CHECK(find_value(r.get_obj(), "ismine").get_bool() == false);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 0);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "safesearch").get_str() , safesearch == "\"\""? "Yes": safesearch);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
 	}
 	if(!otherNode2.empty())
 	{
@@ -632,6 +634,7 @@ string AliasNew(const string& node, const string& aliasname, const string& passw
 		BOOST_CHECK(find_value(r.get_obj(), "ismine").get_bool() == false);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), 0);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "safesearch").get_str() , safesearch == "\"\""? "Yes": safesearch);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
 	}
 	return aliasAddress.ToString();
 }
@@ -811,11 +814,9 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	if(newPassword != oldPassword)
 	{
 		BOOST_CHECK_NO_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
-		/*if(addressStr == "\"\"")
-			BOOST_CHECK(find_value(r.get_obj(), "address").get_str() != oldAddressStr);*/
 	}
-	else
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , addressStr != "\"\""? addressStr: oldAddressStr);
+	
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , addressStr != "\"\""? addressStr: oldAddressStr);
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK(abs(balanceBefore-balanceAfter) < COIN);
 	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == aliasname);
@@ -841,13 +842,8 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		if(newPassword != oldPassword)
 		{
 			BOOST_CHECK_NO_THROW(CallRPC(otherNode1, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
-			// disabled for now because multisig aliases are scripts and thus may not change on a pw change if editing alias with p2sh address
-			// TODO call validateaddress and check if not script type address
-			/*if(addressStr == "\"\"")
-				BOOST_CHECK(find_value(r.get_obj(), "address").get_str() != oldAddressStr);*/
 		}
-		else
-			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , addressStr != "\"\""? addressStr: oldAddressStr);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , addressStr != "\"\""? addressStr: oldAddressStr);
 		balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 		BOOST_CHECK(abs(balanceBefore-balanceAfter) < COIN);	
 		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == aliasname);
@@ -870,11 +866,8 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		if(newPassword != oldPassword)
 		{
 			BOOST_CHECK_NO_THROW(CallRPC(otherNode2, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
-			/*if(addressStr == "\"\"")
-				BOOST_CHECK(find_value(r.get_obj(), "address").get_str() != oldAddressStr);*/
 		}
-		else
-			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , addressStr != "\"\""? addressStr: oldAddressStr);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , addressStr != "\"\""? addressStr: oldAddressStr);
 		balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 		BOOST_CHECK(abs(balanceBefore-balanceAfter) < COIN);
 		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == aliasname);
