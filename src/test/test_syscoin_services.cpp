@@ -762,7 +762,9 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		CPubKey pubKey = privKey.GetPubKey();
 		vchPubKey = vector<unsigned char>(pubKey.begin(), pubKey.end());
 		CSyscoinAddress aliasAddress(pubKey.GetID());
-		addressStr = aliasAddress.ToString();
+		// only set address from password if address isn't passed in
+		if(addressStr.empty())
+			addressStr = aliasAddress.ToString();
 		vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
 		vector<unsigned char> vchEncryptionPrivKey = ParseHex(encryptionprivkey);
 		encryptionPrivKey.Set(vchEncryptionPrivKey.begin(), vchEncryptionPrivKey.end(), true);
