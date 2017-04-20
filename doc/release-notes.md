@@ -45,14 +45,18 @@ using these calls with named arguments needs to be updated.
 Mining
 ------
 
-Getblocktemplate sets the segwit version bit even when the downstream
-client has not been updated to include the segwit commitment.  Ability
-to enforce the rule is the only required criteria for safe activation,
-but previously signaling was only requested if the miner could include
-transactions in order to avoid a potential outcome where segwit would
-activate at a time when no segwit transactions could be included.
-Since many miners are now including the segwit commitment this concern
-no longer applies.
+In previous versions, getblocktemplate required segwit support from downstream
+clients/miners once the feature activated on the network. In this version, it
+now supports non-segwit clients even after activation, by removing all segwit
+transactions from the returned block template. This allows non-segwit miners to
+continue functioning correctly even after segwit has activated.
+
+Due to the limitations in previous versions, getblocktemplate also recommended
+non-segwit clients to not signal for the segwit version-bit. Since this is no
+longer an issue, getblocktemplate now always recommends signalling segwit for
+all miners. This is safe because ability to enforce the rule is the only
+required criteria for safe activation, not actually producing segwit-enabled
+blocks.
 
 UTXO memory accounting
 ----------------------
