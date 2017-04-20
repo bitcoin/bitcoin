@@ -53,8 +53,8 @@ public:
     int getNumConnections(unsigned int flags = CONNECTIONS_ALL) const;
     QString getMasternodeCountString() const;
     int getNumBlocks() const;
-    int getHeaderTipHeight();
-    int64_t getHeaderTipTime();
+    int getHeaderTipHeight() const;
+    int64_t getHeaderTipTime() const;
     //! Return number of transactions in the mempool
     long getMempoolSize() const;
     //! Return the dynamic memory usage of the mempool
@@ -84,8 +84,8 @@ public:
     QString dataDir() const;
 
     // caches for the best header
-    std::atomic<int> cachedBestHeaderHeight;
-    std::atomic<int64_t> cachedBestHeaderTime;
+    mutable std::atomic<int> cachedBestHeaderHeight;
+    mutable std::atomic<int64_t> cachedBestHeaderTime;
 
 private:
     OptionsModel *optionsModel;
