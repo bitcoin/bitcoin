@@ -361,6 +361,26 @@ QLabel { color: rgb(40,40,40);  }</string>
             </widget>
            </item>
            <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLabel" name="infoLabel">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item>
             <spacer name="horizontalSpacer">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>

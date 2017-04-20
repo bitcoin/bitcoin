@@ -53,6 +53,7 @@ private:
     bool userClosed;
     bool verificationPauseActive;
     void eventuallyShowHeaderSyncing(int count);
+    void updatePauseState(bool pauseActive);
 };
 
 #endif // BITCOIN_QT_MODALOVERLAY_H

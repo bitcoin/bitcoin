@@ -19,7 +19,8 @@ ui(new Ui::ModalOverlay),
 bestHeaderHeight(0),
 bestHeaderDate(QDateTime()),
 layerIsVisible(false),
-userClosed(false)
+userClosed(false),
+verificationPauseActive(false)
 {
     ui->setupUi(this);
     connect(ui->closeButton, &QPushButton::clicked, this, &ModalOverlay::closeClicked);
@@ -136,6 +137,7 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
     // show already requested blocks (in total)
     ui->numberBlocksRequested->setText(QString::number(getAmountOfBlocksInFlight()));
     eventuallyShowHeaderSyncing(count);
+    updatePauseState(verificationPauseActive);
 }
 
 void ModalOverlay::eventuallyShowHeaderSyncing(int count)
@@ -191,5 +193,13 @@ void ModalOverlay::pauseClicked()
 
 void ModalOverlay::setPauseResumeState(bool pauseActive)
 {
-    ui->pauseResumeVerification->setText((pauseActive ? "Resume downloading blocks": "Pause downloading blocks"));
+    verificationPauseActive = pauseActive;
+    updatePauseState(pauseActive);
+}
+
+void ModalOverlay::updatePauseState(bool pauseActive)
+{
+    ui->labelNumberBlocksRequested->setText((pauseActive ? "Finish downloading blocks" : "Blocks requested from peers"));
+    ui->pauseResumeVerification->setText((pauseActive ? "Resume downloading blocks " : "Pause downloading blocks"));
+    ui->infoLabel->setText((pauseActive && getAmountOfBlocksInFlight() > 0 ? "Wait to finish current downloads..." : ""));
 }
