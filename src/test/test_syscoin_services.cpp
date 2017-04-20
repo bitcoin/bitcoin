@@ -702,6 +702,7 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , "");
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
 
 	// check xferred right person and data changed
 	BOOST_CHECK_NO_THROW(r = CallRPC(tonode, "aliasinfo " + aliasname));
@@ -713,6 +714,7 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , "");
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
 	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_bool() == true);
 }
 string AliasUpdate(const string& node, const string& aliasname, const string& pubdata, const string& privdata, string password, string safesearch, string addressStr)
