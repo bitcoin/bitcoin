@@ -39,7 +39,6 @@ MyAliasListPage::MyAliasListPage(const PlatformStyle *platformStyle, QWidget *pa
 		ui->editButton->setIcon(QIcon());
 		ui->copyAlias->setIcon(QIcon());
 		ui->refreshButton->setIcon(QIcon());
-		ui->newPubKey->setIcon(QIcon());
 		ui->whitelistButton->setIcon(QIcon());
 		ui->signMultisigButton->setIcon(QIcon());
 	}
@@ -51,7 +50,6 @@ MyAliasListPage::MyAliasListPage(const PlatformStyle *platformStyle, QWidget *pa
 		ui->editButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/editsys"));
 		ui->copyAlias->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/editcopy"));
 		ui->refreshButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/refresh"));
-		ui->newPubKey->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/add"));
 		ui->whitelistButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/address-book"));
 		ui->signMultisigButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/key"));
 		
