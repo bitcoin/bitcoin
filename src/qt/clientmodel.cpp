@@ -11,6 +11,7 @@
 #include "peertablemodel.h"
 
 #include "alert.h"
+#include "chain.h"
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "clientversion.h"

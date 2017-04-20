@@ -52,7 +52,6 @@
 #define DEFAULT_ALLOW_OPTIMISTIC_SEND false
 #endif
 
-class CAddrMan;
 class CScheduler;
 class CNode;
 

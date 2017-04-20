@@ -14,6 +14,7 @@
 #include "transactiontablemodel.h"
 
 #include "base58.h"
+#include "chain.h"
 #include "keystore.h"
 #include "validation.h"
 #include "net.h" // for g_connman
