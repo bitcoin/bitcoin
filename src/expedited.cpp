@@ -15,6 +15,7 @@
 
 // Just save the last few expedited sent blocks so we don't resend (uint256)
 uint256 xpeditedBlkSent[NUM_XPEDITED_STORE];
+
 // zeros on construction)
 int xpeditedBlkSendPos = 0;
 
@@ -38,6 +39,7 @@ bool CheckAndRequestExpeditedBlocks(CNode *pfrom)
 
                 pos1 = strPeerIP.rfind(":");
                 pos2 = strPeerIP.rfind("]:");
+
                 // Handle both ipv4 and ipv6 cases
                 if (pos1 <= 0 && pos2 <= 0)
                     strListeningPeerIP = strPeerIP + ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
@@ -87,7 +89,7 @@ void HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
 {
     uint64_t options;
     vRecv >> options;
-    bool stop = ((options & EXPEDITED_STOP) != 0); // Are we starting or stopping expedited service?
+    bool stop = ((options & EXPEDITED_STOP) != 0); // Indicates started or stopped expedited service
 
     if (options & EXPEDITED_BLOCKS)
     {
@@ -112,6 +114,7 @@ void HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
                 if (xpeditedBlk.size() < maxExpedited)
                 {
                     LogPrint("blk", "Starting expedited blocks to peer %s (%d).\n", pfrom->addrName.c_str(), pfrom->id);
+
                     // find an empty array location
                     std::vector<CNode *>::iterator it =
                         std::find(xpeditedBlk.begin(), xpeditedBlk.end(), ((CNode *)NULL));
@@ -153,6 +156,7 @@ void HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
                 {
                     LogPrint("blk", "Starting expedited transactions to peer %s (%d).\n", pfrom->addrName.c_str(),
                         pfrom->id);
+
                     std::vector<CNode *>::iterator it =
                         std::find(xpeditedTxn.begin(), xpeditedTxn.end(), ((CNode *)NULL));
                     if (it != xpeditedTxn.end())
@@ -250,13 +254,11 @@ bool HandleExpeditedBlock(CDataStream &vRecv, CNode *pfrom)
 
 void SendExpeditedBlock(CXThinBlock &thinBlock, unsigned char hops, const CNode *skip)
 {
-    // bool cameFromUpstream = false;
     LOCK(cs_xpedited);
     std::vector<CNode *>::iterator end = xpeditedBlk.end();
     for (std::vector<CNode *>::iterator it = xpeditedBlk.begin(); it != end; it++)
     {
         CNode *n = *it;
-        // if (n == skip) cameFromUpstream = true;
         if ((n != skip) && (n != NULL)) // Don't send it back in case there is a forwarding loop
         {
             if (n->fDisconnect)
@@ -268,63 +270,21 @@ void SendExpeditedBlock(CXThinBlock &thinBlock, unsigned char hops, const CNode 
             {
                 LogPrint("thin", "Sending expedited block %s to %s.\n", thinBlock.header.GetHash().ToString(),
                     n->addrName.c_str());
-                n->PushMessage(NetMsgType::XPEDITEDBLK, (unsigned char)EXPEDITED_MSG_XTHIN, hops,
-                    thinBlock); // I should push the vRecv rather than reserialize
+
+                n->PushMessage(NetMsgType::XPEDITEDBLK, (unsigned char)EXPEDITED_MSG_XTHIN, hops, thinBlock);
                 n->blocksSent += 1;
             }
         }
     }
-
-#if 0 // Probably better to have the upstream explicitly request blocks from the downstream.
-  // Upstream
-  // TODO, if it came from an upstream block I really want to delay for a short period and then check if we got it and then send.  But this solves some of the issue
-  if (!cameFromUpstream)
-    {
-      LOCK(cs_xpedited);
-
-      std::vector<CNode*>::iterator end = xpeditedBlkUp.end();
-      for (std::vector<CNode*>::iterator it = xpeditedBlkUp.begin(); it != end; it++)
-        {
-          CNode* n = *it;
-          if ((n != skip)&&(n != NULL)) // Don't send it back to the sender in case there is a forwarding loop
-            {
-              if (n->fDisconnect)
-                {
-                  *it = NULL;
-                  n->Release();
-                }
-              else
-                {
-                  LogPrint("thin", "Sending expedited block %s upstream to %s.\n", thinBlock.header.GetHash().ToString(),n->addrName.c_str());
-                  // I should push the vRecv rather than reserialize
-                  n->PushMessage(NetMsgType::XPEDITEDBLK, (unsigned char) EXPEDITED_MSG_XTHIN, hops, thinBlock);
-                  n->blocksSent += 1;
-                }
-            }
-        }
-    }
-#endif
 }
 
 void SendExpeditedBlock(const CBlock &block, const CNode *skip)
 {
-    // If we've already put the block in our hash table, we've already sent it out
-    // BlockMap::iterator it = mapBlockIndex.find(block.GetHash());
-    // if (it != mapBlockIndex.end()) return;
-
-
     if (!IsRecentlyExpeditedAndStore(block.GetHash()))
     {
         CXThinBlock thinBlock(block);
         SendExpeditedBlock(thinBlock, 0, skip);
     }
-    else
-    {
-        // LogPrint("thin", "No need to send expedited block %s\n", block.GetHash().ToString());
-    }
+    // else, nothing to do
 }
-
-
-
-
 
