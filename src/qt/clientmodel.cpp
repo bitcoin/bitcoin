@@ -74,7 +74,7 @@ int ClientModel::getNumBlocks() const
     return chainActive.Height();
 }
 
-int ClientModel::getHeaderTipHeight()
+int ClientModel::getHeaderTipHeight() const
 {
     if (cachedBestHeaderHeight == -1) {
         // make sure we initially populate the cache via a cs_main lock
@@ -87,7 +87,7 @@ int ClientModel::getHeaderTipHeight()
     return cachedBestHeaderHeight;
 }
 
-int64_t ClientModel::getHeaderTipTime()
+int64_t ClientModel::getHeaderTipTime() const
 {
     if (cachedBestHeaderTime == -1) {
         LOCK(cs_main);
