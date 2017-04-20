@@ -843,7 +843,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasinfo " + aliasname));
 		if(newPassword != oldPassword)
 		{
-			BOOST_CHECK_NO_THROW(CallRPC(otherNode1, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
+			BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
 			if(addressStr != "\"\"")
 				BOOST_CHECK_EQUAL(find_value(r.get_obj(), "readonly").get_bool(), true);		
 		}
@@ -865,7 +865,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "aliasinfo " + aliasname));
 		if(newPassword != oldPassword)
 		{
-			BOOST_CHECK_NO_THROW(CallRPC(otherNode2, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
+			BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
 			if(addressStr != "\"\"")
 				BOOST_CHECK_EQUAL(find_value(r.get_obj(), "readonly").get_bool(), true);		
 		}

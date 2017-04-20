@@ -1716,7 +1716,11 @@ UniValue aliasauthenticate(const UniValue& params, bool fHelp) {
 
 	CSyscoinAddress defaultAddress(defaultKey.GetID());
 	CPubKey encryptionPubKey(theAlias.vchEncryptionPublicKey);
+	if(!encryptionPubKey.IsFullyValid())
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5503 - " + _("Encryption public key not fully valid"));
+
 	CSyscoinAddress encryptionAddress(encryptionPubKey.GetID());
+
 	bool readonly = false;
 	if(encryptionAddress.ToString() == defaultAddress.ToString())
 		readonly = true;
