@@ -71,7 +71,10 @@ bool CheckAndRequestExpeditedBlocks(CNode *pfrom)
                 {
                     LogPrintf("Requesting expedited blocks from peer %s (%d).\n", strListeningPeerIP, pfrom->id);
                     pfrom->PushMessage(NetMsgType::XPEDITEDREQUEST, ((uint64_t)EXPEDITED_BLOCKS));
+                    
+                    LOCK(cs_xpedited);
                     xpeditedBlkUp.push_back(pfrom);
+
                     return true;
                 }
             }
@@ -85,8 +88,11 @@ void HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
     uint64_t options;
     vRecv >> options;
     bool stop = ((options & EXPEDITED_STOP) != 0); // Are we starting or stopping expedited service?
+
     if (options & EXPEDITED_BLOCKS)
     {
+        LOCK(cs_xpedited);
+
         if (stop) // If stopping, find the array element and clear it.
         {
             LogPrint("blk", "Stopping expedited blocks to peer %s (%d).\n", pfrom->addrName.c_str(), pfrom->id);
@@ -125,6 +131,8 @@ void HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
     }
     if (options & EXPEDITED_TXNS)
     {
+        LOCK(cs_xpedited);
+
         if (stop) // If stopping, find the array element and clear it.
         {
             LogPrint("blk", "Stopping expedited transactions to peer %s (%d).\n", pfrom->addrName.c_str(), pfrom->id);
@@ -190,6 +198,7 @@ bool HandleExpeditedBlock(CDataStream &vRecv, CNode *pfrom)
         uint256 blkHash = thinBlock.header.GetHash();
         CInv inv(MSG_BLOCK, blkHash);
 
+        
         BlockMap::iterator mapEntry = mapBlockIndex.find(blkHash);
         CBlockIndex *blkidx = NULL;
         unsigned int status = 0;
@@ -243,6 +252,7 @@ bool HandleExpeditedBlock(CDataStream &vRecv, CNode *pfrom)
 void SendExpeditedBlock(CXThinBlock &thinBlock, unsigned char hops, const CNode *skip)
 {
     // bool cameFromUpstream = false;
+    LOCK(cs_xpedited);
     std::vector<CNode *>::iterator end = xpeditedBlk.end();
     for (std::vector<CNode *>::iterator it = xpeditedBlk.begin(); it != end; it++)
     {
@@ -271,6 +281,8 @@ void SendExpeditedBlock(CXThinBlock &thinBlock, unsigned char hops, const CNode 
   // TODO, if it came from an upstream block I really want to delay for a short period and then check if we got it and then send.  But this solves some of the issue
   if (!cameFromUpstream)
     {
+      LOCK(cs_xpedited);
+
       std::vector<CNode*>::iterator end = xpeditedBlkUp.end();
       for (std::vector<CNode*>::iterator it = xpeditedBlkUp.begin(); it != end; it++)
         {

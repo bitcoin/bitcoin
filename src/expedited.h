@@ -25,6 +25,7 @@ enum
     EXPEDITED_MSG_XTHIN = 2,
 };
 
+extern CCriticalSection cs_xpedited;
 extern std::vector<CNode *> xpeditedBlk; // Who requested expedited blocks from us
 extern std::vector<CNode *> xpeditedBlkUp; // Who we requested expedited blocks from
 extern std::vector<CNode *> xpeditedTxn;

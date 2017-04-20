@@ -105,6 +105,13 @@ CCriticalSection cs_vOneShots;
 
 CCriticalSection cs_statMap;
 
+// critical sections from expedited.cpp
+CCriticalSection cs_xpedited;
+
+// semaphore for parallel validation threads
+CCriticalSection cs_semPV;
+CSemaphore *semPV;
+
 deque<string> vOneShots;
 std::map<CNetAddr, ConnectionHistory> mapInboundConnectionTracker;
 vector<std::string> vUseDNSSeeds;
