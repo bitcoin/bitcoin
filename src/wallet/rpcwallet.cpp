@@ -9,6 +9,7 @@
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
+#include "wallet/coincontrol.h"
 #include "validation.h"
 #include "net.h"
 #include "policy/fees.h"
