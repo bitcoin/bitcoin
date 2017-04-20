@@ -12,6 +12,7 @@
 #include "init.h"
 #include "instantsend.h"
 #include "net.h"
+#include "policy/fees.h"
 #include "rpc/server.h"
 #include "timedata.h"
 #include "util.h"

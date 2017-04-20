@@ -16,6 +16,7 @@
 
 #include "wallet/coincontrol.h"
 #include "init.h"
+#include "policy/fees.h"
 #include "policy/policy.h"
 #include "validation.h" // For mempool
 #include "wallet/wallet.h"
@@ -556,7 +557,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
                 nBytes -= 34;
 
         // Fee
-        nPayFee = CWallet::GetMinimumFee(nBytes, nTxConfirmTarget, mempool);
+        nPayFee = CWallet::GetMinimumFee(nBytes, nTxConfirmTarget, ::mempool, ::feeEstimator);
         if (nPayFee > 0 && coinControl->nMinimumTotalFee > nPayFee)
             nPayFee = coinControl->nMinimumTotalFee;
 
@@ -645,7 +646,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     if (payTxFee.GetFeePerK() > 0)
         dFeeVary = (double)std::max(CWallet::GetRequiredFee(1000), payTxFee.GetFeePerK()) / 1000;
     else {
-        dFeeVary = (double)std::max(CWallet::GetRequiredFee(1000), mempool.estimateSmartFee(nTxConfirmTarget).GetFeePerK()) / 1000;
+        dFeeVary = (double)std::max(CWallet::GetRequiredFee(1000), ::feeEstimator.estimateSmartFee(nTxConfirmTarget, NULL, ::mempool).GetFeePerK()) / 1000;
     }
     QString toolTip4 = tr("Can vary +/- %1 duff(s) per input.").arg(dFeeVary);
 
