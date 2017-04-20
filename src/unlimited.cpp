@@ -336,20 +336,18 @@ UniValue expedited(const UniValue& params, bool fHelp)
 
     // Add or remove this node to our list of upstream nodes
     {
-    LOCK(cs_xpedited);
-    std::vector<CNode *>::iterator elem = std::find(xpeditedBlkUp.begin(), xpeditedBlkUp.end(), node);
-    if ((flags & EXPEDITED_BLOCKS) && (flags & EXPEDITED_STOP))
-    {
-        if (elem != xpeditedBlkUp.end())
-            xpeditedBlkUp.erase(elem);
-    }
-    else if (flags & EXPEDITED_BLOCKS)
-    {
-      if (elem == xpeditedBlkUp.end())  // don't add it twice
+        LOCK(cs_xpedited);
+        std::vector<CNode *>::iterator elem = std::find(xpeditedBlkUp.begin(), xpeditedBlkUp.end(), node);
+        if ((flags & EXPEDITED_BLOCKS) && (flags & EXPEDITED_STOP))
         {
-        xpeditedBlkUp.push_back(node);
+            if (elem != xpeditedBlkUp.end())
+                xpeditedBlkUp.erase(elem);
         }
-    }
+        else if (flags & EXPEDITED_BLOCKS)
+        {
+            if (elem == xpeditedBlkUp.end()) // don't add it twice
+                xpeditedBlkUp.push_back(node);
+        }
     }
 
     // Push the expedited message even if its a repeat to allow the operator to reissue the CLI command to trigger another message.
