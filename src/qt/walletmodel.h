@@ -131,6 +131,7 @@ public:
 
     CWallet *getWallet() const { return wallet; };
 
+    QString getWalletName() const;
     CAmount getBalance(const CCoinControl *coinControl = nullptr) const;
     CAmount getUnconfirmedBalance() const;
     CAmount getImmatureBalance() const;

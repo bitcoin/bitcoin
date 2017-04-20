@@ -56,6 +56,7 @@ public:
     void showOutOfSyncWarning(bool fShow);
 
 private:
+    BitcoinGUI *bitcoinGui;
     ClientModel *clientModel;
     WalletModel *walletModel;
 
@@ -124,7 +125,7 @@ Q_SIGNALS:
     /** HD-Enabled status of wallet changed (only possible during startup) */
     void hdEnabledStatusChanged(int hdEnabled);
     /** Notify that a new transaction appeared */
-    void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label);
+    void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& wallet);
     /** Notify that the out of sync warning icon has been pressed */
     void outOfSyncWarningClicked();
 };

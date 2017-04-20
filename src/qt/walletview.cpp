@@ -31,6 +31,7 @@
 
 WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     QStackedWidget(parent),
+    bitcoinGui(0),
     clientModel(0),
     walletModel(0),
     platformStyle(_platformStyle)
@@ -98,11 +99,13 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
         connect(this, SIGNAL(encryptionStatusChanged(int)), gui, SLOT(updateWalletStatus()));
 
         // Pass through transaction notifications
-        connect(this, SIGNAL(incomingTransaction(QString,int,CAmount,QString,QString,QString)), gui, SLOT(incomingTransaction(QString,int,CAmount,QString,QString,QString)));
+        connect(this, SIGNAL(incomingTransaction(QString,int,CAmount,QString,QString,QString,QString)), gui, SLOT(incomingTransaction(QString,int,CAmount,QString,QString,QString,QString)));
 
         // Connect HD enabled state signal 
         connect(this, SIGNAL(hdEnabledStatusChanged(int)), gui, SLOT(updateWalletStatus()));
     }
+
+    bitcoinGui = gui;
 }
 
 void WalletView::setClientModel(ClientModel *_clientModel)
@@ -166,7 +169,12 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
     QString address = ttm->data(index, TransactionTableModel::AddressRole).toString();
     QString label = ttm->data(index, TransactionTableModel::LabelRole).toString();
 
-    Q_EMIT incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address, label);
+    QString wallet;
+    if (bitcoinGui->multiWallet()) {
+        wallet = walletModel->getWalletName();
+    }
+
+    Q_EMIT incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address, label, wallet);
 }
 
 void WalletView::gotoOverviewPage()
