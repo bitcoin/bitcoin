@@ -14,12 +14,10 @@
 #define NUM_XPEDITED_STORE 10
 
 // Just save the last few expedited sent blocks so we don't resend (uint256)
-uint256 xpeditedBlkSent[NUM_XPEDITED_STORE];
+static uint256 xpeditedBlkSent[NUM_XPEDITED_STORE];
 
 // zeros on construction)
-int xpeditedBlkSendPos = 0;
-
-using namespace std;
+static int xpeditedBlkSendPos = 0;
 
 bool CheckAndRequestExpeditedBlocks(CNode *pfrom)
 {
