@@ -3142,6 +3142,17 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                     pto->setInventoryTxToSend.erase(it);
                     // Add the item to the queue to be sent
                     dandVInv.push_back(CInv(MSG_TX, hash));
+                    // Add the hash to the mapRelay if it's in the mempool
+                    {
+                        auto txinfo = mempool.info(hash);
+                        if (!txinfo.tx) {
+                            continue;
+                        }
+                        auto ret = mapRelay.insert(std::make_pair(hash, std::move(txinfo.tx)));
+                        if (ret.second) {
+                            vRelayExpiration.push_back(std::make_pair(nNow + 15 * 60 * 1000000, ret.first));
+                        }
+                    }
                     if (dandVInv.size() == MAX_INV_SZ) {
                         connman.PushMessage(pto, msgMaker.Make(NetMsgType::D_INV, dandVInv));
                         dandVInv.clear();
