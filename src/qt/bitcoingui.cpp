@@ -1110,7 +1110,9 @@ void BitcoinGUI::toggleHidden()
 
 void BitcoinGUI::detectShutdown()
 {
-    if (ShutdownRequested())
+    // only shutdown if the clientmodel has not yet been deallocated
+    // to avoid multiple calls to qApp->quit();
+    if (clientModel && ShutdownRequested())
     {
         if(rpcConsole)
             rpcConsole->hide();
@@ -1172,11 +1174,17 @@ static bool ThreadSafeMessageBox(BitcoinGUI *gui, const std::string& message, co
     return ret;
 }
 
+static void DetectShutdown(BitcoinGUI *gui)
+{
+    QMetaObject::invokeMethod(gui, "detectShutdown", Qt::QueuedConnection);
+}
+
 void BitcoinGUI::subscribeToCoreSignals()
 {
     // Connect signals to client
     uiInterface.ThreadSafeMessageBox.connect(boost::bind(ThreadSafeMessageBox, this, _1, _2, _3));
     uiInterface.ThreadSafeQuestion.connect(boost::bind(ThreadSafeMessageBox, this, _1, _3, _4));
+    uiInterface.ShutdownRequested.connect(boost::bind(DetectShutdown, this));
 }
 
 void BitcoinGUI::unsubscribeFromCoreSignals()
@@ -1184,6 +1192,7 @@ void BitcoinGUI::unsubscribeFromCoreSignals()
     // Disconnect signals from client
     uiInterface.ThreadSafeMessageBox.disconnect(boost::bind(ThreadSafeMessageBox, this, _1, _2, _3));
     uiInterface.ThreadSafeQuestion.disconnect(boost::bind(ThreadSafeMessageBox, this, _1, _3, _4));
+    uiInterface.ShutdownRequested.disconnect(boost::bind(DetectShutdown, this));
 }
 
 void BitcoinGUI::toggleNetworkActive()
