@@ -17,6 +17,21 @@
 #include <utility>
 #include <vector>
 
+/**
+ * Overview of wallet database classes:
+ *
+ * - CDBEnv is an environment in which the database exists (has no analog in dbwrapper.h)
+ * - CWalletDBWrapper represents a wallet database (similar to CDBWrapper in dbwrapper.h)
+ * - CDB is a low-level database transaction (similar to CDBBatch in dbwrapper.h)
+ * - CWalletDB is a modifier object for the wallet, and encapsulates a database
+ *   transaction as well as methods to act on the database (no analog in
+ *   dbwrapper.h)
+ *
+ * The latter two are named confusingly, in contrast to what the names CDB
+ * and CWalletDB suggest they are transient transaction objects and don't
+ * represent the database itself.
+ */
+
 static const bool DEFAULT_FLUSHWALLET = true;
 
 class CAccount;
