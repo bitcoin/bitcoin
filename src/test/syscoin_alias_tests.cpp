@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE (generate_multisigalias)
 	// change the multisigs pw and public data
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasaddscript " + redeemScript));
 	// if updating p2sh alias and changing pw, must always pass in address aswell otherwise new address will be generated for you
-	string hex_str = AliasUpdate("node1", "jagnodemultisig1", "pubdata1", "\"\"", "newpassword", "\"\"", addressStr);
+	string hex_str = AliasUpdate("node1", "jagnodemultisig1", "pubdata1", "privdata1", "newpassword", "\"\"", addressStr);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagnodemultisig1"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), addressStr);
 	BOOST_CHECK(!hex_str.empty());
