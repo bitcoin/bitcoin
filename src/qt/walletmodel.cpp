@@ -105,7 +105,7 @@ void WalletModel::updateStatus()
         Q_EMIT encryptionStatusChanged(newEncryptionStatus);
 }
 
-void WalletModel::checkBalanceChanged()
+void WalletModel::updateBalance()
 {
     CAmount newBalance = getBalance();
     CAmount newUnconfirmedBalance = getUnconfirmedBalance();
@@ -329,7 +329,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
         }
         Q_EMIT coinsSent(wallet, rcp, transaction_array);
     }
-    checkBalanceChanged();
+    updateBalance();
 
     return SendCoinsReturn(OK);
 }
@@ -454,7 +454,7 @@ static void NotifyWatchonlyChanged(WalletModel *walletmodel, bool fHaveWatchonly
 
 static void NotifyBalanceChanged(WalletModel *walletmodel)
 {
-    QMetaObject::invokeMethod(walletmodel, "checkBalanceChanged", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(walletmodel, "updateBalance", Qt::QueuedConnection);
 }
 
 void WalletModel::subscribeToCoreSignals()

@@ -272,7 +272,7 @@ public Q_SLOTS:
     /* Watch-only added */
     void updateWatchOnlyFlag(bool fHaveWatchonly);
     /* Update balance */
-    void checkBalanceChanged();
+    void updateBalance();
 };
 
 #endif // BITCOIN_QT_WALLETMODEL_H
