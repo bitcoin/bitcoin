@@ -24,7 +24,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 extern CScript _createmultisig_redeemScript(const UniValue& params);
 using namespace std;
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
+extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchAliasPeg, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
 void PutToEscrowList(std::vector<CEscrow> &escrowList, CEscrow& index) {
 	int i = escrowList.size() - 1;
 	BOOST_REVERSE_FOREACH(CEscrow &o, escrowList) {
@@ -1550,7 +1550,10 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(buyeralias.vchAlias, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	if(extTxIdStr.empty())
+		SendMoneySyscoin(buyeralias.vchAlias,  selleralias.vchAliasPeg, stringFromVch(theOffer.sCurrencyCode), aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	else
+		SendMoneySyscoin(buyeralias.vchAlias,  selleralias.vchAliasPeg, "SYS", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
 	signParams.push_back(EncodeHexTx(wtx));
@@ -1865,7 +1868,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.vchLinkAlias, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(escrow.vchLinkAlias, theAlias.vchAliasPeg, "SYS", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 
 	UniValue signParams(UniValue::VARR);
@@ -2017,7 +2020,7 @@ UniValue escrowacknowledge(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.vchLinkAlias, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(escrow.vchLinkAlias, sellerAliasLatest.vchAliasPeg, "SYS", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 
 	UniValue signParams(UniValue::VARR);
@@ -2407,7 +2410,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.vchLinkAlias, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(escrow.vchLinkAlias, sellerAliasLatest.vchAliasPeg, "SYS", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue returnRes;
 	UniValue sendParams(UniValue::VARR);
 	sendParams.push_back(rawTx);
@@ -2696,7 +2699,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.vchLinkAlias, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(escrow.vchLinkAlias, sellerAliasLatest.vchAliasPeg, "SYS", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
 	signParams.push_back(EncodeHexTx(wtx));
@@ -3028,7 +3031,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.vchLinkAlias, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(escrow.vchLinkAlias, buyerAliasLatest.vchAliasPeg, "SYS", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue returnRes;
 	UniValue sendParams(UniValue::VARR);
 	sendParams.push_back(rawTx);
@@ -3294,7 +3297,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(escrow.vchLinkAlias, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(escrow.vchLinkAlias, theAlias.vchAliasPeg, "SYS", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
 	signParams.push_back(EncodeHexTx(wtx));

@@ -21,7 +21,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 using namespace std;
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
+extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchAliasPeg, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
 bool EncryptMessage(const vector<unsigned char> &vchPubKey, const string &strMessage, string &strCipherText)
 {
 	strCipherText.clear();
@@ -887,7 +887,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;	
-	SendMoneySyscoin(vchAlias, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(vchAlias, theAlias.vchAliasPeg, "SYS", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
 	signParams.push_back(EncodeHexTx(wtx));
@@ -1033,7 +1033,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;	
-	SendMoneySyscoin(theAlias.vchAlias, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);	
+	SendMoneySyscoin(theAlias.vchAlias,  theAlias.vchAliasPeg, "SYS", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);	
  	UniValue res(UniValue::VARR);
 
 	UniValue signParams(UniValue::VARR);
@@ -1179,7 +1179,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(fromAlias.vchAlias, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(fromAlias.vchAlias,  theAlias.vchAliasPeg, "SYS", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 
 	UniValue signParams(UniValue::VARR);

@@ -2223,7 +2223,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool ov
 
 // SYSCOIN
 bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
-                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl* coinControl, bool sign, bool sysTx, bool bAliasPay)
+                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl* coinControl,const vector<unsigned char> &vchAliasPeg, const string &currencyCode, bool sign, bool sysTx, bool bAliasPay)
 {
     CAmount nValue = 0;
     int nChangePosRequest = nChangePosInOut;
@@ -2323,7 +2323,10 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 							{
 								myrecipient.scriptPubKey = GetScriptForDestination(payDest);
 								CScript scriptPubKey;
-								scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchFromString(address.aliasName) << OP_2DROP;
+								if(currencyCode == "SYS")
+									scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchFromString(address.aliasName) << OP_2DROP;
+								else if(!currencyCode.empty() && !vchAliasPeg.empty())
+									scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchFromString(address.aliasName) << vchFromString("0") << vchAliasPeg << vchFromString(currencyCode) << OP_DROP << OP_2DROP << OP_2DROP;
 								scriptPubKey += myrecipient.scriptPubKey;
 								// SYSCOIN
 								myrecipient = {scriptPubKey, myrecipient.nAmount, false/*myrecipient.fSubtractFeeFromAmount*/};

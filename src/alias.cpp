@@ -37,7 +37,7 @@ COfferDB *pofferdb = NULL;
 CCertDB *pcertdb = NULL;
 CEscrowDB *pescrowdb = NULL;
 CMessageDB *pmessagedb = NULL;
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
+extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchAliasPeg, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
 bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut, const Consensus::Params& consensusParams)
 {
 	if(nHeight < 0 || nHeight > chainActive.Height())
@@ -708,7 +708,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return error(errorMessage.c_str());
 			}
 		}
-		else if(vvchArgs.size() <= 0 || vvchArgs.size() > 2)
+		else if(vvchArgs.size() <= 0 || vvchArgs.size() > 4)
 		{
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5002 - " + _("Alias payment arguments incorrect size");
 			return error(errorMessage.c_str());
@@ -1934,7 +1934,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	coinControl.fAllowWatchOnly = true;
 	bool useOnlyAliasPaymentToFund = false;
 
-	SendMoneySyscoin(vchAlias, recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund);
+	SendMoneySyscoin(vchAlias, vchAliasPeg, "SYS", recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund);
 	UniValue res(UniValue::VARR);
 
 	UniValue signParams(UniValue::VARR);
@@ -2116,7 +2116,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(newAddress.ToString() != EncodeBase58(copyAlias.vchAddress))
 		transferAlias = true;
 	
-	SendMoneySyscoin(vchAlias, recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund, transferAlias);
+	SendMoneySyscoin(vchAlias, copyAlias.vchAliasPeg, "SYS", recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund, transferAlias);
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
 	signParams.push_back(EncodeHexTx(wtx));
@@ -2871,7 +2871,6 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		{
 			if(oPaymentDetails[tx.GetHash()] == 1 || (vvch.size() >= 2 && vvch[1] == vchFromString("1")))
 				continue;
-			oPaymentDetails[tx.GetHash()] = 1;
 			opName = aliasFromOp(op);
 			UniValue oName(UniValue::VOBJ);
 			oName.push_back(Pair("type", opName));
@@ -2880,7 +2879,10 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			{
 				alias.txHash = tx.GetHash();
 				if(BuildAliasJson(alias, false, oName, strWalletless))
+				{
 					oPayments.push_back(oName);
+					oPaymentDetails[tx.GetHash()] = 1;
+				}
 			}
 		}
 		else
@@ -2987,9 +2989,9 @@ bool BuildAliasStatsJson(const std::vector<CAliasIndex> &aliases, UniValue& oAli
 }
 UniValue aliaspay(const UniValue& params, bool fHelp) {
 
-    if (fHelp || params.size() < 2 || params.size() > 4)
+    if (fHelp || params.size() < 3 || params.size() > 5)
         throw runtime_error(
-            "aliaspay aliasfrom {\"address\":amount,...} ( minconf \"comment\")\n"
+            "aliaspay aliasfrom currency {\"address\":amount,...} ( minconf \"comment\")\n"
             "\nSend multiple times from an alias. Amounts are double-precision floating point numbers."
             + HelpRequiringPassphrase() + "\n"
             "\nArguments:\n"
@@ -3018,13 +3020,14 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 	CTransaction aliasTx;
 	if (!GetTxOfAlias(vchFromString(strFromAlias), theAlias, aliasTx, true))
 		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid alias");
-    UniValue sendTo = params[1].get_obj();
+    string strCurrency = params[1].get_str();
+    UniValue sendTo = params[2].get_obj();
     int nMinDepth = 1;
-    if(CheckParam(params, 2))
-        nMinDepth = params[2].get_int();
-    CWalletTx wtx;
     if(CheckParam(params, 3))
-        wtx.mapValue["comment"] = params[3].get_str();
+        nMinDepth = params[3].get_int();
+    CWalletTx wtx;
+    if(CheckParam(params, 4))
+        wtx.mapValue["comment"] = params[4].get_str();
 
     set<CSyscoinAddress> setAddress;
     vector<CRecipient> vecSend;
@@ -3041,7 +3044,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+name_);
         setAddress.insert(address);
 
-        CScript scriptPubKey = GetScriptForDestination(address.Get());
+        CScript scriptPubKeyDest = GetScriptForDestination(address.Get());
         CAmount nAmount = AmountFromValue(sendTo[name_]);
         if (nAmount <= 0)
             throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
@@ -3067,7 +3070,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 	CSyscoinAddress addressAlias;
 	GetAddress(theAlias, &addressAlias, scriptPubKeyOrig);
 	CreateAliasRecipient(scriptPubKeyOrig, theAlias.vchAlias, theAlias.vchAliasPeg, chainActive.Tip()->nHeight, recipientPayment);	
-	SendMoneySyscoin(theAlias.vchAlias, recipient, recipientPayment, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(theAlias.vchAlias, theAlias.vchAliasPeg, currencyStr, recipient, recipientPayment, vecSend, wtx, &coinControl);
 	
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);

@@ -27,7 +27,7 @@
 #include <boost/tokenizer.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 using namespace std;
-extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
+extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchAliasPeg, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
 bool DisconnectAlias(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
 bool DisconnectOffer(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
 bool DisconnectCertificate(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
@@ -1619,7 +1619,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(vchAlias, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(vchAlias, alias.vchAliasPeg, "SYS", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
 	signParams.push_back(EncodeHexTx(wtx));
@@ -1772,7 +1772,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(vchAlias, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(vchAlias, alias.vchAliasPeg, "SYS", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
@@ -1891,7 +1891,7 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(theAlias.vchAlias, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(theAlias.vchAlias, theAlias.vchAliasPeg, "SYS", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
@@ -1995,7 +1995,7 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(theAlias.vchAlias, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(theAlias.vchAlias, theAlias.vchAliasPeg, "SYS", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
@@ -2094,7 +2094,7 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(theAlias.vchAlias, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(theAlias.vchAlias, theAlias.vchAliasPeg, "SYS", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
@@ -2388,7 +2388,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	coinControl.fAllowWatchOnly = false;
 
 
-	SendMoneySyscoin(alias.vchAlias, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(alias.vchAlias, alias.vchAliasPeg, "SYS", aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
 	signParams.push_back(EncodeHexTx(wtx));
@@ -2579,7 +2579,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		if (!GetTxOfAlias(linkOffer.vchAlias, theLinkedAlias, aliastx))
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1564 - " + _("Could not find an alias with this name"));
 		// tiny alias payment so that linked alias can get a notification when calling offerlist (with accepts) that the linked alias made a sale
-		scriptPubKeyAcceptLinked << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << linkOffer.vchAlias << OP_2DROP;
+		scriptPubKeyAcceptLinked << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << linkOffer.vchAlias << vchFromString("0") <<  linkOffer.vchAliasPeg << linkOffer.sCurrencyCode << OP_DROP << OP_2DROP << OP_2DROP;
 	}
 
 	
@@ -2667,7 +2667,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(buyerAlias.vchAlias, aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(buyerAlias.vchAlias, theAlias.vchAliasPeg, stringFromVch(theAlias.sCurrencyCode), aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
@@ -2965,7 +2965,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(vchLinkAlias, recipientAlias, recipientPaymentAlias, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(vchLinkAlias, theAlias.vchAliasPeg, "SYS", recipientAlias, recipientPaymentAlias, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
 	signParams.push_back(EncodeHexTx(wtx));
@@ -3104,7 +3104,7 @@ UniValue offeracceptacknowledge(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(sellerAlias.vchAlias, recipientAlias, recipientPaymentAlias, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(sellerAlias.vchAlias, sellerAlias.vchAliasPeg, "SYS", recipientAlias, recipientPaymentAlias, vecSend, wtx, &coinControl);
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
 	signParams.push_back(EncodeHexTx(wtx));
