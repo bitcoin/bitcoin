@@ -691,7 +691,7 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 	GenerateBlocks(5, node);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + aliasname));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str(), oldPassword);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "password").get_str(), "");
 
 	if(!oldPassword.empty())
 		BOOST_CHECK_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + oldPassword + " " + oldPasswordSalt + " Yes"), runtime_error);
@@ -703,7 +703,7 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str() , pubdata != "\"\""? pubdata: oldvalue);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_publickey").get_str() , encryptionkey);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "encryption_privatekey").get_str() , encryptionprivkey);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , oldPasswordSalt);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "passwordsalt").get_str() , "");
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , aliasAddress.ToString());
 
 	// check xferred right person and data changed
