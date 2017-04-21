@@ -820,7 +820,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5011 - " + _("Alias address cannot be empty");
 					return error(errorMessage.c_str());
-				}	
+				}
 				break;
 			case OP_ALIAS_UPDATE:
 				if (!IsAliasOp(prevOp, true))
@@ -857,6 +857,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	
 	if (!fJustCheck ) {
+		bool pwChange = false;
 		bool isExpired = false;
 		CAliasIndex dbAlias;
 		string strName = stringFromVch(vvchArgs[0]);
@@ -946,6 +947,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theAlias.vchPasswordSalt = dbAlias.vchPasswordSalt;
 					if(theAlias.vchPassword.empty())
 						theAlias.vchPassword = dbAlias.vchPassword;
+					else
+						pwChange = true;
 					if(theAlias.vchAddress.empty())
 						theAlias.vchAddress = dbAlias.vchAddress;
 					// user can't update safety level or rating after creation
@@ -961,6 +964,12 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					// if transfer
 					if(dbAlias.vchAddress != theAlias.vchAddress)
 					{
+						// if transfer clear pw
+						if(!pwChange)
+						{
+							theAlias.vchPassword.clear();
+							theAlias.vchPasswordSalt.clear();
+						}
 						// make sure xfer to pubkey doesn't point to an alias already, otherwise don't assign pubkey to alias
 						// we want to avoid aliases with duplicate addresses
 						if (paliasdb->ExistsAddress(theAlias.vchAddress))
@@ -1080,7 +1089,6 @@ string stringFromValue(const UniValue& value) {
 	string strName = value.get_str();
 	return strName;
 }
-
 vector<unsigned char> vchFromValue(const UniValue& value) {
 	string strName = value.get_str();
 	unsigned char *strbeg = (unsigned char*) strName.c_str();
