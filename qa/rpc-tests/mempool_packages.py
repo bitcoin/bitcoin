@@ -2,8 +2,7 @@
 # Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-# Test descendant package tracking code
+"""Test descendant package tracking code."""
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
@@ -17,14 +16,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         super().__init__()
         self.num_nodes = 2
         self.setup_clean_chain = False
-
-    def setup_network(self):
-        self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-maxorphantx=1000", "-relaypriority=0", "-debug"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-maxorphantx=1000", "-relaypriority=0", "-limitancestorcount=5", "-debug"]))
-        connect_nodes(self.nodes[0], 1)
-        self.is_network_split = False
-        self.sync_all()
+        self.extra_args = [["-maxorphantx=1000"], ["-maxorphantx=1000", "-limitancestorcount=5"]]
 
     # Build a transaction that spends parent_txid:vout
     # Return amount sent
@@ -102,9 +94,21 @@ class MempoolPackagesTest(BitcoinTestFramework):
             assert_equal(mempool[x], v_descendants[x])
         assert(chain[0] not in v_descendants.keys())
 
+        # Check that ancestor modified fees includes fee deltas from
+        # prioritisetransaction
+        self.nodes[0].prioritisetransaction(txid=chain[0], fee_delta=1000)
+        mempool = self.nodes[0].getrawmempool(True)
+        ancestor_fees = 0
+        for x in chain:
+            ancestor_fees += mempool[x]['fee']
+            assert_equal(mempool[x]['ancestorfees'], ancestor_fees * COIN + 1000)
+        
+        # Undo the prioritisetransaction for later tests
+        self.nodes[0].prioritisetransaction(txid=chain[0], fee_delta=-1000)
+
         # Check that descendant modified fees includes fee deltas from
         # prioritisetransaction
-        self.nodes[0].prioritisetransaction(chain[-1], 1000)
+        self.nodes[0].prioritisetransaction(txid=chain[-1], fee_delta=1000)
         mempool = self.nodes[0].getrawmempool(True)
 
         descendant_fees = 0
@@ -113,10 +117,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
             assert_equal(mempool[x]['descendantfees'], descendant_fees * COIN + 1000)
 
         # Adding one more transaction on to the chain should fail.
-        try:
-            self.chain_transaction(self.nodes[0], txid, vout, value, fee, 1)
-        except JSONRPCException as e:
-            print("too-long-ancestor-chain successfully rejected")
+        assert_raises_jsonrpc(-26, "too-long-mempool-chain", self.chain_transaction, self.nodes[0], txid, vout, value, fee, 1)
 
         # Check that prioritising a tx before it's added to the mempool works
         # First clear the mempool by mining a block.
@@ -125,7 +126,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
         # Prioritise a transaction that has been mined, then add it back to the
         # mempool by using invalidateblock.
-        self.nodes[0].prioritisetransaction(chain[-1], 2000)
+        self.nodes[0].prioritisetransaction(txid=chain[-1], fee_delta=2000)
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
         # Keep node1's tip synced with node0
         self.nodes[1].invalidateblock(self.nodes[1].getbestblockhash())
@@ -156,19 +157,19 @@ class MempoolPackagesTest(BitcoinTestFramework):
         for i in range(10):
             transaction_package.append({'txid': txid, 'vout': i, 'amount': sent_value})
 
-        for i in range(MAX_DESCENDANTS):
+        # Sign and send up to MAX_DESCENDANT transactions chained off the parent tx
+        for i in range(MAX_DESCENDANTS - 1):
             utxo = transaction_package.pop(0)
-            try:
-                (txid, sent_value) = self.chain_transaction(self.nodes[0], utxo['txid'], utxo['vout'], utxo['amount'], fee, 10)
-                for j in range(10):
-                    transaction_package.append({'txid': txid, 'vout': j, 'amount': sent_value})
-                if i == MAX_DESCENDANTS - 2:
-                    mempool = self.nodes[0].getrawmempool(True)
-                    assert_equal(mempool[parent_transaction]['descendantcount'], MAX_DESCENDANTS)
-            except JSONRPCException as e:
-                print(e.error['message'])
-                assert_equal(i, MAX_DESCENDANTS - 1)
-                print("tx that would create too large descendant package successfully rejected")
+            (txid, sent_value) = self.chain_transaction(self.nodes[0], utxo['txid'], utxo['vout'], utxo['amount'], fee, 10)
+            for j in range(10):
+                transaction_package.append({'txid': txid, 'vout': j, 'amount': sent_value})
+
+        mempool = self.nodes[0].getrawmempool(True)
+        assert_equal(mempool[parent_transaction]['descendantcount'], MAX_DESCENDANTS)
+
+        # Sending one more chained transaction will fail
+        utxo = transaction_package.pop(0)
+        assert_raises_jsonrpc(-26, "too-long-mempool-chain", self.chain_transaction, self.nodes[0], utxo['txid'], utxo['vout'], utxo['amount'], fee, 10)
 
         # TODO: check that node1's mempool is as expected
 

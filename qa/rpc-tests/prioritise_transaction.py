@@ -13,18 +13,13 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
     def __init__(self):
         super().__init__()
         self.setup_clean_chain = True
-        self.num_nodes = 1
-
-        self.txouts = gen_return_txouts()
-
-    def setup_network(self):
-        self.nodes = []
-        self.is_network_split = False
-
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-printpriority=1"]))
-        self.relayfee = self.nodes[0].getnetworkinfo()['relayfee']
+        self.num_nodes = 2
+        self.extra_args = [["-printpriority=1"], ["-printpriority=1"]]
 
     def run_test(self):
+        self.txouts = gen_return_txouts()
+        self.relayfee = self.nodes[0].getnetworkinfo()['relayfee']
+
         utxo_count = 90
         utxos = create_confirmed_utxos(self.relayfee, self.nodes[0], utxo_count)
         base_fee = self.relayfee*100 # our transactions are smaller than 100kb
@@ -51,12 +46,12 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
 
         # add a fee delta to something in the cheapest bucket and make sure it gets mined
         # also check that a different entry in the cheapest bucket is NOT mined
-        self.nodes[0].prioritisetransaction(txids[0][0], int(3*base_fee*COIN))
+        self.nodes[0].prioritisetransaction(txid=txids[0][0], fee_delta=int(3*base_fee*COIN))
 
         self.nodes[0].generate(1)
 
         mempool = self.nodes[0].getrawmempool()
-        print("Assert that prioritised transaction was mined")
+        self.log.info("Assert that prioritised transaction was mined")
         assert(txids[0][0] not in mempool)
         assert(txids[0][1] in mempool)
 
@@ -70,7 +65,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
 
         # Add a prioritisation before a tx is in the mempool (de-prioritising a
         # high-fee transaction so that it's now low fee).
-        self.nodes[0].prioritisetransaction(high_fee_tx, -int(2*base_fee*COIN))
+        self.nodes[0].prioritisetransaction(txid=high_fee_tx, fee_delta=-int(2*base_fee*COIN))
 
         # Add everything back to mempool
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
@@ -88,7 +83,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         # High fee transaction should not have been mined, but other high fee rate
         # transactions should have been.
         mempool = self.nodes[0].getrawmempool()
-        print("Assert that de-prioritised transaction is still in mempool")
+        self.log.info("Assert that de-prioritised transaction is still in mempool")
         assert(high_fee_tx in mempool)
         for x in txids[2]:
             if (x != high_fee_tx):
@@ -107,22 +102,29 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         tx_hex = self.nodes[0].signrawtransaction(raw_tx)["hex"]
         tx_id = self.nodes[0].decoderawtransaction(tx_hex)["txid"]
 
-        try:
-            self.nodes[0].sendrawtransaction(tx_hex)
-        except JSONRPCException as exp:
-            assert_equal(exp.error['code'], -26) # insufficient fee
-            assert(tx_id not in self.nodes[0].getrawmempool())
-        else:
-            assert(False)
+        # This will raise an exception due to min relay fee not being met
+        assert_raises_jsonrpc(-26, "66: min relay fee not met", self.nodes[0].sendrawtransaction, tx_hex)
+        assert(tx_id not in self.nodes[0].getrawmempool())
 
         # This is a less than 1000-byte transaction, so just set the fee
         # to be the minimum for a 1000 byte transaction and check that it is
         # accepted.
-        self.nodes[0].prioritisetransaction(tx_id, int(self.relayfee*COIN))
+        self.nodes[0].prioritisetransaction(txid=tx_id, fee_delta=int(self.relayfee*COIN))
 
-        print("Assert that prioritised free transaction is accepted to mempool")
+        self.log.info("Assert that prioritised free transaction is accepted to mempool")
         assert_equal(self.nodes[0].sendrawtransaction(tx_hex), tx_id)
         assert(tx_id in self.nodes[0].getrawmempool())
+
+        # Test that calling prioritisetransaction is sufficient to trigger
+        # getblocktemplate to (eventually) return a new block.
+        mock_time = int(time.time())
+        self.nodes[0].setmocktime(mock_time)
+        template = self.nodes[0].getblocktemplate()
+        self.nodes[0].prioritisetransaction(txid=tx_id, fee_delta=-int(self.relayfee*COIN))
+        self.nodes[0].setmocktime(mock_time+10)
+        new_template = self.nodes[0].getblocktemplate()
+
+        assert(template != new_template)
 
 if __name__ == '__main__':
     PrioritiseTransactionTest().main()
