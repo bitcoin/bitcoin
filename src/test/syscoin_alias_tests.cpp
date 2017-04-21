@@ -446,7 +446,7 @@ BOOST_AUTO_TEST_CASE (generate_multisigalias)
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK(abs(balanceBefore - balanceAfter) < COIN);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str(), addressStr);
-	hex_str = AliasUpdate("node2", "jagnodemultisig1", "\"\"", "\"\"", "newpassword1", "\"\"", addressStr);
+	hex_str = AliasUpdate("node2", "jagnodemultisig1", "\"\"", "\"\"", "\"\"", "\"\"", addressStr);
 	BOOST_CHECK(hex_str != "");
 
 	// create 1 of 2
