@@ -9,6 +9,8 @@
 #include "tweak.h"
 #include "unlimited.h"
 
+#include <sstream>
+#include <string>
 #include <univalue.h>
 
 #define NUM_XPEDITED_STORE 10
@@ -30,23 +32,25 @@ bool CheckAndRequestExpeditedBlocks(CNode *pfrom)
             // Add the peer's listening port if it was provided (only misbehaving clients do not provide it)
             if (pfrom->addrFromPort != 0)
             {
+                // get addrFromPort
+                std::ostringstream ss;
+                ss << pfrom->addrFromPort;
+
                 int pos1 = strAddr.rfind(":");
                 int pos2 = strAddr.rfind("]:");
                 if (pos1 <= 0 && pos2 <= 0)
-                    strAddr += ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
+                    strAddr += ':' + ss.str();
 
                 pos1 = strPeerIP.rfind(":");
                 pos2 = strPeerIP.rfind("]:");
 
                 // Handle both ipv4 and ipv6 cases
                 if (pos1 <= 0 && pos2 <= 0)
-                    strListeningPeerIP = strPeerIP + ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
+                    strListeningPeerIP = strPeerIP + ':' + ss.str();
                 else if (pos1 > 0)
-                    strListeningPeerIP =
-                        strPeerIP.substr(0, pos1) + ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
+                    strListeningPeerIP = strPeerIP.substr(0, pos1) + ':' + ss.str();
                 else
-                    strListeningPeerIP =
-                        strPeerIP.substr(0, pos2) + ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
+                    strListeningPeerIP = strPeerIP.substr(0, pos2) + ':' + ss.str();
             }
             else
                 strListeningPeerIP = strPeerIP;
