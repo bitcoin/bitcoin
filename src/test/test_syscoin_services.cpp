@@ -818,10 +818,10 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	string newPasswordSalt = find_value(r.get_obj(), "passwordsalt").get_str();
 
 	BOOST_CHECK_EQUAL(newPassword, myPassword);
-	if(newPassword != oldPassword)
+	if(!newPassword.empty() && newPassword != oldPassword)
 	{
 		UniValue authresult;
-		if(!oldPassword.empty()
+		if(!oldPassword.empty())
 			BOOST_CHECK_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + oldPassword + " " + oldPasswordSalt + " Yes"), runtime_error);
 		BOOST_CHECK_NO_THROW(authresult = CallRPC(node, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
 		if(addressStr1 != "\"\"")
@@ -848,10 +848,10 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	if(!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "aliasinfo " + aliasname));
-		if(newPassword != oldPassword)
+		if(!newPassword.empty() && newPassword != oldPassword)
 		{
 			UniValue authresult;
-			if(!oldPassword.empty()
+			if(!oldPassword.empty())
 				BOOST_CHECK_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + oldPassword + " " + oldPasswordSalt + " Yes"), runtime_error);
 			BOOST_CHECK_NO_THROW(authresult = CallRPC(node, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
 			if(addressStr1 != "\"\"")
@@ -872,10 +872,10 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 	if(!otherNode2.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "aliasinfo " + aliasname));
-		if(newPassword != oldPassword)
+		if(!newPassword.empty() && newPassword != oldPassword)
 		{
 			UniValue authresult;
-			if(!oldPassword.empty()
+			if(!oldPassword.empty())
 				BOOST_CHECK_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + oldPassword + " " + oldPasswordSalt + " Yes"), runtime_error);
 			BOOST_CHECK_NO_THROW(authresult = CallRPC(node, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
 			if(addressStr1 != "\"\"")
