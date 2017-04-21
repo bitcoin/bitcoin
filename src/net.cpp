@@ -340,19 +340,29 @@ bool CConnman::CheckIncomingNonce(uint64_t nonce)
     return true;
 }
 
-CNode* CConnman::ConnectNode(const CAddress& addrConnect, const char *pszDest, bool fCountFailure)
+// if successful, this moves the passed grant to the constructed node
+bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot, bool fFeeler, bool fAddnode)
 {
-    if (pszDest == NULL) {
-        if (IsLocal(addrConnect))
-            return NULL;
+    //
+    // Initiate outbound network connection
+    //
 
-        // Look for an existing connection
-        CNode* pnode = FindNode((CService)addrConnect);
-        if (pnode)
-        {
-            LogPrintf("Failed to open new connection, already connected\n");
-            return NULL;
-        }
+    if (interruptNet) {
+        return false;
+    }
+    if (!fNetworkActive) {
+        return false;
+    }
+    if (IsLocal(addrConnect)) {
+        return false;
+    }
+
+    if (!pszDest) {
+        if (FindNode((CNetAddr)addrConnect) || IsBanned(addrConnect) ||
+            FindNode(addrConnect.ToStringIPPort()))
+            return false;
+    } else if (FindNode(std::string(pszDest))) {
+        return false;
     }
 
     /// debug print
@@ -370,7 +380,7 @@ CNode* CConnman::ConnectNode(const CAddress& addrConnect, const char *pszDest, b
         if (!IsSelectableSocket(hSocket)) {
             LogPrintf("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)\n");
             CloseSocket(hSocket);
-            return NULL;
+            return false;
         }
 
         if (pszDest && addrDest.IsValid()) {
@@ -385,7 +395,7 @@ CNode* CConnman::ConnectNode(const CAddress& addrConnect, const char *pszDest, b
                 pnode->MaybeSetAddrName(std::string(pszDest));
                 CloseSocket(hSocket);
                 LogPrintf("Failed to open new connection, already connected\n");
-                return NULL;
+                return false;
             }
         }
 
@@ -398,14 +408,27 @@ CNode* CConnman::ConnectNode(const CAddress& addrConnect, const char *pszDest, b
         pnode->nServicesExpected = ServiceFlags(addrDest.nServices & nRelevantServices);
         pnode->AddRef();
 
-        return pnode;
+        if (grantOutbound)
+            grantOutbound->MoveTo(pnode->grantOutbound);
+        if (fOneShot)
+            pnode->fOneShot = true;
+        if (fFeeler)
+            pnode->fFeeler = true;
+        if (fAddnode)
+            pnode->fAddnode = true;
+
+        GetNodeSignals().InitializeNode(pnode, *this);
+        {
+            LOCK(cs_vNodes);
+            vNodes.push_back(pnode);
+        }
+        return true;
     } else if (!proxyConnectionFailed) {
         // If connecting to the node failed, and failure is not caused by a problem connecting to
         // the proxy, mark this as an attempt.
         addrman.Attempt(addrDest, fCountFailure);
     }
-
-    return NULL;
+    return false;
 }
 
 void CConnman::DumpBanlist()
@@ -1909,48 +1932,6 @@ void CConnman::ThreadOpenAddedConnections()
         if (!interruptNet.sleep_for(std::chrono::seconds(tried ? 60 : 2)))
             return;
     }
-}
-
-// if successful, this moves the passed grant to the constructed node
-bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot, bool fFeeler, bool fAddnode)
-{
-    //
-    // Initiate outbound network connection
-    //
-    if (interruptNet) {
-        return false;
-    }
-    if (!fNetworkActive) {
-        return false;
-    }
-    if (!pszDest) {
-        if (IsLocal(addrConnect) ||
-            FindNode((CNetAddr)addrConnect) || IsBanned(addrConnect) ||
-            FindNode(addrConnect.ToStringIPPort()))
-            return false;
-    } else if (FindNode(std::string(pszDest)))
-        return false;
-
-    CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure);
-
-    if (!pnode)
-        return false;
-    if (grantOutbound)
-        grantOutbound->MoveTo(pnode->grantOutbound);
-    if (fOneShot)
-        pnode->fOneShot = true;
-    if (fFeeler)
-        pnode->fFeeler = true;
-    if (fAddnode)
-        pnode->fAddnode = true;
-
-    GetNodeSignals().InitializeNode(pnode, *this);
-    {
-        LOCK(cs_vNodes);
-        vNodes.push_back(pnode);
-    }
-
-    return true;
 }
 
 void CConnman::ThreadMessageHandler()
