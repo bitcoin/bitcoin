@@ -70,14 +70,7 @@ int32_t UnlimitedComputeBlockVersion(const CBlockIndex* pindexPrev, const Consen
 // The function also allows * or ? wildcards.
 // This is useful for the RPC calls.
 // Returns the first node that matches.
-<<<<<<< HEAD
-CNode* FindLikelyNode(const std::string& addrName);
-
-// process incoming unsolicited block
-bool HandleExpeditedBlock(CDataStream& vRecv,CNode* pfrom);
-=======
 extern CNode *FindLikelyNode(const std::string &addrName);
->>>>>>> 65caddb... Create expedited.cpp and expedited.h
 
 // Convert the BUComments to the string client's "subversion" string
 extern void settingsToUserAgentString();
@@ -192,6 +185,8 @@ extern CTweak<unsigned int> maxTxSize;
 extern CTweak<uint64_t> blockSigopsPerMb;
 extern CTweak<uint64_t> coinbaseReserve;
 extern CTweak<uint64_t> blockMiningSigopsPerMb;
+
+extern std::list<CStatBase *> mallocedStats;
 
 
 #endif

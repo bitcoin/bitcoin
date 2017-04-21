@@ -5,7 +5,6 @@
 #include "expedited.h"
 #include "tweak.h"
 #include "main.h"
-#include "rpc/server.h"
 #include "thinblock.h"
 #include "unlimited.h"
 
@@ -59,17 +58,15 @@ bool CheckAndRequestExpeditedBlocks(CNode *pfrom)
             {
                 if (!IsThinBlocksEnabled())
                 {
-                    LogPrintf("You do not have Thinblocks enabled.  You can not request expedited blocks from peer %s "
-                              "(%d).\n",
+                    return error("You do not have Thinblocks enabled.  You can not request expedited blocks from "
+                                 "peer %s (%d)",
                         strListeningPeerIP, pfrom->id);
-                    return false;
                 }
                 else if (!pfrom->ThinBlockCapable())
                 {
-                    LogPrintf("Thinblocks is not enabled on remote peer.  You can not request expedited blocks from "
-                              "peer %s (%d).\n",
+                    return error("Thinblocks is not enabled on remote peer.  You can not request expedited blocks "
+                                 "from peer %s (%d)",
                         strListeningPeerIP, pfrom->id);
-                    return false;
                 }
                 else
                 {
@@ -247,9 +244,8 @@ bool HandleExpeditedBlock(CDataStream &vRecv, CNode *pfrom)
     }
     else
     {
-        LogPrint("thin", "Received unknown (0x%x) expedited message from peer %s (%d). Hop %d.\n", msgType,
+        return error("Received unknown (0x%x) expedited message from peer %s (%d). Hop %d.\n", msgType,
             pfrom->addrName.c_str(), pfrom->id, hops);
-        return false;
     }
     return true;
 }
