@@ -663,8 +663,14 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 	BOOST_CHECK(pubKey.IsFullyValid());
 	BOOST_CHECK_NO_THROW(CallRPC(tonode, "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));	
 	BOOST_CHECK_NO_THROW(CallRPC(tonode, "importprivkey " + CSyscoinSecret(encryptionPrivKey).ToString() + " \"\" false", true, false));	
+	string strCipherPassword = "";
+	if(oldPassword != "\"\"")
+		BOOST_CHECK_EQUAL(EncryptMessage(vchPubEncryptionKey, oldPassword, strCipherPassword), true);
 
-
+	string strPasswordHex = HexStr(vchFromString(strCipherPassword));
+	if(strCipherPassword.empty())
+		strPasswordHex = "\"\"";
+	
 	string strCipherPrivateData = "";
 	if(privdata != "\"\"")
 		BOOST_CHECK_EQUAL(EncryptMessage(ParseHex(encryptionkey), privdata, strCipherPrivateData), true);
@@ -686,7 +692,7 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 	string safesearch = "\"\"";
 	string passwordsalt = "\"\"";
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex + " " + safesearch + " " + address + " " + password + " " + acceptTransfers + " " + expires + " " + passwordsalt + " " + strEncryptionPrivateKeyHex));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate sysrates.peg " + aliasname + " " + pubdata + " " + strPrivateHex + " " + safesearch + " " + address + " " + strPasswordHex + " " + acceptTransfers + " " + expires + " " + passwordsalt + " " + strEncryptionPrivateKeyHex));
 	GenerateBlocks(5, tonode);
 	GenerateBlocks(5, node);
 
