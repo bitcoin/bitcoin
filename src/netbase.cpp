@@ -413,7 +413,7 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
     return true;
 }
 
-bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRet, int nTimeout)
+bool CreateSocket(const CService &addrConnect, SOCKET& hSocketRet)
 {
     hSocketRet = INVALID_SOCKET;
 
@@ -444,6 +444,22 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
     // Set to non-blocking
     if (!SetSocketNonBlocking(hSocket, true))
         return error("ConnectSocketDirectly: Setting socket to non-blocking failed, error %s\n", NetworkErrorString(WSAGetLastError()));
+
+    hSocketRet = hSocket;
+    return true;
+}
+
+bool ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocket, int nTimeout)
+{
+    if (!CreateSocket(addrConnect, hSocket))
+        return false;
+
+    struct sockaddr_storage sockaddr;
+    socklen_t len = sizeof(sockaddr);
+    if (!addrConnect.GetSockAddr((struct sockaddr*)&sockaddr, &len)) {
+        LogPrintf("Cannot connect to %s: unsupported network\n", addrConnect.ToString());
+        return false;
+    }
 
     if (connect(hSocket, (struct sockaddr*)&sockaddr, len) == SOCKET_ERROR)
     {
@@ -497,8 +513,6 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
             return false;
         }
     }
-
-    hSocketRet = hSocket;
     return true;
 }
 

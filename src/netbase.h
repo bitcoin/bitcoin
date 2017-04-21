@@ -55,6 +55,7 @@ bool ConnectSocket(const CService &addr, SOCKET& hSocketRet, int nTimeout, bool 
 bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, int portDefault, int nTimeout, bool *outProxyConnectionFailed = 0);
 /** Return readable error string for a network error code */
 std::string NetworkErrorString(int err);
+bool CreateSocket(const CService &addrConnect, SOCKET& hSocketRet);
 /** Close socket and set hSocket to INVALID_SOCKET */
 bool CloseSocket(SOCKET& hSocket);
 /** Disable or enable blocking-mode for a socket */
