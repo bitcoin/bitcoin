@@ -69,6 +69,9 @@ AllowedArgs& AllowedArgs::addArg(const std::string& strArgsDefinition, CheckValu
         strArgs = strArgsDefinition.substr(0, is_index);
     }
 
+    if (strArgs == "")
+        strArgs = ",";
+
     std::stringstream streamArgs(strArgs);
     std::string strArg;
     bool firstArg = true;
@@ -508,6 +511,7 @@ BitcoinTx::BitcoinTx()
         .addArg("create", optionalBool, _("Create new, empty TX."))
         .addArg("json", optionalBool, _("Select JSON output"))
         .addArg("txid", optionalBool, _("Output only the hex-encoded transaction id of the resultant transaction."))
+        .addDebugArg("", optionalBool, "Read hex-encoded bitcoin transaction from stdin.")
         ;
 }
 
