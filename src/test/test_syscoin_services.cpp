@@ -665,7 +665,7 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 	BOOST_CHECK_NO_THROW(CallRPC(tonode, "importprivkey " + CSyscoinSecret(privKey).ToString() + " \"\" false", true, false));	
 	BOOST_CHECK_NO_THROW(CallRPC(tonode, "importprivkey " + CSyscoinSecret(encryptionPrivKey).ToString() + " \"\" false", true, false));	
 	string strCipherPassword = "";
-	if(oldPassword != "\"\"")
+	if(!oldPassword.empty())
 		BOOST_CHECK_EQUAL(EncryptMessage(vchPubEncryptionKey, oldPassword, strCipherPassword), true);
 
 	string strPasswordHex = HexStr(vchFromString(strCipherPassword));
