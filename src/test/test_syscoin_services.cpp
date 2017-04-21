@@ -721,6 +721,7 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 }
 string AliasUpdate(const string& node, const string& aliasname, const string& pubdata, const string& privdata, string password, string safesearch, string addressStr)
 {
+	string addressStr1 = addressStr;
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
 	UniValue r;
@@ -764,7 +765,9 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		CPubKey pubKey = privKey.GetPubKey();
 		vchPubKey = vector<unsigned char>(pubKey.begin(), pubKey.end());
 		CSyscoinAddress aliasAddress(pubKey.GetID());
-		addressStr = aliasAddress.ToString();
+		// only set address from password if address isn't passed in
+		if(addressStr == "\"\"")
+			addressStr = aliasAddress.ToString();
 		vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
 		vector<unsigned char> vchEncryptionPrivKey = ParseHex(encryptionprivkey);
 		encryptionPrivKey.Set(vchEncryptionPrivKey.begin(), vchEncryptionPrivKey.end(), true);
@@ -821,7 +824,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 		if(!oldPassword.empty())
 			BOOST_CHECK_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + oldPassword + " " + oldPasswordSalt + " Yes"), runtime_error);
 		BOOST_CHECK_NO_THROW(authresult = CallRPC(node, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
-		if(addressStr != "\"\"")
+		if(addressStr1 != "\"\"")
 			BOOST_CHECK_EQUAL(find_value(authresult.get_obj(), "readonly").get_bool(), true);
 	}
 	
@@ -851,7 +854,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 			if(!oldPassword.empty())
 				BOOST_CHECK_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + oldPassword + " " + oldPasswordSalt + " Yes"), runtime_error);
 			BOOST_CHECK_NO_THROW(authresult = CallRPC(node, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
-			if(addressStr != "\"\"")
+			if(addressStr1 != "\"\"")
 				BOOST_CHECK_EQUAL(find_value(authresult.get_obj(), "readonly").get_bool(), true);	
 		}
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , addressStr != "\"\""? addressStr: oldAddressStr);
@@ -875,7 +878,7 @@ string AliasUpdate(const string& node, const string& aliasname, const string& pu
 			if(!oldPassword.empty())
 				BOOST_CHECK_THROW(CallRPC(node, "aliasauthenticate " + aliasname + " " + oldPassword + " " + oldPasswordSalt + " Yes"), runtime_error);
 			BOOST_CHECK_NO_THROW(authresult = CallRPC(node, "aliasauthenticate " + aliasname + " " + myPassword + " " + newPasswordSalt + " Yes"));
-			if(addressStr != "\"\"")
+			if(addressStr1 != "\"\"")
 				BOOST_CHECK_EQUAL(find_value(authresult.get_obj(), "readonly").get_bool(), true);		
 		}
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "address").get_str() , addressStr != "\"\""? addressStr: oldAddressStr);
