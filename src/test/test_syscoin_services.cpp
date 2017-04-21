@@ -657,6 +657,7 @@ void AliasTransfer(const string& node, const string& aliasname, const string& to
 	CSyscoinAddress aliasAddress(pubKey.GetID());
 	vector<unsigned char> vchPrivKey(privKey.begin(), privKey.end());
 	vector<unsigned char> vchEncryptionPrivKey = ParseHex(encryptionprivkey);
+	vector<unsigned char> vchPubEncryptionKey = ParseHex(encryptionkey);
 	encryptionPrivKey.Set(vchEncryptionPrivKey.begin(), vchEncryptionPrivKey.end(), true);
 	BOOST_CHECK(privKey.IsValid());
 	BOOST_CHECK(encryptionPrivKey.IsValid());
