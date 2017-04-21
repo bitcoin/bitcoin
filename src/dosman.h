@@ -7,8 +7,29 @@
 #ifndef BITCOIN_DOSMANAGER_H
 #define BITCOIN_DOSMANAGER_H
 
+#include "netbase.h" // for CSubNet
+#include "sync.h" // for CCritalSection
+
+#ifdef DEBUG
+#include <univalue.h>
+#endif
+
+
 class CDoSManager
 {
+protected:
+#ifdef DEBUG
+    friend UniValue getstructuresizes(const UniValue &params, bool fHelp);
+#endif
+
+    // Whitelisted ranges. Any node connecting from these is automatically
+    // whitelisted (as well as those connecting to whitelisted binds).
+    std::vector<CSubNet> vWhitelistedRange;
+    mutable CCriticalSection cs_vWhitelistedRange;
+
+public:
+    bool IsWhitelistedRange(const CNetAddr &ip);
+    void AddWhitelistedRange(const CSubNet &subnet);
 };
 
 // actual definition should be in globals.cpp for ordered construction/destruction

@@ -389,11 +389,6 @@ protected:
     static CCriticalSection cs_setBanned;
     static bool setBannedIsDirty;
 
-    // Whitelisted ranges. Any node connecting from these is automatically
-    // whitelisted (as well as those connecting to whitelisted binds).
-    static std::vector<CSubNet> vWhitelistedRange;
-    static CCriticalSection cs_vWhitelistedRange;
-
     // Basic fuzz-testing
     void Fuzz(int nChance); // modifies ssSend
 
@@ -822,9 +817,6 @@ public:
     static void SweepBanned();
 
     void copyStats(CNodeStats &stats);
-
-    static bool IsWhitelistedRange(const CNetAddr &ip);
-    static void AddWhitelistedRange(const CSubNet &subnet);
 
     // Network stats
     static void RecordBytesRecv(uint64_t bytes);

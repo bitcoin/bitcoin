@@ -11,6 +11,7 @@
 #include "consensus/params.h"
 #include "consensus/validation.h"
 #include "core_io.h"
+#include "dosman.h"
 #include "expedited.h"
 #include "hash.h"
 #include "leakybucket.h"
@@ -1632,7 +1633,7 @@ extern UniValue getstructuresizes(const UniValue &params, bool fHelp)
         ret.push_back(Pair("setUnVerifiedOrphanTxHash", setUnVerifiedOrphanTxHash.size()));
     }
     ret.push_back(Pair("mapLocalHost", mapLocalHost.size()));
-    ret.push_back(Pair("CNode::vWhitelistedRange", CNode::vWhitelistedRange.size()));
+    ret.push_back(Pair("CDoSManager::vWhitelistedRange", dosMan.vWhitelistedRange.size()));
     ret.push_back(Pair("mapInboundConnectionTracker", mapInboundConnectionTracker.size()));
     ret.push_back(Pair("vUseDNSSeeds", vUseDNSSeeds.size()));
     ret.push_back(Pair("vAddedNodes", vAddedNodes.size()));

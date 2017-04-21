@@ -17,7 +17,7 @@
 #include "connmgr.h"
 #include "consensus/consensus.h"
 #include "crypto/common.h"
-#include "crypto/common.h"
+#include "dosman.h"
 #include "hash.h"
 #include "primitives/transaction.h"
 #include "requestManager.h"
@@ -631,26 +631,6 @@ void CNode::SetBannedSetDirty(bool dirty)
 }
 
 
-// BU moved: std::vector<CSubNet> CNode::vWhitelistedRange;
-// BU moved: CCriticalSection CNode::cs_vWhitelistedRange;
-
-bool CNode::IsWhitelistedRange(const CNetAddr &addr)
-{
-    LOCK(cs_vWhitelistedRange);
-    BOOST_FOREACH (const CSubNet &subnet, vWhitelistedRange)
-    {
-        if (subnet.Match(addr))
-            return true;
-    }
-    return false;
-}
-
-void CNode::AddWhitelistedRange(const CSubNet &subnet)
-{
-    LOCK(cs_vWhitelistedRange);
-    vWhitelistedRange.push_back(subnet);
-}
-
 #undef X
 #define X(name) stats.name = name
 void CNode::copyStats(CNodeStats &stats)
@@ -1054,7 +1034,7 @@ static void AcceptConnection(const ListenSocket &hListenSocket)
         if (!addr.SetSockAddr((const struct sockaddr *)&sockaddr))
             LogPrintf("Warning: Unknown socket family\n");
 
-    bool whitelisted = hListenSocket.whitelisted || CNode::IsWhitelistedRange(addr);
+    bool whitelisted = hListenSocket.whitelisted || dosMan.IsWhitelistedRange(addr);
     if (hSocket == INVALID_SOCKET)
     {
         int nErr = WSAGetLastError();
