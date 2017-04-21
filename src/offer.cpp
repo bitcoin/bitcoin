@@ -2579,7 +2579,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		if (!GetTxOfAlias(linkOffer.vchAlias, theLinkedAlias, aliastx))
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1564 - " + _("Could not find an alias with this name"));
 		// tiny alias payment so that linked alias can get a notification when calling offerlist (with accepts) that the linked alias made a sale
-		scriptPubKeyAcceptLinked << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << linkOffer.vchAlias << vchFromString("0") <<  linkOffer.vchAliasPeg << linkOffer.sCurrencyCode << OP_DROP << OP_2DROP << OP_2DROP;
+		scriptPubKeyAcceptLinked << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << linkOffer.vchAlias << vchFromString("0") <<  theLinkedAlias.vchAliasPeg << linkOffer.sCurrencyCode << OP_DROP << OP_2DROP << OP_2DROP;
 	}
 
 	
@@ -2667,7 +2667,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CCoinControl coinControl;
 	coinControl.fAllowOtherInputs = false;
 	coinControl.fAllowWatchOnly = false;
-	SendMoneySyscoin(buyerAlias.vchAlias, theAlias.vchAliasPeg, stringFromVch(theAlias.sCurrencyCode), aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
+	SendMoneySyscoin(buyerAlias.vchAlias, theAlias.vchAliasPeg, stringFromVch(theOffer.sCurrencyCode), aliasRecipient, aliasPaymentRecipient, vecSend, wtx, &coinControl);
 
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
