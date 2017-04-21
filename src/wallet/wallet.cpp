@@ -2223,7 +2223,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool ov
 
 // SYSCOIN
 bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
-                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl* coinControl,const vector<unsigned char> &vchAliasPeg, const string &currencyCode, bool sign, bool sysTx, bool bAliasPay)
+                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl* coinControl,bool sign, const vector<unsigned char> &vchAliasPeg, const string &currencyCode, bool sysTx, bool bAliasPay)
 {
     CAmount nValue = 0;
     int nChangePosRequest = nChangePosInOut;
