@@ -263,6 +263,7 @@ libparticl_wallet_a_SOURCES = \
   wallet/hdwallet.cpp \
   wallet/hdwalletdb.cpp \
   wallet/rpchdwallet.cpp \
+  blind.cpp \
   key/stealth.cpp \
   pos/miner.cpp \
   pos/kernel.cpp \

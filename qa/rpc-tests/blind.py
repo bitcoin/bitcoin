@@ -55,7 +55,9 @@ class BlindTest(ParticlTestFramework):
         assert(sxAddrTo1_1 == 'TetbYTGv5LiqyFiUD3a5HHbpSinQ9KiRYDGAMvRzPfz4RnHMbKGAwDr1fjLGJ5Eqg1XDwpeGyqWMiwdK3qM3zKWjzHNpaatdoHVzzA')
         
         txnHash = nodes[0].sendparttoblind(sxAddrTo1_1, 0.4, '', '', False, 'node0 -> node1 blind')
+        print("txnHash ", txnHash)
         txnHashes.append(txnHash)
+        
         
         
         

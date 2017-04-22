@@ -24,9 +24,14 @@ typedef std::map<uint256, CWalletTx> WalletTxMap;
 class CTempRecipient
 {
 public:
-    CTempRecipient() : nType(0), nAmount(0), fSubtractFeeFromAmount(false) {};
+    CTempRecipient() : nType(0), nAmount(0), fSubtractFeeFromAmount(false) {SetNull();};
     CTempRecipient(CAmount nAmount_, bool fSubtractFeeFromAmount_, CScript scriptPubKey_)
-        : nAmount(nAmount_), fSubtractFeeFromAmount(fSubtractFeeFromAmount_), scriptPubKey(scriptPubKey_) {};
+        : nAmount(nAmount_), fSubtractFeeFromAmount(fSubtractFeeFromAmount_), scriptPubKey(scriptPubKey_) {SetNull();};
+    
+    void SetNull()
+    {
+        fChange = false;
+    }
     
     uint8_t nType;
     CAmount nAmount;
@@ -119,10 +124,10 @@ public:
     int GetChangeAddress(CPubKey &pk);
     
     int AddStandardInputs(CWalletTx &wtx,
-        std::vector<CTempRecipient> vecSend,
+        std::vector<CTempRecipient> &vecSend,
         CExtKeyAccount *sea, CStoredExtKey *pc,
         std::string &sError);
-    int AddStandardInputs(CWalletTx &wtx, std::vector<CTempRecipient> vecSend, std::string &sError);
+    int AddStandardInputs(CWalletTx &wtx, std::vector<CTempRecipient> &vecSend, std::string &sError);
     
     
     bool LoadToWallet(const CWalletTx& wtxIn);

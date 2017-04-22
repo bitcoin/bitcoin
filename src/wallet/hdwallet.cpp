@@ -857,13 +857,18 @@ int CHDWallet::GetChangeAddress(CPubKey &pk)
 };
 
 int CHDWallet::AddStandardInputs(CWalletTx &wtx,
-    std::vector<CTempRecipient> vecSend,
+    std::vector<CTempRecipient> &vecSend,
     CExtKeyAccount *sea, CStoredExtKey *pc,
     std::string &sError)
 {
+    
+    CAmount nFeeRet = 0; // TODO
+    
+    
     CAmount nValue = 0;
     for (auto &r : vecSend)
         nValue += r.nAmount;
+    
     
     uint32_t nChild;
     for (size_t i = 0; i < vecSend.size(); ++i)
@@ -873,7 +878,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx,
         CKey sEphem;
         
         if (0 != pc->DeriveNextKey(sEphem, nChild, true))
-            return errorN(1, __func__, sError, _("TryDeriveNext failed."));
+            return errorN(1, sError, __func__, "TryDeriveNext failed.");
         
         if (r.address.type() == typeid(CStealthAddress))
         {
@@ -888,12 +893,12 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx,
                     break;
                 // if StealthSecret fails try again with new ephem key
                 if (0 != pc->DeriveNextKey(sEphem, nChild, true))
-                    return errorN(1, __func__, sError, _("TryDeriveNext failed."));
+                    return errorN(1, sError, __func__, "TryDeriveNext failed.");
             };
             if (k >= nTries)
-                return errorN(1, __func__, sError, _("Could not generate receiving public key."));
+                return errorN(1, sError, __func__, "Could not generate receiving public key.");
             
-            CPubKey pkEphem = sEphem.GetPubKey();
+            //CPubKey pkEphem = sEphem.GetPubKey();
             r.pkTo = CPubKey(pkSendTo);
             CKeyID idTo = r.pkTo.GetID();
             
@@ -909,7 +914,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx,
             ek58.SetKeyP(ek);
             uint32_t nDestChildKey;
             if (0 != ((CHDWallet*)pwalletMain)->ExtKeyGetDestination(ek, r.pkTo, nDestChildKey))
-                return errorN(1, __func__, sError, _("ExtKeyGetDestination failed."));
+                return errorN(1, sError, __func__, "ExtKeyGetDestination failed.");
             
             r.scriptPubKey = GetScriptForDestination(r.pkTo.GetID());
         } else
@@ -921,21 +926,11 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx,
             if (!GetPubKey(idTo, r.pkTo))
             {
                 if (0 != SecureMsgGetStoredKey(idTo, r.pkTo))
-                    return errorN(1, __func__, sError, _("No public key found for address %s."), CBitcoinAddress(idTo).ToString());
+                    return errorN(1, sError, __func__, _("No public key found for address %s.").c_str(), CBitcoinAddress(idTo).ToString());
             };
         };
         
         r.sEphem = sEphem;
-        
-        r.n = i;
-        
-        uint256 nonce = r.sEphem.ECDH(r.pkTo);
-        CSHA256().Write(nonce.begin(), 32).Finalize(nonce.begin());
-        
-        const char *message = r.sNarration.c_str();
-        size_t mlen = strlen(message);
-        
-        
     };
     
     
@@ -964,7 +959,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx,
         std::vector<COutput> vAvailableCoins;
         AvailableCoins(vAvailableCoins, true);
         
-        
         // Start with no fee and loop until there is enough fee
         for (;;)
         {
@@ -977,34 +971,292 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx,
             
             double dPriority = 0;
             
-            std::vector<uint8_t*> vpBlinds;
+            // Choose coins to use
+            CAmount nValueIn = 0;
+            setCoins.clear();
+            if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn))
+                return errorN(1, sError, __func__, _("Insufficient funds.").c_str());
             
-            vpBlinds.reserve(vecSend.size());
-            
-            // vpouts to the payees
-            for (auto &r : vecSend)
+            for (const auto &pcoin : setCoins)
             {
-                OUTPUT_PTR<CTxOutCT> txout = MAKE_OUTPUT<CTxOutCT>();
-                //r.commitment
-                
-                txNew.vpout.push_back(txout);
-                
-                r.vBlind.resize(32);
-                GetStrongRandBytes(&r.vBlind[0], 32);
-                vpBlinds.push_back(&r.vBlind[0]);
+                CAmount nCredit = pcoin.first->tx->vpout[pcoin.second]->GetValue();
+                //The coin age after the next block (depth+1) is used instead of the current,
+                //reflecting an assumption the user would accept a bit more delay for
+                //a chance at a free transaction.
+                //But mempool inputs might still be in the mempool, so their age stays 0
+                int age = pcoin.first->GetDepthInMainChain();
+                assert(age >= 0);
+                if (age != 0)
+                    age += 1;
+                dPriority += (double)nCredit * age;
             };
+            
+            const CAmount nChange = nValueIn - nValueToSelect;
+            if (nChange > 0)
+            {
+                CTxOutStandard tempOut;
+                // Fill an output to ourself
+                CPubKey vchPubKey;
+                if (0 != GetChangeAddress(vchPubKey))
+                    return errorN(1, sError, __func__, "GetChangeAddress failed.");
+                
+                CTempRecipient r;
+                r.nType = OUTPUT_STANDARD;
+                r.nAmount = nChange;
+                
+                CKeyID idChange = vchPubKey.GetID();
+                r.address = idChange;
+                r.scriptPubKey = GetScriptForDestination(idChange);
+                
+                tempOut.nValue = nChange;
+                tempOut.scriptPubKey = r.scriptPubKey;
+                
+                // Never create dust outputs; if we would, just
+                // add the dust to the fee.
+                if (tempOut.IsDust(dustRelayFee))
+                {
+                    //nChangePosInOut = -1;
+                    nFeeRet += nChange;
+                } else
+                {
+                    r.fChange = true;
+                    vecSend.push_back(r);
+                };
+            };
+            
+            // Fill vin
+            //
+            // Note how the sequence number is set to non-maxint so that
+            // the nLockTime set above actually works.
+            //
+            // BIP125 defines opt-in RBF as any nSequence < maxint-1, so
+            // we use the highest possible value in that range (maxint-2)
+            // to avoid conflicting with other possible uses of nSequence,
+            // and in the spirit of "smallest possible change from prior
+            // behavior."
+            for (const auto &coin : setCoins)
+                txNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second,CScript(),
+                    std::numeric_limits<unsigned int>::max() - (fWalletRbf ? 2 : 1)));
+            
+            // The fee will come out of the change
+            CAmount nValueOutPlain = 0;
+            
+            //std::vector<size_t> vBlindedOutputOffsets;
+            int nLastBlindedOutput = -1;
+            int nChangePosInOut = -1;
+            
+            //for (auto &r : vecSend)
+            for (size_t i = 0; i < vecSend.size(); ++i)
+            {
+                auto &r = vecSend[i];
+                
+                if (r.nType == OUTPUT_STANDARD)
+                {
+                    if (r.fChange)
+                        nChangePosInOut = i;
+                    
+                    nValueOutPlain += r.nAmount;
+                    OUTPUT_PTR<CTxOutStandard> txout = MAKE_OUTPUT<CTxOutStandard>(r.nAmount, r.scriptPubKey);
+                    
+                    r.n = txNew.vpout.size();
+                    txNew.vpout.push_back(txout);
+                } else
+                {
+                    nLastBlindedOutput = i;
+                    //vBlindedOutputOffsets.push_back(i);
+                    OUTPUT_PTR<CTxOutCT> txout = MAKE_OUTPUT<CTxOutCT>();
+                    
+                    txout->vData.resize(33);
+                    CPubKey pkEphem = r.sEphem.GetPubKey();
+                    memcpy(&txout->vData[0], pkEphem.begin(), 33);
+                    
+                    txout->scriptPubKey = r.scriptPubKey;
+                    
+                    r.n = txNew.vpout.size();
+                    txNew.vpout.push_back(txout);
+                };
+            };
+            
+            
+            std::vector<uint8_t*> vpBlinds;
+            std::vector<uint8_t> vBlindPlain;
+            
+            size_t nBlindedInputs = 1;
+            secp256k1_pedersen_commitment plainCommitment;
+            secp256k1_pedersen_commitment plainInputCommitment;
+            
+            
+            vBlindPlain.resize(32);
+            memset(&vBlindPlain[0], 0, 32);
+            vpBlinds.push_back(&vBlindPlain[0]);
+            if (!secp256k1_pedersen_commit(secp256k1_ctx_blind, &plainInputCommitment, &vBlindPlain[0], (uint64_t) nValueIn, secp256k1_generator_h))
+                return errorN(1, sError, __func__, "secp256k1_pedersen_commit failed for plain in.");
+            
+            
+            if (nValueOutPlain > 0)
+            {
+                vpBlinds.push_back(&vBlindPlain[0]);
+                
+                if (!secp256k1_pedersen_commit(secp256k1_ctx_blind, &plainCommitment, &vBlindPlain[0], (uint64_t) nValueOutPlain, secp256k1_generator_h))
+                    return errorN(1, sError, __func__, "secp256k1_pedersen_commit failed for plain out.");
+            };
+            
+            for (size_t i = 0; i < vecSend.size(); ++i)
+            {
+                auto &r = vecSend[i];
+                
+                if (r.nType == OUTPUT_CT)
+                {
+                    r.vBlind.resize(32);
+                    
+                    if (i == nLastBlindedOutput)
+                    {
+                        // Last to-be-blinded value: compute from all other blinding factors.
+                        // sum of output blinding values must equal sum of input blinding values
+                        if (!secp256k1_pedersen_blind_sum(secp256k1_ctx_blind, &r.vBlind[0], &vpBlinds[0], vpBlinds.size(), nBlindedInputs))
+                            return errorN(1, sError, __func__, "secp256k1_pedersen_blind_sum failed.");
+                    } else
+                    {
+                        GetStrongRandBytes(&r.vBlind[0], 32);
+                    };
+                    
+                    
+                    
+                    assert(r.n < (int)txNew.vpout.size());
+                    CTxOutCT *pout = (CTxOutCT*) txNew.vpout[r.n].get();
+                    
+                    uint64_t nValue = r.nAmount;
+                    if (!secp256k1_pedersen_commit(secp256k1_ctx_blind,
+                        &pout->commitment, (uint8_t*)vpBlinds.back(),
+                        nValue, secp256k1_generator_h))
+                        return errorN(1, sError, __func__, "secp256k1_pedersen_commit failed.");
+                    
+                    uint256 nonce = r.sEphem.ECDH(r.pkTo);
+                    CSHA256().Write(nonce.begin(), 32).Finalize(nonce.begin());
+                    
+                    const char *message = r.sNarration.c_str();
+                    size_t mlen = strlen(message);
+                    
+                    size_t nRangeProofLen = 5134;
+                    pout->vchRangeproof.resize(nRangeProofLen);
+                    
+                    // TODO: smarter min_value selection
+                    
+                    uint64_t min_value = 0;
+                    int ct_exponent = 2;
+                    int ct_bits = 32;
+                    
+                    if (1 != secp256k1_rangeproof_sign(secp256k1_ctx_blind,
+                        &pout->vchRangeproof[0], &nRangeProofLen,
+                        min_value, &pout->commitment,
+                        vpBlinds.back(), nonce.begin(),
+                        ct_exponent, ct_bits, 
+                        nValue,
+                        (const unsigned char*) message, mlen,
+                        NULL, 0,
+                        secp256k1_generator_h))
+                        return errorN(1, sError, __func__, "secp256k1_rangeproof_sign failed.");
+                    
+                    pout->vchRangeproof.resize(nRangeProofLen);
+                    
+                };
+            };
+            
+            
+            // Fill in dummy signatures for fee calculation.
+            int nIn = 0;
+            for (const auto &coin : setCoins)
+            {
+                const CScript& scriptPubKey = coin.first->tx->vpout[coin.second]->GetStandardOutput()->scriptPubKey;
+                SignatureData sigdata;
+
+                if (!ProduceSignature(DummySignatureCreatorParticl(this), scriptPubKey, sigdata))
+                    return errorN(1, sError, __func__, "Dummy signature failed.");
+                UpdateTransaction(txNew, nIn, sigdata);
+                nIn++;
+            }
+            
+            unsigned int nBytes = GetVirtualTransactionSize(txNew);
+
+            CTransaction txNewConst(txNew);
+            dPriority = txNewConst.ComputePriority(dPriority, nBytes);
+            
+            // Remove scriptSigs to eliminate the fee calculation dummy signatures
+            for (auto &vin : txNew.vin) {
+                vin.scriptSig = CScript();
+                vin.scriptWitness.SetNull();
+            }
+            
+            int currentConfirmationTarget = nTxConfirmTarget;
+            
+            CAmount nFeeNeeded = GetMinimumFee(nBytes, currentConfirmationTarget, mempool);
+            
+            // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
+            // because we must be at the maximum allowed fee.
+            if (nFeeNeeded < ::minRelayTxFee.GetFee(nBytes))
+                return errorN(1, sError, __func__, _("Transaction too large for fee policy.").c_str());
+            
+            if (nFeeRet >= nFeeNeeded)
+            {
+                // Reduce fee to only the needed amount if we have change
+                // output to increase.  This prevents potential overpayment
+                // in fees if the coins selected to meet nFeeNeeded result
+                // in a transaction that requires less fee than the prior
+                // iteration.
+                // TODO: The case where nSubtractFeeFromAmount > 0 remains
+                // to be addressed because it requires returning the fee to
+                // the payees and not the change output.
+                // TODO: The case where there is no change output remains
+                // to be addressed so we avoid creating too small an output.
+                if (nFeeRet > nFeeNeeded && nChangePosInOut != -1)
+                {
+                    auto &r = vecSend[nChangePosInOut];
+                    
+                    CAmount extraFeePaid = nFeeRet - nFeeNeeded;
+                    CTxOutBaseRef c = txNew.vpout[r.n];
+                    c->SetValue(c->GetValue() + extraFeePaid);
+                    r.nAmount = c->GetValue();
+                    
+                    nFeeRet -= extraFeePaid;
+                };
+                break; // Done, enough fee included.
+            };
+            
+            // Try to reduce change to include necessary fee
+            if (nChangePosInOut != -1)
+            {
+                auto &r = vecSend[nChangePosInOut];
+                
+                CAmount additionalFeeNeeded = nFeeNeeded - nFeeRet;
+                
+                CTxOutBaseRef c = txNew.vpout[r.n];
+                // Only reduce change if remaining amount is still a large enough output.
+                if (c->GetValue() >= MIN_FINAL_CHANGE + additionalFeeNeeded)
+                {
+                    c->SetValue(c->GetValue() - additionalFeeNeeded);
+                    r.nAmount = c->GetValue();
+                    nFeeRet += additionalFeeNeeded;
+                    break; // Done, able to increase fee from change
+                };
+            };
+
+            // Include more fee and try again.
+            nFeeRet = nFeeNeeded;
+            continue;
         };
         
-    }
+        // Embed the constructed transaction data in wtxNew.
+        wtx.SetTx(MakeTransactionRef(std::move(txNew)));
+        
+    } // cs_main, cs_wallet
     
     return 0;
 }
 
-int CHDWallet::AddStandardInputs(CWalletTx &wtx, std::vector<CTempRecipient> vecSend, std::string &sError)
+int CHDWallet::AddStandardInputs(CWalletTx &wtx, std::vector<CTempRecipient> &vecSend, std::string &sError)
 {
-    
     if (vecSend.size() < 1)
-        return errorN(1, __func__, sError, _("Transaction must have at least one recipient."));
+        return errorN(1, sError, __func__, _("Transaction must have at least one recipient.").c_str());
     
     CAmount nValue = 0;
     bool fCT = false;
@@ -1012,7 +1264,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, std::vector<CTempRecipient> vec
     {
         nValue += r.nAmount;
         if (nValue < 0 || r.nAmount < 0)
-            return errorN(1, __func__, sError, _("Transaction amounts must not be negative."));
+            return errorN(1, sError, __func__, _("Transaction amounts must not be negative.").c_str());
         
         if (r.nType == OUTPUT_CT)
             fCT = true;
@@ -1024,21 +1276,24 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, std::vector<CTempRecipient> vec
         && vecSend.size() < 2)
     {
         CTempRecipient &r0 = vecSend[0];
-        CTempRecipient r;
-        r.nType = r0.nType;
-        r.nAmount = r0.nAmount * ((float)GetRandInt(100) / 100.0);
-        r.address = r0.address;
+        CTempRecipient rN;
+        rN.nType = r0.nType;
+        rN.nAmount = r0.nAmount * ((float)GetRandInt(100) / 100.0);
+        rN.address = r0.address;
         
-        r0.nAmount -= r.nAmount;
+        r0.nAmount -= rN.nAmount;
+        vecSend.push_back(rN);
     };
+    
     
     
     CExtKeyAccount *sea;
     CStoredExtKey *pc;
     if (0 != GetDefaultConfidentialChain(NULL, sea, pc))
-        return errorN(1, __func__, sError, _("Could not get confidential chain from account."));
+        return errorN(1, sError, __func__, _("Could not get confidential chain from account.").c_str());
     
     uint32_t nLastHardened = pc->nHGenerated;
+    
     
     if (0 != AddStandardInputs(wtx, vecSend, sea, pc, sError))
     {
@@ -1055,7 +1310,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, std::vector<CTempRecipient> vec
         if (!wdb.WriteExtKey(idChain, *pc))
         {
             pc->nHGenerated = nLastHardened;
-            return errorN(1, __func__, sError, _("WriteExtKey failed."));
+            return errorN(1, sError, __func__, "WriteExtKey failed.");
         };
     }
     
@@ -1176,6 +1431,7 @@ int CHDWallet::GetDefaultConfidentialChain(CHDWalletDB *pwdb, CExtKeyAccount *&s
     if (0 != sekAccount->DeriveNextKey(evConfidential, nChild, true))
         return errorN(1, "%s: %s.", __func__, _("DeriveNextKey failed"));
     
+    
     CStoredExtKey *sekConfidential = new CStoredExtKey();
     sekConfidential->kp = evConfidential;
     vSubKeyPath = vAccountPath;
@@ -1199,6 +1455,7 @@ int CHDWallet::GetDefaultConfidentialChain(CHDWalletDB *pwdb, CExtKeyAccount *&s
             return errorN(1, "%s: %s.", __func__, _("WriteExtAccount failed"));
     };
     
+    pc = sekConfidential;
     return 0;
 };
 

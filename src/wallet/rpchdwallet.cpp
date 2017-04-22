@@ -2584,7 +2584,7 @@ UniValue setvote(const JSONRPCRequest &request)
     if (issue < 1)
         result.push_back(Pair("result", _("Cleared vote token.")));
     else
-        result.push_back(Pair("result", strprintf(_("Voting for option %u on proposal %u"), issue, option)));
+        result.push_back(Pair("result", strprintf(_("Voting for option %u on proposal %u"), option, issue)));
     
     result.push_back(Pair("from_height", nStartHeight));
     result.push_back(Pair("to_height", nEndHeight));
@@ -2731,7 +2731,7 @@ UniValue tallyvotes(const JSONRPCRequest &request)
     return result;
 };
 
-static int AddBlindedOutput(std::vector<CTempRecipient> vecSend, const CTxDestination &address, CAmount nValue,
+static int AddBlindedOutput(std::vector<CTempRecipient> &vecSend, const CTxDestination &address, CAmount nValue,
     bool fSubtractFeeFromAmount, std::string &sNarr, std::string &sError)
 {
     CTempRecipient r;
@@ -2804,8 +2804,8 @@ UniValue sendparttoblind(const JSONRPCRequest &request)
     };
     
     
-    throw std::runtime_error("TODO");
     
+    CReserveKey reservekey(pwallet);
     std::vector<CTempRecipient> vecSend;
     std::string sError;
     if (0 != AddBlindedOutput(vecSend, address.Get(), nAmount, fSubtractFeeFromAmount, sNarr, sError))
@@ -2814,9 +2814,23 @@ UniValue sendparttoblind(const JSONRPCRequest &request)
     if (0 != pwallet->AddStandardInputs(wtx, vecSend, sError))
         throw JSONRPCError(RPC_WALLET_ERROR, strprintf("AddStandardInputs failed: %s.", sError));
     
+    CValidationState state;
+    if (!pwallet->CommitTransaction(wtx, reservekey, g_connman.get(), state))
+        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Transaction commit failed: %s", state.GetRejectReason()));
     
+    UniValue vErrors(UniValue::VARR);
+    if (state.IsInvalid())
+    {
+        // This can happen if the mempool rejected the transaction.  Report
+        // what happened in the "errors" response.
+        vErrors.push_back(strprintf("Error: The transaction was rejected: %s", FormatStateMessage(state)));
+        
+        UniValue result(UniValue::VOBJ);
+        result.push_back(Pair("txid", wtx.GetHash().GetHex()));
+        result.push_back(Pair("errors", vErrors));
+        return result;
+    }
     
-
     return wtx.GetHash().GetHex();
 }
 

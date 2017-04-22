@@ -302,9 +302,7 @@ public:
             if ((nChildIn >> 31) == 1)
             {
                 // TODO: auto spawn new master key
-                if (fHardened)
-                    return errorN(1, "No more hardened keys can be derived from master.");
-                return errorN(1, "No more keys can be derived from master.");
+                return errorN(1, "No more %skeys can be derived from master.", fHardened ? "hardened " : "");
             };
             
             uint32_t nNum = fHardened ? nChildIn | 1 << 31 : nChildIn;

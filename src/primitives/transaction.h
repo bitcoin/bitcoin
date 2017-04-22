@@ -263,7 +263,6 @@ public:
     CAmount nValue;
     CScript scriptPubKey;
     
-    
     CAmount GetDustThreshold(const CFeeRate &minRelayTxFee) const
     {
         // "Dust" is defined in terms of CTransaction::minRelayTxFee,
@@ -327,7 +326,6 @@ public:
     CTxOutCT() : CTxOutBase(OUTPUT_CT) {};
     secp256k1_pedersen_commitment commitment;
     std::vector<uint8_t> vData; // first 33 bytes is always ephemeral pubkey, can contain token for stealth prefix matching
-    //CPubKey pkEphemeral;
     CScript scriptPubKey;
     
     std::vector<uint8_t> vchRangeproof;

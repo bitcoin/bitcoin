@@ -560,12 +560,15 @@ bool CheckStandardOutput(CValidationState &state, const CTxOutStandard *p, CAmou
 
 bool CheckBlindOutput(CValidationState &state, const CTxOutCT *p)
 {
+    return false;
     
     return true;
 }
 
 bool CheckAnonOutput(CValidationState &state, const CTxOutRingCT *p)
 {
+    
+    return false;
     
     return true;
 }
@@ -716,6 +719,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
                               bool* pfMissingInputs, int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
                               bool fOverrideMempoolLimit, const CAmount& nAbsurdFee, std::vector<uint256>& vHashTxnToUncache)
 {
+    
     const CTransaction& tx = *ptx;
     const uint256 hash = tx.GetHash();
     AssertLockHeld(cs_main);
