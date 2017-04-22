@@ -1034,12 +1034,9 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot extract destination of alias payment input");
 				return true;
-			}
-			else
-			{
-				CSyscoinAddress prevaddy(aliasDest);
-				prevaddy = CSyscoinAddress(prevaddy.ToString());
-			}
+			}	
+			CSyscoinAddress prevaddy(aliasDest);
+			prevaddy = CSyscoinAddress(prevaddy.ToString());
 			const uint256 &txHash = tx.GetHash();
 			vector<CAliasPayment> vtxPaymentPos;
 			if(paliasdb->ExistsAliasPayment(vchAlias))
