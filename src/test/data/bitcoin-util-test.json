@@ -42,6 +42,7 @@
     "args": ["-", "delin=31"],
     "input": "tx394b54bb.hex",
     "return_code": 1,
+    "error_txt": "error: Invalid TX input index '31'",
     "description": "Attempts to delete an input with a bad index from a transaction. Expected to fail."
   },
   { "exec": "./bitcoin-tx",
@@ -60,6 +61,7 @@
     "args": ["-", "delout=2"],
     "input": "tx394b54bb.hex",
     "return_code": 1,
+    "error_txt": "error: Invalid TX output index '2'",
     "description": "Attempts to delete an output with a bad index from a transaction. Expected to fail."
   },
   { "exec": "./bitcoin-tx",
@@ -73,6 +75,38 @@
     "input": "tx394b54bb.hex",
     "output_cmp": "tt-locktime317000-out.json",
     "description": "Adds an nlocktime to a transaction (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "outaddr=1"],
+    "return_code": 1,
+    "error_txt": "error: TX output missing or too many separators",
+    "description": "Malformed outaddr argument (no address specified). Expected to fail."
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "outaddr=1:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o:garbage"],
+    "return_code": 1,
+    "error_txt": "error: TX output missing or too many separators",
+    "description": "Malformed outaddr argument (too many separators). Expected to fail."
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "outpubkey=0"],
+    "return_code": 1,
+    "error_txt": "error: TX output missing or too many separators",
+    "description": "Malformed outpubkey argument (no pubkey specified). Expected to fail."
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "outpubkey=0:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:W:non53nse"],
+    "return_code": 1,
+    "error_txt": "error: TX output missing or too many separators",
+    "description": "Malformed outpubkey argument (too many separators). Expected to fail."
   },
   { "exec": "./bitcoin-tx",
     "args":
@@ -233,6 +267,7 @@
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
      "outdata=4:badhexdata"],
     "return_code": 1,
+    "error_txt": "error: invalid TX output data",
     "description": "Attempts to create a new transaction with one input and an output with malformed hex data. Expected to fail"
   },
   { "exec": "./bitcoin-tx",
@@ -241,6 +276,7 @@
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
      "outdata=badhexdata"],
     "return_code": 1,
+    "error_txt": "error: invalid TX output data",
     "description": "Attempts to create a new transaction with one input and an output with no value and malformed hex data. Expected to fail"
   },
   { "exec": "./bitcoin-tx",

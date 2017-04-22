@@ -331,6 +331,7 @@ void StopRPC()
 {
     LogPrint("rpc", "Stopping RPC\n");
     deadlineTimers.clear();
+    DeleteAuthCookie();
     g_rpcSignals.Stopped();
 }
 

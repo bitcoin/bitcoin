@@ -2030,7 +2030,7 @@
     </message>
     <message>
         <location line="+60"/>
-        <location filename="../rpcconsole.cpp" line="+456"/>
+        <location filename="../rpcconsole.cpp" line="+460"/>
         <location line="+719"/>
         <source>Select a peer to view detailed information.</source>
         <translation type="unfinished"></translation>
