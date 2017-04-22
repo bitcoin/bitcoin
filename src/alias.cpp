@@ -1054,7 +1054,10 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			payment.txHash = txHash;
 			payment.nOut = nOut;
 			payment.nHeight = nHeight;
-			payment.strFromAlias = prevaddy.aliasName;
+			if(prevaddy.isAlias)
+				payment.strFrom = prevaddy.aliasName;
+			else
+				payment.strFrom = prevaddy.ToString();
 			vtxPaymentPos.push_back(payment);
 			if (!dontaddtodb && !paliasdb->WriteAliasPayment(vchAlias, vtxPaymentPos))
 			{
@@ -3003,10 +3006,10 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
-    string strFromAlias = params[0].get_str();
+    string strFrom = params[0].get_str();
 	CAliasIndex theAlias;
 	CTransaction aliasTx;
-	if (!GetTxOfAlias(vchFromString(strFromAlias), theAlias, aliasTx, true))
+	if (!GetTxOfAlias(vchFromString(strFrom), theAlias, aliasTx, true))
 		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid alias");
     string strCurrency = params[1].get_str();
     UniValue sendTo = params[2].get_obj();
@@ -3043,7 +3046,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
     EnsureWalletIsUnlocked();
     // Check funds
 	UniValue balanceParams(UniValue::VARR);
-	balanceParams.push_back(strFromAlias);
+	balanceParams.push_back(strFrom);
 	const UniValue &resBalance = tableRPC.execute("aliasbalance", balanceParams);
 	CAmount nBalance = AmountFromValue(resBalance);
     if (totalAmount > nBalance)
