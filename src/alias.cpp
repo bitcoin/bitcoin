@@ -2878,10 +2878,10 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			UniValue oPayment(UniValue::VOBJ);
 			oPayment.push_back(Pair("type", opName));
 			oPayment.push_back(Pair("txid", tx.GetHash().GetHex()));
-			oPayment.push_back(Pair("sysamount", ValueFromAmount(tx.GetValueOut()).write()));
+			oPayment.push_back(Pair("sysamount", ValueFromAmount(tx.vout[txPaymentPos.nOut].nAmount).write()));
 			oPayment.push_back(Pair("currency", stringFromVch(vchCurrencyCode)));
 			int precision = 2;
-			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(vchAliasPeg, vchCurrencyCode, tx.GetValueOut(), txPaymentPos.nHeight, precision);
+			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(vchAliasPeg, vchCurrencyCode, tx.vout[txPaymentPos.nOut].nAmount, txPaymentPos.nHeight, precision);
 			if(nPricePerUnit == 0)
 				oPayment.push_back(Pair("amount", "0"));
 			else
