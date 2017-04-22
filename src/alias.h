@@ -72,7 +72,7 @@ public:
 	uint64_t nHeight;
 	unsigned char nOut;
 	uint256 txHash;
-	std::string strFrom;
+	std::vector<unsigned char> vchFrom;
 	CAliasPayment() {
         SetNull();
     }
@@ -83,7 +83,7 @@ public:
 		READWRITE(txHash);
 		READWRITE(VARINT(nOut));
 		READWRITE(VARINT(nHeight));
-		READWRITE(strFrom);
+		READWRITE(vchFrom);
 	}
 
     inline friend bool operator==(const CAliasPayment &a, const CAliasPayment &b) {
@@ -91,7 +91,7 @@ public:
 		a.txHash == b.txHash
         && a.nOut == b.nOut
 		&& a.nHeight == b.nHeight
-		&& a.strFrom == b.strFrom
+		&& a.vchFrom == b.vchFrom
         );
     }
 
@@ -99,7 +99,7 @@ public:
 		txHash = b.txHash;
         nOut = b.nOut;
 		nHeight = b.nHeight;
-		strFrom = b.strFrom;
+		vchFrom = b.vchFrom;
         return *this;
     }
 
@@ -107,8 +107,8 @@ public:
         return !(a == b);
     }
 
-    inline void SetNull() { strFrom.clear(); nHeight = 0;txHash.SetNull(); nOut = 0;}
-    inline bool IsNull() const { return (strFrom.empty() && nHeight == 0 && txHash.IsNull() && nOut == 0); }
+    inline void SetNull() { vchFrom.clear(); nHeight = 0;txHash.SetNull(); nOut = 0;}
+    inline bool IsNull() const { return (vchFrom.empty() && nHeight == 0 && txHash.IsNull() && nOut == 0); }
 
 };
 class CAliasIndex {

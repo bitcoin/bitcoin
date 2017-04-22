@@ -1052,9 +1052,9 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			payment.nOut = nOut;
 			payment.nHeight = nHeight;
 			if(prevaddy.isAlias)
-				payment.strFrom = prevaddy.aliasName;
+				payment.vchFrom = vchFromString(prevaddy.aliasName);
 			else
-				payment.strFrom = prevaddy.ToString();
+				payment.vchFrom = vchFromString(prevaddy.ToString());
 			vtxPaymentPos.push_back(payment);
 			if (!dontaddtodb && !paliasdb->WriteAliasPayment(vchAlias, vtxPaymentPos))
 			{
@@ -2836,7 +2836,18 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 				opName += "("+_("feedback")+")";
 		}
 		else if(DecodeCertTx(tx, op, nOut, vvch) )
+		{
 			opName = certFromOp(op);
+			UniValue oName(UniValue::VOBJ);
+			oName.push_back(Pair("type", opName));
+			CCert cert(tx);
+			if(!cert.IsNull())
+			{
+				cert.txHash = tx.GetHash();
+				if(BuildCertJson(cert, false, oName, strWalletless))
+					oUpdates.push_back(oName);
+			}
+		}
 		else if(DecodeAliasTx(tx, op, nOut, vvch, false) )
 		{
 			opName = aliasFromOp(op);
@@ -2865,7 +2876,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		UniValue oPayment(UniValue::VOBJ);
 		oPayment.push_back(Pair("type", aliasFromOp(op)));
 		oPayment.push_back(Pair("txid", txPaymentPos.txHash.GetHex()));
-		oPayment.push_back(Pair("from", txPaymentPos.strFrom));
+		oPayment.push_back(Pair("from", stringFromVch(txPaymentPos.vchFrom)));
 		oPayment.push_back(Pair("currency", stringFromVch(vchCurrencyCode)));	
 		oPayment.push_back(Pair("sysamount", ValueFromAmount(tx.vout[txPaymentPos.nOut].nValue).write()));
 		int precision = 2;
