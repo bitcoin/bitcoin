@@ -2856,6 +2856,9 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 	BOOST_FOREACH(txPaymentPos, vtxPaymentPos) {
 		if(oPaymentDetails[txPaymentPos.txHash] == 1 || (vvch.size() >= 2 && vvch[1] == vchFromString("1")))
 			continue;
+		CTransaction tx;		
+		if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
+			continue;
 		oPaymentDetails[txPaymentPos.txHash] = 1;
 		const vector<unsigned char> &vchCurrencyCode = vvch.size() >= 4? vvch[3]: vchFromString("");
 		const vector<unsigned char> &vchAliasPeg = vvch.size() >= 3? vvch[2]: vchFromString("");
