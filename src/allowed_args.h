@@ -5,9 +5,11 @@
 #ifndef BITCOIN_ALLOWED_ARGS_H
 #define BITCOIN_ALLOWED_ARGS_H
 
+#include <functional>
 #include <list>
 #include <map>
-#include <functional>
+#include <string>
+#include "tweak.h"
 
 namespace AllowedArgs {
 
@@ -113,13 +115,13 @@ public:
 class Bitcoind : public AllowedArgs
 {
 public:
-    Bitcoind();
+    Bitcoind(CTweakMap *pTweaks=nullptr);
 };
 
 class BitcoinQt : public AllowedArgs
 {
 public:
-    BitcoinQt();
+    BitcoinQt(CTweakMap *pTweaks=nullptr);
 };
 
 class BitcoinTx : public AllowedArgs

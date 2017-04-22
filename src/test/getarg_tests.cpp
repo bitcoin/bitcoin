@@ -29,7 +29,7 @@ static void ResetArgs(const std::string& strArg)
     BOOST_FOREACH(std::string& s, vecArg)
         vecChar.push_back(s.c_str());
 
-    ParseParameters(vecChar.size(), &vecChar[0], AllowedArgs::Bitcoind());
+    ParseParameters(vecChar.size(), &vecChar[0], AllowedArgs::Bitcoind(&tweaks));
 }
 
 BOOST_AUTO_TEST_CASE(boolarg)
@@ -169,20 +169,12 @@ BOOST_AUTO_TEST_CASE(boolargno)
     BOOST_CHECK(GetBoolArg("-listen", false));
 }
 
-BOOST_AUTO_TEST_CASE(blockSizeAcceptLimit)
+BOOST_AUTO_TEST_CASE(tweakArgs)
 {
-    ResetArgs("-excessiveblocksize=5004000");
-    BOOST_CHECK_EQUAL(Policy::blockSizeAcceptLimit(), 5004000);
-
-    // blocksizeacceptlimit always wins
-    ResetArgs("-excessiveblocksize=5004000 -blocksizeacceptlimit=1.2");
-    BOOST_CHECK_EQUAL(Policy::blockSizeAcceptLimit(), 1200000);
-
-    ResetArgs("-blocksizeacceptlimit=1.2");
-    BOOST_CHECK_EQUAL(Policy::blockSizeAcceptLimit(), 1200000);
-
-    ResetArgs("-blocksizeacceptlimit=1.25");
-    BOOST_CHECK_EQUAL(Policy::blockSizeAcceptLimit(), 1200000);
+    ResetArgs("-mining.comment=I_Am_A_Meat_Popsicle -mining.coinbaseReserve=250 -wallet.maxTxFee=0.001");
+    BOOST_CHECK_EQUAL(GetArg("-mining.comment", "foo"), "I_Am_A_Meat_Popsicle");
+    BOOST_CHECK_EQUAL(GetArg("-mining.coinbaseReserve", 100), 250);
+    BOOST_CHECK_EQUAL(GetArg("-wallet.maxTxFee", ""), "0.001");
 }
 
 BOOST_AUTO_TEST_CASE(unrecognizedArgs)

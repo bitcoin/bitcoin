@@ -2,8 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "allowed_args.h"
+#include <set>
 
+#include "allowed_args.h"
 #include "chainparams.h"
 #include "httpserver.h"
 #include "init.h"
@@ -15,13 +16,16 @@
 #include "tinyformat.h"
 #include "torcontrol.h"
 #include "txdb.h"
+#include "tweak.h"
 #include "qt/guiconstants.h"
 #include "wallet/wallet.h"
 #include "util.h"
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
 
-#include <set>
+#ifdef ENABLE_WALLET
+#include "wallet/wallet.h"
+#endif
 
 namespace AllowedArgs {
 
@@ -193,7 +197,7 @@ static void addChainSelectionOptions(AllowedArgs& allowedArgs)
 {
     allowedArgs
         .addHeader(_("Chain selection options:"))
-        .addArg("testnet-ft", optionalBool, _("Use the flexible-transactions testnet"))
+        .addArg("chain_nol", optionalBool, _("Use the no-limit blockchain"))
         .addArg("testnet", optionalBool, _("Use the test chain"))
         .addDebugArg("regtest", optionalBool,
             "Enter regression test mode, which uses a special chain in which blocks can be solved instantly. "
@@ -232,8 +236,11 @@ static void addGeneralOptions(AllowedArgs& allowedArgs, HelpMessageMode mode)
         .addArg("maxorphantx=<n>", requiredInt, strprintf(_("Keep at most <n> unconnectable transactions in memory (default: %u)"), DEFAULT_MAX_ORPHAN_TRANSACTIONS))
         .addArg("maxmempool=<n>", requiredInt, strprintf(_("Keep the transaction memory pool below <n> megabytes (default: %u)"), DEFAULT_MAX_MEMPOOL_SIZE))
         .addArg("mempoolexpiry=<n>", requiredInt, strprintf(_("Do not keep transactions in the mempool longer than <n> hours (default: %u)"), DEFAULT_MEMPOOL_EXPIRY))
+        .addArg("ophanpoolexpiry=<n>", requiredInt, strprintf(_("Do not keep transactions in the orphanpool longer than <n> hours (default: %u)"),
+            DEFAULT_ORPHANPOOL_EXPIRY))
         .addArg("par=<n>", requiredInt, strprintf(_("Set the number of script verification threads (%u to %d, 0 = auto, <0 = leave that many cores free, default: %d)"),
             -GetNumCores(), MAX_SCRIPTCHECK_THREADS, DEFAULT_SCRIPTCHECK_THREADS))
+        .addArg("parallel=<n>", optionalBool, strprintf(_("Turn Parallel Block Validation on or off (default: %u)"), 1))
 #ifndef WIN32
         .addArg("pid=<file>", requiredStr, strprintf(_("Specify pid file (default: %s)"), BITCOIN_PID_FILENAME))
 #endif
@@ -253,17 +260,24 @@ static void addConnectionOptions(AllowedArgs& allowedArgs)
         .addArg("banscore=<n>", requiredInt, strprintf(_("Threshold for disconnecting misbehaving peers (default: %u)"), DEFAULT_BANSCORE_THRESHOLD))
         .addArg("bantime=<n>", requiredInt, strprintf(_("Number of seconds to keep misbehaving peers from reconnecting (default: %u)"), DEFAULT_MISBEHAVING_BANTIME))
         .addArg("bind=<addr>", requiredStr, _("Bind to given address and always listen on it. Use [host]:port notation for IPv6"))
+        .addArg("bitnodes", optionalBool, _("Query for peer addresses via Bitnodes API, if low on addresses (default: 1 unless -connect)"))
         .addArg("connect=<ip>", optionalStr, _("Connect only to the specified node(s)"))
+        .addArg("connect-thinblock=<ip:port>", requiredStr, _("Connect to a thinblock node(s). Blocks will only be downloaded from a thinblock peer.  If no connections "
+                                                  "are possible then regular blocks will then be downloaded form any other connected peers"))
         .addArg("discover", optionalBool, _("Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)"))
         .addArg("dns", optionalBool, _("Allow DNS lookups for -addnode, -seednode and -connect") + " " + strprintf(_("(default: %u)"), DEFAULT_NAME_LOOKUP))
         .addArg("dnsseed", optionalBool, _("Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)"))
         .addArg("externalip=<ip>", requiredStr, _("Specify your own public address"))
+        .addArg("forcebitnodes", optionalBool, strprintf(_("Always query for peer addresses via Bitnodes API (default: %u)"), DEFAULT_FORCEBITNODES))
         .addArg("forcednsseed", optionalBool, strprintf(_("Always query for peer addresses via DNS lookup (default: %u)"), DEFAULT_FORCEDNSSEED))
         .addArg("listen", optionalBool, _("Accept connections from outside (default: 1 if no -proxy or -connect)"))
         .addArg("listenonion", optionalBool, strprintf(_("Automatically create Tor hidden service (default: %d)"), DEFAULT_LISTEN_ONION))
         .addArg("maxconnections=<n>", optionalInt, strprintf(_("Maintain at most <n> connections to peers (default: %u)"), DEFAULT_MAX_PEER_CONNECTIONS))
+        .addArg("maxoutconnections=<n>", requiredInt, strprintf(_("Initiate at most <n> connections to peers (default: %u).  If this number is higher than "
+                    "--maxconnections, it will be reduced to --maxconnections"), DEFAULT_MAX_OUTBOUND_CONNECTIONS))
         .addArg("maxreceivebuffer=<n>", requiredInt, strprintf(_("Maximum per-connection receive buffer, <n>*1000 bytes (default: %u)"), DEFAULT_MAXRECEIVEBUFFER))
         .addArg("maxsendbuffer=<n>", requiredInt, strprintf(_("Maximum per-connection send buffer, <n>*1000 bytes (default: %u)"), DEFAULT_MAXSENDBUFFER))
+        .addArg("min-xthin-nodes=<n>", requiredInt, strprintf(_("Minimum number of xthin nodes to automatically find and connect (default: %d)"), MIN_XTHIN_NODES))
         .addArg("onion=<ip:port>", requiredStr, strprintf(_("Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)"), "-proxy"))
         .addArg("onlynet=<net>", requiredStr, _("Only connect to nodes in network <net> (ipv4, ipv6 or onion)"))
         .addArg("permitbaremultisig", optionalBool, strprintf(_("Relay non-P2SH multisig (default: %u)"), DEFAULT_PERMIT_BAREMULTISIG))
@@ -283,6 +297,8 @@ static void addConnectionOptions(AllowedArgs& allowedArgs)
         .addArg("upnp", optionalBool, _("Use UPnP to map the listening port (default: 0)"))
 #endif
 #endif
+        .addArg("usednsseed=<host>", requiredStr, _("Add a custom DNS seed to use.  If at least one custom DNS seed "
+                                "is set, the default DNS seeds will be ignored."))
         .addArg("whitebind=<addr>", requiredStr, _("Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6"))
         .addArg("whitelist=<netmask>", requiredStr, _("Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.") +
             " " + _("Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway"))
@@ -390,16 +406,27 @@ static void addNodeRelayOptions(AllowedArgs& allowedArgs)
     allowedArgs
         .addHeader(_("Node relay options:"))
         .addDebugArg("acceptnonstdtxn", optionalBool, strprintf("Relay and mine \"non-standard\" transactions (%sdefault: %u)", "testnet/regtest only; ", true))
-        .addArg("blocksizeacceptlimit=<n>", requiredAmount, strprintf("This node will not accept blocks larger than this limit. Unit is in MB (default: %.1f)", DEFAULT_BLOCK_ACCEPT_SIZE))
         .addArg("bytespersigop=<n>", requiredInt, strprintf(_("Minimum bytes per sigop in transactions we relay and mine (default: %u)"), DEFAULT_BYTES_PER_SIGOP))
         .addArg("datacarrier", optionalBool, strprintf(_("Relay and mine data carrier transactions (default: %u)"), DEFAULT_ACCEPT_DATACARRIER))
         .addArg("datacarriersize=<n>", requiredInt, strprintf(_("Maximum size of data in data carrier transactions we relay and mine (default: %u)"), MAX_OP_RETURN_RELAY))
-        .addDebugArg("excessiveblocksize=<n>", requiredInt, "This node will not accept blocks larger than this limit. Unit is in bytes. Superseded by -blocksizeacceptlimit")
+        .addArg("excessiveacceptdepth=<n>", requiredInt, strprintf(_("Excessive blocks are accepted if this many blocks are mined on top of them (default: %u)"), DEFAULT_EXCESSIVE_ACCEPT_DEPTH))
+        .addArg("excessiveblocksize=<n>", requiredInt, strprintf(_("Blocks above this size in bytes are considered excessive.  (default: %u)"), DEFAULT_EXCESSIVE_BLOCK_SIZE))
         .addArg("expeditedblock=<host>", requiredStr, _("Request expedited blocks from this host whenever we are connected to it"))
         .addArg("maxexpeditedblockrecipients=<n>", requiredInt, _("The maximum number of nodes this node will forward expedited blocks to"))
         .addArg("maxexpeditedtxrecipients=<n>", requiredInt, _("The maximum number of nodes this node will forward expedited transactions to"))
+        .addArg("maxlimitertxfee=<amt>", requiredAmount, strprintf(_("Fees (in satoshi/byte) larger than this are always relayed (default: %s)"), DEFAULT_MAXLIMITERTXFEE))
+        .addArg("minlimitertxfee=<amt>", requiredAmount, strprintf(_("Fees (in satoshi/byte) smaller than this are considered "
+                                                                     "zero fee and subject to -limitfreerelay (default: %s)"), DEFAULT_MINLIMITERTXFEE))
         .addArg("minrelaytxfee=<amt>", requiredAmount, strprintf(_("Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)"),
             CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)))
+        .addArg("receiveavg-<n>", requiredInt, strprintf(_("The average rate that data can be received in kB/s (default: %u)"), DEFAULT_AVE_RECV))
+        .addArg("receiveburst=<n>", requiredInt, strprintf(_("The maximum rate that data can be received in kB/s.  If there has been a period of lower "
+                           "than average data rates, the client may receive extra data to bring the average back to "
+                                                             "'-receiveavg' but the data rate will not exceed this parameter (default: %u)"), DEFAULT_MAX_RECV_BURST))
+        .addArg("sendavg-<n>", requiredInt, strprintf(_("The average rate that data can be sent in kB/s (default: %u)"), DEFAULT_AVE_SEND))
+        .addArg("sendburst-<n>", requiredInt, strprintf(_("The maximum rate that data can be sent in kB/s.  If there has been a period of lower than "
+                        "average data rates, the client may send extra data to bring the average back to '-receiveavg' "
+                                                          "but the data rate will not exceed this parameter (default: %u)"), DEFAULT_MAX_SEND_BURST))
         .addArg("use-thinblocks", optionalBool, _("Enable thin blocks to speed up the relay of blocks (default: 1)"))
         ;
 }
@@ -411,7 +438,7 @@ static void addBlockCreationOptions(AllowedArgs& allowedArgs)
         .addArg("blockminsize=<n>", requiredInt, strprintf(_("Set minimum block size in bytes (default: %u)"), DEFAULT_BLOCK_MIN_SIZE))
         .addArg("blockmaxsize=<n>", requiredInt, strprintf("Set maximum block size in bytes (default: %d)", DEFAULT_BLOCK_MAX_SIZE))
         .addArg("blockprioritysize=<n>", requiredInt, strprintf(_("Set maximum size of high-priority/low-fee transactions in bytes (default: %d)"), DEFAULT_BLOCK_PRIORITY_SIZE))
-        .addDebugArg("blockversion=<n>", requiredInt, "Override block version to test forking scenarios")
+        .addArg("blockversion=<n>", requiredInt, _("Generated block version number.  Value must be an integer"))
         ;
 }
 
@@ -434,15 +461,6 @@ static void addRpcServerOptions(AllowedArgs& allowedArgs)
         ;
 }
 
-static void addAdminServerOptions(AllowedArgs& allowedArgs)
-{
-    allowedArgs
-        .addHeader("Admin server options: (Experimental!)")
-        .addArg("adminserver", optionalBool, "Accept connections on the admin-server (default 0)")
-        .addArg("admincookiefile=<loc>", requiredStr, "Location of the adminserver auth cookie (default: data dir)")
-        ;
-}
-
 static void addUiOptions(AllowedArgs& allowedArgs)
 {
     allowedArgs
@@ -458,7 +476,27 @@ static void addUiOptions(AllowedArgs& allowedArgs)
         ;
 }
 
-static void addAllNodeOptions(AllowedArgs& allowedArgs, HelpMessageMode mode)
+static void addTweaks(AllowedArgs &allowedArgs, CTweakMap *pTweaks)
+{
+    CTweakMap::iterator i;
+
+    allowedArgs.addHeader(_(PACKAGE_NAME) + _(" configuration tweaks:"));
+
+    for (i = pTweaks->begin(); i != pTweaks->end(); ++i)
+    {
+        CTweakBase *tweak = i->second;
+        std::string optName = tweak->GetName();
+
+        if (dynamic_cast<CTweak<CAmount> *>(tweak))
+            allowedArgs.addArg(optName + "=<amt>", requiredAmount, tweak->GetHelp());
+        else if (dynamic_cast<CTweakRef<std::string> *>(tweak))
+            allowedArgs.addArg(optName + "=<str>", requiredStr, tweak->GetHelp());
+        else
+            allowedArgs.addArg(optName + "=<n>", requiredInt, tweak->GetHelp());
+    }
+}
+
+static void addAllNodeOptions(AllowedArgs &allowedArgs, HelpMessageMode mode, CTweakMap *pTweaks)
 {
     addHelpOptions(allowedArgs);
     addConfigurationLocationOptions(allowedArgs);
@@ -471,7 +509,8 @@ static void addAllNodeOptions(AllowedArgs& allowedArgs, HelpMessageMode mode)
     addNodeRelayOptions(allowedArgs);
     addBlockCreationOptions(allowedArgs);
     addRpcServerOptions(allowedArgs);
-    addAdminServerOptions(allowedArgs);
+    if (pTweaks)
+        addTweaks(allowedArgs, pTweaks);
     if (mode == HMM_BITCOIN_QT)
         addUiOptions(allowedArgs);
 }
@@ -489,17 +528,19 @@ BitcoinCli::BitcoinCli()
         .addArg("rpcuser=<user>", requiredStr, _("Username for JSON-RPC connections"))
         .addArg("rpcpassword=<pw>", requiredStr, _("Password for JSON-RPC connections"))
         .addArg("rpcclienttimeout=<n>", requiredInt, strprintf(_("Timeout during HTTP requests (default: %d)"), DEFAULT_HTTP_CLIENT_TIMEOUT))
+        .addArg("stdin", optionalBool, _("Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases)"))
         ;
 }
 
-Bitcoind::Bitcoind()
+Bitcoind::Bitcoind(CTweakMap *pTweaks)
 {
-    addAllNodeOptions(*this, HMM_BITCOIND);
+    addAllNodeOptions(*this, HMM_BITCOIND, pTweaks);
 }
 
-BitcoinQt::BitcoinQt()
+
+BitcoinQt::BitcoinQt(CTweakMap *pTweaks)
 {
-    addAllNodeOptions(*this, HMM_BITCOIN_QT);
+    addAllNodeOptions(*this, HMM_BITCOIN_QT, pTweaks);
 }
 
 BitcoinTx::BitcoinTx()

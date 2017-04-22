@@ -12,10 +12,15 @@
 #include <boost/chrono/chrono.hpp>
 #include <limits>
 
-extern const int64_t DEFAULT_MAX_RECV_BURST;
-extern const int64_t DEFAULT_AVE_RECV;
-extern const int64_t DEFAULT_MAX_SEND_BURST;
-extern const int64_t DEFAULT_AVE_SEND;
+// Variables for traffic shaping
+/** Default value for the maximum amount of data that can be received in a burst */
+static const int64_t DEFAULT_MAX_RECV_BURST = std::numeric_limits<long long>::max();
+/** Default value for the maximum amount of data that can be sent in a burst */
+static const int64_t DEFAULT_MAX_SEND_BURST = std::numeric_limits<long long>::max();
+/** Default value for the average amount of data received per second */
+static const int64_t DEFAULT_AVE_RECV = std::numeric_limits<long long>::max();
+/** Default value for the average amount of data sent per second */
+static const int64_t DEFAULT_AVE_SEND = std::numeric_limits<long long>::max();
 
 /** If we have to break the transmission up into chunks, this is the minimum send chunk size */
 static const int64_t SEND_SHAPER_MIN_FRAG = 256;
