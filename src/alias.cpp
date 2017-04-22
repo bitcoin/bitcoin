@@ -1934,7 +1934,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	coinControl.fAllowWatchOnly = true;
 	bool useOnlyAliasPaymentToFund = false;
 
-	SendMoneySyscoin(vchAlias, vchAliasPeg, "SYS", recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund);
+	SendMoneySyscoin(vchAlias, vchAliasPeg, "", recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund);
 	UniValue res(UniValue::VARR);
 
 	UniValue signParams(UniValue::VARR);
@@ -2116,7 +2116,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(newAddress.ToString() != EncodeBase58(copyAlias.vchAddress))
 		transferAlias = true;
 	
-	SendMoneySyscoin(vchAlias, copyAlias.vchAliasPeg, "SYS", recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund, transferAlias);
+	SendMoneySyscoin(vchAlias, copyAlias.vchAliasPeg, "", recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund, transferAlias);
 	UniValue res(UniValue::VARR);
 	UniValue signParams(UniValue::VARR);
 	signParams.push_back(EncodeHexTx(wtx));
