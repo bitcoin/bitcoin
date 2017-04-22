@@ -2875,18 +2875,18 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			const vector<unsigned char> &vchCurrencyCode = vvch.size() >= 4? vvch[3]: vchFromString("");
 			const vector<unsigned char> &vchAliasPeg = vvch.size() >= 3? vvch[2]: vchFromString("");
 			opName += + " - " + aliasFromOp(op);
-			UniValue oName(UniValue::VOBJ);
-			oName.push_back(Pair("type", opName));
-			oPayments.push_back(oName);	
-			oPayments.push_back(Pair("txid", tx.GetHash().GetHex()));
-			oPayments.push_back(Pair("sysamount", ValueFromAmount(tx.GetValueOut()).write()));
-			oPayments.push_back(Pair("currency", stringFromVch(vchCurrencyCode)));
+			UniValue oPayment(UniValue::VOBJ);
+			oPayment.push_back(Pair("type", opName));
+			oPayment.push_back(Pair("txid", tx.GetHash().GetHex()));
+			oPayment.push_back(Pair("sysamount", ValueFromAmount(tx.GetValueOut()).write()));
+			oPayment.push_back(Pair("currency", stringFromVch(vchCurrencyCode)));
 			int precision = 2;
 			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(vchAliasPeg, vchCurrencyCode, tx.GetValueOut(), txPaymentPos.nHeight, precision);
 			if(nPricePerUnit == 0)
-				oPayments.push_back(Pair("amount", "0"));
+				oPayment.push_back(Pair("amount", "0"));
 			else
-				oPayments.push_back(Pair("amount", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real())));
+				oPayment.push_back(Pair("amount", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real())));
+			oPayments.push_back(oPayment);	
 		}
 		else
 			continue;
