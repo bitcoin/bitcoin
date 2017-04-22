@@ -72,6 +72,7 @@ public:
 	uint64_t nHeight;
 	unsigned char nOut;
 	uint256 txHash;
+	std::string strFrom;
 	CAliasPayment() {
         SetNull();
     }
@@ -82,6 +83,7 @@ public:
 		READWRITE(txHash);
 		READWRITE(VARINT(nOut));
 		READWRITE(VARINT(nHeight));
+		READWRITE(strFromAlias);
 	}
 
     inline friend bool operator==(const CAliasPayment &a, const CAliasPayment &b) {
@@ -89,6 +91,7 @@ public:
 		a.txHash == b.txHash
         && a.nOut == b.nOut
 		&& a.nHeight == b.nHeight
+		&& a.strFromAlias == b.strFromAlias
         );
     }
 
@@ -96,6 +99,7 @@ public:
 		txHash = b.txHash;
         nOut = b.nOut;
 		nHeight = b.nHeight;
+		strFromAlias = b.strFromAlias;
         return *this;
     }
 
@@ -103,8 +107,8 @@ public:
         return !(a == b);
     }
 
-    inline void SetNull() { nHeight = 0;txHash.SetNull(); nOut = 0;}
-    inline bool IsNull() const { return (nHeight == 0 && txHash.IsNull() && nOut == 0); }
+    inline void SetNull() { strFromAlias.clear(); nHeight = 0;txHash.SetNull(); nOut = 0;}
+    inline bool IsNull() const { return (strFromAlias.empty() && nHeight == 0 && txHash.IsNull() && nOut == 0); }
 
 };
 class CAliasIndex {

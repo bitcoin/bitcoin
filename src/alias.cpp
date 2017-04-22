@@ -1029,6 +1029,17 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		else if(op == OP_ALIAS_PAYMENT)
 		{
+			CTxDestination aliasDest;
+			if (!prevCoins || prevOutput->n >= prevCoins->vout.size() || !ExtractDestination(prevCoins->vout[prevOutput->n].scriptPubKey, aliasDest))
+			{
+				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot extract destination of alias payment input");
+				return true;
+			}
+			else
+			{
+				CSyscoinAddress prevaddy(aliasDest);
+				prevaddy = CSyscoinAddress(prevaddy.ToString());
+			}
 			const uint256 &txHash = tx.GetHash();
 			vector<CAliasPayment> vtxPaymentPos;
 			if(paliasdb->ExistsAliasPayment(vchAlias))
@@ -1043,6 +1054,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			payment.txHash = txHash;
 			payment.nOut = nOut;
 			payment.nHeight = nHeight;
+			payment.strFromAlias = prevaddy.aliasName;
 			vtxPaymentPos.push_back(payment);
 			if (!dontaddtodb && !paliasdb->WriteAliasPayment(vchAlias, vtxPaymentPos))
 			{
@@ -2842,54 +2854,24 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			continue;
 	}
 	BOOST_FOREACH(txPaymentPos, vtxPaymentPos) {
-		CTransaction tx;		
-		if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
+		if(oPaymentDetails[txPaymentPos.txHash] == 1 || (vvch.size() >= 2 && vvch[1] == vchFromString("1")))
 			continue;
-		if(DecodeOfferTx(tx, op, nOut, vvch) )
-		{
-			opName = offerFromOp(op);
-			COffer offer(tx);
-			if(offer.accept.bPaymentAck)
-				opName += "("+_("acknowledged")+")";
-			else if(!offer.accept.feedback.empty())
-				opName += "("+_("feedback")+")";
-		}
-		else if(DecodeMessageTx(tx, op, nOut, vvch) )
-			opName = messageFromOp(op);
-		else if(DecodeEscrowTx(tx, op, nOut, vvch) )
-		{
-			CEscrow escrow(tx);
-			opName = escrowFromOp(escrow.op);
-			if(escrow.bPaymentAck)
-				opName += "("+_("acknowledged")+")";
-			else if(!escrow.feedback.empty())
-				opName += "("+_("feedback")+")";
-		}
-		else if(DecodeCertTx(tx, op, nOut, vvch) )
-			opName = certFromOp(op);
-		if(DecodeAliasTx(tx, op, nOut, vvch, true) )
-		{
-			if(oPaymentDetails[tx.GetHash()] == 1 || (vvch.size() >= 2 && vvch[1] == vchFromString("1")))
-				continue;
-			oPaymentDetails[tx.GetHash()] = 1;
-			const vector<unsigned char> &vchCurrencyCode = vvch.size() >= 4? vvch[3]: vchFromString("");
-			const vector<unsigned char> &vchAliasPeg = vvch.size() >= 3? vvch[2]: vchFromString("");
-			opName += + " - " + aliasFromOp(op);
-			UniValue oPayment(UniValue::VOBJ);
-			oPayment.push_back(Pair("type", opName));
-			oPayment.push_back(Pair("txid", tx.GetHash().GetHex()));
-			oPayment.push_back(Pair("sysamount", ValueFromAmount(tx.vout[txPaymentPos.nOut].nValue).write()));
-			oPayment.push_back(Pair("currency", stringFromVch(vchCurrencyCode)));
-			int precision = 2;
-			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(vchAliasPeg, vchCurrencyCode, tx.vout[txPaymentPos.nOut].nValue, txPaymentPos.nHeight, precision);
-			if(nPricePerUnit == 0)
-				oPayment.push_back(Pair("amount", "0"));
-			else
-				oPayment.push_back(Pair("amount", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real())));
-			oPayments.push_back(oPayment);	
-		}
+		oPaymentDetails[txPaymentPos.txHash] = 1;
+		const vector<unsigned char> &vchCurrencyCode = vvch.size() >= 4? vvch[3]: vchFromString("");
+		const vector<unsigned char> &vchAliasPeg = vvch.size() >= 3? vvch[2]: vchFromString("");
+		UniValue oPayment(UniValue::VOBJ);
+		oPayment.push_back(Pair("type", aliasFromOp(op)));
+		oPayment.push_back(Pair("txid", txPaymentPos.txHash.GetHex()));
+		oPayment.push_back(Pair("from", txPaymentPos.strFrom));
+		oPayment.push_back(Pair("currency", stringFromVch(vchCurrencyCode)));	
+		oPayment.push_back(Pair("sysamount", ValueFromAmount(tx.vout[txPaymentPos.nOut].nValue).write()));
+		int precision = 2;
+		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(vchAliasPeg, vchCurrencyCode, tx.vout[txPaymentPos.nOut].nValue, txPaymentPos.nHeight, precision);
+		if(nPricePerUnit == 0)
+			oPayment.push_back(Pair("amount", "0"));
 		else
-			continue;
+			oPayment.push_back(Pair("amount", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real())));
+		oPayments.push_back(oPayment);	
 	}
 	oRes.push_back(oUpdates);	
 	oRes.push_back(oPayments);	
