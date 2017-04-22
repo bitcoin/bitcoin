@@ -57,8 +57,13 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[2].listunspent()), 0)
 
         # Send 21 BTC from 0 to 2 using sendtoaddress call.
+        # Locked memory should use at least 32 bytes to sign each transaction
+        self.log.info("test getmemoryinfo")
+        memory_before = self.nodes[0].getmemoryinfo()
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11)
         mempool_txid = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 10)
+        memory_after = self.nodes[0].getmemoryinfo()
+        assert(memory_before['locked']['used'] + 64 <= memory_after['locked']['used'])
 
         self.log.info("test gettxout")
         # utxo spent in mempool should be visible if you exclude mempool
@@ -78,7 +83,6 @@ class WalletTest(BitcoinTestFramework):
         # but 10 will go to node2 and the rest will go to node0
         balance = self.nodes[0].getbalance()
         assert_equal(set([txout1['value'], txout2['value']]), set([10, balance]))
-
         walletinfo = self.nodes[0].getwalletinfo()
         assert_equal(walletinfo['immature_balance'], 0)
 
