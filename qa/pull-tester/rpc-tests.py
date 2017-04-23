@@ -411,13 +411,13 @@ def runtests():
             print("%-44s  Total time (s): %7s" % (" ", sum(execution_time.values())))
 
             print
-            print("%d test(s) passed / %d test(s) failed / %d test(s) executed" % (test_passed.values().count(True),
-                                                                       test_passed.values().count(False),
+            print("%d test(s) passed / %d test(s) failed / %d test(s) executed" % (list(test_passed.values()).count(True),
+                                                                       list(test_passed.values()).count(False),
                                                                        len(test_passed)))
             print("%d test(s) disabled / %d test(s) skipped due to platform" % (len(disabled), len(skipped)))
 
         # signal that tests have failed using exit code
-        if test_passed.values().count(False):
+        if list(test_passed.values()).count(False):
             sys.exit(1)
 
     else:
