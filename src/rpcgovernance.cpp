@@ -595,13 +595,11 @@ UniValue gobject(const UniValue& params, bool fHelp)
                 bObj.push_back(Pair("SigningMasternode", masternodeVin.prevout.ToStringShort()));
             }
 
-            // REPORT STATUS FOR FUNDING VOTES SPECIFICALLY, EXCEPT WATCHDOGS
-            if(pGovObj->GetObjectType() != GOVERNANCE_OBJECT_WATCHDOG) {
-                bObj.push_back(Pair("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING)));
-                bObj.push_back(Pair("YesCount",  pGovObj->GetYesCount(VOTE_SIGNAL_FUNDING)));
-                bObj.push_back(Pair("NoCount",  pGovObj->GetNoCount(VOTE_SIGNAL_FUNDING)));
-                bObj.push_back(Pair("AbstainCount",  pGovObj->GetAbstainCount(VOTE_SIGNAL_FUNDING)));
-            }
+            // REPORT STATUS FOR FUNDING VOTES SPECIFICALLY
+            bObj.push_back(Pair("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING)));
+            bObj.push_back(Pair("YesCount",  pGovObj->GetYesCount(VOTE_SIGNAL_FUNDING)));
+            bObj.push_back(Pair("NoCount",  pGovObj->GetNoCount(VOTE_SIGNAL_FUNDING)));
+            bObj.push_back(Pair("AbstainCount",  pGovObj->GetAbstainCount(VOTE_SIGNAL_FUNDING)));
 
             // REPORT VALIDITY AND CACHING FLAGS FOR VARIOUS SETTINGS
             std::string strError = "";
