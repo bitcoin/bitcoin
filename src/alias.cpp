@@ -2819,33 +2819,136 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		{
 			opName = offerFromOp(op);
 			COffer offer(tx);
-			if(offer.accept.bPaymentAck)
+			bool bOfferPay = !offer.accept.IsNull();
+			if(offer.accept.bPaymentAck){
 				opName += "("+_("acknowledged")+")";
+				bOfferPay = false;
+			}
 			else if(!offer.accept.feedback.empty())
+			{
 				opName += "("+_("feedback")+")";
+				bOfferPay = false;
+			}
+			UniValue oName(UniValue::VOBJ);
+			oName.push_back(Pair("type", opName));
+			oName.push_back(Pair("txid", tx.GetHash().GetHex()));
+			COffer offer(tx);
+			if(!offer.IsNull())
+			{
+				if(bOfferPay)
+				{
+					if(oPaymentDetails[txPaymentPos.txHash] == 1))
+						continue;
+					oPaymentDetails[txPaymentPos.txHash] = 1;
+					oName.push_back(Pair("from", stringFromVch(offer.accept.vchBuyerAlias)));
+					oName.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));	
+					oName.push_back(Pair("sysamount", ValueFromAmount(offer.accept.nAmount).write()));
+					int precision = 2;
+					// we need to get the offer at the time of the accept
+					vector<CAliasIndex> vtxAliasPos;
+					if (!paliasdb->ReadAlias(offer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
+						continue;
+					CAliasIndex offerAcceptAlias;
+					offerAcceptAlias.nHeight = offer.accept.nAcceptHeight;
+					offerAcceptAlias.GetAliasFromList(vtxAliasPos);
+					CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offerAcceptAlias.vchAliasPeg, offer.sCurrencyCode, offer.accept.nAmount, offer.accept.nAcceptHeight, precision);
+					if(nPricePerUnit == 0)
+						oName.push_back(Pair("amount", "0"));
+					else
+						oName.push_back(Pair("amount", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real())));
+					oName.push_back(Pair("paymentoption",GetPaymentOptionsString( offer.accept.nPaymentOption)));
+					oPayments.push_back(oName);
+				}
+				else
+				{
+					oUpdates.push_back(oName);
+				}
+			}
 		}
 		else if(DecodeMessageTx(tx, op, nOut, vvch) )
+		{
 			opName = messageFromOp(op);
+			UniValue oName(UniValue::VOBJ);
+			oName.push_back(Pair("type", opName));
+			oName.push_back(Pair("txid", tx.GetHash().GetHex()));
+			CMessage message(tx);
+			if(!message.IsNull())
+			{
+				oUpdates.push_back(oName);
+			}
+		}
 		else if(DecodeEscrowTx(tx, op, nOut, vvch) )
 		{
 			CEscrow escrow(tx);
 			opName = escrowFromOp(escrow.op);
+			bool bEscrowPay = escrow.op == OP_ESCROW_ACTIVATE;
 			if(escrow.bPaymentAck)
+			{
 				opName += "("+_("acknowledged")+")";
+				bEscrowPay = false;
+			}
 			else if(!escrow.feedback.empty())
+			{
 				opName += "("+_("feedback")+")";
+				bEscrowPay = false;
+			}
+			UniValue oName(UniValue::VOBJ);
+			oName.push_back(Pair("type", opName));
+			oName.push_back(Pair("txid", tx.GetHash().GetHex()));
+			CEscrow escrow(tx);
+			if(!escrow.IsNull())
+			{
+				if(bEscrowPay)
+				{
+					if(oPaymentDetails[txPaymentPos.txHash] == 1))
+						continue;
+					oPaymentDetails[txPaymentPos.txHash] = 1;
+					oName.push_back(Pair("from", stringFromVch(escrow.vchBuyerAlias)));	
+					// we need to get the offer at the time of the accept
+					vector<COffer> vtxOfferPos;
+					if (!pofferdb->ReadOffer(escrow.vchOffer, vtxOfferPos) || vtxOfferPos.empty())
+						continue;
+					COffer offer;
+					offer.nHeight = escrow.nAcceptHeight;
+					offer.GetOfferFromList(vtxOfferPos);
+					// if offer is not linked, look for a discount for the buyer
+					COfferLinkWhitelistEntry foundEntry;
+					if(offer.vchLinkOffer.empty())
+						offer.linkWhitelist.GetLinkEntryByHash(escrow.vchBuyerAlias, foundEntry);
+					oName.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));
+					oName.push_back(Pair("sysamount", ValueFromAmount(offer.GetPrice(foundEntry)*escrow.nQty).write()));
+					int precision = 2;
+					// we need to get the alias at the time of the accept
+					vector<CAliasIndex> vtxAliasPos;
+					if (!paliasdb->ReadAlias(offer.vchAlias, vtxAliasPos) || vtxAliasPos.empty())
+						continue;
+					CAliasIndex escrowAlias;
+					escrowAlias.nHeight = escrow.nAcceptHeight;
+					escrowAlias.GetAliasFromList(vtxAliasPos);
+					CAmount nPricePerUnit = convertSyscoinToCurrencyCode(escrowAlias.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(foundEntry), escrow.nAcceptHeight, precision)*escrow.nQty;
+					if(nPricePerUnit == 0)
+						oName.push_back(Pair("amount", "0"));
+					else
+						oName.push_back(Pair("amount", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real())));
+					oName.push_back(Pair("paymentoption_display",GetPaymentOptionsString( escrow.nPaymentOption)));
+					oPayments.push_back(oName);
+				}
+				else
+				{
+					oUpdates.push_back(oName);
+				}
+			}
 		}
 		else if(DecodeCertTx(tx, op, nOut, vvch) )
 		{
 			opName = certFromOp(op);
 			UniValue oName(UniValue::VOBJ);
 			oName.push_back(Pair("type", opName));
+			oName.push_back(Pair("txid", tx.GetHash().GetHex()));
 			CCert cert(tx);
 			if(!cert.IsNull())
 			{
-				cert.txHash = tx.GetHash();
-				if(BuildCertJson(cert, false, oName, strWalletless))
-					oUpdates.push_back(oName);
+				oUpdates.push_back(oName);
 			}
 		}
 		else if(DecodeAliasTx(tx, op, nOut, vvch, false) )
@@ -2885,6 +2988,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			oPayment.push_back(Pair("amount", "0"));
 		else
 			oPayment.push_back(Pair("amount", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real())));
+		oName.push_back(Pair("paymentoption_display",GetPaymentOptionsString(PAYMENTOPTION_SYS)));
 		oPayments.push_back(oPayment);	
 	}
 	oRes.push_back(oUpdates);	
