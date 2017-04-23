@@ -343,9 +343,11 @@ case $host in
            PKG_CONFIG_PATH="$openssl_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
            export PKG_CONFIG_PATH
          fi
-         if test x$bdb_prefix != x; then
-           CPPFLAGS="$CPPFLAGS -I$bdb_prefix/include"
-           LIBS="$LIBS -L$bdb_prefix/lib"
+         if test x$enable_wallet != xno; then
+           if test x$bdb_prefix != x; then
+             CPPFLAGS="$CPPFLAGS -I$bdb_prefix/include"
+             LIBS="$LIBS -L$bdb_prefix/lib"
+           fi
          fi
          if test x$qt5_prefix != x; then
            PKG_CONFIG_PATH="$qt5_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
