@@ -422,6 +422,9 @@ protected:
     void Fuzz(int nChance); // modifies ssSend
 
 public:
+#ifdef DEBUG
+    friend UniValue getstructuresizes(const UniValue& params, bool fHelp);
+#endif
     uint256 hashContinue;
     int nStartingHeight;
 
@@ -750,6 +753,16 @@ public:
     }
 
     void CloseSocketDisconnect();
+
+    //! returns the name of this node for logging.  Respects the user's choice to not log the node's IP
+    std::string GetLogName()
+    {
+        std::string idstr = boost::lexical_cast<std::string>(id);
+        if (fLogIPs)
+            return addrName + " (" + idstr + ")";
+        return idstr;
+    }
+
 
     // Denial-of-service detection/prevention
     // The idea is to detect peers that are behaving

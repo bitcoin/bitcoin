@@ -343,7 +343,9 @@ static const CRPCCommand vRPCCommands[] =
     { "util",               "getstat",                &getstat,                true  },  // BU
     { "util",               "get",                    &gettweak,               true  },  // BU
     { "util",               "set",                    &settweak,               true  },  // BU
-
+#ifdef DEBUG
+    { "util",               "getstructuresizes",      &getstructuresizes,      true  },  // BU
+#endif
     /* Not shown in help */
     { "hidden",             "invalidateblock",        &invalidateblock,        true  },
     { "hidden",             "reconsiderblock",        &reconsiderblock,        true  },
