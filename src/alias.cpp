@@ -2832,17 +2832,16 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			UniValue oName(UniValue::VOBJ);
 			oName.push_back(Pair("type", opName));
 			oName.push_back(Pair("txid", tx.GetHash().GetHex()));
-			COffer offer(tx);
 			if(!offer.IsNull())
 			{
 				if(bOfferPay)
 				{
-					if(oPaymentDetails[txPaymentPos.txHash] == 1))
+					if(oPaymentDetails[txPaymentPos.txHash] == 1)
 						continue;
 					oPaymentDetails[txPaymentPos.txHash] = 1;
 					oName.push_back(Pair("from", stringFromVch(offer.accept.vchBuyerAlias)));
 					oName.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));	
-					oName.push_back(Pair("sysamount", ValueFromAmount(offer.accept.nAmount).write()));
+					oName.push_back(Pair("sysamount", ValueFromAmount(offer.accept.nPrice*offer.accept.nQty).write()));
 					int precision = 2;
 					// we need to get the offer at the time of the accept
 					vector<CAliasIndex> vtxAliasPos;
@@ -2851,7 +2850,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 					CAliasIndex offerAcceptAlias;
 					offerAcceptAlias.nHeight = offer.accept.nAcceptHeight;
 					offerAcceptAlias.GetAliasFromList(vtxAliasPos);
-					CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offerAcceptAlias.vchAliasPeg, offer.sCurrencyCode, offer.accept.nAmount, offer.accept.nAcceptHeight, precision);
+					CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offerAcceptAlias.vchAliasPeg, offer.sCurrencyCode, offer.accept.nPrice, offer.accept.nAcceptHeight, precision)*offer.accept.nQty;
 					if(nPricePerUnit == 0)
 						oName.push_back(Pair("amount", "0"));
 					else
@@ -2895,12 +2894,11 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			UniValue oName(UniValue::VOBJ);
 			oName.push_back(Pair("type", opName));
 			oName.push_back(Pair("txid", tx.GetHash().GetHex()));
-			CEscrow escrow(tx);
 			if(!escrow.IsNull())
 			{
 				if(bEscrowPay)
 				{
-					if(oPaymentDetails[txPaymentPos.txHash] == 1))
+					if(oPaymentDetails[txPaymentPos.txHash] == 1)
 						continue;
 					oPaymentDetails[txPaymentPos.txHash] = 1;
 					oName.push_back(Pair("from", stringFromVch(escrow.vchBuyerAlias)));	
@@ -2988,7 +2986,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			oPayment.push_back(Pair("amount", "0"));
 		else
 			oPayment.push_back(Pair("amount", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real())));
-		oName.push_back(Pair("paymentoption_display",GetPaymentOptionsString(PAYMENTOPTION_SYS)));
+		oPayment.push_back(Pair("paymentoption_display",GetPaymentOptionsString(PAYMENTOPTION_SYS)));
 		oPayments.push_back(oPayment);	
 	}
 	oRes.push_back(oUpdates);	
