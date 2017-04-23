@@ -2325,7 +2325,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 								CScript scriptPubKey;
 								if(currencyCode.empty())
 									scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchFromString(address.aliasName) << OP_2DROP;
-								else if(!vchAliasPeg.empty())
+								else
 									scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_PAYMENT) << vchFromString(address.aliasName) << vchFromString("0") << vchAliasPeg << vchFromString(currencyCode) << OP_DROP << OP_2DROP << OP_2DROP;
 								scriptPubKey += myrecipient.scriptPubKey;
 								// SYSCOIN
