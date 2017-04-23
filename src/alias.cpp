@@ -1030,13 +1030,13 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		else if(op == OP_ALIAS_PAYMENT)
 		{
 			CTxDestination aliasDest;
-			if (!prevCoins || !prevOutput || prevOutput->n >= prevCoins->vout.size() || !ExtractDestination(prevCoins->vout[prevOutput->n].scriptPubKey, aliasDest))
+			CSyscoinAddress prevaddy;
+			if (prevCoins && prevOutput && prevOutput->n < prevCoins->vout.size() && ExtractDestination(prevCoins->vout[prevOutput->n].scriptPubKey, aliasDest))
 			{
-				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot extract destination of alias payment input");
-				return true;
+				prevaddy = CSyscoinAddress(aliasDest);
+				prevaddy = CSyscoinAddress(prevaddy.ToString());
 			}	
-			CSyscoinAddress prevaddy(aliasDest);
-			prevaddy = CSyscoinAddress(prevaddy.ToString());
+
 			const uint256 &txHash = tx.GetHash();
 			vector<CAliasPayment> vtxPaymentPos;
 			if(paliasdb->ExistsAliasPayment(vchAlias))
@@ -1051,10 +1051,12 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			payment.txHash = txHash;
 			payment.nOut = nOut;
 			payment.nHeight = nHeight;
-			if(prevaddy.isAlias)
-				payment.vchFrom = vchFromString(prevaddy.aliasName);
-			else
-				payment.vchFrom = vchFromString(prevaddy.ToString());
+			if(prevaddy.IsValid()){
+				if(prevaddy.isAlias)
+					payment.vchFrom = vchFromString(prevaddy.aliasName);
+				else
+					payment.vchFrom = vchFromString(prevaddy.ToString());
+			}
 			vtxPaymentPos.push_back(payment);
 			if (!dontaddtodb && !paliasdb->WriteAliasPayment(vchAlias, vtxPaymentPos))
 			{
