@@ -189,6 +189,25 @@ can be very difficult to track down. Compiling with -DDEBUG_LOCKORDER (configure
 CXXFLAGS="-DDEBUG_LOCKORDER -g") inserts run-time checks to keep track of which locks
 are held, and adds warnings to the debug.log file if inconsistencies are detected.
 
+**Memory Profiling**
+
+*Currently only available on Linux*
+
+Bitcoin Unlimited can be compiled with the libtcmalloc allocation library and
+memory profiling tool.  First install libtcmalloc either from source here
+https://github.com/gperftools/gperftools or via package manager:
+```bash
+sudo apt-get install libgoogle-perftools-dev
+```
+Next reconfigure:
+```bash
+make distclean
+./configure --enable-gperf --disable-hardening --enable-debug
+```
+For detailed instructions on how to use gperftools please read the gperftools
+documentation.
+
+
 Locking/mutex usage notes
 -------------------------
 

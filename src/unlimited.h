@@ -19,6 +19,7 @@
 #include "thinblock.h"
 #include "tweak.h"
 #include <boost/thread.hpp>
+#include <list>
 #include <univalue.h>
 #include <vector>
 
@@ -93,6 +94,7 @@ extern void settingsToUserAgentString();
 extern std::string FormatCoinbaseMessage(const std::vector<std::string> &comments, const std::string &customComment);
 
 extern void UnlimitedSetup(void);
+extern void UnlimitedCleanup(void);
 extern std::string UnlimitedCmdLineHelp();
 
 // Called whenever a new block is accepted
@@ -161,6 +163,9 @@ extern UniValue setblockversion(const UniValue &params, bool fHelp);
 extern UniValue getstatlist(const UniValue &params, bool fHelp);
 // RPC Get a particular statistic
 extern UniValue getstat(const UniValue &params, bool fHelp);
+
+// RPC debugging Get sizes of every data structure
+extern UniValue getstructuresizes(const UniValue &params, bool fHelp);
 
 // RPC Set a node to receive expedited blocks from
 UniValue expedited(const UniValue &params, bool fHelp);
@@ -236,6 +241,7 @@ extern CTweak<uint64_t> blockSigopsPerMb;
 extern CTweak<uint64_t> coinbaseReserve;
 extern CTweak<uint64_t> blockMiningSigopsPerMb;
 
+extern std::list<CStatBase *> mallocedStats;
 
 /**  Parallel Block Validation - begin **/
 

@@ -503,10 +503,8 @@ void UnlimitedSetup(void)
 
     for (std::vector<std::string>::const_iterator i = msgTypes.begin(); i != msgTypes.end(); ++i)
     {
-        new CStatHistory<uint64_t>("net/recv/msg/" + *i); // This "leaks" in the sense that it is never freed, but is
-        // intended to last the duration of the program.
-        new CStatHistory<uint64_t>("net/send/msg/" + *i); // This "leaks" in the sense that it is never freed, but is
-        // intended to last the duration of the program.
+        mallocedStats.push_front(new CStatHistory<uint64_t>("net/recv/msg/" + *i));
+        mallocedStats.push_front(new CStatHistory<uint64_t>("net/send/msg/" + *i));
     }
 
     xpeditedBlk.reserve(256);
@@ -534,6 +532,17 @@ void UnlimitedSetup(void)
 }
 
 FILE *blockReceiptLog = NULL;
+
+void UnlimitedCleanup()
+{
+    CStatBase *obj = NULL;
+    while (!mallocedStats.empty())
+    {
+        obj = mallocedStats.front();
+        delete obj;
+        mallocedStats.pop_front();
+    }
+}
 
 extern void UnlimitedLogBlock(const CBlock &block, const std::string &hash, uint64_t receiptTime)
 {
@@ -1539,7 +1548,6 @@ UniValue getstat(const UniValue &params, bool fHelp)
 
         ret.push_back(ustat);
     }
-
     return ret;
 }
 
@@ -1569,6 +1577,9 @@ static const CRPCCommand commands[] =
     { "util",               "getstat",                &getstat,                true  },
     { "util",               "get",                    &gettweak,               true  },
     { "util",               "set",                    &settweak,               true  },
+#ifdef DEBUG
+    { "util",               "getstructuresizes",      &getstructuresizes,      true  },  // BU
+#endif
 
     /* Coin generation */
     { "generating",         "getgenerate",            &getgenerate,            true  },
@@ -1653,3 +1664,110 @@ UniValue validateblocktemplate(const UniValue &params, bool fHelp)
 
     return UniValue(true);
 }
+
+#ifdef DEBUG
+#ifdef DEBUG_LOCKORDER
+extern std::map<std::pair<void *, void *>, LockStack> lockorders;
+#endif
+
+extern std::vector<std::string> vUseDNSSeeds;
+extern std::list<CNode *> vNodesDisconnected;
+extern std::set<CNetAddr> setservAddNodeAddresses;
+extern UniValue getstructuresizes(const UniValue &params, bool fHelp)
+{
+    UniValue ret(UniValue::VOBJ);
+    ret.push_back(Pair("time", GetTime()));
+    ret.push_back(Pair("requester.mapTxnInfo", requester.mapTxnInfo.size()));
+    ret.push_back(Pair("requester.mapBlkInfo", requester.mapBlkInfo.size()));
+    unsigned long int max = 0;
+    unsigned long int size = 0;
+    for (CRequestManager::OdMap::iterator i = requester.mapTxnInfo.begin(); i != requester.mapTxnInfo.end(); i++)
+    {
+        unsigned long int temp = i->second.availableFrom.size();
+        size += temp;
+        if (max < temp)
+            max = temp;
+    }
+    ret.push_back(Pair("requester.mapTxnInfo.maxobj", max));
+    ret.push_back(Pair("requester.mapTxnInfo.totobj", size));
+
+    max = 0;
+    size = 0;
+    for (CRequestManager::OdMap::iterator i = requester.mapBlkInfo.begin(); i != requester.mapBlkInfo.end(); i++)
+    {
+        unsigned long int temp = i->second.availableFrom.size();
+        size += temp;
+        if (max < temp)
+            max = temp;
+    }
+    ret.push_back(Pair("requester.mapBlkInfo.maxobj", max));
+    ret.push_back(Pair("requester.mapBlkInfo.totobj", size));
+
+    ret.push_back(Pair("mapBlockIndex", mapBlockIndex.size()));
+    // CChain
+    ret.push_back(Pair("setPreVerifiedTxHash", setPreVerifiedTxHash.size()));
+    ret.push_back(Pair("setUnVerifiedOrphanTxHash", setUnVerifiedOrphanTxHash.size()));
+    ret.push_back(Pair("mapLocalHost", mapLocalHost.size()));
+    ret.push_back(Pair("CNode::vWhitelistedRange", CNode::vWhitelistedRange.size()));
+    ret.push_back(Pair("mapInboundConnectionTracker", mapInboundConnectionTracker.size()));
+    ret.push_back(Pair("vUseDNSSeeds", vUseDNSSeeds.size()));
+    ret.push_back(Pair("vAddedNodes", vAddedNodes.size()));
+    ret.push_back(Pair("setservAddNodeAddresses", setservAddNodeAddresses.size()));
+    ret.push_back(Pair("statistics", statistics.size()));
+    ret.push_back(Pair("tweaks", tweaks.size()));
+    ret.push_back(Pair("mapRelay", mapRelay.size()));
+    ret.push_back(Pair("vRelayExpiration", vRelayExpiration.size()));
+    ret.push_back(Pair("vNodes", vNodes.size()));
+    ret.push_back(Pair("vNodesDisconnected", vNodesDisconnected.size()));
+    // CAddrMan
+    ret.push_back(Pair("mapOrphanTransactions", mapOrphanTransactions.size()));
+    ret.push_back(Pair("mapOrphanTransactionsByPrev", mapOrphanTransactionsByPrev.size()));
+    ret.push_back(Pair("xpeditedBlk", xpeditedBlk.size()));
+    ret.push_back(Pair("xpeditedBlkUp", xpeditedBlkUp.size()));
+    ret.push_back(Pair("xpeditedTxn", xpeditedTxn.size()));
+#ifdef DEBUG_LOCKORDER
+    ret.push_back(Pair("lockorders", lockorders.size()));
+#endif
+
+    LOCK(cs_vNodes);
+    std::vector<CNode *>::iterator n;
+    uint64_t totalThinBlockSize = 0;
+    int disconnected = 0; // watch # of disconnected nodes to ensure they are being cleaned up
+    for (std::vector<CNode *>::iterator it = vNodes.begin(); it != vNodes.end(); ++it)
+    {
+        if (*it == NULL)
+            continue;
+        CNode &n = **it;
+        UniValue node(UniValue::VOBJ);
+        disconnected += (n.fDisconnect) ? 1 : 0;
+
+        node.push_back(Pair("vSendMsg", n.vSendMsg.size()));
+        node.push_back(Pair("vRecvGetData", n.vRecvGetData.size()));
+        node.push_back(Pair("vRecvMsg", n.vRecvMsg.size()));
+        if (n.pfilter)
+        {
+            node.push_back(Pair("pfilter", n.pfilter->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION)));
+        }
+        if (n.pThinBlockFilter)
+        {
+            node.push_back(
+                Pair("pThinBlockFilter", n.pThinBlockFilter->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION)));
+        }
+        node.push_back(Pair("thinblock.vtx", n.thinBlock.vtx.size()));
+        uint64_t thinBlockSize = ::GetSerializeSize(n.thinBlock, SER_NETWORK, PROTOCOL_VERSION);
+        totalThinBlockSize += thinBlockSize;
+        node.push_back(Pair("thinblock.size", thinBlockSize));
+        node.push_back(Pair("thinBlockHashes", n.thinBlockHashes.size()));
+        node.push_back(Pair("xThinBlockHashes", n.xThinBlockHashes.size()));
+        node.push_back(Pair("vAddrToSend", n.vAddrToSend.size()));
+        node.push_back(Pair("vInventoryToSend", n.vInventoryToSend.size()));
+        node.push_back(Pair("setAskFor", n.setAskFor.size()));
+        node.push_back(Pair("mapAskFor", n.mapAskFor.size()));
+        ret.push_back(Pair(n.addrName, node));
+    }
+    ret.push_back(Pair("totalThinBlockSize", totalThinBlockSize));
+    ret.push_back(Pair("disconnectedNodes", disconnected));
+
+    return ret;
+}
+#endif

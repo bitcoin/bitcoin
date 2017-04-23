@@ -42,8 +42,8 @@
 #include <boost/thread.hpp>
 #include <inttypes.h>
 #include <iomanip>
+#include <list>
 #include <queue>
-
 
 using namespace std;
 
@@ -146,6 +146,7 @@ CTxMemPool mempool(::minRelayTxFee);
 boost::posix_time::milliseconds statMinInterval(10000);
 boost::asio::io_service stat_io_service;
 
+std::list<CStatBase *> mallocedStats;
 CStatMap statistics;
 CTweakMap tweaks;
 

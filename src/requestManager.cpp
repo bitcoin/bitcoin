@@ -144,8 +144,10 @@ void CRequestManager::AskFor(const CInv &obj, CNode *from, int priority)
         // if (result.second)  // means this was inserted rather than already existed
         // { } nothing to do
         data.priority = max(priority, data.priority);
-        data.AddSource(from);
-        LogPrint("blk", "%s available at %s\n", obj.ToString().c_str(), from->addrName.c_str());
+        if (data.AddSource(from))
+        {
+            LogPrint("blk", "%s available at %s\n", obj.ToString().c_str(), from->addrName.c_str());
+        }
     }
     else
     {
@@ -308,14 +310,13 @@ CNodeRequestData::CNodeRequestData(CNode *n)
     desirability -= latency;
 }
 
-void CUnknownObj::AddSource(CNode *from)
+bool CUnknownObj::AddSource(CNode *from)
 {
     // node is not in the request list
-    if (std::find_if(availableFrom.begin(), availableFrom.end(), IsCNodeRequestDataThisNode(from)) ==
-        availableFrom.end())
+    if (std::find_if(availableFrom.begin(), availableFrom.end(), MatchCNodeRequestData(from)) == availableFrom.end())
     {
-        LogPrint(
-            "req", "%s added ref to node %d.  Current count %d.\n", obj.ToString(), from->GetId(), from->GetRefCount());
+        LogPrint("req", "%s added ref to node %d.  Current count %d.\n",
+                 obj.ToString(), from->GetId(), from->GetRefCount());
         {
             LOCK(cs_vNodes); // This lock is needed to ensure that AddRef happens atomically
             from->AddRef();
@@ -326,11 +327,12 @@ void CUnknownObj::AddSource(CNode *from)
             if (i->desirability < req.desirability)
             {
                 availableFrom.insert(i, req);
-                return;
+                return true;
             }
         }
         availableFrom.push_back(req);
     }
+  return false;
 }
 
 void RequestBlock(CNode *pfrom, CInv obj)

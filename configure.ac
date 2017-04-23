@@ -180,6 +180,12 @@ AC_ARG_ENABLE([lcov],
   [use_lcov=yes],
   [use_lcov=no])
 
+AC_ARG_ENABLE([gperf],
+  [AS_HELP_STRING([--enable-gperf],
+  [enable gperftools testing (default is no)])],
+  [use_gperf=yes],
+  [use_gperf=no])
+
 AC_ARG_ENABLE([glibc-back-compat],
   [AS_HELP_STRING([--enable-glibc-back-compat],
   [enable backwards compatibility with glibc])],
@@ -383,6 +389,10 @@ case $host in
    *linux*)
      TARGET_OS=linux
      LEVELDB_TARGET_FLAGS="-DOS_LINUX"
+     if test "x$use_gperf" = "xyes"; then
+       AC_CHECK_LIB([tcmalloc],      [malloc],, AC_MSG_ERROR(tcmalloc lib missing))
+       AC_DEFINE([ENABLE_GPERF],[1],[Define to 1 to enable GPERF])
+     fi
      ;;
    *dragonfly*)
      TARGET_OS=dragonfly
@@ -1010,6 +1020,7 @@ AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$BUILD_TEST_QT = xyes])
 AM_CONDITIONAL([ENABLE_BENCH],[test x$use_bench = xyes])
 AM_CONDITIONAL([USE_QRCODE], [test x$use_qr = xyes])
 AM_CONDITIONAL([USE_LCOV],[test x$use_lcov = xyes])
+AM_CONDITIONAL([ENABLE_GPERF],[test x$use_gperf = xyes])
 AM_CONDITIONAL([USE_COMPARISON_TOOL],[test x$use_comparison_tool != xno])
 AM_CONDITIONAL([USE_COMPARISON_TOOL_REORG_TESTS],[test x$use_comparison_tool_reorg_test != xno])
 AM_CONDITIONAL([GLIBC_BACK_COMPAT],[test x$use_glibc_compat = xyes])
