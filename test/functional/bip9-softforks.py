@@ -19,7 +19,7 @@ test that enforcement has triggered
 from test_framework.blockstore import BlockStore
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import *
-from test_framework.mininode import CTransaction, NetworkThread
+from test_framework.mininode import CTransaction
 from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager
 from test_framework.script import CScript, OP_1NEGATE, OP_CHECKSEQUENCEVERIFY, OP_DROP
@@ -41,7 +41,6 @@ class BIP9SoftForksTest(ComparisonTestFramework):
     def run_test(self):
         self.test = TestManager(self, self.options.tmpdir)
         self.test.add_all_connections(self.nodes)
-        NetworkThread().start() # Start up network handling in another thread
         self.test.run()
 
     def create_transaction(self, node, coinbase, to_address, amount):
@@ -200,14 +199,11 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         yield TestInstance([[block, False]])
 
         # Restart all
-        self.test.clear_all_connections()
         stop_nodes(self.nodes)
         shutil.rmtree(self.options.tmpdir + "/node0")
         self.setup_chain()
         self.setup_network()
         self.test.add_all_connections(self.nodes)
-        NetworkThread().start()
-        self.test.test_nodes[0].wait_for_verack()
 
     def get_tests(self):
         for test in itertools.chain(

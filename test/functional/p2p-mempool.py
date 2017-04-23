@@ -21,7 +21,7 @@ class TestNode(NodeConnCB):
         self.block_receive_map = {}
 
     def add_connection(self, conn):
-        self.connection = conn
+        super().add_connection(conn)
         self.peer_disconnected = False
 
     def on_inv(self, conn, message):
@@ -37,15 +37,6 @@ class TestNode(NodeConnCB):
             self.block_receive_map[message.block.sha256] += 1
         except KeyError as e:
             self.block_receive_map[message.block.sha256] = 1
-
-    # Spin until verack message is received from the node.
-    # We use this to signal that our test can begin. This
-    # is called from the testing thread, so it needs to acquire
-    # the global lock.
-    def wait_for_verack(self):
-        def veracked():
-            return self.verack_received
-        return wait_until(veracked, timeout=10)
 
     def wait_for_disconnect(self):
         def disconnected():
@@ -83,8 +74,6 @@ class P2PMempoolTests(BitcoinTestFramework):
         aTestNode = TestNode()
         node = NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], aTestNode)
         aTestNode.add_connection(node)
-        NetworkThread().start()
-        aTestNode.wait_for_verack()
 
         #request mempool
         aTestNode.send_mempool()

@@ -27,7 +27,7 @@ class TestNode(NodeConnCB):
         self.block_receive_map = {}
 
     def add_connection(self, conn):
-        self.connection = conn
+        super().add_connection(conn)
         self.peer_disconnected = False
 
     def on_inv(self, conn, message):
@@ -43,15 +43,6 @@ class TestNode(NodeConnCB):
             self.block_receive_map[message.block.sha256] += 1
         except KeyError as e:
             self.block_receive_map[message.block.sha256] = 1
-
-    # Spin until verack message is received from the node.
-    # We use this to signal that our test can begin. This
-    # is called from the testing thread, so it needs to acquire
-    # the global lock.
-    def wait_for_verack(self):
-        def veracked():
-            return self.verack_received
-        return wait_until(veracked, timeout=10)
 
     def wait_for_disconnect(self):
         def disconnected():
@@ -103,11 +94,6 @@ class MaxUploadTest(BitcoinTestFramework):
             test_nodes.append(TestNode())
             connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_nodes[i]))
             test_nodes[i].add_connection(connections[i])
-
-        NetworkThread().start() # Start up network handling in another thread
-        [x.wait_for_verack() for x in test_nodes]
-
-        # Test logic begins here
 
         # Now mine a big block
         mine_large_block(self.nodes[0], self.utxo_cache)
@@ -200,9 +186,6 @@ class MaxUploadTest(BitcoinTestFramework):
             test_nodes.append(TestNode())
             connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_nodes[i]))
             test_nodes[i].add_connection(connections[i])
-
-        NetworkThread().start() # Start up network handling in another thread
-        [x.wait_for_verack() for x in test_nodes]
 
         #retrieve 20 blocks which should be enough to break the 1MB limit
         getdata_request.inv = [CInv(2, big_new_block)]

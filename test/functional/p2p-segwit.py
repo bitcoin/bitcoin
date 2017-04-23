@@ -42,9 +42,6 @@ class TestNode(NodeConnCB):
         self.getdataset = set()
         self.last_reject = None
 
-    def add_connection(self, conn):
-        self.connection = conn
-
     # Wrapper for the NodeConn's send_message function
     def send_message(self, message):
         self.connection.send_message(message)
@@ -1952,13 +1949,8 @@ class SegWitTest(BitcoinTestFramework):
         self.old_node.add_connection(self.connections[1])
         self.std_node.add_connection(self.connections[2])
 
-        NetworkThread().start() # Start up network handling in another thread
-
         # Keep a place to store utxo's that can be used in later tests
         self.utxo = []
-
-        # Test logic begins here
-        self.test_node.wait_for_verack()
 
         self.log.info("Starting tests before segwit lock in:")
 

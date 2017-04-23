@@ -66,10 +66,8 @@ class TimeoutsTest(BitcoinTestFramework):
         connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], self.no_version_node, send_version=False))
         connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], self.no_send_node, send_version=False))
         self.no_verack_node.add_connection(connections[0])
-        self.no_version_node.add_connection(connections[1])
-        self.no_send_node.add_connection(connections[2])
-
-        NetworkThread().start()  # Start up network handling in another thread
+        self.no_version_node.add_connection(connections[1], wait_for_verack=False)
+        self.no_send_node.add_connection(connections[2], wait_for_verack=False)
 
         sleep(1)
 

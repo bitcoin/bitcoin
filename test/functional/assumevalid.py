@@ -38,7 +38,6 @@ from test_framework.mininode import (CBlockHeader,
                                      CTransaction,
                                      CTxIn,
                                      CTxOut,
-                                     NetworkThread,
                                      NodeConn,
                                      NodeConnCB,
                                      msg_block,
@@ -99,9 +98,6 @@ class AssumeValidTest(BitcoinTestFramework):
         connections = []
         connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], node0))
         node0.add_connection(connections[0])
-
-        NetworkThread().start()  # Start up network handling in another thread
-        node0.wait_for_verack()
 
         # Build the blockchain
         self.tip = int(self.nodes[0].getbestblockhash(), 16)
@@ -167,14 +163,12 @@ class AssumeValidTest(BitcoinTestFramework):
         node1 = BaseNode()  # connects to node1
         connections.append(NodeConn('127.0.0.1', p2p_port(1), self.nodes[1], node1))
         node1.add_connection(connections[1])
-        node1.wait_for_verack()
 
         self.nodes.append(start_node(2, self.options.tmpdir,
                                      ["-assumevalid=" + hex(block102.sha256)]))
         node2 = BaseNode()  # connects to node2
         connections.append(NodeConn('127.0.0.1', p2p_port(2), self.nodes[2], node2))
         node2.add_connection(connections[2])
-        node2.wait_for_verack()
 
         # send header lists to all three nodes
         node0.send_header_for_blocks(self.blocks[0:2000])
