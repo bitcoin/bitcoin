@@ -59,7 +59,7 @@ thread.)
 * RPC calls are available in p2p tests.
 
 * Can be used to write free-form tests, where specific p2p-protocol behavior
-is tested.  Examples: ```p2p-accept-block.py```, ```maxblocksinflight.py```.
+is tested.  Examples: ```p2p-accept-block.py```, ```p2p-compactblocks.py```.
 
 ## Comptool
 

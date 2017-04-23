@@ -136,7 +136,6 @@ EXTENDED_SCRIPTS = [
     'txindex.py',
     'forknotify.py',
     'invalidateblock.py',
-    'maxblocksinflight.py',
     'p2p-acceptblock.py', # NOTE: needs dash_hash to pass
 ]
 
