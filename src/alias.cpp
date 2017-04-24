@@ -2884,7 +2884,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		else if(DecodeEscrowTx(tx, op, nOut, vvch) )
 		{
 			CEscrow escrow(tx);
-			opName = escrowFromOp(op);
+			opName = escrowFromOp(escrow.op);
 			bool bEscrowPay = op == OP_ESCROW_ACTIVATE;
 			if(escrow.bPaymentAck)
 			{
