@@ -3018,7 +3018,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			if(!opName.empty())
 				opType = opType + ":" + opName;
 			oPayment.push_back(Pair("type", opType));
-			oPayment.push_back(Pair("txid", tx.GetHash().GetHex()));
+			oPayment.push_back(Pair("txid", txPaymentPos.txHash.GetHex()));
 			oPayment.push_back(Pair("from", stringFromVch(txPaymentPos.vchFrom)));
 			oPayment.push_back(Pair("currency", stringFromVch(vchCurrencyCode)));	
 			CAmount paymentAmount = tx.vout[nOut].nValue;
