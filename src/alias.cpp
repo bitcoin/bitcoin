@@ -3308,11 +3308,13 @@ UniValue aliasconvertcurrency(const UniValue& params, bool fHelp) {
 	CTransaction aliasTx;
 	if (!GetTxOfAlias(vchFromString(alias), theAlias, aliasTx, true))
 		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid alias");
-	CAmount nTotalFrom = convertCurrencyCodeToSyscoin(theAlias.vchAliasPeg, vchCurrencyFrom, fCurrencyValue, chainActive.Tip()->nHeight, precision);
+	int precision;
+	
 	CAmount nTotalTo = convertCurrencyCodeToSyscoin(theAlias.vchAliasPeg, vchCurrencyTo, fCurrencyValue, chainActive.Tip()->nHeight, precision);
+	CAmount nTotalFrom = convertCurrencyCodeToSyscoin(theAlias.vchAliasPeg, vchCurrencyFrom, fCurrencyValue, chainActive.Tip()->nHeight, precision);
 	CAmount nConvertedAmount = (1/nTotalFrom) * nTotalTo;
 
 	UniValue res(UniValue::VOBJ);
-	res.push_back(Pair("amount", ValueFromAmount(nConvertedAmount)));
+	res.push_back(Pair("convertedrate", strprintf("%.*f", precision, ValueFromAmount(nConvertedAmount).get_real())));
 	return res;
 }
