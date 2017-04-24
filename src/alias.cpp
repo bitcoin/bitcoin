@@ -3192,11 +3192,10 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+name_);
         setAddress.insert(address);
         CScript scriptPubKey = GetScriptForDestination(address.Get());
-        CAmount nAmount = AmountFromValue(sendTo[name_]);
-        if (nAmount <= 0)
+        if (sendTo[name_].get_real() <= 0)
             throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
 		int precision = 2;
-		CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theAlias.vchAliasPeg, vchFromString(strCurrency), nAmount, chainActive.Tip()->nHeight, precision);
+		CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theAlias.vchAliasPeg, vchFromString(strCurrency), sendTo[name_].get_real(), chainActive.Tip()->nHeight, precision);
         totalAmount += nPricePerUnit;
         CRecipient recipient = {scriptPubKey, nPricePerUnit, false};
         vecSend.push_back(recipient);
