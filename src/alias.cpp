@@ -2843,7 +2843,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 				{
 					oName.push_back(Pair("from", stringFromVch(offer.accept.vchBuyerAlias)));
 					oName.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));	
-					oName.push_back(Pair("sysamount", ValueFromAmount(offer.accept.nPrice*offer.accept.nQty).write()));
+					oName.push_back(Pair("sysamount", ValueFromAmount(-1*offer.accept.nPrice*offer.accept.nQty).write()));
 					int precision = 2;
 					// we need to get the offer at the time of the accept
 					vector<CAliasIndex> vtxAliasPos;
@@ -2852,7 +2852,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 					CAliasIndex offerAcceptAlias;
 					offerAcceptAlias.nHeight = offer.accept.nAcceptHeight;
 					offerAcceptAlias.GetAliasFromList(vtxAliasPos);
-					CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offerAcceptAlias.vchAliasPeg, offer.sCurrencyCode, offer.accept.nPrice, offer.accept.nAcceptHeight, precision)*offer.accept.nQty;
+					CAmount nPricePerUnit = -1*convertSyscoinToCurrencyCode(offerAcceptAlias.vchAliasPeg, offer.sCurrencyCode, offer.accept.nPrice, offer.accept.nAcceptHeight, precision)*offer.accept.nQty;
 					if(nPricePerUnit == 0)
 						oName.push_back(Pair("amount", "0"));
 					else
@@ -2919,7 +2919,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 					if(offer.vchLinkOffer.empty())
 						offer.linkWhitelist.GetLinkEntryByHash(escrow.vchBuyerAlias, foundEntry);
 					oName.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));
-					oName.push_back(Pair("sysamount", ValueFromAmount(offer.GetPrice(foundEntry)*escrow.nQty).write()));
+					oName.push_back(Pair("sysamount", ValueFromAmount(-1*offer.GetPrice(foundEntry)*escrow.nQty).write()));
 					int precision = 2;
 					// we need to get the alias at the time of the accept
 					vector<CAliasIndex> vtxAliasPos;
@@ -2928,7 +2928,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 					CAliasIndex escrowAlias;
 					escrowAlias.nHeight = escrow.nAcceptHeight;
 					escrowAlias.GetAliasFromList(vtxAliasPos);
-					CAmount nPricePerUnit = convertSyscoinToCurrencyCode(escrowAlias.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(foundEntry), escrow.nAcceptHeight, precision)*escrow.nQty;
+					CAmount nPricePerUnit = -1*convertSyscoinToCurrencyCode(escrowAlias.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(foundEntry), escrow.nAcceptHeight, precision)*escrow.nQty;
 					if(nPricePerUnit == 0)
 						oName.push_back(Pair("amount", "0"));
 					else
@@ -2982,6 +2982,16 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		CTransaction tx;		
 		if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
 			continue;
+		// only alias payments that can happen are from offeraccept, escrownew or sending coins to alias
+		// for offer/escrow just save the opName to describe what the alias payment is for under "type" field response
+		if(DecodeOfferTx(tx, op, nOut, vvch) )
+		{
+			opName = offerFromOp(op);
+		}
+		else if(DecodeEscrowTx(tx, op, nOut, vvch) )
+		{
+			opName = escrowFromOp(escrow.op);
+		}
 		if(DecodeAliasTx(tx, op, nOut, vvch, true) )
 		{
 			if(vvch.size() >= 2 && vvch[1] == vchFromString("1"))
@@ -2990,7 +3000,10 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			const vector<unsigned char> &vchCurrencyCode = vvch.size() >= 4? vvch[3]: vchFromString("");
 			const vector<unsigned char> &vchAliasPeg = vvch.size() >= 3? vvch[2]: vchFromString("");
 			UniValue oPayment(UniValue::VOBJ);
-			oPayment.push_back(Pair("type", "aliaspayment"));
+			string opType = "aliaspayment";
+			if(!opName.empty())
+				opType = opType + " - " + opName;
+			oPayment.push_back(Pair("type", opType));
 			oPayment.push_back(Pair("txid", tx.GetHash().GetHex()));
 			oPayment.push_back(Pair("from", stringFromVch(txPaymentPos.vchFrom)));
 			oPayment.push_back(Pair("currency", stringFromVch(vchCurrencyCode)));	
