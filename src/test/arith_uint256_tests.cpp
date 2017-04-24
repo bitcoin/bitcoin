@@ -537,6 +537,17 @@ BOOST_AUTO_TEST_CASE(bignum_SetCompact)
     BOOST_CHECK_EQUAL(fOverflow, true);
 }
 
+BOOST_AUTO_TEST_CASE(probabilityTarget)
+{
+    arith_uint256 t;
+    for (uint32_t target_attempts = 1; target_attempts < 256; target_attempts++) {
+        double pt = 1.0/target_attempts;
+        t.SetProbabilityTarget(pt);
+        double got = t.GetProbabilityEstimate();
+        BOOST_CHECK(std::abs(got - pt) < 0.0000001);
+    }
+}
+
 
 BOOST_AUTO_TEST_CASE( getmaxcoverage ) // some more tests just to get 100% coverage
 {
