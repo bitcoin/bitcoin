@@ -28,6 +28,7 @@ class prevector_tester {
     typedef typename pretype::size_type Size;
     bool passed = true;
     FastRandomContext rand_cache;
+    uint256 rand_seed;
 
 
     template <typename A, typename B>
@@ -183,13 +184,12 @@ public:
     }
 
     ~prevector_tester() {
-        BOOST_CHECK_MESSAGE(passed, "insecure_rand_Rz: "
-                << rand_cache.Rz
-                << ", insecure_rand_Rw: "
-                << rand_cache.Rw);
+        BOOST_CHECK_MESSAGE(passed, "insecure_rand: " + rand_seed.ToString());
     }
+
     prevector_tester() {
         seed_insecure_rand();
+        rand_seed = insecure_rand_seed;
         rand_cache = insecure_rand_ctx;
     }
 };

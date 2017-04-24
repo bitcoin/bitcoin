@@ -2635,7 +2635,7 @@ static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const C
                 //that the rng is fast. We do not use a constant random sequence,
                 //because there may be some privacy improvement by making
                 //the selection random.
-                if (nPass == 0 ? insecure_rand.rand32()&1 : !vfIncluded[i])
+                if (nPass == 0 ? insecure_rand.randbool() : !vfIncluded[i])
                 {
                     nTotal += vValue[i].txout.nValue;
                     vfIncluded[i] = true;
