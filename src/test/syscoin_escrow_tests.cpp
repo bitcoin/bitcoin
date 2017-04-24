@@ -13,8 +13,6 @@ BOOST_AUTO_TEST_CASE (generate_escrow_release)
 	printf("Running generate_escrow_release...\n");
 	UniValue r;
 	GenerateBlocks(5);
-	GenerateBlocks(5, "node2");
-	GenerateBlocks(5, "node3");
 	AliasNew("node1", "buyeralias", "password", "changeddata1");
 	AliasNew("node2", "selleralias", "password", "changeddata2");
 	AliasNew("node3", "arbiteralias", "password", "changeddata3");
@@ -156,8 +154,6 @@ BOOST_AUTO_TEST_CASE (generate_escrowrelease_arbiter)
 {
 	printf("Running generate_escrowrelease_arbiter...\n");
 	GenerateBlocks(5);
-	GenerateBlocks(5, "node2");
-	GenerateBlocks(5, "node3");
 	AliasNew("node1", "buyeralias1", "password", "changeddata1");
 	AliasNew("node2", "selleralias111", "password", "changeddata2");
 	AliasNew("node3", "arbiteralias1", "password", "changeddata3");
@@ -176,8 +172,6 @@ BOOST_AUTO_TEST_CASE (generate_escrowfeedback)
 	UniValue r;
 	
 	GenerateBlocks(5);
-	GenerateBlocks(5, "node2");
-	GenerateBlocks(5, "node3");
 
 	AliasNew("node1", "sellerescrowfeedback", "password", "somedata");
 	AliasNew("node2", "buyerescrowfeedback", "password", "somedata");
@@ -212,8 +206,6 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release)
 	UniValue r;
 	printf("Running generate_escrow_linked_release...\n");
 	GenerateBlocks(5);
-	GenerateBlocks(5, "node2");
-	GenerateBlocks(5, "node3");
 	AliasNew("node1", "buyeralias2", "password", "changeddata1");
 	AliasNew("node2", "selleralias22", "password", "changeddata2");
 	AliasNew("node3", "arbiteralias2", "password", "changeddata3");
@@ -244,8 +236,6 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release_with_peg_update)
 {
 	printf("Running generate_escrow_linked_release_with_peg_update...\n");
 	GenerateBlocks(5);
-	GenerateBlocks(5, "node2");
-	GenerateBlocks(5, "node3");
 	AliasNew("node1", "buyeralias33", "password", "changeddata1");
 	AliasNew("node2", "selleralias33", "password", "changeddata2");
 	AliasNew("node3", "arbiteralias333", "password", "changeddata3");
@@ -264,8 +254,6 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release_with_peg_update)
 	string data = "{\\\"rates\\\":[{\\\"currency\\\":\\\"USD\\\",\\\"rate\\\":2690.1,\\\"precision\\\":2},{\\\"currency\\\":\\\"EUR\\\",\\\"rate\\\":269.2,\\\"precision\\\":2},{\\\"currency\\\":\\\"GBP\\\",\\\"rate\\\":2697.3,\\\"precision\\\":2},{\\\"currency\\\":\\\"CAD\\\",\\\"rate\\\":2698.0,\\\"precision\\\":2},{\\\"currency\\\":\\\"BTC\\\",\\\"rate\\\":100000.0,\\\"precision\\\":8},{\\\"currency\\\":\\\"SYS\\\",\\\"rate\\\":1.0,\\\"precision\\\":2}]}";
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg sysrates.peg " + data));
 	GenerateBlocks(5);
-	GenerateBlocks(5, "node2");
-	GenerateBlocks(5, "node3");
 	data = "{\\\"rates\\\":[{\\\"currency\\\":\\\"USD\\\",\\\"rate\\\":2690.1,\\\"precision\\\":2},{\\\"currency\\\":\\\"EUR\\\",\\\"rate\\\":218.2,\\\"precision\\\":2},{\\\"currency\\\":\\\"GBP\\\",\\\"rate\\\":2697.3,\\\"precision\\\":2},{\\\"currency\\\":\\\"CAD\\\",\\\"rate\\\":2698.0,\\\"precision\\\":2},{\\\"currency\\\":\\\"BTC\\\",\\\"rate\\\":100000.0,\\\"precision\\\":8},{\\\"currency\\\":\\\"SYS\\\",\\\"rate\\\":1.0,\\\"precision\\\":2}]}";
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg sysrates.peg " + data));
 	// ensure dependent services don't expire
@@ -273,8 +261,6 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release_with_peg_update)
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate sysrates.peg selleralias33 data"));
 	BOOST_CHECK_NO_THROW(CallRPC("node3", "aliasupdate sysrates.peg arbiteralias333 data"));
 	GenerateBlocks(5);
-	GenerateBlocks(5, "node2");
-	GenerateBlocks(5, "node3");
 	OfferUpdate("node2", "selleralias33", offerguid, "category", "titlenew", "100", "0.05", "descriptionnew", "EUR");
 	GenerateBlocks(5, "node2");
 	EscrowClaimRelease("node2", guid);
@@ -282,8 +268,6 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release_with_peg_update)
 	data = "{\\\"rates\\\":[{\\\"currency\\\":\\\"USD\\\",\\\"rate\\\":2690.1,\\\"precision\\\":2},{\\\"currency\\\":\\\"EUR\\\",\\\"rate\\\":2695.2,\\\"precision\\\":2},{\\\"currency\\\":\\\"GBP\\\",\\\"rate\\\":2697.3,\\\"precision\\\":2},{\\\"currency\\\":\\\"CAD\\\",\\\"rate\\\":2698.0,\\\"precision\\\":2},{\\\"currency\\\":\\\"BTC\\\",\\\"rate\\\":100000.0,\\\"precision\\\":8},{\\\"currency\\\":\\\"SYS\\\",\\\"rate\\\":1.0,\\\"precision\\\":2}]}";
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg sysrates.peg " + data));
 	GenerateBlocks(5);
-	GenerateBlocks(5, "node2");
-	GenerateBlocks(5, "node3");
 }
 BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 {
