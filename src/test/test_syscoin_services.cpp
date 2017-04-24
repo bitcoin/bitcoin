@@ -287,9 +287,16 @@ void GenerateBlocks(int nBlocks, const string& node)
 {
   int height, newHeight, timeoutCounter;
   UniValue r;
-	string otherNode1, otherNode2;
-	GetOtherNodes(node, otherNode1, otherNode2);
-  BOOST_CHECK_NO_THROW(r = CallRPC(node, "getinfo"));
+  string otherNode1, otherNode2;
+  GetOtherNodes(node, otherNode1, otherNode2);
+  try
+  {
+	r = CallRPC(node, "getinfo");
+  }
+  catch(const runtime_error &e)
+  {
+	return;
+  }
   newHeight = find_value(r.get_obj(), "blocks").get_int() + nBlocks;
   const string &sBlocks = strprintf("%d",nBlocks);
   BOOST_CHECK_NO_THROW(r = CallRPC(node, "generate " + sBlocks));
