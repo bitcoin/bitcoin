@@ -171,6 +171,48 @@ BOOST_AUTO_TEST_CASE (generate_sendmoneytoalias)
 	GenerateBlocks(10);
 
 }
+BOOST_AUTO_TEST_CASE (generate_aliaspay)
+{
+	printf("Running generate_aliaspay...\n");
+	UniValue r;
+	GenerateBlocks(5);
+	AliasNew("node1", "alias1.aliaspay.tld", "password", "changeddata2");
+	AliasNew("node2", "alias2.aliaspay.tld", "password", "changeddata2");
+	AliasNew("node3", "alias3.aliaspay.tld", "password", "changeddata2");
+	GenerateBlocks(10);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress alias2.aliaspay.tld  2000"), runtime_error);
+	GenerateBlocks(10);
+
+	// get balance of node2 and node3 first to know we sent right amount later
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo alias2.aliaspay.tld"));
+	string node2address = find_value(r.get_obj(), "address").get_str();
+	CAmount balanceBeforeFrom = AmountFromValue(find_value(r.get_obj(), "balance"));
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasinfo alias3.aliaspay.tld"));
+	string node3address = find_value(r.get_obj(), "address").get_str();
+	CAmount balanceBeforeTo = AmountFromValue(find_value(r.get_obj(), "balance"));
+
+	//send amount
+	BOOST_CHECK_THROW(CallRPC("node1", "aliaspay alias2.aliaspay.tld USD \"{\\\"alias3.aliaspay.tld\\\":0.4}\""), runtime_error);
+	GenerateBlocks(10);
+
+	CAmount sysDiff = 0.4 * 2690.1 * COIN;
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo alias2.aliaspay.tld"));
+	CAmount balanceAfterFrom = AmountFromValue(find_value(r.get_obj(), "balance"));
+	CAmount balanceTestAfterFrom = balanceBeforeFrom - sysDiff;
+	BOOST_CHECK_EQUAL(balanceAfterFrom, balanceTestAfterFrom);
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasinfo alias3.aliaspay.tld"));
+	CAmount balanceAfterTo = AmountFromValue(find_value(r.get_obj(), "balance"));
+	CAmount balanceTestAfterTo = balanceBeforeTo + sysDiff;
+	BOOST_CHECK_EQUAL(balanceAfterTo, balanceTestAfterTo);
+
+	// pay to node2/node3 wallets for alias funding for tests
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress " + node2address + " 500000"), runtime_error);
+	GenerateBlocks(10);
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress " + node3address + " 500000"), runtime_error);
+	GenerateBlocks(10);
+}
 BOOST_AUTO_TEST_CASE (generate_alias_offerexpiry_resync)
 {
 	printf("Running generate_offer_aliasexpiry_resync...\n");
