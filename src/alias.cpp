@@ -2978,7 +2978,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		const vector<unsigned char> &vchAliasPeg = vvch.size() >= 3? vvch[2]: vchFromString("");
 		UniValue oPayment(UniValue::VOBJ);
 		oPayment.push_back(Pair("type", "aliaspayment"));
-		oPayment.push_back(Pair("txid", tx.GetHash()));
+		oPayment.push_back(Pair("txid", tx.GetHash().GetHex()));
 		oPayment.push_back(Pair("from", stringFromVch(txPaymentPos.vchFrom)));
 		oPayment.push_back(Pair("currency", stringFromVch(vchCurrencyCode)));	
 		oPayment.push_back(Pair("sysamount", ValueFromAmount(tx.vout[txPaymentPos.nOut].nValue).write()));
