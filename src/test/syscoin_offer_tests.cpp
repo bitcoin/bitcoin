@@ -16,6 +16,8 @@ BOOST_AUTO_TEST_CASE (generate_offernew)
 	UniValue r;
 
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 
 	AliasNew("node1", "selleralias1", "password", "changeddata1");
 
@@ -54,6 +56,8 @@ BOOST_AUTO_TEST_CASE (generate_certoffer)
 	UniValue r;
 
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 
 	AliasNew("node1", "node1alias", "password", "node1aliasdata");
 	AliasNew("node1", "node1aliasa", "password", "node1aliasdata");
@@ -116,6 +120,8 @@ BOOST_AUTO_TEST_CASE (generate_offerwhitelists)
 	UniValue r;
 
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 
 	AliasNew("node1", "sellerwhitelistalias", "password", "changeddata1");
 	AliasNew("node2", "selleraddwhitelistalias", "password", "changeddata1");
@@ -170,6 +176,8 @@ BOOST_AUTO_TEST_CASE (generate_offernew_linkedoffer)
 	UniValue r;
 
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 
 	AliasNew("node1", "selleralias5", "password", "changeddata1");
 	AliasNew("node2", "selleralias6", "password", "changeddata1");
@@ -210,6 +218,8 @@ BOOST_AUTO_TEST_CASE (generate_offernew_linkedofferexmode)
 	UniValue r;
 
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 
 	AliasNew("node1", "selleralias8", "password", "changeddata1");
 	AliasNew("node2", "selleralias9", "password", "changeddata1");
@@ -232,6 +242,8 @@ BOOST_AUTO_TEST_CASE (generate_offernew_linkedlinkedoffer)
 	UniValue r;
 
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 
 	AliasNew("node1", "selleralias12", "password", "changeddata1");
 	AliasNew("node2", "selleralias13", "password", "changeddata1");
@@ -254,6 +266,8 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate)
 	UniValue r;
 	
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 
 	AliasNew("node1", "selleralias2", "password", "changeddata1");
 
@@ -289,6 +303,8 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	UniValue r;
 	
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 
 	AliasNew("node1", "selleraliascurrency", "password", "changeddata1");
 	AliasNew("node2", "buyeraliascurrency", "password", "changeddata2");
@@ -363,6 +379,8 @@ BOOST_AUTO_TEST_CASE (generate_offeraccept)
 	UniValue r;
 	
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 
 	AliasNew("node1", "selleralias3", "password", "somedata");
 	AliasNew("node2", "buyeralias3", "password", "somedata");
@@ -400,6 +418,8 @@ BOOST_AUTO_TEST_CASE (generate_linkedaccept)
 	UniValue r;
 
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 
 	AliasNew("node1", "node1aliaslinked", "password", "node1aliasdata");
 	AliasNew("node2", "node2aliaslinked", "password", "node2aliasdata");
@@ -418,6 +438,8 @@ BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
 	UniValue r;
 
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 
 	AliasNew("node1", "node1alias", "password1", "node1aliasdata");
 	AliasNew("node2", "node2alias", "password2", "node2aliasdata");
@@ -449,6 +471,8 @@ BOOST_AUTO_TEST_CASE (generate_offeracceptfeedback)
 	UniValue r;
 	
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 
 	AliasNew("node1", "selleraliasfeedback", "password", "somedata");
 	AliasNew("node2", "buyeraliasfeedback", "password", "somedata");
@@ -505,6 +529,8 @@ BOOST_AUTO_TEST_CASE (generate_offerexpired)
 	UniValue r;
 	
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 
 	AliasNew("node1", "selleralias4", "password", "somedata");
 	AliasNew("node2", "buyeralias4", "password", "somedata");
@@ -533,6 +559,8 @@ BOOST_AUTO_TEST_CASE (generate_offerexpiredexmode)
 	UniValue r;
 
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 
 	AliasNew("node1", "selleralias10", "password", "changeddata1");
 	AliasNew("node2", "selleralias11", "password", "changeddata1");
@@ -557,6 +585,8 @@ BOOST_AUTO_TEST_CASE (generate_certofferexpired)
 	UniValue r;
 
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 
 	AliasNew("node1", "node1alias2a", "password", "node1aliasdata");
 	AliasNew("node1", "node1alias2", "password", "node1aliasdata");

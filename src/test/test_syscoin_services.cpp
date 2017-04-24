@@ -471,11 +471,10 @@ void ExpireAlias(const string& alias)
 	{
 		r = NullUniValue;
 	}
-	
+	GenerateBlocks(5);
 	// ensure alias is expired
 	try
 	{
-		GenerateBlocks(5, "node1");
 		r = CallRPC("node1", "aliasinfo " + alias);
 	}
 	catch(const runtime_error &e)
@@ -488,7 +487,6 @@ void ExpireAlias(const string& alias)
 	}
 	try
 	{
-		GenerateBlocks(5, "node2");
 		r = CallRPC("node2", "aliasinfo " + alias);
 	}
 	catch(const runtime_error &e)
@@ -501,7 +499,6 @@ void ExpireAlias(const string& alias)
 	}
 	try
 	{
-		GenerateBlocks(5, "node3");
 		r = CallRPC("node3", "aliasinfo " + alias);
 	}
 	catch(const runtime_error &e)

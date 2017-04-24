@@ -10,6 +10,8 @@ BOOST_AUTO_TEST_CASE (generate_big_msgdata)
 {
 	printf("Running generate_big_msgdata...\n");
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 	AliasNew("node1", "jagmsg1", "password", "changeddata1");
 	AliasNew("node2", "jagmsg2", "password", "changeddata2");
 	AliasNew("node3", "jagmsg3", "password", "changeddata3");

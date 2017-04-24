@@ -264,7 +264,8 @@ BOOST_AUTO_TEST_CASE (generate_alias_offerexpiry_resync)
 BOOST_AUTO_TEST_CASE (generate_aliastransfer)
 {
 	printf("Running generate_aliastransfer...\n");
-	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 	UniValue r;
 	string strAddress1 = AliasNew("node1", "jagnode1", "password", "changeddata1");
 	string strAddress2 = AliasNew("node2", "jagnode2", "password", "changeddata2");
@@ -582,6 +583,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	UniValue r;
 	
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 	
 	AliasNew("node1", "aliasexpirebuyback", "passwordnew1", "somedata", "data");
 	// can't renew aliases that aren't expired
@@ -929,6 +932,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithoffer)
 	UniValue r;
 	
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 	StopNode("node3");
 	AliasNew("node1", "aliasprunewithoffer", "password", "pubdata", "privdata");
 	AliasNew("node1", "aliasprunewithoffer1", "password", "pubdata", "privdata");
@@ -952,6 +957,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithcertoffer)
 	UniValue r;
 	
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 	StopNode("node3");
 	AliasNew("node1", "aliasprunewithcertoffer", "password", "pubdata", "privdata");
 	AliasNew("node2", "aliasprunewithcertoffer2", "password", "pubdata", "privdata");
@@ -979,6 +986,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithcert)
 	UniValue r;
 	
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 	StopNode("node3");
 	AliasNew("node1", "aliasprunewithcert", "password", "pubdata", "privdata");
 	AliasNew("node2", "aliasprunewithcert2", "password", "pubdata", "privdata");
@@ -1000,6 +1009,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	UniValue r;
 	
 	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 
 	AliasNew("node1", "aliasexpire", "password", "somedata");
 	AliasNew("node1", "aliasexpire0", "password", "somedata");
