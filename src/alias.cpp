@@ -1570,19 +1570,35 @@ bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut,
 
 
 	// Strict check - bug disallowed
-	for (unsigned int i = 0; i < tx.vout.size(); i++) {
-		const CTxOut& out = tx.vout[i];
-		vector<vector<unsigned char> > vvchRead;
-		if (DecodeAliasScript(out.scriptPubKey, op, vvchRead) && ((op == OP_ALIAS_PAYMENT && payment) || (op != OP_ALIAS_PAYMENT && !payment))) {
-			nOut = i;
-			found = true;
-			vvch = vvchRead;
-			break;
+	if(payment)
+	{
+		for (unsigned int i = 0; i < tx.vout.size(); i++) {
+			const CTxOut& out = tx.vout[i];
+			vector<vector<unsigned char> > vvchRead;
+			if (DecodeAliasScript(out.scriptPubKey, op, vvchRead) && op == OP_ALIAS_PAYMENT) {
+				nOut = i;
+				vvch = vvchRead;
+				found = true;
+				// prioritize output with payment info
+				if(vvch.size() >= 4)
+					return true;
+			}
 		}
 	}
-	if (!found)
+	else
+	{
+		for (unsigned int i = 0; i < tx.vout.size(); i++) {
+			const CTxOut& out = tx.vout[i];
+			vector<vector<unsigned char> > vvchRead;
+			if (DecodeAliasScript(out.scriptPubKey, op, vvchRead) && op != OP_ALIAS_PAYMENT) {
+				nOut = i;
+				vvch = vvchRead;
+				return true;
+			}
+		}
+	}
+	if(!found)
 		vvch.clear();
-
 	return found;
 }
 
