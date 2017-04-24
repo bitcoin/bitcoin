@@ -17,9 +17,16 @@ class TxnMallTest(BitcoinTestFramework):
         parser.add_option("--mineblock", dest="mine_block", default=False, action="store_true",
                           help="Test double-spend of 1-confirmed transaction")
 
-    def setup_network(self):
-        # Start with split network:
-        return super(TxnMallTest, self).setup_network(True)
+    def setup_network(self, split=True):
+        self.nodes = []
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-use-thinblocks=0"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-use-thinblocks=0"]))
+        self.nodes.append(start_node(2, self.options.tmpdir,["-use-thinblocks=0"]))
+        self.nodes.append(start_node(3, self.options.tmpdir,["-use-thinblocks=0"]))
+        connect_nodes_bi(self.nodes,0,1)
+        connect_nodes_bi(self.nodes,2,3)
+        self.is_network_split=True
+        self.sync_all()
 
     def run_test(self):
         # All nodes should start with 1,250 BTC:
