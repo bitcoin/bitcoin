@@ -3296,4 +3296,23 @@ UniValue aliasaddscript(const UniValue& params, bool fHelp) {
 	res.push_back(Pair("result", "success"));
 	return res;
 }
-	
+UniValue aliasconvertcurrency(const UniValue& params, bool fHelp) {
+	if (fHelp || 4 != params.size())
+		throw runtime_error("aliasconvertcurrency alias currencyFrom currencyTo amountCurrencyFrom\n"
+				"Convert from a currency to another currency amount using the rates peg of an alias. Both currencies need to be defined in the rates peg.\n");
+	string alias = params[0].get_str();
+	string vchCurrencyFrom = params[1].get_str();
+	string vchCurrencyTo = params[2].get_str();
+	double fCurrencyValue =  boost::lexical_cast<double>(params[2].get_str());
+	CAliasIndex theAlias;
+	CTransaction aliasTx;
+	if (!GetTxOfAlias(vchFromString(alias), theAlias, aliasTx, true))
+		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid alias");
+	CAmount nTotalFrom = convertCurrencyCodeToSyscoin(theAlias.vchAliasPeg, vchCurrencyFrom, fCurrencyValue, chainActive.Tip()->nHeight, precision);
+	CAmount nTotalTo = convertCurrencyCodeToSyscoin(theAlias.vchAliasPeg, vchCurrencyTo, fCurrencyValue, chainActive.Tip()->nHeight, precision);
+	CAmount nConvertedAmount = (1/nTotalFrom) * nTotalTo;
+
+	UniValue res(UniValue::VOBJ);
+	res.push_back(Pair("amount", ValueFromAmount(nConvertedAmount)));
+	return res;
+}

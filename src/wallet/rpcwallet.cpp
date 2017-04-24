@@ -3007,6 +3007,7 @@ static const CRPCCommand commands[] =
     { "wallet", "aliashistory",      &aliashistory,      false },
     { "wallet", "aliasfilter",       &aliasfilter,       false },
 	{ "wallet", "aliaspay",       &aliaspay,       false },
+	{ "wallet", "aliasconvertcurrency",       &aliasconvertcurrency,       false },
 	{ "wallet", "aliasstats",        &aliasstats,       false },
 	{ "wallet", "aliasdecodemultisigredeemscript",        &aliasdecodemultisigredeemscript,       false },
 	{ "wallet", "aliasaddscript",        &aliasaddscript,       false },
