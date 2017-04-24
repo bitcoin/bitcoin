@@ -3196,7 +3196,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
         if (nAmount <= 0)
             throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
 		int precision = 2;
-		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theAlias.vchAliasPeg, vchFromString(strCurrency), nAmount, chainActive.Tip()->nHeight, precision);
+		CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theAlias.vchAliasPeg, vchFromString(strCurrency), nAmount, chainActive.Tip()->nHeight, precision);
         totalAmount += nPricePerUnit;
         CRecipient recipient = {scriptPubKey, nPricePerUnit, false};
         vecSend.push_back(recipient);
