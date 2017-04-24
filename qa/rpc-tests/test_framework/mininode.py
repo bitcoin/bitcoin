@@ -377,7 +377,7 @@ class CTxOut(object):
 
     def serialize(self):
         r = b""
-        r += struct.pack("<q", self.nValue)
+        r += struct.pack("<q", int(self.nValue))
         r += ser_string(self.scriptPubKey)
         return r
 
@@ -535,7 +535,9 @@ class CBlock(CBlockHeader):
                 i2 = min(i+1, len(hashes)-1)
                 newhashes.append(hash256(hashes[i] + hashes[i2]))
             hashes = newhashes
-        return uint256_from_str(hashes[0])
+        if hashes:
+          return uint256_from_str(hashes[0])
+        return 0
 
     def is_valid(self):
         self.calc_sha256()

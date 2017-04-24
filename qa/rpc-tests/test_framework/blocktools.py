@@ -8,7 +8,7 @@ from .mininode import *
 from .script import CScript, OP_TRUE, OP_CHECKSIG
 
 # Create a block (with regtest difficulty)
-def create_block(hashprev, coinbase, nTime=None):
+def create_block(hashprev, coinbase, nTime=None, txns=None):
     block = CBlock()
     if nTime is None:
         import time
@@ -17,7 +17,10 @@ def create_block(hashprev, coinbase, nTime=None):
         block.nTime = nTime
     block.hashPrevBlock = hashprev
     block.nBits = 0x207fffff # Will break after a difficulty adjustment...
-    block.vtx.append(coinbase)
+    if coinbase:
+        block.vtx.append(coinbase)
+    if txns:
+        block.vtx += txns
     block.hashMerkleRoot = block.calc_merkle_root()
     block.calc_sha256()
     return block
@@ -57,11 +60,15 @@ def create_coinbase(height, pubkey = None):
     return coinbase
 
 # Create a transaction with an anyone-can-spend output, that spends the
-# nth output of prevtx.
+# nth output of prevtx.  pass a single integer value to make one output,
+# or a list to create multiple outputs
 def create_transaction(prevtx, n, sig, value):
+    if not type(value) is list:
+        value = [value]
     tx = CTransaction()
     assert(n < len(prevtx.vout))
     tx.vin.append(CTxIn(COutPoint(prevtx.sha256, n), sig, 0xffffffff))
-    tx.vout.append(CTxOut(value, b""))
+    for v in value:
+        tx.vout.append(CTxOut(v, b""))
     tx.calc_sha256()
     return tx
