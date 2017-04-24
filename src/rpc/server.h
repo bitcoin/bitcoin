@@ -208,6 +208,7 @@ extern UniValue aliasinfo(const UniValue& params, bool fHelp);
 extern UniValue aliashistory(const UniValue& params, bool fHelp);
 extern UniValue aliasfilter(const UniValue& params, bool fHelp);
 extern UniValue aliaspay(const UniValue& params, bool fHelp);
+extern UniValue aliasconvertcurrency(const UniValue& params, bool fHelp);
 
 
 extern UniValue offernew(const UniValue& params, bool fHelp);
