@@ -30,7 +30,7 @@ static const int DATABASE_VERSION = 70507;
 // network protocol versioning
 //
 
-static const int PROTOCOL_VERSION = 60018;
+static const int PROTOCOL_VERSION = 60019;
 
 // earlier versions not supported and disconnected
 static const int MIN_PROTO_VERSION = 209;
@@ -45,6 +45,6 @@ static const int NOBLKS_VERSION_END = 60006;
 
 #define DISPLAY_VERSION_MAJOR       0
 #define DISPLAY_VERSION_MINOR       0
-#define DISPLAY_VERSION_REVISION    7
+#define DISPLAY_VERSION_REVISION    8
 
 #endif
