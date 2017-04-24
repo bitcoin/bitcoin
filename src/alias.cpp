@@ -2982,6 +2982,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		CTransaction tx;		
 		if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
 			continue;
+		opName = "";
 		// only alias payments that can happen are from offeraccept, escrownew or sending coins to alias
 		// for offer/escrow just save the opName to describe what the alias payment is for under "type" field response
 		if(DecodeOfferTx(tx, op, nOut, vvch) )
