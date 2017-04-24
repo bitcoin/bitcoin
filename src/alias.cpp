@@ -3026,11 +3026,11 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			CAmount paymentAmount = tx.vout[nOut].nValue;
 			if(txPaymentPos.vchFrom == vchAlias)
 			{
-				oName.push_back(Pair("category", _("send")));
+				oPayment.push_back(Pair("category", _("send")));
 				paymentAmount *= -1;	
 			}
 			else
-				oName.push_back(Pair("category", _("receive")));
+				oPayment.push_back(Pair("category", _("receive")));
 			oPayment.push_back(Pair("sysamount", ValueFromAmount(paymentAmount).write()));
 			int precision = 2;
 			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(vchAliasPeg, vchCurrencyCode, paymentAmount, txPaymentPos.nHeight, precision);
