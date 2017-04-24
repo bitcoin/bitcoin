@@ -280,6 +280,21 @@ public:
     arith_uint256& SetCompact(uint32_t nCompact, bool *pfNegative = NULL, bool *pfOverflow = NULL);
     uint32_t GetCompact(bool fNegative = false) const;
 
+    /**
+     * Set the value so that a random 256 bit digest will be smaller than this
+     * 1/pt number of times on average.
+     * @param  pt Probability target, in the range [0..1]
+     * @return    Updated self
+     */
+    arith_uint256& SetProbabilityTarget(double pt);
+
+    /**
+     * Obtain an estimate probability that a random 256 bit digest will be
+     * smaller than this.
+     * @return Probability estimate, in the range [0..1]
+     */
+    double GetProbabilityEstimate() const;
+
     friend uint256 ArithToUint256(const arith_uint256 &);
     friend arith_uint256 UintToArith256(const uint256 &);
 };

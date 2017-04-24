@@ -244,6 +244,44 @@ uint32_t arith_uint256::GetCompact(bool fNegative) const
     return nCompact;
 }
 
+arith_uint256& arith_uint256::SetProbabilityTarget(double pt)
+{
+    double pti = 1.0 - pt;      // we are actually summating the probability of failing, whereas pt is the desired probability of success
+    double psum = 0.0;          // sum of probabilities
+    double pcurr = 1.0/2;       // probability at current bit
+    // unset bits to satisfy probability
+    for (int k = WIDTH - 1; k >= 0; k--) {
+        uint32_t pbit = 0x80000000; // current bit value
+        uint32_t v = 0;
+        for (unsigned int i = 0; psum < pti && i < 32; i++) {
+            if (psum + pcurr <= pti) {
+                psum += pcurr;
+                v |= pbit;
+            }
+            pcurr /= 2;
+            pbit >>= 1;
+        }
+        pn[k] = ~v;
+    }
+    return *this;
+}
+
+double arith_uint256::GetProbabilityEstimate() const
+{
+    double psum = 0.0;
+    double pcurr = 1.0/2;       // probability at current bit
+    for (int k = WIDTH - 1; k >= 0; k--) {
+        uint32_t pbit = 0x80000000; // current bit value
+        uint32_t v = ~pn[k];
+        for (unsigned int i = 0; i < 32; i++) {
+            if (v & pbit) psum += pcurr;
+            pcurr /= 2;
+            pbit >>= 1;
+        }
+    }
+    return 1.0 - psum;
+}
+
 uint256 ArithToUint256(const arith_uint256 &a)
 {
     uint256 b;
