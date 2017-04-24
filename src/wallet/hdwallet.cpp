@@ -898,7 +898,6 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx,
             if (k >= nTries)
                 return errorN(1, sError, __func__, "Could not generate receiving public key.");
             
-            //CPubKey pkEphem = sEphem.GetPubKey();
             r.pkTo = CPubKey(pkSendTo);
             CKeyID idTo = r.pkTo.GetID();
             
@@ -1045,7 +1044,13 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx,
             int nLastBlindedOutput = -1;
             int nChangePosInOut = -1;
             
-            //for (auto &r : vecSend)
+            
+            OUTPUT_PTR<CTxOutData> outFee = MAKE_OUTPUT<CTxOutData>();
+            outFee->vData.resize(9);
+            outFee->vData[0] = DO_FEE;
+            txNew.vpout.push_back(outFee);
+            
+            
             for (size_t i = 0; i < vecSend.size(); ++i)
             {
                 auto &r = vecSend[i];
@@ -1138,16 +1143,16 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx,
                     size_t mlen = strlen(message);
                     
                     size_t nRangeProofLen = 5134;
-                    pout->vchRangeproof.resize(nRangeProofLen);
+                    pout->vRangeproof.resize(nRangeProofLen);
                     
-                    // TODO: smarter min_value selection
+                    // TODO: rangeproof parameter selection
                     
                     uint64_t min_value = 0;
                     int ct_exponent = 2;
                     int ct_bits = 32;
                     
                     if (1 != secp256k1_rangeproof_sign(secp256k1_ctx_blind,
-                        &pout->vchRangeproof[0], &nRangeProofLen,
+                        &pout->vRangeproof[0], &nRangeProofLen,
                         min_value, &pout->commitment,
                         vpBlinds.back(), nonce.begin(),
                         ct_exponent, ct_bits, 
@@ -1157,8 +1162,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx,
                         secp256k1_generator_h))
                         return errorN(1, sError, __func__, "secp256k1_rangeproof_sign failed.");
                     
-                    pout->vchRangeproof.resize(nRangeProofLen);
-                    
+                    pout->vRangeproof.resize(nRangeProofLen);
                 };
             };
             
@@ -1244,6 +1248,9 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx,
             nFeeRet = nFeeNeeded;
             continue;
         };
+        
+        std::vector<uint8_t> &vData = ((CTxOutData*)txNew.vpout[0].get())->vData;
+        memcpy(&vData[1], &nFeeRet, 8);
         
         // Embed the constructed transaction data in wtxNew.
         wtx.SetTx(MakeTransactionRef(std::move(txNew)));

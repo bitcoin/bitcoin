@@ -40,7 +40,7 @@ bool CChainParams::CheckImportCoinbase(int nHeight, uint256 &hash) const
         
         if (hash == cth.hash)
             return true;
-        return error("%s - Hash mismatch %s, expect %s.", __func__, hash.ToString(), cth.hash.ToString());
+        return error("%s - Hash mismatch at height %d: %s, expect %s.", __func__, nHeight, hash.ToString(), cth.hash.ToString());
     };
     
     return error("%s - Unknown height.", __func__);
@@ -323,10 +323,8 @@ public:
         consensus.BIP65Height = 388381; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
         consensus.BIP66Height = 363725; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
         
-        //consensus.powLimit = uint256S("0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimit = uint256S("000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         
-        // [rm]
-        consensus.powLimit = uint256S("0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 2 * 60; // 2 minutes
@@ -378,9 +376,9 @@ public:
          
         nPruneAfterHeight = 100000;
         
-        genesis = CreateGenesisBlockMainNet(1489325365, 58409, 0x1f00ffff);
+        genesis = CreateGenesisBlockMainNet(1489325366, 147067, 0x1f00ffff);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x00000dd84a1076752f39ba2dfd22722e5f6159bbe2aa7ecd9f9ed7d9ea4a2636"));
+        assert(consensus.hashGenesisBlock == uint256S("0x0000ce51b1fead038a612876fa393cc1166d7b365b0d38bb99f2f311e5a5eea5"));
         assert(genesis.hashMerkleRoot == uint256S("0x59c9ac2d5430e0ce2cc4b9848e956fcad208322169f77529bc509960fb9f2e33"));
         assert(genesis.hashWitnessMerkleRoot == genesis.hashMerkleRoot);
 
@@ -468,7 +466,6 @@ public:
         consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8");
         consensus.BIP65Height = 581885; // 00000000007f6655f22f98e72ed80d8b06dc761d5da09df0fa1dc4be4f861eb6
         consensus.BIP66Height = 330776; // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
-        //consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.powLimit = uint256S("0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 10 * 60;

@@ -490,8 +490,6 @@ public:
     /* Whether this cache has an active modifier. */
     bool hasModifier;
     
-    
-
     /**
      * Make mutable so that we can "fill the cache" even from Get-methods
      * declared as "const".  
@@ -575,6 +573,11 @@ public:
      * @return	Sum of value of all inputs (scriptSigs)
      */
     CAmount GetValueIn(const CTransaction& tx) const;
+    
+    
+    CAmount GetPlainValueIn(const CTransaction &tx,
+        size_t &nStandard, size_t &nCT, size_t &nRingCT) const;
+    
 
     //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
     bool HaveInputs(const CTransaction& tx) const;

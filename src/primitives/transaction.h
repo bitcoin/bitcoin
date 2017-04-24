@@ -47,6 +47,7 @@ enum DataOutputTypes
     DO_STEALTH              = 3,
     DO_STEALTH_PREFIX       = 4,
     DO_VOTE                 = 5,
+    DO_FEE                  = 6,
 };
 
 inline bool IsParticlTxVersion(int nVersion)
@@ -328,7 +329,7 @@ public:
     std::vector<uint8_t> vData; // first 33 bytes is always ephemeral pubkey, can contain token for stealth prefix matching
     CScript scriptPubKey;
     
-    std::vector<uint8_t> vchRangeproof;
+    std::vector<uint8_t> vRangeproof;
     
     template<typename Stream>
     void Serialize(Stream &s) const
@@ -339,7 +340,7 @@ public:
         s << *(CScriptBase*)(&scriptPubKey);
         
         if (fAllowWitness)
-            s << vchRangeproof;
+            s << vRangeproof;
     };
     
     template<typename Stream>
@@ -349,7 +350,7 @@ public:
         s >> vData;
         s >> *(CScriptBase*)(&scriptPubKey);
         
-        s >> vchRangeproof;
+        s >> vRangeproof;
     };
 };
 
@@ -691,10 +692,7 @@ private:
 public:
     /** Construct a CTransaction that qualifies as IsNull() */
     CTransaction();
-    
-    ~CTransaction()
-    {
-    };
+    ~CTransaction() {};
 
     /** Convert a CMutableTransaction into a CTransaction. */
     CTransaction(const CMutableTransaction &tx);
@@ -759,12 +757,20 @@ public:
     bool IsCoinStake() const
     {
         return GetType() == TXN_COINSTAKE
-            && vin.size() > 0;
+            && vin.size() > 0 && vpout.size() > 0;
+    }
+
+    bool GetCTFee(CAmount &nFee) const
+    {
+        if (vpout.size() < 2 || vpout[0]->nVersion != OUTPUT_DATA)
+            return false;
         
+        std::vector<uint8_t> &vData = ((CTxOutData*)vpout[0].get())->vData;
+        if (vData.size() != 9) // < ?
+            return false;
         
-        // TODO: check output version [rm]
-        // The coin stake transaction is marked with the first output empty
-        //return (vin.size() > 0 && (!vin[0].prevout.IsNull()) && vout.size() >= 2 && vout[0].IsEmpty());
+        memcpy(&nFee, &vData[1], 8);
+        return true;
     }
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)

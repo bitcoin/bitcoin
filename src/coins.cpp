@@ -306,6 +306,37 @@ const CTxOutBase *CCoinsViewCache::GetBaseOutputFor(const CTxIn& input) const
 }
 
 
+CAmount CCoinsViewCache::GetPlainValueIn(const CTransaction &tx,
+    size_t &nStandard, size_t &nCT, size_t &nRingCT) const
+{
+    if (tx.IsCoinBase())
+        return 0;
+
+    CAmount nResult = 0;
+    for (unsigned int i = 0; i < tx.vin.size(); i++)
+    {
+        const CTxOutBase *o = GetBaseOutputFor(tx.vin[i]);
+        
+        switch (o->nVersion)
+        {
+            case OUTPUT_STANDARD:
+                nResult += o->GetValue();
+                nStandard++;
+                break;
+            case OUTPUT_CT:
+                nCT++;
+                break;
+            case OUTPUT_RINGCT:
+                nRingCT++;
+                break;
+            default:
+                break;
+        };
+    };
+    
+    return nResult;
+}
+
 CAmount CCoinsViewCache::GetValueIn(const CTransaction& tx) const
 {
     if (tx.IsCoinBase())
@@ -316,9 +347,7 @@ CAmount CCoinsViewCache::GetValueIn(const CTransaction& tx) const
     {
         if (fParticlMode)
         {
-            const CTxOutBase *o = GetBaseOutputFor(tx.vin[i]);
-            if (o->nVersion == OUTPUT_STANDARD)
-                nResult += o->GetValue();
+            assert(false);
         } else
         {
             nResult += GetOutputFor(tx.vin[i]).nValue;

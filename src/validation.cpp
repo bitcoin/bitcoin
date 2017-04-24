@@ -37,6 +37,9 @@
 #include "warnings.h"
 #include "smsg/smessage.h"
 #include "pos/kernel.h"
+#include "blind.h"
+
+#include <secp256k1_rangeproof.h>
 
 #include <atomic>
 #include <sstream>
@@ -560,15 +563,24 @@ bool CheckStandardOutput(CValidationState &state, const CTxOutStandard *p, CAmou
 
 bool CheckBlindOutput(CValidationState &state, const CTxOutCT *p)
 {
-    return false;
     
-    return true;
+    uint64_t min_value, max_value;
+    int rv = secp256k1_rangeproof_verify(secp256k1_ctx_blind, &min_value, &max_value,
+        &p->commitment, p->vRangeproof.data(), p->vRangeproof.size(),
+        NULL, 0,
+        secp256k1_generator_h);
+    
+    if (fDebug)
+        LogPrintf("CheckBlindOutput rv, min_value, max_value %d, %s, %s\n",
+            rv, FormatMoney((CAmount)min_value), FormatMoney((CAmount)max_value));
+    
+    return rv;
 }
 
 bool CheckAnonOutput(CValidationState &state, const CTxOutRingCT *p)
 {
     
-    return false;
+    return state.DoS(100, false, REJECT_INVALID, "CheckAnonOutput");
     
     return true;
 }
@@ -631,7 +643,6 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
         
         if (nDataOutputs > 1) // limit 1 per txn for now, TODO: raise limit
             return state.DoS(100, false, REJECT_INVALID, "too-many-data-outputs");
-        
     } else
     {
         if (fParticlMode)
@@ -802,7 +813,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         }
     }
     }
-
+    
+    bool fBlind = false, fAnon = false;
     {
         CCoinsView dummy;
         CCoinsViewCache view(&dummy, fParticlMode);
@@ -841,8 +853,28 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 
         // Bring the best block into scope
         view.GetBestBlock();
-
-        nValueIn = view.GetValueIn(tx);
+        
+        
+        size_t nStandard = 0, nCt = 0, nRingCT = 0;
+        if (fParticlMode)
+        {
+            nValueIn = view.GetPlainValueIn(tx, nStandard, nCt, nRingCT);
+            
+            if (nStandard > 0 && (nCt > 0 || nRingCT > 0))
+                return state.DoS(100, false, REJECT_INVALID, "mixed-input-types");
+            if (nCt > 0 && (nStandard > 0 || nRingCT > 0))
+                return state.DoS(100, false, REJECT_INVALID, "mixed-input-types");
+            if (nRingCT > 0 && (nCt > 0 || nStandard > 0))
+                return state.DoS(100, false, REJECT_INVALID, "mixed-input-types");
+            
+            if (nCt > 0)
+                fBlind = true;
+            if (nRingCT > 0)
+                fAnon = true;
+        } else
+        {
+            nValueIn = view.GetValueIn(tx);
+        };
 
         // we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
         view.SetBackend(dummy);
@@ -866,8 +898,21 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 
         int64_t nSigOpsCost = GetTransactionSigOpCost(tx, view, STANDARD_SCRIPT_VERIFY_FLAGS);
         
-        CAmount nValueOut = tx.GetValueOut();
-        CAmount nFees = nValueIn-nValueOut;
+        
+        CAmount nFees = 0;
+        
+        if (fBlind || fAnon)
+        {
+            // plain fee is sent in data output at vpout[0]
+            
+            if (!tx.GetCTFee(nFees))
+                return state.DoS(100, false, REJECT_INVALID, "bad-fee-output");
+            
+        } else
+        {
+            CAmount nValueOut = tx.GetValueOut();
+            nFees = nValueIn-nValueOut;
+        };
         
         
         // nModifiedFees includes any fee deltas from PrioritiseTransaction
@@ -1357,7 +1402,8 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
     if (fParticlMode)
     {
         // only CheckProofOfWork for genesis blocks
-        if (block.hashPrevBlock.IsNull() && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+        if (block.hashPrevBlock.IsNull()
+            && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams, 0, Params().GetLastImportHeight()))
             return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
     } else
     {
@@ -1639,6 +1685,23 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
     if (!inputs.HaveInputs(tx))
         return state.Invalid(false, 0, "", "Inputs unavailable");
     
+    
+    size_t nStandard = 0, nCt = 0, nRingCT = 0;
+    /*
+        nValueIn = view.GetPlainValueIn(tx, nStandard, nCt, nRingCT);
+        
+        if (nStandard > 0 && (nCt > 0 || nRingCT > 0))
+            return state.DoS(100, false, REJECT_INVALID, "mixed-input-types");
+        if (nCt > 0 && (nStandard > 0 || nRingCT > 0))
+            return state.DoS(100, false, REJECT_INVALID, "mixed-input-types");
+        if (nRingCT > 0 && (nCt > 0 || nStandard > 0))
+            return state.DoS(100, false, REJECT_INVALID, "mixed-input-types");
+        
+        if (nCt > 0)
+            fBlind = true;
+        if (nRingCT > 0)
+            fAnon = true;
+    */
     CAmount nValueIn = 0;
     CAmount nFees = 0;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
@@ -1677,6 +1740,15 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
                 nValueIn += nOutputValue;
                 if (!MoneyRange(nOutputValue) || !MoneyRange(nValueIn))
                     return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
+                nStandard++;
+            } else
+            if (txprevout->nVersion == OUTPUT_CT)
+            {
+                nCt++;
+            } else
+            if (txprevout->nVersion == OUTPUT_RINGCT)
+            {
+                nRingCT++;
             };
         } else
         {
@@ -1685,6 +1757,8 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
         };
     }
+    
+    
     
     if (!tx.IsCoinStake())
     {
@@ -2238,6 +2312,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     std::vector<PrecomputedTransactionData> txdata;
     txdata.reserve(block.vtx.size()); // Required so that pointers to individual PrecomputedTransactionData don't get invalidated
     
+    // NOTE: TODO: Be careful traking coin when adding anon, block reward is based on nMoneySupply
+    CAmount nMoneyCreated = 0;
+    
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const CTransaction &tx = *(block.vtx[i]);
@@ -2302,7 +2379,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                     nValueOut += txout->GetValue();
             };
         };
-        
 
         // GetTransactionSigOpCost counts 3 types of sigops:
         // * legacy (always)
@@ -2315,10 +2391,36 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         txdata.emplace_back(tx);
         if (!tx.IsCoinBase())
         {
-            if (tx.IsCoinStake())
-                nStakeReward += tx.GetValueOut() - view.GetValueIn(tx);
-            else
+            size_t nStandard = 0, nCt = 0, nRingCT = 0;
+            CAmount nPlainValueIn = view.GetPlainValueIn(tx, nStandard, nCt, nRingCT);
+            if (fParticlMode)
+            {
+                if (tx.IsCoinStake())
+                {
+                    nStakeReward += tx.GetValueOut() - nPlainValueIn;
+                    nMoneyCreated += nStakeReward;
+                    
+                    if (nCt > 0 || nRingCT > 0)
+                        return state.DoS(100, error("ConnectBlock(): non-standard outputs in coinstake"),
+                             REJECT_INVALID, "bad-coinstake-outputs");
+                } else
+                {
+                    if (nCt > 0 || nRingCT > 0)
+                    {
+                        CAmount nFee;
+                        if (!tx.GetCTFee(nFee))
+                            return state.DoS(100, error("ConnectBlock(): bad-fee-output"),
+                                REJECT_INVALID, "bad-fee-output");
+                        nFees += nFee;
+                    } else
+                    {
+                        nFees += nPlainValueIn-tx.GetValueOut();
+                    };
+                }
+            } else
+            {
                 nFees += view.GetValueIn(tx)-tx.GetValueOut();
+            };
 
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
@@ -2336,14 +2438,13 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             // tx is coinbase
             CTxUndo undoDummy;
             UpdateCoins(tx, view, undoDummy, pindex->nHeight);
+            nMoneyCreated += tx.GetValueOut();
         };
         
         vPos.push_back(std::make_pair(tx.GetHash(), pos));
         pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
     }
     
-    // NOTE: TODO: Be careful traking coin when adding anon, block reward is based on nMoneySupply
-    CAmount nMoneyCreated = nValueOut - nValueIn;
     
     
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
@@ -3553,7 +3654,26 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
 unsigned int GetNextTargetRequired(const CBlockIndex *pindexLast)
 {
     const Consensus::Params &consensus = Params().GetConsensus();
-    unsigned int nProofOfWorkLimit = UintToArith256(consensus.powLimit).GetCompact();
+    
+    arith_uint256 bnProofOfWorkLimit;
+    unsigned int nProofOfWorkLimit;
+    int nHeight = pindexLast ? pindexLast->nHeight+1 : 0;
+    
+    if (nHeight < Params().GetLastImportHeight())
+    {
+        int nLastImportHeight = (int) Params().GetLastImportHeight();
+        arith_uint256 nMinProofOfWorkLimit = arith_uint256("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        arith_uint256 nMaxProofOfWorkLimit = UintToArith256(consensus.powLimit);
+        
+        arith_uint256 nStep = ((nMaxProofOfWorkLimit - nMinProofOfWorkLimit) / nLastImportHeight);
+        
+        bnProofOfWorkLimit = nMinProofOfWorkLimit + nStep * nHeight;
+        nProofOfWorkLimit = bnProofOfWorkLimit.GetCompact();
+    } else
+    {
+        bnProofOfWorkLimit = UintToArith256(consensus.powLimit);
+        nProofOfWorkLimit = bnProofOfWorkLimit.GetCompact();
+    };
 
     if (pindexLast == NULL)
         return nProofOfWorkLimit; // Genesis block
@@ -3583,7 +3703,7 @@ unsigned int GetNextTargetRequired(const CBlockIndex *pindexLast)
     bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
     bnNew /= ((nInterval + 1) * nTargetSpacing);
     
-    if (bnNew <= 0 || bnNew > UintToArith256(consensus.powLimit))
+    if (bnNew <= 0 || bnNew > bnProofOfWorkLimit)
         return nProofOfWorkLimit;
 
     return bnNew.GetCompact();
@@ -3705,7 +3825,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
         } else
         {
             bool fCheckPOW = true; // TODO: pass properly
-            if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+            if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams, nHeight, Params().GetLastImportHeight()))
                 return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
             
             // Enforce rule that the coinbase/ ends with serialized block height
