@@ -2842,6 +2842,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 				if(bOfferPay)
 				{
 					oName.push_back(Pair("from", stringFromVch(offer.accept.vchBuyerAlias)));
+					oName.push_back(Pair("category", _("send")));
 					oName.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));	
 					oName.push_back(Pair("sysamount", ValueFromAmount(-1*offer.accept.nPrice*offer.accept.nQty).write()));
 					int precision = 2;
@@ -2907,6 +2908,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 				if(bEscrowPay)
 				{
 					oName.push_back(Pair("from", stringFromVch(escrow.vchBuyerAlias)));	
+					oName.push_back(Pair("category", _("send")));
 					// we need to get the offer at the time of the accept
 					vector<COffer> vtxOfferPos;
 					if (!pofferdb->ReadOffer(escrow.vchOffer, vtxOfferPos) || vtxOfferPos.empty())
@@ -3023,7 +3025,12 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			oPayment.push_back(Pair("currency", stringFromVch(vchCurrencyCode)));	
 			CAmount paymentAmount = tx.vout[nOut].nValue;
 			if(txPaymentPos.vchFrom == vchAlias)
+			{
+				oName.push_back(Pair("category", _("send")));
 				paymentAmount *= -1;	
+			}
+			else
+				oName.push_back(Pair("category", _("receive")));
 			oPayment.push_back(Pair("sysamount", ValueFromAmount(paymentAmount).write()));
 			int precision = 2;
 			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(vchAliasPeg, vchCurrencyCode, paymentAmount, txPaymentPos.nHeight, precision);
