@@ -93,6 +93,8 @@ CCriticalSection CNode::cs_totalBytesSent;
 bool fIsChainNearlySyncd;
 CCriticalSection cs_ischainnearlysyncd;
 
+CCriticalSection cs_previousblock;
+
 // critical sections from net.cpp
 CCriticalSection cs_setservAddNodeAddresses;
 CCriticalSection cs_vAddedNodes;

@@ -44,6 +44,9 @@ static boost::atomic<bool> fIsChainNearlySyncd(false);
 extern CTweakRef<uint64_t> miningBlockSize;
 extern CTweakRef<unsigned int> ebTweak;
 
+extern CCriticalSection cs_previousblock;
+vector<uint256> vPreviousBlock;
+
 bool IsTrafficShapingEnabled();
 
 bool MiningAndExcessiveBlockValidatorRule(const unsigned int newExcessiveBlockSize, const unsigned int newMiningBlockSize)
@@ -1235,6 +1238,29 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
         if (nTotalThinBlocksInFlight == 0) {
             setPreVerifiedTxHash.clear();
             setUnVerifiedOrphanTxHash.clear();
+        }
+    }
+
+    if (!IsInitialBlockDownload())
+    {
+        LOCK(cs_orphancache);
+        {
+            // Erase any orphans that may have been in the previous block and arrived
+            // after the previous block had already been processed.
+            LOCK(cs_previousblock);
+            for (unsigned int i = 0; i < vPreviousBlock.size(); i++)
+            {
+                EraseOrphanTx(vPreviousBlock[i]);
+            }
+            vPreviousBlock.clear();
+
+            // Erase orphans from the current block that were already received.
+            for (unsigned int i = 0; i < block.vtx.size(); i++)
+            {
+                uint256 hash = block.vtx[i].GetHash();
+                vPreviousBlock.push_back(hash);
+                EraseOrphanTx(hash);
+            }
         }
     }
 
