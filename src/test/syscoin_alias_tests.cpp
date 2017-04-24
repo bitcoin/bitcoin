@@ -194,7 +194,9 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 
 	//send amount
 	BOOST_CHECK_THROW(CallRPC("node1", "aliaspay alias2.aliaspay.tld USD \"{\\\"alias3.aliaspay.tld\\\":0.4}\""), runtime_error);
-	GenerateBlocks(10);
+	GenerateBlocks(10, "node1");
+	GenerateBlocks(10, "node2");
+	GenerateBlocks(10, "node3");
 
 	CAmount sysDiff = 0.4 * 2690.1 * COIN;
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo alias2.aliaspay.tld"));
