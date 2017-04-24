@@ -2836,11 +2836,11 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			oName.push_back(Pair("txid", tx.GetHash().GetHex()));
 			if(!offer.IsNull())
 			{
+				if(oPaymentDetails[tx.GetHash()] == 1)
+					continue;
+				oPaymentDetails[tx.GetHash()] = 1;
 				if(bOfferPay)
 				{
-					if(oPaymentDetails[tx.GetHash()] == 1)
-						continue;
-					oPaymentDetails[tx.GetHash()] = 1;
 					oName.push_back(Pair("from", stringFromVch(offer.accept.vchBuyerAlias)));
 					oName.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));	
 					oName.push_back(Pair("sysamount", ValueFromAmount(offer.accept.nPrice*offer.accept.nQty).write()));
@@ -2875,6 +2875,9 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			CMessage message(tx);
 			if(!message.IsNull())
 			{
+				if(oPaymentDetails[tx.GetHash()] == 1)
+					continue;
+				oPaymentDetails[tx.GetHash()] = 1;
 				oUpdates.push_back(oName);
 			}
 		}
@@ -2898,11 +2901,11 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			oName.push_back(Pair("txid", tx.GetHash().GetHex()));
 			if(!escrow.IsNull())
 			{
+				if(oPaymentDetails[tx.GetHash()] == 1)
+					continue;
+				oPaymentDetails[tx.GetHash()] = 1;
 				if(bEscrowPay)
 				{
-					if(oPaymentDetails[tx.GetHash()] == 1)
-						continue;
-					oPaymentDetails[tx.GetHash()] = 1;
 					oName.push_back(Pair("from", stringFromVch(escrow.vchBuyerAlias)));	
 					// we need to get the offer at the time of the accept
 					vector<COffer> vtxOfferPos;
@@ -2948,6 +2951,9 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			CCert cert(tx);
 			if(!cert.IsNull())
 			{
+				if(oPaymentDetails[tx.GetHash()] == 1)
+					continue;
+				oPaymentDetails[tx.GetHash()] = 1;
 				oUpdates.push_back(oName);
 			}
 		}
@@ -2959,6 +2965,9 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			CAliasIndex alias(tx);
 			if(!alias.IsNull())
 			{
+				if(oPaymentDetails[tx.GetHash()] == 1)
+					continue;
+				oPaymentDetails[tx.GetHash()] = 1;
 				alias.txHash = tx.GetHash();
 				if(BuildAliasJson(alias, false, oName, strWalletless))
 					oUpdates.push_back(oName);
@@ -2968,28 +2977,33 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			continue;
 	}
 	BOOST_FOREACH(txPaymentPos, vtxPaymentPos) {
-		if(oPaymentDetails[txPaymentPos.txHash] == 1 || (vvch.size() >= 2 && vvch[1] == vchFromString("1")))
+		if(oPaymentDetails[txPaymentPos.txHash] == 1)
 			continue;
 		CTransaction tx;		
 		if (!GetSyscoinTransaction(txPaymentPos.nHeight, txPaymentPos.txHash, tx, Params().GetConsensus()))
 			continue;
-		oPaymentDetails[txPaymentPos.txHash] = 1;
-		const vector<unsigned char> &vchCurrencyCode = vvch.size() >= 4? vvch[3]: vchFromString("");
-		const vector<unsigned char> &vchAliasPeg = vvch.size() >= 3? vvch[2]: vchFromString("");
-		UniValue oPayment(UniValue::VOBJ);
-		oPayment.push_back(Pair("type", "aliaspayment"));
-		oPayment.push_back(Pair("txid", tx.GetHash().GetHex()));
-		oPayment.push_back(Pair("from", stringFromVch(txPaymentPos.vchFrom)));
-		oPayment.push_back(Pair("currency", stringFromVch(vchCurrencyCode)));	
-		oPayment.push_back(Pair("sysamount", ValueFromAmount(tx.vout[txPaymentPos.nOut].nValue).write()));
-		int precision = 2;
-		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(vchAliasPeg, vchCurrencyCode, tx.vout[txPaymentPos.nOut].nValue, txPaymentPos.nHeight, precision);
-		if(nPricePerUnit == 0)
-			oPayment.push_back(Pair("amount", "0"));
-		else
-			oPayment.push_back(Pair("amount", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real())));
-		oPayment.push_back(Pair("paymentoption_display",GetPaymentOptionsString(PAYMENTOPTION_SYS)));
-		oPayments.push_back(oPayment);	
+		if(DecodeAliasTx(tx, op, nOut, vvch, true) )
+		{
+			if(vvch.size() >= 2 && vvch[1] == vchFromString("1"))
+				continue;
+			oPaymentDetails[txPaymentPos.txHash] = 1;
+			const vector<unsigned char> &vchCurrencyCode = vvch.size() >= 4? vvch[3]: vchFromString("");
+			const vector<unsigned char> &vchAliasPeg = vvch.size() >= 3? vvch[2]: vchFromString("");
+			UniValue oPayment(UniValue::VOBJ);
+			oPayment.push_back(Pair("type", "aliaspayment"));
+			oPayment.push_back(Pair("txid", tx.GetHash().GetHex()));
+			oPayment.push_back(Pair("from", stringFromVch(txPaymentPos.vchFrom)));
+			oPayment.push_back(Pair("currency", stringFromVch(vchCurrencyCode)));	
+			oPayment.push_back(Pair("sysamount", ValueFromAmount(tx.vout[txPaymentPos.nOut].nValue).write()));
+			int precision = 2;
+			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(vchAliasPeg, vchCurrencyCode, tx.vout[txPaymentPos.nOut].nValue, txPaymentPos.nHeight, precision);
+			if(nPricePerUnit == 0)
+				oPayment.push_back(Pair("amount", "0"));
+			else
+				oPayment.push_back(Pair("amount", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real())));
+			oPayment.push_back(Pair("paymentoption_display",GetPaymentOptionsString(PAYMENTOPTION_SYS)));
+			oPayments.push_back(oPayment);	
+		}
 	}
 	oRes.push_back(oUpdates);	
 	oRes.push_back(oPayments);	
