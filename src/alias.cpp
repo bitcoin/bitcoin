@@ -1570,35 +1570,19 @@ bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut,
 
 
 	// Strict check - bug disallowed
-	if(payment)
-	{
-		for (unsigned int i = 0; i < tx.vout.size(); i++) {
-			const CTxOut& out = tx.vout[i];
-			vector<vector<unsigned char> > vvchRead;
-			if (DecodeAliasScript(out.scriptPubKey, op, vvchRead) && op == OP_ALIAS_PAYMENT) {
-				nOut = i;
-				vvch = vvchRead;
-				found = true;
-				// prioritize output with payment info
-				if(vvch.size() >= 4)
-					return true;
-			}
+	for (unsigned int i = 0; i < tx.vout.size(); i++) {
+		const CTxOut& out = tx.vout[i];
+		vector<vector<unsigned char> > vvchRead;
+		if (DecodeAliasScript(out.scriptPubKey, op, vvchRead) && ((op == OP_ALIAS_PAYMENT && payment) || (op != OP_ALIAS_PAYMENT && !payment))) {
+			nOut = i;
+			found = true;
+			vvch = vvchRead;
+			break;
 		}
 	}
-	else
-	{
-		for (unsigned int i = 0; i < tx.vout.size(); i++) {
-			const CTxOut& out = tx.vout[i];
-			vector<vector<unsigned char> > vvchRead;
-			if (DecodeAliasScript(out.scriptPubKey, op, vvchRead) && op != OP_ALIAS_PAYMENT) {
-				nOut = i;
-				vvch = vvchRead;
-				return true;
-			}
-		}
-	}
-	if(!found)
+	if (!found)
 		vvch.clear();
+
 	return found;
 }
 
@@ -3009,10 +2993,23 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		{
 			opName = escrowFromOp(op);
 		}
-		if(DecodeAliasTx(tx, op, nOut, vvch, true) )
+		bool foundPayment = false;
+		for (unsigned int i = 0; i < tx.vout.size(); i++) {
+			const CTxOut& out = tx.vout[i];
+			vector<vector<unsigned char> > vvchRead;
+			if (DecodeAliasScript(out.scriptPubKey, op, vvchRead) && op == OP_ALIAS_PAYMENT) {
+				if(vvch.size() >= 2 && vvch[1] == vchFromString("1"))
+					continue;
+				nOut = i;
+				vvch = vvchRead;
+				foundPayment = true;
+				// prioritize output with payment info
+				if(vvch.size() >= 4)
+					break;
+			}
+		}
+		if(foundPayment)
 		{
-			if(vvch.size() >= 2 && vvch[1] == vchFromString("1"))
-				continue;
 			oPaymentDetails[txPaymentPos.txHash] = 1;
 			const vector<unsigned char> &vchCurrencyCode = vvch.size() >= 4? vvch[3]: vchFromString("");
 			const vector<unsigned char> &vchAliasPeg = vvch.size() >= 3? vvch[2]: vchFromString("");
