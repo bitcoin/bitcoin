@@ -5940,7 +5940,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
         }
 
         if (!fAlreadyHave)
-           thinBlock.process(pfrom, nSizeThinBlock, strCommand);
+            thinBlock.process(pfrom, nSizeThinBlock, strCommand);
     }
 
 
