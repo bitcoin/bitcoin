@@ -275,12 +275,6 @@ void GenerateMainNetBlocks(int nBlocks, const string& node)
 	}
 	BOOST_CHECK(newHeight >= targetHeight);
 }
-void GenerateBlocks(int nBlocks)
-{
-	GenerateBlocks(nBlocks, "node1");
-	GenerateBlocks(nBlocks, "node2");
-	GenerateBlocks(nBlocks, "node3");
-}
 // generate n Blocks, with up to 10 seconds relay time buffer for other nodes to get the blocks.
 // may fail if your network is slow or you try to generate too many blocks such that can't relay within 10 seconds
 void GenerateBlocks(int nBlocks, const string& node)
@@ -369,7 +363,9 @@ void CreateSysRatesIfNotExist()
 	}
 	catch(const runtime_error& err)
 	{
-		GenerateBlocks(200);	
+		GenerateBlocks(200, "node1");	
+		GenerateBlocks(200, "node2");	
+		GenerateBlocks(200, "node3");
 		try
 		{
 			AliasNew("node1", "sysrates.peg", "password", data);
@@ -1575,7 +1571,9 @@ const string LinkOfferAccept(const string& ownernode, const string& buyernode, c
 	const UniValue &arr = r.get_array();
 	string acceptguid = arr[1].get_str();
 
-	GenerateBlocks(5);
+	GenerateBlocks(5, "node1");
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 	const UniValue &acceptSellerValue = FindOfferAcceptList(ownernode, rootalias, offerguid, acceptguid);
 	
 	int discount = atoi(find_value(acceptSellerValue, "offer_discount_percentage").get_str().c_str());
@@ -1606,7 +1604,9 @@ const string LinkOfferAccept(const string& ownernode, const string& buyernode, c
 	BOOST_CHECK_EQUAL(balanceResellerBefore ,  balanceResellerAfter);
 	nSellerTotal += nCommission;
 	BOOST_CHECK(find_value(acceptReSellerValue, "pay_message").get_str() != pay_message);
-	GenerateBlocks(2);
+	GenerateBlocks(2, "node1");
+	GenerateBlocks(2, "node2");
+	GenerateBlocks(2, "node3");
 
 	BOOST_CHECK_EQUAL(nSellerTotal, nTotal);
 	BOOST_CHECK_THROW(r = CallRPC(buyernode, "offeracceptacknowledge " + offerguid + " " + acceptguid + " message"), runtime_error);

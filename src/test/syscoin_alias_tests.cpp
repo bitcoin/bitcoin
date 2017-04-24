@@ -182,6 +182,9 @@ BOOST_AUTO_TEST_CASE (generate_alias_offerexpiry_resync)
 	AliasNew("node1", "aliasold", "password", "changeddata1");
 	printf("Sleeping 5 seconds between the creation of the two aliases for this test...\n");
 	MilliSleep(5000);
+	GenerateBlocks(5, "node1");
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
 	GenerateBlocks(50);
 	AliasNew("node1", "aliasnew", "passworda", "changeddata1");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo aliasold"));
@@ -1079,7 +1082,9 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	StartNode("node3");
 	ExpireAlias("aliasexpirednode2");
 	
-	GenerateBlocks(5);
+	GenerateBlocks(5, "node3");
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node1");
 	// since all aliases are expired related to that escrow, the escrow was pruned
 	BOOST_CHECK_THROW(CallRPC("node3", "escrowinfo " + escrowguid), runtime_error);
 	// and node2
