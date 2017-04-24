@@ -5916,9 +5916,21 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
             if (mi == mapBlockIndex.end())
             {
                 Misbehaving(pfrom->GetId(), 10);
-                return error("xthinblock %s from peer %s (%d) will not connect", prevHash.ToString(),
+                return error("xthinblock from peer %s (%d) will not connect, unknown previous block %s",
                     pfrom->addrName.c_str(),
-                    pfrom->id);
+                    pfrom->id,
+                    prevHash.ToString());
+            }
+            CBlockIndex* pprev = mi->second;
+            CValidationState state;
+            if (!ContextualCheckBlockHeader(thinBlock.header, state, pprev))
+            {
+                // Thin block does not fit within our blockchain
+                Misbehaving(pfrom->GetId(), 100);
+                return error("thinblock from peer %s (%d) contextual error: %s",
+                    pfrom->addrName.c_str(),
+                    pfrom->id,
+                    state.GetRejectReason().c_str());
             }
         }
 
@@ -5972,9 +5984,21 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
             if (mi == mapBlockIndex.end())
             {
                 Misbehaving(pfrom->GetId(), 10);
-                return error("thinblock %s from peer %s (%d) will not connect", prevHash.ToString(),
+                return error("thinblock from peer %s (%d) will not connect, unknown previous block %s",
                     pfrom->addrName.c_str(),
-                    pfrom->id);
+                    pfrom->id,
+                    prevHash.ToString());
+            }
+            CBlockIndex* pprev = mi->second;
+            CValidationState state;
+            if (!ContextualCheckBlockHeader(thinBlock.header, state, pprev))
+            {
+                // Thin block does not fit within our blockchain
+                Misbehaving(pfrom->GetId(), 100);
+                return error("thinblock from peer %s (%d) contextual error: %s",
+                    pfrom->addrName.c_str(),
+                    pfrom->id,
+                    state.GetRejectReason().c_str());
             }
         }
 
