@@ -36,6 +36,10 @@ public:
         READWRITE(vTxHashes);
         READWRITE(vMissingTx);
     }
+
+    CInv GetInv() { return CInv(MSG_BLOCK, header.GetHash()); }
+    bool process(CNode* pfrom, int nSizeThinbBlock, std::string strCommand);
+    bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state);
 };
 
 class CXThinBlock
@@ -162,6 +166,7 @@ bool CanThinBlockBeDownloaded(CNode* pto);
 void ConnectToThinBlockNodes();
 void CheckNodeSupportForThinBlocks();
 void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv);
+bool IsThinBlockValid(const CNode *pfrom, const std::vector<CTransaction> &vMissingTx, const CBlockHeader &header);
 void BuildSeededBloomFilter(CBloomFilter& memPoolFilter, std::vector<uint256>& vOrphanHashes, uint256 hash, bool fDeterministic = false);
 
 // Xpress Validation: begin

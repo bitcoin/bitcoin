@@ -88,6 +88,8 @@ uint64_t nLocalHostNonce = 0;
 static std::vector<ListenSocket> vhListenSocket;
 extern CAddrMan addrman;
 int nMaxConnections = DEFAULT_MAX_PEER_CONNECTIONS;
+int nMinXthinNodes = MIN_XTHIN_NODES;
+
 bool fAddressesInitialized = false;
 std::string strSubVersion;
 
@@ -495,6 +497,7 @@ void CNode::PushVersion()
     PushMessage(NetMsgType::VERSION, PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
                 nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, BUComments),
                 nBestHeight, !GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY));
+    tVersionSent = GetTime();
 }
 
 
@@ -1788,12 +1791,81 @@ void ThreadOpenConnections()
 
     // Initiate network connections
     int64_t nStart = GetTime();
-    while (true) {
+    unsigned int nDisconnects = 0;
+    while (true)
+    {
         ProcessOneShot();
 
         MilliSleep(500);
 
-        CSemaphoreGrant grant(*semOutbound);
+        // Only connect out to one peer per network group (/16 for IPv4).
+        // Do this here so we don't have to critsect vNodes inside mapAddresses critsect.
+        // And also must do this before the semaphore grant so that we don't have to block
+        // if the grants are all taken and we want to disconnect a node in the event that
+        // we don't have enough connections to XTHIN capable nodes yet.
+        int nOutbound = 0;
+        int nThinBlockCapable = 0;
+        set<vector<unsigned char> > setConnected;
+        CNode* ptemp = NULL;
+        bool fDisconnected = false;
+        {
+            LOCK(cs_vNodes);
+            BOOST_FOREACH (CNode* pnode, vNodes)
+            {
+                if (pnode->fAutoOutbound) // only count outgoing connections.
+                {
+                    setConnected.insert(pnode->addr.GetGroup());
+                    nOutbound++;
+
+                    if (pnode->ThinBlockCapable())
+                        nThinBlockCapable++;
+                    else
+                        ptemp = pnode;
+                }
+            }
+            // Disconnect a node that is not XTHIN capable if all outbound slots are full and we
+            // have not yet connected to enough XTHIN nodes.
+            nMinXthinNodes = GetArg("-min-xthin-nodes", MIN_XTHIN_NODES);
+            if (nOutbound >= nMaxOutConnections &&
+                nThinBlockCapable <= min(nMinXthinNodes, nMaxOutConnections) &&
+                nDisconnects < MAX_DISCONNECTS && IsThinBlocksEnabled() && IsChainNearlySyncd())
+            {
+                if (ptemp != NULL)
+                {
+                    ptemp->fDisconnect = true;
+                    fDisconnected = true;
+                    nDisconnects++;
+                }
+            }
+        }
+
+        // If disconnected then wait for disconnection completion
+        if (fDisconnected)
+        {
+            while (true)
+            {
+                MilliSleep(500);
+                {
+                    LOCK(cs_vNodes);
+                    if (find(vNodes.begin(), vNodes.end(), ptemp) == vNodes.end())
+                        break;
+                }
+            }
+        }
+
+        // During IBD we do not actively disconnect and search for XTHIN capable nodes therefore
+        // we need to check occasionally whether IBD is complete, meaning IsChainNearlySynd() returns true.
+        // Therefore we do a try_wait() rather than wait() when aquiring the semaphore. A try_wait() is
+        // indicated by passing "true" to CSemaphore grant().
+        CSemaphoreGrant grant(*semOutbound, true);
+        if (!grant)
+        {
+            // If the try_wait() fails, meaning all grants are currently in use, then we wait for one minute
+            // to check again whether we should disconnect any nodes.  We don't have to check this too often
+            // as this is most relevant during IBD.
+            MilliSleep(60000);
+            continue;
+        }
         boost::this_thread::interruption_point();
 
         // Add seed nodes if DNS seeds are all down (an infrastructure attack?).
@@ -1810,25 +1882,10 @@ void ThreadOpenConnections()
         // Choose an address to connect to based on most recently seen
         //
         CAddress addrConnect;
-
-        // Only connect out to one peer per network group (/16 for IPv4).
-        // Do this here so we don't have to critsect vNodes inside mapAddresses critsect.
-        int nOutbound = 0;
-        set<vector<unsigned char> > setConnected;
-        {
-            LOCK(cs_vNodes);
-            BOOST_FOREACH (CNode* pnode, vNodes) {
-                if (!pnode->fInbound) {
-                    setConnected.insert(pnode->addr.GetGroup());
-                    nOutbound++;
-                }
-            }
-        }
-
         int64_t nANow = GetAdjustedTime();
-
         int nTries = 0;
-        while (true) {
+        while (true)
+        {
             CAddrInfo addr = addrman.Select();
 
             // if we selected an invalid address, restart
@@ -1858,8 +1915,18 @@ void ThreadOpenConnections()
         }
 
         if (addrConnect.IsValid())
+        {
             //Seeded outbound connections track against the original semaphore
-            OpenNetworkConnection(addrConnect, &grant);
+            if (OpenNetworkConnection(addrConnect, &grant))
+            {
+                LOCK(cs_vNodes);
+                CNode* pnode = FindNode((CService)addrConnect);
+                // We need to use a separate outbound flag so as not to differentiate these outbound 
+                // nodes with ones that were added using -addnode -connect-thinblock or -connect.
+                if (pnode)
+                    pnode->fAutoOutbound = true;
+            }
+        }
     }
 }
 
@@ -2657,7 +2724,11 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     fOneShot = false;
     fClient = false; // set by version message
     fInbound = fInboundIn;
+    fAutoOutbound = false;
     fNetworkNode = false;
+    tVersionSent = -1;
+    fVerackSent = false;
+    fBUVersionSent = false;
     fSuccessfullyConnected = false;
     fDisconnect = false;
     nRefCount = 0;
@@ -2740,6 +2811,7 @@ CNode::~CNode()
     // We must set this to false on disconnect otherwise we will have trouble reconnecting -addnode nodes
     // if the remote peer restarts.
     fSuccessfullyConnected = false;
+    fAutoOutbound = false;
 
     // BUIP010 - Xtreme Thinblocks - end section
 

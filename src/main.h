@@ -88,6 +88,8 @@ static const int DEFAULT_SCRIPTCHECK_THREADS = 0;
 /** Timeout in seconds during which a peer must stall block download progress before being disconnected. */
 //static const unsigned int BLOCK_STALLING_TIMEOUT = 2;
 static const unsigned int BLOCK_STALLING_TIMEOUT = 60; // BU: request manager handles block timeouts at 30 seconds
+/** Timeout in seconds during which we must receive a VERACK message after having first sent a VERSION message */
+static const unsigned int VERACK_TIMEOUT = 60;
 /** Number of headers sent in one getheaders result. We rely on the assumption that if a peer sends
  *  less than this number, we reached its tip. Changing this value is a protocol upgrade. */
 static const unsigned int MAX_HEADERS_RESULTS = 2000;
@@ -114,7 +116,7 @@ static const int64_t BLOCK_DOWNLOAD_TIMEOUT_BASE = 1000000;
 /** Additional block download timeout per parallel downloading peer (i.e. 5 min) */
 static const int64_t BLOCK_DOWNLOAD_TIMEOUT_PER_PEER = 500000;
 /** Timeout in secs for the initial sync. If we don't receive the first batch of headers */
-static const uint8_t INITIAL_HEADERS_TIMEOUT = 30;
+static const uint32_t INITIAL_HEADERS_TIMEOUT = 30;
 
 static const unsigned int DEFAULT_LIMITFREERELAY = 15;
 static const bool DEFAULT_RELAYPRIORITY = true;
@@ -230,6 +232,7 @@ bool LoadBlockIndex();
 void UnloadBlockIndex();
 /** Process protocol messages received from a given node */
 bool ProcessMessages(CNode* pfrom);
+extern bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, int64_t nTimeReceived);
 /**
  * Send queued protocol messages to be sent to a give node.
  *

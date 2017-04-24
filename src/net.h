@@ -70,6 +70,10 @@ static const size_t SETASKFOR_MAX_SZ = 2 * MAX_INV_SZ;
 static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 /** BU: The maximum numer of outbound peer connections */
 static const unsigned int DEFAULT_MAX_OUTBOUND_CONNECTIONS = 8;
+/** BU: The minimum number of xthin nodes to connect */
+static const uint8_t MIN_XTHIN_NODES = 4;
+/** BU: The maximum disconnects while searching for xthin nodes to connect */
+static const unsigned int MAX_DISCONNECTS = 500;
 /** The default for -maxuploadtarget. 0 = Unlimited */
 static const uint64_t DEFAULT_MAX_UPLOAD_TARGET = 0;
 /** Default for blocks only*/
@@ -173,7 +177,8 @@ extern CAddrMan addrman;
 
 /** Maximum number of connections to simultaneously allow (aka connection slots) */
 extern int nMaxConnections;
-
+/** The minimum number of xthin nodes to connect to */
+extern int nMinXthinNodes;
 extern std::vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;
 extern std::map<CInv, CDataStream> mapRelay;
@@ -376,7 +381,11 @@ public:
     bool fOneShot;
     bool fClient;
     bool fInbound;
-    bool fNetworkNode;
+    bool fAutoOutbound; // any outbound node not connected with -addnode, connect-thinblock or -connect
+    bool fNetworkNode; // any outbound node
+    int64_t tVersionSent;
+    bool fVerackSent;
+    bool fBUVersionSent;
     bool fSuccessfullyConnected;
     bool fDisconnect;
     // We use fRelayTxes for two purposes -
