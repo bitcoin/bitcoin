@@ -2838,9 +2838,9 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			{
 				if(bOfferPay)
 				{
-					if(oPaymentDetails[txPaymentPos.txHash] == 1)
+					if(oPaymentDetails[tx.GetHash()] == 1)
 						continue;
-					oPaymentDetails[txPaymentPos.txHash] = 1;
+					oPaymentDetails[tx.GetHash()] = 1;
 					oName.push_back(Pair("from", stringFromVch(offer.accept.vchBuyerAlias)));
 					oName.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));	
 					oName.push_back(Pair("sysamount", ValueFromAmount(offer.accept.nPrice*offer.accept.nQty).write()));
@@ -2900,9 +2900,9 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			{
 				if(bEscrowPay)
 				{
-					if(oPaymentDetails[txPaymentPos.txHash] == 1)
+					if(oPaymentDetails[tx.GetHash()] == 1)
 						continue;
-					oPaymentDetails[txPaymentPos.txHash] = 1;
+					oPaymentDetails[tx.GetHash()] = 1;
 					oName.push_back(Pair("from", stringFromVch(escrow.vchBuyerAlias)));	
 					// we need to get the offer at the time of the accept
 					vector<COffer> vtxOfferPos;
@@ -2977,8 +2977,8 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		const vector<unsigned char> &vchCurrencyCode = vvch.size() >= 4? vvch[3]: vchFromString("");
 		const vector<unsigned char> &vchAliasPeg = vvch.size() >= 3? vvch[2]: vchFromString("");
 		UniValue oPayment(UniValue::VOBJ);
-		oPayment.push_back(Pair("type", aliasFromOp(op)));
-		oPayment.push_back(Pair("txid", txPaymentPos.txHash.GetHex()));
+		oPayment.push_back(Pair("type", "aliaspayment"));
+		oPayment.push_back(Pair("txid", tx.GetHash()));
 		oPayment.push_back(Pair("from", stringFromVch(txPaymentPos.vchFrom)));
 		oPayment.push_back(Pair("currency", stringFromVch(vchCurrencyCode)));	
 		oPayment.push_back(Pair("sysamount", ValueFromAmount(tx.vout[txPaymentPos.nOut].nValue).write()));
@@ -3098,14 +3098,15 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
             "\nSend multiple times from an alias. Amounts are double-precision floating point numbers."
             + HelpRequiringPassphrase() + "\n"
             "\nArguments:\n"
-			"1. \"aliasfrom\"			(string, required) alias to pay from\n"
-            "2. \"amounts\"             (string, required) A json object with aliases and amounts\n"
+			"1. \"aliasfrom\"			(string, required) Alias to pay from\n"
+			"2. \"currency\"			(string, required) Currency to pay from, must be valid in the rates peg in aliasfrom\n"
+            "3. \"amounts\"             (string, required) A json object with aliases and amounts\n"
             "    {\n"
             "      \"address\":amount   (numeric or string) The syscoin alias is the key, the numeric amount (can be string) in " + CURRENCY_UNIT + " is the value\n"
             "      ,...\n"
             "    }\n"
-			"3. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
-            "4. \"comment\"             (string, optional) A comment\n"
+			"4. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
+            "5. \"comment\"             (string, optional) A comment\n"
             "\nResult:\n"
             "\"transactionid\"          (string) The transaction id for the send. Only 1 transaction is created regardless of \n"
             "                                    the number of addresses.\n"
@@ -3122,7 +3123,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 	CAliasIndex theAlias;
 	CTransaction aliasTx;
 	if (!GetTxOfAlias(vchFromString(strFrom), theAlias, aliasTx, true))
-		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid alias");
+		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid fromalias");
     string strCurrency = params[1].get_str();
     UniValue sendTo = params[2].get_obj();
     int nMinDepth = 1;
