@@ -423,12 +423,7 @@ void CDB::Flush()
     if (activeTxn)
         return;
 
-    // Flush database activity from memory pool to disk log
-    unsigned int nMinutes = 0;
-    if (fReadOnly)
-        nMinutes = 1;
-
-    bitdb.dbenv->txn_checkpoint(nMinutes ? GetArg("-dblogsize", DEFAULT_WALLET_DBLOGSIZE) * 1024 : 0, nMinutes, 0);
+    bitdb.dbenv->memp_sync(NULL);
 }
 
 void CDB::Close()
