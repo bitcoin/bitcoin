@@ -7,6 +7,7 @@
 #define BITCOIN_WALLET_WALLET_H
 
 #include "amount.h"
+#include "base58.h"
 #include "streams.h"
 #include "tinyformat.h"
 #include "ui_interface.h"
@@ -716,6 +717,12 @@ private:
      */
     bool AddWatchOnly(const CScript& dest) override;
 
+    /**
+     * Addresses designated as 'frozen'; coins will not to be selected during coin selection nor listed in unspent.
+     * Set via -freezeaddress
+     */
+    std::set<CBitcoinAddress> setFrozenAddresses;
+
 public:
     /*
      * Main wallet lock.
@@ -823,6 +830,7 @@ public:
     void UnlockCoin(const COutPoint& output);
     void UnlockAllCoins();
     void ListLockedCoins(std::vector<COutPoint>& vOutpts);
+    bool IsFrozenCoin(const CTxOut& txout) const;
 
     /*
      * Rescan abort properties
