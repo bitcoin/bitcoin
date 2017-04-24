@@ -3301,8 +3301,8 @@ UniValue aliasconvertcurrency(const UniValue& params, bool fHelp) {
 		throw runtime_error("aliasconvertcurrency alias currencyFrom currencyTo amountCurrencyFrom\n"
 				"Convert from a currency to another currency amount using the rates peg of an alias. Both currencies need to be defined in the rates peg.\n");
 	string alias = params[0].get_str();
-	string vchCurrencyFrom = vchFromValue(params[1]);
-	string vchCurrencyTo = vchFromValue(params[2]);
+	vector<unsigned char> vchCurrencyFrom = vchFromValue(params[1]);
+	vector<unsigned char> vchCurrencyTo = vchFromValue(params[2]);
 	double fCurrencyValue =  boost::lexical_cast<double>(params[2].get_str());
 	CAliasIndex theAlias;
 	CTransaction aliasTx;
