@@ -18,7 +18,7 @@
 #include <stdint.h>
 
 #include <boost/foreach.hpp>
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 
 /** 
  * Pruned version of CTransaction: only retains metadata and unspent transaction outputs
@@ -280,7 +280,7 @@ struct CCoinsCacheEntry
     CCoinsCacheEntry() : coins(), flags(0) {}
 };
 
-typedef boost::unordered_map<uint256, CCoinsCacheEntry, SaltedTxidHasher> CCoinsMap;
+typedef std::unordered_map<uint256, CCoinsCacheEntry, SaltedTxidHasher> CCoinsMap;
 
 /** Cursor for iterating over CoinsView state */
 class CCoinsViewCursor
