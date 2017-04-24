@@ -2832,7 +2832,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 				bOfferPay = false;
 			}
 			UniValue oName(UniValue::VOBJ);
-			oName.push_back(Pair("type", opName));
+			oName.push_back(Pair("type", "aliaspayment:" + opName));
 			oName.push_back(Pair("txid", tx.GetHash().GetHex()));
 			if(!offer.IsNull())
 			{
@@ -2897,7 +2897,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 				bEscrowPay = false;
 			}
 			UniValue oName(UniValue::VOBJ);
-			oName.push_back(Pair("type", opName));
+			oName.push_back(Pair("type", "aliaspayment:" + opName));
 			oName.push_back(Pair("txid", tx.GetHash().GetHex()));
 			if(!escrow.IsNull())
 			{
@@ -3003,7 +3003,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			UniValue oPayment(UniValue::VOBJ);
 			string opType = "aliaspayment";
 			if(!opName.empty())
-				opType = opType + " - " + opName;
+				opType = opType + ":" + opName;
 			oPayment.push_back(Pair("type", opType));
 			oPayment.push_back(Pair("txid", tx.GetHash().GetHex()));
 			oPayment.push_back(Pair("from", stringFromVch(txPaymentPos.vchFrom)));
