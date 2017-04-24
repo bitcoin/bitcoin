@@ -73,7 +73,7 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock, string strCommand)
     {
         LOCK(cs_main);
         Misbehaving(pfrom->GetId(), 100);
-        return error("Thinblock merkelroot does not match computed merkleroot, peer=%d", pfrom->GetId());
+        return error("Thinblock merkle root does not match computed merkle root, peer=%d", pfrom->GetId());
     }
 
     // Create the mapMissingTx from all the supplied tx's in the xthinblock
