@@ -85,6 +85,7 @@
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
 #include <openssl/conf.h>
+#include <thread>
 
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
@@ -989,11 +990,7 @@ bool SetupNetworking()
 
 int GetNumCores()
 {
-#if BOOST_VERSION >= 105600
-    return boost::thread::physical_concurrency();
-#else // Must fall back to hardware_concurrency, which unfortunately counts virtual cores
-    return boost::thread::hardware_concurrency();
-#endif
+    return std::thread::hardware_concurrency();
 }
 
 
