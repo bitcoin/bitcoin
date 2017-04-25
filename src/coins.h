@@ -452,6 +452,7 @@ public:
     // Standard CCoinsView methods
     bool GetCoins(const uint256 &txid, CCoins &coins) const;
     bool HaveCoins(const uint256 &txid) const;
+    bool HaveCoins(const COutPoint &outpoint) const;
     uint256 GetBestBlock() const;
     void SetBestBlock(const uint256 &hashBlock);
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
@@ -471,6 +472,14 @@ public:
     const CCoins* AccessCoins(const uint256 &txid) const;
 
     /**
+     * Return a copy of a Coin in the cache, or a pruned one if not found. This is
+     * more efficient than GetCoins. Modifications to other cache entries are
+     * allowed while accessing the returned pointer.
+     * TODO: return a reference to a Coin after changing CCoinsViewCache storage.
+     */
+    const Coin AccessCoin(const COutPoint &output) const;
+
+    /**
      * Return a modifiable reference to a CCoins. If no entry with the given
      * txid exists, a new one is created. Simultaneous modifications are not
      * allowed.
@@ -487,6 +496,19 @@ public:
      * are not allowed.
      */
     CCoinsModifier ModifyNewCoins(const uint256 &txid, bool coinbase);
+
+    /**
+     * Add a coin. Set potential_overwrite to true if a non-pruned version may
+     * already exist.
+     */
+    void AddCoin(const COutPoint& outpoint, Coin&& coin, bool potential_overwrite);
+
+    /**
+     * Spend a coin. Pass moveto in order to get the deleted data.
+     * If no unspent output exists for the passed outpoint, this call
+     * has no effect.
+     */
+    void SpendCoin(const COutPoint &outpoint, Coin* moveto = nullptr);
 
     /**
      * Push the modifications applied to this cache to its base.
@@ -525,12 +547,21 @@ public:
     friend class CCoinsModifier;
 
 private:
-    CCoinsMap::const_iterator FetchCoins(const uint256 &txid) const;
+    CCoinsMap::iterator FetchCoins(const uint256 &txid) const;
 
     /**
      * By making the copy constructor private, we prevent accidentally using it when one intends to create a cache on top of a base cache.
      */
     CCoinsViewCache(const CCoinsViewCache &);
 };
+
+//! Utility function to add all of a transaction's outputs to a cache.
+// It assumes that overwrites are only possible for coinbase transactions,
+// TODO: pass in a boolean to limit these possible overwrites to known
+// (pre-BIP34) cases.
+void AddCoins(CCoinsViewCache& cache, const CTransaction& tx, int nHeight);
+
+//! Utility function to find any unspent output with a given txid.
+const Coin AccessByTxid(const CCoinsViewCache& cache, const uint256& txid);
 
 #endif // BITCOIN_COINS_H
