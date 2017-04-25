@@ -285,6 +285,7 @@ bool CXThinBlock::process(CNode *pfrom,
     map<uint64_t, uint256> mapPartialTxHash;
     vector<uint256> memPoolHashes;
 
+    bool fMerkleRootCorrect = true;
     {
         // Do the orphans first before taking the mempool.cs lock, so that we maintain correct locking order.
         LOCK(cs_orphancache);
@@ -338,43 +339,52 @@ bool CXThinBlock::process(CNode *pfrom,
             uint256 merkleroot = ComputeMerkleRoot(fullTxHashes, &mutated);
             if (header.hashMerkleRoot != merkleroot)
             {
-                LOCK(cs_main);
-                Misbehaving(pfrom->GetId(), 100);
-                return error("Thinblock merkelroot does not match computed merkleroot, peer=%d", pfrom->GetId());
+                fMerkleRootCorrect = false;
             }
-
-            // Look for each transaction in our various pools and buffers.
-            // With xThinBlocks the vTxHashes contains only the first 8 bytes of the tx hash.
-            for (const uint256 hash : fullTxHashes)
+            else
             {
-                // Replace the truncated hash with the full hash value if it exists
-                CTransaction tx;
-                if (!hash.IsNull())
+                // Look for each transaction in our various pools and buffers.
+                // With xThinBlocks the vTxHashes contains only the first 8 bytes of the tx hash.
+                for (const uint256 hash : fullTxHashes)
                 {
-                    bool inMemPool = mempool.lookup(hash, tx);
-                    bool inMissingTx = mapMissingTx.count(hash) > 0;
-                    bool inOrphanCache = mapOrphanTransactions.count(hash) > 0;
-
-                    if ((inMemPool && inMissingTx) || (inOrphanCache && inMissingTx))
-                        unnecessaryCount++;
-
-                    if (inOrphanCache)
+                    // Replace the truncated hash with the full hash value if it exists
+                    CTransaction tx;
+                    if (!hash.IsNull())
                     {
-                        tx = mapOrphanTransactions[hash].tx;
-                        setUnVerifiedOrphanTxHash.insert(hash);
+                        bool inMemPool = mempool.lookup(hash, tx);
+                        bool inMissingTx = mapMissingTx.count(hash) > 0;
+                        bool inOrphanCache = mapOrphanTransactions.count(hash) > 0;
+
+                        if ((inMemPool && inMissingTx) || (inOrphanCache && inMissingTx))
+                            unnecessaryCount++;
+
+                        if (inOrphanCache)
+                        {
+                            tx = mapOrphanTransactions[hash].tx;
+                            setUnVerifiedOrphanTxHash.insert(hash);
+                        }
+                        else if (inMemPool && fXVal)
+                            setPreVerifiedTxHash.insert(hash);
+                        else if (inMissingTx)
+                            tx = mapMissingTx[hash];
                     }
-                    else if (inMemPool && fXVal)
-                        setPreVerifiedTxHash.insert(hash);
-                    else if (inMissingTx)
-                        tx = mapMissingTx[hash];
+                    if (tx.IsNull())
+                        missingCount++;
+
+                    // This will push an empty/invalid transaction if we don't have it yet
+                    pfrom->thinBlock.vtx.push_back(tx);
                 }
-                if (tx.IsNull())
-                    missingCount++;
-                // This will push an empty/invalid transaction if we don't have it yet
-                pfrom->thinBlock.vtx.push_back(tx);
             }
         }
     } // End locking cs_orphancache, mempool.cs and cs_xval
+
+    // This must be checked outside the above section or a deadlock may occur
+    if (!fMerkleRootCorrect)
+    {
+        LOCK(cs_main);
+        Misbehaving(pfrom->GetId(), 100);
+        return error("Thinblock merkelroot does not match computed merkleroot, peer=%d", pfrom->GetId());
+    }
 
     // There is a remote possiblity of a Tx hash collision therefore if it occurs we re-request a normal
     // thinblock which has the full Tx hash data rather than just the truncated hash.
