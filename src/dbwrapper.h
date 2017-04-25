@@ -55,11 +55,19 @@ private:
     CDataStream ssKey;
     CDataStream ssValue;
 
+    size_t size_estimate;
+
 public:
     /**
      * @param[in] _parent   CDBWrapper that this batch is to be submitted to
      */
-    CDBBatch(const CDBWrapper &_parent) : parent(_parent), ssKey(SER_DISK, CLIENT_VERSION), ssValue(SER_DISK, CLIENT_VERSION) { };
+    CDBBatch(const CDBWrapper &_parent) : parent(_parent), ssKey(SER_DISK, CLIENT_VERSION), ssValue(SER_DISK, CLIENT_VERSION), size_estimate(0) { };
+
+    void Clear()
+    {
+        batch.Clear();
+        size_estimate = 0;
+    }
 
     template <typename K, typename V>
     void Write(const K& key, const V& value)
@@ -74,6 +82,14 @@ public:
         leveldb::Slice slValue(ssValue.data(), ssValue.size());
 
         batch.Put(slKey, slValue);
+        // LevelDB serializes writes as:
+        // - byte: header
+        // - varint: key length (1 byte up to 127B, 2 bytes up to 16383B, ...)
+        // - byte[]: key
+        // - varint: value length
+        // - byte[]: value
+        // The formula below assumes the key and value are both less than 16k.
+        size_estimate += 3 + (slKey.size() > 127) + slKey.size() + (slValue.size() > 127) + slValue.size();
         ssKey.clear();
         ssValue.clear();
     }
@@ -86,8 +102,16 @@ public:
         leveldb::Slice slKey(ssKey.data(), ssKey.size());
 
         batch.Delete(slKey);
+        // LevelDB serializes erases as:
+        // - byte: header
+        // - varint: key length
+        // - byte[]: key
+        // The formula below assumes the key is less than 16kB.
+        size_estimate += 2 + (slKey.size() > 127) + slKey.size();
         ssKey.clear();
     }
+
+    size_t SizeEstimate() const { return size_estimate; }
 };
 
 class CDBIterator
