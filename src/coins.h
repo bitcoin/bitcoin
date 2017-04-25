@@ -100,6 +100,7 @@ public:
     }
 };
 
+//! Legacy class to deserialize pre-pertxout database entries without reindex.
 class CCoins
 {
 public:
