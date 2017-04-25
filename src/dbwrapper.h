@@ -82,6 +82,9 @@ public:
         leveldb::Slice slValue(ssValue.data(), ssValue.size());
 
         batch.Put(slKey, slValue);
+
+        // LevelDB serializes writes as:
+        // - byte: header
         // - varint: key length (1 byte up to 127B, 2 bytes up to 16383B, ...)
         // - byte[]: key
         // - varint: value length
@@ -100,6 +103,8 @@ public:
         leveldb::Slice slKey(ssKey.data(), ssKey.size());
 
         batch.Delete(slKey);
+
+        // LevelDB serializes erases as:
         // - byte: header
         // - varint: key length
         // - byte[]: key
