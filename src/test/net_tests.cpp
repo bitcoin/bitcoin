@@ -11,6 +11,7 @@
 #include "net.h"
 #include "netbase.h"
 #include "chainparams.h"
+#include "util.h"
 
 class CAddrManSerializationMock : public CAddrMan
 {
@@ -71,6 +72,18 @@ CDataStream AddrmanToStream(CAddrManSerializationMock& _addrman)
 }
 
 BOOST_FIXTURE_TEST_SUITE(net_tests, BasicTestingSetup)
+
+BOOST_AUTO_TEST_CASE(cnode_listen_port)
+{
+    // test default
+    unsigned short port = GetListenPort();
+    BOOST_CHECK(port == Params().GetDefaultPort());
+    // test set port
+    unsigned short altPort = 12345;
+    SoftSetArg("-port", std::to_string(altPort));
+    port = GetListenPort();
+    BOOST_CHECK(port == altPort);
+}
 
 BOOST_AUTO_TEST_CASE(caddrdb_read)
 {
