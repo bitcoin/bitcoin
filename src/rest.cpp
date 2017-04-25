@@ -514,8 +514,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
         for (size_t i = 0; i < vOutPoints.size(); i++) {
             bool hit = false;
             if (view.GetCoins(hash, coins)) {
-                mempool.pruneSpent(hash, coins);
-                if (coins.IsAvailable(vOutPoints[i].n)) {
+                if (coins.IsAvailable(vOutPoints[i].n) && !mempool.isSpent(vOutPoints[i])) {
                     hit = true;
                     // Safe to index into vout here because IsAvailable checked if it's off the end of the array, or if
                     // n is valid but points to an already spent output (IsNull).
