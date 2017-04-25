@@ -388,6 +388,9 @@
 /* Define to 1 if strerror_r returns char *. */
 /* #undef STRERROR_R_CHAR_P */
 
+/* Define this symbol if coverage is enabled */
+/* #undef USE_COVERAGE */
+
 /* Define if dbus support should be compiled in */
 #define USE_DBUS 1
 
