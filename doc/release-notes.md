@@ -36,6 +36,15 @@ Notable changes
 Low-level RPC changes
 ---------------------
 
+- The new database model no longer stores information about transaction
+  versions of unspent outputs. This means that:
+  - The `gettxout` RPC no longer has a `version` field in the response.
+  - The `gettxoutsetinfo` RPC reports `hash_serialized_2` instead of `hash_serialized`,
+    which does not commit to the transaction versions of unspent outputs, but does
+    commit to the height and coinbase information.
+  - The `getutxos` REST path no longer reports the `txvers` field in JSON format,
+    and always reports 0 for transaction versions in the binary format
+
 - Error codes have been updated to be more accurate for the following error cases:
   - `getblock` now returns RPC_MISC_ERROR if the block can't be found on disk (for
   example if the block has been pruned). Previously returned RPC_INTERNAL_ERROR.
