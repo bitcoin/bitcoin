@@ -3312,9 +3312,13 @@ UniValue aliasconvertcurrency(const UniValue& params, bool fHelp) {
 	
 	CAmount nTotalTo = convertCurrencyCodeToSyscoin(theAlias.vchAliasPeg, vchCurrencyTo, fCurrencyValue, chainActive.Tip()->nHeight, precision);
 	CAmount nTotalFrom = convertCurrencyCodeToSyscoin(theAlias.vchAliasPeg, vchCurrencyFrom, fCurrencyValue, chainActive.Tip()->nHeight, precision);
-	CAmount nConvertedAmount = (1/nTotalFrom) * nTotalTo;
+	double fTotalTo = ValueFromAmount(nTotalTo);
+	double fTotalFrom = ValueFromAmount(nTotalFrom);
+	double fConvertedAmount = 0;
+	if(nTotalFrom != 0)
+		fConvertedAmount = (1/fTotalFrom) * fTotalTo;
 
 	UniValue res(UniValue::VOBJ);
-	res.push_back(Pair("convertedrate", strprintf("%.*f", precision, ValueFromAmount(nConvertedAmount).get_real())));
+	res.push_back(Pair("convertedrate", strprintf("%.*f", precision, fConvertedAmount)));
 	return res;
 }
