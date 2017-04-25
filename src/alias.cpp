@@ -3310,8 +3310,8 @@ UniValue aliasconvertcurrency(const UniValue& params, bool fHelp) {
 		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid alias");
 	int precision;
 	
-	CAmount nTotalTo = convertCurrencyCodeToSyscoin(theAlias.vchAliasPeg, vchCurrencyTo, fCurrencyValue, chainActive.Tip()->nHeight, precision);
 	CAmount nTotalFrom = convertCurrencyCodeToSyscoin(theAlias.vchAliasPeg, vchCurrencyFrom, fCurrencyValue, chainActive.Tip()->nHeight, precision);
+	CAmount nTotalTo = convertCurrencyCodeToSyscoin(theAlias.vchAliasPeg, vchCurrencyTo, fCurrencyValue, chainActive.Tip()->nHeight, precision);
 	double fTotalTo = ValueFromAmount(nTotalTo).get_real();
 	double fTotalFrom = ValueFromAmount(nTotalFrom).get_real();
 	double fConvertedAmount = 0;
