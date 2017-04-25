@@ -73,7 +73,7 @@ static void SipHash_32b(benchmark::State& state)
 static void FastRandom_32bit(benchmark::State& state)
 {
     FastRandomContext rng(true);
-    uint32_t x;
+    uint32_t x = 0;
     while (state.KeepRunning()) {
         for (int i = 0; i < 1000000; i++) {
             x += rng.rand32();
@@ -84,7 +84,7 @@ static void FastRandom_32bit(benchmark::State& state)
 static void FastRandom_1bit(benchmark::State& state)
 {
     FastRandomContext rng(true);
-    uint32_t x;
+    uint32_t x = 0;
     while (state.KeepRunning()) {
         for (int i = 0; i < 1000000; i++) {
             x += rng.randbool();
