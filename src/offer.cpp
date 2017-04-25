@@ -3262,9 +3262,15 @@ bool BuildOfferJson(const COffer& theOffer, const CAliasIndex &alias, UniValue& 
 	expires_in = expired_time - chainActive.Tip()->nTime;
 	if(expires_in < -1)
 		expires_in = -1;
+
 	oOffer.push_back(Pair("expires_in", expires_in));
 	oOffer.push_back(Pair("expires_on", expired_time));
 	oOffer.push_back(Pair("expired", expired));
+	if(chainActive[nHeight])
+		oOffer.push_back(Pair("timereceived", chainActive[nHeight]->nTime));
+	else
+		oOffer.push_back(Pair("timereceived", 0));
+
 	oOffer.push_back(Pair("height", strprintf("%llu", nHeight)));
 	oOffer.push_back(Pair("category", stringFromVch(theOffer.sCategory)));
 	oOffer.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
@@ -3539,6 +3545,10 @@ bool BuildOfferAcceptJson(const COffer& theOffer, const CAliasIndex& theAlias, c
 	oOfferAccept.push_back(Pair("paymentoption", (int)theOffer.accept.nPaymentOption));
 	oOfferAccept.push_back(Pair("paymentoption_display", GetPaymentOptionsString(theOffer.accept.nPaymentOption)));
 	oOfferAccept.push_back(Pair("height", sHeight));
+	if(chainActive[theOffer.nHeight])
+		oOfferAccept.push_back(Pair("timereceived", chainActive[theOffer.nHeight]->nTime));
+	else
+		oOfferAccept.push_back(Pair("timereceived", 0));
 	oOfferAccept.push_back(Pair("time", sTime));
 	oOfferAccept.push_back(Pair("quantity", strprintf("%d", theOffer.accept.nQty)));
 	oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
