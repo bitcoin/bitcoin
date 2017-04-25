@@ -910,15 +910,23 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
     std::map<uint32_t, Coin> outputs;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
-        COutPoint key;
-        Coin coin;
-        if (pcursor->GetKey(key) && pcursor->GetValue(coin)) {
-            if (!outputs.empty() && key.hash != prevkey) {
-                ApplyStats(stats, ss, prevkey, outputs);
-                outputs.clear();
+        uint256 key;
+        CCoins coins;
+        if (pcursor->GetKey(key) && pcursor->GetValue(coins)) {
+            stats.nTransactions++;
+            ss << key;
+            ss << VARINT(coins.nHeight * 2 + coins.fCoinBase);
+            for (unsigned int i=0; i<coins.vout.size(); i++) {
+                const CTxOut &out = coins.vout[i];
+                if (!out.IsNull()) {
+                    stats.nTransactionOutputs++;
+                    ss << VARINT(i+1);
+                    ss << *(const CScriptBase*)(&out.scriptPubKey);
+                    ss << VARINT(out.nValue);
+                    nTotalAmount += out.nValue;
+                }
             }
-            prevkey = key.hash;
-            outputs[key.n] = std::move(coin);
+            ss << VARINT(0);
         } else {
             return error("%s: unable to read value", __func__);
         }
@@ -1013,7 +1021,10 @@ UniValue gettxoutsetinfo(const JSONRPCRequest& request)
         ret.push_back(Pair("transactions", (int64_t)stats.nTransactions));
         ret.push_back(Pair("txouts", (int64_t)stats.nTransactionOutputs));
         ret.push_back(Pair("hash_serialized_2", stats.hashSerialized.GetHex()));
+<<<<<<< HEAD
         ret.push_back(Pair("disk_size", stats.nDiskSize));
+=======
+>>>>>>> d342424... Remove/ignore tx version in utxo and undo
         ret.push_back(Pair("total_amount", ValueFromAmount(stats.nTotalAmount)));
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
@@ -1100,7 +1111,11 @@ UniValue gettxout(const JSONRPCRequest& request)
     ScriptPubKeyToUniv(coins.vout[n].scriptPubKey, o, true);
 >>>>>>> 0ff9320... refactor TxToJSON() and ScriptPubKeyToJSON()
     ret.push_back(Pair("scriptPubKey", o));
+<<<<<<< HEAD
     ret.push_back(Pair("coinbase", (bool)coin.fCoinBase));
+=======
+    ret.push_back(Pair("coinbase", coins.fCoinBase));
+>>>>>>> d342424... Remove/ignore tx version in utxo and undo
 
     return ret;
 }

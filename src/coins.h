@@ -84,15 +84,10 @@ public:
     //! at which height this transaction was included in the active block chain
     int nHeight;
 
-    //! version of the CTransaction; accesses to this value should probably check for nHeight as well,
-    //! as new tx version will probably only be introduced at certain heights
-    int nVersion;
-
     void FromTx(const CTransaction &tx, int nHeightIn) {
         fCoinBase = tx.IsCoinBase();
         vout = tx.vout;
         nHeight = nHeightIn;
-        nVersion = tx.nVersion;
         ClearUnspendable();
     }
 
@@ -105,11 +100,10 @@ public:
         fCoinBase = false;
         std::vector<CTxOut>().swap(vout);
         nHeight = 0;
-        nVersion = 0;
     }
 
     //! empty constructor
-    CCoins() : fCoinBase(false), vout(0), nHeight(0), nVersion(0) { }
+    CCoins() : fCoinBase(false), vout(0), nHeight(0) { }
 
     //!remove spent outputs at the end of vout
     void Cleanup() {
@@ -131,7 +125,6 @@ public:
         std::swap(to.fCoinBase, fCoinBase);
         to.vout.swap(vout);
         std::swap(to.nHeight, nHeight);
-        std::swap(to.nVersion, nVersion);
     }
 
     //! equality test
@@ -141,7 +134,6 @@ public:
              return true;
          return a.fCoinBase == b.fCoinBase &&
                 a.nHeight == b.nHeight &&
-                a.nVersion == b.nVersion &&
                 a.vout == b.vout;
     }
     friend bool operator!=(const CCoins &a, const CCoins &b) {
@@ -163,7 +155,8 @@ public:
         assert(fFirst || fSecond || nMaskCode);
         unsigned int nCode = 8*(nMaskCode - (fFirst || fSecond ? 0 : 1)) + (fCoinBase ? 1 : 0) + (fFirst ? 2 : 0) + (fSecond ? 4 : 0);
         // version
-        ::Serialize(s, VARINT(this->nVersion));
+        int nVersionDummy = 0;
+        ::Serialize(s, VARINT(nVersionDummy));
         // header code
         ::Serialize(s, VARINT(nCode));
         // spentness bitmask
@@ -187,7 +180,8 @@ public:
     void Unserialize(Stream &s) {
         unsigned int nCode = 0;
         // version
-        ::Unserialize(s, VARINT(this->nVersion));
+        int nVersionDummy;
+        ::Unserialize(s, VARINT(nVersionDummy));
         // header code
         ::Unserialize(s, VARINT(nCode));
         fCoinBase = nCode & 1;

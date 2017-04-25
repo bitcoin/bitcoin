@@ -471,7 +471,6 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
         threadGroup.create_thread(boost::bind(&CCheckQueue<CScriptCheck>::Thread, boost::ref(scriptcheckqueue)));
 
     CCoins coins;
-    coins.nVersion = 1;
     coins.fCoinBase = false;
     for(uint32_t i = 0; i < mtx.vin.size(); i++) {
         CTxOut txout;

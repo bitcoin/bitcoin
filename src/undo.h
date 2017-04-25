@@ -14,7 +14,8 @@
  *
  *  Contains the prevout's CTxOut being spent, and if this was the
  *  last output of the affected transaction, its metadata as well
- *  (coinbase or not, height, transaction version)
+ *  (coinbase or not, height). Earlier versions also stored the transaction
+ *  version.
  */
 class CTxInUndo
 {
@@ -22,16 +23,17 @@ public:
     CTxOut txout;         // the txout data before being spent
     bool fCoinBase;       // if the outpoint was the last unspent: whether it belonged to a coinbase
     unsigned int nHeight; // if the outpoint was the last unspent: its height
-    int nVersion;         // if the outpoint was the last unspent: its version
 
-    CTxInUndo() : txout(), fCoinBase(false), nHeight(0), nVersion(0) {}
-    CTxInUndo(const CTxOut &txoutIn, bool fCoinBaseIn = false, unsigned int nHeightIn = 0, int nVersionIn = 0) : txout(txoutIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nVersion(nVersionIn) { }
+    CTxInUndo() : txout(), fCoinBase(false), nHeight(0) {}
+    CTxInUndo(const CTxOut &txoutIn, bool fCoinBaseIn = false, unsigned int nHeightIn = 0) : txout(txoutIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) { }
 
     template<typename Stream>
     void Serialize(Stream &s) const {
         ::Serialize(s, VARINT(nHeight*2+(fCoinBase ? 1 : 0)));
-        if (nHeight > 0)
-            ::Serialize(s, VARINT(this->nVersion));
+        if (nHeight > 0) {
+            int nVersionDummy = 0;
+            ::Serialize(s, VARINT(nVersionDummy));
+        }
         ::Serialize(s, CTxOutCompressor(REF(txout)));
     }
 
@@ -41,8 +43,10 @@ public:
         ::Unserialize(s, VARINT(nCode));
         nHeight = nCode / 2;
         fCoinBase = nCode & 1;
-        if (nHeight > 0)
-            ::Unserialize(s, VARINT(this->nVersion));
+        if (nHeight > 0) {
+            int nVersionDummy;
+            ::Unserialize(s, VARINT(nVersionDummy));
+        }
         ::Unserialize(s, REF(CTxOutCompressor(REF(txout))));
     }
 };
