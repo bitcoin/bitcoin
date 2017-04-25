@@ -16,7 +16,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-int ApplyTxInUndo(const CTxInUndo& undo, CCoinsViewCache& view, const COutPoint& out);
+int ApplyTxInUndo(const Coin& undo, CCoinsViewCache& view, const COutPoint& out);
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight);
 
 namespace
@@ -298,9 +298,35 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
             // Track this tx to possibly spend later
             alltxids.insert(tx.GetHash());
 
-            // Update the expected result to know about the new output coins
-            CCoins &coins = result[tx.GetHash()];
-            coins.FromTx(tx, height);
+            CTransaction &tx = std::get<0>(txd);
+            CTxUndo &undo = std::get<1>(txd);
+            CCoins &origcoins = std::get<2>(txd);
+
+            uint256 undohash = tx.GetHash();
+
+            // Update the expected result
+            // Remove new outputs
+            result[undohash].Clear();
+            // If not coinbase restore prevout
+            if (!tx.IsCoinBase()) {
+                result[tx.vin[0].prevout.hash] = origcoins;
+            }
+
+            // Disconnect the tx from the current UTXO
+            // See code in DisconnectBlock
+            // remove outputs
+            {
+                CCoinsModifier outs = stack.back()->ModifyCoins(undohash);
+                outs->Clear();
+            }
+            // restore inputs
+            if (!tx.IsCoinBase()) {
+                const COutPoint &out = tx.vin[0].prevout;
+                const Coin &undoin = undo.vprevout[0];
+                ApplyTxInUndo(undoin, *(stack.back()), out);
+            }
+            // Store as a candidate for reconnection
+            disconnectedids.insert(undohash);
 
             CValidationState dummy;
             UpdateCoins(tx, dummy, *(stack.back()), height);
