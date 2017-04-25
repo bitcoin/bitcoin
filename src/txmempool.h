@@ -480,7 +480,7 @@ public:
     void clear();
     void _clear(); //lock free
     void queryHashes(std::vector<uint256>& vtxid);
-    void pruneSpent(const uint256& hash, CCoins &coins);
+    bool isSpent(const COutPoint& outpoint);
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
     /**
