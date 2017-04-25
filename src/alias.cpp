@@ -3174,7 +3174,7 @@ UniValue aliaspay(const UniValue& params, bool fHelp) {
 	CAliasIndex theAlias;
 	CTransaction aliasTx;
 	if (!GetTxOfAlias(vchFromString(strFrom), theAlias, aliasTx, true))
-		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid fromalias");
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5509 - " + _("Invalid fromalias"));
     string strCurrency = params[1].get_str();
     UniValue sendTo = params[2].get_obj();
     int nMinDepth = 1;
@@ -3307,11 +3307,11 @@ UniValue aliasconvertcurrency(const UniValue& params, bool fHelp) {
 	CAliasIndex theAlias;
 	CTransaction aliasTx;
 	if (!GetTxOfAlias(vchFromString(alias), theAlias, aliasTx, true))
-		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid alias");
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5509 - " + _("Invalid alias"));
 	int precision;
 	
 	CAmount nTotalFrom = convertCurrencyCodeToSyscoin(theAlias.vchAliasPeg, vchCurrencyFrom, fCurrencyValue, chainActive.Tip()->nHeight, precision);
-	CAmount nTotalTo = convertSyscoinToCurrencyCode(theAlias.vchAliasPeg, vchCurrencyTo, ValueFromAmount(nTotalFrom).get_real(), chainActive.Tip()->nHeight, precision);
+	CAmount nTotalTo = convertSyscoinToCurrencyCode(theAlias.vchAliasPeg, vchCurrencyTo, nTotalFrom, chainActive.Tip()->nHeight, precision);
 	UniValue res(UniValue::VOBJ);
 	res.push_back(Pair("convertedrate", strprintf("%.*f", precision, ValueFromAmount(nTotalTo).get_real())));
 	return res;
