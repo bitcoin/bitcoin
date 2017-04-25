@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 	CAmount balanceBeforeTo = AmountFromValue(find_value(r.get_obj(), "balance"));
 
 	//send amount
-	BOOST_CHECK_THROW(CallRPC("node2", "aliaspay alias2.aliaspay.tld USD \"{\\\"alias3.aliaspay.tld\\\":0.4}\""), runtime_error);
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "aliaspay alias2.aliaspay.tld USD \"{\\\"alias3.aliaspay.tld\\\":0.4}\""));
 	GenerateBlocks(10, "node1");
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node3");
