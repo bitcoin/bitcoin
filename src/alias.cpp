@@ -2910,7 +2910,7 @@ bool BuildAliasJson(const CAliasIndex& alias, const int pending, UniValue& oName
 	oName.push_back(Pair("arbiter_ratingcount", (int)alias.nRatingCountAsArbiter));
 	oName.push_back(Pair("arbiter_rating_display", strprintf("%.1f/5 (%d %s)", ratingAsArbiter, alias.nRatingCountAsArbiter, _("Votes"))));
 	string sTime;
-	CBlockIndex *pindex = chainActive[cert.nHeight];
+	CBlockIndex *pindex = chainActive[alias.nHeight];
 	if (pindex) {
 		sTime = strprintf("%llu", pindex->nTime);
 	}
