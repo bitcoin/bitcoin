@@ -3303,7 +3303,7 @@ UniValue aliasconvertcurrency(const UniValue& params, bool fHelp) {
 	string alias = params[0].get_str();
 	vector<unsigned char> vchCurrencyFrom = vchFromValue(params[1]);
 	vector<unsigned char> vchCurrencyTo = vchFromValue(params[2]);
-	double fCurrencyValue =  boost::lexical_cast<double>(params[2].get_str());
+	double fCurrencyValue =  boost::lexical_cast<double>(params[3].get_str());
 	CAliasIndex theAlias;
 	CTransaction aliasTx;
 	if (!GetTxOfAlias(vchFromString(alias), theAlias, aliasTx, true))
