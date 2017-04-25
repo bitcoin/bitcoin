@@ -586,7 +586,7 @@ bool CBlockPolicyEstimator::Write(CAutoFile& fileout) const
         feeStats->Write(fileout);
     }
     catch (const std::exception&) {
-        LogPrintf("CBlockPolicyEstimator::Write(): unable to read policy estimator data (non-fatal)\n");
+        LogPrintf("CBlockPolicyEstimator::Write(): unable to write policy estimator data (non-fatal)\n");
         return false;
     }
     return true;
