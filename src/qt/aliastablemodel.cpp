@@ -85,7 +85,7 @@ public:
 			string safesearch_str;
 			int64_t expires_on = 0;
 			
-			int lastupdate_height = 0;
+
 			try {
 				result = tableRPC.execute(strMethod, params);
 				if (result.type() == UniValue::VARR)
@@ -97,7 +97,7 @@ public:
 					safesearch_str = "";
 					expired = 0;
 					expires_on = 0;
-					lastupdate_height = 0;
+			
 					buyer_rating = "";
 					seller_rating = "";
 					arbiter_rating = "";
@@ -118,7 +118,7 @@ public:
 						seller_rating = "";
 						arbiter_rating = "";
 						expires_on = 0;
-						lastupdate_height = 0;
+					
 				
 						const UniValue& name_value = find_value(o, "name");
 						if (name_value.type() == UniValue::VSTR)

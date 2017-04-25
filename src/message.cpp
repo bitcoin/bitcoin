@@ -798,6 +798,10 @@ bool BuildMessageJson(const CMessage& message, UniValue& oName, const string &st
 	}
 	string strAddress = "";
 	oName.push_back(Pair("time", sTime));
+	if(chainActive[message.nHeight])
+		oName.push_back(Pair("timereceived", chainActive[message.nHeight]->nTime));
+	else
+		oName.push_back(Pair("timereceived", 0));
 	oName.push_back(Pair("from", stringFromVch(message.vchAliasFrom)));
 	oName.push_back(Pair("to", stringFromVch(message.vchAliasTo)));
 

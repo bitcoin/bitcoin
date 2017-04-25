@@ -2909,7 +2909,10 @@ bool BuildAliasJson(const CAliasIndex& alias, const int pending, UniValue& oName
 	oName.push_back(Pair("arbiter_rating", ratingAsArbiter));
 	oName.push_back(Pair("arbiter_ratingcount", (int)alias.nRatingCountAsArbiter));
 	oName.push_back(Pair("arbiter_rating_display", strprintf("%.1f/5 (%d %s)", ratingAsArbiter, alias.nRatingCountAsArbiter, _("Votes"))));
-    oName.push_back(Pair("lastupdate_height", nHeight));
+	if(chainActive[nHeight])
+		oName.push_back(Pair("timereceived", chainActive[nHeight]->nTime));
+	else
+		oName.push_back(Pair("timereceived", 0));
 	if(alias.vchAlias != vchFromString("sysrates.peg") && alias.vchAlias != vchFromString("sysban") && alias.vchAlias != vchFromString("syscategory"))
 	{
 		expired_time = alias.nExpireTime;
