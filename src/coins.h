@@ -20,6 +20,68 @@
 #include <boost/foreach.hpp>
 #include <unordered_map>
 
+/**
+ * A UTXO entry.
+ *
+ * Serialized format:
+ * - VARINT((coinbase ? 1 : 0) | (height << 1))
+ * - the non-spent CTxOut (via CTxOutCompressor)
+ */
+class Coin
+{
+public:
+    //! whether the containing transaction was a coinbase
+    bool fCoinBase;
+
+    //! unspent transaction output
+    CTxOut out;
+
+    //! at which height the containing transaction was included in the active block chain
+    uint32_t nHeight;
+
+    //! construct a Coin from a CTxOut and height/coinbase properties.
+    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : fCoinBase(fCoinBaseIn), out(std::move(outIn)), nHeight(nHeightIn) {}
+    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : fCoinBase(fCoinBaseIn), out(outIn), nHeight(nHeightIn) {}
+
+    void Clear() {
+        out.SetNull();
+        fCoinBase = false;
+        nHeight = 0;
+    }
+
+    //! empty constructor
+    Coin() : fCoinBase(false), nHeight(0) { }
+
+    bool IsCoinBase() const {
+        return fCoinBase;
+    }
+
+    template<typename Stream>
+    void Serialize(Stream &s) const {
+        assert(!IsPruned());
+        uint32_t code = nHeight * 2 + fCoinBase;
+        ::Serialize(s, VARINT(code));
+        ::Serialize(s, CTxOutCompressor(REF(out)));
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream &s) {
+        uint32_t code = 0;
+        ::Unserialize(s, VARINT(code));
+        nHeight = code >> 1;
+        fCoinBase = code & 1;
+        ::Unserialize(s, REF(CTxOutCompressor(out)));
+    }
+
+    bool IsPruned() const {
+        return out.IsNull();
+    }
+
+    size_t DynamicMemoryUsage() const {
+        return memusage::DynamicUsage(out.scriptPubKey);
+    }
+};
+
 /** 
  * Pruned version of CTransaction: only retains metadata and unspent transaction outputs
  *
