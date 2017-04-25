@@ -9,11 +9,15 @@
 #include "test/test_bitcoin.h"
 #include "main.h"
 #include "consensus/validation.h"
+#include "undo.h"
 
 #include <vector>
 #include <map>
 
 #include <boost/test/unit_test.hpp>
+
+int ApplyTxInUndo(const CTxInUndo& undo, CCoinsViewCache& view, const COutPoint& out);
+void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight);
 
 namespace
 {
