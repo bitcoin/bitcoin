@@ -168,8 +168,8 @@ int do_fuzz()
         {
             try
             {
-                CCoins block;
-                ds >> block;
+                Coin coin;
+                ds >> coin;
             } catch (const std::ios_base::failure& e) {return 0;}
             break;
         }
