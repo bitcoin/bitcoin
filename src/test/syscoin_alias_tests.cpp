@@ -198,11 +198,15 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 	GenerateBlocks(10, "node2");
 	GenerateBlocks(10, "node3");
 
-	CAmount sysDiff = 0.4 * 2690.1 * COIN;
+	// I want to convert 0.4 USD to SYS
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasconvertcurrency alias1.aliaspay.tld USD SYS 0.4"));
+	CAmount sysDiff = AmountFromValue(find_value(r.get_obj(), "convertedrate"));
+
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo alias2.aliaspay.tld"));
 	CAmount balanceAfterFrom = AmountFromValue(find_value(r.get_obj(), "balance"));
 	CAmount balanceTestAfterFrom = balanceBeforeFrom - sysDiff;
-	BOOST_CHECK_EQUAL(balanceAfterFrom, balanceTestAfterFrom);
+	// account for fees from the sender alias (0.1 SYS maximum)
+	BOOST_CHECK(balanceAfterFrom <= (balanceTestAfterFrom-0.1*COIN));
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasinfo alias3.aliaspay.tld"));
 	CAmount balanceAfterTo = AmountFromValue(find_value(r.get_obj(), "balance"));
