@@ -9,6 +9,7 @@
 
 #include "utiltime.h"
 
+#include <boost/date_time/c_local_time_adjustor.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread.hpp>
 
@@ -82,6 +83,6 @@ std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime)
     std::locale loc(classic, new boost::posix_time::time_facet(pszFormat));
     std::stringstream ss;
     ss.imbue(loc);
-    ss << boost::posix_time::from_time_t(nTime);
+    ss << boost::date_time::c_local_adjustor<boost::posix_time::ptime>::utc_to_local(boost::posix_time::from_time_t(nTime));
     return ss.str();
 }
