@@ -3564,10 +3564,6 @@ bool BuildEscrowJson(const CEscrow &escrow, const CEscrow &firstEscrow, UniValue
 	oEscrow.push_back(Pair("redeem_txid", strRedeemTxId));
     oEscrow.push_back(Pair("txid", escrow.txHash.GetHex()));
     oEscrow.push_back(Pair("height", sHeight));
-	if(chainActive[nHeight])
-		oEscrow.push_back(Pair("timereceived", chainActive[nHeight]->nTime));
-	else
-		oEscrow.push_back(Pair("timereceived", 0));
 	string strMessage = string("");
 	if(!DecryptMessage(theSellerAlias, escrow.vchPaymentMessage, strMessage, strPrivKey))
 		strMessage = _("Encrypted for owner of offer");
