@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE (generate_aliaspay)
 	CAmount balanceAfterFrom = AmountFromValue(find_value(r.get_obj(), "balance"));
 	CAmount balanceTestAfterFrom = balanceBeforeFrom - sysDiff;
 	// account for fees from the sender alias (0.1 SYS maximum)
-	BOOST_CHECK(abs(balanceAfterFrom - balanceTestAfterFrom) <= 0.1*COIN));
+	BOOST_CHECK(abs(balanceAfterFrom - balanceTestAfterFrom) <= 0.1*COIN);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "aliasinfo alias3.aliaspay.tld"));
 	CAmount balanceAfterTo = AmountFromValue(find_value(r.get_obj(), "balance"));
