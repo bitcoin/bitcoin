@@ -17,6 +17,7 @@
 
 using namespace std;
 
+static const char DB_COIN = 'C';
 static const char DB_COINS = 'c';
 static const char DB_BLOCK_FILES = 'f';
 static const char DB_TXINDEX = 't';
@@ -27,19 +28,40 @@ static const char DB_FLAG = 'F';
 static const char DB_REINDEX_FLAG = 'R';
 static const char DB_LAST_BLOCK = 'l';
 
+namespace {
+
+struct CoinsEntry {
+    COutPoint* outpoint;
+    char key;
+    CoinsEntry(const COutPoint* ptr) : outpoint(const_cast<COutPoint*>(ptr)), key(DB_COIN)  {}
+
+    template<typename Stream>
+    void Serialize(Stream &s) const {
+        s << key;
+        s << outpoint->hash;
+        s << VARINT(outpoint->n);
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s) {
+        s >> key;
+        s >> outpoint->hash;
+        s >> VARINT(outpoint->n);
+    }
+};
+
+}
 
 CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe, true)
 {
 }
 
-bool CCoinsViewDB::GetCoins(const uint256 &txid, CCoins &coins) const {
-    LOCK(cs_utxo);
-    return db.Read(make_pair(DB_COINS, txid), coins);
+bool CCoinsViewDB::GetCoins(const COutPoint &outpoint, Coin &coin) const {
+    return db.Read(CoinsEntry(&outpoint), coin);
 }
 
-bool CCoinsViewDB::HaveCoins(const uint256 &txid) const {
-    LOCK(cs_utxo);
-    return db.Exists(make_pair(DB_COINS, txid));
+bool CCoinsViewDB::HaveCoins(const COutPoint &outpoint) const {
+    return db.Exists(CoinsEntry(&outpoint));
 }
 
 uint256 CCoinsViewDB::GetBestBlock() const {
@@ -62,10 +84,11 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, siz
     {
         if (it->second.flags & CCoinsCacheEntry::DIRTY)
         {
+            CoinsEntry entry(&it->first);
             size_t nUsage = it->second.coins.DynamicMemoryUsage();
             if (it->second.coins.IsPruned())
             {
-                batch.Erase(make_pair(DB_COINS, it->first));
+                batch.Erase(entry);
 
                 // Update the usage of the child cache before deleting the entry in the child cache
                 nChildCachedCoinsUsage -= nUsage;
@@ -73,7 +96,7 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, siz
             }
             else
             {
-                batch.Write(make_pair(DB_COINS, it->first), it->second.coins);
+                batch.Write(entry, it->second.coins);
 
                 // Only delete valid coins from the cache when we're nearly syncd.  During IBD, and also
                 // if BlockOnly mode is turned on, these coins will be used, whereas, once the chain is
@@ -112,13 +135,14 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, siz
     if (!hashBlock.IsNull())
         batch.Write(DB_BEST_BLOCK, hashBlock);
 
+    bool ret = db.WriteBatch(batch);
     LogPrint("coindb", "Committing %u changed transactions (out of %u) to coin database with %u batch writes...\n", (unsigned int)changed, (unsigned int)count, (unsigned int)nBatchWrites);
-    return db.WriteBatch(batch);
+    return ret;
 }
 
 size_t CCoinsViewDB::EstimateSize() const
 {
-    return db.EstimateSize(DB_COINS, (char)(DB_COINS+1));
+    return db.EstimateSize(DB_COIN, (char)(DB_COIN+1));
 }
 
 CBlockTreeDB::CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "blocks" / "index", nCacheSize, fMemory, fWipe) {
@@ -150,16 +174,22 @@ CCoinsViewCursor *CCoinsViewDB::Cursor() const
     /* It seems that there are no "const iterators" for LevelDB.  Since we
        only need read operations on it, use a const-cast to get around
        that restriction.  */
-    i->pcursor->Seek(DB_COINS);
+    i->pcursor->Seek(DB_COIN);
     // Cache key of first record
-    i->pcursor->GetKey(i->keyTmp);
+    if (i->pcursor->Valid()) {
+        CoinsEntry entry(&i->keyTmp.second);
+        i->pcursor->GetKey(entry);
+        i->keyTmp.first = entry.key;
+    } else {
+        i->keyTmp.first = 0; // Make sure Valid() and GetKey() return false
+    }
     return i;
 }
 
 bool CCoinsViewDBCursor::GetKey(uint256 &key) const
 {
     // Return cached key
-    if (keyTmp.first == DB_COINS) {
+    if (keyTmp.first == DB_COIN) {
         key = keyTmp.second;
         return true;
     }
@@ -178,15 +208,21 @@ unsigned int CCoinsViewDBCursor::GetValueSize() const
 
 bool CCoinsViewDBCursor::Valid() const
 {
-    return keyTmp.first == DB_COINS;
+    return keyTmp.first == DB_COIN;
 }
 
 void CCoinsViewDBCursor::Next()
 {
     pcursor->Next();
+<<<<<<< HEAD
     if (pcursor->Valid()) {
         bool ok = pcursor->GetKey(keyTmp);
         assert(ok); // If GetKey fails here something must be wrong with underlying database, we cannot handle that here
+=======
+    CoinsEntry entry(&keyTmp.second);
+    if (!pcursor->Valid() || !pcursor->GetKey(entry)) {
+        keyTmp.first = 0; // Invalidate cached key after last record so that Valid() and GetKey() return false
+>>>>>>> 239f540... Switch CCoinsView and chainstate db from per-txid to per-txout
     } else {
         keyTmp.first = 0; // Invalidate cached key after last record so that Valid() and GetKey() return false
     }

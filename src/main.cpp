@@ -70,6 +70,9 @@
 // BU moved BlockMap mapBlockIndex;
 // BU movedCChain chainActive;
 CBlockIndex *pindexBestHeader = NULL;
+
+CCoinsViewDB *pcoinsdbview = nullptr;
+
 int64_t nTimeBestReceived = 0;
 // BU moved CWaitableCriticalSection csBestBlock;
 // BU moved CConditionVariable cvBlockChange;
@@ -987,19 +990,19 @@ bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints *lp, bool 
         for (size_t txinIndex = 0; txinIndex < tx.vin.size(); txinIndex++)
         {
             const CTxIn &txin = tx.vin[txinIndex];
-            CCoins coins;
-            if (!viewMemPool.GetCoins(txin.prevout.hash, coins))
+            Coin coin;
+            if (!viewMemPool.GetCoins(txin.prevout, coin))
             {
                 return error("%s: Missing input", __func__);
             }
-            if (coins.nHeight == MEMPOOL_HEIGHT)
+            if (coin.nHeight == MEMPOOL_HEIGHT)
             {
                 // Assume all mempool transaction confirm in the next block
                 prevheights[txinIndex] = tip->nHeight + 1;
             }
             else
             {
-                prevheights[txinIndex] = coins.nHeight;
+                prevheights[txinIndex] = coin.nHeight;
             }
         }
         lockPair = CalculateSequenceLocks(tx, flags, &prevheights, index);
@@ -1127,9 +1130,9 @@ void LimitMempoolSize(CTxMemPool &pool, size_t limit, unsigned long age)
     if (expired != 0)
         LogPrint("mempool", "Expired %i transactions from the memory pool\n", expired);
 
-    std::vector<uint256> vNoSpendsRemaining;
+    std::vector<COutPoint> vNoSpendsRemaining;
     pool.TrimToSize(limit, &vNoSpendsRemaining);
-    BOOST_FOREACH (const uint256 &removed, vNoSpendsRemaining)
+    BOOST_FOREACH (const COutPoint &removed, vNoSpendsRemaining)
         pcoinsTip->Uncache(removed);
 }
 
@@ -1147,7 +1150,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
     bool *pfMissingInputs,
     bool fOverrideMempoolLimit,
     bool fRejectAbsurdFee,
-    std::vector<uint256> &vHashTxnToUncache)
+    std::vector<COutPoint> &vHashTxnToUncache)
 {
     unsigned int forkVerifyFlags = 0;
     CTransaction tx = consttx;
@@ -1231,24 +1234,21 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool,
             view.SetBackend(viewMemPool);
 
             // do all inputs exist?
-            // Note that this does not check for the presence of actual outputs (see the next check for that),
-            // and only helps with filling in pfMissingInputs (to determine missing vs spent).
-            BOOST_FOREACH (const CTxIn txin, tx.vin)
+            BOOST_FOREACH(const CTxIn txin, tx.vin)
             {
-                if (!pcoinsTip->HaveCoinsInCache(txin.prevout.hash))
-                    vHashTxnToUncache.push_back(txin.prevout.hash);
-                if (!view.HaveCoins(txin.prevout.hash))
+                if (!pcoinsTip->HaveCoinsInCache(txin.prevout))
+                {
+                    vHashTxnToUncache.push_back(txin.prevout);
+                }
+                if (!view.HaveCoins(txin.prevout))
                 {
                     if (pfMissingInputs)
+                    {
                         *pfMissingInputs = true;
-                    // fMissingInputs and !state.IsInvalid() is used to detect this condition, don't set state.Invalid()
-                    return false;
+                    }
+                    return false; // fMissingInputs and !state.IsInvalid() is used to detect this condition, don't set state.Invalid()
                 }
             }
-
-            // are the actual inputs available?
-            if (!view.HaveInputs(tx))
-                return state.Invalid(false, REJECT_DUPLICATE, "bad-txns-inputs-spent");
 
             // Bring the best block into scope
             view.GetBestBlock();
@@ -1502,13 +1502,13 @@ bool AcceptToMemoryPool(CTxMemPool &pool,
     bool fOverrideMempoolLimit,
     bool fRejectAbsurdFee)
 {
-    std::vector<uint256> vHashTxToUncache;
+    std::vector<COutPoint> vHashTxToUncache;
     bool res = AcceptToMemoryPoolWorker(
         pool, state, tx, fLimitFree, pfMissingInputs, fOverrideMempoolLimit, fRejectAbsurdFee, vHashTxToUncache);
     if (!res)
     {
-        BOOST_FOREACH (const uint256 &hashTx, vHashTxToUncache)
-            pcoinsTip->Uncache(hashTx);
+        for (const COutPoint &remove: vHashTxToUncache)
+            pcoinsTip->Uncache(remove);
     }
 
     return res;
@@ -2871,12 +2871,12 @@ bool FlushStateToDisk(CValidationState &state, FlushStateMode mode)
         // Flush best chain related state. This can only be done if the blocks / block index write was also done.
         if (fDoFullFlush)
         {
-            // Typical CCoins structures on disk are around 128 bytes in size.
+            // Typical Coin structures on disk are around 48 bytes in size.
             // Pushing a new one to the database can cause it to be written
             // twice (once in the log, and once in the tables). This is already
             // an overestimation, as most will delete an existing entry or
             // overwrite one. Still, use a conservative safety factor of 2.
-            if (!CheckDiskSpace(128 * 2 * 2 * pcoinsTip->GetCacheSize()))
+            if (!CheckDiskSpace(48 * 2 * 2 * pcoinsTip->GetCacheSize()))
                 return state.Error("out of disk space");
             // Flush the chainstate (which may refer to block index entries).
             if (!pcoinsTip->Flush())
@@ -2940,7 +2940,7 @@ void static UpdateTip(CBlockIndex *pindexNew)
     nTimeBestReceived = GetTime();
     mempool.AddTransactionsUpdated(1);
 
-    LogPrintf("%s: new best=%s  height=%d bits=%d log2_work=%.8g  tx=%lu  date=%s progress=%f  cache=%.1fMiB(%utx)\n",
+    LogPrintf("%s: new best=%s  height=%d bits=%d log2_work=%.8g  tx=%lu  date=%s progress=%f  cache=%.1fMiB(%utxo)\n",
         __func__, chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), chainActive.Tip()->nBits,
         log(chainActive.Tip()->nChainWork.getdouble()) / log(2.0), (unsigned long)chainActive.Tip()->nChainTx,
         DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
@@ -5446,7 +5446,10 @@ bool AlreadyHave(const CInv &inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
             }
         }
         bool rrc = recentRejects ? recentRejects->contains(inv.hash) : false;
-        return rrc || mempool.exists(inv.hash) || AlreadyHaveOrphan(inv.hash) || pcoinsTip->HaveCoins(inv.hash);
+        return rrc || mempool.exists(inv.hash) || AlreadyHaveOrphan(inv.hash) || 
+                   pcoinsTip->HaveCoinsInCache(COutPoint(inv.hash, 0)) || // Best effort: only try output 0 and 1
+                   pcoinsTip->HaveCoinsInCache(COutPoint(inv.hash, 1));
+
     }
     case MSG_BLOCK:
     case MSG_XTHINBLOCK:
