@@ -223,7 +223,7 @@ UniValue gettxoutproof(const JSONRPCRequest& request)
         pblockindex = mapBlockIndex[hashBlock];
     } else {
         const Coin& coin = AccessByTxid(*pcoinsTip, oneTxid);
-        if (!coin.IsSpent() && coin.nHeight > 0 && coin.nHeight <= chainActive.Height()) {
+        if (!coin.IsPruned() && coin.nHeight > 0 && coin.nHeight <= chainActive.Height()) {
             pblockindex = chainActive[coin.nHeight];
         }
     }

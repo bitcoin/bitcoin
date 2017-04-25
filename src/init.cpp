@@ -169,9 +169,9 @@ class CCoinsViewErrorCatcher : public CCoinsViewBacked
 {
 public:
     CCoinsViewErrorCatcher(CCoinsView* view) : CCoinsViewBacked(view) {}
-    bool GetCoin(const COutPoint &outpoint, Coin &coin) const override {
+    bool GetCoins(const COutPoint &outpoint, Coin &coin) const override {
         try {
-            return CCoinsViewBacked::GetCoin(outpoint, coin);
+            return CCoinsViewBacked::GetCoins(outpoint, coin);
         } catch(const std::runtime_error& e) {
             uiInterface.ThreadSafeMessageBox(_("Error reading from database, shutting down."), "", CClientUIInterface::MSG_ERROR);
             LogPrintf("Error reading from database: %s\n", e.what());
@@ -1514,14 +1514,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-<<<<<<< HEAD
-    if (gArgs.IsArgSet("-seednode")) {
-        for (const std::string& strDest : gArgs.GetArgs("-seednode"))
-            connman.AddOneShot(strDest);
-    }
-
-=======
->>>>>>> 5d67526... add SeedNodes to CConnman::Options
 #if ENABLE_ZMQ
     pzmqNotificationInterface = CZMQNotificationInterface::Create();
 

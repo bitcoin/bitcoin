@@ -164,8 +164,8 @@ int test_one_input(std::vector<uint8_t> buffer) {
         {
             try
             {
-                CCoins block;
-                ds >> block;
+                Coin coin;
+                ds >> coin;
             } catch (const std::ios_base::failure& e) {return 0;}
             break;
         }
