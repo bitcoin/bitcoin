@@ -3312,6 +3312,7 @@ UniValue aliasconvertcurrency(const UniValue& params, bool fHelp) {
 	
 	CAmount nTotalFrom = convertCurrencyCodeToSyscoin(theAlias.vchAliasPeg, vchCurrencyFrom, fCurrencyValue, chainActive.Tip()->nHeight, precision);
 	CAmount nTotalTo = nTotalFrom;
+	// don't need extra conversion if attempting to convert to SYS
 	if(vchCurrencyTo != vchFromString("SYS"))
 		nTotalTo = convertSyscoinToCurrencyCode(theAlias.vchAliasPeg, vchCurrencyTo, nTotalFrom, chainActive.Tip()->nHeight, precision);
 	UniValue res(UniValue::VOBJ);
