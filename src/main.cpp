@@ -1827,12 +1827,9 @@ void UpdateCoins(const CTransaction &tx, CValidationState &state, CCoinsViewCach
             // mark an outpoint spent, and construct undo information
             txundo.vprevout.push_back(CTxInUndo(coins->vout[nPos]));
             coins->Spend(nPos);
-            if (coins->vout.size() == 0)
-            {
-                CTxInUndo &undo = txundo.vprevout.back();
-                undo.nHeight = coins->nHeight;
-                undo.fCoinBase = coins->fCoinBase;
-            }
+            CTxInUndo &undo = txundo.vprevout.back();
+            undo.nHeight = coins->nHeight;
+            undo.fCoinBase = coins->fCoinBase;
         }
         // add outputs
         inputs.ModifyNewCoins(tx.GetHash())->FromTx(tx, nHeight);
@@ -2110,13 +2107,19 @@ int ApplyTxInUndo(const CTxInUndo& undo, CCoinsViewCache& view, const COutPoint&
     CCoinsModifier coins = view.ModifyCoins(out.hash);
     if (undo.nHeight != 0)
     {
-        // undo data contains height: this is the last output of the prevout tx being spent
-        if (!coins->IsPruned()) fClean = false; // overwriting existing transaction
+        if (!coins->IsPruned())
+        {
+            if (coins->fCoinBase != undo.fCoinBase || (uint32_t)coins->nHeight != undo.nHeight) fClean = false; // metadata mismatch
+        }
+        // restore height/coinbase tx metadata from undo data
         coins->fCoinBase = undo.fCoinBase;
         coins->nHeight = undo.nHeight;
     }
     else
     {
+        // Undo data does not contain height/coinbase. This should never happen
+        // for newly created undo entries. Previously, this data was only saved
+        // for the last spend of a transaction's outputs, so check IsPruned().
         if (coins->IsPruned()) fClean = false; // adding output to missing transaction
     }
     if (coins->IsAvailable(out.n)) fClean = false; // overwriting existing output
