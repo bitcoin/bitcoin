@@ -1933,13 +1933,21 @@ bool CheckInputs(const CTransaction &tx,
             for (unsigned int i = 0; i < tx.vin.size(); i++)
             {
                 const COutPoint &prevout = tx.vin[i].prevout;
-                const CCoins *coins = inputs.AccessCoins(prevout.hash);
-                if (!coins)
+                const Coin& coin = inputs.AccessCoin(prevout);
+                if (!coin.IsPruned())
                     LogPrintf("ASSERTION: no inputs available\n");
-                assert(coins);
+                assert(!coin.IsPruned());
+
+                // We very carefully only pass in things to CScriptCheck which
+                // are clearly committed. This provides
+                // a sanity check that our caching is not introducing consensus
+                // failures through additional data in, eg, the coins being
+                // spent being checked as a part of CScriptCheck.
+                const CScript& scriptPubKey = coin.out.scriptPubKey;
+                const CAmount amount = coin.out.nValue;
 
                 // Verify signature
-                CScriptCheck check(resourceTracker, *coins, tx, i, flags, cacheStore);
+                CScriptCheck check(resourceTracker, scriptPubKey, amount, tx, i, flags, cacheStore);
                 if (pvChecks)
                 {
                     pvChecks->push_back(CScriptCheck());
