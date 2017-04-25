@@ -3311,7 +3311,9 @@ UniValue aliasconvertcurrency(const UniValue& params, bool fHelp) {
 	int precision;
 	
 	CAmount nTotalFrom = convertCurrencyCodeToSyscoin(theAlias.vchAliasPeg, vchCurrencyFrom, fCurrencyValue, chainActive.Tip()->nHeight, precision);
-	CAmount nTotalTo = convertSyscoinToCurrencyCode(theAlias.vchAliasPeg, vchCurrencyTo, nTotalFrom, chainActive.Tip()->nHeight, precision);
+	CAmount nTotalTo = nTotalFrom;
+	if(vchCurrencyTo != vchFromString("SYS"))
+		nTotalTo = convertSyscoinToCurrencyCode(theAlias.vchAliasPeg, vchCurrencyTo, nTotalFrom, chainActive.Tip()->nHeight, precision);
 	UniValue res(UniValue::VOBJ);
 	res.push_back(Pair("convertedrate", strprintf("%.*f", precision, ValueFromAmount(nTotalTo).get_real())));
 	return res;
