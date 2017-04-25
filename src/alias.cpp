@@ -3312,8 +3312,8 @@ UniValue aliasconvertcurrency(const UniValue& params, bool fHelp) {
 	
 	CAmount nTotalTo = convertCurrencyCodeToSyscoin(theAlias.vchAliasPeg, vchCurrencyTo, fCurrencyValue, chainActive.Tip()->nHeight, precision);
 	CAmount nTotalFrom = convertCurrencyCodeToSyscoin(theAlias.vchAliasPeg, vchCurrencyFrom, fCurrencyValue, chainActive.Tip()->nHeight, precision);
-	double fTotalTo = ValueFromAmount(nTotalTo);
-	double fTotalFrom = ValueFromAmount(nTotalFrom);
+	double fTotalTo = ValueFromAmount(nTotalTo).get_real();
+	double fTotalFrom = ValueFromAmount(nTotalFrom).get_real();
 	double fConvertedAmount = 0;
 	if(nTotalFrom != 0)
 		fConvertedAmount = (1/fTotalFrom) * fTotalTo;
