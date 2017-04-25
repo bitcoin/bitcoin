@@ -158,4 +158,19 @@ BOOST_AUTO_TEST_CASE(key_test1)
     BOOST_CHECK(detsigc == ParseHex("2052d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1cd561d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d"));
 }
 
+BOOST_AUTO_TEST_CASE(key_export_test)
+{
+    CKey key1;
+    key1.MakeNewKey(true);
+    CPrivKey pkey1 = key1.GetPrivKey();
+    key1.SetPrivKey(pkey1, true);
+    BOOST_CHECK(key1.IsCompressed() == true);
+
+    CKey key2;
+    key2.MakeNewKey(false);
+    CPrivKey pkey2 = key2.GetPrivKey();
+    key2.SetPrivKey(pkey2, false);
+    BOOST_CHECK(key2.IsCompressed() == false);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
