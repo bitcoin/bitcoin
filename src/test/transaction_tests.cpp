@@ -339,6 +339,156 @@ BOOST_AUTO_TEST_CASE(test_Get)
     BOOST_CHECK_EQUAL(coins.GetValueIn(t1), (50+21+22)*CENT);
 }
 
+void CreateCreditAndSpend(const CKeyStore& keystore, const CScript& outscript, CTransactionRef& output, CMutableTransaction& input, bool success = true)
+{
+    CMutableTransaction outputm;
+    outputm.nVersion = 1;
+    outputm.vin.resize(1);
+    outputm.vin[0].prevout.SetNull();
+    outputm.vin[0].scriptSig = CScript();
+    outputm.vout.resize(1);
+    outputm.vout[0].nValue = 1;
+    outputm.vout[0].scriptPubKey = outscript;
+    CDataStream ssout(SER_NETWORK, PROTOCOL_VERSION);
+    ssout << outputm;
+    ssout >> output;
+    assert(output->vin.size() == 1);
+    assert(output->vin[0] == outputm.vin[0]);
+    assert(output->vout.size() == 1);
+    assert(output->vout[0] == outputm.vout[0]);
+
+    CMutableTransaction inputm;
+    inputm.nVersion = 1;
+    inputm.vin.resize(1);
+    inputm.vin[0].prevout.hash = output->GetHash();
+    inputm.vin[0].prevout.n = 0;
+    inputm.vout.resize(1);
+    inputm.vout[0].nValue = 1;
+    inputm.vout[0].scriptPubKey = CScript();
+    bool ret = SignSignature(keystore, *output, inputm, 0, SIGHASH_ALL);
+    assert(ret == success);
+    CDataStream ssin(SER_NETWORK, PROTOCOL_VERSION);
+    ssin << inputm;
+    ssin >> input;
+    assert(input.vin.size() == 1);
+    assert(input.vin[0] == inputm.vin[0]);
+    assert(input.vout.size() == 1);
+    assert(input.vout[0] == inputm.vout[0]);
+    assert(input.vin[0].scriptWitness.stack == inputm.vin[0].scriptWitness.stack);
+}
+
+void CheckWithFlag(const CTransactionRef& output, const CMutableTransaction& input, int flags, bool success)
+{
+    ScriptError error;
+    CTransaction inputi(input);
+    bool ret = VerifyScript(inputi.vin[0].scriptSig, output->vout[0].scriptPubKey, &inputi.vin[0].scriptWitness, flags, TransactionSignatureChecker(&inputi, 0, output->vout[0].nValue), &error);
+    assert(ret == success);
+}
+
+static CScript PushAll(const std::vector<valtype>& values)
+{
+    CScript result;
+    BOOST_FOREACH(const valtype& v, values) {
+        if (v.size() == 0) {
+            result << OP_0;
+        } else if (v.size() == 1 && v[0] >= 1 && v[0] <= 16) {
+            result << CScript::EncodeOP_N(v[0]);
+        } else {
+            result << v;
+        }
+    }
+    return result;
+}
+
+void ReplaceRedeemScript(CScript& script, const CScript& redeemScript)
+{
+    std::vector<valtype> stack;
+    EvalScript(stack, script, SCRIPT_VERIFY_STRICTENC, BaseSignatureChecker(), SIGVERSION_BASE);
+    assert(stack.size() > 0);
+    stack.back() = std::vector<unsigned char>(redeemScript.begin(), redeemScript.end());
+    script = PushAll(stack);
+}
+
+BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
+    CMutableTransaction mtx;
+    mtx.nVersion = 1;
+
+    CKey key;
+    key.MakeNewKey(true); // Need to use compressed keys in segwit or the signing will fail
+    CBasicKeyStore keystore;
+    keystore.AddKeyPubKey(key, key.GetPubKey());
+    CKeyID hash = key.GetPubKey().GetID();
+    CScript scriptPubKey = CScript() << OP_0 << std::vector<unsigned char>(hash.begin(), hash.end());
+
+    std::vector<int> sigHashes;
+    sigHashes.push_back(SIGHASH_NONE | SIGHASH_ANYONECANPAY);
+    sigHashes.push_back(SIGHASH_SINGLE | SIGHASH_ANYONECANPAY);
+    sigHashes.push_back(SIGHASH_ALL | SIGHASH_ANYONECANPAY);
+    sigHashes.push_back(SIGHASH_NONE);
+    sigHashes.push_back(SIGHASH_SINGLE);
+    sigHashes.push_back(SIGHASH_ALL);
+
+    // create a big transaction of 4500 inputs signed by the same key
+    for(uint32_t ij = 0; ij < 4500; ij++) {
+        uint32_t i = mtx.vin.size();
+        uint256 prevId;
+        prevId.SetHex("0000000000000000000000000000000000000000000000000000000000000100");
+        COutPoint outpoint(prevId, i);
+
+        mtx.vin.resize(mtx.vin.size() + 1);
+        mtx.vin[i].prevout = outpoint;
+        mtx.vin[i].scriptSig = CScript();
+
+        mtx.vout.resize(mtx.vout.size() + 1);
+        mtx.vout[i].nValue = 1000;
+        mtx.vout[i].scriptPubKey = CScript() << OP_1;
+    }
+
+    // sign all inputs
+    for(uint32_t i = 0; i < mtx.vin.size(); i++) {
+        bool hashSigned = SignSignature(keystore, scriptPubKey, mtx, i, 1000, sigHashes.at(i % sigHashes.size()));
+        assert(hashSigned);
+    }
+
+    CDataStream ssout(SER_NETWORK, PROTOCOL_VERSION);
+    auto vstream = WithOrVersion(&ssout, 0);
+    vstream << mtx;
+    CTransaction tx(deserialize, vstream);
+
+    // check all inputs concurrently, with the cache
+    PrecomputedTransactionData txdata(tx);
+    boost::thread_group threadGroup;
+    CCheckQueue<CScriptCheck> scriptcheckqueue(128);
+    CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
+
+    for (int i=0; i<20; i++)
+        threadGroup.create_thread(boost::bind(&CCheckQueue<CScriptCheck>::Thread, boost::ref(scriptcheckqueue)));
+
+    CCoins coins;
+    coins.fCoinBase = false;
+    for(uint32_t i = 0; i < mtx.vin.size(); i++) {
+        CTxOut txout;
+        txout.nValue = 1000;
+        txout.scriptPubKey = scriptPubKey;
+        coins.vout.push_back(txout);
+    }
+
+    for(uint32_t i = 0; i < mtx.vin.size(); i++) {
+        std::vector<CScriptCheck> vChecks;
+        CScriptCheck check(coins, tx, i, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false, &txdata);
+        vChecks.push_back(CScriptCheck());
+        check.swap(vChecks.back());
+        control.Add(vChecks);
+    }
+
+    bool controlCheck = control.Wait();
+    assert(controlCheck);
+
+    threadGroup.interrupt_all();
+    threadGroup.join_all();
+}
+
+
 BOOST_AUTO_TEST_CASE(test_IsStandard)
 {
     LOCK(cs_main);

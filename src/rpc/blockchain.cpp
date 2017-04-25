@@ -446,7 +446,110 @@ UniValue getblock(const UniValue& params, bool fHelp)
         return strHex;
     }
 
-    return blockToJSON(block, pblockindex);
+    return blockToJSON(block, pblockindex, verbosity >= 2);
+}
+
+struct CCoinsStats
+{
+    int nHeight;
+    uint256 hashBlock;
+    uint64_t nTransactions;
+    uint64_t nTransactionOutputs;
+    uint256 hashSerialized;
+    CAmount nTotalAmount;
+
+    CCoinsStats() : nHeight(0), nTransactions(0), nTransactionOutputs(0), nTotalAmount(0) {}
+};
+
+//! Calculate statistics about the unspent transaction output set
+static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
+{
+    std::unique_ptr<CCoinsViewCursor> pcursor(view->Cursor());
+
+    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    stats.hashBlock = pcursor->GetBestBlock();
+    {
+        LOCK(cs_main);
+        stats.nHeight = mapBlockIndex.find(stats.hashBlock)->second->nHeight;
+    }
+    ss << stats.hashBlock;
+    CAmount nTotalAmount = 0;
+    while (pcursor->Valid()) {
+        boost::this_thread::interruption_point();
+        uint256 key;
+        CCoins coins;
+        if (pcursor->GetKey(key) && pcursor->GetValue(coins)) {
+            stats.nTransactions++;
+            ss << key;
+            ss << VARINT(coins.nHeight * 2 + coins.fCoinBase);
+            for (unsigned int i=0; i<coins.vout.size(); i++) {
+                const CTxOut &out = coins.vout[i];
+                if (!out.IsNull()) {
+                    stats.nTransactionOutputs++;
+                    ss << VARINT(i+1);
+                    ss << *(const CScriptBase*)(&out.scriptPubKey);
+                    ss << VARINT(out.nValue);
+                    nTotalAmount += out.nValue;
+                }
+            }
+            ss << VARINT(0);
+        } else {
+            return error("%s: unable to read value", __func__);
+        }
+        pcursor->Next();
+    }
+    stats.hashSerialized = ss.GetHash();
+    stats.nTotalAmount = nTotalAmount;
+    return true;
+}
+
+UniValue pruneblockchain(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "pruneblockchain\n"
+            "\nArguments:\n"
+            "1. \"height\"       (numeric, required) The block height to prune up to. May be set to a discrete height, or a unix timestamp\n"
+            "                  to prune blocks whose block time is at least 2 hours older than the provided timestamp.\n"
+            "\nResult:\n"
+            "n    (numeric) Height of the last block pruned.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("pruneblockchain", "1000")
+            + HelpExampleRpc("pruneblockchain", "1000"));
+
+    if (!fPruneMode)
+        throw JSONRPCError(RPC_MISC_ERROR, "Cannot prune blocks because node is not in prune mode.");
+
+    LOCK(cs_main);
+
+    int heightParam = request.params[0].get_int();
+    if (heightParam < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative block height.");
+
+    // Height value more than a billion is too high to be a block height, and
+    // too low to be a block time (corresponds to timestamp from Sep 2001).
+    if (heightParam > 1000000000) {
+        // Add a 2 hour buffer to include blocks which might have had old timestamps
+        CBlockIndex* pindex = chainActive.FindEarliestAtLeast(heightParam - TIMESTAMP_WINDOW);
+        if (!pindex) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not find block with at least the specified timestamp.");
+        }
+        heightParam = pindex->nHeight;
+    }
+
+    unsigned int height = (unsigned int) heightParam;
+    unsigned int chainHeight = (unsigned int) chainActive.Height();
+    if (chainHeight < Params().PruneAfterHeight())
+        throw JSONRPCError(RPC_MISC_ERROR, "Blockchain is too short for pruning.");
+    else if (height > chainHeight)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Blockchain is shorter than the attempted prune height.");
+    else if (height > chainHeight - MIN_BLOCKS_TO_KEEP) {
+        LogPrint(BCLog::RPC, "Attempt to prune blocks close to the tip.  Retaining the minimum number of blocks.");
+        height = chainHeight - MIN_BLOCKS_TO_KEEP;
+    }
+
+    PruneBlockFilesManual(height);
+    return uint64_t(height);
 }
 
 struct CCoinsStats
@@ -515,7 +618,6 @@ UniValue gettxoutsetinfo(const UniValue& params, bool fHelp)
             "  \"bestblock\": \"hex\",   (string) the best block hash hex\n"
             "  \"transactions\": n,      (numeric) The number of transactions\n"
             "  \"txouts\": n,            (numeric) The number of output transactions\n"
-            "  \"bytes_serialized\": n,  (numeric) The serialized size\n"
             "  \"hash_serialized\": \"hash\",   (string) The serialized hash\n"
             "  \"total_amount\": x.xxx          (numeric) The total amount\n"
             "}\n"
@@ -533,8 +635,7 @@ UniValue gettxoutsetinfo(const UniValue& params, bool fHelp)
         ret.push_back(Pair("bestblock", stats.hashBlock.GetHex()));
         ret.push_back(Pair("transactions", (int64_t)stats.nTransactions));
         ret.push_back(Pair("txouts", (int64_t)stats.nTransactionOutputs));
-        ret.push_back(Pair("bytes_serialized", (int64_t)stats.nSerializedSize));
-        ret.push_back(Pair("hash_serialized", stats.hashSerialized.GetHex()));
+        ret.push_back(Pair("hash_serialized_2", stats.hashSerialized.GetHex()));
         ret.push_back(Pair("total_amount", ValueFromAmount(stats.nTotalAmount)));
     }
     return ret;
@@ -614,7 +715,6 @@ UniValue gettxout(const UniValue& params, bool fHelp)
     UniValue o(UniValue::VOBJ);
     ScriptPubKeyToJSON(coins.vout[n].scriptPubKey, o, true);
     ret.push_back(Pair("scriptPubKey", o));
-    ret.push_back(Pair("version", coins.nVersion));
     ret.push_back(Pair("coinbase", coins.fCoinBase));
 
     return ret;
