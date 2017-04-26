@@ -445,9 +445,6 @@ bool CreateSocket(const CService &addrConnect, SOCKET& hSocketRet)
 
 bool ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocket, int nTimeout)
 {
-    if (!CreateSocket(addrConnect, hSocket))
-        return false;
-
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
     if (!addrConnect.GetSockAddr((struct sockaddr*)&sockaddr, &len)) {
