@@ -54,8 +54,7 @@ In addition to the above, the following functionalities and configurations will 
 
 - An XTHIN service bit
 
-- If the thinblocks service bit is turned off then your node you will not be able to request thinkblocks but requests for thinblocks from other nodes 
-will still be serviced. 
+- If the thinblocks service bit is turned off then your node you will not be able to request thinkblocks or receive thinblocks. 
 
 - The coinbase transaction will always be included in the thinblock.
 

@@ -383,6 +383,9 @@ public:
     bool fInbound;
     bool fAutoOutbound; // any outbound node not connected with -addnode, connect-thinblock or -connect
     bool fNetworkNode; // any outbound node
+    int64_t tVersionSent;
+    bool fVerackSent;
+    bool fBUVersionSent;
     bool fSuccessfullyConnected;
     bool fDisconnect;
     // We use fRelayTxes for two purposes -

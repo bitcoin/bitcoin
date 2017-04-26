@@ -36,6 +36,7 @@
 #include "validationinterface.h"
 #include "version.h"
 
+#include <atomic>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
@@ -51,6 +52,9 @@ boost::mutex dd_mutex;
 std::map<std::pair<void *, void *>, LockStack> lockorders;
 boost::thread_specific_ptr<LockStack> lockstack;
 #endif
+
+
+std::atomic<bool> fIsInitialBlockDownload{false};
 
 // main.cpp CriticalSections:
 CCriticalSection cs_LastBlockFile;
