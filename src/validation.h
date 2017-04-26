@@ -285,7 +285,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, b
 CAmount GetMasternodePayment(int nHeight, CAmount blockValue);
 
 /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip). */
-double GuessVerificationProgress(const ChainTxData& data, CBlockIndex* pindex);
+double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex* pindex);
 
 /** Calculate the amount of disk space the block & undo files currently use */
 uint64_t CalculateCurrentUsage();

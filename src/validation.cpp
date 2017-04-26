@@ -118,6 +118,39 @@ private:
      * missing the data for the block.
      */
     std::set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexCandidates;
+
+    /**
+     * Every received block is assigned a unique and increasing identifier, so we
+     * know which one to give priority in case of a fork.
+     */
+    CCriticalSection cs_nBlockSequenceId;
+    /** Blocks loaded from disk are assigned id 0, so start the counter at 1. */
+    int32_t nBlockSequenceId = 1;
+    /** Decreasing counter (used by subsequent preciousblock calls). */
+    int32_t nBlockReverseSequenceId = -1;
+    /** chainwork for the last block that preciousblock has been applied to. */
+    arith_uint256 nLastPreciousChainwork = 0;
+
+    /** In order to efficiently track invalidity of headers, we keep the set of
+      * blocks which we tried to connect and found to be invalid here (ie which
+      * were set to BLOCK_FAILED_VALID since the last restart). We can then
+      * walk this set and check if a new header is a descendant of something in
+      * this set, preventing us from having to walk mapBlockIndex when we try
+      * to connect a bad block and fail.
+      *
+      * While this is more complicated than marking everything which descends
+      * from an invalid block as invalid at the time we discover it to be
+      * invalid, doing so would require walking all of mapBlockIndex to find all
+      * descendants. Since this case should be very rare, keeping track of all
+      * BLOCK_FAILED_VALID blocks in a set should be just fine and work just as
+      * well.
+      *
+      * Because we already walk mapBlockIndex in height-order at startup, we go
+      * ahead and mark descendants of invalid blocks as FAILED_CHILD at that time,
+      * instead of putting things in this set.
+      */
+    std::set<CBlockIndex*> g_failed_blocks;
+
 public:
     CChain chainActive;
     BlockMap mapBlockIndex;
@@ -231,38 +264,6 @@ namespace {
      *  or if we allocate more file space when we're in prune mode
      */
     bool fCheckForPruning = false;
-
-    /**
-     * Every received block is assigned a unique and increasing identifier, so we
-     * know which one to give priority in case of a fork.
-     */
-    CCriticalSection cs_nBlockSequenceId;
-    /** Blocks loaded from disk are assigned id 0, so start the counter at 1. */
-    int32_t nBlockSequenceId = 1;
-    /** Decreasing counter (used by subsequent preciousblock calls). */
-    int32_t nBlockReverseSequenceId = -1;
-    /** chainwork for the last block that preciousblock has been applied to. */
-    arith_uint256 nLastPreciousChainwork = 0;
-
-    /** In order to efficiently track invalidity of headers, we keep the set of
-      * blocks which we tried to connect and found to be invalid here (ie which
-      * were set to BLOCK_FAILED_VALID since the last restart). We can then
-      * walk this set and check if a new header is a descendant of something in
-      * this set, preventing us from having to walk mapBlockIndex when we try
-      * to connect a bad block and fail.
-      *
-      * While this is more complicated than marking everything which descends
-      * from an invalid block as invalid at the time we discover it to be
-      * invalid, doing so would require walking all of mapBlockIndex to find all
-      * descendants. Since this case should be very rare, keeping track of all
-      * BLOCK_FAILED_VALID blocks in a set should be just fine and work just as
-      * well.
-      *
-      * Because we already walk mapBlockIndex in height-order at startup, we go
-      * ahead and mark descendants of invalid blocks as FAILED_CHILD at that time,
-      * instead of putting things in this set.
-      */
-    std::set<CBlockIndex*> g_failed_blocks;
 
     /** Dirty block index entries. */
     std::set<CBlockIndex*> setDirtyBlockIndex;
@@ -2267,10 +2268,8 @@ static void DoWarning(const std::string& strWarning)
     }
 }
 
-/** Update chainActive and related internal data structures. */
-void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
-    chainActive.SetTip(pindexNew);
-
+/** Check warning conditions and do some notifications on new chain tip set. */
+void static UpdateTip(const CBlockIndex *pindexNew, const CChainParams& chainParams) {
     // New best block
     mempool.AddTransactionsUpdated(1);
 
@@ -2280,7 +2279,7 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
     if (!IsInitialBlockDownload())
     {
         int nUpgraded = 0;
-        const CBlockIndex* pindex = chainActive.Tip();
+        const CBlockIndex* pindex = pindexNew;
         for (int bit = 0; bit < VERSIONBITS_NUM_BITS; bit++) {
             WarningBitsConditionChecker checker(bit);
             ThresholdState state = checker.GetStateFor(pindex, chainParams.GetConsensus(), warningcache[bit]);
@@ -2311,10 +2310,10 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
         }
     }
     LogPrintf("%s: new best=%s height=%d version=0x%08x log2_work=%.8g tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)", __func__,
-      chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), chainActive.Tip()->nVersion,
-      log(chainActive.Tip()->nChainWork.getdouble())/log(2.0), (unsigned long)chainActive.Tip()->nChainTx,
-      DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
-      GuessVerificationProgress(chainParams.TxData(), chainActive.Tip()), pcoinsTip->DynamicMemoryUsage() * (1.0 / (1<<20)), pcoinsTip->GetCacheSize());
+      pindexNew->GetBlockHash().ToString(), pindexNew->nHeight, pindexNew->nVersion,
+      log(pindexNew->nChainWork.getdouble())/log(2.0), (unsigned long)pindexNew->nChainTx,
+      DateTimeStrFormat("%Y-%m-%d %H:%M:%S", pindexNew->GetBlockTime()),
+      GuessVerificationProgress(chainParams.TxData(), pindexNew), pcoinsTip->DynamicMemoryUsage() * (1.0 / (1<<20)), pcoinsTip->GetCacheSize());
     if (!warningMessages.empty())
         LogPrintf(" warning='%s'", boost::algorithm::join(warningMessages, ", "));
     LogPrintf("\n");
@@ -2368,7 +2367,8 @@ bool CChainState::DisconnectTip(CValidationState& state, const CChainParams& cha
         }
     }
 
-    // Update chainActive and related variables.
+    chainActive.SetTip(pindexDelete->pprev);
+
     UpdateTip(pindexDelete->pprev, chainparams);
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
@@ -2497,6 +2497,7 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
     mempool.removeForBlock(blockConnecting.vtx, pindexNew->nHeight);
     disconnectpool.removeForBlock(blockConnecting.vtx);
     // Update chainActive & related variables.
+    chainActive.SetTip(pindexNew);
     UpdateTip(pindexNew, chainparams);
 
     int64_t nTime6 = GetTimeMicros(); nTimePostConnect += nTime6 - nTime5; nTimeTotal += nTime6 - nTime1;
@@ -4274,6 +4275,8 @@ bool RewindBlockIndex(const CChainParams& params) {
 }
 
 void CChainState::UnloadBlockIndex() {
+    nBlockSequenceId = 1;
+    g_failed_blocks.clear();
     setBlockIndexCandidates.clear();
 }
 
@@ -4290,9 +4293,7 @@ void UnloadBlockIndex()
     mapBlocksUnlinked.clear();
     vinfoBlockFile.clear();
     nLastBlockFile = 0;
-    nBlockSequenceId = 1;
     setDirtyBlockIndex.clear();
-    g_failed_blocks.clear();
     setDirtyFileInfo.clear();
     versionbitscache.Clear();
     for (int b = 0; b < VERSIONBITS_NUM_BITS; b++) {
@@ -4824,7 +4825,7 @@ bool DumpMempool(void)
 }
 
 //! Guess how far we are in the verification process at the given block index
-double GuessVerificationProgress(const ChainTxData& data, CBlockIndex *pindex) {
+double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex *pindex) {
     if (pindex == nullptr)
         return 0.0;
 
