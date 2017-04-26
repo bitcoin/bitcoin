@@ -6,7 +6,7 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-class WalletTest (BitcoinTestFramework):
+class WalletTest(BitcoinTestFramework):
 
     def check_fee_amount(self, curr_balance, balance_with_fee, fee_per_byte, tx_size):
         """Return curr_balance after asserting the fee was in range"""
@@ -28,7 +28,7 @@ class WalletTest (BitcoinTestFramework):
         self.is_network_split=False
         self.sync_all()
 
-    def run_test (self):
+    def run_test(self):
 
         # Check that there's no UTXO on none of the nodes
         assert_equal(len(self.nodes[0].listunspent()), 0)
@@ -52,13 +52,33 @@ class WalletTest (BitcoinTestFramework):
         assert_equal(self.nodes[2].getbalance(), 0)
 
         # Check that only first and second nodes have UTXOs
-        assert_equal(len(self.nodes[0].listunspent()), 1)
+        utxos = self.nodes[0].listunspent()
+        assert_equal(len(utxos), 1)
         assert_equal(len(self.nodes[1].listunspent()), 1)
         assert_equal(len(self.nodes[2].listunspent()), 0)
 
         # Send 21 BTC from 0 to 2 using sendtoaddress call.
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11)
-        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 10)
+        mempool_txid = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 10)
+
+        self.log.info("test gettxout")
+        # utxo spent in mempool should be visible if you exclude mempool
+        # but invisible if you include mempool
+        confirmed_txid, confirmed_index = utxos[0]["txid"], utxos[0]["vout"]
+        txout = self.nodes[0].gettxout(confirmed_txid, confirmed_index, False)
+        assert_equal(txout['value'], 50)
+        txout = self.nodes[0].gettxout(confirmed_txid, confirmed_index, True)
+        assert txout is None
+        # new utxo from mempool should be invisible if you exclude mempool
+        # but visible if you include mempool
+        txout = self.nodes[0].gettxout(mempool_txid, 0, False)
+        assert txout is None
+        txout1 = self.nodes[0].gettxout(mempool_txid, 0, True)
+        txout2 = self.nodes[0].gettxout(mempool_txid, 1, True)
+        # note the mempool tx will have randomly assigned indices
+        # but 10 will go to node2 and the rest will go to node0
+        balance = self.nodes[0].getbalance()
+        assert_equal(set([txout1['value'], txout2['value']]), set([10, balance]))
 
         walletinfo = self.nodes[0].getwalletinfo()
         assert_equal(walletinfo['immature_balance'], 0)
