@@ -1321,6 +1321,12 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert,
     oCert.push_back(Pair("cert", stringFromVch(cert.vchCert)));
     oCert.push_back(Pair("txid", cert.txHash.GetHex()));
     oCert.push_back(Pair("height", sHeight));
+	string sTime;
+	CBlockIndex *pindex = chainActive[cert.nHeight];
+	if (pindex) {
+		sTime = strprintf("%llu", pindex->nTime);
+	}
+	oCert.push_back(Pair("time", sTime));
 	oCert.push_back(Pair("title", stringFromVch(cert.vchTitle)));
 	string strEncryptionPrivateKey = "";
 	string strData = "";

@@ -2724,6 +2724,12 @@ bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oNam
 	oName.push_back(Pair("publicvalue", stringFromVch(alias.vchPublicValue)));	
 	oName.push_back(Pair("privatevalue", strData));
 	oName.push_back(Pair("txid", alias.txHash.GetHex()));
+	string sTime;
+	CBlockIndex *pindex = chainActive[alias.nHeight];
+	if (pindex) {
+		sTime = strprintf("%llu", pindex->nTime);
+	}
+	oName.push_back(Pair("time", sTime));
 	oName.push_back(Pair("address", EncodeBase58(alias.vchAddress)));
 	UniValue balanceParams(UniValue::VARR);
 	balanceParams.push_back(stringFromVch(alias.vchAlias));
@@ -2760,7 +2766,7 @@ bool BuildAliasJson(const CAliasIndex& alias, const bool pending, UniValue& oNam
 	oName.push_back(Pair("arbiter_rating", ratingAsArbiter));
 	oName.push_back(Pair("arbiter_ratingcount", (int)alias.nRatingCountAsArbiter));
 	oName.push_back(Pair("arbiter_rating_display", strprintf("%.1f/5 (%d %s)", ratingAsArbiter, alias.nRatingCountAsArbiter, _("Votes"))));
-	oName.push_back(Pair("lastupdate_height", nHeight));
+	
 	if(alias.vchAlias != vchFromString("sysrates.peg") && alias.vchAlias != vchFromString("sysban") && alias.vchAlias != vchFromString("syscategory"))
 	{
 		expired_time = alias.nExpireTime;
