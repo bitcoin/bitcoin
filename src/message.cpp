@@ -797,6 +797,7 @@ bool BuildMessageJson(const CMessage& message, UniValue& oName, const string &st
 		sTime = strprintf("%llu", pindex->nTime);
 	}
 	string strAddress = "";
+	oName.push_back(Pair("txid", message.txHash.GetHex()));
 	oName.push_back(Pair("time", sTime));
 	oName.push_back(Pair("from", stringFromVch(message.vchAliasFrom)));
 	oName.push_back(Pair("to", stringFromVch(message.vchAliasTo)));
