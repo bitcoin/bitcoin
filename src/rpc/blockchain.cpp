@@ -906,27 +906,19 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
         stats.nHeight = mapBlockIndex.find(stats.hashBlock)->second->nHeight;
     }
     ss << stats.hashBlock;
-    uint256 prevkey;
-    std::map<uint32_t, Coin> outputs;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         uint256 key;
         CCoins coins;
         if (pcursor->GetKey(key) && pcursor->GetValue(coins)) {
-            stats.nTransactions++;
-            ss << key;
-            ss << VARINT(coins.nHeight * 2 + coins.fCoinBase);
+            std::map<uint32_t, Coin> outputs;
             for (unsigned int i=0; i<coins.vout.size(); i++) {
-                const CTxOut &out = coins.vout[i];
+                CTxOut &out = coins.vout[i];
                 if (!out.IsNull()) {
-                    stats.nTransactionOutputs++;
-                    ss << VARINT(i+1);
-                    ss << *(const CScriptBase*)(&out.scriptPubKey);
-                    ss << VARINT(out.nValue);
-                    nTotalAmount += out.nValue;
+                    outputs[i] = Coin(std::move(out), coins.nHeight, coins.fCoinBase);
                 }
             }
-            ss << VARINT(0);
+            ApplyStats(stats, ss, key, outputs);
         } else {
             return error("%s: unable to read value", __func__);
         }
@@ -936,7 +928,6 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
         ApplyStats(stats, ss, prevkey, outputs);
     }
     stats.hashSerialized = ss.GetHash();
-    stats.nTotalAmount = nTotalAmount;
     stats.nDiskSize = view->EstimateSize();
     return true;
 }
