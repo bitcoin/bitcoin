@@ -6,6 +6,8 @@
 #ifndef BITCOIN_CONSENSUS_CONSENSUS_H
 #define BITCOIN_CONSENSUS_CONSENSUS_H
 
+#include "config/bitcoin-config.h"  // for COPYRIGHT_YEAR
+
 #include <stdint.h>
 
 /** The maximum allowed size for a serialized block, in bytes (only for buffer size limits) */
@@ -27,5 +29,9 @@ enum {
     /* Use GetMedianTimePast() instead of nTime for end point timestamp. */
     LOCKTIME_MEDIAN_TIME_PAST = (1 << 1),
 };
+
+static const int64_t SECONDS_PER_YEAR = 31558060;
+static const int POSIX_EPOCH_YEAR = 1970;
+static const int64_t DEFAULT_SOFTWARE_EXPIRY = ((COPYRIGHT_YEAR - POSIX_EPOCH_YEAR) * SECONDS_PER_YEAR) + (SECONDS_PER_YEAR * 8);
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H

@@ -32,6 +32,7 @@
 #include "util.h"
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
+#include "utiltime.h"
 #include "validationinterface.h"
 #include "versionbits.h"
 #include "warnings.h"
@@ -2825,11 +2826,24 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
     return true;
 }
 
+bool IsThisSoftwareExpired(int64_t nTime)
+{
+    int64_t nSoftwareExpiry = GetArg("-softwareexpiry", DEFAULT_SOFTWARE_EXPIRY);
+    if (nSoftwareExpiry <= 0) {
+        nSoftwareExpiry = std::numeric_limits<int64_t>::max();
+    }
+    return (nTime > nSoftwareExpiry);
+}
+
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW)
 {
     // Check proof of work matches claimed amount
     if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
         return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
+
+    if (IsThisSoftwareExpired(block.nTime)) {
+        return state.DoS(0, false, REJECT_INVALID, "node-expired", true, "node software has expired");
+    }
 
     return true;
 }

@@ -18,6 +18,7 @@
 #include "platformstyle.h"
 #include "splashscreen.h"
 #include "utilitydialog.h"
+#include "validation.h"
 #include "winshutdownmonitor.h"
 
 #ifdef ENABLE_WALLET
@@ -634,6 +635,11 @@ int main(int argc, char *argv[])
     // Parse URIs on command line -- this can affect Params()
     PaymentServer::ipcParseCommandLine(argc, argv);
 #endif
+
+    if (IsThisSoftwareExpired(GetTime())) {
+        QMessageBox::critical(0, QObject::tr("Software expired"), QObject::tr("This software is expired, and may be out of consensus. You must choose to upgrade or override this expiration."));
+        return EXIT_FAILURE;
+    }
 
     QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(QString::fromStdString(Params().NetworkIDString())));
     assert(!networkStyle.isNull());
