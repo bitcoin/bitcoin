@@ -61,7 +61,7 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool w
 bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnessEnabled)
 {
 	// SYSCOIN check for syscoin or bitcoin tx
-    if ((tx.nVersion > CTransaction::CURRENT_VERSION || tx.nVersion < 1) && tx.nVersion != GetSyscoinTxVersion()) {
+    if ((tx.nVersion > CTransaction::MAX_STANDARD_VERSION || tx.nVersion < 1) && tx.nVersion != GetSyscoinTxVersion()) {
         reason = "version";
         return false;
     }
