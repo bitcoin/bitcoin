@@ -256,12 +256,6 @@ static IntrRecvError InterruptibleRecv(char* data, size_t len, int timeout, SOCK
     return len == 0 ? IntrRecvError::OK : IntrRecvError::Timeout;
 }
 
-struct ProxyCredentials
-{
-    std::string username;
-    std::string password;
-};
-
 std::string Socks5ErrorString(int err)
 {
     switch(err) {
@@ -278,7 +272,7 @@ std::string Socks5ErrorString(int err)
 }
 
 /** Connect using SOCKS5 (as described in RFC1928) */
-static bool Socks5(const std::string& strDest, int port, const ProxyCredentials *auth, SOCKET& hSocket)
+bool Socks5(const std::string& strDest, int port, const ProxyCredentials *auth, SOCKET& hSocket)
 {
     IntrRecvError recvr;
     LogPrint(BCLog::NET, "SOCKS5 connecting %s\n", strDest);

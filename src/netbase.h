@@ -37,6 +37,12 @@ public:
     bool randomize_credentials;
 };
 
+struct ProxyCredentials
+{
+    std::string username;
+    std::string password;
+};
+
 enum Network ParseNetwork(std::string net);
 std::string GetNetworkName(enum Network net);
 void SplitHostPort(std::string in, int &portOut, std::string &hostOut);
@@ -45,6 +51,8 @@ bool GetProxy(enum Network net, proxyType &proxyInfoOut);
 bool IsProxy(const CNetAddr &addr);
 bool SetNameProxy(const proxyType &addrProxy);
 bool HaveNameProxy();
+bool GetNameProxy(proxyType &nameProxyOut);
+bool Socks5(const std::string& strDest, int port, const ProxyCredentials *auth, SOCKET& hSocket);
 bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup);
 bool LookupHost(const char *pszName, CNetAddr& addr, bool fAllowLookup);
 bool Lookup(const char *pszName, CService& addr, int portDefault, bool fAllowLookup);
@@ -53,6 +61,7 @@ CService LookupNumeric(const char *pszName, int portDefault = 0);
 bool LookupSubNet(const char *pszName, CSubNet& subnet);
 bool ConnectSocket(const CService &addr, SOCKET& hSocketRet, int nTimeout, bool *outProxyConnectionFailed = 0);
 bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, int portDefault, int nTimeout, bool *outProxyConnectionFailed = 0);
+bool ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocket, int nTimeout);
 /** Return readable error string for a network error code */
 std::string NetworkErrorString(int err);
 bool CreateSocket(const CService &addrConnect, SOCKET& hSocketRet);
