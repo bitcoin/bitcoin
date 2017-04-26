@@ -112,6 +112,9 @@ extern CTweak<unsigned int> maxBlocksInTransitPerPeer;  // override the above
 extern CTweak<unsigned int> blockDownloadWindow;
 extern CTweak<uint64_t> reindexTypicalBlockSize;
 
+extern std::map<CNetAddr, ConnectionHistory> mapInboundConnectionTracker;
+extern CCriticalSection cs_mapInboundConnectionTracker;
+
 
 /**
  * Returns true if there are nRequired or more blocks of minVersion or above
@@ -5254,8 +5257,10 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
         if (pfrom->nVersion != 0)
         {
             pfrom->PushMessage(NetMsgType::REJECT, strCommand, REJECT_DUPLICATE, std::string("Duplicate version message"));
-            Misbehaving(pfrom->GetId(), 1);
-            return false;
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("Duplicate version message received - banning peer=%d version=%s ip=%s", pfrom->GetId(),
+                pfrom->cleanSubVer, pfrom->addrName.c_str());
         }
 
         int64_t nTime;
@@ -5268,12 +5273,13 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
 
         if (pfrom->nVersion < MIN_PEER_PROTO_VERSION)
         {
-            // disconnect from peers older than this proto version
-            LogPrintf("peer=%d using obsolete version %i; disconnecting\n", pfrom->id, pfrom->nVersion);
+            // ban peers older than this proto version
             pfrom->PushMessage(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
-                               strprintf("Version must be %d or greater", MIN_PEER_PROTO_VERSION));
-            pfrom->fDisconnect = true;
-            return false;
+                               strprintf("Protocol Version must be %d or greater", MIN_PEER_PROTO_VERSION));
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("Using obsolete protocol version %i - banning peer=%d version=%s ip=%s", pfrom->nVersion,
+                pfrom->GetId(), pfrom->cleanSubVer, pfrom->addrName.c_str());
         }
 
         if (pfrom->nVersion == 10300)
@@ -5314,8 +5320,11 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
         // Potentially mark this peer as a preferred download peer.
         UpdatePreferredDownload(pfrom, State(pfrom->GetId()));
 
-        // Change version
+        // Send VERACK handshake message
         pfrom->PushMessage(NetMsgType::VERACK);
+        pfrom->fVerackSent = true;
+
+        // Change version
         pfrom->ssSend.SetVersion(std::min(pfrom->nVersion, PROTOCOL_VERSION));
 
         if (!pfrom->fInbound)
@@ -5350,8 +5359,6 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
             }
         }
 
-        pfrom->fSuccessfullyConnected = true;
-
         std::string remoteAddr;
         if (fLogIPs)
             remoteAddr = ", peeraddr=" + pfrom->addr.ToString();
@@ -5369,14 +5376,38 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
 
     else if (pfrom->nVersion == 0)
     {
-        // Must have a version message before anything else
-        Misbehaving(pfrom->GetId(), 1);
-        return false;
+        // Must have version message before anything else (Although we may send our VERSION before
+        // we receive theirs, it would not be possible to receive their VERACK before their VERSION).
+        // NOTE:  we MUST explicitly ban the peer here.  If we only indicate a misbehaviour then the peer
+        //        may never be banned since the banning process requires that messages be sent back. If an
+        //        attacker sends us messages that do not require a response coupled with an nVersion of zero
+        //        then they can continue unimpeded even though they have exceeded the misbehaving threshold.
+        pfrom->fDisconnect = true;
+        CNode::Ban(pfrom->addr, BanReasonNodeMisbehaving);
+        return error("VERSION was not received before other messages - banning peer=%d ip=%s",
+            pfrom->GetId(), pfrom->addrName.c_str());
     }
 
 
     else if (strCommand == NetMsgType::VERACK)
     {
+        // If we haven't sent a VERSION message yet then we should not get a VERACK message.
+        if (pfrom->tVersionSent < 0)
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("VERACK received but we never sent a VERSION message - banning peer=%d version=%s ip=%s",
+                pfrom->GetId(), pfrom->cleanSubVer, pfrom->addrName.c_str());
+        }
+        if (pfrom->fSuccessfullyConnected)
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("duplicate VERACK received - banning peer=%d version=%s ip=%s", pfrom->GetId(),
+                pfrom->cleanSubVer, pfrom->addrName.c_str());
+        }
+
+        pfrom->fSuccessfullyConnected = true;
         pfrom->SetRecvVersion(std::min(pfrom->nVersion, PROTOCOL_VERSION));
 
         // Mark this node as currently connected, so we update its timestamp later.
@@ -5400,8 +5431,32 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
         // message because we don't know if in the future Core will append more data to the end of the current VERSION message.
         // The BUVERSION should be after the VERACK message otherwise Core may flag an error if another messaged shows up before the VERACK is received.
         // The BUVERSION message is active from the protocol EXPEDITED_VERSION onwards.
-        if( pfrom->nVersion >= EXPEDITED_VERSION)
+        if (pfrom->nVersion >= EXPEDITED_VERSION)
+        {
             pfrom->PushMessage(NetMsgType::BUVERSION, GetListenPort());
+            pfrom->fBUVersionSent = true;
+        }
+    }
+
+
+    else if (!pfrom->fSuccessfullyConnected && GetTime() - pfrom->tVersionSent > VERACK_TIMEOUT &&
+             pfrom->tVersionSent >= 0)
+    {
+        // If verack is not received within timeout then disconnect.
+        // The peer may be slow so disconnect them only, to give them another chance if they try to re-connect.
+        // If they are a bad peer and keep trying to reconnect and still do not VERACK, they will eventually
+        // get banned by the connection slot algorithm which tracks disconnects and reconnects.
+        pfrom->fDisconnect = true;
+        LogPrint("net", "ERROR: disconnecting - VERACK not received within %d seconds for peer=%d version=%s ip=%s\n",
+            VERACK_TIMEOUT, pfrom->GetId(), pfrom->cleanSubVer, pfrom->addrName.c_str());
+
+        // update connection tracker which is used by the connection slot algorithm.
+        LOCK(cs_mapInboundConnectionTracker);
+        CNetAddr ipAddress = (CNetAddr)pfrom->addr;
+        mapInboundConnectionTracker[ipAddress].nEvictions += 1;
+        mapInboundConnectionTracker[ipAddress].nLastEvictionTime = GetTime();
+
+        return true; // return true so we don't get any process message failures in the log.
     }
 
 
@@ -5482,22 +5537,25 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
     {
         std::vector<CInv> vInv;
         vRecv >> vInv;
-        // BU check size == 0 to be intolerant of an empty and useless request
-        if ((vInv.size() > MAX_INV_SZ)||(vInv.size() == 0))
+
+        // Message Consistency Checking
+        //   Check size == 0 to be intolerant of an empty and useless request.
+        //   Validate that INVs are a valid type and not null.
+        if (vInv.size() > MAX_INV_SZ || vInv.empty())
         {
+            LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 20);
             return error("message inv size() = %u", vInv.size());
         }
-        
-        for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)  // Validate that INVs are a valid type
+        for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
         {
             const CInv &inv = vInv[nInv];
-            if (!((inv.type == MSG_TX) || (inv.type == MSG_BLOCK)))
+            if (!((inv.type == MSG_TX) || (inv.type == MSG_BLOCK)) || inv.hash.IsNull())
             {
+                LOCK(cs_main);
                 Misbehaving(pfrom->GetId(), 20);
-                return error("message inv invalid type = %u", inv.type);                
+                return error("message inv invalid type = %u or is null hash %s", inv.type, inv.hash.ToString());
             }
-            // inv.hash does not need validation, since SHA2556 hash can be any value
         }
         
         bool fBlocksOnly = GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
@@ -5931,8 +5989,15 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
     }
 
     // BUIP010 Xtreme Thinblocks: begin section
-    else if (strCommand == NetMsgType::GET_XTHIN && !fImporting && !fReindex) // Ignore blocks received while importing
+    else if (strCommand == NetMsgType::GET_XTHIN && !fImporting && !fReindex && IsThinBlocksEnabled())
     {
+
+        if (!pfrom->ThinBlockCapable())
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("Thinblock message received from a non thinblock node, peer=%d", pfrom->GetId());
+        }
 
         // Check for Misbehaving and DOS
         // If they make more than 20 requests in 10 minutes then disconnect them
@@ -5971,7 +6036,6 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
 
         // Validates that the filter is reasonably sized.
         LoadFilter(pfrom, &filterMemPool);
-
         {
             LOCK(cs_main);
             BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
@@ -6000,44 +6064,72 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
     {
         HandleExpeditedRequest(vRecv, pfrom);
     }
-
-
     else if (strCommand == NetMsgType::XPEDITEDBLK)
     {
-	if (!HandleExpeditedBlock(vRecv, pfrom))
+        // ignore the expedited message unless we are at the chain tip...
+        if (!fImporting && !fReindex && IsChainNearlySyncd())
         {
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 5);
-            return false;            
+	          if (!HandleExpeditedBlock(vRecv, pfrom))
+            {
+                LOCK(cs_main);
+                Misbehaving(pfrom->GetId(), 5);
+                return false;            
+            }
         }
     }
-
-
-    // BU - used to pass BU specific version information similar to NetMsgType::VERSION
+    // BUVERSION is used to pass BU specific version information similar to NetMsgType::VERSION
+    // and is exchanged after the VERSION and VERACK are both sent and received.
     else if (strCommand == NetMsgType::BUVERSION)
     {
+        // If we never sent a VERACK message then we should not get a BUVERSION message.
+        if (!pfrom->fVerackSent)
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("BUVERSION received but we never sent a VERACK message - banning peer=%d version=%s ip=%s",
+                pfrom->GetId(), pfrom->cleanSubVer, pfrom->addrName.c_str());
+        }
         // Each connection can only send one version message
         if (pfrom->addrFromPort != 0)
         {
             pfrom->PushMessage(NetMsgType::REJECT, strCommand, REJECT_DUPLICATE, std::string("Duplicate BU version message"));
             LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 5);
-            return false;
+            Misbehaving(pfrom->GetId(), 100);
+            return error("Duplicate BU version message received from peer=%d version=%s ip=%s",
+                pfrom->GetId(), pfrom->cleanSubVer, pfrom->addrName.c_str());
         }
 
-        vRecv >> pfrom->addrFromPort; // needed for connecting and initializing Xpedited forwarding.
+        // addrFromPort is needed for connecting and initializing Xpedited forwarding.
+        vRecv >> pfrom->addrFromPort;
         pfrom->PushMessage(NetMsgType::BUVERACK);
     }
-    // BU - final handshake for BU specific version information similar to NetMsgType::VERACK
+    // Final handshake for BU specific version information similar to NetMsgType::VERACK
     else if (strCommand == NetMsgType::BUVERACK)
     {
-        // BU: this step done here after final handshake
+        // If we never sent a BUVERSION message then we should not get a VERACK message.
+        if (!pfrom->fBUVersionSent)
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("BUVERACK received but we never sent a BUVERSION message - banning peer=%d version=%s ip=%s",
+                pfrom->GetId(), pfrom->cleanSubVer, pfrom->addrName.c_str());
+        }
+
+        // This step done after final handshake
         CheckAndRequestExpeditedBlocks(pfrom);
     }
 
-
-    else if (strCommand == NetMsgType::XTHINBLOCK  && !fImporting && !fReindex) // BU received extreme thin block -- but ignore blocks received while importing
+    else if (strCommand == NetMsgType::XTHINBLOCK && !fImporting && !fReindex &&
+        !IsInitialBlockDownload() &&
+        IsThinBlocksEnabled())
     {
+        if (!pfrom->ThinBlockCapable())
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("xthinblock message received from a non thinblock node, peer=%d", pfrom->GetId());
+        }
+
         CXThinBlock thinBlock;
         vRecv >> thinBlock;
 
@@ -6054,13 +6146,43 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
         if (!IsRecentlyExpeditedAndStore(inv.hash))
             SendExpeditedBlock(thinBlock, 0, pfrom);
 
+        // Is there a previous block or header to connect with?
+        {
+            LOCK(cs_main);
+            uint256 prevHash = thinBlock.header.hashPrevBlock;
+            BlockMap::iterator mi = mapBlockIndex.find(prevHash);
+            if (mi == mapBlockIndex.end())
+            {
+                Misbehaving(pfrom->GetId(), 10);
+                return error("xthinblock from peer %s (%d) will not connect, unknown previous block %s",
+                    pfrom->addrName.c_str(),
+                    pfrom->id,
+                    prevHash.ToString());
+            }
+            CBlockIndex* pprev = mi->second;
+            CValidationState state;
+            if (!ContextualCheckBlockHeader(thinBlock.header, state, pprev))
+            {
+                // Thin block does not fit within our blockchain
+                Misbehaving(pfrom->GetId(), 100);
+                return error("thinblock from peer %s (%d) contextual error: %s",
+                    pfrom->addrName.c_str(),
+                    pfrom->id,
+                    state.GetRejectReason().c_str());
+            }
+        }
+
         int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
-        LogPrint("thin", "Received thinblock %s from peer %s (%d). Size %d bytes.\n", inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id, nSizeThinBlock);
+        LogPrint("thin", "Received xthinblock %s from peer %s (%d). Size %d bytes.\n", inv.hash.ToString(),
+            pfrom->addrName.c_str(),
+            pfrom->id,
+            nSizeThinBlock);
 
         bool fAlreadyHave = false;
         // An expedited block or re-requested xthin can arrive and beat the original thin block request/response
-        if (!pfrom->mapThinBlocksInFlight.count(inv.hash)) {
-            LogPrint("thin", "Thinblock %s from peer %s (%d) received but we already have it\n", inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id);
+        if (!pfrom->mapThinBlocksInFlight.count(inv.hash))
+        {
+            LogPrint("thin", "xthinblock %s from peer %s (%d) received but we may already have processed it\n", inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id);
             LOCK(cs_main);
             fAlreadyHave = AlreadyHave(inv); // I'll still continue processing if we don't have an accepted block yet
             if (fAlreadyHave)
@@ -6071,8 +6193,18 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
            thinBlock.process(pfrom, nSizeThinBlock, strCommand);
     }
 
-    else if (strCommand == NetMsgType::THINBLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
+
+    else if (strCommand == NetMsgType::THINBLOCK && !fImporting && !fReindex &&
+        !IsInitialBlockDownload() &&
+        IsThinBlocksEnabled())
     {
+        if (!pfrom->ThinBlockCapable())
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("Thinblock message received from a non thinblock node, peer=%d", pfrom->GetId());
+        }
+
         CThinBlock thinBlock;
         vRecv >> thinBlock;
 
@@ -6084,10 +6216,41 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
             return error("Invalid thinblock received");
         }
 
+        // Is there a previous block or header to connect with?
+        {
+            LOCK(cs_main);
+            uint256 prevHash = thinBlock.header.hashPrevBlock;
+            BlockMap::iterator mi = mapBlockIndex.find(prevHash);
+            if (mi == mapBlockIndex.end())
+            {
+                Misbehaving(pfrom->GetId(), 10);
+                return error("thinblock from peer %s (%d) will not connect, unknown previous block %s",
+                    pfrom->addrName.c_str(),
+                    pfrom->id,
+                    prevHash.ToString());
+            }
+            CBlockIndex* pprev = mi->second;
+            CValidationState state;
+            if (!ContextualCheckBlockHeader(thinBlock.header, state, pprev))
+            {
+                // Thin block does not fit within our blockchain
+                Misbehaving(pfrom->GetId(), 100);
+                return error("thinblock from peer %s (%d) contextual error: %s",
+                    pfrom->addrName.c_str(),
+                    pfrom->id,
+                    state.GetRejectReason().c_str());
+            }
+        }
+
         CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
         int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
-        LogPrint("thin", "received thinblock %s from peer %s (%d) of %d bytes\n", inv.hash.ToString(), pfrom->addrName.c_str(),pfrom->id, nSizeThinBlock);
-        if (!pfrom->mapThinBlocksInFlight.count(inv.hash)) {
+        LogPrint("thin", "received thinblock %s from peer %s (%d) of %d bytes\n", inv.hash.ToString(),
+            pfrom->addrName.c_str(),
+            pfrom->id,
+            nSizeThinBlock);
+
+        if (!pfrom->mapThinBlocksInFlight.count(inv.hash))
+        {
             LogPrint("thin", "Thinblock received but not requested %s  peer=%d\n",inv.hash.ToString(), pfrom->id);
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 20);
@@ -6095,8 +6258,19 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
 
         thinBlock.process(pfrom, nSizeThinBlock, strCommand);
     }
-    else if (strCommand == NetMsgType::GET_XBLOCKTX && !fImporting && !fReindex) // return Re-requested xthinblock transactions
+
+
+    else if (strCommand == NetMsgType::GET_XBLOCKTX && !fImporting && !fReindex &&
+        !IsInitialBlockDownload() &&
+        IsThinBlocksEnabled())
     {
+        if (!pfrom->ThinBlockCapable())
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("Thinblock message received from a non thinblock node, peer=%d", pfrom->GetId());
+        }
+
         CXRequestThinBlockTx thinRequestBlockTx;
         vRecv >> thinRequestBlockTx;
 
@@ -6137,7 +6311,9 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
             BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
             if (mi == mapBlockIndex.end())
             {
-                return error("Requested block is not available");
+                LOCK(cs_main);
+                Misbehaving(pfrom->GetId(), 20);
+                return error("Requested block is not available");          
             }
             else
             {
@@ -6145,6 +6321,8 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
                 const Consensus::Params& consensusParams = Params().GetConsensus();
                 if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
                 {
+                    LOCK(cs_main);
+                    Misbehaving(pfrom->GetId(), 20);
                     return error("Cannot load block from disk -- Block txn request before assembled");
                 }
                 else
@@ -6163,8 +6341,18 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
         }
     }
 
-    else if (strCommand == NetMsgType::XBLOCKTX && !fImporting && !fReindex) // handle Re-requested thinblock transactions
+
+    else if (strCommand == NetMsgType::XBLOCKTX && !fImporting && !fReindex &&
+        !IsInitialBlockDownload() &&
+        IsThinBlocksEnabled())
     {
+        if (!pfrom->ThinBlockCapable())
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("Thinblock message received from a non thinblock node, peer=%d", pfrom->GetId());
+        }
+
         CXThinBlockTx thinBlockTx;
         vRecv >> thinBlockTx;
 
@@ -6259,17 +6447,33 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
 
         CInv inv(MSG_BLOCK, block.GetHash());
         LogPrint("blk", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
-        UnlimitedLogBlock(block,inv.hash.ToString(),receiptTime);
+        UnlimitedLogBlock(block, inv.hash.ToString(), receiptTime);
+
+        // If block was never requested then ban the peer. We should never received 
+        // unrequested blocks unless we are doing testing in regtest.
+        {
+            LOCK(cs_main);
+            if (mapBlocksInFlight.find(inv.hash) == mapBlocksInFlight.end() && !pfrom->fWhitelisted)
+            {
+                Misbehaving(pfrom->GetId(), 100);
+                return error("Block %s was never requested, banning peer=%d", inv.hash.ToString(), pfrom->GetId());
+            }
+        }
 
         if (IsChainNearlySyncd()) // BU send the received block out expedited channels quickly
-          {
-          CValidationState state;
-          if (CheckBlockHeader(block, state, true))  // block header is fine
-            SendExpeditedBlock(block, pfrom);
-          }
+        {
+            CValidationState state;
+            if (CheckBlockHeader(block, state, true))  // block header is fine
+                SendExpeditedBlock(block, pfrom);
+        }
+        // This comes after the check for block header and expedited forwarding, in case this
+        // block is invalid we don't want to remove it from the request manager yet.
         requester.Received(inv, pfrom, msgSize);
 
-        // BUIP010 Extreme Thinblocks: Handle Block Message.
+         
+        // Message consistency checking
+        // NOTE: consistency checking is handled by checkblock() which is called during
+        //       ProcessNewBlock() during HandleBlockMessage.
         PV.HandleBlockMessage(pfrom, strCommand, block, inv);
     }
 
@@ -6641,7 +6845,8 @@ bool SendMessages(CNode* pto)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
     {
-        // Don't send anything until we get its version message
+        // Don't send anything until we get its version message otherwise we may
+        // end up geting ourselves banned by the receiving peer.
         if (pto->nVersion == 0)
             return true;
 

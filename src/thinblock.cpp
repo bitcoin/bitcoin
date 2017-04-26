@@ -4,6 +4,7 @@
 
 #include "thinblock.h"
 #include "chainparams.h"
+#include "consensus/merkle.h"
 #include "main.h"
 #include "net.h"
 #include "parallel.h"
@@ -65,9 +66,19 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock, string strCommand)
     pfrom->thinBlock.hashPrevBlock = header.hashPrevBlock;
     pfrom->thinBlockHashes = vTxHashes;
 
+    // Check that the merkleroot matches the merkelroot calculated from the hashes provided.
+    bool mutated;
+    uint256 merkleroot = ComputeMerkleRoot(vTxHashes, &mutated);
+    if (header.hashMerkleRoot != merkleroot)
+    {
+        LOCK(cs_main);
+        Misbehaving(pfrom->GetId(), 100);
+        return error("Thinblock merkle root does not match computed merkle root, peer=%d", pfrom->GetId());
+    }
+
     // Create the mapMissingTx from all the supplied tx's in the xthinblock
     std::map<uint256, CTransaction> mapMissingTx;
-    BOOST_FOREACH (CTransaction tx, vMissingTx)
+    for (const CTransaction tx : vMissingTx)
         mapMissingTx[tx.GetHash()] = tx;
 
     {
@@ -79,7 +90,7 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock, string strCommand)
         int unnecessaryCount = 0;
 
         // Look for each transaction in our various pools and buffers.
-        BOOST_FOREACH (const uint256 &hash, vTxHashes)
+        for (const uint256 &hash : vTxHashes)
         {
             CTransaction tx;
             if (!hash.IsNull())
@@ -128,7 +139,7 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock, string strCommand)
 
         PV.HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, GetInv());
         LOCK(cs_orphancache);
-        BOOST_FOREACH (uint256 &hash, vTxHashes)
+        for (const uint256 &hash : vTxHashes)
             EraseOrphanTx(hash);
     }
     else if (pfrom->thinBlockWaitingForTxns > 0)
@@ -262,7 +273,7 @@ bool CXThinBlock::process(CNode *pfrom,
 
     // Create the mapMissingTx from all the supplied tx's in the xthinblock
     map<uint256, CTransaction> mapMissingTx;
-    BOOST_FOREACH (CTransaction tx, vMissingTx)
+    for (const CTransaction tx : vMissingTx)
         mapMissingTx[tx.GetHash()] = tx;
 
     // Create a map of all 8 bytes tx hashes pointing to their full tx hash counterpart
@@ -274,6 +285,7 @@ bool CXThinBlock::process(CNode *pfrom,
     map<uint64_t, uint256> mapPartialTxHash;
     vector<uint256> memPoolHashes;
 
+    bool fMerkleRootCorrect = true;
     {
         // Do the orphans first before taking the mempool.cs lock, so that we maintain correct locking order.
         LOCK(cs_orphancache);
@@ -318,39 +330,61 @@ bool CXThinBlock::process(CNode *pfrom,
 
         if (!collision)
         {
-            // Look for each transaction in our various pools and buffers.
-            // With xThinBlocks the vTxHashes contains only the first 8 bytes of the tx hash.
-            BOOST_FOREACH (uint64_t &cheapHash, vTxHashes)
+            // Check that the merkleroot matches the merkelroot calculated from the hashes provided.
+            std::vector<uint256> fullTxHashes;
+            for (const uint64_t &cheapHash : vTxHashes)
+                fullTxHashes.push_back(mapPartialTxHash[cheapHash]);
+
+            bool mutated;
+            uint256 merkleroot = ComputeMerkleRoot(fullTxHashes, &mutated);
+            if (header.hashMerkleRoot != merkleroot)
             {
-                // Replace the truncated hash with the full hash value if it exists
-                const uint256 hash = mapPartialTxHash[cheapHash];
-                CTransaction tx;
-                if (!hash.IsNull())
+                fMerkleRootCorrect = false;
+            }
+            else
+            {
+                // Look for each transaction in our various pools and buffers.
+                // With xThinBlocks the vTxHashes contains only the first 8 bytes of the tx hash.
+                for (const uint256 hash : fullTxHashes)
                 {
-                    bool inMemPool = mempool.lookup(hash, tx);
-                    bool inMissingTx = mapMissingTx.count(hash) > 0;
-                    bool inOrphanCache = mapOrphanTransactions.count(hash) > 0;
-
-                    if ((inMemPool && inMissingTx) || (inOrphanCache && inMissingTx))
-                        unnecessaryCount++;
-
-                    if (inOrphanCache)
+                    // Replace the truncated hash with the full hash value if it exists
+                    CTransaction tx;
+                    if (!hash.IsNull())
                     {
-                        tx = mapOrphanTransactions[hash].tx;
-                        setUnVerifiedOrphanTxHash.insert(hash);
+                        bool inMemPool = mempool.lookup(hash, tx);
+                        bool inMissingTx = mapMissingTx.count(hash) > 0;
+                        bool inOrphanCache = mapOrphanTransactions.count(hash) > 0;
+
+                        if ((inMemPool && inMissingTx) || (inOrphanCache && inMissingTx))
+                            unnecessaryCount++;
+
+                        if (inOrphanCache)
+                        {
+                            tx = mapOrphanTransactions[hash].tx;
+                            setUnVerifiedOrphanTxHash.insert(hash);
+                        }
+                        else if (inMemPool && fXVal)
+                            setPreVerifiedTxHash.insert(hash);
+                        else if (inMissingTx)
+                            tx = mapMissingTx[hash];
                     }
-                    else if (inMemPool && fXVal)
-                        setPreVerifiedTxHash.insert(hash);
-                    else if (inMissingTx)
-                        tx = mapMissingTx[hash];
+                    if (tx.IsNull())
+                        missingCount++;
+
+                    // This will push an empty/invalid transaction if we don't have it yet
+                    pfrom->thinBlock.vtx.push_back(tx);
                 }
-                if (tx.IsNull())
-                    missingCount++;
-                // This will push an empty/invalid transaction if we don't have it yet
-                pfrom->thinBlock.vtx.push_back(tx);
             }
         }
     } // End locking cs_orphancache, mempool.cs and cs_xval
+
+    // This must be checked outside the above section or a deadlock may occur
+    if (!fMerkleRootCorrect)
+    {
+        LOCK(cs_main);
+        Misbehaving(pfrom->GetId(), 100);
+        return error("Thinblock merkelroot does not match computed merkleroot, peer=%d", pfrom->GetId());
+    }
 
     // There is a remote possiblity of a Tx hash collision therefore if it occurs we re-request a normal
     // thinblock which has the full Tx hash data rather than just the truncated hash.
