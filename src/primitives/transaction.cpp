@@ -230,6 +230,12 @@ CAmount GetInterest(CAmount nValue, int outputBlockHeight, int valuationHeight, 
     //Term deposits may have up to 1 year of interest
     if(maturationBlock>0){
         blocks=std::min(ONEYEAR,valuationHeight-outputBlockHeight);
+
+        //Bug fix here - if the valuation height is greater than the maturation height, the deposit continues to earn interest after maturation
+        //Need the minimum of three figures - one year, valuation height, or maturation period
+        if(valuationHeight>=THEUNFORKENING){
+            blocks=std::min(blocks,maturationBlock-outputBlockHeight);
+        }
     }
 
     CAmount standardInterest=getRateForAmount(blocks, nValue);

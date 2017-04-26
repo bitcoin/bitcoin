@@ -11,6 +11,8 @@
 #include "serialize.h"
 #include "uint256.h"
 
+static const unsigned int THEUNFORKENING = 257000;
+
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
 {
