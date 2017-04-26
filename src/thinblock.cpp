@@ -845,6 +845,12 @@ string CThinBlockData::MempoolLimiterBytesSavedToString()
     return ss.str();
 }
 
+// Preferential Thinblock Timer:
+// The purpose of the timer is to ensure that we more often download an XTHINBLOCK rather than a full block.
+// The timer is started when we receive the first announcement indicating there is a new block to download.  If the
+// block inventory is from a non XTHIN node then we will continue to wait for block announcements until either we
+// get one from an XTHIN capable node or the timer is exceeded.  If the timer is exceeded before receiving an
+// announcement from an XTHIN node then we just download a full block instead of an xthin.
 bool CThinBlockData::CheckThinblockTimer(uint256 hash)
 {
     LOCK(cs_mapThinBlockTimer);
@@ -864,7 +870,7 @@ bool CThinBlockData::CheckThinblockTimer(uint256 hash)
     }
     return true;
 }
-
+// The timer is cleared as soon as we request a block or thinblock.
 void CThinBlockData::ClearThinBlockTimer(uint256 hash)
 {
     LOCK(cs_mapThinBlockTimer);

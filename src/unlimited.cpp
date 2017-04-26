@@ -1235,9 +1235,6 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
             setUnVerifiedOrphanTxHash.clear();
         }
     }
-
-    // Clear the thinblock timer used for preferential download
-    thindata.ClearThinBlockTimer(inv.hash);
 }
 
 bool CheckAndRequestExpeditedBlocks(CNode* pfrom)
