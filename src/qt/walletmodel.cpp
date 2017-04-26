@@ -722,9 +722,24 @@ bool WalletModel::bumpFee(uint256 hash)
     }
 
     // allow a user based fee verification
-    QString questionString = tr("Do you want to increase the fee from %1 to %2").arg(
-                BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), feeBump->getOldFee()),
-                BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), feeBump->getNewFee()));
+    QString questionString = tr("Do you want to increase the fee?");
+    questionString.append("<br />");
+    CAmount oldFee = feeBump->getOldFee();
+    CAmount newFee = feeBump->getNewFee();
+    questionString.append("<table style=\"text-align: left;\">");
+    questionString.append("<tr><td>");
+    questionString.append(tr("Current fee:"));
+    questionString.append("</td><td>");
+    questionString.append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), oldFee));
+    questionString.append("</td></tr><tr><td>");
+    questionString.append(tr("Increase:"));
+    questionString.append("</td><td>");
+    questionString.append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), newFee - oldFee));
+    questionString.append("</td></tr><tr><td>");
+    questionString.append(tr("New fee:"));
+    questionString.append("</td><td>");
+    questionString.append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), newFee));
+    questionString.append("</td></tr></table>");
     SendConfirmationDialog confirmationDialog(tr("Confirm fee bump"), questionString);
     confirmationDialog.exec();
     QMessageBox::StandardButton retval = (QMessageBox::StandardButton)confirmationDialog.result();
