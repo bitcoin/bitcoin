@@ -540,7 +540,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
         // This guards against using an invalid dummy address and forces
         // users that run without a wallet to supply a valid miningaddress
         // at runtime (in the conf file or on the command line)
-        if (chainActive.Height()+1 >= MINERHODLINGHEIGHT) {
+        if (chainActive.Height()+1 >= MINERHODLINGHEIGHT && chainActive.Height()+1<THEUNFORKENING) {
             LogPrintf("Creating Block post-fork...\n");
             string ma=GetArg("-miningaddress", "");
 #ifdef ENABLE_WALLET

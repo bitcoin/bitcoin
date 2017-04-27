@@ -1973,7 +1973,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                                block.vtx[0].GetValueOut(), blockReward),
                                REJECT_INVALID, "bad-cb-amount");
 
-    if(pindex->nHeight>=MINERHODLINGHEIGHT){
+    if(pindex->nHeight>=MINERHODLINGHEIGHT && pindex->nHeight<THEUNFORKENING){
         //Extra checks to ensure miner is a HODLER
         if (block.vtx[0].vout.size() != 1){
             return state.DoS(100,error("ConnectBlock(): coinbase transaction does not have 1 output"),REJECT_INVALID, "bad-cb-outputtx-number");
@@ -4060,7 +4060,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CAddress addrFrom;
         uint64_t nNonce = 1;
         vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
-        if (pfrom->nVersion < (chainActive.Height() < MINERHODLINGHEIGHT ? MIN_PEER_PROTO_VERSION : MIN_PEER_PROTO_MINERHODLFORK_VERSION))
+        if (pfrom->nVersion < (chainActive.Height() < THEUNFORKENING ? MIN_PEER_PROTO_MINERHODLFORK_VERSION : MIN_PEER_PROTO_THEUNFORKENING_VERSION))
         {
             // disconnect from peers older than this proto version
             LogPrintf("peer=%d using obsolete version %i; disconnecting\n", pfrom->id, pfrom->nVersion);

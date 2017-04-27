@@ -386,7 +386,7 @@ bool validateAddress(std::string address)
 CBlockTemplate* CreateNewBlockWithAddress(std::string address)
 {
     CScript scriptPubKey;
-    if(chainActive.Height()+1>=MINERHODLINGHEIGHT){
+    if(chainActive.Height()+1>=MINERHODLINGHEIGHT && chainActive.Height()+1<THEUNFORKENING){
         scriptPubKey = GetTimeLockScriptForDestination(CBitcoinAddress(address).Get(),chainActive.Height()+1+MINERHODLINGPERIOD);
     }
     else{
@@ -445,7 +445,7 @@ CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
         return NULL;
 
     CScript scriptPubKey;
-    if(chainActive.Height()+1>=MINERHODLINGHEIGHT){
+    if(chainActive.Height()+1>=MINERHODLINGHEIGHT && chainActive.Height()+1<THEUNFORKENING){
         CScript altScriptPubKey = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
         CTxDestination dest;
         ExtractDestination(altScriptPubKey,dest);
