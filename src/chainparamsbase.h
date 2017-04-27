@@ -53,10 +53,4 @@ void SelectBaseParams(const std::string& chain);
  */
 std::string ChainNameFromCommandLine();
 
-/**
- * Return true if SelectBaseParamsFromCommandLine() has been called to select
- * a network.
- */
-bool AreBaseParamsConfigured();
-
 #endif // BITCOIN_CHAINPARAMSBASE_H
