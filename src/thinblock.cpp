@@ -378,12 +378,15 @@ bool CXThinBlock::process(CNode *pfrom,
         }
     } // End locking cs_orphancache, mempool.cs and cs_xval
 
-    // This must be checked outside the above section or a deadlock may occur
+    // This must be done outside of the above section or a deadlock may occur.
     if (!fMerkleRootCorrect)
     {
-        LOCK(cs_main);
-        Misbehaving(pfrom->GetId(), 100);
-        return error("Thinblock merkelroot does not match computed merkleroot, peer=%d", pfrom->GetId());
+        vector<CInv> vGetData;
+        vGetData.push_back(CInv(MSG_THINBLOCK, header.GetHash()));
+        pfrom->PushMessage("getdata", vGetData);
+        LogPrintf("xthinblock merkelroot does not match computed merkleroot - requesting full thinblock, peer=%d",
+            pfrom->GetId());
+        return true;
     }
 
     // There is a remote possiblity of a Tx hash collision therefore if it occurs we re-request a normal
