@@ -553,13 +553,16 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
         int nTotalThinBlocksInFlight = 0;
         {
             LOCK(cs_vNodes);
+            // Erase this thinblock from the tracking map now that we're done with it.
+            if (pfrom->mapThinBlocksInFlight.erase(inv.hash))
+            {
+                pfrom->thinBlockWaitingForTxns = -1;
+                pfrom->thinBlock.SetNull();
+            }
+          
+            // Count up any other remaining nodes with thinblocks in flight.
             BOOST_FOREACH (CNode *pnode, vNodes)
             {
-                if (pnode->mapThinBlocksInFlight.erase(inv.hash))
-                {
-                    pnode->thinBlockWaitingForTxns = -1;
-                    pnode->thinBlock.SetNull();
-                }
                 if (pnode->mapThinBlocksInFlight.size() > 0)
                     nTotalThinBlocksInFlight++;
             }

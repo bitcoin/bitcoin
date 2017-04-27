@@ -5921,16 +5921,32 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
     }
 
 
-    else if (strCommand == NetMsgType::XPEDITEDREQUEST)
+    else if (strCommand == NetMsgType::XPEDITEDREQUEST && IsThinBlocksEnabled())
     {
+        if (!pfrom->ThinBlockCapable())
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("XPEDITEDREQUEST message received from a non thinblock node, peer=%d", pfrom->GetId());
+        }
+
         HandleExpeditedRequest(vRecv, pfrom);
     }
-    else if (strCommand == NetMsgType::XPEDITEDBLK)
+
+
+    else if (strCommand == NetMsgType::XPEDITEDBLK && IsThinBlocksEnabled() && IsExpeditedNode(pfrom))
     {
-        // ignore the expedited message unless we are at the chain tip...
+        if (!pfrom->ThinBlockCapable())
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("XPEDITEDBLK message received from a non thinblock node, peer=%d", pfrom->GetId());
+        }
+
+        // ignore the expedited message unless we are near the chain tip...
         if (!fImporting && !fReindex && IsChainNearlySyncd())
         {
-	          if (!HandleExpeditedBlock(vRecv, pfrom))
+	    if (!HandleExpeditedBlock(vRecv, pfrom))
             {
                 LOCK(cs_main);
                 Misbehaving(pfrom->GetId(), 5);
@@ -5938,6 +5954,8 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
             }
         }
     }
+
+
     // BUVERSION is used to pass BU specific version information similar to NetMsgType::VERSION
     // and is exchanged after the VERSION and VERACK are both sent and received.
     else if (strCommand == NetMsgType::BUVERSION)
@@ -6039,6 +6057,14 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
             pfrom->id,
             nSizeThinBlock);
 
+        // Ban a node for sending unrequested xthins unless from an expedited node.
+        if (!pfrom->mapThinBlocksInFlight.count(inv.hash) && !IsExpeditedNode(pfrom))
+        {
+                LOCK(cs_main);
+                Misbehaving(pfrom->GetId(), 100);
+                return error("unrequested xthinblock from peer %s (%d)", pfrom->addrName.c_str(), pfrom->id);
+        }
+
         bool fAlreadyHave = false;
         // An expedited block or re-requested xthin can arrive and beat the original thin block request/response
         if (!pfrom->mapThinBlocksInFlight.count(inv.hash))
@@ -6110,11 +6136,12 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
             pfrom->id,
             nSizeThinBlock);
 
-        if (!pfrom->mapThinBlocksInFlight.count(inv.hash))
+        // Ban a node for sending unrequested thinblocks unless from an expedited node.
+        if (!pfrom->mapThinBlocksInFlight.count(inv.hash) && !IsExpeditedNode(pfrom))
         {
-            LogPrint("thin", "Thinblock received but not requested %s  peer=%d\n",inv.hash.ToString(), pfrom->id);
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 20);
+                LOCK(cs_main);
+                Misbehaving(pfrom->GetId(), 100);
+                return error("unrequested thinblock from peer %s (%d)", pfrom->addrName.c_str(), pfrom->id);
         }
 
         thinBlock.process(pfrom, nSizeThinBlock, strCommand);
@@ -6308,10 +6335,10 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
         UnlimitedLogBlock(block, inv.hash.ToString(), receiptTime);
 
         // If block was never requested then ban the peer. We should never received 
-        // unrequested blocks unless we are doing testing in regtest.
+        // unrequested blocks unless we are doing testing in regtest or is an from an expedited node.
         {
             LOCK(cs_main);
-            if (mapBlocksInFlight.find(inv.hash) == mapBlocksInFlight.end() && !pfrom->fWhitelisted)
+            if (mapBlocksInFlight.find(inv.hash) == mapBlocksInFlight.end() && !pfrom->fWhitelisted && !IsExpeditedNode(pfrom))
             {
                 Misbehaving(pfrom->GetId(), 100);
                 return error("Block %s was never requested, banning peer=%d", inv.hash.ToString(), pfrom->GetId());
