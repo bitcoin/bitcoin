@@ -330,7 +330,10 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
         std::vector<uint8_t> vAuth;
         vAuth.push_back(0x01);
         if (auth->username.size() > 255 || auth->password.size() > 255)
+        {
+            CloseSocket(hSocket);
             return error("Proxy username or password too long");
+        }
         vAuth.push_back(auth->username.size());
         vAuth.insert(vAuth.end(), auth->username.begin(), auth->username.end());
         vAuth.push_back(auth->password.size());
