@@ -15,6 +15,7 @@
 #include "consensus/consensus.h"
 #include "consensus/merkle.h"
 #include "consensus/validation.h"
+#include "expedited.h"
 #include "hash.h"
 #include "init.h"
 #include "merkleblock.h"
@@ -133,6 +134,7 @@ extern CCriticalSection cs_blockvalidationtime;
 
 extern CCriticalSection cs_LastBlockFile;
 extern CCriticalSection cs_nBlockSequenceId;
+
 
 // Internal stuff
 namespace {
@@ -6060,21 +6062,21 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
 
     else if (strCommand == NetMsgType::XPEDITEDREQUEST)
     {
-	HandleExpeditedRequest(vRecv, pfrom);
+        HandleExpeditedRequest(vRecv, pfrom);
     }
-
-
-    else if (strCommand == NetMsgType::XPEDITEDBLK && !fImporting && !fReindex && IsChainNearlySyncd())
+    else if (strCommand == NetMsgType::XPEDITEDBLK)
     {
-	if (!HandleExpeditedBlock(vRecv, pfrom))
+        // ignore the expedited message unless we are at the chain tip...
+        if (!fImporting && !fReindex && IsChainNearlySyncd())
         {
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 5);
-            return false;            
+	          if (!HandleExpeditedBlock(vRecv, pfrom))
+            {
+                LOCK(cs_main);
+                Misbehaving(pfrom->GetId(), 5);
+                return false;            
+            }
         }
     }
-
-
     // BUVERSION is used to pass BU specific version information similar to NetMsgType::VERSION
     // and is exchanged after the VERSION and VERACK are both sent and received.
     else if (strCommand == NetMsgType::BUVERSION)
