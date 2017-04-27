@@ -224,7 +224,7 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
         time (&rawtime);
         rawtime+=blocksRemaining*154;
         timeinfo = localtime(&rawtime);
-        strftime(buffer,80,"%d/%m/%Y",timeinfo);
+        strftime(buffer,80,"%Y/%m/%d",timeinfo);
         std::string str(buffer);
 
         ui->hodlTable->setItem(i, 8, new QTableWidgetItem(QString(buffer)));
