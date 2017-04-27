@@ -1947,6 +1947,8 @@ bool CheckInputs(const CTransaction &tx,
                 const CAmount amount = coin.out.nValue;
 
                 // Verify signature
+                const CScript &scriptPubKey = coins->vout[prevout.n].scriptPubKey;
+                const CAmount amount = coins->vout[prevout.n].nValue;
                 CScriptCheck check(resourceTracker, scriptPubKey, amount, tx, i, flags, cacheStore);
                 if (pvChecks)
                 {
@@ -1964,7 +1966,7 @@ bool CheckInputs(const CTransaction &tx,
                         // avoid splitting the network between upgraded and
                         // non-upgraded nodes.
                         CScriptCheck check2(
-                            NULL, *coins, tx, i, flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheStore);
+                            NULL, scriptPubKey, amount, tx, i, flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheStore);
                         if (check2())
                             return state.Invalid(
                                 false, REJECT_NONSTANDARD, strprintf("non-mandatory-script-verify-flag (%s)",
