@@ -201,6 +201,14 @@ bool HandleExpeditedBlock(CDataStream &vRecv, CNode *pfrom)
         uint256 blkHash = thinBlock.header.GetHash();
         CInv inv(MSG_BLOCK, blkHash);
 
+        // Message consistency checking
+        if (!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("Invalid EXPEDITED_MSG_XTHIN received");
+        }
+
         bool newBlock = false;
         unsigned int status = 0;
         {
@@ -230,10 +238,6 @@ bool HandleExpeditedBlock(CDataStream &vRecv, CNode *pfrom)
             return true;
         if (!newBlock)
             return true;
-
-        CValidationState state;
-        if (!CheckBlockHeader(thinBlock.header, state, true))
-            return false;
 
         // TODO: Start headers-only mining now
 
@@ -284,5 +288,16 @@ void SendExpeditedBlock(const CBlock &block, const CNode *skip)
         SendExpeditedBlock(thinBlock, 0, skip);
     }
     // else, nothing to do
+}
+
+bool IsExpeditedNode(const CNode *pfrom)
+{
+    // Check if this node is an expedited node
+    BOOST_FOREACH (const std::string &strAddrNode, mapMultiArgs["-expeditedblock"])
+    {
+        if (pfrom->addrName == strAddrNode)
+            return true;
+    }
+    return false;
 }
 

@@ -1035,15 +1035,20 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
         int nTotalThinBlocksInFlight = 0;
         {
             LOCK(cs_vNodes);
-            BOOST_FOREACH(CNode* pnode, vNodes) {
-                if (pnode->mapThinBlocksInFlight.count(inv.hash)) {
-                    pnode->mapThinBlocksInFlight.erase(inv.hash); 
-                    pnode->thinBlockWaitingForTxns = -1;
-                    pnode->thinBlock.SetNull();
-                }
+            // Erase this thinblock from the tracking map now that we're done with it.
+            if (pfrom->mapThinBlocksInFlight.erase(inv.hash))
+            {
+                pfrom->thinBlockWaitingForTxns = -1;
+                pfrom->thinBlock.SetNull();
+            }
+          
+            // Count up any other remaining nodes with thinblocks in flight.
+            BOOST_FOREACH (CNode *pnode, vNodes)
+            {
                 if (pnode->mapThinBlocksInFlight.size() > 0)
                     nTotalThinBlocksInFlight++;
             }
+            pfrom->firstBlock += 1; // update statistics, requires cs_vNodes
         }
 
         // When we no longer have any thinblocks in flight then clear the set

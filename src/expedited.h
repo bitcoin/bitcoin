@@ -43,6 +43,8 @@ extern bool IsRecentlyExpeditedAndStore(const uint256 &hash);
 // process incoming unsolicited block
 extern bool HandleExpeditedBlock(CDataStream &vRecv, CNode *pfrom);
 
+// is this node an expedited node
+extern bool IsExpeditedNode(const CNode *pfrom);
 
 #endif
 
