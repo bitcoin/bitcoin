@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
 
     // Test 2: Does Addrman::Add work as expected.
     CService addr1 = ResolveService("250.1.1.1", 8333);
-    addrman.Add(CAddress(addr1, NODE_NONE), source);
+    BOOST_CHECK(addrman.Add(CAddress(addr1, NODE_NONE), source));
     BOOST_CHECK(addrman.size() == 1);
     CAddrInfo addr_ret1 = addrman.Select();
     BOOST_CHECK(addr_ret1.ToString() == "250.1.1.1:8333");
@@ -99,14 +99,14 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
     // Test 3: Does IP address deduplication work correctly.
     //  Expected dup IP should not be added.
     CService addr1_dup = ResolveService("250.1.1.1", 8333);
-    addrman.Add(CAddress(addr1_dup, NODE_NONE), source);
+    BOOST_CHECK(!addrman.Add(CAddress(addr1_dup, NODE_NONE), source));
     BOOST_CHECK(addrman.size() == 1);
 
 
     // Test 5: New table has one addr and we add a diff addr we should
     //  have two addrs.
     CService addr2 = ResolveService("250.1.1.2", 8333);
-    addrman.Add(CAddress(addr2, NODE_NONE), source);
+    BOOST_CHECK(addrman.Add(CAddress(addr2, NODE_NONE), source));
     BOOST_CHECK(addrman.size() == 2);
 
     // Test 6: AddrMan::Clear() should empty the new table.
@@ -114,6 +114,13 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
     BOOST_CHECK(addrman.size() == 0);
     CAddrInfo addr_null2 = addrman.Select();
     BOOST_CHECK(addr_null2.ToString() == "[::]:0");
+
+    // Test 6.5: AddrMan::Add multiple addresses works as expected
+    std::vector<CAddress> vAddr;
+    vAddr.push_back(CAddress(ResolveService("250.1.1.3", 8333), NODE_NONE));
+    vAddr.push_back(CAddress(ResolveService("250.1.1.4", 8333), NODE_NONE));
+    BOOST_CHECK(addrman.Add(vAddr, source));
+    BOOST_CHECK(addrman.size() == 2);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_ports)
@@ -398,9 +405,8 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
     // Test 25: Ensure GetAddr still returns 23% when addrman has many addrs.
     for (unsigned int i = 1; i < (8 * 256); i++) {
         int octet1 = i % 256;
-        int octet2 = (i / 256) % 256;
-        int octet3 = (i / (256 * 2)) % 256;
-        std::string strAddr = boost::to_string(octet1) + "." + boost::to_string(octet2) + "." + boost::to_string(octet3) + ".23";
+        int octet2 = i >> 8 % 256;
+        std::string strAddr = boost::to_string(octet1) + "." + boost::to_string(octet2) + ".1.23";
         CAddress addr = CAddress(ResolveService(strAddr), NODE_NONE);
         
         // Ensure that for all addrs in addrman, isTerrible == false.
@@ -412,10 +418,10 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
     std::vector<CAddress> vAddr = addrman.GetAddr();
 
     size_t percent23 = (addrman.size() * 23) / 100;
-    BOOST_CHECK(vAddr.size() == percent23);
-    BOOST_CHECK(vAddr.size() == 461);
+    BOOST_CHECK_EQUAL(vAddr.size(), percent23);
+    BOOST_CHECK_EQUAL(vAddr.size(), 461);
     // (Addrman.size() < number of addresses added) due to address collisions.
-    BOOST_CHECK(addrman.size() == 2007);
+    BOOST_CHECK_EQUAL(addrman.size(), 2006);
 }
 
 
@@ -493,7 +499,9 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
     uint256 nKey1 = (uint256)(CHashWriter(SER_GETHASH, 0) << 1).GetHash();
     uint256 nKey2 = (uint256)(CHashWriter(SER_GETHASH, 0) << 2).GetHash();
 
+    // Test 29.5: Make sure the buckets are what we expect
     BOOST_CHECK(info1.GetNewBucket(nKey1) == 786);
+    BOOST_CHECK(info1.GetNewBucket(nKey1, source1) == 786);
 
     // Test 30: Make sure key actually randomizes bucket placement. A fail on
     //  this test could be a security issue.
