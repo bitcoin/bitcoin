@@ -1034,7 +1034,7 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
     {
         int nTotalThinBlocksInFlight = 0;
         {
-            LOCK(cs_vNodes);
+            LOCK2(cs_vNodes, pfrom->cs_mapthinblocksinflight);
             // Erase this thinblock from the tracking map now that we're done with it.
             if (pfrom->mapThinBlocksInFlight.erase(inv.hash))
             {

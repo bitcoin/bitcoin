@@ -6,8 +6,15 @@
 #define REQUEST_MANAGER_H
 #include "net.h"
 #include "stat.h"
-extern unsigned int MIN_TX_REQUEST_RETRY_INTERVAL;  // When should I request a tx from someone else (in microseconds). cmdline/bitcoin.conf: -txretryinterval
-extern unsigned int MIN_BLK_REQUEST_RETRY_INTERVAL;  // When should I request a block from someone else (in microseconds). cmdline/bitcoin.conf: -blkretryinterval
+// When should I request a tx from someone else (in microseconds). cmdline/bitcoin.conf: -txretryinterval
+extern unsigned int MIN_TX_REQUEST_RETRY_INTERVAL;
+// When should I request a block from someone else (in microseconds). cmdline/bitcoin.conf: -blkretryinterval
+extern unsigned int MIN_BLK_REQUEST_RETRY_INTERVAL;
+
+// How long in seconds we wait for a xthin request to be fullfilled before disconnecting the node.
+static const unsigned int THINBLOCK_DOWNLOAD_TIMEOUT = 30;
+
+class CNode;
 
 class CNodeRequestData
 {
