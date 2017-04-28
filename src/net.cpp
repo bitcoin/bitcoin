@@ -17,6 +17,7 @@
 #include "crypto/common.h"
 #include "hash.h"
 #include "primitives/transaction.h"
+#include "requestManager.h"
 #include "scheduler.h"
 #include "ui_interface.h"
 #include "utilstrencodings.h"
@@ -2092,14 +2093,18 @@ void ThreadMessageHandler()
             LOCK(cs_vNodes);
             vNodesCopy.reserve(vNodes.size());
             // Prefer thinBlockCapable nodes when doing communications.
-            BOOST_FOREACH(CNode* pnode, vNodes) {
-                if (pnode->ThinBlockCapable()) {
+            BOOST_FOREACH(CNode* pnode, vNodes)
+            {
+                if (pnode->ThinBlockCapable())
+                {
                     vNodesCopy.push_back(pnode);
                     pnode->AddRef();
                 }
             }
-            BOOST_FOREACH(CNode* pnode, vNodes) {
-                if (!pnode->ThinBlockCapable()) {
+            BOOST_FOREACH(CNode* pnode, vNodes)
+            {
+                if (!pnode->ThinBlockCapable())
+                {
                     vNodesCopy.push_back(pnode);
                     pnode->AddRef();
                 }
