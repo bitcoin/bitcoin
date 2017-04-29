@@ -79,6 +79,74 @@ $ curl localhost:18332/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff76
 }
 ```
 
+####Query UTXO set (by address/script)
+`GET /rest/getutxoindex/<checkmempool>/<address>/<address>/.../<address>.json`
+
+The getutxoindex command allows querying of the UTXO set given a set of addresses (or script).
+
+To use this function, you must start bitcoin with the -txoutindex parameter.
+
+Output:
+```
+[                                 (array of json object)
+  {
+    \"confirmations\" : n,        (numeric) The number of confirmations
+    \"txid\" : \"txid\",          (string)  The transaction id 
+    \"vout\" : n,                 (numeric) The vout value
+    \"value\" : x.xxx,            (numeric) The transaction value in btc
+    \"scriptPubKey\" : {          (json object)
+       \"asm\" : \"code\",        (string) 
+       \"hex\" : \"hex\",         (string) 
+       \"reqSigs\" : n,           (numeric) Number of required signatures
+       \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash
+       \"addresses\" : [          (array of string) array of bitcoin addresses
+          \"bitcoinaddress\"      (string) bitcoin address
+          ,...
+       ]
+    },
+    \"version\" : n,              (numeric) The transaction version
+    \"coinbase\" : true|false     (boolean) Coinbase or not
+    \"bestblockhash\" : \"hash\", (string)  The block hash of the best block
+    \"bestblockheight\" : n,      (numeric) The block height of the best block
+    \"bestblocktime\" : n,        (numeric) The block time of the best block
+    \"blockhash\" : \"hash\",     (string)  The block hash of the block the tx is in (only if confirmations > 0)
+    \"blockheight\" : n,          (numeric) The block height of the block the tx is in (only if confirmations > 0)
+    \"blocktime\" : ttt,          (numeric) The block time in seconds since 1.1.1970 GMT (only if confirmations > 0)
+  }
+  ,...
+]
+```
+
+Example:
+```
+$ curl localhost:18332/rest/getutxoindex/checkmempool/mvkA8gYrKUmXFiuFpoxNGjMjYcV9oCkwGV.json 2>/dev/null | json_pp
+[
+   {
+      "confirmations" : 721918,
+      "txid" : "75bc54c673ed535db361a6e89c08bf7256d1378e2c645229d469d41042356e54",
+      "vout" : 0,
+      "value" : 0.001,
+      "scriptPubKey" : {
+         "asm" : "OP_DUP OP_HASH160 a7092d2dc8778b56d4c352697081c687b451ab6d OP_EQUALVERIFY OP_CHECKSIG",
+         "hex" : "76a914a7092d2dc8778b56d4c352697081c687b451ab6d88ac",
+         "reqSigs" : 1,
+         "type" : "pubkeyhash",
+         "addresses" : [
+            "mvkA8gYrKUmXFiuFpoxNGjMjYcV9oCkwGV"
+         ]
+      },
+      "version" : 1,
+      "coinbase" : false,
+      "bestblockhash" : "00000000007872ee19923a5604d86a6c9bfa3041c417a7ecf60dc034387b173f",
+      "blockheight" : 244755,
+      "bestblocktime" : 1475309084,
+      "blockhash" : "000000000001c163caa76dbc16c7b383fb10257829b3617c5a1ffb91ea3824db",
+      "bestblockheight" : 966672,
+      "blocktime" : 1400786412,
+   }
+]
+```
+
 ####Memory pool
 `GET /rest/mempool/info.json`
 

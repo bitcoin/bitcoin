@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "base58.h"
 #include "chain.h"
 #include "chainparams.h"
 #include "primitives/block.h"
@@ -22,6 +23,7 @@
 #include <univalue.h>
 
 static const size_t MAX_GETUTXOS_OUTPOINTS = 15; //allow a max of 15 outpoints to be queried at once
+static const size_t MAX_GETUTXOINDEX_SCRIPTS = 15; //allow a max of 15 scripts to be queried at once
 
 enum RetFormat {
     RF_UNDEF,
@@ -59,6 +61,7 @@ struct CCoin {
 /* Defined in rawtransaction.cpp */
 void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
+void CoinsByScriptToJSON(const CCoinsByScript& coinsByScript, int nMinDepth, UniValue& vObjects, std::vector<std::pair<int, unsigned int>>& vSort, bool fIncludeHex);
 
 static bool RESTERR(HTTPRequest* req, enum HTTPStatusCode status, std::string message)
 {
@@ -598,6 +601,109 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
     return true; // continue to process further HTTP reqs on this cxn
 }
 
+static bool rest_getutxoindex(HTTPRequest* req, const std::string& strURIPart)
+{
+    if (!CheckWarmup(req))
+        return false;
+    if (!fTxOutIndex)
+        return RESTERR(req, HTTP_BAD_REQUEST, "To use this function, you must start bitcoin with the -txoutindex parameter.");
+
+    std::string param;
+    const RetFormat rf = ParseDataFormat(param, strURIPart);
+
+    std::vector<std::string> uriParts;
+    if (param.length() > 1)
+    {
+        std::string strUriParams = param.substr(1);
+        boost::split(uriParts, strUriParams, boost::is_any_of("/"));
+    }
+
+    // throw exception in case of a empty request
+    std::string strRequestMutable = req->ReadBody();
+    if (strRequestMutable.length() == 0 && uriParts.size() == 0)
+        return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
+
+    bool fInputParsed = false;
+    bool fCheckMemPool = false;
+    std::vector<CScript> vScripts;
+
+    // parse/deserialize input
+    // only json format supported
+
+    if (uriParts.size() > 0)
+    {
+
+        //inputs is sent over URI scheme (/rest/getutxoindex/checkmempool/addr1/addr2/...)
+        if (uriParts.size() > 0 && uriParts[0] == "checkmempool")
+            fCheckMemPool = true;
+
+        for (size_t i = (fCheckMemPool) ? 1 : 0; i < uriParts.size(); i++)
+        {
+            CScript script;
+            CBitcoinAddress address(uriParts[i]);
+            if (address.IsValid()) {
+                script = GetScriptForDestination(address.Get());
+            } else if (IsHex(uriParts[i])) {
+                std::vector<unsigned char> data(ParseHex(uriParts[i]));
+                script = CScript(data.begin(), data.end());
+            } else {
+                return RESTERR(req, HTTP_BAD_REQUEST, "Invalid Bitcoin address or script: " + uriParts[i]);
+            }
+
+            vScripts.push_back(script);
+        }
+
+        if (vScripts.size() > 0)
+            fInputParsed = true;
+        else
+            return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
+    }
+
+    switch (rf) {
+    case RF_JSON: {
+        if (!fInputParsed)
+            return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
+        break;
+    }
+    default: {
+        return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: json)");
+    }
+    }
+
+    // limit max scripts
+    if (vScripts.size() > MAX_GETUTXOINDEX_SCRIPTS)
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Error: max scripts exceeded (max: %d, tried: %d)", MAX_GETUTXOINDEX_SCRIPTS, vScripts.size()));
+
+    int nMinDepth = fCheckMemPool ? 0 : 1;
+    UniValue vObjects(UniValue::VARR);
+    std::vector<std::pair<int, unsigned int> > vSort;
+
+    for(auto& scriptObj: vScripts)
+    {
+        const CScript& script = scriptObj;
+        CCoinsByScript coinsByScript;
+        pcoinsByScript->GetCoinsByScript(script, coinsByScript);
+
+        if (nMinDepth == 0)
+            mempool.GetCoinsByScript(script, coinsByScript);
+
+        CoinsByScriptToJSON(coinsByScript, nMinDepth, vObjects, vSort, true); 
+    }
+
+    UniValue results(UniValue::VARR);
+    sort(vSort.begin(), vSort.end());
+    for (unsigned int i = 0; i < vSort.size(); i++)
+    {
+        results.push_back(vObjects[vSort[i].second]);
+    }
+
+    // return json string
+    std::string strJSON = results.write() + "\n";
+    req->WriteHeader("Content-Type", "application/json");
+    req->WriteReply(HTTP_OK, strJSON);
+    return true;
+}
+
 static const struct {
     const char* prefix;
     bool (*handler)(HTTPRequest* req, const std::string& strReq);
@@ -610,6 +716,7 @@ static const struct {
       {"/rest/mempool/contents", rest_mempool_contents},
       {"/rest/headers/", rest_headers},
       {"/rest/getutxos", rest_getutxos},
+      {"/rest/getutxoindex", rest_getutxoindex},
 };
 
 bool StartREST()

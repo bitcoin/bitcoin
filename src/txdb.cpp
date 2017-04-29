@@ -9,6 +9,7 @@
 #include "hash.h"
 #include "pow.h"
 #include "uint256.h"
+#include "ui_interface.h"
 
 #include <stdint.h>
 
@@ -25,7 +26,7 @@ static const char DB_REINDEX_FLAG = 'R';
 static const char DB_LAST_BLOCK = 'l';
 
 
-CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe, true) 
+CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe, true)
 {
 }
 
@@ -98,7 +99,8 @@ CCoinsViewCursor *CCoinsViewDB::Cursor() const
        that restriction.  */
     i->pcursor->Seek(DB_COINS);
     // Cache key of first record
-    i->pcursor->GetKey(i->keyTmp);
+    if (!i->pcursor->Valid() || !i->pcursor->GetKey(i->keyTmp))
+        i->keyTmp.first = 0; 
     return i;
 }
 
@@ -132,6 +134,19 @@ void CCoinsViewDBCursor::Next()
     pcursor->Next();
     if (!pcursor->Valid() || !pcursor->GetKey(keyTmp))
         keyTmp.first = 0; // Invalidate cached key after last record so that Valid() and GetKey() return false
+}
+
+int64_t CCoinsViewDB::CountCoins() const
+{
+    std::unique_ptr<CCoinsViewCursor> pcursor(Cursor());
+
+    int64_t i = 0;
+    while (pcursor->Valid()) {
+        boost::this_thread::interruption_point();
+        i++;
+        pcursor->Next();
+    }
+    return i;
 }
 
 bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo) {
