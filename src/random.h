@@ -21,12 +21,6 @@ int GetRandInt(int nMax);
 uint256 GetRandHash();
 
 /**
- * Function to gather random data from multiple sources, failing whenever any
- * of those source fail to provide a result.
- */
-void GetStrongRandBytes(unsigned char* buf, int num);
-
-/**
  * Fast randomness source. This is seeded once with secure random data, but
  * is completely deterministic and insecure after that.
  * This class is not thread-safe.

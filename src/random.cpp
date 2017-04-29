@@ -178,27 +178,6 @@ void GetRandBytes(unsigned char* buf, int num)
     memory_cleanse(seed32, 32);
 }
 
-void GetStrongRandBytes(unsigned char* out, int num)
-{
-    assert(num <= 32);
-    CSHA512 hasher;
-    unsigned char buf[64];
-
-    // First source: OpenSSL's RNG
-    RandAddSeedPerfmon();
-    GetRandBytes(buf, 32);
-    hasher.Write(buf, 32);
-
-    // Second source: OS RNG
-    GetOSRand(buf);
-    hasher.Write(buf, 32);
-
-    // Produce output
-    hasher.Finalize(buf);
-    memcpy(out, buf, num);
-    memory_cleanse(buf, 64);
-}
-
 uint64_t GetRand(uint64_t nMax)
 {
     if (nMax == 0)
