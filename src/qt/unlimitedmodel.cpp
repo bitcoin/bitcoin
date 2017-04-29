@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <boost/lexical_cast.hpp>
+#include <limits>
 
 #if defined(HAVE_CONFIG_H)
 #include "config/bitcoin-config.h"
@@ -88,8 +89,8 @@ void UnlimitedModel::Init()
     int64_t burstKB = settings.value("nReceiveBurst").toLongLong();
     int64_t aveKB = settings.value("nReceiveAve").toLongLong();
 
-    std::string avg = QString::number(inUse ? aveKB : std::numeric_limits<long long>::max()).toStdString();
-    std::string burst = QString::number(inUse ? burstKB : std::numeric_limits<long long>::max()).toStdString();
+    std::string avg = QString::number(inUse ? aveKB : std::numeric_limits<int64_t>::max()).toStdString();
+    std::string burst = QString::number(inUse ? burstKB : std::numeric_limits<int64_t>::max()).toStdString();
 
     if (!SoftSetArg("-receiveavg", avg))
         addOverriddenOption("-receiveavg");
@@ -100,8 +101,8 @@ void UnlimitedModel::Init()
     burstKB = settings.value("nSendBurst").toLongLong();
     aveKB = settings.value("nSendAve").toLongLong();
 
-    avg = boost::lexical_cast<std::string>(inUse ? aveKB : std::numeric_limits<long long>::max());
-    burst = boost::lexical_cast<std::string>(inUse ? burstKB : std::numeric_limits<long long>::max());
+    avg = boost::lexical_cast<std::string>(inUse ? aveKB : std::numeric_limits<int64_t>::max());
+    burst = boost::lexical_cast<std::string>(inUse ? burstKB : std::numeric_limits<int64_t>::max());
 
     if (!SoftSetArg("-sendavg", avg))
         addOverriddenOption("-sendavg");

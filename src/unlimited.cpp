@@ -40,6 +40,7 @@
 #include <boost/thread.hpp>
 #include <inttypes.h>
 #include <iomanip>
+#include <limits>
 #include <queue>
 
 using namespace std;
