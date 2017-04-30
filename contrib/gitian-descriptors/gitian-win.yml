@@ -1,5 +1,5 @@
 ---
-name: "hodlcoin-win-2.0"
+name: "hodlcoin-win-3.0"
 enable_cache: true
 suites:
 - "trusty"

@@ -1,5 +1,5 @@
 ---
-name: "hodlcoin-osx-2.0"
+name: "hodlcoin-osx-3.0"
 enable_cache: true
 suites:
 - "trusty"
