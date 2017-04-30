@@ -530,7 +530,7 @@ static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64
     SetMockTime(mockTime);
     CBlockIndex* block = nullptr;
     if (blockTime > 0) {
-        auto inserted = mapBlockIndex.emplace(GetRandHash(), new CBlockIndex);
+        auto inserted = const_cast<BlockMap&>(mapBlockIndex).emplace(GetRandHash(), new CBlockIndex);
         assert(inserted.second);
         const uint256& hash = inserted.first->first;
         block = inserted.first->second;

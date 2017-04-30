@@ -185,7 +185,7 @@ private:
 
 CCriticalSection cs_main;
 
-BlockMap& mapBlockIndex = chainstate.mapBlockIndex;
+const BlockMap& mapBlockIndex = chainstate.mapBlockIndex;
 CChain& chainActive = chainstate.chainActive;
 CBlockIndex *pindexBestHeader = nullptr;
 CWaitableCriticalSection csBestBlock;
@@ -250,7 +250,7 @@ const CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocato
         BlockMap::const_iterator mi = mapBlockIndex.find(hash);
         if (mi != mapBlockIndex.end())
         {
-            CBlockIndex* pindex = (*mi).second;
+            const CBlockIndex* pindex = (*mi).second;
             if (chain.Contains(pindex))
                 return pindex;
             if (pindex->GetAncestor(chain.Height()) == chain.Tip()) {
@@ -3358,7 +3358,7 @@ static uint64_t CalculateCurrentUsage()
 /* Prune a block file (modify associated database entries)*/
 void PruneOneBlockFile(const int fileNumber)
 {
-    for (BlockMap::iterator it = mapBlockIndex.begin(); it != mapBlockIndex.end(); ++it) {
+    for (BlockMap::iterator it = chainstate.mapBlockIndex.begin(); it != chainstate.mapBlockIndex.end(); ++it) {
         CBlockIndex* pindex = it->second;
         if (pindex->nFile == fileNumber) {
             pindex->nStatus &= ~BLOCK_HAVE_DATA;
@@ -4144,15 +4144,15 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                 }
 
                 // process in case the block isn't known yet
-                if (mapBlockIndex.count(hash) == 0 || (mapBlockIndex[hash]->nStatus & BLOCK_HAVE_DATA) == 0) {
+                if (mapBlockIndex.count(hash) == 0 || (mapBlockIndex.at(hash)->nStatus & BLOCK_HAVE_DATA) == 0) {
                     LOCK(cs_main);
                     CValidationState state;
                     if (chainstate.AcceptBlock(pblock, state, chainparams, nullptr, true, dbp, nullptr))
                         nLoaded++;
                     if (state.IsError())
                         break;
-                } else if (hash != chainparams.GetConsensus().hashGenesisBlock && mapBlockIndex[hash]->nHeight % 1000 == 0) {
-                    LogPrint(BCLog::REINDEX, "Block Import: already had block %s at height %d\n", hash.ToString(), mapBlockIndex[hash]->nHeight);
+                } else if (hash != chainparams.GetConsensus().hashGenesisBlock && mapBlockIndex.at(hash)->nHeight % 1000 == 0) {
+                    LogPrint(BCLog::REINDEX, "Block Import: already had block %s at height %d\n", hash.ToString(), mapBlockIndex.at(hash)->nHeight);
                 }
 
                 // Activate the genesis block so normal node progress can continue
