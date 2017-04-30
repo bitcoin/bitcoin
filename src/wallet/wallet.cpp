@@ -1160,7 +1160,7 @@ void CWallet::MarkConflicted(const uint256& hashBlock, const uint256& hashTx)
 
     int conflictconfirms = 0;
     if (mapBlockIndex.count(hashBlock)) {
-        const CBlockIndex* pindex = mapBlockIndex[hashBlock];
+        const CBlockIndex* pindex = mapBlockIndex.at(hashBlock);
         if (chainActive.Contains(pindex)) {
             conflictconfirms = -(chainActive.Height() - pindex->nHeight + 1);
         }
@@ -3827,7 +3827,7 @@ unsigned int CWallet::ComputeTimeSmart(const CWalletTx& wtx) const
                 }
             }
 
-            int64_t blocktime = mapBlockIndex[wtx.hashBlock]->GetBlockTime();
+            int64_t blocktime = mapBlockIndex.at(wtx.hashBlock)->GetBlockTime();
             nTimeSmart = std::max(latestEntry, std::min(blocktime, latestNow));
         } else {
             LogPrintf("%s: found %s in block %s not in index\n", __func__, wtx.GetHash().ToString(), wtx.hashBlock.ToString());

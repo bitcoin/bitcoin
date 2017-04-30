@@ -672,7 +672,7 @@ UniValue getblockheader(const JSONRPCRequest& request)
     if (mapBlockIndex.count(hash) == 0)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
-    const CBlockIndex* pblockindex = mapBlockIndex[hash];
+    const CBlockIndex* pblockindex = mapBlockIndex.at(hash);
 
     if (!fVerbose)
     {
@@ -752,7 +752,7 @@ UniValue getblock(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
     CBlock block;
-    const CBlockIndex* pblockindex = mapBlockIndex[hash];
+    const CBlockIndex* pblockindex = mapBlockIndex.at(hash);
 
     if (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0)
         throw JSONRPCError(RPC_MISC_ERROR, "Block not available (pruned data)");
@@ -1378,7 +1378,7 @@ UniValue preciousblock(const JSONRPCRequest& request)
         if (mapBlockIndex.count(hash) == 0)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
-        pblockindex = mapBlockIndex[hash];
+        pblockindex = mapBlockIndex.at(hash);
     }
 
     CValidationState state;
@@ -1414,7 +1414,7 @@ UniValue invalidateblock(const JSONRPCRequest& request)
         if (mapBlockIndex.count(hash) == 0)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
-        const CBlockIndex* pblockindex = mapBlockIndex[hash];
+        const CBlockIndex* pblockindex = mapBlockIndex.at(hash);
         InvalidateBlock(state, Params(), pblockindex);
     }
 
@@ -1452,7 +1452,7 @@ UniValue reconsiderblock(const JSONRPCRequest& request)
         if (mapBlockIndex.count(hash) == 0)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
-        const CBlockIndex* pblockindex = mapBlockIndex[hash];
+        const CBlockIndex* pblockindex = mapBlockIndex.at(hash);
         ResetBlockFailureFlags(pblockindex);
     }
 
