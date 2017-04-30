@@ -39,6 +39,8 @@ private:
 
 static CFeeRate blockMinFeeRate = CFeeRate(DEFAULT_BLOCK_MIN_TX_FEE);
 
+static CChain& nonConstChainActive = const_cast<CChain&>(chainActive);
+
 static BlockAssembler AssemblerForTest(const CChainParams& params) {
     BlockAssembler::Options options;
 
