@@ -187,7 +187,7 @@ extern bool fEnableReplacement;
 extern uint256 hashAssumeValid;
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
-extern CBlockIndex *pindexBestHeader;
+extern const CBlockIndex *pindexBestHeader;
 
 /** Minimum disk space required - used in CheckDiskSpace() */
 static const uint64_t nMinDiskSpace = 52428800;
@@ -431,7 +431,7 @@ bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, c
 bool ResetBlockFailureFlags(const CBlockIndex *pindex);
 
 /** The currently-connected chain of blocks (protected by cs_main). */
-extern CChain& chainActive;
+extern const CChain& chainActive;
 
 /** Global variable that points to the coins database (protected by cs_main) */
 extern CCoinsViewDB *pcoinsdbview;

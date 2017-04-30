@@ -190,8 +190,8 @@ private:
 CCriticalSection cs_main;
 
 const BlockMap& mapBlockIndex = reinterpret_cast<BlockMap&>(chainstate.mapBlockIndex);
-CChain& chainActive = chainstate.chainActive;
-CBlockIndex *pindexBestHeader = nullptr;
+const CChain& chainActive = chainstate.chainActive;
+const CBlockIndex *pindexBestHeader = nullptr;
 CWaitableCriticalSection csBestBlock;
 CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
