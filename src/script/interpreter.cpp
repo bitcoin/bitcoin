@@ -13,7 +13,6 @@
 #include "script/script.h"
 #include "uint256.h"
 
-#include "util.h" // [rm] log
 
 using namespace std;
 
@@ -1120,7 +1119,12 @@ public:
             // Do not lock-in the txout payee at other indices as txin
             ::Serialize(s, CTxOut());
         else
-            ::Serialize(s, txTo.vout[nOutput]);
+        {
+            if (txTo.IsParticlVersion())
+                ::Serialize(s, *(txTo.vpout[nOutput].get()));
+            else
+                ::Serialize(s, txTo.vout[nOutput]);
+        }
     }
 
     /** Serialize txTo */
@@ -1133,11 +1137,22 @@ public:
         ::WriteCompactSize(s, nInputs);
         for (unsigned int nInput = 0; nInput < nInputs; nInput++)
              SerializeInput(s, nInput);
-        // Serialize vout
-        unsigned int nOutputs = fHashNone ? 0 : (fHashSingle ? nIn+1 : txTo.vout.size());
-        ::WriteCompactSize(s, nOutputs);
-        for (unsigned int nOutput = 0; nOutput < nOutputs; nOutput++)
-             SerializeOutput(s, nOutput);
+        
+        if (txTo.IsParticlVersion())
+        {
+            // Serialize vpout
+            unsigned int nOutputs = fHashNone ? 0 : (fHashSingle ? nIn+1 : txTo.vpout.size());
+            ::WriteCompactSize(s, nOutputs);
+            for (unsigned int nOutput = 0; nOutput < nOutputs; nOutput++)
+                 SerializeOutput(s, nOutput);
+        } else
+        {
+            // Serialize vout
+            unsigned int nOutputs = fHashNone ? 0 : (fHashSingle ? nIn+1 : txTo.vout.size());
+            ::WriteCompactSize(s, nOutputs);
+            for (unsigned int nOutput = 0; nOutput < nOutputs; nOutput++)
+                 SerializeOutput(s, nOutput);
+        };
         // Serialize nLockTime
         ::Serialize(s, txTo.nLockTime);
     }
@@ -1184,7 +1199,7 @@ PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo)
     hashOutputs = GetOutputsHash(txTo);
 }
 
-uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache)
+uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, const std::vector<uint8_t>& amount, SigVersion sigversion, const PrecomputedTransactionData* cache)
 {
     if (sigversion == SIGVERSION_WITNESS_V0
         || txTo.IsParticlVersion()) {
@@ -1204,7 +1219,11 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
             hashOutputs = cache ? cache->hashOutputs : GetOutputsHash(txTo);
         } else if ((nHashType & 0x1f) == SIGHASH_SINGLE && nIn < txTo.vout.size()) {
             CHashWriter ss(SER_GETHASH, 0);
-            ss << txTo.vout[nIn];
+            
+            if (txTo.IsParticlVersion())
+                ss << *(txTo.vpout[nIn].get());
+            else
+                ss << txTo.vout[nIn];
             hashOutputs = ss.GetHash();
         }
 
@@ -1219,7 +1238,10 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
         // may already be contain in hashSequence.
         ss << txTo.vin[nIn].prevout;
         ss << static_cast<const CScriptBase&>(scriptCode);
-        ss << amount;
+        
+        //ss << amount;
+        if (amount.size() > 0)
+            ss.write((const char*)&amount[0], amount.size()); // Make unit tests still pass, same as << CAmount when amount.size() == 8
         ss << txTo.vin[nIn].nSequence;
         // Outputs (none/one/all, depending on flags)
         ss << hashOutputs;

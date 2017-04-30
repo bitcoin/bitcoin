@@ -388,8 +388,15 @@ double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight, CAmount
                 continue;
             
             if (coins->nHeight <= nHeight) {
-                dResult += (double)(coins->vpout[txin.prevout.n]->GetValue()) * (nHeight-coins->nHeight);
-                inChainInputValue += coins->vpout[txin.prevout.n]->GetValue();
+                if (coins->vpout[txin.prevout.n]->IsStandardOutput())
+                {
+                    dResult += (double)(coins->vpout[txin.prevout.n]->GetValue()) * (nHeight-coins->nHeight);
+                    inChainInputValue += coins->vpout[txin.prevout.n]->GetValue();
+                } else
+                {
+                    dResult += (double)(nHeight-coins->nHeight);
+                }
+                
             }
         };
     } else

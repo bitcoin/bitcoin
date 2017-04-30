@@ -173,13 +173,29 @@ CScriptCheck::CScriptCheck(const CCoins& txFromIn, const CTransaction& txToIn, u
         if (fParticlMode)
         {
             const CTxOutBase *txprevout= txFromIn.vpout[txToIn.vin[nInIn].prevout.n].get();
-            assert(txprevout->nVersion == OUTPUT_STANDARD);
-            scriptPubKey = ((CTxOutStandard*)txprevout)->scriptPubKey;
-            amount = txprevout->GetValue();
+            if (txprevout->IsType(OUTPUT_STANDARD))
+            {
+                scriptPubKey = ((CTxOutStandard*)txprevout)->scriptPubKey;
+                amount = txprevout->GetValue();
+                txprevout->PutValue(vchAmount);
+            } else
+            if (txprevout->IsType(OUTPUT_CT))
+            {
+                scriptPubKey = ((CTxOutCT*)txprevout)->scriptPubKey;
+                //valueCommitment = ((CTxOutCT*)txprevout)->commitment;
+                txprevout->PutValue(vchAmount);
+            } else
+            {
+                error = SCRIPT_ERR_UNKNOWN_ERROR;
+                LogPrintf("Error: %s - No script on output %s.", __func__, txToIn.vin[nInIn].prevout.ToString());
+            };
+            
         } else
         {
             scriptPubKey = txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey;
             amount = txFromIn.vout[txToIn.vin[nInIn].prevout.n].nValue;
+            vchAmount.resize(8);
+            memcpy(&vchAmount[0], &amount, 8);
         };
     }
 
@@ -564,11 +580,21 @@ bool CheckStandardOutput(CValidationState &state, const CTxOutStandard *p, CAmou
 bool CheckBlindOutput(CValidationState &state, const CTxOutCT *p)
 {
     
+    if (p->vData.size() < 33 || p->vData.size() > 33 + 5)
+        return state.DoS(100, false, REJECT_INVALID, "bad-ctout-ephem-size");
+    
+    size_t nRangeProofLen = 5134;
+    if (p->vRangeproof.size() > nRangeProofLen)
+        return state.DoS(100, false, REJECT_INVALID, "bad-ctout-rangeproof-size");
+    
     uint64_t min_value, max_value;
     int rv = secp256k1_rangeproof_verify(secp256k1_ctx_blind, &min_value, &max_value,
         &p->commitment, p->vRangeproof.data(), p->vRangeproof.size(),
         NULL, 0,
         secp256k1_generator_h);
+    
+    if (rv != 1)
+        return state.DoS(100, false, REJECT_INVALID, "bad-ctout-rangeproof-verify");
     
     if (fDebug)
         LogPrintf("CheckBlindOutput rv, min_value, max_value %d, %s, %s\n",
@@ -610,6 +636,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
         if (!tx.vout.empty())
             return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-not-empty");
         
+        size_t nStandardOutputs = 0;
         CAmount nValueOut = 0;
         size_t nDataOutputs = 0;
         for (const auto &txout : tx.vpout)
@@ -619,6 +646,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
                 case OUTPUT_STANDARD:
                     if (!CheckStandardOutput(state, (CTxOutStandard*) txout.get(), nValueOut))
                         return false;
+                    nStandardOutputs++;
                     break;
                 case OUTPUT_CT:
                     if (!CheckBlindOutput(state, (CTxOutCT*) txout.get()))
@@ -641,7 +669,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
         };
         
-        if (nDataOutputs > 1) // limit 1 per txn for now, TODO: raise limit
+        if (nDataOutputs > 1 + nStandardOutputs) // extra 1 for ct fee output
             return state.DoS(100, false, REJECT_INVALID, "too-many-data-outputs");
     } else
     {
@@ -901,6 +929,14 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         
         CAmount nFees = 0;
         
+        size_t nStandardOut = 0, nCtOut = 0, nRingCTOut = 0;
+        CAmount nPlainValueOut = tx.GetPlainValueOut(nStandardOut, nCtOut, nRingCTOut);
+        
+        if (nCtOut > 0)
+            fBlind = true;
+        if (nRingCTOut > 0)
+            fAnon = true;
+        
         if (fBlind || fAnon)
         {
             // plain fee is sent in data output at vpout[0]
@@ -913,6 +949,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
             CAmount nValueOut = tx.GetValueOut();
             nFees = nValueIn-nValueOut;
         };
+        
         
         
         // nModifiedFees includes any fee deltas from PrioritiseTransaction
@@ -934,9 +971,14 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
                 break;
             }
         }
-
+        
+        uint32_t nFlags = 0;
+        if (fBlind > 0)
+            nFlags |= MPE_CT;
+        if (fAnon > 0)
+            nFlags |= MPE_RINGCT;
         CTxMemPoolEntry entry(ptx, nFees, nAcceptTime, dPriority, chainActive.Height(),
-                              inChainInputValue, fSpendsCoinbase, nSigOpsCost, lp);
+                              inChainInputValue, fSpendsCoinbase, nSigOpsCost, lp, nFlags);
         unsigned int nSize = entry.GetTxSize();
 
         // Check that the transaction doesn't have an excessive number of
@@ -979,6 +1021,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
             LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
             dFreeCount += nSize;
         }
+        
 
         if (nAbsurdFee && nFees > nAbsurdFee)
             return state.Invalid(false,
@@ -1614,7 +1657,8 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
             if (tx.IsParticlVersion())
             {
                 if (nPos >= coins->vpout.size()
-                    || (coins->vpout[nPos]->nVersion != OUTPUT_STANDARD)) // TODO: CT / ringCT
+                    || (coins->vpout[nPos]->nVersion != OUTPUT_STANDARD
+                        && coins->vpout[nPos]->nVersion != OUTPUT_CT))
                     assert(false);
                     
                 // mark an outpoint spent, and construct undo information
@@ -1658,7 +1702,9 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight)
 bool CScriptCheck::operator()() {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
     const CScriptWitness *witness = &ptxTo->vin[nIn].scriptWitness;
-    if (!VerifyScript(scriptSig, scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, amount, cacheStore, *txdata), &error)) {
+    //std::vector<uint8_t> vchAmount(8);
+    //memcpy(&vchAmount[0], &amount, 8);
+    if (!VerifyScript(scriptSig, scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, vchAmount, cacheStore, *txdata), &error)) {
         return false;
     }
     return true;
@@ -1686,16 +1732,10 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
         return state.Invalid(false, 0, "", "Inputs unavailable");
     
     
+    std::vector<const secp256k1_pedersen_commitment*> vpCommitsIn, vpCommitsOut;
     size_t nStandard = 0, nCt = 0, nRingCT = 0;
     /*
         nValueIn = view.GetPlainValueIn(tx, nStandard, nCt, nRingCT);
-        
-        if (nStandard > 0 && (nCt > 0 || nRingCT > 0))
-            return state.DoS(100, false, REJECT_INVALID, "mixed-input-types");
-        if (nCt > 0 && (nStandard > 0 || nRingCT > 0))
-            return state.DoS(100, false, REJECT_INVALID, "mixed-input-types");
-        if (nRingCT > 0 && (nCt > 0 || nStandard > 0))
-            return state.DoS(100, false, REJECT_INVALID, "mixed-input-types");
         
         if (nCt > 0)
             fBlind = true;
@@ -1744,7 +1784,9 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
             } else
             if (txprevout->nVersion == OUTPUT_CT)
             {
+                const CTxOutCT *ctout = (CTxOutCT*) txprevout;
                 nCt++;
+                vpCommitsIn.push_back(&ctout->commitment);
             } else
             if (txprevout->nVersion == OUTPUT_RINGCT)
             {
@@ -1758,21 +1800,99 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
         };
     }
     
+    if ((nStandard > 0 && (nCt > 0 || nRingCT > 0))
+        || (nCt > 0 && (nStandard > 0 || nRingCT > 0))
+        || (nRingCT > 0 && (nCt > 0 || nStandard > 0)))
+        return state.DoS(100, false, REJECT_INVALID, "mixed-input-types");
+    
+    // GetPlainValueOut adds to nStandard, nCt, nRingCT
+    CAmount nPlainValueOut = tx.GetPlainValueOut(nStandard, nCt, nRingCT);
     
     
-    if (!tx.IsCoinStake())
+    CAmount nTxFee = 0;
+    if (fParticlMode)
+    {
+        if (!tx.IsCoinStake())
+        {
+            // Tally transaction fees
+            if (nCt > 0 || nRingCT > 0)
+            {
+                if (!tx.GetCTFee(nTxFee))
+                    return state.DoS(100, error("%s: bad-fee-output", __func__),
+                        REJECT_INVALID, "bad-fee-output");
+            } else
+            {
+                nTxFee = nValueIn - nPlainValueOut;
+                
+                if (nValueIn < nPlainValueOut)
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-belowout", false,
+                        strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(nPlainValueOut)));
+            };
+            
+            if (nTxFee < 0)
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-negative");
+            nFees += nTxFee;
+            if (!MoneyRange(nFees))
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
+        }
+    } else
     {
         if (nValueIn < tx.GetValueOut())
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-belowout", false,
                 strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(tx.GetValueOut())));
 
         // Tally transaction fees
-        CAmount nTxFee = nValueIn - tx.GetValueOut();
+        nTxFee = nValueIn - tx.GetValueOut();
         if (nTxFee < 0)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-negative");
         nFees += nTxFee;
         if (!MoneyRange(nFees))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
+    };
+    
+    if (nCt > 0)
+    {
+        nPlainValueOut += nTxFee;
+        
+        if (!MoneyRange(nPlainValueOut))
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-out-outofrange");
+        
+        if (!MoneyRange(nValueIn))
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-outofrange");
+        
+        // commitments must sum to 0
+        secp256k1_pedersen_commitment plainInCommitment, plainOutCommitment;
+        uint8_t blindPlain[32];
+        memset(blindPlain, 0, 32);
+        if (nValueIn > 0)
+        {
+            if (!secp256k1_pedersen_commit(secp256k1_ctx_blind, &plainInCommitment, blindPlain, (uint64_t) nValueIn, secp256k1_generator_h))
+                return state.Invalid(false, REJECT_INVALID, "commit-failed");
+            vpCommitsIn.push_back(&plainInCommitment);
+        };
+        
+        if (nPlainValueOut > 0)
+        {
+            if (!secp256k1_pedersen_commit(secp256k1_ctx_blind, &plainOutCommitment, blindPlain, (uint64_t) nPlainValueOut, secp256k1_generator_h))
+                return state.Invalid(false, REJECT_INVALID, "commit-failed");
+            vpCommitsOut.push_back(&plainOutCommitment);
+        };
+        
+        for (auto &txout : tx.vpout)
+        {
+            if (txout->IsType(OUTPUT_CT))
+            {
+                const CTxOutCT *ctout = (CTxOutCT*) txout.get();
+                vpCommitsOut.push_back(&ctout->commitment);
+            };
+        }
+        
+        
+        int rv = secp256k1_pedersen_verify_tally(secp256k1_ctx_blind,
+            vpCommitsIn.data(), vpCommitsIn.size(), vpCommitsOut.data(), vpCommitsOut.size());
+        
+        if (rv != 1)
+            return state.DoS(100, false, REJECT_INVALID, "bad-commitment-sum");
     };
     
     return true;
@@ -2342,43 +2462,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             }
         };
         
-        // Track money supply
-        if (fParticlMode)
-        {
-            for (auto &txin : tx.vin)
-            {
-                // [rm] TODO: fix, check prevout type
-                if (!txin.prevout.IsNull())
-                {
-                    const CCoins *coins = view.AccessCoins(txin.prevout.hash);
-                    if (!coins || coins->vpout.size() <= txin.prevout.n)
-                    {
-                        LogPrintf("ERROR: problem with AccessCoins vpout.size(), txin.prevout.n %d, %d.", coins->vpout.size(), txin.prevout.n);  // [rm]
-                        return state.DoS(100, error("Null prevtxout in AccessCoins %s %d", txin.prevout.hash.ToString(), txin.prevout.n), REJECT_INVALID, "bad-accesscoins");
-                    };
-                    
-                    const CTxOutBase *prevtxout = coins->vpout[txin.prevout.n].get();
-                    if (prevtxout == nullptr)
-                    {
-                        LogPrintf("ERROR: problem with AccessCoins prevtxout.");  // [rm]
-                        return state.DoS(100, error("Null prevtxout %s %d", txin.prevout.hash.ToString(), txin.prevout.n), REJECT_INVALID, "bad-prevtxout");
-                    };
-                    nValueIn += prevtxout->GetValue();
-                };
-            };
-            
-            for (auto &txout : tx.vpout)
-            {
-                //LogPrintf("[rm] txout.\n");
-                // [rm] TODO: fix, check all types
-                
-                if (txout == nullptr)
-                    return state.DoS(100, error("Null txout"), REJECT_INVALID, "null-txout");
-                
-                if (txout->nVersion == OUTPUT_STANDARD)
-                    nValueOut += txout->GetValue();
-            };
-        };
 
         // GetTransactionSigOpCost counts 3 types of sigops:
         // * legacy (always)
@@ -2392,12 +2475,14 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         if (!tx.IsCoinBase())
         {
             size_t nStandard = 0, nCt = 0, nRingCT = 0;
-            CAmount nPlainValueIn = view.GetPlainValueIn(tx, nStandard, nCt, nRingCT);
             if (fParticlMode)
             {
+                CAmount nPlainValueIn = view.GetPlainValueIn(tx, nStandard, nCt, nRingCT);
+                CAmount nPlainValueOut = tx.GetPlainValueOut(nStandard, nCt, nRingCT);
+                
                 if (tx.IsCoinStake())
                 {
-                    nStakeReward += tx.GetValueOut() - nPlainValueIn;
+                    nStakeReward += nPlainValueOut - nPlainValueIn;
                     nMoneyCreated += nStakeReward;
                     
                     if (nCt > 0 || nRingCT > 0)
@@ -2407,6 +2492,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                 {
                     if (nCt > 0 || nRingCT > 0)
                     {
+                        // fee is serialised in data output at vpout0
                         CAmount nFee;
                         if (!tx.GetCTFee(nFee))
                             return state.DoS(100, error("ConnectBlock(): bad-fee-output"),
@@ -2414,7 +2500,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                         nFees += nFee;
                     } else
                     {
-                        nFees += nPlainValueIn-tx.GetValueOut();
+                        nFees += nPlainValueIn - nPlainValueOut;
                     };
                 }
             } else

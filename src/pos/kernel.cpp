@@ -181,8 +181,10 @@ bool CheckProofOfStake(const CBlockIndex *pindexPrev, const CTransaction &tx, in
     const CScriptWitness *witness = &txin.scriptWitness;
     ScriptError serror = SCRIPT_ERR_OK;
     
+    std::vector<uint8_t> vchAmount(8);
+    memcpy(&vchAmount[0], &amount, 8);
     // all inputs are checked later during CheckInputs
-    if (!VerifyScript(scriptSig, kernelPubKey, witness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&tx, 0, amount), &serror))
+    if (!VerifyScript(scriptSig, kernelPubKey, witness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&tx, 0, vchAmount), &serror))
         return state.DoS(100, error("%s: verify-script-failed, txn %s, reason %s", __func__, tx.GetHash().ToString(), ScriptErrorString(serror)),
             REJECT_INVALID, "verify-script-failed");
     

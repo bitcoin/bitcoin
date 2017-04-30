@@ -83,6 +83,7 @@ class CReserveKey;
 class CScript;
 class CTxMemPool;
 class CWalletTx;
+class CTransactionRecord;
 
 /** (client) version numbers for particular wallet features */
 enum WalletFeature
@@ -130,9 +131,12 @@ public:
     
     typedef std::map<std::string, std::string> StringMap;
     StringMap destdata;
+    
+    mutable uint8_t nOwned; // 0 unknown, 1 yes, 2 no
 
     CAddressBookData()
     {
+        nOwned = 0;
         purpose = "unknown";
     }
     
@@ -187,12 +191,14 @@ struct COutputEntry
     int vout;
 };
 
+extern const uint256 ABANDON_HASH;
+
 /** A transaction with a merkle branch linking it to the block chain. */
 class CMerkleTx
 {
 private:
   /** Constant used in hashBlock to indicate tx has been abandoned */
-    static const uint256 ABANDON_HASH;
+    //static const uint256 ABANDON_HASH;
 
 public:
     CTransactionRef tx;
@@ -293,6 +299,7 @@ private:
     const CWallet* pwallet;
 
 public:
+    std::vector<uint32_t> vPath; // index to m is stored in first entry
     mapValue_t mapValue;
     std::vector<std::pair<std::string, std::string> > vOrderForm;
     unsigned int fTimeReceivedIsTxTime;
@@ -340,6 +347,7 @@ public:
     void Init(const CWallet* pwalletIn)
     {
         pwallet = pwalletIn;
+        vPath.clear();
         mapValue.clear();
         vOrderForm.clear();
         fTimeReceivedIsTxTime = false;
@@ -389,6 +397,7 @@ public:
         READWRITE(*(CMerkleTx*)this);
         std::vector<CMerkleTx> vUnused; //!< Used to be vtxPrev
         READWRITE(vUnused);
+        READWRITE(vPath);
         READWRITE(mapValue);
         READWRITE(vOrderForm);
         READWRITE(fTimeReceivedIsTxTime);
@@ -643,7 +652,7 @@ private:
     /* Mark a transaction (and its in-wallet descendants) as conflicting with a particular block. */
     void MarkConflicted(const uint256& hashBlock, const uint256& hashTx);
 
-    void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
+    virtual void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
 
     /* the HD chain data model (external chain counters) */
     CHDChain hdChain;
@@ -744,7 +753,7 @@ public:
 
     std::set<COutPoint> setLockedCoins;
 
-    const CWalletTx* GetWalletTx(const uint256& hash) const;
+    virtual const CWalletTx* GetWalletTx(const uint256& hash) const;
 
     //! check whether we are allowed to upgrade (or already support) to the named feature
     bool CanSupportFeature(enum WalletFeature wf) { AssertLockHeld(cs_wallet); return nWalletMaxVersion >= wf; }
@@ -762,7 +771,7 @@ public:
      */
     bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, uint64_t nMaxAncestors, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet) const;
 
-    bool IsSpent(const uint256& hash, unsigned int n) const;
+    virtual bool IsSpent(const uint256& hash, unsigned int n) const;
 
     bool IsLockedCoin(uint256 hash, unsigned int n) const;
     void LockCoin(const COutPoint& output);
@@ -832,8 +841,8 @@ public:
     void ReacceptWalletTransactions();
     void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) override;
     std::vector<uint256> ResendWalletTransactionsBefore(int64_t nTime, CConnman* connman);
-    CAmount GetBalance() const;
-    CAmount GetUnconfirmedBalance() const;
+    virtual CAmount GetBalance() const;
+    virtual CAmount GetUnconfirmedBalance() const;
     CAmount GetImmatureBalance() const;
     CAmount GetWatchOnlyBalance() const;
     CAmount GetUnconfirmedWatchOnlyBalance() const;

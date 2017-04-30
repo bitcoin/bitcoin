@@ -113,7 +113,9 @@ int CStealthAddress::ToRaw(std::vector<uint8_t> &raw) const
     raw[o] = number_signatures; o++;
     raw[o] = prefix.number_bits; o++;
     if (nPrefixBytes)
+    {
         memcpy(&raw[o], &prefix.bitfield, nPrefixBytes); o += nPrefixBytes;
+    };
     
     return 0;
 };

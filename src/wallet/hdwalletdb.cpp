@@ -3,22 +3,23 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "wallet/hdwalletdb.h"
+#include "wallet/hdwallet.h"
 
 #include "serialize.h"
 #include <boost/tuple/tuple.hpp>
 
 
-bool CHDWalletDB::WriteStealthKeyMeta(const CKeyID& keyId, const CStealthKeyMetadata& sxKeyMeta)
+bool CHDWalletDB::WriteStealthKeyMeta(const CKeyID &keyId, const CStealthKeyMetadata &sxKeyMeta)
 {
     return Write(std::make_pair(std::string("sxkm"), keyId), sxKeyMeta, true);
 }
 
-bool CHDWalletDB::EraseStealthKeyMeta(const CKeyID& keyId)
+bool CHDWalletDB::EraseStealthKeyMeta(const CKeyID &keyId)
 {
     return Erase(std::make_pair(std::string("sxkm"), keyId));
 }
 
-bool CHDWalletDB::WriteStealthAddress(const CStealthAddress& sxAddr)
+bool CHDWalletDB::WriteStealthAddress(const CStealthAddress &sxAddr)
 {
     return Write(std::make_pair(std::string("sxad"), sxAddr.scan_pubkey), sxAddr, true);
 }
@@ -160,4 +161,33 @@ bool CHDWalletDB::WriteVoteTokens(const std::vector<CVoteToken> &vVoteTokens)
 {
     return Write(std::string("votes"), vVoteTokens, true);
 };
+
+
+bool CHDWalletDB::WriteTxRecord(const uint256 &hash, const CTransactionRecord &rtx)
+{
+    return Write(std::make_pair(std::string("rtx"), hash), rtx, true);
+};
+
+bool CHDWalletDB::EraseTxRecord(const uint256 &hash)
+{
+    return Erase(std::make_pair(std::string("rtx"), hash));
+};
+
+
+bool CHDWalletDB::ReadStoredTx(const uint256 &hash, CStoredTransaction &stx, uint32_t nFlags)
+{
+    return Read(std::make_pair(std::string("stx"), hash), stx, nFlags);
+};
+
+bool CHDWalletDB::WriteStoredTx(const uint256 &hash, const CStoredTransaction &stx)
+{
+     return Write(std::make_pair(std::string("stx"), hash), stx, true);
+};
+
+bool CHDWalletDB::EraseStoredTx(const uint256 &hash)
+{
+    return Erase(std::make_pair(std::string("stx"), hash));
+};
+
+
 

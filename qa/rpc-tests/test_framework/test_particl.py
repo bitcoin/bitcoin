@@ -6,6 +6,13 @@
 from .test_framework import BitcoinTestFramework
 from .util import *
 
+import decimal
+
+def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
+    a = decimal.Decimal(a)
+    b = decimal.Decimal(b)
+    return abs(a-b) <= max(decimal.Decimal(rel_tol) * decimal.Decimal(max(abs(a), abs(b))), abs_tol)
+
 class ParticlTestFramework(BitcoinTestFramework):
     def __init__(self):
         super().__init__()
@@ -29,3 +36,8 @@ class ParticlTestFramework(BitcoinTestFramework):
             except:
                 continue
         return False
+    
+    def jsonDecimal(self, obj):
+        if isinstance(obj, decimal.Decimal):
+            return str(obj)
+        raise TypeError

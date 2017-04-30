@@ -30,6 +30,12 @@
 class CAutoFile;
 class CBlockIndex;
 
+enum eMemPoolFlags
+{
+    MPE_CT                 = (1 << 1),
+    MPE_RINGCT             = (1 << 2),
+};
+
 inline double AllowFreeThreshold()
 {
     return COIN * 144 / 250;
@@ -115,7 +121,7 @@ public:
     CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
                     int64_t _nTime, double _entryPriority, unsigned int _entryHeight,
                     CAmount _inChainInputValue, bool spendsCoinbase,
-                    int64_t nSigOpsCost, LockPoints lp);
+                    int64_t nSigOpsCost, LockPoints lp, uint32_t nFlags_ = 0);
 
     CTxMemPoolEntry(const CTxMemPoolEntry& other);
 
@@ -158,6 +164,7 @@ public:
     int64_t GetSigOpCostWithAncestors() const { return nSigOpCostWithAncestors; }
 
     mutable size_t vTxHashesIdx; //!< Index in mempool's vTxHashes
+    uint32_t nFlags;
 };
 
 // Helpers for modifying CTxMemPool::mapTx, which is a boost multi_index.

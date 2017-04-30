@@ -483,12 +483,14 @@ class CScriptCheck
 private:
     CScript scriptPubKey;
     CAmount amount;
+    std::vector<uint8_t> vchAmount;
     const CTransaction *ptxTo;
     unsigned int nIn;
     unsigned int nFlags;
     bool cacheStore;
     ScriptError error;
     PrecomputedTransactionData *txdata;
+    //secp256k1_pedersen_commitment valueCommitment;
 
 public:
     CScriptCheck(): amount(0), ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR) {}
@@ -501,6 +503,7 @@ public:
         scriptPubKey.swap(check.scriptPubKey);
         std::swap(ptxTo, check.ptxTo);
         std::swap(amount, check.amount);
+        std::swap(vchAmount, check.vchAmount);
         std::swap(nIn, check.nIn);
         std::swap(nFlags, check.nFlags);
         std::swap(cacheStore, check.cacheStore);

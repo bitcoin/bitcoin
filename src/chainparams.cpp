@@ -373,7 +373,6 @@ public:
         AddImportHashesMain(vImportedCoinbaseTxns);
         SetLastImportHeight();
         
-         
         nPruneAfterHeight = 100000;
         
         genesis = CreateGenesisBlockMainNet(1489325366, 147067, 0x1f00ffff);

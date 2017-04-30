@@ -75,9 +75,12 @@ BOOST_AUTO_TEST_CASE(signature_test)
     CMutableTransaction txn2;
     txn2.vin.push_back(CTxIn(txn.GetHash(), 1));
     
-    nValue = out1->nValue; // used for???
+    nValue = out1->nValue;
+    std::vector<uint8_t> vchAmount(8);
+    memcpy(&vchAmount[0], &nValue, 8);
+    
     CTransaction txToConst(txn2);
-    BOOST_CHECK(ProduceSignature(TransactionSignatureCreator(&keystore, &txToConst, 1, nValue, SIGHASH_ALL), script, sigdata));
+    BOOST_CHECK(ProduceSignature(TransactionSignatureCreator(&keystore, &txToConst, 1, vchAmount, SIGHASH_ALL), script, sigdata));
     
     //BOOST_MESSAGE("sigdata.scriptSig.size() " << sigdata.scriptSig.size());
     //BOOST_MESSAGE("sigdata.scriptWitness.stack.size() " << sigdata.scriptWitness.stack.size());

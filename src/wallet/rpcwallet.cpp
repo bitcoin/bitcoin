@@ -92,7 +92,7 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
         else if (rbfState == RBF_TRANSACTIONSTATE_REPLACEABLE_BIP125)
             rbfStatus = "yes";
     }
-    entry.push_back(Pair("bip125-replaceable", rbfStatus));
+    entry.push_back(Pair("bip125_replaceable", rbfStatus));
 
     BOOST_FOREACH(const PAIRTYPE(string,string)& item, wtx.mapValue)
         entry.push_back(Pair(item.first, item.second));
@@ -374,10 +374,10 @@ static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtr
     // Check amount
     if (nValue <= 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid amount");
-
+    
     if (nValue > curBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
-
+    
     if (pwalletMain->GetBroadcastTransactions() && !g_connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
@@ -1590,6 +1590,50 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     
 }
 
+void ListRecord(const uint256 &hash, const CTransactionRecord &rtx,
+    const std::string &strAccount, int nMinDepth, bool fLong, UniValue &ret, const isminefilter &filter)
+{
+    bool fAllAccounts = (strAccount == string("*"));
+    
+    for (auto &r : rtx.vout)
+    {
+        if (r.nFlags & ORF_CHANGE)
+            continue;
+        
+        UniValue entry(UniValue::VOBJ);
+        entry.push_back(Pair("time", rtx.nTimeReceived));
+        entry.push_back(Pair("txid", hash.ToString()));
+        entry.push_back(Pair("vout", r.n));
+        entry.push_back(Pair("narration", r.sNarration));
+        
+        if (r.nFlags & ORF_OWNED && r.nFlags & ORF_FROM)
+        {
+            // sent to self
+            continue;
+        } else
+        if (r.nFlags & ORF_OWNED)
+        {
+            entry.push_back(Pair("category", "receive"));
+            entry.push_back(Pair("type", r.nType == OUTPUT_STANDARD ? "standard"
+                : r.nType == OUTPUT_CT ? "blind" : r.nType == OUTPUT_RINGCT ? "anon" : "unknown"));
+            entry.push_back(Pair("amount", ValueFromAmount(r.nValue)));
+        } else
+        if (r.nFlags & ORF_FROM)
+        {
+            entry.push_back(Pair("category", "send"));
+            entry.push_back(Pair("type", r.nType == OUTPUT_STANDARD ? "standard"
+                : r.nType == OUTPUT_CT ? "blind" : r.nType == OUTPUT_RINGCT ? "anon" : "unknown"));
+            entry.push_back(Pair("fee", ValueFromAmount(rtx.nFee)));
+            entry.push_back(Pair("amount", ValueFromAmount(r.nValue)));
+        }
+        ret.push_back(entry);
+    };
+    
+    
+    
+    
+};
+
 void AcentryToJSON(const CAccountingEntry& acentry, const string& strAccount, UniValue& ret)
 {
     bool fAllAccounts = (strAccount == string("*"));
@@ -1658,7 +1702,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
             "    \"otheraccount\": \"accountname\",  (string) DEPRECATED. For the 'move' category of transactions, the account the funds came \n"
             "                                          from (for receiving funds, positive amounts), or went to (for sending funds,\n"
             "                                          negative amounts).\n"
-            "    \"bip125-replaceable\": \"yes|no|unknown\",  (string) Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
+            "    \"bip125_replaceable\": \"yes|no|unknown\",  (string) Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
             "                                                     may be unknown for unconfirmed transactions not in the mempool\n"
             "    \"abandoned\": xxx          (bool) 'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
             "                                         'send' category of transactions.\n"
@@ -1696,44 +1740,81 @@ UniValue listtransactions(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative from");
 
     UniValue ret(UniValue::VARR);
+    UniValue retReversed(UniValue::VARR);
 
-    const CWallet::TxItems & txOrdered = pwalletMain->wtxOrdered;
-
+    const CWallet::TxItems &txOrdered = pwalletMain->wtxOrdered;
+    
+    
+    size_t nCountIter = 0;
     // iterate backwards until we have nCount items to return:
     for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
     {
+        nCountIter++;
+        if (nFrom > nCountIter)
+            continue;
+        
         CWalletTx *const pwtx = (*it).second.first;
         if (pwtx != 0)
-            ListTransactions(*pwtx, strAccount, 0, true, ret, filter);
+            ListTransactions(*pwtx, strAccount, 0, true, retReversed, filter);
         CAccountingEntry *const pacentry = (*it).second.second;
         if (pacentry != 0)
-            AcentryToJSON(*pacentry, strAccount, ret);
-
-        if ((int)ret.size() >= (nCount+nFrom)) break;
-    }
-    // ret is newest to oldest
-
-    if (nFrom > (int)ret.size())
-        nFrom = ret.size();
-    if ((nFrom + nCount) > (int)ret.size())
-        nCount = ret.size() - nFrom;
-
-    vector<UniValue> arrTmp = ret.getValues();
-
-    vector<UniValue>::iterator first = arrTmp.begin();
-    std::advance(first, nFrom);
-    vector<UniValue>::iterator last = arrTmp.begin();
-    std::advance(last, nFrom+nCount);
-
-    if (last != arrTmp.end()) arrTmp.erase(last, arrTmp.end());
-    if (first != arrTmp.begin()) arrTmp.erase(arrTmp.begin(), first);
-
-    std::reverse(arrTmp.begin(), arrTmp.end()); // Return oldest to newest
-
-    ret.clear();
-    ret.setArray();
-    ret.push_backV(arrTmp);
-
+            AcentryToJSON(*pacentry, strAccount, retReversed);
+        
+        if (nCountIter - nFrom >= nCount)
+            break;
+    };
+    
+    // TODO: neater to add reverse to Univalue?
+    for (size_t i = retReversed.size(); i-- > 0; )
+    {
+        ret.push_back(retReversed[i]);
+    };
+    
+    if (fParticlMode)
+    {
+        const RtxOrdered_t &txOrdered = ((CHDWallet*)pwalletMain)->rtxOrdered;
+        
+        UniValue retRecords(UniValue::VARR);
+        nCountIter = 0;
+        for (RtxOrdered_t::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
+        {
+            nCountIter++;
+            if (nFrom > nCountIter)
+                continue;
+            
+            
+            
+            ListRecord(it->second->first, it->second->second, strAccount, 0, true, retRecords, filter);
+            //ListRecord(*pwtx, strAccount, 0, true, retReversed, filter);
+            if (nCountIter - nFrom >= nCount)
+                break;
+        };
+        
+        for (size_t i = retRecords.size(); i-- > 0; )
+        {
+            int64_t nInsertTime = find_value(retRecords[i], "time").get_int64();
+            bool fFound = false;
+            for (size_t k = ret.size(); k-- > 0; )
+            {
+                int64_t nTime = find_value(ret[k], "time").get_int64();
+                if (nTime > nInsertTime)
+                {
+                    ret.insert(k, ret);
+                    fFound = true;
+                    break;
+                };
+            };
+            
+            if (!fFound)
+                ret.push_back(retRecords[i]);
+        };
+        
+        if (ret.size() > nCount)
+            ret.erase(0, ret.size() - nCount);
+    };
+    
+    
+    
     return ret;
 }
 
@@ -1848,7 +1929,7 @@ UniValue listsinceblock(const JSONRPCRequest& request)
             "    \"txid\": \"transactionid\",  (string) The transaction id. Available for 'send' and 'receive' category of transactions.\n"
             "    \"time\": xxx,              (numeric) The transaction time in seconds since epoch (Jan 1 1970 GMT).\n"
             "    \"timereceived\": xxx,      (numeric) The time received in seconds since epoch (Jan 1 1970 GMT). Available for 'send' and 'receive' category of transactions.\n"
-            "    \"bip125-replaceable\": \"yes|no|unknown\",  (string) Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
+            "    \"bip125_replaceable\": \"yes|no|unknown\",  (string) Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
             "                                                   may be unknown for unconfirmed transactions not in the mempool\n"
             "    \"abandoned\": xxx,         (bool) 'true' if the transaction has been abandoned (inputs are respendable). Only available for the 'send' category of transactions.\n"
             "    \"comment\": \"...\",       (string) If a comment is associated with the transaction.\n"
@@ -1947,7 +2028,7 @@ UniValue gettransaction(const JSONRPCRequest& request)
             "  \"txid\" : \"transactionid\",   (string) The transaction id.\n"
             "  \"time\" : ttt,            (numeric) The transaction time in seconds since epoch (1 Jan 1970 GMT)\n"
             "  \"timereceived\" : ttt,    (numeric) The time received in seconds since epoch (1 Jan 1970 GMT)\n"
-            "  \"bip125-replaceable\": \"yes|no|unknown\",  (string) Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
+            "  \"bip125_replaceable\": \"yes|no|unknown\",  (string) Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
             "                                                   may be unknown for unconfirmed transactions not in the mempool\n"
             "  \"details\" : [\n"
             "    {\n"
@@ -3147,7 +3228,11 @@ UniValue bumpfee(const JSONRPCRequest& request)
         const CScript& scriptPubKey = mi->second.tx->vout[input.prevout.n].scriptPubKey;
         const CAmount& amount = mi->second.tx->vout[input.prevout.n].nValue;
         SignatureData sigdata;
-        if (!ProduceSignature(TransactionSignatureCreator(pwalletMain, &txNewConst, nIn, amount, SIGHASH_ALL), scriptPubKey, sigdata)) {
+        
+        std::vector<uint8_t> vchAmount(8);
+        memcpy(&vchAmount[0], &amount, 8);
+        
+        if (!ProduceSignature(TransactionSignatureCreator(pwalletMain, &txNewConst, nIn, vchAmount, SIGHASH_ALL), scriptPubKey, sigdata)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Can't sign transaction.");
         }
         UpdateTransaction(tx, nIn, sigdata);

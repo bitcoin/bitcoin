@@ -292,7 +292,7 @@ public:
     };
     
     template<typename T>
-    int DeriveKey(T &keyOut, uint32_t nChildIn, uint32_t &nChildOut, bool fHardened = false)
+    int DeriveKey(T &keyOut, uint32_t nChildIn, uint32_t &nChildOut, bool fHardened = false) const
     {
         if (fHardened && !kp.IsValidV())
             return errorN(1, "Ext key does not contain a secret.");
@@ -422,7 +422,7 @@ public:
     uint32_t nParent; // chain identifier, vExtKeys
     uint32_t nKey;
     //uint32_t nChecksum; // TODO: is it worth storing 4 bytes of the id (160 hash here)
-     
+    
     std::string sLabel; // TODO: use later
 };
 
@@ -805,12 +805,17 @@ std::vector<uint8_t> &PushUInt32(std::vector<uint8_t> &v, const uint32_t i);
 
 
 uint32_t &SetHardenedBit(uint32_t &n);
+uint32_t &ClearHardenedBit(uint32_t &n);
 int ExtractExtKeyPath(const std::string &sPath, std::vector<uint32_t> &vPath);
 
 int PathToString(const std::vector<uint8_t> &vPath, std::string &sPath, char cH='\'', size_t nStart = 0);
 int PathToString(const std::vector<uint32_t> &vPath, std::string &sPath, char cH='\'', size_t nStart = 0);
 
 bool IsBIP32(const char *base58);
+
+int AppendChainPath(const CStoredExtKey *pc, std::vector<uint32_t> &vPath);
+int AppendChainPath(const CStoredExtKey *pc, std::vector<uint8_t> &vPath);
+
 
 #endif // EXT_KEY_H
 

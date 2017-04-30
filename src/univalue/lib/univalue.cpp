@@ -179,6 +179,31 @@ bool UniValue::push_back(const UniValue& val_)
     return true;
 }
 
+bool UniValue::insert(size_t pos, const UniValue& val_)
+{
+    if (typ != VARR)
+        return false;
+    
+    if (pos >= values.size())
+        values.push_back(val_);
+    else
+        values.insert(values.begin() + pos, val_);
+    return true;
+}
+
+bool UniValue::erase(size_t from, size_t to)
+{
+    if (typ != VARR)
+        return false;
+    
+    if (from >= values.size() || to >= values.size()
+        || from > to)
+        return false;
+    
+    values.erase(values.begin() + from, values.begin() + to);
+    return true;
+}
+
 bool UniValue::push_backV(const std::vector<UniValue>& vec)
 {
     if (typ != VARR)

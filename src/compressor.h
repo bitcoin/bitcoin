@@ -135,7 +135,8 @@ private:
 public:
 
     CTxOutBaseCompressor(CTxOutBaseRef &txoutIn) : txout(txoutIn) { }
-
+    
+    
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
@@ -165,7 +166,17 @@ public:
                     READWRITE(cscript);
                     }
                     break;
-                
+                case OUTPUT_CT:
+                    {
+                    std::shared_ptr<CTxOutCT> p = std::dynamic_pointer_cast<CTxOutCT>(txout);
+                    
+                    // TODO: need all fields?
+                    CScriptCompressor cscript(REF(p->scriptPubKey));
+                    READWRITE(cscript);
+                    
+                    s.write((char*)&p->commitment.data[0], 33);
+                    }
+                    break;
                 default:
                     assert(false);
             };
@@ -192,13 +203,25 @@ public:
                     READWRITE(cscript);
                     }
                     break;
-                
+                case OUTPUT_CT:
+                    {
+                    std::shared_ptr<CTxOutCT> p;
+                    txout = p = MAKE_OUTPUT<CTxOutCT>();
+                    
+                    // TODO: need all fields?
+                    CScriptCompressor cscript(REF(p->scriptPubKey));
+                    READWRITE(cscript);
+                    
+                    s.read((char*)&p->commitment.data[0], 33);
+                    }
+                    break;
                 default:
                     assert(false);
             };
             txout->nVersion = bv;
         };
     }
+    
 };
 
 #endif // BITCOIN_COMPRESSOR_H

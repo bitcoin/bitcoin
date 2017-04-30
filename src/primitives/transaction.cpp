@@ -153,6 +153,35 @@ CAmount CTransaction::GetValueOut() const
     return nValueOut;
 }
 
+CAmount CTransaction::GetPlainValueOut(size_t &nStandard, size_t &nCT, size_t &nRingCT) const
+{
+    // accumulators not cleared here intentionally
+    CAmount nValueOut = 0;
+    
+    for (auto &txout : vpout)
+    {
+        if (txout->IsType(OUTPUT_CT))
+        {
+            nCT++;
+        } else
+        if (txout->IsType(OUTPUT_RINGCT))
+        {
+            nRingCT++;
+        };
+        
+        if (!txout->IsStandardOutput())
+            continue;
+        
+        nStandard++;
+        CAmount nValue = txout->GetValue();
+        nValueOut += txout->GetValue();
+        if (!MoneyRange(nValue) || !MoneyRange(nValueOut))
+            throw std::runtime_error(std::string(__func__) + ": value out of range");
+    };
+    
+    return nValueOut;
+};
+
 double CTransaction::ComputePriority(double dPriorityInputs, unsigned int nTxSize) const
 {
     nTxSize = CalculateModifiedSize(nTxSize);

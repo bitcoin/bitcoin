@@ -145,7 +145,12 @@ BOOST_AUTO_TEST_CASE(sighash_test)
 
         uint256 sh, sho;
         sho = SignatureHashOld(scriptCode, txTo, nIn, nHashType);
-        sh = SignatureHash(scriptCode, txTo, nIn, nHashType, 0, SIGVERSION_BASE);
+        
+        CAmount amount = 0;
+        std::vector<uint8_t> vchAmount(8);
+        memcpy(&vchAmount[0], &amount, 8);
+        
+        sh = SignatureHash(scriptCode, txTo, nIn, nHashType, vchAmount, SIGVERSION_BASE);
         #if defined(PRINT_SIGHASH_JSON)
         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
         ss << txTo;
@@ -222,8 +227,10 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
           BOOST_ERROR("Bad test, couldn't deserialize data: " << strTest);
           continue;
         }
-
-        sh = SignatureHash(scriptCode, *tx, nIn, nHashType, 0, SIGVERSION_BASE);
+        CAmount amount = 0;
+        std::vector<uint8_t> vchAmount(8);
+        memcpy(&vchAmount[0], &amount, 8);
+        sh = SignatureHash(scriptCode, *tx, nIn, nHashType, vchAmount, SIGVERSION_BASE);
         if (!fExpectHashFailure)
             BOOST_CHECK_MESSAGE(sh.GetHex() == sigHashHex, strTest);
     }

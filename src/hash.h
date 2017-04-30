@@ -144,6 +144,11 @@ public:
     void write(const char *pch, size_t size) {
         ctx.Write((const unsigned char*)pch, size);
     }
+    
+    void read(const char *psz, size_t _nSize)
+    {
+        // do nothing, needed by CTxOutBaseCompressor
+    }
 
     // invalidates the object
     uint256 GetHash() {

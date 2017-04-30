@@ -4,14 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.test_particl import ParticlTestFramework
+from test_framework.test_particl import isclose
 from test_framework.util import *
-
-import decimal
-
-def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
-    a = decimal.Decimal(a)
-    b = decimal.Decimal(b)
-    return abs(a-b) <= max(decimal.Decimal(rel_tol) * decimal.Decimal(max(abs(a), abs(b))), abs_tol)
 
 class MultiSigTest(ParticlTestFramework):
 

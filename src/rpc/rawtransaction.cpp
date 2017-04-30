@@ -920,7 +920,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
         
         CScript prevPubKey;
         CAmount amount;
-        
+        std::vector<uint8_t> vchAmount(8);
         SignatureData sigdata;
         
         if (fParticlMode)
@@ -931,17 +931,19 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             
             prevPubKey = so->scriptPubKey;
             amount = so->nValue;
+            memcpy(&vchAmount[0], &amount, 8);
             
             if (!fHashSingle || (i < mergedTx.vpout.size()))
-                ProduceSignature(MutableTransactionSignatureCreator(&keystore, &mergedTx, i, amount, nHashType), prevPubKey, sigdata);
+                ProduceSignature(MutableTransactionSignatureCreator(&keystore, &mergedTx, i, vchAmount, nHashType), prevPubKey, sigdata);
         } else
         {
             prevPubKey = coins->vout[txin.prevout.n].scriptPubKey;
             amount = coins->vout[txin.prevout.n].nValue;
+            memcpy(&vchAmount[0], &amount, 8);
             
             // Only sign SIGHASH_SINGLE if there's a corresponding output:
             if (!fHashSingle || (i < mergedTx.vout.size()))
-                ProduceSignature(MutableTransactionSignatureCreator(&keystore, &mergedTx, i, amount, nHashType), prevPubKey, sigdata);
+                ProduceSignature(MutableTransactionSignatureCreator(&keystore, &mergedTx, i, vchAmount, nHashType), prevPubKey, sigdata);
         };
         
         
@@ -949,7 +951,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
         // ... and merge in other signatures:
         BOOST_FOREACH(const CMutableTransaction& txv, txVariants) {
             if (txv.vin.size() > i) {
-                sigdata = CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, amount), sigdata, DataFromTransaction(txv, i));
+                sigdata = CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, vchAmount), sigdata, DataFromTransaction(txv, i));
             }
         }
         
@@ -957,7 +959,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
         UpdateTransaction(mergedTx, i, sigdata);
 
         ScriptError serror = SCRIPT_ERR_OK;
-        if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, amount), &serror)) {
+        if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, vchAmount), &serror)) {
             TxInErrorToJSON(txin, vErrors, ScriptErrorString(serror));
         }
     }

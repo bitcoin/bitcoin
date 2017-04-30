@@ -4,14 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.test_particl import ParticlTestFramework
+from test_framework.test_particl import isclose
 from test_framework.util import *
-
-import decimal
-
-def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
-    a = decimal.Decimal(a)
-    b = decimal.Decimal(b)
-    return abs(a-b) <= max(decimal.Decimal(rel_tol) * decimal.Decimal(max(abs(a), abs(b))), abs_tol)
 
 class BlindTest(ParticlTestFramework):
 
@@ -50,18 +44,104 @@ class BlindTest(ParticlTestFramework):
         #assert(self.wait_for_height(node, 1))
         
         ro = nodes[1].extkeyimportmaster("drip fog service village program equip minute dentist series hawk crop sphere olympic lazy garbage segment fox library good alley steak jazz force inmate")
-        
         sxAddrTo1_1 = nodes[1].getnewstealthaddress()
         assert(sxAddrTo1_1 == 'TetbYTGv5LiqyFiUD3a5HHbpSinQ9KiRYDGAMvRzPfz4RnHMbKGAwDr1fjLGJ5Eqg1XDwpeGyqWMiwdK3qM3zKWjzHNpaatdoHVzzA')
         
-        txnHash = nodes[0].sendparttoblind(sxAddrTo1_1, 0.4, '', '', False, 'node0 -> node1 blind')
+        txnHash = nodes[0].sendparttoblind(sxAddrTo1_1, 3.4, '', '', False, 'node0 -> node1 p->b')
         print("txnHash ", txnHash)
         txnHashes.append(txnHash)
         
         
         
+        ro = nodes[0].listtransactions()
+        print("0 listtransactions " + json.dumps(ro, indent=4, default=self.jsonDecimal))
         
-        assert(False)
+        ro = nodes[0].getwalletinfo()
+        print("0 getwalletinfo " + json.dumps(ro, indent=4, default=self.jsonDecimal))
+        assert(isclose(ro['total_balance'], 99996.5996656))
+        
+        
+        assert(self.wait_for_mempool(nodes[1], txnHash))
+        
+        ro = nodes[1].getwalletinfo()
+        print("1 getwalletinfo ", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        
+        ro = nodes[1].listtransactions()
+        print("1 listtransactions ", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        
+        
+        
+        ro = nodes[0].reservebalance(True, 0)
+        self.wait_for_height(nodes[0], 2, 2000)
+        ro = nodes[0].reservebalance(True, 10000000)
+        
+        
+        mnemonic2 = nodes[2].mnemonic("new");
+        ro = nodes[2].extkeyimportmaster(mnemonic2["master"])
+        sxAddrTo2_1 = nodes[2].getnewstealthaddress()
+        
+        txnHash3 = nodes[1].sendblindtoblind(sxAddrTo2_1, 0.2, '', '', False, 'node1 -> node2 b->b')
+        print("txnHash3 ", txnHash3)
+        
+        ro = nodes[1].getwalletinfo()
+        print("1 getwalletinfo ", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        
+        ro = nodes[1].listtransactions()
+        print("1 listtransactions ", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        
+        assert(self.wait_for_mempool(nodes[2], txnHash3))
+        
+        
+        ro = nodes[2].getwalletinfo()
+        print("2 getwalletinfo ", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        
+        ro = nodes[2].listtransactions()
+        print("2 listtransactions ", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        
+        
+        
+        sxAddrTo2_2 = nodes[2].getnewextaddress();
+        txnHash4 = nodes[1].sendblindtopart(sxAddrTo2_1, 0.5, '', '', False, 'node1 -> node2 b->p')
+        #txnHash4 = nodes[1].sendblindtopart(sxAddrTo2_2, 0.5, '', '', False, 'node1 -> node2 b->p')
+        print("txnHash4 ", txnHash4)
+        
+        
+        ro = nodes[1].getwalletinfo()
+        print("1 getwalletinfo ", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        
+        ro = nodes[1].listtransactions()
+        print("1 listtransactions ", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        
+        
+        assert(self.wait_for_mempool(nodes[2], txnHash4))
+        
+        ro = nodes[2].getwalletinfo()
+        print("2 getwalletinfo ", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        
+        ro = nodes[2].listtransactions()
+        print("2 listtransactions ", json.dumps(ro, indent=4, default=self.jsonDecimal))
+        
+        
+        ro = nodes[0].getwalletinfo()
+        print("0 getwalletinfo " + json.dumps(ro, indent=4, default=self.jsonDecimal))
+        # some of the balance will have staked
+        assert(isclose(ro['balance'] + ro['staked_balance'], 99996.60079274))
+        availableBalance = ro['balance'];
+        
+        
+        # check node0 can spend remaining coin
+        addrTo0_2 = nodes[0].getnewaddress()
+        txnHash2 = nodes[0].sendtoaddress(addrTo0_2, availableBalance, '', '', True, 'node0 spend remaining')
+        print("txnHash2 ", txnHash2)
+        txnHashes.append(txnHash2)
+        
+        ro = nodes[0].getwalletinfo()
+        print("0 getwalletinfo " + json.dumps(ro, indent=4, default=self.jsonDecimal))
+        assert(isclose(ro['total_balance'], 99996.60048194))
+        
+        
+        
+        #assert(False)
         #print(json.dumps(ro, indent=4))
         
 

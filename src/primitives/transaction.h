@@ -226,10 +226,17 @@ public:
         return nVersion;
     };
     
+    bool IsType(uint8_t nType) const
+    {
+        return nVersion == nType;
+    };
+    
     bool IsStandardOutput() const
     {
         return nVersion == OUTPUT_STANDARD;
     };
+    
+    
     
     const CTxOutStandard *GetStandardOutput() const
     {
@@ -243,6 +250,16 @@ public:
     void SetValue(CAmount value);
     
     CAmount GetValue() const;
+    
+    virtual bool PutValue(std::vector<uint8_t> &vchAmount) const
+    {
+        return false;
+    };
+    
+    virtual bool GetScriptPubKey(CScript &scriptPubKey_) const
+    {
+        return false;
+    };
     
     std::string ToString() const;
 };
@@ -263,6 +280,20 @@ public:
     
     CAmount nValue;
     CScript scriptPubKey;
+    
+    template<typename Stream>
+    void Serialize(Stream &s) const
+    {
+        s << nValue;
+        s << *(CScriptBase*)(&scriptPubKey);
+    };
+    
+    template<typename Stream>
+    void Unserialize(Stream &s)
+    {
+        s >> nValue;
+        s >> *(CScriptBase*)(&scriptPubKey);
+    };
     
     CAmount GetDustThreshold(const CFeeRate &minRelayTxFee) const
     {
@@ -306,19 +337,20 @@ public:
         return (nValue == 0 && scriptPubKey.empty());
     }
     
-    template<typename Stream>
-    void Serialize(Stream &s) const
+    bool PutValue(std::vector<uint8_t> &vchAmount) const
     {
-        s << nValue;
-        s << *(CScriptBase*)(&scriptPubKey);
+        vchAmount.resize(8);
+        memcpy(&vchAmount[0], &nValue, 8);
+        return true;
     };
     
-    template<typename Stream>
-    void Unserialize(Stream &s)
+    bool GetScriptPubKey(CScript &scriptPubKey_) const
     {
-        s >> nValue;
-        s >> *(CScriptBase*)(&scriptPubKey);
+        scriptPubKey_ = scriptPubKey;
+        return true;
     };
+    
+    
 };
 
 class CTxOutCT : public CTxOutBase
@@ -352,6 +384,20 @@ public:
         
         s >> vRangeproof;
     };
+    
+    bool PutValue(std::vector<uint8_t> &vchAmount) const
+    {
+        vchAmount.resize(33);
+        memcpy(&vchAmount[0], commitment.data, 33);
+        return true;
+    };
+    
+    bool GetScriptPubKey(CScript &scriptPubKey_) const
+    {
+        scriptPubKey_ = scriptPubKey;
+        return true;
+    };
+    
 };
 
 class CTxOutRingCT : public CTxOutBase
@@ -374,6 +420,14 @@ public:
     {
         
     };
+    
+    bool PutValue(std::vector<uint8_t> &vchAmount) const
+    {
+        vchAmount.resize(33);
+        memcpy(&vchAmount[0], commitment.data, 33);
+        return true;
+    };
+    
 };
 
 class CTxOutData : public CTxOutBase
@@ -729,6 +783,10 @@ public:
 
     // Return sum of txouts.
     CAmount GetValueOut() const;
+    
+    // Return sum of standard txouts and counts of output types
+    CAmount GetPlainValueOut(size_t &nStandard, size_t &nCT, size_t &nRingCT) const;
+    
     // GetValueIn() is a method on CCoinsViewCache, because
     // inputs must be known to compute value in.
 

@@ -71,10 +71,14 @@ static void VerifyScriptBench(benchmark::State& state)
     CMutableTransaction txSpend = BuildSpendingTransaction(scriptSig, txCredit);
     CScriptWitness& witness = txSpend.vin[0].scriptWitness;
     witness.stack.emplace_back();
-    key.Sign(SignatureHash(witScriptPubkey, txSpend, 0, SIGHASH_ALL, txCredit.vout[0].nValue, SIGVERSION_WITNESS_V0), witness.stack.back(), 0);
+    
+    std::vector<uint8_t> vchAmount(8);
+    memcpy(&vchAmount[0], &txCredit.vout[0].nValue, 8);
+    
+    key.Sign(SignatureHash(witScriptPubkey, txSpend, 0, SIGHASH_ALL, vchAmount, SIGVERSION_WITNESS_V0), witness.stack.back(), 0);
     witness.stack.back().push_back(static_cast<unsigned char>(SIGHASH_ALL));
     witness.stack.push_back(ToByteVector(pubkey));
-
+    
     // Benchmark.
     while (state.KeepRunning()) {
         ScriptError err;
@@ -83,7 +87,7 @@ static void VerifyScriptBench(benchmark::State& state)
             txCredit.vout[0].scriptPubKey,
             &txSpend.vin[0].scriptWitness,
             flags,
-            MutableTransactionSignatureChecker(&txSpend, 0, txCredit.vout[0].nValue),
+            MutableTransactionSignatureChecker(&txSpend, 0, vchAmount),
             &err);
         assert(err == SCRIPT_ERR_OK);
         assert(success);

@@ -25,54 +25,69 @@
 /*
 prefixes
     name
+    
     abe                 - address book entry
     acc
     acentry
     
-    ckey
-    keymeta
-    key
-    wkey
-    mkey
-    defaultkey
-    sxad                - loose stealth address
-    sxkm                - key meta data for keys received on stealth while wallet locked 
-    keymeta
-    lastfilteredheight
-    pool
-    version
-    cscript
-    orderposnext
-    minversion
-    tx
-    lao                 - locked anon output
-    oao                 - owned anon output
-    oal
     bestblock
     bestblockheader
-    minversion
+    
+    ckey
+    cscript
+    
+    defaultkey
+    
+    eacc                - extended account
+    ecpk                - extended account stealth child key pack
     ek32                - bip32 extended keypair
     eknm                - named extended key
-    eacc                - extended account
     epak                - extended account key pack
     espk                - extended account stealth key pack
-    ecpk                - extended account stealth child key pack
+    
     flag                - named integer flag
     
     ine                 - extkey index
-    
     ins                 - stealth index, key: uint32_t, value: raw stealth address bytes
-    ris                 - reverse stealth index key: hashed raw stealth address bytes, value: uint32_t
-    lns                 - stealth link, key: keyid, value uint32_t (stealth index)
     
+    keymeta
+    key
+    
+    lao                 - locked anon output
+    lastfilteredheight
+    lns                 - stealth link, key: keyid, value uint32_t (stealth index)
     lne                 - extkey link key: keyid, value uint32_t (stealth index)
     
+    mkey
+    minversion
+    
+    oal
+    oao                 - owned anon output
+    orderposnext
+    
+    pool
+    
+    ris                 - reverse stealth index key: hashed raw stealth address bytes, value: uint32_t
+    rtx                 - CTransactionRecord
+    
+    stx                 - CStoredTransaction
+    sxad                - loose stealth address
+    sxkm                - key meta data for keys received on stealth while wallet locked 
+    
+    tx
+    
+    version
     votes               - vector of vote tokens added by time added asc
     
+    wkey
     
     old:
 
 */
+
+class CTransactionRecord;
+class CStoredTransaction;
+
 
 class CStealthKeyMetadata
 {
@@ -172,48 +187,6 @@ public:
     };
 };
 
-
-class COutputRecord
-{
-public:
-    uint8_t nType;
-    int n;
-    CAmount nValue;
-    std::string sNarration;
-    
-    ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream &s, Operation ser_action)
-    {
-        READWRITE(nType);
-        READWRITE(n);
-        READWRITE(nValue);
-        READWRITE(sNarration);
-    }
-};
-
-class CTransactionRecord
-{
-public:
-    uint256 txnHash;
-    uint256 blockHash;
-    int64_t nBlockTime;
-    
-    std::vector<COutputRecord> vOwnedOutputs;
-    std::vector<COutputRecord> vOwnedInputs;
-    
-    ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream &s, Operation ser_action)
-    {
-        READWRITE(txnHash);
-        READWRITE(blockHash);
-        READWRITE(nBlockTime);
-        READWRITE(vOwnedOutputs);
-        READWRITE(vOwnedInputs);
-    }
-};
-
 class CVoteToken
 {
 public:
@@ -237,6 +210,24 @@ public:
     };
 };
 
+/*
+store in CTransactionRecord mapvalue
+class CEphemLink
+{
+public:
+    CEphemLink() {};
+    
+    std::vector<uint32_t> vPath; // index to m is stored in first entry
+    
+    ADD_SERIALIZE_METHODS;
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream &s, Operation ser_action)
+    {
+        READWRITE(vPath);
+    };
+    
+};
+*/
 
 
 /** Access to the wallet database */
@@ -246,6 +237,11 @@ public:
     CHDWalletDB(const std::string& strFilename, const char* pszMode = "r+", bool fFlushOnClose = true) : CWalletDB(strFilename, pszMode, fFlushOnClose)
     {
     }
+    
+    bool InTxn()
+    {
+        return pdb && activeTxn;
+    };
     
     Dbc *GetTxnCursor()
     {
@@ -420,12 +416,12 @@ public:
     
     
     
-    bool WriteStealthKeyMeta(const CKeyID& keyId, const CStealthKeyMetadata& sxKeyMeta);
-    bool EraseStealthKeyMeta(const CKeyID& keyId);
+    bool WriteStealthKeyMeta(const CKeyID &keyId, const CStealthKeyMetadata &sxKeyMeta);
+    bool EraseStealthKeyMeta(const CKeyID &keyId);
     
-    bool WriteStealthAddress(const CStealthAddress& sxAddr);
-    bool ReadStealthAddress(CStealthAddress& sxAddr);
-    bool EraseStealthAddress(const CStealthAddress& sxAddr);
+    bool WriteStealthAddress(const CStealthAddress &sxAddr);
+    bool ReadStealthAddress(CStealthAddress &sxAddr);
+    bool EraseStealthAddress(const CStealthAddress &sxAddr);
     
     
     
@@ -470,6 +466,15 @@ public:
     
     bool ReadVoteTokens(std::vector<CVoteToken> &vVoteTokens, uint32_t nFlags=DB_READ_UNCOMMITTED);
     bool WriteVoteTokens(const std::vector<CVoteToken> &vVoteTokens);
+    
+    bool WriteTxRecord(const uint256 &hash, const CTransactionRecord &rtx);
+    bool EraseTxRecord(const uint256 &hash);
+    
+    
+    bool ReadStoredTx(const uint256 &hash, CStoredTransaction &stx, uint32_t nFlags=DB_READ_UNCOMMITTED);
+    bool WriteStoredTx(const uint256 &hash, const CStoredTransaction &stx);
+    bool EraseStoredTx(const uint256 &hash);
+
 
 };
 

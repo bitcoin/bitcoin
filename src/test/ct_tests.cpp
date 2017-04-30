@@ -139,8 +139,7 @@ BOOST_AUTO_TEST_CASE(ct_test)
         
         int rexp;
         int rmantissa;
-        uint64_t min_value;
-        uint64_t max_value;
+        uint64_t min_value, max_value;
         
         BOOST_CHECK(secp256k1_rangeproof_info(ctx,
             &rexp, &rmantissa,
@@ -151,7 +150,6 @@ BOOST_AUTO_TEST_CASE(ct_test)
         BOOST_MESSAGE("rmantissa " << rmantissa);
         BOOST_MESSAGE("min_value " << min_value);
         BOOST_MESSAGE("max_value " << max_value);
-        
         
         min_value = 0;
         max_value = 0;

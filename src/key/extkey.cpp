@@ -1037,6 +1037,12 @@ uint32_t &SetHardenedBit(uint32_t &n)
     return n;
 };
 
+uint32_t &ClearHardenedBit(uint32_t &n)
+{
+    n &= ~(1 << 31);
+    return n;
+};
+
 inline void AppendPathLink(std::string &s, uint32_t n, char cH)
 {
     s += "/";
@@ -1094,4 +1100,43 @@ bool IsBIP32(const char *base58)
     
     return false;
 };
+
+int AppendChainPath(const CStoredExtKey *pc, std::vector<uint32_t> &vPath)
+{
+    mapEKValue_t::const_iterator mvi = pc->mapValue.find(EKVT_PATH);
+    if (mvi == pc->mapValue.end())
+        return 1;
+    
+    assert(mvi->second.size() % 4 == 0);
+    
+    // Path on pc is relative to master key, get path relative to account by starting at 1
+    for (size_t i = 4; i < mvi->second.size(); i+=4)
+    {
+        uint32_t tmp;
+        memcpy(&tmp, &mvi->second[i], 4);
+        vPath.push_back(tmp);
+    };
+    
+    return 0;
+};
+
+int AppendChainPath(const CStoredExtKey *pc, std::vector<uint8_t> &vPath)
+{
+    mapEKValue_t::const_iterator mvi = pc->mapValue.find(EKVT_PATH);
+    if (mvi == pc->mapValue.end())
+        return 1;
+    
+    assert(mvi->second.size() % 4 == 0);
+    
+    // Path on pc is relative to master key, get path relative to account by starting at 1
+    for (size_t i = 4; i < mvi->second.size(); i+=4)
+    {
+        uint32_t tmp;
+        memcpy(&tmp, &mvi->second[i], 4);
+        PushUInt32(vPath, tmp);
+    };
+    
+    return 0;
+};
+
 
