@@ -816,7 +816,9 @@ namespace { // Variables internal to initialization process only
 
 ServiceFlags nRelevantServices = NODE_NETWORK;
 int nMaxConnections;
+int nPOWConnectionSlots;
 int nUserMaxConnections;
+int nUserPOWConnectionSlots;
 int nFD;
 ServiceFlags nLocalServices = NODE_NETWORK;
 
@@ -904,6 +906,8 @@ bool AppInitParameterInteraction()
                 (gArgs.IsArgSet("-whitebind") ? gArgs.GetArgs("-whitebind").size() : 0), size_t(1));
     nUserMaxConnections = GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
     nMaxConnections = std::max(nUserMaxConnections, 0);
+    nUserPOWConnectionSlots = GetArg("-powconnectionslots", DEFAULT_POW_CONNECTION_SLOTS);
+    nPOWConnectionSlots = std::max(nUserPOWConnectionSlots, 0);
 
     // Trim requested connection counts, to fit into system limitations
     nMaxConnections = std::max(std::min(nMaxConnections, (int)(FD_SETSIZE - nBind - MIN_CORE_FILEDESCRIPTORS - MAX_ADDNODE_CONNECTIONS)), 0);
@@ -1649,6 +1653,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     connOptions.nLocalServices = nLocalServices;
     connOptions.nRelevantServices = nRelevantServices;
     connOptions.nMaxConnections = nMaxConnections;
+    connOptions.nPOWConnectionSlots = nPOWConnectionSlots;
     connOptions.nMaxOutbound = std::min(MAX_OUTBOUND_CONNECTIONS, connOptions.nMaxConnections);
     connOptions.nMaxAddnode = MAX_ADDNODE_CONNECTIONS;
     connOptions.nMaxFeeler = 1;

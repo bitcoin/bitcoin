@@ -21,6 +21,7 @@
 #include "scheduler.h"
 #include "ui_interface.h"
 #include "utilstrencodings.h"
+#include "ados.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -1100,9 +1101,13 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         return;
     }
 
-    if (nInbound >= nMaxInbound)
+    bool fRequirePOW = false;
+    if (nInbound >= nMaxInbound - nPOWConnectionSlots)
     {
-        if (!AttemptToEvictConnection()) {
+        // We're out of free slots; any POW slots around? If not, try to evict
+        // somebody; if that fails, we give up
+        fRequirePOW = true;
+        if (nInbound >= nMaxInbound && !AttemptToEvictConnection()) {
             // No connection to evict, disconnect the new connection
             LogPrint(BCLog::NET, "failed to find an eviction candidate - connection dropped (full)\n");
             CloseSocket(hSocket);
@@ -1116,6 +1121,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
 
     CNode* pnode = new CNode(id, nLocalServices, GetBestHeight(), hSocket, addr, CalculateKeyedNetGroup(addr), nonce, addr_bind, "", true);
     pnode->AddRef();
+    pnode->fRequirePOW = fRequirePOW;
     pnode->fWhitelisted = whitelisted;
     GetNodeSignals().InitializeNode(pnode, *this);
 
@@ -1944,7 +1950,7 @@ void CConnman::ThreadOpenAddedConnections()
 }
 
 // if successful, this moves the passed grant to the constructed node
-bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot, bool fFeeler, bool fAddnode)
+bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot, bool fFeeler, bool fAddnode, const ados::offer_ref offer)
 {
     //
     // Initiate outbound network connection
@@ -1967,6 +1973,9 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
 
     if (!pnode)
         return false;
+    if (offer) {
+        pnode->offer = offer;
+    }
     if (grantOutbound)
         grantOutbound->MoveTo(pnode->grantOutbound);
     if (fOneShot)
@@ -2218,6 +2227,7 @@ CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In) : nSeed0(nSeed0In), nSe
     semOutbound = NULL;
     semAddnode = NULL;
     nMaxConnections = 0;
+    nPOWConnectionSlots = 0;
     nMaxOutbound = 0;
     nMaxAddnode = 0;
     nBestHeight = 0;
@@ -2240,6 +2250,7 @@ bool CConnman::Start(CScheduler& scheduler, std::string& strNodeError, Options c
     nRelevantServices = connOptions.nRelevantServices;
     nLocalServices = connOptions.nLocalServices;
     nMaxConnections = connOptions.nMaxConnections;
+    nPOWConnectionSlots = connOptions.nPOWConnectionSlots;
     nMaxOutbound = std::min((connOptions.nMaxOutbound), nMaxConnections);
     nMaxAddnode = connOptions.nMaxAddnode;
     nMaxFeeler = connOptions.nMaxFeeler;
@@ -2647,6 +2658,12 @@ ServiceFlags CConnman::GetLocalServices() const
     return nLocalServices;
 }
 
+double CConnman::GetPressure()
+{
+    int nMaxInbound = nMaxConnections - (nMaxOutbound + nMaxFeeler + nPOWConnectionSlots);
+    return ((double)GetNodeCount(CONNECTIONS_ALL) - nMaxInbound) / nPOWConnectionSlots;
+}
+
 void CConnman::SetBestHeight(int height)
 {
     nBestHeight.store(height, std::memory_order_release);
@@ -2692,6 +2709,9 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     fClient = false; // set by version message
     fFeeler = false;
     fSuccessfullyConnected = false;
+    fRequirePOW = false;
+    offer = nullptr;
+    fDidPOW = false;
     fDisconnect = false;
     nRefCount = 0;
     nSendSize = 0;
