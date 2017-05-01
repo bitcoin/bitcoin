@@ -379,7 +379,7 @@ void entryToJSON(UniValue &info, const CTxMemPoolEntry &e)
     info.push_back(Pair("depends", depends));
 }
 
-UniValue mempoolToJSON(bool fVerbose)
+UniValue mempoolToJSON(bool fVerbose, uint256* txid)
 {
     if (fVerbose)
     {
@@ -388,9 +388,11 @@ UniValue mempoolToJSON(bool fVerbose)
         BOOST_FOREACH(const CTxMemPoolEntry& e, mempool.mapTx)
         {
             const uint256& hash = e.GetTx().GetHash();
-            UniValue info(UniValue::VOBJ);
-            entryToJSON(info, e);
-            o.push_back(Pair(hash.ToString(), info));
+            if (!txid || *txid == hash) {
+                UniValue info(UniValue::VOBJ);
+                entryToJSON(info, e);
+                o.push_back(Pair(hash.ToString(), info));
+            }
         }
         return o;
     }
@@ -400,8 +402,12 @@ UniValue mempoolToJSON(bool fVerbose)
         mempool.queryHashes(vtxid);
 
         UniValue a(UniValue::VARR);
-        BOOST_FOREACH(const uint256& hash, vtxid)
-            a.push_back(hash.ToString());
+        BOOST_FOREACH(const uint256& hash, vtxid) {
+            if (!txid || *txid == hash) {
+                a.push_back(hash.ToString());
+                if (txid) return a;
+            }
+        }
 
         return a;
     }
@@ -409,12 +415,14 @@ UniValue mempoolToJSON(bool fVerbose)
 
 UniValue getrawmempool(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() > 1)
+    if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
-            "getrawmempool ( verbose )\n"
+            "getrawmempool ( verbose txid )\n"
             "\nReturns all transaction ids in memory pool as a json array of string transaction ids.\n"
+            "If txid is set, only the matching transaction will be returned, if found.\n"
             "\nArguments:\n"
             "1. verbose (boolean, optional, default=false) True for a json object, false for array of transaction ids\n"
+            "2. txid    (string, optional) Transaction to display\n"
             "\nResult: (for verbose = false):\n"
             "[                     (json array of string)\n"
             "  \"transactionid\"     (string) The transaction id\n"
@@ -429,13 +437,17 @@ UniValue getrawmempool(const JSONRPCRequest& request)
             "\nExamples:\n"
             + HelpExampleCli("getrawmempool", "true")
             + HelpExampleRpc("getrawmempool", "true")
+            + HelpExampleRpc("getrawmempool", "true 7dde270e7071667c5d53b073f1d7854319696ea10202e0fb8874c2361dcdd6da")
         );
 
-    bool fVerbose = false;
-    if (request.params.size() > 0)
-        fVerbose = request.params[0].get_bool();
+    bool fVerbose = request.params.size() > 0 && !request.params[0].isNull() && request.params[0].get_bool();
+    bool fTxid = request.params.size() > 1 && !request.params[1].isNull();
+    uint256 txid;
+    if (request.params.size() > 1 && !request.params[1].isNull()) {
+        txid = ParseHashV(request.params[1], "txid parameter");
+    }
 
-    return mempoolToJSON(fVerbose);
+    return mempoolToJSON(fVerbose, fTxid ? &txid : nullptr);
 }
 
 UniValue getmempoolancestors(const JSONRPCRequest& request)
@@ -1431,7 +1443,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getmempooldescendants",  &getmempooldescendants,  true,  {"txid","verbose"} },
     { "blockchain",         "getmempoolentry",        &getmempoolentry,        true,  {"txid"} },
     { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         true,  {} },
-    { "blockchain",         "getrawmempool",          &getrawmempool,          true,  {"verbose"} },
+    { "blockchain",         "getrawmempool",          &getrawmempool,          true,  {"verbose","txid"} },
     { "blockchain",         "gettxout",               &gettxout,               true,  {"txid","n","include_mempool"} },
     { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        true,  {} },
     { "blockchain",         "pruneblockchain",        &pruneblockchain,        true,  {"height"} },
