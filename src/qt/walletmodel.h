@@ -40,7 +40,7 @@ class SendCoinsRecipient
 public:
     explicit SendCoinsRecipient() : amount(0), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
     explicit SendCoinsRecipient(const QString &addr, const QString &label, const CAmount& amount, const QString &message, const QString& freezeLockTime,  const QString &labelPublic):
-        address(addr), label(label), amount(amount), message(message), freezeLockTime(freezeLockTime), labelPublic(labelPublic), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
+        address(addr), label(label), labelPublic(labelPublic), amount(amount), message(message), freezeLockTime(freezeLockTime), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
 
     // If from an unauthenticated payment request, this is used for storing
     // the addresses, e.g. address-A<br />address-B<br />address-C.
