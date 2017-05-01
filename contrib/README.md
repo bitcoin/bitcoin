@@ -48,6 +48,10 @@ Test and Verify Tools
 ### [TestGen](/contrib/testgen) ###
 Utilities to generate test vectors for the data-driven Bitcoin tests.
 
+### [Test Tools](/contrib/testtools) ###
+Additional test tools - currently only the gtest-parallel-bitcoin
+script which allows parallel execution of the C++ unit tests
+
 ### [Test Patches](/contrib/test-patches) ###
 These patches are applied when the automated pull-tester
 tests each pull and when master is tested using jenkins.
