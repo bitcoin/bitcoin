@@ -32,6 +32,39 @@ class NetTest(BitcoinTestFramework):
         self.sync_all()
 
     def run_test(self):
+        self._test_connection_count()
+        self._test_getnettotals()
+        self._test_getnetworkinginfo()
+        self._test_getaddednodeinfo()
+
+    def _test_connection_count(self):
+        # connect_nodes_bi connects each node to the other
+        assert_equal(self.nodes[0].getconnectioncount(), 2)
+
+    def _test_getnettotals(self):
+        # check that getnettotals totalbytesrecv and totalbytessent
+        # are consistent with getpeerinfo
+        peer_info = self.nodes[0].getpeerinfo()
+        assert_equal(len(peer_info), 2)
+        net_totals = self.nodes[0].getnettotals()
+        assert_equal(sum([peer['bytesrecv'] for peer in peer_info]),
+                     net_totals['totalbytesrecv'])
+        assert_equal(sum([peer['bytessent'] for peer in peer_info]),
+                     net_totals['totalbytessent'])
+        # test getnettotals and getpeerinfo by doing a ping
+        # the bytes sent/received should change
+        # note ping and pong are 32 bytes each
+        self.nodes[0].ping()
+        time.sleep(0.1)
+        peer_info_after_ping = self.nodes[0].getpeerinfo()
+        net_totals_after_ping = self.nodes[0].getnettotals()
+        for before, after in zip(peer_info, peer_info_after_ping):
+            assert_equal(before['bytesrecv_per_msg']['pong'] + 32, after['bytesrecv_per_msg']['pong'])
+            assert_equal(before['bytessent_per_msg']['ping'] + 32, after['bytessent_per_msg']['ping'])
+        assert_equal(net_totals['totalbytesrecv'] + 32*2, net_totals_after_ping['totalbytesrecv'])
+        assert_equal(net_totals['totalbytessent'] + 32*2, net_totals_after_ping['totalbytessent'])
+
+    def _test_getnetworkinginfo(self):
         assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], True)
         assert_equal(self.nodes[0].getnetworkinfo()['connections'], 2)
 
@@ -49,7 +82,7 @@ class NetTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], True)
         assert_equal(self.nodes[0].getnetworkinfo()['connections'], 2)
 
-        # test getaddednodeinfo
+    def _test_getaddednodeinfo(self):
         assert_equal(self.nodes[0].getaddednodeinfo(), [])
         # add a node (node2) to node0
         ip_port = "127.0.0.1:{}".format(p2p_port(2))
