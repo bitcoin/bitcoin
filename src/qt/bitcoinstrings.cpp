@@ -310,6 +310,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Location of the auth cookie (default: data di
 QT_TRANSLATE_NOOP("bitcoin-core", "Maintain at most <n> connections to peers (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Make the wallet broadcast transactions"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Maximum per-connection receive buffer, <n>*1000 bytes (default: %u)"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Reserve <n> slots for proof of work challenged peers (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Maximum per-connection send buffer, <n>*1000 bytes (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Need to specify a port with -whitebind: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Node relay options:"),
