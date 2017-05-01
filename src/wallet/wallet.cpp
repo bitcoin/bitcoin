@@ -1444,7 +1444,7 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const
             const CTxOut &txout = vout[i];
             nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
             if (!MoneyRange(nCredit))
-                throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
+                throw std::runtime_error("CWalletTx::GetAvailableCredit(false) : value out of range");
         }
     }
 
@@ -1487,7 +1487,7 @@ CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool& fUseCache) const
             const CTxOut &txout = vout[i];
             nCredit += pwallet->GetCredit(txout, ISMINE_WATCH_ONLY);
             if (!MoneyRange(nCredit))
-                throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
+                throw std::runtime_error("CWalletTx::GetAvailableCredit(false) : value out of range");
         }
     }
 
@@ -1621,7 +1621,7 @@ CAmount CWallet::GetBalance() const
         {
             const CWalletTx* pcoin = &(*it).second;
             if (pcoin->IsTrusted())
-                nTotal += pcoin->GetAvailableCredit();
+                nTotal += pcoin->GetAvailableCredit(false);
         }
     }
 
@@ -1637,7 +1637,7 @@ CAmount CWallet::GetUnconfirmedBalance() const
         {
             const CWalletTx* pcoin = &(*it).second;
             if (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0 && pcoin->InMempool())
-                nTotal += pcoin->GetAvailableCredit();
+                nTotal += pcoin->GetAvailableCredit(false);
         }
     }
     return nTotal;
@@ -1651,7 +1651,7 @@ CAmount CWallet::GetImmatureBalance() const
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
-            nTotal += pcoin->GetImmatureCredit();
+            nTotal += pcoin->GetImmatureCredit(false);
         }
     }
     return nTotal;
@@ -1666,7 +1666,7 @@ CAmount CWallet::GetWatchOnlyBalance() const
         {
             const CWalletTx* pcoin = &(*it).second;
             if (pcoin->IsTrusted())
-                nTotal += pcoin->GetAvailableWatchOnlyCredit();
+                nTotal += pcoin->GetAvailableWatchOnlyCredit(false);
         }
     }
 
@@ -1682,7 +1682,7 @@ CAmount CWallet::GetUnconfirmedWatchOnlyBalance() const
         {
             const CWalletTx* pcoin = &(*it).second;
             if (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0 && pcoin->InMempool())
-                nTotal += pcoin->GetAvailableWatchOnlyCredit();
+                nTotal += pcoin->GetAvailableWatchOnlyCredit(false);
         }
     }
     return nTotal;
@@ -1696,7 +1696,7 @@ CAmount CWallet::GetImmatureWatchOnlyBalance() const
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
-            nTotal += pcoin->GetImmatureWatchOnlyCredit();
+            nTotal += pcoin->GetImmatureWatchOnlyCredit(false);
         }
     }
     return nTotal;

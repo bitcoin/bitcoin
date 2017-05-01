@@ -152,7 +152,7 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, CBlock
             {
                 CScriptNum nFreezeLockTime(vSolutions[0], true, 5);
 
-                LogPrintf("Found Freeze Have Key. nFreezeLockTime=%d \n", nFreezeLockTime.getint64());
+                LogPrintf("Found Freeze Have Key. nFreezeLockTime=%d. BestBlockHeight=%d \n", nFreezeLockTime.getint64(), bestBlock->nHeight);
                 if (nFreezeLockTime < LOCKTIME_THRESHOLD)
                 {
                     // locktime is a block
