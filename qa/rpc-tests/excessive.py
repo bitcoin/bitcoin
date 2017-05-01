@@ -587,10 +587,15 @@ class ExcessiveBlockTest (BitcoinTestFramework):
 if __name__ == '__main__':
     
     
-    if "--extended" in sys.argv:
+    if "--extensive" in sys.argv:
       longTest=True
-      sys.argv.remove("--extended")
-      logging.info("Running extended tests")
+      # we must remove duplicate 'extensive' arg here
+      while True:
+          try:
+              sys.argv.remove('--extensive')
+          except:
+              break
+      logging.info("Running extensive tests")
     else:
       longTest=False
 
