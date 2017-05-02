@@ -504,7 +504,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			prevCoins = inputs.AccessCoins(prevOutput->hash);
 			if(prevCoins == NULL)
 				continue;
-			if(!prevCoins->IsAvailable(prevOutputs->n) || !IsSyscoinScript(prevCoins->vout[prevOutput->n].scriptPubKey, pop, vvch))
+			if(!prevCoins->IsAvailable(prevOutput->n) || !IsSyscoinScript(prevCoins->vout[prevOutput->n].scriptPubKey, pop, vvch))
 				continue;
 			if(foundAlias)
 				break;
