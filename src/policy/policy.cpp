@@ -42,8 +42,9 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool w
     {
         unsigned char m = vSolutions.front()[0];
         unsigned char n = vSolutions.back()[0];
-        // Support up to x-of-3 multisig txns as standard
-        if (n < 1 || n > 3)
+        // Support up to m-of-MAX_STANDARD_MULTISIG_KEYS multisig txns as
+        // standard
+        if (n < 1 || n > MAX_STANDARD_MULTISIG_KEYS)
             return false;
         if (m < 1 || m > n)
             return false;
