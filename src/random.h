@@ -94,6 +94,9 @@ public:
         }
     }
 
+    /** Generate random bytes. */
+    void randbytes(unsigned char* out, size_t len) { rng.Output(out, len); }
+
     /** Generate a random 32-bit integer. */
     uint32_t rand32() { return randbits(32); }
 
