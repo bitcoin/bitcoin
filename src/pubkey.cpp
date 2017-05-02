@@ -1,4 +1,5 @@
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -46,7 +47,7 @@ static int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1
     lenbyte = input[pos++];
     if (lenbyte & 0x80) {
         lenbyte -= 0x80;
-        if (pos + lenbyte > inputlen) {
+        if (lenbyte > inputlen - pos) {
             return 0;
         }
         pos += lenbyte;
@@ -65,14 +66,15 @@ static int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1
     lenbyte = input[pos++];
     if (lenbyte & 0x80) {
         lenbyte -= 0x80;
-        if (pos + lenbyte > inputlen) {
+        if (lenbyte > inputlen - pos) {
             return 0;
         }
         while (lenbyte > 0 && input[pos] == 0) {
             pos++;
             lenbyte--;
         }
-        if (lenbyte >= sizeof(size_t)) {
+        static_assert(sizeof(size_t) >= 4, "size_t too small");
+        if (lenbyte >= 4) {
             return 0;
         }
         rlen = 0;
@@ -103,14 +105,15 @@ static int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1
     lenbyte = input[pos++];
     if (lenbyte & 0x80) {
         lenbyte -= 0x80;
-        if (pos + lenbyte > inputlen) {
+        if (lenbyte > inputlen - pos) {
             return 0;
         }
         while (lenbyte > 0 && input[pos] == 0) {
             pos++;
             lenbyte--;
         }
-        if (lenbyte >= sizeof(size_t)) {
+        static_assert(sizeof(size_t) >= 4, "size_t too small");
+        if (lenbyte >= 4) {
             return 0;
         }
         slen = 0;
@@ -225,7 +228,7 @@ bool CPubKey::Decompress() {
 bool CPubKey::Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const {
     assert(IsValid());
     assert((nChild >> 31) == 0);
-    assert(begin() + 33 == end());
+    assert(size() == 33);
     unsigned char out[64];
     BIP32Hash(cc, nChild, *begin(), begin()+1, out);
     memcpy(ccChild.begin(), out+32, 32);
