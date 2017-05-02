@@ -1,4 +1,5 @@
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,41 +19,46 @@ static secp256k1_context* secp256k1_context_sign = NULL;
 /** These functions are taken from the libsecp256k1 distribution and are very ugly. */
 static int ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *out32, const unsigned char *privkey, size_t privkeylen) {
     const unsigned char *end = privkey + privkeylen;
-    int lenb = 0;
-    int len = 0;
+    size_t lenb = 0;
+    size_t len = 0;
     memset(out32, 0, 32);
     /* sequence header */
-    if (end < privkey+1 || *privkey != 0x30) {
+    if (end - privkey < 1 || *privkey != 0x30u) {
         return 0;
     }
     privkey++;
     /* sequence length constructor */
-    if (end < privkey+1 || !(*privkey & 0x80)) {
+    if (end - privkey < 1 || !(*privkey & 0x80u)) {
         return 0;
     }
-    lenb = *privkey & ~0x80; privkey++;
+    lenb = *privkey & ~0x80u; privkey++;
     if (lenb < 1 || lenb > 2) {
         return 0;
     }
-    if (end < privkey+lenb) {
+    if (end - privkey < lenb) {
         return 0;
     }
     /* sequence length */
-    len = privkey[lenb-1] | (lenb > 1 ? privkey[lenb-2] << 8 : 0);
+    len = privkey[lenb-1] | (lenb > 1 ? privkey[lenb-2] << 8 : 0u);
     privkey += lenb;
-    if (end < privkey+len) {
+    if (end - privkey < len) {
         return 0;
     }
     /* sequence element 0: version number (=1) */
-    if (end < privkey+3 || privkey[0] != 0x02 || privkey[1] != 0x01 || privkey[2] != 0x01) {
+    if (end - privkey < 3 || privkey[0] != 0x02u || privkey[1] != 0x01u || privkey[2] != 0x01u) {
         return 0;
     }
     privkey += 3;
     /* sequence element 1: octet string, up to 32 bytes */
-    if (end < privkey+2 || privkey[0] != 0x04 || privkey[1] > 0x20 || end < privkey+2+privkey[1]) {
+    if (end - privkey < 2 || privkey[0] != 0x04u) {
         return 0;
     }
-    memcpy(out32 + 32 - privkey[1], privkey + 2, privkey[1]);
+    size_t oslen = privkey[1];
+    privkey += 2;
+    if (oslen > 32 || end - privkey < oslen) {
+        return 0;
+    }
+    memcpy(out32 + (32 - oslen), privkey, oslen);
     if (!secp256k1_ec_seckey_verify(ctx, out32)) {
         memset(out32, 0, 32);
         return 0;
@@ -219,10 +225,10 @@ bool CKey::Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const
     std::vector<unsigned char, secure_allocator<unsigned char>> vout(64);
     if ((nChild >> 31) == 0) {
         CPubKey pubkey = GetPubKey();
-        assert(pubkey.begin() + 33 == pubkey.end());
+        assert(pubkey.size() == 33);
         BIP32Hash(cc, nChild, *pubkey.begin(), pubkey.begin()+1, vout.data());
     } else {
-        assert(begin() + 32 == end());
+        assert(size() == 32);
         BIP32Hash(cc, nChild, 0, begin(), vout.data());
     }
     memcpy(ccChild.begin(), vout.data()+32, 32);
