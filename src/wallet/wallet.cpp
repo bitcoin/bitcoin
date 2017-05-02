@@ -3703,6 +3703,9 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
             CPubKey masterPubKey = walletInstance->GenerateNewHDMasterKey();
             if (!walletInstance->SetHDMasterKey(masterPubKey))
                 throw std::runtime_error(std::string(__func__) + ": Storing master key failed");
+
+            // ensure this wallet.dat can only be opened by clients supporting HD
+            walletInstance->SetMinVersion(FEATURE_HD);
         }
         CPubKey newDefaultKey;
         if (walletInstance->GetKeyFromPool(newDefaultKey, false)) {
