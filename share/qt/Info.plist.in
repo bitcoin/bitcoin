@@ -38,7 +38,7 @@
   <true/>
 
   <key>CFBundleIdentifier</key>
-  <string>org.bitcoinfoundation.Bitcoin-Qt</string>
+  <string>org.bitcoinfoundation.Bitcoin-Core</string>
 
   <key>CFBundleURLTypes</key>
   <array>
