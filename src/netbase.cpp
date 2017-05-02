@@ -672,3 +672,15 @@ void InterruptSocks5(bool interrupt)
 {
     interruptSocks5Recv = interrupt;
 }
+
+void CSocketCloser::release()
+{
+    enabled = false;
+}
+
+CSocketCloser::~CSocketCloser()
+{
+    if (enabled) {
+        CloseSocket(hSocket);
+    }
+}

@@ -25,6 +25,17 @@ static const int DEFAULT_CONNECT_TIMEOUT = 5000;
 //! -dns default
 static const int DEFAULT_NAME_LOOKUP = true;
 
+class CSocketCloser
+{
+public:
+    CSocketCloser(SOCKET& hSocketIn) : hSocket(hSocketIn){}
+    ~CSocketCloser();
+    void release();
+private:
+    SOCKET& hSocket;
+    bool enabled = true;
+};
+
 class proxyType
 {
 public:

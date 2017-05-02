@@ -427,8 +427,9 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         return false;
     }
 
-    // Create socket
+    // Create socket and make sure that it is closed in the event of an error
     SOCKET hSocket = INVALID_SOCKET;
+    CSocketCloser sockCloser(hSocket);
     if (proxy.IsValid()) {
         if (!CreateSocket(proxy.proxy, hSocket)) {
             return false;
@@ -440,7 +441,6 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     }
     if (!IsSelectableSocket(hSocket)) {
         LogPrintf("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)\n");
-        CloseSocket(hSocket);
         return false;
     }
 
@@ -472,6 +472,9 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     if (!connected) {
         return false;
     }
+
+    // Connection successful. Don't close the socket.
+    sockCloser.release();
 
     // Add node
     NodeId id = GetNewNodeId();
