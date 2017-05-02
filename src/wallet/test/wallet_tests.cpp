@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "policy/policy.h"
 #include "wallet/wallet.h"
 
 #include <set>
@@ -268,6 +269,32 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
         BOOST_CHECK(testWallet.SelectCoinsMinConf(MIN_CHANGE * 9990 / 100, 1, 1, 0, vCoins, setCoinsRet, nValueRet));
         BOOST_CHECK_EQUAL(nValueRet, 101 * MIN_CHANGE);
         BOOST_CHECK_EQUAL(setCoinsRet.size(), 2U);
+
+        // test large transactions
+        const uint16_t nMaxInputsPerTx = MAX_STANDARD_TX_SIZE / 148; // Assume ~148 bytes per input
+
+        // https://github.com/bitcoin/bitcoin/issues/5782#issuecomment-73819058
+        // large tx 1:
+        empty_wallet();
+        add_coin(50 * COIN);
+        for (uint16_t j1 = 0; j1 < 1000; j1++)
+            add_coin(5 * CENT);
+        BOOST_CHECK(wallet.SelectCoinsMinConf(49.5 * COIN, 1, 1, vCoins, setCoinsRet, nValueRet));
+        BOOST_CHECK_GT(nMaxInputsPerTx, setCoinsRet.size());
+
+        // large tx 2:
+        empty_wallet();
+        for (uint16_t j2 = 0; j2 < 500; j2++)
+            add_coin(0.1 * COIN);
+        for (uint16_t j2 = 0; j2 < 1000; j2++)
+            add_coin(5 * CENT);
+        BOOST_CHECK(wallet.SelectCoinsMinConf(49.5 * COIN, 1, 1, vCoins, setCoinsRet, nValueRet));
+        BOOST_CHECK_GT(nMaxInputsPerTx, setCoinsRet.size());
+
+        // large tx 3:
+        add_coin(50 * COIN);
+        BOOST_CHECK(wallet.SelectCoinsMinConf(49.5 * COIN, 1, 1, vCoins, setCoinsRet, nValueRet));
+        BOOST_CHECK_GT(nMaxInputsPerTx, setCoinsRet.size());
 
         // test with many inputs
         for (CAmount amt=1500; amt < COIN; amt*=10) {
