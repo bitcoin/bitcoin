@@ -893,7 +893,7 @@ Status VersionSet::LogAndApply(VersionEdit* edit, port::Mutex* mu) {
   return s;
 }
 
-Status VersionSet::Recover() {
+Status VersionSet::Recover(bool *save_manifest) {
   struct LogReporter : public log::Reader::Reporter {
     Status* status;
     virtual void Corruption(size_t bytes, const Status& s) {
@@ -1003,9 +1003,47 @@ Status VersionSet::Recover() {
     last_sequence_ = last_sequence;
     log_number_ = log_number;
     prev_log_number_ = prev_log_number;
+
+    // See if we can reuse the existing MANIFEST file.
+    if (ReuseManifest(dscname, current)) {
+      // No need to save new manifest
+    } else {
+      *save_manifest = true;
+    }
   }
 
   return s;
+}
+
+bool VersionSet::ReuseManifest(const std::string& dscname,
+                               const std::string& dscbase) {
+  if (!options_->reuse_logs) {
+    return false;
+  }
+  FileType manifest_type;
+  uint64_t manifest_number;
+  uint64_t manifest_size;
+  if (!ParseFileName(dscbase, &manifest_number, &manifest_type) ||
+      manifest_type != kDescriptorFile ||
+      !env_->GetFileSize(dscname, &manifest_size).ok() ||
+      // Make new compacted MANIFEST if old one is too big
+      manifest_size >= kTargetFileSize) {
+    return false;
+  }
+
+  assert(descriptor_file_ == NULL);
+  assert(descriptor_log_ == NULL);
+  Status r = env_->NewAppendableFile(dscname, &descriptor_file_);
+  if (!r.ok()) {
+    Log(options_->info_log, "Reuse MANIFEST: %s\n", r.ToString().c_str());
+    assert(descriptor_file_ == NULL);
+    return false;
+  }
+
+  Log(options_->info_log, "Reusing MANIFEST %s\n", dscname.c_str());
+  descriptor_log_ = new log::Writer(descriptor_file_, manifest_size);
+  manifest_file_number_ = manifest_number;
+  return true;
 }
 
 void VersionSet::MarkFileNumberUsed(uint64_t number) {
