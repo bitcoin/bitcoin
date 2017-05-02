@@ -28,6 +28,7 @@ static void microTask(CScheduler& s, boost::mutex& mutex, int& counter, int delt
     }
 }
 
+#if 0 /* Disabled for now because there is a race condition issue in this test - see #6540 */
 static void MicroSleep(uint64_t n)
 {
 #if defined(HAVE_WORKING_BOOST_SLEEP_FOR)
