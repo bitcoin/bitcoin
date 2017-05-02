@@ -573,9 +573,9 @@ struct CImportingNow
 
 
 // If we're using -prune with -reindex, then delete block files that will be ignored by the
-// reindex.  Since reindexing works by starting at block file 0 and looping until a blockfile
-// is missing, do the same here to delete any later block files after a gap.  Also delete all
-// rev files since they'll be rewritten by the reindex anyway.  This ensures that vinfoBlockFile
+// reindex. Since reindexing works by starting at block file 0 and looping until a blockfile
+// is missing, do the same here to delete any later block files after a gap. Also delete all
+// rev files since they'll be rewritten by the reindex anyway. This ensures that vinfoBlockFile
 // is in sync with what's actually on disk by the time we start downloading, so that pruning
 // works correctly.
 void CleanupBlockRevFiles()
@@ -601,7 +601,7 @@ void CleanupBlockRevFiles()
 
     // Remove all block files that aren't part of a contiguous set starting at
     // zero by walking the ordered map (keys are block file indices) by
-    // keeping a separate counter.  Once we hit a gap (or if 0 doesn't exist)
+    // keeping a separate counter. Once we hit a gap (or if 0 doesn't exist)
     // start removing block files.
     int nContigCounter = 0;
     BOOST_FOREACH(const PAIRTYPE(std::string, fs::path)& item, mapBlockFiles) {
@@ -1005,7 +1005,7 @@ bool AppInitParameterInteraction()
         fPruneMode = true;
     } else if (nPruneTarget) {
         if (nPruneTarget < MIN_DISK_SPACE_FOR_BLOCK_FILES) {
-            return InitError(strprintf(_("Prune configured below the minimum of %d MiB.  Please use a higher number."), MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024));
+            return InitError(strprintf(_("Prune configured below the minimum of %d MiB. Please use a higher number."), MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024));
         }
         LogPrintf("Prune configured to target %uMiB on disk for block and undo files.\n", nPruneTarget / 1024 / 1024);
         fPruneMode = true;
@@ -1215,9 +1215,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     CScheduler::Function serviceLoop = boost::bind(&CScheduler::serviceQueue, &scheduler);
     threadGroup.create_thread(boost::bind(&TraceThread<CScheduler::Function>, "scheduler", serviceLoop));
 
-    /* Start the RPC server already.  It will be started in "warmup" mode
+    /* Start the RPC server already. It will be started in "warmup" mode
      * and not really process calls already (but it will signify connections
-     * that the server is there and will be ready later).  Warmup mode will
+     * that the server is there and will be ready later). Warmup mode will
      * be disabled when initialisation is finished.
      */
     if (GetBoolArg("-server", false))
@@ -1472,10 +1472,10 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     break;
                 }
 
-                // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
+                // Check for changed -prune state. What we are concerned about is a user who has pruned blocks
                 // in the past, but is now trying to run unpruned.
                 if (fHavePruned && !fPruneMode) {
-                    strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain");
+                    strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode. This will redownload the entire blockchain");
                     break;
                 }
 
