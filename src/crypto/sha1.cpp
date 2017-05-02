@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Bitcoin Core developers
+// Copyright (c) 2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -134,9 +134,13 @@ void Transform(uint32_t* s, const unsigned char* chunk)
     Round(b, c, d, e, a, f2(c, d, e), k4, left(w15 ^ w12 ^ w7 ^ w1));
 
     s[0] += a;
+    
     s[1] += b;
+    
     s[2] += c;
+    
     s[3] += d;
+    
     s[4] += e;
 }
 
