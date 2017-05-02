@@ -91,7 +91,7 @@ class CNetAddr
         std::vector<unsigned char> GetGroup() const;
         int GetReachabilityFrom(const CNetAddr *paddrPartner = NULL) const;
 
-        CNetAddr(const struct in6_addr& pipv6Addr, const uint32_t scope = 0);
+        CNetAddr(const struct in6_addr& pipv6Addr, const uint32_t scope = IPV6_ADDR_SCOPE_RESERVED);
         bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
 
         friend bool operator==(const CNetAddr& a, const CNetAddr& b);
@@ -207,10 +207,49 @@ bool GetProxy(enum Network net, proxyType &proxyInfoOut);
 bool IsProxy(const CNetAddr &addr);
 bool SetNameProxy(const proxyType &addrProxy);
 bool HaveNameProxy();
-bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup);
-bool Lookup(const char *pszName, CService& addr, int portDefault, bool fAllowLookup);
-bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, bool fAllowLookup, unsigned int nMaxSolutions);
+
+/**
+ * Resolve a string hostname into an array of possible IP addresses.
+ * @param[in]  pszName             The host name or dotted IP
+ * @param[out] vIP                 The host's IP addresses
+ * @param[in]  nMaxSolutions       Don't find more than this number of solutions
+ * @param[in]  fAllowDnsResolution If true, pszName may be a dotted-name address, and an attempt will be made to
+                                   resolve.  This can be very time consuming depending on your machine's DNS lookup time
+ * @return True if resolution succeeded
+ */
+bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowDnsResolution);
+
+/**
+ * Resolve a string hostname into an IP address:port "service".
+ * @param[in]  pszName             The host name or dotted IP
+ * @param[out] addr                The resolved IP address:port
+ * @param[in]  portDefault         If a port is not specified in pszName, use this one.
+ * @param[in]  fAllowDnsResolution If true, pszName may be a dotted-name address, and an attempt will be made to
+                                   resolve.  This can be very time consuming depending on your machine's DNS lookup time
+ * @return True if resolution succeeded
+ */
+bool Lookup(const char *pszName, CService& addr, int portDefault, bool fAllowDnsResolution);
+
+/**
+ * Resolve a string hostname into an array of possible IP address/port "services".
+ * @param[in]  pszName             The host name or dotted IP
+ * @param[out] vAddr               All resolved IP address:ports
+ * @param[in]  nMaxSolutions       Don't find more than this number of solutions
+ * @param[in]  fAllowDnsResolution If true, pszName may be a dotted-name address, and an attempt will be made to
+                                   resolve.  This can be very time consuming depending on your machine's DNS lookup time
+ * @return True if resolution succeeded
+ */
+bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, unsigned int nMaxSolutions, bool fAllowDnsResolution);
+
+/**
+ * Resolve a string numeric hostname into an IP address:port "service".
+ * @param[in]  pszName             The host name or dotted IP
+ * @param[out] addr                The resolved IP address:port
+ * @param[in]  portDefault         If a port is not specified in pszName, use this one.
+ * @return True if resolution succeeded
+ */
 bool LookupNumeric(const char *pszName, CService& addr, int portDefault = 0);
+
 bool ConnectSocket(const CService &addr, SOCKET& hSocketRet, int nTimeout, bool *outProxyConnectionFailed = 0);
 bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, int portDefault, int nTimeout, bool *outProxyConnectionFailed = 0);
 /** Return readable error string for a network error code */

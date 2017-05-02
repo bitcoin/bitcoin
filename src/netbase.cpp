@@ -197,7 +197,7 @@ bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nM
     return LookupIntern(strHost.c_str(), vIP, nMaxSolutions, fAllowLookup);
 }
 
-bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, bool fAllowLookup, unsigned int nMaxSolutions)
+bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, unsigned int nMaxSolutions, bool fAllowLookup)
 {
     if (pszName[0] == 0)
         return false;
@@ -218,7 +218,7 @@ bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, 
 bool Lookup(const char *pszName, CService& addr, int portDefault, bool fAllowLookup)
 {
     std::vector<CService> vService;
-    bool fRet = Lookup(pszName, vService, portDefault, fAllowLookup, 1);
+    bool fRet = Lookup(pszName, vService, portDefault, 1, fAllowLookup);
     if (!fRet)
         return false;
     addr = vService[0];
@@ -620,8 +620,10 @@ bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest
     GetNameProxy(nameProxy);
 
     CService addrResolved;
-    if (Lookup(strDest.c_str(), addrResolved, port, fNameLookup && !HaveNameProxy())) {
-        if (addrResolved.IsValid()) {
+    if (Lookup(strDest.c_str(), addrResolved, port, fNameLookup && !HaveNameProxy()))
+    {
+        if (addrResolved.IsValid())
+        {
             addr = addrResolved;
             return ConnectSocket(addr, hSocketRet, nTimeout);
         }
