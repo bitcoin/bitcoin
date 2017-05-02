@@ -80,16 +80,13 @@ class SegWitTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 3
+        self.extra_args = [["-walletprematurewitness", "-rpcserialversion=0"],
+                           ["-blockversion=4", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness", "-rpcserialversion=1"],
+                           ["-blockversion=536870915", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness"]]
 
     def setup_network(self):
-        self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-walletprematurewitness", "-rpcserialversion=0"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-blockversion=4", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness", "-rpcserialversion=1"]))
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-blockversion=536870915", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness"]))
-        connect_nodes(self.nodes[1], 0)
-        connect_nodes(self.nodes[2], 1)
+        super().setup_network()
         connect_nodes(self.nodes[0], 2)
-        self.is_network_split = False
         self.sync_all()
 
     def success_mine(self, node, txid, sign, redeem_script=""):

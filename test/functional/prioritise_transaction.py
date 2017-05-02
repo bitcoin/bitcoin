@@ -14,17 +14,12 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 1
-
-        self.txouts = gen_return_txouts()
-
-    def setup_network(self):
-        self.nodes = []
-        self.is_network_split = False
-
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-printpriority=1"]))
-        self.relayfee = self.nodes[0].getnetworkinfo()['relayfee']
+        self.extra_args = [["-printpriority=1"]]
 
     def run_test(self):
+        self.txouts = gen_return_txouts()
+        self.relayfee = self.nodes[0].getnetworkinfo()['relayfee']
+
         utxo_count = 90
         utxos = create_confirmed_utxos(self.relayfee, self.nodes[0], utxo_count)
         base_fee = self.relayfee*100 # our transactions are smaller than 100kb

@@ -23,13 +23,9 @@ class ZapWalletTXesTest (BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 3
 
-    def setup_network(self, split=False):
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
-        connect_nodes_bi(self.nodes,0,1)
-        connect_nodes_bi(self.nodes,1,2)
+    def setup_network(self):
+        super().setup_network()
         connect_nodes_bi(self.nodes,0,2)
-        self.is_network_split=False
-        self.sync_all()
 
     def run_test (self):
         self.log.info("Mining blocks...")

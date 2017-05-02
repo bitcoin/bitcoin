@@ -49,12 +49,8 @@ class RESTTest (BitcoinTestFramework):
         self.num_nodes = 3
 
     def setup_network(self, split=False):
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
-        connect_nodes_bi(self.nodes,0,1)
-        connect_nodes_bi(self.nodes,1,2)
-        connect_nodes_bi(self.nodes,0,2)
-        self.is_network_split=False
-        self.sync_all()
+        super().setup_network()
+        connect_nodes_bi(self.nodes, 0, 2)
 
     def run_test(self):
         url = urllib.parse.urlparse(self.nodes[0].url)

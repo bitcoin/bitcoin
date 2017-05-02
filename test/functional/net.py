@@ -25,12 +25,6 @@ class NetTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 2
 
-    def setup_network(self):
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
-        connect_nodes_bi(self.nodes, 0, 1)
-        self.is_network_split = False
-        self.sync_all()
-
     def run_test(self):
         self._test_connection_count()
         self._test_getnettotals()
