@@ -37,6 +37,10 @@ COfferDB *pofferdb = NULL;
 CCertDB *pcertdb = NULL;
 CEscrowDB *pescrowdb = NULL;
 CMessageDB *pmessagedb = NULL;
+typedef map<vector<unsigned char>, COutPoint > mapAliasRegistrationsType;
+typedef map<vector<unsigned char>, vector<unsigned char> > mapAliasRegistrationsDataType;
+mapAliasRegistrationsType mapAliasRegistrations;
+mapAliasRegistrationsDataType mapAliasRegistrationData;
 extern void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchAliasPeg, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasPaymentRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false);
 bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut, const Consensus::Params& consensusParams)
 {
@@ -738,13 +742,13 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			prevCoins = inputs.AccessCoins(prevOutput->hash);
 			if(prevCoins == NULL)
 				continue;
-			if(prevCoins->vout.size() <= prevOutput->n || !IsSyscoinScript(prevCoins->vout[prevOutput->n].scriptPubKey, pop, vvch))
+			if(!prevCoins->IsAvailable(prevOutputs->n) ||  || !IsSyscoinScript(prevCoins->vout[prevOutput->n].scriptPubKey, pop, vvch))
 			{
 				prevCoins = NULL;
 				continue;
 			}
 
-			if (IsAliasOp(pop, true) && vvchArgs[0] == vvch[0]) {
+			if (IsAliasOp(pop, true) && (vvchArgs[0] == vvch[0] || pop == OP_ALIAS_ACTIVATE)) {
 				prevOp = pop;
 				vvchPrevArgs = vvch;
 				break;
@@ -805,6 +809,17 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			case OP_ALIAS_PAYMENT:
 				break;
 			case OP_ALIAS_ACTIVATE:
+				if (prevOp != OP_ALIAS_ACTIVATE)
+				{
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5012 - " + _("Alias input to this transaction not found");
+					return error(errorMessage.c_str());
+				}
+				// Check new/activate hash
+				if (vvchPrevArgs.size() <= 0 || vvchPrevArgs[0] != vchHash)
+				{
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5010 - " + _("Alias new and activate hash mismatch");
+					return error(errorMessage.c_str());
+				}
 				// Check GUID
 				if (vvchArgs.size() <=  1 || theAlias.vchGUID != vvchArgs[1])
 				{
@@ -1574,10 +1589,13 @@ bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut,
 		const CTxOut& out = tx.vout[i];
 		vector<vector<unsigned char> > vvchRead;
 		if (DecodeAliasScript(out.scriptPubKey, op, vvchRead) && ((op == OP_ALIAS_PAYMENT && payment) || (op != OP_ALIAS_PAYMENT && !payment))) {
-			nOut = i;
-			found = true;
-			vvch = vvchRead;
-			break;
+			if(op == OP_ALIAS_PAYMENT || vvchRead.size() >= 3)
+			{
+				nOut = i;
+				found = true;
+				vvch = vvchRead;
+				break;
+			}
 		}
 	}
 	if (!found)
@@ -1916,12 +1934,20 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	GetAddress(newAlias, &newAddress, scriptPubKeyOrig);
 
 	vector<unsigned char> data;
+	if(mapAliasRegistrationData.count(vchName) > 0)
+		data = mapAliasRegistrationData[vchName];
+	else
+		newAlias.Serialize(data);
 	newAlias.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
     vector<unsigned char> vchHashAlias = vchFromValue(hash.GetHex());
 
 	CScript scriptPubKey;
-	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchAlias << vchRandAlias << vchHashAlias << OP_2DROP << OP_2DROP;
+	if(mapAliasRegistrations.count(vchHashAlias) > 0)
+		scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchAlias << vchRandAlias << vchHashAlias << OP_2DROP << OP_2DROP;
+	else
+		scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchHashAlias << OP_2DROP;
+
 	scriptPubKey += scriptPubKeyOrig;
 
     vector<CRecipient> vecSend;
@@ -1944,6 +1970,12 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	vecSend.push_back(fee);
 	CCoinControl coinControl;
+	if(mapAliasRegistrations.count(vchName) > 0)
+	{
+		vecSend.push_back(fee);
+		// add the registration input to the alias activation transaction
+		coinControl->Select(mapAliasRegistrations[vchName]);
+	}
 	coinControl.fAllowOtherInputs = true;
 	coinControl.fAllowWatchOnly = true;
 	bool useOnlyAliasPaymentToFund = false;
@@ -2305,6 +2337,29 @@ UniValue syscoinsignrawtransaction(const UniValue& params, bool fHelp) {
 		if (!returnRes.isStr())
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Could not send raw transaction: Invalid response from sendrawtransaction"));
 		res.push_back(Pair("txid", returnRes.get_str()));
+		// check for alias registration, if so save the info in this node for alias activation calls after a block confirmation
+		CTransaction tx;
+		if(!DecodeHexTx(tx,hex_str))
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5534 - " + _("Could not send raw transaction: Cannot decode transaction from hex string"));
+		vector<vector<unsigned char> > vvch;
+		int op;
+		for (unsigned int i = 0; i < tx.vout.size(); i++) {
+			const CTxOut& out = tx.vout[i];
+			if (DecodeAliasScript(out.scriptPubKey, op, vvch) && op == OP_ALIAS_ACTIVATE) 
+			{
+				if(vvch.size() == 1)
+				{
+					if(!mapAliasRegistrations.count(vvch[0]))
+						mapAliasRegistrations[vvch[0]] = COutPoint(tx.GetHash(), i);
+				}
+				else
+				{
+					mapAliasRegistrations.erase(vvch[2]);
+					mapAliasRegistrationData.erase(vvch[0]);
+				}
+				break;
+			}
+		}
 	}
 	return res;
 }
