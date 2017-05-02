@@ -160,7 +160,7 @@ if ENABLE_ZMQ:
 #Tests
 testScripts = [ RpcTest(t) for t in [
     'bip68-112-113-p2p',
-    'validateblocktemplate'
+    'validateblocktemplate',
     'wallet',
     'excessive',
     'listtransactions',
