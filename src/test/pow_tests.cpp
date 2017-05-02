@@ -8,6 +8,7 @@
 #include "random.h"
 #include "util.h"
 #include "test/test_bitcoin.h"
+#include "test/test_random.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -84,9 +85,9 @@ BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
     }
 
     for (int j = 0; j < 1000; j++) {
-        CBlockIndex *p1 = &blocks[GetRand(10000)];
-        CBlockIndex *p2 = &blocks[GetRand(10000)];
-        CBlockIndex *p3 = &blocks[GetRand(10000)];
+        CBlockIndex *p1 = &blocks[insecure_rand_ctx.randrange(10000)];
+        CBlockIndex *p2 = &blocks[insecure_rand_ctx.randrange(10000)];
+        CBlockIndex *p3 = &blocks[insecure_rand_ctx.randrange(10000)];
 
         int64_t tdiff = GetBlockProofEquivalentTime(*p1, *p2, *p3, params);
         BOOST_CHECK_EQUAL(tdiff, p1->GetBlockTime() - p2->GetBlockTime());
