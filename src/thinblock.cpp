@@ -123,6 +123,9 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock, string strCommand)
             pfrom->thinBlock.vtx.size(), mapMissingTx.size());
     } // end lock cs_orphancache, mempool.cs, cs_xval
 
+    // Clear out data we no longer need before processing block.
+    pfrom->thinBlockHashes.clear();
+
     if (pfrom->thinBlockWaitingForTxns == 0)
     {
         // We have all the transactions now that are in this block: try to reassemble and process.
@@ -377,6 +380,10 @@ bool CXThinBlock::process(CNode *pfrom,
             }
         }
     } // End locking cs_orphancache, mempool.cs and cs_xval
+
+    // Clear out data we no longer need before processing block or making re-requests.
+    pfrom->xThinBlockHashes.clear();
+    mapPartialTxHash.clear();
 
     // This must be done outside of the above section or a deadlock may occur.
     if (!fMerkleRootCorrect)
