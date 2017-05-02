@@ -1934,8 +1934,8 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	GetAddress(newAlias, &newAddress, scriptPubKeyOrig);
 
 	vector<unsigned char> data;
-	if(mapAliasRegistrationData.count(vchName) > 0)
-		data = mapAliasRegistrationData[vchName];
+	if(mapAliasRegistrationData.count(vchAlias) > 0)
+		data = mapAliasRegistrationData[vchAlias];
 	else
 		newAlias.Serialize(data);
 	newAlias.Serialize(data);
@@ -1974,15 +1974,15 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	{
 		vecSend.push_back(fee);
 		// add the registration input to the alias activation transaction
-		coinControl->Select(mapAliasRegistrations[vchName]);
+		coinControl.Select(mapAliasRegistrations[vchName]);
 	}
 	coinControl.fAllowOtherInputs = true;
 	coinControl.fAllowWatchOnly = true;
 	bool useOnlyAliasPaymentToFund = false;
 
 	SendMoneySyscoin(vchAlias, vchAliasPeg, "", recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund);
-	if(!mapAliasRegistrationData.count(vchName))
- 		mapAliasRegistrationData[vchName] = data;	
+	if(!mapAliasRegistrationData.count(vchAlias))
+ 		mapAliasRegistrationData[vchAlias] = data;	
 	UniValue res(UniValue::VARR);
 
 	UniValue signParams(UniValue::VARR);
