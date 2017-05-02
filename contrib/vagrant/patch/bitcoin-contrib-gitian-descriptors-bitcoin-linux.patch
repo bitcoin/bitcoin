@@ -1,0 +1,31 @@
+diff --git a/contrib/gitian-descriptors/gitian.yml b/contrib/gitian-descriptors/gitian.yml
+--- a/contrib/gitian-descriptors/gitian.yml
++++ b/contrib/gitian-descriptors/gitian.yml
+@@ -19,12 +19,11 @@ packages:
+ - "pkg-config"
+ - "libpng12-dev"
+ reference_datetime: "2011-01-30 00:00:00"
+-remotes:
+-- "url": "https://github.com/bitcoin/bitcoin.git"
+-  "dir": "bitcoin"
++remotes: []
+ files:
+ - "miniupnpc-1.6.tar.gz"
+ - "qrencode-3.2.0.tar.bz2"
++- "src-local.tar.xz"
+ script: |
+   INSTDIR="$HOME/install"
+   export LIBRARY_PATH="$INSTDIR/lib"
+@@ -40,9 +39,11 @@ script: |
+   make $MAKEOPTS install
+   cd ..
+   #
++  mkdir -p bitcoin
++  tar -C bitcoin -xf src-local.tar.xz
+   cd bitcoin
+   mkdir -p $OUTDIR/src
+-  git archive HEAD | tar -x -C $OUTDIR/src
++  tar -C $OUTDIR/src -xf ../src-local.tar.xz
+   cp $OUTDIR/src/doc/README $OUTDIR
+   cp $OUTDIR/src/COPYING $OUTDIR
+   cd src

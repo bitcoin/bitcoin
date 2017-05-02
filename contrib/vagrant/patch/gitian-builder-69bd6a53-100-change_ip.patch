@@ -1,0 +1,11 @@
+diff --git a/target-bin/bootstrap-fixup b/target-bin/bootstrap-fixup
+--- a/target-bin/bootstrap-fixup
++++ b/target-bin/bootstrap-fixup
+@@ -2,5 +2,5 @@
+ 
+ set -e
+ 
+-echo 'deb http://10.0.2.2:3142/archive.ubuntu.com/ubuntu lucid main universe' > $1/etc/apt/sources.list
+-echo 'deb http://10.0.2.2:3142/archive.ubuntu.com/ubuntu lucid-updates main universe' >> $1/etc/apt/sources.list
++echo 'deb http://10.0.2.15:3142/archive.ubuntu.com/ubuntu lucid main universe' > $1/etc/apt/sources.list
++echo 'deb http://10.0.2.15:3142/archive.ubuntu.com/ubuntu lucid-updates main universe' >> $1/etc/apt/sources.list

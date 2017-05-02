@@ -1,0 +1,31 @@
+diff --git a/contrib/gitian-descriptors/qt-win32.yml b/contrib/gitian-descriptors/qt-win32.yml
+--- a/contrib/gitian-descriptors/qt-win32.yml
++++ b/contrib/gitian-descriptors/qt-win32.yml
+@@ -18,11 +18,17 @@ script: |
+   SRCDIR="$INSTDIR/src/"
+   mkdir $SRCDIR
+   #
++  if [ x"`uname -p`" == x"x86_64" ]; then
++    BITNESS=64
++  else
++    BITNESS=32
++  fi
++  #
+   tar xzf qt-everywhere-opensource-src-4.7.4.tar.gz
+   cd qt-everywhere-opensource-src-4.7.4
+   sed 's/$TODAY/2011-01-30/' -i configure
+   sed 's/i686-pc-mingw32-/i586-mingw32msvc-/' -i mkspecs/unsupported/win32-g++-cross/qmake.conf
+-  sed --posix 's|QMAKE_CFLAGS\t\t= -pipe|QMAKE_CFLAGS\t\t= -pipe -isystem /usr/i586-mingw32msvc/include/ -frandom-seed=qtbuild|' -i mkspecs/unsupported/win32-g++-cross/qmake.conf
++  sed --posix 's|QMAKE_CFLAGS\t\t= -pipe|QMAKE_CFLAGS\t\t= -pipe -isystem /usr/i586-mingw32msvc/include/ -frandom-seed=qtbuild -m32|' -i mkspecs/unsupported/win32-g++-cross/qmake.conf
+   sed 's/QMAKE_CXXFLAGS_EXCEPTIONS_ON = -fexceptions -mthreads/QMAKE_CXXFLAGS_EXCEPTIONS_ON = -fexceptions/' -i mkspecs/unsupported/win32-g++-cross/qmake.conf
+   sed 's/QMAKE_LFLAGS_EXCEPTIONS_ON = -mthreads/QMAKE_LFLAGS_EXCEPTIONS_ON = -lmingwthrd/' -i mkspecs/unsupported/win32-g++-cross/qmake.conf
+   sed --posix 's/QMAKE_MOC\t\t= i586-mingw32msvc-moc/QMAKE_MOC\t\t= moc/' -i mkspecs/unsupported/win32-g++-cross/qmake.conf
+@@ -40,7 +46,7 @@ script: |
+   #export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+   export FAKETIME=$REFERENCE_DATETIME
+   export TZ=UTC
+-  ./configure -prefix $INSTDIR -confirm-license -release -opensource -static -no-qt3support -xplatform unsupported/win32-g++-cross -no-multimedia -no-audio-backend -no-phonon -no-phonon-backend -no-declarative -no-script -no-scripttools -no-javascript-jit  -no-webkit -no-svg -no-xmlpatterns -no-sql-sqlite -no-nis -no-cups -no-iconv -no-dbus -no-gif -no-libtiff -opengl no -nomake examples -nomake demos -nomake docs
++  ./configure -prefix $INSTDIR -confirm-license -release -opensource -static -no-qt3support -platform linux-g++-$BITNESS -xplatform unsupported/win32-g++-cross -no-multimedia -no-audio-backend -no-phonon -no-phonon-backend -no-declarative -no-script -no-scripttools -no-javascript-jit  -no-webkit -no-svg -no-xmlpatterns -no-sql-sqlite -no-nis -no-cups -no-iconv -no-dbus -no-gif -no-libtiff -opengl no -nomake examples -nomake demos -nomake docs
+   find . -name *.prl | xargs -l sed 's|/\.||' -i
+   find . -name *.prl | xargs -l sed 's|/$||' -i
+   make $MAKEOPTS install

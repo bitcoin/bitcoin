@@ -1,0 +1,14 @@
+diff --git a/bin/make-base-vm b/bin/make-base-vm
+--- a/bin/make-base-vm
++++ b/bin/make-base-vm
+@@ -3,8 +3,8 @@ set -e
+ 
+ SUITE=lucid
+ ARCH=amd64
+-MIRROR=http://${MIRROR_HOST:-127.0.0.1}:3142/archive.ubuntu.com/ubuntu
+-SECURITY_MIRROR=http://${MIRROR_HOST:-127.0.0.1}:3142/security.ubuntu.com/ubuntu
++MIRROR=http://mirror.anl.gov/pub/ubuntu/
++SECURITY_MIRROR=http://security.ubuntu.com/ubuntu
+ LXC=0
+ 
+ usage() {
