@@ -385,30 +385,23 @@ bool CXThinBlock::process(CNode *pfrom,
     pfrom->xThinBlockHashes.clear();
     mapPartialTxHash.clear();
 
-    // This must be done outside of the above section or a deadlock may occur.
-    if (!fMerkleRootCorrect)
-    {
-        vector<CInv> vGetData;
-        vGetData.push_back(CInv(MSG_THINBLOCK, header.GetHash()));
-        pfrom->PushMessage(NetMsgType::GETDATA, vGetData);
-        LogPrintf("xthinblock merkelroot does not match computed merkleroot - requesting full thinblock, peer=%d",
-            pfrom->GetId());
-        return true;
-    }
-
+    // These must be checked outside the above section or a deadlock may occur
+    // Expedited blocks are sent before checking the merkle root, so a mismatch should not attract a penalty
     // There is a remote possiblity of a Tx hash collision therefore if it occurs we re-request a normal
     // thinblock which has the full Tx hash data rather than just the truncated hash.
-    if (collision)
+    if (collision || !fMerkleRootCorrect)
     {
         vector<CInv> vGetData;
         vGetData.push_back(CInv(MSG_THINBLOCK, header.GetHash()));
         // This must be done outside of the mempool.cs lock or the deadlock
         pfrom->PushMessage(NetMsgType::GETDATA, vGetData);
         // detection with pfrom->cs_vSend will be triggered.
-        LogPrintf("TX HASH COLLISION for xthinblock: re-requesting a thinblock\n");
+        if (!fMerkleRootCorrect)
+            LogPrintf("mismatched merkle root on xthinblock: re-requesting a thinblock\n");
+        else
+            LogPrintf("TX HASH COLLISION for xthinblock: re-requesting a thinblock\n");
         return true;
     }
-
 
     pfrom->thinBlockWaitingForTxns = missingCount;
     LogPrint("thin", "thinblock waiting for: %d, unnecessary: %d, txs: %d full: %d\n", pfrom->thinBlockWaitingForTxns,
