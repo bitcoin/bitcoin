@@ -1981,6 +1981,8 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	bool useOnlyAliasPaymentToFund = false;
 
 	SendMoneySyscoin(vchAlias, vchAliasPeg, "", recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund);
+	if(!mapAliasRegistrationData.count(vchName))
+ 		mapAliasRegistrationData[vchName] = data;	
 	UniValue res(UniValue::VARR);
 
 	UniValue signParams(UniValue::VARR);
