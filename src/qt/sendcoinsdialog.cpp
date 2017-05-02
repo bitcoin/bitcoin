@@ -240,6 +240,10 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     // prepare transaction for getting txFee earlier
     WalletModelTransaction currentTransaction(recipients);
+    
+    // add comment to wtx
+    currentTransaction.setComment(ui->commentTextEdit->toPlainText());
+    
     WalletModel::SendCoinsReturn prepareStatus;
 
     // Always use a CCoinControl instance, use the CoinControlDialog instance if CoinControl has been enabled
@@ -373,6 +377,7 @@ void SendCoinsDialog::clear()
     }
     addEntry();
 
+    ui->commentTextEdit->clear();
     updateTabsAndLabels();
 }
 

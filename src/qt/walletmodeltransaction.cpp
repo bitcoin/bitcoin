@@ -98,3 +98,8 @@ CReserveKey *WalletModelTransaction::getPossibleKeyChange()
 {
     return keyChange;
 }
+
+void WalletModelTransaction::setComment(const QString& comment)
+{
+    walletTransaction->mapValue["comment"] = comment.toStdString();
+}

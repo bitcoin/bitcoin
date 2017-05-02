@@ -23,6 +23,9 @@
    <property name="frameShape">
     <enum>QFrame::NoFrame</enum>
    </property>
+   <property name="frameShadow">
+    <enum>QFrame::Plain</enum>
+   </property>
    <layout class="QGridLayout" name="gridLayout">
     <property name="topMargin">
      <number>8</number>
@@ -708,6 +711,16 @@
       </property>
      </widget>
     </item>
+    <item row="5" column="0" colspan="2">
+        <widget class="Line" name="lineInsecPR">
+            <property name="lineWidth">
+                <number>1</number>
+            </property>
+            <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+            </property>
+        </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QFrame" name="SendCoins_AuthenticatedPaymentRequest">
@@ -1240,6 +1253,16 @@
        <bool>false</bool>
       </property>
      </widget>
+    </item>
+    <item row="5" column="0" colspan="2">
+        <widget class="Line" name="lineSecPR">
+            <property name="lineWidth">
+                <number>1</number>
+            </property>
+            <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+            </property>
+        </widget>
     </item>
    </layout>
   </widget>
