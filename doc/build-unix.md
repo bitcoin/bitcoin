@@ -26,6 +26,12 @@ make install # optional
 
 This will build bitcoin-qt as well if the dependencies are met.
 
+If you have installed more than one version of Berkeley DB you should specify the path of the correct one:
+
+	./autogen.sh
+	./configure LDFLAGS=-L/usr/local/BerkeleyDB.4.8/lib/ CPPFLAGS=-I/usr/local/BerkeleyDB.4.8/include/
+	make
+
 Dependencies
 ---------------------
 
