@@ -47,7 +47,6 @@ class BumpFeeTest(BitcoinTestFramework):
         self.nodes[1].walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
 
         connect_nodes_bi(self.nodes, 0, 1)
-        self.is_network_split = False
         self.sync_all()
 
     def run_test(self):

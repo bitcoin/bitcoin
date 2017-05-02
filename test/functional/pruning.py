@@ -32,31 +32,21 @@ class PruneTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 6
 
-        # Cache for utxos, as the listunspent may take a long time later in the test
-        self.utxo_cache_0 = []
-        self.utxo_cache_1 = []
+        # Create nodes 0 and 1 to mine.
+        # Create node 2 to test pruning.
+        # Create nodes 3 and 4 to test manual pruning (they will be re-started with manual pruning later)
+        # Create nodes 5 to test wallet in prune mode, but do not connect
+        self.extra_args = [["-maxreceivebuffer=20000", "-blockmaxsize=999000", "-checkblocks=5"],
+                           ["-maxreceivebuffer=20000", "-blockmaxsize=999000", "-checkblocks=5"],
+                           ["-maxreceivebuffer=20000", "-prune=550"],
+                           ["-maxreceivebuffer=20000", "-blockmaxsize=999000"],
+                           ["-maxreceivebuffer=20000", "-blockmaxsize=999000"],
+                           ["-prune=550"]]
 
     def setup_network(self):
-        self.nodes = []
-        self.is_network_split = False
+        self.setup_nodes()
 
-        # Create nodes 0 and 1 to mine
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-maxreceivebuffer=20000","-blockmaxsize=999000", "-checkblocks=5"], timewait=900))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-maxreceivebuffer=20000","-blockmaxsize=999000", "-checkblocks=5"], timewait=900))
-
-        # Create node 2 to test pruning
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-maxreceivebuffer=20000","-prune=550"], timewait=900))
-        self.prunedir = self.options.tmpdir+"/node2/regtest/blocks/"
-
-        # Create nodes 3 and 4 to test manual pruning (they will be re-started with manual pruning later)
-        self.nodes.append(start_node(3, self.options.tmpdir, ["-maxreceivebuffer=20000","-blockmaxsize=999000"], timewait=900))
-        self.nodes.append(start_node(4, self.options.tmpdir, ["-maxreceivebuffer=20000","-blockmaxsize=999000"], timewait=900))
-
-        # Create nodes 5 to test wallet in prune mode, but do not connect
-        self.nodes.append(start_node(5, self.options.tmpdir, ["-prune=550"]))
-
-        # Determine default relay fee
-        self.relayfee = self.nodes[0].getnetworkinfo()["relayfee"]
+        self.prunedir = self.options.tmpdir + "/node2/regtest/blocks/"
 
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[1], 2)
@@ -332,6 +322,14 @@ class PruneTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info("Warning! This test requires 4GB of disk space and takes over 30 mins (up to 2 hours)")
         self.log.info("Mining a big blockchain of 995 blocks")
+
+        # Determine default relay fee
+        self.relayfee = self.nodes[0].getnetworkinfo()["relayfee"]
+
+        # Cache for utxos, as the listunspent may take a long time later in the test
+        self.utxo_cache_0 = []
+        self.utxo_cache_1 = []
+
         self.create_big_chain()
         # Chain diagram key:
         # *   blocks on main chain
