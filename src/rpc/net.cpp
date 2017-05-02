@@ -322,7 +322,7 @@ UniValue getaddednodeinfo(const UniValue& params, bool fHelp)
     list<pair<string, vector<CService> > > laddedAddreses(0);
     BOOST_FOREACH(const std::string& strAddNode, laddedNodes) {
         vector<CService> vservNode(0);
-        if(Lookup(strAddNode.c_str(), vservNode, Params().GetDefaultPort(), fNameLookup, 0))
+        if(Lookup(strAddNode.c_str(), vservNode, Params().GetDefaultPort(), 0, fNameLookup))
             laddedAddreses.push_back(make_pair(strAddNode, vservNode));
         else
         {
