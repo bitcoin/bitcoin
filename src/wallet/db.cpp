@@ -438,8 +438,9 @@ void CDB::Close()
 {
     if (!pdb)
         return;
-    if (activeTxn)
-        activeTxn->abort();
+
+    assert(!activeTxn);
+
     activeTxn = NULL;
     pdb = NULL;
 
