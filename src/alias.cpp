@@ -742,7 +742,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			prevCoins = inputs.AccessCoins(prevOutput->hash);
 			if(prevCoins == NULL)
 				continue;
-			if(!prevCoins->IsAvailable(prevOutputs->n) ||  || !IsSyscoinScript(prevCoins->vout[prevOutput->n].scriptPubKey, pop, vvch))
+			if(!prevCoins->IsAvailable(prevOutputs->n) || !IsSyscoinScript(prevCoins->vout[prevOutput->n].scriptPubKey, pop, vvch))
 			{
 				prevCoins = NULL;
 				continue;
@@ -1970,11 +1970,11 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	vecSend.push_back(fee);
 	CCoinControl coinControl;
-	if(mapAliasRegistrations.count(vchName) > 0)
+	if(mapAliasRegistrations.count(vchAlias) > 0)
 	{
 		vecSend.push_back(fee);
 		// add the registration input to the alias activation transaction
-		coinControl.Select(mapAliasRegistrations[vchName]);
+		coinControl.Select(mapAliasRegistrations[vchAlias]);
 	}
 	coinControl.fAllowOtherInputs = true;
 	coinControl.fAllowWatchOnly = true;
