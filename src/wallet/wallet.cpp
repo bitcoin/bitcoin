@@ -393,6 +393,7 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
 
 void CWallet::SetBestChain(const CBlockLocator& loc)
 {
+    if (m_sync_paused_for_keypool) return;
     CWalletDB walletdb(*dbw);
     walletdb.WriteBestBlock(loc);
 }
@@ -1187,29 +1188,41 @@ void CWallet::SyncTransaction(const CTransactionRef& ptx, const CBlockIndex *pin
 }
 
 void CWallet::TransactionAddedToMempool(const CTransactionRef& ptx) {
+    if (m_sync_paused_for_keypool) return;
     LOCK2(cs_main, cs_wallet);
     SyncTransaction(ptx);
 }
 
-void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex, const std::vector<CTransactionRef>& vtxConflicted) {
-    LOCK2(cs_main, cs_wallet);
-    // TODO: Temporarily ensure that mempool removals are notified before
-    // connected transactions.  This shouldn't matter, but the abandoned
-    // state of transactions in our wallet is currently cleared when we
-    // receive another notification and there is a race condition where
-    // notification of a connected conflict might cause an outside process
-    // to abandon a transaction and then have it inadvertently cleared by
-    // the notification that the conflicted transaction was evicted.
-
-    for (const CTransactionRef& ptx : vtxConflicted) {
-        SyncTransaction(ptx);
+void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex, const std::vector<CTransactionRef>& vtxConflicted, bool &requestPause) {
+    if (m_sync_paused_for_keypool) {
+        requestPause = true;
+        return;
     }
-    for (size_t i = 0; i < pblock->vtx.size(); i++) {
-        SyncTransaction(pblock->vtx[i], pindex, i);
+
+    {
+        LOCK2(cs_main, cs_wallet);
+        // TODO: Temporarily ensure that mempool removals are notified before
+        // connected transactions.  This shouldn't matter, but the abandoned
+        // state of transactions in our wallet is currently cleared when we
+        // receive another notification and there is a race condition where
+        // notification of a connected conflict might cause an outside process
+        // to abandon a transaction and then have it inadvertently cleared by
+        // the notification that the conflicted transaction was evicted.
+
+        for (const CTransactionRef& ptx : vtxConflicted) {
+            SyncTransaction(ptx);
+        }
+        for (size_t i = 0; i < pblock->vtx.size(); i++) {
+            SyncTransaction(pblock->vtx[i], pindex, i);
+        }
+        if (m_sync_paused_for_keypool) {
+            requestPause = true;
+        }
     }
 }
 
 void CWallet::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) {
+    if (m_sync_paused_for_keypool) return;
     LOCK2(cs_main, cs_wallet);
 
     for (const CTransactionRef& ptx : pblock->vtx) {

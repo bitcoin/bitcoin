@@ -657,6 +657,13 @@ private:
     std::atomic<bool> fScanningWallet;
 
     /**
+     * m_sync_paused_for_keypool temporarily pauses the transaction syncing process until
+     * the keypool has been refilled (manual topup may be required for encrypted and locked wallets).
+     * Not doing so may result in missing transactions in case of a HD recovery (or shared HD wallet).
+     */
+    std::atomic<bool> m_sync_paused_for_keypool;
+
+    /**
      * Select a set of coins such that nValueRet >= nTargetValue and at least
      * all coins from coinControl are selected; Never select unconfirmed coins
      * if they are not ours
@@ -796,6 +803,7 @@ public:
         nRelockTime = 0;
         fAbortRescan = false;
         fScanningWallet = false;
+        m_sync_paused_for_keypool = false;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -920,7 +928,7 @@ public:
     bool AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose=true);
     bool LoadToWallet(const CWalletTx& wtxIn);
     void TransactionAddedToMempool(const CTransactionRef& tx) override;
-    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex, const std::vector<CTransactionRef>& vtxConflicted) override;
+    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex, const std::vector<CTransactionRef>& vtxConflicted, bool &requestPause) override;
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) override;
     bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate);
     int64_t RescanFromTime(int64_t startTime, bool update);

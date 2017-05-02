@@ -2467,9 +2467,18 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
             pindexFork = chainActive.FindFork(pindexOldTip);
             fInitialDownload = IsInitialBlockDownload();
 
+            bool requestPause = false;
             for (const PerBlockConnectTrace& trace : connectTrace.GetBlocksConnected()) {
                 assert(trace.pblock && trace.pindex);
-                GetMainSignals().BlockConnected(trace.pblock, trace.pindex, *trace.conflictedTxs);
+                GetMainSignals().BlockConnected(trace.pblock, trace.pindex, *trace.conflictedTxs, requestPause);
+                if (requestPause) {
+                    // in case we are in pruned mode, we have to halt verification and block requests
+                    // to ensure the signal listener can keep up with the updates
+                    if (fPruneMode) {
+                        setBlockRequestsPaused(true);
+                        setTipUpdatesPaused(true);
+                    }
+                }
             }
         }
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
@@ -2485,7 +2494,7 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
         }
 
         if (nStopAtHeight && pindexNewTip && pindexNewTip->nHeight >= nStopAtHeight) StartShutdown();
-    } while (pindexNewTip != pindexMostWork);
+    } while (pindexNewTip != pindexMostWork && !isTipUpdatesPaused());
     CheckBlockIndex(chainparams.GetConsensus());
 
     // Write changes periodically to disk, after relay.
