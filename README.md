@@ -37,8 +37,6 @@ The developer [mailing list](https://lists.linuxfoundation.org/mailman/listinfo/
 should be used to discuss complicated or controversial changes before working
 on a patch set.
 
-Developer IRC can be found on Freenode at #bitcoin-core-dev.
-
 Testing
 -------
 
