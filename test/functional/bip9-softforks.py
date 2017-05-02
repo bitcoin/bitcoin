@@ -32,11 +32,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
     def __init__(self):
         super().__init__()
         self.num_nodes = 1
-
-    def setup_network(self):
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir,
-                                 extra_args=[['-whitelist=127.0.0.1']],
-                                 binary=[self.options.testbinary])
+        self.extra_args = [['-whitelist=127.0.0.1']]
 
     def run_test(self):
         self.test = TestManager(self, self.options.tmpdir)

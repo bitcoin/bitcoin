@@ -204,7 +204,6 @@ class EstimateFeeTest(BitcoinTestFramework):
         connect_nodes(self.nodes[0], 2)
         connect_nodes(self.nodes[2], 1)
 
-        self.is_network_split = False
         self.sync_all()
 
     def transact_and_mine(self, numblocks, mining_node):

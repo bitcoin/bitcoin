@@ -14,13 +14,8 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         super().__init__()
         self.num_nodes = 1
         self.setup_clean_chain = False
-
-    def setup_network(self):
         # Just need one node for this test
-        args = ["-checkmempool"]
-        self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, args))
-        self.is_network_split = False
+        self.extra_args = [["-checkmempool"]]
 
     def run_test(self):
         node0_address = self.nodes[0].getnewaddress()

@@ -27,9 +27,6 @@ class HTTPBasicsTest (BitcoinTestFramework):
             f.write(rpcauth+"\n")
             f.write(rpcauth2+"\n")
 
-    def setup_network(self):
-        self.nodes = self.setup_nodes()
-
     def run_test(self):
 
         ##################################################

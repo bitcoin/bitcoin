@@ -41,7 +41,7 @@ class PreciousTest(BitcoinTestFramework):
         self.num_nodes = 3
 
     def setup_network(self):
-        self.nodes = self.setup_nodes()
+        self.setup_nodes()
 
     def run_test(self):
         self.log.info("Ensure submitblock can in principle reorg to a competing chain")

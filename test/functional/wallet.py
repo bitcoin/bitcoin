@@ -20,12 +20,11 @@ class WalletTest(BitcoinTestFramework):
         self.num_nodes = 4
         self.extra_args = [['-usehd={:d}'.format(i%2==0)] for i in range(4)]
 
-    def setup_network(self, split=False):
+    def setup_network(self):
         self.nodes = start_nodes(3, self.options.tmpdir, self.extra_args[:3], redirect_stderr=True)
         connect_nodes_bi(self.nodes,0,1)
         connect_nodes_bi(self.nodes,1,2)
         connect_nodes_bi(self.nodes,0,2)
-        self.is_network_split=False
         self.sync_all()
 
     def run_test(self):

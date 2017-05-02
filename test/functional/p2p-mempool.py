@@ -17,10 +17,8 @@ class P2PMempoolTests(BitcoinTestFramework):
     def __init__(self):
         super().__init__()
         self.setup_clean_chain = True
-        self.num_nodes = 2
-
-    def setup_network(self):
-        self.nodes = [start_node(0, self.options.tmpdir, ["-peerbloomfilters=0"])]
+        self.num_nodes = 1
+        self.extra_args = [["-peerbloomfilters=0"]]
 
     def run_test(self):
         #connect a mininode

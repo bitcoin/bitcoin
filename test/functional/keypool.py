@@ -55,8 +55,5 @@ class KeyPoolTest(BitcoinTestFramework):
         nodes[0].generate(1)
         assert_raises_jsonrpc(-12, "Keypool ran out", nodes[0].generate, 1)
 
-    def setup_network(self):
-        self.nodes = start_nodes(1, self.options.tmpdir, [['-usehd=0']])
-
 if __name__ == '__main__':
     KeyPoolTest().main()

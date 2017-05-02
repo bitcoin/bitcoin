@@ -12,15 +12,12 @@ class BIP66Test(BitcoinTestFramework):
         super().__init__()
         self.num_nodes = 3
         self.setup_clean_chain = False
+        self.extra_args = [[], ["-blockversion=2"], ["-blockversion=3"]]
 
     def setup_network(self):
-        self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, []))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-blockversion=2"]))
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-blockversion=3"]))
+        self.setup_nodes()
         connect_nodes(self.nodes[1], 0)
         connect_nodes(self.nodes[2], 0)
-        self.is_network_split = False
         self.sync_all()
 
     def run_test(self):

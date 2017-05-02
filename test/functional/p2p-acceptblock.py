@@ -64,17 +64,13 @@ class AcceptBlockTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 2
+        self.extra_args = [[], ["-whitelist=127.0.0.1"]]
 
     def setup_network(self):
         # Node0 will be used to test behavior of processing unrequested blocks
         # from peers which are not whitelisted, while Node1 will be used for
         # the whitelisted case.
-        self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir,
-                                     binary=self.options.testbinary))
-        self.nodes.append(start_node(1, self.options.tmpdir,
-                                     ["-whitelist=127.0.0.1"],
-                                     binary=self.options.testbinary))
+        self.setup_nodes()
 
     def run_test(self):
         # Setup the p2p connections and start up the network thread.
