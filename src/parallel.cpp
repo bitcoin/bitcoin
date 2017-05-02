@@ -576,9 +576,6 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
         }
     }
 
-    // Clear the thinblock timer used for preferential download
-    thindata.ClearThinBlockTimer(inv.hash);
-
     // Erase any txns from the orphan cache that are no longer needed
     PV.ClearOrphanCache(block);
 

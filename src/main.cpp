@@ -628,6 +628,9 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBl
     CNodeState *state = State(nodeid);
     DbgAssert(state != NULL, return);
 
+    // If started then clear the thinblock timer used for preferential downloading
+    thindata.ClearThinBlockTimer(hash);
+
     // BU why mark as received? because this erases it from the inflight list.  Instead we'll check for it
     // BU removed: MarkBlockAsReceived(hash);
     std::map<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator> >::iterator itInFlight = mapBlocksInFlight.find(hash);
@@ -6180,9 +6183,6 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
                 pfrom->thinBlockWaitingForTxns = -1;
                 pfrom->thinBlock.SetNull();
             }
-
-            // Clear the thinblock timer used for preferential download
-            thindata.ClearThinBlockTimer(inv.hash);
 
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 100);
