@@ -1,7 +1,7 @@
 Source: bitcoin
 Section: utils
 Priority: optional
-Maintainer: Jonas Smedegaard <dr@jones.dk>
+Maintainer: Ivan J. (parazyd) <parazyd@dyne.org>
 Uploaders: Micah Anderson <micah@debian.org>
 Build-Depends: debhelper,
  devscripts,
@@ -10,6 +10,7 @@ Build-Depends: debhelper,
  bash-completion,
  libboost-system-dev (>> 1.35) | libboost-system1.35-dev,
  libdb4.8++-dev,
+ libevent-dev,
  libssl-dev,
  pkg-config,
  libminiupnpc8-dev | libminiupnpc-dev (>> 1.6),
@@ -17,8 +18,8 @@ Build-Depends: debhelper,
  libboost-program-options-dev (>> 1.35) | libboost-program-options1.35-dev,
  libboost-thread-dev (>> 1.35) | libboost-thread1.35-dev,
  libboost-test-dev (>> 1.35) | libboost-test1.35-dev,
- qt4-qmake,
- libqt4-dev,
+ qt5-qmake,
+ qtbase5-dev,
  libqrencode-dev,
  libprotobuf-dev, protobuf-compiler,
  python

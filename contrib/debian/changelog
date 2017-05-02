@@ -1,3 +1,9 @@
+bitcoin (0.14.1-1) experimental; urgency=medium
+
+  * Update to latest tagged release.
+
+ -- Ivan J. (parazyd) <parazyd@dyne.org>  Tue, 2 May 2017 20:10:00 +0200
+
 bitcoin (0.11.0-precise1) precise; urgency=medium
 
   * New upstream release.
