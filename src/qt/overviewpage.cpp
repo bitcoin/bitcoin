@@ -221,8 +221,13 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
         ui->hodlTable->setItem(i, 3, new QTableWidgetItem(BitcoinUnits::format(nDisplayUnit, withInterest)));
         ui->hodlTable->setItem(i, 4, new QTableWidgetItem(BitcoinUnits::format(nDisplayUnit, matureValue)));
         ui->hodlTable->setItem(i, 5, new QTableWidgetItem(QString::number((term)/561)));
-        ui->hodlTable->setItem(i, 6, new QTableWidgetItem(QString::number(lockHeight)));
-        ui->hodlTable->setItem(i, 7, new QTableWidgetItem(QString::number(releaseBlock)));
+        if(!sort_flag){
+            ui->hodlTable->setItem(i, 6, new QTableWidgetItem(QString::number(lockHeight)));
+            ui->hodlTable->setItem(i, 7, new QTableWidgetItem(QString::number(releaseBlock)));
+        }else{
+            ui->hodlTable->setItem(i, 6, new QTableWidgetItem(QString::number(lockHeight).rightJustified(7,'0')));
+            ui->hodlTable->setItem(i, 7, new QTableWidgetItem(QString::number(releaseBlock).rightJustified(7,'0')));
+        }
         //time_t releaseDate = time(0)+blocksRemaining*154;
 
         time_t rawtime;
