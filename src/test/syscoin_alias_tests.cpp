@@ -37,9 +37,13 @@ BOOST_AUTO_TEST_CASE (generate_big_aliasdata)
 	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, gooddata, strCipherGoodPrivData), true);	
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag1 " + HexStr(vchFromString("password")) +  " " + gooddata + " " + HexStr(vchFromString(strCipherGoodPrivData))));
 	GenerateBlocks(5);
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 " + HexStr(vchFromString("password")) +  " " + gooddata + " " + HexStr(vchFromString(strCipherBadPrivData))), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 " + HexStr(vchFromString("password")) +  " " + baddata + " " + HexStr(vchFromString(strCipherGoodPrivData))), runtime_error);
-	
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag1 \"\" \"\""));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 " + HexStr(vchFromString("password")) +  " " + gooddata + " " + HexStr(vchFromString(strCipherBadPrivData))));
+	GenerateBlocks(5);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 \"\" \"\""), runtime_error);	
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 " + HexStr(vchFromString("password")) +  " " + baddata + " " + HexStr(vchFromString(strCipherGoodPrivData))));
+	GenerateBlocks(5);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg jag2 \"\" \"\""), runtime_error);		
 }
 BOOST_AUTO_TEST_CASE (generate_big_aliasname)
 {
@@ -70,7 +74,9 @@ BOOST_AUTO_TEST_CASE (generate_big_aliaspassword)
 	string strCipherBadPassword = "";
 	BOOST_CHECK_EQUAL(EncryptMessage(vchPubKey, baddata, strCipherBadPassword), true);	
 	AliasNew("node1", "aliasname", gooddata, "a");
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasname1 " + HexStr(vchFromString(strCipherBadPassword)) + " pubdata"), runtime_error);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasname1 " + HexStr(vchFromString(strCipherBadPassword)) + " pubdata"));
+	GenerateBlocks(5);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasname1 \"\" \"\""), runtime_error);		
 }
 BOOST_AUTO_TEST_CASE (generate_aliasupdate)
 {
@@ -641,7 +647,9 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	
 	AliasNew("node1", "aliasexpirebuyback", "passwordnew1", "somedata", "data");
 	// can't renew aliases that aren't expired
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback " + HexStr(vchFromString("password")) + " data"), runtime_error);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback " + HexStr(vchFromString("password")) + " data"));
+	GenerateBlocks(5);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback \"\" \"\""), runtime_error);	
 	ExpireAlias("aliasexpirebuyback");
 	// expired aliases shouldnt be searchable
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback", "On"), false);
@@ -703,18 +711,24 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	GenerateBlocks(10, "node1");
 	GenerateBlocks(10, "node2");
 	AliasNew("node2", "aliasexpirebuyback", "passwordnew8", "somedata", "data");
-	BOOST_CHECK_THROW(CallRPC("node2", "aliasnew sysrates.peg aliasexpirebuyback " + HexStr(vchFromString("passwordnew9")) + " data"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback " + HexStr(vchFromString("password10")) + " data"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpirebuyback changedata1 " + HexStr(vchFromString("pvtdata"))), runtime_error);
-
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasnew sysrates.peg aliasexpirebuyback " + HexStr(vchFromString("passwordnew9")) + " data"));
+	GenerateBlocks(5, "node2");
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback \"\" \"\""), runtime_error);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback " + HexStr(vchFromString("password10")) + " data"));
+	GenerateBlocks(5, "node1");
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback \"\" \"\""), runtime_error);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sysrates.peg aliasexpirebuyback changedata1 " + HexStr(vchFromString("pvtdata"))));
+	GenerateBlocks(5, "node1");
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback \"\" \"\""), runtime_error);
 	// this time steal the alias and try to recreate at the same time
 	ExpireAlias("aliasexpirebuyback");
 	AliasNew("node1", "aliasexpirebuyback", "passwordnew11", "somedata", "data");
 	ExpireAlias("aliasexpirebuyback");
 	AliasNew("node2", "aliasexpirebuyback", "passwordnew12", "somedata", "data");
 	GenerateBlocks(5,"node2");
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback " + HexStr(vchFromString("passwordnew13")) + " data2"), runtime_error);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback " + HexStr(vchFromString("passwordnew13")) + " data2"));
 	GenerateBlocks(5);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew sysrates.peg aliasexpirebuyback \"\" \"\""), runtime_error);	
 }
 
 BOOST_AUTO_TEST_CASE (generate_aliasban)
