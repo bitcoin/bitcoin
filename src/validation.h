@@ -294,6 +294,13 @@ bool isBlockRequestsPaused();
 void setBlockRequestsPaused(bool state);
 
 /**
+ * Pausing tip updates will temporary pause connecting new blocks
+ * Pausing won't prevent the net logic from requesing downloading more blocks (up to BLOCK_DOWNLOAD_WINDOW)
+ */
+bool isTipUpdatesPaused();
+void setTipUpdatesPaused(bool state);
+
+/**
  * Prune block and undo files (blk???.dat and undo???.dat) so that the disk space used is less than a user-defined target.
  * The user sets the target (in MB) on the command line or in config file.  This will be run on startup and whenever new
  * space is allocated in a block or undo file, staying below the target. Changing back to unpruned requires a reindex

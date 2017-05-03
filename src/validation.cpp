@@ -95,6 +95,10 @@ const std::string strMessageMagic = "Bitcoin Signed Message:\n";
 static const bool DEFAULT_BLOCK_REQUESTS_PAUSED = false;
 std::atomic<bool> fPauseBlockRequests(DEFAULT_BLOCK_REQUESTS_PAUSED);
 
+/** if enable, ActiveBestChain will ignore/refuse to do tip updates */
+static const bool DEFAULT_TIP_UPDATE_PAUSED = false;
+std::atomic<bool> fPauseTipUpdates(DEFAULT_TIP_UPDATE_PAUSED);
+
 // Internal stuff
 namespace {
 
@@ -2484,6 +2488,12 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
     // us in the middle of ProcessNewBlock - do not assume pblock is set
     // sanely for performance or correctness!
 
+    if (isTipUpdatesPaused()) {
+        LogPrintf("%s: ignore ActivateBestChain, tip update are disabled\n", std::string(__func__));
+
+        // we will abort with a return value of true to not trigger error routines/shutdown
+        return true;
+    }
     CBlockIndex *pindexMostWork = NULL;
     CBlockIndex *pindexNewTip = NULL;
     do {
@@ -4306,6 +4316,14 @@ bool isBlockRequestsPaused() {
 
 void setBlockRequestsPaused(bool state) {
     fPauseBlockRequests = state;
+}
+
+bool isTipUpdatesPaused() {
+    return fPauseTipUpdates;
+}
+
+void setTipUpdatesPaused(bool state) {
+    fPauseTipUpdates = state;
 }
 
 //! Guess how far we are in the verification process at the given block index
