@@ -655,6 +655,13 @@ private:
     std::atomic<bool> fScanningWallet;
 
     /**
+     * fSyncPausedUntilKeypoolExt allows to temporarily pause the transaction syncing process until
+     * the keypool has been refilled (manual topup may be required for encrypted and locked wallets).
+     * Not doing so may result in missing transactions in case of a HD recovery (or shared HD wallet).
+     */
+    std::atomic<bool> fSyncPausedUntilKeypoolExt;
+
+    /**
      * Select a set of coins such that nValueRet >= nTargetValue and at least
      * all coins from coinControl are selected; Never select unconfirmed coins
      * if they are not ours
@@ -793,6 +800,7 @@ public:
         nRelockTime = 0;
         fAbortRescan = false;
         fScanningWallet = false;
+        fSyncPausedUntilKeypoolExt = false;
     }
 
     std::map<uint256, CWalletTx> mapWallet;

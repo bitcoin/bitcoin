@@ -390,6 +390,7 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
 
 void CWallet::SetBestChain(const CBlockLocator& loc)
 {
+    if (fSyncPausedUntilKeypoolExt) return;
     CWalletDB walletdb(*dbw);
     walletdb.WriteBestBlock(loc);
 }
@@ -1167,29 +1168,41 @@ void CWallet::SyncTransaction(const CTransactionRef& ptx, const CBlockIndex *pin
 }
 
 void CWallet::TransactionAddedToMempool(const CTransactionRef& ptx) {
+    if (fSyncPausedUntilKeypoolExt) return;
     LOCK2(cs_main, cs_wallet);
     SyncTransaction(ptx);
 }
 
-    LOCK2(cs_main, cs_wallet);
-    // TODO: Temporarily ensure that mempool removals are notified before
-    // connected transactions.  This shouldn't matter, but the abandoned
-    // state of transactions in our wallet is currently cleared when we
-    // receive another notification and there is a race condition where
-    // notification of a connected conflict might cause an outside process
-    // to abandon a transaction and then have it inadvertently cleared by
-    // the notification that the conflicted transaction was evicted.
-
-    for (const CTransactionRef& ptx : vtxConflicted) {
-        SyncTransaction(ptx);
-    }
-    for (size_t i = 0; i < pblock->vtx.size(); i++) {
-        SyncTransaction(pblock->vtx[i], pindex, i);
 void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex, const std::vector<CTransactionRef>& vtxConflicted, bool &requestPause) {
+    if (fSyncPausedUntilKeypoolExt) {
+        requestPause = true;
+        return;
+    }
+
+    {
+        LOCK2(cs_main, cs_wallet);
+        // TODO: Temporarily ensure that mempool removals are notified before
+        // connected transactions.  This shouldn't matter, but the abandoned
+        // state of transactions in our wallet is currently cleared when we
+        // receive another notification and there is a race condition where
+        // notification of a connected conflict might cause an outside process
+        // to abandon a transaction and then have it inadvertently cleared by
+        // the notification that the conflicted transaction was evicted.
+
+        for (const CTransactionRef& ptx : vtxConflicted) {
+            SyncTransaction(ptx);
+        }
+        for (size_t i = 0; i < pblock->vtx.size(); i++) {
+            SyncTransaction(pblock->vtx[i], pindex, i);
+        }
+        if (fSyncPausedUntilKeypoolExt) {
+            requestPause = true;
+        }
     }
 }
 
 void CWallet::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) {
+    if (fSyncPausedUntilKeypoolExt) return;
     LOCK2(cs_main, cs_wallet);
 
     for (const CTransactionRef& ptx : pblock->vtx) {
@@ -3413,7 +3426,8 @@ void CWallet::MarkReserveKeysAsUsed(const CKeyID& keyId)
     }
 
     if (IsHDEnabled() && !TopUpKeyPool()) {
-        LogPrintf("%s: Topping up keypool failed (locked wallet)\n", __func__);
+        fSyncPausedUntilKeypoolExt = true;
+        LogPrintf("%s: Topping up keypool failed (locked wallet), pausing transaction processing\n", __func__);
     }
 }
 
