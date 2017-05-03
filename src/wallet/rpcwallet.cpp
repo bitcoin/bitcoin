@@ -583,8 +583,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
         throw runtime_error(strError);
     }
 	// run a check on the inputs without putting them into the db, just to ensure it will go into the mempool without issues
-	vector<vector<unsigned char> > vvch;
-	int op, nOut;
+	int nOut;
 	bool fJustCheck = true;
 	string errorMessage="";
 	CCoinsViewCache inputs(pcoinsTip);
