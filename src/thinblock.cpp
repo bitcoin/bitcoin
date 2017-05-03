@@ -123,6 +123,9 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock, string strCommand)
             pfrom->thinBlock.vtx.size(), mapMissingTx.size());
     } // end lock cs_orphancache, mempool.cs, cs_xval
 
+    // Clear out data we no longer need before processing block.
+    pfrom->thinBlockHashes.clear();
+
     if (pfrom->thinBlockWaitingForTxns == 0)
     {
         // We have all the transactions now that are in this block: try to reassemble and process.
@@ -148,7 +151,7 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock, string strCommand)
         // finish reassembling the block, we need to re-request the full regular block:
         vector<CInv> vGetData;
         vGetData.push_back(CInv(MSG_BLOCK, header.GetHash()));
-        pfrom->PushMessage("getdata", vGetData);
+        pfrom->PushMessage(NetMsgType::GETDATA, vGetData);
         setPreVerifiedTxHash.clear(); // Xpress Validation - clear the set since we do not do XVal on regular blocks
         LogPrint("thin", "Missing %d Thinblock transactions, re-requesting a regular block\n",
             pfrom->thinBlockWaitingForTxns);
@@ -378,12 +381,19 @@ bool CXThinBlock::process(CNode *pfrom,
         }
     } // End locking cs_orphancache, mempool.cs and cs_xval
 
-    // This must be checked outside the above section or a deadlock may occur
+    // Clear out data we no longer need before processing block or making re-requests.
+    pfrom->xThinBlockHashes.clear();
+    mapPartialTxHash.clear();
+
+    // This must be done outside of the above section or a deadlock may occur.
     if (!fMerkleRootCorrect)
     {
-        LOCK(cs_main);
-        Misbehaving(pfrom->GetId(), 100);
-        return error("Thinblock merkelroot does not match computed merkleroot, peer=%d", pfrom->GetId());
+        vector<CInv> vGetData;
+        vGetData.push_back(CInv(MSG_THINBLOCK, header.GetHash()));
+        pfrom->PushMessage(NetMsgType::GETDATA, vGetData);
+        LogPrintf("xthinblock merkelroot does not match computed merkleroot - requesting full thinblock, peer=%d",
+            pfrom->GetId());
+        return true;
     }
 
     // There is a remote possiblity of a Tx hash collision therefore if it occurs we re-request a normal
@@ -392,7 +402,8 @@ bool CXThinBlock::process(CNode *pfrom,
     {
         vector<CInv> vGetData;
         vGetData.push_back(CInv(MSG_THINBLOCK, header.GetHash()));
-        pfrom->PushMessage("getdata", vGetData); // This must be done outside of the mempool.cs lock or the deadlock
+        // This must be done outside of the mempool.cs lock or the deadlock
+        pfrom->PushMessage(NetMsgType::GETDATA, vGetData);
         // detection with pfrom->cs_vSend will be triggered.
         LogPrintf("TX HASH COLLISION for xthinblock: re-requesting a thinblock\n");
         return true;
