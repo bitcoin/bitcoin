@@ -2046,6 +2046,9 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
 
     pwallet->TopUpKeyPool();
 
+    // give a hint to the wallet in case we have paused sync (we may have fall bellow the hd gap limit)
+    pwallet->EventuallyRescanAfterKeypoolTopUp();
+
     int64_t nSleepTime = request.params[1].get_int64();
     pwallet->nRelockTime = GetTime() + nSleepTime;
     RPCRunLater(strprintf("lockwallet(%s)", pwallet->GetName()), boost::bind(LockWallet, pwallet), nSleepTime);

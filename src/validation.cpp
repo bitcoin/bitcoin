@@ -2533,6 +2533,14 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
             for (const PerBlockConnectTrace& trace : connectTrace.GetBlocksConnected()) {
                 assert(trace.pblock && trace.pindex);
                 GetMainSignals().BlockConnected(trace.pblock, trace.pindex, *trace.conflictedTxs, requestPause);
+                if (requestPause) {
+                    // in case we are in pruned mode, we have to halt verification and block requests
+                    // to ensure the signal listener can keep up with the updates
+                    if (fPruneMode) {
+                        setBlockRequestsPaused(true);
+                        setTipUpdatesPaused(true);
+                    }
+                }
             }
         }
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
@@ -4316,6 +4324,7 @@ bool isBlockRequestsPaused() {
 }
 
 void setBlockRequestsPaused(bool state) {
+    LogPrintf("%s Block Requests\n", (state ? "Pause" : "Resume"));
     fPauseBlockRequests = state;
 }
 
@@ -4324,6 +4333,7 @@ bool isTipUpdatesPaused() {
 }
 
 void setTipUpdatesPaused(bool state) {
+    LogPrintf("%s Tip Updates\n", (state ? "Pause" : "Resume"));
     fPauseTipUpdates = state;
 }
 
