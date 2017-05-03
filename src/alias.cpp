@@ -1938,7 +1938,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		data = mapAliasRegistrationData[vchAlias];
 	else
 		newAlias.Serialize(data);
-	newAlias.Serialize(data);
+
     uint256 hash = Hash(data.begin(), data.end());
     vector<unsigned char> vchHashAlias = vchFromValue(hash.GetHex());
 
