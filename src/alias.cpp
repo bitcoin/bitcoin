@@ -1979,7 +1979,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	SendMoneySyscoin(vchAlias, vchAliasPeg, "", recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund);
 	if(!mapAliasRegistrationData.count(vchAlias))
- 		mapAliasRegistrationData.push_back(make_pair(vchAlias, data));	
+ 		mapAliasRegistrationData.insert(make_pair(vchAlias, data));	
 	UniValue res(UniValue::VARR);
 
 	UniValue signParams(UniValue::VARR);
@@ -2349,7 +2349,7 @@ UniValue syscoinsignrawtransaction(const UniValue& params, bool fHelp) {
 				if(vvch.size() == 1)
 				{
 					if(!mapAliasRegistrations.count(vvch[0]))
-						mapAliasRegistrations.push_back(make_pair(vvch[0], COutPoint(tx.GetHash(), i)));
+						mapAliasRegistrations.insert(make_pair(vvch[0], COutPoint(tx.GetHash(), i)));
 				}
 				else
 				{
