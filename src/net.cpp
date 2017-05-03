@@ -353,12 +353,8 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     if (!fNetworkActive) {
         return false;
     }
-    if (IsLocal(addrConnect)) {
-        return false;
-    }
-
     if (!pszDest) {
-        if (FindNode((CNetAddr)addrConnect) || IsBanned(addrConnect) ||
+        if (IsLocal(addrConnect) || FindNode((CNetAddr)addrConnect) || IsBanned(addrConnect) ||
             FindNode(addrConnect.ToStringIPPort()))
             return false;
     } else if (FindNode(std::string(pszDest))) {

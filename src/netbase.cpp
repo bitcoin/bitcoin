@@ -437,7 +437,7 @@ bool CreateSocket(const CService &addrConnect, SOCKET& hSocketRet)
 
     // Set to non-blocking
     if (!SetSocketNonBlocking(hSocket, true))
-        return error("ConnectSocketDirectly: Setting socket to non-blocking failed, error %s\n", NetworkErrorString(WSAGetLastError()));
+        return error("%s: Setting socket to non-blocking failed, error %s\n", __func__, NetworkErrorString(WSAGetLastError()));
 
     hSocketRet = hSocket;
     return true;
