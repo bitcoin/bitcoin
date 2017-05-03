@@ -110,7 +110,6 @@ BASE_SCRIPTS= [
     'rpcnamedargs.py',
     'listsinceblock.py',
     'p2p-leaktests.py',
-    'import-abort-rescan.py',
 ]
 
 EXTENDED_SCRIPTS = [
