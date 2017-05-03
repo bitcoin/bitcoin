@@ -1967,11 +1967,11 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		fYears = 1;
 	fee.nAmount *= powf(2.88,fYears);
 	CCoinControl coinControl;
-	if(mapAliasRegistrations.count(vchAlias) > 0)
+	if(mapAliasRegistrations.count(vchHashAlias) > 0)
 	{
 		vecSend.push_back(fee);
 		// add the registration input to the alias activation transaction
-		coinControl.Select(mapAliasRegistrations[vchAlias]);
+		coinControl.Select(mapAliasRegistrations[vchHashAlias]);
 	}
 	coinControl.fAllowOtherInputs = true;
 	coinControl.fAllowWatchOnly = true;
@@ -1979,7 +1979,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	SendMoneySyscoin(vchAlias, vchAliasPeg, "", recipient, recipientPayment, vecSend, wtx, &coinControl, useOnlyAliasPaymentToFund);
 	if(!mapAliasRegistrationData.count(vchAlias))
- 		mapAliasRegistrationData[vchAlias] = data;	
+ 		mapAliasRegistrationData[vchAlias].push_back(data);	
 	UniValue res(UniValue::VARR);
 
 	UniValue signParams(UniValue::VARR);
@@ -2349,7 +2349,7 @@ UniValue syscoinsignrawtransaction(const UniValue& params, bool fHelp) {
 				if(vvch.size() == 1)
 				{
 					if(!mapAliasRegistrations.count(vvch[0]))
-						mapAliasRegistrations[vvch[0]] = COutPoint(tx.GetHash(), i);
+						mapAliasRegistrations[vvch[0]].push_back(COutPoint(tx.GetHash(), i));
 				}
 				else
 				{
