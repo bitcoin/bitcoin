@@ -27,9 +27,11 @@ class ZMQTest (BitcoinTestFramework):
             self.log.warning("python3-zmq module not available. Skipping zmq tests!")
             sys.exit(self.TEST_EXIT_SKIPPED)
 
-        # Check that bitcoin has been built with ZMQ enabled
+        # Check that dash has been built with ZMQ enabled
         config = configparser.ConfigParser()
-        config.read_file(open(os.path.dirname(__file__) + "/config.ini"))
+        if not self.options.configfile:
+            self.options.configfile = os.path.dirname(__file__) + "/config.ini"
+        config.read_file(open(self.options.configfile))
 
         if not config["components"].getboolean("ENABLE_ZMQ"):
             self.log.warning("dashd has not been built with zmq enabled. Skipping zmq tests!")
