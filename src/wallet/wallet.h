@@ -970,6 +970,7 @@ public:
     void ReturnKey(int64_t nIndex);
     bool GetKeyFromPool(CPubKey &key, bool internal = false);
     int64_t GetOldestKeyPoolTime();
+    bool CheckKeypoolMinSize();
     void MarkReserveKeysAsUsed(const CKeyID& keyId);
     void GetAllReserveKeys(std::set<CKeyID>& setAddress) const;
 

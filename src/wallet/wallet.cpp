@@ -3175,6 +3175,7 @@ void CWallet::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool, bool int
                 setKeyPool.erase(id);
                 assert(keypool.vchPubKey.IsValid());
                 LogPrintf("keypool reserve %d\n", nIndex);
+                CheckKeypoolMinSize();
                 return;
             }
         }
@@ -3440,6 +3441,18 @@ void CReserveKey::ReturnKey()
     vchPubKey = CPubKey();
 }
 
+bool CWallet::CheckKeypoolMinSize() {
+    LOCK(cs_wallet);
+    size_t extKeypoolSize = KeypoolCountExternalKeys();
+    if (IsHDEnabled() && (extKeypoolSize < HD_RESTORE_KEYPOOL_SIZE_MIN || (setKeyPool.size()-extKeypoolSize) < HD_RESTORE_KEYPOOL_SIZE_MIN)) {
+        // if the remaining keypool size is below the gap limit, refuse to continue with the sync
+        fSyncPausedUntilKeypoolExt = true;
+        LogPrintf("%s: Keypool ran below min size, pause wallet sync\n", __func__);
+        return false;
+    }
+    return true;
+}
+
 void CWallet::MarkReserveKeysAsUsed(const CKeyID& keyId)
 {
     LOCK(cs_wallet);
@@ -3488,13 +3501,7 @@ void CWallet::MarkReserveKeysAsUsed(const CKeyID& keyId)
         LogPrintf("%s: Topping up keypool failed (locked wallet), pausing transaction processing\n", __func__);
     }
 
-    size_t extKeypoolSize = KeypoolCountExternalKeys();
-    if (IsHDEnabled() && (extKeypoolSize < HD_RESTORE_KEYPOOL_SIZE_MIN || (setKeyPool.size()-extKeypoolSize) < HD_RESTORE_KEYPOOL_SIZE_MIN)) {
-
-        // if the remaining keypool size is below the gap limit, refuse to cintinue with the sync
-        fSyncPausedUntilKeypoolExt = true;
-        LogPrintf("%s: Topping up keypool failed (locked wallet)\n", __func__);
-    }
+    CheckKeypoolMinSize();
 }
 
 void CWallet::GetAllReserveKeys(std::set<CKeyID>& setAddress) const
@@ -3879,12 +3886,11 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
             InitWarning(_("Your are using an encrypted HD wallet. In case you recover a HD wallet, you may miss incomming or outgoing funds."));
         }
         else {
-            if (GetArg("-keypool", DEFAULT_KEYPOOL_SIZE) < HD_RESTORE_KEYPOOL_SIZE_MIN ) {
-                InitWarning(_("Your keypool size is below the recommended limit for HD rescans. In case you recover a HD wallet, you may miss incomming or outgoing funds."));
-            }
             walletInstance->TopUpKeyPool();
         }
-
+        if (!walletInstance->CheckKeypoolMinSize()) {
+            InitWarning(_("Your keypool size is below the required limit for HD rescans. Wallet synchronisation is now paused until you have refilled the keypool."));
+        }
     }
     CBlockIndex *pindexRescan = chainActive.Genesis();
     if (!GetBoolArg("-rescan", false))
