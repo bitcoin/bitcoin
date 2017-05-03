@@ -22,6 +22,7 @@ string srcdir(JSON_TEST_SRC);
 static bool test_failed = false;
 
 #define d_assert(expr) { if (!(expr)) { test_failed = true; fprintf(stderr, "%s failed\n", filename.c_str()); } }
+#define f_assert(expr) { if (!(expr)) { test_failed = true; fprintf(stderr, "%s failed\n", __func__); } }
 
 static std::string rtrim(std::string s)
 {
@@ -108,6 +109,10 @@ static const char *filenames[] = {
         "fail35.json",
         "fail36.json",
         "fail37.json",
+        "fail38.json",               // invalid unicode: only first half of surrogate pair
+        "fail39.json",               // invalid unicode: only second half of surrogate pair
+        "fail40.json",               // invalid unicode: broken UTF-8
+        "fail41.json",               // invalid unicode: unfinished UTF-8
         "fail3.json",
         "fail4.json",                // extra comma
         "fail5.json",
@@ -119,13 +124,39 @@ static const char *filenames[] = {
         "pass2.json",
         "pass3.json",
         "round1.json",              // round-trip test
+        "round2.json",              // unicode
 };
+
+// Test \u handling
+void unescape_unicode_test()
+{
+    UniValue val;
+    bool testResult;
+    // Escaped ASCII (quote)
+    testResult = val.read("[\"\\u0022\"]");
+    f_assert(testResult);
+    f_assert(val[0].get_str() == "\"");
+    // Escaped Basic Plane character, two-byte UTF-8
+    testResult = val.read("[\"\\u0191\"]");
+    f_assert(testResult);
+    f_assert(val[0].get_str() == "\xc6\x91");
+    // Escaped Basic Plane character, three-byte UTF-8
+    testResult = val.read("[\"\\u2191\"]");
+    f_assert(testResult);
+    f_assert(val[0].get_str() == "\xe2\x86\x91");
+    // Escaped Supplementary Plane character U+1d161
+    testResult = val.read("[\"\\ud834\\udd61\"]");
+    f_assert(testResult);
+    f_assert(val[0].get_str() == "\xf0\x9d\x85\xa1");
+}
 
 int main (int argc, char *argv[])
 {
     for (unsigned int fidx = 0; fidx < ARRAY_SIZE(filenames); fidx++) {
         runtest_file(filenames[fidx]);
     }
+
+    unescape_unicode_test();
 
     return test_failed ? 1 : 0;
 }

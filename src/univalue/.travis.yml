@@ -1,4 +1,3 @@
-
 language: cpp
 
 compiler:
@@ -26,6 +25,7 @@ addons:
       - pkg-config
 
 before_script:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew uninstall libtool; brew install libtool; fi
   - if [ -n "$USE_SHELL" ]; then export CONFIG_SHELL="$USE_SHELL"; fi
   - test -n "$USE_SHELL" && eval '"$USE_SHELL" -c "./autogen.sh"' || ./autogen.sh
 
