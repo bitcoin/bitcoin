@@ -635,6 +635,9 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBl
     CNodeState *state = State(nodeid);
     DbgAssert(state != NULL, return);
 
+    // If started then clear the thinblock timer used for preferential downloading
+    thindata.ClearThinBlockTimer(hash);
+
     // BU why mark as received? because this erases it from the inflight list.  Instead we'll check for it
     // BU removed: MarkBlockAsReceived(hash);
     map<uint256, pair<NodeId, list<QueuedBlock>::iterator> >::iterator itInFlight = mapBlocksInFlight.find(hash);
