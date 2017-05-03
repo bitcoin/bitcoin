@@ -3116,14 +3116,11 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 UniValue aliasfilter(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() > 3)
 		throw runtime_error(
-				"aliasfilter [[[[[regexp]] from='']] safesearch='Yes']\n"
+		"aliasfilter [regexp] [alias] [safesearch='Yes']\n"
 						"scan and filter aliases\n"
 						"[regexp] : apply [regexp] on aliases, empty means all aliases\n"
-						"[from] : show results from this GUID [from], empty means first.\n"
-						"[aliasfilter] : shows all aliases that are safe to display (not on the ban list)\n"
-						"aliasfilter \"\" 5 # list aliases updated in last 5 blocks\n"
-						"aliasfilter \"^alias\" # list all aliases starting with \"alias\"\n"
-						"aliasfilter 36000 0 0 stat # display stats (number of aliases) on active aliases\n");
+						"[alias] : look for a specific alias\n"
+						"[safesearch] : shows all aliases that are safe to display (not on the ban list)\n");
 
 	vector<unsigned char> vchAlias;
 	string strRegexp;

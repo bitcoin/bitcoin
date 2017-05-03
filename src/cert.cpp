@@ -1381,16 +1381,12 @@ bool BuildCertJson(const CCert& cert, const CAliasIndex& alias, UniValue& oCert,
 UniValue certfilter(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() > 4)
 		throw runtime_error(
-				"certfilter [[[[[regexp]] from=0]] safesearch='Yes' category]\n"
+		"certfilter [regexp] [cert] [safesearch='Yes'] [category]\n"
 						"scan and filter certs\n"
 						"[regexp] : apply [regexp] on certs, empty means all certs\n"
-						"[from] : show results from this GUID [from], 0 means first.\n"
-						"[certfilter] : shows all certs that are safe to display (not on the ban list)\n"
+						"[cert] : look for a specific certificate\n"
 						"[safesearch] : shows all certs that are safe to display (not on the ban list)\n"
-						"[category] : category you want to search in, empty for all\n"
-						"certfilter \"\" 5 # list certs updated in last 5 blocks\n"
-						"certfilter \"^cert\" # list all certs starting with \"cert\"\n"
-						"certfilter 36000 0 0 stat # display stats (number of certs) on active certs\n");
+						"[category] : category you want to search in, empty for all\n");
 
 	vector<unsigned char> vchCert;
 	string strRegexp;

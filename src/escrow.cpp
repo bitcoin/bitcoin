@@ -3669,14 +3669,10 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 UniValue escrowfilter(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() > 2)
 		throw runtime_error(
-				"escrowfilter [[[[[regexp]] from=0]}\n"
+		"escrowfilter [regexp] [escrow]\n"
 						"scan and filter escrows\n"
 						"[regexp] : apply [regexp] on escrows, empty means all escrows\n"
-						"[from] : show results from this GUID [from], 0 means first.\n"
-						"[escrowfilter] : shows all escrows that are safe to display (not on the ban list)\n"
-						"escrowfilter \"\" 5 # list escrows updated in last 5 blocks\n"
-						"escrowfilter \"^escrow\" # list all excrows starting with \"escrow\"\n"
-						"escrowfilter 36000 0 0 stat # display stats (number of escrows) on active escrows\n");
+						"[escrow] : look for a specific escrow guid\n");
 
 	vector<unsigned char> vchEscrow;
 	string strRegexp;
