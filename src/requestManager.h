@@ -29,10 +29,10 @@ public:
   bool operator<(const CNodeRequestData &rhs) const { return desirability < rhs.desirability; }
 };
 
-struct IsCNodeRequestDataThisNode // Compare a CNodeRequestData object to a node
+struct MatchCNodeRequestData // Compare a CNodeRequestData object to a node
 {
   CNode* node;
-  IsCNodeRequestDataThisNode(CNode* n):node(n) {};
+  MatchCNodeRequestData(CNode* n):node(n) {};
   inline bool operator()(const CNodeRequestData& nd) const { return nd.node == node; }
 };
 
@@ -57,12 +57,16 @@ public:
     lastRequestTime = 0;
   }
 
-  void AddSource(CNode* from);
+  bool AddSource(CNode* from); // returns true if the source did not already exist
 };
 
 class CRequestManager
 {
   protected:
+#ifdef DEBUG
+  friend UniValue getstructuresizes(const UniValue& params, bool fHelp);
+#endif
+
   // map of transactions
   typedef std::map<uint256, CUnknownObj> OdMap;
   OdMap mapTxnInfo;
@@ -79,7 +83,7 @@ class CRequestManager
   CStatHistory<int> rejectedTxns;
   CStatHistory<int> droppedTxns;
   CStatHistory<int> pendingTxns;
-  
+
   void cleanup(OdMap::iterator& item);
   CLeakyBucket requestPacer;
   CLeakyBucket blockPacer;

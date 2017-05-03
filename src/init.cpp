@@ -258,6 +258,7 @@ void Shutdown()
 
     NetCleanup();
     MainCleanup();
+    UnlimitedCleanup();
     LogPrintf("%s: done\n", __func__);
 }
 

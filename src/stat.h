@@ -62,6 +62,7 @@ class CStatBase
 {
 public:
   CStatBase() {};
+  virtual ~CStatBase() {};
   virtual UniValue GetNow()=0;  // Returns the current value of this statistic
   virtual UniValue GetTotal()=0;  // Returns the cumulative value of this statistic
   virtual UniValue GetSeries(const std::string& name, int count)=0;  // Returns the historical or series data
@@ -111,7 +112,7 @@ void cleanup()
 {
   LOCK(cs_statMap);
   statistics.erase(CStatKey(name));
-  name = "";
+  name.clear();
 }
 
   CStat& operator=(const DataType& arg) { value=arg; return *this;}
@@ -136,12 +137,15 @@ void cleanup()
     return NullUniValue;  // Has no series data
   }
 
-  ~CStat()
-    {
-  LOCK(cs_statMap);
-  if (name.size())
-        statistics.erase(CStatKey(name));
-    }
+  virtual ~CStat()
+  {
+      LOCK(cs_statMap);
+      if (name.size())
+      {
+          statistics.erase(CStatKey(name));
+          name.clear();
+      }
+  }
 };
 
 
@@ -216,9 +220,9 @@ CStatHistory(const std::string& name, unsigned int operation=STAT_OP_SUM):CStat<
       Start();      
     }
 
-  ~CStatHistory()
-    {
-    }
+  virtual ~CStatHistory()
+  {
+  }
 
   CStatHistory& operator << (const DataType& rhs) 
     {
