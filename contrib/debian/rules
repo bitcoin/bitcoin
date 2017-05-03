@@ -15,7 +15,7 @@ override_dh_auto_clean:
 # Yea, autogen should be run on the source archive, but I like doing git archive
 override_dh_auto_configure:
 	./autogen.sh
-	./configure
+	./configure --without-miniupnpc --with-gui=qt4
 
 override_dh_auto_test:
 	make check
