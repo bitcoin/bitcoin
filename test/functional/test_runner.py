@@ -94,6 +94,7 @@ BASE_SCRIPTS= [
     'rest.py',
     'mempool_spendcoinbase.py',
     'mempool_reorg.py',
+    'mempool_persist.py',
     'httpbasics.py',
     'multi_rpc.py',
     'proxy_test.py',
