@@ -234,19 +234,19 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         EraseOrphansByTime();
         BOOST_CHECK(mapOrphanTransactions.size() == 50);
 
-        // Advance the clock 72 hours
-        SetMockTime(nStartTime+60*60*72);
+        // Advance the clock DEFAULT_ORPHANPOOL_EXPIRY hours
+        SetMockTime(nStartTime+60*60*DEFAULT_ORPHANPOOL_EXPIRY);
         EraseOrphansByTime();
         BOOST_CHECK(mapOrphanTransactions.size() == 50);
 
         /** Test the boundary where orphans should get purged. **/
-        // Advance the clock 72 hours and 4 minutes 59 seconds
-        SetMockTime(nStartTime+60*60*72 + 299);
+        // Advance the clock DEFAULT_ORPHANPOOL_EXPIRY hours plus 4 minutes 59 seconds
+        SetMockTime(nStartTime+60*60*DEFAULT_ORPHANPOOL_EXPIRY + 299);
         EraseOrphansByTime();
         BOOST_CHECK(mapOrphanTransactions.size() == 50);
 
-        // Advance the clock 72 hours and 5 minutes
-        SetMockTime(nStartTime+60*60*72 + 300);
+        // Advance the clock DEFAULT_ORPHANPOOL_EXPIRY hours plus 5 minutes
+        SetMockTime(nStartTime+60*60*DEFAULT_ORPHANPOOL_EXPIRY + 300);
         EraseOrphansByTime();
         BOOST_CHECK(mapOrphanTransactions.size() == 0);
     }

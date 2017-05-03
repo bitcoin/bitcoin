@@ -47,6 +47,9 @@ static boost::atomic<bool> fIsChainNearlySyncd(false);
 extern CTweakRef<uint64_t> miningBlockSize;
 extern CTweakRef<unsigned int> ebTweak;
 
+extern CCriticalSection cs_previousblock;
+vector<uint256> vPreviousBlock;
+
 bool IsTrafficShapingEnabled();
 
 bool MiningAndExcessiveBlockValidatorRule(const unsigned int newExcessiveBlockSize, const unsigned int newMiningBlockSize)
@@ -453,6 +456,8 @@ std::string UnlimitedCmdLineHelp()
     strUsage += HelpMessageOpt("-genproclimit=<n>",
         strprintf(_("Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)"),
                                    DEFAULT_GENERATE_THREADS));
+    strUsage += HelpMessageOpt("-ophanpoolexpiry=<n>", strprintf(_("Do not keep transactions in the orphanpool longer than <n> hours (default: %u)"),
+                                   DEFAULT_ORPHANPOOL_EXPIRY));
     strUsage += TweakCmdLineHelp();
     return strUsage;
 }
@@ -1248,6 +1253,32 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
             setUnVerifiedOrphanTxHash.clear();
         }
     }
+
+    if (!IsInitialBlockDownload())
+    {
+        LOCK(cs_orphancache);
+        {
+            // Erase any orphans that may have been in the previous block and arrived
+            // after the previous block had already been processed.
+            LOCK(cs_previousblock);
+            for (unsigned int i = 0; i < vPreviousBlock.size(); i++)
+            {
+                EraseOrphanTx(vPreviousBlock[i]);
+            }
+            vPreviousBlock.clear();
+
+            // Erase orphans from the current block that were already received.
+            for (unsigned int i = 0; i < block.vtx.size(); i++)
+            {
+                uint256 hash = block.vtx[i].GetHash();
+                vPreviousBlock.push_back(hash);
+                EraseOrphanTx(hash);
+            }
+        }
+    }
+
+    // Clear the thinblock timer used for preferential download
+    thindata.ClearThinBlockTimer(inv.hash);
 }
 
 bool CheckAndRequestExpeditedBlocks(CNode* pfrom)
