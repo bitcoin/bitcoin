@@ -66,6 +66,8 @@ static const bool DEFAULT_DISABLE_WALLET = false;
 //! if set, all keys will be derived by using BIP32
 static const bool DEFAULT_USE_HD_WALLET = true;
 
+static const bool DEFAULT_IGNORE_HD_MIN_KEYPOOL_SIZE = false;
+
 extern const char * DEFAULT_WALLET_DAT;
 
 class CBlockIndex;

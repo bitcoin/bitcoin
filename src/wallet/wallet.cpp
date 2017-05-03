@@ -3444,7 +3444,7 @@ void CReserveKey::ReturnKey()
 bool CWallet::CheckKeypoolMinSize() {
     LOCK(cs_wallet);
     size_t extKeypoolSize = KeypoolCountExternalKeys();
-    if (IsHDEnabled() && (extKeypoolSize < HD_RESTORE_KEYPOOL_SIZE_MIN || (setKeyPool.size()-extKeypoolSize) < HD_RESTORE_KEYPOOL_SIZE_MIN)) {
+    if (!GetBoolArg("-hdignoregaplimit", DEFAULT_IGNORE_HD_MIN_KEYPOOL_SIZE) && IsHDEnabled() && (extKeypoolSize < HD_RESTORE_KEYPOOL_SIZE_MIN || (setKeyPool.size()-extKeypoolSize) < HD_RESTORE_KEYPOOL_SIZE_MIN)) {
         // if the remaining keypool size is below the gap limit, refuse to continue with the sync
         fSyncPausedUntilKeypoolExt = true;
         LogPrintf("%s: Keypool ran below min size, pause wallet sync\n", __func__);
@@ -3762,6 +3762,7 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
         strUsage += HelpMessageOpt("-flushwallet", strprintf("Run a thread to flush wallet periodically (default: %u)", DEFAULT_FLUSHWALLET));
         strUsage += HelpMessageOpt("-privdb", strprintf("Sets the DB_PRIVATE flag in the wallet db environment (default: %u)", DEFAULT_WALLET_PRIVDB));
         strUsage += HelpMessageOpt("-walletrejectlongchains", strprintf(_("Wallet will not create transactions that violate mempool chain limits (default: %u)"), DEFAULT_WALLET_REJECT_LONG_CHAINS));
+        strUsage += HelpMessageOpt("-hdignoregaplimit", strprintf(_("Ignores the minimum keypool-size warning for HD restore (default: %u)"), DEFAULT_IGNORE_HD_MIN_KEYPOOL_SIZE));
     }
 
     return strUsage;
@@ -3882,13 +3883,14 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
 
     // HD Restore: Make sure we always have a reasonable keypool size if HD is enabled
     if (walletInstance->IsHDEnabled()) {
-        if (walletInstance->IsCrypted()) {
-            InitWarning(_("Your are using an encrypted HD wallet. In case you recover a HD wallet, you may miss incomming or outgoing funds."));
+        if (GetArg("-keypool", DEFAULT_KEYPOOL_SIZE) < HD_RESTORE_KEYPOOL_SIZE_MIN && !GetBoolArg("-hdignoregaplimit", DEFAULT_IGNORE_HD_MIN_KEYPOOL_SIZE)) {
+            LogPrintf("Parameter Interaction: set keypool to required minimum for encrypted wallets (%d)\n", HD_RESTORE_KEYPOOL_SIZE_MIN);
+            SoftSetArg("-keypool", std::to_string(HD_RESTORE_KEYPOOL_SIZE_MIN));
         }
         else {
             walletInstance->TopUpKeyPool();
         }
-        if (!walletInstance->CheckKeypoolMinSize()) {
+        if (!walletInstance->CheckKeypoolMinSize() && !GetBoolArg("-hdignoregaplimit", DEFAULT_IGNORE_HD_MIN_KEYPOOL_SIZE)) {
             InitWarning(_("Your keypool size is below the required limit for HD rescans. Wallet synchronisation is now paused until you have refilled the keypool."));
         }
     }

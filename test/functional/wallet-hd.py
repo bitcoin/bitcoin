@@ -74,10 +74,12 @@ class WalletHDTest(BitcoinTestFramework):
 
         self.log.info("Restore backup ...")
         self.stop_node(1)
-        os.remove(self.options.tmpdir + "/node1/regtest/wallet.dat")
+        # we need to delete the complete regtest directory
+        # otherwise node1 would auto-recover all funds in flag the keypool keys as used
+        shutil.rmtree(tmpdir + "/node1/regtest")
+        os.mkdir(tmpdir + "/node1/regtest")
         shutil.copyfile(tmpdir + "/hd.bak", tmpdir + "/node1/regtest/wallet.dat")
         self.nodes[1] = start_node(1, self.options.tmpdir, self.extra_args[1])
-        #connect_nodes_bi(self.nodes, 0, 1)
 
         # Assert that derivation is deterministic
         hd_add_2 = None
@@ -87,7 +89,9 @@ class WalletHDTest(BitcoinTestFramework):
             assert_equal(hd_info_2["hdkeypath"], "m/0'/0'/"+str(_+1)+"'")
             assert_equal(hd_info_2["hdmasterkeyid"], masterkeyid)
         assert_equal(hd_add, hd_add_2)
-
+        connect_nodes_bi(self.nodes, 0, 1)
+        self.sync_all()
+        
         # Needs rescan
         self.stop_node(1)
         self.nodes[1] = start_node(1, self.options.tmpdir, self.extra_args[1] + ['-rescan'])

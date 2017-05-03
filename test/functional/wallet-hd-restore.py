@@ -16,7 +16,7 @@ class WalletHDRestoreTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.node_args = [['-usehd=0'], ['-usehd=1', '-keypool=100']]
+        self.node_args = [['-usehd=0'], ['-usehd=1', '-keypool=100', '-hdignoregaplimit=0']]
 
     def setup_network(self):
         self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.node_args)
@@ -111,7 +111,7 @@ class WalletHDRestoreTest(BitcoinTestFramework):
         shutil.rmtree(tmpdir + "/node1/regtest")
         os.mkdir(tmpdir + "/node1/regtest")
         shutil.copyfile(tmpdir + "/hd.enc.bak", tmpdir + "/node1/regtest/wallet.dat")
-        self.nodes[1] = start_node(1, self.options.tmpdir, ['-usehd=1', '-keypool=100'])
+        self.nodes[1] = start_node(1, self.options.tmpdir, ['-usehd=1', '-keypool=100', '-hdignoregaplimit=0'])
         connect_nodes_bi(self.nodes,0,1)
 
         # Sync must be possible, though the wallet bestblock should lack behind
@@ -137,7 +137,7 @@ class WalletHDRestoreTest(BitcoinTestFramework):
         shutil.rmtree(tmpdir + "/node1/regtest")
         os.mkdir(tmpdir + "/node1/regtest")
         shutil.copyfile(tmpdir + "/hd.enc.bak", tmpdir + "/node1/regtest/wallet.dat")
-        self.nodes[1] = start_node(1, self.options.tmpdir, ['-usehd=1', '-keypool=100', '-prune=550'])
+        self.nodes[1] = start_node(1, self.options.tmpdir, ['-usehd=1', '-keypool=100', '-prune=550', '-hdignoregaplimit=0'])
         connect_nodes_bi(self.nodes,0,1)
 
         # now we should only be capable to sync up to the second last block (pruned mode, sync will be paused)
