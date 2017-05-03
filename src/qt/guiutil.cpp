@@ -754,12 +754,15 @@ bool SetStartOnSystemStartup(bool fAutoStart)
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
 
+// NB: caller must release returned ref if it's not NULL
 LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef findUrl);
 LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef findUrl)
 {
-    // loop through the list of startup items and try to find the bitcoin app
+    LSSharedFileListItemRef foundItem = NULL;
+
+    // loop through the list of startup items and try to find the app
     CFArrayRef listSnapshot = LSSharedFileListCopySnapshot(list, NULL);
-    for(int i = 0; i < CFArrayGetCount(listSnapshot); i++) {
+    for(int i = 0; !foundItem && i < CFArrayGetCount(listSnapshot); ++i) {
         LSSharedFileListItemRef item = (LSSharedFileListItemRef)CFArrayGetValueAtIndex(listSnapshot, i);
         UInt32 resolutionFlags = kLSSharedFileListNoUserInteraction | kLSSharedFileListDoNotMountVolumes;
         CFURLRef currentItemURL = NULL;
@@ -767,24 +770,24 @@ LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef
 #if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED >= 10100
     if(&LSSharedFileListItemCopyResolvedURL)
         currentItemURL = LSSharedFileListItemCopyResolvedURL(item, resolutionFlags, NULL);
-#if defined(MAC_OS_X_VERSION_MIN_REQUIRED) && MAC_OS_X_VERSION_MIN_REQUIRED < 10100
+#  if defined(MAC_OS_X_VERSION_MIN_REQUIRED) && MAC_OS_X_VERSION_MIN_REQUIRED < 10100
     else
         LSSharedFileListItemResolve(item, resolutionFlags, &currentItemURL, NULL);
-#endif
+#  endif
 #else
     LSSharedFileListItemResolve(item, resolutionFlags, &currentItemURL, NULL);
 #endif
 
         if(currentItemURL && CFEqual(currentItemURL, findUrl)) {
             // found
-            CFRelease(currentItemURL);
-            return item;
+            CFRetain(foundItem = item);
         }
         if(currentItemURL) {
             CFRelease(currentItemURL);
         }
     }
-    return NULL;
+    CFRelease(listSnapshot);
+    return foundItem;
 }
 
 bool GetStartOnSystemStartup()
@@ -792,7 +795,11 @@ bool GetStartOnSystemStartup()
     CFURLRef bitcoinAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
     LSSharedFileListRef loginItems = LSSharedFileListCreate(NULL, kLSSharedFileListSessionLoginItems, NULL);
     LSSharedFileListItemRef foundItem = findStartupItemInList(loginItems, bitcoinAppUrl);
-    return !!foundItem; // return boolified object
+    // findStartupItemInList retains the item it returned, need to release
+    if (foundItem) CFRelease(foundItem);
+    CFRelease(loginItems);
+    CFRelease(bitcoinAppUrl);
+    return !!foundItem;
 }
 
 bool SetStartOnSystemStartup(bool fAutoStart)
@@ -809,6 +816,10 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         // remove item
         LSSharedFileListItemRemove(loginItems, foundItem);
     }
+    // findStartupItemInList retains the item it returned, need to release
+    if (foundItem) CFRelease(foundItem);
+    CFRelease(loginItems);
+    CFRelease(bitcoinAppUrl);
     return true;
 }
 #else
