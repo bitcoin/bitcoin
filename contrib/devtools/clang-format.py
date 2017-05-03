@@ -17,7 +17,10 @@ import StringIO
 import pdb
 import tempfile
 
-tested_versions = ['3.6.0', '3.6.1', '3.6.2', '3.8.0'] # A set of versions known to produce the same output
+# A set of versions known to produce the same output
+tested_versions = ['3.8.0',
+                   '3.8.1',  # 3.8.1-12ubuntu1 on yakkety works
+                  ]
 accepted_file_extensions = ('.h', '.cpp') # Files to format
 trailing_comment_exe = "trailing-comment.py"
 max_col_len = 120
