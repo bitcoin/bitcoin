@@ -293,6 +293,13 @@ bool isBlockRequestsPaused();
 void setBlockRequestsPaused(bool state);
 
 /**
+ * Pausing tip updates temporarily pauses connecting new blocks
+ * Pausing won't prevent the net logic from requesting more blocks for download (up to BLOCK_DOWNLOAD_WINDOW)
+ */
+bool isTipUpdatesPaused();
+void setTipUpdatesPaused(bool state);
+
+/**
  *  Mark one block file as pruned.
  */
 void PruneOneBlockFile(const int fileNumber);
