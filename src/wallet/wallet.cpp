@@ -4043,6 +4043,11 @@ bool CWallet::ParameterInteraction()
         }
     }
 
+    // -zapwallettx implies dropping the mempool on startup
+    if (GetBoolArg("-zapwallettxes", false) && SoftSetBoolArg("-persistmempool", false)) {
+        LogPrintf("%s: parameter interaction: -zapwallettxes=<mode> -> setting -persistmempool=0\n", __func__);
+    }
+
     // -zapwallettx implies a rescan
     if (GetBoolArg("-zapwallettxes", false)) {
         if (is_multiwallet) {
