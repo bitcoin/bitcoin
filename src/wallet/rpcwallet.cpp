@@ -460,7 +460,12 @@ When to pay with this method:
 4) if transaction completely funded, try to sign and send to network*/
 void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsigned char> &vchAliasPeg, const string &currencyCode, const CRecipient &aliasRecipient, const CRecipient &aliasFeePlaceholderRecipient, vector<CRecipient> &vecSend, CWalletTx& wtxNew, CCoinControl* coinControl, bool useOnlyAliasPaymentToFund=true, bool transferAlias=false)
 {
-
+	int op;
+	vector<vector<unsigned char> > vvch;
+	if (!DecodeAliasScript(aliasRecipient.scriptPubKey, op, vvch))
+		throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("Invalid alias recipient"));
+	
+	bool bAliasRegistration = op == OP_ALIAS_ACTIVATE && vvch.size() == 1;
     CReserveKey reservekey(pwalletMain);
     CAmount nFeeRequired;
     std::string strError;
@@ -468,7 +473,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	// step 1
 	COutPoint aliasOutPoint;
 	unsigned int numResults = aliasunspent(vchAlias, aliasOutPoint);
-	if(numResults > 0 && numResults >= MAX_ALIAS_UPDATES_PER_BLOCK)
+	if(numResults > 0 && numResults >= MAX_ALIAS_UPDATES_PER_BLOCK || bAliasRegistration)
 		numResults = MAX_ALIAS_UPDATES_PER_BLOCK-1;
 	if(transferAlias)
 		numResults = 0;
@@ -477,7 +482,7 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	{
 		for(unsigned int i =numResults;i<MAX_ALIAS_UPDATES_PER_BLOCK;i++)
 			vecSend.push_back(aliasRecipient);
-		if(!aliasOutPoint.IsNull())
+		if(!aliasOutPoint.IsNull() && !bAliasRegistration)
 			coinControl->Select(aliasOutPoint);
 	}
 
@@ -502,9 +507,12 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	vector<COutPoint> outPoints;
 	// select coins from alias to pay for this tx
 	numFeeCoinsLeft = aliasselectpaymentcoins(vchAlias, nTotal, outPoints, bAreFeePlaceholdersFunded, nRequiredFeePlaceholderFunds, true, transferAlias);
-	BOOST_FOREACH(const COutPoint& outpoint, outPoints)
+	if(!bAliasRegistration)
 	{
-		coinControl->Select(outpoint);	
+		BOOST_FOREACH(const COutPoint& outpoint, outPoints)
+		{
+			coinControl->Select(outpoint);	
+		}
 	}
 	
 	// step 3
@@ -514,14 +522,14 @@ void SendMoneySyscoin(const vector<unsigned char> &vchAlias, const vector<unsign
 	CAmount nBalance = AmountFromValue(result);
 	// if fee placement utxo's have been used up (or we are creating a new alias) use balance(alias or wallet) for funding as well as create more fee placeholders
 	bool bNeedNewAliasPaymentInputs = numFeeCoinsLeft == 0 || numResults <= 0;
-	if(bNeedNewAliasPaymentInputs)
+	if(bNeedNewAliasPaymentInputs && !bAliasRegistration)
 	{
 		for(unsigned int i =0;i<MAX_ALIAS_UPDATES_PER_BLOCK;i++)
 		{
 			vecSend.push_back(aliasFeePlaceholderRecipient);
 		}	
 	}
-	if(nBalance > 0)
+	if(nBalance > 0 && !bAliasRegistration)
 	{
 		// get total output required
 		if (!pwalletMain->CreateTransaction(vecSend, wtxNew2, reservekey, nFeeRequired, nChangePosRet, strError, coinControl, false,vchAliasPeg, currencyCode,true, useOnlyAliasPaymentToFund)) {
