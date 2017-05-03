@@ -1966,9 +1966,6 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if(fYears < 1)
 		fYears = 1;
 	fee.nAmount *= powf(2.88,fYears);
-
-
-	vecSend.push_back(fee);
 	CCoinControl coinControl;
 	if(mapAliasRegistrations.count(vchAlias) > 0)
 	{
