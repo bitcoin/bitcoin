@@ -1100,9 +1100,10 @@ public:
     CPubKey GenerateNewHDMasterKey();
     
     /* Set the current HD master key (will reset the chain child index counters)
-       If possibleOldChain is provided, the parameters from the old chain (version)
-       will be preserved. */
-    bool SetHDMasterKey(const CPubKey& key, CHDChain *possibleOldChain = nullptr);
+       Sets the master key's version based on the current wallet version (so the
+       caller must ensure the current wallet version is correct before calling
+       this function). */
+    bool SetHDMasterKey(const CPubKey& key);
 };
 
 /** A key allocated from the key pool. */
