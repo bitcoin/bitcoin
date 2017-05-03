@@ -12,6 +12,7 @@
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "fs.h"
+#include "init.h" //for StartShutdown()
 #include "key.h"
 #include "keystore.h"
 #include "validation.h"
@@ -1435,6 +1436,57 @@ bool CWallet::IsHDEnabled() const
     return !hdChain.masterKeyID.IsNull();
 }
 
+void CWallet::EventuallyRescanAfterKeypoolTopUp() {
+    if (m_sync_paused_for_keypool) {
+
+        // for now, enable block requests and tip updates via the states
+        // this will only be sufficient as long as only a single wallet adjusts these stats
+        // switch to counters (instead of a single boolean state) could solve this
+        ::setBlockRequestsPaused(false);
+        ::setTipUpdatesPaused(false);
+
+        // disabled the per-wallet pause
+        m_sync_paused_for_keypool = false;
+
+        const CChainParams& chainparams = Params();
+        CValidationState state;
+        if (!ActivateBestChain(state, chainparams)) {
+            LogPrintf("Failed to connect best block");
+            StartShutdown();
+        }
+
+        CBlockIndex *pindexRescan = chainActive.Genesis();
+        CWalletDB walletdb(*dbw);
+        CBlockLocator locator;
+        if (walletdb.ReadBestBlock(locator)) {
+            pindexRescan = FindForkInGlobalIndex(chainActive, locator);
+        }
+
+        if (chainActive.Tip() && chainActive.Tip() != pindexRescan) {
+            //We can't rescan beyond non-pruned blocks, stop and throw an error
+            //this might happen if a user uses a old wallet within a pruned node
+            // or if he ran -disablewallet for a longer time, then decided to re-enable
+            if (fPruneMode) {
+                CBlockIndex *block = chainActive.Tip();
+                while (block && block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA) && block->pprev->nTx > 0 && pindexRescan != block) {
+                    block = block->pprev;
+                }
+
+                if (pindexRescan != block) {
+                    const static std::string pruneError = "Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)";
+                    uiInterface.ThreadSafeMessageBox(pruneError, "", CClientUIInterface::MSG_ERROR);
+                    StartShutdown();
+                    throw std::runtime_error(pruneError);
+                }
+            }
+            if (pindexRescan) {
+                LogPrintf("Rescanning from height: %d\n", pindexRescan->nHeight);
+            }
+            ScanForWalletTransactions(pindexRescan, true);
+        }
+    }
+}
+
 int64_t CWalletTx::GetTxTime() const
 {
     int64_t n = nTimeSmart;
@@ -1580,6 +1632,7 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool f
 
     CBlockIndex* pindex = pindexStart;
     CBlockIndex* ret = nullptr;
+    CBlockIndex* pindex_prev = NULL;
     {
         LOCK2(cs_main, cs_wallet);
         fAbortRescan = false;
@@ -1602,6 +1655,11 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool f
                 for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
                     AddToWalletIfInvolvingMe(block.vtx[posInBlock], pindex, posInBlock, fUpdate);
                 }
+                if (m_sync_paused_for_keypool) {
+                    LogPrintf("Aborting rescanning at block %d. Please extend the keypool first.\n", (pindex ? pindex->nHeight: 0));
+                    return pindex_prev;
+                }
+                pindex_prev = pindex;
             } else {
                 ret = pindex;
             }
@@ -3602,6 +3660,13 @@ void CWallet::MarkReserveKeysAsUsed(const CKeyID& keyId)
     }
 
     if (IsHDEnabled() && !TopUpKeyPool()) {
+        LogPrintf("%s: Topping up keypool failed (locked wallet)\n", __func__);
+    }
+
+    size_t extKeypoolSize = KeypoolCountExternalKeys();
+    if (IsHDEnabled() && (extKeypoolSize < HD_RESTORE_KEYPOOL_SIZE_MIN || (setKeyPool.size()-extKeypoolSize) < HD_RESTORE_KEYPOOL_SIZE_MIN)) {
+        // if the remaining keypool size is below the gap limit, refuse to cintinue with the sync
+        m_sync_paused_for_keypool = true;
         LogPrintf("%s: Topping up keypool failed (locked wallet)\n", __func__);
     }
 }
