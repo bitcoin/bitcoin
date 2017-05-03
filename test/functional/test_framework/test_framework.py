@@ -115,6 +115,8 @@ class BitcoinTestFramework(object):
                           help="The seed to use for assigning port numbers (default: current process id)")
         parser.add_option("--coveragedir", dest="coveragedir",
                           help="Write tested RPC commands into this directory")
+        parser.add_option("--configfile", dest="configfile",
+                          help="Location of the test framework config file")
         self.add_options(parser)
         (self.options, self.args) = parser.parse_args()
 
