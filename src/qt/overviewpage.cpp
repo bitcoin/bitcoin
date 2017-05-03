@@ -15,6 +15,7 @@
 #include "transactiontablemodel.h"
 #include "walletmodel.h"
 #include "wallet/wallet.h"
+#include "util.h"
 
 #include <QAbstractItemDelegate>
 #include <QPainter>
@@ -174,6 +175,10 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
     bool showImmature = immatureBalance != 0;
     bool showWatchOnlyImmature = watchImmatureBalance != 0;
 
+    // Fetch sort flag
+    bool sort_flag = GetArg("-sorthodlings", true);
+    LogPrintf("sort hodlings flag = %b\n", sort_flag);
+
     // for symmetry reasons also show immature label when the watch-only one is shown
     ui->labelImmature->setVisible(showImmature || showWatchOnlyImmature);
     ui->labelImmatureText->setVisible(showImmature || showWatchOnlyImmature);
@@ -186,6 +191,8 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
     int nDisplayUnit = BitcoinUnits::HODL;
     //if (model && model->getOptionsModel())
     //    nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
+    // Disable sorting outside the for loop 
+    ui->hodlTable->setSortingEnabled(false);
 
     for(int i=0;i<termDepositInfo.size();i++){
         COutput ctermDeposit=termDepositInfo[i];
@@ -202,7 +209,7 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
 
         double interestRatePerBlock=pow(((0.0+matureValue)/termDeposit.nValue),1.0/term);
         double interestRate=(pow(interestRatePerBlock,365*561)-1)*100;
-        ui->hodlTable->setSortingEnabled(false);
+        
         if(curHeight>=releaseBlock){
             ui->hodlTable->setItem(i, 0, new QTableWidgetItem(QString("Matured (Warning: this amount is no longer earning interest of any kind)")));
         }else{
@@ -214,8 +221,13 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
         ui->hodlTable->setItem(i, 3, new QTableWidgetItem(BitcoinUnits::format(nDisplayUnit, withInterest)));
         ui->hodlTable->setItem(i, 4, new QTableWidgetItem(BitcoinUnits::format(nDisplayUnit, matureValue)));
         ui->hodlTable->setItem(i, 5, new QTableWidgetItem(QString::number((term)/561)));
-        ui->hodlTable->setItem(i, 6, new QTableWidgetItem(QString::number(lockHeight)));
-        ui->hodlTable->setItem(i, 7, new QTableWidgetItem(QString::number(releaseBlock)));
+        if(!sort_flag){
+            ui->hodlTable->setItem(i, 6, new QTableWidgetItem(QString::number(lockHeight)));
+            ui->hodlTable->setItem(i, 7, new QTableWidgetItem(QString::number(releaseBlock)));
+        }else{
+            ui->hodlTable->setItem(i, 6, new QTableWidgetItem(QString::number(lockHeight).rightJustified(7,'0')));
+            ui->hodlTable->setItem(i, 7, new QTableWidgetItem(QString::number(releaseBlock).rightJustified(7,'0')));
+        }
         //time_t releaseDate = time(0)+blocksRemaining*154;
 
         time_t rawtime;
@@ -228,10 +240,10 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
         std::string str(buffer);
 
         ui->hodlTable->setItem(i, 8, new QTableWidgetItem(QString(buffer)));
-	ui->hodlTable->setSortingEnabled(true);
         //ui->hodlTable->setItem(i, 9, new QTableWidgetItem(QString::number(interestRatePerBlock)+QString("%")));
-
-
+    }
+    if(sort_flag){
+     ui->hodlTable->setSortingEnabled(true);
     }
 }
 
