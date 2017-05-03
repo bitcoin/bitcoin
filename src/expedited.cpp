@@ -208,62 +208,13 @@ bool HandleExpeditedBlock(CDataStream &vRecv, CNode *pfrom)
 
     if (msgType == EXPEDITED_MSG_XTHIN)
     {
-        CXThinBlock thinBlock;
-        vRecv >> thinBlock;
-        uint256 blkHash = thinBlock.header.GetHash();
-        CInv inv(MSG_BLOCK, blkHash);
-
-        // Message consistency checking
-        if (!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
-        {
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 100);
-            return error("Invalid EXPEDITED_MSG_XTHIN received");
-        }
-
-        bool newBlock = false;
-        unsigned int status = 0;
-        {
-            LOCK(cs_main);
-            BlockMap::iterator mapEntry = mapBlockIndex.find(blkHash);
-            CBlockIndex *blkidx = NULL;
-            if (mapEntry != mapBlockIndex.end())
-            {
-                blkidx = mapEntry->second;
-                if (blkidx)
-                    status = blkidx->nStatus;
-            }
-
-            // If we do not have the block on disk or do not have the header yet then treat the block as new.
-            newBlock = ((blkidx == NULL) || (!(blkidx->nStatus & BLOCK_HAVE_DATA)));
-        }
-
-        int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
-        LogPrint("thin",
-            "Received %s expedited thinblock %s from peer %s (%d). Hop %d. Size %d bytes. (status %d,0x%x)\n",
-            newBlock ? "new" : "repeated", inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id, hops,
-            nSizeThinBlock, status, status);
-
-        // TODO: Move this section above the print once we ensure no unexpected dups.
-        // Skip if we've already seen this block
-        if (IsRecentlyExpeditedAndStore(blkHash))
-            return true;
-        if (!newBlock)
-            return true;
-
-        // TODO: Start headers-only mining now
-
-        SendExpeditedBlock(thinBlock, hops + 1, pfrom);
-
-        // Process the thinblock
-        thinBlock.process(pfrom, nSizeThinBlock, NetMsgType::XPEDITEDBLK);
+        return CXThinBlock::HandleMessage(vRecv, pfrom, NetMsgType::XPEDITEDBLK, hops + 1);
     }
     else
     {
         return error("Received unknown (0x%x) expedited message from peer %s (%d). Hop %d.\n", msgType,
             pfrom->addrName.c_str(), pfrom->id, hops);
     }
-    return true;
 }
 
 void SendExpeditedBlock(CXThinBlock &thinBlock, unsigned char hops, const CNode *skip)
@@ -312,4 +263,3 @@ bool IsExpeditedNode(const CNode *pfrom)
 
     return true;
 }
-
