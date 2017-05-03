@@ -41,7 +41,9 @@ extern bool bSpendZeroConfChange;
 extern bool fWalletRbf;
 
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 100;
-static const unsigned int HD_RESTORE_KEYPOOL_SIZE_MIN = 20;
+//! If the keypool drops below this value, generate new keys (or pause sync if
+//  unable to generate new keys)
+static const unsigned int DEFAULT_KEYPOOL_RESTORE_MIN = 20;
 //! -paytxfee default
 static const CAmount DEFAULT_TRANSACTION_FEE = 0;
 //! -fallbackfee default
