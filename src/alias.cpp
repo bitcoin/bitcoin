@@ -1941,10 +1941,14 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
     uint256 hash = Hash(data.begin(), data.end());
     vector<unsigned char> vchHashAlias = vchFromValue(hash.GetHex());
-
+	if(mapAliasRegistrationData.count(vchAlias) > 0)
+	{
+		if(!newAlias.UnserializeFromData(data, vchHashAlias))
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Cannot unserialize alias registration transaction"));
+	}
 	CScript scriptPubKey;
 	if(mapAliasRegistrations.count(vchHashAlias) > 0)
-		scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchAlias << vchRandAlias << vchHashAlias << OP_2DROP << OP_2DROP;
+		scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchAlias << newAlias.vchGUID << vchHashAlias << OP_2DROP << OP_2DROP;
 	else
 		scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchHashAlias << OP_2DROP;
 
