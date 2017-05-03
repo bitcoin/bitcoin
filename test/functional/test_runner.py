@@ -55,6 +55,7 @@ BASE_SCRIPTS= [
     # Scripts that are run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
     'wallet-hd.py',
+    'keypool-restore.py',
     'walletbackup.py',
     # vv Tests less than 5m vv
     'p2p-fullblocktest.py',
