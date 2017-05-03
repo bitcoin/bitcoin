@@ -54,6 +54,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "waitforblockheight", 1, "timeout" },
     { "waitforblock", 1, "timeout" },
     { "waitfornewblock", 0, "timeout" },
+    { "dumpbootstrap", 1, "endblock" },
+    { "dumpbootstrap", 2, "startblock" },
     { "move", 2, "amount" },
     { "move", 3, "minconf" },
     { "sendfrom", 2, "amount" },

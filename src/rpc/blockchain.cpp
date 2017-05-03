@@ -9,6 +9,7 @@
 #include "chain.h"
 #include "chainparams.h"
 #include "checkpoints.h"
+#include "clientversion.h"
 #include "coins.h"
 #include "consensus/validation.h"
 #include "validation.h"
@@ -1415,6 +1416,75 @@ UniValue reconsiderblock(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
+UniValue dumpbootstrap(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
+        throw std::runtime_error(
+            "dumpbootstrap <destination> [endblock] [startblock=0]\n"
+            "\nCreates a bootstrap format block dump of the blockchain in destination, which can be a directory or a path with filename, up to the given endblock number.\n"
+            "\nArguments:\n"
+            "1. destination  (string, required) Pathname of file to write to. If a directory is use, 'bootstrap.dat' is created in that directory.\n"
+            "2. endblock     (numeric, optional, defaults to the last block in the active chain) Height of last block to dump.\n"
+            "3. startblock   (numeric, optional, default=0) Height of first block to dump.\n"
+            "\nResult:\n"
+            "\nExamples:\n"
+            + HelpExampleCli("dumpbootstrap", "\"/tmp\"")
+            + HelpExampleRpc("dumpbootstrap", "\"/tmp\"")
+        );
+
+    LOCK(cs_main);
+
+    std::string strDest = request.params[0].get_str();
+    int nEndBlock = chainActive.Height();
+    int nStartBlock = 0;
+
+    if (request.params.size() > 1) {
+        nEndBlock = request.params[1].get_int();
+        if (nEndBlock < 0 || nEndBlock > chainActive.Height())
+            throw std::runtime_error("End block number out of range.");
+    }
+
+    if (request.params.size() > 2) {
+        nStartBlock = request.params[2].get_int();
+        if (nStartBlock < 0 || nStartBlock > nEndBlock)
+            throw std::runtime_error("Start block number out of range.");
+    }
+
+    boost::filesystem::path pathDest(strDest);
+    if (boost::filesystem::is_directory(pathDest))
+        pathDest /= "bootstrap.dat";
+
+    try {
+        FILE* file = fopen(pathDest.string().c_str(), "wb");
+        if (!file)
+            throw JSONRPCError(RPC_MISC_ERROR, "Error: Could not open bootstrap file for writing.");
+
+        CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
+        if (fileout.IsNull())
+            throw JSONRPCError(RPC_MISC_ERROR, "Error: Could not open bootstrap file for writing.");
+
+        for (int nHeight = nStartBlock; nHeight <= nEndBlock; nHeight++)
+        {
+            CBlock block;
+            CBlockIndex* pblockindex = chainActive[nHeight];
+
+            if (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0)
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "Block not available (pruned data)");
+
+            if(!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus()))
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
+
+            fileout << FLATDATA(Params().MessageStart())
+                    << (unsigned int)GetSerializeSize(fileout, block)
+                    << block;
+        }
+    } catch(const boost::filesystem::filesystem_error &e) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Error: Bootstrap dump failed!");
+    }
+
+    return strprintf("dumped %d blocks from %d to %d into %s", nEndBlock - nStartBlock + 1, nStartBlock, nEndBlock, pathDest);
+}
+
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafe argNames
   //  --------------------- ------------------------  -----------------------  ------ ----------
@@ -1435,6 +1505,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        true,  {} },
     { "blockchain",         "pruneblockchain",        &pruneblockchain,        true,  {"height"} },
     { "blockchain",         "verifychain",            &verifychain,            true,  {"checklevel","nblocks"} },
+    { "blockchain",         "dumpbootstrap",          &dumpbootstrap,          true,  {"destination", "endblock", "startblock"} },
 
     { "blockchain",         "preciousblock",          &preciousblock,          true,  {"blockhash"} },
 
