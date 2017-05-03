@@ -2144,14 +2144,15 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             return ProcessMessage(pfrom, NetMsgType::HEADERS, vHeadersMsg, nTimeReceived, chainparams, connman, interruptMsgProc);
 
         if (fBlockReconstructed) {
+            const uint256& block_hash = pblock->GetHash();
             // If we got here, we were able to optimistically reconstruct a
             // block that is in flight from some other peer.
             {
                 LOCK(cs_main);
-                mapBlockSource.emplace(pblock->GetHash(), std::make_pair(pfrom->GetId(), false));
+                mapBlockSource.emplace(block_hash, std::make_pair(pfrom->GetId(), false));
             }
             bool fNewBlock = false;
-            ProcessNewBlock(chainparams, pblock, true, &fNewBlock);
+            ProcessNewBlock(chainparams, pblock, block_hash, true, &fNewBlock);
             if (fNewBlock)
                 pfrom->nLastBlockTime = GetTime();
 
@@ -2161,7 +2162,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 // process from some other peer.  We do this after calling
                 // ProcessNewBlock so that a malleated cmpctblock announcement
                 // can't be used to interfere with block relay.
-                MarkBlockAsReceived(pblock->GetHash());
+                MarkBlockAsReceived(block_hash);
             }
         }
 
@@ -2228,7 +2229,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             bool fNewBlock = false;
             // Since we requested this block (it was in mapBlocksInFlight), force it to be processed,
             // even if it would not be a candidate for new tip (missing previous block, chain not long enough, etc)
-            ProcessNewBlock(chainparams, pblock, true, &fNewBlock);
+            ProcessNewBlock(chainparams, pblock, pblock->GetHash(), true, &fNewBlock);
             if (fNewBlock)
                 pfrom->nLastBlockTime = GetTime();
         }
@@ -2388,26 +2389,26 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     {
         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
         vRecv >> *pblock;
+        const uint256& block_hash = pblock->GetHash();
 
-        LogPrint(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom->GetId());
+        LogPrint(BCLog::NET, "received block %s peer=%d\n", block_hash.ToString(), pfrom->GetId());
 
         // Process all blocks from whitelisted peers, even if not requested,
         // unless we're still syncing with the network.
         // Such an unrequested block may still be processed, subject to the
         // conditions in AcceptBlock().
         bool forceProcessing = pfrom->fWhitelisted && !IsInitialBlockDownload();
-        const uint256 hash(pblock->GetHash());
         {
             LOCK(cs_main);
             // Also always process if we requested the block explicitly, as we may
             // need it even though it is not a candidate for a new best tip.
-            forceProcessing |= MarkBlockAsReceived(hash);
+            forceProcessing |= MarkBlockAsReceived(block_hash);
             // mapBlockSource is only used for sending reject messages and DoS scores,
             // so the race between here and cs_main in ProcessNewBlock is fine.
-            mapBlockSource.emplace(hash, std::make_pair(pfrom->GetId(), true));
+            mapBlockSource.emplace(block_hash, std::make_pair(pfrom->GetId(), true));
         }
         bool fNewBlock = false;
-        ProcessNewBlock(chainparams, pblock, forceProcessing, &fNewBlock);
+        ProcessNewBlock(chainparams, pblock, block_hash, forceProcessing, &fNewBlock);
         if (fNewBlock)
             pfrom->nLastBlockTime = GetTime();
     }
