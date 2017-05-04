@@ -2554,7 +2554,7 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
         if (pindexFork != pindexNewTip) {
             uiInterface.NotifyBlockTip(fInitialDownload, pindexNewTip);
         }
-    } while (pindexNewTip != pindexMostWork);
+    } while (pindexNewTip != pindexMostWork && !isTipUpdatesPaused());
     CheckBlockIndex(chainparams.GetConsensus());
 
     // Write changes periodically to disk, after relay.
