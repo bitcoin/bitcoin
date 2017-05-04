@@ -40,6 +40,7 @@
 #include <fcntl.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
+#include <pwd.h>
 
 #else
 
@@ -523,12 +524,9 @@ fs::path GetDefaultDataDir()
     // Windows
     return GetSpecialFolderPath(CSIDL_APPDATA) / "Bitcoin";
 #else
-    fs::path pathRet;
-    char* pszHome = getenv("HOME");
-    if (pszHome == NULL || strlen(pszHome) == 0)
-        pathRet = fs::path("/");
-    else
-        pathRet = fs::path(pszHome);
+    struct passwd *pw_ptr = getpwuid(geteuid());
+    const char *pszHome = pw_ptr? pw_ptr->pw_dir : getenv("HOME"); 
+    fs::path pathRet((pszHome == NULL || *pszHome == 0)? "/" : pszHome);
 #ifdef MAC_OSX
     // Mac
     return pathRet / "Library/Application Support/Bitcoin";
