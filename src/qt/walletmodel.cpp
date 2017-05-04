@@ -575,7 +575,7 @@ bool WalletModel::getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const
 // returns a list of COutputs from COutPoints
 void WalletModel::getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs)
 {
-    LOCK2(cs_main, wallet->cs_wallet);
+    AssertLockHeld(wallet->cs_wallet); // Have to hold cs_wallet as we return pointers into mapWallet
     BOOST_FOREACH(const COutPoint& outpoint, vOutpoints)
     {
         if (!wallet->mapWallet.count(outpoint.hash)) continue;
@@ -595,10 +595,11 @@ bool WalletModel::isSpent(const COutPoint& outpoint) const
 // AvailableCoins + LockedCoins grouped by wallet address (put change in one group with wallet address)
 void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const
 {
+    AssertLockHeld(wallet->cs_wallet); // Have to hold cs_wallet as we return pointers into mapWallet
+
     std::vector<COutput> vCoins;
     wallet->AvailableCoins(vCoins);
 
-    LOCK2(cs_main, wallet->cs_wallet); // ListLockedCoins, mapWallet
     std::vector<COutPoint> vLockedCoins;
     wallet->ListLockedCoins(vLockedCoins);
 
