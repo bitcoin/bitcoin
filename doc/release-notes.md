@@ -57,8 +57,12 @@ building. Effectively this means GCC 4.7 or higher, or Clang 3.3 or higher.
 When cross-compiling for a target that doesn't have C++11 libraries, configure with
 `./configure --enable-glibc-back-compat ... LDFLAGS=-static-libstdc++`.
 
-0.12.1 Change log
-=================
+RPC low-level changes
+----------------------
+
+- `gettxoutsetinfo` UTXO hash (`hash_serialized`) has changed. There was a divergence between
+  32-bit and 64-bit platforms, and the txids were missing in the hashed data. This has been
+  fixed, but this means that the output will be different than from previous versions.
 
 Detailed release notes follow. This overview includes changes that affect
 behavior, not code moves, refactors and string updates. For convenience in locating
