@@ -415,6 +415,9 @@ void TransactionView::bumpFee()
 
     // Bump tx fee over the walletModel
     model->bumpFee(hash);
+
+    // Update the table
+    model->getTransactionTableModel()->updateTransaction(hashQStr, CT_UPDATED, false);
 }
 
 void TransactionView::copyAddress()
