@@ -1,3 +1,9 @@
+bitcoin (0.14.1-trusty2) trusty; urgency=medium
+
+  * Bump minimum boost version in deps.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Thu, 04 May 2017 17:12:00 -0400
+
 bitcoin (0.14.1-trusty1) trusty; urgency=medium
 
   * New upstream release.
