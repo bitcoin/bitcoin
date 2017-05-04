@@ -75,10 +75,10 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
     for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();) {
         if (it->second.flags & CCoinsCacheEntry::DIRTY) {
             CoinsEntry entry(&it->first);
-            if (it->second.coins.IsPruned())
+            if (it->second.coin.IsPruned())
                 batch.Erase(entry);
             else
-                batch.Write(entry, it->second.coins);
+                batch.Write(entry, it->second.coin);
             changed++;
         }
         count++;
