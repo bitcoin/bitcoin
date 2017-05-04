@@ -42,19 +42,19 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoins(const COutPoint &outpoint) const
     if (!base->GetCoins(outpoint, tmp))
         return cacheCoins.end();
     CCoinsMap::iterator ret = cacheCoins.emplace(std::piecewise_construct, std::forward_as_tuple(outpoint), std::forward_as_tuple(std::move(tmp))).first;
-    if (ret->second.coins.IsPruned()) {
+    if (ret->second.coin.IsPruned()) {
         // The parent only has an empty entry for this outpoint; we can consider our
         // version as fresh.
         ret->second.flags = CCoinsCacheEntry::FRESH;
     }
-    cachedCoinsUsage += ret->second.coins.DynamicMemoryUsage();
+    cachedCoinsUsage += ret->second.coin.DynamicMemoryUsage();
     return ret;
 }
 
 bool CCoinsViewCache::GetCoins(const COutPoint &outpoint, Coin &coin) const {
     CCoinsMap::const_iterator it = FetchCoins(outpoint);
     if (it != cacheCoins.end()) {
-        coin = it->second.coins;
+        coin = it->second.coin;
         return true;
     }
     return false;
@@ -68,17 +68,17 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
     std::tie(it, inserted) = cacheCoins.emplace(std::piecewise_construct, std::forward_as_tuple(outpoint), std::tuple<>());
     bool fresh = false;
     if (!inserted) {
-        cachedCoinsUsage -= it->second.coins.DynamicMemoryUsage();
+        cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
     }
     if (!possible_overwrite) {
-        if (!it->second.coins.IsPruned()) {
+        if (!it->second.coin.IsPruned()) {
             throw std::logic_error("Adding new coin that replaces non-pruned entry");
         }
         fresh = !(it->second.flags & CCoinsCacheEntry::DIRTY);
     }
-    it->second.coins = std::move(coin);
+    it->second.coin = std::move(coin);
     it->second.flags |= CCoinsCacheEntry::DIRTY | (fresh ? CCoinsCacheEntry::FRESH : 0);
-    cachedCoinsUsage += it->second.coins.DynamicMemoryUsage();
+    cachedCoinsUsage += it->second.coin.DynamicMemoryUsage();
 }
 
 void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight) {
@@ -94,15 +94,15 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight) {
 void CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout) {
     CCoinsMap::iterator it = FetchCoins(outpoint);
     if (it == cacheCoins.end()) return;
-    cachedCoinsUsage -= it->second.coins.DynamicMemoryUsage();
+    cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
     if (moveout) {
-        *moveout = std::move(it->second.coins);
+        *moveout = std::move(it->second.coin);
     }
     if (it->second.flags & CCoinsCacheEntry::FRESH) {
         cacheCoins.erase(it);
     } else {
         it->second.flags |= CCoinsCacheEntry::DIRTY;
-        it->second.coins.Clear();
+        it->second.coin.Clear();
     }
 }
 
@@ -113,13 +113,13 @@ const Coin& CCoinsViewCache::AccessCoin(const COutPoint &outpoint) const {
     if (it == cacheCoins.end()) {
         return coinEmpty;
     } else {
-        return it->second.coins;
+        return it->second.coin;
     }
 }
 
 bool CCoinsViewCache::HaveCoins(const COutPoint &outpoint) const {
     CCoinsMap::const_iterator it = FetchCoins(outpoint);
-    return (it != cacheCoins.end() && !it->second.coins.IsPruned());
+    return (it != cacheCoins.end() && !it->second.coin.IsPruned());
 }
 
 bool CCoinsViewCache::HaveCoinsInCache(const COutPoint &outpoint) const {
@@ -144,12 +144,12 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
             if (itUs == cacheCoins.end()) {
                 // The parent cache does not have an entry, while the child does
                 // We can ignore it if it's both FRESH and pruned in the child
-                if (!(it->second.flags & CCoinsCacheEntry::FRESH && it->second.coins.IsPruned())) {
+                if (!(it->second.flags & CCoinsCacheEntry::FRESH && it->second.coin.IsPruned())) {
                     // Otherwise we will need to create it in the parent
                     // and move the data up and mark it as dirty
                     CCoinsCacheEntry& entry = cacheCoins[it->first];
-                    entry.coins = std::move(it->second.coins);
-                    cachedCoinsUsage += entry.coins.DynamicMemoryUsage();
+                    entry.coin = std::move(it->second.coin);
+                    cachedCoinsUsage += entry.coin.DynamicMemoryUsage();
                     entry.flags = CCoinsCacheEntry::DIRTY;
                     // We can mark it FRESH in the parent if it was FRESH in the child
                     // Otherwise it might have just been flushed from the parent's cache
@@ -162,21 +162,21 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
                 // parent cache entry has unspent outputs. If this ever happens,
                 // it means the FRESH flag was misapplied and there is a logic
                 // error in the calling code.
-                if ((it->second.flags & CCoinsCacheEntry::FRESH) && !itUs->second.coins.IsPruned())
+                if ((it->second.flags & CCoinsCacheEntry::FRESH) && !itUs->second.coin.IsPruned())
                     throw std::logic_error("FRESH flag misapplied to cache entry for base transaction with spendable outputs");
 
                 // Found the entry in the parent cache
-                if ((itUs->second.flags & CCoinsCacheEntry::FRESH) && it->second.coins.IsPruned()) {
+                if ((itUs->second.flags & CCoinsCacheEntry::FRESH) && it->second.coin.IsPruned()) {
                     // The grandparent does not have an entry, and the child is
                     // modified and being pruned. This means we can just delete
                     // it from the parent.
-                    cachedCoinsUsage -= itUs->second.coins.DynamicMemoryUsage();
+                    cachedCoinsUsage -= itUs->second.coin.DynamicMemoryUsage();
                     cacheCoins.erase(itUs);
                 } else {
                     // A normal modification.
-                    cachedCoinsUsage -= itUs->second.coins.DynamicMemoryUsage();
-                    itUs->second.coins = std::move(it->second.coins);
-                    cachedCoinsUsage += itUs->second.coins.DynamicMemoryUsage();
+                    cachedCoinsUsage -= itUs->second.coin.DynamicMemoryUsage();
+                    itUs->second.coin = std::move(it->second.coin);
+                    cachedCoinsUsage += itUs->second.coin.DynamicMemoryUsage();
                     itUs->second.flags |= CCoinsCacheEntry::DIRTY;
                     // NOTE: It is possible the child has a FRESH flag here in
                     // the event the entry we found in the parent is pruned. But
@@ -204,7 +204,7 @@ void CCoinsViewCache::Uncache(const COutPoint& hash)
 {
     CCoinsMap::iterator it = cacheCoins.find(hash);
     if (it != cacheCoins.end() && it->second.flags == 0) {
-        cachedCoinsUsage -= it->second.coins.DynamicMemoryUsage();
+        cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
         cacheCoins.erase(it);
     }
 }
