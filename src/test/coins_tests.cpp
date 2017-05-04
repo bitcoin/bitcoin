@@ -63,8 +63,8 @@ public:
         for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end(); ) {
             if (it->second.flags & CCoinsCacheEntry::DIRTY) {
                 // Same optimization used in CCoinsViewDB is to only write dirty entries.
-                map_[it->first] = it->second.coins;
-                if (it->second.coins.IsPruned() && insecure_rand() % 3 == 0) {
+                map_[it->first] = it->second.coin;
+                if (it->second.coin.IsPruned() && insecure_rand() % 3 == 0) {
                     // Randomly delete empty entries on write.
                     map_.erase(it->first);
                 }
@@ -78,6 +78,30 @@ public:
             hashBestBlock_ = hashBlock;
         return true;
     }
+
+    bool GetStats(CCoinsStats& stats) const { return false; }
+};
+
+class CCoinsViewCacheTest : public CCoinsViewCache
+{
+public:
+    explicit CCoinsViewCacheTest(CCoinsView* _base) : CCoinsViewCache(_base) {}
+
+    void SelfTest() const
+    {
+        // Manually recompute the dynamic usage of the whole data, and compare it.
+        size_t ret = memusage::DynamicUsage(cacheCoins);
+        size_t count = 0;
+        for (CCoinsMap::iterator it = cacheCoins.begin(); it != cacheCoins.end(); it++) {
+            ret += it->second.coin.DynamicMemoryUsage();
+            ++count;
+        }
+        BOOST_CHECK_EQUAL(GetCacheSize(), count);
+        BOOST_CHECK_EQUAL(DynamicMemoryUsage(), ret);
+    }
+
+    CCoinsMap& map() const { return cacheCoins; }
+    size_t& usage() const { return cachedCoinsUsage; }
 };
 
 class CCoinsViewCacheTest : public CCoinsViewCache
@@ -516,10 +540,10 @@ size_t InsertCoinsMapEntry(CCoinsMap& map, CAmount value, char flags)
     assert(flags != NO_ENTRY);
     CCoinsCacheEntry entry;
     entry.flags = flags;
-    SetCoinsValue(value, entry.coins);
+    SetCoinsValue(value, entry.coin);
     auto inserted = map.emplace(OUTPOINT, std::move(entry));
     assert(inserted.second);
-    return inserted.first->second.coins.DynamicMemoryUsage();
+    return inserted.first->second.coin.DynamicMemoryUsage();
 }
 
 void GetCoinsMapEntry(const CCoinsMap& map, CAmount& value, char& flags)
@@ -529,10 +553,10 @@ void GetCoinsMapEntry(const CCoinsMap& map, CAmount& value, char& flags)
         value = ABSENT;
         flags = NO_ENTRY;
     } else {
-        if (it->second.coins.IsPruned()) {
+        if (it->second.coin.IsPruned()) {
             value = PRUNED;
         } else {
-            value = it->second.coins.out.nValue;
+            value = it->second.coin.out.nValue;
         }
         flags = it->second.flags;
         assert(flags != NO_ENTRY);

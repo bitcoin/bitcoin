@@ -85,8 +85,8 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, siz
         if (it->second.flags & CCoinsCacheEntry::DIRTY)
         {
             CoinsEntry entry(&it->first);
-            size_t nUsage = it->second.coins.DynamicMemoryUsage();
-            if (it->second.coins.IsPruned())
+            size_t nUsage = it->second.coin.DynamicMemoryUsage();
+            if (it->second.coin.IsPruned())
             {
                 batch.Erase(entry);
 
@@ -96,7 +96,7 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, siz
             }
             else
             {
-                batch.Write(entry, it->second.coins);
+                batch.Write(entry, it->second.coin);
 
                 // Only delete valid coins from the cache when we're nearly syncd.  During IBD, and also
                 // if BlockOnly mode is turned on, these coins will be used, whereas, once the chain is
