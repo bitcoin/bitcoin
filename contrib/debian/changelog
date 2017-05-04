@@ -1,3 +1,9 @@
+bitcoin (0.14.1-trusty3) trusty; urgency=medium
+
+  * Build with qt5 if we are on a non-Ubuntu (ie non-Unity) distro.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Thu, 04 May 2017 17:13:00 -0400
+
 bitcoin (0.14.1-trusty2) trusty; urgency=medium
 
   * Bump minimum boost version in deps.
