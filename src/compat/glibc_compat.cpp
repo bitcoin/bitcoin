@@ -7,6 +7,7 @@
 #endif
 
 #include <cstddef>
+#include <errno.h>
 
 #if defined(HAVE_SYS_SELECT_H)
 #include <sys/select.h>
@@ -27,3 +28,11 @@ extern "C" FDELT_TYPE __fdelt_warn(FDELT_TYPE a)
     return a / __NFDBITS;
 }
 extern "C" FDELT_TYPE __fdelt_chk(FDELT_TYPE) __attribute__((weak, alias("__fdelt_warn")));
+
+/* getentropy was introduced with glibc 2.25 */
+extern "C" int int_getentropy(void *buf, size_t buflen)
+{
+    errno = ENOSYS;
+    return -1;
+}
+extern "C" int getentropy(void *buf, size_t buflen) __attribute__((weak, alias("int_getentropy")));
