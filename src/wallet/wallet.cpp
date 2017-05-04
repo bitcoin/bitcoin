@@ -1986,6 +1986,8 @@ CAmount CWallet::GetLegacyBalance(const isminefilter& filter, int minDepth, cons
 
 CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
 {
+    LOCK2(cs_main, cs_wallet);
+
     CAmount balance = 0;
     std::vector<COutput> vCoins;
     AvailableCoins(vCoins, true, coinControl);
