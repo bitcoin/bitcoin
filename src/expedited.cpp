@@ -91,6 +91,13 @@ void HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
     vRecv >> options;
     bool stop = ((options & EXPEDITED_STOP) != 0); // Indicates started or stopped expedited service
 
+    if (!pfrom->ThinBlockCapable() || !IsThinBlocksEnabled())
+    {
+        LOCK(cs_main);
+        Misbehaving(pfrom->GetId(), 5);
+        return;
+    }
+
     if (options & EXPEDITED_BLOCKS)
     {
         LOCK(cs_xpedited);
@@ -195,6 +202,11 @@ bool HandleExpeditedBlock(CDataStream &vRecv, CNode *pfrom)
     unsigned char msgType;
     vRecv >> msgType >> hops;
 
+    if (!pfrom->ThinBlockCapable() || !IsThinBlocksEnabled() || !IsExpeditedNode(pfrom))
+    {
+        return false;
+    }
+
     if (msgType == EXPEDITED_MSG_XTHIN)
     {
         CXThinBlock thinBlock;
@@ -293,11 +305,11 @@ void SendExpeditedBlock(const CBlock &block, const CNode *skip)
 
 bool IsExpeditedNode(const CNode *pfrom)
 {
-    // Check if this node is an expedited node
-    BOOST_FOREACH (const std::string &strAddrNode, mapMultiArgs["-expeditedblock"])
-    {
-        if (pfrom->addrName == strAddrNode)
-            return true;
-    }
-    return false;
+    // xpeditedBlkUp keeps track of the nodes that we have requested expedited blocks from.  If the node
+    // is not in this list then it is not expedited node.
+    LOCK(cs_xpedited);
+    if (std::find(xpeditedBlkUp.begin(), xpeditedBlkUp.end(), pfrom) == xpeditedBlkUp.end())
+        return false;
+    
+    return true;
 }

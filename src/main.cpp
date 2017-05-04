@@ -5927,28 +5927,14 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
     }
 
 
-    else if (strCommand == NetMsgType::XPEDITEDREQUEST && IsThinBlocksEnabled())
+    else if (strCommand == NetMsgType::XPEDITEDREQUEST)
     {
-        if (!pfrom->ThinBlockCapable())
-        {
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 100);
-            return error("XPEDITEDREQUEST message received from a non thinblock node, peer=%d", pfrom->GetId());
-        }
-
         HandleExpeditedRequest(vRecv, pfrom);
     }
 
 
-    else if (strCommand == NetMsgType::XPEDITEDBLK && IsThinBlocksEnabled() && IsExpeditedNode(pfrom))
+    else if (strCommand == NetMsgType::XPEDITEDBLK)
     {
-        if (!pfrom->ThinBlockCapable())
-        {
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 100);
-            return error("XPEDITEDBLK message received from a non thinblock node, peer=%d", pfrom->GetId());
-        }
-
         // ignore the expedited message unless we are near the chain tip...
         if (!fImporting && !fReindex && IsChainNearlySyncd())
         {
