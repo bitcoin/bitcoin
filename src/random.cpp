@@ -102,12 +102,12 @@ static void RandAddSeedPerfmon()
 #endif
 }
 
-#ifndef WIN32
 /** Fallback: get 32 bytes of system entropy from /dev/urandom. The most
  * compatible way to get cryptographic randomness on UNIX-ish platforms.
  */
 void GetDevURandom(unsigned char *ent32)
 {
+#ifndef WIN32
     int f = open("/dev/urandom", O_RDONLY);
     if (f == -1) {
         RandFailure();
@@ -121,12 +121,15 @@ void GetDevURandom(unsigned char *ent32)
         have += n;
     } while (have < NUM_OS_RANDOM_BYTES);
     close(f);
-}
+#else
+    RandFailure();
 #endif
+}
 
 /** Get 32 bytes of system entropy. */
 void GetOSRand(unsigned char *ent32)
 {
+    bool fUseFallback = false;
 #if defined(WIN32)
     HCRYPTPROV hProvider;
     int ret = CryptAcquireContextW(&hProvider, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
@@ -151,7 +154,7 @@ void GetOSRand(unsigned char *ent32)
              * ENOSYS if the syscall is not available, in that case fall back
              * to /dev/urandom.
              */
-            GetDevURandom(ent32);
+            fUseFallback = true;
         } else {
             RandFailure();
         }
@@ -162,7 +165,11 @@ void GetOSRand(unsigned char *ent32)
      * The call cannot return less than the requested number of bytes.
      */
     if (getentropy(ent32, NUM_OS_RANDOM_BYTES) != 0) {
-        RandFailure();
+        if (errno == ENOSYS) {
+            fUseFallback = true;
+        } else {
+            RandFailure();
+        }
     }
 #elif defined(HAVE_SYSCTL_ARND)
     /* FreeBSD and similar. It is possible for the call to return less
@@ -181,8 +188,11 @@ void GetOSRand(unsigned char *ent32)
     /* Fall back to /dev/urandom if there is no specific method implemented to
      * get system entropy for this OS.
      */
-    GetDevURandom(ent32);
+    fUseFallback = true;
 #endif
+    if (fUseFallback) {
+        GetDevURandom(ent32);
+    }
 }
 
 void GetRandBytes(unsigned char* buf, int num)
