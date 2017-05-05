@@ -17,7 +17,7 @@ QT=$(shell dpkg-vendor --derives-from Ubuntu && echo qt4 || echo qt5)
 # Yea, autogen should be run on the source archive, but I like doing git archive
 override_dh_auto_configure:
 	./autogen.sh
-	./configure --without-miniupnpc --with-gui=$(QT)
+	./configure --with-gui=$(QT)
 
 override_dh_auto_test:
 	make check
