@@ -51,7 +51,7 @@
 #include <string>
 #include <vector>
 // SYSCOIN
-static const std::string SYSCOIN_CLIENT_VERSION = "2.1.3";
+static const std::string SYSCOIN_CLIENT_VERSION = "2.1.4";
 static const int CLIENT_VERSION =
                            1000000 * CLIENT_VERSION_MAJOR
                          +   10000 * CLIENT_VERSION_MINOR
