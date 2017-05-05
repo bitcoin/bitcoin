@@ -5914,7 +5914,6 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
         vRecv >> thinBlock;
 
         // Message consistency checking
-        CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
         if (!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
         {
             LOCK(cs_main);
