@@ -2420,8 +2420,21 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
             std::vector<COutput> vAvailableCoins;
             AvailableCoins(vAvailableCoins, true, coinControl);
 
-            nFeeRet = 0;
+            // Estimate feerate and apply user constraints
+
+            // Allow to override the default confirmation target over the CoinControl instance
+            int currentConfirmationTarget = nTxConfirmTarget;
+            if (coinControl && coinControl->nConfirmTarget > 0) {
+                currentConfirmationTarget = coinControl->nConfirmTarget;
+            }
+
+            CFeeRate nFeeRateNeeded = GetMinimumFeeRate(currentConfirmationTarget, ::mempool, ::feeEstimator);
+
+            if (coinControl && coinControl->fOverrideFeeRate)
+                nFeeRateNeeded = coinControl->nFeeRate;
+
             // Start with no fee and loop until there is enough fee
+            nFeeRet = 0;
             while (true)
             {
                 nChangePosInOut = nChangePosRequest;
@@ -2593,11 +2606,6 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     vin.scriptWitness.SetNull();
                 }
 
-                // Allow to override the default confirmation target over the CoinControl instance
-                int currentConfirmationTarget = nTxConfirmTarget;
-                if (coinControl && coinControl->nConfirmTarget > 0)
-                    currentConfirmationTarget = coinControl->nConfirmTarget;
-
                 CAmount nFeeNeeded = GetMinimumFeeRate(currentConfirmationTarget, ::mempool, ::feeEstimator).GetFee(nBytes);
 
                 // If total estimated fee is too high, just set to default maximum
@@ -2608,9 +2616,6 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 if (coinControl && nFeeNeeded > 0 && coinControl->nMinimumTotalFee > nFeeNeeded) {
                     nFeeNeeded = coinControl->nMinimumTotalFee;
                 }
-                if (coinControl && coinControl->fOverrideFeeRate)
-                    nFeeNeeded = coinControl->nFeeRate.GetFee(nBytes);
-
                 // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
                 // because we must be at the maximum allowed fee.
                 if (nFeeNeeded < ::minRelayTxFee.GetFee(nBytes))
