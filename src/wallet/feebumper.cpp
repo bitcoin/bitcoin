@@ -167,6 +167,10 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConf
             nNewFee = CWallet::GetMinimumFee(maxNewTxSize, newConfirmTarget, mempool, ::feeEstimator);
         }
 
+        if (nNewFee > maxTxFee) {
+            nNewFee = maxTxFee;
+        }
+
         nNewFeeRate = CFeeRate(nNewFee, maxNewTxSize);
 
         // New fee rate must be at least old rate + minimum incremental relay rate
