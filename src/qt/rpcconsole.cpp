@@ -10,7 +10,6 @@
 #include "clientmodel.h"
 #include "guiutil.h"
 #include "platformstyle.h"
-#include "bantablemodel.h"
 
 #include "chainparams.h"
 #include "rpcserver.h"
