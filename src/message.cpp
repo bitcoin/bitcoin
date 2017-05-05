@@ -797,6 +797,7 @@ bool BuildMessageJson(const CMessage& message, UniValue& oName, const string &st
 		sTime = strprintf("%llu", pindex->nTime);
 	}
 	string strAddress = "";
+	oName.push_back(Pair("txid", message.txHash.GetHex()));
 	oName.push_back(Pair("time", sTime));
 	oName.push_back(Pair("from", stringFromVch(message.vchAliasFrom)));
 	oName.push_back(Pair("to", stringFromVch(message.vchAliasTo)));
@@ -864,13 +865,13 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 			vector<unsigned char> vchAlias = vchFromString(name);
 			vector<CAliasIndex> vtxPos;
 			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
-				throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3509 - " + _("Failed to read from alias DB"));
+				continue;
 		
 			const CAliasIndex &alias = vtxPos.back();
 			CTransaction aliastx;
 			uint256 txHash;
 			if (!GetSyscoinTransaction(alias.nHeight, alias.txHash, aliastx, Params().GetConsensus()))
-				throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3510 - " + _("Failed to read alias transaction"));
+				continue;
 
 			CTransaction tx;
 
