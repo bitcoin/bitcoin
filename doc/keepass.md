@@ -1,4 +1,4 @@
-###What is it about###
+### What is it about
 
 More info regarding KeePass: http://keepass.info/
 
@@ -10,7 +10,7 @@ The implementation is dependent on the following:
  - OpenSSL for base64 encoding. regular util.h libraries were not used for base64 encoding/decoding since they do not use secure allocation.
  - JSON Spirit for reading / writing RPC communications
 
-###What's new###
+### What's new
 
 The following new options are available for dashd and dash-qt:
  - _-keepass_ Use KeePass 2 integration using KeePassHttp plugin (default: 0)
@@ -25,7 +25,7 @@ The following rpc commands are available:
  - _keepass init_: sets up the association between dashd and keepass by generating an AES key and sending an association message to KeePassHttp. This will trigger KeePass to ask for an Id for the association. Returns the association and the base64 encoded string for the AES key.
  - _keepass setpassphrase_: updates the passphrase in KeePassHttp to a new value. This should match the passphrase you intend to use for the wallet. Please note that the standard RPC commands _walletpassphrasechange_ and the wallet encrption from the QT GUI already send the updates to KeePassHttp, so this is only necessary for manual manipulation of the password.
 
-###How to setup###
+### How to setup
 
 Sample initialization flow from _dash-qt_ console (this needs to be done only once to set up the association):
 

@@ -1,10 +1,10 @@
-##InstantSend Technical Information
+## InstantSend Technical Information
 
 InstantSend has been integrated into the Core Daemon in two ways:
 * "push" notifications (ZMQ and `-instantsendnotify` cmd-line/config option);
 * RPC commands.
 
-####ZMQ
+#### ZMQ
 
 When a "Transaction Lock" occurs the hash of the related transaction is broadcasted through ZMQ using both the `zmqpubrawtxlock` and `zmqpubhashtxlock` channels.
 
@@ -15,7 +15,7 @@ This mechanism has been integrated into Bitcore-Node-Dash which allows for notif
 * WebSocket: [https://github.com/dashpay/insight-api-dash#web-socket-api](https://github.com/dashpay/insight-api-dash#web-socket-api) 
 * API: [https://github.com/dashpay/insight-api-dash#instantsend-transactions](https://github.com/dashpay/insight-api-dash#instantsend-transactions) 
 
-####Command line option
+#### Command line option
 
 When a wallet InstantSend transaction is successfully locked a shell command provided in this option is executed (`%s` in `<cmd>` is replaced by TxID):
 
@@ -23,7 +23,7 @@ When a wallet InstantSend transaction is successfully locked a shell command pro
 -instantsendnotify=<cmd>
 ```
 
-####RPC
+#### RPC
 
 Details pertaining to an observed "Transaction Lock" can also be retrieved through RPC, it’s important however to understand the underlying mechanism.
 
