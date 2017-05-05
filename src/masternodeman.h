@@ -290,7 +290,7 @@ public:
     CMasternode* GetNextMasternodeInQueueForPayment(bool fFilterSigTime, int& nCount);
 
     /// Find a random entry
-    CMasternode* FindRandomNotInVec(const std::vector<CTxIn> &vecToExclude, int nProtocolVersion = -1);
+    masternode_info_t FindRandomNotInVec(const std::vector<CTxIn> &vecToExclude, int nProtocolVersion = -1);
 
     std::vector<CMasternode> GetFullMasternodeVector() { return vMasternodes; }
 
@@ -322,6 +322,7 @@ public:
     bool IsMnbRecoveryRequested(const uint256& hash) { return mMnbRecoveryRequests.count(hash); }
 
     void UpdateLastPaid();
+    bool UpdateLastDsq(const CTxIn& vin);
 
     void CheckAndRebuildMasternodeIndex();
 

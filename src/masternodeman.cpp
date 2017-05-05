@@ -4,13 +4,13 @@
 
 #include "activemasternode.h"
 #include "addrman.h"
-#include "darksend.h"
 #include "governance.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
 #include "messagesigner.h"
 #include "netfulfilledman.h"
+#include "privatesend-client.h"
 #include "util.h"
 
 /** Masternode manager */
@@ -612,7 +612,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
     return pBestMasternode;
 }
 
-CMasternode* CMasternodeMan::FindRandomNotInVec(const std::vector<CTxIn> &vecToExclude, int nProtocolVersion)
+masternode_info_t CMasternodeMan::FindRandomNotInVec(const std::vector<CTxIn> &vecToExclude, int nProtocolVersion)
 {
     LOCK(cs);
 
@@ -622,7 +622,7 @@ CMasternode* CMasternodeMan::FindRandomNotInVec(const std::vector<CTxIn> &vecToE
     int nCountNotExcluded = nCountEnabled - vecToExclude.size();
 
     LogPrintf("CMasternodeMan::FindRandomNotInVec -- %d enabled masternodes, %d masternodes to choose from\n", nCountEnabled, nCountNotExcluded);
-    if(nCountNotExcluded < 1) return NULL;
+    if(nCountNotExcluded < 1) return masternode_info_t();
 
     // fill a vector of pointers
     std::vector<CMasternode*> vpMasternodesShuffled;
@@ -648,11 +648,11 @@ CMasternode* CMasternodeMan::FindRandomNotInVec(const std::vector<CTxIn> &vecToE
         if(fExclude) continue;
         // found the one not in vecToExclude
         LogPrint("masternode", "CMasternodeMan::FindRandomNotInVec -- found, masternode=%s\n", pmn->vin.prevout.ToStringShort());
-        return pmn;
+        return pmn->GetInfo();
     }
 
     LogPrint("masternode", "CMasternodeMan::FindRandomNotInVec -- failed\n");
-    return NULL;
+    return masternode_info_t();
 }
 
 int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int nBlockHeight, int nMinProtocol, bool fOnlyActive)
@@ -766,7 +766,7 @@ void CMasternodeMan::ProcessMasternodeConnections()
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes) {
         if(pnode->fMasternode) {
-            if(darkSendPool.pSubmittedToMasternode != NULL && pnode->addr == darkSendPool.pSubmittedToMasternode->addr) continue;
+            if(privateSendClient.infoMixingMasternode.fInfoValid && pnode->addr == privateSendClient.infoMixingMasternode.addr) continue;
             LogPrintf("Closing Masternode connection: peer=%d, addr=%s\n", pnode->id, pnode->addr.ToString());
             pnode->fDisconnect = true;
         }
@@ -1510,6 +1510,18 @@ void CMasternodeMan::UpdateLastPaid()
 
     // every time is like the first time if winners list is not synced
     IsFirstRun = !masternodeSync.IsWinnersListSynced();
+}
+
+bool CMasternodeMan::UpdateLastDsq(const CTxIn& vin)
+{
+    masternode_info_t info;
+    LOCK(cs);
+    CMasternode* pMN = Find(vin);
+    if(!pMN)
+        return false;
+    pMN->nLastDsq = nDsqCount;
+    pMN->fAllowMixingTx = true;
+    return true;
 }
 
 void CMasternodeMan::CheckAndRebuildMasternodeIndex()

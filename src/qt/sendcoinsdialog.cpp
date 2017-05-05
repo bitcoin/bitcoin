@@ -23,7 +23,7 @@
 #include "txmempool.h"
 #include "wallet/wallet.h"
 
-#include "darksend.h"
+#include "privatesend-client.h"
 
 #include <QMessageBox>
 #include <QScrollBar>

@@ -96,9 +96,10 @@ BITCOIN_CORE_H = \
   consensus/validation.h \
   core_io.h \
   core_memusage.h \
-  darksend.h \
+  privatesend-client.h \
+  privatesend.h \
+  privatesend-server.h \
   dsnotificationinterface.h \
-  darksend-relay.h \
   governance.h \
   governance-classes.h \
   governance-exceptions.h \
@@ -220,6 +221,8 @@ libbitcoin_server_a_SOURCES = \
   policy/fees.cpp \
   policy/policy.cpp \
   pow.cpp \
+  privatesend.cpp \
+  privatesend-server.cpp \
   rest.cpp \
   rpcblockchain.cpp \
   rpcmasternode.cpp \
@@ -257,9 +260,8 @@ libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
   activemasternode.cpp \
-  darksend.cpp \
+  privatesend-client.cpp \
   dsnotificationinterface.cpp \
-  darksend-relay.cpp \
   instantx.cpp \
   masternode.cpp \
   masternode-payments.cpp \

@@ -18,9 +18,9 @@
 #include "ui_interface.h"
 #include "util.h"
 
-#include "darksend.h"
 #include "masternodeman.h"
 #include "masternode-sync.h"
+#include "privatesend-client.h"
 
 #include <stdint.h>
 

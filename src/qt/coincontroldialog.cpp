@@ -19,8 +19,8 @@
 #include "main.h" // For minRelayTxFee
 #include "wallet/wallet.h"
 
-#include "darksend.h"
 #include "instantx.h"
+#include "privatesend-client.h"
 
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
 
@@ -451,7 +451,7 @@ void CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
             coinControl->Select(outpt);
             CTxIn txin = CTxIn(outpt);
             int nRounds = pwalletMain->GetInputPrivateSendRounds(txin);
-            if (coinControl->fUsePrivateSend && nRounds < nPrivateSendRounds) {
+            if (coinControl->fUsePrivateSend && nRounds < privateSendClient.nPrivateSendRounds) {
                 QMessageBox::warning(this, windowTitle(),
                     tr("Non-anonymized input selected. <b>PrivateSend will be disabled.</b><br><br>If you still want to use PrivateSend, please deselect all non-nonymized inputs first and then check PrivateSend checkbox again."),
                     QMessageBox::Ok, QMessageBox::Ok);

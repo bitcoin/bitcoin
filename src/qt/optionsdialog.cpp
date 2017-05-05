@@ -21,7 +21,7 @@
 #include "wallet/wallet.h" // for CWallet::GetRequiredFee()
 #endif
 
-#include "darksend.h"
+#include "privatesend-client.h"
 
 #include <boost/thread.hpp>
 
@@ -260,7 +260,7 @@ void OptionsDialog::on_resetButton_clicked()
 void OptionsDialog::on_okButton_clicked()
 {
     mapper->submit();
-    darkSendPool.nCachedNumBlocks = std::numeric_limits<int>::max();
+    privateSendClient.nCachedNumBlocks = std::numeric_limits<int>::max();
     pwalletMain->MarkDirty();
     accept();
     updateDefaultProxyNets();

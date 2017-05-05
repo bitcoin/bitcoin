@@ -22,10 +22,10 @@
 #include "wallet/wallet.h"
 #include "utilstrencodings.h"
 
-#include "darksend.h"
 #include "instantx.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
+#include "privatesend.h"
 
 #ifdef WIN32
 #include <string.h>
