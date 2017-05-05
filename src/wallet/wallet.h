@@ -644,7 +644,7 @@ public:
     mutable CCriticalSection cs_wallet;
 
     bool fFileBacked;
-    std::string strWalletFile;
+    const std::string strWalletFile;
 
     std::set<int64_t> setKeyPool;
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
@@ -658,11 +658,11 @@ public:
         SetNull();
     }
 
-    CWallet(const std::string& strWalletFileIn)
+    CWallet(const std::string& strWalletFileIn) 
+    : strWalletFile(strWalletFileIn)
     {
         SetNull();
 
-        strWalletFile = strWalletFileIn;
         fFileBacked = true;
     }
 
