@@ -5556,7 +5556,7 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
         // we must use CBlocks, as CBlockHeaders won't include the 0x00 nTx count at the end
         std::vector<CBlock> vHeaders;
         int nLimit = MAX_HEADERS_RESULTS;
-        LogPrint("net", "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString(), pfrom->id);
+        LogPrint("net", "getheaders height %d for block %s from peer %s\n", (pindex ? pindex->nHeight : -1), hashStop.ToString(), pfrom->GetLogName());
         for (; pindex; pindex = chainActive.Next(pindex))
         {
             vHeaders.push_back(pindex->GetBlockHeader());
@@ -6351,10 +6351,10 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
                 {
                     if (pfrom->mapThinBlocksInFlight.find(inv.hash) == pfrom->mapThinBlocksInFlight.end())
                     {
-                        Misbehaving(pfrom->GetId(), 100);
-                        return error("Block %s was never requested, banning peer=%d",
+                        Misbehaving(pfrom->GetId(), 1);
+                        return error("Block %s was never requested, misbehaving peer %s",
                             inv.hash.ToString(),
-                            pfrom->GetId());
+                            pfrom->GetLogName());
                     }
                 }
             }
@@ -6370,7 +6370,6 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
         // block is invalid we don't want to remove it from the request manager yet.
         requester.Received(inv, pfrom, msgSize);
 
-         
         // Message consistency checking
         // NOTE: consistency checking is handled by checkblock() which is called during
         //       ProcessNewBlock() during HandleBlockMessage.

@@ -477,8 +477,9 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure
 void CNode::CloseSocketDisconnect()
 {
     fDisconnect = true;
-    if (hSocket != INVALID_SOCKET) {
-        LogPrint("net", "disconnecting peer=%d\n", id);
+    if (hSocket != INVALID_SOCKET)
+    {
+        LogPrint("net", "disconnecting peer %s\n", GetLogName());
         CloseSocket(hSocket);
     }
 
@@ -1140,21 +1141,33 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
     {
         double nConnections = 0;
         LOCK(cs_mapInboundConnectionTracker);
+        int64_t now = GetTime();
         CNetAddr ipAddress = (CNetAddr)addr;
-        if (mapInboundConnectionTracker.count(ipAddress)) {
+        if (mapInboundConnectionTracker.count(ipAddress))
+        {
             // Decay the current number of connections (over 60 seconds) depending on the last connection attempt
-            int64_t nTimeElapsed = GetTime() - mapInboundConnectionTracker[ipAddress].nLastConnectionTime;
+            int64_t nTimeElapsed = now - mapInboundConnectionTracker[ipAddress].nLastConnectionTime;
+            if (nTimeElapsed < 0) nTimeElapsed = 0;
             double nRatioElapsed = (double)nTimeElapsed / 60;
             nConnections = mapInboundConnectionTracker[ipAddress].nConnections - (nRatioElapsed * mapInboundConnectionTracker[ipAddress].nConnections);
             if (nConnections < 0)
                 nConnections = 0;
+        }
+        else
+        {
+            ConnectionHistory ch;
+            ch.nConnections = 0.0;
+            ch.nLastConnectionTime = now;
+            ch.nEvictions = 0.0;
+            ch.nLastEvictionTime = now;
+            mapInboundConnectionTracker[ipAddress] = ch;
         }
 
         nConnections += 1;
         mapInboundConnectionTracker[ipAddress].nConnections = nConnections;
         mapInboundConnectionTracker[ipAddress].nLastConnectionTime = GetTime();
 
-        LogPrint("evict", "Number of Connection attempts is %f for %s\n", nConnections, addr.ToString());
+        LogPrint("evict", "Number of connection attempts is %f for %s\n", nConnections, addr.ToString());
         if (nConnections > 4 && !whitelisted) {
             int nHoursToBan = 4;
             CNode::Ban((CNetAddr)addr, BanReasonNodeMisbehaving, nHoursToBan*60*60);
