@@ -5504,7 +5504,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
         // we must use CBlocks, as CBlockHeaders won't include the 0x00 nTx count at the end
         vector<CBlock> vHeaders;
         int nLimit = MAX_HEADERS_RESULTS;
-        LogPrint("net", "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString(), pfrom->id);
+        LogPrint("net", "getheaders height %d for block %s from peer %s\n", (pindex ? pindex->nHeight : -1), hashStop.ToString(), pfrom->GetLogName());
         for (; pindex; pindex = chainActive.Next(pindex))
         {
             vHeaders.push_back(pindex->GetBlockHeader());
@@ -6331,10 +6331,10 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
                 {
                     if (pfrom->mapThinBlocksInFlight.find(inv.hash) == pfrom->mapThinBlocksInFlight.end())
                     {
-                        Misbehaving(pfrom->GetId(), 100);
-                        return error("Block %s was never requested, banning peer=%d",
+                        Misbehaving(pfrom->GetId(), 1);
+                        return error("Block %s was never requested, misbehaving peer %s",
                             inv.hash.ToString(),
-                            pfrom->GetId());
+                            pfrom->GetLogName());
                     }
                 }
             }

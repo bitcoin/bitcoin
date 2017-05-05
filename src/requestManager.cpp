@@ -41,8 +41,14 @@ extern CCriticalSection cs_orphancache; // from main.h
 // Request management
 extern CRequestManager requester;
 
-unsigned int MIN_TX_REQUEST_RETRY_INTERVAL = 5*1000*1000;  // When should I request an object from someone else (in microseconds)
-unsigned int MIN_BLK_REQUEST_RETRY_INTERVAL = 5*1000*1000;  // When should I request a block from someone else (in microseconds)
+// Any ping < 25 ms is good
+unsigned int ACCEPTABLE_PING_USEC = 25*1000;
+
+// When should I request an object from someone else (in microseconds)
+unsigned int MIN_TX_REQUEST_RETRY_INTERVAL = 5 * 1000 * 1000;
+// When should I request a block from someone else (in microseconds)
+unsigned int MIN_BLK_REQUEST_RETRY_INTERVAL = 5 * 1000 * 1000;
+cache creation and during validateblocktemplate test
 
 // defined in main.cpp.  should be moved into a utilities file but want to make rebasing easier
 extern bool CanDirectFetch(const Consensus::Params &consensusParams);
@@ -362,8 +368,8 @@ void RequestBlock(CNode* pfrom, CInv obj)
                     BuildSeededBloomFilter(filterMemPool, vOrphanHashes, inv2.hash);
                     ss << inv2;
                     ss << filterMemPool;
-                    pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
                     MarkBlockAsInFlight(pfrom->GetId(), obj.hash, chainParams.GetConsensus());
+                    pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
                     LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(),
                         pfrom->addrName.c_str(), pfrom->id);
                 }
@@ -372,6 +378,7 @@ void RequestBlock(CNode* pfrom, CInv obj)
             {
                 // Try to download a thinblock if possible otherwise just download a regular block
                 // We can only send one thinblock per peer at a time
+                MarkBlockAsInFlight(pfrom->GetId(), obj.hash, chainParams.GetConsensus());
                 if (pfrom->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pfrom))
                 {
                     {
@@ -402,7 +409,6 @@ void RequestBlock(CNode* pfrom, CInv obj)
                     vToFetch.push_back(inv2);
                     pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
                 }
-                MarkBlockAsInFlight(pfrom->GetId(), obj.hash, chainParams.GetConsensus());
             }
         }
         else
@@ -410,8 +416,8 @@ void RequestBlock(CNode* pfrom, CInv obj)
             std::vector<CInv> vToFetch;
             inv2.type = MSG_BLOCK;
             vToFetch.push_back(inv2);
-            pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
             MarkBlockAsInFlight(pfrom->GetId(), obj.hash, chainParams.GetConsensus());
+            pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
             LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(),
                 pfrom->addrName.c_str(), pfrom->id);
         }
@@ -455,8 +461,42 @@ void CRequestManager::SendRequests()
 	      CNodeRequestData next;
               while (!item.availableFrom.empty() && (next.node == NULL)) // Go thru the availableFrom list, looking for the first node that isn't disconnected
                 {
-  	        next = item.availableFrom.front();  // Grab the next location where we can find this object.
-                item.availableFrom.pop_front();
+                    next = item.availableFrom.front(); // Grab the next location where we can find this object.
+                    item.availableFrom.pop_front();
+                    if (next.node != NULL)
+                    {
+                        // Do not request from this node if it was disconnected or the node pingtime is far beyond
+                        // acceptable during initial block download.
+                        // We only check pingtime during IBD because we don't want to lock vNodes too often and when the
+                        // chain is syncd, waiting
+                        // just 5 seconds for a timeout is not an issue, however waiting for a slow node during IBD can
+                        // really slow down the process.
+                        //   TODO: Eventually when we move away from vNodes or have a different mechanism for tracking
+                        //   ping times we can include
+                        //   this filtering in all our requests for blocks and transactions.
+                        bool release = false;
+                        std::string reason;
+                        if (next.node->fDisconnect)
+                        {
+                            reason = "on disconnect";
+                            release = true;
+                        }
+                        else if (!IsChainNearlySyncd() && !IsNodePingAcceptable(next.node))
+                        {
+                            reason = "bad ping time";
+                            release = true;
+                        }
+                        if (release)
+                        {
+                            LOCK(cs_vNodes);
+                            LogPrint("req", "ReqMgr: %s removed block ref to %s count %d (%s).\n", item.obj.ToString(),
+                                next.node->GetLogName(), next.node->GetRefCount(), reason);
+                            next.node->Release();
+                            next.node = NULL; // force the loop to get another node
+                        }
+                    }
+                }
+
                 if (next.node != NULL)
                   {
                     // Do not request from this node if it was disconnected or the node pingtime is far beyond acceptable during initial block download.
@@ -600,6 +640,9 @@ void CRequestManager::SendRequests()
 
 bool CRequestManager::IsNodePingAcceptable(CNode* pfrom)
 {
+    if (pfrom->nPingUsecTime < ACCEPTABLE_PING_USEC)
+        return true;
+
     // Calculate average ping time of all nodes
     uint16_t nValidNodes = 0;
     std::vector<uint64_t> vPingTimes;
@@ -610,7 +653,8 @@ bool CRequestManager::IsNodePingAcceptable(CNode* pfrom)
             vPingTimes.push_back(pnode->nPingUsecTime);
         }
     }
-    if (nValidNodes == 1) return true;
+    if (nValidNodes < 10)  // Take anything if we are poorly connected
+        return true;
 
     // Calculate Standard Deviation and Mean of Ping Time
     using namespace boost::accumulators;
