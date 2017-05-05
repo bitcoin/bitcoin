@@ -41,8 +41,13 @@ extern CCriticalSection cs_orphancache; // from main.h
 // Request management
 extern CRequestManager requester;
 
-unsigned int MIN_TX_REQUEST_RETRY_INTERVAL = 5*1000*1000;  // When should I request an object from someone else (in microseconds)
-unsigned int MIN_BLK_REQUEST_RETRY_INTERVAL = 5*1000*1000;  // When should I request a block from someone else (in microseconds)
+// Any ping < 25 ms is good
+unsigned int ACCEPTABLE_PING_USEC = 25*1000;
+
+// When should I request an object from someone else (in microseconds)
+unsigned int MIN_TX_REQUEST_RETRY_INTERVAL = 5 * 1000 * 1000;
+// When should I request a block from someone else (in microseconds)
+unsigned int MIN_BLK_REQUEST_RETRY_INTERVAL = 5 * 1000 * 1000;
 
 // defined in main.cpp.  should be moved into a utilities file but want to make rebasing easier
 extern bool CanDirectFetch(const Consensus::Params &consensusParams);
@@ -316,92 +321,107 @@ bool CUnknownObj::AddSource(CNode* from)
 
 void RequestBlock(CNode* pfrom, CInv obj)
 {
-  const CChainParams& chainParams = Params();
+    const CChainParams &chainParams = Params();
 
-  // First request the headers preceding the announced block. In the normal fully-synced
-  // case where a new block is announced that succeeds the current tip (no reorganization),
-  // there are no such headers.
-  // Secondly, and only when we are close to being synced, we request the announced block directly,
-  // to avoid an extra round-trip. Note that we must *first* ask for the headers, so by the
-  // time the block arrives, the header chain leading up to it is already validated. Not
-  // doing this will result in the received block being rejected as an orphan in case it is
-  // not a direct successor.
-  //  NOTE: only download headers if we're not doing IBD.  The IBD process will take care of it's own headers.
-  //        Also, we need to always download headers for "regtest". TODO: we need to redesign how IBD is initiated here.
-  if (IsChainNearlySyncd() || chainParams.NetworkIDString() == "regtest")
-  {
-    LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, obj.hash.ToString(), pfrom->id);  
-    pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), obj.hash);
-  }
+    // First request the headers preceding the announced block. In the normal fully-synced
+    // case where a new block is announced that succeeds the current tip (no reorganization),
+    // there are no such headers.
+    // Secondly, and only when we are close to being synced, we request the announced block directly,
+    // to avoid an extra round-trip. Note that we must *first* ask for the headers, so by the
+    // time the block arrives, the header chain leading up to it is already validated. Not
+    // doing this will result in the received block being rejected as an orphan in case it is
+    // not a direct successor.
+    //  NOTE: only download headers if we're not doing IBD.  The IBD process will take care of it's own headers.
+    //        Also, we need to always download headers for "regtest". TODO: we need to redesign how IBD is initiated
+    //        here.
+    if (IsChainNearlySyncd() || chainParams.NetworkIDString() == "regtest")
+    {
+        LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, obj.hash.ToString(), pfrom->id);
+        pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), obj.hash);
+    }
 
-  {
-      // BUIP010 Xtreme Thinblocks: begin section
-      CInv inv2(obj);
-      CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-      CBloomFilter filterMemPool;
-      if (IsThinBlocksEnabled() && IsChainNearlySyncd()) 
-	{
-	  if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && thindata.CheckThinblockTimer(obj.hash))) 
-	    {
-	      // Must download a block from a ThinBlock peer
-	      if (pfrom->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pfrom)) 
-		{ // We can only send one thinblock per peer at a time
-		  pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
-		  inv2.type = MSG_XTHINBLOCK;
-		  std::vector<uint256> vOrphanHashes;
-                  {
-                    LOCK(cs_orphancache);
-                    for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
-                        vOrphanHashes.push_back((*mi).first);
-                  }
-		  BuildSeededBloomFilter(filterMemPool, vOrphanHashes,inv2.hash);
-		  ss << inv2;
-		  ss << filterMemPool;
-		  pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
-		  MarkBlockAsInFlight(pfrom->GetId(), obj.hash, chainParams.GetConsensus());
-		  LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
-		}
-	    }
-	  else 
-	    {
-	      // Try to download a thinblock if possible otherwise just download a regular block
-	      if (pfrom->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pfrom)) { // We can only send one thinblock per peer at a time
-		  pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
-		  inv2.type = MSG_XTHINBLOCK;
-		  std::vector<uint256> vOrphanHashes;
-                  {
-                    LOCK(cs_orphancache);
-                    for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
-                        vOrphanHashes.push_back((*mi).first);
-                  }
-		  BuildSeededBloomFilter(filterMemPool, vOrphanHashes,inv2.hash);
-		  ss << inv2;
-		  ss << filterMemPool;
-		  pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
-		  LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
-	        }
-	      else 
-		{
-		  LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
-		  std::vector<CInv> vToFetch;
-		  inv2.type = MSG_BLOCK;
-		  vToFetch.push_back(inv2);
-		  pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
-		}
-	      MarkBlockAsInFlight(pfrom->GetId(), obj.hash, chainParams.GetConsensus());
-	    }
-	}
-      else 
-	{
-	  std::vector<CInv> vToFetch;
-	  inv2.type = MSG_BLOCK;
-	  vToFetch.push_back(inv2);
-	  pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
-	  MarkBlockAsInFlight(pfrom->GetId(), obj.hash, chainParams.GetConsensus());
-	  LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
-	}
-      // BUIP010 Xtreme Thinblocks: end section
-  }
+    {
+        // BUIP010 Xtreme Thinblocks: begin section
+        CInv inv2(obj);
+        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+        CBloomFilter filterMemPool;
+        if (IsThinBlocksEnabled() && IsChainNearlySyncd())
+        {
+            if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && thindata.CheckThinblockTimer(obj.hash)))
+            {
+                // Must download a block from a ThinBlock peer
+                if (pfrom->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pfrom))
+                { // We can only send one thinblock per peer at a time
+                    {
+                        LOCK(pfrom->cs_mapthinblocksinflight);
+                        pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
+                    }
+                    inv2.type = MSG_XTHINBLOCK;
+                    std::vector<uint256> vOrphanHashes;
+                    {
+                        LOCK(cs_orphancache);
+                        for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin();
+                             mi != mapOrphanTransactions.end(); ++mi)
+                            vOrphanHashes.push_back((*mi).first);
+                    }
+                    BuildSeededBloomFilter(filterMemPool, vOrphanHashes, inv2.hash);
+                    ss << inv2;
+                    ss << filterMemPool;
+                    MarkBlockAsInFlight(pfrom->GetId(), obj.hash, chainParams.GetConsensus());
+                    pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
+                    LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(),
+                        pfrom->addrName.c_str(), pfrom->id);
+                }
+            }
+            else
+            {
+                // Try to download a thinblock if possible otherwise just download a regular block
+                // We can only send one thinblock per peer at a time
+                MarkBlockAsInFlight(pfrom->GetId(), obj.hash, chainParams.GetConsensus());
+                if (pfrom->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pfrom))
+                {
+                    {
+                        LOCK(pfrom->cs_mapthinblocksinflight);
+                        pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
+                    }
+                    inv2.type = MSG_XTHINBLOCK;
+                    std::vector<uint256> vOrphanHashes;
+                    {
+                        LOCK(cs_orphancache);
+                        for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin();
+                             mi != mapOrphanTransactions.end(); ++mi)
+                            vOrphanHashes.push_back((*mi).first);
+                    }
+                    BuildSeededBloomFilter(filterMemPool, vOrphanHashes, inv2.hash);
+                    ss << inv2;
+                    ss << filterMemPool;
+                    pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
+                    LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(),
+                        pfrom->addrName.c_str(), pfrom->id);
+                }
+                else
+                {
+                    LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(),
+                        pfrom->addrName.c_str(), pfrom->id);
+                    std::vector<CInv> vToFetch;
+                    inv2.type = MSG_BLOCK;
+                    vToFetch.push_back(inv2);
+                    pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
+                }
+            }
+        }
+        else
+        {
+            std::vector<CInv> vToFetch;
+            inv2.type = MSG_BLOCK;
+            vToFetch.push_back(inv2);
+            MarkBlockAsInFlight(pfrom->GetId(), obj.hash, chainParams.GetConsensus());
+            pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
+            LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(),
+                pfrom->addrName.c_str(), pfrom->id);
+        }
+        // BUIP010 Xtreme Thinblocks: end section
+    }
 }
 
 
@@ -440,24 +460,42 @@ void CRequestManager::SendRequests()
 	      CNodeRequestData next;
               while (!item.availableFrom.empty() && (next.node == NULL)) // Go thru the availableFrom list, looking for the first node that isn't disconnected
                 {
-  	        next = item.availableFrom.front();  // Grab the next location where we can find this object.
-                item.availableFrom.pop_front();
-                if (next.node != NULL)
-                  {
-                    // Do not request from this node if it was disconnected or the node pingtime is far beyond acceptable during initial block download.
-                    // We only check pingtime during IBD because we don't want to lock vNodes too often and when the chain is syncd, waiting
-                    // just 5 seconds for a timeout is not an issue, however waiting for a slow node during IBD can really slow down the process.
-                    //   TODO: Eventually when we move away from vNodes or have a different mechanism for tracking ping times we can include
-                    //   this filtering in all our requests for blocks and transactions.
-		    if (next.node->fDisconnect || (!IsChainNearlySyncd() && !IsNodePingAcceptable(next.node)))
-		      {
-                        LOCK(cs_vNodes);
-                        LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
-                        next.node->Release();
-                        next.node = NULL; // force the loop to get another node            
-		      }
-		  }
-	        }
+                    next = item.availableFrom.front(); // Grab the next location where we can find this object.
+                    item.availableFrom.pop_front();
+                    if (next.node != NULL)
+                    {
+                        // Do not request from this node if it was disconnected or the node pingtime is far beyond
+                        // acceptable during initial block download.
+                        // We only check pingtime during IBD because we don't want to lock vNodes too often and when the
+                        // chain is syncd, waiting
+                        // just 5 seconds for a timeout is not an issue, however waiting for a slow node during IBD can
+                        // really slow down the process.
+                        //   TODO: Eventually when we move away from vNodes or have a different mechanism for tracking
+                        //   ping times we can include
+                        //   this filtering in all our requests for blocks and transactions.
+                        bool release = false;
+                        std::string reason;
+                        if (next.node->fDisconnect)
+                        {
+                            reason = "on disconnect";
+                            release = true;
+                        }
+                        else if (!IsChainNearlySyncd() && !IsNodePingAcceptable(next.node))
+                        {
+                            reason = "bad ping time";
+                            release = true;
+                        }
+                        if (release)
+                        {
+                            LOCK(cs_vNodes);
+                            LogPrint("req", "ReqMgr: %s removed block ref to %s count %d (%s).\n", item.obj.ToString(),
+                                next.node->GetLogName(), next.node->GetRefCount(), reason);
+                            next.node->Release();
+                            next.node = NULL; // force the loop to get another node
+                        }
+                    }
+                }
+
 
 	      if (next.node != NULL )
 		{
@@ -585,6 +623,9 @@ void CRequestManager::SendRequests()
 
 bool CRequestManager::IsNodePingAcceptable(CNode* pfrom)
 {
+    if (pfrom->nPingUsecTime < ACCEPTABLE_PING_USEC)
+        return true;
+
     // Calculate average ping time of all nodes
     uint16_t nValidNodes = 0;
     std::vector<uint64_t> vPingTimes;
@@ -595,7 +636,8 @@ bool CRequestManager::IsNodePingAcceptable(CNode* pfrom)
             vPingTimes.push_back(pnode->nPingUsecTime);
         }
     }
-    if (nValidNodes == 1) return true;
+    if (nValidNodes < 10)  // Take anything if we are poorly connected
+        return true;
 
     // Calculate Standard Deviation and Mean of Ping Time
     using namespace boost::accumulators;
