@@ -6012,11 +6012,6 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
             return error("Invalid xthinblock received");
         }
 
-        // Send expedited block ASAP
-        CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
-        if (!IsRecentlyExpeditedAndStore(inv.hash))
-            SendExpeditedBlock(thinBlock, 0, pfrom);
-
         // Is there a previous block or header to connect with?
         {
             LOCK(cs_main);
@@ -6042,6 +6037,11 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
                     state.GetRejectReason().c_str());
             }
         }
+
+        // Send expedited block without checking merkle root.
+        CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
+        if (!IsRecentlyExpeditedAndStore(inv.hash))
+            SendExpeditedBlock(thinBlock, 0, pfrom);
 
         int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
         LogPrint("thin", "Received xthinblock %s from peer %s (%d). Size %d bytes.\n", inv.hash.ToString(),
