@@ -2441,42 +2441,16 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 txNew.vin.clear();
                 txNew.vout.clear();
                 wtxNew.fFromMe = true;
-                bool fFirst = true;
+
+                // First construct the transaction with no inputs and outputs to payees
+                for (const auto& recipient : vecSend) {
+                    CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
+                    txNew.vout.push_back(txout);
+                }
 
                 CAmount nValueToSelect = nValue;
                 if (nSubtractFeeFromAmount == 0)
                     nValueToSelect += nFeeRet;
-                // vouts to the payees
-                for (const auto& recipient : vecSend)
-                {
-                    CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
-
-                    if (recipient.fSubtractFeeFromAmount)
-                    {
-                        txout.nValue -= nFeeRet / nSubtractFeeFromAmount; // Subtract fee equally from each selected recipient
-
-                        if (fFirst) // first receiver pays the remainder not divisible by output count
-                        {
-                            fFirst = false;
-                            txout.nValue -= nFeeRet % nSubtractFeeFromAmount;
-                        }
-                    }
-
-                    if (IsDust(txout, ::dustRelayFee))
-                    {
-                        if (recipient.fSubtractFeeFromAmount && nFeeRet > 0)
-                        {
-                            if (txout.nValue < 0)
-                                strFailReason = _("The transaction amount is too small to pay the fee");
-                            else
-                                strFailReason = _("The transaction amount is too small to send after the fee has been deducted");
-                        }
-                        else
-                            strFailReason = _("Transaction amount too small");
-                        return false;
-                    }
-                    txNew.vout.push_back(txout);
-                }
 
                 // Choose coins to use
                 CAmount nValueIn = 0;
@@ -2524,31 +2498,9 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
 
                     CTxOut newTxOut(nChange, scriptChange);
 
-                    // We do not move dust-change to fees, because the sender would end up paying more than requested.
-                    // This would be against the purpose of the all-inclusive feature.
-                    // So instead we raise the change and deduct from the recipient.
-                    if (nSubtractFeeFromAmount > 0 && IsDust(newTxOut, ::dustRelayFee))
-                    {
-                        CAmount nDust = GetDustThreshold(newTxOut, ::dustRelayFee) - newTxOut.nValue;
-                        newTxOut.nValue += nDust; // raise change until no more dust
-                        for (unsigned int i = 0; i < vecSend.size(); i++) // subtract from first recipient
-                        {
-                            if (vecSend[i].fSubtractFeeFromAmount)
-                            {
-                                txNew.vout[i].nValue -= nDust;
-                                if (IsDust(txNew.vout[i], ::dustRelayFee))
-                                {
-                                    strFailReason = _("The transaction amount is too small to send after the fee has been deducted");
-                                    return false;
-                                }
-                                break;
-                            }
-                        }
-                    }
-
-                    // Never create dust outputs; if we would, just
-                    // add the dust to the fee.
-                    if (IsDust(newTxOut, ::dustRelayFee))
+                    // Don't create dust change unless subtracting fee from outputs;
+                    // Instead just add the dust to the fee.
+                    if (nSubtractFeeFromAmount == 0 && IsDust(newTxOut, dustRelayFee))
                     {
                         nChangePosInOut = -1;
                         nFeeRet += nChange;
@@ -2567,8 +2519,8 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                             return false;
                         }
 
-                        std::vector<CTxOut>::iterator position = txNew.vout.begin()+nChangePosInOut;
-                        txNew.vout.insert(position, newTxOut);
+                        // For now stick change on end since we may adjust recipient/change values
+                        txNew.vout.push_back(newTxOut);
                     }
                 } else {
                     reservekey.ReturnKey();
@@ -2622,6 +2574,75 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 {
                     strFailReason = _("Transaction too large for fee policy");
                     return false;
+                }
+
+                // Now that we know required fee, if we are subtracting fee from amounts, do so
+                if (nSubtractFeeFromAmount > 0) {
+                    assert(vecSend.size() <= txNew.vout.size());
+                    bool fFirst = true;
+                    // Iterate over non-change outputs
+                    for (unsigned int i = 0; i < vecSend.size(); i++)
+                    {
+                        CTxOut& txout = txNew.vout[i];
+                        const CRecipient& recipient = vecSend[i];
+
+                        if (recipient.fSubtractFeeFromAmount)
+                        {
+                            txout.nValue -= nFeeRet / nSubtractFeeFromAmount; // Subtract fee equally from each selected recipient
+
+                            if (fFirst) // first receiver pays the remainder not divisible by output count
+                            {
+                                fFirst = false;
+                                txout.nValue -= nFeeRet % nSubtractFeeFromAmount;
+                            }
+                        }
+
+                        if (IsDust(txout, dustRelayFee))
+                        {
+                            if (recipient.fSubtractFeeFromAmount && nFeeRet > 0)
+                            {
+                                if (txout.nValue < 0)
+                                    strFailReason = _("The transaction amount is too small to pay the fee");
+                                else
+                                    strFailReason = _("The transaction amount is too small to send after the fee has been deducted");
+                            }
+                            else
+                                strFailReason = _("Transaction amount too small");
+                            return false;
+                        }
+                    }
+                    // We do not move dust-change to fees, because the sender would end up paying more than requested.
+                    // This would be against the purpose of the all-inclusive feature.
+                    // So instead we raise the change and deduct from the recipient.
+                    if (nChangePosInOut != -1)
+                    {
+                        assert(txNew.vout.size() == vecSend.size() + 1);
+                        CTxOut& txout = txNew.vout.back();
+                        if (IsDust(txout, dustRelayFee)) {
+                            CAmount nDust = GetDustThreshold(txout, dustRelayFee) - txout.nValue;
+                            txout.nValue += nDust; // raise change until no more dust
+                            for (unsigned int i = 0; i < vecSend.size(); i++) // subtract from first recipient
+                            {
+                                if (vecSend[i].fSubtractFeeFromAmount)
+                                {
+                                    txNew.vout[i].nValue -= nDust;
+                                    if (IsDust(txNew.vout[i], dustRelayFee))
+                                    {
+                                        strFailReason = _("The transaction amount is too small to send after the fee has been deducted");
+                                        return false;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Move change into required position
+                if (nChangePosInOut != -1) {
+                    std::vector<CTxOut>::iterator position = txNew.vout.begin()+nChangePosInOut;
+                    txNew.vout.insert(position, txNew.vout.back());
+                    txNew.vout.pop_back();
                 }
 
                 if (nFeeRet >= nFeeNeeded) {
