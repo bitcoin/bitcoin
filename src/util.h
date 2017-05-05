@@ -17,9 +17,9 @@
 
 #include <compat.h>
 #include <fs.h>
+#include <sync.h>
 #include <tinyformat.h>
 #include <utiltime.h>
-#include <amount.h>
 
 #include <atomic>
 #include <exception>
@@ -178,8 +178,7 @@ bool error(const char* fmt, const Args&... args)
 }
 
 void PrintExceptionContinue(const std::exception *pex, const char* pszThread);
-void ParseParameters(int argc, const char*const argv[]);
-void FileCommit(FILE *fileout);
+void FileCommit(FILE *file);
 bool TruncateFile(FILE *file, unsigned int length);
 int RaiseFileDescriptorLimit(int nMinFD);
 void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
@@ -194,7 +193,6 @@ fs::path GetMasternodeConfigFile(const std::string& confPath);
 fs::path GetPidFile();
 void CreatePidFile(const fs::path &path, pid_t pid);
 #endif
-void ReadConfigFile(const std::string& confPath);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
@@ -211,6 +209,15 @@ inline bool IsSwitchChar(char c)
 #endif
 }
 
+class ArgsManager
+{
+protected:
+    CCriticalSection cs_args;
+    std::map<std::string, std::string> mapArgs;
+public:
+    void ParseParameters(int argc, const char*const argv[]);
+    void ReadConfigFile(const std::string& confPath);
+    std::vector<std::string> GetArgs(const std::string& strArg);
 /**
  * Return true if the given argument has been manually set
  *
@@ -266,8 +273,55 @@ bool SoftSetBoolArg(const std::string& strArg, bool fValue);
 
 // Forces an arg setting
 void ForceSetArg(const std::string& strArg, const std::string& strValue);
-void ForceSetMultiArgs(const std::string& strArg, const std::vector<std::string>& values);
-void ForceRemoveArg(const std::string& strArg);
+};
+
+extern ArgsManager gArgs;
+
+// wrappers using the global ArgsManager:
+static inline void ParseParameters(int argc, const char*const argv[])
+{
+    gArgs.ParseParameters(argc, argv);
+}
+
+static inline void ReadConfigFile(const std::string& confPath)
+{
+    gArgs.ReadConfigFile(confPath);
+}
+
+static inline bool SoftSetArg(const std::string& strArg, const std::string& strValue)
+{
+    return gArgs.SoftSetArg(strArg, strValue);
+}
+
+static inline void ForceSetArg(const std::string& strArg, const std::string& strValue)
+{
+    gArgs.ForceSetArg(strArg, strValue);
+}
+
+static inline bool IsArgSet(const std::string& strArg)
+{
+    return gArgs.IsArgSet(strArg);
+}
+
+static inline std::string GetArg(const std::string& strArg, const std::string& strDefault)
+{
+    return gArgs.GetArg(strArg, strDefault);
+}
+
+static inline int64_t GetArg(const std::string& strArg, int64_t nDefault)
+{
+    return gArgs.GetArg(strArg, nDefault);
+}
+
+static inline bool GetBoolArg(const std::string& strArg, bool fDefault)
+{
+    return gArgs.GetBoolArg(strArg, fDefault);
+}
+
+static inline bool SoftSetBoolArg(const std::string& strArg, bool fValue)
+{
+    return gArgs.SoftSetBoolArg(strArg, fValue);
+}
 
 /**
  * Format a string to be used as group of options in help messages
