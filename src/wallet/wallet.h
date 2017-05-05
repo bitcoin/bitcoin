@@ -948,10 +948,22 @@ public:
      */
     static CAmount GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, bool ignoreUserSetFee = false);
     /**
+     * Estimate the minimum fee rate considering user set parameters
+     * and the required fee
+     */
+    static CFeeRate GetMinimumFeeRate(unsigned int nConfirmTarget, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, bool ignoreUserSetFee = false);
+
+    /**
      * Return the minimum required fee taking into account the
      * floating relay fee and user set minimum transaction fee
      */
     static CAmount GetRequiredFee(unsigned int nTxBytes);
+
+    /**
+     * Return the minimum required fee taking into account the
+     * floating relay fee and user set minimum transaction fee
+     */
+    static CFeeRate GetRequiredFeeRate();
 
     bool NewKeyPool();
     size_t KeypoolCountExternalKeys();
