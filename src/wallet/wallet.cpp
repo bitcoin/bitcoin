@@ -2598,7 +2598,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 if (coinControl && coinControl->nConfirmTarget > 0)
                     currentConfirmationTarget = coinControl->nConfirmTarget;
 
-                CAmount nFeeNeeded = GetMinimumFee(nBytes, currentConfirmationTarget, ::mempool, ::feeEstimator);
+                CAmount nFeeNeeded = GetMinimumFeeRate(currentConfirmationTarget, ::mempool, ::feeEstimator).GetFee(nBytes);
 
                 // If total estimated fee is too high, just set to default maximum
                 if (nFeeNeeded > maxTxFee) {
@@ -2781,23 +2781,6 @@ CAmount CWallet::GetRequiredFee(unsigned int nTxBytes)
 CFeeRate CWallet::GetRequiredFeeRate()
 {
     return std::max(minTxFee, ::minRelayTxFee);
-}
-
-CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, bool ignoreUserSetFee)
-{
-    // payTxFee is the user-set global for desired feerate
-    CAmount nFeeNeeded = payTxFee.GetFee(nTxBytes);
-    // User didn't set: use -txconfirmtarget to estimate...
-    if (nFeeNeeded == 0 || ignoreUserSetFee) {
-        int estimateFoundTarget = nConfirmTarget;
-        nFeeNeeded = estimator.estimateSmartFee(nConfirmTarget, &estimateFoundTarget, pool).GetFee(nTxBytes);
-        // ... unless we don't have enough mempool data for estimatefee, then use fallbackFee
-        if (nFeeNeeded == 0)
-            nFeeNeeded = fallbackFee.GetFee(nTxBytes);
-    }
-    // prevent user from paying a fee below minRelayTxFee or minTxFee
-    nFeeNeeded = std::max(nFeeNeeded, GetRequiredFee(nTxBytes));
-    return nFeeNeeded;
 }
 
 CFeeRate CWallet::GetMinimumFeeRate(unsigned int nConfirmTarget, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, bool ignoreUserSetFee)

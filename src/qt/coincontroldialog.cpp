@@ -512,7 +512,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
                 nBytes -= 34;
 
         // Fee
-        nPayFee = CWallet::GetMinimumFee(nBytes, nTxConfirmTarget, ::mempool, ::feeEstimator);
+        nPayFee = CWallet::GetMinimumFeeRate(nTxConfirmTarget, ::mempool, ::feeEstimator).GetFee(nBytes);
         if (nPayFee > maxTxFee) {
             nPayFee = maxTxFee;
         }

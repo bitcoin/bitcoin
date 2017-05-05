@@ -943,11 +943,6 @@ public:
     static CFeeRate minTxFee;
     static CFeeRate fallbackFee;
     /**
-     * Estimate the minimum fee considering user set parameters
-     * and the required fee
-     */
-    static CAmount GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, bool ignoreUserSetFee = false);
-    /**
      * Estimate the minimum fee rate considering user set parameters
      * and the required fee
      */
