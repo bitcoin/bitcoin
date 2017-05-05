@@ -156,7 +156,7 @@ const char *http_errorstring(int code)
 
 static void http_request_done(struct evhttp_request *req, void *ctx)
 {
-    HTTPReply *reply = static_cast<HTTPReply*>(ctx);
+    auto *reply = static_cast<HTTPReply*>(ctx);
 
     if (req == NULL) {
         /* If req is NULL, it means an error occurred while connecting: the
@@ -182,7 +182,7 @@ static void http_request_done(struct evhttp_request *req, void *ctx)
 #if LIBEVENT_VERSION_NUMBER >= 0x02010300
 static void http_error_cb(enum evhttp_request_error err, void *ctx)
 {
-    HTTPReply *reply = static_cast<HTTPReply*>(ctx);
+    auto *reply = static_cast<HTTPReply*>(ctx);
     reply->error = err;
 }
 #endif
