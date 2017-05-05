@@ -6335,31 +6335,6 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
         LogPrint("blk", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
         UnlimitedLogBlock(block, inv.hash.ToString(), receiptTime);
 
-        // If block was never requested then ban the peer. We should never received 
-        // unrequested blocks unless we are doing testing in regtest or is an from an expedited node.
-        {
-            LOCK(cs_main);
-            if (mapBlocksInFlight.find(inv.hash) == mapBlocksInFlight.end() && !pfrom->fWhitelisted && !IsExpeditedNode(pfrom))
-            {
-                // We also have to check mapThinBlocksInflight.  It is possible that an expedited block could beat
-                // our request for a full block (if for instance a thinblock request fails we re-request a full block).
-                // In that rare event mapBlocksInFlight will be empty because we do not track by peer but only by hash.
-                // TODO: mapBlocksInFlight is needing of a rewrite (so as to track by node as well as hash) and also
-                //       both mapBlocksInflight and mapThinBlocksInFlight should be put into and managed by the request
-                //       manager.
-                LOCK(pfrom->cs_mapthinblocksinflight);
-                {
-                    if (pfrom->mapThinBlocksInFlight.find(inv.hash) == pfrom->mapThinBlocksInFlight.end())
-                    {
-                        Misbehaving(pfrom->GetId(), 1);
-                        return error("Block %s was never requested, misbehaving peer %s",
-                            inv.hash.ToString(),
-                            pfrom->GetLogName());
-                    }
-                }
-            }
-        }
-
         if (IsChainNearlySyncd()) // BU send the received block out expedited channels quickly
         {
             CValidationState state;
