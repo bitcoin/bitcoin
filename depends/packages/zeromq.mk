@@ -7,6 +7,7 @@ $(package)_sha256_hash=e00b2967e074990d0538361cc79084a0a92892df2c6e7585da34e4c61
 define $(package)_set_vars
   $(package)_config_opts=--without-documentation --disable-shared
   $(package)_config_opts_linux=--with-pic
+  $(package)_cxxflags=-std=c++11
 endef
 
 define $(package)_config_cmds
