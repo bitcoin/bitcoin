@@ -23,7 +23,7 @@ void print_number(double x) {
     if (y < 0.0) {
         y = -y;
     }
-    while (y < 100.0) {
+    while (y > 0 && y < 100.0) {
         y *= 10.0;
         c++;
     }
