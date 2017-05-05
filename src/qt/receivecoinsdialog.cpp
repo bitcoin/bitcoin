@@ -47,18 +47,21 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *platformStyle, QWidg
     }
 
     // context menu actions
+    QAction *copyAddressAction = new QAction(tr("Copy address"), this);
     QAction *copyLabelAction = new QAction(tr("Copy label"), this);
     QAction *copyMessageAction = new QAction(tr("Copy message"), this);
     QAction *copyAmountAction = new QAction(tr("Copy amount"), this);
 
     // context menu
     contextMenu = new QMenu();
+    contextMenu->addAction(copyAddressAction);
     contextMenu->addAction(copyLabelAction);
     contextMenu->addAction(copyMessageAction);
     contextMenu->addAction(copyAmountAction);
 
     // context menu signals
     connect(ui->recentRequestsView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showMenu(QPoint)));
+    connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(copyAddress()));
     connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(copyLabel()));
     connect(copyMessageAction, SIGNAL(triggered()), this, SLOT(copyMessage()));
     connect(copyAmountAction, SIGNAL(triggered()), this, SLOT(copyAmount()));
@@ -306,6 +309,12 @@ void ReceiveCoinsDialog::showMenu(const QPoint &point)
     if(selection.empty())
         return;
     contextMenu->exec(QCursor::pos());
+}
+
+// context menu action: copy address
+void ReceiveCoinsDialog::copyAddress()
+{
+    copyColumnToClipboard(RecentRequestsTableModel::Address);
 }
 
 // context menu action: copy label

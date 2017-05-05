@@ -515,7 +515,7 @@ QString TransactionTableModel::formatTooltip(const TransactionRecord *rec) const
     return tooltip;
 }
 
-QString TransactionTableModel::pickLabelWithAddress(std::map <std::string,CScript> listAddresses, std::string& address) const
+QString TransactionTableModel::pickLabelWithAddress(AddressList listAddresses, std::string& address) const
 {
     /* returns the first address wiith a label or the last address on the list */
     QString label = "";

@@ -16,6 +16,10 @@
 class CWallet;
 class CWalletTx;
 
+// Addresses need to preserve their txout order for accurate display so implemented as list (instead of map)
+typedef std::pair<std::string,CScript> Address;
+typedef std::list<Address> AddressList;
+
 /** UI model for transaction status. The transaction status is the part of a transaction that will change over time.
  */
 class TransactionStatus
@@ -96,7 +100,7 @@ public:
     }
 
     TransactionRecord(uint256 hash, qint64 time,
-                Type type, const std::map <std::string,CScript> &addresses,
+                Type type, const AddressList &addresses,
                 const CAmount& debit, const CAmount& credit):
             hash(hash), time(time), type(type), addresses(addresses), debit(debit), credit(credit),
             idx(0)
@@ -113,7 +117,7 @@ public:
     uint256 hash;
     qint64 time;
     Type type;
-    std::map <std::string,CScript> addresses;
+    AddressList addresses;
     CAmount debit;
     CAmount credit;
     /**@}*/

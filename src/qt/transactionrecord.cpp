@@ -42,7 +42,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     CAmount nNet = nCredit - nDebit;
     uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
-    std::map<std::string, CScript> listAllAddresses;
+    AddressList listAllAddresses;
 
     // load all tx addresses for user display/filter
     isminetype fAllToMe = ISMINE_SPENDABLE;
@@ -50,19 +50,19 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     CTxDestination address;
     BOOST_FOREACH(const CTxOut& txout, wtx.vout)
     {
+        // get public label if it exists
+        std::string labelPublic = getLabelPublic(txout.scriptPubKey);
+        if (labelPublic != "")
+            // use public label instead of address
+            listAllAddresses.push_back(std::make_pair("<" + labelPublic + ">", txout.scriptPubKey));
 
-        if (ExtractDestination(txout.scriptPubKey, address))
+        else if (ExtractDestination(txout.scriptPubKey, address))
             // a standard address
-            listAllAddresses[CBitcoinAddress(address).ToString()] = txout.scriptPubKey;
-        else
-        {
-            std::string labelPublic = getLabelPublic(txout.scriptPubKey);
-            if (labelPublic != "")
-                listAllAddresses["<" + labelPublic + ">"] = txout.scriptPubKey;
+            listAllAddresses.push_back(std::make_pair(CBitcoinAddress(address).ToString(), txout.scriptPubKey));
+
             else
                 // add the unknown scriptPubKey as n/a - TODO could also skip these if there is no need to display/filter??
-                listAllAddresses["n/a"] = txout.scriptPubKey;
-        }
+                listAllAddresses.push_back(std::make_pair("n/a", txout.scriptPubKey));
 
         if (txout.nValue > 0)  // only checkout outputs which received bitcoin
         {
@@ -92,19 +92,20 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 {
                     // Received by Bitcoin Address
                     sub.type = TransactionRecord::RecvWithAddress;
-                    //sub.addresses[CBitcoinAddress(address).ToString()] = txout.scriptPubKey;
+                    listAllAddresses.push_back(std::make_pair(CBitcoinAddress(address).ToString(), txout.scriptPubKey));
                 }
                 else
                 {
                     // Received by IP connection (deprecated features), or a multisignature or other non-simple transaction
                     sub.type = TransactionRecord::RecvFromOther;
-                    listAllAddresses[mapValue["from"]] = txout.scriptPubKey;
+                    listAllAddresses.push_back(std::make_pair(mapValue["from "],txout.scriptPubKey));
                 }
                 if (wtx.IsCoinBase())
                 {
                     // Generated
                     sub.type = TransactionRecord::Generated;
                 }
+
                 sub.addresses = listAllAddresses;
 
                 parts.append(sub);
@@ -158,13 +159,13 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 {
                     // Sent to Bitcoin Address
                     sub.type = TransactionRecord::SendToAddress;
-                    sub.addresses[CBitcoinAddress(address).ToString()] = txout.scriptPubKey;
+                    sub.addresses.push_back(std::make_pair(CBitcoinAddress(address).ToString(), txout.scriptPubKey));
                 }
                 else
                 {
                     // Sent to IP, or other non-address transaction like OP_EVAL
                     sub.type = TransactionRecord::SendToOther;
-                    sub.addresses[mapValue["to"]] = txout.scriptPubKey;
+                    sub.addresses.push_back(std::make_pair(mapValue["to"], txout.scriptPubKey));
                 }
 
                 CAmount nValue = txout.nValue;

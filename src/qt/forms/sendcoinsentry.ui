@@ -36,7 +36,7 @@
     <property name="verticalSpacing">
      <number>8</number>
     </property>
-    <item row="3" column="1">
+    <item row="4" column="1">
      <layout class="QHBoxLayout" name="horizontalLayoutAmount" stretch="0,1">
       <item>
        <widget class="BitcoinAmountField" name="payAmount"/>
@@ -53,7 +53,7 @@
       </item>
      </layout>
     </item>
-    <item row="4" column="0">
+    <item row="5" column="0">
      <widget class="QLabel" name="messageLabel">
       <property name="text">
        <string>Private Description:</string>
@@ -76,7 +76,7 @@
       </property>
      </widget>
     </item>
-    <item row="3" column="0">
+    <item row="4" column="0">
      <widget class="QLabel" name="amountLabel">
       <property name="text">
        <string>A&amp;mount:</string>
@@ -99,6 +99,13 @@
       </property>
       <property name="buddy">
        <cstring>payTo</cstring>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="0" colspan="2">
+     <widget class="Line" name="line">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
       </property>
      </widget>
     </item>
@@ -182,14 +189,7 @@
       </item>
      </layout>
     </item>
-    <item row="5" column="0" colspan="2">
-     <widget class="Line" name="line">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="1">
+    <item row="5" column="1">
      <widget class="QLabel" name="messageTextLabel">
       <property name="toolTip">
        <string>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</string>
@@ -211,19 +211,29 @@
      </layout>
     </item>
     <item row="2" column="1">
-     <widget class="QLineEdit" name="lineEditPublic">
-      <property name="toolTip">
-       <string>Enter a public label for this transaction</string>
-      </property>
-     </widget>
+     <layout class="QHBoxLayout" name="labelPublicLayout">
+      <item>
+       <widget class="QLineEdit" name="lineEditPublic">
+        <property name="toolTip">
+         <string>Enter a public label for this transaction</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
-    <item row="2" column="0" alignment="Qt::AlignRight">
+    <item row="2" column="0">
      <widget class="QLabel" name="labelPublic">
       <property name="text">
-       <string>Public Label:</string>
+       <string>&amp;Public Label:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
       <property name="margin">
-       <number>5</number>
+       <number>0</number>
+      </property>
+      <property name="buddy">
+       <cstring>lineEditPublic</cstring>
       </property>
      </widget>
     </item>
@@ -1287,10 +1297,10 @@
   <tabstop>lineEditPublic</tabstop>
   <tabstop>payAmount</tabstop>
   <tabstop>checkboxSubtractFeeFromAmount</tabstop>
-  <tabstop>deleteButton_is</tabstop>
   <tabstop>payAmount_s</tabstop>
   <tabstop>payAmount_is</tabstop>
   <tabstop>deleteButton_s</tabstop>
+  <tabstop>deleteButton_is</tabstop>
  </tabstops>
  <resources/>
  <connections/>
