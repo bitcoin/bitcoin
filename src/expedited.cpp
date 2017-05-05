@@ -309,7 +309,7 @@ bool IsExpeditedNode(const CNode *pfrom)
     LOCK(cs_xpedited);
     if (std::find(xpeditedBlkUp.begin(), xpeditedBlkUp.end(), pfrom) == xpeditedBlkUp.end())
         return false;
-    
+
     return true;
 }
 

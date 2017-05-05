@@ -48,7 +48,6 @@ unsigned int ACCEPTABLE_PING_USEC = 25*1000;
 unsigned int MIN_TX_REQUEST_RETRY_INTERVAL = 5 * 1000 * 1000;
 // When should I request a block from someone else (in microseconds)
 unsigned int MIN_BLK_REQUEST_RETRY_INTERVAL = 5 * 1000 * 1000;
-cache creation and during validateblocktemplate test
 
 // defined in main.cpp.  should be moved into a utilities file but want to make rebasing easier
 extern bool CanDirectFetch(const Consensus::Params &consensusParams);
@@ -497,22 +496,6 @@ void CRequestManager::SendRequests()
                     }
                 }
 
-                if (next.node != NULL)
-                  {
-                    // Do not request from this node if it was disconnected or the node pingtime is far beyond acceptable during initial block download.
-                    // We only check pingtime during IBD because we don't want to lock vNodes too often and when the chain is syncd, waiting
-                    // just 5 seconds for a timeout is not an issue, however waiting for a slow node during IBD can really slow down the process.
-                    //   TODO: Eventually when we move away from vNodes or have a different mechanism for tracking ping times we can include
-                    //   this filtering in all our requests for blocks and transactions.
-		    if (next.node->fDisconnect || (!IsChainNearlySyncd() && !IsNodePingAcceptable(next.node)))
-		      {
-                        LOCK(cs_vNodes);
-                        LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
-                        next.node->Release();
-                        next.node = NULL; // force the loop to get another node            
-		      }
-		  }
-	        }
 
 	      if (next.node != NULL )
 		{
