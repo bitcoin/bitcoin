@@ -91,6 +91,13 @@ void HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
     vRecv >> options;
     bool stop = ((options & EXPEDITED_STOP) != 0); // Indicates started or stopped expedited service
 
+    if (!pfrom->ThinBlockCapable() || !IsThinBlocksEnabled())
+    {
+        LOCK(cs_main);
+        Misbehaving(pfrom->GetId(), 5);
+        return;
+    }
+
     if (options & EXPEDITED_BLOCKS)
     {
         LOCK(cs_xpedited);
@@ -195,12 +202,25 @@ bool HandleExpeditedBlock(CDataStream &vRecv, CNode *pfrom)
     unsigned char msgType;
     vRecv >> msgType >> hops;
 
+    if (!pfrom->ThinBlockCapable() || !IsThinBlocksEnabled() || !IsExpeditedNode(pfrom))
+    {
+        return false;
+    }
+
     if (msgType == EXPEDITED_MSG_XTHIN)
     {
         CXThinBlock thinBlock;
         vRecv >> thinBlock;
         uint256 blkHash = thinBlock.header.GetHash();
         CInv inv(MSG_BLOCK, blkHash);
+
+        // Message consistency checking
+        if (!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("Invalid EXPEDITED_MSG_XTHIN received");
+        }
 
         bool newBlock = false;
         unsigned int status = 0;
@@ -231,10 +251,6 @@ bool HandleExpeditedBlock(CDataStream &vRecv, CNode *pfrom)
             return true;
         if (!newBlock)
             return true;
-
-        CValidationState state;
-        if (!CheckBlockHeader(thinBlock.header, state, true))
-            return false;
 
         // TODO: Start headers-only mining now
 
@@ -285,4 +301,15 @@ void SendExpeditedBlock(const CBlock &block, const CNode *skip)
         SendExpeditedBlock(thinBlock, 0, skip);
     }
     // else, nothing to do
+}
+
+bool IsExpeditedNode(const CNode *pfrom)
+{
+    // xpeditedBlkUp keeps track of the nodes that we have requested expedited blocks from.  If the node
+    // is not in this list then it is not expedited node.
+    LOCK(cs_xpedited);
+    if (std::find(xpeditedBlkUp.begin(), xpeditedBlkUp.end(), pfrom) == xpeditedBlkUp.end())
+        return false;
+
+    return true;
 }

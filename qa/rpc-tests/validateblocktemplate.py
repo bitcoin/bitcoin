@@ -353,4 +353,7 @@ def Test():
 
 
 if __name__ == '__main__':
-    ValidateblocktemplateTest().main()
+    bitcoinConf = {
+        "debug": ["net", "blk", "thin", "mempool", "req", "bench", "evict"]
+    }
+    ValidateblocktemplateTest().main([],bitcoinConf)

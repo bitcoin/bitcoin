@@ -433,13 +433,19 @@ bool MarkBlockAsReceived(const uint256& hash) {
 
         {
             LOCK(cs_vNodes);
-            BOOST_FOREACH(CNode* pnode, vNodes) {
-                if (pnode->mapThinBlocksInFlight.count(hash)) {
-                    // Only update thinstats if this is actually a thinblock and not a regular block.
-                    // Sometimes we request a thinblock but then revert to requesting a regular block
-                    // as can happen when the thinblock preferential timer is exceeded.
-                    thindata.UpdateResponseTime(nResponseTime);
-                    break;
+            BOOST_FOREACH(CNode* pnode, vNodes)
+            {
+                if (pnode->mapThinBlocksInFlight.size() > 0)
+                {
+                    LOCK(pnode->cs_mapthinblocksinflight);
+                    if (pnode->mapThinBlocksInFlight.count(hash))
+                    {
+                        // Only update thinstats if this is actually a thinblock and not a regular block.
+                        // Sometimes we request a thinblock but then revert to requesting a regular block
+                        // as can happen when the thinblock preferential timer is exceeded.
+                        thindata.UpdateResponseTime(nResponseTime);
+                        break;
+                    }
                 }
             }
         }
@@ -5550,7 +5556,7 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
         // we must use CBlocks, as CBlockHeaders won't include the 0x00 nTx count at the end
         std::vector<CBlock> vHeaders;
         int nLimit = MAX_HEADERS_RESULTS;
-        LogPrint("net", "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString(), pfrom->id);
+        LogPrint("net", "getheaders height %d for block %s from peer %s\n", (pindex ? pindex->nHeight : -1), hashStop.ToString(), pfrom->GetLogName());
         for (; pindex; pindex = chainActive.Next(pindex))
         {
             vHeaders.push_back(pindex->GetBlockHeader());
@@ -5925,12 +5931,14 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
     {
         HandleExpeditedRequest(vRecv, pfrom);
     }
+
+
     else if (strCommand == NetMsgType::XPEDITEDBLK)
     {
-        // ignore the expedited message unless we are at the chain tip...
+        // ignore the expedited message unless we are near the chain tip...
         if (!fImporting && !fReindex && IsChainNearlySyncd())
         {
-	          if (!HandleExpeditedBlock(vRecv, pfrom))
+	    if (!HandleExpeditedBlock(vRecv, pfrom))
             {
                 LOCK(cs_main);
                 Misbehaving(pfrom->GetId(), 5);
@@ -5938,6 +5946,8 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
             }
         }
     }
+
+
     // BUVERSION is used to pass BU specific version information similar to NetMsgType::VERSION
     // and is exchanged after the VERSION and VERACK are both sent and received.
     else if (strCommand == NetMsgType::BUVERSION)
@@ -6039,7 +6049,17 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
             pfrom->id,
             nSizeThinBlock);
 
+        // Ban a node for sending unrequested xthins unless from an expedited node.
         bool fAlreadyHave = false;
+        {
+        LOCK(pfrom->cs_mapthinblocksinflight);
+        if (!pfrom->mapThinBlocksInFlight.count(inv.hash) && !IsExpeditedNode(pfrom))
+        {
+                LOCK(cs_main);
+                Misbehaving(pfrom->GetId(), 100);
+                return error("unrequested xthinblock from peer %s (%d)", pfrom->addrName.c_str(), pfrom->id);
+        }
+
         // An expedited block or re-requested xthin can arrive and beat the original thin block request/response
         if (!pfrom->mapThinBlocksInFlight.count(inv.hash))
         {
@@ -6048,6 +6068,7 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
             fAlreadyHave = AlreadyHave(inv); // I'll still continue processing if we don't have an accepted block yet
             if (fAlreadyHave)
                 requester.Received(inv, pfrom, nSizeThinBlock); // record the bytes received from the thinblock even though we had it already
+        }
         }
 
         if (!fAlreadyHave)
@@ -6110,11 +6131,15 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
             pfrom->id,
             nSizeThinBlock);
 
-        if (!pfrom->mapThinBlocksInFlight.count(inv.hash))
+        // Ban a node for sending unrequested thinblocks unless from an expedited node.
         {
-            LogPrint("thin", "Thinblock received but not requested %s  peer=%d\n",inv.hash.ToString(), pfrom->id);
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 20);
+        LOCK(pfrom->cs_mapthinblocksinflight);
+        if (!pfrom->mapThinBlocksInFlight.count(inv.hash) && !IsExpeditedNode(pfrom))
+        {
+                LOCK(cs_main);
+                Misbehaving(pfrom->GetId(), 100);
+                return error("unrequested thinblock from peer %s (%d)", pfrom->addrName.c_str(), pfrom->id);
+        }
         }
 
         thinBlock.process(pfrom, nSizeThinBlock, strCommand);
@@ -6222,7 +6247,7 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
         if (thinBlockTx.vMissingTx.empty() || thinBlockTx.blockhash.IsNull() || pfrom->xThinBlockHashes.size() != pfrom->thinBlock.vtx.size())
         {
             {
-                LOCK(cs_vNodes);
+                LOCK2(cs_vNodes, pfrom->cs_mapthinblocksinflight);
                 pfrom->mapThinBlocksInFlight.erase(inv.hash);
                 pfrom->thinBlockWaitingForTxns = -1;
                 pfrom->thinBlock.SetNull();
@@ -6234,11 +6259,14 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
         }
 
         LogPrint("net", "received blocktxs for %s peer=%d\n", inv.hash.ToString(), pfrom->id);
+        {
+        LOCK(pfrom->cs_mapthinblocksinflight);
         if (!pfrom->mapThinBlocksInFlight.count(inv.hash))
         {
             LogPrint("thin", "xblocktx received but it was either not requested or it was beaten by another block %s  peer=%d\n", inv.hash.ToString(), pfrom->id);
             requester.Received(inv, pfrom, msgSize); // record the bytes received from the message
             return true;
+        }
         }
 
         // Create the mapMissingTx from all the supplied tx's in the xthinblock
@@ -6307,17 +6335,6 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
         LogPrint("blk", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
         UnlimitedLogBlock(block, inv.hash.ToString(), receiptTime);
 
-        // If block was never requested then ban the peer. We should never received 
-        // unrequested blocks unless we are doing testing in regtest.
-        {
-            LOCK(cs_main);
-            if (mapBlocksInFlight.find(inv.hash) == mapBlocksInFlight.end() && !pfrom->fWhitelisted)
-            {
-                Misbehaving(pfrom->GetId(), 100);
-                return error("Block %s was never requested, banning peer=%d", inv.hash.ToString(), pfrom->GetId());
-            }
-        }
-
         if (IsChainNearlySyncd()) // BU send the received block out expedited channels quickly
         {
             CValidationState state;
@@ -6328,7 +6345,6 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
         // block is invalid we don't want to remove it from the request manager yet.
         requester.Received(inv, pfrom, msgSize);
 
-         
         // Message consistency checking
         // NOTE: consistency checking is handled by checkblock() which is called during
         //       ProcessNewBlock() during HandleBlockMessage.
@@ -6737,6 +6753,34 @@ bool SendMessages(CNode* pto)
             }
         }
 
+        if (pto->ThinBlockCapable())
+        {
+            // Check to see if there are any thinblocks in flight that have gone beyond the timeout interval.
+            // If so then we need to disconnect them so that the thinblock data is nullified.  We coud null
+            // the thinblock data here but that would possible cause a node to be baneed later if the thinblock
+            // finally did show up. Better to just disconnect this slow node instead.
+            if (pto->mapThinBlocksInFlight.size() > 0)
+            {
+                LOCK(pto->cs_mapthinblocksinflight);
+                std::map<uint256, int64_t>::iterator iter = pto->mapThinBlocksInFlight.begin();
+                while (iter != pto->mapThinBlocksInFlight.end())
+                {
+                    if ((GetTime() - (*iter).second) > THINBLOCK_DOWNLOAD_TIMEOUT)
+                    {
+                        if (!pto->fWhitelisted && Params().NetworkIDString() != "regtest")
+                        {
+                            LogPrint("thin", "ERROR: Disconnecting peer=%d due to download timeout exceeded "
+                                     "(%d secs)\n",
+                                pto->GetId(),
+                                (GetTime() - (*iter).second));
+                            pto->fDisconnect = true;
+                            break;
+                        }
+                    }
+                    iter++;
+                }
+            }
+        }
 
         TRY_LOCK(cs_main, lockMain); // Acquire cs_main for IsInitialBlockDownload() and CNodeState()
         if (!lockMain)

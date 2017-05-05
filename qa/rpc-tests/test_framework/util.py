@@ -245,7 +245,7 @@ def initialize_chain(test_dir,bitcoinConfDict=None,wallets=None):
 
         # Create cache directories, run bitcoinds:
         for i in range(4):
-            datadir=initialize_datadir("cache", i)
+            datadir=initialize_datadir("cache", i,bitcoinConfDict)
             args = [ os.getenv("BITCOIND", "bitcoind"), "-keypool=1", "-datadir="+datadir ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
