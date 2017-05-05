@@ -148,7 +148,7 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConf
             currentResult = BumpFeeResult::INVALID_PARAMETER;
             return;
         }
-        CAmount requiredFee = CWallet::GetRequiredFee(maxNewTxSize);
+        CAmount requiredFee = CWallet::GetRequiredFeeRate().GetFee(maxNewTxSize);
         if (totalFee < requiredFee) {
             vErrors.push_back(strprintf("Insufficient totalFee (cannot be less than required fee %s)",
                                                                 FormatMoney(requiredFee)));

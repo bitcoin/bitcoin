@@ -952,12 +952,6 @@ public:
      * Return the minimum required fee taking into account the
      * floating relay fee and user set minimum transaction fee
      */
-    static CAmount GetRequiredFee(unsigned int nTxBytes);
-
-    /**
-     * Return the minimum required fee taking into account the
-     * floating relay fee and user set minimum transaction fee
-     */
     static CFeeRate GetRequiredFeeRate();
 
     bool NewKeyPool();

@@ -2778,11 +2778,6 @@ bool CWallet::AddAccountingEntry(const CAccountingEntry& acentry, CWalletDB *pwa
     return true;
 }
 
-CAmount CWallet::GetRequiredFee(unsigned int nTxBytes)
-{
-    return std::max(minTxFee.GetFee(nTxBytes), ::minRelayTxFee.GetFee(nTxBytes));
-}
-
 CFeeRate CWallet::GetRequiredFeeRate()
 {
     return std::max(minTxFee, ::minRelayTxFee);
