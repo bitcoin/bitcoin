@@ -53,9 +53,7 @@
 #    to a place outside of your working area, since otherwise it might
 #    disappear during the run :-)
 #
-# 3. This script has only been used with rpc-tests.py tests up to now.
-#
-# 4. You may need to adapt PARALLEL_TEST_TOOL. This tool should also be
+# 3. You may need to adapt PARALLEL_TEST_TOOL. This tool should also be
 #    placed outside the working area, to protect it during runs.
 #
 #########################################################################
