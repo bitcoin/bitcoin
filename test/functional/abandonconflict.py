@@ -10,10 +10,8 @@
  which are not included in a block and are not currently in the mempool. It has
  no effect on transactions which are already conflicted or abandoned.
 """
-
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-import urllib.parse
 
 class AbandonConflictTest(BitcoinTestFramework):
     def __init__(self):
@@ -37,8 +35,8 @@ class AbandonConflictTest(BitcoinTestFramework):
         assert(balance - newbalance < Decimal("0.001")) #no more than fees lost
         balance = newbalance
 
-        url = urllib.parse.urlparse(self.nodes[1].url)
-        self.nodes[0].disconnectnode(url.hostname+":"+str(p2p_port(1)))
+        # Disconnect nodes so node0's transactions don't get into node1's mempool
+        disconnect_nodes(self.nodes[0], 1)
 
         # Identify the 10btc outputs
         nA = next(i for i, vout in enumerate(self.nodes[0].getrawtransaction(txA, 1)["vout"]) if vout["value"] == Decimal("10"))
@@ -78,8 +76,9 @@ class AbandonConflictTest(BitcoinTestFramework):
         stop_node(self.nodes[0],0)
         self.nodes[0]=start_node(0, self.options.tmpdir, ["-minrelaytxfee=0.0001"])
 
-        # Verify txs no longer in mempool
+        # Verify txs no longer in either node's mempool
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
+        assert_equal(len(self.nodes[1].getrawmempool()), 0)
 
         # Not in mempool txs from self should only reduce balance
         # inputs are still spent, but change not received
