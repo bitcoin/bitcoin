@@ -160,7 +160,7 @@ fi
 # either way, must do a build now before we can test
 echo "building..."
 make -j ${NUM_CORES_TO_USE} || {
-    echo "Build failed - the test could not be assessed.
+    echo "Build failed - the test could not be assessed."
     exit 1
 }
 
