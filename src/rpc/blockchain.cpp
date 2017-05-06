@@ -817,22 +817,23 @@ UniValue verifychain(const UniValue& params, bool fHelp)
 }
 
 /** Implementation of IsSuperMajority with better feedback */
-static UniValue SoftForkMajorityDesc(int minVersion, CBlockIndex* pindex, int nRequired, const Consensus::Params& consensusParams)
+static UniValue SoftForkMajorityDesc(int version, CBlockIndex* pindex, const Consensus::Params& consensusParams)
 {
-    int nFound = 0;
-    CBlockIndex* pstart = pindex;
-    for (int i = 0; i < consensusParams.nMajorityWindow && pstart != NULL; i++)
-    {
-        if (pstart->nVersion >= minVersion)
-            ++nFound;
-        pstart = pstart->pprev;
-    }
-
     UniValue rv(UniValue::VOBJ);
-    rv.push_back(Pair("status", nFound >= nRequired));
-    rv.push_back(Pair("found", nFound));
-    rv.push_back(Pair("required", nRequired));
-    rv.push_back(Pair("window", consensusParams.nMajorityWindow));
+    bool activated = false;
+    switch(version)
+    {
+        case 2:
+            activated = pindex->nHeight >= consensusParams.BIP34Height;
+            break;
+        case 3:
+            activated = pindex->nHeight >= consensusParams.BIP66Height;
+            break;
+        case 4:
+            activated = pindex->nHeight >= consensusParams.BIP65Height;
+            break;
+    }
+    rv.push_back(Pair("status", activated));
     return rv;
 }
 
@@ -841,8 +842,7 @@ static UniValue SoftForkDesc(const std::string &name, int version, CBlockIndex* 
     UniValue rv(UniValue::VOBJ);
     rv.push_back(Pair("id", name));
     rv.push_back(Pair("version", version));
-    rv.push_back(Pair("enforce", SoftForkMajorityDesc(version, pindex, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams)));
-    rv.push_back(Pair("reject", SoftForkMajorityDesc(version, pindex, consensusParams.nMajorityRejectBlockOutdated, consensusParams)));
+    rv.push_back(Pair("reject", SoftForkMajorityDesc(version, pindex, consensusParams)));
     return rv;
 }
 
@@ -897,13 +897,9 @@ UniValue getblockchaininfo(const UniValue& params, bool fHelp)
             "     {\n"
             "        \"id\": \"xxxx\",        (string) name of softfork\n"
             "        \"version\": xx,         (numeric) block version\n"
-            "        \"enforce\": {           (object) progress toward enforcing the softfork rules for new-version blocks\n"
+            "        \"reject\": {            (object) progress toward rejecting pre-softfork blocks\n"
             "           \"status\": xx,       (boolean) true if threshold reached\n"
-            "           \"found\": xx,        (numeric) number of blocks with the new version found\n"
-            "           \"required\": xx,     (numeric) number of blocks required to trigger\n"
-            "           \"window\": xx,       (numeric) maximum size of examined window of recent blocks\n"
             "        },\n"
-            "        \"reject\": { ... }      (object) progress toward rejecting pre-softfork blocks (same fields as \"enforce\")\n"
             "     }, ...\n"
             "  ],\n"
             "  \"bip9_softforks\": {          (object) status of BIP9 softforks in progress\n"

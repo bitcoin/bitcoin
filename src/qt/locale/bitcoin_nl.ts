@@ -2491,10 +2491,6 @@
         <translation>Stel sleutelpoelgrootte in op &lt;n&gt; (standaard: %u)</translation>
     </message>
     <message>
-        <source>Set minimum block size in bytes (default: %u)</source>
-        <translation>Stel minimum blokgrootte in in bytes (standaard: %u)</translation>
-    </message>
-    <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
         <translation>Stel het aantal threads in om RPC-aanvragen mee te bedienen (standaard: %d)</translation>
     </message>

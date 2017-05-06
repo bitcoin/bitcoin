@@ -2427,10 +2427,6 @@
         <translation>Defina o tamanho da chave para piscina&lt;n&gt; (padrão: %u)</translation>
     </message>
     <message>
-        <source>Set minimum block size in bytes (default: %u)</source>
-        <translation>Definir tamanho mínimo do bloco, em bytes (padrão: %u)</translation>
-    </message>
-    <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
         <translation>Defina o número de threads para chamadas do serviço RPC (padrão: %d)</translation>
     </message>

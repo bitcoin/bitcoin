@@ -2260,10 +2260,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Imposta la dimensione del pool di chiavi a &lt;n&gt; (predefinito: %u)</translation>
     </message>
     <message>
-        <source>Set minimum block size in bytes (default: %u)</source>
-        <translation>Imposta la dimensione minima del blocco in byte (predefinito: %u)</translation>
-    </message>
-    <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
         <translation>Imposta il numero di thread destinati a rispondere alle chiamate RPC (predefinito %d)</translation>
     </message>

@@ -227,10 +227,11 @@ UniValue getmininginfo(const UniValue& params, bool fHelp)
             "  \"currentblockweight\": nnn, (numeric) The last block weight\n"
             "  \"currentblocktx\": nnn,     (numeric) The last block transaction\n"
             "  \"difficulty\": xxx.xxxxx    (numeric) The current difficulty\n"
-            "  \"errors\": \"...\"          (string) Current errors\n"
+            "  \"errors\": \"...\"            (string) Current errors\n"
+            "  \"networkhashps\": nnn,      (numeric) The network hashes per second\n"
             "  \"pooledtx\": n              (numeric) The size of the mem pool\n"
             "  \"testnet\": true|false      (boolean) If using testnet or not\n"
-            "  \"chain\": \"xxxx\",         (string) current network name as defined in BIP70 (main, test, regtest)\n"
+            "  \"chain\": \"xxxx\",           (string) current network name as defined in BIP70 (main, test, regtest)\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getmininginfo", "")
@@ -546,6 +547,9 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
     UpdateTime(pblock, consensusParams, pindexPrev);
     pblock->nNonce = 0;
 
+    // NOTE: If at some point we support pre-segwit miners post-segwit-activation, this needs to take segwit support into consideration
+    const bool fPreSegWit = (THRESHOLD_ACTIVE != VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache));
+
     UniValue aCaps(UniValue::VARR); aCaps.push_back("proposal");
 
     UniValue transactions(UniValue::VARR);
@@ -574,7 +578,12 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
 
         int index_in_template = i - 1;
         entry.push_back(Pair("fee", pblocktemplate->vTxFees[index_in_template]));
-        entry.push_back(Pair("sigops", pblocktemplate->vTxSigOpsCost[index_in_template]));
+        int64_t nTxSigOps = pblocktemplate->vTxSigOpsCost[index_in_template];
+        if (fPreSegWit) {
+            assert(nTxSigOps % WITNESS_SCALE_FACTOR == 0);
+            nTxSigOps /= WITNESS_SCALE_FACTOR;
+        }
+        entry.push_back(Pair("sigops", nTxSigOps));
         entry.push_back(Pair("weight", GetTransactionWeight(tx)));
 
         transactions.push_back(entry);
@@ -642,7 +651,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
 
     if (nMaxVersionPreVB >= 2) {
         // If VB is supported by the client, nMaxVersionPreVB is -1, so we won't get here
-        // Because BIP 34 changed how the generation transaction is serialised, we can only use version/force back to v2 blocks
+        // Because BIP 34 changed how the generation transaction is serialized, we can only use version/force back to v2 blocks
         // This is safe to do [otherwise-]unconditionally only because we are throwing an exception above if a non-force deployment gets activated
         // Note that this can probably also be removed entirely after the first BIP9 non-force deployment (ie, probably segwit) gets activated
         aMutable.push_back("version/force");
@@ -657,7 +666,12 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
     result.push_back(Pair("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1));
     result.push_back(Pair("mutable", aMutable));
     result.push_back(Pair("noncerange", "00000000ffffffff"));
-    result.push_back(Pair("sigoplimit", (int64_t)MAX_BLOCK_SIGOPS_COST));
+    int64_t nSigOpLimit = MAX_BLOCK_SIGOPS_COST;
+    if (fPreSegWit) {
+        assert(nSigOpLimit % WITNESS_SCALE_FACTOR == 0);
+        nSigOpLimit /= WITNESS_SCALE_FACTOR;
+    }
+    result.push_back(Pair("sigoplimit", nSigOpLimit));
     result.push_back(Pair("sizelimit", (int64_t)MAX_BLOCK_SERIALIZED_SIZE));
     result.push_back(Pair("weightlimit", (int64_t)MAX_BLOCK_WEIGHT));
     result.push_back(Pair("curtime", pblock->GetBlockTime()));

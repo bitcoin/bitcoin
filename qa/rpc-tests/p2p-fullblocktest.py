@@ -25,9 +25,6 @@ We use the testing framework in which we expect a particular answer from
 each test.
 '''
 
-def hash160(s):
-    return hashlib.new('ripemd160', sha256(s)).digest()
-
 #  Use this class for tests that require behavior other than normal "mininode" behavior.
 #  For now, it is used to serialize a bloated varint (b64).
 class CBrokenBlock(CBlock):

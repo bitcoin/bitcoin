@@ -2,6 +2,10 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>Kliknite desnim klikom radi izmene adrese ili oznake</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
         <translation>Napravite novu adresu</translation>
     </message>
@@ -18,8 +22,16 @@
         <translation>Kopirajte</translation>
     </message>
     <message>
+        <source>C&amp;lose</source>
+        <translation>Zatvorite</translation>
+    </message>
+    <message>
         <source>Delete the currently selected address from the list</source>
         <translation>Izbrisite trenutno izabranu adresu sa liste</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Eksportuj podatke iz izabrane kartice u fajl</translation>
     </message>
     <message>
         <source>&amp;Delete</source>

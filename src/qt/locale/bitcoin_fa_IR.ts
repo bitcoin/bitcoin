@@ -513,10 +513,6 @@
         <translation>لود شدن آدرسها..</translation>
     </message>
     <message>
-        <source>Set minimum block size in bytes (default: %u)</source>
-        <translation>تنظیم کمینه اندازه بلاک بر حسب بایت (پیش فرض: %u)</translation>
-    </message>
-    <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
         <translation>تنظیم تعداد ریسمان ها برای سرویس دهی فراخوانی های RPC (پیش فرض: %d)</translation>
     </message>

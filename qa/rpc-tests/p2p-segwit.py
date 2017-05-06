@@ -168,8 +168,11 @@ class UTXO(object):
 
 
 class SegWitTest(BitcoinTestFramework):
-    def setup_chain(self):
-        initialize_chain_clean(self.options.tmpdir, 3)
+
+    def __init__(self):
+        super().__init__()
+        self.setup_clean_chain = True
+        self.num_nodes = 3
 
     def add_options(self, parser):
         parser.add_option("--oldbinary", dest="oldbinary",

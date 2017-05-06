@@ -2099,10 +2099,6 @@
         <translation>Veritabanı önbellek boyutunu megabayt olarak belirt (%d ilâ %d, varsayılan: %d)</translation>
     </message>
     <message>
-        <source>Set maximum block cost (default: %d)</source>
-        <translation>Azami blok maliyetini ayarla (varsayılan: %d)</translation>
-    </message>
-    <message>
         <source>Set maximum block size in bytes (default: %d)</source>
         <translation>Azami blok boyutunu bayt olarak ayarla (varsayılan: %d)</translation>
     </message>
@@ -2305,6 +2301,10 @@
     <message>
         <source>Send transactions as zero-fee transactions if possible (default: %u)</source>
         <translation>Muameleleri mümkünse ücretsiz olarak gönder (varsayılan: %u)</translation>
+    </message>
+    <message>
+        <source>Set maximum BIP141 block cost (default: %d)</source>
+        <translation>Azami BIP141 blok maliyetini ayarla (varsayılan: %d)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
@@ -2529,10 +2529,6 @@
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>Anahtar alan boyutunu &lt;n&gt; değerine ayarla (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Set minimum block size in bytes (default: %u)</source>
-        <translation>Bayt olarak asgari blok boyutunu tanımla (varsayılan: %u)</translation>
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>

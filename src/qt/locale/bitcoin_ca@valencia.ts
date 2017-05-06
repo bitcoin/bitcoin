@@ -1967,10 +1967,6 @@
         <translation>Defineix la mida clau disponible a &lt;n&gt; (per defecte: %u)</translation>
     </message>
     <message>
-        <source>Set minimum block size in bytes (default: %u)</source>
-        <translation>Defineix la mida de bloc mínima en bytes (per defecte: %u)</translation>
-    </message>
-    <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
         <translation>Defineix el nombre de fils a crides de servei RPC (per defecte: %d)</translation>
     </message>

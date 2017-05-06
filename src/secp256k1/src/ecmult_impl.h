@@ -11,6 +11,8 @@
 #include "scalar.h"
 #include "ecmult.h"
 
+#include <string.h>
+
 /* optimal for 128-bit and 256-bit exponents. */
 #define WINDOW_A 5
 

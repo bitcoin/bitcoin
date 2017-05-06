@@ -2099,10 +2099,6 @@
         <translation>Sæt cache-størrelse for database i megabytes (%d til %d; standard: %d)</translation>
     </message>
     <message>
-        <source>Set maximum block cost (default: %d)</source>
-        <translation>Sæt maksimal blokudgift (standard: %d)</translation>
-    </message>
-    <message>
         <source>Set maximum block size in bytes (default: %d)</source>
         <translation>Sæt maksimum blokstørrelse i byte (standard: %d)</translation>
     </message>
@@ -2305,6 +2301,10 @@
     <message>
         <source>Send transactions as zero-fee transactions if possible (default: %u)</source>
         <translation>Send transaktioner som nul-gebyr-transaktioner hvis muligt (standard: %u)</translation>
+    </message>
+    <message>
+        <source>Set maximum BIP141 block cost (default: %d)</source>
+        <translation>Sæt maksimal BIP141-blokudgift (standard: %d)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
@@ -2530,10 +2530,6 @@
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>Sæt nøglepuljestørrelse til &lt;n&gt; (standard: %u)
 </translation>
-    </message>
-    <message>
-        <source>Set minimum block size in bytes (default: %u)</source>
-        <translation>Angiv minimumsblokstørrelse i byte (standard: %u)</translation>
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>

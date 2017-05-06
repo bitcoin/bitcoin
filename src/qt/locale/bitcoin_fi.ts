@@ -1038,6 +1038,14 @@
         <translation>Käyttöliittymä</translation>
     </message>
     <message>
+        <source>Decrease font size</source>
+        <translation>Pienennä fontin kokoa</translation>
+    </message>
+    <message>
+        <source>Increase font size</source>
+        <translation>Suurenna fontin kokoa</translation>
+    </message>
+    <message>
         <source>Services</source>
         <translation>Palvelut</translation>
     </message>
@@ -1509,6 +1517,10 @@
 <context>
     <name>ShutdownWindow</name>
     <message>
+        <source>%1 is shutting down...</source>
+        <translation>%1 sulkeutuu...</translation>
+    </message>
+    <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation>Älä sammuta tietokonetta ennenkuin tämä ikkuna katoaa.</translation>
     </message>
@@ -1691,6 +1703,10 @@
         <translation>Bitcoin-ydin</translation>
     </message>
     <message>
+        <source>The %s developers</source>
+        <translation>%s kehittäjät</translation>
+    </message>
+    <message>
         <source>-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available.</source>
         <translation>-fallbackfee on asetettu erittäin suureksi! Tämä on rahansiirtokulu jonka voit maksaa kun arvioitu rahansirtokulu ei ole saatavilla.</translation>
     </message>
@@ -1701,6 +1717,10 @@
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Suorita käsky kun lompakossa rahansiirto muuttuu (%s cmd on vaihdettu TxID kanssa)</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
+        <translation>Tarkistathan että tietokoneesi päivämäärä ja kellonaika ovat oikeassa! Jos kellosi on väärässä, %s ei toimi oikein.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -2065,10 +2085,6 @@
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>Aseta avainaltaan kooksi &lt;n&gt; (oletus: %u)</translation>
-    </message>
-    <message>
-        <source>Set minimum block size in bytes (default: %u)</source>
-        <translation>Aseta pienin mahdollinen lohkokoko tavuina (oletus: %u)</translation>
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>

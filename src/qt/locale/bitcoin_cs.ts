@@ -2235,10 +2235,6 @@
         <translation>Nastavit zásobník klíčů na velikost &lt;n&gt; (výchozí: %u)</translation>
     </message>
     <message>
-        <source>Set minimum block size in bytes (default: %u)</source>
-        <translation>Nastavit minimální velikost bloku v bajtech (výchozí: %u)</translation>
-    </message>
-    <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
         <translation>Nastavení počtu vláken pro servisní RPC volání (výchozí: %d)</translation>
     </message>

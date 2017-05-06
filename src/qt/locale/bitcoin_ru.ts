@@ -2027,10 +2027,6 @@
         <translation>Установить размер кэша БД в мегабайтах(от %d до %d, по умолчанию: %d)</translation>
     </message>
     <message>
-        <source>Set maximum block cost (default: %d)</source>
-        <translation>Задать максимальную стоимость блока (по умолчанию: %d)</translation>
-    </message>
-    <message>
         <source>Set maximum block size in bytes (default: %d)</source>
         <translation>Задать максимальный размер блока в байтах (по умолчанию: %d)</translation>
     </message>
@@ -2449,10 +2445,6 @@
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>Установить размер пула ключей в &lt;n&gt; (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Set minimum block size in bytes (default: %u)</source>
-        <translation>Задать минимальный размер блока в байтах (по умолчанию: %u)</translation>
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>

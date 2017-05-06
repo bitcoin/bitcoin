@@ -2071,10 +2071,6 @@
         <translation>Définir la taille du cache de la base de données en mégaoctets (%d to %d, default: %d)</translation>
     </message>
     <message>
-        <source>Set maximum block cost (default: %d)</source>
-        <translation>Définir le coût maximal de bloc (par défaut : %d)</translation>
-    </message>
-    <message>
         <source>Set maximum block size in bytes (default: %d)</source>
         <translation>Définir la taille minimale de bloc en octets (par défaut : %d)</translation>
     </message>
@@ -2269,6 +2265,10 @@
     <message>
         <source>Send transactions as zero-fee transactions if possible (default: %u)</source>
         <translation>Envoyer si possible les transactions comme étant sans frais (par défaut : %u)</translation>
+    </message>
+    <message>
+        <source>Set maximum BIP141 block cost (default: %d)</source>
+        <translation>Définir le coût maximal de bloc BIP141 (par défaut : %d)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
@@ -2493,10 +2493,6 @@
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>Définir la taille de la réserve de clefs à &lt;n&gt; (par défaut : %u)</translation>
-    </message>
-    <message>
-        <source>Set minimum block size in bytes (default: %u)</source>
-        <translation>Définir la taille de bloc minimale en octets (par défaut : %u)</translation>
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
