@@ -1737,7 +1737,12 @@ class NodeConnCB(object):
         assert wait_until(test_function, timeout=timeout)
 
     def wait_for_inv(self, expected_inv, timeout=60):
-        test_function = lambda: self.last_message.get("inv") and self.last_message["inv"] != expected_inv
+        """Waits for an INV message and checks that the first inv object in the message was as expected."""
+        if len(expected_inv) > 1:
+            raise NotImplementedError("wait_for_inv() will only verify the first inv object")
+        test_function = lambda: self.last_message.get("inv") and \
+                                self.last_message["inv"].inv[0].type == expected_inv[0].type and \
+                                self.last_message["inv"].inv[0].hash == expected_inv[0].hash
         assert wait_until(test_function, timeout=timeout)
 
     def wait_for_verack(self, timeout=60):
