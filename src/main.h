@@ -228,6 +228,7 @@ bool LoadBlockIndex();
 void UnloadBlockIndex();
 /** Process protocol messages received from a given node */
 bool ProcessMessages(CNode* pfrom);
+bool AlreadyHave(const CInv &);
 /** Process a single protocol messages received from a given node */
 bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, int64_t nTimeReceived);
 

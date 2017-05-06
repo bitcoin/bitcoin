@@ -15,6 +15,7 @@
 #include "uint256.h"
 #include <vector>
 
+class CDataStream;
 class CNode;
 
 class CThinBlock
@@ -53,6 +54,19 @@ public:
     CXThinBlock(const CBlock &block, CBloomFilter *filter); // Use the filter to determine which txns the client has
     CXThinBlock(const CBlock &block); // Assume client has all of the transactions (except coinbase)
     CXThinBlock() {}
+    /**
+     * Handle an incoming Xthin or Xpedited block
+     * Once the block is validated apart from the Merkle root, forward the Xpedited block with a hop count of nHops.
+     * @param[in]  vRecv        The raw binary message
+     * @param[in] pFrom        The node the message was from
+     * @param[in]  strCommand   The message kind
+     * @param[in]  nHops        On the wire, an Xpedited block has a hop count of zero the first time it is sent, and
+     *                          the hop count is incremented each time it is forwarded.  nHops is zero for an incoming
+     *                          Xthin block, and for an incoming Xpedited block its hop count + 1.
+     * @return True if handling succeeded
+     */
+    static bool HandleMessage(CDataStream &vRecv, CNode *pfrom, std::string strCommand, unsigned nHops);
+
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
