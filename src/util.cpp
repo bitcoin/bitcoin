@@ -108,8 +108,6 @@ const char * const BITCOIN_PID_FILENAME = "chaincoind.pid";
 const char * const MASTERNODE_CONF_FILENAME = "masternode.conf";
 
 ArgsManager gArgs;
-static std::map<std::string, std::vector<std::string> > _mapMultiArgs;
-const std::map<std::string, std::vector<std::string> >& mapMultiArgs = _mapMultiArgs;
 bool fPrintToConsole = false;
 bool fPrintToDebugLog = true;
 
@@ -427,7 +425,7 @@ void ArgsManager::ParseParameters(int argc, const char* const argv[])
 {
     LOCK(cs_args);
     mapArgs.clear();
-    _mapMultiArgs.clear();
+    mapMultiArgs.clear();
 
     for (int i = 1; i < argc; i++)
     {
@@ -500,7 +498,7 @@ bool ArgsManager::SoftSetArg(const std::string& strArg, const std::string& strVa
     LOCK(cs_args);
     if (mapArgs.count(strArg))
         return false;
-    mapArgs[strArg] = strValue;
+    ForceSetArg(strArg, strValue);
     return true;
 }
 
@@ -516,6 +514,7 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
 {
     LOCK(cs_args);
     mapArgs[strArg] = strValue;
+    mapMultiArgs[strArg].push_back(strValue);
 }
 
 void ForceSetMultiArgs(const std::string& strArg, const std::vector<std::string>& values)
@@ -685,7 +684,7 @@ void ArgsManager::ReadConfigFile(const std::string& confPath)
             InterpretNegativeSetting(strKey, strValue);
             if (mapArgs.count(strKey) == 0)
                 mapArgs[strKey] = strValue;
-            _mapMultiArgs[strKey].push_back(strValue);
+            mapMultiArgs[strKey].push_back(strValue);
         }
     }
     // If datadir is changed in .conf file:

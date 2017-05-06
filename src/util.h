@@ -61,7 +61,6 @@ public:
     boost::signals2::signal<std::string (const char* psz)> Translate;
 };
 
-extern const std::map<std::string, std::vector<std::string> >& mapMultiArgs;
 extern bool fPrintToConsole;
 extern bool fPrintToDebugLog;
 extern bool fServer;
@@ -214,6 +213,7 @@ class ArgsManager
 protected:
     CCriticalSection cs_args;
     std::map<std::string, std::string> mapArgs;
+    std::map<std::string, std::vector<std::string> > mapMultiArgs;
 public:
     void ParseParameters(int argc, const char*const argv[]);
     void ReadConfigFile(const std::string& confPath);
