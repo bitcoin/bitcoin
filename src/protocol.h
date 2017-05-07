@@ -484,9 +484,7 @@ enum GetDataMsg : uint32_t {
     MSG_CMPCT_BLOCK = 4,                              //!< Defined in BIP152
     MSG_WITNESS_BLOCK = MSG_BLOCK | MSG_WITNESS_FLAG, //!< Defined in BIP144
     MSG_WITNESS_TX = MSG_TX | MSG_WITNESS_FLAG,       //!< Defined in BIP144
-    // MSG_FILTERED_WITNESS_BLOCK is defined in BIP144 as reserved for future
-    // use and remains unused.
-    // MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,
+    MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,  //!< Defined in BIP144
 };
 
 /** inv message data */
@@ -510,6 +508,7 @@ public:
     bool IsMsgFilteredBlk() const { return type == MSG_FILTERED_BLOCK; }
     bool IsMsgCmpctBlk() const { return type == MSG_CMPCT_BLOCK; }
     bool IsMsgWitnessBlk() const { return type == MSG_WITNESS_BLOCK; }
+    bool IsMsgFilteredWitnessBlk() const { return type == MSG_FILTERED_WITNESS_BLOCK; }
 
     // Combined-message helper methods
     bool IsGenTxMsg() const
@@ -518,7 +517,7 @@ public:
     }
     bool IsGenBlkMsg() const
     {
-        return type == MSG_BLOCK || type == MSG_FILTERED_BLOCK || type == MSG_CMPCT_BLOCK || type == MSG_WITNESS_BLOCK;
+        return type == MSG_BLOCK || type == MSG_FILTERED_BLOCK || type == MSG_CMPCT_BLOCK || type == MSG_WITNESS_BLOCK || type == MSG_FILTERED_WITNESS_BLOCK;
     }
 
     uint32_t type;
