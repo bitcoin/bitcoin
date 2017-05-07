@@ -751,6 +751,7 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 					continue;
 				if (vchNameUniq.size() > 0 && vchNameUniq != message.vchMessage)
 					continue;
+				message.txHash = wtx.GetHash();
 				messageScan.push_back(message);
 				vNamesI[message.vchMessage] = message.nHeight;
 				UniValue oName(UniValue::VOBJ);
@@ -888,6 +889,7 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 						continue;
 					if (vchNameUniq.size() > 0 && vchNameUniq != message.vchMessage)
 						continue;
+					message.txHash = theAlias.txHash;
 					messageScan.push_back(message);
 					vNamesI[message.vchMessage] = message.nHeight;
 				}
@@ -910,6 +912,7 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 					continue;
 				if (vchNameUniq.size() > 0 && vchNameUniq != message.vchMessage)
 					continue;
+				message.txHash = wtx.GetHash();
 				messageScan.push_back(message);
 				vNamesI[message.vchMessage] = message.nHeight;
 			}
