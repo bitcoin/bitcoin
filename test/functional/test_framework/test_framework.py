@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2019 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Base class for RPC testing."""
@@ -8,29 +9,41 @@ from collections import deque
 import logging
 import optparse
 import os
-import sys
 import shutil
+import subprocess
+import sys
 import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor
 
 from .util import (
     assert_equal,
-    initialize_chain,
-    start_node,
     start_nodes,
+    PortSeed,
+    MAX_NODES,
+    bitcoind_processes,
+    check_json_precision,
     connect_nodes_bi,
     connect_nodes,
+    disable_mocktime,
     disconnect_nodes,
+    enable_coverage,
+    enable_mocktime,
+    get_mocktime,
+    get_rpc_proxy,
+    initialize_datadir,
+    log_filename,
+    p2p_port,
+    rpc_url,
+    set_node_times,
+    start_node,
+    start_nodes,
+    stop_node,
+    stop_nodes,
     sync_blocks,
     sync_mempools,
     sync_masternodes,
-    stop_nodes,
-    stop_node,
-    enable_coverage,
-    check_json_precision,
-    initialize_chain_clean,
-    PortSeed,
+    wait_for_bitcoind_start,
     set_cache_mocktime,
     set_genesis_mocktime,
     get_mocktime,
@@ -43,6 +56,21 @@ from .util import (
 from .authproxy import JSONRPCException
 
 class BitcoinTestFramework(object):
+    """Base class for a bitcoin test script.
+
+    Individual bitcoin test scripts should subclass this class and override the following methods:
+
+    - __init__()
+    - add_options()
+    - setup_chain()
+    - setup_network()
+    - run_test()
+
+    The main() method should not be overridden.
+
+    This class also contains various public and private helper methods."""
+
+    # Methods to override in subclass test scripts.
 
     TEST_EXIT_PASSED = 0
     TEST_EXIT_FAILED = 1
@@ -53,29 +81,17 @@ class BitcoinTestFramework(object):
         self.setup_clean_chain = False
         self.nodes = None
 
-    def run_test(self):
-        raise NotImplementedError
-
     def add_options(self, parser):
         pass
 
     def setup_chain(self):
         self.log.info("Initializing test directory "+self.options.tmpdir)
         if self.setup_clean_chain:
-            initialize_chain_clean(self.options.tmpdir, self.num_nodes)
+            self._initialize_chain_clean(self.options.tmpdir, self.num_nodes)
             set_genesis_mocktime()
         else:
-            initialize_chain(self.options.tmpdir, self.num_nodes, self.options.cachedir)
+            self._initialize_chain(self.options.tmpdir, self.num_nodes, self.options.cachedir)
             set_cache_mocktime()
-
-    def stop_node(self, num_node):
-        stop_node(self.nodes[num_node], num_node)
-
-    def setup_nodes(self):
-        extra_args = None
-        if hasattr(self, "extra_args"):
-            extra_args = self.extra_args
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
 
     def setup_network(self):
         self.setup_nodes()
@@ -87,27 +103,16 @@ class BitcoinTestFramework(object):
             connect_nodes_bi(self.nodes, i, i + 1)
         self.sync_all()
 
-    def split_network(self):
-        """
-        Split the network of four nodes into nodes 0/1 and 2/3.
-        """
-        disconnect_nodes(self.nodes[1], 2)
-        disconnect_nodes(self.nodes[2], 1)
-        self.sync_all([self.nodes[:2], self.nodes[2:]])
+    def setup_nodes(self):
+        extra_args = None
+        if hasattr(self, "extra_args"):
+            extra_args = self.extra_args
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
 
-    def sync_all(self, node_groups=None):
-        if not node_groups:
-            node_groups = [self.nodes]
+    def run_test(self):
+        raise NotImplementedError
 
-        [sync_blocks(group) for group in node_groups]
-        [sync_mempools(group) for group in node_groups]
-
-    def join_network(self):
-        """
-        Join the (previously split) network halves together.
-        """
-        connect_nodes_bi(self.nodes, 1, 2)
-        self.sync_all()
+    # Main function. This should not be overridden by the subclass test scripts.
 
     def main(self):
 
@@ -209,6 +214,45 @@ class BitcoinTestFramework(object):
             logging.shutdown()
             sys.exit(self.TEST_EXIT_FAILED)
 
+    # Public helper methods. These can be accessed by the subclass test scripts.
+
+    def start_node(self, i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
+        return start_node(i, dirname, extra_args, rpchost, timewait, binary, stderr)
+
+    def start_nodes(self, num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
+        return start_nodes(num_nodes, dirname, extra_args, rpchost, timewait, binary)
+
+    def stop_node(self, num_node):
+        stop_node(self.nodes[num_node], num_node)
+
+    def stop_nodes(self):
+        stop_nodes(self.nodes)
+
+    def split_network(self):
+        """
+        Split the network of four nodes into nodes 0/1 and 2/3.
+        """
+        disconnect_nodes(self.nodes[1], 2)
+        disconnect_nodes(self.nodes[2], 1)
+        self.sync_all([self.nodes[:2], self.nodes[2:]])
+
+    def join_network(self):
+        """
+        Join the (previously split) network halves together.
+        """
+        connect_nodes_bi(self.nodes, 1, 2)
+        self.sync_all()
+
+    def sync_all(self, node_groups=None):
+        if not node_groups:
+            node_groups = [self.nodes]
+
+        for group in node_groups:
+            sync_blocks(group)
+            sync_mempools(group)
+
+    # Private helper methods. These should not be accessed by the subclass test scripts.
+
     def _start_logging(self):
         # Add logger and logging handlers
         self.log = logging.getLogger('TestFramework')
@@ -236,6 +280,88 @@ class BitcoinTestFramework(object):
             rpc_handler = logging.StreamHandler(sys.stdout)
             rpc_handler.setLevel(logging.DEBUG)
             rpc_logger.addHandler(rpc_handler)
+
+    def _initialize_chain(self, test_dir, num_nodes, cachedir):
+        """Initialize a pre-mined blockchain for use by the test.
+
+        Create a cache of a 200-block-long chain (with wallet) for MAX_NODES
+        Afterward, create num_nodes copies from the cache."""
+
+        assert num_nodes <= MAX_NODES
+        create_cache = False
+        for i in range(MAX_NODES):
+            if not os.path.isdir(os.path.join(cachedir, 'node' + str(i))):
+                create_cache = True
+                break
+
+        if create_cache:
+            self.log.debug("Creating data directories from cached datadir")
+
+            # find and delete old cache directories if any exist
+            for i in range(MAX_NODES):
+                if os.path.isdir(os.path.join(cachedir, "node" + str(i))):
+                    shutil.rmtree(os.path.join(cachedir, "node" + str(i)))
+
+            # Create cache directories, run dashds:
+            for i in range(MAX_NODES):
+                datadir = initialize_datadir(cachedir, i)
+                args = [os.getenv("DASHD", "dashd"), "-server", "-keypool=1", "-datadir=" + datadir, "-discover=0"]
+                if i > 0:
+                    args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
+                bitcoind_processes[i] = subprocess.Popen(args)
+                self.log.debug("initialize_chain: dashd started, waiting for RPC to come up")
+                wait_for_bitcoind_start(bitcoind_processes[i], rpc_url(i), i)
+                self.log.debug("initialize_chain: RPC successfully started")
+
+            self.nodes = []
+            for i in range(MAX_NODES):
+                try:
+                    self.nodes.append(get_rpc_proxy(rpc_url(i), i))
+                except:
+                    self.log.exception("Error connecting to node %d" % i)
+                    sys.exit(1)
+
+            # Create a 200-block-long chain; each of the 4 first nodes
+            # gets 25 mature blocks and 25 immature.
+            # Note: To preserve compatibility with older versions of
+            # initialize_chain, only 4 nodes will generate coins.
+            #
+            # blocks are created with timestamps 10 minutes apart
+            # starting from 2010 minutes in the past
+            enable_mocktime()
+            block_time = get_mocktime() - (201 * 10 * 60)
+            for i in range(2):
+                for peer in range(4):
+                    for j in range(25):
+                        set_node_times(self.nodes, block_time)
+                        self.nodes[peer].generate(1)
+                        block_time += 10 * 60
+                    # Must sync before next peer starts generating blocks
+                    sync_blocks(self.nodes)
+
+            # Shut them down, and clean up cache directories:
+            self.stop_nodes()
+            self.nodes = []
+            disable_mocktime()
+            for i in range(MAX_NODES):
+                os.remove(log_filename(cachedir, i, "debug.log"))
+                os.remove(log_filename(cachedir, i, "db.log"))
+                os.remove(log_filename(cachedir, i, "peers.dat"))
+                os.remove(log_filename(cachedir, i, "fee_estimates.dat"))
+
+        for i in range(num_nodes):
+            from_dir = os.path.join(cachedir, "node" + str(i))
+            to_dir = os.path.join(test_dir, "node" + str(i))
+            shutil.copytree(from_dir, to_dir)
+            initialize_datadir(test_dir, i)  # Overwrite port/rpcport in bitcoin.conf
+
+    def _initialize_chain_clean(self, test_dir, num_nodes):
+        """Initialize empty blockchain for use by the test.
+
+        Create an empty blockchain and num_nodes wallets.
+        Useful if a test case wants complete control over initialization."""
+        for i in range(num_nodes):
+            initialize_datadir(test_dir, i)
 
 
 MASTERNODE_COLLATERAL = 1000
@@ -719,7 +845,7 @@ class ComparisonTestFramework(BitcoinTestFramework):
                           help="dashd binary to use for reference nodes (if any)")
 
     def setup_network(self):
-        self.nodes = start_nodes(
+        self.nodes = self.start_nodes(
             self.num_nodes, self.options.tmpdir,
             extra_args=[['-whitelist=127.0.0.1']] * self.num_nodes,
             binary=[self.options.testbinary] +
