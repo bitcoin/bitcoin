@@ -130,10 +130,10 @@ public:
 class CThinBlockData
 {
 private:
-    CCriticalSection cs_mapThinBlockTimer;
+    CCriticalSection cs_mapThinBlockTimer; // locks mapThinBlockTimer
     std::map<uint256, uint64_t> mapThinBlockTimer;
 
-    CCriticalSection cs_thinblockstats;
+    CCriticalSection cs_thinblockstats; // locks everything below this point
     CStatHistory<uint64_t> nOriginalSize;
     CStatHistory<uint64_t> nThinSize;
     CStatHistory<uint64_t> nBlocks;
@@ -146,6 +146,8 @@ private:
     std::map<int64_t, double> mapThinBlockResponseTime;
     std::map<int64_t, double> mapThinBlockValidationTime;
     std::map<int64_t, int> mapThinBlocksInBoundReRequestedTx;
+    /* The sum total of all bytes for thinblocks currently in process of being reconstructed */
+    uint64_t nThinBlockBytes;
 
 public:
     void UpdateInBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
@@ -168,6 +170,13 @@ public:
 
     bool CheckThinblockTimer(uint256 hash);
     void ClearThinBlockTimer(uint256 hash);
+
+    void ClearThinBlockData(CNode *pfrom);
+
+    uint64_t AddThinBlockBytes(uint64_t);
+    void DeleteThinBlockBytes(uint64_t);
+    void ResetThinBlockBytes();
+    uint64_t GetThinBlockBytes();
 };
 extern CThinBlockData thindata; // Singleton class
 
@@ -178,6 +187,7 @@ bool IsThinBlocksEnabled();
 bool CanThinBlockBeDownloaded(CNode *pto);
 void ConnectToThinBlockNodes();
 void CheckNodeSupportForThinBlocks();
+void ClearLargestThinBlockAndDisconnect();
 void SendXThinBlock(CBlock &block, CNode *pfrom, const CInv &inv);
 bool IsThinBlockValid(const CNode *pfrom, const std::vector<CTransaction> &vMissingTx, const CBlockHeader &header);
 void BuildSeededBloomFilter(CBloomFilter &memPoolFilter,
