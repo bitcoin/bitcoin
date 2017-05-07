@@ -819,7 +819,7 @@ void InitParameterInteraction()
         }
     }
 
-    if (gArgs.IsArgSet("-connect") && gArgs.GetArgs("-connect").size() > 0) {
+    if (gArgs.IsArgSet("-connect")) {
         // when only connecting to trusted nodes, do not seed via DNS, or listen by default
         if (SoftSetBoolArg("-dnsseed", false))
             LogPrintf("%s: parameter interaction: -connect set -> setting -dnsseed=0\n", __func__);
@@ -1014,9 +1014,9 @@ bool AppInitParameterInteraction()
         InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
 
     // ********************************************************* Step 3: parameter-to-internal-flags
-    if (gArgs.IsArgSet("-debug") > 0) {
+    if (gArgs.IsArgSet("-debug")) {
         // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
-        const std::vector<std::string>& categories = gArgs.GetArgs("-debug");
+        const std::vector<std::string> categories = gArgs.GetArgs("-debug");
 
         if (find(categories.begin(), categories.end(), std::string("0")) == categories.end()) {
             for (const auto& cat : categories) {
@@ -1031,9 +1031,8 @@ bool AppInitParameterInteraction()
     }
 
     // Now remove the logging categories which were explicitly excluded
-    if (gArgs.IsArgSet("-debugexclude") > 0) {
-        const std::vector<std::string>& excludedCategories = gArgs.GetArgs("-debugexclude");
-        for (const auto& cat : excludedCategories) {
+    if (gArgs.IsArgSet("-debugexclude")) {
+        for (const std::string& cat : gArgs.GetArgs("-debugexclude")) {
             uint32_t flag = 0;
             if (!GetLogCategory(&flag, &cat)) {
                 InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat));
@@ -1205,10 +1204,9 @@ bool AppInitParameterInteraction()
         if (!chainparams.MineBlocksOnDemand()) {
             return InitError("BIP9 parameters may only be overridden on regtest.");
         }
-        const std::vector<std::string>& deployments = gArgs.GetArgs("-bip9params");
-        for (auto i : deployments) {
+        for (const std::string& strDeployment : gArgs.GetArgs("-bip9params")) {
             std::vector<std::string> vDeploymentParams;
-            boost::split(vDeploymentParams, i, boost::is_any_of(":"));
+            boost::split(vDeploymentParams, strDeployment, boost::is_any_of(":"));
             if (vDeploymentParams.size() != 3) {
                 return InitError("BIP9 parameters malformed, expecting deployment:start:end");
             }
