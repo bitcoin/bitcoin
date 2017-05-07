@@ -82,7 +82,8 @@ public:
         SendToOther,
         RecvWithAddress,
         RecvFromOther,
-        SendToSelf
+        SendToSelf,
+        PublicLabel
     };
 
     /** Number of confirmation recommended for accepting a transaction */

@@ -50,6 +50,8 @@ public:
         DateRole,
         /** Watch-only boolean */
         WatchonlyRole,
+        /** Public label boolean */
+        PublicLabelRole,
         /** Watch-only icon */
         WatchonlyDecorationRole,
         /** Long description (HTML format) */
