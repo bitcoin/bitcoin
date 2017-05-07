@@ -2020,8 +2020,10 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 {
     CAmount nValue = 0;
     unsigned int nSubtractFeeFromAmount = 0;
+    bool involvesPublicLabel = false;
     BOOST_FOREACH (const CRecipient& recipient, vecSend)
     {
+        if (getLabelPublic(recipient.scriptPubKey) != "") involvesPublicLabel = true;
         if (nValue < 0 || recipient.nAmount < 0)
         {
             strFailReason = _("Transaction amounts must be positive");
@@ -2213,10 +2215,16 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                     }
                     else
                     {
+                        if (!involvesPublicLabel)
+                        {
                         // Insert change txn at random position:
                         nChangePosRet = GetRandInt(txNew.vout.size()+1);
                         vector<CTxOut>::iterator position = txNew.vout.begin()+nChangePosRet;
                         txNew.vout.insert(position, newTxOut);
+                        }
+                        else
+                            // Insert change at end position because original txout order is critical for public label
+                            txNew.vout.insert(txNew.vout.end(), newTxOut);
                     }
                 }
                 else
