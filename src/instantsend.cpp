@@ -63,7 +63,7 @@ void CInstantSend::ProcessMessage(CNode* pfrom, const std::string& strCommand, C
 
     if (strCommand == NetMsgType::TXLOCKVOTE) { // InstantSend Transaction Lock Consensus Votes
         if(pfrom->nVersion < MIN_INSTANTSEND_PROTO_VERSION) {
-            LogPrint(BCLog::INSTANTSEND, "TXLOCKVOTE -- peer=%d using obsolete version %i\n", pfrom->id, pfrom->nVersion);
+            LogPrint(BCLog::INSTANTSEND, "TXLOCKVOTE -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
             connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
                                strprintf("Version must be %d or greater", MIN_INSTANTSEND_PROTO_VERSION)));
             return;
@@ -364,7 +364,7 @@ bool CInstantSend::ProcessNewTxLockVote(CNode* pfrom, const CTxLockVote& vote, C
             if (itMnOV->second > GetTime() && itMnOV->second > GetAverageMasternodeOrphanVoteTime()) {
                 LogPrint(BCLog::INSTANTSEND, "CInstantSend::%s -- masternode is spamming orphan Transaction Lock Votes: txid=%s  masternode=%s\n",
                         __func__, txHash.ToString(), vote.GetMasternodeOutpoint().ToStringShort());
-                // Misbehaving(pfrom->id, 1);
+                // Misbehaving(pfrom->GetId(), 1);
                 return false;
             }
             // not spamming, refresh

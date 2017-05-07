@@ -86,7 +86,7 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
     if (vRecv.size() < 1) {
         LOCK(cs_main);
-        Misbehaving(pfrom->id, 100);
+        Misbehaving(pfrom->GetId(), 100);
         return;
     }
 
@@ -94,7 +94,7 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
     Consensus::LLMQType llmqType = (Consensus::LLMQType)*vRecv.begin();
     if (!dkgSessionHandlers.count(llmqType)) {
         LOCK(cs_main);
-        Misbehaving(pfrom->id, 100);
+        Misbehaving(pfrom->GetId(), 100);
         return;
     }
 

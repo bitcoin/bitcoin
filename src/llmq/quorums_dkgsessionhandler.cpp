@@ -129,13 +129,13 @@ void CDKGSessionHandler::ProcessMessage(CNode* pfrom, const std::string& strComm
 {
     // We don't handle messages in the calling thread as deserialization/processing of these would block everything
     if (strCommand == NetMsgType::QCONTRIB) {
-        pendingContributions.PushPendingMessage(pfrom->id, vRecv);
+        pendingContributions.PushPendingMessage(pfrom->GetId(), vRecv);
     } else if (strCommand == NetMsgType::QCOMPLAINT) {
-        pendingComplaints.PushPendingMessage(pfrom->id, vRecv);
+        pendingComplaints.PushPendingMessage(pfrom->GetId(), vRecv);
     } else if (strCommand == NetMsgType::QJUSTIFICATION) {
-        pendingJustifications.PushPendingMessage(pfrom->id, vRecv);
+        pendingJustifications.PushPendingMessage(pfrom->GetId(), vRecv);
     } else if (strCommand == NetMsgType::QPCOMMITMENT) {
-        pendingPrematureCommitments.PushPendingMessage(pfrom->id, vRecv);
+        pendingPrematureCommitments.PushPendingMessage(pfrom->GetId(), vRecv);
     }
 }
 
