@@ -954,6 +954,8 @@ public:
      */
     static CFeeRate GetRequiredFeeRate();
 
+    int64_t CalculateMaximumSignedTxSize(const CTransaction &tx) const;
+
     bool NewKeyPool();
     size_t KeypoolCountExternalKeys();
     bool TopUpKeyPool(unsigned int kpSize = 0);

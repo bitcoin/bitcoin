@@ -1350,6 +1350,28 @@ bool CWallet::IsHDEnabled() const
     return !hdChain.masterKeyID.IsNull();
 }
 
+// Calculate the size of the transaction assuming all signatures are max size
+// Use DummySignatureCreator, which inserts 72 byte signatures everywhere.
+int64_t CWallet::CalculateMaximumSignedTxSize(const CTransaction &tx) const
+{
+    CMutableTransaction txNew(tx);
+    std::vector<CInputCoin> vCoins;
+    // Look up the inputs.  We should have already checked that this transaction
+    // IsAllFromMe(ISMINE_SPENDABLE), so every input should already be in our
+    // wallet, with a valid index into the vout array.
+    for (auto& input : tx.vin) {
+        const auto mi = mapWallet.find(input.prevout.hash);
+        assert(mi != mapWallet.end() && input.prevout.n < mi->second.tx->vout.size());
+        vCoins.emplace_back(CInputCoin(&(mi->second), input.prevout.n));
+    }
+    if (!DummySignTx(txNew, vCoins)) {
+        // This should never happen, because IsAllFromMe(ISMINE_SPENDABLE)
+        // implies that we can sign for every input.
+        return -1;
+    }
+    return GetVirtualTransactionSize(txNew);
+}
+
 int64_t CWalletTx::GetTxTime() const
 {
     int64_t n = nTimeSmart;
@@ -2542,13 +2564,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     txNew.vin.push_back(CTxIn(coin.outpoint,CScript(),
                                               std::numeric_limits<unsigned int>::max() - (rbf ? 2 : 1)));
 
-                // Fill in dummy signatures for fee calculation.
-                if (!DummySignTx(txNew, setCoins)) {
-                    strFailReason = _("Signing transaction failed");
-                    return false;
-                }
-
-                unsigned int nBytes = GetVirtualTransactionSize(txNew);
+                unsigned int nBytes = CalculateMaximumSignedTxSize(txNew);
 
                 CTransaction txNewConst(txNew);
 
