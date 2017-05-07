@@ -1781,8 +1781,8 @@ bool CWalletTx::IsEquivalentTo(const CWalletTx& _tx) const
 {
         CMutableTransaction tx1 = *this->tx;
         CMutableTransaction tx2 = *_tx.tx;
-        for (unsigned int i = 0; i < tx1.vin.size(); i++) tx1.vin[i].scriptSig = CScript();
-        for (unsigned int i = 0; i < tx2.vin.size(); i++) tx2.vin[i].scriptSig = CScript();
+        for (auto txIn : tx1.vin) txIn.scriptSig = CScript();
+        for (auto txIn : tx2.vin) txIn.scriptSig = CScript();
         return CTransaction(tx1) == CTransaction(tx2);
 }
 
@@ -2149,10 +2149,10 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 
     if (nTotalLower == nTargetValue)
     {
-        for (unsigned int i = 0; i < vValue.size(); ++i)
+        for (auto inputCoin : vValue) {
         {
-            setCoinsRet.insert(vValue[i]);
-            nValueRet += vValue[i].txout.nValue;
+            setCoinsRet.insert(inputCoin);
+            nValueRet += inputCoin.txout.nValue;
         }
         return true;
     }
@@ -3222,11 +3222,11 @@ std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings()
         }
 
         // group lone addrs by themselves
-        for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++)
-            if (IsMine(pcoin->tx->vout[i]))
+        for (auto txOut : pcoin->tx->vout) {
+            if (IsMine(txOut))
             {
                 CTxDestination address;
-                if(!ExtractDestination(pcoin->tx->vout[i].scriptPubKey, address))
+                if(!ExtractDestination(txOut.scriptPubKey, address))
                     continue;
                 grouping.insert(address);
                 groupings.insert(grouping);
