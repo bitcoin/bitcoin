@@ -28,7 +28,7 @@ enum
 };
 
 /** Script verification flags */
-enum
+enum CScriptFlag
 {
     SCRIPT_VERIFY_NONE      = 0,
 
@@ -108,7 +108,63 @@ enum
     SCRIPT_VERIFY_WITNESS_PUBKEYTYPE = (1U << 15),
 };
 
-bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
+class CScriptFlags
+{
+private:
+    typedef uint16_t _flags_type;
+    _flags_type flags;
+
+public:
+    CScriptFlags() : flags(0) { }
+    CScriptFlags(CScriptFlag flag) : flags(_flags_type(flag)) { }
+
+    static CScriptFlags FromBitfieldInt(const uint64_t _flags) {
+        CScriptFlags r;
+        r.flags = _flags;
+        return r;
+    }
+
+    inline uint64_t ToBitfieldInt() const {
+        return flags;
+    }
+
+    inline bool IsNull() const {
+        return (flags == 0);
+    }
+
+    inline void ClearFlags(const CScriptFlags _flags) {
+        flags &= ~(_flags.flags);
+    }
+
+    inline CScriptFlags WithFlagsCleared(const CScriptFlags _flags) const {
+        CScriptFlags r(*this);
+        r.ClearFlags(_flags);
+        return r;
+    }
+
+    inline CScriptFlags& operator|=(const CScriptFlag flag) {
+        flags |= _flags_type(flag);
+        return *this;
+    }
+
+    inline CScriptFlags& operator|(const CScriptFlag flag) const {
+        return CScriptFlags(*this) |= flag;
+    }
+
+    inline bool IsSet(const CScriptFlag flag) const {
+        return (flags & _flags_type(flag));
+    }
+
+    inline bool IsAtLeastOneSet(const CScriptFlags _flags) const {
+        return (flags & _flags.flags);
+    }
+};
+
+inline CScriptFlags operator|(const CScriptFlag flagA, const CScriptFlag flagB) {
+    return CScriptFlags() | flagA | flagB;
+}
+
+bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, const CScriptFlags, ScriptError* serror);
 
 struct PrecomputedTransactionData
 {
@@ -174,9 +230,9 @@ public:
     MutableTransactionSignatureChecker(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn) : TransactionSignatureChecker(&txTo, nInIn, amountIn), txTo(*txToIn) {}
 };
 
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = NULL);
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror = NULL);
+bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CScriptFlags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = NULL);
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, const CScriptFlags, const BaseSignatureChecker& checker, ScriptError* serror = NULL);
 
-size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags);
+size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, const CScriptFlags);
 
 #endif // BITCOIN_SCRIPT_INTERPRETER_H

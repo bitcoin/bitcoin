@@ -50,7 +50,7 @@ static CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, co
 // modified to measure performance of other types of scripts.
 static void VerifyScriptBench(benchmark::State& state)
 {
-    const int flags = SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH;
+    CScriptFlags flags = SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH;
     const int witnessversion = 0;
 
     // Keypair.
@@ -93,7 +93,7 @@ static void VerifyScriptBench(benchmark::State& state)
             txCredit.vout[0].scriptPubKey.data(),
             txCredit.vout[0].scriptPubKey.size(),
             txCredit.vout[0].nValue,
-            (const unsigned char*)stream.data(), stream.size(), 0, flags, nullptr);
+            (const unsigned char*)stream.data(), stream.size(), 0, flags.ToBitfieldInt(), nullptr);
         assert(csuccess == 1);
 #endif
     }

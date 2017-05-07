@@ -37,31 +37,31 @@ typedef std::vector<unsigned char> valtype;
 // In script_tests.cpp
 extern UniValue read_json(const std::string& jsondata);
 
-static std::map<std::string, unsigned int> mapFlagNames = boost::assign::map_list_of
-    (std::string("NONE"), (unsigned int)SCRIPT_VERIFY_NONE)
-    (std::string("P2SH"), (unsigned int)SCRIPT_VERIFY_P2SH)
-    (std::string("STRICTENC"), (unsigned int)SCRIPT_VERIFY_STRICTENC)
-    (std::string("DERSIG"), (unsigned int)SCRIPT_VERIFY_DERSIG)
-    (std::string("LOW_S"), (unsigned int)SCRIPT_VERIFY_LOW_S)
-    (std::string("SIGPUSHONLY"), (unsigned int)SCRIPT_VERIFY_SIGPUSHONLY)
-    (std::string("MINIMALDATA"), (unsigned int)SCRIPT_VERIFY_MINIMALDATA)
-    (std::string("NULLDUMMY"), (unsigned int)SCRIPT_VERIFY_NULLDUMMY)
-    (std::string("DISCOURAGE_UPGRADABLE_NOPS"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
-    (std::string("CLEANSTACK"), (unsigned int)SCRIPT_VERIFY_CLEANSTACK)
-    (std::string("MINIMALIF"), (unsigned int)SCRIPT_VERIFY_MINIMALIF)
-    (std::string("NULLFAIL"), (unsigned int)SCRIPT_VERIFY_NULLFAIL)
-    (std::string("CHECKLOCKTIMEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)
-    (std::string("CHECKSEQUENCEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)
-    (std::string("WITNESS"), (unsigned int)SCRIPT_VERIFY_WITNESS)
-    (std::string("DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM)
-    (std::string("WITNESS_PUBKEYTYPE"), (unsigned int)SCRIPT_VERIFY_WITNESS_PUBKEYTYPE);
+static std::map<std::string, CScriptFlag> mapFlagNames = boost::assign::map_list_of
+    (std::string("NONE"), SCRIPT_VERIFY_NONE)
+    (std::string("P2SH"), SCRIPT_VERIFY_P2SH)
+    (std::string("STRICTENC"), SCRIPT_VERIFY_STRICTENC)
+    (std::string("DERSIG"), SCRIPT_VERIFY_DERSIG)
+    (std::string("LOW_S"), SCRIPT_VERIFY_LOW_S)
+    (std::string("SIGPUSHONLY"), SCRIPT_VERIFY_SIGPUSHONLY)
+    (std::string("MINIMALDATA"), SCRIPT_VERIFY_MINIMALDATA)
+    (std::string("NULLDUMMY"), SCRIPT_VERIFY_NULLDUMMY)
+    (std::string("DISCOURAGE_UPGRADABLE_NOPS"), SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
+    (std::string("CLEANSTACK"), SCRIPT_VERIFY_CLEANSTACK)
+    (std::string("MINIMALIF"), SCRIPT_VERIFY_MINIMALIF)
+    (std::string("NULLFAIL"), SCRIPT_VERIFY_NULLFAIL)
+    (std::string("CHECKLOCKTIMEVERIFY"), SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)
+    (std::string("CHECKSEQUENCEVERIFY"), SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)
+    (std::string("WITNESS"), SCRIPT_VERIFY_WITNESS)
+    (std::string("DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM"), SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM)
+    (std::string("WITNESS_PUBKEYTYPE"), SCRIPT_VERIFY_WITNESS_PUBKEYTYPE);
 
-unsigned int ParseScriptFlags(std::string strFlags)
+CScriptFlags ParseScriptFlags(std::string strFlags)
 {
     if (strFlags.empty()) {
-        return 0;
+        return CScriptFlags();
     }
-    unsigned int flags = 0;
+    CScriptFlags flags;
     std::vector<std::string> words;
     boost::algorithm::split(words, strFlags, boost::algorithm::is_any_of(","));
 
@@ -75,18 +75,16 @@ unsigned int ParseScriptFlags(std::string strFlags)
     return flags;
 }
 
-std::string FormatScriptFlags(unsigned int flags)
+std::string FormatScriptFlags(const CScriptFlags flags)
 {
-    if (flags == 0) {
+    if (flags.IsNull()) {
         return "";
     }
     std::string ret;
-    std::map<std::string, unsigned int>::const_iterator it = mapFlagNames.begin();
-    while (it != mapFlagNames.end()) {
-        if (flags & it->second) {
-            ret += it->first + ",";
+    for (auto& flagpair : mapFlagNames) {
+        if (flags.IsSet(flagpair.second)) {
+            ret += flagpair.first + ",";
         }
-        it++;
     }
     return ret.substr(0, ret.size() - 1);
 }
@@ -167,7 +165,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                 if (mapprevOutValues.count(tx.vin[i].prevout)) {
                     amount = mapprevOutValues[tx.vin[i].prevout];
                 }
-                unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
+                CScriptFlags verify_flags = ParseScriptFlags(test[2].get_str());
                 const CScriptWitness *witness = &tx.vin[i].scriptWitness;
                 BOOST_CHECK_MESSAGE(VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
                                                  witness, verify_flags, TransactionSignatureChecker(&tx, i, amount, txdata), &err),
@@ -249,7 +247,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
                     break;
                 }
 
-                unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
+                CScriptFlags verify_flags = ParseScriptFlags(test[2].get_str());
                 CAmount amount = 0;
                 if (mapprevOutValues.count(tx.vin[i].prevout)) {
                     amount = mapprevOutValues[tx.vin[i].prevout];
@@ -382,7 +380,7 @@ void CreateCreditAndSpend(const CKeyStore& keystore, const CScript& outscript, C
     assert(input.vin[0].scriptWitness.stack == inputm.vin[0].scriptWitness.stack);
 }
 
-void CheckWithFlag(const CTransactionRef& output, const CMutableTransaction& input, int flags, bool success)
+void CheckWithFlag(const CTransactionRef& output, const CMutableTransaction& input, const CScriptFlags flags, bool success)
 {
     ScriptError error;
     CTransaction inputi(input);
@@ -543,11 +541,11 @@ BOOST_AUTO_TEST_CASE(test_witness)
     // Normal pay-to-compressed-pubkey.
     CreateCreditAndSpend(keystore, scriptPubkey1, output1, input1);
     CreateCreditAndSpend(keystore, scriptPubkey2, output2, input2);
-    CheckWithFlag(output1, input1, 0, true);
+    CheckWithFlag(output1, input1, CScriptFlags(), true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
-    CheckWithFlag(output1, input2, 0, false);
+    CheckWithFlag(output1, input2, CScriptFlags(), false);
     CheckWithFlag(output1, input2, SCRIPT_VERIFY_P2SH, false);
     CheckWithFlag(output1, input2, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, false);
     CheckWithFlag(output1, input2, STANDARD_SCRIPT_VERIFY_FLAGS, false);
@@ -556,11 +554,11 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(scriptPubkey1)), output1, input1);
     CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(scriptPubkey2)), output2, input2);
     ReplaceRedeemScript(input2.vin[0].scriptSig, scriptPubkey1);
-    CheckWithFlag(output1, input1, 0, true);
+    CheckWithFlag(output1, input1, CScriptFlags(), true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
-    CheckWithFlag(output1, input2, 0, true);
+    CheckWithFlag(output1, input2, CScriptFlags(), true);
     CheckWithFlag(output1, input2, SCRIPT_VERIFY_P2SH, false);
     CheckWithFlag(output1, input2, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, false);
     CheckWithFlag(output1, input2, STANDARD_SCRIPT_VERIFY_FLAGS, false);
@@ -568,11 +566,11 @@ BOOST_AUTO_TEST_CASE(test_witness)
     // Witness pay-to-compressed-pubkey (v0).
     CreateCreditAndSpend(keystore, GetScriptForWitness(scriptPubkey1), output1, input1);
     CreateCreditAndSpend(keystore, GetScriptForWitness(scriptPubkey2), output2, input2);
-    CheckWithFlag(output1, input1, 0, true);
+    CheckWithFlag(output1, input1, CScriptFlags(), true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
-    CheckWithFlag(output1, input2, 0, true);
+    CheckWithFlag(output1, input2, CScriptFlags(), true);
     CheckWithFlag(output1, input2, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input2, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, false);
     CheckWithFlag(output1, input2, STANDARD_SCRIPT_VERIFY_FLAGS, false);
@@ -581,11 +579,11 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(GetScriptForWitness(scriptPubkey1))), output1, input1);
     CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(GetScriptForWitness(scriptPubkey2))), output2, input2);
     ReplaceRedeemScript(input2.vin[0].scriptSig, GetScriptForWitness(scriptPubkey1));
-    CheckWithFlag(output1, input1, 0, true);
+    CheckWithFlag(output1, input1, CScriptFlags(), true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
-    CheckWithFlag(output1, input2, 0, true);
+    CheckWithFlag(output1, input2, CScriptFlags(), true);
     CheckWithFlag(output1, input2, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input2, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, false);
     CheckWithFlag(output1, input2, STANDARD_SCRIPT_VERIFY_FLAGS, false);
@@ -593,11 +591,11 @@ BOOST_AUTO_TEST_CASE(test_witness)
     // Normal pay-to-uncompressed-pubkey.
     CreateCreditAndSpend(keystore, scriptPubkey1L, output1, input1);
     CreateCreditAndSpend(keystore, scriptPubkey2L, output2, input2);
-    CheckWithFlag(output1, input1, 0, true);
+    CheckWithFlag(output1, input1, CScriptFlags(), true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
-    CheckWithFlag(output1, input2, 0, false);
+    CheckWithFlag(output1, input2, CScriptFlags(), false);
     CheckWithFlag(output1, input2, SCRIPT_VERIFY_P2SH, false);
     CheckWithFlag(output1, input2, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, false);
     CheckWithFlag(output1, input2, STANDARD_SCRIPT_VERIFY_FLAGS, false);
@@ -606,11 +604,11 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(scriptPubkey1L)), output1, input1);
     CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(scriptPubkey2L)), output2, input2);
     ReplaceRedeemScript(input2.vin[0].scriptSig, scriptPubkey1L);
-    CheckWithFlag(output1, input1, 0, true);
+    CheckWithFlag(output1, input1, CScriptFlags(), true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
-    CheckWithFlag(output1, input2, 0, true);
+    CheckWithFlag(output1, input2, CScriptFlags(), true);
     CheckWithFlag(output1, input2, SCRIPT_VERIFY_P2SH, false);
     CheckWithFlag(output1, input2, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, false);
     CheckWithFlag(output1, input2, STANDARD_SCRIPT_VERIFY_FLAGS, false);
@@ -625,19 +623,19 @@ BOOST_AUTO_TEST_CASE(test_witness)
 
     // Normal 2-of-2 multisig
     CreateCreditAndSpend(keystore, scriptMulti, output1, input1, false);
-    CheckWithFlag(output1, input1, 0, false);
+    CheckWithFlag(output1, input1, CScriptFlags(), false);
     CreateCreditAndSpend(keystore2, scriptMulti, output2, input2, false);
-    CheckWithFlag(output2, input2, 0, false);
+    CheckWithFlag(output2, input2, CScriptFlags(), false);
     BOOST_CHECK(*output1 == *output2);
     UpdateTransaction(input1, 0, CombineSignatures(output1->vout[0].scriptPubKey, MutableTransactionSignatureChecker(&input1, 0, output1->vout[0].nValue), DataFromTransaction(input1, 0), DataFromTransaction(input2, 0)));
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
 
     // P2SH 2-of-2 multisig
     CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(scriptMulti)), output1, input1, false);
-    CheckWithFlag(output1, input1, 0, true);
+    CheckWithFlag(output1, input1, CScriptFlags(), true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, false);
     CreateCreditAndSpend(keystore2, GetScriptForDestination(CScriptID(scriptMulti)), output2, input2, false);
-    CheckWithFlag(output2, input2, 0, true);
+    CheckWithFlag(output2, input2, CScriptFlags(), true);
     CheckWithFlag(output2, input2, SCRIPT_VERIFY_P2SH, false);
     BOOST_CHECK(*output1 == *output2);
     UpdateTransaction(input1, 0, CombineSignatures(output1->vout[0].scriptPubKey, MutableTransactionSignatureChecker(&input1, 0, output1->vout[0].nValue), DataFromTransaction(input1, 0), DataFromTransaction(input2, 0)));
@@ -646,10 +644,10 @@ BOOST_AUTO_TEST_CASE(test_witness)
 
     // Witness 2-of-2 multisig
     CreateCreditAndSpend(keystore, GetScriptForWitness(scriptMulti), output1, input1, false);
-    CheckWithFlag(output1, input1, 0, true);
+    CheckWithFlag(output1, input1, CScriptFlags(), true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false);
     CreateCreditAndSpend(keystore2, GetScriptForWitness(scriptMulti), output2, input2, false);
-    CheckWithFlag(output2, input2, 0, true);
+    CheckWithFlag(output2, input2, CScriptFlags(), true);
     CheckWithFlag(output2, input2, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false);
     BOOST_CHECK(*output1 == *output2);
     UpdateTransaction(input1, 0, CombineSignatures(output1->vout[0].scriptPubKey, MutableTransactionSignatureChecker(&input1, 0, output1->vout[0].nValue), DataFromTransaction(input1, 0), DataFromTransaction(input2, 0)));

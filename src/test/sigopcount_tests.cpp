@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
  * Verifies script execution of the zeroth scriptPubKey of tx output and
  * zeroth scriptSig and witness of tx input.
  */
-ScriptError VerifyWithFlag(const CTransaction& output, const CMutableTransaction& input, int flags)
+ScriptError VerifyWithFlag(const CTransaction& output, const CMutableTransaction& input, const CScriptFlags flags)
 {
     ScriptError error;
     CTransaction inputi(input);
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
     key.MakeNewKey(true);
     CPubKey pubkey = key.GetPubKey();
     // Default flags
-    int flags = SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH;
+    CScriptFlags flags = SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH;
 
     // Multisig script (legacy counting)
     {
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, scriptWitness);
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 1);
         // No signature operations if we don't verify the witness.
-        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags & ~SCRIPT_VERIFY_WITNESS) == 0);
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags.WithFlagsCleared(SCRIPT_VERIFY_WITNESS)) == 0);
         assert(VerifyWithFlag(creationTx, spendingTx, flags) == SCRIPT_ERR_EQUALVERIFY);
 
         // The sig op cost for witness version != 0 is zero.
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, scriptWitness);
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 2);
-        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags & ~SCRIPT_VERIFY_WITNESS) == 0);
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags.WithFlagsCleared(SCRIPT_VERIFY_WITNESS)) == 0);
         assert(VerifyWithFlag(creationTx, spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
     }
 
