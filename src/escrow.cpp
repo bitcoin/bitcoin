@@ -186,7 +186,10 @@ bool CEscrowDB::ScanEscrows(const std::vector<unsigned char>& vchEscrow, const s
 			if (pcursor->GetKey(key) && key.first == "escrowi") {
             	const vector<unsigned char> &vchMyEscrow = key.second;
 				if(!vchEscrow.empty() && vchMyEscrow != vchEscrow)
-					continue;                      
+				{
+					pcursor->Next();
+					continue;              
+				}                    
 				pcursor->GetValue(vtxPos);
 				if (vtxPos.empty()){
 					pcursor->Next();

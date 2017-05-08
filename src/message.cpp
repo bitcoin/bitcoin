@@ -145,7 +145,10 @@ bool CMessageDB::ScanRecvMessages(const std::vector<unsigned char>& vchMessage, 
             if (pcursor->GetKey(key) && key.first == "messagei") {
                 const vector<unsigned char> &vchMyMessage = key.second;   
 				if(!vchMessage.empty() && vchMyMessage != vchMessage)
-					continue;  
+				{
+					pcursor->Next();
+					continue;              
+				} 
                 pcursor->GetValue(vtxPos);
 				if (vtxPos.empty()){
 					pcursor->Next();

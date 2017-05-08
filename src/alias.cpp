@@ -1232,7 +1232,10 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchAlias, const strin
 			if (pcursor->GetKey(key) && key.first == "namei") {
             	const vector<unsigned char> &vchMyAlias = key.second;
 				if(!vchAlias.empty() && vchMyAlias != vchAlias)
-					continue;				
+				{
+					pcursor->Next();
+					continue;              
+				}			
                 
 				pcursor->GetValue(vtxPos);
 				
