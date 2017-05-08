@@ -11,7 +11,9 @@ class MempoolLimitTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.extra_args = [["-maxmempool=5", "-spendzeroconfchange=0"]]
+        
+        # set a very low (100bytes) statsmaxmemorytarget to ensure we use the min amount of samples
+        self.extra_args = [["-maxmempool=5", "--statsenable", "--statsmaxmemorytarget=100""-spendzeroconfchange=0"]]
 
     def run_test(self):
         txouts = gen_return_txouts()
@@ -41,6 +43,12 @@ class MempoolLimitTest(BitcoinTestFramework):
         assert(txid not in self.nodes[0].getrawmempool())
         txdata = self.nodes[0].gettransaction(txid)
         assert(txdata['confirmations'] ==  0) #confirmation should still be 0
+        
+        # test mempool stats
+        time.sleep(15)
+        mps = self.nodes[0].getmempoolstats()
+        assert_equal(len(mps), 3) #fixed amount of percision levels
+        assert_equal(len(mps[0]['samples']), 5) #make sure we only have 5 samples (minimum history)
 
 if __name__ == '__main__':
     MempoolLimitTest().main()

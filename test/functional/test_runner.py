@@ -71,7 +71,7 @@ BASE_SCRIPTS= [
     'sendheaders.py',
     'zapwallettxes.py',
     'importmulti.py',
-    'mempool_limit.py',
+    'mempool_limit_stats.py',
     'merkle_blocks.py',
     'receivedby.py',
     'abandonconflict.py',
