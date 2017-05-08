@@ -4,10 +4,77 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test segwit transactions and blocks on P2P network."""
 
-from test_framework.mininode import *
+import struct
+
+from test_framework.mininode import (
+    CBlock,
+    CBlockHeader,
+    CInv,
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxInWitness,
+    CTxOut,
+    CTxWitness,
+    MAX_BLOCK_BASE_SIZE,
+    mininode_lock,
+    msg_block,
+    msg_getdata,
+    msg_headers,
+    msg_inv,
+    msg_tx,
+    msg_witness_block,
+    MSG_WITNESS_FLAG,
+    msg_witness_tx,
+    NetworkThread,
+    NODE_NETWORK,
+    NODE_WITNESS,
+    NodeConn,
+    NodeConnCB,
+    ser_uint256,
+    ser_vector,
+    sha256,
+    uint256_from_str,
+)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from test_framework.script import *
+from test_framework.util import (
+    assert_equal,
+    bytes_to_hex_str,
+    connect_nodes,
+    get_bip9_status,
+    hex_str_to_bytes,
+    p2p_port,
+    sync_blocks,
+    sync_mempools,
+)
+from test_framework.script import (
+    CScript,
+    CScriptNum,
+    CScriptOp,
+    hash160,
+    OP_0,
+    OP_1,
+    OP_16,
+    OP_2DROP,
+    OP_CHECKMULTISIG,
+    OP_CHECKSIG,
+    OP_DROP,
+    OP_DUP,
+    OP_ELSE,
+    OP_ENDIF,
+    OP_EQUAL,
+    OP_EQUALVERIFY,
+    OP_HASH160,
+    OP_IF,
+    OP_RETURN,
+    OP_TRUE,
+    SegwitVersion1SignatureHash,
+    SIGHASH_ALL,
+    SIGHASH_ANYONECANPAY,
+    SIGHASH_NONE,
+    SIGHASH_SINGLE,
+    SignatureHash,
+)
 from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment, get_witness_script, WITNESS_COMMITMENT_HEADER
 from test_framework.key import CECKey, CPubKey
 import time
