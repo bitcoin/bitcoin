@@ -5,11 +5,20 @@
 """Test the SegWit changeover logic."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (
+    assert_equal,
+    assert_raises_jsonrpc,
+    bytes_to_hex_str,
+    connect_nodes,
+    hex_str_to_bytes,
+    JSONRPCException,
+    sync_blocks,
+)
 from test_framework.mininode import sha256, CTransaction, CTxIn, COutPoint, CTxOut, COIN, ToHex, FromHex
 from test_framework.address import script_to_p2sh, key_to_p2pkh
 from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG, OP_TRUE
 from io import BytesIO
+from decimal import Decimal
 
 NODE_0 = 0
 NODE_1 = 1
