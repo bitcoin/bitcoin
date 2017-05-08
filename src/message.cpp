@@ -143,7 +143,9 @@ bool CMessageDB::ScanRecvMessages(const std::vector<unsigned char>& vchMessage, 
         boost::this_thread::interruption_point();
         try {
             if (pcursor->GetKey(key) && key.first == "messagei") {
-                const vector<unsigned char> &vchMyMessage = key.second;     
+                const vector<unsigned char> &vchMyMessage = key.second;   
+				if(!vchMessage.empty() && vchMyMessage != vchMessage)
+					continue;  
                 pcursor->GetValue(vtxPos);
 				if (vtxPos.empty()){
 					pcursor->Next();
@@ -174,6 +176,8 @@ bool CMessageDB::ScanRecvMessages(const std::vector<unsigned char>& vchMessage, 
 					}
 				}
                 messageScan.push_back(txPos);
+				if(!vchMessage.empty() && vchMyMessage == vchMessage)
+					break;  
             }
             if (messageScan.size() >= nMax)
                 break;
