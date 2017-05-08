@@ -8,9 +8,11 @@ Generate chains with block versions that appear to be signalling unknown
 soft-forks, and test that warning alerts are generated.
 """
 
-from test_framework.mininode import *
+import os
+
+from test_framework.mininode import msg_block, NetworkThread, NodeConn, NodeConnCB
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import p2p_port
 import re
 from test_framework.blocktools import create_block, create_coinbase
 
