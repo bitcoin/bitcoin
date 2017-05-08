@@ -73,6 +73,15 @@ struct CompareValueOnly
     }
 };
 
+struct CompareEffectiveValueOnly
+{
+    bool operator()(const CInputCoin& t1,
+                    const CInputCoin& t2) const
+    {
+        return t1.eValue < t2.eValue;
+    }
+};
+
 std::string COutput::ToString() const
 {
     return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString(), i, nDepth, FormatMoney(tx->tx->vout[i].nValue));
@@ -2119,7 +2128,7 @@ static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const C
                 //the selection random.
                 if (nPass == 0 ? insecure_rand.randbool() : !vfIncluded[i])
                 {
-                    nTotal += vValue[i].txout.nValue;
+                    nTotal += vValue[i].eValue;
                     vfIncluded[i] = true;
                     if (nTotal >= nTargetValue)
                     {
@@ -2129,7 +2138,7 @@ static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const C
                             nBest = nTotal;
                             vfBest = vfIncluded;
                         }
-                        nTotal -= vValue[i].txout.nValue;
+                        nTotal -= vValue[i].eValue;
                         vfIncluded[i] = false;
                     }
                 }
@@ -2139,7 +2148,7 @@ static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const C
 }
 
 bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMine, const int nConfTheirs, const uint64_t nMaxAncestors, std::vector<COutput>& vCoins,
-                                 std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet) const
+                                 std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, CFeeRate effectiveFee) const
 {
     setCoinsRet.clear();
     nValueRet = 0;
@@ -2149,9 +2158,9 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
     std::vector<CInputCoin> vValue;
     CAmount nTotalLower = 0;
 
-    random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
+    std::random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
 
-    BOOST_FOREACH(const COutput &output, vCoins)
+    for (auto& output : vCoins)
     {
         if (!output.fSpendable)
             continue;
@@ -2166,20 +2175,21 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 
         int i = output.i;
 
-        CInputCoin coin = CInputCoin(pcoin, i);
+        // Tests do not cache effective size of input, avoid assertion
+        CInputCoin coin = CInputCoin(pcoin, i, effectiveFee.GetFee((output.nInputBytes == -1) ? 0 : output.nInputBytes));
 
-        if (coin.txout.nValue == nTargetValue)
+        if (coin.eValue == nTargetValue)
         {
             setCoinsRet.insert(coin);
-            nValueRet += coin.txout.nValue;
+            nValueRet += coin.eValue;
             return true;
         }
-        else if (coin.txout.nValue < nTargetValue + MIN_CHANGE)
+        else if (coin.eValue < nTargetValue + MIN_CHANGE)
         {
             vValue.push_back(coin);
-            nTotalLower += coin.txout.nValue;
+            nTotalLower += coin.eValue;
         }
-        else if (!coinLowestLarger || coin.txout.nValue < coinLowestLarger->txout.nValue)
+        else if (!coinLowestLarger || coin.eValue < coinLowestLarger->eValue)
         {
             coinLowestLarger = coin;
         }
@@ -2190,7 +2200,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
         for (unsigned int i = 0; i < vValue.size(); ++i)
         {
             setCoinsRet.insert(vValue[i]);
-            nValueRet += vValue[i].txout.nValue;
+            nValueRet += vValue[i].eValue;
         }
         return true;
     }
@@ -2200,12 +2210,12 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
         if (!coinLowestLarger)
             return false;
         setCoinsRet.insert(coinLowestLarger.get());
-        nValueRet += coinLowestLarger->txout.nValue;
+        nValueRet += coinLowestLarger->eValue;
         return true;
     }
 
     // Solve subset sum by stochastic approximation
-    std::sort(vValue.begin(), vValue.end(), CompareValueOnly());
+    std::sort(vValue.begin(), vValue.end(), CompareEffectiveValueOnly());
     std::reverse(vValue.begin(), vValue.end());
     std::vector<char> vfBest;
     CAmount nBest;
@@ -2217,17 +2227,17 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
     // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
     //                                   or the next bigger coin is closer), return the bigger coin
     if (coinLowestLarger &&
-        ((nBest != nTargetValue && nBest < nTargetValue + MIN_CHANGE) || coinLowestLarger->txout.nValue <= nBest))
+        ((nBest != nTargetValue && nBest < nTargetValue + MIN_CHANGE) || coinLowestLarger->eValue <= nBest))
     {
         setCoinsRet.insert(coinLowestLarger.get());
-        nValueRet += coinLowestLarger->txout.nValue;
+        nValueRet += coinLowestLarger->eValue;
     }
     else {
         for (unsigned int i = 0; i < vValue.size(); i++)
             if (vfBest[i])
             {
                 setCoinsRet.insert(vValue[i]);
-                nValueRet += vValue[i].txout.nValue;
+                nValueRet += vValue[i].eValue;
             }
 
         if (LogAcceptCategory(BCLog::SELECTCOINS)) {
@@ -2244,18 +2254,19 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
     return true;
 }
 
-bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl) const
+bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CFeeRate effectiveFee, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl) const
 {
     std::vector<COutput> vCoins(vAvailableCoins);
 
     // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
     if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs)
     {
-        BOOST_FOREACH(const COutput& out, vCoins)
+        for (auto& out : vCoins)
         {
             if (!out.fSpendable)
                  continue;
-            nValueRet += out.tx->tx->vout[out.i].nValue;
+            //TODO Account for witness empty-vin and flag
+            nValueRet += (out.tx->tx->vout[out.i].nValue - effectiveFee.GetFee(out.nInputBytes));
             setCoinsRet.insert(CInputCoin(out.tx, out.i));
         }
         return (nValueRet >= nTargetValue);
@@ -2277,14 +2288,16 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             // Clearly invalid input, fail
             if (pcoin->tx->vout.size() <= outpoint.n)
                 return false;
-            nValueFromPresetInputs += pcoin->tx->vout[outpoint.n].nValue;
+            // Just to calculate the marginal byte size
+            COutput output(pcoin, outpoint.n, 0, true, true, true);
+            nValueFromPresetInputs += pcoin->tx->vout[outpoint.n].nValue - effectiveFee.GetFee(output.nInputBytes);
             setPresetCoins.insert(CInputCoin(pcoin, outpoint.n));
         } else
             return false; // TODO: Allow non-wallet inputs
     }
 
     // remove preset inputs from vCoins
-    for (std::vector<COutput>::iterator it = vCoins.begin(); it != vCoins.end() && coinControl && coinControl->HasSelected();)
+    for (auto&& it = vCoins.begin(); it != vCoins.end() && coinControl && coinControl->HasSelected();)
     {
         if (setPresetCoins.count(CInputCoin(it->tx, it->i)))
             it = vCoins.erase(it);
@@ -2292,17 +2305,18 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             ++it;
     }
 
+
     size_t nMaxChainLength = std::min(GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT), GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT));
     bool fRejectLongChains = GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS);
 
     bool res = nTargetValue <= nValueFromPresetInputs ||
-        SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 6, 0, vCoins, setCoinsRet, nValueRet) ||
-        SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 1, 0, vCoins, setCoinsRet, nValueRet) ||
-        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, 2, vCoins, setCoinsRet, nValueRet)) ||
-        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, std::min((size_t)4, nMaxChainLength/3), vCoins, setCoinsRet, nValueRet)) ||
-        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, nMaxChainLength/2, vCoins, setCoinsRet, nValueRet)) ||
-        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, nMaxChainLength, vCoins, setCoinsRet, nValueRet)) ||
-        (bSpendZeroConfChange && !fRejectLongChains && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, std::numeric_limits<uint64_t>::max(), vCoins, setCoinsRet, nValueRet));
+        SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 6, 0, vCoins, setCoinsRet, nValueRet, effectiveFee) ||
+        SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 1, 0, vCoins, setCoinsRet, nValueRet, effectiveFee) ||
+        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, 2, vCoins, setCoinsRet, nValueRet, effectiveFee)) ||
+        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, std::min((size_t)4, nMaxChainLength/3), vCoins, setCoinsRet, nValueRet, effectiveFee)) ||
+        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, nMaxChainLength/2, vCoins, setCoinsRet, nValueRet, effectiveFee)) ||
+        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, nMaxChainLength, vCoins, setCoinsRet, nValueRet, effectiveFee)) ||
+        (bSpendZeroConfChange && !fRejectLongChains && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, std::numeric_limits<uint64_t>::max(), vCoins, setCoinsRet, nValueRet, effectiveFee));
 
     // because SelectCoinsMinConf clears the setCoinsRet, we now add the possible inputs to the coinset
     setCoinsRet.insert(setPresetCoins.begin(), setPresetCoins.end());
@@ -2471,14 +2485,47 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
             if (coinControl && coinControl->fOverrideFeeRate)
                 nFeeRateNeeded = coinControl->nFeeRate;
 
-            // Start with no fee and loop until there is enough fee
-            nFeeRet = 0;
             while (true)
             {
+                // Track value of fee when input/output set is chosen
+                nFeeRet = 0;
+
                 nChangePosInOut = nChangePosRequest;
                 txNew.vin.clear();
                 txNew.vout.clear();
                 wtxNew.fFromMe = true;
+
+                // Get scriptPubKey to yourself for change
+                // TODO: pass in scriptChange instead of reservekey so
+                // change transaction isn't always pay-to-bitcoin-address
+                CScript scriptChange;
+
+                // coin control: send change to custom address
+                if (coinControl && !boost::get<CNoDestination>(&coinControl->destChange))
+                    scriptChange = GetScriptForDestination(coinControl->destChange);
+
+                // no coin control: send change to newly generated address
+                else
+                {
+                    // Note: We use a new key here to keep it from being obvious which side is the change.
+                    //  The drawback is that by not reusing a previous key, the change may be lost if a
+                    //  backup is restored, if the backup doesn't have the new private key for the change.
+                    //  If we reused the old key, it would be possible to add code to look for and
+                    //  rediscover unknown transactions that were written with keys of ours to recover
+                    //  post-backup change.
+
+                    // Reserve a new key pair from key pool
+                    CPubKey vchPubKey;
+                    bool ret;
+                    ret = reservekey.GetReservedKey(vchPubKey, true);
+                    if (!ret)
+                    {
+                        strFailReason = _("Keypool ran out, please call keypoolrefill first");
+                        return false;
+                    }
+
+                    scriptChange = GetScriptForDestination(vchPubKey.GetID());
+                }
 
                 // First construct the transaction with no inputs and outputs to payees
                 for (const auto& recipient : vecSend) {
@@ -2486,54 +2533,32 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     txNew.vout.push_back(txout);
                 }
 
+                // Append dummy change output, to make sure we are targeting suffient fee
+                txNew.vout.push_back(CTxOut(0, scriptChange));
+
+                // The estimated fee to cover the transaction minus the inputs
+                CAmount outputFee = nFeeRateNeeded.GetFee(GetVirtualTransactionSize(txNew));
+
+                // Now that we estimate full size with change, remove
+                txNew.vout.pop_back();
+
                 CAmount nValueToSelect = nValue;
-                if (nSubtractFeeFromAmount == 0)
-                    nValueToSelect += nFeeRet;
+                if (nSubtractFeeFromAmount == 0) {
+                    nValueToSelect += outputFee;
+                }
 
                 // Choose coins to use
-                CAmount nValueIn = 0;
+                CAmount nSelectedEValue = 0;
                 setCoins.clear();
-                if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coinControl))
+                if (!SelectCoins(vAvailableCoins, nSubtractFeeFromAmount > 0 ? CFeeRate(0) : nFeeRateNeeded, nValueToSelect, setCoins, nSelectedEValue, coinControl))
                 {
                     strFailReason = _("Insufficient funds");
                     return false;
                 }
 
-                const CAmount nChange = nValueIn - nValueToSelect;
+                const CAmount nChange = nSelectedEValue - nValueToSelect;
                 if (nChange > 0)
                 {
-                    // Fill a vout to ourself
-                    // TODO: pass in scriptChange instead of reservekey so
-                    // change transaction isn't always pay-to-bitcoin-address
-                    CScript scriptChange;
-
-                    // coin control: send change to custom address
-                    if (coinControl && !boost::get<CNoDestination>(&coinControl->destChange))
-                        scriptChange = GetScriptForDestination(coinControl->destChange);
-
-                    // no coin control: send change to newly generated address
-                    else
-                    {
-                        // Note: We use a new key here to keep it from being obvious which side is the change.
-                        //  The drawback is that by not reusing a previous key, the change may be lost if a
-                        //  backup is restored, if the backup doesn't have the new private key for the change.
-                        //  If we reused the old key, it would be possible to add code to look for and
-                        //  rediscover unknown transactions that were written with keys of ours to recover
-                        //  post-backup change.
-
-                        // Reserve a new key pair from key pool
-                        CPubKey vchPubKey;
-                        bool ret;
-                        ret = reservekey.GetReservedKey(vchPubKey, true);
-                        if (!ret)
-                        {
-                            strFailReason = _("Keypool ran out, please call keypoolrefill first");
-                            return false;
-                        }
-
-                        scriptChange = GetScriptForDestination(vchPubKey.GetID());
-                    }
-
                     CTxOut newTxOut(nChange, scriptChange);
 
                     // Don't create dust change unless subtracting fee from outputs;
@@ -2541,7 +2566,6 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     if (nSubtractFeeFromAmount == 0 && IsDust(newTxOut, dustRelayFee))
                     {
                         nChangePosInOut = -1;
-                        nFeeRet += nChange;
                         reservekey.ReturnKey();
                     }
                     else
@@ -2576,9 +2600,15 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 // and in the spirit of "smallest possible change from prior
                 // behavior."
                 bool rbf = coinControl ? coinControl->signalRbf : fWalletRbf;
-                for (const auto& coin : setCoins)
+                for (const auto& coin : setCoins) {
+                    nFeeRet += coin.txout.nValue;
                     txNew.vin.push_back(CTxIn(coin.outpoint,CScript(),
                                               std::numeric_limits<unsigned int>::max() - (rbf ? 2 : 1)));
+                }
+
+                for (const auto& output : txNew.vout) {
+                    nFeeRet -= output.nValue;
+                }
 
                 unsigned int nBytes = CalculateMaximumSignedTxSize(txNew);
 
@@ -2590,7 +2620,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     vin.scriptWitness.SetNull();
                 }
 
-                CAmount nFeeNeeded = GetMinimumFeeRate(currentConfirmationTarget, ::mempool, ::feeEstimator).GetFee(nBytes);
+                CAmount nFeeNeeded = nFeeRateNeeded.GetFee(nBytes);
 
                 // If total estimated fee is too high, just set to default maximum
                 if (nFeeNeeded > maxTxFee) {
@@ -2610,6 +2640,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
 
                 // Now that we know required fee, if we are subtracting fee from amounts, do so
                 if (nSubtractFeeFromAmount > 0) {
+                    assert(nFeeRet == 0);
                     assert(vecSend.size() <= txNew.vout.size());
                     bool fFirst = true;
                     // Iterate over non-change outputs
@@ -2620,18 +2651,20 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
 
                         if (recipient.fSubtractFeeFromAmount)
                         {
-                            txout.nValue -= nFeeRet / nSubtractFeeFromAmount; // Subtract fee equally from each selected recipient
+                            txout.nValue -= nFeeNeeded / nSubtractFeeFromAmount; // Subtract fee equally from each selected recipient
+                            nFeeRet += nFeeNeeded / nSubtractFeeFromAmount;
 
                             if (fFirst) // first receiver pays the remainder not divisible by output count
                             {
                                 fFirst = false;
-                                txout.nValue -= nFeeRet % nSubtractFeeFromAmount;
+                                txout.nValue -= nFeeNeeded % nSubtractFeeFromAmount;
+                                nFeeRet += nFeeNeeded % nSubtractFeeFromAmount;
                             }
                         }
 
                         if (IsDust(txout, dustRelayFee))
                         {
-                            if (recipient.fSubtractFeeFromAmount && nFeeRet > 0)
+                            if (recipient.fSubtractFeeFromAmount && nFeeNeeded > 0)
                             {
                                 if (txout.nValue < 0)
                                     strFailReason = _("The transaction amount is too small to pay the fee");
@@ -2710,7 +2743,6 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 }
 
                 // Include more fee and try again.
-                nFeeRet = nFeeNeeded;
                 continue;
             }
         }
