@@ -18,7 +18,16 @@ from segwit import send_to_witness
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework import blocktools
 from test_framework.mininode import CTransaction
-from test_framework.util import *
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than,
+    assert_raises_jsonrpc,
+    bytes_to_hex_str,
+    connect_nodes_bi,
+    hex_str_to_bytes,
+    sync_mempools,
+)
+from decimal import Decimal
 
 import io
 
