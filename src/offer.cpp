@@ -246,7 +246,10 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, const stri
 			if (pcursor->GetKey(key) && key.first == "offeri") {
             	const vector<unsigned char> &vchMyOffer = key.second;
    				if(!vchOffer.empty() && vchMyOffer != vchOffer)
-					continue;                    
+				{
+					pcursor->Next();
+					continue;              
+				}                  
 				pcursor->GetValue(vtxPos);
 
 				if (vtxPos.empty()){
