@@ -73,9 +73,24 @@ e. Announce one more that doesn't connect.
    Expect: disconnect.
 """
 
-from test_framework.mininode import *
+from test_framework.mininode import (
+    CBlockHeader,
+    CInv,
+    mininode_lock,
+    msg_block,
+    msg_getblocks,
+    msg_getdata,
+    msg_getheaders,
+    msg_headers,
+    msg_inv,
+    msg_sendheaders,
+    NetworkThread,
+    NodeConn,
+    NodeConnCB,
+    wait_until,
+)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import assert_equal, sync_blocks, p2p_port
 from test_framework.blocktools import create_block, create_coinbase
 
 
