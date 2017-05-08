@@ -3447,6 +3447,39 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                 return true;
             }
         }
+        // Check for headers sync timeouts
+        if (state.fSyncStarted && state.nHeadersSyncTimeout < std::numeric_limits<int64_t>::max()) {
+            // Detect whether this is a stalling initial-headers-sync peer
+            if (pindexBestHeader->GetBlockTime() <= GetAdjustedTime() - 24*60*60) {
+                if (nNow > state.nHeadersSyncTimeout && nSyncStarted == 1 && (nPreferredDownload - state.fPreferredDownload >= 1)) {
+                    // Disconnect a (non-whitelisted) peer if it is our only sync peer,
+                    // and we have others we could be using instead.
+                    // Note: If all our peers are inbound, then we won't
+                    // disconnect our sync peer for stalling; we have bigger
+                    // problems if we can't get any outbound peers.
+                    if (!pto->fWhitelisted) {
+                        LogPrintf("Timeout downloading headers from peer=%d, disconnecting\n", pto->GetId());
+                        pto->fDisconnect = true;
+                        return true;
+                    } else {
+                        LogPrintf("Timeout downloading headers from whitelisted peer=%d, not disconnecting\n", pto->GetId());
+                        // Reset the headers sync state so that we have a
+                        // chance to try downloading from a different peer.
+                        // Note: this will also result in at least one more
+                        // getheaders message to be sent to
+                        // this peer (eventually).
+                        state.fSyncStarted = false;
+                        nSyncStarted--;
+                        state.nHeadersSyncTimeout = 0;
+                    }
+                }
+            } else {
+                // After we've caught up once, reset the timeout so we can't trigger
+                // disconnect later.
+                state.nHeadersSyncTimeout = std::numeric_limits<int64_t>::max();
+            }
+        }
+
 
         //
         // Message: getdata (blocks)
