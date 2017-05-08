@@ -44,11 +44,20 @@ bip112tx_special - test negative argument to OP_CSV
 """
 
 from test_framework.test_framework import ComparisonTestFramework
-from test_framework.util import *
+from test_framework.util import (
+    assert_equal,
+    Decimal,
+    get_bip9_status,
+    hex_str_to_bytes,
+)
 from test_framework.mininode import ToHex, CTransaction, NetworkThread
 from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager
-from test_framework.script import *
+from test_framework.script import (
+    CScript,
+    OP_CHECKSEQUENCEVERIFY,
+    OP_DROP,
+)
 from io import BytesIO
 import time
 
