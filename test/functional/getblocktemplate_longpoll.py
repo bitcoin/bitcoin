@@ -5,7 +5,8 @@
 """Test longpolling with getblocktemplate."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import get_rpc_proxy, random_transaction
+from decimal import Decimal
 
 import threading
 
