@@ -11,13 +11,54 @@ We use the testing framework in which we expect a particular answer from
 each test.
 """
 
+import copy
+
 from test_framework.test_framework import ComparisonTestFramework
-from test_framework.util import *
+from test_framework.util import assert_equal
 from test_framework.comptool import TestManager, TestInstance, RejectResult
-from test_framework.blocktools import *
+from test_framework.blocktools import (
+    create_block,
+    create_coinbase,
+    create_transaction,
+    get_legacy_sigopcount_block,
+)
 import time
 from test_framework.key import CECKey
-from test_framework.script import *
+from test_framework.script import (
+    CScript,
+    hash160,
+    MAX_SCRIPT_ELEMENT_SIZE,
+    OP_2DUP,
+    OP_CHECKMULTISIG,
+    OP_CHECKMULTISIGVERIFY,
+    OP_CHECKSIG,
+    OP_CHECKSIGVERIFY,
+    OP_ELSE,
+    OP_ENDIF,
+    OP_EQUAL,
+    OP_FALSE,
+    OP_HASH160,
+    OP_IF,
+    OP_INVALIDOPCODE,
+    OP_RETURN,
+    OP_TRUE,
+    SIGHASH_ALL,
+    SignatureHash,
+)
+from test_framework.mininode import (
+    CBlock,
+    CBlockHeader,
+    COIN,
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxOut,
+    MAX_BLOCK_BASE_SIZE,
+    NetworkThread,
+    ser_uint256,
+    uint256_from_compact,
+    uint256_from_str,
+)
 import struct
 
 class PreviousSpendableOutput(object):
