@@ -227,10 +227,11 @@ def wait_for_bitcoind_start(process, url, i):
         time.sleep(0.25)
 
 
-def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
-    """
-    Start a bitcoind and return RPC connection to it
-    """
+def _start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
+    """Start a bitcoind and return RPC connection to it
+
+    This function should only be called from within test_framework, not by individual test scripts."""
+
     datadir = os.path.join(dirname, "node"+str(i))
     if binary is None:
         binary = os.getenv("BITCOIND", "bitcoind")
@@ -251,8 +252,8 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
 def assert_start_raises_init_error(i, dirname, extra_args=None, expected_msg=None):
     with tempfile.SpooledTemporaryFile(max_size=2**16) as log_stderr:
         try:
-            node = start_node(i, dirname, extra_args, stderr=log_stderr)
-            stop_node(node, i)
+            node = _start_node(i, dirname, extra_args, stderr=log_stderr)
+            _stop_node(node, i)
         except Exception as e:
             assert 'bitcoind exited' in str(e) #node must have shutdown
             if expected_msg is not None:
@@ -267,10 +268,11 @@ def assert_start_raises_init_error(i, dirname, extra_args=None, expected_msg=Non
                 assert_msg = "bitcoind should have exited with expected error " + expected_msg
             raise AssertionError(assert_msg)
 
-def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
-    """
-    Start multiple bitcoinds, return RPC connections to them
-    """
+def _start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
+    """Start multiple bitcoinds, return RPC connections to them
+    
+    This function should only be called from within test_framework, not by individual test scripts."""
+
     if extra_args is None: extra_args = [ None for _ in range(num_nodes) ]
     if binary is None: binary = [ None for _ in range(num_nodes) ]
     assert_equal(len(extra_args), num_nodes)
@@ -278,16 +280,20 @@ def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None
     rpcs = []
     try:
         for i in range(num_nodes):
-            rpcs.append(start_node(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i]))
+            rpcs.append(_start_node(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i]))
     except: # If one node failed to start, stop the others
-        stop_nodes(rpcs)
+        _stop_nodes(rpcs)
         raise
     return rpcs
 
 def log_filename(dirname, n_node, logname):
     return os.path.join(dirname, "node"+str(n_node), "regtest", logname)
 
-def stop_node(node, i):
+def _stop_node(node, i):
+    """Stop a bitcoind test node
+
+    This function should only be called from within test_framework, not by individual test scripts."""
+
     logger.debug("Stopping node %d" % i)
     try:
         node.stop()
@@ -297,9 +303,13 @@ def stop_node(node, i):
     assert_equal(return_code, 0)
     del bitcoind_processes[i]
 
-def stop_nodes(nodes):
+def _stop_nodes(nodes):
+    """Stop multiple bitcoind test nodes
+
+    This function should only be called from within test_framework, not by individual test scripts."""
+
     for i, node in enumerate(nodes):
-        stop_node(node, i)
+        _stop_node(node, i)
     assert not bitcoind_processes.values() # All connections must be gone now
 
 def set_node_times(nodes, t):
