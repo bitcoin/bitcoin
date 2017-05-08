@@ -5,8 +5,12 @@
 """Test decoding scripts via decodescript RPC command."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from test_framework.mininode import *
+from test_framework.util import (
+    assert_equal,
+    bytes_to_hex_str,
+    hex_str_to_bytes,
+)
+from test_framework.mininode import CTransaction
 from io import BytesIO
 
 class DecodeScriptTest(BitcoinTestFramework):
