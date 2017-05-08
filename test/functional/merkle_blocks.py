@@ -5,7 +5,12 @@
 """Test gettxoutproof and verifytxoutproof RPCs."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (assert_equal,
+                                 assert_raises,
+                                 assert_raises_jsonrpc,
+                                 connect_nodes,
+                                 JSONRPCException,
+                                 )
 
 class MerkleBlockTest(BitcoinTestFramework):
 
