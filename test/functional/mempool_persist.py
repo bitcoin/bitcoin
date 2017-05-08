@@ -34,7 +34,8 @@ import time
 
 from test_framework.mininode import wait_until
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import assert_equal, connect_nodes_bi
+from decimal import Decimal
 
 class MempoolPersistTest(BitcoinTestFramework):
 
