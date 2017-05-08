@@ -224,14 +224,9 @@ namespace {
         uint256 hash;
         CBlockIndex* pindex;     //!< Optional.
         int64_t nTime;  //! Time of "getdata" request in microseconds.
-      // int64_t nTimeDisconnect; //! The timeout for this block request (for disconnecting a slow peer)
         bool fValidatedHeaders;  //!< Whether this block has validated headers at the time of request.
     };
     std::map<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator> > mapBlocksInFlight;
-
-    // GAS TODO: removed
-    /** Number of blocks in flight with validated headers. */
-    int nQueuedValidatedHeaders = 0;
 
     /** Number of preferable block download peers. */
     int nPreferredDownload = 0;
@@ -468,14 +463,6 @@ bool MarkBlockAsReceived(const uint256& hash) {
     return false;
 }
 
-#if 0  // BU: not currently used
-// Returns time at which to timeout block request (nTime in microseconds)
-int64_t GetBlockTimeout(int64_t nTime, int nValidatedQueuedBefore, const Consensus::Params &consensusParams)
-{
-    return nTime + 500000 * consensusParams.nPowTargetSpacing * (4 + nValidatedQueuedBefore);
-}
-#endif
-
   // BU MarkBlockAsInFlight moved out of anonymous namespace
 
 /** Check whether the last unknown block a peer advertised is not yet known. */
@@ -643,9 +630,7 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBl
     if (itInFlight == mapBlocksInFlight.end()) // If it hasn't already been marked inflight...
       {
 	int64_t nNow = GetTimeMicros();
-	//QueuedBlock newentry = {hash, pindex, nNow, pindex != NULL, GetBlockTimeout(nNow, nQueuedValidatedHeaders, consensusParams)};
         QueuedBlock newentry = {hash, pindex, nNow,pindex != NULL };
-	nQueuedValidatedHeaders += newentry.fValidatedHeaders;
 	std::list<QueuedBlock>::iterator it = state->vBlocksInFlight.insert(state->vBlocksInFlight.end(), newentry);
 	state->nBlocksInFlight++;
 	state->nBlocksInFlightValidHeaders += newentry.fValidatedHeaders;
