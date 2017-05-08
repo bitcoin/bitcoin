@@ -11,9 +11,19 @@ This test connects to a node and sends it a few messages, trying to intice it
 into sending us something it shouldn't.
 """
 
-from test_framework.mininode import *
+import time
+
+from test_framework.mininode import (
+    msg_getaddr,
+    msg_ping,
+    msg_verack,
+    NetworkThread,
+    NodeConn,
+    NodeConnCB,
+    wait_until,
+)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import p2p_port
 
 banscore = 10
 
