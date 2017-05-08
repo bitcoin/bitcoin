@@ -5,9 +5,16 @@
 """Test the listtransactions API."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (
+    assert_array_result,
+    assert_equal,
+    bytes_to_hex_str,
+    hex_str_to_bytes,
+    sync_mempools,
+)
 from test_framework.mininode import CTransaction, COIN
 from io import BytesIO
+from decimal import Decimal
 
 def txFromHex(hexstring):
     tx = CTransaction()
