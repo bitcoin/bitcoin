@@ -8,8 +8,15 @@ import socket
 import sys
 
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
-from test_framework.util import *
-from test_framework.netutil import *
+from test_framework.util import (
+    assert_equal,
+    assert_raises_jsonrpc,
+    get_datadir_path,
+    get_rpc_proxy,
+    rpc_port,
+    rpc_url,
+)
+from test_framework.netutil import addr_to_hex, all_interfaces, get_bind_addrs
 
 
 class RPCBindTest(BitcoinTestFramework):
