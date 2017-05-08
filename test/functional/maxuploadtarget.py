@@ -13,9 +13,19 @@ if uploadtarget has been reached.
 from collections import defaultdict
 import time
 
-from test_framework.mininode import *
+from test_framework.mininode import (
+    CInv,
+    msg_getdata,
+    NetworkThread,
+    NodeConn,
+    NodeConnCB,
+)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (
+    assert_equal,
+    mine_large_block,
+    p2p_port,
+)
 
 class TestNode(NodeConnCB):
     def __init__(self):
