@@ -6203,10 +6203,9 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
                     pfrom->nLocalThinBlockBytes += nTxSize - nSizeNullTx;
                     if (thindata.AddThinBlockBytes(nTxSize) > maxAllowedSize)
                     {
-                        ClearLargestThinBlockAndDisconnect();
-                        return error("xthin block has exceeded memory limits of %ld bytes", maxAllowedSize);
+                        if (ClearLargestThinBlockAndDisconnect(pfrom))
+                            return error("xthin block has exceeded memory limits of %ld bytes", maxAllowedSize);
                     }
-
                 }
                 count++;
             }

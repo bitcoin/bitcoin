@@ -129,8 +129,8 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock, string strCommand)
             pfrom->nLocalThinBlockBytes += nTxSize;
             if (thindata.AddThinBlockBytes(nTxSize) > maxAllowedSize)
             {
-                ClearLargestThinBlockAndDisconnect();
-                return error("Thinblock has exceeded memory limits of %ld bytes", maxAllowedSize);
+                if (ClearLargestThinBlockAndDisconnect(pfrom))
+                    return error("Thinblock has exceeded memory limits of %ld bytes", maxAllowedSize);
             }
         }
         pfrom->thinBlockWaitingForTxns = missingCount;
@@ -509,8 +509,8 @@ bool CXThinBlock::process(CNode *pfrom,
                     pfrom->nLocalThinBlockBytes += nTxSize;
                     if (thindata.AddThinBlockBytes(nTxSize) > maxAllowedSize)
                     {
-                        ClearLargestThinBlockAndDisconnect();
-                        return error("xthin block has exceeded memory limits of %ld bytes", maxAllowedSize);
+                        if (ClearLargestThinBlockAndDisconnect(pfrom))
+                            return error("xthin block has exceeded memory limits of %ld bytes", maxAllowedSize);
                     }
                 }
             }
@@ -1081,7 +1081,8 @@ void CThinBlockData::ClearThinBlockData(CNode *pnode)
     // Remove bytes from counter
     thindata.DeleteThinBlockBytes(pnode->nLocalThinBlockBytes);
     pnode->nLocalThinBlockBytes = 0;
-    LogPrint("thin", "total thinblockbytes size after clearing a thinblock is %ld bytes\n", thindata.GetThinBlockBytes());
+    LogPrint(
+        "thin", "total thinblockbytes size after clearing a thinblock is %ld bytes\n", thindata.GetThinBlockBytes());
 
     // Clear out thinblock data we no longer need
     pnode->thinBlockWaitingForTxns = -1;
@@ -1242,7 +1243,7 @@ void CheckNodeSupportForThinBlocks()
     }
 }
 
-void ClearLargestThinBlockAndDisconnect()
+bool ClearLargestThinBlockAndDisconnect(CNode *pfrom)
 {
     CNode *pLargest = NULL;
     LOCK(cs_vNodes);
@@ -1256,7 +1257,14 @@ void ClearLargestThinBlockAndDisconnect()
     {
         thindata.ClearThinBlockData(pLargest);
         pLargest->fDisconnect = true;
+
+        // If the our node is currently using up the most thinblock bytes then return true so that we
+        // can stop processing this thinblock and let the disconnection happen.
+        if (pfrom == pLargest)
+            return true;
     }
+
+    return false;
 }
 
 void SendXThinBlock(CBlock &block, CNode *pfrom, const CInv &inv)
