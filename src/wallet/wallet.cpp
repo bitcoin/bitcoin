@@ -3257,7 +3257,7 @@ bool CWallet::ParameterInteraction()
         CAmount nMaxFee = 0;
         if (!ParseMoney(mapArgs["-maxtxfee"], nMaxFee))
             return UIError(AmountErrMsg("maxtxfee", mapArgs["-maxtxfee"]));
-        if (nMaxFee > HIGH_TX_FEE_PER_KB)
+        if (nMaxFee > HIGH_MAX_TX_FEE)
             UIWarning(_("-maxtxfee is set very high! Fees this large could be paid on a single transaction."));
         maxTxFee.value = nMaxFee;
         if (CFeeRate(maxTxFee.value, 1000) < ::minRelayTxFee)
