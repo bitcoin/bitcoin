@@ -173,7 +173,9 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock, string strCommand)
     else if (pfrom->thinBlockWaitingForTxns > 0)
     {
         // This marks the end of the transactions we've received. If we get this and we have NOT been able to
-        // finish reassembling the block, we need to re-request the full regular block:
+        // finish reassembling the block, we need to re-request the full regular block
+        thindata.ClearThinBlockData(pfrom);
+
         vector<CInv> vGetData;
         vGetData.push_back(CInv(MSG_BLOCK, header.GetHash()));
         pfrom->PushMessage(NetMsgType::GETDATA, vGetData);
