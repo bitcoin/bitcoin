@@ -6110,9 +6110,8 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
 
                     // In order to prevent a memory exhaustion attack we track transaction bytes used to create Block
                     // to see if we've exceeded any limits and if so clear out data and return.
-                    uint64_t nTxSize = RecursiveDynamicUsage(val->second);
-                    pfrom->nLocalThinBlockBytes += nTxSize - nSizeNullTx;
-                    if (thindata.AddThinBlockBytes(nTxSize) > maxAllowedSize)
+                    uint64_t nTxSize = RecursiveDynamicUsage(val->second) - nSizeNullTx;
+                    if (thindata.AddThinBlockBytes(nTxSize, pfrom) > maxAllowedSize)
                     {
                         if (ClearLargestThinBlockAndDisconnect(pfrom))
                             return error("xthin block has exceeded memory limits of %ld bytes", maxAllowedSize);

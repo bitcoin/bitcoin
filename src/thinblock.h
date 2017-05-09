@@ -174,8 +174,8 @@ public:
 
     void ClearThinBlockData(CNode *pfrom);
 
-    uint64_t AddThinBlockBytes(uint64_t);
-    void DeleteThinBlockBytes(uint64_t);
+    uint64_t AddThinBlockBytes(uint64_t, CNode *pfrom);
+    void DeleteThinBlockBytes(uint64_t, CNode *pfrom);
     void ResetThinBlockBytes();
     uint64_t GetThinBlockBytes();
 };
