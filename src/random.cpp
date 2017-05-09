@@ -34,8 +34,8 @@
 #include <sys/sysctl.h>
 #endif
 
-#include <openssl/err.h>
-#include <openssl/rand.h>
+#include <thread>
+#include <mutex>
 
 static void RandFailure()
 {
@@ -60,54 +60,6 @@ static inline int64_t GetPerformanceCounter()
 #else
     // Fall back to using C++11 clock (usually microsecond or nanosecond precision)
     return std::chrono::high_resolution_clock::now().time_since_epoch().count();
-#endif
-}
-
-void RandAddSeed()
-{
-    // Seed with CPU performance counter
-    int64_t nCounter = GetPerformanceCounter();
-    RAND_add(&nCounter, sizeof(nCounter), 1.5);
-    memory_cleanse((void*)&nCounter, sizeof(nCounter));
-}
-
-static void RandAddSeedPerfmon()
-{
-    RandAddSeed();
-
-#ifdef WIN32
-    // Don't need this on Linux, OpenSSL automatically uses /dev/urandom
-    // Seed with the entire set of perfmon data
-
-    // This can take up to 2 seconds, so only do it every 10 minutes
-    static int64_t nLastPerfmon;
-    if (GetTime() < nLastPerfmon + 10 * 60)
-        return;
-    nLastPerfmon = GetTime();
-
-    std::vector<unsigned char> vData(250000, 0);
-    long ret = 0;
-    unsigned long nSize = 0;
-    const size_t nMaxSize = 10000000; // Bail out at more than 10MB of performance data
-    while (true) {
-        nSize = vData.size();
-        ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, vData.data(), &nSize);
-        if (ret != ERROR_MORE_DATA || vData.size() >= nMaxSize)
-            break;
-        vData.resize(std::max((vData.size() * 3) / 2, nMaxSize)); // Grow size of buffer exponentially
-    }
-    RegCloseKey(HKEY_PERFORMANCE_DATA);
-    if (ret == ERROR_SUCCESS) {
-        RAND_add(vData.data(), nSize, nSize / 100.0);
-        memory_cleanse(vData.data(), nSize);
-        LogPrint(BCLog::RAND, "%s: %lu bytes\n", __func__, nSize);
-    } else {
-        static bool warned = false; // Warn only once
-        if (!warned) {
-            LogPrintf("%s: Warning: RegQueryValueExA(HKEY_PERFORMANCE_DATA) failed with code %i\n", __func__, ret);
-            warned = true;
-        }
-    }
 #endif
 }
 
@@ -194,32 +146,45 @@ void GetOSRand(unsigned char *ent32)
 #endif
 }
 
+static unsigned char entropy[32] = {0};
+static std::mutex cs_entropy;
+
 void GetRandBytes(unsigned char* buf, int num)
 {
-    if (RAND_bytes(buf, num) != 1) {
-        RandFailure();
-    }
-}
+    unsigned char seed32[32];
 
-void GetStrongRandBytes(unsigned char* out, int num)
-{
-    assert(num <= 32);
+    // Entropy sources
+    int64_t counter = GetPerformanceCounter(); // Time
+    int64_t* pcounter = &counter; // Stack frame pointer (thread specific)
+    unsigned char os_entropy[NUM_OS_RANDOM_BYTES]; // OS entropy
+    GetOSRand(os_entropy);
+
+    // Process entropy
     CSHA512 hasher;
-    unsigned char buf[64];
+    hasher.Write(os_entropy, NUM_OS_RANDOM_BYTES);
+    memory_cleanse(os_entropy, NUM_OS_RANDOM_BYTES);
+    hasher.Write((const unsigned char*)&counter, sizeof(counter));
+    hasher.Write((const unsigned char*)&pcounter, sizeof(pcounter));
 
-    // First source: OpenSSL's RNG
-    RandAddSeedPerfmon();
-    GetRandBytes(buf, 32);
-    hasher.Write(buf, 32);
-
-    // Second source: OS RNG
-    GetOSRand(buf);
-    hasher.Write(buf, 32);
+    {
+        // Mix in global entropy, and update it.
+        std::unique_lock<std::mutex> lock(cs_entropy);
+        hasher.Write(entropy, 32);
+        unsigned char out[64];
+        hasher.Finalize(out);
+        memcpy(seed32, out, 32);
+        memcpy(entropy, out + 32, 32);
+        memory_cleanse(out, 64);
+    }
 
     // Produce output
-    hasher.Finalize(buf);
-    memcpy(out, buf, num);
-    memory_cleanse(buf, 64);
+    if (num <= 32) {
+        memcpy(buf, seed32, num);
+    } else {
+       ChaCha20 prng(seed32, 32);
+       prng.Output(buf, num);
+    }
+    memory_cleanse(seed32, 32);
 }
 
 uint64_t GetRand(uint64_t nMax)
@@ -254,6 +219,17 @@ void FastRandomContext::RandomSeed()
     uint256 seed = GetRandHash();
     rng.SetKey(seed.begin(), 32);
     requires_seed = false;
+}
+
+uint256 FastRandomContext::rand256()
+{
+    if (bytebuf_size < 32) {
+        FillByteBuffer();
+    }
+    uint256 ret;
+    memcpy(ret.begin(), bytebuf + 64 - bytebuf_size, 32);
+    bytebuf_size -= 32;
+    return ret;
 }
 
 FastRandomContext::FastRandomContext(const uint256& seed) : requires_seed(false), bytebuf_size(0), bitbuf_size(0)

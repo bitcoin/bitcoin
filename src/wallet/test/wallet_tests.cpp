@@ -11,6 +11,7 @@
 
 #include "rpc/server.h"
 #include "test/test_bitcoin.h"
+#include "test/test_random.h"
 #include "validation.h"
 #include "wallet/test/wallet_test_fixture.h"
 
@@ -469,7 +470,7 @@ static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64
     SetMockTime(mockTime);
     CBlockIndex* block = nullptr;
     if (blockTime > 0) {
-        auto inserted = mapBlockIndex.emplace(GetRandHash(), new CBlockIndex);
+        auto inserted = mapBlockIndex.emplace(insecure_rand_ctx.rand256(), new CBlockIndex);
         assert(inserted.second);
         const uint256& hash = inserted.first->first;
         block = inserted.first->second;

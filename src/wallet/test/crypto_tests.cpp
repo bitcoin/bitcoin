@@ -5,6 +5,7 @@
 #include "test/test_random.h"
 #include "utilstrencodings.h"
 #include "test/test_bitcoin.h"
+#include "test/test_random.h"
 #include "wallet/crypter.h"
 
 #include <vector>
@@ -190,9 +191,9 @@ BOOST_AUTO_TEST_CASE(passphrase) {
                                 ParseHex("fc7aba077ad5f4c3a0988d8daa4810d0d4a0e3bcb53af662998898f33df0556a"), \
                                 ParseHex("cf2f2691526dd1aa220896fb8bf7c369"));
 
-    std::string hash(GetRandHash().ToString());
+    std::string hash(insecure_rand_ctx.rand256().ToString());
     std::vector<unsigned char> vchSalt(8);
-    GetRandBytes(&vchSalt[0], vchSalt.size());
+    insecure_rand_ctx.randbytes(&vchSalt[0], vchSalt.size());
     uint32_t rounds = insecure_rand();
     if (rounds > 30000)
         rounds = 30000;
@@ -208,7 +209,7 @@ BOOST_AUTO_TEST_CASE(encrypt) {
 
     for (int i = 0; i != 100; i++)
     {
-        uint256 hash(GetRandHash());
+        uint256 hash(insecure_rand_ctx.rand256());
         TestCrypter::TestEncrypt(crypt, std::vector<unsigned char>(hash.begin(), hash.end()));
     }
 
@@ -230,7 +231,7 @@ BOOST_AUTO_TEST_CASE(decrypt) {
 
     for (int i = 0; i != 100; i++)
     {
-        uint256 hash(GetRandHash());
+        uint256 hash(insecure_rand_ctx.rand256());
         TestCrypter::TestDecrypt(crypt, std::vector<unsigned char>(hash.begin(), hash.end()));
     }
 }

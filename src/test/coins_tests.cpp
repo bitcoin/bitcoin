@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
     std::vector<uint256> txids;
     txids.resize(NUM_SIMULATION_ITERATIONS / 8);
     for (unsigned int i = 0; i < txids.size(); i++) {
-        txids[i] = GetRandHash();
+        txids[i] = insecure_rand_ctx.rand256();
     }
 
     for (unsigned int i = 0; i < NUM_SIMULATION_ITERATIONS; i++) {
@@ -223,7 +223,7 @@ std::map<uint256, TxData> alltxs;
 
 TxData &FindRandomFrom(const std::set<uint256> &txidset) {
     assert(txidset.size());
-    std::set<uint256>::iterator txIt = txidset.lower_bound(GetRandHash());
+    std::set<uint256>::iterator txIt = txidset.lower_bound(insecure_rand_ctx.rand256());
     if (txIt == txidset.end()) {
         txIt = txidset.begin();
     }

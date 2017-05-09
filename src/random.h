@@ -12,22 +12,13 @@
 
 #include <stdint.h>
 
-/* Seed OpenSSL PRNG with additional entropy data */
-void RandAddSeed();
-
 /**
- * Functions to gather random data via the OpenSSL PRNG
+ * Functions to gather secure random data.
  */
 void GetRandBytes(unsigned char* buf, int num);
 uint64_t GetRand(uint64_t nMax);
 int GetRandInt(int nMax);
 uint256 GetRandHash();
-
-/**
- * Function to gather random data from multiple sources, failing whenever any
- * of those source fail to provide a result.
- */
-void GetStrongRandBytes(unsigned char* buf, int num);
 
 /**
  * Fast randomness source. This is seeded once with secure random data, but
@@ -103,8 +94,14 @@ public:
         }
     }
 
+    /** Generate random bytes. */
+    void randbytes(unsigned char* out, size_t len) { rng.Output(out, len); }
+
     /** Generate a random 32-bit integer. */
     uint32_t rand32() { return randbits(32); }
+
+    /** generate a random uint256. */
+    uint256 rand256();
 
     /** Generate a random boolean. */
     bool randbool() { return randbits(1); }

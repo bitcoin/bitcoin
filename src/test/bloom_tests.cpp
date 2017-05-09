@@ -15,6 +15,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "test/test_bitcoin.h"
+#include "test/test_random.h"
 
 #include <vector>
 
@@ -463,7 +464,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_update_none)
 
 static std::vector<unsigned char> RandomData()
 {
-    uint256 r = GetRandHash();
+    uint256 r = insecure_rand_ctx.rand256();
     return std::vector<unsigned char>(r.begin(), r.end());
 }
 
