@@ -19,7 +19,7 @@ class CAutoFile;
 class CFeeRate;
 class CTxMemPoolEntry;
 class CTxMemPool;
-class TxConfirmStats;
+class CTxConfirmStats;
 
 /** \class CBlockPolicyEstimator
  * The BlockPolicyEstimator is used for estimating the feerate needed
@@ -141,7 +141,7 @@ private:
     std::map<uint256, TxStatsInfo> mapMemPoolTxs;
 
     /** Classes to track historical data on transaction confirmations */
-    TxConfirmStats* feeStats;
+    CTxConfirmStats* feeStats;
 
     unsigned int trackedTxs;
     unsigned int untrackedTxs;

@@ -22,7 +22,7 @@
  * The tracking of unconfirmed (mempool) transactions is completely independent of the
  * historical tracking of transactions that have been confirmed in a block.
  */
-class TxConfirmStats
+class CTxConfirmStats
 {
 private:
     //Define the buckets we will group transactions into
@@ -62,13 +62,13 @@ private:
 
 public:
     /**
-     * Create new TxConfirmStats. This is called by BlockPolicyEstimator's
+     * Create new CTxConfirmStats. This is called by BlockPolicyEstimator's
      * constructor with default values.
      * @param defaultBuckets contains the upper limits for the bucket boundaries
      * @param maxConfirms max number of confirms to track
      * @param decay how much to decay the historical moving average per block
      */
-    TxConfirmStats(const std::vector<double>& defaultBuckets, unsigned int maxConfirms, double decay);
+    CTxConfirmStats(const std::vector<double>& defaultBuckets, unsigned int maxConfirms, double decay);
 
     /** Clear the state of the curBlock variables to start counting for the new block */
     void ClearCurrent(unsigned int nBlockHeight);
@@ -120,8 +120,8 @@ public:
 };
 
 
-TxConfirmStats::TxConfirmStats(const std::vector<double>& defaultBuckets,
-                               unsigned int maxConfirms, double _decay)
+CTxConfirmStats::CTxConfirmStats(const std::vector<double>& defaultBuckets,
+                                 unsigned int maxConfirms, double _decay)
 {
     decay = _decay;
     for (unsigned int i = 0; i < defaultBuckets.size(); i++) {
@@ -145,7 +145,7 @@ TxConfirmStats::TxConfirmStats(const std::vector<double>& defaultBuckets,
 }
 
 // Zero out the data for the current block
-void TxConfirmStats::ClearCurrent(unsigned int nBlockHeight)
+void CTxConfirmStats::ClearCurrent(unsigned int nBlockHeight)
 {
     for (unsigned int j = 0; j < buckets.size(); j++) {
         oldUnconfTxs[j] += unconfTxs[nBlockHeight%unconfTxs.size()][j];
@@ -158,7 +158,7 @@ void TxConfirmStats::ClearCurrent(unsigned int nBlockHeight)
 }
 
 
-void TxConfirmStats::Record(int blocksToConfirm, double val)
+void CTxConfirmStats::Record(int blocksToConfirm, double val)
 {
     // blocksToConfirm is 1-based
     if (blocksToConfirm < 1)
@@ -171,7 +171,7 @@ void TxConfirmStats::Record(int blocksToConfirm, double val)
     curBlockVal[bucketindex] += val;
 }
 
-void TxConfirmStats::UpdateMovingAverages()
+void CTxConfirmStats::UpdateMovingAverages()
 {
     for (unsigned int j = 0; j < buckets.size(); j++) {
         for (unsigned int i = 0; i < confAvg.size(); i++)
@@ -182,9 +182,9 @@ void TxConfirmStats::UpdateMovingAverages()
 }
 
 // returns -1 on error conditions
-double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
-                                         double successBreakPoint, bool requireGreater,
-                                         unsigned int nBlockHeight) const
+double CTxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
+                                          double successBreakPoint, bool requireGreater,
+                                          unsigned int nBlockHeight) const
 {
     // Counters for a bucket (or range of buckets)
     double nConf = 0; // Number of tx's confirmed within the confTarget
@@ -280,7 +280,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
     return median;
 }
 
-void TxConfirmStats::Write(CAutoFile& fileout) const
+void CTxConfirmStats::Write(CAutoFile& fileout) const
 {
     fileout << decay;
     fileout << buckets;
@@ -289,7 +289,7 @@ void TxConfirmStats::Write(CAutoFile& fileout) const
     fileout << confAvg;
 }
 
-void TxConfirmStats::Read(CAutoFile& filein)
+void CTxConfirmStats::Read(CAutoFile& filein)
 {
     // Read data file into temporary variables and do some very basic sanity checking
     std::vector<double> fileBuckets;
@@ -352,7 +352,7 @@ void TxConfirmStats::Read(CAutoFile& filein)
              numBuckets, maxConfirms);
 }
 
-unsigned int TxConfirmStats::NewTx(unsigned int nBlockHeight, double val)
+unsigned int CTxConfirmStats::NewTx(unsigned int nBlockHeight, double val)
 {
     unsigned int bucketindex = bucketMap.lower_bound(val)->second;
     unsigned int blockIndex = nBlockHeight % unconfTxs.size();
@@ -360,7 +360,7 @@ unsigned int TxConfirmStats::NewTx(unsigned int nBlockHeight, double val)
     return bucketindex;
 }
 
-void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHeight, unsigned int bucketindex)
+void CTxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHeight, unsigned int bucketindex)
 {
     //nBestSeenHeight is not updated yet for the new block
     int blocksAgo = nBestSeenHeight - entryHeight;
@@ -418,7 +418,7 @@ CBlockPolicyEstimator::CBlockPolicyEstimator()
         vfeelist.push_back(bucketBoundary);
     }
     vfeelist.push_back(INF_FEERATE);
-    feeStats = new TxConfirmStats(vfeelist, MAX_BLOCK_CONFIRMS, DEFAULT_DECAY);
+    feeStats = new CTxConfirmStats(vfeelist, MAX_BLOCK_CONFIRMS, DEFAULT_DECAY);
 }
 
 CBlockPolicyEstimator::~CBlockPolicyEstimator()
@@ -603,7 +603,7 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
         filein >> nFileBestSeenHeight;
         feeStats->Read(filein);
         nBestSeenHeight = nFileBestSeenHeight;
-        // if nVersionThatWrote < 139900 then another TxConfirmStats (for priority) follows but can be ignored.
+        // if nVersionThatWrote < 139900 then another CTxConfirmStats (for priority) follows but can be ignored.
     }
     catch (const std::exception&) {
         LogPrintf("CBlockPolicyEstimator::Read(): unable to read policy estimator data (non-fatal)\n");
