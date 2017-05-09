@@ -70,7 +70,7 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock, string strCommand)
     // Check that the merkleroot matches the merkelroot calculated from the hashes provided.
     bool mutated;
     uint256 merkleroot = ComputeMerkleRoot(vTxHashes, &mutated);
-    if (header.hashMerkleRoot != merkleroot)
+    if (header.hashMerkleRoot != merkleroot || mutated)
     {
         LOCK(cs_main);
         Misbehaving(pfrom->GetId(), 100);
@@ -445,7 +445,7 @@ bool CXThinBlock::process(CNode *pfrom,
 
             bool mutated;
             uint256 merkleroot = ComputeMerkleRoot(fullTxHashes, &mutated);
-            if (header.hashMerkleRoot != merkleroot)
+            if (header.hashMerkleRoot != merkleroot || mutated)
             {
                 fMerkleRootCorrect = false;
             }
