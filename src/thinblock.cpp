@@ -123,20 +123,23 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock, string strCommand)
             // In order to prevent a memory exhaustion attack we track transaction bytes used to create Block
             // to see if we've exceeded any limits and if so clear out data and return.
             uint64_t nTxSize = RecursiveDynamicUsage(tx);
-            if (thindata.AddThinBlockBytes(nTxSize, pfrom) > maxAllowedSize-nTxSize)
+            if (thindata.AddThinBlockBytes(nTxSize, pfrom) > maxAllowedSize - nTxSize)
             {
+                LogPrint("thin", "thin block too large %lu %llu %llu\n", vTxHashes.size(), nTxSize,
+                    pfrom->nLocalThinBlockBytes);
                 if (ClearLargestThinBlockAndDisconnect(pfrom))
                     return error("Thinblock has exceeded memory limits of %ld bytes", maxAllowedSize);
             }
-            if (pfrom->nLocalThinBlockBytes > maxAllowedSize-nTxSize)
+            if (pfrom->nLocalThinBlockBytes > maxAllowedSize - nTxSize)
             {
+                LogPrint("thin", "node %s xthin block is too large %lu %llu %llu\n", pfrom->GetLogName(),
+                    vTxHashes.size(), nTxSize, pfrom->nLocalThinBlockBytes);
                 thindata.ClearThinBlockData(pfrom);
                 return error("This thinblock has exceeded memory limits of %ld bytes", maxAllowedSize);
             }
 
             // This will push an empty/invalid transaction if we don't have it yet
             pfrom->thinBlock.vtx.push_back(tx);
-
         }
         pfrom->thinBlockWaitingForTxns = missingCount;
         LogPrint("thin", "Thinblock %s waiting for: %d, unnecessary: %d, txs: %d full: %d\n",
@@ -520,18 +523,26 @@ bool CXThinBlock::process(CNode *pfrom,
                     if (tx.IsNull())
                         missingCount++;
 
-                    // This will push an empty/invalid transaction if we don't have it yet
-                    pfrom->thinBlock.vtx.push_back(tx);
-
                     // In order to prevent a memory exhaustion attack we track transaction bytes used to create Block
                     // to see if we've exceeded any limits and if so clear out data and return.
                     uint64_t nTxSize = RecursiveDynamicUsage(tx);
-                    if (thindata.AddThinBlockBytes(nTxSize, pfrom) > maxAllowedSize)
+                    if (thindata.AddThinBlockBytes(nTxSize, pfrom) > maxAllowedSize - nTxSize)
                     {
-                        LogPrint("thin", "xthin block too large %lu %llu %llu\n", fullTxHashes.size(), nTxSize, pfrom->nLocalThinBlockBytes);
+                        LogPrint("thin", "xthin block too large %lu %llu %llu\n", fullTxHashes.size(), nTxSize,
+                            pfrom->nLocalThinBlockBytes);
                         if (ClearLargestThinBlockAndDisconnect(pfrom))
                             return error("xthin block has exceeded memory limits of %ld bytes", maxAllowedSize);
                     }
+                    if (pfrom->nLocalThinBlockBytes > maxAllowedSize - nTxSize)
+                    {
+                        LogPrint("thin", "node %s xthin block is too large %lu %llu %llu\n", pfrom->GetLogName(),
+                            fullTxHashes.size(), nTxSize, pfrom->nLocalThinBlockBytes);
+                        thindata.ClearThinBlockData(pfrom);
+                        return error("This thinblock has exceeded memory limits of %ld bytes", maxAllowedSize);
+                    }
+
+                    // This will push an empty/invalid transaction if we don't have it yet
+                    pfrom->thinBlock.vtx.push_back(tx);
                 }
             }
         }
