@@ -6,6 +6,7 @@
 #define BITCOIN_POLICYESTIMATOR_H
 
 #include "amount.h"
+#include "feerate.h"
 #include "uint256.h"
 #include "random.h"
 #include "sync.h"
