@@ -269,7 +269,7 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
     {
         LOCK(cs_main);
 
-        // Message consistency checking
+        // Message consistency checking (FIXME: some redundancy here with AcceptBlockHeader)
         if (!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
         {
             Misbehaving(pfrom->GetId(), 100);
