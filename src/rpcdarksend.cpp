@@ -21,8 +21,8 @@ Value darksend(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() == 0)
         throw runtime_error(
-            "darksend <dashaddress> <amount>\n"
-            "dashaddress, reset, or auto (AutoDenominate)"
+            "darksend <crownaddress> <amount>\n"
+            "crownaddress, reset, or auto (AutoDenominate)"
             "<amount> is a real and is rounded to the nearest 0.00000001"
             + HelpRequiringPassphrase());
 
@@ -45,14 +45,14 @@ Value darksend(const Array& params, bool fHelp)
 
     if (params.size() != 2)
         throw runtime_error(
-            "darksend <dashaddress> <amount>\n"
-            "dashaddress, denominate, or auto (AutoDenominate)"
+            "darksend <crownaddress> <amount>\n"
+            "crownaddress, denominate, or auto (AutoDenominate)"
             "<amount> is a real and is rounded to the nearest 0.00000001"
             + HelpRequiringPassphrase());
 
     CCrowncoinAddress address(params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Crown address");
 
     // Amount
     int64_t nAmount = AmountFromValue(params[1]);
@@ -105,17 +105,17 @@ Value throne(const Array& params, bool fHelp)
                 "  genkey       - Generate new throneprivkey\n"
                 "  enforce      - Enforce throne payments\n"
                 "  outputs      - Print throne compatible outputs\n"
-                "  start        - Start throne configured in dash.conf\n"
+                "  start        - Start throne configured in crown.conf\n"
                 "  start-alias  - Start single throne by assigned alias configured in throne.conf\n"
                 "  start-many   - Start all thrones configured in throne.conf\n"
-                "  stop         - Stop throne configured in dash.conf\n"
+                "  stop         - Stop throne configured in crown.conf\n"
                 "  stop-alias   - Stop single throne by assigned alias configured in throne.conf\n"
                 "  stop-many    - Stop all thrones configured in throne.conf\n"
                 "  list         - Print list of all known thrones (see thronelist for more info)\n"
                 "  list-conf    - Print throne.conf in JSON format\n"
                 "  winners      - Print list of throne winners\n"
-                "  vote-many    - Vote on a Dash initiative\n"
-                "  vote         - Vote on a Dash initiative\n"
+                "  vote-many    - Vote on a Crown initiative\n"
+                "  vote         - Vote on a Crown initiative\n"
                 );
 
 
@@ -141,7 +141,7 @@ Value throne(const Array& params, bool fHelp)
 
         std::string errorMessage;
         if(!activeThrone.StopThroNe(errorMessage)) {
-        	return "stop failed: " + errorMessage;
+            return "stop failed: " + errorMessage;
         }
         pwalletMain->Lock();
 
@@ -153,109 +153,109 @@ Value throne(const Array& params, bool fHelp)
 
     if (strCommand == "stop-alias")
     {
-	    if (params.size() < 2){
-			throw runtime_error(
-			"command needs at least 2 parameters\n");
-	    }
-
-	    std::string alias = params[1].get_str().c_str();
-
-    	if(pwalletMain->IsLocked()) {
-    		SecureString strWalletPass;
-    	    strWalletPass.reserve(100);
-
-			if (params.size() == 3){
-				strWalletPass = params[2].get_str().c_str();
-			} else {
-				throw runtime_error(
-				"Your wallet is locked, passphrase is required\n");
-			}
-
-			if(!pwalletMain->Unlock(strWalletPass)){
-				return "incorrect passphrase";
-			}
+        if (params.size() < 2){
+            throw runtime_error(
+            "command needs at least 2 parameters\n");
         }
 
-    	bool found = false;
+        std::string alias = params[1].get_str().c_str();
 
-		Object statusObj;
-		statusObj.push_back(Pair("alias", alias));
+        if(pwalletMain->IsLocked()) {
+            SecureString strWalletPass;
+            strWalletPass.reserve(100);
 
-    	BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
-    		if(mne.getAlias() == alias) {
-    			found = true;
-    			std::string errorMessage;
-    			bool result = activeThrone.StopThroNe(mne.getIp(), mne.getPrivKey(), errorMessage);
+            if (params.size() == 3){
+                strWalletPass = params[2].get_str().c_str();
+            } else {
+                throw runtime_error(
+                "Your wallet is locked, passphrase is required\n");
+            }
 
-				statusObj.push_back(Pair("result", result ? "successful" : "failed"));
-    			if(!result) {
-   					statusObj.push_back(Pair("errorMessage", errorMessage));
-   				}
-    			break;
-    		}
-    	}
+            if(!pwalletMain->Unlock(strWalletPass)){
+                return "incorrect passphrase";
+            }
+        }
 
-    	if(!found) {
-    		statusObj.push_back(Pair("result", "failed"));
-    		statusObj.push_back(Pair("errorMessage", "could not find alias in config. Verify with list-conf."));
-    	}
+        bool found = false;
 
-    	pwalletMain->Lock();
-    	return statusObj;
+        Object statusObj;
+        statusObj.push_back(Pair("alias", alias));
+
+        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
+            if(mne.getAlias() == alias) {
+                found = true;
+                std::string errorMessage;
+                bool result = activeThrone.StopThroNe(mne.getIp(), mne.getPrivKey(), errorMessage);
+
+                statusObj.push_back(Pair("result", result ? "successful" : "failed"));
+                if(!result) {
+                    statusObj.push_back(Pair("errorMessage", errorMessage));
+                }
+                break;
+            }
+        }
+
+        if(!found) {
+            statusObj.push_back(Pair("result", "failed"));
+            statusObj.push_back(Pair("errorMessage", "could not find alias in config. Verify with list-conf."));
+        }
+
+        pwalletMain->Lock();
+        return statusObj;
     }
 
     if (strCommand == "stop-many")
     {
-    	if(pwalletMain->IsLocked()) {
-			SecureString strWalletPass;
-			strWalletPass.reserve(100);
+        if(pwalletMain->IsLocked()) {
+            SecureString strWalletPass;
+            strWalletPass.reserve(100);
 
-			if (params.size() == 2){
-				strWalletPass = params[1].get_str().c_str();
-			} else {
-				throw runtime_error(
-				"Your wallet is locked, passphrase is required\n");
-			}
+            if (params.size() == 2){
+                strWalletPass = params[1].get_str().c_str();
+            } else {
+                throw runtime_error(
+                "Your wallet is locked, passphrase is required\n");
+            }
 
-			if(!pwalletMain->Unlock(strWalletPass)){
-				return "incorrect passphrase";
-			}
-		}
+            if(!pwalletMain->Unlock(strWalletPass)){
+                return "incorrect passphrase";
+            }
+        }
 
-		int total = 0;
-		int successful = 0;
-		int fail = 0;
+        int total = 0;
+        int successful = 0;
+        int fail = 0;
 
 
-		Object resultsObj;
+        Object resultsObj;
 
-		BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
-			total++;
+        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
+            total++;
 
-			std::string errorMessage;
-			bool result = activeThrone.StopThroNe(mne.getIp(), mne.getPrivKey(), errorMessage);
+            std::string errorMessage;
+            bool result = activeThrone.StopThroNe(mne.getIp(), mne.getPrivKey(), errorMessage);
 
-			Object statusObj;
-			statusObj.push_back(Pair("alias", mne.getAlias()));
-			statusObj.push_back(Pair("result", result ? "successful" : "failed"));
+            Object statusObj;
+            statusObj.push_back(Pair("alias", mne.getAlias()));
+            statusObj.push_back(Pair("result", result ? "successful" : "failed"));
 
-			if(result) {
-				successful++;
-			} else {
-				fail++;
-				statusObj.push_back(Pair("errorMessage", errorMessage));
-			}
+            if(result) {
+                successful++;
+            } else {
+                fail++;
+                statusObj.push_back(Pair("errorMessage", errorMessage));
+            }
 
-			resultsObj.push_back(Pair("status", statusObj));
-		}
-		pwalletMain->Lock();
+            resultsObj.push_back(Pair("status", statusObj));
+        }
+        pwalletMain->Lock();
 
-		Object returnObj;
-		returnObj.push_back(Pair("overall", "Successfully stopped " + boost::lexical_cast<std::string>(successful) + " thrones, failed to stop " +
-				boost::lexical_cast<std::string>(fail) + ", total " + boost::lexical_cast<std::string>(total)));
-		returnObj.push_back(Pair("detail", resultsObj));
+        Object returnObj;
+        returnObj.push_back(Pair("overall", "Successfully stopped " + boost::lexical_cast<std::string>(successful) + " thrones, failed to stop " +
+                boost::lexical_cast<std::string>(fail) + ", total " + boost::lexical_cast<std::string>(total)));
+        returnObj.push_back(Pair("detail", resultsObj));
 
-		return returnObj;
+        return returnObj;
 
     }
 
@@ -283,6 +283,7 @@ Value throne(const Array& params, bool fHelp)
     if (strCommand == "start")
     {
         if(!fThroNe) return "you must set throne=1 in the configuration";
+
 
         if(pwalletMain->IsLocked()) {
             SecureString strWalletPass;
@@ -319,112 +320,112 @@ Value throne(const Array& params, bool fHelp)
 
     if (strCommand == "start-alias")
     {
-	    if (params.size() < 2){
-			throw runtime_error(
-			"command needs at least 2 parameters\n");
-	    }
-
-	    std::string alias = params[1].get_str().c_str();
-
-    	if(pwalletMain->IsLocked()) {
-    		SecureString strWalletPass;
-    	    strWalletPass.reserve(100);
-
-			if (params.size() == 3){
-				strWalletPass = params[2].get_str().c_str();
-			} else {
-				throw runtime_error(
-				"Your wallet is locked, passphrase is required\n");
-			}
-
-			if(!pwalletMain->Unlock(strWalletPass)){
-				return "incorrect passphrase";
-			}
+        if (params.size() < 2){
+            throw runtime_error(
+            "command needs at least 2 parameters\n");
         }
 
-    	bool found = false;
+        std::string alias = params[1].get_str().c_str();
 
-		Object statusObj;
-		statusObj.push_back(Pair("alias", alias));
+        if(pwalletMain->IsLocked()) {
+            SecureString strWalletPass;
+            strWalletPass.reserve(100);
 
-    	BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
-    		if(mne.getAlias() == alias) {
-    			found = true;
-    			std::string errorMessage;
-    			bool result = activeThrone.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
+            if (params.size() == 3){
+                strWalletPass = params[2].get_str().c_str();
+            } else {
+                throw runtime_error(
+                "Your wallet is locked, passphrase is required\n");
+            }
 
-    			statusObj.push_back(Pair("result", result ? "successful" : "failed"));
-    			if(!result) {
-					statusObj.push_back(Pair("errorMessage", errorMessage));
-				}
-    			break;
-    		}
-    	}
+            if(!pwalletMain->Unlock(strWalletPass)){
+                return "incorrect passphrase";
+            }
+        }
 
-    	if(!found) {
-    		statusObj.push_back(Pair("result", "failed"));
-    		statusObj.push_back(Pair("errorMessage", "could not find alias in config. Verify with list-conf."));
-    	}
+        bool found = false;
+        bool found2 = false;
 
-    	pwalletMain->Lock();
-    	return statusObj;
+        Object statusObj;
+        statusObj.push_back(Pair("alias", alias));
+        std::vector<CThrone> vThrones = mnodeman.GetFullThroneVector();
+
+        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
+            if(mne.getAlias() == alias) {
+                found = true;
+                std::string errorMessage;
+                bool result = activeThrone.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
+                statusObj.push_back(Pair("result", result ? "successful" : "failed"));
+                if(!result) {
+                    statusObj.push_back(Pair("errorMessage", errorMessage));
+                }
+                break;
+            }
+        }
+
+        if(!found) {
+            statusObj.push_back(Pair("result", "failed"));
+            statusObj.push_back(Pair("errorMessage", "could not find alias in config. Verify with list-conf."));
+        }
+
+        pwalletMain->Lock();
+        return statusObj;
 
     }
 
     if (strCommand == "start-many")
     {
-    	if(pwalletMain->IsLocked()) {
-			SecureString strWalletPass;
-			strWalletPass.reserve(100);
+        if(pwalletMain->IsLocked()) {
+            SecureString strWalletPass;
+            strWalletPass.reserve(100);
 
-			if (params.size() == 2){
-				strWalletPass = params[1].get_str().c_str();
-			} else {
-				throw runtime_error(
-				"Your wallet is locked, passphrase is required\n");
-			}
+            if (params.size() == 2){
+                strWalletPass = params[1].get_str().c_str();
+            } else {
+                throw runtime_error(
+                "Your wallet is locked, passphrase is required\n");
+            }
 
-			if(!pwalletMain->Unlock(strWalletPass)){
-				return "incorrect passphrase";
-			}
-		}
+            if(!pwalletMain->Unlock(strWalletPass)){
+                return "incorrect passphrase";
+            }
+        }
 
-		std::vector<CThroneConfig::CThroneEntry> mnEntries;
-		mnEntries = throneConfig.getEntries();
+        std::vector<CThroneConfig::CThroneEntry> mnEntries;
+        mnEntries = throneConfig.getEntries();
 
-		int total = 0;
-		int successful = 0;
-		int fail = 0;
+        int total = 0;
+        int successful = 0;
+        int fail = 0;
 
-		Object resultsObj;
+        Object resultsObj;
+        std::vector<CThrone> vThrones = mnodeman.GetFullThroneVector();
 
-		BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
-			total++;
-
-			std::string errorMessage;
-			bool result = activeThrone.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
-
-			Object statusObj;
-			statusObj.push_back(Pair("alias", mne.getAlias()));
+        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
+            total++;
+            std::string errorMessage;
+            bool result = activeThrone.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
+            Object statusObj;
+            statusObj.push_back(Pair("alias", mne.getAlias()));
             statusObj.push_back(Pair("result", result ? "successful" : "failed"));
 
-			if(result) {
-				successful++;
-			} else {
-				fail++;
-				statusObj.push_back(Pair("errorMessage", errorMessage));
-			}
+            if (result) {
+                successful++;
+            } else {
+                fail++;
+                statusObj.push_back(Pair("errorMessage", errorMessage));
+            }
 
-			resultsObj.push_back(Pair("status", statusObj));
-		}
-		pwalletMain->Lock();
+            resultsObj.push_back(Pair("status", statusObj));
+        }
+        pwalletMain->Lock();
 
-		Object returnObj;
-		returnObj.push_back(Pair("overall", "Successfully started " + boost::lexical_cast<std::string>(successful) + " thrones, failed to start " +
-				boost::lexical_cast<std::string>(fail) + ", total " + boost::lexical_cast<std::string>(total)));
-		returnObj.push_back(Pair("detail", resultsObj));
+        Object returnObj;
+        returnObj.push_back(Pair("overall", "Successfully started " + boost::lexical_cast<std::string>(successful) + " thrones, failed to start " +
+                boost::lexical_cast<std::string>(fail) + ", total " + boost::lexical_cast<std::string>(total)));
+        returnObj.push_back(Pair("detail", resultsObj));
 
-		return returnObj;
+        return returnObj;
     }
 
     if (strCommand == "debug")
@@ -530,20 +531,20 @@ Value throne(const Array& params, bool fHelp)
 
     if(strCommand == "list-conf")
     {
-    	std::vector<CThroneConfig::CThroneEntry> mnEntries;
-    	mnEntries = throneConfig.getEntries();
+        std::vector<CThroneConfig::CThroneEntry> mnEntries;
+        mnEntries = throneConfig.getEntries();
 
         Object resultObj;
 
         BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
-    		Object mnObj;
-    		mnObj.push_back(Pair("alias", mne.getAlias()));
-    		mnObj.push_back(Pair("address", mne.getIp()));
-    		mnObj.push_back(Pair("privateKey", mne.getPrivKey()));
-    		mnObj.push_back(Pair("txHash", mne.getTxHash()));
-    		mnObj.push_back(Pair("outputIndex", mne.getOutputIndex()));
-    		resultObj.push_back(Pair("throne", mnObj));
-    	}
+            Object mnObj;
+            mnObj.push_back(Pair("alias", mne.getAlias()));
+            mnObj.push_back(Pair("address", mne.getIp()));
+            mnObj.push_back(Pair("privateKey", mne.getPrivKey()));
+            mnObj.push_back(Pair("txHash", mne.getTxHash()));
+            mnObj.push_back(Pair("outputIndex", mne.getOutputIndex()));
+            resultObj.push_back(Pair("throne", mnObj));
+        }
 
         return resultObj;
     }
@@ -702,7 +703,7 @@ Value thronelist(const Array& params, bool fHelp)
                 "  rank           - Print rank of a throne based on current block\n"
                 "  status         - Print throne status: ENABLED / EXPIRED / VIN_SPENT / REMOVE / POS_ERROR (can be additionally filtered, partial match)\n"
                 "  vin            - Print vin associated with a throne (can be additionally filtered, partial match)\n"
-                "  votes          - Print all throne votes for a Dash initiative (can be additionally filtered, partial match)\n"
+                "  votes          - Print all throne votes for a Crown initiative (can be additionally filtered, partial match)\n"
                 );
     }
 

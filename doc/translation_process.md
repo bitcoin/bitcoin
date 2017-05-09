@@ -1,50 +1,52 @@
 Translations
 ============
 
-The Qt GUI can be easily translated into other languages. Here's how we
+The Crown Core GUI can be easily translated into other languages. Here's how we
 handle those translations.
 
 Files and Folders
 -----------------
 
-### crowncoin-qt.pro
+### crown-qt.pro
 
 This file takes care of generating `.qm` files from `.ts` files. It is mostly
 automated.
 
-### src/qt/crowncoin.qrc
+### src/qt/crown.qrc
 
 This file must be updated whenever a new translation is added. Please note that
 files must end with `.qm`, not `.ts`.
 
-    <qresource prefix="/translations">
-        <file alias="en">locale/crowncoin_en.qm</file>
-        ...
-    </qresource>
+```xml
+<qresource prefix="/translations">
+    <file alias="en">locale/crown_en.qm</file>
+    ...
+</qresource>
+```
 
 ### src/qt/locale/
 
 This directory contains all translations. Filenames must adhere to this format:
 
-    crowncoin_xx_YY.ts or crowncoin_xx.ts
+    crown_xx_YY.ts or crown_xx.ts
 
-#### crowncoin_en.ts (Source file)
+#### crown_en.ts (Source file)
 
-`src/qt/locale/crowncoin_en.ts` is treated in a special way. It is used as the
+`src/qt/locale/crown_en.ts` is treated in a special way. It is used as the
 source for all other translations. Whenever a string in the code is changed
-this file must be updated to reflect those changes. A  custom script is used
+this file must be updated to reflect those changes. A custom script is used
 to extract strings from the non-Qt parts. This script makes use of `gettext`,
-so make sure that utility is installed (ie, `apt-get install gettext` on 
+so make sure that utility is installed (ie, `apt-get install gettext` on
 Ubuntu/Debian). Once this has been updated, lupdate (included in the Qt SDK)
-is used to update crowncoin_en.ts. This process has been automated, from src/qt,
+is used to update crown_en.ts. This process has been automated, from src/,
 simply run:
     make translate
-    
+
 ##### Handling of plurals in the source file
 
 When new plurals are added to the source file, it's important to do the following steps:
 
-1. Open crowncoin_en.ts in Qt Linguist (also included in the Qt SDK)
+1. Open crown_en.ts in Qt Linguist (also included in the Qt SDK)
 2. Search for `%n`, which will take you to the parts in the translation that use plurals
 3. Look for empty `English Translation (Singular)` and `English Translation (Plural)` fields
 4. Add the appropriate strings for the singular and plural form of the base string
@@ -60,7 +62,7 @@ in Transifex and can be translated.
 
 To create the pull-request you have to do:
 
-    git add src/qt/crowncoinstrings.cpp src/qt/locale/crowncoin_en.ts
+    git add src/qt/crownstrings.cpp src/qt/locale/crown_en.ts
     git commit
 
 Syncing with Transifex
@@ -68,7 +70,7 @@ Syncing with Transifex
 
 We are using https://transifex.com as a frontend for translating the client.
 
-https://www.transifex.com/projects/p/crowncoin/resource/tx/
+https://www.transifex.com/projects/p/crown/
 
 The "Transifex client" (see: http://support.transifex.com/customer/portal/topics/440187-transifex-client/articles)
 is used to fetch new translations from Transifex. The configuration for this client (`.tx/config`)
@@ -80,8 +82,8 @@ postprocessing steps before committing the translations.
 ### Fetching new translations
 
 1. `python contrib/devtools/update-translations.py`
-2. update `src/qt/crowncoin.qrc` manually or via
-   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(crowncoin_\(.*\)\).ts/<file alias="\2">locale\/\1.qm<\/file>/'`
-3. update `src/qt/Makefile.am` manually or via
-   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(crowncoin_\(.*\)\).ts/  locale\/\1.ts \\/'`
+2. update `src/qt/crown.qrc` manually or via
+   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(crown_\(.*\)\).ts/        <file alias="\2">locale\/\1.qm<\/file>/'`
+3. update `src/Makefile.qt.include` manually or via
+   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(crown_\(.*\)\).ts/  qt\/locale\/\1.ts \\/'`
 4. `git add` new translations from `src/qt/locale/`

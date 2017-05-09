@@ -1,13 +1,17 @@
-// Copyright (c) 2012-2013 The Crowncoin developers
+// Copyright (c) 2012-2013 The Bitcoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "main.h"
+#include "merkleblock.h"
 #include "serialize.h"
+#include "streams.h"
 #include "uint256.h"
+#include "arith_uint256.h"
+#include "version.h"
 
 #include <vector>
 
+#include <boost/assign/list_of.hpp>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
@@ -19,8 +23,7 @@ public:
     void Damage() {
         unsigned int n = rand() % vHash.size();
         int bit = rand() % 256;
-        uint256 &hash = vHash[n];
-        hash ^= ((uint256)1 << bit);
+        *(vHash[n].begin() + (bit>>3)) ^= 1<<(bit&7);
     }
 };
 
@@ -36,14 +39,14 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
         // build a block with some dummy transactions
         CBlock block;
         for (unsigned int j=0; j<nTx; j++) {
-            CTransaction tx;
+            CMutableTransaction tx;
             tx.nLockTime = rand(); // actual transaction data doesn't matter; just make the nLockTime's unique
-            block.vtx.push_back(tx);
+            block.vtx.push_back(CTransaction(tx));
         }
 
         // calculate actual merkle root and height
         uint256 merkleRoot1 = block.BuildMerkleTree();
-        std::vector<uint256> vTxid(nTx, 0);
+        std::vector<uint256> vTxid(nTx, uint256());
         for (unsigned int j=0; j<nTx; j++)
             vTxid[j] = block.vtx[j].GetHash();
         int nHeight = 1, nTx_ = nTx;
@@ -85,7 +88,7 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
 
             // check that it has the same merkle root as the original, and a valid one
             BOOST_CHECK(merkleRoot1 == merkleRoot2);
-            BOOST_CHECK(merkleRoot2 != 0);
+            BOOST_CHECK(!merkleRoot2.IsNull());
 
             // check that it contains the matched transactions (in the same order!)
             BOOST_CHECK(vMatchTxid1 == vMatchTxid2);
@@ -100,6 +103,22 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
             }
         }
     }
+}
+
+BOOST_AUTO_TEST_CASE(pmt_malleability)
+{
+    std::vector<uint256> vTxid = boost::assign::list_of
+        (ArithToUint256(1))(ArithToUint256(2))
+        (ArithToUint256(3))(ArithToUint256(4))
+        (ArithToUint256(5))(ArithToUint256(6))
+        (ArithToUint256(7))(ArithToUint256(8))
+        (ArithToUint256(9))(ArithToUint256(10))
+        (ArithToUint256(9))(ArithToUint256(10));
+    std::vector<bool> vMatch = boost::assign::list_of(false)(false)(false)(false)(false)(false)(false)(false)(false)(true)(true)(false);
+
+    CPartialMerkleTree tree(vTxid, vMatch);
+    std::vector<uint256> vTxid2;
+    BOOST_CHECK(tree.ExtractMatches(vTxid).IsNull());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
