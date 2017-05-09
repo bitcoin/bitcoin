@@ -107,13 +107,10 @@ testScripts = [
     'bip68-112-113-p2p.py',
     'wallet.py',
     'wallet-hd.py',
-    'wallet-dump.py',
     'listtransactions.py',
     'receivedby.py',
     'mempool_resurrect_test.py',
     'txn_doublespend.py --mineblock',
-    'p2p-segwit.py',
-    'segwit.py',
     'txn_clone.py',
     'getchaintips.py',
     'rawtransactions.py',
@@ -135,15 +132,15 @@ testScripts = [
     'disablewallet.py',
     'sendheaders.py',
     'keypool.py',
-    'p2p-mempool.py',
     'prioritise_transaction.py',
     'invalidblockrequest.py',
     'invalidtxrequest.py',
     'abandonconflict.py',
     'p2p-versionbits-warning.py',
+    'p2p-segwit.py',
+    'segwit.py',
     'importprunedfunds.py',
     'signmessages.py',
-    'p2p-compactblocks.py',
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')
@@ -161,7 +158,7 @@ testScriptsExt = [
     'txn_clone.py --mineblock',
     'forknotify.py',
     'invalidateblock.py',
-    'rpcbind_test.py',
+#    'rpcbind_test.py', #temporary, bug in libevent, see #6655
     'smartfees.py',
     'maxblocksinflight.py',
     'p2p-acceptblock.py',
@@ -195,7 +192,6 @@ def runtests():
         coverage = RPCCoverage()
         print("Initializing coverage directory at %s\n" % coverage.dir)
     flags = ["--srcdir=%s/src" % BUILDDIR] + passon_args
-    flags.append("--cachedir=%s/qa/cache" % BUILDDIR)
     if coverage:
         flags.append(coverage.flag)
 

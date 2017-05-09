@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 Bitcoin Core 0.13.99
-=======
-Bitcoin Core 0.13.0
->>>>>>> bitcoin/0.13
 =====================
 
 Setup

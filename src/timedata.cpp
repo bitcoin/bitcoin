@@ -8,7 +8,7 @@
 
 #include "timedata.h"
 
-#include "netaddress.h"
+#include "netbase.h"
 #include "sync.h"
 #include "ui_interface.h"
 #include "util.h"

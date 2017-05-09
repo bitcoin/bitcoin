@@ -2,10 +2,6 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation>Paremkliki aadressi või sildi muutmiseks</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
         <translation>Loo uus aadress</translation>
     </message>

@@ -10,6 +10,7 @@
 #include "init.h"
 #include "main.h"
 #include "net.h"
+#include "netbase.h"
 #include "policy/rbf.h"
 #include "rpc/server.h"
 #include "timedata.h"
