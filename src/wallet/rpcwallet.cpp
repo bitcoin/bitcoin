@@ -13,6 +13,7 @@
 #include "wallet/coincontrol.h"
 #include "instantsend.h"
 #include "net.h"
+#include "policy/feerate.h"
 #include "policy/fees.h"
 #include "rpc/server.h"
 #include "timedata.h"

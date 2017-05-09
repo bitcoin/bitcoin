@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_COINCONTROL_H
 #define BITCOIN_WALLET_COINCONTROL_H
 
+#include "policy/feerate.h"
 #include "primitives/transaction.h"
 
 /** Coin Control Features. */

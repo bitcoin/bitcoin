@@ -15,6 +15,27 @@
 
 #include <boost/foreach.hpp>
 
+CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFee)
+{
+    // "Dust" is defined in terms of CTransaction::minRelayTxFee, which has units duffs-per-kilobyte.
+    // If you'd pay more than 1/3 in fees to spend something, then we consider it dust.
+    // A typical spendable txout is 34 bytes big, and will need a CTxIn of at least 148 bytes to spend
+    // i.e. total is 148 + 34 = 182 bytes. Default -minrelaytxfee is 1000 duffs per kB
+    // and that means that fee per spendable txout is 182 * 1000 / 1000 = 182 duffs.
+    // So dust is a spendable txout less than 546 * minRelayTxFee / 1000 (in duffs)
+    // i.e. 182 * 3 = 546 duffs with default -minrelaytxfee = minRelayTxFee = 1000 duffs per kB.
+    if (txout.scriptPubKey.IsUnspendable())
+        return 0;
+
+    size_t nSize = GetSerializeSize(txout, SER_DISK, 0)+148u;
+    return 3 * dustRelayFee.GetFee(nSize);
+}
+
+bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFee)
+{
+    return (txout.nValue < GetDustThreshold(txout, dustRelayFee));
+}
+
     /**
      * Check transaction inputs to mitigate two
      * potential denial-of-service attacks:
@@ -103,7 +124,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
         else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
             reason = "bare-multisig";
             return false;
-        } else if (txout.IsDust(dustRelayFee)) {
+        } else if (IsDust(txout, ::dustRelayFee)) {
             reason = "dust";
             return false;
         }

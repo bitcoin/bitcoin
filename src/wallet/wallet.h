@@ -9,6 +9,7 @@
 
 #include "amount.h"
 #include "base58.h"
+#include "policy/feerate.h"
 #include "streams.h"
 #include "tinyformat.h"
 #include "ui_interface.h"
