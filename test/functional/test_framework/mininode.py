@@ -1358,6 +1358,8 @@ class msg_reject(object):
 
 # Helper function
 def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf')):
+    if attempts == float('inf') and timeout == float('inf'):
+        timeout = 60
     attempt = 0
     elapsed = 0
 
