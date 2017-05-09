@@ -68,9 +68,9 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock, string strCommand)
     pfrom->thinBlock.hashPrevBlock = header.hashPrevBlock;
     pfrom->thinBlockHashes = vTxHashes;
 
-    bool mutated;
+    bool mutated = false;
     uint256 merkleroot = ComputeMerkleRoot(vTxHashes, &mutated);
-    if (header.hashMerkleRoot != merkleroot)
+    if (header.hashMerkleRoot != merkleroot || mutated)
     {
         LOCK(cs_main);
         Misbehaving(pfrom->GetId(), 100);
@@ -427,9 +427,9 @@ bool CXThinBlock::process(CNode* pfrom,
         BOOST_FOREACH(const uint64_t &cheapHash, vTxHashes)
             fullTxHashes.push_back(mapPartialTxHash[cheapHash]);
 
-        bool mutated;
+        bool mutated = false;
         uint256 merkleroot = ComputeMerkleRoot(fullTxHashes, &mutated);
-        if (header.hashMerkleRoot != merkleroot)
+        if (header.hashMerkleRoot != merkleroot || mutated)
         {
             fMerkleRootCorrect = false;
         }
