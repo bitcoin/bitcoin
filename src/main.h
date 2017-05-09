@@ -214,7 +214,7 @@ void UnregisterNodeSignals(CNodeSignals& nodeSignals);
  * block is made active. Note that it does not, however, guarantee that the
  * specific block passed to it has been checked for validity!
  * 
- * @param[out]  state   This may be set to an Error state if any error occurred processing it, including during validation/connection/etc of otherwise unrelated blocks during reorganization; or it may be set to an Invalid state if pblock is itself invalid (but this is not guaranteed even when the block is checked). If you want to *possibly* get feedback on whether pblock is valid, you must also install a CValidationInterface (see validationinterface.h) - this will have its BlockChecked method called whenever *any* block completes validation.
+ * @param[out]  state   This may be set to an Error state if any error occurred processing it, including during validation/connection/etc of otherwise unrelated blocks during reorganisation; or it may be set to an Invalid state if pblock is itself invalid (but this is not guaranteed even when the block is checked). If you want to *possibly* get feedback on whether pblock is valid, you must also install a CValidationInterface (see validationinterface.h) - this will have its BlockChecked method called whenever *any* block completes validation.
  * @param[in]   pfrom   The node which we are receiving the block from; it is added to mapBlockSource and may be penalised if the block is invalid.
  * @param[in]   pblock  The block we want to process.
  * @param[in]   fForceProcessing Process this block even if unrequested; used for non-network block sources and whitelisted peers.
@@ -352,21 +352,8 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);
 
-/** Transaction validation functions */
-
 /** Context-independent validity checks */
 bool CheckTransaction(const CTransaction& tx, CValidationState& state);
-
-namespace Consensus {
-
-/**
- * Check whether all inputs of this transaction are valid (no double spends and amounts)
- * This does not modify the UTXO set. This does not check scripts and sigs.
- * Preconditions: tx.IsCoinBase() is false.
- */
-bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight);
-
-} // namespace Consensus
 
 /**
  * Check if transaction is final and can be included in a block with the
@@ -459,7 +446,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
  *  By "context", we mean only the previous block headers, but not the UTXO
  *  set; UTXO-related validity checks are done in ConnectBlock(). */
 bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, int64_t nAdjustedTime);
-bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
+bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const CBlockIndex* pindexPrev);
 
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()

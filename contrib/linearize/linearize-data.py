@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 #
 # linearize-data.py: Construct a linear, no-fork version of the chain.
 #

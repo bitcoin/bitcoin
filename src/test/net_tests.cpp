@@ -9,7 +9,6 @@
 #include "serialize.h"
 #include "streams.h"
 #include "net.h"
-#include "netbase.h"
 #include "chainparams.h"
 
 using namespace std;
@@ -52,12 +51,8 @@ public:
         int nUBuckets = ADDRMAN_NEW_BUCKET_COUNT ^ (1 << 30);
         s << nUBuckets;
 
-        CService serv;
-        Lookup("252.1.1.1", serv, 7777, false);
-        CAddress addr = CAddress(serv, NODE_NONE);
-        CNetAddr resolved;
-        LookupHost("252.2.2.2", resolved, false);
-        CAddrInfo info = CAddrInfo(addr, resolved);
+        CAddress addr = CAddress(CService("252.1.1.1", 7777), NODE_NONE);
+        CAddrInfo info = CAddrInfo(addr, CNetAddr("252.2.2.2"));
         s << info;
     }
 };
@@ -79,17 +74,14 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     CAddrManUncorrupted addrmanUncorrupted;
     addrmanUncorrupted.MakeDeterministic();
 
-    CService addr1, addr2, addr3;
-    Lookup("250.7.1.1", addr1, 8333, false);
-    Lookup("250.7.2.2", addr2, 9999, false);
-    Lookup("250.7.3.3", addr3, 9999, false);
+    CService addr1 = CService("250.7.1.1", 8333);
+    CService addr2 = CService("250.7.2.2", 9999);
+    CService addr3 = CService("250.7.3.3", 9999);
 
     // Add three addresses to new table.
-    CService source;
-    Lookup("252.5.1.1", source, 8333, false);
-    addrmanUncorrupted.Add(CAddress(addr1, NODE_NONE), source);
-    addrmanUncorrupted.Add(CAddress(addr2, NODE_NONE), source);
-    addrmanUncorrupted.Add(CAddress(addr3, NODE_NONE), source);
+    addrmanUncorrupted.Add(CAddress(addr1, NODE_NONE), CService("252.5.1.1", 8333));
+    addrmanUncorrupted.Add(CAddress(addr2, NODE_NONE), CService("252.5.1.1", 8333));
+    addrmanUncorrupted.Add(CAddress(addr3, NODE_NONE), CService("252.5.1.1", 8333));
 
     // Test that the de-serialization does not throw an exception.
     CDataStream ssPeers1 = AddrmanToStream(addrmanUncorrupted);

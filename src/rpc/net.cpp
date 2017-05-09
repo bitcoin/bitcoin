@@ -484,7 +484,7 @@ UniValue setban(const UniValue& params, bool fHelp)
                             "\nExamples:\n"
                             + HelpExampleCli("setban", "\"192.168.0.6\" \"add\" 86400")
                             + HelpExampleCli("setban", "\"192.168.0.0/24\" \"add\"")
-                            + HelpExampleRpc("setban", "\"192.168.0.6\", \"add\", 86400")
+                            + HelpExampleRpc("setban", "\"192.168.0.6\", \"add\" 86400")
                             );
 
     CSubNet subNet;
@@ -494,13 +494,10 @@ UniValue setban(const UniValue& params, bool fHelp)
     if (params[0].get_str().find("/") != string::npos)
         isSubnet = true;
 
-    if (!isSubnet) {
-        CNetAddr resolved;
-        LookupHost(params[0].get_str().c_str(), resolved, false);
-        netAddr = resolved;
-    }
+    if (!isSubnet)
+        netAddr = CNetAddr(params[0].get_str());
     else
-        LookupSubNet(params[0].get_str().c_str(), subNet);
+        subNet = CSubNet(params[0].get_str());
 
     if (! (isSubnet ? subNet.IsValid() : netAddr.IsValid()) )
         throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: Invalid IP/Subnet");

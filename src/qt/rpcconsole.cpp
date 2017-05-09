@@ -16,7 +16,6 @@
 #include "bantablemodel.h"
 
 #include "chainparams.h"
-#include "netbase.h"
 #include "rpc/server.h"
 #include "rpc/client.h"
 #include "util.h"
@@ -899,10 +898,7 @@ void RPCConsole::banSelectedNode(int bantime)
         int port = 0;
         SplitHostPort(nStr, port, addr);
 
-        CNetAddr resolved;
-        if(!LookupHost(addr.c_str(), resolved, false))
-            return;
-        CNode::Ban(resolved, BanReasonManuallyAdded, bantime);
+        CNode::Ban(CNetAddr(addr), BanReasonManuallyAdded, bantime);
 
         clearSelectedNode();
         clientModel->getBanTableModel()->refresh();
@@ -916,9 +912,8 @@ void RPCConsole::unbanSelectedNode()
 
     // Get currently selected ban address
     QString strNode = GUIUtil::getEntryData(ui->banlistWidget, 0, BanTableModel::Address);
-    CSubNet possibleSubnet;
+    CSubNet possibleSubnet(strNode.toStdString());
 
-    LookupSubNet(strNode.toStdString().c_str(), possibleSubnet);
     if (possibleSubnet.IsValid())
     {
         CNode::Unban(possibleSubnet);

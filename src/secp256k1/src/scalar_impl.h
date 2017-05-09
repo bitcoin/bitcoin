@@ -7,6 +7,8 @@
 #ifndef _SECP256K1_SCALAR_IMPL_H_
 #define _SECP256K1_SCALAR_IMPL_H_
 
+#include <string.h>
+
 #include "group.h"
 #include "scalar.h"
 

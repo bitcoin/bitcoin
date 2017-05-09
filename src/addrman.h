@@ -6,7 +6,7 @@
 #ifndef BITCOIN_ADDRMAN_H
 #define BITCOIN_ADDRMAN_H
 
-#include "netaddress.h"
+#include "netbase.h"
 #include "protocol.h"
 #include "random.h"
 #include "sync.h"
