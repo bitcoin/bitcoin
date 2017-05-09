@@ -1,0 +1,2318 @@
+travis_fold:start:worker_info
+[0K[33;1mWorker information[0m
+hostname: travis-worker-gce-org-prod5-3:5385f0d5-1961-49cb-a4a1-d29e50c912c7
+version: v2.3.0-5-gef7116f https://github.com/travis-ci/worker/tree/ef7116fac34a232b5d8ecfe0eb9d834b0af9705d
+instance: testing-gce-be0038c4-2294-48a0-87f2-597a8d211ec7:travis-ci-minimal-trusty-1447278780
+startup: 21.793948693s
+travis_fold:end:worker_info
+[0Ktravis_fold:start:system_info
+[0K[33;1mBuild system information[0m
+Build language: generic
+Build group: stable
+Build dist: trusty
+Build image provisioning date and time
+Wed Nov 11 22:03:39 UTC 2015
+Operating System Details
+Distributor ID:	Ubuntu
+Description:	Ubuntu 14.04.3 LTS
+Release:	14.04
+Codename:	trusty
+Linux Version
+3.19.0-28-generic
+Cookbooks Version
+fffffff https://github.com/travis-ci/travis-cookbooks/tree/fffffff
+Docker version
+Client:
+ Version:      1.9.0
+ API version:  1.21
+ Go version:   go1.4.2
+ Git commit:   76d6bc9
+ Built:        Tue Nov  3 17:43:42 UTC 2015
+ OS/Arch:      linux/amd64
+Git version
+git version 1.9.1
+GCC version
+gcc (Ubuntu 4.8.4-2ubuntu1~14.04) 4.8.4
+Copyright (C) 2013 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+LLVM version
+clang version 3.5.0 (tags/RELEASE_350/final)
+Target: x86_64-unknown-linux-gnu
+Thread model: posix
+jq version
+jq-1.5
+gimme version
+v0.2.3
+nvm version
+0.29.0
+perlbrew version
+/home/travis/perl5/perlbrew/bin/perlbrew  - App::perlbrew/0.73
+postgresql client version
+psql (PostgreSQL) 9.3.10
+phpenv version
+rbenv 0.4.0-183-gc18a3f9
+rvm version
+rvm 1.26.11 (latest) by Wayne E. Seguin <wayneeseguin@gmail.com>, Michal Papis <mpapis@gmail.com> [https://rvm.io/]
+default ruby version
+ruby 2.2.3p173 (2015-08-18 revision 51636) [x86_64-linux]
+travis_fold:end:system_info
+[0K
+travis_fold:start:fix.CVE-2015-7547
+[0K$ export DEBIAN_FRONTEND=noninteractive
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following extra packages will be installed:
+  libc-dev-bin libc6-dev
+Suggested packages:
+  glibc-doc
+The following packages will be upgraded:
+  libc-dev-bin libc6 libc6-dev
+3 upgraded, 0 newly installed, 0 to remove and 243 not upgraded.
+Need to get 6,696 kB of archives.
+After this operation, 19.5 kB of additional disk space will be used.
+Get:1 http://us-central1.gce.archive.ubuntu.com/ubuntu/ trusty-updates/main libc6-dev amd64 2.19-0ubuntu6.9 [1,910 kB]
+Get:2 http://us-central1.gce.archive.ubuntu.com/ubuntu/ trusty-updates/main libc-dev-bin amd64 2.19-0ubuntu6.9 [69.0 kB]
+Get:3 http://us-central1.gce.archive.ubuntu.com/ubuntu/ trusty-updates/main libc6 amd64 2.19-0ubuntu6.9 [4,717 kB]
+Fetched 6,696 kB in 0s (48.3 MB/s)
+Preconfiguring packages ...
+(Reading database ... 
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 119311 files and directories currently installed.)
+Preparing to unpack .../libc6-dev_2.19-0ubuntu6.9_amd64.deb ...
+Unpacking libc6-dev:amd64 (2.19-0ubuntu6.9) over (2.19-0ubuntu6.6) ...
+Preparing to unpack .../libc-dev-bin_2.19-0ubuntu6.9_amd64.deb ...
+Unpacking libc-dev-bin (2.19-0ubuntu6.9) over (2.19-0ubuntu6.6) ...
+Preparing to unpack .../libc6_2.19-0ubuntu6.9_amd64.deb ...
+Unpacking libc6:amd64 (2.19-0ubuntu6.9) over (2.19-0ubuntu6.6) ...
+Processing triggers for man-db (2.6.7.1-1ubuntu1) ...
+Not building database; man-db/auto-update is not 'true'.
+Setting up libc6:amd64 (2.19-0ubuntu6.9) ...
+Setting up libc-dev-bin (2.19-0ubuntu6.9) ...
+Setting up libc6-dev:amd64 (2.19-0ubuntu6.9) ...
+Processing triggers for libc-bin (2.19-0ubuntu6.6) ...
+travis_fold:end:fix.CVE-2015-7547
+[0Ktravis_fold:start:git.checkout
+[0Ktravis_time:start:0834f1f3
+[0K$ git clone --depth=50 https://github.com/bitcoin/bitcoin.git bitcoin/bitcoin
+Cloning into 'bitcoin/bitcoin'...
+remote: Counting objects: 20309, done.[K
+remote: Compressing objects:   0% (1/8731)   [K
+remote: Compressing objects:   1% (88/8731)   [K
+remote: Compressing objects:   2% (175/8731)   [K
+remote: Compressing objects:   3% (262/8731)   [K
+remote: Compressing objects:   4% (350/8731)   [K
+remote: Compressing objects:   5% (437/8731)   [K
+remote: Compressing objects:   6% (524/8731)   [K
+remote: Compressing objects:   6% (580/8731)   [K
+remote: Compressing objects:   7% (612/8731)   [K
+remote: Compressing objects:   8% (699/8731)   [K
+remote: Compressing objects:   9% (786/8731)   [K
+remote: Compressing objects:  10% (874/8731)   [K
+remote: Compressing objects:  11% (961/8731)   [K
+remote: Compressing objects:  12% (1048/8731)   [K
+remote: Compressing objects:  13% (1136/8731)   [K
+remote: Compressing objects:  14% (1223/8731)   [K
+remote: Compressing objects:  15% (1310/8731)   [K
+remote: Compressing objects:  16% (1397/8731)   [K
+remote: Compressing objects:  17% (1485/8731)   [K
+remote: Compressing objects:  18% (1572/8731)   [K
+remote: Compressing objects:  19% (1659/8731)   [K
+remote: Compressing objects:  20% (1747/8731)   [K
+remote: Compressing objects:  20% (1782/8731)   [K
+remote: Compressing objects:  21% (1834/8731)   [K
+remote: Compressing objects:  22% (1921/8731)   [K
+remote: Compressing objects:  23% (2009/8731)   [K
+remote: Compressing objects:  24% (2096/8731)   [K
+remote: Compressing objects:  25% (2183/8731)   [K
+remote: Compressing objects:  26% (2271/8731)   [K
+remote: Compressing objects:  27% (2358/8731)   [K
+remote: Compressing objects:  28% (2445/8731)   [K
+remote: Compressing objects:  29% (2532/8731)   [K
+remote: Compressing objects:  30% (2620/8731)   [K
+remote: Compressing objects:  31% (2707/8731)   [K
+remote: Compressing objects:  32% (2794/8731)   [K
+remote: Compressing objects:  33% (2882/8731)   [K
+remote: Compressing objects:  34% (2969/8731)   [K
+remote: Compressing objects:  35% (3056/8731)   [K
+remote: Compressing objects:  36% (3144/8731)   [K
+remote: Compressing objects:  37% (3231/8731)   [K
+remote: Compressing objects:  38% (3318/8731)   [K
+remote: Compressing objects:  39% (3406/8731)   [K
+remote: Compressing objects:  40% (3493/8731)   [K
+remote: Compressing objects:  41% (3580/8731)   [K
+remote: Compressing objects:  42% (3668/8731)   [K
+remote: Compressing objects:  43% (3755/8731)   [K
+remote: Compressing objects:  44% (3842/8731)   [K
+remote: Compressing objects:  45% (3929/8731)   [K
+remote: Compressing objects:  46% (4017/8731)   [K
+remote: Compressing objects:  47% (4104/8731)   [K
+remote: Compressing objects:  48% (4191/8731)   [K
+remote: Compressing objects:  49% (4279/8731)   [K
+remote: Compressing objects:  50% (4366/8731)   [K
+remote: Compressing objects:  51% (4453/8731)   [K
+remote: Compressing objects:  52% (4541/8731)   [K
+remote: Compressing objects:  53% (4628/8731)   [K
+remote: Compressing objects:  54% (4715/8731)   [K
+remote: Compressing objects:  55% (4803/8731)   [K
+remote: Compressing objects:  56% (4890/8731)   [K
+remote: Compressing objects:  57% (4977/8731)   [K
+remote: Compressing objects:  58% (5064/8731)   [K
+remote: Compressing objects:  59% (5152/8731)   [K
+remote: Compressing objects:  60% (5239/8731)   [K
+remote: Compressing objects:  61% (5326/8731)   [K
+remote: Compressing objects:  62% (5414/8731)   [K
+remote: Compressing objects:  63% (5501/8731)   [K
+remote: Compressing objects:  64% (5588/8731)   [K
+remote: Compressing objects:  65% (5676/8731)   [K
+remote: Compressing objects:  66% (5763/8731)   [K
+remote: Compressing objects:  67% (5850/8731)   [K
+remote: Compressing objects:  68% (5938/8731)   [K
+remote: Compressing objects:  69% (6025/8731)   [K
+remote: Compressing objects:  70% (6112/8731)   [K
+remote: Compressing objects:  71% (6200/8731)   [K
+remote: Compressing objects:  72% (6287/8731)   [K
+remote: Compressing objects:  73% (6374/8731)   [K
+remote: Compressing objects:  74% (6461/8731)   [K
+remote: Compressing objects:  75% (6549/8731)   [K
+remote: Compressing objects:  76% (6636/8731)   [K
+remote: Compressing objects:  77% (6723/8731)   [K
+remote: Compressing objects:  78% (6811/8731)   [K
+remote: Compressing objects:  79% (6898/8731)   [K
+remote: Compressing objects:  80% (6985/8731)   [K
+remote: Compressing objects:  81% (7073/8731)   [K
+remote: Compressing objects:  82% (7160/8731)   [K
+remote: Compressing objects:  83% (7247/8731)   [K
+remote: Compressing objects:  84% (7335/8731)   [K
+remote: Compressing objects:  85% (7422/8731)   [K
+remote: Compressing objects:  86% (7509/8731)   [K
+remote: Compressing objects:  87% (7596/8731)   [K
+remote: Compressing objects:  88% (7684/8731)   [K
+remote: Compressing objects:  89% (7771/8731)   [K
+remote: Compressing objects:  90% (7858/8731)   [K
+remote: Compressing objects:  91% (7946/8731)   [K
+remote: Compressing objects:  92% (8033/8731)   [K
+remote: Compressing objects:  93% (8120/8731)   [K
+remote: Compressing objects:  94% (8208/8731)   [K
+remote: Compressing objects:  95% (8295/8731)   [K
+remote: Compressing objects:  96% (8382/8731)   [K
+remote: Compressing objects:  97% (8470/8731)   [K
+remote: Compressing objects:  98% (8557/8731)   [K
+remote: Compressing objects:  99% (8644/8731)   [K
+remote: Compressing objects: 100% (8731/8731)   [K
+remote: Compressing objects: 100% (8731/8731), done.[K
+Receiving objects:   0% (1/20309)   
+Receiving objects:   1% (204/20309)   
+Receiving objects:   2% (407/20309)   
+Receiving objects:   3% (610/20309)   
+Receiving objects:   4% (813/20309)   
+Receiving objects:   5% (1016/20309)   
+Receiving objects:   6% (1219/20309)   
+Receiving objects:   7% (1422/20309)   
+Receiving objects:   8% (1625/20309)   
+Receiving objects:   9% (1828/20309)   
+Receiving objects:  10% (2031/20309)   
+Receiving objects:  11% (2234/20309)   
+Receiving objects:  12% (2438/20309)   
+Receiving objects:  13% (2641/20309)   
+Receiving objects:  14% (2844/20309)   
+Receiving objects:  15% (3047/20309)   
+Receiving objects:  16% (3250/20309)   
+Receiving objects:  17% (3453/20309)   
+Receiving objects:  18% (3656/20309)   
+Receiving objects:  19% (3859/20309)   
+Receiving objects:  20% (4062/20309)   
+Receiving objects:  21% (4265/20309)   
+Receiving objects:  22% (4468/20309)   
+Receiving objects:  23% (4672/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  24% (4875/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  25% (5078/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  26% (5281/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  27% (5484/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  28% (5687/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  29% (5890/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  30% (6093/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  31% (6296/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  32% (6499/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  33% (6702/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  34% (6906/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  35% (7109/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  36% (7312/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  37% (7515/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  38% (7718/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  39% (7921/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  40% (8124/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  41% (8327/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  42% (8530/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  43% (8733/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  44% (8936/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  45% (9140/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  46% (9343/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  47% (9546/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  48% (9749/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  49% (9952/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  50% (10155/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  51% (10358/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  52% (10561/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  53% (10764/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  54% (10967/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  55% (11170/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  56% (11374/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  57% (11577/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  58% (11780/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  59% (11983/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  60% (12186/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  61% (12389/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  62% (12592/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  63% (12795/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  64% (12998/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  65% (13201/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  66% (13404/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  67% (13608/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  68% (13811/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  69% (14014/20309), 7.53 MiB | 15.02 MiB/s   
+Receiving objects:  69% (14189/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  70% (14217/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  71% (14420/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  72% (14623/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  73% (14826/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  74% (15029/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  75% (15232/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  76% (15435/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  77% (15638/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  78% (15842/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  79% (16045/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  80% (16248/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  81% (16451/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  82% (16654/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  83% (16857/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  84% (17060/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  85% (17263/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  86% (17466/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  87% (17669/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  88% (17872/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  89% (18076/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  90% (18279/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  91% (18482/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  92% (18685/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  93% (18888/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  94% (19091/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  95% (19294/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  96% (19497/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  97% (19700/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  98% (19903/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects:  99% (20106/20309), 17.19 MiB | 17.15 MiB/s   
+remote: Total 20309 (delta 14502), reused 16878 (delta 11414), pack-reused 0[K
+Receiving objects: 100% (20309/20309), 17.19 MiB | 17.15 MiB/s   
+Receiving objects: 100% (20309/20309), 22.88 MiB | 17.15 MiB/s, done.
+Resolving deltas:   0% (0/14502)   
+Resolving deltas:   1% (176/14502)   
+Resolving deltas:   2% (300/14502)   
+Resolving deltas:   3% (437/14502)   
+Resolving deltas:   4% (595/14502)   
+Resolving deltas:   5% (743/14502)   
+Resolving deltas:   6% (880/14502)   
+Resolving deltas:   7% (1022/14502)   
+Resolving deltas:   8% (1172/14502)   
+Resolving deltas:   9% (1308/14502)   
+Resolving deltas:  10% (1453/14502)   
+Resolving deltas:  11% (1625/14502)   
+Resolving deltas:  12% (1743/14502)   
+Resolving deltas:  13% (1887/14502)   
+Resolving deltas:  14% (2033/14502)   
+Resolving deltas:  16% (2326/14502)   
+Resolving deltas:  17% (2527/14502)   
+Resolving deltas:  18% (2629/14502)   
+Resolving deltas:  19% (2763/14502)   
+Resolving deltas:  20% (2903/14502)   
+Resolving deltas:  21% (3079/14502)   
+Resolving deltas:  22% (3194/14502)   
+Resolving deltas:  23% (3337/14502)   
+Resolving deltas:  25% (3631/14502)   
+Resolving deltas:  27% (3973/14502)   
+Resolving deltas:  28% (4125/14502)   
+Resolving deltas:  29% (4226/14502)   
+Resolving deltas:  30% (4353/14502)   
+Resolving deltas:  31% (4500/14502)   
+Resolving deltas:  32% (4647/14502)   
+Resolving deltas:  33% (4792/14502)   
+Resolving deltas:  34% (4933/14502)   
+Resolving deltas:  35% (5077/14502)   
+Resolving deltas:  36% (5221/14502)   
+Resolving deltas:  37% (5379/14502)   
+Resolving deltas:  38% (5530/14502)   
+Resolving deltas:  39% (5663/14502)   
+Resolving deltas:  40% (5832/14502)   
+Resolving deltas:  41% (5947/14502)   
+Resolving deltas:  42% (6093/14502)   
+Resolving deltas:  43% (6259/14502)   
+Resolving deltas:  44% (6463/14502)   
+Resolving deltas:  45% (6574/14502)   
+Resolving deltas:  46% (6675/14502)   
+Resolving deltas:  47% (6851/14502)   
+Resolving deltas:  50% (7387/14502)   
+Resolving deltas:  51% (7398/14502)   
+Resolving deltas:  56% (8199/14502)   
+Resolving deltas:  57% (8271/14502)   
+Resolving deltas:  58% (8428/14502)   
+Resolving deltas:  59% (8591/14502)   
+Resolving deltas:  60% (8702/14502)   
+Resolving deltas:  61% (8902/14502)   
+Resolving deltas:  62% (8992/14502)   
+Resolving deltas:  63% (9137/14502)   
+Resolving deltas:  63% (9268/14502)   
+Resolving deltas:  64% (9292/14502)   
+Resolving deltas:  65% (9436/14502)   
+Resolving deltas:  66% (9619/14502)   
+Resolving deltas:  67% (9801/14502)   
+Resolving deltas:  68% (9880/14502)   
+Resolving deltas:  69% (10027/14502)   
+Resolving deltas:  70% (10167/14502)   
+Resolving deltas:  71% (10333/14502)   
+Resolving deltas:  72% (10443/14502)   
+Resolving deltas:  73% (10593/14502)   
+Resolving deltas:  74% (10752/14502)   
+Resolving deltas:  76% (11045/14502)   
+Resolving deltas:  77% (11195/14502)   
+Resolving deltas:  78% (11347/14502)   
+Resolving deltas:  79% (11515/14502)   
+Resolving deltas:  80% (11685/14502)   
+Resolving deltas:  81% (11799/14502)   
+Resolving deltas:  82% (11894/14502)   
+Resolving deltas:  83% (12037/14502)   
+Resolving deltas:  84% (12186/14502)   
+Resolving deltas:  85% (12449/14502)   
+Resolving deltas:  86% (12473/14502)   
+Resolving deltas:  87% (12719/14502)   
+Resolving deltas:  88% (12780/14502)   
+Resolving deltas:  89% (12907/14502)   
+Resolving deltas:  90% (13063/14502)   
+Resolving deltas:  91% (13199/14502)   
+Resolving deltas:  92% (13351/14502)   
+Resolving deltas:  93% (13547/14502)   
+Resolving deltas:  95% (13827/14502)   
+Resolving deltas:  96% (13926/14502)   
+Resolving deltas:  97% (14068/14502)   
+Resolving deltas:  98% (14220/14502)   
+Resolving deltas:  99% (14357/14502)   
+Resolving deltas: 100% (14502/14502)   
+Resolving deltas: 100% (14502/14502), done.
+Checking connectivity... done.
+
+travis_time:end:0834f1f3:start=1468062689984164214,finish=1468062696716005242,duration=6731841028
+[0K$ cd bitcoin/bitcoin
+travis_time:start:1050c716
+[0K$ git fetch origin +refs/pull/8324/merge:
+remote: Counting objects: 7, done.[K
+remote: Compressing objects:  50% (1/2)   [K
+remote: Compressing objects: 100% (2/2)   [K
+remote: Compressing objects: 100% (2/2), done.[K
+remote: Total 7 (delta 5), reused 6 (delta 5), pack-reused 0[K
+Unpacking objects:  14% (1/7)   
+Unpacking objects:  28% (2/7)   
+Unpacking objects:  42% (3/7)   
+Unpacking objects:  57% (4/7)   
+Unpacking objects:  71% (5/7)   
+Unpacking objects:  85% (6/7)   
+Unpacking objects: 100% (7/7)   
+Unpacking objects: 100% (7/7), done.
+From https://github.com/bitcoin/bitcoin
+ * branch            refs/pull/8324/merge -> FETCH_HEAD
+
+travis_time:end:1050c716:start=1468062696720626401,finish=1468062697561334805,duration=840708404
+[0K$ git checkout -qf FETCH_HEAD
+travis_fold:end:git.checkout
+[0K[33;1mSet hostname to bitcoin-tester[0m
+$ sudo hostname bitcoin-tester
+
+[33;1mSetting environment variables from .travis.yml[0m
+$ export MAKEJOBS=-j3
+$ export RUN_TESTS=false
+$ export CHECK_DOC=0
+$ export BOOST_TEST_RANDOM=1$TRAVIS_BUILD_ID
+$ export CCACHE_SIZE=100M
+$ export CCACHE_TEMPDIR=/tmp/.ccache-temp
+$ export CCACHE_COMPRESS=1
+$ export BASE_OUTDIR=$TRAVIS_BUILD_DIR/out
+$ export SDK_URL=https://bitcoincore.org/depends-sources/sdks
+$ export PYTHON_DEBUG=1
+$ export WINEDEBUG=fixme-all
+$ export HOST=x86_64-apple-darwin11
+$ export PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev"
+$ export BITCOIN_CONFIG="--enable-reduce-exports"
+$ export OSX_SDK=10.11
+$ export GOAL="deploy"
+
+travis_fold:start:cache.1
+[0KSetting up build cache
+$ export CASHER_DIR=$HOME/.casher
+travis_time:start:0bc6abaa
+[0K$ Installing caching utilities
+
+travis_time:end:0bc6abaa:start=1468062698283089976,finish=1468062698350327521,duration=67237545
+[0Ktravis_time:start:05753220
+[0K
+travis_time:end:05753220:start=1468062698355565303,finish=1468062698359596872,duration=4031569
+[0Ktravis_time:start:0224a180
+[0K[32;1mattempting to download cache archive[0m
+[32;1mfetching PR.8324/cache-linux-trusty-27ccac5531ea00c22f46be3b05fe6f11863d522af64a2c3a3b8692d864bcb840.tgz[0m
+[32;1mfetching master/cache-linux-trusty-27ccac5531ea00c22f46be3b05fe6f11863d522af64a2c3a3b8692d864bcb840.tgz[0m
+[32;1mfound cache[0m
+
+travis_time:end:0224a180:start=1468062698364475834,finish=1468062699730983931,duration=1366508097
+[0Ktravis_time:start:092d2da6
+[0K
+travis_time:end:092d2da6:start=1468062699735485646,finish=1468062699739484649,duration=3999003
+[0Ktravis_time:start:06e1cb78
+[0K[32;1madding /home/travis/build/bitcoin/bitcoin/depends/built to cache[0m
+[32;1madding /home/travis/build/bitcoin/bitcoin/depends/sdk-sources to cache[0m
+[32;1madding /home/travis/.ccache to cache[0m
+
+travis_time:end:06e1cb78:start=1468062699744200732,finish=1468062702366599815,duration=2622399083
+[0Ktravis_fold:end:cache.1
+[0K$ bash -c 'echo $BASH_VERSION'
+4.3.11(1)-release
+travis_fold:start:before_install
+[0Ktravis_time:start:01870248
+[0K$ export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
+
+travis_time:end:01870248:start=1468062702373158815,finish=1468062702381953092,duration=8794277
+[0Ktravis_fold:end:before_install
+[0Ktravis_fold:start:install.1
+[0Ktravis_time:start:1c4ce3b3
+[0K$ if [ -n "$PPA" ]; then travis_retry sudo add-apt-repository "$PPA" -y; fi
+
+travis_time:end:1c4ce3b3:start=1468062702386814893,finish=1468062702390560066,duration=3745173
+[0Ktravis_fold:end:install.1
+[0Ktravis_fold:start:install.2
+[0Ktravis_time:start:10cbecbc
+[0K$ if [ -n "$DPKG_ADD_ARCH" ]; then sudo dpkg --add-architecture "$DPKG_ADD_ARCH" ; fi
+
+travis_time:end:10cbecbc:start=1468062702395610757,finish=1468062702399405605,duration=3794848
+[0Ktravis_fold:end:install.2
+[0Ktravis_fold:start:install.3
+[0Ktravis_time:start:25394570
+[0K$ if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get update; fi
+sudo: unable to resolve host bitcoin-tester
+
+
+0% [Working]
+            
+Ign http://us-central1.gce.archive.ubuntu.com trusty InRelease
+
+            
+6% [Connecting to security.ubuntu.com (91.189.88.149)] [Connecting to ppa.launc
+                                                                               
+Hit http://us-central1.gce.archive.ubuntu.com trusty-updates InRelease
+
+10% [Connecting to security.ubuntu.com (91.189.88.149)] [Connecting to ppa.laun
+10% [InRelease gpgv 65.9 kB] [Waiting for headers] [Connecting to security.ubun
+                                                                               
+Hit http://us-central1.gce.archive.ubuntu.com trusty Release.gpg
+
+18% [InRelease gpgv 65.9 kB] [Connecting to security.ubuntu.com (91.189.88.149)
+                                                                               
+Hit http://us-central1.gce.archive.ubuntu.com trusty Release
+
+18% [InRelease gpgv 65.9 kB] [Connecting to security.ubuntu.com (91.189.88.149)
+18% [Connecting to security.ubuntu.com (91.189.88.149)] [Connecting to ppa.laun
+                                                                               
+Hit http://apt.postgresql.org trusty-pgdg InRelease
+
+18% [Connecting to security.ubuntu.com (91.189.88.149)] [Connecting to ppa.laun
+18% [Release gpgv 58.5 kB] [Waiting for headers] [Connecting to security.ubuntu
+                                                                               
+Hit http://us-central1.gce.archive.ubuntu.com trusty-updates/main Sources
+
+18% [Release gpgv 58.5 kB] [Connecting to security.ubuntu.com (91.189.88.149)] 
+16% [Connecting to security.ubuntu.com (91.189.88.149)] [Connecting to ppa.laun
+16% [InRelease gpgv 33.8 kB] [Waiting for headers] [Connecting to security.ubun
+16% [Sources 1,495 kB] [InRelease gpgv 33.8 kB] [Waiting for headers] [Connecti
+                                                                               
+Hit http://us-central1.gce.archive.ubuntu.com trusty-updates/universe Sources
+
+16% [Sources 1,495 kB] [InRelease gpgv 33.8 kB] [Waiting for headers] [Connecti
+                                                                               
+Hit http://us-central1.gce.archive.ubuntu.com trusty-updates/main amd64 Packages
+
+16% [Sources 1,495 kB] [InRelease gpgv 33.8 kB] [Waiting for headers] [Connecti
+                                                                               
+Hit http://us-central1.gce.archive.ubuntu.com trusty-updates/universe amd64 Packages
+
+16% [Sources 1,495 kB] [InRelease gpgv 33.8 kB] [Waiting for headers] [Connecti
+                                                                               
+Hit http://us-central1.gce.archive.ubuntu.com trusty-updates/main Translation-en
+
+16% [Sources 1,495 kB] [InRelease gpgv 33.8 kB] [Waiting for headers] [Connecti
+                                                                               
+Hit http://us-central1.gce.archive.ubuntu.com trusty-updates/universe Translation-en
+
+16% [Sources 1,495 kB] [InRelease gpgv 33.8 kB] [Waiting for headers] [Connecti
+                                                                               
+Hit http://us-central1.gce.archive.ubuntu.com trusty/main Sources
+
+16% [Sources 1,495 kB] [InRelease gpgv 33.8 kB] [Waiting for headers] [Connecti
+                                                                               
+Hit http://us-central1.gce.archive.ubuntu.com trusty/universe Sources
+
+16% [Sources 1,495 kB] [InRelease gpgv 33.8 kB] [Waiting for headers] [Connecti
+                                                                               
+Hit http://us-central1.gce.archive.ubuntu.com trusty/main amd64 Packages
+
+16% [Sources 1,495 kB] [InRelease gpgv 33.8 kB] [Waiting for headers] [Connecti
+                                                                               
+Hit http://us-central1.gce.archive.ubuntu.com trusty/universe amd64 Packages
+
+16% [Sources 1,495 kB] [InRelease gpgv 33.8 kB] [Waiting for headers] [Connecti
+                                                                               
+Hit http://us-central1.gce.archive.ubuntu.com trusty/main Translation-en
+
+16% [Sources 1,495 kB] [InRelease gpgv 33.8 kB] [Waiting for headers] [Connecti
+                                                                               
+Hit http://us-central1.gce.archive.ubuntu.com trusty/universe Translation-en
+
+16% [Sources 1,495 kB] [InRelease gpgv 33.8 kB] [Waiting for headers] [Connecti
+                                                                               
+Hit http://dl.hhvm.com trusty InRelease
+
+16% [Sources 1,495 kB] [InRelease gpgv 33.8 kB] [Waiting for headers] [Connecti
+16% [Sources 1,495 kB] [Waiting for headers] [Connecting to security.ubuntu.com
+16% [Sources 1,495 kB] [InRelease gpgv 2,104 B] [Waiting for headers] [Waiting 
+18% [Sources 1,495 kB] [Waiting for headers] [Waiting for headers] [Waiting for
+                                                                               
+Ign http://us-central1.gce.archive.ubuntu.com trusty/main Translation-en_US
+
+21% [Sources 1,495 kB] [Waiting for headers] [Waiting for headers] [Waiting for
+                                                                               
+Ign http://us-central1.gce.archive.ubuntu.com trusty/universe Translation-en_US
+
+24% [Sources 1,495 kB] [Waiting for headers] [Waiting for headers] [Waiting for
+100% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Waiting
+100% [Sources 749 kB] [Waiting for headers] [Waiting for headers] [Waiting for 
+                                                                               
+Hit http://apt.postgresql.org trusty-pgdg/main amd64 Packages
+
+100% [Sources 749 kB] [Waiting for headers] [Waiting for headers] [Waiting for 
+100% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connect
+100% [Packages 5,349 kB] [Waiting for headers] [Waiting for headers] [Waiting f
+                                                                               
+Hit http://dl.hhvm.com trusty/main amd64 Packages
+
+100% [Packages 5,349 kB] [Waiting for headers] [Waiting for headers] [Waiting f
+                                                                               
+Hit http://apt.postgresql.org trusty-pgdg/9.4 amd64 Packages
+
+100% [Packages 5,349 kB] [Waiting for headers] [Waiting for headers] [Waiting f
+                                                                               
+Hit http://ppa.launchpad.net trusty InRelease
+
+100% [Packages 5,349 kB] [Waiting for headers] [Waiting for headers] [Waiting f
+100% [Packages 5,349 kB] [InRelease gpgv 15.5 kB] [Waiting for headers] [Waitin
+                                                                               
+Hit http://security.ubuntu.com trusty-security InRelease
+
+100% [Packages 5,349 kB] [InRelease gpgv 15.5 kB] [Waiting for headers] [Waitin
+100% [Packages 5,349 kB] [Waiting for headers] [Waiting for headers] [Waiting f
+100% [Packages 5,349 kB] [InRelease gpgv 65.9 kB] [Waiting for headers] [Waitin
+100% [Packages 5,349 kB] [Waiting for headers] [Waiting for headers] [Waiting f
+                                                                               
+Hit https://apt.dockerproject.org ubuntu-trusty InRelease
+
+100% [Packages 5,349 kB] [Waiting for headers] [Waiting for headers] [Waiting f
+100% [Packages 5,349 kB] [InRelease gpgv 20.6 kB] [Waiting for headers] [Waitin
+100% [InRelease gpgv 20.6 kB] [Waiting for headers] [Waiting for headers] [Wait
+100% [Packages 2,160 kB] [InRelease gpgv 20.6 kB] [Waiting for headers] [Waitin
+100% [Packages 2,160 kB] [Waiting for headers] [Waiting for headers] [Waiting f
+                                                                               
+Hit http://ppa.launchpad.net trusty InRelease
+
+100% [Packages 2,160 kB] [Waiting for headers] [Waiting for headers] [Waiting f
+100% [Packages 2,160 kB] [InRelease gpgv 15.4 kB] [Waiting for headers] [Waitin
+                                                                               
+Hit https://apt.dockerproject.org ubuntu-trusty/main amd64 Packages
+
+100% [Packages 2,160 kB] [InRelease gpgv 15.4 kB] [Waiting for headers] [Waitin
+100% [Packages 2,160 kB] [Waiting for headers] [Waiting for headers] [Waiting f
+                                                                               
+Get:1 https://apt.dockerproject.org ubuntu-trusty/main Translation-en_US
+
+100% [Packages 2,160 kB] [Waiting for headers] [Waiting for headers] [1 Transla
+100% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Waiting
+100% [Translation-en 5,034 kB] [Waiting for headers] [Waiting for headers] [Wai
+                                                                               
+Hit http://security.ubuntu.com trusty-security/main Sources
+
+100% [Translation-en 5,034 kB] [Waiting for headers] [Waiting for headers] [Wai
+                                                                               
+Hit http://ppa.launchpad.net trusty/main amd64 Packages
+
+100% [Translation-en 5,034 kB] [Waiting for headers] [Waiting for headers] [Wai
+100% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Waiting
+100% [Translation-en 970 kB] [Waiting for headers] [Waiting for headers] [Waiti
+100% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Waiting
+100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Waiting fo
+                                                                               
+Hit http://security.ubuntu.com trusty-security/universe Sources
+
+100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Waiting fo
+                                                                               
+Ign https://apt.dockerproject.org ubuntu-trusty/main Translation-en_US
+
+100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Waiting fo
+                                                                               
+Hit http://ppa.launchpad.net trusty/main Translation-en
+
+100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Waiting fo
+                                                                               
+Ign https://apt.dockerproject.org ubuntu-trusty/main Translation-en
+
+100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Waiting fo
+100% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Waiting
+100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for
+                                                                               
+Ign http://dl.hhvm.com trusty/main Translation-en_US
+
+100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for
+                                                                               
+Hit http://security.ubuntu.com trusty-security/main amd64 Packages
+
+100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for
+                                                                               
+Hit http://ppa.launchpad.net trusty/main amd64 Packages
+
+100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for
+                                                                               
+Ign http://dl.hhvm.com trusty/main Translation-en
+
+100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for
+                                                                               
+Ign http://apt.postgresql.org trusty-pgdg/9.4 Translation-en_US
+
+100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Connecting 
+                                                                               
+Hit http://security.ubuntu.com trusty-security/universe amd64 Packages
+
+100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for
+                                                                               
+Ign http://apt.postgresql.org trusty-pgdg/9.4 Translation-en
+
+100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for
+                                                                               
+Ign http://apt.postgresql.org trusty-pgdg/main Translation-en_US
+
+                                                                               
+100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers]
+                                                                  
+Hit http://ppa.launchpad.net trusty/main Translation-en
+
+100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers]
+                                                                  
+Ign http://apt.postgresql.org trusty-pgdg/main Translation-en
+
+                                                                  
+100% [Sources 27.9 MB] [Waiting for headers]
+                                            
+Hit http://security.ubuntu.com trusty-security/main Translation-en
+
+100% [Sources 27.9 MB] [Waiting for headers]
+                                            
+Hit http://security.ubuntu.com trusty-security/universe Translation-en
+
+                                            
+100% [Sources 27.9 MB]
+                      
+100% [Working]
+              
+100% [Packages 8,235 kB]
+                        
+100% [Working]
+              
+100% [Packages 31.7 MB]
+100% [Packages 31.7 MB]
+                       
+100% [Working]
+              
+100% [Translation-en 4,149 kB]
+                              
+100% [Working]
+              
+100% [Translation-en 18.6 MB]
+                             
+100% [Working]
+              
+100% [Packages 418 kB]
+                      
+100% [Working]
+              
+100% [Packages 8,474 B]
+                       
+100% [Working]
+              
+100% [Packages 5,733 B]
+                       
+100% [Working]
+              
+100% [Packages 29.7 kB]
+                       
+100% [Working]
+              
+100% [Sources 595 kB]
+                     
+100% [Working]
+              
+100% [Packages 4,699 B]
+                       
+100% [Working]
+              
+100% [Sources 155 kB]
+                     
+100% [Working]
+              
+100% [Translation-en 3,337 B]
+                             
+100% [Working]
+              
+100% [Packages 3,463 kB]
+                        
+100% [Working]
+              
+100% [Packages 11.7 kB]
+                       
+100% [Working]
+              
+100% [Packages 777 kB]
+                      
+100% [Working]
+              
+100% [Translation-en 13.0 kB]
+                             
+100% [Working]
+              
+100% [Translation-en 4,162 kB]
+                              
+100% [Working]
+              
+100% [Translation-en 385 kB]
+                            
+100% [Working]
+              
+
+Reading package lists... 0%
+
+Reading package lists... 0%
+
+Reading package lists... 1%
+
+Reading package lists... 9%
+
+Reading package lists... 9%
+
+Reading package lists... 42%
+
+Reading package lists... 46%
+
+Reading package lists... 46%
+
+Reading package lists... 51%
+
+Reading package lists... 51%
+
+Reading package lists... 72%
+
+Reading package lists... 72%
+
+Reading package lists... 78%
+
+Reading package lists... 78%
+
+Reading package lists... 81%
+
+Reading package lists... 81%
+
+Reading package lists... 87%
+
+Reading package lists... 87%
+
+Reading package lists... 88%
+
+Reading package lists... 88%
+
+Reading package lists... 92%
+
+Reading package lists... 92%
+
+Reading package lists... 93%
+
+Reading package lists... 93%
+
+Reading package lists... 97%
+
+Reading package lists... 97%
+
+Reading package lists... 98%
+
+Reading package lists... 98%
+
+Reading package lists... 98%
+
+Reading package lists... 98%
+
+Reading package lists... 98%
+
+Reading package lists... 98%
+
+Reading package lists... 98%
+
+Reading package lists... 98%
+
+Reading package lists... 98%
+
+Reading package lists... 98%
+
+Reading package lists... 98%
+
+Reading package lists... 98%
+
+Reading package lists... 98%
+
+Reading package lists... 98%
+
+Reading package lists... 98%
+
+Reading package lists... 98%
+
+Reading package lists... 98%
+
+Reading package lists... 98%
+
+Reading package lists... 99%
+
+Reading package lists... Done
+
+
+travis_time:end:25394570:start=1468062702404155417,finish=1468062706758885764,duration=4354730347
+[0Ktravis_fold:end:install.3
+[0Ktravis_fold:start:install.4
+[0Ktravis_time:start:25d42f01
+[0K$ if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES; fi
+sudo: unable to resolve host bitcoin-tester
+Selecting previously unselected package libatspi2.0-0:amd64.
+(Reading database ... 
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 119311 files and directories currently installed.)
+Preparing to unpack .../libatspi2.0-0_2.10.2.is.2.10.1-0ubuntu1_amd64.deb ...
+Unpacking libatspi2.0-0:amd64 (2.10.2.is.2.10.1-0ubuntu1) ...
+Selecting previously unselected package libatk-bridge2.0-0:amd64.
+Preparing to unpack .../libatk-bridge2.0-0_2.10.2-2ubuntu1_amd64.deb ...
+Unpacking libatk-bridge2.0-0:amd64 (2.10.2-2ubuntu1) ...
+Selecting previously unselected package libcolord1:amd64.
+Preparing to unpack .../libcolord1_1.0.6-1_amd64.deb ...
+Unpacking libcolord1:amd64 (1.0.6-1) ...
+Selecting previously unselected package libdconf1:amd64.
+Preparing to unpack .../libdconf1_0.20.0-1_amd64.deb ...
+Unpacking libdconf1:amd64 (0.20.0-1) ...
+Selecting previously unselected package dconf-service.
+Preparing to unpack .../dconf-service_0.20.0-1_amd64.deb ...
+Unpacking dconf-service (0.20.0-1) ...
+Selecting previously unselected package dconf-gsettings-backend:amd64.
+Preparing to unpack .../dconf-gsettings-backend_0.20.0-1_amd64.deb ...
+Unpacking dconf-gsettings-backend:amd64 (0.20.0-1) ...
+Selecting previously unselected package libgtk-3-common.
+Preparing to unpack .../libgtk-3-common_3.10.8-0ubuntu1.6_all.deb ...
+Unpacking libgtk-3-common (3.10.8-0ubuntu1.6) ...
+Selecting previously unselected package libwayland-client0:amd64.
+Preparing to unpack .../libwayland-client0_1.4.0-1ubuntu1_amd64.deb ...
+Unpacking libwayland-client0:amd64 (1.4.0-1ubuntu1) ...
+Selecting previously unselected package libwayland-cursor0:amd64.
+Preparing to unpack .../libwayland-cursor0_1.4.0-1ubuntu1_amd64.deb ...
+Unpacking libwayland-cursor0:amd64 (1.4.0-1ubuntu1) ...
+Selecting previously unselected package libxkbcommon0:amd64.
+Preparing to unpack .../libxkbcommon0_0.4.1-0ubuntu1_amd64.deb ...
+Unpacking libxkbcommon0:amd64 (0.4.1-0ubuntu1) ...
+Selecting previously unselected package libgtk-3-0:amd64.
+Preparing to unpack .../libgtk-3-0_3.10.8-0ubuntu1.6_amd64.deb ...
+Unpacking libgtk-3-0:amd64 (3.10.8-0ubuntu1.6) ...
+Selecting previously unselected package libpython2.7-dev:amd64.
+Preparing to unpack .../libpython2.7-dev_2.7.6-8ubuntu0.2_amd64.deb ...
+Unpacking libpython2.7-dev:amd64 (2.7.6-8ubuntu0.2) ...
+Selecting previously unselected package libcap-dev:amd64.
+Preparing to unpack .../libcap-dev_1%3a2.24-0ubuntu2_amd64.deb ...
+Unpacking libcap-dev:amd64 (1:2.24-0ubuntu2) ...
+Selecting previously unselected package libpython-dev:amd64.
+Preparing to unpack .../libpython-dev_2.7.5-5ubuntu3_amd64.deb ...
+Unpacking libpython-dev:amd64 (2.7.5-5ubuntu3) ...
+Selecting previously unselected package librsvg2-bin.
+Preparing to unpack .../librsvg2-bin_2.40.2-1_amd64.deb ...
+Unpacking librsvg2-bin (2.40.2-1) ...
+Selecting previously unselected package libtiff-tools.
+Preparing to unpack .../libtiff-tools_4.0.3-7ubuntu0.4_amd64.deb ...
+Unpacking libtiff-tools (4.0.3-7ubuntu0.4) ...
+Selecting previously unselected package python2.7-dev.
+Preparing to unpack .../python2.7-dev_2.7.6-8ubuntu0.2_amd64.deb ...
+Unpacking python2.7-dev (2.7.6-8ubuntu0.2) ...
+Selecting previously unselected package python-dev.
+Preparing to unpack .../python-dev_2.7.5-5ubuntu3_amd64.deb ...
+Unpacking python-dev (2.7.5-5ubuntu3) ...
+Processing triggers for man-db (2.6.7.1-1ubuntu1) ...
+Not building database; man-db/auto-update is not 'true'.
+Processing triggers for libglib2.0-0:amd64 (2.40.2-0ubuntu1) ...
+Setting up libatspi2.0-0:amd64 (2.10.2.is.2.10.1-0ubuntu1) ...
+Setting up libatk-bridge2.0-0:amd64 (2.10.2-2ubuntu1) ...
+Setting up libcolord1:amd64 (1.0.6-1) ...
+Setting up libdconf1:amd64 (0.20.0-1) ...
+Setting up dconf-service (0.20.0-1) ...
+Setting up dconf-gsettings-backend:amd64 (0.20.0-1) ...
+Setting up libgtk-3-common (3.10.8-0ubuntu1.6) ...
+Setting up libwayland-client0:amd64 (1.4.0-1ubuntu1) ...
+Setting up libwayland-cursor0:amd64 (1.4.0-1ubuntu1) ...
+Setting up libxkbcommon0:amd64 (0.4.1-0ubuntu1) ...
+Setting up libgtk-3-0:amd64 (3.10.8-0ubuntu1.6) ...
+Setting up libpython2.7-dev:amd64 (2.7.6-8ubuntu0.2) ...
+Setting up libcap-dev:amd64 (1:2.24-0ubuntu2) ...
+Setting up libpython-dev:amd64 (2.7.5-5ubuntu3) ...
+Setting up librsvg2-bin (2.40.2-1) ...
+Setting up libtiff-tools (4.0.3-7ubuntu0.4) ...
+Setting up python2.7-dev (2.7.6-8ubuntu0.2) ...
+Setting up python-dev (2.7.5-5ubuntu3) ...
+Processing triggers for libc-bin (2.19-0ubuntu6.6) ...
+
+travis_time:end:25d42f01:start=1468062706763987433,finish=1468062712394108523,duration=5630121090
+[0Ktravis_fold:end:install.4
+[0Ktravis_fold:start:before_script.1
+[0Ktravis_time:start:1f446248
+[0K$ unset CC; unset CXX
+
+travis_time:end:1f446248:start=1468062712399185859,finish=1468062712403166135,duration=3980276
+[0Ktravis_fold:end:before_script.1
+[0Ktravis_fold:start:before_script.2
+[0Ktravis_time:start:26525932
+[0K$ if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/check-doc.py; fi
+
+travis_time:end:26525932:start=1468062712408418233,finish=1468062712412470691,duration=4052458
+[0Ktravis_fold:end:before_script.2
+[0Ktravis_fold:start:before_script.3
+[0Ktravis_time:start:030ff784
+[0K$ mkdir -p depends/SDKs depends/sdk-sources
+
+travis_time:end:030ff784:start=1468062712417943073,finish=1468062712422742448,duration=4799375
+[0Ktravis_fold:end:before_script.3
+[0Ktravis_fold:start:before_script.4
+[0Ktravis_time:start:0e490681
+[0K$ if [ -n "$OSX_SDK" -a ! -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then curl --location --fail $SDK_URL/MacOSX${OSX_SDK}.sdk.tar.gz -o depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
+
+travis_time:end:0e490681:start=1468062712427658988,finish=1468062712431299047,duration=3640059
+[0Ktravis_fold:end:before_script.4
+[0Ktravis_fold:start:before_script.5
+[0Ktravis_time:start:034f9c3e
+[0K$ if [ -n "$OSX_SDK" -a -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then tar -C depends/SDKs -xf depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+tar: Ignoring unknown extended header keyword 'SCHILY.dev'
+tar: Ignoring unknown extended header keyword 'SCHILY.ino'
+tar: Ignoring unknown extended header keyword 'SCHILY.nlink'
+
+travis_time:end:034f9c3e:start=1468062712436530977,finish=1468062714970112866,duration=2533581889
+[0Ktravis_fold:end:before_script.5
+[0Ktravis_fold:start:before_script.6
+[0Ktravis_time:start:0bdf6a63
+[0K$ make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
+make: Entering directory `/home/travis/build/bitcoin/bitcoin/depends'
+copying packages: native_ccache native_comparisontool native_biplist native_ds_store native_mac_alias native_cctools native_cdrkit native_libdmg-hfsplus native_protobuf boost openssl libevent zeromq qrencode protobuf qt bdb miniupnpc
+to: /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11
+make: Leaving directory `/home/travis/build/bitcoin/bitcoin/depends'
+
+travis_time:end:0bdf6a63:start=1468062714975379128,finish=1468062723554408336,duration=8579029208
+[0Ktravis_fold:end:before_script.6
+[0Ktravis_time:start:16924f20
+[0K$ export TRAVIS_COMMIT_LOG=`git log --format=fuller -1`
+
+travis_time:end:16924f20:start=1468062723559327966,finish=1468062723565541186,duration=6213220
+[0K
+[32;1mThe command "export TRAVIS_COMMIT_LOG=`git log --format=fuller -1`" exited with 0.[0m
+travis_time:start:005a56bc
+[0K$ if [ -n "$USE_SHELL" ]; then export CONFIG_SHELL="$USE_SHELL"; fi
+
+travis_time:end:005a56bc:start=1468062723570563724,finish=1468062723574368639,duration=3804915
+[0K
+[32;1mThe command "if [ -n "$USE_SHELL" ]; then export CONFIG_SHELL="$USE_SHELL"; fi" exited with 0.[0m
+travis_time:start:17943778
+[0K$ OUTDIR=$BASE_OUTDIR/$TRAVIS_PULL_REQUEST/$TRAVIS_JOB_NUMBER-$HOST
+
+travis_time:end:17943778:start=1468062723579407345,finish=1468062723583145372,duration=3738027
+[0K
+[32;1mThe command "OUTDIR=$BASE_OUTDIR/$TRAVIS_PULL_REQUEST/$TRAVIS_JOB_NUMBER-$HOST" exited with 0.[0m
+travis_time:start:184f9f86
+[0K$ BITCOIN_CONFIG_ALL="--disable-dependency-tracking --prefix=$TRAVIS_BUILD_DIR/depends/$HOST --bindir=$OUTDIR/bin --libdir=$OUTDIR/lib"
+
+travis_time:end:184f9f86:start=1468062723588061684,finish=1468062723591897937,duration=3836253
+[0K
+[32;1mThe command "BITCOIN_CONFIG_ALL="--disable-dependency-tracking --prefix=$TRAVIS_BUILD_DIR/depends/$HOST --bindir=$OUTDIR/bin --libdir=$OUTDIR/lib"" exited with 0.[0m
+travis_time:start:14463912
+[0K$ depends/$HOST/native/bin/ccache --max-size=$CCACHE_SIZE
+Set cache size limit to 100.0 MB
+
+travis_time:end:14463912:start=1468062723596647636,finish=1468062723601867100,duration=5219464
+[0K
+[32;1mThe command "depends/$HOST/native/bin/ccache --max-size=$CCACHE_SIZE" exited with 0.[0m
+travis_time:start:02e10409
+[0K$ test -n "$USE_SHELL" && eval '"$USE_SHELL" -c "./autogen.sh"' || ./autogen.sh
+libtoolize: putting auxiliary files in AC_CONFIG_AUX_DIR, `build-aux'.
+libtoolize: copying file `build-aux/ltmain.sh'
+libtoolize: putting macros in AC_CONFIG_MACRO_DIR, `build-aux/m4'.
+libtoolize: copying file `build-aux/m4/libtool.m4'
+libtoolize: copying file `build-aux/m4/ltoptions.m4'
+libtoolize: copying file `build-aux/m4/ltsugar.m4'
+libtoolize: copying file `build-aux/m4/ltversion.m4'
+libtoolize: copying file `build-aux/m4/lt~obsolete.m4'
+configure.ac:45: installing 'build-aux/compile'
+configure.ac:45: installing 'build-aux/config.guess'
+configure.ac:45: installing 'build-aux/config.sub'
+configure.ac:28: installing 'build-aux/install-sh'
+configure.ac:28: installing 'build-aux/missing'
+Makefile.am: installing 'build-aux/depcomp'
+parallel-tests: installing 'build-aux/test-driver'
+libtoolize: putting auxiliary files in AC_CONFIG_AUX_DIR, `build-aux'.
+libtoolize: copying file `build-aux/ltmain.sh'
+libtoolize: putting macros in AC_CONFIG_MACRO_DIR, `build-aux/m4'.
+libtoolize: copying file `build-aux/m4/libtool.m4'
+libtoolize: copying file `build-aux/m4/ltoptions.m4'
+libtoolize: copying file `build-aux/m4/ltsugar.m4'
+libtoolize: copying file `build-aux/m4/ltversion.m4'
+libtoolize: copying file `build-aux/m4/lt~obsolete.m4'
+configure.ac:10: installing 'build-aux/compile'
+configure.ac:5: installing 'build-aux/config.guess'
+configure.ac:5: installing 'build-aux/config.sub'
+configure.ac:9: installing 'build-aux/install-sh'
+configure.ac:9: installing 'build-aux/missing'
+Makefile.am: installing 'build-aux/depcomp'
+parallel-tests: installing 'build-aux/test-driver'
+libtoolize: putting auxiliary files in AC_CONFIG_AUX_DIR, `build-aux'.
+libtoolize: copying file `build-aux/ltmain.sh'
+libtoolize: putting macros in AC_CONFIG_MACRO_DIR, `build-aux/m4'.
+libtoolize: copying file `build-aux/m4/libtool.m4'
+libtoolize: copying file `build-aux/m4/ltoptions.m4'
+libtoolize: copying file `build-aux/m4/ltsugar.m4'
+libtoolize: copying file `build-aux/m4/ltversion.m4'
+libtoolize: copying file `build-aux/m4/lt~obsolete.m4'
+configure.ac:61: installing 'build-aux/compile'
+configure.ac:22: installing 'build-aux/config.guess'
+configure.ac:22: installing 'build-aux/config.sub'
+configure.ac:32: installing 'build-aux/install-sh'
+configure.ac:32: installing 'build-aux/missing'
+Makefile.am:5: warning: user variable 'GZIP_ENV' defined here ...
+/usr/share/automake-1.14/am/distdir.am: ... overrides Automake variable 'GZIP_ENV' defined here
+src/Makefile.am: installing 'build-aux/depcomp'
+src/Makefile.am:454: warning: user target '.mm.o' defined here ...
+/usr/share/automake-1.14/am/depend2.am: ... overrides Automake target '.mm.o' defined here
+parallel-tests: installing 'build-aux/test-driver'
+
+travis_time:end:02e10409:start=1468062723606995989,finish=1468062748743127746,duration=25136131757
+[0K
+[32;1mThe command "test -n "$USE_SHELL" && eval '"$USE_SHELL" -c "./autogen.sh"' || ./autogen.sh" exited with 0.[0m
+travis_time:start:07ca66fc
+[0K$ mkdir build && cd build
+
+travis_time:end:07ca66fc:start=1468062748748312430,finish=1468062748753431758,duration=5119328
+[0K
+[32;1mThe command "mkdir build && cd build" exited with 0.[0m
+travis_time:start:08e30ced
+[0K$ ../configure $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
+configure: loading site script /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/config.site
+checking build system type... x86_64-unknown-linux-gnu
+checking host system type... x86_64-apple-darwin11
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether build environment is sane... yes
+checking for x86_64-apple-darwin11-strip... x86_64-apple-darwin11-strip
+checking for a thread-safe mkdir -p... /bin/mkdir -p
+checking for gawk... gawk
+checking whether make sets $(MAKE)... yes
+checking whether make supports nested variables... yes
+checking whether to enable maintainer-specific portions of Makefiles... yes
+checking whether make supports nested variables... (cached) yes
+checking whether the C++ compiler works... yes
+checking for C++ compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... yes
+checking for suffix of object files... o
+checking whether we are using the GNU C++ compiler... yes
+checking whether /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ accepts -g... yes
+checking for style of include used by make... GNU
+checking dependency style of /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++... none
+checking for x86_64-apple-darwin11-g++... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++
+checking whether we are using the GNU Objective C++ compiler... yes
+checking whether /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ accepts -g... yes
+checking dependency style of /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++... none
+checking whether /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ supports C++11 features by default... no
+checking whether /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ supports C++11 features with -std=c++11... yes
+checking how to print strings... printf
+checking for x86_64-apple-darwin11-gcc... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9
+checking whether we are using the GNU C compiler... yes
+checking whether /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 accepts -g... yes
+checking for /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 option to accept ISO C89... none needed
+checking whether /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 understands -c and -o together... yes
+checking dependency style of /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9... none
+checking for a sed that does not truncate output... /bin/sed
+checking for grep that handles long lines and -e... /bin/grep
+checking for egrep... /bin/grep -E
+checking for fgrep... /bin/grep -F
+checking for ld used by /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ld
+checking if the linker (/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ld) is GNU ld... no
+checking for BSD- or MS-compatible name lister (nm)... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-nm
+checking the name lister (/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-nm) interface... BSD nm
+checking whether ln -s works... yes
+checking the maximum length of command line arguments... 1572864
+checking whether the shell understands some XSI constructs... yes
+checking whether the shell understands "+="... yes
+checking how to convert x86_64-unknown-linux-gnu file names to x86_64-apple-darwin11 format... func_convert_file_noop
+checking how to convert x86_64-unknown-linux-gnu file names to toolchain format... func_convert_file_noop
+checking for /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ld option to reload object files... -r
+checking for x86_64-apple-darwin11-objdump... no
+checking for objdump... objdump
+configure: WARNING: using cross tools not prefixed with host triplet
+checking how to recognize dependent libraries... pass_all
+checking for x86_64-apple-darwin11-dlltool... no
+checking for dlltool... no
+checking how to associate runtime and link libraries... printf %s\n
+checking for x86_64-apple-darwin11-ar... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ar
+checking for archiver @FILE support... no
+checking for x86_64-apple-darwin11-strip... (cached) x86_64-apple-darwin11-strip
+checking for x86_64-apple-darwin11-ranlib... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ranlib
+checking command to parse /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-nm output from /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 object... ok
+checking for sysroot... no
+checking for x86_64-apple-darwin11-mt... no
+checking for mt... mt
+checking if mt is a manifest tool... no
+checking for x86_64-apple-darwin11-dsymutil... x86_64-apple-darwin11-dsymutil
+checking for x86_64-apple-darwin11-nmedit... x86_64-apple-darwin11-nmedit
+checking for x86_64-apple-darwin11-lipo... x86_64-apple-darwin11-lipo
+checking for x86_64-apple-darwin11-otool... x86_64-apple-darwin11-otool
+checking for x86_64-apple-darwin11-otool64... no
+checking for otool64... no
+checking for -single_module linker flag... yes
+checking for -exported_symbols_list linker flag... yes
+checking for -force_load linker flag... yes
+checking how to run the C preprocessor... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -E
+checking for ANSI C header files... yes
+checking for sys/types.h... yes
+checking for sys/stat.h... yes
+checking for stdlib.h... yes
+checking for string.h... yes
+checking for memory.h... yes
+checking for strings.h... yes
+checking for inttypes.h... yes
+checking for stdint.h... yes
+checking for unistd.h... yes
+checking for dlfcn.h... yes
+checking for objdir... .libs
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 supports -fno-rtti -fno-exceptions... yes
+checking for /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 option to produce PIC... -fno-common -DPIC
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 PIC flag -fno-common -DPIC works... yes
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 static flag -static works... no
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 supports -c -o file.o... yes
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 supports -c -o file.o... (cached) yes
+checking whether the /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 linker (/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ld) supports shared libraries... yes
+checking dynamic linker characteristics... darwin11 dyld
+checking how to hardcode library paths into programs... immediate
+checking whether stripping libraries is possible... yes
+checking if libtool supports shared libraries... yes
+checking whether to build shared libraries... yes
+checking whether to build static libraries... yes
+checking how to run the C++ preprocessor... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ -std=c++11 -E
+checking for ld used by /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ -std=c++11... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ld
+checking if the linker (/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ld) is GNU ld... no
+checking whether the /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ -std=c++11 linker (/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ld) supports shared libraries... yes
+checking for /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ -std=c++11 option to produce PIC... -fno-common -DPIC
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ -std=c++11 PIC flag -fno-common -DPIC works... yes
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ -std=c++11 static flag -static works... no
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ -std=c++11 supports -c -o file.o... yes
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ -std=c++11 supports -c -o file.o... (cached) yes
+checking whether the /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ -std=c++11 linker (/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ld) supports shared libraries... yes
+checking dynamic linker characteristics... darwin11 dyld
+checking how to hardcode library paths into programs... immediate
+checking for x86_64-apple-darwin11-ar... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ar
+checking for x86_64-apple-darwin11-ranlib... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ranlib
+checking for x86_64-apple-darwin11-strip... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/../native/bin/x86_64-apple-darwin11-strip
+checking for x86_64-apple-darwin11-gcov... no
+checking for gcov... /usr/bin/gcov
+checking for lcov... no
+checking for java... no
+checking for python3... /usr/bin/python3
+checking for genhtml... no
+checking for git... /usr/bin/git
+checking for ccache... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/../native/bin/ccache
+checking for xgettext... /usr/bin/xgettext
+checking for hexdump... /usr/bin/hexdump
+checking for x86_64-apple-darwin11-readelf... no
+checking for readelf... /usr/bin/readelf
+checking for x86_64-apple-darwin11-c++filt... no
+checking for c++filt... /usr/bin/c++filt
+checking for x86_64-apple-darwin11-objcopy... no
+checking for objcopy... /usr/bin/objcopy
+checking whether C++ compiler accepts -Werror... yes
+checking for x86_64-apple-darwin11-install_name_tool... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/../native/bin/x86_64-apple-darwin11-install_name_tool
+checking for x86_64-apple-darwin11-otool... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/../native/bin/x86_64-apple-darwin11-otool
+checking for genisoimage... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/../native/bin/genisoimage
+checking for rsvg-convert... /usr/bin/rsvg-convert
+checking for convert... /usr/bin/convert
+checking for tiffcp... /usr/bin/tiffcp
+checking whether the linker accepts -Wl,-headerpad_max_install_names... yes
+checking for x86_64-apple-darwin11-pkg-config... /usr/bin/pkg-config --static
+checking pkg-config is at least version 0.9.0... yes
+checking whether byte ordering is bigendian... no
+checking whether /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 is Clang... yes
+checking whether Clang needs flag to prevent "argument unused" warning when linking with -pthread... -Qunused-arguments
+checking for joinable pthread attribute... PTHREAD_CREATE_JOINABLE
+checking whether more special flags are required for pthreads... no
+checking for PTHREAD_PRIO_INHERIT... yes
+checking for special C compiler options needed for large files... no
+checking for _FILE_OFFSET_BITS value needed for large files... no
+checking whether strerror_r is declared... yes
+checking for strerror_r... yes
+checking whether strerror_r returns char *... no
+checking whether the linker accepts -Wl,--large-address-aware... no
+checking for __attribute__((visibility))... no
+checking for __attribute__((dllexport))... no
+checking for __attribute__((dllimport))... no
+checking for library containing clock_gettime... no
+checking whether C++ compiler accepts -fPIC... yes
+checking whether C++ compiler accepts -Wstack-protector... yes
+checking whether C++ compiler accepts -fstack-protector-all... yes
+checking whether C++ preprocessor accepts -D_FORTIFY_SOURCE=2... yes
+checking whether C++ preprocessor accepts -U_FORTIFY_SOURCE... yes
+checking whether the linker accepts -Wl,--dynamicbase... no
+checking whether the linker accepts -Wl,--nxcompat... no
+checking whether the linker accepts -Wl,-z,relro... no
+checking whether the linker accepts -Wl,-z,now... no
+checking whether C++ compiler accepts -fPIE... yes
+checking whether the linker accepts -pie... yes
+checking whether the linker accepts -Wl,-dead_strip... yes
+checking endian.h usability... no
+checking endian.h presence... no
+checking for endian.h... no
+checking sys/endian.h usability... no
+checking sys/endian.h presence... no
+checking for sys/endian.h... no
+checking byteswap.h usability... no
+checking byteswap.h presence... no
+checking for byteswap.h... no
+checking stdio.h usability... yes
+checking stdio.h presence... yes
+checking for stdio.h... yes
+checking for stdlib.h... (cached) yes
+checking for unistd.h... (cached) yes
+checking for strings.h... (cached) yes
+checking for sys/types.h... (cached) yes
+checking for sys/stat.h... (cached) yes
+checking sys/select.h usability... yes
+checking sys/select.h presence... yes
+checking for sys/select.h... yes
+checking sys/prctl.h usability... no
+checking sys/prctl.h presence... no
+checking for sys/prctl.h... no
+checking for library containing getaddrinfo_a... no
+checking for library containing inet_pton... none required
+checking whether strnlen is declared... yes
+checking whether le16toh is declared... no
+checking whether le32toh is declared... no
+checking whether le64toh is declared... no
+checking whether htole16 is declared... no
+checking whether htole32 is declared... no
+checking whether htole64 is declared... no
+checking whether be16toh is declared... no
+checking whether be32toh is declared... no
+checking whether be64toh is declared... no
+checking whether htobe16 is declared... no
+checking whether htobe32 is declared... no
+checking whether htobe64 is declared... no
+checking whether bswap_16 is declared... no
+checking whether bswap_32 is declared... no
+checking whether bswap_64 is declared... no
+checking for MSG_NOSIGNAL... no
+checking for visibility attribute... yes
+checking whether C++ compiler accepts -fvisibility=hidden... yes
+checking for Berkeley DB C++ headers... default
+checking for main in -ldb_cxx-4.8... yes
+checking miniupnpc/miniwget.h usability... yes
+checking miniupnpc/miniwget.h presence... yes
+checking for miniupnpc/miniwget.h... yes
+checking for main in -lminiupnpc... yes
+checking miniupnpc/miniupnpc.h usability... yes
+checking miniupnpc/miniupnpc.h presence... yes
+checking for miniupnpc/miniupnpc.h... yes
+checking for main in -lminiupnpc... (cached) yes
+checking miniupnpc/upnpcommands.h usability... yes
+checking miniupnpc/upnpcommands.h presence... yes
+checking for miniupnpc/upnpcommands.h... yes
+checking for main in -lminiupnpc... (cached) yes
+checking miniupnpc/upnperrors.h usability... yes
+checking miniupnpc/upnperrors.h presence... yes
+checking for miniupnpc/upnperrors.h... yes
+checking for main in -lminiupnpc... (cached) yes
+checking for QT... yes
+checking for QT_TEST... yes
+checking for QT_DBUS... yes
+checking for static Qt... yes
+checking for QTPLATFORM... yes
+checking for QTPRINT... yes
+checking for Qt < 5.4... no
+checking whether the linker accepts -framework IOKit... yes
+checking for static Qt plugins: -lqcocoa... yes
+checking whether -fPIE can be used with this Qt config... yes
+checking for moc-qt5... no
+checking for moc5... no
+checking for moc... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/../native/bin/moc
+checking for uic-qt5... no
+checking for uic5... no
+checking for uic... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/../native/bin/uic
+checking for rcc-qt5... no
+checking for rcc5... no
+checking for rcc... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/../native/bin/rcc
+checking for lrelease-qt5... no
+checking for lrelease5... no
+checking for lrelease... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/../native/bin/lrelease
+checking for lupdate-qt5... no
+checking for lupdate5... no
+checking for lupdate... no
+checking whether the linker accepts -framework Foundation -framework ApplicationServices -framework AppKit... yes
+checking whether to build Bitcoin Core GUI... configure: WARNING: "lupdate is required to update qt translations"
+yes (Qt5)
+checking for boostlib >= 1.20.0... yes
+checking whether the Boost::System library is available... yes
+checking for exit in -lboost_system-mt... yes
+checking whether the Boost::Filesystem library is available... yes
+checking for exit in -lboost_filesystem-mt... yes
+checking whether the Boost::Program_Options library is available... yes
+checking for exit in -lboost_program_options-mt... yes
+checking whether the Boost::Thread library is available... yes
+checking for exit in -lboost_thread-mt... yes
+checking whether the Boost::Chrono library is available... yes
+checking for exit in -lboost_chrono-mt... yes
+checking for working boost reduced exports... yes
+checking whether the linker accepts -Wl,--exclude-libs,ALL... no
+checking whether the Boost::Unit_Test_Framework library is available... yes
+checking for dynamic linked boost test... no
+checking for mismatched boost c++11 scoped enums... ok
+checking for SSL... yes
+checking for CRYPTO... yes
+checking for PROTOBUF... yes
+checking for QR... yes
+checking for EVENT... yes
+checking for EVENT_PTHREADS... yes
+checking for ZMQ... yes
+checking openssl/ec.h usability... yes
+checking openssl/ec.h presence... yes
+checking for openssl/ec.h... yes
+checking for protoc... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/../native/bin/protoc
+checking whether to build bitcoind... yes
+checking whether to build utils (bitcoin-cli bitcoin-tx)... yes
+checking whether to build libraries... yes
+checking if ccache should be used... yes
+checking whether C preprocessor accepts -Qunused-arguments... yes
+checking if wallet should be enabled... yes
+checking whether to build with support for UPnP... yes
+checking whether to build with UPnP enabled by default... no
+checking whether to build GUI with support for D-Bus... yes
+checking whether to build GUI with support for QR codes... yes
+checking whether to build test_bitcoin-qt... yes
+checking whether to build test_bitcoin... yes
+checking whether to reduce exports... yes
+checking that generated files are newer than configure... done
+configure: creating ./config.status
+config.status: creating libbitcoinconsensus.pc
+config.status: creating Makefile
+config.status: creating src/Makefile
+config.status: creating share/setup.nsi
+config.status: creating share/qt/Info.plist
+config.status: creating src/test/buildenv.py
+config.status: creating qa/pull-tester/run-bitcoind-for-test.sh
+config.status: creating qa/pull-tester/tests_config.py
+config.status: creating contrib/devtools/split-debug.sh
+config.status: creating src/config/bitcoin-config.h
+config.status: linking ../qa/pull-tester/rpc-tests.py to qa/pull-tester/rpc-tests.py
+config.status: executing depfiles commands
+config.status: executing libtool commands
+=== configuring in src/univalue (/home/travis/build/bitcoin/bitcoin/build/src/univalue)
+configure: running /bin/bash ../../../src/univalue/configure --disable-option-checking '--prefix=/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11'  '--disable-dependency-tracking' '--bindir=/home/travis/build/bitcoin/bitcoin/out/8324/11444.7-x86_64-apple-darwin11/bin' '--libdir=/home/travis/build/bitcoin/bitcoin/out/8324/11444.7-x86_64-apple-darwin11/lib' '--enable-reduce-exports' '--disable-shared' '--with-pic' '--with-bignum=no' '--enable-module-recovery' --cache-file=/dev/null --srcdir=../../../src/univalue
+configure: loading site script /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/config.site
+checking whether make supports nested variables... yes
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether build environment is sane... yes
+checking for x86_64-apple-darwin11-strip... x86_64-apple-darwin11-strip
+checking for a thread-safe mkdir -p... /bin/mkdir -p
+checking for gawk... gawk
+checking whether make sets $(MAKE)... yes
+checking build system type... x86_64-unknown-linux-gnu
+checking host system type... x86_64-apple-darwin11
+checking how to print strings... printf
+checking for style of include used by make... GNU
+checking for x86_64-apple-darwin11-gcc... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... yes
+checking for suffix of object files... o
+checking whether we are using the GNU C compiler... yes
+checking whether /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 accepts -g... yes
+checking for /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 option to accept ISO C89... none needed
+checking whether /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 understands -c and -o together... yes
+checking dependency style of /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9... none
+checking for a sed that does not truncate output... /bin/sed
+checking for grep that handles long lines and -e... /bin/grep
+checking for egrep... /bin/grep -E
+checking for fgrep... /bin/grep -F
+checking for ld used by /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ld
+checking if the linker (/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ld) is GNU ld... no
+checking for BSD- or MS-compatible name lister (nm)... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-nm
+checking the name lister (/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-nm) interface... BSD nm
+checking whether ln -s works... yes
+checking the maximum length of command line arguments... 1572864
+checking whether the shell understands some XSI constructs... yes
+checking whether the shell understands "+="... yes
+checking how to convert x86_64-unknown-linux-gnu file names to x86_64-apple-darwin11 format... func_convert_file_noop
+checking how to convert x86_64-unknown-linux-gnu file names to toolchain format... func_convert_file_noop
+checking for /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ld option to reload object files... -r
+checking for x86_64-apple-darwin11-objdump... no
+checking for objdump... objdump
+configure: WARNING: using cross tools not prefixed with host triplet
+checking how to recognize dependent libraries... pass_all
+checking for x86_64-apple-darwin11-dlltool... no
+checking for dlltool... no
+checking how to associate runtime and link libraries... printf %s\n
+checking for x86_64-apple-darwin11-ar... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ar
+checking for archiver @FILE support... no
+checking for x86_64-apple-darwin11-strip... (cached) x86_64-apple-darwin11-strip
+checking for x86_64-apple-darwin11-ranlib... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ranlib
+checking command to parse /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-nm output from /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 object... ok
+checking for sysroot... no
+checking for x86_64-apple-darwin11-mt... no
+checking for mt... mt
+checking if mt is a manifest tool... no
+checking for x86_64-apple-darwin11-dsymutil... x86_64-apple-darwin11-dsymutil
+checking for x86_64-apple-darwin11-nmedit... x86_64-apple-darwin11-nmedit
+checking for x86_64-apple-darwin11-lipo... x86_64-apple-darwin11-lipo
+checking for x86_64-apple-darwin11-otool... x86_64-apple-darwin11-otool
+checking for x86_64-apple-darwin11-otool64... no
+checking for otool64... no
+checking for -single_module linker flag... yes
+checking for -exported_symbols_list linker flag... yes
+checking for -force_load linker flag... yes
+checking how to run the C preprocessor... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -E
+checking for ANSI C header files... yes
+checking for sys/types.h... yes
+checking for sys/stat.h... yes
+checking for stdlib.h... yes
+checking for string.h... yes
+checking for memory.h... yes
+checking for strings.h... yes
+checking for inttypes.h... yes
+checking for stdint.h... yes
+checking for unistd.h... yes
+checking for dlfcn.h... yes
+checking for objdir... .libs
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 supports -fno-rtti -fno-exceptions... yes
+checking for /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 option to produce PIC... -fno-common -DPIC
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 PIC flag -fno-common -DPIC works... yes
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 static flag -static works... no
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 supports -c -o file.o... yes
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 supports -c -o file.o... (cached) yes
+checking whether the /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 linker (/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ld) supports shared libraries... yes
+checking dynamic linker characteristics... darwin11 dyld
+checking how to hardcode library paths into programs... immediate
+checking whether stripping libraries is possible... yes
+checking if libtool supports shared libraries... yes
+checking whether to build shared libraries... no
+checking whether to build static libraries... yes
+checking whether we are using the GNU C++ compiler... yes
+checking whether /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ accepts -g... yes
+checking dependency style of /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++... none
+checking how to run the C++ preprocessor... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ -E
+checking for ld used by /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ld
+checking if the linker (/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ld) is GNU ld... no
+checking whether the /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ linker (/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ld) supports shared libraries... yes
+checking for /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ option to produce PIC... -fno-common -DPIC
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ PIC flag -fno-common -DPIC works... yes
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ static flag -static works... no
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ supports -c -o file.o... yes
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ supports -c -o file.o... (cached) yes
+checking whether the /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang++ -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -stdlib=libc++ linker (/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ld) supports shared libraries... yes
+checking dynamic linker characteristics... darwin11 dyld
+checking how to hardcode library paths into programs... immediate
+checking that generated files are newer than configure... done
+configure: creating ./config.status
+config.status: creating Makefile
+config.status: creating pc/libunivalue.pc
+config.status: creating pc/libunivalue-uninstalled.pc
+config.status: creating univalue-config.h
+config.status: executing depfiles commands
+config.status: executing libtool commands
+=== configuring in src/secp256k1 (/home/travis/build/bitcoin/bitcoin/build/src/secp256k1)
+configure: running /bin/bash ../../../src/secp256k1/configure --disable-option-checking '--prefix=/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11'  '--disable-dependency-tracking' '--bindir=/home/travis/build/bitcoin/bitcoin/out/8324/11444.7-x86_64-apple-darwin11/bin' '--libdir=/home/travis/build/bitcoin/bitcoin/out/8324/11444.7-x86_64-apple-darwin11/lib' '--enable-reduce-exports' '--disable-shared' '--with-pic' '--with-bignum=no' '--enable-module-recovery' --cache-file=/dev/null --srcdir=../../../src/secp256k1
+configure: loading site script /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/config.site
+checking build system type... x86_64-unknown-linux-gnu
+checking host system type... x86_64-apple-darwin11
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether build environment is sane... yes
+checking for x86_64-apple-darwin11-strip... x86_64-apple-darwin11-strip
+checking for a thread-safe mkdir -p... /bin/mkdir -p
+checking for gawk... gawk
+checking whether make sets $(MAKE)... yes
+checking whether make supports nested variables... yes
+checking how to print strings... printf
+checking for style of include used by make... GNU
+checking for x86_64-apple-darwin11-gcc... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... yes
+checking for suffix of object files... o
+checking whether we are using the GNU C compiler... yes
+checking whether /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 accepts -g... yes
+checking for /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 option to accept ISO C89... none needed
+checking whether /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 understands -c and -o together... yes
+checking dependency style of /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9... none
+checking for a sed that does not truncate output... /bin/sed
+checking for grep that handles long lines and -e... /bin/grep
+checking for egrep... /bin/grep -E
+checking for fgrep... /bin/grep -F
+checking for ld used by /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ld
+checking if the linker (/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ld) is GNU ld... no
+checking for BSD- or MS-compatible name lister (nm)... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-nm
+checking the name lister (/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-nm) interface... BSD nm
+checking whether ln -s works... yes
+checking the maximum length of command line arguments... 1572864
+checking whether the shell understands some XSI constructs... yes
+checking whether the shell understands "+="... yes
+checking how to convert x86_64-unknown-linux-gnu file names to x86_64-apple-darwin11 format... func_convert_file_noop
+checking how to convert x86_64-unknown-linux-gnu file names to toolchain format... func_convert_file_noop
+checking for /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ld option to reload object files... -r
+checking for x86_64-apple-darwin11-objdump... no
+checking for objdump... objdump
+configure: WARNING: using cross tools not prefixed with host triplet
+checking how to recognize dependent libraries... pass_all
+checking for x86_64-apple-darwin11-dlltool... no
+checking for dlltool... no
+checking how to associate runtime and link libraries... printf %s\n
+checking for x86_64-apple-darwin11-ar... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ar
+checking for archiver @FILE support... no
+checking for x86_64-apple-darwin11-strip... (cached) x86_64-apple-darwin11-strip
+checking for x86_64-apple-darwin11-ranlib... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ranlib
+checking command to parse /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-nm output from /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 object... ok
+checking for sysroot... no
+checking for x86_64-apple-darwin11-mt... no
+checking for mt... mt
+checking if mt is a manifest tool... no
+checking for x86_64-apple-darwin11-dsymutil... x86_64-apple-darwin11-dsymutil
+checking for x86_64-apple-darwin11-nmedit... x86_64-apple-darwin11-nmedit
+checking for x86_64-apple-darwin11-lipo... x86_64-apple-darwin11-lipo
+checking for x86_64-apple-darwin11-otool... x86_64-apple-darwin11-otool
+checking for x86_64-apple-darwin11-otool64... no
+checking for otool64... no
+checking for -single_module linker flag... yes
+checking for -exported_symbols_list linker flag... yes
+checking for -force_load linker flag... yes
+checking how to run the C preprocessor... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 -E
+checking for ANSI C header files... yes
+checking for sys/types.h... yes
+checking for sys/stat.h... yes
+checking for stdlib.h... yes
+checking for string.h... yes
+checking for memory.h... yes
+checking for strings.h... yes
+checking for inttypes.h... yes
+checking for stdint.h... yes
+checking for unistd.h... yes
+checking for dlfcn.h... yes
+checking for objdir... .libs
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 supports -fno-rtti -fno-exceptions... yes
+checking for /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 option to produce PIC... -fno-common -DPIC
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 PIC flag -fno-common -DPIC works... yes
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 static flag -static works... no
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 supports -c -o file.o... yes
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 supports -c -o file.o... (cached) yes
+checking whether the /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 linker (/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ld) supports shared libraries... yes
+checking dynamic linker characteristics... darwin11 dyld
+checking how to hardcode library paths into programs... immediate
+checking whether stripping libraries is possible... yes
+checking if libtool supports shared libraries... yes
+checking whether to build shared libraries... no
+checking whether to build static libraries... yes
+checking whether make supports nested variables... (cached) yes
+checking for x86_64-apple-darwin11-pkg-config... /usr/bin/pkg-config --static
+checking pkg-config is at least version 0.9.0... yes
+checking for x86_64-apple-darwin11-ar... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ar
+checking for x86_64-apple-darwin11-ranlib... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ranlib
+checking for x86_64-apple-darwin11-strip... /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/../native/bin/x86_64-apple-darwin11-strip
+checking for gcc... gcc
+checking whether we are using the GNU C compiler... (cached) yes
+checking whether gcc accepts -g... yes
+checking for gcc option to accept ISO C89... (cached) none needed
+checking whether gcc understands -c and -o together... (cached) yes
+checking dependency style of gcc... (cached) none
+checking how to run the C preprocessor... gcc -E
+checking for /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 option to accept ISO C89... (cached) none needed
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 supports -std=c89 -pedantic -Wall -Wextra -Wcast-align -Wnested-externs -Wshadow -Wstrict-prototypes -Wno-unused-function -Wno-long-long -Wno-overlength-strings... yes
+checking if /home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/clang -target x86_64-apple-darwin11 -mmacosx-version-min=10.7 --sysroot /home/travis/build/bitcoin/bitcoin/depends/SDKs/MacOSX10.11.sdk -mlinker-version=253.9 supports -fvisibility=hidden... yes
+checking for __int128... yes
+checking for __builtin_expect... yes
+checking for x86_64 assembly availability... no
+checking for CRYPTO... yes
+checking for main in -lcrypto... yes
+checking for EC functions in libcrypto... yes
+checking whether byte ordering is bigendian... no
+configure: Using assembly optimizations: no
+configure: Using field implementation: 64bit
+configure: Using bignum implementation: no
+configure: Using scalar implementation: 64bit
+configure: Using endomorphism optimizations: no
+configure: Building ECDH module: no
+configure: Building Schnorr signatures module: no
+configure: Building ECDSA pubkey recovery module: yes
+checking that generated files are newer than configure... done
+configure: creating ./config.status
+config.status: creating Makefile
+config.status: creating libsecp256k1.pc
+config.status: creating src/libsecp256k1-config.h
+config.status: executing depfiles commands
+config.status: executing libtool commands
+
+travis_time:end:08e30ced:start=1468062748758595300,finish=1468062770450882562,duration=21692287262
+[0K
+[32;1mThe command "../configure $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)" exited with 0.[0m
+travis_time:start:0a896c62
+[0K$ make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
+sed 's/PACKAGE_NAME/Bitcoin Core/' < "../contrib/macdeploy/background.svg" | /usr/bin/rsvg-convert -f png -d 36 -p 36 | /usr/bin/convert - dpi36.background.tiff
+sed 's/PACKAGE_NAME/Bitcoin Core/' < "../contrib/macdeploy/background.svg" | /usr/bin/rsvg-convert -f png -d 72 -p 72 | /usr/bin/convert - dpi72.background.tiff
+/bin/mkdir -p Bitcoin-Qt.app/Contents
+/bin/mkdir -p Bitcoin-Qt.app/Contents/Resources
+/bin/mkdir -p Bitcoin-Qt.app/Contents/Resources
+/usr/bin/install -c -m 644 ../src/qt/res/icons/bitcoin.icns Bitcoin-Qt.app/Contents/Resources/bitcoin.icns
+/bin/mkdir -p Bitcoin-Qt.app/Contents
+/usr/bin/install -c -m 644 share/qt/Info.plist Bitcoin-Qt.app/Contents/Info.plist
+make -C src qt/bitcoin-qt
+make[1]: Entering directory `/home/travis/build/bitcoin/bitcoin/build/src'
+  GEN      qt/forms/ui_addressbookpage.h
+  GEN      qt/forms/ui_askpassphrasedialog.h
+  GEN      qt/forms/ui_coincontroldialog.h
+  GEN      qt/forms/ui_editaddressdialog.h
+  GEN      qt/forms/ui_helpmessagedialog.h
+  GEN      qt/forms/ui_intro.h
+  GEN      qt/forms/ui_openuridialog.h
+  GEN      qt/forms/ui_optionsdialog.h
+  GEN      qt/forms/ui_overviewpage.h
+  GEN      qt/forms/ui_receivecoinsdialog.h
+  GEN      qt/forms/ui_receiverequestdialog.h
+  GEN      qt/forms/ui_debugwindow.h
+  GEN      qt/forms/ui_sendcoinsdialog.h
+/bin/mkdir -p Bitcoin-Qt.app/Contents/Resources/Base.lproj
+echo '{	CFBundleDisplayName = "Bitcoin Core"; CFBundleName = "Bitcoin Core"; }' > Bitcoin-Qt.app/Contents/Resources/Base.lproj/InfoPlist.strings
+  GEN      qt/forms/ui_sendcoinsentry.h
+  GEN      qt/forms/ui_signverifymessagedialog.h
+  GEN      qt/paymentrequest.pb.h
+  GEN      qt/forms/ui_transactiondescdialog.h
+  GEN      qt/locale/bitcoin_af.qm
+  GEN      qt/locale/bitcoin_af_ZA.qm
+  GEN      qt/locale/bitcoin_ar.qm
+  GEN      qt/locale/bitcoin_be_BY.qm
+  GEN      qt/locale/bitcoin_bg.qm
+Removed plural forms as the target language has less forms.
+If this sounds wrong, possibly the target language is not set or recognized.
+  GEN      qt/locale/bitcoin_ca_ES.qm
+  GEN      qt/locale/bitcoin_ca.qm
+  GEN      qt/locale/bitcoin_ca@valencia.qm
+  GEN      qt/locale/bitcoin_cs_CZ.qm
+  GEN      qt/locale/bitcoin_cs.qm
+  GEN      qt/locale/bitcoin_cy.qm
+  GEN      qt/locale/bitcoin_da.qm
+  GEN      qt/locale/bitcoin_de.qm
+  GEN      qt/locale/bitcoin_el_GR.qm
+  GEN      qt/locale/bitcoin_el.qm
+  GEN      qt/locale/bitcoin_en_GB.qm
+  GEN      qt/locale/bitcoin_en.qm
+  GEN      qt/locale/bitcoin_eo.qm
+  GEN      qt/locale/bitcoin_es_AR.qm
+  GEN      qt/locale/bitcoin_es_CL.qm
+  GEN      qt/locale/bitcoin_es_CO.qm
+  GEN      qt/locale/bitcoin_es_DO.qm
+  GEN      qt/locale/bitcoin_es_ES.qm
+  GEN      qt/locale/bitcoin_es_MX.qm
+  GEN      qt/locale/bitcoin_es.qm
+  GEN      qt/locale/bitcoin_es_UY.qm
+  GEN      qt/locale/bitcoin_es_VE.qm
+  GEN      qt/locale/bitcoin_et.qm
+  GEN      qt/locale/bitcoin_eu_ES.qm
+  GEN      qt/locale/bitcoin_fa_IR.qm
+  GEN      qt/locale/bitcoin_fa.qm
+  GEN      qt/locale/bitcoin_fi.qm
+  GEN      qt/locale/bitcoin_fr_CA.qm
+  GEN      qt/locale/bitcoin_fr_FR.qm
+  GEN      qt/locale/bitcoin_fr.qm
+  GEN      qt/locale/bitcoin_gl.qm
+  GEN      qt/locale/bitcoin_he.qm
+  GEN      qt/locale/bitcoin_hi_IN.qm
+  GEN      qt/locale/bitcoin_hr.qm
+  GEN      qt/locale/bitcoin_hu.qm
+  GEN      qt/locale/bitcoin_id_ID.qm
+  GEN      qt/locale/bitcoin_it_IT.qm
+Removed plural forms as the target language has less forms.
+If this sounds wrong, possibly the target language is not set or recognized.
+  GEN      qt/locale/bitcoin_it.qm
+  GEN      qt/locale/bitcoin_ja.qm
+  GEN      qt/locale/bitcoin_ka.qm
+  GEN      qt/locale/bitcoin_kk_KZ.qm
+  GEN      qt/locale/bitcoin_ko_KR.qm
+  GEN      qt/locale/bitcoin_ku_IQ.qm
+  GEN      qt/locale/bitcoin_ky.qm
+  GEN      qt/locale/bitcoin_lt.qm
+  GEN      qt/locale/bitcoin_la.qm
+  GEN      qt/locale/bitcoin_lv_LV.qm
+  GEN      qt/locale/bitcoin_mk_MK.qm
+  GEN      qt/locale/bitcoin_mn.qm
+  GEN      qt/locale/bitcoin_ms_MY.qm
+  GEN      qt/locale/bitcoin_nb.qm
+  GEN      qt/locale/bitcoin_nl.qm
+  GEN      qt/locale/bitcoin_pam.qm
+  GEN      qt/locale/bitcoin_pl.qm
+  GEN      qt/locale/bitcoin_pt_BR.qm
+  GEN      qt/locale/bitcoin_pt_PT.qm
+  GEN      qt/locale/bitcoin_ro_RO.qm
+  GEN      qt/locale/bitcoin_ro.qm
+  GEN      qt/locale/bitcoin_ru_RU.qm
+  GEN      qt/locale/bitcoin_sk.qm
+  GEN      qt/locale/bitcoin_ru.qm
+  GEN      qt/locale/bitcoin_sl_SI.qm
+Removed plural forms as the target language has less forms.
+If this sounds wrong, possibly the target language is not set or recognized.
+  GEN      qt/locale/bitcoin_sq.qm
+  GEN      qt/locale/bitcoin_sr@latin.qm
+  GEN      qt/locale/bitcoin_sr.qm
+  GEN      qt/locale/bitcoin_ta.qm
+  GEN      qt/locale/bitcoin_sv.qm
+  GEN      qt/locale/bitcoin_th_TH.qm
+  GEN      qt/locale/bitcoin_tr_TR.qm
+  GEN      qt/locale/bitcoin_tr.qm
+  GEN      qt/locale/bitcoin_uk.qm
+  GEN      qt/locale/bitcoin_ur_PK.qm
+Removed plural forms as the target language has less forms.
+If this sounds wrong, possibly the target language is not set or recognized.
+  GEN      qt/locale/bitcoin_uz@Cyrl.qm
+  GEN      qt/locale/bitcoin_vi.qm
+  GEN      qt/locale/bitcoin_vi_VN.qm
+  GEN      qt/locale/bitcoin_zh_CN.qm
+  GEN      qt/locale/bitcoin_zh_HK.qm
+  GEN      qt/locale/bitcoin_zh.qm
+  CXX      libbitcoin_server_a-addrman.o
+  GEN      qt/locale/bitcoin_zh_TW.qm
+  CXX      libbitcoin_server_a-bloom.o
+  CXX      libbitcoin_server_a-blockencodings.o
+  CXX      libbitcoin_server_a-chain.o
+  CXX      libbitcoin_server_a-checkpoints.o
+  CXX      libbitcoin_server_a-httprpc.o
+  CXX      libbitcoin_server_a-httpserver.o
+  CXX      libbitcoin_server_a-init.o
+  CXX      libbitcoin_server_a-dbwrapper.o
+  CXX      libbitcoin_server_a-main.o
+  CXX      libbitcoin_server_a-merkleblock.o
+  CXX      libbitcoin_server_a-miner.o
+  CXX      libbitcoin_server_a-net.o
+  CXX      libbitcoin_server_a-noui.o
+  CXX      libbitcoin_server_a-pow.o
+  CXX      libbitcoin_server_a-rest.o
+  CXX      libbitcoin_server_a-timedata.o
+  CXX      libbitcoin_server_a-torcontrol.o
+  CXX      libbitcoin_server_a-txdb.o
+  CXX      libbitcoin_server_a-txmempool.o
+  CXX      libbitcoin_server_a-ui_interface.o
+  CXX      libbitcoin_server_a-validationinterface.o
+  CXX      libbitcoin_server_a-versionbits.o
+  CXX      policy/libbitcoin_wallet_a-rbf.o
+  CXX      rpc/libbitcoin_cli_a-client.o
+  CXX      libbitcoin_common_a-amount.o
+  CXX      libbitcoin_common_a-base58.o
+  CXX      libbitcoin_common_a-chainparams.o
+  CXX      libbitcoin_common_a-coins.o
+  CXX      libbitcoin_common_a-compressor.o
+  CXX      libbitcoin_common_a-core_read.o
+  CXX      libbitcoin_common_a-core_write.o
+  CXX      libbitcoin_common_a-key.o
+  CXX      libbitcoin_common_a-keystore.o
+  CXX      libbitcoin_common_a-netbase.o
+  CXX      libbitcoin_common_a-protocol.o
+  CXX      libbitcoin_common_a-scheduler.o
+  CXX      script/libbitcoin_common_a-sign.o
+  CXX      script/libbitcoin_common_a-standard.o
+  CXX      libbitcoin_util_a-chainparamsbase.o
+  CXX      libbitcoin_util_a-random.o
+  CXX      rpc/libbitcoin_util_a-protocol.o
+  CXX      support/libbitcoin_util_a-cleanse.o
+  CXX      libbitcoin_util_a-sync.o
+  CXX      libbitcoin_util_a-util.o
+  CXX      libbitcoin_util_a-utilmoneystr.o
+  CXX      libbitcoin_util_a-utilstrencodings.o
+  CXX      libbitcoin_util_a-utiltime.o
+  CXX      libbitcoin_consensus_a-arith_uint256.o
+  CXX      libbitcoin_consensus_a-hash.o
+  CXX      libbitcoin_consensus_a-pubkey.o
+  CXX      script/libbitcoin_consensus_a-bitcoinconsensus.o
+  CXX      script/libbitcoin_consensus_a-interpreter.o
+  CXX      script/libbitcoin_consensus_a-script.o
+  CXX      script/libbitcoin_consensus_a-script_error.o
+  CXX      libbitcoin_consensus_a-uint256.o
+  CXX      libbitcoin_consensus_a-utilstrencodings.o
+make[2]: Entering directory `/home/travis/build/bitcoin/bitcoin/build/src/univalue'
+  CXX      lib/libunivalue_la-univalue.lo
+  CXX      lib/libunivalue_la-univalue_read.lo
+make[2]: Entering directory `/home/travis/build/bitcoin/bitcoin/build/src/secp256k1'
+gcc -I../../../src/secp256k1 -g -O2 -Wall -Wextra -Wno-unused-function -c ../../../src/secp256k1/src/gen_context.c -o gen_context.o
+  CXX      lib/libunivalue_la-univalue_write.lo
+  CXXLD    libunivalue.la
+make[2]: Leaving directory `/home/travis/build/bitcoin/bitcoin/build/src/univalue'
+  GEN      qt/bitcoin.moc
+  GEN      qt/bitcoinamountfield.moc
+  GEN      qt/intro.moc
+  GEN      qt/overviewpage.moc
+  GEN      qt/rpcconsole.moc
+  GEN      qt/moc_addressbookpage.cpp
+  GEN      qt/moc_addresstablemodel.cpp
+  GEN      qt/moc_askpassphrasedialog.cpp
+  GEN      qt/moc_bantablemodel.cpp
+  GEN      qt/moc_bitcoinaddressvalidator.cpp
+  GEN      qt/moc_bitcoinamountfield.cpp
+  GEN      qt/moc_bitcoingui.cpp
+  GEN      qt/moc_bitcoinunits.cpp
+  GEN      qt/moc_clientmodel.cpp
+  GEN      qt/moc_coincontroldialog.cpp
+  GEN      qt/moc_coincontroltreewidget.cpp
+  GEN      qt/moc_csvmodelwriter.cpp
+  GEN      qt/moc_editaddressdialog.cpp
+  GEN      qt/moc_guiutil.cpp
+  GEN      qt/moc_intro.cpp
+  GEN      qt/moc_macdockiconhandler.cpp
+  GEN      qt/moc_macnotificationhandler.cpp
+  GEN      qt/moc_notificator.cpp
+  GEN      qt/moc_openuridialog.cpp
+  GEN      qt/moc_optionsdialog.cpp
+  GEN      qt/moc_optionsmodel.cpp
+  GEN      qt/moc_overviewpage.cpp
+  GEN      qt/moc_peertablemodel.cpp
+  GEN      qt/moc_paymentserver.cpp
+  GEN      qt/moc_qvalidatedlineedit.cpp
+  GEN      qt/moc_qvaluecombobox.cpp
+  GEN      qt/moc_receivecoinsdialog.cpp
+  GEN      qt/moc_receiverequestdialog.cpp
+  GEN      qt/moc_recentrequeststablemodel.cpp
+  GEN      qt/moc_rpcconsole.cpp
+  GEN      qt/moc_sendcoinsdialog.cpp
+  GEN      qt/moc_sendcoinsentry.cpp
+  GEN      qt/moc_signverifymessagedialog.cpp
+  GEN      qt/moc_splashscreen.cpp
+  GEN      qt/moc_trafficgraphwidget.cpp
+  GEN      qt/moc_transactiondesc.cpp
+  GEN      qt/moc_transactiondescdialog.cpp
+  GEN      qt/moc_transactionfilterproxy.cpp
+  GEN      qt/moc_transactiontablemodel.cpp
+  GEN      qt/moc_transactionview.cpp
+  GEN      qt/moc_utilitydialog.cpp
+  GEN      qt/moc_walletframe.cpp
+  GEN      qt/moc_walletmodel.cpp
+  GEN      qt/moc_walletview.cpp
+  CXX      qt/qt_libbitcoinqt_a-paymentrequest.pb.o
+  GEN      qt/qrc_bitcoin.cpp
+  GEN      qt/qrc_bitcoin_locale.cpp
+  CXX      policy/libbitcoin_server_a-fees.o
+  CXX      policy/libbitcoin_server_a-policy.o
+  CXX      rpc/libbitcoin_server_a-blockchain.o
+  CXX      rpc/libbitcoin_server_a-mining.o
+  CXX      rpc/libbitcoin_server_a-misc.o
+  CXX      rpc/libbitcoin_server_a-net.o
+  CXX      rpc/libbitcoin_server_a-rawtransaction.o
+  CXX      rpc/libbitcoin_server_a-server.o
+  CXX      script/libbitcoin_server_a-sigcache.o
+  CXX      script/libbitcoin_server_a-ismine.o
+  CXX      wallet/libbitcoin_wallet_a-crypter.o
+  CXX      wallet/libbitcoin_wallet_a-db.o
+  CXX      wallet/libbitcoin_wallet_a-rpcdump.o
+  CXX      wallet/libbitcoin_wallet_a-rpcwallet.o
+  CXX      wallet/libbitcoin_wallet_a-wallet.o
+  CXX      wallet/libbitcoin_wallet_a-walletdb.o
+gcc gen_context.o -o gen_context
+./gen_context
+  CC       src/libsecp256k1_la-secp256k1.lo
+  CCLD     libsecp256k1.la
+make[2]: Leaving directory `/home/travis/build/bitcoin/bitcoin/build/src/secp256k1'
+  CXX      zmq/libbitcoin_zmq_a-zmqabstractnotifier.o
+  CXX      zmq/libbitcoin_zmq_a-zmqnotificationinterface.o
+  CXX      zmq/libbitcoin_zmq_a-zmqpublishnotifier.o
+  AR       libbitcoin_cli.a
+  AR       libbitcoin_common.a
+  CXX      support/libbitcoin_util_a-pagelocker.o
+  CXX      libbitcoin_util_a-clientversion.o
+  CXX      compat/libbitcoin_util_a-glibc_sanity.o
+  CXX      compat/libbitcoin_util_a-glibcxx_sanity.o
+  CXX      compat/libbitcoin_util_a-strnlen.o
+  CXX      consensus/libbitcoin_consensus_a-merkle.o
+  CXX      primitives/libbitcoin_consensus_a-block.o
+  CXX      primitives/libbitcoin_consensus_a-transaction.o
+  CXX      crypto/crypto_libbitcoin_crypto_a-aes.o
+  CXX      crypto/crypto_libbitcoin_crypto_a-hmac_sha256.o
+  CXX      crypto/crypto_libbitcoin_crypto_a-hmac_sha512.o
+  CXX      crypto/crypto_libbitcoin_crypto_a-ripemd160.o
+  CXX      crypto/crypto_libbitcoin_crypto_a-sha1.o
+  CXX      crypto/crypto_libbitcoin_crypto_a-sha256.o
+  CXX      crypto/crypto_libbitcoin_crypto_a-sha512.o
+  CXX      leveldb/db/leveldb_libleveldb_a-builder.o
+  CXX      leveldb/db/leveldb_libleveldb_a-c.o
+  CXX      leveldb/db/leveldb_libleveldb_a-dbformat.o
+  CXX      leveldb/db/leveldb_libleveldb_a-db_impl.o
+  CXX      leveldb/db/leveldb_libleveldb_a-db_iter.o
+  CXX      leveldb/db/leveldb_libleveldb_a-dumpfile.o
+  CXX      leveldb/db/leveldb_libleveldb_a-filename.o
+  CXX      leveldb/db/leveldb_libleveldb_a-log_reader.o
+  CXX      leveldb/db/leveldb_libleveldb_a-log_writer.o
+  CXX      leveldb/db/leveldb_libleveldb_a-memtable.o
+  CXX      leveldb/db/leveldb_libleveldb_a-repair.o
+  CXX      leveldb/db/leveldb_libleveldb_a-table_cache.o
+  CXX      leveldb/db/leveldb_libleveldb_a-version_edit.o
+  CXX      leveldb/db/leveldb_libleveldb_a-version_set.o
+  CXX      leveldb/db/leveldb_libleveldb_a-write_batch.o
+  CXX      leveldb/table/leveldb_libleveldb_a-block_builder.o
+  CXX      leveldb/table/leveldb_libleveldb_a-block.o
+  CXX      leveldb/table/leveldb_libleveldb_a-filter_block.o
+  CXX      leveldb/table/leveldb_libleveldb_a-format.o
+  CXX      leveldb/table/leveldb_libleveldb_a-iterator.o
+  CXX      leveldb/table/leveldb_libleveldb_a-merger.o
+  CXX      leveldb/table/leveldb_libleveldb_a-table_builder.o
+  CXX      leveldb/table/leveldb_libleveldb_a-table.o
+  CXX      leveldb/table/leveldb_libleveldb_a-two_level_iterator.o
+  CXX      leveldb/util/leveldb_libleveldb_a-arena.o
+  CXX      leveldb/util/leveldb_libleveldb_a-bloom.o
+  CXX      leveldb/util/leveldb_libleveldb_a-cache.o
+  CXX      leveldb/util/leveldb_libleveldb_a-coding.o
+  CXX      leveldb/util/leveldb_libleveldb_a-comparator.o
+  CXX      leveldb/util/leveldb_libleveldb_a-crc32c.o
+  CXX      leveldb/util/leveldb_libleveldb_a-env.o
+  CXX      leveldb/util/leveldb_libleveldb_a-env_posix.o
+  CXX      leveldb/util/leveldb_libleveldb_a-env_win.o
+  CXX      leveldb/util/leveldb_libleveldb_a-filter_policy.o
+  CXX      leveldb/util/leveldb_libleveldb_a-hash.o
+  CXX      leveldb/util/leveldb_libleveldb_a-histogram.o
+  CXX      leveldb/util/leveldb_libleveldb_a-logging.o
+  CXX      leveldb/util/leveldb_libleveldb_a-options.o
+  CXX      leveldb/util/leveldb_libleveldb_a-status.o
+  CXX      leveldb/port/leveldb_libleveldb_a-port_posix.o
+  CXX      leveldb/helpers/memenv/leveldb_libmemenv_a-memenv.o
+  CXX      qt/qt_bitcoin_qt-bitcoin.o
+  OBJCXX   qt/qt_bitcoin_qt-macdockiconhandler.o
+  OBJCXX   qt/qt_bitcoin_qt-macnotificationhandler.o
+  CXX      qt/qt_libbitcoinqt_a-bantablemodel.o
+  CXX      qt/qt_libbitcoinqt_a-bitcoinaddressvalidator.o
+  CXX      qt/qt_libbitcoinqt_a-bitcoinamountfield.o
+  CXX      qt/qt_libbitcoinqt_a-bitcoingui.o
+  CXX      qt/qt_libbitcoinqt_a-bitcoinunits.o
+  CXX      qt/qt_libbitcoinqt_a-clientmodel.o
+  CXX      qt/qt_libbitcoinqt_a-csvmodelwriter.o
+  CXX      qt/qt_libbitcoinqt_a-guiutil.o
+  CXX      qt/qt_libbitcoinqt_a-intro.o
+  CXX      qt/qt_libbitcoinqt_a-networkstyle.o
+  CXX      qt/qt_libbitcoinqt_a-notificator.o
+  CXX      qt/qt_libbitcoinqt_a-optionsdialog.o
+  CXX      qt/qt_libbitcoinqt_a-optionsmodel.o
+  CXX      qt/qt_libbitcoinqt_a-peertablemodel.o
+  CXX      qt/qt_libbitcoinqt_a-platformstyle.o
+  CXX      qt/qt_libbitcoinqt_a-qvalidatedlineedit.o
+  CXX      qt/qt_libbitcoinqt_a-qvaluecombobox.o
+  CXX      qt/qt_libbitcoinqt_a-rpcconsole.o
+  CXX      qt/qt_libbitcoinqt_a-splashscreen.o
+  CXX      qt/qt_libbitcoinqt_a-trafficgraphwidget.o
+  CXX      qt/qt_libbitcoinqt_a-utilitydialog.o
+  CXX      qt/qt_libbitcoinqt_a-addressbookpage.o
+  CXX      qt/qt_libbitcoinqt_a-addresstablemodel.o
+  CXX      qt/qt_libbitcoinqt_a-askpassphrasedialog.o
+  CXX      qt/qt_libbitcoinqt_a-coincontroldialog.o
+  CXX      qt/qt_libbitcoinqt_a-coincontroltreewidget.o
+  CXX      qt/qt_libbitcoinqt_a-editaddressdialog.o
+  CXX      qt/qt_libbitcoinqt_a-openuridialog.o
+  CXX      qt/qt_libbitcoinqt_a-overviewpage.o
+  CXX      qt/qt_libbitcoinqt_a-paymentrequestplus.o
+  CXX      qt/qt_libbitcoinqt_a-paymentserver.o
+  CXX      qt/qt_libbitcoinqt_a-receivecoinsdialog.o
+  CXX      qt/qt_libbitcoinqt_a-receiverequestdialog.o
+  CXX      qt/qt_libbitcoinqt_a-recentrequeststablemodel.o
+  CXX      qt/qt_libbitcoinqt_a-sendcoinsdialog.o
+  CXX      qt/qt_libbitcoinqt_a-sendcoinsentry.o
+  CXX      qt/qt_libbitcoinqt_a-signverifymessagedialog.o
+  CXX      qt/qt_libbitcoinqt_a-transactiondesc.o
+  CXX      qt/qt_libbitcoinqt_a-transactiondescdialog.o
+  CXX      qt/qt_libbitcoinqt_a-transactionfilterproxy.o
+  CXX      qt/qt_libbitcoinqt_a-transactionrecord.o
+  CXX      qt/qt_libbitcoinqt_a-transactiontablemodel.o
+  CXX      qt/qt_libbitcoinqt_a-transactionview.o
+  CXX      qt/qt_libbitcoinqt_a-walletframe.o
+  CXX      qt/qt_libbitcoinqt_a-walletmodel.o
+  CXX      qt/qt_libbitcoinqt_a-walletmodeltransaction.o
+  CXX      qt/qt_libbitcoinqt_a-walletview.o
+  CXX      qt/qt_libbitcoinqt_a-moc_addressbookpage.o
+  CXX      qt/qt_libbitcoinqt_a-moc_addresstablemodel.o
+  CXX      qt/qt_libbitcoinqt_a-moc_askpassphrasedialog.o
+  CXX      qt/qt_libbitcoinqt_a-moc_bantablemodel.o
+  CXX      qt/qt_libbitcoinqt_a-moc_bitcoinaddressvalidator.o
+  CXX      qt/qt_libbitcoinqt_a-moc_bitcoinamountfield.o
+  CXX      qt/qt_libbitcoinqt_a-moc_bitcoingui.o
+  CXX      qt/qt_libbitcoinqt_a-moc_bitcoinunits.o
+  CXX      qt/qt_libbitcoinqt_a-moc_clientmodel.o
+  CXX      qt/qt_libbitcoinqt_a-moc_coincontroldialog.o
+  CXX      qt/qt_libbitcoinqt_a-moc_coincontroltreewidget.o
+  CXX      qt/qt_libbitcoinqt_a-moc_csvmodelwriter.o
+  CXX      qt/qt_libbitcoinqt_a-moc_editaddressdialog.o
+  CXX      qt/qt_libbitcoinqt_a-moc_guiutil.o
+  CXX      qt/qt_libbitcoinqt_a-moc_intro.o
+  CXX      qt/qt_libbitcoinqt_a-moc_macdockiconhandler.o
+  CXX      qt/qt_libbitcoinqt_a-moc_macnotificationhandler.o
+  CXX      qt/qt_libbitcoinqt_a-moc_notificator.o
+  CXX      qt/qt_libbitcoinqt_a-moc_openuridialog.o
+  CXX      qt/qt_libbitcoinqt_a-moc_optionsdialog.o
+  CXX      qt/qt_libbitcoinqt_a-moc_optionsmodel.o
+  CXX      qt/qt_libbitcoinqt_a-moc_overviewpage.o
+  CXX      qt/qt_libbitcoinqt_a-moc_peertablemodel.o
+  CXX      qt/qt_libbitcoinqt_a-moc_paymentserver.o
+  CXX      qt/qt_libbitcoinqt_a-moc_qvalidatedlineedit.o
+  CXX      qt/qt_libbitcoinqt_a-moc_qvaluecombobox.o
+  CXX      qt/qt_libbitcoinqt_a-moc_receivecoinsdialog.o
+  CXX      qt/qt_libbitcoinqt_a-moc_receiverequestdialog.o
+  CXX      qt/qt_libbitcoinqt_a-moc_recentrequeststablemodel.o
+  CXX      qt/qt_libbitcoinqt_a-moc_rpcconsole.o
+  CXX      qt/qt_libbitcoinqt_a-moc_sendcoinsdialog.o
+  CXX      qt/qt_libbitcoinqt_a-moc_sendcoinsentry.o
+  CXX      qt/qt_libbitcoinqt_a-moc_signverifymessagedialog.o
+  CXX      qt/qt_libbitcoinqt_a-moc_splashscreen.o
+  CXX      qt/qt_libbitcoinqt_a-moc_trafficgraphwidget.o
+  CXX      qt/qt_libbitcoinqt_a-moc_transactiondesc.o
+  CXX      qt/qt_libbitcoinqt_a-moc_transactiondescdialog.o
+  CXX      qt/qt_libbitcoinqt_a-moc_transactionfilterproxy.o
+  CXX      qt/qt_libbitcoinqt_a-moc_transactiontablemodel.o
+  CXX      qt/qt_libbitcoinqt_a-moc_transactionview.o
+  CXX      qt/qt_libbitcoinqt_a-moc_utilitydialog.o
+  CXX      qt/qt_libbitcoinqt_a-moc_walletframe.o
+  CXX      qt/qt_libbitcoinqt_a-moc_walletmodel.o
+  CXX      qt/qt_libbitcoinqt_a-moc_walletview.o
+  CXX      qt/qt_libbitcoinqt_a-qrc_bitcoin.o
+  CXX      qt/qt_libbitcoinqt_a-qrc_bitcoin_locale.o
+  AR       libbitcoin_server.a
+  AR       libbitcoin_zmq.a
+  AR       libbitcoin_util.a
+/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ranlib: file: libbitcoin_util.a(libbitcoin_util_a-strnlen.o) has no symbols
+  AR       libbitcoin_consensus.a
+/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ranlib: file: libbitcoin_util.a(libbitcoin_util_a-strnlen.o) has no symbols
+  AR       crypto/libbitcoin_crypto.a
+  AR       leveldb/libleveldb.a
+  AR       leveldb/libmemenv.a
+/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ranlib: file: leveldb/libleveldb.a(leveldb_libleveldb_a-env_win.o) has no symbols
+  AR       qt/libbitcoinqt.a
+/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-ranlib: file: leveldb/libleveldb.a(leveldb_libleveldb_a-env_win.o) has no symbols
+  AR       libbitcoin_wallet.a
+  OBJCXXLD qt/bitcoin-qt
+ld: warning: direct access in zmq::socket_base_t::parse_uri(char const*, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >&) to global weak symbol std::__1::char_traits<char>::eq(char, char) means the weak symbol cannot be overridden at runtime. This was likely caused by different translation units being compiled with different visibility settings.
+ld: warning: direct access in zmq::tcp_address_t::resolve(char const*, bool, bool, bool) to global weak symbol std::__1::char_traits<char>::eq(char, char) means the weak symbol cannot be overridden at runtime. This was likely caused by different translation units being compiled with different visibility settings.
+make[1]: Leaving directory `/home/travis/build/bitcoin/bitcoin/build/src'
+/bin/mkdir -p Bitcoin-Qt.app/Contents/MacOS
+STRIPPROG="/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/../native/bin/x86_64-apple-darwin11-strip" /bin/bash /home/travis/build/bitcoin/bitcoin/build-aux/install-sh -c -s  src/qt/bitcoin-qt Bitcoin-Qt.app/Contents/MacOS/Bitcoin-Qt
+INSTALLNAMETOOL=/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/../native/bin/x86_64-apple-darwin11-install_name_tool  OTOOL=/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/../native/bin/x86_64-apple-darwin11-otool STRIP=/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/../native/bin/x86_64-apple-darwin11-strip /usr/bin/python3 ../contrib/macdeploy/macdeployqtplus Bitcoin-Qt.app -translations-dir=/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/../translations -add-qt-tr da,de,es,hu,ru,uk,zh_CN,zh_TW -verbose 2
++ Copying source bundle +
++ Deploying frameworks +
+Warning: Could not find any external frameworks to deploy in dist/Bitcoin-Qt.app.
+Warning: Could not detect Qt's path, skipping plugin deployment!
++ Installing qt.conf +
++ Adding Qt translations +
++ Done +
+/bin/mkdir -p dist/.background
+/usr/bin/python3 ../contrib/macdeploy/custom_dsstore.py "dist/.DS_Store" "Bitcoin-Core"
+/usr/bin/tiffcp -c none dpi36.background.tiff dpi72.background.tiff dist/.background/background.tiff
+/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/../native/bin/genisoimage -no-cache-inodes -D -l -probe -V "Bitcoin-Core" -no-pad -r -dir-mode 0755 -apple -o Bitcoin-Core.dmg dist
+/home/travis/build/bitcoin/bitcoin/depends/x86_64-apple-darwin11/share/../native/bin/genisoimage: Warning: assuming PC Exchange cluster size of 512 bytes
+ 31.67% done, estimate finish Sat Jul  9 11:13:30 2016
+ 63.36% done, estimate finish Sat Jul  9 11:13:30 2016
+ 94.91% done, estimate finish Sat Jul  9 11:13:30 2016
+Total translation table size: 0
+Total rockridge attributes bytes: 3197
+Total directory bytes: 13084
+Path table size(bytes): 118
+Max brk space used 0
+15806 extents written (30 MB)
+
+travis_time:end:0a896c62:start=1468062770455581188,finish=1468062810383474668,duration=39927893480
+[0K
+[32;1mThe command "make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )" exited with 0.[0m
+travis_time:start:2bb2649f
+[0K$ export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib
+
+travis_time:end:2bb2649f:start=1468062810388647721,finish=1468062810392849367,duration=4201646
+[0K
+[32;1mThe command "export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib" exited with 0.[0m
+travis_time:start:096b56d1
+[0K$ if [ "$RUN_TESTS" = "true" ]; then make $MAKEJOBS check VERBOSE=1; fi
+
+travis_time:end:096b56d1:start=1468062810397991288,finish=1468062810402004336,duration=4013048
+[0K
+[32;1mThe command "if [ "$RUN_TESTS" = "true" ]; then make $MAKEJOBS check VERBOSE=1; fi" exited with 0.[0m
+travis_time:start:0127dc00
+[0K$ if [ "$RUN_TESTS" = "true" ]; then qa/pull-tester/rpc-tests.py --coverage; fi
+
+travis_time:end:0127dc00:start=1468062810407593611,finish=1468062810411953379,duration=4359768
+[0K
+[32;1mThe command "if [ "$RUN_TESTS" = "true" ]; then qa/pull-tester/rpc-tests.py --coverage; fi" exited with 0.[0m
+travis_fold:start:cache.2
+[0Kstore build cache
+travis_time:start:137b1048
+[0K
+travis_time:end:137b1048:start=1468062810417628281,finish=1468062810421962166,duration=4333885
+[0Ktravis_time:start:0683a252
+[0K[32;1mchange detected (content changed, file is created, or file is deleted):
+/home/travis/.ccache/0/f/7f4701fc4c1738b0b31662ca027b09-128383.manifest
+/home/travis/.ccache/0/stats
+/home/travis/.ccache/1/stats
+/home/travis/.ccache/2/stats
+/home/travis/.ccache/3/c/1fb6fb38de6d7592bf16916d400a96-33975.manifest
+/home/travis/.ccache/3/c/faeea4da23f3cbd43c93f0d9b6fdab-5332635.o
+/home/travis/.ccache/3/stats
+/home/travis/.ccache/4/stats
+/home/travis/.ccache/5/stats
+/home/travis/.ccache/6/stats
+/home/travis/.ccache/7/9/d2560d2f3307edd8d2d85fdb457f11-1477174.o
+/home/travis/.ccache/7/stats
+/home/travis/.ccache/8/6/8f789ad479340ac5d3a7e0246aa552-5253.manifest
+/home/travis/.ccache/8/stats
+/home/travis/.ccache/9/stats
+/home/travis/.ccache/a/stats
+/home/travis/.ccache/b/stats
+/home/travis/.ccache/c/stats
+/home/travis/.ccache/d/4/04fc81d6eef69e35e223d6b4f06f0f-6182965.o
+/home/travis/.ccache/d/stats
+/home/travis/.ccache/e/stats
+/home/travis/.ccache/f/stats
+
+[0m
+[32;1mchanges detected, packing new archive[0m
+.
+[32;1muploading archive[0m
+
+travis_time:end:0683a252:start=1468062810427259666,finish=1468062821093490792,duration=10666231126
+[0Ktravis_fold:end:cache.2
+[0Ktravis_fold:start:after_script.1
+[0Ktravis_time:start:023e7fa0
+[0K$ echo $TRAVIS_COMMIT_RANGE
+67caef673089aca2ffb95cd15b2cb056c96e5c30...b993671921c0c301f18c542e77d695fdc50ffd91
+
+travis_time:end:023e7fa0:start=1468062821098376841,finish=1468062821102214889,duration=3838048
+[0Ktravis_fold:end:after_script.1
+[0Ktravis_fold:start:after_script.2
+[0Ktravis_time:start:1524ca0b
+[0K$ echo $TRAVIS_COMMIT_LOG
+commit 55be595548275163fcd97906d4031732dc62439c Merge: 67caef6 b993671 Author: Jonas Schnelli <dev@jonasschnelli.ch> AuthorDate: Sat Jul 9 11:03:09 2016 +0000 Commit: GitHub <noreply@github.com> CommitDate: Sat Jul 9 11:03:09 2016 +0000 Merge b993671921c0c301f18c542e77d695fdc50ffd91 into 67caef673089aca2ffb95cd15b2cb056c96e5c30
+
+travis_time:end:1524ca0b:start=1468062821106922155,finish=1468062821110976845,duration=4054690
+[0Ktravis_fold:end:after_script.2
+[0K
+Done. Your build exited with 0.
