@@ -7,6 +7,7 @@
 #include "utiltime.h"
 #include "chainparams.h"
 #include "consensus/merkle.h"
+#include "expedited.h"
 #include "main.h"
 #include "net.h"
 #include "chainparams.h"
@@ -244,8 +245,114 @@ bool CXThinBlock::CheckBlockHeader(const CBlockHeader& block, CValidationState& 
 
   return true;
 }
-    
-bool CXThinBlock::process(CNode* pfrom, int nSizeThinBlock, string strCommand)  // TODO: request from the "best" txn source not necessarily from the block source 
+
+/**
+ * Handle an incoming Xthin or Xpedited block
+ * Once the block is validated apart from the Merkle root, forward the Xpedited block with a hop count of nHops.
+ */
+bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strCommand, unsigned nHops)
+{
+    if (!pfrom->ThinBlockCapable())
+    {
+        LOCK(cs_main);
+        Misbehaving(pfrom->GetId(), 5);
+        return error("%s message received from a non thinblock node, peer=%d", strCommand, pfrom->GetId());
+    }
+
+    int nSizeThinBlock = vRecv.size();
+    CXThinBlock thinBlock;
+    vRecv >> thinBlock;
+
+    // Message consistency checking
+    if (!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
+    {
+        LOCK(cs_main);
+        Misbehaving(pfrom->GetId(), 100);
+        return error("Invalid %s received", strCommand);
+    }
+
+    // Is there a previous block or header to connect with?
+    {
+        LOCK(cs_main);
+        uint256 prevHash = thinBlock.header.hashPrevBlock;
+        BlockMap::iterator mi = mapBlockIndex.find(prevHash);
+        if (mi == mapBlockIndex.end())
+        {
+            Misbehaving(pfrom->GetId(), 10);
+            return error("%s from peer %s (%d) will not connect, unknown previous block %s", strCommand,
+                pfrom->addrName.c_str(), pfrom->id, prevHash.ToString());
+        }
+        CBlockIndex *pprev = mi->second;
+        CValidationState state;
+        if (!ContextualCheckBlockHeader(thinBlock.header, state, pprev))
+        {
+            // Thin block does not fit within our blockchain
+            Misbehaving(pfrom->GetId(), 100);
+            return error("%s from peer %s (%d) contextual error: %s", strCommand, pfrom->addrName.c_str(), pfrom->id,
+                state.GetRejectReason().c_str());
+        }
+    }
+
+    CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
+    bool fAlreadyHave = false;
+
+    if (nHops > 0)
+    {
+        bool newBlock = false;
+        unsigned int status = 0;
+
+        LOCK(cs_main);
+        BlockMap::iterator mapEntry = mapBlockIndex.find(inv.hash);
+        CBlockIndex *blkidx = NULL;
+        if (mapEntry != mapBlockIndex.end())
+        {
+            blkidx = mapEntry->second;
+            if (blkidx)
+                status = blkidx->nStatus;
+        }
+
+        // If we do not have the block on disk or do not have the header yet then treat the block as new.
+        newBlock = blkidx == NULL || !(blkidx->nStatus & BLOCK_HAVE_DATA);
+
+        LogPrint("thin",
+            "Received %s expedited thinblock %s from peer %s (%d). Hop %d. Size %d bytes. (status %d,0x%x)\n",
+            newBlock ? "new" : "repeated", inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id, nHops,
+            nSizeThinBlock, status, status);
+
+        if (!newBlock)
+            return true;
+    }
+    else
+    {
+        LogPrint("thin", "Received %s %s from peer %s (%d). Size %d bytes.\n", strCommand, inv.hash.ToString(),
+            pfrom->addrName.c_str(), pfrom->id, nSizeThinBlock);
+
+        // An expedited block or re-requested xthin can arrive and beat the original thin block request/response
+        if (!pfrom->mapThinBlocksInFlight.count(inv.hash))
+        {
+            LogPrint("thin", "%s %s from peer %s (%d) received but we may already have processed it\n", strCommand,
+                inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id);
+            LOCK(cs_main);
+            fAlreadyHave = AlreadyHave(inv); // I'll still continue processing if we don't have an accepted block yet
+            if (fAlreadyHave)
+                // record the bytes received from the thinblock even though we had it already
+                requester.Received(inv, pfrom, nSizeThinBlock);
+        }
+    }
+
+    // Send expedited block without checking merkle root.
+    if (!IsRecentlyExpeditedAndStore(inv.hash))
+        SendExpeditedBlock(thinBlock, nHops, pfrom);
+
+    if (fAlreadyHave)
+        return true;
+
+    return thinBlock.process(pfrom, nSizeThinBlock, strCommand);
+}
+
+bool CXThinBlock::process(CNode* pfrom,
+    int nSizeThinBlock,
+    string strCommand)  // TODO: request from the "best" txn source not necessarily from the block source 
 {
     // Xpress Validation - only perform xval if the chaintip matches the last blockhash in the thinblock
     bool fXVal;
