@@ -80,7 +80,7 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConf
         return;
     }
 
-    if (!SignalsOptInRBF(wtx)) {
+    if (!SignalsOptInRBF(*wtx.tx)) {
         vErrors.push_back("Transaction is not BIP 125 replaceable");
         currentResult = BumpFeeResult::WALLET_ERROR;
         return;
@@ -94,7 +94,7 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConf
 
     // check that original tx consists entirely of our inputs
     // if not, we can't bump the fee, because the wallet has no way of knowing the value of the other inputs (thus the fee)
-    if (!pWallet->IsAllFromMe(wtx, ISMINE_SPENDABLE)) {
+    if (!pWallet->IsAllFromMe(*wtx.tx, ISMINE_SPENDABLE)) {
         vErrors.push_back("Transaction contains inputs that don't belong to this wallet");
         currentResult = BumpFeeResult::WALLET_ERROR;
         return;
