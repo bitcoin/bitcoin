@@ -120,17 +120,24 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock, string strCommand)
             }
             if (tx.IsNull())
                 missingCount++;
-            // This will push an empty/invalid transaction if we don't have it yet
-            pfrom->thinBlock.vtx.push_back(tx);
 
             // In order to prevent a memory exhaustion attack we track transaction bytes used to create Block
             // to see if we've exceeded any limits and if so clear out data and return.
             uint64_t nTxSize = RecursiveDynamicUsage(tx);
-            if (thindata.AddThinBlockBytes(nTxSize, pfrom) > maxAllowedSize)
+            if (thindata.AddThinBlockBytes(nTxSize, pfrom) > maxAllowedSize-nTxSize)
             {
                 if (ClearLargestThinBlockAndDisconnect(pfrom))
                     return error("Thinblock has exceeded memory limits of %ld bytes", maxAllowedSize);
             }
+            if (pfrom->nLocalThinBlockBytes > maxAllowedSize-nTxSize)
+            {
+                thindata.ClearThinBlockData(pfrom);
+                return error("This thinblock has exceeded memory limits of %ld bytes", maxAllowedSize);
+            }
+
+            // This will push an empty/invalid transaction if we don't have it yet
+            pfrom->thinBlock.vtx.push_back(tx);
+
         }
         pfrom->thinBlockWaitingForTxns = missingCount;
         LogPrint("thin", "Thinblock %s waiting for: %d, unnecessary: %d, txs: %d full: %d\n",
@@ -440,12 +447,31 @@ bool CXThinBlock::process(CNode* pfrom,
 	}
 	mapPartialTxHash[cheapHash] = (*mi).first;
     }
+    
+    std::vector<uint256> fullTxHashes;
     if (!collision)
     {
-        std::vector<uint256> fullTxHashes;
-        BOOST_FOREACH(const uint64_t &cheapHash, vTxHashes)
-            fullTxHashes.push_back(mapPartialTxHash[cheapHash]);
-
+        // Check that the merkleroot matches the merkelroot calculated from the hashes provided.
+        for (const uint64_t &cheapHash : vTxHashes)
+        {
+            map<uint64_t, uint256>::iterator val = mapPartialTxHash.find(cheapHash);
+            if (val != mapPartialTxHash.end())
+            {
+                fullTxHashes.push_back(val->second);
+                // Remove this transaction so attack blocks that repeat the same transaction stop here.
+                mapPartialTxHash.erase(val);
+            }
+            else
+            {
+                LogPrint("thin", "Xthin block has either repeated or missing transactions");
+                collision = true;
+                break;
+            }
+        }
+    }
+    if (!collision)
+    {
+ 
         bool mutated = false;
         uint256 merkleroot = ComputeMerkleRoot(fullTxHashes, &mutated);
         if (header.hashMerkleRoot != merkleroot || mutated)
@@ -490,6 +516,7 @@ bool CXThinBlock::process(CNode* pfrom,
                     uint64_t nTxSize = RecursiveDynamicUsage(tx);
                     if (thindata.AddThinBlockBytes(nTxSize, pfrom) > maxAllowedSize)
                     {
+                        LogPrint("thin", "xthin block too large %lu %llu %llu\n", fullTxHashes.size(), nTxSize, pfrom->nLocalThinBlockBytes);
                         if (ClearLargestThinBlockAndDisconnect(pfrom))
                             return error("xthin block has exceeded memory limits of %ld bytes", maxAllowedSize);
                     }
@@ -1203,8 +1230,10 @@ bool ClearLargestThinBlockAndDisconnect(CNode *pfrom)
     BOOST_FOREACH (CNode *pnode, vNodes)
     {
         if (pnode->mapThinBlocksInFlight.size() > 0)
-            if (pLargest == NULL || pnode->nLocalThinBlockBytes > pLargest->nLocalThinBlockBytes)
+        {
+            if ((pLargest == NULL) || (pnode->nLocalThinBlockBytes > pLargest->nLocalThinBlockBytes))
                 pLargest = pnode;
+        }
     }
     if (pLargest != NULL)
     {
