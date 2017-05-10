@@ -110,6 +110,7 @@ BASE_SCRIPTS= [
     'rpcnamedargs.py',
     'listsinceblock.py',
     'p2p-leaktests.py',
+    'prune_service.py',
 ]
 
 EXTENDED_SCRIPTS = [
