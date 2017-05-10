@@ -5806,7 +5806,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
         vRecv >> inv >> filterMemPool;
         if (!((inv.type == MSG_XTHINBLOCK)||(inv.type == MSG_THINBLOCK)))
         {
-            Misbehaving(pfrom->GetId(), 20);
+            Misbehaving(pfrom->GetId(), 100);
             return error("message inv invalid type = %u", inv.type);                
         }
         

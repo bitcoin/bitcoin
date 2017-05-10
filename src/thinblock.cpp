@@ -460,7 +460,7 @@ bool CXThinBlock::process(CNode* pfrom,
     if (!collision)
     {
         // Check that the merkleroot matches the merkelroot calculated from the hashes provided.
-        for (const uint64_t &cheapHash : vTxHashes)
+        BOOST_FOREACH (const uint64_t &cheapHash, vTxHashes)
         {
             map<uint64_t, uint256>::iterator val = mapPartialTxHash.find(cheapHash);
             if (val != mapPartialTxHash.end())
@@ -513,7 +513,9 @@ bool CXThinBlock::process(CNode* pfrom,
                     else if (inMissingTx)
                         tx = mapMissingTx[hash];
 
-                    if (tx.IsNull())
+                }
+ 
+                   if (tx.IsNull())
                         missingCount++;
 
                     // In order to prevent a memory exhaustion attack we track transaction bytes used to create Block
@@ -538,17 +540,12 @@ bool CXThinBlock::process(CNode* pfrom,
                     }
 
                     // This will push an empty/invalid transaction if we don't have it yet
-                    pfrom->thinBlock.vtx.push_back(tx);
-                }
-                if (tx.IsNull())
-                    missingCount++;
-                // This will push an empty/invalid transaction if we don't have it yet
-                pfrom->thinBlock.vtx.push_back(tx);
+                    pfrom->thinBlock.vtx.push_back(tx);           
             }
         }
     }
     }  // End locking mempool.cs and cs_xval
-    LogPrint("thin", "Total in memory thinblockbytes size is %ld bytes\n", thindata.GetThinBlockBytes());
+    LogPrintf("Total in memory thinblockbytes size is %ld bytes\n", thindata.GetThinBlockBytes());
 
     // Clear out data we no longer need before processing block or making re-requests.
     pfrom->xThinBlockHashes.clear();
@@ -574,14 +571,14 @@ bool CXThinBlock::process(CNode* pfrom,
     }
 
     pfrom->thinBlockWaitingForTxns = missingCount;
-    LogPrint("thin", "thinblock waiting for: %d, unnecessary: %d, txs: %d full: %d\n", pfrom->thinBlockWaitingForTxns, unnecessaryCount, pfrom->thinBlock.vtx.size(), mapMissingTx.size());
+    LogPrintf("thinblock waiting for: %d, unnecessary: %d, txs: %d full: %d\n", pfrom->thinBlockWaitingForTxns, unnecessaryCount, pfrom->thinBlock.vtx.size(), mapMissingTx.size());
 
     if (pfrom->thinBlockWaitingForTxns == 0) {
         // We have all the transactions now that are in this block: try to reassemble and process.
         pfrom->thinBlockWaitingForTxns = -1;
         pfrom->AddInventoryKnown(GetInv());
         int blockSize = pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION);
-        LogPrint("thin", "Reassembled thin block for %s (%d bytes). Message was %d bytes, compression ratio %3.2f\n",
+        LogPrintf("Reassembled thin block for %s (%d bytes). Message was %d bytes, compression ratio %3.2f\n",
 	       pfrom->thinBlock.GetHash().ToString(),
 	       blockSize,
 	       pfrom->nSizeThinBlock,
@@ -610,7 +607,7 @@ bool CXThinBlock::process(CNode* pfrom,
         // Re-request transactions that we are still missing
         CXRequestThinBlockTx thinBlockTx(header.GetHash(), setHashesToRequest);
         pfrom->PushMessage(NetMsgType::GET_XBLOCKTX, thinBlockTx);
-        LogPrint("thin", "Missing %d transactions for xthinblock, re-requesting\n", pfrom->thinBlockWaitingForTxns);
+        LogPrintf("Missing %d transactions for xthinblock, re-requesting\n", pfrom->thinBlockWaitingForTxns);
         thindata.UpdateInBoundReRequestedTx(pfrom->thinBlockWaitingForTxns);
     }
 
