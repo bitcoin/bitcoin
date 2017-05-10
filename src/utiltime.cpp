@@ -31,6 +31,11 @@ void SetMockTime(int64_t nMockTimeIn)
     nMockTime.store(nMockTimeIn, std::memory_order_relaxed);
 }
 
+int64_t GetMockTime()
+{
+    return nMockTime.load(std::memory_order_relaxed);
+}
+
 int64_t GetTimeMillis()
 {
     int64_t now = (boost::posix_time::microsec_clock::universal_time() -
@@ -50,15 +55,6 @@ int64_t GetTimeMicros()
 int64_t GetSystemTimeInSeconds()
 {
     return GetTimeMicros()/1000000;
-}
-
-/** Return a time useful for the debug log */
-int64_t GetLogTimeMicros()
-{
-    int64_t mocktime = nMockTime.load(std::memory_order_relaxed);
-    if (mocktime) return mocktime*1000000;
-
-    return GetTimeMicros();
 }
 
 void MilliSleep(int64_t n)
