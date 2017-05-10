@@ -289,84 +289,88 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
         return error("%s message received from a non thinblock node, peer=%d", strCommand, pfrom->GetId());
     }
 
+    bool fAlreadyHave = false;
     int nSizeThinBlock = vRecv.size();
+    CInv inv(MSG_BLOCK, uint256());
+
     CXThinBlock thinBlock;
     vRecv >> thinBlock;
 
-    // Message consistency checking
-    if (!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
     {
         LOCK(cs_main);
-        Misbehaving(pfrom->GetId(), 100);
-        return error("Invalid %s received", strCommand);
-    }
 
-    // Is there a previous block or header to connect with?
-    {
-        LOCK(cs_main);
-        uint256 prevHash = thinBlock.header.hashPrevBlock;
-        BlockMap::iterator mi = mapBlockIndex.find(prevHash);
-        if (mi == mapBlockIndex.end())
+        // Message consistency checking (FIXME: some redundancy here with AcceptBlockHeader)
+        if (!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
         {
-            Misbehaving(pfrom->GetId(), 10);
-            return error("%s from peer %s (%d) will not connect, unknown previous block %s", strCommand,
-                pfrom->addrName.c_str(), pfrom->id, prevHash.ToString());
-        }
-        CBlockIndex *pprev = mi->second;
-        CValidationState state;
-        if (!ContextualCheckBlockHeader(thinBlock.header, state, pprev))
-        {
-            // Thin block does not fit within our blockchain
             Misbehaving(pfrom->GetId(), 100);
-            return error("%s from peer %s (%d) contextual error: %s", strCommand, pfrom->addrName.c_str(), pfrom->id,
-                state.GetRejectReason().c_str());
+            LogPrintf("Received an invalid %s from peer %s (%d)\n",
+                      strCommand, pfrom->addrName.c_str(), pfrom->id);
+            return false;
         }
-    }
 
-    CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
-    bool fAlreadyHave = false;
-
-    if (nHops > 0)
-    {
-        bool newBlock = false;
-        unsigned int status = 0;
-
-        LOCK(cs_main);
-        BlockMap::iterator mapEntry = mapBlockIndex.find(inv.hash);
-        CBlockIndex *blkidx = NULL;
-        if (mapEntry != mapBlockIndex.end())
+        CValidationState state;
+        CBlockIndex *pIndex = NULL;
+        if (!AcceptBlockHeader(thinBlock.header, state, Params(), &pIndex))
         {
-            blkidx = mapEntry->second;
-            if (blkidx)
-                status = blkidx->nStatus;
+            int nDoS;
+            if (state.IsInvalid(nDoS))
+            {
+                if (nDoS > 0)
+                    Misbehaving(pfrom->GetId(), nDoS);
+                LogPrintf("Received an invalid %s header from peer %s (%d)\n",
+                          strCommand, pfrom->addrName.c_str(), pfrom->id);
+            }
+
+            return false;
         }
 
-        // If we do not have the block on disk or do not have the header yet then treat the block as new.
-        newBlock = blkidx == NULL || !(blkidx->nStatus & BLOCK_HAVE_DATA);
-
-        LogPrint("thin",
-            "Received %s expedited thinblock %s from peer %s (%d). Hop %d. Size %d bytes. (status %d,0x%x)\n",
-            newBlock ? "new" : "repeated", inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id, nHops,
-            nSizeThinBlock, status, status);
-
-        if (!newBlock)
+        if (!pIndex)
+        {
+            LogPrintf("INTERNAL ERROR: pIndex null in CXThinBlock::HandleMessage");
             return true;
-    }
-    else
-    {
-        LogPrint("thin", "Received %s %s from peer %s (%d). Size %d bytes.\n", strCommand, inv.hash.ToString(),
-            pfrom->addrName.c_str(), pfrom->id, nSizeThinBlock);
+        }
 
-        // An expedited block or re-requested xthin can arrive and beat the original thin block request/response
-        if (!pfrom->mapThinBlocksInFlight.count(inv.hash))
+        inv.hash = pIndex->GetBlockHash();
+        UpdateBlockAvailability(pfrom->GetId(), inv.hash);
+
+        // Return early if we already have the block data
+        if (pIndex->nStatus & BLOCK_HAVE_DATA)
+            return true;
+
+
+        // Request thin block if it isn't extending the best chain
+        if (pIndex->nChainWork <= chainActive.Tip()->nChainWork)
         {
-            LogPrint("thin", "%s %s from peer %s (%d) received but we may already have processed it\n", strCommand,
-                inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id);
-            LOCK(cs_main);
-            fAlreadyHave = AlreadyHave(inv); // I'll still continue processing if we don't have an accepted block yet
-            if (fAlreadyHave)
-                // record the bytes received from the thinblock even though we had it already
-                requester.Received(inv, pfrom, nSizeThinBlock);
+            vector<CInv> vGetData;
+            vGetData.push_back(CInv(MSG_THINBLOCK, inv.hash));
+
+            pfrom->PushMessage(NetMsgType::GETDATA, vGetData);
+            LogPrintf("xthinblock does not extend longest chain; re-requesting as a thinblock\n");
+            return true;
+        }
+
+        if (nHops > 0)
+        {
+            LogPrint("thin",
+                     "Received new expedited thinblock %s from peer %s (%d) hop %d size %d bytes\n",
+                     inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id, nHops, nSizeThinBlock);
+        }
+        else
+        {
+            LogPrint("thin", "Received %s %s from peer %s (%d). Size %d bytes.\n", strCommand, inv.hash.ToString(),
+                     pfrom->addrName.c_str(), pfrom->id, nSizeThinBlock);
+
+            // An expedited block or re-requested xthin can arrive and beat the original thin block request/response
+            if (!pfrom->mapThinBlocksInFlight.count(inv.hash))
+            {
+                LogPrint("thin", "%s %s from peer %s (%d) received but we may already have processed it\n", strCommand,
+                         inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id);
+                // I'll still continue processing if we don't have an accepted block yet
+                fAlreadyHave = AlreadyHave(inv);
+                if (fAlreadyHave)
+                    // record the bytes received from the thinblock even though we had it already
+                    requester.Received(inv, pfrom, nSizeThinBlock);
+            }
         }
     }
 
