@@ -1,5 +1,5 @@
 ACLOCAL_AMFLAGS = -I build-aux/m4
-
+CC_FOR_BUILD = gcc
 lib_LTLIBRARIES = libsecp256k1.la
 if USE_JNI
 JNI_LIB = libsecp256k1_jni.la
