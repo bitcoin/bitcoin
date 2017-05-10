@@ -5981,7 +5981,7 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
     else if (strCommand == NetMsgType::XTHINBLOCK && !fImporting && !fReindex && !IsInitialBlockDownload()
     	     && IsThinBlocksEnabled())
     {
-    	CXThinBlock::HandleMessage(vRecv, pfrom, strCommand, 0);
+    	return CXThinBlock::HandleMessage(vRecv, pfrom, strCommand, 0);
     }
 
 
