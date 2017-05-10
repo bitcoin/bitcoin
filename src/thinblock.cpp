@@ -275,8 +275,7 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
         if (!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
         {
             Misbehaving(pfrom->GetId(), 100);
-            LogPrintf("Received an invalid %s from peer %s (%d)\n",
-                      strCommand, pfrom->addrName.c_str(), pfrom->id);
+            LogPrintf("Received an invalid %s from peer %s (%d)\n", strCommand, pfrom->addrName.c_str(), pfrom->id);
             return true;
         }
 
@@ -289,8 +288,8 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
             {
                 if (nDoS > 0)
                     Misbehaving(pfrom->GetId(), nDoS);
-                LogPrintf("Received an invalid %s header from peer %s (%d)\n",
-                          strCommand, pfrom->addrName.c_str(), pfrom->id);
+                LogPrintf("Received an invalid %s header from peer %s (%d)\n", strCommand, pfrom->addrName.c_str(),
+                    pfrom->id);
             }
 
             return true;
@@ -312,34 +311,34 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
 
         inv.hash = pIndex->GetBlockHash();
 
-        // Request thin block if it isn't extending the best chain
+        // Request full block if it isn't extending the best chain
         if (pIndex->nChainWork <= chainActive.Tip()->nChainWork)
         {
             vector<CInv> vGetData;
-            vGetData.push_back(CInv(MSG_THINBLOCK, inv.hash));
-
+            vGetData.push_back(inv);
             pfrom->PushMessage(NetMsgType::GETDATA, vGetData);
-            LogPrintf("xthinblock does not extend longest chain; re-requesting as a thinblock\n");
+
+            LogPrintf("%s %s from peer %s (%d) received but does not extend longest chain; requesting full block\n",
+                strCommand, inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id);
             return true;
         }
 
         if (nHops > 0)
         {
-            LogPrint("thin",
-                     "Received new expedited thinblock %s from peer %s (%d) hop %d size %d bytes\n",
-                     inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id, nHops, nSizeThinBlock);
+            LogPrint("thin", "Received new expedited thinblock %s from peer %s (%d) hop %d size %d bytes\n",
+                inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id, nHops, nSizeThinBlock);
         }
         else
         {
             LogPrint("thin", "Received %s %s from peer %s (%d). Size %d bytes.\n", strCommand, inv.hash.ToString(),
-                     pfrom->addrName.c_str(), pfrom->id, nSizeThinBlock);
+                pfrom->addrName.c_str(), pfrom->id, nSizeThinBlock);
 
             // An expedited block or re-requested xthin can arrive and beat the original thin block request/response
             if (!pfrom->mapThinBlocksInFlight.count(inv.hash))
             {
                 LogPrint("thin", "%s %s from peer %s (%d) received but we may already have processed it\n", strCommand,
-                         inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id);
-                 // I'll still continue processing if we don't have an accepted block yet
+                    inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id);
+                // I'll still continue processing if we don't have an accepted block yet
                 fAlreadyHave = AlreadyHave(inv);
                 if (fAlreadyHave)
                     // record the bytes received from the thinblock even though we had it already
