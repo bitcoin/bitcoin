@@ -496,6 +496,18 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
     CValidationState state;
     uint64_t nSizeBlock = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
 
+    // At this point we have either a block or a fully reconstructed thinblock but we still need to
+    // maintain a mapThinBlocksInFlight entry so that we don't re-request a full block from
+    // the same node while the block is processing. Furthermore by setting the time = -1 we prevent
+    // the timeout from triggering and inadvertently disconnecting the node in the event that the block
+    // takes a longer time to process than the THINBLOCK_DOWNLOAD_TIMEOUT interval.
+    {
+        LOCK(pfrom->cs_mapthinblocksinflight);
+        if (pfrom->mapThinBlocksInFlight.count(inv.hash))
+            pfrom->mapThinBlocksInFlight[inv.hash] = -1;
+    }
+
+
     boost::thread::id this_id(boost::this_thread::get_id());
     PV.InitThread(this_id, pfrom, block, inv); // initialize the mapBlockValidationThread entries
 
