@@ -310,8 +310,8 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
         if (!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
         {
             Misbehaving(pfrom->GetId(), 100);
-            LogPrintf("Received an invalid %s from peer %s (%d)\n", strCommand, pfrom->addrName.c_str(), pfrom->id);
-            return true;
+            LogPrintf("Received an invalid %s from peer %s\n", strCommand, pfrom->GetLogName());
+            return false;
         }
 
         CValidationState state;
@@ -323,11 +323,10 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
             {
                 if (nDoS > 0)
                     Misbehaving(pfrom->GetId(), nDoS);
-                LogPrintf("Received an invalid %s header from peer %s (%d)\n", strCommand, pfrom->addrName.c_str(),
-                    pfrom->id);
+                LogPrintf("Received an invalid %s header from peer %s\n", strCommand, pfrom->GetLogName());
             }
 
-            return true;
+            return false;
         }
 
         // pIndex should always be set by AcceptBlockHeader
@@ -337,20 +336,19 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
             return true;
         }
 
-        // FIXME: enable this later
-        // UpdateBlockAvailability(pfrom->GetId(), pIndex->GetBlockHash());
+        inv.hash = pIndex->GetBlockHash();
+        UpdateBlockAvailability(pfrom->GetId(), inv.hash);
 
         // Return early if we already have the block data
         if (pIndex->nStatus & BLOCK_HAVE_DATA)
             return true;
 
-        inv.hash = pIndex->GetBlockHash();
 
         // Request full block if it isn't extending the best chain
         if (pIndex->nChainWork <= chainActive.Tip()->nChainWork)
         {
             vector<CInv> vGetData;
-            vGetData.push_back(inv);
+            vGetData.push_back(CInv(MSG_THINBLOCK, inv.hash));
             pfrom->PushMessage(NetMsgType::GETDATA, vGetData);
 
             LogPrintf("%s %s from peer %s (%d) received but does not extend longest chain; requesting full block\n",
