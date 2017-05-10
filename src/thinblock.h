@@ -188,6 +188,7 @@ bool CanThinBlockBeDownloaded(CNode *pto);
 void ConnectToThinBlockNodes();
 void CheckNodeSupportForThinBlocks();
 bool ClearLargestThinBlockAndDisconnect(CNode *pfrom);
+void ClearThinBlockInFlight(CNode *pfrom, uint256 hash);
 void SendXThinBlock(CBlock &block, CNode *pfrom, const CInv &inv);
 bool IsThinBlockValid(const CNode *pfrom, const std::vector<CTransaction> &vMissingTx, const CBlockHeader &header);
 void BuildSeededBloomFilter(CBloomFilter &memPoolFilter,

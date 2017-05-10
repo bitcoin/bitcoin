@@ -326,6 +326,7 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
                 LogPrintf("Received an invalid %s header from peer %s\n", strCommand, pfrom->GetLogName());
             }
 
+            ClearThinBlockInFlight(pfrom, thinBlock.header.GetHash());
             return false;
         }
 
@@ -333,6 +334,7 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
         if (!pIndex)
         {
             LogPrintf("INTERNAL ERROR: pIndex null in CXThinBlock::HandleMessage");
+            ClearThinBlockInFlight(pfrom, thinBlock.header.GetHash());
             return true;
         }
 
@@ -341,7 +343,10 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
 
         // Return early if we already have the block data
         if (pIndex->nStatus & BLOCK_HAVE_DATA)
+        {
+            ClearThinBlockInFlight(pfrom, thinBlock.header.GetHash());
             return true;
+        }
 
 
         // Request full block if it isn't extending the best chain
@@ -1327,6 +1332,12 @@ bool ClearLargestThinBlockAndDisconnect(CNode *pfrom)
     }
 
     return false;
+}
+
+void ClearThinBlockInFlight(CNode *pfrom, uint256 hash)
+{
+    LOCK(pfrom->cs_mapthinblocksinflight);
+    pfrom->mapThinBlocksInFlight.erase(hash);
 }
 
 void SendXThinBlock(CBlock &block, CNode *pfrom, const CInv &inv)
