@@ -327,12 +327,14 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
                           strCommand, pfrom->addrName.c_str(), pfrom->id);
             }
 
+            ClearThinBlockInFlight(pfrom, thinBlock.header.GetHash());
             return false;
         }
 
         if (!pIndex)
         {
             LogPrintf("INTERNAL ERROR: pIndex null in CXThinBlock::HandleMessage");
+            ClearThinBlockInFlight(pfrom, thinBlock.header.GetHash());
             return true;
         }
 
@@ -341,7 +343,10 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
 
         // Return early if we already have the block data
         if (pIndex->nStatus & BLOCK_HAVE_DATA)
+        {
+            ClearThinBlockInFlight(pfrom, thinBlock.header.GetHash());
             return true;
+        }
 
 
         // Request thin block if it isn't extending the best chain
@@ -1280,6 +1285,12 @@ bool ClearLargestThinBlockAndDisconnect(CNode *pfrom)
     }
 
     return false;
+}
+
+void ClearThinBlockInFlight(CNode *pfrom, uint256 hash)
+{
+    LOCK(pfrom->cs_mapthinblocksinflight);
+    pfrom->mapThinBlocksInFlight.erase(hash);
 }
 
 void SendXThinBlock(CBlock &block, CNode *pfrom, const CInv &inv)
