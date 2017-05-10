@@ -131,8 +131,13 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock, string strCommand)
             {
                 LogPrint("thin", "thin block too large %lu %llu %llu\n", vTxHashes.size(), nTxSize,
                     pfrom->nLocalThinBlockBytes);
+                LEAVE_CRITICAL_SECTION(cs_xval); // maintain locking order with vNodes
                 if (ClearLargestThinBlockAndDisconnect(pfrom))
+                {
+                    ENTER_CRITICAL_SECTION(cs_xval);
                     return error("Thinblock has exceeded memory limits of %ld bytes", maxAllowedSize);
+                }
+                ENTER_CRITICAL_SECTION(cs_xval);
             }
             if (pfrom->nLocalThinBlockBytes > nCurrentMax)
             {
@@ -528,8 +533,13 @@ bool CXThinBlock::process(CNode* pfrom,
                     {
                         LogPrint("thin", "xthin block too large %lu %llu %llu\n", fullTxHashes.size(), nTxSize,
                             pfrom->nLocalThinBlockBytes);
+                        LEAVE_CRITICAL_SECTION(cs_xval); // maintain locking order with vNodes
                         if (ClearLargestThinBlockAndDisconnect(pfrom))
+                        {
+                            ENTER_CRITICAL_SECTION(cs_xval);
                             return error("xthin block has exceeded memory limits of %ld bytes", maxAllowedSize);
+                        }
+                        ENTER_CRITICAL_SECTION(cs_xval);
                     }
                     if (pfrom->nLocalThinBlockBytes > nCurrentMax)
                     {
