@@ -203,6 +203,7 @@ testScripts = [ RpcTest(t) for t in [
     'abandonconflict',
     'p2p-versionbits-warning',
     'importprunedfunds',
+    'thinblocks'
 ] ]
 
 testScriptsExt = [ RpcTest(t) for t in [
