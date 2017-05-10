@@ -124,14 +124,17 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock, string strCommand)
             // In order to prevent a memory exhaustion attack we track transaction bytes used to create Block
             // to see if we've exceeded any limits and if so clear out data and return.
             uint64_t nTxSize = RecursiveDynamicUsage(tx);
-            if (thindata.AddThinBlockBytes(nTxSize, pfrom) > maxAllowedSize - nTxSize)
+            uint64_t nCurrentMax = 0;
+            if (maxAllowedSize >= nTxSize)
+                nCurrentMax = maxAllowedSize - nTxSize;
+            if (thindata.AddThinBlockBytes(nTxSize, pfrom) > nCurrentMax)
             {
                 LogPrint("thin", "thin block too large %lu %llu %llu\n", vTxHashes.size(), nTxSize,
                     pfrom->nLocalThinBlockBytes);
                 if (ClearLargestThinBlockAndDisconnect(pfrom))
                     return error("Thinblock has exceeded memory limits of %ld bytes", maxAllowedSize);
             }
-            if (pfrom->nLocalThinBlockBytes > maxAllowedSize - nTxSize)
+            if (pfrom->nLocalThinBlockBytes > nCurrentMax)
             {
                 LogPrint("thin", "node %s xthin block is too large %lu %llu %llu\n", pfrom->GetLogName(),
                     vTxHashes.size(), nTxSize, pfrom->nLocalThinBlockBytes);
@@ -516,14 +519,17 @@ bool CXThinBlock::process(CNode* pfrom,
                     // In order to prevent a memory exhaustion attack we track transaction bytes used to create Block
                     // to see if we've exceeded any limits and if so clear out data and return.
                     uint64_t nTxSize = RecursiveDynamicUsage(tx);
-                    if (thindata.AddThinBlockBytes(nTxSize, pfrom) > maxAllowedSize - nTxSize)
+                    uint64_t nCurrentMax = 0;
+                    if (maxAllowedSize >= nTxSize)
+                        nCurrentMax = maxAllowedSize - nTxSize;
+                    if (thindata.AddThinBlockBytes(nTxSize, pfrom) > nCurrentMax)
                     {
                         LogPrint("thin", "xthin block too large %lu %llu %llu\n", fullTxHashes.size(), nTxSize,
                             pfrom->nLocalThinBlockBytes);
                         if (ClearLargestThinBlockAndDisconnect(pfrom))
                             return error("xthin block has exceeded memory limits of %ld bytes", maxAllowedSize);
                     }
-                    if (pfrom->nLocalThinBlockBytes > maxAllowedSize - nTxSize)
+                    if (pfrom->nLocalThinBlockBytes > nCurrentMax)
                     {
                         LogPrint("thin", "node %s xthin block is too large %lu %llu %llu\n", pfrom->GetLogName(),
                             fullTxHashes.size(), nTxSize, pfrom->nLocalThinBlockBytes);
@@ -1099,10 +1105,14 @@ uint64_t CThinBlockData::AddThinBlockBytes(uint64_t bytes, CNode *pfrom)
 
 void CThinBlockData::DeleteThinBlockBytes(uint64_t bytes, CNode *pfrom)
 {
-    pfrom->nLocalThinBlockBytes -= bytes;
+    if (bytes <= pfrom->nLocalThinBlockBytes)
+        pfrom->nLocalThinBlockBytes -= bytes;
 
-    LOCK(cs_thinblockstats);
-    nThinBlockBytes -= bytes;
+    if (bytes <= nThinBlockBytes)
+    {
+        LOCK(cs_thinblockstats);
+        nThinBlockBytes -= bytes;
+    }
 }
 
 void CThinBlockData::ResetThinBlockBytes()
