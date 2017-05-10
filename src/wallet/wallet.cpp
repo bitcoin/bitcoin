@@ -922,6 +922,35 @@ bool CWallet::MarkReplaced(const uint256& originalHash, const uint256& newHash)
     return success;
 }
 
+void CWallet::SetDirtyState(const uint256& hash, unsigned int n, bool dirty)
+{
+    const CWalletTx* srctx = GetWalletTx(hash);
+    if (srctx) {
+        CTxDestination dst;
+        if (ExtractDestination(srctx->tx->vout[n].scriptPubKey, dst)) {
+            if (::IsMine(*this, dst)) {
+                if (dirty && !GetDestData(dst, "dirty", NULL)) {
+                    AddDestData(dst, "dirty", "p"); // p for "present", opposite of absent (null)
+                } else if (!dirty && GetDestData(dst, "dirty", NULL)) {
+                    EraseDestData(dst, "dirty");
+                }
+            }
+        }
+    }
+}
+
+bool CWallet::IsDirty(const uint256& hash, unsigned int n) const
+{
+    const CWalletTx* srctx = GetWalletTx(hash);
+    if (srctx) {
+        CTxDestination dst;
+        if (ExtractDestination(srctx->tx->vout[n].scriptPubKey, dst)) {
+            return ::IsMine(*this, dst) && GetDestData(dst, "dirty", NULL);
+        }
+    }
+    return false;
+}
+
 bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
 {
     LOCK(cs_wallet);
@@ -933,15 +962,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
     // Mark used destinations as dirty
     for (const CTxIn& txin : wtxIn.tx->vin) {
         const COutPoint& op = txin.prevout;
-        const CWalletTx* srctx = GetWalletTx(op.hash);
-        if (srctx) {
-            CTxDestination dst;
-            if (ExtractDestination(srctx->tx->vout[op.n].scriptPubKey, dst)) {
-                if (::IsMine(*this, dst) && !GetDestData(dst, "dirty", NULL)) {
-                    AddDestData(dst, "dirty", "1");
-                }
-            }
-        }
+        SetDirtyState(op.hash, op.n, true);
     }
 
     // Inserts only if not already there, returns tx inserted or tx found
@@ -2341,6 +2362,10 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
             isminetype mine = IsMine(pcoin->tx->vout[i]);
 
             if (mine == ISMINE_NO) {
+                continue;
+            }
+
+            if (IsDirty(wtxid, i)) {
                 continue;
             }
 
