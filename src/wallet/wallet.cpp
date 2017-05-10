@@ -930,6 +930,20 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
 
     uint256 hash = wtxIn.GetHash();
 
+    // Mark used destinations as dirty
+    for (const CTxIn& txin : wtxIn.tx->vin) {
+        const COutPoint& op = txin.prevout;
+        const CWalletTx* srctx = GetWalletTx(op.hash);
+        if (srctx) {
+            CTxDestination dst;
+            if (ExtractDestination(srctx->tx->vout[op.n].scriptPubKey, dst)) {
+                if (::IsMine(*this, dst) && !GetDestData(dst, "dirty", NULL)) {
+                    AddDestData(dst, "dirty", "1");
+                }
+            }
+        }
+    }
+
     // Inserts only if not already there, returns tx inserted or tx found
     std::pair<std::map<uint256, CWalletTx>::iterator, bool> ret = mapWallet.insert(std::make_pair(hash, wtxIn));
     CWalletTx& wtx = (*ret.first).second;
