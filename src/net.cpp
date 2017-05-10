@@ -2788,6 +2788,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
     thinBlockWaitingForTxns = -1; // BUIP010 Xtreme Thinblocks
     addrFromPort = 0; // BU
+    nLocalThinBlockBytes = 0;
 
     // BU instrumentation
     std::string xmledName;
