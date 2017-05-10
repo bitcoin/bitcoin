@@ -58,7 +58,18 @@ private:
     CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweak);
     friend class CRollingBloomFilter;
 
+    /** Helper function to set up bloom filter from desired number of elements and false positive rate.
+        Used by the constructors. Checks that the variables in sane ranges. */
+    void setup(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn, bool size_constrained);
+
+    //! Checks for empty and full filters to avoid wasting cpu
+    void UpdateEmptyFull();
 public:
+    //! for testing only
+    bool getFull() const { return isFull; }
+    //! for testing only
+    unsigned int vDataSize() const { return vData.size(); }
+
     /**
      * Creates a new bloom filter which will provide the given fp rate when filled with the given number of elements
      * Note that if the given parameters will result in a filter outside the bounds of the protocol limits,
@@ -69,7 +80,7 @@ public:
      * nFlags should be one of the BLOOM_UPDATE_* enums (not _MASK)
      */
     CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweak, unsigned char nFlagsIn);
-    CBloomFilter() : isFull(true), isEmpty(false), nHashFuncs(0), nTweak(0), nFlags(0) {}
+    CBloomFilter() : isFull(true), isEmpty(true), nHashFuncs(0), nTweak(0), nFlags(0) {}
 
     ADD_SERIALIZE_METHODS;
 
@@ -79,6 +90,9 @@ public:
         READWRITE(nHashFuncs);
         READWRITE(nTweak);
         READWRITE(nFlags);
+        if (ser_action.ForRead()) {
+            UpdateEmptyFull();
+        }
     }
 
     void insert(const std::vector<unsigned char>& vKey);
@@ -98,9 +112,6 @@ public:
 
     //! Also adds any outputs which match the filter to the filter (to match their spending txes)
     bool IsRelevantAndUpdate(const CTransaction& tx);
-
-    //! Checks for empty and full filters to avoid wasting cpu
-    void UpdateEmptyFull();
 };
 
 /**
@@ -129,6 +140,8 @@ public:
 
     void reset();
 
+    //! for testing only
+    unsigned vDataTotalSize() const { return b1.vDataSize() + b2.vDataSize(); }
 private:
     unsigned int nBloomSize;
     unsigned int nInsertions;
