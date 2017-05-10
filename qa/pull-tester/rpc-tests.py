@@ -193,8 +193,8 @@ testScripts = [ RpcTest(t) for t in [
     Disabled('invalidblockrequest', "TODO"),
     'invalidtxrequest',
     'abandonconflict',
-    'p2p-versionbits-warning'
-    ,
+    'p2p-versionbits-warning',
+    'thinblocks'
 ] ]
 
 testScriptsExt = [ RpcTest(t) for t in [
