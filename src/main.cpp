@@ -6700,7 +6700,7 @@ bool SendMessages(CNode* pto)
                 std::map<uint256, int64_t>::iterator iter = pto->mapThinBlocksInFlight.begin();
                 while (iter != pto->mapThinBlocksInFlight.end())
                 {
-                    if ((GetTime() - (*iter).second) > THINBLOCK_DOWNLOAD_TIMEOUT)
+                    if ((*iter).second != -1 && (GetTime() - (*iter).second) > THINBLOCK_DOWNLOAD_TIMEOUT)
                     {
                         if (!pto->fWhitelisted && Params().NetworkIDString() != "regtest")
                         {
