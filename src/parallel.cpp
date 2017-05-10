@@ -557,8 +557,8 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
             // Erase this thinblock from the tracking map now that we're done with it.
             if (pfrom->mapThinBlocksInFlight.erase(inv.hash))
             {
-                pfrom->thinBlockWaitingForTxns = -1;
-                pfrom->thinBlock.SetNull();
+                // Clear out and reset thinblock data
+                thindata.ClearThinBlockData(pfrom);
             }
 
             // Count up any other remaining nodes with thinblocks in flight.
@@ -570,10 +570,12 @@ void HandleBlockMessageThread(CNode *pfrom, const string &strCommand, const CBlo
             pfrom->firstBlock += 1; // update statistics, requires cs_vNodes
         }
 
-        // When we no longer have any thinblocks in flight then clear the set
+        // When we no longer have any thinblocks in flight then clear our any data
         // just to make sure we don't somehow get growth over time.
         if (nTotalThinBlocksInFlight == 0)
         {
+            thindata.ResetThinBlockBytes();
+
             LOCK(cs_xval);
             setPreVerifiedTxHash.clear();
             setUnVerifiedOrphanTxHash.clear();

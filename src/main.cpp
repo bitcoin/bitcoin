@@ -6184,6 +6184,9 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
             mapMissingTx[tx.GetHash().GetCheapHash()] = tx;
 
         int count = 0;
+        uint64_t maxAllowedSize = maxMessageSizeMultiplier * excessiveBlockSize;
+        CTransaction nulltx;
+        uint64_t nSizeNullTx =  RecursiveDynamicUsage(nulltx);
         for (size_t i = 0; i < pfrom->thinBlock.vtx.size(); i++)
         {
             if (pfrom->thinBlock.vtx[i].IsNull())
@@ -6193,6 +6196,15 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
                 {
                     pfrom->thinBlock.vtx[i] = val->second;
                     pfrom->thinBlockWaitingForTxns--;
+
+                    // In order to prevent a memory exhaustion attack we track transaction bytes used to create Block
+                    // to see if we've exceeded any limits and if so clear out data and return.
+                    uint64_t nTxSize = RecursiveDynamicUsage(val->second) - nSizeNullTx;
+                    if (thindata.AddThinBlockBytes(nTxSize, pfrom) > maxAllowedSize)
+                    {
+                        if (ClearLargestThinBlockAndDisconnect(pfrom))
+                            return error("xthin block has exceeded memory limits of %ld bytes", maxAllowedSize);
+                    }
                 }
                 count++;
             }
