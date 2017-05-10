@@ -343,10 +343,9 @@ Strings and formatting
 Variable names
 --------------
 
-The shadowing warning (`-Wshadow`) is enabled by default. It prevents issues rising
-from using a different variable with the same name.
-
-Please name variables so that their names do not shadow variables defined in the source code.
+Although the shadowing warning (`-Wshadow`) is not enabled by default (it prevents issues rising
+from using a different variable with the same name),
+please name variables so that their names do not shadow variables defined in the source code.
 
 E.g. in member initializers, prepend `_` to the argument name shadowing the
 member name:
