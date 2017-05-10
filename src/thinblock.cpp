@@ -143,6 +143,7 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock, string strCommand)
                 LogPrint("thin", "node %s xthin block is too large %lu %llu %llu\n", pfrom->GetLogName(),
                     vTxHashes.size(), nTxSize, pfrom->nLocalThinBlockBytes);
                 thindata.ClearThinBlockData(pfrom);
+                pfrom->fDisconnect = true;
                 return error("This thinblock has exceeded memory limits of %ld bytes", maxAllowedSize);
             }
 
@@ -556,6 +557,7 @@ bool CXThinBlock::process(CNode *pfrom,
                         LogPrint("thin", "node %s xthin block is too large %lu %llu %llu\n", pfrom->GetLogName(),
                             fullTxHashes.size(), nTxSize, pfrom->nLocalThinBlockBytes);
                         thindata.ClearThinBlockData(pfrom);
+                        pfrom->fDisconnect = true;
                         return error("This thinblock has exceeded memory limits of %ld bytes", maxAllowedSize);
                     }
 
