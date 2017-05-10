@@ -1309,11 +1309,8 @@ bool ClearLargestThinBlockAndDisconnect(CNode *pfrom)
     LOCK(cs_vNodes);
     BOOST_FOREACH (CNode *pnode, vNodes)
     {
-        if (pnode->mapThinBlocksInFlight.size() > 0)
-        {
-            if ((pLargest == NULL) || (pnode->nLocalThinBlockBytes > pLargest->nLocalThinBlockBytes))
-                pLargest = pnode;
-        }
+        if ((pLargest == NULL) || (pnode->nLocalThinBlockBytes > pLargest->nLocalThinBlockBytes))
+            pLargest = pnode;
     }
     if (pLargest != NULL)
     {
