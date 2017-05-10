@@ -994,6 +994,17 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
     CValidationState state;
     uint64_t nSizeBlock = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
 
+    // At this point we have either a block or a fully reconstructed thinblock but we still need to
+    // maintain a mapThinBlocksInFlight entry so that we don't re-request a full block from
+    // the same node while the block is processing. Furthermore by setting the time = -1 we prevent
+    // the timeout from triggering and inadvertently disconnecting the node in the event that the block
+    // takes a longer time to process than the THINBLOCK_DOWNLOAD_TIMEOUT interval.
+    {
+        LOCK(pfrom->cs_mapthinblocksinflight);
+        if (pfrom->mapThinBlocksInFlight.count(inv.hash))
+            pfrom->mapThinBlocksInFlight[inv.hash] = -1;
+    }
+
     // Process all blocks from whitelisted peers, even if not requested,
     // unless we're still syncing with the network.
     // Such an unrequested block may still be processed, subject to the
@@ -1038,8 +1049,8 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
             // Erase this thinblock from the tracking map now that we're done with it.
             if (pfrom->mapThinBlocksInFlight.erase(inv.hash))
             {
-                pfrom->thinBlockWaitingForTxns = -1;
-                pfrom->thinBlock.SetNull();
+                // Clear out and reset thinblock data
+                thindata.ClearThinBlockData(pfrom);
             }
           
             // Count up any other remaining nodes with thinblocks in flight.
@@ -1053,8 +1064,11 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
 
         // When we no longer have any thinblocks in flight then clear the set
         // just to make sure we don't somehow get growth over time.
-        LOCK(cs_xval);
         if (nTotalThinBlocksInFlight == 0) {
+
+            thindata.ResetThinBlockBytes();
+
+            LOCK(cs_xval);
             setPreVerifiedTxHash.clear();
             setUnVerifiedOrphanTxHash.clear();
         }

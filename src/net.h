@@ -404,6 +404,7 @@ public:
     CBlock thinBlock;
     std::vector<uint256> thinBlockHashes;
     std::vector<uint64_t> xThinBlockHashes;
+    uint64_t nLocalThinBlockBytes; // the bytes used in creating this thinblock, updated dynamically
     int nSizeThinBlock;   // Original on-wire size of the block. Just used for reporting
     int thinBlockWaitingForTxns;   // if -1 then not currently waiting
     CCriticalSection cs_mapthinblocksinflight; // lock mapThinBlocksInFlight
