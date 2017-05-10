@@ -305,7 +305,7 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
             Misbehaving(pfrom->GetId(), 100);
             LogPrintf("Received an invalid %s from peer %s (%d)\n",
                       strCommand, pfrom->addrName.c_str(), pfrom->id);
-            return true;
+            return false;
         }
 
         CValidationState state;
@@ -321,7 +321,7 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
                           strCommand, pfrom->addrName.c_str(), pfrom->id);
             }
 
-            return true;
+            return false;
         }
 
         if (!pIndex)
@@ -330,14 +330,13 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
             return true;
         }
 
-        // FIXME: enable this later
-        // UpdateBlockAvailability(pfrom->GetId(), pIndex->GetBlockHash());
+        inv.hash = pIndex->GetBlockHash();
+        UpdateBlockAvailability(pfrom->GetId(), inv.hash);
 
         // Return early if we already have the block data
         if (pIndex->nStatus & BLOCK_HAVE_DATA)
             return true;
 
-        inv.hash = pIndex->GetBlockHash();
 
         // Request thin block if it isn't extending the best chain
         if (pIndex->nChainWork <= chainActive.Tip()->nChainWork)
