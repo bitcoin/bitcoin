@@ -175,6 +175,7 @@ private:
     std::map<uint256, uint64_t> mapThinBlockTimer;
 
     CCriticalSection cs_thinblockstats; // locks everything below this point
+
     CStatHistory<uint64_t> nOriginalSize;
     CStatHistory<uint64_t> nThinSize;
     CStatHistory<uint64_t> nBlocks;
@@ -190,6 +191,29 @@ private:
     /* The sum total of all bytes for thinblocks currently in process of being reconstructed */
     uint64_t nThinBlockBytes;
 
+    /**
+        Add new entry to statistics array; also removes old timestamps
+        from statistics array using expireStats() below.
+        @param [statsMap] a statistics array
+        @param [value] the value to insert for the current time
+     */
+    template <class T>
+    void updateStats(std::map<int64_t, T> &statsMap, T value);
+
+    /**
+       Expire old statistics in given array (currently after one day).
+       Uses getTimeForStats() virtual method for timing. */
+    template <class T>
+    void expireStats(std::map<int64_t, T> &statsMap);
+
+    /**
+      Calculate average of long long values in given map. Return 0 for no entries.
+      Expires values before calculation. */
+    double average(std::map<int64_t, uint64_t> &map);
+
+protected:
+    //! Virtual method so it can be overridden for better unit testing
+    virtual int64_t getTimeForStats() { return GetTimeMillis(); }
 public:
     void UpdateInBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
     void UpdateOutBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
