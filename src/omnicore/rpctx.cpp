@@ -1076,7 +1076,6 @@ UniValue omni_sendchangeissuer(const UniValue& params, bool fHelp)
 
     // perform checks
     RequireExistingProperty(propertyId);
-    RequireManagedProperty(propertyId);
     RequireTokenIssuer(fromAddress, propertyId);
 
     // create a payload for the transaction
