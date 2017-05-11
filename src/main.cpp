@@ -5916,7 +5916,7 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
 
     else if (strCommand == NetMsgType::XPEDITEDREQUEST)
     {
-        HandleExpeditedRequest(vRecv, pfrom);
+        return HandleExpeditedRequest(vRecv, pfrom);
     }
 
 
