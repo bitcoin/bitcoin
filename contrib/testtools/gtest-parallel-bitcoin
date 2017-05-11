@@ -4,7 +4,8 @@
 #
 # Adaptations for running Bitcoin's tests (using runner based on
 # Boost Test Library instead of Google Test):
-# Copyright (c) 2016 The Bitcoin Unlimited developers
+# Copyright (c) 2016-2017 The Bitcoin Unlimited developers
+# Copyright (C) 2017 Tom Zander <tomz@freedommail.ch>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,6 +21,7 @@
 
 import cPickle
 import errno
+import getpass
 import gzip
 import json
 import multiprocessing
@@ -175,10 +177,17 @@ class FilterFormat:
         for test_id in test_ids:
             self.out.permanent_line(" %s: %s" % self.tests[test_id])
 
-    def print_test_status(self, last_finished_test, time_ms):
-        self.out.transient_line("[%d/%d] %s (%d ms)"
-                                % (self.finished_tests, self.total_tests,
-                                   last_finished_test, time_ms))
+    def print_test_status(self):
+        lines = list()
+        for test_id in sorted(self.started):
+            (binary, test) = self.tests[test_id]
+            lines.append(test)
+
+        if (len(lines) == 0):
+            self.out.transient_line("Finished %d test-suites" % self.total_tests)
+        else:
+            self.out.transient_line("[%d/%d] [%s]"
+                                    % (self.finished_tests, self.total_tests, " ".join(lines)))
 
     def log(self, job_id, command, args=tuple(), file_name=None):
         with stdout_lock:
@@ -187,19 +196,21 @@ class FilterFormat:
             elif command == "START":
                 self.started.add(job_id)
                 self.outputs[job_id] = file_name
+                self.print_test_status()
             elif command == "EXIT":
                 self.started.remove(job_id)
                 self.finished_tests += 1
+                self.print_test_status()
                 (exit_code, time_ms) = args
-                (binary, test) = self.tests[job_id]
-                self.print_test_status(test, time_ms)
-                if exit_code == 0:
+                if exit_code == 0 or (exit_code == 200 and not options.fail_empty_suites):
                     self.passed.append(job_id)
                 else:
                     self.failed.append(job_id)
                     with open(file_name) as f:
                         for line in f.readlines():
                             self.out.permanent_line(line.rstrip())
+
+                    (binary, test) = self.tests[job_id]
                     self.out.permanent_line(
                         "[%d/%d] %s returned/aborted with exit code %d (%d ms)"
                         % (self.finished_tests, self.total_tests, test, exit_code, time_ms))
@@ -307,7 +318,7 @@ class TestTimes(object):
         if type(times) is not dict:
             return
         for ((test_binary, test_name), runtime) in times.items():
-            if (type(test_binary) is not str or type(test_name) is not str
+            if (type(test_binary) is not str or type(test_name) not in (str, unicode)
                     or type(runtime) not in {int, long, type(None)}):
                 return
 
@@ -348,10 +359,13 @@ parser = optparse.OptionParser(
 
 parser.add_option('-d', '--output_dir', type='string',
                   default=os.path.join(
-                      tempfile.gettempdir(), "gtest-parallel-bitcoin"),
+                      tempfile.gettempdir(), "gtest-parallel-bitcoin.%s" %
+                      getpass.getuser()),
                   help='output directory for test logs')
 parser.add_option('-r', '--repeat', type='int', default=1,
                   help='repeat tests')
+parser.add_option('--fail_empty_suites', action='store_true', default=True,
+                  help='fail empty test suites')
 parser.add_option('--failed', action='store_true', default=False,
                   help='run only failed and new tests')
 parser.add_option('-w', '--workers', type='int',
@@ -414,7 +428,6 @@ for test_binary in binaries:
 
     list_command = list(command)
     list_command += ['--list_content']
-    # src/test/test_bitcoin --list_content 2>&1 | grep '^[a-zA-Z]' | sort
 
     try:
         proc = subprocess.Popen(list_command,
@@ -450,6 +463,9 @@ if options.failed:
     # run if it was successful, or None if the test is new or the most
     # recent run failed.
     tests = [x for x in tests if x[0] is None]
+    if not tests:
+        print("No new or failed tests.")
+        sys.exit(0)
 
 # Sort tests by falling runtime (with None, which is what we get for
 # new and failing tests, being considered larger than any real
@@ -503,7 +519,7 @@ def run_job((command, job_id, test, test_index)):
         "time": runtime_ms,
     })
     logger.log(job_id, "EXIT", (code, runtime_ms), file_name=test_file)
-    if code == 0:
+    if code == 0 or (code == 200 and not options.fail_empty_suites):
         return runtime_ms
     global exit_code
     exit_code = code
