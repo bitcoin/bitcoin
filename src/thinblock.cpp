@@ -353,7 +353,7 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
         if (pIndex->nChainWork <= chainActive.Tip()->nChainWork)
         {
             vector<CInv> vGetData;
-            vGetData.push_back(CInv(MSG_THINBLOCK, inv.hash));
+            vGetData.push_back(inv);
 
             pfrom->PushMessage(NetMsgType::GETDATA, vGetData);
             LogPrintf("xthinblock does not extend longest chain; re-requesting as a thinblock\n");

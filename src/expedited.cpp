@@ -173,8 +173,8 @@ void HandleExpeditedRequest(CDataStream &vRecv, CNode *pfrom)
                 }
                 else
                 {
-                    LogPrint("blk", "Expedited transactions requested from peer %s (%d), but I am full.\n",
-                        pfrom->addrName.c_str(), pfrom->id);
+                    LogPrint(
+                        "blk", "Expedited transactions requested from peer %s but I am full\n", pfrom->GetLogName());
                 }
             }
         }
