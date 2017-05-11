@@ -1601,7 +1601,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 return true;
 
             bool fAlreadyHave = AlreadyHave(inv);
-            LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom->id);
+            if (strCommand == NetMsgType::INV) {
+                LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom->id);
+            } else {
+                LogPrint(BCLog::NET, "got Dandelion inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom->id);
+            }
 
             if (inv.type == MSG_TX) {
                 inv.type |= nFetchFlags;
@@ -1610,11 +1614,14 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 if (strCommand == NetMsgType::D_INV)
                 {
                     float rand_prob = ((float) rand() / (float) RAND_MAX);
-                    if (rand_prob > DANDELION_PROB)
+                    bool coin_flip = (rand_prob > DANDELION_PROB);
+                    if (coin_flip)
                     {
                         // Add the hash to the set of ongoing stem transactions
                         Dandelion::stemSet.insert(inv.hash);
                     }
+                    LogPrint(BCLog::NET, "Coin flip was %s for transaction hash=%s\n", coin_flip,
+                            inv.hash.ToString());
                 }
             }
 
@@ -3142,6 +3149,8 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                     pto->setInventoryTxToSend.erase(it);
                     // Add the item to the queue to be sent
                     dandVInv.push_back(CInv(MSG_TX, hash));
+                    LogPrint(BCLog::NET, "%s: sending Dandelion inv to peer=%d with hash=%s\n", __func__,
+                            pto->id, hash.ToString());
                     // Add the hash to the mapRelay if it's in the mempool
                     {
                         auto txinfo = mempool.info(hash);
@@ -3161,7 +3170,7 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                 }
             }
             if (!dandVInv.empty()) {
-                LogPrintf("About to send %d Dandelion messages.\n", dandVInv.size());
+                // LogPrintf("About to send %d Dandelion messages.\n", dandVInv.size());
                 connman.PushMessage(pto, msgMaker.Make(NetMsgType::D_INV, dandVInv));
             }
 
