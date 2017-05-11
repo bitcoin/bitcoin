@@ -414,10 +414,10 @@ void TransactionView::bumpFee()
     hash.SetHex(hashQStr.toStdString());
 
     // Bump tx fee over the walletModel
-    model->bumpFee(hash);
-
-    // Update the table
-    model->getTransactionTableModel()->updateTransaction(hashQStr, CT_UPDATED, false);
+    if (model->bumpFee(hash)) {
+        // Update the table
+        model->getTransactionTableModel()->updateTransaction(hashQStr, CT_UPDATED, false);
+    }
 }
 
 void TransactionView::copyAddress()
