@@ -712,7 +712,7 @@ bool WalletModel::bumpFee(uint256 hash)
     std::unique_ptr<CFeeBumper> feeBump;
     {
         LOCK2(cs_main, wallet->cs_wallet);
-        feeBump.reset(new CFeeBumper(wallet, hash, 0, false, 0, true));
+        feeBump.reset(new CFeeBumper(wallet, hash, nTxConfirmTarget, false, 0, true));
     }
     if (feeBump->getResult() != BumpFeeResult::OK)
     {
