@@ -28,6 +28,23 @@ extern CCriticalSection cs_thinblockstats;
 extern CCriticalSection cs_orphancache;
 extern map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_orphancache);
 
+string formatInfoUnit(double value)
+{
+    static const char *units[] = {"B", "KB", "MB", "GB", "TB", "PB", "EB"};
+
+    size_t i = 0;
+    while ((value > 1000.0 || value < -1000.0) && i < (sizeof(units) / sizeof(units[0])) - 1)
+    {
+        value /= 1000.0;
+        i++;
+    }
+
+    ostringstream ss;
+    ss << fixed << setprecision(2);
+    ss << value << units[i];
+    return ss.str();
+}
+
 CThinBlock::CThinBlock(const CBlock &block, CBloomFilter &filter)
 {
     header = block.GetBlockHeader();
@@ -784,19 +801,9 @@ void CThinBlockData::UpdateMempoolLimiterBytesSaved(unsigned int nBytesSaved)
 string CThinBlockData::ToString()
 {
     LOCK(cs_thinblockstats);
-
-    static const char *units[] = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
-    int i = 0;
     double size = double(nOriginalSize() - nThinSize() - nTotalBloomFilterBytes());
-    while (size > 1000)
-    {
-        size /= 1000;
-        i++;
-    }
-
     ostringstream ss;
-    ss << fixed << setprecision(2);
-    ss << nBlocks() << " thin " << ((nBlocks() > 1) ? "blocks have" : "block has") << " saved " << size << units[i]
+    ss << nBlocks() << " thin " << ((nBlocks() > 1) ? "blocks have" : "block has") << " saved " << formatInfoUnit(size)
        << " of bandwidth";
     return ss.str();
 }
@@ -911,17 +918,8 @@ string CThinBlockData::InBoundBloomFiltersToString()
     if (nInBoundBloomFilters > 0)
         avgBloomSize = (double)nInBoundBloomFilterSize / nInBoundBloomFilters;
 
-    static const char *units[] = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
-    int i = 0;
-    while (avgBloomSize > 1000)
-    {
-        avgBloomSize /= 1000;
-        i++;
-    }
-
     ostringstream ss;
-    ss << fixed << setprecision(1);
-    ss << "Inbound bloom filter size (last 24hrs) AVG: " << avgBloomSize << units[i];
+    ss << "Inbound bloom filter size (last 24hrs) AVG: " << formatInfoUnit(avgBloomSize);
     return ss.str();
 }
 
@@ -952,17 +950,8 @@ string CThinBlockData::OutBoundBloomFiltersToString()
     if (nOutBoundBloomFilters > 0)
         avgBloomSize = (double)nOutBoundBloomFilterSize / nOutBoundBloomFilters;
 
-    static const char *units[] = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
-    int i = 0;
-    while (avgBloomSize > 1000)
-    {
-        avgBloomSize /= 1000;
-        i++;
-    }
-
     ostringstream ss;
-    ss << fixed << setprecision(1);
-    ss << "Outbound bloom filter size (last 24hrs) AVG: " << avgBloomSize << units[i];
+    ss << "Outbound bloom filter size (last 24hrs) AVG: " << formatInfoUnit(avgBloomSize);
     return ss.str();
 }
 // Calculate the xthin percentage compression over the last 24 hours
@@ -1072,19 +1061,9 @@ string CThinBlockData::ReRequestedTxToString()
 string CThinBlockData::MempoolLimiterBytesSavedToString()
 {
     LOCK(cs_thinblockstats);
-
-    static const char *units[] = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
-    int i = 0;
     double size = (double)nMempoolLimiterBytesSaved();
-    while (size > 1000)
-    {
-        size /= 1000;
-        i++;
-    }
-
     ostringstream ss;
-    ss << fixed << setprecision(2);
-    ss << "Thinblock mempool limiting has saved " << size << units[i] << " of bandwidth";
+    ss << "Thinblock mempool limiting has saved " << formatInfoUnit(size) << " of bandwidth";
     return ss.str();
 }
 

@@ -11,3 +11,4 @@ unlimited.h
 globals.cpp
 expedited.cpp
 expedited.h
+test/thinblock_util_tests.cpp
