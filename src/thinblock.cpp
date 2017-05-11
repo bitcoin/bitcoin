@@ -348,34 +348,33 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
             return true;
         }
 
-
-        // Request thin block if it isn't extending the best chain
+        // Request full block if it isn't extending the best chain
         if (pIndex->nChainWork <= chainActive.Tip()->nChainWork)
         {
             vector<CInv> vGetData;
             vGetData.push_back(inv);
 
             pfrom->PushMessage(NetMsgType::GETDATA, vGetData);
-            LogPrintf("xthinblock does not extend longest chain; re-requesting as a thinblock\n");
+            LogPrintf("%s %s from peer %s received but does not extend longest chain; requesting full block\n",
+                strCommand, inv.hash.ToString(), pfrom->GetLogName());
             return true;
         }
 
         if (nHops > 0)
         {
-            LogPrint("thin",
-                     "Received new expedited thinblock %s from peer %s (%d) hop %d size %d bytes\n",
-                     inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id, nHops, nSizeThinBlock);
+            LogPrint("thin", "Received new expedited thinblock %s from peer %s hop %d size %d bytes\n",
+                inv.hash.ToString(), pfrom->GetLogName(), nHops, nSizeThinBlock);
         }
         else
         {
-            LogPrint("thin", "Received %s %s from peer %s (%d). Size %d bytes.\n", strCommand, inv.hash.ToString(),
-                     pfrom->addrName.c_str(), pfrom->id, nSizeThinBlock);
+            LogPrint("thin", "Received %s %s from peer %s. Size %d bytes.\n", strCommand, inv.hash.ToString(),
+                pfrom->GetLogName(), nSizeThinBlock);
 
             // An expedited block or re-requested xthin can arrive and beat the original thin block request/response
             if (!pfrom->mapThinBlocksInFlight.count(inv.hash))
             {
-                LogPrint("thin", "%s %s from peer %s (%d) received but we may already have processed it\n", strCommand,
-                         inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id);
+                LogPrint("thin", "%s %s from peer %s received but we may already have processed it\n", strCommand,
+                    inv.hash.ToString(), pfrom->GetLogName());
                 // I'll still continue processing if we don't have an accepted block yet
                 fAlreadyHave = AlreadyHave(inv);
                 if (fAlreadyHave)
