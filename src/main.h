@@ -407,7 +407,9 @@ bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeig
  */
 bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp = NULL, bool useExistingLockPoints = false);
 
-//  BU: This was all moved to parallel.cpp
+/** Update tracking information about which blocks a peer is assumed to have. */
+void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash);
+
 /**
  * Class that keeps track of number of signature operations
  * and bytes hashed to compute signature hashes.

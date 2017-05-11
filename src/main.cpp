@@ -480,23 +480,6 @@ void ProcessBlockAvailability(NodeId nodeid) {
     }
 }
 
-/** Update tracking information about which blocks a peer is assumed to have. */
-void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) {
-    CNodeState *state = State(nodeid);
-    DbgAssert(state != NULL, return);  // node already destructed, nothing to do in production mode
-
-    ProcessBlockAvailability(nodeid);
-
-    BlockMap::iterator it = mapBlockIndex.find(hash);
-    if (it != mapBlockIndex.end() && it->second->nChainWork > 0) {
-        // An actually better block was announced.
-        if (state->pindexBestKnownBlock == NULL || it->second->nChainWork >= state->pindexBestKnownBlock->nChainWork)
-            state->pindexBestKnownBlock = it->second;
-    } else {
-        // An unknown block was announced; just assume that the latest one is the best one.
-        state->hashLastUnknownBlock = hash;
-    }
-}
 
 // Requires cs_main
 bool PeerHasHeader(CNodeState *state, CBlockIndex *pindex)
@@ -614,7 +597,23 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBl
 
 } // anon namespace
 
+/** Update tracking information about which blocks a peer is assumed to have. */
+void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) {
+    CNodeState *state = State(nodeid);
+    DbgAssert(state != NULL, return);  // node already destructed, nothing to do in production mode
 
+    ProcessBlockAvailability(nodeid);
+
+    BlockMap::iterator it = mapBlockIndex.find(hash);
+    if (it != mapBlockIndex.end() && it->second->nChainWork > 0) {
+        // An actually better block was announced.
+        if (state->pindexBestKnownBlock == NULL || it->second->nChainWork >= state->pindexBestKnownBlock->nChainWork)
+            state->pindexBestKnownBlock = it->second;
+    } else {
+        // An unknown block was announced; just assume that the latest one is the best one.
+        state->hashLastUnknownBlock = hash;
+    }
+}
 
   void MarkBlockAsInFlight(NodeId nodeid, const uint256& hash, const Consensus::Params& consensusParams, CBlockIndex *pindex = NULL) {
     LOCK(cs_main);
@@ -5978,10 +5977,10 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
         CheckAndRequestExpeditedBlocks(pfrom);
     }
 
-    else if (strCommand == NetMsgType::XTHINBLOCK && !fImporting && !fReindex && !IsInitialBlockDownload()
-    	     && IsThinBlocksEnabled())
+    else if (strCommand == NetMsgType::XTHINBLOCK && !fImporting && !fReindex && !IsInitialBlockDownload() &&
+             IsThinBlocksEnabled())
     {
-    	return CXThinBlock::HandleMessage(vRecv, pfrom, strCommand, 0);
+        return CXThinBlock::HandleMessage(vRecv, pfrom, strCommand, 0);
     }
 
 
@@ -6184,6 +6183,9 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
             mapMissingTx[tx.GetHash().GetCheapHash()] = tx;
 
         int count = 0;
+        uint64_t maxAllowedSize = maxMessageSizeMultiplier * excessiveBlockSize;
+        CTransaction nulltx;
+        uint64_t nSizeNullTx =  RecursiveDynamicUsage(nulltx);
         for (size_t i = 0; i < pfrom->thinBlock.vtx.size(); i++)
         {
             if (pfrom->thinBlock.vtx[i].IsNull())
@@ -6193,6 +6195,15 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
                 {
                     pfrom->thinBlock.vtx[i] = val->second;
                     pfrom->thinBlockWaitingForTxns--;
+
+                    // In order to prevent a memory exhaustion attack we track transaction bytes used to create Block
+                    // to see if we've exceeded any limits and if so clear out data and return.
+                    uint64_t nTxSize = RecursiveDynamicUsage(val->second) - nSizeNullTx;
+                    if (thindata.AddThinBlockBytes(nTxSize, pfrom) > maxAllowedSize)
+                    {
+                        if (ClearLargestThinBlockAndDisconnect(pfrom))
+                            return error("xthin block has exceeded memory limits of %ld bytes", maxAllowedSize);
+                    }
                 }
                 count++;
             }
@@ -6674,7 +6685,7 @@ bool SendMessages(CNode* pto)
                 std::map<uint256, int64_t>::iterator iter = pto->mapThinBlocksInFlight.begin();
                 while (iter != pto->mapThinBlocksInFlight.end())
                 {
-                    if ((GetTime() - (*iter).second) > THINBLOCK_DOWNLOAD_TIMEOUT)
+                    if ((*iter).second != -1 && (GetTime() - (*iter).second) > THINBLOCK_DOWNLOAD_TIMEOUT)
                     {
                         if (!pto->fWhitelisted && Params().NetworkIDString() != "regtest")
                         {
