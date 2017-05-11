@@ -6007,6 +6007,7 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
         }
 
         // Is there a previous block or header to connect with?
+        CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
         {
             LOCK(cs_main);
             uint256 prevHash = thinBlock.header.hashPrevBlock;
@@ -6014,6 +6015,7 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
             if (mi == mapBlockIndex.end())
             {
                 Misbehaving(pfrom->GetId(), 10);
+                ClearThinBlockInFlight(pfrom, inv.hash);
                 return error("thinblock from peer %s (%d) will not connect, unknown previous block %s",
                     pfrom->addrName.c_str(),
                     pfrom->id,
@@ -6032,7 +6034,6 @@ bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv, in
             }
         }
 
-        CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
         int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
         LogPrint("thin", "received thinblock %s from peer %s (%d) of %d bytes\n", inv.hash.ToString(),
             pfrom->addrName.c_str(),
