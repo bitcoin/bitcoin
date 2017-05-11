@@ -41,6 +41,31 @@ int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *pWal
     return GetVirtualTransactionSize(txNew);
 }
 
+bool CFeeBumper::preconditionChecks(const CWallet *pWallet, const CWalletTx& wtx) {
+    if (pWallet->HasWalletSpend(wtx.GetHash())) {
+        vErrors.push_back("Transaction has descendants in the wallet");
+        currentResult = BumpFeeResult::INVALID_PARAMETER;
+        return false;
+    }
+
+    {
+        LOCK(mempool.cs);
+        auto it_mp = mempool.mapTx.find(wtx.GetHash());
+        if (it_mp != mempool.mapTx.end() && it_mp->GetCountWithDescendants() > 1) {
+            vErrors.push_back("Transaction has descendants in the mempool");
+            currentResult = BumpFeeResult::INVALID_PARAMETER;
+            return false;
+        }
+    }
+
+    if (wtx.GetDepthInMainChain() != 0) {
+        vErrors.push_back("Transaction has been mined, or is conflicted with a mined transaction");
+        currentResult = BumpFeeResult::WALLET_ERROR;
+        return false;
+    }
+    return true;
+}
+
 CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConfirmTarget, bool specifiedConfirmTarget, CAmount totalFee, bool newTxReplaceable)
     :
     txid(std::move(txidIn)),
@@ -58,25 +83,7 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, int newConf
     auto it = pWallet->mapWallet.find(txid);
     const CWalletTx& wtx = it->second;
 
-    if (pWallet->HasWalletSpend(txid)) {
-        vErrors.push_back("Transaction has descendants in the wallet");
-        currentResult = BumpFeeResult::INVALID_PARAMETER;
-        return;
-    }
-
-    {
-        LOCK(mempool.cs);
-        auto it_mp = mempool.mapTx.find(txid);
-        if (it_mp != mempool.mapTx.end() && it_mp->GetCountWithDescendants() > 1) {
-            vErrors.push_back("Transaction has descendants in the mempool");
-            currentResult = BumpFeeResult::INVALID_PARAMETER;
-            return;
-        }
-    }
-
-    if (wtx.GetDepthInMainChain() != 0) {
-        vErrors.push_back("Transaction has been mined, or is conflicted with a mined transaction");
-        currentResult = BumpFeeResult::WALLET_ERROR;
+    if (!preconditionChecks(pWallet, wtx)) {
         return;
     }
 
@@ -247,6 +254,11 @@ bool CFeeBumper::commit(CWallet *pWallet)
         return false;
     }
     CWalletTx& oldWtx = pWallet->mapWallet[txid];
+
+    // make sure the transaction still has no descendants and hasen't been mined in the meantime
+    if (!preconditionChecks(pWallet, oldWtx)) {
+        return false;
+    }
 
     CWalletTx wtxBumped(pWallet, MakeTransactionRef(std::move(mtx)));
     // commit/broadcast the tx
