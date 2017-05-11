@@ -369,7 +369,7 @@ bool CXThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom, string strComm
         if (pIndex->nChainWork <= chainActive.Tip()->nChainWork)
         {
             vector<CInv> vGetData;
-            vGetData.push_back(CInv(MSG_THINBLOCK, inv.hash));
+            vGetData.push_back(inv);
             pfrom->PushMessage(NetMsgType::GETDATA, vGetData);
 
             LogPrintf("%s %s from peer %s received but does not extend longest chain; requesting full block\n",
