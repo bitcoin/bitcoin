@@ -107,9 +107,12 @@ enum
     // Public keys in segregated witness scripts must be compressed
     //
     SCRIPT_VERIFY_WITNESS_PUBKEYTYPE = (1U << 15),
+
+    // Enforce CHECKBLOCKATHEIGHT opcode
+    SCRIPT_VERIFY_CHECKBLOCKATHEIGHT = (1U << 16),
 };
 
-static const unsigned int CONTEXTUAL_SCRIPT_VERIFY_FLAGS = 0;
+static const unsigned int CONTEXTUAL_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_CHECKBLOCKATHEIGHT;
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
 
@@ -146,6 +149,11 @@ public:
          return false;
     }
 
+    virtual bool CheckBlockHash(const int32_t nHeight, const std::vector<unsigned char>& nBlockHash) const
+    {
+         return false;
+    }
+
     virtual ~BaseSignatureChecker() {}
 };
 
@@ -167,6 +175,7 @@ public:
     bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const;
     bool CheckLockTime(const CScriptNum& nLockTime) const;
     bool CheckSequence(const CScriptNum& nSequence) const;
+    bool CheckBlockHash(const int32_t nHeight, const std::vector<unsigned char>& nBlockHash) const;
 };
 
 class MutableTransactionSignatureChecker : public TransactionSignatureChecker

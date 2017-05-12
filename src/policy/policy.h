@@ -65,7 +65,8 @@ static const unsigned int STANDARD_CONTEXTUAL_SCRIPT_VERIFY_FLAGS = MANDATORY_SC
                                                          SCRIPT_VERIFY_LOW_S |
                                                          SCRIPT_VERIFY_WITNESS |
                                                          SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM |
-                                                         SCRIPT_VERIFY_WITNESS_PUBKEYTYPE;
+                                                         SCRIPT_VERIFY_WITNESS_PUBKEYTYPE |
+                                                         SCRIPT_VERIFY_CHECKBLOCKATHEIGHT;
 
 /** For convenience, standard but not contextual verify flags. */
 static const unsigned int STANDARD_NONCONTEXTUAL_SCRIPT_VERIFY_FLAGS = STANDARD_CONTEXTUAL_SCRIPT_VERIFY_FLAGS & ~CONTEXTUAL_SCRIPT_VERIFY_FLAGS;
