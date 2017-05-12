@@ -508,8 +508,7 @@ public:
             return false;
 
         // Read instruction
-        if (end() - pc < 1)
-            return false;
+        // guaranteed one opcode available from check above
         unsigned int opcode = *pc++;
 
         // Immediate operand
