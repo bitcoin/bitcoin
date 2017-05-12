@@ -1494,7 +1494,121 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
     if (addr.Set(dest))
         entry.push_back(Pair("v2address", addr.ToString()));
 }
-
+// SYSCOIN
+string GetSyscoinTransactionDescription(const int op, const vector<vector<unsigned char> > &vvchArgs, const CWalletTx &wtx, const string &type)
+{
+	string strResponse = "";
+	COffer offer;
+	CEscrow escrow;
+	switch(op)
+	{
+	case OP_ALIAS_ACTIVATE:
+		strResponse = _("Alias Activated");
+		break;
+	case OP_ALIAS_PAYMENT:
+		if(type == "send")
+			strResponse =  _("Alias Payment Sent");
+		else if(type == "recv")
+			strResponse = _("Alias Payment Received");
+		break;
+	case OP_ALIAS_UPDATE:
+		if(type == "send")
+			strResponse = (IsSyscoinTxMine(wtx, "alias")) ? _("Alias Updated") : _("Alias Transferred");	
+		else if(type == "recv")
+			strResponse = _("Alias Received");
+		break;
+	case OP_OFFER_ACTIVATE:
+		strResponse = _("Offer Activated");
+		break;
+	case OP_OFFER_UPDATE:
+		strResponse = _("Offer Updated");
+		break;
+	case OP_OFFER_ACCEPT:
+		offer = COffer(wtx);
+		if(!offer.accept.feedback.empty())
+		{
+			if(type == "send")
+				strResponse =  _("Offer Accept Feedback");
+			else if(type == "recv")
+				strResponse = _("Offer Accept Feedback Received");
+		}
+		else if(offer.accept.bPaymentAck)
+		{
+			strResponse = _("Offer Accept Acknowledged");
+		}
+		else
+		{
+			if(type == "send")
+				strResponse = _("Offer Accepted");
+			else if(type == "recv")
+				strResponse = _("Offer Accept Received");
+		}
+		strResponse += " " + stringFromVch(vvchArgs[1]) + " (" + stringFromVch(vvchArgs[0]) + ")";
+		return strResponse;
+		break;
+	case OP_CERT_ACTIVATE:
+		strResponse = _("Offer Accepted");
+		break;
+	case OP_CERT_UPDATE:
+		strResponse = _("Certificate Updated");
+		break;
+	case OP_CERT_TRANSFER:
+		if(type == "send")
+			strResponse = _("Certificate Transferred");
+		else if(type == "recv")
+			strResponse = _("Certificate Received");
+		break;
+	case OP_ESCROW_ACTIVATE:
+		escrow = CEscrow(wtx);
+		if(escrow.bPaymentAck)
+			strResponse = _("Escrow Acknowledged");
+		else
+			strResponse = _("Escrow Activated");
+		break;
+	case OP_ESCROW_RELEASE:
+		if(vvchArgs[1] == vchFromString("1"))
+		{
+			strResponse = _("Escrow Release Complete");
+		}
+		else
+		{
+			if(type == "send")
+				strResponse = _("Escrow Released");
+			else if(type == "recv")
+				strResponse = _("Escrow Release Received");
+		}
+		break;
+	case OP_ESCROW_COMPLETE:		
+			if(type == "send")
+				strResponse = _("Escrow Feedback");
+			else if(type == "recv")
+				strResponse = _("Escrow Feedback Received");
+		break;
+	case OP_ESCROW_REFUND:
+		if(vvchArgs[1] == vchFromString("1"))
+		{
+			strResponse = _("Escrow Refund Complete");
+		}
+		else
+		{
+			if(type == "send")
+				strResponse = _("Escrow Refunded");
+			else if(type == "recv")
+				strResponse = _("Escrow Refund Received");
+		}
+		break;
+	case OP_MESSAGE_ACTIVATE:
+		if(type == "send")
+			strResponse = _("Message Sent");
+		else if(type == "recv")
+			strResponse = _("Message Received");
+		break;
+	default:
+		return "";
+	}
+	strResponse += " " + stringFromVch(vvchArgs[0]);
+	return strResponse;
+}
 void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter)
 {
     CAmount nFee;
@@ -1506,7 +1620,20 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 
     bool fAllAccounts = (strAccount == string("*"));
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
-
+	if(wtx.nVersion != GetSyscoinTxVersion())
+		return false;	
+	// SYSCOIN
+    vector<vector<unsigned char> > vvchArgs;
+    int op, nOut;
+	// there should only be one data carrying syscoin output per transaction, but there may be more than 1 syscoin utxo in a transaction
+	// we want to display the data carrying one and not the empty utxo	
+	// alias payment does not carry a data output, just alias payment scriptpubkey
+	string strResponseSend, string strResponseRecv;
+	if(DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs))
+	{
+		strResponseSend = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "send"));
+		strResponseRecv = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "recv"));
+	}
     // Sent
     if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
     {
@@ -1526,6 +1653,9 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             if (fLong)
                 WalletTxToJSON(wtx, entry);
             entry.push_back(Pair("abandoned", wtx.isAbandoned()));
+			// SYSCOIN
+			if(!strResponseSend.empty())
+				entry.push_back(Pair("systx", strResponseSend));
             ret.push_back(entry);
         }
     }
@@ -1564,6 +1694,9 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 entry.push_back(Pair("vout", r.vout));
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
+				// SYSCOIN
+				if(!strResponseRecv.empty())
+					entry.push_back(Pair("systx", strResponseRecv));
                 ret.push_back(entry);
             }
         }
