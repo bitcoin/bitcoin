@@ -87,7 +87,7 @@ public:
 
 		//!
 		void Decode(const byte *input, size_t inputLen);
-		//! 
+		//!
 		//* Precondition: bt.MaxRetrievable() >= inputLen
 		void Decode(BufferedTransformation &bt, size_t inputLen);
 
@@ -286,16 +286,16 @@ public:
 
 	virtual GF2NP * Clone() const {return new GF2NP(*this);}
 	virtual void DEREncode(BufferedTransformation &bt) const
-		{CRYPTOPP_UNUSED(bt); assert(false);}	// no ASN.1 syntax yet for general polynomial basis
+		{CRYPTOPP_UNUSED(bt); CRYPTOPP_ASSERT(false);}	// no ASN.1 syntax yet for general polynomial basis
 
 	void DEREncodeElement(BufferedTransformation &out, const Element &a) const;
 	void BERDecodeElement(BufferedTransformation &in, Element &a) const;
 
 	bool Equal(const Element &a, const Element &b) const
-		{assert(a.Degree() < m_modulus.Degree() && b.Degree() < m_modulus.Degree()); return a.Equals(b);}
+		{CRYPTOPP_ASSERT(a.Degree() < m_modulus.Degree() && b.Degree() < m_modulus.Degree()); return a.Equals(b);}
 
 	bool IsUnit(const Element &a) const
-		{assert(a.Degree() < m_modulus.Degree()); return !!a;}
+		{CRYPTOPP_ASSERT(a.Degree() < m_modulus.Degree()); return !!a;}
 
 	unsigned int MaxElementBitLength() const
 		{return m;}

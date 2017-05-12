@@ -24,7 +24,7 @@ const byte GOST::Base::sBox[8][16]={
 	{ 7, 13, 14,  3,  0,  6,  9, 10,  1,  2,  8,  5, 11, 12,  4, 15 },
 	{10,  0,  9, 14,  6,  3, 15,  5,  1, 13, 12,  7, 11,  4,  2,  8 },
 	{15,  1,  8, 14,  6, 11,  3,  4,  9,  7,  2, 13, 12,  0,  5, 10 },
-	{14,  4, 13,  1,  2, 15, 11,  8,  3, 10,  6, 12,  5,  9,  0,  7 }}; 
+	{14,  4, 13,  1,  2, 15, 11,  8,  3, 10,  6, 12,  5,  9,  0,  7 }};
 */
 
 volatile bool GOST::Base::sTableCalculated = false;
@@ -36,7 +36,7 @@ void GOST::Base::UncheckedSetKey(const byte *userKey, unsigned int length, const
 
 	PrecalculateSTable();
 
-	GetUserKey(LITTLE_ENDIAN_ORDER, key.begin(), 8, userKey, KEYLENGTH);
+	GetUserKey(LITTLE_ENDIAN_ORDER, m_key.begin(), 8, userKey, KEYLENGTH);
 }
 
 void GOST::Base::PrecalculateSTable()
@@ -44,7 +44,7 @@ void GOST::Base::PrecalculateSTable()
 	if (!sTableCalculated)
 	{
 		for (unsigned i = 0; i < 4; i++)
-			for (unsigned j = 0; j < 256; j++) 
+			for (unsigned j = 0; j < 256; j++)
 			{
 				word32 temp = sBox[2*i][j%16] | (sBox[2*i+1][j/16] << 4);
 				sTable[i][j] = rotlMod(temp, 11+8*i);
@@ -68,24 +68,24 @@ void GOST::Enc::ProcessAndXorBlock(const byte *inBlock, const byte *xorBlock, by
 
 	for (unsigned int i=0; i<3; i++)
 	{
-		n2 ^= f(n1+key[0]);
-		n1 ^= f(n2+key[1]);
-		n2 ^= f(n1+key[2]);
-		n1 ^= f(n2+key[3]);
-		n2 ^= f(n1+key[4]);
-		n1 ^= f(n2+key[5]);
-		n2 ^= f(n1+key[6]);
-		n1 ^= f(n2+key[7]);
+		n2 ^= f(n1+m_key[0]);
+		n1 ^= f(n2+m_key[1]);
+		n2 ^= f(n1+m_key[2]);
+		n1 ^= f(n2+m_key[3]);
+		n2 ^= f(n1+m_key[4]);
+		n1 ^= f(n2+m_key[5]);
+		n2 ^= f(n1+m_key[6]);
+		n1 ^= f(n2+m_key[7]);
 	}
 
-	n2 ^= f(n1+key[7]);
-	n1 ^= f(n2+key[6]);
-	n2 ^= f(n1+key[5]);
-	n1 ^= f(n2+key[4]);
-	n2 ^= f(n1+key[3]);
-	n1 ^= f(n2+key[2]);
-	n2 ^= f(n1+key[1]);
-	n1 ^= f(n2+key[0]);
+	n2 ^= f(n1+m_key[7]);
+	n1 ^= f(n2+m_key[6]);
+	n2 ^= f(n1+m_key[5]);
+	n1 ^= f(n2+m_key[4]);
+	n2 ^= f(n1+m_key[3]);
+	n1 ^= f(n2+m_key[2]);
+	n2 ^= f(n1+m_key[1]);
+	n1 ^= f(n2+m_key[0]);
 
 	Block::Put(xorBlock, outBlock)(n2)(n1);
 }
@@ -96,25 +96,25 @@ void GOST::Dec::ProcessAndXorBlock(const byte *inBlock, const byte *xorBlock, by
 
 	Block::Get(inBlock)(n1)(n2);
 
-	n2 ^= f(n1+key[0]);
-	n1 ^= f(n2+key[1]);
-	n2 ^= f(n1+key[2]);
-	n1 ^= f(n2+key[3]);
-	n2 ^= f(n1+key[4]);
-	n1 ^= f(n2+key[5]);
-	n2 ^= f(n1+key[6]);
-	n1 ^= f(n2+key[7]);
+	n2 ^= f(n1+m_key[0]);
+	n1 ^= f(n2+m_key[1]);
+	n2 ^= f(n1+m_key[2]);
+	n1 ^= f(n2+m_key[3]);
+	n2 ^= f(n1+m_key[4]);
+	n1 ^= f(n2+m_key[5]);
+	n2 ^= f(n1+m_key[6]);
+	n1 ^= f(n2+m_key[7]);
 
 	for (unsigned int i=0; i<3; i++)
 	{
-		n2 ^= f(n1+key[7]);
-		n1 ^= f(n2+key[6]);
-		n2 ^= f(n1+key[5]);
-		n1 ^= f(n2+key[4]);
-		n2 ^= f(n1+key[3]);
-		n1 ^= f(n2+key[2]);
-		n2 ^= f(n1+key[1]);
-		n1 ^= f(n2+key[0]);
+		n2 ^= f(n1+m_key[7]);
+		n1 ^= f(n2+m_key[6]);
+		n2 ^= f(n1+m_key[5]);
+		n1 ^= f(n2+m_key[4]);
+		n2 ^= f(n1+m_key[3]);
+		n1 ^= f(n2+m_key[2]);
+		n2 ^= f(n1+m_key[1]);
+		n1 ^= f(n2+m_key[0]);
 	}
 
 	Block::Put(xorBlock, outBlock)(n2)(n1);

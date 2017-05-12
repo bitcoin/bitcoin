@@ -16,8 +16,8 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-class CRYPTOPP_NO_VTABLE ElGamalBase : public DL_KeyAgreementAlgorithm_DH<Integer, NoCofactorMultiplication>, 
-					public DL_KeyDerivationAlgorithm<Integer>, 
+class CRYPTOPP_NO_VTABLE ElGamalBase : public DL_KeyAgreementAlgorithm_DH<Integer, NoCofactorMultiplication>,
+					public DL_KeyDerivationAlgorithm<Integer>,
 					public DL_SymmetricEncryptionAlgorithm
 {
 public:
@@ -86,7 +86,7 @@ public:
 	}
 
 	virtual const DL_GroupParameters_GFP & GetGroupParameters() const =0;
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~ElGamalBase() {}
 #endif
@@ -127,7 +127,7 @@ struct ElGamal
 {
 	typedef DL_CryptoSchemeOptions<ElGamal, ElGamalKeys, int, int, int> SchemeOptions;
 
-	static const char * StaticAlgorithmName() {return "ElgamalEnc/Crypto++Padding";}
+	CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "ElgamalEnc/Crypto++Padding";}
 
 	typedef SchemeOptions::GroupParameters GroupParameters;
 	//! implements PK_Encryptor interface

@@ -23,13 +23,13 @@ class CRYPTOPP_NO_VTABLE ARC4_Base : public VariableKeyLength<16, 1, 256>, publi
 public:
 	~ARC4_Base();
 
-	static const char *StaticAlgorithmName() {return "ARC4";}
+	CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "ARC4";}
 
 	void GenerateBlock(byte *output, size_t size);
 	void DiscardBytes(size_t n);
 
     void ProcessData(byte *outString, const byte *inString, size_t length);
-	
+
 	bool IsRandomAccess() const {return false;}
 	bool IsSelfInverting() const {return true;}
 	bool IsForwardTransformation() const {return true;}
@@ -55,7 +55,7 @@ DOCUMENTED_TYPEDEF(SymmetricCipherFinal<ARC4_Base>, ARC4)
 class CRYPTOPP_NO_VTABLE MARC4_Base : public ARC4_Base
 {
 public:
-	static const char *StaticAlgorithmName() {return "MARC4";}
+	CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "MARC4";}
 
 	typedef SymmetricCipherFinal<MARC4_Base> Encryption;
 	typedef SymmetricCipherFinal<MARC4_Base> Decryption;

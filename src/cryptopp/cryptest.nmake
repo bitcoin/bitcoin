@@ -1,0 +1,152 @@
+# cryptest.nmake - written and placed in public domain by Jeffrey Walton.
+#                  Copyright assigned to the Crypto++ project.
+
+# This makefile is used for testing and building cryptlib.lib and cryptest.exe under nmake. Open a
+#   Visual Studio Developer Prompt and then run "nmake /f cryptest.nmake". The build procedure will
+#   reveal not-so-readily-apparent problems under Microsoft ARM and Metro UI apps.
+
+# The makefile is not intended for production use, though it may be used as a starting point.
+#   For example, you can add switches like /MT and /MTd for dynamic runtime linking against
+#   the Microsoft C++ Runtime libraries. If you are building for Windows Phone or Windows Store, then
+#   you probably want to remove /D_MBCS. The resulting cryptlib.lib may be suitable as a starting
+#   point for a DLL project using Crypto++.
+
+# You must also add /DCRYPTOPP_DEBUG or /DDEBUG if you want a debug build with the library's assert.
+#   The library moved from Posix NDEBUG and assert() to CRYPTOPP_ASSERT at 5.6.5 due to CVE-2016-7420.
+#   CRYPTOPP_ASSERT has the additional benefit of using DebugBreak(), and the  program does not crash
+#   while you are debugging it like would happen with Posix assert().
+
+# The list of LIB_SRCS and TEST_SRCS was generated under Linux with "make sources". The list of
+#   LIB_OBJS and TEST_OBJS was generated under Linux with "make sources | sed 's|.cpp|.obj|g'".
+#   The order of the firt three object files are significant. See C++ Static Initialization Order
+#   Fisaco on the Crypto++ wiki for details.
+
+# You are free to add and remove files to the list. For example, you can remove rdrand.asm
+#   build it using NASM, and then include the NASM object file rdrand_x86.obj or rdrand_x64.obj.
+
+###########################################################################################
+
+# To test debug builds, use the following CXXFLAGS:
+#   - /DDEBUG /D_DEBUG /Oi /Oy- /Od
+# To test release builds, use the following CXXFLAGS:
+#   - /DNDEBUG /D_NDEBUG /Oi /Oy /O2
+# To test with static C++ runtime linking, use the following CXXFLAGS (default below):
+#   - /MT (release) or /MTd (debug)
+# To test with dynamic C++ runtime linking, use the following CXXFLAGS:
+#   - /MD (release) or /MDd (debug)
+# To test Desktop app, use the following CXXFLAGS:
+#   - /DWINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP
+# To test Windows Store app, use the following CXXFLAGS:
+#   - /DWINAPI_FAMILY=WINAPI_FAMILY_APP
+# To test Windows Phone, use the following CXXFLAGS:
+#   - /DWINAPI_FAMILY=WINAPI_FAMILY_PHONE_APP
+# To test Surface RT (ARM tablet), use the following CXXFLAGS:
+#   - /D_ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE=1 /DWINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP
+
+###########################################################################################
+
+# If you use 'make sources' from Linux makefile, then add 'winpipes.cpp'. Platform specific
+#  classes, like 'rdrand.cpp', should not be included. Add them under the X86 and X64 rules.
+
+LIB_SRCS = cryptlib.cpp cpu.cpp integer.cpp shacal2.cpp md5.cpp shark.cpp zinflate.cpp gf2n.cpp salsa.cpp xtr.cpp oaep.cpp rc2.cpp default.cpp wait.cpp wake.cpp twofish.cpp iterhash.cpp adler32.cpp algparam.cpp marss.cpp blowfish.cpp ecp.cpp strciphr.cpp camellia.cpp dh2.cpp ida.cpp zlib.cpp elgamal.cpp crc.cpp dessp.cpp tea.cpp eax.cpp network.cpp sha.cpp emsa2.cpp pkcspad.cpp squaretb.cpp idea.cpp authenc.cpp hmac.cpp xtrcrypt.cpp queue.cpp mars.cpp rc5.cpp md2.cpp hrtimer.cpp vmac.cpp eprecomp.cpp hex.cpp dsa.cpp fips140.cpp gzip.cpp seal.cpp blake2.cpp files.cpp base32.cpp sharkbox.cpp safer.cpp randpool.cpp sosemanuk.cpp arc4.cpp osrng.cpp skipjack.cpp seed.cpp sha3.cpp filters.cpp bfinit.cpp rabin.cpp 3way.cpp rw.cpp rdtables.cpp rsa.cpp tftables.cpp gost.cpp socketft.cpp nbtheory.cpp panama.cpp modes.cpp rijndael.cpp casts.cpp algebra.cpp esign.cpp gfpcrypt.cpp dll.cpp ec2n.cpp polynomi.cpp blumshub.cpp des.cpp basecode.cpp zdeflate.cpp base64.cpp rc6.cpp gf256.cpp mqueue.cpp misc.cpp pssr.cpp channels.cpp rng.cpp tiger.cpp cast.cpp square.cpp asn.cpp chacha.cpp whrlpool.cpp md4.cpp dh.cpp ccm.cpp mqv.cpp tigertab.cpp gf2_32.cpp cbcmac.cpp ttmac.cpp luc.cpp trdlocal.cpp pubkey.cpp gcm.cpp ripemd.cpp keccak.cpp eccrypto.cpp serpent.cpp cmac.cpp winpipes.cpp
+
+LIB_OBJS = cryptlib.obj cpu.obj integer.obj shacal2.obj md5.obj shark.obj zinflate.obj gf2n.obj salsa.obj xtr.obj oaep.obj rc2.obj default.obj wait.obj wake.obj twofish.obj iterhash.obj adler32.obj algparam.obj marss.obj blowfish.obj ecp.obj strciphr.obj camellia.obj dh2.obj ida.obj zlib.obj elgamal.obj crc.obj dessp.obj tea.obj eax.obj network.obj sha.obj emsa2.obj pkcspad.obj squaretb.obj idea.obj authenc.obj hmac.obj xtrcrypt.obj queue.obj mars.obj rc5.obj md2.obj hrtimer.obj vmac.obj eprecomp.obj hex.obj dsa.obj fips140.obj gzip.obj seal.obj blake2.obj files.obj base32.obj sharkbox.obj safer.obj randpool.obj sosemanuk.obj arc4.obj osrng.obj skipjack.obj seed.obj sha3.obj filters.obj bfinit.obj rabin.obj 3way.obj rw.obj rdtables.obj rsa.obj tftables.obj gost.obj socketft.obj nbtheory.obj panama.obj modes.obj rijndael.obj casts.obj algebra.obj esign.obj gfpcrypt.obj dll.obj ec2n.obj polynomi.obj blumshub.obj des.obj basecode.obj zdeflate.obj base64.obj rc6.obj gf256.obj mqueue.obj misc.obj pssr.obj channels.obj rng.obj tiger.obj cast.obj square.obj asn.obj chacha.obj whrlpool.obj md4.obj dh.obj ccm.obj mqv.obj tigertab.obj gf2_32.obj cbcmac.obj ttmac.obj luc.obj trdlocal.obj pubkey.obj gcm.obj ripemd.obj keccak.obj eccrypto.obj serpent.obj cmac.obj winpipes.obj
+
+TEST_SRCS = bench1.cpp bench2.cpp test.cpp validat1.cpp validat2.cpp validat3.cpp datatest.cpp regtest.cpp fipsalgt.cpp dlltest.cpp fipstest.cpp
+
+TEST_OBJS = bench1.obj bench2.obj test.obj validat1.obj validat2.obj validat3.obj datatest.obj regtest.obj fipsalgt.obj dlltest.obj fipstest.obj
+
+CXX = cl.exe
+LD = link.exe
+AR = lib.exe
+RM = del.exe
+
+CXXFLAGS = /nologo /W4 /wd4511 /D_MBCS /Zi /TP /GR /EHsc /MD /FI sdkddkver.h /FI winapifamily.h
+LDFLAGS = /nologo /SUBSYSTEM:CONSOLE
+ARFLAGS = /nologo
+LDLIBS =
+
+!IF "$(PLATFORM)" == ""
+!IF "$(PROCESSOR_ARCHITECTURE)" == "x86"
+PLATFORM = x86
+!ELSEIF "$(PROCESSOR_ARCHITECTURE)" == "x64" || "$(PROCESSOR_ARCHITECTURE)" == "AMD64"
+PLATFORM = x64
+!ELSE
+!ERROR "Unknown platform"
+!ENDIF
+!ENDIF
+
+!MESSAGE
+!MESSAGE ******************************
+!MESSAGE Platform is $(PLATFORM)
+!MESSAGE ******************************
+!MESSAGE
+
+!IF "$(PLATFORM)" == "x86" || "$(PLATFORM)" == "X86"
+# CXXFLAGS = $(CXXFLAGS) /arch:SSE2
+# CXXFLAGS = $(CXXFLAGS) /DWINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP
+# CXXFLAGS = $(CXXFLAGS) /DWINAPI_FAMILY=WINAPI_FAMILY_APP
+AS = ml.exe
+ASFLAGS = /nologo /D_M_X86 /W3 /Cx /Zi /safeseh
+LIB_SRCS = $(LIB_SRCS) rdrand.cpp rdrand.asm
+LIB_OBJS = $(LIB_OBJS) rdrand.obj rdrand-x86.obj
+LDLIBS = $(LDLIBS) ws2_32.lib kernel32.lib
+!ENDIF
+
+# May need $(VCINSTALLDIR)\bin\amd64\ml64.exe
+!IF "$(PLATFORM)" == "x64" || "$(PLATFORM)" == "X64"
+# CXXFLAGS = $(CXXFLAGS) /arch:AVX2
+# CXXFLAGS = $(CXXFLAGS) /DWINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP
+# CXXFLAGS = $(CXXFLAGS) /DWINAPI_FAMILY=WINAPI_FAMILY_APP
+AS = ml64.exe
+ASFLAGS = /nologo /D_M_X64 /W3 /Cx /Zi
+LIB_SRCS = $(LIB_SRCS) rdrand.cpp rdrand.asm
+LIB_OBJS = $(LIB_OBJS) rdrand.obj rdrand-x64.obj x64masm.obj x64dll.obj
+LDLIBS = $(LDLIBS) ws2_32.lib kernel32.lib
+!ENDIF
+
+!IF "$(PLATFORM)" == "ARM"
+# CXXFLAGS = $(CXXFLAGS) /D_ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE=1 /DWINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP
+# CXXFLAGS = $(CXXFLAGS) /DWINAPI_FAMILY=WINAPI_FAMILY_PHONE_APP
+# CXXFLAGS = $(CXXFLAGS) /DWINAPI_FAMILY=WINAPI_FAMILY_APP
+# LDLIBS = $(LDLIBS) ws2_32.lib
+!ENDIF
+
+all: cryptest.exe
+
+cryptest.exe: pch.pch cryptlib.lib $(TEST_OBJS)
+	$(LD) $(LDFLAGS) $(TEST_OBJS) cryptlib.lib $(LDLIBS) /out:$@
+
+cryptlib.lib: $(LIB_OBJS)
+	$(AR) $(ARFLAGS) $(LIB_OBJS) /out:$@
+
+clean:
+	$(RM) /F /Q pch.pch $(LIB_OBJS) rdrand-x86.obj rdrand-x64.obj x64masm.obj x64dll.obj cryptlib.lib $(TEST_OBJS) cryptest.exe *.pdb
+
+# Precompiled header
+pch.pch: pch.h pch.cpp
+	$(CXX) $(CXXFLAGS) /Yc"pch.h" /Fp"pch.pch" /c pch.cpp
+
+# No precompiled headers
+iterhash.obj:
+	$(CXX) $(CXXFLAGS) /Y- /c iterhash.cpp
+dll.obj:
+	$(CXX) $(CXXFLAGS) /Y- /c dll.cpp
+rdrand.obj:
+	$(CXX) $(CXXFLAGS) /c rdrand.cpp
+
+# Built for x86/x64
+rdrand-x86.obj:
+	$(AS) $(ASFLAGS) /Fo rdrand-x86.obj /c rdrand.asm
+rdrand-x64.obj:
+	$(AS) $(ASFLAGS) /Fo rdrand-x64.obj /c rdrand.asm
+x64masm.obj:
+	$(AS) $(ASFLAGS) /Fo x64masm.obj /c x64masm.asm
+x64dll.obj:
+	$(AS) $(ASFLAGS) /Fo x64dll.obj /c x64dll.asm
+
+.cpp.obj:
+	$(CXX) $(CXXFLAGS) /c $<
+
+.asm.obj:
+	$(AS) $(ASFLAGS) /c $<

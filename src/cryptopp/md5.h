@@ -13,7 +13,7 @@ class MD5 : public IteratedHashWithStaticTransform<word32, LittleEndian, 64, 16,
 public:
 	static void InitState(HashWordType *state);
 	static void Transform(word32 *digest, const word32 *data);
-	static const char * StaticAlgorithmName() {return "MD5";}
+	CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "MD5";}
 };
 
 }

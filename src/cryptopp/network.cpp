@@ -3,13 +3,14 @@
 #include "pch.h"
 
 #include "network.h"
+
+#if !defined(NO_OS_DEPENDENCE) && defined(SOCKETS_AVAILABLE)
+
 #include "wait.h"
 
 #define CRYPTOPP_TRACE_NETWORK 0
 
 NAMESPACE_BEGIN(CryptoPP)
-
-#ifdef HIGHRES_TIMER_AVAILABLE
 
 lword LimitedBandwidth::ComputeCurrentTransceiveLimit()
 {
@@ -181,7 +182,7 @@ lword NonblockingSink::TimedFlush(unsigned long maxTime, size_t targetSize)
 	timer.StartTimer();
 
 	while (true)
-	{	
+	{
 		size_t flushSize = UnsignedMin(curBufSize - targetSize, ComputeCurrentTransceiveLimit());
 		if (flushSize || EofPending())
 		{
@@ -249,7 +250,7 @@ void NetworkSource::GetWaitObjects(WaitObjectContainer &container, CallStack con
 	else if (!m_outputBlocked)
 	{
 		if (m_dataBegin == m_dataEnd)
-			AccessReceiver().GetWaitObjects(container, CallStack("NetworkSource::GetWaitObjects() - no data", &callStack)); 
+			AccessReceiver().GetWaitObjects(container, CallStack("NetworkSource::GetWaitObjects() - no data", &callStack));
 		else
 			container.SetNoWait(CallStack("NetworkSource::GetWaitObjects() - have data", &callStack));
 	}
@@ -376,7 +377,7 @@ DoOutput:
 NetworkSink::NetworkSink(unsigned int maxBufferSize, unsigned int autoFlushBound)
 	: m_maxBufferSize(maxBufferSize), m_autoFlushBound(autoFlushBound)
 	, m_needSendResult(false), m_wasBlocked(false), m_eofState(EOF_NONE)
-	, m_buffer(STDMIN(16U*1024U+256, maxBufferSize)), m_skipBytes(0) 
+	, m_buffer(STDMIN(16U*1024U+256, maxBufferSize)), m_skipBytes(0)
 	, m_speedTimer(Timer::MILLISECONDS), m_byteCountSinceLastTimerReset(0)
 	, m_currentSpeed(0), m_maxObservedSpeed(0)
 {
@@ -434,7 +435,7 @@ size_t NetworkSink::Put2(const byte *inString, size_t length, int messageEnd, bo
 	{
 		if (m_skipBytes)
 		{
-			assert(length >= m_skipBytes);
+			CRYPTOPP_ASSERT(length >= m_skipBytes);
 			inString += m_skipBytes;
 			length -= m_skipBytes;
 		}
@@ -450,7 +451,7 @@ size_t NetworkSink::Put2(const byte *inString, size_t length, int messageEnd, bo
 
 		if (m_buffer.CurrentSize() > targetSize)
 		{
-			assert(!blocking);
+			CRYPTOPP_ASSERT(!blocking);
 			m_wasBlocked = true;
 			m_skipBytes += length;
 			size_t blockedBytes = UnsignedMin(length, m_buffer.CurrentSize() - targetSize);
@@ -486,7 +487,7 @@ lword NetworkSink::DoFlush(unsigned long maxTime, size_t targetSize)
 	{
 		if (m_buffer.CurrentSize() <= targetSize)
 			break;
-		
+
 		if (m_needSendResult)
 		{
 			if (sender.MustWaitForResult() &&
@@ -525,7 +526,7 @@ lword NetworkSink::DoFlush(unsigned long maxTime, size_t targetSize)
 
 	m_byteCountSinceLastTimerReset += totalFlushSize;
 	ComputeCurrentSpeed();
-	
+
 	if (m_buffer.IsEmpty() && !m_needSendResult)
 	{
 		if (m_eofState == EOF_PENDING_SEND)
@@ -548,6 +549,6 @@ lword NetworkSink::DoFlush(unsigned long maxTime, size_t targetSize)
 	return totalFlushSize;
 }
 
-#endif	// #ifdef HIGHRES_TIMER_AVAILABLE
-
 NAMESPACE_END
+
+#endif	// #ifdef SOCKETS_AVAILABLE

@@ -13,7 +13,7 @@
 NAMESPACE_BEGIN(CryptoPP)
 namespace Weak1 {
 
-#if !defined(NDEBUG) && !defined(CRYPTOPP_DOXYGEN_PROCESSING)
+#if CRYPTOPP_DEBUG && !defined(CRYPTOPP_DOXYGEN_PROCESSING)
 void ARC4_TestInstantiations()
 {
 	ARC4 x;

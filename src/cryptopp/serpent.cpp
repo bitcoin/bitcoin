@@ -52,7 +52,7 @@ typedef BlockGetAndPut<word32, LittleEndian> Block;
 void Serpent::Enc::ProcessAndXorBlock(const byte *inBlock, const byte *xorBlock, byte *outBlock) const
 {
 	word32 a, b, c, d, e;
-	
+
 	Block::Get(inBlock)(a)(b)(c)(d);
 
 	const word32 *k = m_key;
@@ -84,14 +84,14 @@ void Serpent::Enc::ProcessAndXorBlock(const byte *inBlock, const byte *xorBlock,
 	while (true);
 
 	afterS7(KX);
-	
+
 	Block::Put(xorBlock, outBlock)(d)(e)(b)(a);
 }
 
 void Serpent::Dec::ProcessAndXorBlock(const byte *inBlock, const byte *xorBlock, byte *outBlock) const
 {
 	word32 a, b, c, d, e;
-	
+
 	Block::Get(inBlock)(a)(b)(c)(d);
 
 	const word32 *k = m_key + 96;
@@ -108,17 +108,17 @@ void Serpent::Dec::ProcessAndXorBlock(const byte *inBlock, const byte *xorBlock,
 		k -= 32;
 		beforeI7(ILT);
 start:
-		            beforeI7(I7); afterI7(KX); 
-		afterI7(ILT); afterI7(I6); afterI6(KX); 
-		afterI6(ILT); afterI6(I5); afterI5(KX); 
-		afterI5(ILT); afterI5(I4); afterI4(KX); 
-		afterI4(ILT); afterI4(I3); afterI3(KX); 
-		afterI3(ILT); afterI3(I2); afterI2(KX); 
-		afterI2(ILT); afterI2(I1); afterI1(KX); 
+		            beforeI7(I7); afterI7(KX);
+		afterI7(ILT); afterI7(I6); afterI6(KX);
+		afterI6(ILT); afterI6(I5); afterI5(KX);
+		afterI5(ILT); afterI5(I4); afterI4(KX);
+		afterI4(ILT); afterI4(I3); afterI3(KX);
+		afterI3(ILT); afterI3(I2); afterI2(KX);
+		afterI2(ILT); afterI2(I1); afterI1(KX);
 		afterI1(ILT); afterI1(I0); afterI0(KX);
 	}
 	while (--i != 0);
-	
+
 	Block::Put(xorBlock, outBlock)(a)(d)(b)(e);
 }
 

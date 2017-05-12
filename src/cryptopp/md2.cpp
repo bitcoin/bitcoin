@@ -8,8 +8,8 @@
  *
  * Part of the Python Cryptography Toolkit, version 1.1
  *
- * Distribute and use freely; there are no restrictions on further 
- * dissemination and usage except those imposed by the laws of your 
+ * Distribute and use freely; there are no restrictions on further
+ * dissemination and usage except those imposed by the laws of your
  * country of residence.
  *
  */
@@ -20,7 +20,7 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 namespace Weak1 {
-	
+
 MD2::MD2()
 	: m_X(48), m_C(16), m_buf(16)
 {
@@ -58,18 +58,18 @@ void MD2::Update(const byte *buf, size_t len)
 		31, 26, 219, 153, 141, 51, 159, 17, 131, 20
 	};
 
-	while (len) 
+	while (len)
     {
 		unsigned int L = UnsignedMin(16U-m_count, len);
 		memcpy(m_buf+m_count, buf, L);
 		m_count+=L;
 		buf+=L;
 		len-=L;
-		if (m_count==16) 
+		if (m_count==16)
 		{
 			byte t;
 			int i,j;
-			
+
 			m_count=0;
 			memcpy(m_X+16, m_buf, 16);
 			t=m_C[15];
@@ -78,7 +78,7 @@ void MD2::Update(const byte *buf, size_t len)
 				m_X[32+i]=m_X[16+i]^m_X[i];
 				t=m_C[i]^=S[m_buf[i]^t];
 			}
-			
+
 			t=0;
 			for(i=0; i<18; i++)
 			{

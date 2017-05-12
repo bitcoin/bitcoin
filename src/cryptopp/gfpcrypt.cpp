@@ -20,7 +20,7 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-#if !defined(NDEBUG) && !defined(CRYPTOPP_DOXYGEN_PROCESSING)
+#if CRYPTOPP_DEBUG && !defined(CRYPTOPP_DOXYGEN_PROCESSING)
 void TestInstantiations_gfpcrypt()
 {
 	GDSA<SHA>::Signer test;
@@ -75,15 +75,15 @@ bool DL_GroupParameters_DSA::ValidateGroup(RandomNumberGenerator &rng, unsigned 
 	return pass;
 }
 
-void DL_SignatureMessageEncodingMethod_DSA::ComputeMessageRepresentative(RandomNumberGenerator &rng, 
+void DL_SignatureMessageEncodingMethod_DSA::ComputeMessageRepresentative(RandomNumberGenerator &rng,
 	const byte *recoverableMessage, size_t recoverableMessageLength,
 	HashTransformation &hash, HashIdentifier hashIdentifier, bool messageEmpty,
 	byte *representative, size_t representativeBitLength) const
 {
 	CRYPTOPP_UNUSED(rng), CRYPTOPP_UNUSED(recoverableMessage), CRYPTOPP_UNUSED(recoverableMessageLength);
 	CRYPTOPP_UNUSED(messageEmpty), CRYPTOPP_UNUSED(hashIdentifier);
-	assert(recoverableMessageLength == 0);
-	assert(hashIdentifier.second == 0);
+	CRYPTOPP_ASSERT(recoverableMessageLength == 0);
+	CRYPTOPP_ASSERT(hashIdentifier.second == 0);
 
 	const size_t representativeByteLength = BitsToBytes(representativeBitLength);
 	const size_t digestSize = hash.DigestSize();
@@ -100,7 +100,7 @@ void DL_SignatureMessageEncodingMethod_DSA::ComputeMessageRepresentative(RandomN
 	}
 }
 
-void DL_SignatureMessageEncodingMethod_NR::ComputeMessageRepresentative(RandomNumberGenerator &rng, 
+void DL_SignatureMessageEncodingMethod_NR::ComputeMessageRepresentative(RandomNumberGenerator &rng,
 	const byte *recoverableMessage, size_t recoverableMessageLength,
 	HashTransformation &hash, HashIdentifier hashIdentifier, bool messageEmpty,
 	byte *representative, size_t representativeBitLength) const
@@ -109,8 +109,8 @@ void DL_SignatureMessageEncodingMethod_NR::ComputeMessageRepresentative(RandomNu
 	CRYPTOPP_UNUSED(hash); CRYPTOPP_UNUSED(hashIdentifier); CRYPTOPP_UNUSED(messageEmpty);
 	CRYPTOPP_UNUSED(representative); CRYPTOPP_UNUSED(representativeBitLength);
 
-	assert(recoverableMessageLength == 0);
-	assert(hashIdentifier.second == 0);
+	CRYPTOPP_ASSERT(recoverableMessageLength == 0);
+	CRYPTOPP_ASSERT(hashIdentifier.second == 0);
 	const size_t representativeByteLength = BitsToBytes(representativeBitLength);
 	const size_t digestSize = hash.DigestSize();
 	const size_t paddingLength = SaturatingSubtract(representativeByteLength, digestSize);
@@ -179,7 +179,7 @@ bool DL_GroupParameters_IntegerBased::ValidateElement(unsigned int level, const 
 void DL_GroupParameters_IntegerBased::GenerateRandom(RandomNumberGenerator &rng, const NameValuePairs &alg)
 {
 	Integer p, q, g;
-	
+
 	if (alg.GetValue("Modulus", p) && alg.GetValue("SubgroupGenerator", g))
 	{
 		q = alg.GetValueWithDefault("SubgroupOrder", ComputeGroupOrder(p)/2);
@@ -208,7 +208,7 @@ void DL_GroupParameters_IntegerBased::GenerateRandom(RandomNumberGenerator &rng,
 void DL_GroupParameters_IntegerBased::EncodeElement(bool reversible, const Element &element, byte *encoded) const
 {
 	CRYPTOPP_UNUSED(reversible);
-	element.Encode(encoded, GetModulus().ByteCount());	
+	element.Encode(encoded, GetModulus().ByteCount());
 }
 
 unsigned int DL_GroupParameters_IntegerBased::GetEncodedElementSize(bool reversible) const

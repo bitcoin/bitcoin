@@ -27,7 +27,7 @@ public:
 
 	bool IsSelfInverting() const {return true;}
 	bool IsForwardTransformation() const {return true;}
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~PublicBlumBlumShub() {}
 #endif
@@ -45,7 +45,7 @@ public:
 	// Make sure p and q are both primes congruent to 3 mod 4 and at least 512 bits long,
 	// seed is the secret key and should be about as big as p*q
 	BlumBlumShub(const Integer &p, const Integer &q, const Integer &seed);
-	
+
 	bool IsRandomAccess() const {return true;}
 	void Seek(lword index);
 

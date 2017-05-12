@@ -12,13 +12,16 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-//! _
+//! \class Camellia_Info
+//! \brief Camellia block cipher information
 struct Camellia_Info : public FixedBlockSize<16>, public VariableKeyLength<16, 16, 32, 8>
 {
-	static const char *StaticAlgorithmName() {return "Camellia";}
+	CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "Camellia";}
 };
 
-/// <a href="http://www.weidai.com/scan-mirror/cs.html#Camellia">Camellia</a>
+//! \class Camellia
+//! \brief Camellia block cipher
+//! \sa <a href="http://www.weidai.com/scan-mirror/cs.html#Camellia">Camellia</a>
 class Camellia : public Camellia_Info, public BlockCipherDocumentation
 {
 	class CRYPTOPP_NO_VTABLE Base : public BlockCipherImpl<Camellia_Info>
@@ -28,7 +31,7 @@ class Camellia : public Camellia_Info, public BlockCipherDocumentation
 		void ProcessAndXorBlock(const byte *inBlock, const byte *xorBlock, byte *outBlock) const;
 
 	protected:
-		static const byte s1[256];
+		CRYPTOPP_ALIGN_DATA(4) static const byte s1[256];
 		static const word32 SP[4][256];
 
 		unsigned int m_rounds;

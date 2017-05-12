@@ -1,14 +1,21 @@
 // socketft.cpp - written and placed in the public domain by Wei Dai
 
 #include "pch.h"
+#include "config.h"
 
-// TODO: http://github.com/weidai11/cryptopp/issues/19
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
+#if !defined(NO_OS_DEPENDENCE) && defined(SOCKETS_AVAILABLE)
+
 #include "socketft.h"
-
-#ifdef SOCKETS_AVAILABLE
-
 #include "wait.h"
+
+// Windows 8, Windows Server 2012, and Windows Phone 8.1 need <synchapi.h> and <ioapiset.h>
+#if defined(CRYPTOPP_WIN32_AVAILABLE)
+# if ((WINVER >= 0x0602 /*_WIN32_WINNT_WIN8*/) || (_WIN32_WINNT >= 0x0602 /*_WIN32_WINNT_WIN8*/))
+#  include <synchapi.h>
+#  include <ioapiset.h>
+#  define USE_WINDOWS8_API
+# endif
+#endif
 
 #ifdef USE_BERKELEY_STYLE_SOCKETS
 #include <errno.h>
@@ -17,6 +24,10 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/ioctl.h>
+#endif
+
+#if defined(CRYPTOPP_MSAN)
+# include <sanitizer/msan_interface.h>
 #endif
 
 #ifdef PREFER_WINDOWS_STYLE_SOCKETS
@@ -39,6 +50,62 @@ const int SOCKET_EWOULDBLOCK = EWOULDBLOCK;
 # define INADDR_NONE	0xffffffff
 #endif /* INADDR_NONE */
 
+// Some Windows SDKs do not have INET6_ADDRSTRLEN
+#ifndef INET_ADDRSTRLEN
+# define INET_ADDRSTRLEN (22)
+#endif
+#ifndef INET6_ADDRSTRLEN
+# define INET6_ADDRSTRLEN (65)
+#endif
+
+#define MAX_ADDRSTRLEN (INET6_ADDRSTRLEN > INET_ADDRSTRLEN ? INET6_ADDRSTRLEN : INET_ADDRSTRLEN)
+
+#if defined(CRYPTOPP_WIN32_AVAILABLE)
+// http://stackoverflow.com/a/20816961
+int inet_pton(int af, const char *src, void *dst)
+{
+#if CRYPTOPP_MSC_VERSION
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+
+	// Posix states only src is validated. Avoid a bad dst dereference.
+	if(!src || !dst) return 0;
+
+	struct sockaddr_storage ss;
+	ZeroMemory(&ss, sizeof(ss));
+
+#if CRYPTOPP_MSC_VERSION >= 1400
+	char temp[MAX_ADDRSTRLEN];
+	strcpy_s(temp, sizeof(temp), src);
+#else
+	char temp[MAX_ADDRSTRLEN];
+	strncpy(temp, src, sizeof(temp));
+	temp[MAX_ADDRSTRLEN-1] = '\0';
+#endif
+
+
+	int size = sizeof(ss);
+	if (WSAStringToAddress(temp, af, NULL, (struct sockaddr *)&ss, &size) == 0) {
+		switch (af) {
+		case AF_INET:
+			*(struct in_addr *)dst = ((struct sockaddr_in *)&ss)->sin_addr;
+			return 1;
+		case AF_INET6:
+			*(struct in6_addr *)dst = ((struct sockaddr_in6 *)&ss)->sin6_addr;
+			return 1;
+		}
+	}
+
+	((sockaddr_in *)dst)->sin_addr.s_addr = INADDR_NONE;
+	return 0;
+
+#if CRYPTOPP_MSC_VERSION
+# pragma warning(pop)
+#endif
+}
+#endif
+
 Socket::Err::Err(socket_t s, const std::string& operation, int error)
 	: OS_Error(IO_ERROR, "Socket: " + operation + " operation failed with error " + IntToString(error), operation, error)
 	, m_s(s)
@@ -55,7 +122,7 @@ Socket::~Socket()
 		}
 		catch (const Exception&)
 		{
-			assert(0);
+			CRYPTOPP_ASSERT(0);
 		}
 	}
 }
@@ -80,7 +147,7 @@ socket_t Socket::DetachSocket()
 
 void Socket::Create(int nType)
 {
-	assert(m_s == INVALID_SOCKET);
+	CRYPTOPP_ASSERT(m_s == INVALID_SOCKET);
 	m_s = socket(AF_INET, nType, 0);
 	CheckAndHandleError("socket", m_s);
 	m_own = true;
@@ -92,8 +159,17 @@ void Socket::CloseSocket()
 	if (m_s != INVALID_SOCKET)
 	{
 #ifdef USE_WINDOWS_STYLE_SOCKETS
-		CancelIo((HANDLE) m_s);
+# if defined(USE_WINDOWS8_API)
+		BOOL result = CancelIoEx((HANDLE) m_s, NULL);
+		CRYPTOPP_ASSERT(result || (!result && GetLastError() == ERROR_NOT_FOUND));
 		CheckAndHandleError_int("closesocket", closesocket(m_s));
+		CRYPTOPP_UNUSED(result);	// Used by CRYPTOPP_ASSERT in debug builds
+# else
+		BOOL result = CancelIo((HANDLE) m_s);
+		CRYPTOPP_ASSERT(result || (!result && GetLastError() == ERROR_NOT_FOUND));
+		CheckAndHandleError_int("closesocket", closesocket(m_s));
+		CRYPTOPP_UNUSED(result);
+# endif
 #else
 		CheckAndHandleError_int("close", close(m_s));
 #endif
@@ -112,8 +188,9 @@ void Socket::Bind(unsigned int port, const char *addr)
 		sa.sin_addr.s_addr = htonl(INADDR_ANY);
 	else
 	{
-		unsigned long result = inet_addr(addr);
-		if (result == INADDR_NONE)
+		// unsigned long result = inet_addr(addr);
+		unsigned long result;
+		if (inet_pton(AF_INET, addr, &result) < 1 || result == INADDR_NONE)
 		{
 			SetLastError(SOCKET_EINVAL);
 			CheckAndHandleError_int("inet_addr", SOCKET_ERROR);
@@ -121,55 +198,66 @@ void Socket::Bind(unsigned int port, const char *addr)
 		sa.sin_addr.s_addr = result;
 	}
 
-	sa.sin_port = htons((u_short)port);
+	sa.sin_port = htons((unsigned short)port);
 
 	Bind((sockaddr *)&sa, sizeof(sa));
 }
 
 void Socket::Bind(const sockaddr *psa, socklen_t saLen)
 {
-	assert(m_s != INVALID_SOCKET);
+	CRYPTOPP_ASSERT(m_s != INVALID_SOCKET);
 	// cygwin workaround: needs const_cast
 	CheckAndHandleError_int("bind", bind(m_s, const_cast<sockaddr *>(psa), saLen));
 }
 
 void Socket::Listen(int backlog)
 {
-	assert(m_s != INVALID_SOCKET);
+	CRYPTOPP_ASSERT(m_s != INVALID_SOCKET);
 	CheckAndHandleError_int("listen", listen(m_s, backlog));
 }
 
 bool Socket::Connect(const char *addr, unsigned int port)
 {
-	assert(addr != NULL);
+	CRYPTOPP_ASSERT(addr != NULL);
 
 	sockaddr_in sa;
 	memset(&sa, 0, sizeof(sa));
 	sa.sin_family = AF_INET;
-	sa.sin_addr.s_addr = inet_addr(addr);
+
+	// Make inet_pton failures non-fatal.
+	if (!addr || inet_pton(AF_INET, addr, &sa.sin_addr.s_addr) < 1)
+		sa.sin_addr.s_addr = INADDR_NONE;
 
 	if (sa.sin_addr.s_addr == INADDR_NONE)
 	{
-		hostent *lphost = gethostbyname(addr);
-		if (lphost == NULL)
+		addrinfo hints, *result = NULL;
+		memset(&hints, 0, sizeof(hints));
+
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_family = AF_INET;
+
+		if (getaddrinfo(addr, NULL, &hints, &result) != 0 || result == NULL)
 		{
+			freeaddrinfo(result);
 			SetLastError(SOCKET_EINVAL);
-			CheckAndHandleError_int("gethostbyname", SOCKET_ERROR);
+			CheckAndHandleError_int("getaddrinfo", SOCKET_ERROR);
 		}
 		else
 		{
-			sa.sin_addr.s_addr = ((in_addr *)lphost->h_addr)->s_addr;
+			// sa.sin_addr.s_addr = ((in_addr *)(void *)lphost->h_addr)->s_addr;
+			sa.sin_addr.s_addr = ((struct sockaddr_in *)(result->ai_addr))->sin_addr.s_addr;
+			freeaddrinfo(result);
 		}
 	}
 
-	sa.sin_port = htons((u_short)port);
+	sa.sin_port = htons((unsigned short)port);
 
 	return Connect((const sockaddr *)&sa, sizeof(sa));
 }
 
 bool Socket::Connect(const sockaddr* psa, socklen_t saLen)
 {
-	assert(m_s != INVALID_SOCKET);
+	CRYPTOPP_ASSERT(m_s != INVALID_SOCKET);
 	int result = connect(m_s, const_cast<sockaddr*>(psa), saLen);
 	if (result == SOCKET_ERROR && GetLastError() == SOCKET_EWOULDBLOCK)
 		return false;
@@ -179,7 +267,7 @@ bool Socket::Connect(const sockaddr* psa, socklen_t saLen)
 
 bool Socket::Accept(Socket& target, sockaddr *psa, socklen_t *psaLen)
 {
-	assert(m_s != INVALID_SOCKET);
+	CRYPTOPP_ASSERT(m_s != INVALID_SOCKET);
 	socket_t s = accept(m_s, psa, psaLen);
 	if (s == INVALID_SOCKET && GetLastError() == SOCKET_EWOULDBLOCK)
 		return false;
@@ -190,19 +278,19 @@ bool Socket::Accept(Socket& target, sockaddr *psa, socklen_t *psaLen)
 
 void Socket::GetSockName(sockaddr *psa, socklen_t *psaLen)
 {
-	assert(m_s != INVALID_SOCKET);
+	CRYPTOPP_ASSERT(m_s != INVALID_SOCKET);
 	CheckAndHandleError_int("getsockname", getsockname(m_s, psa, psaLen));
 }
 
 void Socket::GetPeerName(sockaddr *psa, socklen_t *psaLen)
 {
-	assert(m_s != INVALID_SOCKET);
+	CRYPTOPP_ASSERT(m_s != INVALID_SOCKET);
 	CheckAndHandleError_int("getpeername", getpeername(m_s, psa, psaLen));
 }
 
 unsigned int Socket::Send(const byte* buf, size_t bufLen, int flags)
 {
-	assert(m_s != INVALID_SOCKET);
+	CRYPTOPP_ASSERT(m_s != INVALID_SOCKET);
 	int result = send(m_s, (const char *)buf, UnsignedMin(INT_MAX, bufLen), flags);
 	CheckAndHandleError_int("send", result);
 	return result;
@@ -210,7 +298,7 @@ unsigned int Socket::Send(const byte* buf, size_t bufLen, int flags)
 
 unsigned int Socket::Receive(byte* buf, size_t bufLen, int flags)
 {
-	assert(m_s != INVALID_SOCKET);
+	CRYPTOPP_ASSERT(m_s != INVALID_SOCKET);
 	int result = recv(m_s, (char *)buf, UnsignedMin(INT_MAX, bufLen), flags);
 	CheckAndHandleError_int("recv", result);
 	return result;
@@ -218,14 +306,14 @@ unsigned int Socket::Receive(byte* buf, size_t bufLen, int flags)
 
 void Socket::ShutDown(int how)
 {
-	assert(m_s != INVALID_SOCKET);
+	CRYPTOPP_ASSERT(m_s != INVALID_SOCKET);
 	int result = shutdown(m_s, how);
 	CheckAndHandleError_int("shutdown", result);
 }
 
 void Socket::IOCtl(long cmd, unsigned long *argp)
 {
-	assert(m_s != INVALID_SOCKET);
+	CRYPTOPP_ASSERT(m_s != INVALID_SOCKET);
 #ifdef USE_WINDOWS_STYLE_SOCKETS
 	CheckAndHandleError_int("ioctlsocket", ioctlsocket(m_s, cmd, argp));
 #else
@@ -238,6 +326,10 @@ bool Socket::SendReady(const timeval *timeout)
 	fd_set fds;
 	FD_ZERO(&fds);
 	FD_SET(m_s, &fds);
+#ifdef CRYPTOPP_MSAN
+	__msan_unpoison(&fds, sizeof(fds));
+#endif
+
 	int ready;
 	if (timeout == NULL)
 		ready = select((int)m_s+1, NULL, &fds, NULL, NULL);
@@ -255,6 +347,10 @@ bool Socket::ReceiveReady(const timeval *timeout)
 	fd_set fds;
 	FD_ZERO(&fds);
 	FD_SET(m_s, &fds);
+#ifdef CRYPTOPP_MSAN
+	__msan_unpoison(&fds, sizeof(fds));
+#endif
+
 	int ready;
 	if (timeout == NULL)
 		ready = select((int)m_s+1, &fds, NULL, NULL, NULL);
@@ -325,7 +421,7 @@ void Socket::HandleError(const char *operation) const
 #ifdef USE_WINDOWS_STYLE_SOCKETS
 
 SocketReceiver::SocketReceiver(Socket &s)
-	: m_s(s), m_eofReceived(false), m_resultPending(false)
+	: m_s(s), m_lastResult(0), m_resultPending(false), m_eofReceived(false)
 {
 	m_event.AttachHandle(CreateEvent(NULL, true, false, NULL), true);
 	m_s.CheckAndHandleError("CreateEvent", m_event.HandleValid());
@@ -336,13 +432,21 @@ SocketReceiver::SocketReceiver(Socket &s)
 SocketReceiver::~SocketReceiver()
 {
 #ifdef USE_WINDOWS_STYLE_SOCKETS
-	CancelIo((HANDLE) m_s.GetSocket());
+# if defined(USE_WINDOWS8_API)
+	BOOL result = CancelIoEx((HANDLE) m_s.GetSocket(), NULL);
+	CRYPTOPP_ASSERT(result || (!result && GetLastError() == ERROR_NOT_FOUND));
+	CRYPTOPP_UNUSED(result);	// Used by CRYPTOPP_ASSERT in debug builds
+# else
+	BOOL result = CancelIo((HANDLE) m_s.GetSocket());
+	CRYPTOPP_ASSERT(result || (!result && GetLastError() == ERROR_NOT_FOUND));
+	CRYPTOPP_UNUSED(result);
+# endif
 #endif
 }
 
 bool SocketReceiver::Receive(byte* buf, size_t bufLen)
 {
-	assert(!m_resultPending && !m_eofReceived);
+	CRYPTOPP_ASSERT(!m_resultPending && !m_eofReceived);
 
 	DWORD flags = 0;
 	// don't queue too much at once, or we might use up non-paged memory
@@ -358,6 +462,7 @@ bool SocketReceiver::Receive(byte* buf, size_t bufLen)
 		{
 		default:
 			m_s.CheckAndHandleError_int("WSARecv", SOCKET_ERROR);
+			// Fall through for non-fatal
 		case WSAEDISCON:
 			m_lastResult = 0;
 			m_eofReceived = true;
@@ -393,6 +498,7 @@ unsigned int SocketReceiver::GetReceiveResult()
 			{
 			default:
 				m_s.CheckAndHandleError("WSAGetOverlappedResult", FALSE);
+				// Fall through for non-fatal
 			case WSAEDISCON:
 				m_lastResult = 0;
 				m_eofReceived = true;
@@ -418,13 +524,21 @@ SocketSender::SocketSender(Socket &s)
 SocketSender::~SocketSender()
 {
 #ifdef USE_WINDOWS_STYLE_SOCKETS
-	CancelIo((HANDLE) m_s.GetSocket());
+# if defined(USE_WINDOWS8_API)
+	BOOL result = CancelIoEx((HANDLE) m_s.GetSocket(), NULL);
+	CRYPTOPP_ASSERT(result || (!result && GetLastError() == ERROR_NOT_FOUND));
+	CRYPTOPP_UNUSED(result);	// Used by CRYPTOPP_ASSERT in debug builds
+# else
+	BOOL result = CancelIo((HANDLE) m_s.GetSocket());
+	CRYPTOPP_ASSERT(result || (!result && GetLastError() == ERROR_NOT_FOUND));
+	CRYPTOPP_UNUSED(result);
+# endif
 #endif
 }
 
 void SocketSender::Send(const byte* buf, size_t bufLen)
 {
-	assert(!m_resultPending);
+	CRYPTOPP_ASSERT(!m_resultPending);
 	DWORD written = 0;
 	// don't queue too much at once, or we might use up non-paged memory
 	WSABUF wsabuf = {UnsignedMin((u_long)128*1024, bufLen), (char *)buf};
@@ -444,7 +558,7 @@ void SocketSender::Send(const byte* buf, size_t bufLen)
 
 void SocketSender::SendEof()
 {
-	assert(!m_resultPending);
+	CRYPTOPP_ASSERT(!m_resultPending);
 	m_s.ShutDown(SD_SEND);
 	m_s.CheckAndHandleError("ResetEvent", ResetEvent(m_event));
 	m_s.CheckAndHandleError_int("WSAEventSelect", WSAEventSelect(m_s, m_event, FD_CLOSE));
@@ -491,7 +605,7 @@ unsigned int SocketSender::GetSendResult()
 #ifdef USE_BERKELEY_STYLE_SOCKETS
 
 SocketReceiver::SocketReceiver(Socket &s)
-	: m_s(s), m_eofReceived(false), m_lastResult(0)
+	: m_s(s), m_lastResult(0), m_eofReceived(false)
 {
 }
 
@@ -539,8 +653,8 @@ void SocketSender::GetWaitObjects(WaitObjectContainer &container, CallStack cons
 	container.AddWriteFd(m_s, CallStack("SocketSender::GetWaitObjects()", &callStack));
 }
 
-#endif
+#endif  // USE_BERKELEY_STYLE_SOCKETS
 
 NAMESPACE_END
 
-#endif	// #ifdef SOCKETS_AVAILABLE
+#endif	// SOCKETS_AVAILABLE

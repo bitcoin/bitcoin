@@ -3,7 +3,7 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-const word64 Tiger::table[4*256+3] = 
+const word64 Tiger::table[4*256+3] =
 {
 	W64LIT(0x02AAB17CF7E90C5E)   /*    0 */,    W64LIT(0xAC424B03E243A8EC)   /*    1 */,
 	W64LIT(0x72CD5BE30DD5FCD3)   /*    2 */,    W64LIT(0x6D019B93F6F97F3A)   /*    3 */,

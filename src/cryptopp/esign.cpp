@@ -18,7 +18,7 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-#if !defined(NDEBUG) && !defined(CRYPTOPP_DOXYGEN_PROCESSING)
+#if CRYPTOPP_DEBUG && !defined(CRYPTOPP_DOXYGEN_PROCESSING)
 void ESIGN_TestInstantiations()
 {
 	ESIGN<SHA>::Verifier x1(1, 1);
@@ -125,7 +125,7 @@ void InvertibleESIGNFunction::GenerateRandom(RandomNumberGenerator &rng, const N
 
 	m_n = m_p * m_p * m_q;
 
-	assert(m_n.BitCount() == (unsigned int)modulusSize);
+	CRYPTOPP_ASSERT(m_n.BitCount() == (unsigned int)modulusSize);
 }
 
 void InvertibleESIGNFunction::BERDecode(BufferedTransformation &bt)
@@ -148,7 +148,7 @@ void InvertibleESIGNFunction::DEREncode(BufferedTransformation &bt) const
 	privateKey.MessageEnd();
 }
 
-Integer InvertibleESIGNFunction::CalculateRandomizedInverse(RandomNumberGenerator &rng, const Integer &x) const 
+Integer InvertibleESIGNFunction::CalculateRandomizedInverse(RandomNumberGenerator &rng, const Integer &x) const
 {
 	DoQuickSanityCheck();
 
@@ -174,7 +174,7 @@ Integer InvertibleESIGNFunction::CalculateRandomizedInverse(RandomNumberGenerato
 	ModularArithmetic modp(m_p);
 	Integer t = modp.Divide(w0 * r % m_p, m_e * re % m_p);
 	Integer s = r + t*pq;
-	assert(s < m_n);
+	CRYPTOPP_ASSERT(s < m_n);
 #if 0
 	using namespace std;
 	cout << "f = " << x << endl;

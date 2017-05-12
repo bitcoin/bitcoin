@@ -2,7 +2,7 @@
 
 //! \file lubyrack.h
 //! \brief Classes for the Luby-Rackoff block cipher
-	
+
 #ifndef CRYPTOPP_LUBYRACK_H
 #define CRYPTOPP_LUBYRACK_H
 
@@ -16,14 +16,16 @@ template <class T> struct DigestSizeDoubleWorkaround 	// VC60 workaround
 	CRYPTOPP_CONSTANT(RESULT = 2*T::DIGESTSIZE)
 };
 
-//! algorithm info
+//! \class LR_Info
+//! \brief Luby-Rackoff block cipher information
 template <class T>
 struct LR_Info : public VariableKeyLength<16, 0, 2*(INT_MAX/2), 2>, public FixedBlockSize<DigestSizeDoubleWorkaround<T>::RESULT>
 {
 	static std::string StaticAlgorithmName() {return std::string("LR/")+T::StaticAlgorithmName();}
 };
 
-//! Luby-Rackoff
+//! \class LR
+//! \brief Luby-Rackoff block cipher
 template <class T>
 class LR : public LR_Info<T>, public BlockCipherDocumentation
 {

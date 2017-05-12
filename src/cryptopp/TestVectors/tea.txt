@@ -1,0 +1,711 @@
+AlgorithmType: SymmetricCipher
+Name: TEA/ECB
+Source: http://www.cix.co.uk/~klockstone/teavect.htm
+Comment: test   1
+Plaintext: 00000000 00000000
+Key: 00000000 00000000 00000000 00000000
+Ciphertext: 41ea3a0a 94baa940
+Test: Encrypt
+Comment: test   2
+Plaintext: 94baa940 00000000
+Key: 00000000 00000000 00000000 41ea3a0a
+Ciphertext: 4e8e7829 7d8236d8
+Test: Encrypt
+Comment: test   3
+Plaintext: 7d8236d8 00000000
+Key: 00000000 00000000 41ea3a0a 4e8e7829
+Ciphertext: c88ba95e e7edac02
+Test: Encrypt
+Comment: test   4
+Plaintext: e7edac02 00000000
+Key: 00000000 41ea3a0a 4e8e7829 c88ba95e
+Ciphertext: b84e28af b6b62088
+Test: Encrypt
+Comment: test   5
+Plaintext: b6b62088 00000000
+Key: 41ea3a0a 4e8e7829 c88ba95e b84e28af
+Ciphertext: a0a47295 8fadf3b3
+Test: Encrypt
+Comment: test   6
+Plaintext: 8fadf3b3 41ea3a0a
+Key: 4e8e7829 c88ba95e b84e28af a0a47295
+Ciphertext: ed650698 cf9f2b79
+Test: Encrypt
+Comment: test   7
+Plaintext: cf9f2b79 4e8e7829
+Key: c88ba95e b84e28af a0a47295 ed650698
+Ciphertext: 1024eea0 6220ae1c
+Test: Encrypt
+Comment: test   8
+Plaintext: 6220ae1c c88ba95e
+Key: b84e28af a0a47295 ed650698 1024eea0
+Ciphertext: 5ddf75d9 7a4ce68f
+Test: Encrypt
+Comment: test   9
+Plaintext: 7a4ce68f b84e28af
+Key: a0a47295 ed650698 1024eea0 5ddf75d9
+Ciphertext: f1be9d1e 8dd4a984
+Test: Encrypt
+Comment: test  10
+Plaintext: 8dd4a984 a0a47295
+Key: ed650698 1024eea0 5ddf75d9 f1be9d1e
+Ciphertext: d32c758c 092dabad
+Test: Encrypt
+Comment: test  11
+Plaintext: 092dabad ed650698
+Key: 1024eea0 5ddf75d9 f1be9d1e d32c758c
+Ciphertext: bdb43728 f7183fc0
+Test: Encrypt
+Comment: test  12
+Plaintext: f7183fc0 1024eea0
+Key: 5ddf75d9 f1be9d1e d32c758c bdb43728
+Ciphertext: a9c3801a d9dcfb4e
+Test: Encrypt
+Comment: test  13
+Plaintext: d9dcfb4e 5ddf75d9
+Key: f1be9d1e d32c758c bdb43728 a9c3801a
+Ciphertext: 32a1e654 a9df917c
+Test: Encrypt
+Comment: test  14
+Plaintext: a9df917c f1be9d1e
+Key: d32c758c bdb43728 a9c3801a 32a1e654
+Ciphertext: 08b63bb9 b20bd3e8
+Test: Encrypt
+Comment: test  15
+Plaintext: b20bd3e8 d32c758c
+Key: bdb43728 a9c3801a 32a1e654 08b63bb9
+Ciphertext: 21410574 cc4264c6
+Test: Encrypt
+Comment: test  16
+Plaintext: cc4264c6 bdb43728
+Key: a9c3801a 32a1e654 08b63bb9 21410574
+Ciphertext: 4ec5d2e2 5ada1d89
+Test: Encrypt
+Comment: test  17
+Plaintext: 5ada1d89 a9c3801a
+Key: 32a1e654 08b63bb9 21410574 4ec5d2e2
+Ciphertext: dd46249e 28aa0b4b
+Test: Encrypt
+Comment: test  18
+Plaintext: 28aa0b4b 32a1e654
+Key: 08b63bb9 21410574 4ec5d2e2 dd46249e
+Ciphertext: 2486dcba a713df03
+Test: Encrypt
+Comment: test  19
+Plaintext: a713df03 08b63bb9
+Key: 21410574 4ec5d2e2 dd46249e 2486dcba
+Ciphertext: b7c7af9d 1acb6cab
+Test: Encrypt
+Comment: test  20
+Plaintext: 1acb6cab 21410574
+Key: 4ec5d2e2 dd46249e 2486dcba b7c7af9d
+Ciphertext: 8cc0400a 9aa49fbb
+Test: Encrypt
+Comment: test  21
+Plaintext: 9aa49fbb 4ec5d2e2
+Key: dd46249e 2486dcba b7c7af9d 8cc0400a
+Ciphertext: 9c241876 6cbc8c66
+Test: Encrypt
+Comment: test  22
+Plaintext: 6cbc8c66 dd46249e
+Key: 2486dcba b7c7af9d 8cc0400a 9c241876
+Ciphertext: b59c5d45 a90066f9
+Test: Encrypt
+Comment: test  23
+Plaintext: a90066f9 2486dcba
+Key: b7c7af9d 8cc0400a 9c241876 b59c5d45
+Ciphertext: b765a1b3 64b37eb0
+Test: Encrypt
+Comment: test  24
+Plaintext: 64b37eb0 b7c7af9d
+Key: 8cc0400a 9c241876 b59c5d45 b765a1b3
+Ciphertext: 7b172fac f5ab4933
+Test: Encrypt
+Comment: test  25
+Plaintext: f5ab4933 8cc0400a
+Key: 9c241876 b59c5d45 b765a1b3 7b172fac
+Ciphertext: fe48f4fb ada404b1
+Test: Encrypt
+Comment: test  26
+Plaintext: ada404b1 9c241876
+Key: b59c5d45 b765a1b3 7b172fac fe48f4fb
+Ciphertext: c5294093 c1d53e3d
+Test: Encrypt
+Comment: test  27
+Plaintext: c1d53e3d b59c5d45
+Key: b765a1b3 7b172fac fe48f4fb c5294093
+Ciphertext: 759ca8e2 77a96649
+Test: Encrypt
+Comment: test  28
+Plaintext: 77a96649 b765a1b3
+Key: 7b172fac fe48f4fb c5294093 759ca8e2
+Ciphertext: 69c53e0f 3e979807
+Test: Encrypt
+Comment: test  29
+Plaintext: 3e979807 7b172fac
+Key: fe48f4fb c5294093 759ca8e2 69c53e0f
+Ciphertext: 60388ada a21fa8e8
+Test: Encrypt
+Comment: test  30
+Plaintext: a21fa8e8 fe48f4fb
+Key: c5294093 759ca8e2 69c53e0f 60388ada
+Ciphertext: df70a1f5 ac4aa407
+Test: Encrypt
+Comment: test  31
+Plaintext: ac4aa407 c5294093
+Key: 759ca8e2 69c53e0f 60388ada df70a1f5
+Ciphertext: d9cb4e09 92636233
+Test: Encrypt
+Comment: test  32
+Plaintext: 92636233 759ca8e2
+Key: 69c53e0f 60388ada df70a1f5 d9cb4e09
+Ciphertext: 7d2c6c57 7a6adb4d
+Test: Encrypt
+Comment: test  33
+Plaintext: 7a6adb4d 69c53e0f
+Key: 60388ada df70a1f5 d9cb4e09 7d2c6c57
+Ciphertext: 44b71215 cf25368a
+Test: Encrypt
+Comment: test  34
+Plaintext: cf25368a 60388ada
+Key: df70a1f5 d9cb4e09 7d2c6c57 44b71215
+Ciphertext: c10105a1 ef781a18
+Test: Encrypt
+Comment: test  35
+Plaintext: ef781a18 df70a1f5
+Key: d9cb4e09 7d2c6c57 44b71215 c10105a1
+Ciphertext: bfdb29fa 9ece39b6
+Test: Encrypt
+Comment: test  36
+Plaintext: 9ece39b6 d9cb4e09
+Key: 7d2c6c57 44b71215 c10105a1 bfdb29fa
+Ciphertext: 9b0b256d dc04574c
+Test: Encrypt
+Comment: test  37
+Plaintext: dc04574c 7d2c6c57
+Key: 44b71215 c10105a1 bfdb29fa 9b0b256d
+Ciphertext: f8295142 8c022711
+Test: Encrypt
+Comment: test  38
+Plaintext: 8c022711 44b71215
+Key: c10105a1 bfdb29fa 9b0b256d f8295142
+Ciphertext: 61341d1c 3a85f2f0
+Test: Encrypt
+Comment: test  39
+Plaintext: 3a85f2f0 c10105a1
+Key: bfdb29fa 9b0b256d f8295142 61341d1c
+Ciphertext: f6a0d30c ad230209
+Test: Encrypt
+Comment: test  40
+Plaintext: ad230209 bfdb29fa
+Key: 9b0b256d f8295142 61341d1c f6a0d30c
+Ciphertext: 3de21a3f aa0cf5c9
+Test: Encrypt
+Comment: test  41
+Plaintext: aa0cf5c9 9b0b256d
+Key: f8295142 61341d1c f6a0d30c 3de21a3f
+Ciphertext: a7e307c6 bd52d939
+Test: Encrypt
+Comment: test  42
+Plaintext: bd52d939 f8295142
+Key: 61341d1c f6a0d30c 3de21a3f a7e307c6
+Ciphertext: 017bc3a7 66fd8c77
+Test: Encrypt
+Comment: test  43
+Plaintext: 66fd8c77 61341d1c
+Key: f6a0d30c 3de21a3f a7e307c6 017bc3a7
+Ciphertext: d8f8fc86 d01b5761
+Test: Encrypt
+Comment: test  44
+Plaintext: d01b5761 f6a0d30c
+Key: 3de21a3f a7e307c6 017bc3a7 d8f8fc86
+Ciphertext: e186c41a 5e6e5a4d
+Test: Encrypt
+Comment: test  45
+Plaintext: 5e6e5a4d 3de21a3f
+Key: a7e307c6 017bc3a7 d8f8fc86 e186c41a
+Ciphertext: 4368d224 dbb4e677
+Test: Encrypt
+Comment: test  46
+Plaintext: dbb4e677 a7e307c6
+Key: 017bc3a7 d8f8fc86 e186c41a 4368d224
+Ciphertext: 9bd0321e 84096523
+Test: Encrypt
+Comment: test  47
+Plaintext: 84096523 017bc3a7
+Key: d8f8fc86 e186c41a 4368d224 9bd0321e
+Ciphertext: b7c56d5b 97c65866
+Test: Encrypt
+Comment: test  48
+Plaintext: 97c65866 d8f8fc86
+Key: e186c41a 4368d224 9bd0321e b7c56d5b
+Ciphertext: 63a1bfac 5a5d7ca2
+Test: Encrypt
+Comment: test  49
+Plaintext: 5a5d7ca2 e186c41a
+Key: 4368d224 9bd0321e b7c56d5b 63a1bfac
+Ciphertext: 91f56dff 7281794f
+Test: Encrypt
+Comment: test  50
+Plaintext: 7281794f 4368d224
+Key: 9bd0321e b7c56d5b 63a1bfac 91f56dff
+Ciphertext: e4c63780 019aedf7
+Test: Encrypt
+Comment: test  51
+Plaintext: 019aedf7 9bd0321e
+Key: b7c56d5b 63a1bfac 91f56dff e4c63780
+Ciphertext: a9fb56e7 35f4aeca
+Test: Encrypt
+Comment: test  52
+Plaintext: 35f4aeca b7c56d5b
+Key: 63a1bfac 91f56dff e4c63780 a9fb56e7
+Ciphertext: a6537187 f0f1ba93
+Test: Encrypt
+Comment: test  53
+Plaintext: f0f1ba93 63a1bfac
+Key: 91f56dff e4c63780 a9fb56e7 a6537187
+Ciphertext: cc960eda e44c6b8f
+Test: Encrypt
+Comment: test  54
+Plaintext: e44c6b8f 91f56dff
+Key: e4c63780 a9fb56e7 a6537187 cc960eda
+Ciphertext: e12f106d 4f1152d0
+Test: Encrypt
+Comment: test  55
+Plaintext: 4f1152d0 e4c63780
+Key: a9fb56e7 a6537187 cc960eda e12f106d
+Ciphertext: 556ad853 f79992fd
+Test: Encrypt
+Comment: test  56
+Plaintext: f79992fd a9fb56e7
+Key: a6537187 cc960eda e12f106d 556ad853
+Ciphertext: 78e8e265 128df6ad
+Test: Encrypt
+Comment: test  57
+Plaintext: 128df6ad a6537187
+Key: cc960eda e12f106d 556ad853 78e8e265
+Ciphertext: f23892aa 288cb926
+Test: Encrypt
+Comment: test  58
+Plaintext: 288cb926 cc960eda
+Key: e12f106d 556ad853 78e8e265 f23892aa
+Ciphertext: 1d115839 6a117fca
+Test: Encrypt
+Comment: test  59
+Plaintext: 6a117fca e12f106d
+Key: 556ad853 78e8e265 f23892aa 1d115839
+Ciphertext: cf899635 5b087e34
+Test: Encrypt
+Comment: test  60
+Plaintext: 5b087e34 556ad853
+Key: 78e8e265 f23892aa 1d115839 cf899635
+Ciphertext: 5c60bff2 e68d88c2
+Test: Encrypt
+Comment: test  61
+Plaintext: e68d88c2 78e8e265
+Key: f23892aa 1d115839 cf899635 5c60bff2
+Ciphertext: 7072d01c bffeb50a
+Test: Encrypt
+Comment: test  62
+Plaintext: bffeb50a f23892aa
+Key: 1d115839 cf899635 5c60bff2 7072d01c
+Ciphertext: 4513c5eb 9c99ae9e
+Test: Encrypt
+Comment: test  63
+Plaintext: 9c99ae9e 1d115839
+Key: cf899635 5c60bff2 7072d01c 4513c5eb
+Ciphertext: 8f3a38ab 80d9c4ad
+Test: Encrypt
+Comment: test  64
+Plaintext: 80d9c4ad cf899635
+Key: 5c60bff2 7072d01c 4513c5eb 8f3a38ab
+Ciphertext: 2bb0f1b3 c023ed11
+Test: Encrypt
+
+AlgorithmType: SymmetricCipher
+Name: XTEA/ECB
+Source: http://www.cix.co.uk/~klockstone/teavect.htm
+Comment: test   1
+Plaintext: 00000000 00000000
+Key: 00000000 00000000 00000000 00000000
+Rounds: 1
+Ciphertext: 00000000 9e3779b9
+Test: Encrypt
+Comment: test   2
+Plaintext: 9e3779b9 00000000
+Key: 00000000 00000000 00000000 00000000
+Rounds: 2
+Ciphertext: ec01a1de aaa0256d
+Test: Encrypt
+Comment: test   3
+Plaintext: aaa0256d 00000000
+Key: 00000000 00000000 00000000 ec01a1de
+Rounds: 3
+Ciphertext: 114f6d74 a39e590c
+Test: Encrypt
+Comment: test   4
+Plaintext: a39e590c 00000000
+Key: 00000000 00000000 ec01a1de 114f6d74
+Rounds: 4
+Ciphertext: bc3a7de2 4e238eb9
+Test: Encrypt
+Comment: test   5
+Plaintext: 4e238eb9 00000000
+Key: 00000000 ec01a1de 114f6d74 bc3a7de2
+Rounds: 5
+Ciphertext: 845846cf 2f36d07f
+Test: Encrypt
+Comment: test   6
+Plaintext: 2f36d07f 00000000
+Key: ec01a1de 114f6d74 bc3a7de2 845846cf
+Rounds: 6
+Ciphertext: 2794a127 4f3e4b6a
+Test: Encrypt
+Comment: test   7
+Plaintext: 4f3e4b6a ec01a1de
+Key: 114f6d74 bc3a7de2 845846cf 2794a127
+Rounds: 7
+Ciphertext: 6b8ea8b8 d99e66c3
+Test: Encrypt
+Comment: test   8
+Plaintext: d99e66c3 114f6d74
+Key: bc3a7de2 845846cf 2794a127 6b8ea8b8
+Rounds: 8
+Ciphertext: 31c5fa6c 241756d6
+Test: Encrypt
+Comment: test   9
+Plaintext: 241756d6 bc3a7de2
+Key: 845846cf 2794a127 6b8ea8b8 31c5fa6c
+Rounds: 9
+Ciphertext: 4a581696 1fd58a6b
+Test: Encrypt
+Comment: test  10
+Plaintext: 1fd58a6b 845846cf
+Key: 2794a127 6b8ea8b8 31c5fa6c 4a581696
+Rounds: 10
+Ciphertext: dfcd0451 df8822cd
+Test: Encrypt
+Comment: test  11
+Plaintext: df8822cd 2794a127
+Key: 6b8ea8b8 31c5fa6c 4a581696 dfcd0451
+Rounds: 11
+Ciphertext: 3ad1ff17 f465776c
+Test: Encrypt
+Comment: test  12
+Plaintext: f465776c 6b8ea8b8
+Key: 31c5fa6c 4a581696 dfcd0451 3ad1ff17
+Rounds: 12
+Ciphertext: 6a1d78c8 4d30bdb9
+Test: Encrypt
+Comment: test  13
+Plaintext: 4d30bdb9 31c5fa6c
+Key: 4a581696 dfcd0451 3ad1ff17 6a1d78c8
+Rounds: 13
+Ciphertext: 08c86d67 f6ef939b
+Test: Encrypt
+Comment: test  14
+Plaintext: f6ef939b 4a581696
+Key: dfcd0451 3ad1ff17 6a1d78c8 08c86d67
+Rounds: 14
+Ciphertext: 2a65bfbe f733428c
+Test: Encrypt
+Comment: test  15
+Plaintext: f733428c dfcd0451
+Key: 3ad1ff17 6a1d78c8 08c86d67 2a65bfbe
+Rounds: 15
+Ciphertext: b4bd6e46 40672bcc
+Test: Encrypt
+Comment: test  16
+Plaintext: 40672bcc 3ad1ff17
+Key: 6a1d78c8 08c86d67 2a65bfbe b4bd6e46
+Rounds: 16
+Ciphertext: 1d8e6992 9a478905
+Test: Encrypt
+Comment: test  17
+Plaintext: 9a478905 6a1d78c8
+Key: 08c86d67 2a65bfbe b4bd6e46 1d8e6992
+Rounds: 17
+Ciphertext: f8994ada 80dee76a
+Test: Encrypt
+Comment: test  18
+Plaintext: 80dee76a 08c86d67
+Key: 2a65bfbe b4bd6e46 1d8e6992 f8994ada
+Rounds: 18
+Ciphertext: 0997e6ed cdfef370
+Test: Encrypt
+Comment: test  19
+Plaintext: cdfef370 2a65bfbe
+Key: b4bd6e46 1d8e6992 f8994ada 0997e6ed
+Rounds: 19
+Ciphertext: ece50553 10b76c66
+Test: Encrypt
+Comment: test  20
+Plaintext: 10b76c66 b4bd6e46
+Key: 1d8e6992 f8994ada 0997e6ed ece50553
+Rounds: 20
+Ciphertext: a6d39c7b dce1a473
+Test: Encrypt
+Comment: test  21
+Plaintext: dce1a473 1d8e6992
+Key: f8994ada 0997e6ed ece50553 a6d39c7b
+Rounds: 21
+Ciphertext: 21d06fb7 fbb98544
+Test: Encrypt
+Comment: test  22
+Plaintext: fbb98544 f8994ada
+Key: 0997e6ed ece50553 a6d39c7b 21d06fb7
+Rounds: 22
+Ciphertext: 72cdd36c e1115fb6
+Test: Encrypt
+Comment: test  23
+Plaintext: e1115fb6 0997e6ed
+Key: ece50553 a6d39c7b 21d06fb7 72cdd36c
+Rounds: 23
+Ciphertext: 25bc6eb3 e4c28ab7
+Test: Encrypt
+Comment: test  24
+Plaintext: e4c28ab7 ece50553
+Key: a6d39c7b 21d06fb7 72cdd36c 25bc6eb3
+Rounds: 24
+Ciphertext: 4932a288 78020b9e
+Test: Encrypt
+Comment: test  25
+Plaintext: 78020b9e a6d39c7b
+Key: 21d06fb7 72cdd36c 25bc6eb3 4932a288
+Rounds: 25
+Ciphertext: 25285da1 b66c4459
+Test: Encrypt
+Comment: test  26
+Plaintext: b66c4459 21d06fb7
+Key: 72cdd36c 25bc6eb3 4932a288 25285da1
+Rounds: 26
+Ciphertext: 39b0155c f227ab20
+Test: Encrypt
+Comment: test  27
+Plaintext: f227ab20 72cdd36c
+Key: 25bc6eb3 4932a288 25285da1 39b0155c
+Rounds: 27
+Ciphertext: 547571aa f38f1e39
+Test: Encrypt
+Comment: test  28
+Plaintext: f38f1e39 25bc6eb3
+Key: 4932a288 25285da1 39b0155c 547571aa
+Rounds: 28
+Ciphertext: 27f917b1 e5796aee
+Test: Encrypt
+Comment: test  29
+Plaintext: e5796aee 4932a288
+Key: 25285da1 39b0155c 547571aa 27f917b1
+Rounds: 29
+Ciphertext: c1da8993 670f9fd2
+Test: Encrypt
+Comment: test  30
+Plaintext: 670f9fd2 25285da1
+Key: 39b0155c 547571aa 27f917b1 c1da8993
+Rounds: 30
+Ciphertext: 60e2acaa d0a60db4
+Test: Encrypt
+Comment: test  31
+Plaintext: d0a60db4 39b0155c
+Key: 547571aa 27f917b1 c1da8993 60e2acaa
+Rounds: 31
+Ciphertext: a6eb923d af20a390
+Test: Encrypt
+Comment: test  32
+Plaintext: af20a390 547571aa
+Key: 27f917b1 c1da8993 60e2acaa a6eb923d
+Rounds: 32
+Ciphertext: d26428af 0a202283
+Test: Encrypt
+Comment: test  33
+Plaintext: 0a202283 27f917b1
+Key: c1da8993 60e2acaa a6eb923d d26428af
+Rounds: 33
+Ciphertext: 1c03ceb9 96e9f2d3
+Test: Encrypt
+Comment: test  34
+Plaintext: 96e9f2d3 c1da8993
+Key: 60e2acaa a6eb923d d26428af 1c03ceb9
+Rounds: 34
+Ciphertext: e260b3c1 bbd7dff0
+Test: Encrypt
+Comment: test  35
+Plaintext: bbd7dff0 60e2acaa
+Key: a6eb923d d26428af 1c03ceb9 e260b3c1
+Rounds: 35
+Ciphertext: d33073f9 12841b97
+Test: Encrypt
+Comment: test  36
+Plaintext: 12841b97 a6eb923d
+Key: d26428af 1c03ceb9 e260b3c1 d33073f9
+Rounds: 36
+Ciphertext: 17b7ea05 1d723f18
+Test: Encrypt
+Comment: test  37
+Plaintext: 1d723f18 d26428af
+Key: 1c03ceb9 e260b3c1 d33073f9 17b7ea05
+Rounds: 37
+Ciphertext: 9f571045 31e849b9
+Test: Encrypt
+Comment: test  38
+Plaintext: 31e849b9 1c03ceb9
+Key: e260b3c1 d33073f9 17b7ea05 9f571045
+Rounds: 38
+Ciphertext: 288351d2 bd0a0054
+Test: Encrypt
+Comment: test  39
+Plaintext: bd0a0054 e260b3c1
+Key: d33073f9 17b7ea05 9f571045 288351d2
+Rounds: 39
+Ciphertext: 9236883a 2bd13143
+Test: Encrypt
+Comment: test  40
+Plaintext: 2bd13143 d33073f9
+Key: 17b7ea05 9f571045 288351d2 9236883a
+Rounds: 40
+Ciphertext: e91dcf23 7c3fd716
+Test: Encrypt
+Comment: test  41
+Plaintext: 7c3fd716 17b7ea05
+Key: 9f571045 288351d2 9236883a e91dcf23
+Rounds: 41
+Ciphertext: 5c8ff51e c3abe43d
+Test: Encrypt
+Comment: test  42
+Plaintext: c3abe43d 9f571045
+Key: 288351d2 9236883a e91dcf23 5c8ff51e
+Rounds: 42
+Ciphertext: 446e9f7c ecb0eb4d
+Test: Encrypt
+Comment: test  43
+Plaintext: ecb0eb4d 288351d2
+Key: 9236883a e91dcf23 5c8ff51e 446e9f7c
+Rounds: 43
+Ciphertext: 86455f77 ffc74050
+Test: Encrypt
+Comment: test  44
+Plaintext: ffc74050 9236883a
+Key: e91dcf23 5c8ff51e 446e9f7c 86455f77
+Rounds: 44
+Ciphertext: ae85d873 e21ef8d3
+Test: Encrypt
+Comment: test  45
+Plaintext: e21ef8d3 e91dcf23
+Key: 5c8ff51e 446e9f7c 86455f77 ae85d873
+Rounds: 45
+Ciphertext: cf411a68 18dce768
+Test: Encrypt
+Comment: test  46
+Plaintext: 18dce768 5c8ff51e
+Key: 446e9f7c 86455f77 ae85d873 cf411a68
+Rounds: 46
+Ciphertext: 4ef68794 07d2b1b3
+Test: Encrypt
+Comment: test  47
+Plaintext: 07d2b1b3 446e9f7c
+Key: 86455f77 ae85d873 cf411a68 4ef68794
+Rounds: 47
+Ciphertext: d75a1925 07476976
+Test: Encrypt
+Comment: test  48
+Plaintext: 07476976 86455f77
+Key: ae85d873 cf411a68 4ef68794 d75a1925
+Rounds: 48
+Ciphertext: 909d29cb 16b37e1b
+Test: Encrypt
+Comment: test  49
+Plaintext: 16b37e1b ae85d873
+Key: cf411a68 4ef68794 d75a1925 909d29cb
+Rounds: 49
+Ciphertext: e05578cd bd40cd0c
+Test: Encrypt
+Comment: test  50
+Plaintext: bd40cd0c cf411a68
+Key: 4ef68794 d75a1925 909d29cb e05578cd
+Rounds: 50
+Ciphertext: 988b50e5 adf1b74c
+Test: Encrypt
+Comment: test  51
+Plaintext: adf1b74c 4ef68794
+Key: d75a1925 909d29cb e05578cd 988b50e5
+Rounds: 51
+Ciphertext: 90699d3d d2333c19
+Test: Encrypt
+Comment: test  52
+Plaintext: d2333c19 d75a1925
+Key: 909d29cb e05578cd 988b50e5 90699d3d
+Rounds: 52
+Ciphertext: a119eb2e 3488c65b
+Test: Encrypt
+Comment: test  53
+Plaintext: 3488c65b 909d29cb
+Key: e05578cd 988b50e5 90699d3d a119eb2e
+Rounds: 53
+Ciphertext: e4c43e62 e9c4894b
+Test: Encrypt
+Comment: test  54
+Plaintext: e9c4894b e05578cd
+Key: 988b50e5 90699d3d a119eb2e e4c43e62
+Rounds: 54
+Ciphertext: e1aec3f2 1976c384
+Test: Encrypt
+Comment: test  55
+Plaintext: 1976c384 988b50e5
+Key: 90699d3d a119eb2e e4c43e62 e1aec3f2
+Rounds: 55
+Ciphertext: 1b7b0e2b 0b392b46
+Test: Encrypt
+Comment: test  56
+Plaintext: 0b392b46 90699d3d
+Key: a119eb2e e4c43e62 e1aec3f2 1b7b0e2b
+Rounds: 56
+Ciphertext: 1a6ffc0c 600f2ee0
+Test: Encrypt
+Comment: test  57
+Plaintext: 600f2ee0 a119eb2e
+Key: e4c43e62 e1aec3f2 1b7b0e2b 1a6ffc0c
+Rounds: 57
+Ciphertext: 82ccc9d3 94ba3d77
+Test: Encrypt
+Comment: test  58
+Plaintext: 94ba3d77 e4c43e62
+Key: e1aec3f2 1b7b0e2b 1a6ffc0c 82ccc9d3
+Rounds: 58
+Ciphertext: 38b5ebd1 c56af77e
+Test: Encrypt
+Comment: test  59
+Plaintext: c56af77e e1aec3f2
+Key: 1b7b0e2b 1a6ffc0c 82ccc9d3 38b5ebd1
+Rounds: 59
+Ciphertext: f5571f9d fe136a04
+Test: Encrypt
+Comment: test  60
+Plaintext: fe136a04 1b7b0e2b
+Key: 1a6ffc0c 82ccc9d3 38b5ebd1 f5571f9d
+Rounds: 60
+Ciphertext: 62ee209f 08550367
+Test: Encrypt
+Comment: test  61
+Plaintext: 08550367 1a6ffc0c
+Key: 82ccc9d3 38b5ebd1 f5571f9d 62ee209f
+Rounds: 61
+Ciphertext: 069b7afc b0fcde91
+Test: Encrypt
+Comment: test  62
+Plaintext: b0fcde91 82ccc9d3
+Key: 38b5ebd1 f5571f9d 62ee209f 069b7afc
+Rounds: 62
+Ciphertext: 376a8936 11b9c087
+Test: Encrypt
+Comment: test  63
+Plaintext: 11b9c087 38b5ebd1
+Key: f5571f9d 62ee209f 069b7afc 376a8936
+Rounds: 63
+Ciphertext: cdc9e923 2e6c1fe7
+Test: Encrypt
+Comment: test  64
+Plaintext: 2e6c1fe7 f5571f9d
+Key: 62ee209f 069b7afc 376a8936 cdc9e923
+Rounds: 64
+Ciphertext: 7a01cbc9 b03d6068
+Test: Encrypt

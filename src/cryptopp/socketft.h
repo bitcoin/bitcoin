@@ -1,7 +1,9 @@
 #ifndef CRYPTOPP_SOCKETFT_H
 #define CRYPTOPP_SOCKETFT_H
 
-#ifdef SOCKETS_AVAILABLE
+#include "config.h"
+
+#if !defined(NO_OS_DEPENDENCE) && defined(SOCKETS_AVAILABLE)
 
 #include "cryptlib.h"
 #include "network.h"
@@ -12,6 +14,7 @@
 #		error Winsock 1 is not supported by this library. Please include this file or winsock2.h before windows.h.
 #	endif
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #include "winpipes.h"
 #else
 #include <sys/time.h>
@@ -92,7 +95,7 @@ public:
 		{if (result == static_cast<socket_t>(SOCKET_ERROR)) HandleError(operation);}
 #ifdef USE_WINDOWS_STYLE_SOCKETS
 	void CheckAndHandleError(const char *operation, BOOL result) const
-		{assert(result==TRUE || result==FALSE); if (!result) HandleError(operation);}
+		{if (!result) HandleError(operation);}
 	void CheckAndHandleError(const char *operation, bool result) const
 		{if (!result) HandleError(operation);}
 #endif
@@ -119,7 +122,7 @@ class SocketsInitializer
 {
 public:
 	SocketsInitializer() {Socket::StartSockets();}
-	~SocketsInitializer() {try {Socket::ShutdownSockets();} catch (const Exception&) {assert(0);}}
+	~SocketsInitializer() {try {Socket::ShutdownSockets();} catch (const Exception&) {CRYPTOPP_ASSERT(0);}}
 };
 
 class SocketReceiver : public NetworkReceiver
@@ -142,16 +145,17 @@ public:
 
 private:
 	Socket &m_s;
-	bool m_eofReceived;
 
 #ifdef USE_WINDOWS_STYLE_SOCKETS
 	WindowsHandle m_event;
 	OVERLAPPED m_overlapped;
-	bool m_resultPending;
 	DWORD m_lastResult;
+	bool m_resultPending;
 #else
 	unsigned int m_lastResult;
 #endif
+
+	bool m_eofReceived;
 };
 
 class SocketSender : public NetworkSender
@@ -179,8 +183,8 @@ private:
 #ifdef USE_WINDOWS_STYLE_SOCKETS
 	WindowsHandle m_event;
 	OVERLAPPED m_overlapped;
-	bool m_resultPending;
 	DWORD m_lastResult;
+	bool m_resultPending;
 #else
 	unsigned int m_lastResult;
 #endif
@@ -218,6 +222,6 @@ private:
 
 NAMESPACE_END
 
-#endif	// #ifdef SOCKETS_AVAILABLE
+#endif	// SOCKETS_AVAILABLE
 
-#endif
+#endif  // CRYPTOPP_SOCKETFT_H

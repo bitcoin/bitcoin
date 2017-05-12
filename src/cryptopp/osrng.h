@@ -1,7 +1,6 @@
 // osrng.h - written and placed in the public domain by Wei Dai
 
-//! \file
-//! \headerfile osrng.h
+//! \file osrng.h
 //! \brief Classes for access to the operating system's random number generators
 
 #ifndef CRYPTOPP_OSRNG_H
@@ -9,7 +8,7 @@
 
 #include "config.h"
 
-#ifdef OS_RNG_AVAILABLE
+#if !defined(OS_NO_DEPENDENCE) && defined(OS_RNG_AVAILABLE)
 
 #include "cryptlib.h"
 #include "randpool.h"
@@ -36,7 +35,7 @@ public:
 #ifdef CRYPTOPP_WIN32_AVAILABLE
 //! \class MicrosoftCryptoProvider
 //! \brief Wrapper for Microsoft crypto service provider
-//! \sa \def USE_MS_CRYPTOAPI, \def WORKAROUND_MS_BUG_Q258000
+//! \sa \def USE_MS_CRYPTOAPI, \def USE_MS_CNGAPI, \def WORKAROUND_MS_BUG_Q258000
 class CRYPTOPP_DLL MicrosoftCryptoProvider
 {
 public:
@@ -44,41 +43,54 @@ public:
 	MicrosoftCryptoProvider();
 	~MicrosoftCryptoProvider();
 
-// type HCRYPTPROV, avoid #include <windows.h>
-#if defined(__CYGWIN__) && defined(__x86_64__)
+// type HCRYPTPROV and BCRYPT_ALG_HANDLE, avoid #include <windows.h>
+#if defined(USE_MS_CRYPTOAPI)
+# if defined(__CYGWIN__) && defined(__x86_64__)
 	typedef unsigned long long ProviderHandle;
-#elif defined(WIN64) || defined(_WIN64)
+# elif defined(WIN64) || defined(_WIN64)
 	typedef unsigned __int64 ProviderHandle;
-#else
+# else
 	typedef unsigned long ProviderHandle;
-#endif
+# endif
+#elif defined(USE_MS_CNGAPI)
+	typedef void *PVOID;
+	typedef PVOID ProviderHandle;
+#endif // USE_MS_CRYPTOAPI or USE_MS_CNGAPI
 
-	//! \brief Retrieves the CryptoAPI provider handle
+	//! \brief Retrieves the provider handle
 	//! \returns CryptoAPI provider handle
-	//! \details The handle is acquired by a call to CryptAcquireContext().
-	//!   CryptReleaseContext() is called upon destruction.
+	//! \details If USE_MS_CRYPTOAPI is in effect, then CryptAcquireContext()
+	//!   acquires then handle and CryptReleaseContext() releases the handle
+	//!   upon destruction. If USE_MS_CNGAPI is in effect, then
+	//!   BCryptOpenAlgorithmProvider() acquires then handle and
+	//!   BCryptCloseAlgorithmProvider() releases the handle upon destruction.
 	ProviderHandle GetProviderHandle() const {return m_hProvider;}
 
 private:
 	ProviderHandle m_hProvider;
 };
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && defined(USE_MS_CRYPTOAPI)
 # pragma comment(lib, "advapi32.lib")
+#endif
+
+#if defined(_MSC_VER) && defined(USE_MS_CNGAPI)
+# pragma comment(lib, "bcrypt.lib")
 #endif
 
 #endif //CRYPTOPP_WIN32_AVAILABLE
 
 //! \class NonblockingRng
 //! \brief Wrapper class for /dev/random and /dev/srandom
-//! \details Encapsulates CryptoAPI's CryptGenRandom() on Windows, or /dev/urandom on Unix and compatibles.
+//! \details Encapsulates CryptoAPI's CryptGenRandom() or CryptoNG's BCryptGenRandom()
+//!   on Windows, or /dev/urandom on Unix and compatibles.
 class CRYPTOPP_DLL NonblockingRng : public RandomNumberGenerator
 {
 public:
 	//! \brief Construct a NonblockingRng
 	NonblockingRng();
 	~NonblockingRng();
-	
+
 	//! \brief Generate random array of bytes
 	//! \param output the byte buffer
 	//! \param size the length of the buffer, in bytes
@@ -87,9 +99,7 @@ public:
 
 protected:
 #ifdef CRYPTOPP_WIN32_AVAILABLE
-#	ifndef WORKAROUND_MS_BUG_Q258000
-		MicrosoftCryptoProvider m_Provider;
-#	endif
+	MicrosoftCryptoProvider m_Provider;
 #else
 	int m_fd;
 #endif
@@ -108,7 +118,7 @@ public:
 	//! \brief Construct a BlockingRng
 	BlockingRng();
 	~BlockingRng();
-	
+
 	//! \brief Generate random array of bytes
 	//! \param output the byte buffer
 	//! \param size the length of the buffer, in bytes
@@ -137,6 +147,7 @@ CRYPTOPP_DLL void CRYPTOPP_API OS_GenerateRandomBlock(bool blocking, byte *outpu
 //! \class AutoSeededRandomPool
 //! \brief Automatically Seeded Randomness Pool
 //! \details This class seeds itself using an operating system provided RNG.
+//!    AutoSeededRandomPool was suggested by Leonard Janke.
 class CRYPTOPP_DLL AutoSeededRandomPool : public RandomPool
 {
 public:
@@ -147,7 +158,7 @@ public:
 	//!   The parameter is ignored if only one of these is available.
 	explicit AutoSeededRandomPool(bool blocking = false, unsigned int seedSize = 32)
 		{Reseed(blocking, seedSize);}
-	
+
 	//! \brief Reseed an AutoSeededRandomPool
 	//! \param blocking controls seeding with BlockingRng or NonblockingRng
 	//! \param seedSize the size of the seed, in bytes

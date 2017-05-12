@@ -20,6 +20,13 @@
 #include "misc.h"
 #include "cpu.h"
 
+#if defined(CRYPTOPP_DISABLE_SHA_ASM)
+# undef CRYPTOPP_X86_ASM_AVAILABLE
+# undef CRYPTOPP_X32_ASM_AVAILABLE
+# undef CRYPTOPP_X64_ASM_AVAILABLE
+# undef CRYPTOPP_BOOL_SSE2_ASM_AVAILABLE
+#endif
+
 NAMESPACE_BEGIN(CryptoPP)
 
 // start of Steve Reid's code
@@ -127,7 +134,7 @@ extern const word32 SHA256_K[64] = {
 
 #endif // #ifndef CRYPTOPP_GENERATE_X64_MASM
 
-#if defined(CRYPTOPP_X86_ASM_AVAILABLE) || defined(CRYPTOPP_X32_ASM_AVAILABLE) || defined(CRYPTOPP_GENERATE_X64_MASM)
+#if (defined(CRYPTOPP_X86_ASM_AVAILABLE) || defined(CRYPTOPP_X32_ASM_AVAILABLE) || defined(CRYPTOPP_GENERATE_X64_MASM))
 
 static void CRYPTOPP_FASTCALL X86_SHA256_HashBlocks(word32 *state, const word32 *data, size_t len
 #if defined(_MSC_VER) && (_MSC_VER == 1200)
@@ -245,7 +252,7 @@ static void CRYPTOPP_FASTCALL X86_SHA256_HashBlocks(word32 *state, const word32 
 #define SWAP_COPY(i)		\
 	AS2(	mov		WORD_REG(bx), [WORD_REG(dx)+i*WORD_SZ])\
 	AS1(	bswap	WORD_REG(bx))\
-	AS2(	mov		[Wt(i)], WORD_REG(bx))	
+	AS2(	mov		[Wt(i)], WORD_REG(bx))
 #endif
 
 #if defined(__GNUC__)
@@ -310,7 +317,9 @@ static void CRYPTOPP_FASTCALL X86_SHA256_HashBlocks(word32 *state, const word32 
 	AS2(	mov		esi, ecx)
 	AS2(	lea		edi, A(0))
 	AS2(	mov		ecx, 8)
+ATT_NOPREFIX
 	AS1(	rep movsd)
+INTEL_NOPREFIX
 	AS2(	mov		esi, K_END)
 	ASJ(	jmp,	3, f)
 #endif
@@ -371,7 +380,9 @@ static void CRYPTOPP_FASTCALL X86_SHA256_HashBlocks(word32 *state, const word32 
 	ROUND(14, 1, eax, ecx, edi, edx)
 	ROUND(15, 1, ecx, eax, edx, edi)
 	AS2(	cmp		WORD_REG(si), K_END)
+	ATT_NOPREFIX
 	ASJ(	jb,		1, b)
+	INTEL_NOPREFIX
 
 	AS2(	mov		WORD_REG(dx), DATA_SAVE)
 	AS2(	add		WORD_REG(dx), 64)
@@ -390,7 +401,9 @@ static void CRYPTOPP_FASTCALL X86_SHA256_HashBlocks(word32 *state, const word32 
 	AS2(	movdqa	[AS_REG_7+1*16], xmm1)
 	AS2(	movdqa	[AS_REG_7+0*16], xmm0)
 	AS2(	cmp		WORD_REG(dx), DATA_END)
+	ATT_NOPREFIX
 	ASJ(	jb,		0, b)
+	INTEL_NOPREFIX
 #endif
 
 #if CRYPTOPP_BOOL_X86 || CRYPTOPP_BOOL_X32
@@ -438,7 +451,7 @@ static void CRYPTOPP_FASTCALL X86_SHA256_HashBlocks(word32 *state, const word32 
 
 #ifdef __GNUC__
 	ATT_PREFIX
-	: 
+	:
 	: "c" (state), "d" (data), "S" (SHA256_K+48), "D" (len)
 	#if CRYPTOPP_BOOL_X64
 		, "m" (workspace[0])
@@ -461,7 +474,7 @@ void CRYPTOPP_FASTCALL X86_SHA256_HashBlocks(word32 *state, const word32 *data, 
 }
 #endif
 
-#if defined(CRYPTOPP_X86_ASM_AVAILABLE) || defined(CRYPTOPP_X32_ASM_AVAILABLE) || defined(CRYPTOPP_X64_MASM_AVAILABLE)
+#if (defined(CRYPTOPP_X86_ASM_AVAILABLE) || defined(CRYPTOPP_X32_ASM_AVAILABLE) || defined(CRYPTOPP_X64_MASM_AVAILABLE)) && !defined(CRYPTOPP_DISABLE_SHA_ASM)
 
 size_t SHA256::HashMultipleBlocks(const word32 *input, size_t length)
 {
@@ -500,39 +513,8 @@ size_t SHA224::HashMultipleBlocks(const word32 *input, size_t length)
 #define s0(x) (rotrFixed(x,7)^rotrFixed(x,18)^(x>>3))
 #define s1(x) (rotrFixed(x,17)^rotrFixed(x,19)^(x>>10))
 
-void SHA256::Transform(word32 *state, const word32 *data)
-{
-	word32 W[16];
-#if defined(CRYPTOPP_X86_ASM_AVAILABLE) || defined(CRYPTOPP_X32_ASM_AVAILABLE) || defined(CRYPTOPP_X64_MASM_AVAILABLE)
-	// this byte reverse is a waste of time, but this function is only called by MDC
-	ByteReverse(W, data, BLOCKSIZE);
-	X86_SHA256_HashBlocks(state, W, BLOCKSIZE - !HasSSE2());
-#else
-	word32 T[8];
-    /* Copy context->state[] to working vars */
-	memcpy(T, state, sizeof(T));
-    /* 64 operations, partially loop unrolled */
-	for (unsigned int j=0; j<64; j+=16)
-	{
-		R( 0); R( 1); R( 2); R( 3);
-		R( 4); R( 5); R( 6); R( 7);
-		R( 8); R( 9); R(10); R(11);
-		R(12); R(13); R(14); R(15);
-	}
-    /* Add the working vars back into context.state[] */
-    state[0] += a(0);
-    state[1] += b(0);
-    state[2] += c(0);
-    state[3] += d(0);
-    state[4] += e(0);
-    state[5] += f(0);
-    state[6] += g(0);
-    state[7] += h(0);
-#endif
-}
-
-/* 
-// smaller but slower
+// Smaller but slower
+#if defined(__OPTIMIZE_SIZE__)
 void SHA256::Transform(word32 *state, const word32 *data)
 {
 	word32 T[20];
@@ -543,7 +525,7 @@ void SHA256::Transform(word32 *state, const word32 *data)
 	memcpy(t, state, 8*4);
 	word32 e = t[4], a = t[0];
 
-	do 
+	do
 	{
 		word32 w = data[j];
 		W[j] = w;
@@ -604,7 +586,38 @@ void SHA256::Transform(word32 *state, const word32 *data)
     state[6] += t[6];
     state[7] += t[7];
 }
-*/
+#else
+void SHA256::Transform(word32 *state, const word32 *data)
+{
+	word32 W[16];
+#if (defined(CRYPTOPP_X86_ASM_AVAILABLE) || defined(CRYPTOPP_X32_ASM_AVAILABLE) || defined(CRYPTOPP_X64_MASM_AVAILABLE)) && !defined(CRYPTOPP_DISABLE_SHA_ASM)
+	// this byte reverse is a waste of time, but this function is only called by MDC
+	ByteReverse(W, data, BLOCKSIZE);
+	X86_SHA256_HashBlocks(state, W, BLOCKSIZE - !HasSSE2());
+#else
+	word32 T[8];
+    /* Copy context->state[] to working vars */
+	memcpy(T, state, sizeof(T));
+    /* 64 operations, partially loop unrolled */
+	for (unsigned int j=0; j<64; j+=16)
+	{
+		R( 0); R( 1); R( 2); R( 3);
+		R( 4); R( 5); R( 6); R( 7);
+		R( 8); R( 9); R(10); R(11);
+		R(12); R(13); R(14); R(15);
+	}
+    /* Add the working vars back into context.state[] */
+    state[0] += a(0);
+    state[1] += b(0);
+    state[2] += c(0);
+    state[3] += d(0);
+    state[4] += e(0);
+    state[5] += f(0);
+    state[6] += g(0);
+    state[7] += h(0);
+#endif
+}
+#endif
 
 #undef S0
 #undef S1
@@ -637,7 +650,7 @@ void SHA512::InitState(HashWordType *state)
 #if CRYPTOPP_BOOL_SSE2_ASM_AVAILABLE && (CRYPTOPP_BOOL_X86 || CRYPTOPP_BOOL_X32)
 CRYPTOPP_ALIGN_DATA(16) static const word64 SHA512_K[80] CRYPTOPP_SECTION_ALIGN16 = {
 #else
-static const word64 SHA512_K[80] = {
+CRYPTOPP_ALIGN_DATA(16) static const word64 SHA512_K[80] CRYPTOPP_SECTION_ALIGN16 = {
 #endif
 	W64LIT(0x428a2f98d728ae22), W64LIT(0x7137449123ef65cd),
 	W64LIT(0xb5c0fbcfec4d3b2f), W64LIT(0xe9b5dba58189dbbc),
@@ -703,14 +716,14 @@ CRYPTOPP_NAKED static void CRYPTOPP_FASTCALL SHA512_SSE2_Transform(word64 *state
 	AS2(	sub		esp, 27*16)				// 17*16 for expanded data, 20*8 for state
 	AS_PUSH_IF86(	ax)
 	AS2(	xor		eax, eax)
-			
+
 #if CRYPTOPP_BOOL_X32
 	AS2(	lea		edi, [esp+8+8*8])		// start at middle of state buffer. will decrement pointer each round to avoid copying
 	AS2(	lea		esi, [esp+8+20*8+8])	// 16-byte alignment, then add 8
 #else
 	AS2(	lea		edi, [esp+4+8*8])		// start at middle of state buffer. will decrement pointer each round to avoid copying
 	AS2(	lea		esi, [esp+4+20*8+8])	// 16-byte alignment, then add 8
-#endif	
+#endif
 
 	AS2(	movdqa	xmm0, [ecx+0*16])
 	AS2(	movdq2q	mm4, xmm0)
@@ -880,6 +893,9 @@ CRYPTOPP_NAKED static void CRYPTOPP_FASTCALL SHA512_SSE2_Transform(word64 *state
 
 void SHA512::Transform(word64 *state, const word64 *data)
 {
+	CRYPTOPP_ASSERT(IsAlignedOn(state, GetAlignmentOf<word64>()));
+	CRYPTOPP_ASSERT(IsAlignedOn(data, GetAlignmentOf<word64>()));
+
 #if CRYPTOPP_BOOL_SSE2_ASM_AVAILABLE && (CRYPTOPP_BOOL_X86 || CRYPTOPP_BOOL_X32)
 	if (HasSSE2())
 	{

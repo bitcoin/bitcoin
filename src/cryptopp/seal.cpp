@@ -10,7 +10,7 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-#if !defined(NDEBUG) && !defined(CRYPTOPP_DOXYGEN_PROCESSING)
+#if CRYPTOPP_DEBUG && !defined(CRYPTOPP_DOXYGEN_PROCESSING)
 void SEAL_TestInstantiations()
 {
 	SEAL<>::Encryption x;
@@ -73,7 +73,7 @@ template <class B>
 void SEAL_Policy<B>::CipherResynchronize(byte *keystreamBuffer, const byte *IV, size_t length)
 {
 	CRYPTOPP_UNUSED(keystreamBuffer), CRYPTOPP_UNUSED(IV), CRYPTOPP_UNUSED(length);
-	assert(length==4);
+	CRYPTOPP_ASSERT(length==4);
 
 	m_outsideCounter = IV ? GetWord<word32>(false, BIG_ENDIAN_ORDER, IV) : 0;
 	m_startCount = m_outsideCounter;
@@ -93,9 +93,10 @@ void SEAL_Policy<B>::OperateKeystream(KeystreamOperation operation, byte *output
 	word32 a, b, c, d, n1, n2, n3, n4;
 	unsigned int p, q;
 
+	CRYPTOPP_ASSERT(IsAlignedOn(m_T.begin(),GetAlignmentOf<word32>()));
 	for (size_t iteration = 0; iteration < iterationCount; ++iteration)
 	{
-#define Ttab(x) *(word32 *)((byte *)m_T.begin()+x)
+		#define Ttab(x) *(word32 *)(void*)((byte *)m_T.begin()+x)
 
 		a = m_outsideCounter ^ m_R[4*m_insideCounter];
 		b = rotrFixed(m_outsideCounter, 8U) ^ m_R[4*m_insideCounter+1];
@@ -138,7 +139,7 @@ void SEAL_Policy<B>::OperateKeystream(KeystreamOperation operation, byte *output
 		p = d & 0x7fc;
 		a += Ttab(p);
 		d = rotrFixed(d, 9U);
-		
+
 		// generate 8192 bits
 		for (unsigned int i=0; i<64; i++)
 		{
@@ -196,7 +197,7 @@ void SEAL_Policy<B>::OperateKeystream(KeystreamOperation operation, byte *output
 			else
 			{
 				a += n1;
-				b += n2;        
+				b += n2;
 				c ^= n1;
 				d ^= n2;
 			}

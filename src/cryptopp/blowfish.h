@@ -12,16 +12,16 @@
 NAMESPACE_BEGIN(CryptoPP)
 
 //! \class Blowfish_Info
-//! \brief The cipher's key, iv, block size and name information.
+//! \brief Blowfish block cipher information
 struct Blowfish_Info : public FixedBlockSize<8>, public VariableKeyLength<16, 4, 56>, public FixedRounds<16>
 {
-	static const char *StaticAlgorithmName() {return "Blowfish";}
+	CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "Blowfish";}
 };
 
 // <a href="http://www.weidai.com/scan-mirror/cs.html#Blowfish">Blowfish</a>
 
-//! \class Blowfish
-//! \brief Provides Blowfish encryption and decryption
+//! \class Blowfish_Info
+//! \brief Blowfish block cipher
 class Blowfish : public Blowfish_Info, public BlockCipherDocumentation
 {
 	//! \class Base

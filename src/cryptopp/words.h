@@ -55,7 +55,7 @@ inline void AndWords(word *r, const word *a, size_t n)
 
 inline word ShiftWordsLeftByBits(word *r, size_t n, unsigned int shiftBits)
 {
-	assert (shiftBits<WORD_BITS);
+	CRYPTOPP_ASSERT (shiftBits<WORD_BITS);
 	word u, carry=0;
 	if (shiftBits)
 		for (size_t i=0; i<n; i++)
@@ -69,7 +69,7 @@ inline word ShiftWordsLeftByBits(word *r, size_t n, unsigned int shiftBits)
 
 inline word ShiftWordsRightByBits(word *r, size_t n, unsigned int shiftBits)
 {
-	assert (shiftBits<WORD_BITS);
+	CRYPTOPP_ASSERT (shiftBits<WORD_BITS);
 	word u, carry=0;
 	if (shiftBits)
 		for (size_t i=n; i>0; i--)

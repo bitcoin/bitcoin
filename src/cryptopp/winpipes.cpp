@@ -1,11 +1,21 @@
 // winpipes.cpp - written and placed in the public domain by Wei Dai
 
 #include "pch.h"
+#include "config.h"
+
+#if !defined(NO_OS_DEPENDENCE) && defined(WINDOWS_PIPES_AVAILABLE)
+
 #include "winpipes.h"
-
-#ifdef WINDOWS_PIPES_AVAILABLE
-
 #include "wait.h"
+
+// Windows 8, Windows Server 2012, and Windows Phone 8.1 need <synchapi.h> and <ioapiset.h>
+#if defined(CRYPTOPP_WIN32_AVAILABLE)
+# if ((WINVER >= 0x0602 /*_WIN32_WINNT_WIN8*/) || (_WIN32_WINNT >= 0x0602 /*_WIN32_WINNT_WIN8*/))
+#  include <synchapi.h>
+#  include <ioapiset.h>
+#  define USE_WINDOWS8_API
+# endif
+#endif
 
 NAMESPACE_BEGIN(CryptoPP)
 
@@ -24,7 +34,7 @@ WindowsHandle::~WindowsHandle()
 		}
 		catch (const Exception&)
 		{
-			assert(0);
+			CRYPTOPP_ASSERT(0);
 		}
 	}
 }
@@ -79,7 +89,7 @@ WindowsPipe::Err::Err(HANDLE s, const std::string& operation, int error)
 // *************************************************************
 
 WindowsPipeReceiver::WindowsPipeReceiver()
-	: m_resultPending(false), m_eofReceived(false)
+	: m_lastResult(0), m_resultPending(false), m_eofReceived(false)
 {
 	m_event.AttachHandle(CreateEvent(NULL, true, false, NULL), true);
 	CheckAndHandleError("CreateEvent", m_event.HandleValid());
@@ -89,7 +99,7 @@ WindowsPipeReceiver::WindowsPipeReceiver()
 
 bool WindowsPipeReceiver::Receive(byte* buf, size_t bufLen)
 {
-	assert(!m_resultPending && !m_eofReceived);
+	CRYPTOPP_ASSERT(!m_resultPending && !m_eofReceived);
 
 	const HANDLE h = GetHandle();
 	// don't queue too much at once, or we might use up non-paged memory
@@ -104,6 +114,7 @@ bool WindowsPipeReceiver::Receive(byte* buf, size_t bufLen)
 		{
 		default:
 			CheckAndHandleError("ReadFile", false);
+			// Fall through for non-fatal
 		case ERROR_BROKEN_PIPE:
 		case ERROR_HANDLE_EOF:
 			m_lastResult = 0;
@@ -128,8 +139,12 @@ unsigned int WindowsPipeReceiver::GetReceiveResult()
 {
 	if (m_resultPending)
 	{
-		const HANDLE h = GetHandle();
-		if (GetOverlappedResult(h, &m_overlapped, &m_lastResult, false))
+#if defined(USE_WINDOWS8_API)
+		BOOL result = GetOverlappedResultEx(GetHandle(), &m_overlapped, &m_lastResult, INFINITE, FALSE);
+#else
+		BOOL result = GetOverlappedResult(GetHandle(), &m_overlapped, &m_lastResult, FALSE);
+#endif
+		if (result)
 		{
 			if (m_lastResult == 0)
 				m_eofReceived = true;
@@ -140,6 +155,7 @@ unsigned int WindowsPipeReceiver::GetReceiveResult()
 			{
 			default:
 				CheckAndHandleError("GetOverlappedResult", false);
+				// Fall through for non-fatal
 			case ERROR_BROKEN_PIPE:
 			case ERROR_HANDLE_EOF:
 				m_lastResult = 0;
@@ -154,7 +170,7 @@ unsigned int WindowsPipeReceiver::GetReceiveResult()
 // *************************************************************
 
 WindowsPipeSender::WindowsPipeSender()
-	: m_resultPending(false), m_lastResult(0)
+	: m_lastResult(0), m_resultPending(false)
 {
 	m_event.AttachHandle(CreateEvent(NULL, true, false, NULL), true);
 	CheckAndHandleError("CreateEvent", m_event.HandleValid());
@@ -194,8 +210,13 @@ unsigned int WindowsPipeSender::GetSendResult()
 	if (m_resultPending)
 	{
 		const HANDLE h = GetHandle();
-		BOOL result = GetOverlappedResult(h, &m_overlapped, &m_lastResult, false);
+#if defined(USE_WINDOWS8_API)
+		BOOL result = GetOverlappedResultEx(h, &m_overlapped, &m_lastResult, INFINITE, FALSE);
+		CheckAndHandleError("GetOverlappedResultEx", result);
+#else
+		BOOL result = GetOverlappedResult(h, &m_overlapped, &m_lastResult, FALSE);
 		CheckAndHandleError("GetOverlappedResult", result);
+#endif
 		m_resultPending = false;
 	}
 	return m_lastResult;

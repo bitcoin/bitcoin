@@ -17,7 +17,7 @@ class RIPEMD160 : public IteratedHashWithStaticTransform<word32, LittleEndian, 6
 public:
 	static void InitState(HashWordType *state);
 	static void Transform(word32 *digest, const word32 *data);
-	static const char * StaticAlgorithmName() {return "RIPEMD-160";}
+	CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "RIPEMD-160";}
 };
 
 /*! Digest Length = 320 bits, Security is similar to RIPEMD-160 */
@@ -26,7 +26,7 @@ class RIPEMD320 : public IteratedHashWithStaticTransform<word32, LittleEndian, 6
 public:
 	static void InitState(HashWordType *state);
 	static void Transform(word32 *digest, const word32 *data);
-	static const char * StaticAlgorithmName() {return "RIPEMD-320";}
+	CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "RIPEMD-320";}
 };
 
 /*! \warning RIPEMD-128 is considered insecure, and should not be used
@@ -36,7 +36,7 @@ class RIPEMD128 : public IteratedHashWithStaticTransform<word32, LittleEndian, 6
 public:
 	static void InitState(HashWordType *state);
 	static void Transform(word32 *digest, const word32 *data);
-	static const char * StaticAlgorithmName() {return "RIPEMD-128";}
+	CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "RIPEMD-128";}
 };
 
 /*! \warning RIPEMD-256 is considered insecure, and should not be used
@@ -46,7 +46,7 @@ class RIPEMD256 : public IteratedHashWithStaticTransform<word32, LittleEndian, 6
 public:
 	static void InitState(HashWordType *state);
 	static void Transform(word32 *digest, const word32 *data);
-	static const char * StaticAlgorithmName() {return "RIPEMD-256";}
+	CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "RIPEMD-256";}
 };
 
 NAMESPACE_END

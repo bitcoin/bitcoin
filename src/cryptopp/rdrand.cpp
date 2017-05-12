@@ -17,8 +17,8 @@
 //   indirectly uses CRYPTOPP_BOOL_{X86|X32|X64} (via CRYPTOPP_CPUID_AVAILABLE)
 //   to select an implementation or "throw NotImplemented". At runtime, the
 //   class uses the result of CPUID to determine if RDRAND or RDSEED are
-//   available. A lazy throw strategy is used in case the CPU does not support
-//   the instruction. I.e., the throw is deferred until GenerateBlock is called.
+//   available. If not available, a lazy throw strategy is used. I.e., the
+//   throw is deferred until GenerateBlock() is called.
 
 // Here's the naming convention for the functions....
 //   MSC = Microsoft Compiler (and compatibles)
@@ -45,60 +45,45 @@
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
 
-// According to Wei, CRYPTOPP_DISABLE_ASM is a failsafe due to the assembler.
-//   We sidestep it because it does not limit us. The assembler does not limit
-//   us because we emit out own byte codes as needed. To diasble RDRAND or
-//    RDSEED, set CRYPTOPP_BOOL_RDRAND_ASM or CRYPTOPP_BOOL_RDSEED_ASM to 0.
-#ifndef CRYPTOPP_CPUID_AVAILABLE
-# if (CRYPTOPP_BOOL_X86 || CRYPTOPP_BOOL_X32 || CRYPTOPP_BOOL_X64)
+// In general, the library's ASM code is best on Windows, and Intrinsics is
+//   the best code under GCC. Clang is missing symbols, so it gets ASM.
+//   The NASM code is optimized well on Linux, but its not easy to cut-in.
+#if (CRYPTOPP_BOOL_X86 || CRYPTOPP_BOOL_X32 || CRYPTOPP_BOOL_X64)
+# ifndef CRYPTOPP_CPUID_AVAILABLE
 #  define CRYPTOPP_CPUID_AVAILABLE
 # endif
 #endif
 
-#if defined(CRYPTOPP_CPUID_AVAILABLE) && !defined(CRYPTOPP_BOOL_RDRAND_ASM)
-# define CRYPTOPP_BOOL_RDRAND_ASM 1
-#else
-# define CRYPTOPP_BOOL_RDRAND_ASM 0
-#endif
-#if defined(CRYPTOPP_CPUID_AVAILABLE) && !defined(CRYPTOPP_BOOL_RDSEED_ASM)
-# define CRYPTOPP_BOOL_RDSEED_ASM 1
-#else
-# define CRYPTOPP_BOOL_RDSEED_ASM 0
-#endif
-
 #if defined(CRYPTOPP_CPUID_AVAILABLE)
-# define MSC_INTRIN_COMPILER ((CRYPTOPP_MSC_VERSION >= 1700) || (CRYPTOPP_CLANG_VERSION >= 30200) || (_INTEL_COMPILER >= 1210))
-# define GCC_INTRIN_COMPILER ((CRYPTOPP_GCC_VERSION >= 40600) || (CRYPTOPP_CLANG_VERSION >= 30200) || (_INTEL_COMPILER >= 1210))
-#else
-# define MSC_INTRIN_COMPILER 0
-# define GCC_INTRIN_COMPILER 0
-#endif
-
-// In general, the library's ASM code is best on Windows, and Intrinsics is
-//   the best code under GCC and compatibles. We favor them accordingly.
-//   The NASM code is optimized well on Linux, but its not easy to cut-in.
-#if defined(CRYPTOPP_CPUID_AVAILABLE) && (CRYPTOPP_MSC_VERSION >= 1200)
-#  if CRYPTOPP_BOOL_RDRAND_ASM
-#    define MASM_RDRAND_ASM_AVAILABLE 1
-#  elif MSC_INTRIN_COMPILER
+# if defined(CRYPTOPP_MSC_VERSION)
+#  define MASM_RDRAND_ASM_AVAILABLE 1
+#  define MASM_RDSEED_ASM_AVAILABLE 1
+# elif defined(CRYPTOPP_LLVM_CLANG_VERSION) || defined(CRYPTOPP_APPLE_CLANG_VERSION)
+#  define GCC_RDRAND_ASM_AVAILABLE 1
+#  define GCC_RDSEED_ASM_AVAILABLE 1
+# elif defined(__SUNPRO_CC)
+#  if defined(__RDRND__) && (__SUNPRO_CC >= 0x5130)
 #    define ALL_RDRAND_INTRIN_AVAILABLE 1
-#  endif
-#  if CRYPTOPP_BOOL_RDSEED_ASM
-#    define MASM_RDSEED_ASM_AVAILABLE 1
-#  elif MSC_INTRIN_COMPILER
-#    define ALL_RDSEED_INTRIN_AVAILABLE 1
-#  endif
-#elif defined(CRYPTOPP_CPUID_AVAILABLE) && (CRYPTOPP_GCC_VERSION >= 30200)
-#  if GCC_INTRIN_COMPILER && defined(__RDRND__)
-#    define ALL_RDRAND_INTRIN_AVAILABLE 1
-#  elif CRYPTOPP_BOOL_RDRAND_ASM
+#  elif (__SUNPRO_CC >= 0x5100)
 #    define GCC_RDRAND_ASM_AVAILABLE 1
 #  endif
-#  if GCC_INTRIN_COMPILER && defined(__RDSEED__)
+#  if defined(__RDSEED__) && (__SUNPRO_CC >= 0x5140)
 #    define ALL_RDSEED_INTRIN_AVAILABLE 1
-#  elif CRYPTOPP_BOOL_RDSEED_ASM
+#  elif (__SUNPRO_CC >= 0x5100)
 #    define GCC_RDSEED_ASM_AVAILABLE 1
 #  endif
+# elif defined(CRYPTOPP_GCC_VERSION)
+#  if defined(__RDRND__) && (CRYPTOPP_GCC_VERSION >= 30200)
+#    define ALL_RDRAND_INTRIN_AVAILABLE 1
+#  else
+#    define GCC_RDRAND_ASM_AVAILABLE 1
+#  endif
+#  if defined(__RDSEED__) && (CRYPTOPP_GCC_VERSION >= 30200)
+#    define ALL_RDSEED_INTRIN_AVAILABLE 1
+#  else
+#    define GCC_RDSEED_ASM_AVAILABLE 1
+#  endif
+# endif
 #endif
 
 // Debug diagnostics
@@ -131,10 +116,13 @@
 /////////////////////////////////////////////////////////////////////
 
 #if (ALL_RDRAND_INTRIN_AVAILABLE || ALL_RDSEED_INTRIN_AVAILABLE)
-# include <immintrin.h> // rdrand, MSC, ICC, and GCC
+# include <immintrin.h> // rdrand, MSC, ICC, GCC, and SunCC
+# if defined(__GNUC__) && (CRYPTOPP_GCC_VERSION >= 40600)
+#  include <x86intrin.h> // rdseed for some compilers, like GCC
+# endif
 # if defined(__has_include)
 #  if __has_include(<x86intrin.h>)
-#   include <x86intrin.h> // rdseed for some compilers, like GCC
+#   include <x86intrin.h> // rdrand for Clang (immintrin.h); rdseed for Clang (rdseedintrin.h)
 #  endif
 # endif
 #endif
@@ -166,46 +154,51 @@ extern "C" int NASM_RRA_GenerateBlock(byte*, size_t, unsigned int);
 #if NASM_RDSEED_ASM_AVAILABLE
 extern "C" int NASM_RSA_GenerateBlock(byte*, size_t, unsigned int);
 #endif
-	
+
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
 
 NAMESPACE_BEGIN(CryptoPP)
-	
+
 #if ALL_RDRAND_INTRIN_AVAILABLE
 static int ALL_RRI_GenerateBlock(byte *output, size_t size, unsigned int safety)
 {
-	assert((output && size) || !(output || size));
-#if CRYPTOPP_BOOL_X64 || CRYTPOPP_BOOL_X32
-	word64 val;
-#else
+	CRYPTOPP_ASSERT((output && size) || !(output || size));
+#if CRYPTOPP_BOOL_X86 || CRYPTOPP_BOOL_X32
 	word32 val;
+#else
+	word64 val;
 #endif
 
 	while (size >= sizeof(val))
 	{
-#if CRYPTOPP_BOOL_X64 || CRYTPOPP_BOOL_X32
-		if (_rdrand64_step((word64*)output))
-#else
+#if CRYPTOPP_BOOL_X86 || CRYPTOPP_BOOL_X32
 		if (_rdrand32_step((word32*)output))
+#else
+		// Cast due to GCC, http://github.com/weidai11/cryptopp/issues/236
+		if (_rdrand64_step(reinterpret_cast<unsigned long long*>(output)))
 #endif
-        {
+		{
 			output += sizeof(val);
 			size -= sizeof(val);
-        }
-        else
-        {
+		}
+		else
+		{
 			if (!safety--)
+			{
+				CRYPTOPP_ASSERT(0);
 				return 0;
-        }
+			}
+		}
 	}
 
 	if (size)
 	{
-#if CRYPTOPP_BOOL_X64 || CRYTPOPP_BOOL_X32
-		if (_rdrand64_step(&val))
-#else
+#if CRYPTOPP_BOOL_X86 || CRYPTOPP_BOOL_X32
 		if (_rdrand32_step(&val))
+#else
+		// Cast due to GCC, http://github.com/weidai11/cryptopp/issues/236
+		if (_rdrand64_step(reinterpret_cast<unsigned long long*>(&val)))
 #endif
 		{
 			memcpy(output, &val, size);
@@ -214,15 +207,14 @@ static int ALL_RRI_GenerateBlock(byte *output, size_t size, unsigned int safety)
 		else
 		{
 			if (!safety--)
+			{
+				CRYPTOPP_ASSERT(0);
 				return 0;
+			}
 		}
-    }
-		
-#if CRYPTOPP_BOOL_X64 || CRYTPOPP_BOOL_X32
-	*((volatile word64*)&val) = 0;
-#else
-	*((volatile word32*)&val) = 0;
-#endif
+	}
+
+	SecureWipeBuffer(&val, 1);
 
 	return int(size == 0);
 }
@@ -231,7 +223,7 @@ static int ALL_RRI_GenerateBlock(byte *output, size_t size, unsigned int safety)
 #if GCC_RDRAND_ASM_AVAILABLE
 static int GCC_RRA_GenerateBlock(byte *output, size_t size, unsigned int safety)
 {
-	assert((output && size) || !(output || size));
+	CRYPTOPP_ASSERT((output && size) || !(output || size));
 #if CRYPTOPP_BOOL_X64 || CRYPTOPP_BOOL_X32
 	word64 val;
 #else
@@ -240,7 +232,7 @@ static int GCC_RRA_GenerateBlock(byte *output, size_t size, unsigned int safety)
 	char rc;
 	while (size)
 	{
-        __asm__ volatile(
+		__asm__ volatile(
 #if CRYPTOPP_BOOL_X64 || CRYPTOPP_BOOL_X32
 			".byte 0x48, 0x0f, 0xc7, 0xf0;\n"  // rdrand rax
 #else
@@ -250,16 +242,16 @@ static int GCC_RRA_GenerateBlock(byte *output, size_t size, unsigned int safety)
 			: "=a" (val), "=qm" (rc)
 			:
 			: "cc"
-        );
+		);
 
 		if (rc)
-        {
+		{
 			if (size >= sizeof(val))
 			{
 #if defined(CRYPTOPP_ALLOW_UNALIGNED_DATA_ACCESS) && (CRYPTOPP_BOOL_X64 || CRYPTOPP_BOOL_X32)
-				*((word64*)output) = val;
+				*((word64*)(void *)output) = val;
 #elif defined(CRYPTOPP_ALLOW_UNALIGNED_DATA_ACCESS) && (CRYPTOPP_BOOL_X86)
-				*((word32*)output) = val;
+				*((word32*)(void *)output) = val;
 #else
 				memcpy(output, &val, sizeof(val));
 #endif
@@ -271,19 +263,18 @@ static int GCC_RRA_GenerateBlock(byte *output, size_t size, unsigned int safety)
 				memcpy(output, &val, size);
 				size = 0;
 			}
-        }
-        else
-        {
+		}
+		else
+		{
 			if (!safety--)
-				break;
-        }
+			{
+				CRYPTOPP_ASSERT(0);
+				return 0;
+			}
+		}
 	}
 
-#if CRYPTOPP_BOOL_X64 || CRYPTOPP_BOOL_X32
-	*((volatile word64*)&val) = 0;
-#else
-	*((volatile word32*)&val) = 0;
-#endif
+	SecureWipeBuffer(&val, 1);
 
 	return int(size == 0);
 }
@@ -294,7 +285,7 @@ static int GCC_RRA_GenerateBlock(byte *output, size_t size, unsigned int safety)
 void RDRAND::GenerateBlock(byte *output, size_t size)
 {
 	CRYPTOPP_UNUSED(output), CRYPTOPP_UNUSED(size);
-	assert((output && size) || !(output || size));
+	CRYPTOPP_ASSERT((output && size) || !(output || size));
 
 	if(!HasRDRAND())
 		throw NotImplemented("RDRAND: rdrand is not available on this platform");
@@ -322,7 +313,7 @@ void RDRAND::DiscardBytes(size_t n)
 {
 	// RoundUpToMultipleOf is used because a full word is read, and its cheaper
 	//   to discard full words. There's no sense in dealing with tail bytes.
-	assert(HasRDRAND());
+	CRYPTOPP_ASSERT(HasRDRAND());
 #if CRYPTOPP_BOOL_X64 || CRYPTOPP_BOOL_X32
 	FixedSizeSecBlock<word64, 16> discard;
 	n = RoundUpToMultipleOf(n, sizeof(word64));
@@ -347,37 +338,42 @@ void RDRAND::DiscardBytes(size_t n)
 #if ALL_RDSEED_INTRIN_AVAILABLE
 static int ALL_RSI_GenerateBlock(byte *output, size_t size, unsigned int safety)
 {
-	assert((output && size) || !(output || size));
-#if CRYPTOPP_BOOL_X64 || CRYPTOPP_BOOL_X32
-	word64 val;
-#else
+	CRYPTOPP_ASSERT((output && size) || !(output || size));
+#if CRYPTOPP_BOOL_X86 || CRYPTOPP_BOOL_X32
 	word32 val;
+#else
+	word64 val;
 #endif
 
 	while (size >= sizeof(val))
 	{
-#if CRYPTOPP_BOOL_X64 || CRYPTOPP_BOOL_X32
-		if (_rdseed64_step((word64*)output))
-#else
+#if CRYPTOPP_BOOL_X86 || CRYPTOPP_BOOL_X32
 		if (_rdseed32_step((word32*)output))
+#else
+		// Cast due to GCC, http://github.com/weidai11/cryptopp/issues/236
+		if (_rdseed64_step(reinterpret_cast<unsigned long long*>(output)))
 #endif
-        {
+		{
 			output += sizeof(val);
 			size -= sizeof(val);
-        }
-        else
-        {
+		}
+		else
+		{
 			if (!safety--)
+			{
+				CRYPTOPP_ASSERT(0);
 				return 0;
-        }
+			}
+		}
 	}
 
 	if (size)
 	{
-#if CRYPTOPP_BOOL_X64 || CRYPTOPP_BOOL_X32
-		if (_rdseed64_step(&val))
-#else
+#if CRYPTOPP_BOOL_X86 || CRYPTOPP_BOOL_X32
 		if (_rdseed32_step(&val))
+#else
+		// Cast due to GCC, http://github.com/weidai11/cryptopp/issues/236
+		if (_rdseed64_step(reinterpret_cast<unsigned long long*>(&val)))
 #endif
 		{
 			memcpy(output, &val, size);
@@ -386,15 +382,14 @@ static int ALL_RSI_GenerateBlock(byte *output, size_t size, unsigned int safety)
 		else
 		{
 			if (!safety--)
+			{
+				CRYPTOPP_ASSERT(0);
 				return 0;
+			}
 		}
-    }
-		
-#if CRYPTOPP_BOOL_X64 || CRYPTOPP_BOOL_X32
-	*((volatile word64*)&val) = 0;
-#else
-	*((volatile word32*)&val) = 0;
-#endif
+	}
+
+	SecureWipeBuffer(&val, 1);
 
 	return int(size == 0);
 }
@@ -403,7 +398,7 @@ static int ALL_RSI_GenerateBlock(byte *output, size_t size, unsigned int safety)
 #if GCC_RDSEED_ASM_AVAILABLE
 static int GCC_RSA_GenerateBlock(byte *output, size_t size, unsigned int safety)
 {
-	assert((output && size) || !(output || size));
+	CRYPTOPP_ASSERT((output && size) || !(output || size));
 #if CRYPTOPP_BOOL_X64 || CRYPTOPP_BOOL_X32
 	word64 val;
 #else
@@ -412,7 +407,7 @@ static int GCC_RSA_GenerateBlock(byte *output, size_t size, unsigned int safety)
 	char rc;
 	while (size)
 	{
-        __asm__ volatile(
+		__asm__ volatile(
 #if CRYPTOPP_BOOL_X64 || CRYPTOPP_BOOL_X32
 			".byte 0x48, 0x0f, 0xc7, 0xf8;\n"  // rdseed rax
 #else
@@ -422,16 +417,16 @@ static int GCC_RSA_GenerateBlock(byte *output, size_t size, unsigned int safety)
 			: "=a" (val), "=qm" (rc)
 			:
 			: "cc"
-        );
+		);
 
 		if (rc)
-        {
+		{
 			if (size >= sizeof(val))
 			{
 #if defined(CRYPTOPP_ALLOW_UNALIGNED_DATA_ACCESS) && (CRYPTOPP_BOOL_X64 || CRYPTOPP_BOOL_X32)
-				*((word64*)output) = val;
+				*((word64*)(void *)output) = val;
 #elif defined(CRYPTOPP_ALLOW_UNALIGNED_DATA_ACCESS) && (CRYPTOPP_BOOL_X86)
-				*((word32*)output) = val;
+				*((word32*)(void *)output) = val;
 #else
 				memcpy(output, &val, sizeof(val));
 #endif
@@ -443,19 +438,18 @@ static int GCC_RSA_GenerateBlock(byte *output, size_t size, unsigned int safety)
 				memcpy(output, &val, size);
 				size = 0;
 			}
-        }
-        else
-        {
+		}
+		else
+		{
 			if (!safety--)
-				break;
-        }
+			{
+				CRYPTOPP_ASSERT(0);
+				return 0;
+			}
+		}
 	}
 
-#if CRYPTOPP_BOOL_X64 || CRYPTOPP_BOOL_X32
-	*((volatile word64*)&val) = 0;
-#else
-	*((volatile word32*)&val) = 0;
-#endif
+	SecureWipeBuffer(&val, 1);
 
 	return int(size == 0);
 }
@@ -465,7 +459,7 @@ static int GCC_RSA_GenerateBlock(byte *output, size_t size, unsigned int safety)
 void RDSEED::GenerateBlock(byte *output, size_t size)
 {
 	CRYPTOPP_UNUSED(output), CRYPTOPP_UNUSED(size);
-	assert((output && size) || !(output || size));
+	CRYPTOPP_ASSERT((output && size) || !(output || size));
 
 	if(!HasRDSEED())
 		throw NotImplemented("RDSEED: rdseed is not available on this platform");
@@ -493,7 +487,7 @@ void RDSEED::DiscardBytes(size_t n)
 {
 	// RoundUpToMultipleOf is used because a full word is read, and its cheaper
 	//   to discard full words. There's no sense in dealing with tail bytes.
-	assert(HasRDSEED());
+	CRYPTOPP_ASSERT(HasRDSEED());
 #if CRYPTOPP_BOOL_X64 || CRYPTOPP_BOOL_X32
 	FixedSizeSecBlock<word64, 16> discard;
 	n = RoundUpToMultipleOf(n, sizeof(word64));

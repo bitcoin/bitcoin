@@ -20,7 +20,7 @@ NAMESPACE_BEGIN(CryptoPP)
 //! algorithm info
 struct SosemanukInfo : public VariableKeyLength<16, 1, 32, 1, SimpleKeyingInterface::UNIQUE_IV, 16>
 {
-	static const char * StaticAlgorithmName() {return "Sosemanuk";}
+	CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "Sosemanuk";}
 };
 
 //! _

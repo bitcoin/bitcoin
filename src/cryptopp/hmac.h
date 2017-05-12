@@ -1,6 +1,6 @@
 // hmac.h - written and placed in the public domain by Wei Dai
 
-//! \file
+//! \file hmac.h
 //! \brief Classes for HMAC message authentication codes
 
 #ifndef CRYPTOPP_HMAC_H
@@ -11,10 +11,13 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-//! _
+//! \class HMAC_Base
+//! \brief HMAC information
+//! \details HMAC_Base derives from VariableKeyLength and MessageAuthenticationCode
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE HMAC_Base : public VariableKeyLength<16, 0, INT_MAX>, public MessageAuthenticationCode
 {
 public:
+	//! \brief Construct a HMAC_Base
 	HMAC_Base() : m_innerHashKeyed(false) {}
 	void UncheckedSetKey(const byte *userKey, unsigned int keylength, const NameValuePairs &params);
 
@@ -37,8 +40,12 @@ private:
 	bool m_innerHashKeyed;
 };
 
-//! <a href="http://www.weidai.com/scan-mirror/mac.html#HMAC">HMAC</a>
-/*! HMAC(K, text) = H(K XOR opad, H(K XOR ipad, text)) */
+//! \class HMAC
+//! \brief HMAC
+//! \tparam T HashTransformation derived class
+//! \details HMAC derives from MessageAuthenticationCodeImpl. It calculates the HMAC using
+//!   <tt>HMAC(K, text) = H(K XOR opad, H(K XOR ipad, text))</tt>.
+//! \sa <a href="http://www.weidai.com/scan-mirror/mac.html#HMAC">HMAC</a>
 template <class T>
 class HMAC : public MessageAuthenticationCodeImpl<HMAC_Base, HMAC<T> >
 {
@@ -46,7 +53,11 @@ public:
 	CRYPTOPP_CONSTANT(DIGESTSIZE=T::DIGESTSIZE)
 	CRYPTOPP_CONSTANT(BLOCKSIZE=T::BLOCKSIZE)
 
+	//! \brief Construct a HMAC
 	HMAC() {}
+	//! \brief Construct a HMAC
+	//! \param key the HMAC key
+	//! \param length the size of the HMAC key
 	HMAC(const byte *key, size_t length=HMAC_Base::DEFAULT_KEYLENGTH)
 		{this->SetKey(key, length);}
 

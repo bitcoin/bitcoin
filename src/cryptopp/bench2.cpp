@@ -21,6 +21,8 @@
 #include "asn.h"
 #include "dh.h"
 #include "mqv.h"
+#include "hmqv.h"
+#include "fhmqv.h"
 #include "xtrcrypt.h"
 #include "esign.h"
 #include "pssr.h"
@@ -209,6 +211,32 @@ void BenchMarkAgreement(const char *name, AuthenticatedKeyAgreementDomain &d, do
 	OutputResultOperations(name, "Key Agreement", pc, i, timeTaken);
 }
 
+#if 0
+void BenchMarkAgreement(const char *name, AuthenticatedKeyAgreementDomainWithRoles &d, double timeTotal, bool pc=false)
+{
+	SecByteBlock spriv1(d.StaticPrivateKeyLength()), spriv2(d.StaticPrivateKeyLength());
+	SecByteBlock epriv1(d.EphemeralPrivateKeyLength()), epriv2(d.EphemeralPrivateKeyLength());
+	SecByteBlock spub1(d.StaticPublicKeyLength()), spub2(d.StaticPublicKeyLength());
+	SecByteBlock epub1(d.EphemeralPublicKeyLength()), epub2(d.EphemeralPublicKeyLength());
+	d.GenerateStaticKeyPair(GlobalRNG(), spriv1, spub1);
+	d.GenerateStaticKeyPair(GlobalRNG(), spriv2, spub2);
+	d.GenerateEphemeralKeyPair(GlobalRNG(), epriv1, epub1);
+	d.GenerateEphemeralKeyPair(GlobalRNG(), epriv2, epub2);
+	SecByteBlock val(d.AgreedValueLength());
+
+	const clock_t start = clock();
+	unsigned int i;
+	double timeTaken;
+	for (timeTaken=(double)0, i=0; timeTaken < timeTotal; timeTaken = double(clock() - start) / CLOCK_TICKS_PER_SECOND, i+=2)
+	{
+		d.Agree(val, spriv1, epriv1, spub2, epub2);
+		d.Agree(val, spriv2, epriv2, spub1, epub1);
+	}
+
+	OutputResultOperations(name, "Key Agreement", pc, i, timeTaken);
+}
+#endif
+
 //VC60 workaround: compiler bug triggered without the extra dummy parameters
 template <class SCHEME>
 void BenchMarkCrypto(const char *filename, const char *name, double timeTotal, SCHEME *x=NULL)
@@ -257,44 +285,56 @@ void BenchmarkAll2(double t, double hertz)
 	cout << "<THEAD><TR><TH>Operation<TH>Milliseconds/Operation" << (g_hertz ? "<TH>Megacycles/Operation" : "") << endl;
 
 	cout << "\n<TBODY style=\"background: yellow\">";
-	BenchMarkCrypto<RSAES<OAEP<SHA> > >("TestData/rsa1024.dat", "RSA 1024", t);
-	BenchMarkCrypto<LUCES<OAEP<SHA> > >("TestData/luc1024.dat", "LUC 1024", t);
-	BenchMarkCrypto<DLIES<> >("TestData/dlie1024.dat", "DLIES 1024", t);
-	BenchMarkCrypto<LUC_IES<> >("TestData/lucc512.dat", "LUCELG 512", t);
+	BenchMarkCrypto<RSAES<OAEP<SHA> > >(CRYPTOPP_DATA_DIR "TestData/rsa1024.dat", "RSA 1024", t);
+	BenchMarkCrypto<LUCES<OAEP<SHA> > >(CRYPTOPP_DATA_DIR "TestData/luc1024.dat", "LUC 1024", t);
+	BenchMarkCrypto<DLIES<> >(CRYPTOPP_DATA_DIR "TestData/dlie1024.dat", "DLIES 1024", t);
+	BenchMarkCrypto<LUC_IES<> >(CRYPTOPP_DATA_DIR "TestData/lucc512.dat", "LUCELG 512", t);
 
 	cout << "\n<TBODY style=\"background: white\">";
-	BenchMarkCrypto<RSAES<OAEP<SHA> > >("TestData/rsa2048.dat", "RSA 2048", t);
-	BenchMarkCrypto<LUCES<OAEP<SHA> > >("TestData/luc2048.dat", "LUC 2048", t);
-	BenchMarkCrypto<DLIES<> >("TestData/dlie2048.dat", "DLIES 2048", t);
-	BenchMarkCrypto<LUC_IES<> >("TestData/lucc1024.dat", "LUCELG 1024", t);
+	BenchMarkCrypto<RSAES<OAEP<SHA> > >(CRYPTOPP_DATA_DIR "TestData/rsa2048.dat", "RSA 2048", t);
+	BenchMarkCrypto<LUCES<OAEP<SHA> > >(CRYPTOPP_DATA_DIR "TestData/luc2048.dat", "LUC 2048", t);
+	BenchMarkCrypto<DLIES<> >(CRYPTOPP_DATA_DIR "TestData/dlie2048.dat", "DLIES 2048", t);
+	BenchMarkCrypto<LUC_IES<> >(CRYPTOPP_DATA_DIR "TestData/lucc1024.dat", "LUCELG 1024", t);
 
 	cout << "\n<TBODY style=\"background: yellow\">";
-	BenchMarkSignature<RSASS<PSSR, SHA> >("TestData/rsa1024.dat", "RSA 1024", t);
-	BenchMarkSignature<RWSS<PSSR, SHA> >("TestData/rw1024.dat", "RW 1024", t);
-	BenchMarkSignature<LUCSS<PSSR, SHA> >("TestData/luc1024.dat", "LUC 1024", t);
-	BenchMarkSignature<NR<SHA> >("TestData/nr1024.dat", "NR 1024", t);
-	BenchMarkSignature<DSA>("TestData/dsa1024.dat", "DSA 1024", t);
-	BenchMarkSignature<LUC_HMP<SHA> >("TestData/lucs512.dat", "LUC-HMP 512", t);
-	BenchMarkSignature<ESIGN<SHA> >("TestData/esig1023.dat", "ESIGN 1023", t);
-	BenchMarkSignature<ESIGN<SHA> >("TestData/esig1536.dat", "ESIGN 1536", t);
+	BenchMarkSignature<RSASS<PSSR, SHA> >(CRYPTOPP_DATA_DIR "TestData/rsa1024.dat", "RSA 1024", t);
+	BenchMarkSignature<RWSS<PSSR, SHA> >(CRYPTOPP_DATA_DIR "TestData/rw1024.dat", "RW 1024", t);
+	BenchMarkSignature<LUCSS<PSSR, SHA> >(CRYPTOPP_DATA_DIR "TestData/luc1024.dat", "LUC 1024", t);
+	BenchMarkSignature<NR<SHA> >(CRYPTOPP_DATA_DIR "TestData/nr1024.dat", "NR 1024", t);
+	BenchMarkSignature<DSA>(CRYPTOPP_DATA_DIR "TestData/dsa1024.dat", "DSA 1024", t);
+	BenchMarkSignature<LUC_HMP<SHA> >(CRYPTOPP_DATA_DIR "TestData/lucs512.dat", "LUC-HMP 512", t);
+	BenchMarkSignature<ESIGN<SHA> >(CRYPTOPP_DATA_DIR "TestData/esig1023.dat", "ESIGN 1023", t);
+	BenchMarkSignature<ESIGN<SHA> >(CRYPTOPP_DATA_DIR "TestData/esig1536.dat", "ESIGN 1536", t);
 
 	cout << "\n<TBODY style=\"background: white\">";
-	BenchMarkSignature<RSASS<PSSR, SHA> >("TestData/rsa2048.dat", "RSA 2048", t);
-	BenchMarkSignature<RWSS<PSSR, SHA> >("TestData/rw2048.dat", "RW 2048", t);
-	BenchMarkSignature<LUCSS<PSSR, SHA> >("TestData/luc2048.dat", "LUC 2048", t);
-	BenchMarkSignature<NR<SHA> >("TestData/nr2048.dat", "NR 2048", t);
-	BenchMarkSignature<LUC_HMP<SHA> >("TestData/lucs1024.dat", "LUC-HMP 1024", t);
-	BenchMarkSignature<ESIGN<SHA> >("TestData/esig2046.dat", "ESIGN 2046", t);
+	BenchMarkSignature<RSASS<PSSR, SHA> >(CRYPTOPP_DATA_DIR "TestData/rsa2048.dat", "RSA 2048", t);
+	BenchMarkSignature<RWSS<PSSR, SHA> >(CRYPTOPP_DATA_DIR "TestData/rw2048.dat", "RW 2048", t);
+	BenchMarkSignature<LUCSS<PSSR, SHA> >(CRYPTOPP_DATA_DIR "TestData/luc2048.dat", "LUC 2048", t);
+	BenchMarkSignature<NR<SHA> >(CRYPTOPP_DATA_DIR "TestData/nr2048.dat", "NR 2048", t);
+	BenchMarkSignature<LUC_HMP<SHA> >(CRYPTOPP_DATA_DIR "TestData/lucs1024.dat", "LUC-HMP 1024", t);
+	BenchMarkSignature<ESIGN<SHA> >(CRYPTOPP_DATA_DIR "TestData/esig2046.dat", "ESIGN 2046", t);
 
 	cout << "\n<TBODY style=\"background: yellow\">";
-	BenchMarkKeyAgreement<XTR_DH>("TestData/xtrdh171.dat", "XTR-DH 171", t);
-	BenchMarkKeyAgreement<XTR_DH>("TestData/xtrdh342.dat", "XTR-DH 342", t);
-	BenchMarkKeyAgreement<DH>("TestData/dh1024.dat", "DH 1024", t);
-	BenchMarkKeyAgreement<DH>("TestData/dh2048.dat", "DH 2048", t);
-	BenchMarkKeyAgreement<LUC_DH>("TestData/lucd512.dat", "LUCDIF 512", t);
-	BenchMarkKeyAgreement<LUC_DH>("TestData/lucd1024.dat", "LUCDIF 1024", t);
-	BenchMarkKeyAgreement<MQV>("TestData/mqv1024.dat", "MQV 1024", t);
-	BenchMarkKeyAgreement<MQV>("TestData/mqv2048.dat", "MQV 2048", t);
+	BenchMarkKeyAgreement<XTR_DH>(CRYPTOPP_DATA_DIR "TestData/xtrdh171.dat", "XTR-DH 171", t);
+	BenchMarkKeyAgreement<XTR_DH>(CRYPTOPP_DATA_DIR "TestData/xtrdh342.dat", "XTR-DH 342", t);
+	BenchMarkKeyAgreement<DH>(CRYPTOPP_DATA_DIR "TestData/dh1024.dat", "DH 1024", t);
+	BenchMarkKeyAgreement<DH>(CRYPTOPP_DATA_DIR "TestData/dh2048.dat", "DH 2048", t);
+	BenchMarkKeyAgreement<LUC_DH>(CRYPTOPP_DATA_DIR "TestData/lucd512.dat", "LUCDIF 512", t);
+	BenchMarkKeyAgreement<LUC_DH>(CRYPTOPP_DATA_DIR "TestData/lucd1024.dat", "LUCDIF 1024", t);
+	BenchMarkKeyAgreement<MQV>(CRYPTOPP_DATA_DIR "TestData/mqv1024.dat", "MQV 1024", t);
+	BenchMarkKeyAgreement<MQV>(CRYPTOPP_DATA_DIR "TestData/mqv2048.dat", "MQV 2048", t);
+
+#if 0
+	BenchMarkKeyAgreement<ECHMQV160>(CRYPTOPP_DATA_DIR "TestData/hmqv160.dat", "HMQV P-160", t);
+	BenchMarkKeyAgreement<ECHMQV256>(CRYPTOPP_DATA_DIR "TestData/hmqv256.dat", "HMQV P-256", t);
+	BenchMarkKeyAgreement<ECHMQV384>(CRYPTOPP_DATA_DIR "TestData/hmqv384.dat", "HMQV P-384", t);
+	BenchMarkKeyAgreement<ECHMQV512>(CRYPTOPP_DATA_DIR "TestData/hmqv512.dat", "HMQV P-512", t);
+
+	BenchMarkKeyAgreement<ECFHMQV160>(CRYPTOPP_DATA_DIR "TestData/fhmqv160.dat", "FHMQV P-160", t);
+	BenchMarkKeyAgreement<ECFHMQV256>(CRYPTOPP_DATA_DIR "TestData/fhmqv256.dat", "FHMQV P-256", t);
+	BenchMarkKeyAgreement<ECFHMQV384>(CRYPTOPP_DATA_DIR "TestData/fhmqv384.dat", "FHMQV P-384", t);
+	BenchMarkKeyAgreement<ECFHMQV512>(CRYPTOPP_DATA_DIR "TestData/fhmqv512.dat", "FHMQV P-512", t);
+#endif
 
 	cout << "\n<TBODY style=\"background: white\">";
 	{

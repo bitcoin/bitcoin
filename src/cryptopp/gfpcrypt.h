@@ -31,7 +31,7 @@ CRYPTOPP_DLL_TEMPLATE_CLASS DL_GroupParameters<Integer>;
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE DL_GroupParameters_IntegerBased : public ASN1CryptoMaterial<DL_GroupParameters<Integer> >
 {
 	typedef DL_GroupParameters_IntegerBased ThisClass;
-	
+
 public:
 	void Initialize(const DL_GroupParameters_IntegerBased &params)
 		{Initialize(params.GetModulus(), params.GetSubgroupOrder(), params.GetSubgroupGenerator());}
@@ -51,7 +51,7 @@ public:
 	void GenerateRandom(RandomNumberGenerator &rng, const NameValuePairs &alg);
 	bool GetVoidValue(const char *name, const std::type_info &valueType, void *pValue) const;
 	void AssignFrom(const NameValuePairs &source);
-	
+
 	// DL_GroupParameters
 	const Integer & GetSubgroupOrder() const {return m_q;}
 	Integer GetGroupOrder() const {return GetFieldType() == 1 ? GetModulus()-Integer::One() : GetModulus()+Integer::One();}
@@ -83,7 +83,7 @@ public:
 
 	void SetSubgroupOrder(const Integer &q)
 		{m_q = q; ParametersChanged();}
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_GroupParameters_IntegerBased() {}
 #endif
@@ -132,7 +132,7 @@ public:
 		{return GetModulus() == rhs.GetModulus() && GetGenerator() == rhs.GetGenerator() && this->GetSubgroupOrder() == rhs.GetSubgroupOrder();}
 	bool operator!=(const DL_GroupParameters_IntegerBasedImpl<GROUP_PRECOMP, BASE_PRECOMP> &rhs) const
 		{return !operator==(rhs);}
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_GroupParameters_IntegerBasedImpl() {}
 #endif
@@ -157,7 +157,7 @@ public:
 	// used by MQV
 	Element MultiplyElements(const Element &a, const Element &b) const;
 	Element CascadeExponentiate(const Element &element1, const Integer &exponent1, const Element &element2, const Integer &exponent2) const;
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_GroupParameters_GFP() {}
 #endif
@@ -171,7 +171,7 @@ class CRYPTOPP_DLL DL_GroupParameters_GFP_DefaultSafePrime : public DL_GroupPara
 {
 public:
 	typedef NoCofactorMultiplication DefaultCofactorOption;
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_GroupParameters_GFP_DefaultSafePrime() {}
 #endif
@@ -185,7 +185,7 @@ template <class T>
 class DL_Algorithm_GDSA : public DL_ElgamalLikeSignatureAlgorithm<T>
 {
 public:
-	static const char * CRYPTOPP_API StaticAlgorithmName() {return "DSA-1363";}
+	CRYPTOPP_CONSTEXPR static const char * CRYPTOPP_API StaticAlgorithmName() {return "DSA-1363";}
 
 	void Sign(const DL_GroupParameters<T> &params, const Integer &x, const Integer &k, const Integer &e, Integer &r, Integer &s) const
 	{
@@ -193,7 +193,7 @@ public:
 		r %= q;
 		Integer kInv = k.InverseMod(q);
 		s = (kInv * (x*r + e)) % q;
-		assert(!!r && !!s);
+		CRYPTOPP_ASSERT(!!r && !!s);
 	}
 
 	bool Verify(const DL_GroupParameters<T> &params, const DL_PublicKey<T> &publicKey, const Integer &e, const Integer &r, const Integer &s) const
@@ -221,14 +221,14 @@ template <class T>
 class DL_Algorithm_NR : public DL_ElgamalLikeSignatureAlgorithm<T>
 {
 public:
-	static const char * CRYPTOPP_API StaticAlgorithmName() {return "NR";}
+	CRYPTOPP_CONSTEXPR static const char * CRYPTOPP_API StaticAlgorithmName() {return "NR";}
 
 	void Sign(const DL_GroupParameters<T> &params, const Integer &x, const Integer &k, const Integer &e, Integer &r, Integer &s) const
 	{
 		const Integer &q = params.GetSubgroupOrder();
 		r = (r + e) % q;
 		s = (k - x*r) % q;
-		assert(!!r);
+		CRYPTOPP_ASSERT(!!r);
 	}
 
 	bool Verify(const DL_GroupParameters<T> &params, const DL_PublicKey<T> &publicKey, const Integer &e, const Integer &r, const Integer &s) const
@@ -240,7 +240,7 @@ public:
 		// check r == (m_g^s * m_y^r + m) mod m_q
 		return r == (params.ConvertElementToInteger(publicKey.CascadeExponentiateBaseAndPublicElement(s, r)) + e) % q;
 	}
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_Algorithm_NR() {}
 #endif
@@ -264,7 +264,7 @@ public:
 		{this->SetPublicElement(Integer(bt));}
 	void DEREncodePublicKey(BufferedTransformation &bt) const
 		{this->GetPublicElement().DEREncode(bt);}
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_PublicKey_GFP() {}
 #endif
@@ -287,7 +287,7 @@ public:
 		{this->AccessGroupParameters().Initialize(p, g); this->SetPrivateExponent(x);}
 	void Initialize(const Integer &p, const Integer &q, const Integer &g, const Integer &x)
 		{this->AccessGroupParameters().Initialize(p, q, g); this->SetPrivateExponent(x);}
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_PrivateKey_GFP() {}
 #endif
@@ -299,7 +299,7 @@ struct DL_SignatureKeys_GFP
 	typedef DL_GroupParameters_GFP GroupParameters;
 	typedef DL_PublicKey_GFP<GroupParameters> PublicKey;
 	typedef DL_PrivateKey_GFP<GroupParameters> PrivateKey;
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_SignatureKeys_GFP() {}
 #endif
@@ -311,7 +311,7 @@ struct DL_CryptoKeys_GFP
 	typedef DL_GroupParameters_GFP_DefaultSafePrime GroupParameters;
 	typedef DL_PublicKey_GFP<GroupParameters> PublicKey;
 	typedef DL_PrivateKey_GFP<GroupParameters> PrivateKey;
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_CryptoKeys_GFP() {}
 #endif
@@ -354,7 +354,7 @@ public:
 			this->GetPublicElement().DEREncode(seq);
 		seq.MessageEnd();
 	}
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_PublicKey_GFP_OldFormat() {}
 #endif
@@ -399,7 +399,7 @@ public:
 			this->GetPrivateExponent().DEREncode(seq);
 		seq.MessageEnd();
 	}
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_PrivateKey_GFP_OldFormat() {}
 #endif
@@ -408,8 +408,8 @@ public:
 //! <a href="http://www.weidai.com/scan-mirror/sig.html#DSA-1363">DSA-1363</a>
 template <class H>
 struct GDSA : public DL_SS<
-	DL_SignatureKeys_GFP, 
-	DL_Algorithm_GDSA<Integer>, 
+	DL_SignatureKeys_GFP,
+	DL_Algorithm_GDSA<Integer>,
 	DL_SignatureMessageEncodingMethod_DSA,
 	H>
 {
@@ -421,8 +421,8 @@ struct GDSA : public DL_SS<
 //! <a href="http://www.weidai.com/scan-mirror/sig.html#NR">NR</a>
 template <class H>
 struct NR : public DL_SS<
-	DL_SignatureKeys_GFP, 
-	DL_Algorithm_NR<Integer>, 
+	DL_SignatureKeys_GFP,
+	DL_Algorithm_NR<Integer>,
 	DL_SignatureMessageEncodingMethod_NR,
 	H>
 {
@@ -445,7 +445,7 @@ public:
 		{return pbits >= MIN_PRIME_LENGTH && pbits <= MAX_PRIME_LENGTH && pbits % PRIME_LENGTH_MULTIPLE == 0;}
 
 	enum {MIN_PRIME_LENGTH = 1024, MAX_PRIME_LENGTH = 3072, PRIME_LENGTH_MULTIPLE = 1024};
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_GroupParameters_DSA() {}
 #endif
@@ -459,7 +459,7 @@ struct DL_Keys_DSA
 {
 	typedef DL_PublicKey_GFP<DL_GroupParameters_DSA> PublicKey;
 	typedef DL_PrivateKey_WithSignaturePairwiseConsistencyTest<DL_PrivateKey_GFP<DL_GroupParameters_DSA>, DSA2<SHA> > PrivateKey;
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_Keys_DSA() {}
 #endif
@@ -469,10 +469,10 @@ struct DL_Keys_DSA
 // class named DSA2 instead of DSA for backwards compatibility (DSA was a non-template class)
 template <class H>
 class DSA2 : public DL_SS<
-	DL_Keys_DSA, 
-	DL_Algorithm_GDSA<Integer>, 
+	DL_Keys_DSA,
+	DL_Algorithm_GDSA<Integer>,
 	DL_SignatureMessageEncodingMethod_DSA,
-	H, 
+	H,
 	DSA2<H> >
 {
 public:
@@ -573,7 +573,7 @@ public:
 
 		return DecodingResult(plaintextLength);
 	}
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_EncryptionAlgorithm_Xor() {}
 #endif
@@ -604,7 +604,7 @@ public:
 		parameters.GetValue(Name::KeyDerivationParameters(), derivationParameters);
 		KDF::DeriveKey(derivedKey, derivedLength, agreedSecret, agreedSecret.size(), derivationParameters.begin(), derivationParameters.size());
 	}
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_KeyDerivationAlgorithm_P1363() {}
 #endif
@@ -621,14 +621,14 @@ struct DLIES
 		DLIES<> >
 {
 	static std::string CRYPTOPP_API StaticAlgorithmName() {return "DLIES";}	// TODO: fix this after name is standardized
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DLIES() {}
 #endif
 };
 
 NAMESPACE_END
-	
+
 #if CRYPTOPP_MSC_VERSION
 # pragma warning(pop)
 #endif

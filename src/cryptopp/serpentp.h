@@ -45,7 +45,7 @@ NAMESPACE_BEGIN(CryptoPP)
 #define afterI1(f) f(1,a,b,c,e,d)
 #define afterI0(f) f(0,a,d,b,e,c)
 
-// The instruction sequences for the S-box functions 
+// The instruction sequences for the S-box functions
 // come from Dag Arne Osvik's paper "Speeding up Serpent".
 
 #define S0(i, r0, r1, r2, r3, r4) \

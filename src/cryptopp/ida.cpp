@@ -22,7 +22,7 @@ void RawIDA::IsolatedInitialize(const NameValuePairs &parameters)
 	if (!parameters.GetIntValue("RecoveryThreshold", m_threshold))
 		throw InvalidArgument("RawIDA: missing RecoveryThreshold argument");
 
-	assert(m_threshold > 0);
+	CRYPTOPP_ASSERT(m_threshold > 0);
 	if (m_threshold <= 0)
 		throw InvalidArgument("RawIDA: RecoveryThreshold must be greater than 0");
 
@@ -43,7 +43,7 @@ void RawIDA::IsolatedInitialize(const NameValuePairs &parameters)
 	else
 	{
 		int nShares = parameters.GetIntValueWithDefault("NumberOfShares", m_threshold);
-		assert(nShares > 0);
+		CRYPTOPP_ASSERT(nShares > 0);
 		if (nShares <= 0) {nShares = m_threshold;}
 		for (unsigned int i=0; i< (unsigned int)(nShares); i++)
 			AddOutputChannel(i);
@@ -152,7 +152,7 @@ void RawIDA::AddOutputChannel(word32 channelId)
 
 void RawIDA::PrepareInterpolation()
 {
-	assert(m_inputChannelIds.size() == size_t(m_threshold));
+	CRYPTOPP_ASSERT(m_inputChannelIds.size() == size_t(m_threshold));
 	PrepareBulkPolynomialInterpolation(field, m_w.begin(), &(m_inputChannelIds[0]), (unsigned int)(m_threshold));
 	for (unsigned int i=0; i<m_outputChannelIds.size(); i++)
 		ComputeV(i);
@@ -318,7 +318,7 @@ size_t InformationDispersal::Put2(const byte *begin, size_t length, int messageE
 {
 	if (!blocking)
 		throw BlockingInputOnly("InformationDispersal");
-	
+
 	while (length--)
 	{
 		m_ida.ChannelData(m_nextChannel, begin, 1, false);
@@ -394,15 +394,15 @@ size_t PaddingRemover::Put2(const byte *begin, size_t length, int messageEnd, bo
 		m_possiblePadding = false;
 	}
 
-#if defined(_MSC_VER) && !defined(__MWERKS__) && (_MSC_VER <= 1300)
+#if defined(_MSC_VER) && (_MSC_VER <= 1300) && !defined(__MWERKS__)
 	// VC60 and VC7 workaround: built-in reverse_iterator has two template parameters, Dinkumware only has one
 	typedef std::reverse_bidirectional_iterator<const byte *, const byte> RevIt;
 #elif defined(_RWSTD_NO_CLASS_PARTIAL_SPEC)
-	typedef std::reverse_iterator<const byte *, random_access_iterator_tag, const byte> RevIt;
+	typedef std::reverse_iterator<const byte *, std::random_access_iterator_tag, const byte> RevIt;
 #else
 	typedef std::reverse_iterator<const byte *> RevIt;
 #endif
-	const byte *x = std::find_if(RevIt(end), RevIt(begin), bind2nd(std::not_equal_to<byte>(), byte(0))).base();
+	const byte *x = std::find_if(RevIt(end), RevIt(begin), std::bind2nd(std::not_equal_to<byte>(), byte(0))).base();
 	if (x != begin && *(x-1) == 1)
 	{
 		AttachedTransformation()->Put(begin, x-begin-1);

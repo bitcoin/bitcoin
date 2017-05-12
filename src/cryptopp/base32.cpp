@@ -5,8 +5,11 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-static const byte s_vecUpper[] = "ABCDEFGHIJKMNPQRSTUVWXYZ23456789";
-static const byte s_vecLower[] = "abcdefghijkmnpqrstuvwxyz23456789";
+namespace
+{
+	const byte s_vecUpper[] = "ABCDEFGHIJKMNPQRSTUVWXYZ23456789";
+	const byte s_vecLower[] = "abcdefghijkmnpqrstuvwxyz23456789";
+}
 
 void Base32Encoder::IsolatedInitialize(const NameValuePairs &parameters)
 {
@@ -18,7 +21,7 @@ void Base32Encoder::IsolatedInitialize(const NameValuePairs &parameters)
 
 void Base32Decoder::IsolatedInitialize(const NameValuePairs &parameters)
 {
-	BaseN_Decoder::Initialize(CombinedNameValuePairs(
+	BaseN_Decoder::IsolatedInitialize(CombinedNameValuePairs(
 		parameters,
 		MakeParameters(Name::DecodingLookupArray(), GetDefaultDecodingLookupArray(), false)(Name::Log2Base(), 5, true)));
 }

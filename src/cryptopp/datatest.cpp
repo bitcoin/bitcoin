@@ -24,7 +24,7 @@
 #endif
 
 #if defined(__COVERITY__)
-extern "C" void __coverity_tainted_data_sanitize__(void *);  
+extern "C" void __coverity_tainted_data_sanitize__(void *);
 #endif
 
 USING_NAMESPACE(CryptoPP)
@@ -53,6 +53,12 @@ static void SignalTestFailure()
 {
 	OutputTestData(*s_currentTestData);
 	throw TestFailure();
+}
+
+static void SignalUnknownAlgorithmError(const std::string& algType)
+{
+	OutputTestData(*s_currentTestData);
+	throw Exception(Exception::OTHER_ERROR, "Unknown algorithm " + algType + " during validation test");
 }
 
 static void SignalTestError()
@@ -107,7 +113,7 @@ void PutDecodedDatumInto(const TestData &data, const char *name, BufferedTransfo
 			repeat = atoi(s1.c_str()+1);
 			s1 = s1.substr(s1.find(' ')+1);
 		}
-		
+
 		s2 = ""; // MSVC 6 doesn't have clear();
 
 		if (s1[0] == '\"')
@@ -178,9 +184,9 @@ public:
 			else
 				return false;
 		}
-		
+
 		const std::string &value = i->second;
-		
+
 		if (valueType == typeid(int))
 			*reinterpret_cast<int *>(pValue) = atoi(value.c_str());
 		else if (valueType == typeid(Integer))
@@ -280,18 +286,26 @@ void TestSignatureScheme(TestData &v)
 	}
 	else if (test == "DeterministicSign")
 	{
-		SignalTestError();
-		assert(false);	// TODO: implement
+		// This test is specialized for RFC 6979. The RFC is a drop-in replacement
+		// for DSA and ECDSA, and access to the seed or secret is not needed. If
+		// additional determinsitic signatures are added, then the test harness will
+		// likely need to be extended.
+		string signature;
+		SignerFilter f(GlobalRNG(), *signer, new HexEncoder(new StringSink(signature)));
+		StringSource ss(GetDecodedDatum(v, "Message"), true, new Redirector(f));
+		if (GetDecodedDatum(v, "Signature") != signature)
+			SignalTestFailure();
+		return;
 	}
 	else if (test == "RandomSign")
 	{
 		SignalTestError();
-		assert(false);	// TODO: implement
+		CRYPTOPP_ASSERT(false);	// TODO: implement
 	}
 	else
 	{
 		SignalTestError();
-		assert(false);
+		CRYPTOPP_ASSERT(false);
 	}
 }
 
@@ -331,7 +345,7 @@ void TestAsymmetricCipher(TestData &v)
 	else
 	{
 		SignalTestError();
-		assert(false);
+		CRYPTOPP_ASSERT(false);
 	}
 }
 
@@ -429,7 +443,7 @@ void TestSymmetricCipher(TestData &v, const NameValuePairs &overrideParameters)
 			while (ss.Pump(64)) {}
 			ss.PumpAll();
 			for (int i=0; i<z.length(); i++)
-				assert(encrypted[i] == z[i]);
+				CRYPTOPP_ASSERT(encrypted[i] == z[i]);
 		}*/
 		if (test != "EncryptXorDigest")
 			ciphertext = GetDecodedDatum(v, "Ciphertext");
@@ -594,36 +608,36 @@ void TestDigestOrMAC(TestData &v, bool testDigest)
 	else
 	{
 		SignalTestError();
-		assert(false);
+		CRYPTOPP_ASSERT(false);
 	}
 }
 
 void TestKeyDerivationFunction(TestData &v)
-{	
+{
 	std::string name = GetRequiredDatum(v, "Name");
 	std::string test = GetRequiredDatum(v, "Test");
 
 	if(test == "Skip") return;
-	assert(test == "Verify");
+	CRYPTOPP_ASSERT(test == "Verify");
 
 	std::string key = GetDecodedDatum(v, "Key");
 	std::string salt = GetDecodedDatum(v, "Salt");
 	std::string info = GetDecodedDatum(v, "Info");
 	std::string derived = GetDecodedDatum(v, "DerivedKey");
 	std::string t = GetDecodedDatum(v, "DerivedKeyLength");
-	
+
 	TestDataNameValuePairs pairs(v);
 	unsigned int length = pairs.GetIntValueWithDefault(Name::DerivedKeyLength(), (int)derived.size());
 
 	member_ptr<KeyDerivationFunction> kdf;
 	kdf.reset(ObjectFactoryRegistry<KeyDerivationFunction>::Registry().CreateObject(name.c_str()));
-	
+
 	std::string calc; calc.resize(length);
 	unsigned int ret = kdf->DeriveKey(reinterpret_cast<byte*>(&calc[0]), calc.size(),
 		reinterpret_cast<const byte*>(key.data()), key.size(),
 		reinterpret_cast<const byte*>(salt.data()), salt.size(),
 		reinterpret_cast<const byte*>(info.data()), info.size());
-							
+
 	if(calc != derived || ret != length)
 		SignalTestFailure();
 }
@@ -632,11 +646,6 @@ bool GetField(std::istream &is, std::string &name, std::string &value)
 {
 	name.resize(0);		// GCC workaround: 2.95.3 doesn't have clear()
 	is >> name;
-
-#if defined(__COVERITY__)
-	// The datafile being read is in /usr/share, and it protected by filesystem ACLs
-	// __coverity_tainted_data_sanitize__(reinterpret_cast<void*>(&name));
-#endif
 
 	if (name.empty())
 		return false;
@@ -657,7 +666,7 @@ bool GetField(std::istream &is, std::string &name, std::string &value)
 	// VC60 workaround: getline bug
 	char buffer[128];
 	value.resize(0);	// GCC workaround: 2.95.3 doesn't have clear()
-	bool continueLine;
+	bool continueLine, space = false;
 
 	do
 	{
@@ -665,6 +674,8 @@ bool GetField(std::istream &is, std::string &name, std::string &value)
 		{
 			is.get(buffer, sizeof(buffer));
 			value += buffer;
+			if (buffer[0] == ' ')
+				space = true;
 		}
 		while (buffer[0] != 0);
 		is.clear();
@@ -687,6 +698,23 @@ bool GetField(std::istream &is, std::string &name, std::string &value)
 	}
 	while (continueLine);
 
+	// Strip intermediate spaces for some values.
+	if (space && (name == "Modulus" || name == "SubgroupOrder" || name == "SubgroupGenerator" ||
+		name == "PublicElement" || name == "PrivateExponent" || name == "Signature"))
+	{
+		string temp;
+		temp.reserve(value.size());
+
+		std::string::const_iterator it;
+		for(it = value.begin(); it != value.end(); it++)
+		{
+			if(*it != ' ')
+				temp.push_back(*it);
+		}
+
+		std::swap(temp, value);
+	}
+
 	return true;
 }
 
@@ -694,7 +722,7 @@ void OutputPair(const NameValuePairs &v, const char *name)
 {
 	Integer x;
 	bool b = v.GetValue(name, x);
-	CRYPTOPP_UNUSED(b); assert(b);
+	CRYPTOPP_UNUSED(b); CRYPTOPP_ASSERT(b);
 	cout << name << ": \\\n    ";
 	x.Encode(HexEncoder(new FileSink(cout), false, 64, "\\\n    ").Ref(), x.MinEncodedSize());
 	cout << endl;
@@ -721,8 +749,15 @@ void OutputNameValuePairs(const NameValuePairs &v)
 	}
 }
 
-void TestDataFile(const std::string &filename, const NameValuePairs &overrideParameters, unsigned int &totalTests, unsigned int &failedTests)
+void TestDataFile(std::string filename, const NameValuePairs &overrideParameters, unsigned int &totalTests, unsigned int &failedTests)
 {
+	static const std::string dataDirectory(CRYPTOPP_DATA_DIR);
+	if (!dataDirectory.empty())
+	{
+		if(dataDirectory != filename.substr(0, dataDirectory.length()))
+			filename.insert(0, dataDirectory);
+	}
+
 	std::ifstream file(filename.c_str());
 	if (!file.good())
 		throw Exception(Exception::OTHER_ERROR, "Can not open file " + filename + " for reading");
@@ -733,7 +768,7 @@ void TestDataFile(const std::string &filename, const NameValuePairs &overridePar
 	while (file)
 	{
 		while (file.peek() == '#')
-			file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			file.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
 
 		if (file.peek() == '\n' || file.peek() == '\r')
 			v.clear();
@@ -772,18 +807,18 @@ void TestDataFile(const std::string &filename, const NameValuePairs &overridePar
 				else if (algType == "FileList")
 					TestDataFile(GetRequiredDatum(v, "Test"), g_nullNameValuePairs, totalTests, failedTests);
 				else
-					SignalTestError();
+					SignalUnknownAlgorithmError(algType);
 				failed = false;
 			}
-			catch (TestFailure &)
+			catch (const TestFailure &)
 			{
 				cout << "\nTest failed.\n";
 			}
-			catch (CryptoPP::Exception &e)
+			catch (const CryptoPP::Exception &e)
 			{
 				cout << "\nCryptoPP::Exception caught: " << e.what() << endl;
 			}
-			catch (std::exception &e)
+			catch (const std::exception &e)
 			{
 				cout << "\nstd::exception caught: " << e.what() << endl;
 			}
@@ -805,9 +840,10 @@ bool RunTestDataFile(const char *filename, const NameValuePairs &overrideParamet
 {
 	s_thorough = thorough;
 	unsigned int totalTests = 0, failedTests = 0;
-	TestDataFile(filename, overrideParameters, totalTests, failedTests);
-	cout << dec << "\nTests complete. Total tests = " << totalTests << ". Failed tests = " << failedTests << ".\n";
+	TestDataFile((filename ? filename : ""), overrideParameters, totalTests, failedTests);
+	cout << dec << "\nTests complete. Total tests = " << totalTests << ". Failed tests = " << failedTests << "." << endl;
 	if (failedTests != 0)
 		cout << "SOME TESTS FAILED!\n";
 	return failedTests == 0;
 }
+
