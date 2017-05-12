@@ -1386,6 +1386,9 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                     pvChecks->push_back(CScriptCheck());
                     check.swap(pvChecks->back());
                 } else if (!check()) {
+                    if (check.GetScriptError() == SCRIPT_ERR_NOT_FINAL) {
+                        return state.DoS(0, false, REJECT_NONSTANDARD, "non-final");
+                    }
                     if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
                         // Check whether the failure was caused by a
                         // non-mandatory script verification check, such as
