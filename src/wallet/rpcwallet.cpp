@@ -1655,8 +1655,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 WalletTxToJSON(wtx, entry);
             entry.push_back(Pair("abandoned", wtx.isAbandoned()));
 			// SYSCOIN
-			if(!strResponseSend.empty())
-				entry.push_back(Pair("systx", strResponseSend));
+			if(!strResponse.empty())
+				entry.push_back(Pair("systx", strResponse));
             ret.push_back(entry);
         }
     }
