@@ -5,6 +5,10 @@
 
 #include "chain.h"
 
+#include "tinyformat.h"
+
+#include <stdexcept>
+
 /**
  * CChain implementation
  */
@@ -64,6 +68,28 @@ CBlockIndex* CChain::FindEarliestAtLeast(int64_t nTime) const
     std::vector<CBlockIndex*>::const_iterator lower = std::lower_bound(vChain.begin(), vChain.end(), nTime,
         [](CBlockIndex* pBlock, const int64_t& time) -> bool { return pBlock->GetBlockTimeMax() < time; });
     return (lower == vChain.end() ? NULL : *lower);
+}
+
+void CHistoricalChain::SetHeight(const int nHeight)
+{
+    if (nHeight > chain.Height()) {
+        throw std::runtime_error(strprintf("%s: Cannot set a height beyond parent!", __func__));
+    }
+    my_height = nHeight;
+}
+
+void CHistoricalChain::SetTip(CBlockIndex *pindex)
+{
+    throw std::runtime_error("Cannot SetTip of a CHistoricalChain!");
+}
+
+CBlockIndex* CHistoricalChain::FindEarliestAtLeast(int64_t nTime) const
+{
+    CBlockIndex * const pblockindex = chain.FindEarliestAtLeast(nTime);
+    if (pblockindex->nHeight > Height()) {
+        return NULL;
+    }
+    return pblockindex;
 }
 
 /** Turn the lowest '1' bit in the binary representation of a number into a '0'. */

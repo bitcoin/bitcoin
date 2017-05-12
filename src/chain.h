@@ -436,25 +436,26 @@ private:
 public:
     /** Returns the index entry for the genesis block of this chain, or NULL if none. */
     CBlockIndex *Genesis() const {
-        return vChain.size() > 0 ? vChain[0] : NULL;
+        return (*this)[0];
     }
 
     /** Returns the index entry for the tip of this chain, or NULL if none. */
     CBlockIndex *Tip() const {
-        return vChain.size() > 0 ? vChain[vChain.size() - 1] : NULL;
+        const int nHeight = Height();
+        return nHeight >= 0 ? (*this)[nHeight] : NULL;
     }
 
     /** Returns the index entry at a particular height in this chain, or NULL if no such height exists. */
-    CBlockIndex *operator[](int nHeight) const {
-        if (nHeight < 0 || nHeight >= (int)vChain.size())
+    virtual CBlockIndex *operator[](int nHeight) const {
+        if (nHeight < 0 || nHeight > Height()) {
             return NULL;
+        }
         return vChain[nHeight];
     }
 
     /** Compare two chains efficiently. */
     friend bool operator==(const CChain &a, const CChain &b) {
-        return a.vChain.size() == b.vChain.size() &&
-               a.vChain[a.vChain.size() - 1] == b.vChain[b.vChain.size() - 1];
+        return a.Tip() == b.Tip();
     }
 
     /** Efficiently check whether a block is present in this chain. */
@@ -471,12 +472,12 @@ public:
     }
 
     /** Return the maximal height in the chain. Is equal to chain.Tip() ? chain.Tip()->nHeight : -1. */
-    int Height() const {
+    virtual int Height() const {
         return vChain.size() - 1;
     }
 
     /** Set/initialize a chain with a given tip. */
-    void SetTip(CBlockIndex *pindex);
+    virtual void SetTip(CBlockIndex *pindex);
 
     /** Return a CBlockLocator that refers to a block in this chain (by default the tip). */
     CBlockLocator GetLocator(const CBlockIndex *pindex = NULL) const;
@@ -485,6 +486,32 @@ public:
     const CBlockIndex *FindFork(const CBlockIndex *pindex) const;
 
     /** Find the earliest block with timestamp equal or greater than the given. */
+    virtual CBlockIndex* FindEarliestAtLeast(int64_t nTime) const;
+};
+
+class CHistoricalChain : public CChain {
+private:
+    const CChain& chain;
+    int my_height;
+
+public:
+    CHistoricalChain() = delete;
+    CHistoricalChain(const CChain& chainIn, const int heightIn) : chain(chainIn), my_height(heightIn) { }
+
+    void SetHeight(int nHeight);
+
+    CBlockIndex *operator[](int nHeight) const {
+        if (nHeight > Height()) {
+            return NULL;
+        }
+        return chain[nHeight];
+    }
+
+    int Height() const {
+        return my_height;
+    }
+
+    void SetTip(CBlockIndex *pindex);
     CBlockIndex* FindEarliestAtLeast(int64_t nTime) const;
 };
 
