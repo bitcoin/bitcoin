@@ -94,6 +94,13 @@ public:
 public:
     CXThinBlockTx(uint256 blockHash, std::vector<CTransaction>& vTx);
     CXThinBlockTx() {}
+    /**
+     * Handle receiving a list of missing xthin block transactions from a prior request
+     * @param[in] vRecv        The raw binary message
+     * @param[in] pFrom        The node the message was from
+     * @return True if handling succeeded
+     */
+    static bool HandleMessage(CDataStream &vRecv, CNode *pfrom);
 
     ADD_SERIALIZE_METHODS;
 
