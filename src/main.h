@@ -699,6 +699,7 @@ struct COrphanTx
     CTransaction tx;
     NodeId fromPeer;
     int64_t nEntryTime; // BU - Xtreme Thinblocks: used for aging orphans out of the cache
+    uint64_t nOrphanTxSize;
 };
 // BU: begin creating separate critical section for orphan cache and untangling from cs_main.
 extern CCriticalSection cs_orphancache;
