@@ -1632,8 +1632,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 	string strResponseRecv = "";
 	if(DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs))
 	{
-		strResponseSend = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "send"));
-		strResponseRecv = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "recv"));
+		strResponseSend = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "send");
+		strResponseRecv = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "recv");
 	}
     // Sent
     if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
