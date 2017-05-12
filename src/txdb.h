@@ -80,6 +80,8 @@ public:
     uint256 GetBestBlock() const;
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, size_t &nChildCachedCoinsUsage);
     CCoinsViewCursor *Cursor() const;
+
+    size_t EstimateSize() const override;
 };
 
 /** Specialization of CCoinsViewCursor to iterate over a CCoinsViewDB */
@@ -98,7 +100,7 @@ public:
 private:
     CCoinsViewDBCursor(CDBIterator* pcursorIn, const uint256 &hashBlockIn):
         CCoinsViewCursor(hashBlockIn), pcursor(pcursorIn) {}
-    boost::scoped_ptr<CDBIterator> pcursor;
+    std::unique_ptr<CDBIterator> pcursor;
     std::pair<char, uint256> keyTmp;
 
     friend class CCoinsViewDB;
