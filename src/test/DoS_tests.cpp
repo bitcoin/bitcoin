@@ -176,15 +176,6 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         BOOST_CHECK(AddOrphanTx(tx, i));  // BU, we keep orphans up to the configured memory limit to help xthin compression so this should succeed whereas it fails in other clients
     }
 
-    // Test EraseOrphansFor:
-    for (NodeId i = 0; i < 3; i++)
-    {
-        size_t sizeBefore = mapOrphanTransactions.size();
-        LOCK(cs_orphancache);
-        EraseOrphansFor(i);
-        BOOST_CHECK(mapOrphanTransactions.size() < sizeBefore);
-    }
-
     // Test LimitOrphanTxSize() function:
     {
         LOCK(cs_orphancache);
