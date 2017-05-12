@@ -1630,7 +1630,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 	// alias payment does not carry a data output, just alias payment scriptpubkey
 	string strResponse = "";
 	if(wtx.nVersion == GetSyscoinTxVersion())
-		DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs));
+		DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs);
 	
     // Sent
     if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
