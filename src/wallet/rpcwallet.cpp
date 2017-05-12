@@ -1620,15 +1620,14 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 
     bool fAllAccounts = (strAccount == string("*"));
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
-	if(wtx.nVersion != GetSyscoinTxVersion())
-		return false;	
 	// SYSCOIN
     vector<vector<unsigned char> > vvchArgs;
     int op, nOut;
 	// there should only be one data carrying syscoin output per transaction, but there may be more than 1 syscoin utxo in a transaction
 	// we want to display the data carrying one and not the empty utxo	
 	// alias payment does not carry a data output, just alias payment scriptpubkey
-	string strResponseSend, string strResponseRecv;
+	string strResponseSend = "";
+	string strResponseRecv = "";
 	if(DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs))
 	{
 		strResponseSend = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "send"));
