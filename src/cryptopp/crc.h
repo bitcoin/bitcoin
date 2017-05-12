@@ -2,7 +2,7 @@
 
 //! \file
 //! \headerfile crc.h
-//! \brief Classes for CRC-32 checksum algorithm
+//! \brief Classes for CRC-32 and CRC-32C checksum algorithm
 
 #ifndef CRYPTOPP_CRC32_H
 #define CRYPTOPP_CRC32_H
@@ -21,7 +21,8 @@ const word32 CRC32_NEGL = 0xffffffffL;
 #define CRC32_SHIFTED(c) (c << 8)
 #endif
 
-//! CRC Checksum Calculation
+//! \brief CRC-32 Checksum Calculation
+//! \details Uses CRC polynomial 0xEDB88320
 class CRC32 : public HashTransformation
 {
 public:
@@ -30,15 +31,41 @@ public:
 	void Update(const byte *input, size_t length);
 	void TruncatedFinal(byte *hash, size_t size);
 	unsigned int DigestSize() const {return DIGESTSIZE;}
-    static const char * StaticAlgorithmName() {return "CRC32";}
+    CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "CRC32";}
     std::string AlgorithmName() const {return StaticAlgorithmName();}
 
 	void UpdateByte(byte b) {m_crc = m_tab[CRC32_INDEX(m_crc) ^ b] ^ CRC32_SHIFTED(m_crc);}
 	byte GetCrcByte(size_t i) const {return ((byte *)&(m_crc))[i];}
 
-private:
+protected:
 	void Reset() {m_crc = CRC32_NEGL;}
-	
+
+private:
+	static const word32 m_tab[256];
+	word32 m_crc;
+};
+
+//! \brief CRC-32C Checksum Calculation
+//! \details Uses CRC polynomial 0x82F63B78
+//! \since Crypto++ 5.6.4
+class CRC32C : public HashTransformation
+{
+public:
+	CRYPTOPP_CONSTANT(DIGESTSIZE = 4)
+	CRC32C();
+	void Update(const byte *input, size_t length);
+	void TruncatedFinal(byte *hash, size_t size);
+	unsigned int DigestSize() const {return DIGESTSIZE;}
+    CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "CRC32C";}
+    std::string AlgorithmName() const {return StaticAlgorithmName();}
+
+	void UpdateByte(byte b) {m_crc = m_tab[CRC32_INDEX(m_crc) ^ b] ^ CRC32_SHIFTED(m_crc);}
+	byte GetCrcByte(size_t i) const {return ((byte *)&(m_crc))[i];}
+
+protected:
+	void Reset() {m_crc = CRC32_NEGL;}
+
+private:
 	static const word32 m_tab[256];
 	word32 m_crc;
 };

@@ -23,7 +23,7 @@ template <class T, class BASE> void IteratedHashBase<T, BASE>::Update(const byte
 
 	T* dataBuf = this->DataBuf();
 	byte* data = (byte *)dataBuf;
-	assert(dataBuf && data);
+	CRYPTOPP_ASSERT(dataBuf && data);
 
 	if (num != 0)	// process left over data
 	{
@@ -48,13 +48,13 @@ template <class T, class BASE> void IteratedHashBase<T, BASE>::Update(const byte
 	{
 		if (input == data)
 		{
-			assert(len == blockSize);
+			CRYPTOPP_ASSERT(len == blockSize);
 			HashBlock(dataBuf);
 			return;
 		}
 		else if (IsAligned<T>(input))
 		{
-			size_t leftOver = HashMultipleBlocks((T *)input, len);
+			size_t leftOver = HashMultipleBlocks((T *)(void*)input, len);
 			input += (len - leftOver);
 			len = leftOver;
 		}
@@ -141,7 +141,7 @@ template <class T, class BASE> void IteratedHashBase<T, BASE>::TruncatedFinal(by
 	HashBlock(dataBuf);
 
 	if (IsAligned<HashWordType>(digest) && size%sizeof(HashWordType)==0)
-		ConditionalByteReverse<HashWordType>(order, (HashWordType *)digest, stateBuf, size);
+		ConditionalByteReverse<HashWordType>(order, (HashWordType *)(void*)digest, stateBuf, size);
 	else
 	{
 		ConditionalByteReverse<HashWordType>(order, stateBuf, stateBuf, this->DigestSize());

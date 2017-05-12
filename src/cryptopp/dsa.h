@@ -33,7 +33,7 @@ enum DSASignatureFormat {
 //! \details This function converts between these formats, and returns length
 //!   of signature in the target format. If <tt>toFormat == DSA_P1363</tt>, then
 //!   <tt>bufferSize</tt> must equal <tt>publicKey.SignatureLength()</tt>
-size_t DSAConvertSignatureFormat(byte *buffer, size_t bufferSize, DSASignatureFormat toFormat, 
+size_t DSAConvertSignatureFormat(byte *buffer, size_t bufferSize, DSASignatureFormat toFormat,
 	const byte *signature, size_t signatureLen, DSASignatureFormat fromFormat);
 
 NAMESPACE_END

@@ -5,13 +5,12 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-// Base64
-static const byte s_stdVec[] =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-// Base64URL
-static const byte s_urlVec[] =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-static const byte s_padding = '=';
+namespace
+{
+	const byte s_stdVec[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+	const byte s_urlVec[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+	const byte s_padding = '=';
+}
 
 void Base64Encoder::IsolatedInitialize(const NameValuePairs &parameters)
 {
@@ -19,7 +18,7 @@ void Base64Encoder::IsolatedInitialize(const NameValuePairs &parameters)
 	int maxLineLength = parameters.GetIntValueWithDefault(Name::MaxLineLength(), 72);
 
 	const char *lineBreak = insertLineBreaks ? "\n" : "";
-	
+
 	m_filter->Initialize(CombinedNameValuePairs(
 		parameters,
 		MakeParameters(Name::EncodingLookupArray(), &s_stdVec[0], false)
@@ -34,9 +33,9 @@ void Base64URLEncoder::IsolatedInitialize(const NameValuePairs &parameters)
 {
 	bool insertLineBreaks = parameters.GetValueWithDefault(Name::InsertLineBreaks(), true);
 	int maxLineLength = parameters.GetIntValueWithDefault(Name::MaxLineLength(), 72);
-    
+
 	const char *lineBreak = insertLineBreaks ? "\n" : "";
-	
+
 	m_filter->Initialize(CombinedNameValuePairs(
 		parameters,
 		MakeParameters(Name::EncodingLookupArray(), &s_urlVec[0], false)
@@ -47,11 +46,18 @@ void Base64URLEncoder::IsolatedInitialize(const NameValuePairs &parameters)
 			(Name::Log2Base(), 6, true)));
 }
 
+void Base64Decoder::IsolatedInitialize(const NameValuePairs &parameters)
+{
+	BaseN_Decoder::IsolatedInitialize(CombinedNameValuePairs(
+		parameters,
+		MakeParameters(Name::DecodingLookupArray(), GetDecodingLookupArray(), false)(Name::Log2Base(), 6, true)));
+}
+
 const int *Base64Decoder::GetDecodingLookupArray()
 {
 	static volatile bool s_initialized = false;
 	static int s_array[256];
-    
+
 	if (!s_initialized)
 	{
 		InitializeDecodingLookupArray(s_array, s_stdVec, 64, false);
@@ -60,11 +66,18 @@ const int *Base64Decoder::GetDecodingLookupArray()
 	return s_array;
 }
 
+void Base64URLDecoder::IsolatedInitialize(const NameValuePairs &parameters)
+{
+	BaseN_Decoder::IsolatedInitialize(CombinedNameValuePairs(
+		parameters,
+		MakeParameters(Name::DecodingLookupArray(), GetDecodingLookupArray(), false)(Name::Log2Base(), 6, true)));
+}
+
 const int *Base64URLDecoder::GetDecodingLookupArray()
 {
 	static volatile bool s_initialized = false;
 	static int s_array[256];
-    
+
 	if (!s_initialized)
 	{
 		InitializeDecodingLookupArray(s_array, s_urlVec, 64, false);

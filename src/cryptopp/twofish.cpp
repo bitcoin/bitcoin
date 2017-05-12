@@ -132,7 +132,7 @@ void Twofish::Enc::ProcessAndXorBlock(const byte *inBlock, const byte *xorBlock,
 	c ^= m_k[4];
 	d ^= m_k[5];
 	a ^= m_k[6];
-	b ^= m_k[7]; 
+	b ^= m_k[7];
 
 	Block::Put(xorBlock, outBlock)(c)(d)(a)(b);
 }

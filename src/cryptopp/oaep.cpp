@@ -19,7 +19,7 @@ size_t OAEP_Base::MaxUnpaddedLength(size_t paddedLength) const
 
 void OAEP_Base::Pad(RandomNumberGenerator &rng, const byte *input, size_t inputLength, byte *oaepBlock, size_t oaepBlockLen, const NameValuePairs &parameters) const
 {
-	assert (inputLength <= MaxUnpaddedLength(oaepBlockLen));
+	CRYPTOPP_ASSERT (inputLength <= MaxUnpaddedLength(oaepBlockLen));
 
 	// convert from bit length to byte length
 	if (oaepBlockLen % 8 != 0)

@@ -7,6 +7,7 @@
 #include "cryptlib.h"
 #include "gfpcrypt.h"
 #include "integer.h"
+#include "algebra.h"
 #include "secblock.h"
 
 #if CRYPTOPP_MSC_VERSION
@@ -133,7 +134,7 @@ typedef LUCSS<PKCS1v15, SHA>::Verifier LUCSSA_PKCS1v15_SHA_Verifier;
 class DL_GroupPrecomputation_LUC : public DL_GroupPrecomputation<Integer>
 {
 public:
-	const AbstractGroup<Element> & GetGroup() const {assert(false); throw 0;}
+	const AbstractGroup<Element> & GetGroup() const {CRYPTOPP_ASSERT(false); throw 0;}
 	Element BERDecodeElement(BufferedTransformation &bt) const {return Integer(bt);}
 	void DEREncodeElement(BufferedTransformation &bt, const Element &v) const {v.DEREncode(bt);}
 
@@ -204,7 +205,7 @@ public:
 	{
 		return GetValueHelper<DL_GroupParameters_IntegerBased>(this, name, valueType, pValue).Assignable();
 	}
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_GroupParameters_LUC() {}
 #endif
@@ -218,7 +219,7 @@ class DL_GroupParameters_LUC_DefaultSafePrime : public DL_GroupParameters_LUC
 {
 public:
 	typedef NoCofactorMultiplication DefaultCofactorOption;
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_GroupParameters_LUC_DefaultSafePrime() {}
 #endif
@@ -231,14 +232,14 @@ protected:
 class DL_Algorithm_LUC_HMP : public DL_ElgamalLikeSignatureAlgorithm<Integer>
 {
 public:
-	static const char * StaticAlgorithmName() {return "LUC-HMP";}
+	CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "LUC-HMP";}
 
 	void Sign(const DL_GroupParameters<Integer> &params, const Integer &x, const Integer &k, const Integer &e, Integer &r, Integer &s) const;
 	bool Verify(const DL_GroupParameters<Integer> &params, const DL_PublicKey<Integer> &publicKey, const Integer &e, const Integer &r, const Integer &s) const;
 
 	size_t RLen(const DL_GroupParameters<Integer> &params) const
 		{return params.GetGroupOrder().ByteCount();}
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_Algorithm_LUC_HMP() {}
 #endif
@@ -250,7 +251,7 @@ struct DL_SignatureKeys_LUC
 	typedef DL_GroupParameters_LUC GroupParameters;
 	typedef DL_PublicKey_GFP<GroupParameters> PublicKey;
 	typedef DL_PrivateKey_GFP<GroupParameters> PrivateKey;
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_SignatureKeys_LUC() {}
 #endif
@@ -268,7 +269,7 @@ struct DL_CryptoKeys_LUC
 	typedef DL_GroupParameters_LUC_DefaultSafePrime GroupParameters;
 	typedef DL_PublicKey_GFP<GroupParameters> PublicKey;
 	typedef DL_PrivateKey_GFP<GroupParameters> PrivateKey;
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~DL_CryptoKeys_LUC() {}
 #endif
@@ -285,7 +286,7 @@ struct LUC_IES
 		LUC_IES<> >
 {
 	static std::string StaticAlgorithmName() {return "LUC-IES";}	// non-standard name
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~LUC_IES() {}
 #endif

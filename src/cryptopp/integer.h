@@ -1,7 +1,16 @@
+// integer.h - written and placed in the public domain by Wei Dai
+
+//! \file integer.h
+//! \brief Multiple precision integer with arithmetic operations
+//! \details The Integer class can represent positive and negative integers
+//!   with absolute value less than (256**sizeof(word))<sup>(256**sizeof(int))</sup>.
+//! \details Internally, the library uses a sign magnitude representation, and the class
+//!   has two data members. The first is a IntegerSecBlock (a SecBlock<word>) and it is
+//!   used to hold the representation. The second is a Sign, and its is used to track
+//!   the sign of the Integer.
+
 #ifndef CRYPTOPP_INTEGER_H
 #define CRYPTOPP_INTEGER_H
-
-/** \file */
 
 #include "cryptlib.h"
 #include "secblock.h"
@@ -18,13 +27,18 @@ struct InitializeInteger
 	InitializeInteger();
 };
 
+// http://github.com/weidai11/cryptopp/issues/256
+#if defined(CRYPTOPP_WORD128_AVAILABLE)
+typedef SecBlock<word, AllocatorWithCleanup<word, true> > IntegerSecBlock;
+#else
 typedef SecBlock<word, AllocatorWithCleanup<word, CRYPTOPP_BOOL_X86> > IntegerSecBlock;
+#endif
 
 //! \brief Multiple precision integer with arithmetic operations
 //! \details The Integer class can represent positive and negative integers
 //!   with absolute value less than (256**sizeof(word))<sup>(256**sizeof(int))</sup>.
 //! \details Internally, the library uses a sign magnitude representation, and the class
-//!   has two data members. The first is a IntegerSecBlock (a SecBlock<word>) and it i
+//!   has two data members. The first is a IntegerSecBlock (a SecBlock<word>) and it is
 //!   used to hold the representation. The second is a Sign, and its is used to track
 //!   the sign of the Integer.
 //! \nosubgrouping
@@ -101,27 +115,39 @@ public:
 
 		//! \brief Convert from a C-string
 		//! \param str C-string value
+		//! \param order byte order
 		//! \details \p str can be in base 2, 8, 10, or 16. Base is determined by a case
 		//!   insensitive suffix of 'h', 'o', or 'b'.  No suffix means base 10.
-		explicit Integer(const char *str);
-		
+		//! \details Byte order was added at Crypto++ 5.7 to allow use of little-endian
+		//!   integers with curve25519, Poly1305 and Microsoft CAPI.
+		explicit Integer(const char *str, ByteOrder order = BIG_ENDIAN_ORDER);
+
 		//! \brief Convert from a wide C-string
 		//! \param str wide C-string value
+		//! \param order byte order
 		//! \details \p str can be in base 2, 8, 10, or 16. Base is determined by a case
 		//!   insensitive suffix of 'h', 'o', or 'b'.  No suffix means base 10.
-		explicit Integer(const wchar_t *str);
+		//! \details Byte order was added at Crypto++ 5.7 to allow use of little-endian
+		//!   integers with curve25519, Poly1305 and Microsoft CAPI.
+		explicit Integer(const wchar_t *str, ByteOrder order = BIG_ENDIAN_ORDER);
 
 		//! \brief Convert from a big-endian byte array
 		//! \param encodedInteger big-endian byte array
 		//! \param byteCount length of the byte array
 		//! \param sign enumeration indicating Signedness
-		Integer(const byte *encodedInteger, size_t byteCount, Signedness sign=UNSIGNED);
+		//! \param order byte order
+		//! \details Byte order was added at Crypto++ 5.7 to allow use of little-endian
+		//!   integers with curve25519, Poly1305 and Microsoft CAPI.
+		Integer(const byte *encodedInteger, size_t byteCount, Signedness sign=UNSIGNED, ByteOrder order = BIG_ENDIAN_ORDER);
 
 		//! \brief Convert from a big-endian array
 		//! \param bt BufferedTransformation object with big-endian byte array
 		//! \param byteCount length of the byte array
 		//! \param sign enumeration indicating Signedness
-		Integer(BufferedTransformation &bt, size_t byteCount, Signedness sign=UNSIGNED);
+		//! \param order byte order
+		//! \details Byte order was added at Crypto++ 5.7 to allow use of little-endian
+		//!   integers with curve25519, Poly1305 and Microsoft CAPI.
+		Integer(BufferedTransformation &bt, size_t byteCount, Signedness sign=UNSIGNED, ByteOrder order = BIG_ENDIAN_ORDER);
 
 		//! \brief Convert from a BER encoded byte array
 		//! \param bt BufferedTransformation object with BER encoded byte array
@@ -213,8 +239,8 @@ public:
 		//! \details OpenPGPEncode places result into a BufferedTransformation object and returns the
 		//!   number of bytes used for the encoding
 		size_t OpenPGPEncode(byte *output, size_t bufferSize) const;
-	
-		//! \brief Encode absolute value in OpenPGP format	
+
+		//! \brief Encode absolute value in OpenPGP format
 		//! \param bt BufferedTransformation object
 		//! \returns length of the output
 		//! \details OpenPGPEncode places result into a BufferedTransformation object and returns the
@@ -226,7 +252,7 @@ public:
 		//! \param inputLen length of the byte array
 		//! \param sign enumeration indicating Signedness
 		void Decode(const byte *input, size_t inputLen, Signedness sign=UNSIGNED);
-		
+
 		//! \brief Decode nonnegative value from big-endian byte array
 		//! \param bt BufferedTransformation object
 		//! \param inputLen length of the byte array
@@ -251,7 +277,7 @@ public:
 		//! \brief Exception thrown when an error is encountered decoding an OpenPGP integer
 		class OpenPGPDecodeErr : public Exception
 		{
-		public: 
+		public:
 			OpenPGPDecodeErr() : Exception(INVALID_DATA_FORMAT, "OpenPGP decode error") {}
 		};
 
@@ -266,40 +292,58 @@ public:
 
 	//! \name ACCESSORS
 	//@{
-		//! return true if *this can be represented as a signed long
+		//! \brief Determines if the Integer is convertable to Long
+		//! \returns true if *this can be represented as a signed long
+		//! \sa ConvertToLong()
 		bool IsConvertableToLong() const;
-		//! return equivalent signed long if possible, otherwise undefined
+		//! \brief Convert the Integer to Long
+		//! \return equivalent signed long if possible, otherwise undefined
+		//! \sa IsConvertableToLong()
 		signed long ConvertToLong() const;
 
-		//! number of significant bits = floor(log2(abs(*this))) + 1
+		//! \brief Determines the number of bits required to represent the Integer
+		//! \returns number of significant bits = floor(log2(abs(*this))) + 1
 		unsigned int BitCount() const;
-		//! number of significant bytes = ceiling(BitCount()/8)
+		//! \brief Determines the number of bytes required to represent the Integer
+		//! \returns number of significant bytes = ceiling(BitCount()/8)
 		unsigned int ByteCount() const;
-		//! number of significant words = ceiling(ByteCount()/sizeof(word))
+		//! \brief Determines the number of words required to represent the Integer
+		//! \returns number of significant words = ceiling(ByteCount()/sizeof(word))
 		unsigned int WordCount() const;
 
-		//! return the i-th bit, i=0 being the least significant bit
+		//! \brief Provides the i-th bit of the Integer
+		//! \returns the i-th bit, i=0 being the least significant bit
 		bool GetBit(size_t i) const;
-		//! return the i-th byte
+		//! \brief Provides the i-th byte of the Integer
+		//! \returns the i-th byte
 		byte GetByte(size_t i) const;
-		//! return n lowest bits of *this >> i
+		//! \brief Provides the low order bits of the Integer
+		//! \returns n lowest bits of *this >> i
 		lword GetBits(size_t i, size_t n) const;
 
-		//!
+		//! \brief Determines if the Integer is 0
+		//! \returns true if the Integer is 0, false otherwise
 		bool IsZero() const {return !*this;}
-		//!
+		//! \brief Determines if the Integer is non-0
+		//! \returns true if the Integer is non-0, false otherwise
 		bool NotZero() const {return !IsZero();}
-		//!
+		//! \brief Determines if the Integer is negative
+		//! \returns true if the Integer is negative, false otherwise
 		bool IsNegative() const {return sign == NEGATIVE;}
-		//!
+		//! \brief Determines if the Integer is non-negative
+		//! \returns true if the Integer is non-negative, false otherwise
 		bool NotNegative() const {return !IsNegative();}
-		//!
+		//! \brief Determines if the Integer is positive
+		//! \returns true if the Integer is positive, false otherwise
 		bool IsPositive() const {return NotNegative() && NotZero();}
-		//!
+		//! \brief Determines if the Integer is non-positive
+		//! \returns true if the Integer is non-positive, false otherwise
 		bool NotPositive() const {return !IsPositive();}
-		//!
+		//! \brief Determines if the Integer is even parity
+		//! \returns true if the Integer is even, false otherwise
 		bool IsEven() const {return GetBit(0) == 0;}
-		//!
+		//! \brief Determines if the Integer is odd parity
+		//! \returns true if the Integer is odd, false otherwise
 		bool IsOdd() const	{return GetBit(0) == 1;}
 	//@}
 
@@ -379,10 +423,10 @@ public:
 
 		//! \brief Reverse the Sign of the Integer
 		void Negate();
-		
+
 		//! \brief Sets the Integer to positive
 		void SetPositive() {sign = POSITIVE;}
-		
+
 		//! \brief Sets the Integer to negative
 		void SetNegative() {if (!!(*this)) sign = NEGATIVE;}
 
@@ -498,7 +542,7 @@ public:
 		//! \sa IntToString<Integer>
 		friend CRYPTOPP_DLL std::ostream& CRYPTOPP_API operator<<(std::ostream& out, const Integer &a);
 	//@}
-		
+
 #ifndef CRYPTOPP_DOXYGEN_PROCESSING
 	//! modular multiplication
 	CRYPTOPP_DLL friend Integer CRYPTOPP_API a_times_b_mod_c(const Integer &x, const Integer& y, const Integer& m);
@@ -507,13 +551,13 @@ public:
 #endif
 
 private:
-	
+
 	Integer(word value, size_t length);
 	int PositiveCompare(const Integer &t) const;
-	
+
 	IntegerSecBlock reg;
 	Sign sign;
-	
+
 #ifndef CRYPTOPP_DOXYGEN_PROCESSING
 	friend class ModularArithmetic;
 	friend class MontgomeryRepresentation;

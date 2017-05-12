@@ -27,7 +27,7 @@ PolynomialMod2::PolynomialMod2()
 PolynomialMod2::PolynomialMod2(word value, size_t bitLength)
 	: reg(BitsToWords(bitLength))
 {
-	assert(value==0 || reg.size()>0);
+	CRYPTOPP_ASSERT(value==0 || reg.size()>0);
 
 	if (reg.size() > 0)
 	{
@@ -89,14 +89,14 @@ void PolynomialMod2::SetByte(size_t n, byte value)
 	reg[n/WORD_SIZE] |= (word(value) << 8*(n%WORD_SIZE));
 }
 
-PolynomialMod2 PolynomialMod2::Monomial(size_t i) 
+PolynomialMod2 PolynomialMod2::Monomial(size_t i)
 {
-	PolynomialMod2 r((word)0, i+1); 
-	r.SetBit(i); 
+	PolynomialMod2 r((word)0, i+1);
+	r.SetBit(i);
 	return r;
 }
 
-PolynomialMod2 PolynomialMod2::Trinomial(size_t t0, size_t t1, size_t t2) 
+PolynomialMod2 PolynomialMod2::Trinomial(size_t t0, size_t t1, size_t t2)
 {
 	PolynomialMod2 r((word)0, t0+1);
 	r.SetBit(t0);
@@ -325,9 +325,9 @@ PolynomialMod2 PolynomialMod2::Modulo(const PolynomialMod2 &b) const
 
 PolynomialMod2& PolynomialMod2::operator<<=(unsigned int n)
 {
-#if !defined(NDEBUG)
+#if CRYPTOPP_DEBUG
 	int x; CRYPTOPP_UNUSED(x);
-	assert(SafeConvert(n,x));
+	CRYPTOPP_ASSERT(SafeConvert(n,x));
 #endif
 
 	if (!reg.size())
@@ -547,7 +547,7 @@ bool PolynomialMod2::IsIrreducible() const
 // ********************************************************
 
 GF2NP::GF2NP(const PolynomialMod2 &modulus)
-	: QuotientRing<EuclideanDomainOf<PolynomialMod2> >(EuclideanDomainOf<PolynomialMod2>(), modulus), m(modulus.Degree()) 
+	: QuotientRing<EuclideanDomainOf<PolynomialMod2> >(EuclideanDomainOf<PolynomialMod2>(), modulus), m(modulus.Degree())
 {
 }
 
@@ -561,7 +561,7 @@ GF2NP::Element GF2NP::SquareRoot(const Element &a) const
 
 GF2NP::Element GF2NP::HalfTrace(const Element &a) const
 {
-	assert(m%2 == 1);
+	CRYPTOPP_ASSERT(m%2 == 1);
 	Element h = a;
 	for (unsigned int i=1; i<=(m-1)/2; i++)
 		h = Add(Square(Square(h)), a);
@@ -595,12 +595,12 @@ GF2NP::Element GF2NP::SolveQuadraticEquation(const Element &a) const
 
 // ********************************************************
 
-GF2NT::GF2NT(unsigned int t0, unsigned int t1, unsigned int t2)
-	: GF2NP(PolynomialMod2::Trinomial(t0, t1, t2))
-	, t0(t0), t1(t1)
+GF2NT::GF2NT(unsigned int c0, unsigned int c1, unsigned int c2)
+	: GF2NP(PolynomialMod2::Trinomial(c0, c1, c2))
+	, t0(c0), t1(c1)
 	, result((word)0, m)
 {
-	assert(t0 > t1 && t1 > t2 && t2==0);
+	CRYPTOPP_ASSERT(c0 > c1 && c1 > c2 && c2==0);
 }
 
 const GF2NT::Element& GF2NT::MultiplicativeInverse(const Element &a) const
@@ -618,7 +618,7 @@ const GF2NT::Element& GF2NT::MultiplicativeInverse(const Element &a) const
 
 	SetWords(T, 0, 3*m_modulus.reg.size());
 	b[0]=1;
-	assert(a.reg.size() <= m_modulus.reg.size());
+	CRYPTOPP_ASSERT(a.reg.size() <= m_modulus.reg.size());
 	CopyWords(f, a.reg, a.reg.size());
 	CopyWords(g, m_modulus.reg, m_modulus.reg.size());
 
@@ -630,7 +630,7 @@ const GF2NT::Element& GF2NT::MultiplicativeInverse(const Element &a) const
 			ShiftWordsRightByWords(f, fgLen, 1);
 			if (c[bcLen-1])
 				bcLen++;
-			assert(bcLen <= m_modulus.reg.size());
+			CRYPTOPP_ASSERT(bcLen <= m_modulus.reg.size());
 			ShiftWordsLeftByWords(c, bcLen, 1);
 			k+=WORD_BITS;
 			t=f[0];
@@ -661,7 +661,7 @@ const GF2NT::Element& GF2NT::MultiplicativeInverse(const Element &a) const
 		{
 			c[bcLen] = t;
 			bcLen++;
-			assert(bcLen <= m_modulus.reg.size());
+			CRYPTOPP_ASSERT(bcLen <= m_modulus.reg.size());
 		}
 
 		if (f[fgLen-1]==0 && g[fgLen-1]==0)
@@ -685,11 +685,15 @@ const GF2NT::Element& GF2NT::MultiplicativeInverse(const Element &a) const
 			b[i] = b[i+1];
 		b[BitsToWords(m)-1] = 0;
 
-		// TODO: the shift by "t1+j" (64-bits) is being flagged as potential UB
-		//   temp ^= ((temp >> j) & 1) << ((t1 + j) & (sizeof(temp)*8-1));
 		if (t1 < WORD_BITS)
 			for (unsigned int j=0; j<WORD_BITS-t1; j++)
-				temp ^= ((temp >> j) & 1) << (t1 + j);
+			{
+				// Coverity finding on shift amount of 'word x << (t1+j)'.
+				//   temp ^= ((temp >> j) & 1) << (t1 + j);
+				const unsigned int shift = t1 + j;
+				CRYPTOPP_ASSERT(shift < WORD_BITS);
+				temp ^= (shift < WORD_BITS) ? (((temp >> j) & 1) << shift) : 0;
+			}
 		else
 			b[t1/WORD_BITS-1] ^= temp << t1%WORD_BITS;
 
@@ -717,8 +721,10 @@ const GF2NT::Element& GF2NT::MultiplicativeInverse(const Element &a) const
 			for (unsigned int j=0; j<WORD_BITS-t1; j++)
 			{
 				// Coverity finding on shift amount of 'word x << (t1+j)'.
-				assert(t1+j < WORD_BITS);
-				temp ^= ((temp >> j) & 1) << (t1 + j);
+				//   temp ^= ((temp >> j) & 1) << (t1 + j);
+				const unsigned int shift = t1 + j;
+				CRYPTOPP_ASSERT(shift < WORD_BITS);
+				temp ^= (shift < WORD_BITS) ? (((temp >> j) & 1) << shift) : 0;
 			}
 		}
 		else
@@ -811,7 +817,7 @@ const GF2NT::Element& GF2NT::Reduced(const Element &a) const
 			if ((t0-t1)%WORD_BITS > t0%WORD_BITS)
 				b[i-(t0-t1)/WORD_BITS-1] ^= temp << (WORD_BITS - (t0-t1)%WORD_BITS);
 			else
-				assert(temp << (WORD_BITS - (t0-t1)%WORD_BITS) == 0);
+				CRYPTOPP_ASSERT(temp << (WORD_BITS - (t0-t1)%WORD_BITS) == 0);
 		}
 		else
 			b[i-(t0-t1)/WORD_BITS] ^= temp;

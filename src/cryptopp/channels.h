@@ -76,13 +76,13 @@ public:
 	void Next();
 	BufferedTransformation & Destination();
 	const std::string & Channel();
-	
+
 	ChannelSwitch& m_cs;
 	std::string m_channel;
 	bool m_useDefault;
 	MapIterator m_itMapCurrent, m_itMapEnd;
 	ListIterator m_itListCurrent, m_itListEnd;
-	
+
 protected:
 	// Hide this to see if we break something...
 	ChannelRouteIterator();
@@ -111,7 +111,7 @@ public:
 	bool ChannelMessageSeriesEnd(const std::string &channel, int propagation=-1, bool blocking=true);
 
 	byte * ChannelCreatePutSpace(const std::string &channel, size_t &size);
-	
+
 	void AddDefaultRoute(BufferedTransformation &destination);
 	void RemoveDefaultRoute(BufferedTransformation &destination);
 	void AddDefaultRoute(BufferedTransformation &destination, const std::string &outChannel);

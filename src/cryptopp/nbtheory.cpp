@@ -34,7 +34,7 @@ struct NewPrimeTable
 
 		primeTable.push_back(2);
 		unsigned int testEntriesEnd = 1;
-		
+
 		for (unsigned int p=3; p<=s_lastSmallPrime; p+=2)
 		{
 			unsigned int j;
@@ -75,7 +75,7 @@ bool TrialDivision(const Integer &p, unsigned bound)
 	unsigned int primeTableSize;
 	const word16 * primeTable = GetPrimeTable(primeTableSize);
 
-	assert(primeTable[primeTableSize-1] >= bound);
+	CRYPTOPP_ASSERT(primeTable[primeTableSize-1] >= bound);
 
 	unsigned int i;
 	for (i = 0; primeTable[i]<bound; i++)
@@ -100,7 +100,7 @@ bool IsFermatProbablePrime(const Integer &n, const Integer &b)
 	if (n <= 3)
 		return n==2 || n==3;
 
-	assert(n>3 && b>1 && b<n-1);
+	CRYPTOPP_ASSERT(n>3 && b>1 && b<n-1);
 	return a_exp_b_mod_c(b, n-1, n)==1;
 }
 
@@ -109,7 +109,7 @@ bool IsStrongProbablePrime(const Integer &n, const Integer &b)
 	if (n <= 3)
 		return n==2 || n==3;
 
-	assert(n>3 && b>1 && b<n-1);
+	CRYPTOPP_ASSERT(n>3 && b>1 && b<n-1);
 
 	if ((n.IsEven() && n!=2) || GCD(b, n) != 1)
 		return false;
@@ -142,7 +142,7 @@ bool RabinMillerTest(RandomNumberGenerator &rng, const Integer &n, unsigned int 
 	if (n <= 3)
 		return n==2 || n==3;
 
-	assert(n>3);
+	CRYPTOPP_ASSERT(n>3);
 
 	Integer b;
 	for (unsigned int i=0; i<rounds; i++)
@@ -162,7 +162,7 @@ bool IsLucasProbablePrime(const Integer &n)
 	if (n.IsEven())
 		return n==2;
 
-	assert(n>2);
+	CRYPTOPP_ASSERT(n>2);
 
 	Integer b=3;
 	unsigned int i=0;
@@ -175,7 +175,7 @@ bool IsLucasProbablePrime(const Integer &n)
 		++b; ++b;
 	}
 
-	if (j==0) 
+	if (j==0)
 		return false;
 	else
 		return Lucas(n+1, b, n)==2;
@@ -189,7 +189,7 @@ bool IsStrongLucasProbablePrime(const Integer &n)
 	if (n.IsEven())
 		return n==2;
 
-	assert(n>2);
+	CRYPTOPP_ASSERT(n>2);
 
 	Integer b=3;
 	unsigned int i=0;
@@ -202,7 +202,7 @@ bool IsStrongLucasProbablePrime(const Integer &n)
 		++b; ++b;
 	}
 
-	if (j==0) 
+	if (j==0)
 		return false;
 
 	Integer n1 = n+1;
@@ -310,7 +310,7 @@ PrimeSieve::PrimeSieve(const Integer &first, const Integer &last, const Integer 
 bool PrimeSieve::NextCandidate(Integer &c)
 {
 	bool safe = SafeConvert(std::find(m_sieve.begin()+m_next, m_sieve.end(), false) - m_sieve.begin(), m_next);
-	CRYPTOPP_UNUSED(safe); assert(safe);
+	CRYPTOPP_UNUSED(safe); CRYPTOPP_ASSERT(safe);
 	if (m_next == m_sieve.size())
 	{
 		m_first += long(m_sieve.size())*m_step;
@@ -363,7 +363,7 @@ void PrimeSieve::DoSieve()
 	}
 	else
 	{
-		assert(m_step%2==0);
+		CRYPTOPP_ASSERT(m_step%2==0);
 		Integer qFirst = (m_first-m_delta) >> 1;
 		Integer halfStep = m_step >> 1;
 		for (unsigned int i = 0; i < primeTableSize; ++i)
@@ -380,7 +380,7 @@ void PrimeSieve::DoSieve()
 
 bool FirstPrime(Integer &p, const Integer &max, const Integer &equiv, const Integer &mod, const PrimeSelector *pSelector)
 {
-	assert(!equiv.IsNegative() && equiv < mod);
+	CRYPTOPP_ASSERT(!equiv.IsNegative() && equiv < mod);
 
 	Integer gcd = GCD(equiv, mod);
 	if (gcd != Integer::One())
@@ -420,7 +420,7 @@ bool FirstPrime(Integer &p, const Integer &max, const Integer &equiv, const Inte
 		p = primeTable[primeTableSize-1]+1;
 	}
 
-	assert(p > primeTable[primeTableSize-1]);
+	CRYPTOPP_ASSERT(p > primeTable[primeTableSize-1]);
 
 	if (mod.IsOdd())
 		return FirstPrime(p, max, CRT(equiv, mod, 1, 2, 1), mod<<1, pSelector);
@@ -444,8 +444,8 @@ bool FirstPrime(Integer &p, const Integer &max, const Integer &equiv, const Inte
 // the following two functions are based on code and comments provided by Preda Mihailescu
 static bool ProvePrime(const Integer &p, const Integer &q)
 {
-	assert(p < q*q*q);
-	assert(p % q == 1);
+	CRYPTOPP_ASSERT(p < q*q*q);
+	CRYPTOPP_ASSERT(p % q == 1);
 
 // this is the Quisquater test. Numbers p having passed the Lucas - Lehmer test
 // for q and verifying p < q^3 can only be built up of two factors, both = 1 mod q,
@@ -459,11 +459,11 @@ static bool ProvePrime(const Integer &p, const Integer &q)
 	unsigned int primeTableSize;
 	const word16 * primeTable = GetPrimeTable(primeTableSize);
 
-	assert(primeTableSize >= 50);
-	for (int i=0; i<50; i++) 
+	CRYPTOPP_ASSERT(primeTableSize >= 50);
+	for (int i=0; i<50; i++)
 	{
 		Integer b = a_exp_b_mod_c(primeTable[i], r, p);
-		if (b != 1) 
+		if (b != 1)
 			return a_exp_b_mod_c(b, q, p) == 1;
 	}
 	return false;
@@ -616,7 +616,7 @@ Integer ModularSquareRoot(const Integer &a, const Integer &p)
 		b = tempb*y%p;
 	}
 
-	assert(x.Squared()%p == a);
+	CRYPTOPP_ASSERT(x.Squared()%p == a);
 	return x;
 }
 
@@ -626,21 +626,21 @@ bool SolveModularQuadraticEquation(Integer &r1, Integer &r2, const Integer &a, c
 	switch (Jacobi(D, p))
 	{
 	default:
-		assert(false);	// not reached
+		CRYPTOPP_ASSERT(false);	// not reached
 		return false;
 	case -1:
 		return false;
 	case 0:
 		r1 = r2 = (-b*(a+a).InverseMod(p)) % p;
-		assert(((r1.Squared()*a + r1*b + c) % p).IsZero());
+		CRYPTOPP_ASSERT(((r1.Squared()*a + r1*b + c) % p).IsZero());
 		return true;
 	case 1:
 		Integer s = ModularSquareRoot(D, p);
 		Integer t = (a+a).InverseMod(p);
 		r1 = (s-b)*t % p;
 		r2 = (-s-b)*t % p;
-		assert(((r1.Squared()*a + r1*b + c) % p).IsZero());
-		assert(((r2.Squared()*a + r2*b + c) % p).IsZero());
+		CRYPTOPP_ASSERT(((r1.Squared()*a + r1*b + c) % p).IsZero());
+		CRYPTOPP_ASSERT(((r2.Squared()*a + r2*b + c) % p).IsZero());
 		return true;
 	}
 }
@@ -666,7 +666,7 @@ Integer ModularRoot(const Integer &a, const Integer &e,
 	Integer dp = EuclideanMultiplicativeInverse(e, p-1);
 	Integer dq = EuclideanMultiplicativeInverse(e, q-1);
 	Integer u = EuclideanMultiplicativeInverse(p, q);
-	assert(!!dp && !!dq && !!u);
+	CRYPTOPP_ASSERT(!!dp && !!dq && !!u);
 	return ModularRoot(a, dp, dq, p, q, u);
 }
 
@@ -676,7 +676,7 @@ Integer GCDI(const Integer &x, const Integer &y)
 	Integer a=x, b=y;
 	unsigned k=0;
 
-	assert(!!a && !!b);
+	CRYPTOPP_ASSERT(!!a && !!b);
 
 	while (a[0]==0 && b[0]==0)
 	{
@@ -711,14 +711,14 @@ Integer GCDI(const Integer &x, const Integer &y)
 				break;
 
 			default:
-				assert(false);
+				CRYPTOPP_ASSERT(false);
 		}
 	}
 }
 
 Integer EuclideanMultiplicativeInverse(const Integer &a, const Integer &b)
 {
-	assert(b.Positive());
+	CRYPTOPP_ASSERT(b.Positive());
 
 	if (a.Negative())
 		return EuclideanMultiplicativeInverse(a%b, b);
@@ -786,7 +786,7 @@ Integer EuclideanMultiplicativeInverse(const Integer &a, const Integer &b)
 
 int Jacobi(const Integer &aIn, const Integer &bIn)
 {
-	assert(bIn.IsOdd());
+	CRYPTOPP_ASSERT(bIn.IsOdd());
 
 	Integer b = bIn, a = aIn%bIn;
 	int result = 1;
@@ -979,7 +979,7 @@ Integer Lucas(const Integer &n, const Integer &P, const Integer &modulus)
 				continue;
 			}
 
-			assert(em2 == 0);
+			CRYPTOPP_ASSERT(em2 == 0);
 			// #9
 			e >>= 1;
 			C = f(C, B, A);
@@ -1038,8 +1038,8 @@ unsigned int DiscreteLogWorkFactor(unsigned int n)
 void PrimeAndGenerator::Generate(signed int delta, RandomNumberGenerator &rng, unsigned int pbits, unsigned int qbits)
 {
 	// no prime exists for delta = -1, qbits = 4, and pbits = 5
-	assert(qbits > 4);
-	assert(pbits > qbits);
+	CRYPTOPP_ASSERT(qbits > 4);
+	CRYPTOPP_ASSERT(pbits > qbits);
 
 	if (qbits+1 == pbits)
 	{
@@ -1054,9 +1054,9 @@ void PrimeAndGenerator::Generate(signed int delta, RandomNumberGenerator &rng, u
 
 			while (sieve.NextCandidate(p))
 			{
-				assert(IsSmallPrime(p) || SmallDivisorsTest(p));
+				CRYPTOPP_ASSERT(IsSmallPrime(p) || SmallDivisorsTest(p));
 				q = (p-delta) >> 1;
-				assert(IsSmallPrime(q) || SmallDivisorsTest(q));
+				CRYPTOPP_ASSERT(IsSmallPrime(q) || SmallDivisorsTest(q));
 				if (FastProbablePrimeTest(q) && FastProbablePrimeTest(p) && IsPrime(q) && IsPrime(p))
 				{
 					success = true;
@@ -1071,12 +1071,12 @@ void PrimeAndGenerator::Generate(signed int delta, RandomNumberGenerator &rng, u
 			// g=4 always works, but this way we get the smallest quadratic residue (other than 1)
 			for (g=2; Jacobi(g, p) != 1; ++g) {}
 			// contributed by Walt Tuvell: g should be the following according to the Law of Quadratic Reciprocity
-			assert((p%8==1 || p%8==7) ? g==2 : (p%12==1 || p%12==11) ? g==3 : g==4);
+			CRYPTOPP_ASSERT((p%8==1 || p%8==7) ? g==2 : (p%12==1 || p%12==11) ? g==3 : g==4);
 		}
 		else
 		{
-			assert(delta == -1);
-			// find g such that g*g-4 is a quadratic non-residue, 
+			CRYPTOPP_ASSERT(delta == -1);
+			// find g such that g*g-4 is a quadratic non-residue,
 			// and such that g has order q
 			for (g=3; ; ++g)
 				if (Jacobi(g*g-4, p)==-1 && Lucas(q, g, p)==2)
@@ -1103,11 +1103,11 @@ void PrimeAndGenerator::Generate(signed int delta, RandomNumberGenerator &rng, u
 				Integer h(rng, 2, p-2, Integer::ANY);
 				g = a_exp_b_mod_c(h, (p-1)/q, p);
 			} while (g <= 1);
-			assert(a_exp_b_mod_c(g, q, p)==1);
+			CRYPTOPP_ASSERT(a_exp_b_mod_c(g, q, p)==1);
 		}
 		else
 		{
-			assert(delta==-1);
+			CRYPTOPP_ASSERT(delta==-1);
 			do
 			{
 				Integer h(rng, 3, p-1, Integer::ANY);
@@ -1115,7 +1115,7 @@ void PrimeAndGenerator::Generate(signed int delta, RandomNumberGenerator &rng, u
 					continue;
 				g = Lucas((p+1)/q, h, p);
 			} while (g <= 2);
-			assert(Lucas(q, g, p) == 2);
+			CRYPTOPP_ASSERT(Lucas(q, g, p) == 2);
 		}
 	}
 }

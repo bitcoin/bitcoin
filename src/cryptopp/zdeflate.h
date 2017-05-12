@@ -1,3 +1,8 @@
+// zdeflate.h - written and placed in the public domain by Wei Dai
+
+//! \file zdeflate.h
+//! \brief DEFLATE compression and decompression (RFC 1951)
+
 #ifndef CRYPTOPP_ZDEFLATE_H
 #define CRYPTOPP_ZDEFLATE_H
 
@@ -7,11 +12,14 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-//! _
+//! \brief Encoding table writer
 class LowFirstBitWriter : public Filter
 {
 public:
+	//! \brief Construct a LowFirstBitWriter
+	//! \param attachment an attached transformation
 	LowFirstBitWriter(BufferedTransformation *attachment);
+
 	void PutBits(unsigned long value, unsigned int length);
 	void FlushBitBuffer();
 	void ClearBitBuffer();
@@ -36,12 +44,12 @@ public:
 
 	//! \brief Construct a HuffmanEncoder
 	HuffmanEncoder() {}
-	
+
 	//! \brief Construct a HuffmanEncoder
 	//! \param codeBits a table of code bits
 	//! \param nCodes the number of codes in the table
 	HuffmanEncoder(const unsigned int *codeBits, unsigned int nCodes);
-	
+
 	//! \brief Initialize or reinitialize this object
 	//! \param codeBits a table of code bits
 	//! \param nCodes the number of codes in the table
@@ -60,23 +68,55 @@ public:
 	SecBlock<Code> m_valueToCode;
 };
 
-//! DEFLATE (RFC 1951) compressor
-
+//! \class Deflator
+//! \brief DEFLATE compressor (RFC 1951)
 class Deflator : public LowFirstBitWriter
 {
 public:
-	enum {MIN_DEFLATE_LEVEL = 0, DEFAULT_DEFLATE_LEVEL = 6, MAX_DEFLATE_LEVEL = 9};
-	enum {MIN_LOG2_WINDOW_SIZE = 9, DEFAULT_LOG2_WINDOW_SIZE = 15, MAX_LOG2_WINDOW_SIZE = 15};
-	/*! \note detectUncompressible makes it faster to process uncompressible files, but
-		if a file has both compressible and uncompressible parts, it may fail to compress some of the
-		compressible parts. */
+	//! \brief Deflate level as enumerated values.
+	enum {
+		//! \brief Minimum deflation level, fastest speed (0)
+		MIN_DEFLATE_LEVEL = 0,
+		//! \brief Default deflation level, compromise between speed (6)
+		DEFAULT_DEFLATE_LEVEL = 6,
+		//! \brief Minimum deflation level, slowest speed (9)
+		MAX_DEFLATE_LEVEL = 9};
+
+	//! \brief Windows size as enumerated values.
+	enum {
+		//! \brief Minimum window size, smallest table (9)
+		MIN_LOG2_WINDOW_SIZE = 9,
+		//! \brief Default window size (15)
+		DEFAULT_LOG2_WINDOW_SIZE = 15,
+		//! \brief Maximum window size, largest table (15)
+		MAX_LOG2_WINDOW_SIZE = 15};
+
+	//! \brief Construct a Deflator compressor
+	//! \param attachment an attached transformation
+	//! \param deflateLevel the deflate level
+	//! \param log2WindowSize the window size
+	//! \param detectUncompressible flag to detect if data is compressible
+	//! \details detectUncompressible makes it faster to process uncompressible files, but
+	//!   if a file has both compressible and uncompressible parts, it may fail to compress
+	//!   some of the compressible parts.
 	Deflator(BufferedTransformation *attachment=NULL, int deflateLevel=DEFAULT_DEFLATE_LEVEL, int log2WindowSize=DEFAULT_LOG2_WINDOW_SIZE, bool detectUncompressible=true);
-	//! possible parameter names: Log2WindowSize, DeflateLevel, DetectUncompressible
+	//! \brief Construct a Deflator compressor
+	//! \param parameters a set of NameValuePairs to initialize this object
+	//! \param attachment an attached transformation
+	//! \details Possible parameter names: Log2WindowSize, DeflateLevel, DetectUncompressible
 	Deflator(const NameValuePairs &parameters, BufferedTransformation *attachment=NULL);
 
-	//! this function can be used to set the deflate level in the middle of compression
+	//! \brief Sets the deflation level
+	//! \param deflateLevel the level of deflation
+	//! \details SetDeflateLevel can be used to set the deflate level in the middle of compression
 	void SetDeflateLevel(int deflateLevel);
+
+	//! \brief Retrieves the deflation level
+	//! \returns the level of deflation
 	int GetDeflateLevel() const {return m_deflateLevel;}
+
+	//! \brief Retrieves the window size
+	//! \returns the windows size
 	int GetLog2WindowSize() const {return m_log2WindowSize;}
 
 	void IsolatedInitialize(const NameValuePairs &parameters);

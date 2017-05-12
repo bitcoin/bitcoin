@@ -8,8 +8,11 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-static const byte s_vecUpper[] = "0123456789ABCDEF";
-static const byte s_vecLower[] = "0123456789abcdef";
+namespace
+{
+	const byte s_vecUpper[] = "0123456789ABCDEF";
+	const byte s_vecLower[] = "0123456789abcdef";
+}
 
 void HexEncoder::IsolatedInitialize(const NameValuePairs &parameters)
 {

@@ -1,7 +1,7 @@
 // simple.h - written and placed in the public domain by Wei Dai
 
 //! \file simple.h
-//! \brief Classes providing simple keying interfaces.
+//! \brief Classes providing basic library services.
 
 #ifndef CRYPTOPP_SIMPLE_H
 #define CRYPTOPP_SIMPLE_H
@@ -58,6 +58,22 @@ public:
 	explicit InvalidRounds(const std::string &algorithm, unsigned int rounds) : InvalidArgument(algorithm + ": " + IntToString(rounds) + " is not a valid number of rounds") {}
 };
 
+//! \class InvalidPersonalizationLength
+//! \brief Exception thrown when an invalid personalization string length is encountered
+class CRYPTOPP_DLL InvalidPersonalizationLength : public InvalidArgument
+{
+public:
+	explicit InvalidPersonalizationLength(const std::string &algorithm, size_t length) : InvalidArgument(algorithm + ": " + IntToString(length) + " is not a valid salt length") {}
+};
+
+//! \class InvalidSaltLength
+//! \brief Exception thrown when an invalid salt length is encountered
+class CRYPTOPP_DLL InvalidSaltLength : public InvalidArgument
+{
+public:
+	explicit InvalidSaltLength(const std::string &algorithm, size_t length) : InvalidArgument(algorithm + ": " + IntToString(length) + " is not a valid salt length") {}
+};
+
 // *****************************
 
 //! \class Bufferless
@@ -81,12 +97,12 @@ public:
 	bool Flush(bool completeFlush, int propagation=-1, bool blocking=true)
 		{return ChannelFlush(DEFAULT_CHANNEL, completeFlush, propagation, blocking);}
 	bool IsolatedFlush(bool hardFlush, bool blocking)
-		{CRYPTOPP_UNUSED(hardFlush); CRYPTOPP_UNUSED(blocking); assert(false); return false;}
+		{CRYPTOPP_UNUSED(hardFlush); CRYPTOPP_UNUSED(blocking); CRYPTOPP_ASSERT(false); return false;}
 	bool ChannelFlush(const std::string &channel, bool hardFlush, int propagation=-1, bool blocking=true)
 	{
 		if (hardFlush && !InputBufferIsEmpty())
 			throw CannotFlush("Unflushable<T>: this object has buffered input that cannot be flushed");
-		else 
+		else
 		{
 			BufferedTransformation *attached = this->AttachedTransformation();
 			return attached && propagation ? attached->ChannelFlush(channel, hardFlush, propagation-1, blocking) : false;
@@ -151,7 +167,7 @@ public:
 
 private:
 	bool IsolatedFlush(bool hardFlush, bool blocking)
-		{CRYPTOPP_UNUSED(hardFlush); CRYPTOPP_UNUSED(blocking); assert(false); return false;}
+		{CRYPTOPP_UNUSED(hardFlush); CRYPTOPP_UNUSED(blocking); CRYPTOPP_ASSERT(false); return false;}
 };
 
 //! \class CustomSignalPropagation
@@ -166,7 +182,7 @@ public:
 
 private:
 	void IsolatedInitialize(const NameValuePairs &parameters)
-		{CRYPTOPP_UNUSED(parameters); assert(false);}
+		{CRYPTOPP_UNUSED(parameters); CRYPTOPP_ASSERT(false);}
 };
 
 //! \class Multichannel
@@ -228,6 +244,7 @@ private:
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE Store : public AutoSignaling<InputRejecting<BufferedTransformation> >
 {
 public:
+	//! \brief Construct a Store
 	Store() : m_messageEnd(false) {}
 
 	void IsolatedInitialize(const NameValuePairs &parameters)

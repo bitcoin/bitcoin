@@ -81,6 +81,12 @@ CRYPTOPP_DEFINE_NAME_STRING(TableSize)			//!< int, in bytes
 CRYPTOPP_DEFINE_NAME_STRING(Blinding)			//!< bool, timing attack mitigations, ON by default
 CRYPTOPP_DEFINE_NAME_STRING(DerivedKey)			//!< ByteArrayParameter, key derivation, derived key
 CRYPTOPP_DEFINE_NAME_STRING(DerivedKeyLength)	//!< int, key derivation, derived key length in bytes
+CRYPTOPP_DEFINE_NAME_STRING(Personalization)	//!< ConstByteArrayParameter
+CRYPTOPP_DEFINE_NAME_STRING(PersonalizationSize)	//!< int, in bytes
+CRYPTOPP_DEFINE_NAME_STRING(Salt)				//!< ConstByteArrayParameter
+CRYPTOPP_DEFINE_NAME_STRING(Tweak)				//!< ConstByteArrayParameter
+CRYPTOPP_DEFINE_NAME_STRING(SaltSize)			//!< int, in bytes
+CRYPTOPP_DEFINE_NAME_STRING(TreeMode)			//< byte
 DOCUMENTED_NAMESPACE_END
 
 NAMESPACE_END

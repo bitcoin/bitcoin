@@ -12,7 +12,7 @@
 #include "cpu.h"
 
 NAMESPACE_BEGIN(CryptoPP)
-	
+
 #if CRYPTOPP_MSC_VERSION
 # pragma warning(disable: 4731)
 #endif
@@ -326,6 +326,7 @@ void CRYPTOPP_NOINLINE Panama_SSE2_Pull(size_t count, word32 *state, word32 *z, 
 template <class B>
 void Panama<B>::Iterate(size_t count, const word32 *p, byte *output, const byte *input, KeystreamOperation operation)
 {
+	CRYPTOPP_ASSERT(IsAlignedOn(m_state,GetAlignmentOf<word32>()));
 	word32 bstart = m_state[17];
 	word32 *const aPtr = m_state;
 	word32 cPtr[17];
@@ -369,11 +370,11 @@ void Panama<B>::Iterate(size_t count, const word32 *p, byte *output, const byte 
 			CRYPTOPP_KEYSTREAM_OUTPUT_SWITCH(PANAMA_OUTPUT, 4*8);
 		}
 
-		word32 *const b16 = (word32 *)(bPtr+((bstart+16*32) & 31*32));
-		word32 *const b4 = (word32 *)(bPtr+((bstart+(32-4)*32) & 31*32));
+		word32 *const b16 = (word32 *)(void *)(bPtr+((bstart+16*32) & 31*32));
+		word32 *const b4 = (word32 *)(void *)(bPtr+((bstart+(32-4)*32) & 31*32));
        	bstart += 32;
-		word32 *const b0 = (word32 *)(bPtr+((bstart) & 31*32));
-		word32 *const b25 = (word32 *)(bPtr+((bstart+(32-25)*32) & 31*32));
+		word32 *const b0 = (word32 *)(void *)(bPtr+((bstart) & 31*32));
+		word32 *const b25 = (word32 *)(void *)(bPtr+((bstart+(32-25)*32) & 31*32));
 
 		if (p)
 		{
@@ -384,22 +385,22 @@ void Panama<B>::Iterate(size_t count, const word32 *p, byte *output, const byte 
 			UL(0); UL(1); UL(2); UL(3); UL(4); UL(5); UL(6); UL(7);
 		}
 
-		GP(0); 
-		GP(1); 
-		GP(2); 
-		GP(3); 
-		GP(4); 
-		GP(5); 
-		GP(6); 
+		GP(0);
+		GP(1);
+		GP(2);
+		GP(3);
+		GP(4);
+		GP(5);
+		GP(6);
 		GP(7);
-		GP(8); 
-		GP(9); 
-		GP(10); 
-		GP(11); 
-		GP(12); 
-		GP(13); 
-		GP(14); 
-		GP(15); 
+		GP(8);
+		GP(9);
+		GP(10);
+		GP(11);
+		GP(12);
+		GP(13);
+		GP(14);
+		GP(15);
 		GP(16);
 
 		T(0,1);
@@ -433,7 +434,7 @@ void PanamaHash<B>::TruncatedFinal(byte *hash, size_t size)
 	this->ThrowIfInvalidTruncatedSize(size);
 
 	this->PadLastBlock(this->BLOCKSIZE, 0x01);
-	
+
 	HashEndianCorrectedBlock(this->m_data);
 
 	this->Iterate(32);	// pull
@@ -451,7 +452,7 @@ template <class B>
 void PanamaCipherPolicy<B>::CipherSetKey(const NameValuePairs &params, const byte *key, size_t length)
 {
 	CRYPTOPP_UNUSED(params); CRYPTOPP_UNUSED(length);
-	assert(length==32);
+	CRYPTOPP_ASSERT(length==32);
 	memcpy(m_key, key, 32);
 }
 
@@ -459,11 +460,13 @@ template <class B>
 void PanamaCipherPolicy<B>::CipherResynchronize(byte *keystreamBuffer, const byte *iv, size_t length)
 {
 	CRYPTOPP_UNUSED(keystreamBuffer); CRYPTOPP_UNUSED(iv); CRYPTOPP_UNUSED(length);
-	assert(length==32);
+	CRYPTOPP_ASSERT(IsAlignedOn(iv,GetAlignmentOf<word32>()));
+	CRYPTOPP_ASSERT(length==32);
+
 	this->Reset();
 	this->Iterate(1, m_key);
 	if (iv && IsAligned<word32>(iv))
-		this->Iterate(1, (const word32 *)iv);
+		this->Iterate(1, (const word32 *)(void *)iv);
 	else
 	{
 		FixedSizeSecBlock<word32, 8> buf;
@@ -497,8 +500,9 @@ template <class B>
 void PanamaCipherPolicy<B>::OperateKeystream(KeystreamOperation operation, byte *output, const byte *input, size_t iterationCount)
 {
 #if (CRYPTOPP_BOOL_SSE2_ASM_AVAILABLE || defined(CRYPTOPP_X64_MASM_AVAILABLE)) && !defined(CRYPTOPP_DISABLE_PANAMA_ASM)
+	// No need for alignment CRYPTOPP_ASSERT. Panama_SSE2_Pull is ASM, and its not bound by C alignment requirements.
 	if (B::ToEnum() == LITTLE_ENDIAN_ORDER && HasSSE2())
-		Panama_SSE2_Pull(iterationCount, this->m_state, (word32 *)output, (const word32 *)input);
+		Panama_SSE2_Pull(iterationCount, this->m_state, (word32 *)(void *)output, (const word32 *)(void *)input);
 	else
 #endif
 		this->Iterate(iterationCount, NULL, output, input, operation);

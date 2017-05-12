@@ -52,7 +52,7 @@ GF2_32::Element GF2_32::MultiplicativeInverse(Element a) const
 	word32 g0=m_modulus, g1=a, g2=a;
 	word32 v0=0, v1=1, v2=1;
 
-	assert(g1);
+	CRYPTOPP_ASSERT(g1);
 
 	while (!(g2 & 0x80000000))
 	{
@@ -70,25 +70,25 @@ GF2_32::Element GF2_32::MultiplicativeInverse(Element a) const
 	{
 		if (g1 < g0 || ((g0^g1) < g0 && (g0^g1) < g1))
 		{
-			assert(BitPrecision(g1) <= BitPrecision(g0));
+			CRYPTOPP_ASSERT(BitPrecision(g1) <= BitPrecision(g0));
 			g2 = g1;
 			v2 = v1;
 		}
 		else
 		{
-			assert(BitPrecision(g1) > BitPrecision(g0));
+			CRYPTOPP_ASSERT(BitPrecision(g1) > BitPrecision(g0));
 			g2 = g0; g0 = g1; g1 = g2;
 			v2 = v0; v0 = v1; v1 = v2;
 		}
 
 		while ((g0^g2) >= g2)
 		{
-			assert(BitPrecision(g0) > BitPrecision(g2));
+			CRYPTOPP_ASSERT(BitPrecision(g0) > BitPrecision(g2));
 			g2 <<= 1;
 			v2 <<= 1;
 		}
 
-		assert(BitPrecision(g0) == BitPrecision(g2));
+		CRYPTOPP_ASSERT(BitPrecision(g0) == BitPrecision(g2));
 		g0 ^= g2;
 		v0 ^= v2;
 	}

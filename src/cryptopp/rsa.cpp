@@ -10,7 +10,7 @@
 #include "algparam.h"
 #include "fips140.h"
 
-#if !defined(NDEBUG) && !defined(CRYPTOPP_DOXYGEN_PROCESSING) && !defined(CRYPTOPP_IS_DLL)
+#if CRYPTOPP_DEBUG && !defined(CRYPTOPP_DOXYGEN_PROCESSING) && !defined(CRYPTOPP_IS_DLL)
 #include "pssr.h"
 NAMESPACE_BEGIN(CryptoPP)
 void RSA_TestInstantiations()
@@ -108,13 +108,13 @@ void InvertibleRSAFunction::GenerateRandom(RandomNumberGenerator &rng, const Nam
 	int modulusSize = 2048;
 	alg.GetIntValue(Name::ModulusSize(), modulusSize) || alg.GetIntValue(Name::KeySize(), modulusSize);
 
-	assert(modulusSize >= 16);
+	CRYPTOPP_ASSERT(modulusSize >= 16);
 	if (modulusSize < 16)
 		throw InvalidArgument("InvertibleRSAFunction: specified modulus size is too small");
 
 	m_e = alg.GetValueWithDefault(Name::PublicExponent(), Integer(17));
 
-	assert(m_e >= 3); assert(!m_e.IsEven());
+	CRYPTOPP_ASSERT(m_e >= 3); CRYPTOPP_ASSERT(!m_e.IsEven());
 	if (m_e < 3 || m_e.IsEven())
 		throw InvalidArgument("InvertibleRSAFunction: invalid public exponent");
 
@@ -125,7 +125,7 @@ void InvertibleRSAFunction::GenerateRandom(RandomNumberGenerator &rng, const Nam
 	m_q.GenerateRandom(rng, primeParam);
 
 	m_d = m_e.InverseMod(LCM(m_p-1, m_q-1));
-	assert(m_d.IsPositive());
+	CRYPTOPP_ASSERT(m_d.IsPositive());
 
 	m_dp = m_d % (m_p-1);
 	m_dq = m_d % (m_q-1);
@@ -224,7 +224,7 @@ void InvertibleRSAFunction::DEREncodePrivateKey(BufferedTransformation &bt) cons
 	privateKey.MessageEnd();
 }
 
-Integer InvertibleRSAFunction::CalculateInverse(RandomNumberGenerator &rng, const Integer &x) const 
+Integer InvertibleRSAFunction::CalculateInverse(RandomNumberGenerator &rng, const Integer &x) const
 {
 	DoQuickSanityCheck();
 	ModularArithmetic modn(m_n);
@@ -297,7 +297,7 @@ Integer RSAFunction_ISO::ApplyFunction(const Integer &x) const
 	return t % 16 == 12 ? t : m_n - t;
 }
 
-Integer InvertibleRSAFunction_ISO::CalculateInverse(RandomNumberGenerator &rng, const Integer &x) const 
+Integer InvertibleRSAFunction_ISO::CalculateInverse(RandomNumberGenerator &rng, const Integer &x) const
 {
 	Integer t = InvertibleRSAFunction::CalculateInverse(rng, x);
 	return STDMIN(t, m_n-t);

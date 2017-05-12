@@ -21,9 +21,9 @@ static const byte FDICT_FLAG = (1 << 5);
 void ZlibCompressor::WritePrestreamHeader()
 {
 	m_adler32.Restart();
-	assert(((GetLog2WindowSize()-8) << 4) <= 255);
+	CRYPTOPP_ASSERT(((GetLog2WindowSize()-8) << 4) <= 255);
 	byte cmf = byte(DEFLATE_METHOD | ((GetLog2WindowSize()-8) << 4));
-	assert((GetCompressionLevel() << 6) <= 255);
+	CRYPTOPP_ASSERT((GetCompressionLevel() << 6) <= 255);
 	byte flags = byte(GetCompressionLevel() << 6);
 	AttachedTransformation()->PutWord16(RoundUpToMultipleOf(word16(cmf*256+flags), word16(31)));
 }

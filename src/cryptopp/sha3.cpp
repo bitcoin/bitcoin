@@ -19,14 +19,14 @@ http://creativecommons.org/publicdomain/zero/1.0/
 
 NAMESPACE_BEGIN(CryptoPP)
 
-static const word64 KeccakF_RoundConstants[24] = 
+static const word64 KeccakF_RoundConstants[24] =
 {
     W64LIT(0x0000000000000001), W64LIT(0x0000000000008082), W64LIT(0x800000000000808a),
     W64LIT(0x8000000080008000), W64LIT(0x000000000000808b), W64LIT(0x0000000080000001),
     W64LIT(0x8000000080008081), W64LIT(0x8000000000008009), W64LIT(0x000000000000008a),
     W64LIT(0x0000000000000088), W64LIT(0x0000000080008009), W64LIT(0x000000008000000a),
     W64LIT(0x000000008000808b), W64LIT(0x800000000000008b), W64LIT(0x8000000000008089),
-    W64LIT(0x8000000000008003), W64LIT(0x8000000000008002), W64LIT(0x8000000000000080), 
+    W64LIT(0x8000000000008003), W64LIT(0x8000000000008002), W64LIT(0x8000000000000080),
     W64LIT(0x000000000000800a), W64LIT(0x800000008000000a), W64LIT(0x8000000080008081),
     W64LIT(0x8000000000008080), W64LIT(0x0000000080000001), W64LIT(0x8000000080008008)
 };
@@ -48,8 +48,8 @@ static void KeccakF1600(word64 *state)
         word64 Esa, Ese, Esi, Eso, Esu;
 
         //copyFromState(A, state)
-		typedef BlockGetAndPut<word64, LittleEndian, true, true> Block;
-		Block::Get(state)(Aba)(Abe)(Abi)(Abo)(Abu)(Aga)(Age)(Agi)(Ago)(Agu)(Aka)(Ake)(Aki)(Ako)(Aku)(Ama)(Ame)(Ami)(Amo)(Amu)(Asa)(Ase)(Asi)(Aso)(Asu);
+        typedef BlockGetAndPut<word64, LittleEndian, true, true> Block;
+        Block::Get(state)(Aba)(Abe)(Abi)(Abo)(Abu)(Aga)(Age)(Agi)(Ago)(Agu)(Aka)(Ake)(Aki)(Ako)(Aku)(Ama)(Ame)(Ami)(Amo)(Amu)(Asa)(Ase)(Asi)(Aso)(Asu);
 
         for( unsigned int round = 0; round < 24; round += 2 )
         {
@@ -245,46 +245,46 @@ static void KeccakF1600(word64 *state)
         }
 
         //copyToState(state, A)
-		Block::Put(NULL, state)(Aba)(Abe)(Abi)(Abo)(Abu)(Aga)(Age)(Agi)(Ago)(Agu)(Aka)(Ake)(Aki)(Ako)(Aku)(Ama)(Ame)(Ami)(Amo)(Amu)(Asa)(Ase)(Asi)(Aso)(Asu);
+        Block::Put(NULL, state)(Aba)(Abe)(Abi)(Abo)(Abu)(Aga)(Age)(Agi)(Ago)(Agu)(Aka)(Ake)(Aki)(Ako)(Aku)(Ama)(Ame)(Ami)(Amo)(Amu)(Asa)(Ase)(Asi)(Aso)(Asu);
     }
 }
 
 void SHA3::Update(const byte *input, size_t length)
 {
-	assert((input && length) || !(input || length));
-	if (!length)
-		return;
+    CRYPTOPP_ASSERT((input && length) || !(input || length));
+    if (!length) { return; }
 
-	size_t spaceLeft;
-	while (length >= (spaceLeft = r() - m_counter))
-	{
-		if (spaceLeft)
-			xorbuf(m_state.BytePtr() + m_counter, input, spaceLeft);
-		KeccakF1600(m_state);
-		input += spaceLeft;
-		length -= spaceLeft;
-		m_counter = 0;
-	}
+    size_t spaceLeft;
+    while (length >= (spaceLeft = r() - m_counter))
+    {
+        if (spaceLeft)
+            xorbuf(m_state.BytePtr() + m_counter, input, spaceLeft);
+        KeccakF1600(m_state);
+        input += spaceLeft;
+        length -= spaceLeft;
+        m_counter = 0;
+    }
 
-	if (length)
-		xorbuf(m_state.BytePtr() + m_counter, input, length);
-	m_counter += (unsigned int)length;
+    if (length)
+        xorbuf(m_state.BytePtr() + m_counter, input, length);
+    m_counter += (unsigned int)length;
 }
 
 void SHA3::Restart()
 {
-	memset(m_state, 0, m_state.SizeInBytes());
-	m_counter = 0;
+    memset(m_state, 0, m_state.SizeInBytes());
+    m_counter = 0;
 }
 
 void SHA3::TruncatedFinal(byte *hash, size_t size)
 {
-	ThrowIfInvalidTruncatedSize(size);
-	m_state.BytePtr()[m_counter] ^= 1;
-	m_state.BytePtr()[r()-1] ^= 0x80;
-	KeccakF1600(m_state);
-	memcpy(hash, m_state, size);
-	Restart();
+    ThrowIfInvalidTruncatedSize(size);
+
+    m_state.BytePtr()[m_counter] ^= 0x06;
+    m_state.BytePtr()[r()-1] ^= 0x80;
+    KeccakF1600(m_state);
+    memcpy(hash, m_state, size);
+    Restart();
 }
 
 NAMESPACE_END

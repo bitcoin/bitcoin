@@ -3,6 +3,7 @@
 //! \file
 //! \headerfile authenc.h
 //! \brief Base classes for working with authenticated encryption modes of encryption
+//! \since Crypto++ 5.6.0
 
 #ifndef CRYPTOPP_AUTHENC_H
 #define CRYPTOPP_AUTHENC_H
@@ -13,7 +14,8 @@
 NAMESPACE_BEGIN(CryptoPP)
 
 //! \class AuthenticatedSymmetricCipherBase
-//! \brief 
+//! \brief Base implementation for one direction (encryption or decryption) of a stream cipher or block cipher mode with authentication
+//! \since Crypto++ 5.6.0
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE AuthenticatedSymmetricCipherBase : public AuthenticatedSymmetricCipher
 {
 public:
@@ -22,7 +24,14 @@ public:
 
 	bool IsRandomAccess() const {return false;}
 	bool IsSelfInverting() const {return true;}
-	void UncheckedSetKey(const byte *,unsigned int,const CryptoPP::NameValuePairs &) {assert(false);}
+
+	//! \brief Sets the key for this object without performing parameter validation
+	//! \param key a byte buffer used to key the cipher
+	//! \param length the length of the byte buffer
+	//! \param params additional parameters passed as  NameValuePairs
+	//! \details key must be at least DEFAULT_KEYLENGTH in length.
+	void UncheckedSetKey(const byte * key, unsigned int length,const CryptoPP::NameValuePairs &params)
+		{CRYPTOPP_UNUSED(key), CRYPTOPP_UNUSED(length), CRYPTOPP_UNUSED(params); CRYPTOPP_ASSERT(false);}
 
 	void SetKey(const byte *userKey, size_t keylength, const NameValuePairs &params);
 	void Restart() {if (m_state > State_KeySet) m_state = State_KeySet;}

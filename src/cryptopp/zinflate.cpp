@@ -1,7 +1,7 @@
 // zinflate.cpp - written and placed in the public domain by Wei Dai
 
 // This is a complete reimplementation of the DEFLATE decompression algorithm.
-// It should not be affected by any security vulnerabilities in the zlib 
+// It should not be affected by any security vulnerabilities in the zlib
 // compression library. In particular it is not affected by the double free bug
 // (http://www.kb.cert.org/vuls/id/368819).
 
@@ -32,20 +32,20 @@ inline bool LowFirstBitReader::FillBuffer(unsigned int length)
 		m_buffer |= (unsigned long)b << m_bitsBuffered;
 		m_bitsBuffered += 8;
 	}
-	assert(m_bitsBuffered <= sizeof(unsigned long)*8);
+	CRYPTOPP_ASSERT(m_bitsBuffered <= sizeof(unsigned long)*8);
 	return true;
 }
 
 inline unsigned long LowFirstBitReader::PeekBits(unsigned int length)
 {
 	bool result = FillBuffer(length);
-	CRYPTOPP_UNUSED(result); assert(result);
+	CRYPTOPP_UNUSED(result); CRYPTOPP_ASSERT(result);
 	return m_buffer & (((unsigned long)1 << length) - 1);
 }
 
 inline void LowFirstBitReader::SkipBits(unsigned int length)
 {
-	assert(m_bitsBuffered >= length);
+	CRYPTOPP_ASSERT(m_bitsBuffered >= length);
 	m_buffer >>= length;
 	m_bitsBuffered -= length;
 }
@@ -114,7 +114,7 @@ void HuffmanDecoder::Initialize(const unsigned int *codeBits, unsigned int nCode
 	}
 
 	// MAX_CODE_BITS is 32, m_maxCodeBits may be smaller.
-	const unsigned long long shiftedMaxCode = (1ULL << m_maxCodeBits);
+	const word64 shiftedMaxCode = ((word64)1 << m_maxCodeBits);
 	if (code > shiftedMaxCode - blCount[m_maxCodeBits])
 		throw Err("codes oversubscribed");
 	else if (m_maxCodeBits != 1 && code < shiftedMaxCode - blCount[m_maxCodeBits])
@@ -123,7 +123,7 @@ void HuffmanDecoder::Initialize(const unsigned int *codeBits, unsigned int nCode
 	// compute a vector of <code, length, value> triples sorted by code
 	m_codeToValue.resize(nCodes - blCount[0]);
 	unsigned int j=0;
-	for (i=0; i<nCodes; i++) 
+	for (i=0; i<nCodes; i++)
 	{
 		unsigned int len = codeBits[i];
 		if (len != 0)
@@ -141,10 +141,10 @@ void HuffmanDecoder::Initialize(const unsigned int *codeBits, unsigned int nCode
 	m_cacheBits = STDMIN(9U, m_maxCodeBits);
 	m_cacheMask = (1 << m_cacheBits) - 1;
 	m_normalizedCacheMask = NormalizeCode(m_cacheMask, m_cacheBits);
-	assert(m_normalizedCacheMask == BitReverse(m_cacheMask));
+	CRYPTOPP_ASSERT(m_normalizedCacheMask == BitReverse(m_cacheMask));
 
-	const unsigned long long shiftedCache = (1ULL << m_cacheBits);
-	assert(shiftedCache <= SIZE_MAX);
+	const word64 shiftedCache = ((word64)1 << m_cacheBits);
+	CRYPTOPP_ASSERT(shiftedCache <= SIZE_MAX);
 	if (m_cache.size() != shiftedCache)
 		m_cache.resize((size_t)shiftedCache);
 
@@ -181,7 +181,7 @@ void HuffmanDecoder::FillCacheEntry(LookupEntry &entry, code_t normalizedCode) c
 
 inline unsigned int HuffmanDecoder::Decode(code_t code, /* out */ value_t &value) const
 {
-	assert(m_codeToValue.size() > 0);
+	CRYPTOPP_ASSERT(m_codeToValue.size() > 0);
 	LookupEntry &entry = m_cache[code & m_cacheMask];
 
 	code_t normalizedCode = 0;
@@ -209,7 +209,7 @@ inline unsigned int HuffmanDecoder::Decode(code_t code, /* out */ value_t &value
 bool HuffmanDecoder::Decode(LowFirstBitReader &reader, value_t &value) const
 {
 	bool result = reader.FillBuffer(m_maxCodeBits);
-	if(!result) return false;
+	CRYPTOPP_UNUSED(result); // CRYPTOPP_ASSERT(result);
 
 	unsigned int codeBits = Decode(reader.PeekBuffer(), value);
 	if (codeBits > reader.BitsBuffered())
@@ -265,7 +265,7 @@ void Inflator::OutputString(const byte *string, size_t length)
 		}
 		string += len;
 		length -= len;
-	}		
+	}
 }
 
 void Inflator::OutputPast(unsigned int length, unsigned int distance)
@@ -339,7 +339,7 @@ void Inflator::ProcessInput(bool flush)
 			m_wrappedAround = false;
 			m_current = 0;
 			m_lastFlush = 0;
-			m_window.New(1 << GetLog2WindowSize());
+			m_window.New(((size_t) 1) << GetLog2WindowSize());
 			break;
 		case WAIT_HEADER:
 			{
@@ -478,14 +478,14 @@ bool Inflator::DecodeBody()
 	switch (m_blockType)
 	{
 	case 0:	// stored
-		assert(m_reader.BitsBuffered() == 0);
+		CRYPTOPP_ASSERT(m_reader.BitsBuffered() == 0);
 		while (!m_inQueue.IsEmpty() && !blockEnd)
 		{
 			size_t size;
 			const byte *block = m_inQueue.Spy(size);
 			size = UnsignedMin(m_storedLen, size);
-			assert(size <= 0xffff);
-			
+			CRYPTOPP_ASSERT(size <= 0xffff);
+
 			OutputString(block, size);
 			m_inQueue.Skip(size);
 			m_storedLen = m_storedLen - (word16)size;
@@ -562,7 +562,7 @@ bool Inflator::DecodeBody()
 			}
 			break;
 		default:
-			assert(0);
+			CRYPTOPP_ASSERT(0);
 		}
 	}
 	if (blockEnd)
@@ -591,7 +591,7 @@ void Inflator::FlushOutput()
 {
 	if (m_state != PRE_STREAM)
 	{
-		assert(m_current >= m_lastFlush);
+		CRYPTOPP_ASSERT(m_current >= m_lastFlush);
 		ProcessDecompressedData(m_window + m_lastFlush, m_current - m_lastFlush);
 		m_lastFlush = m_current;
 	}

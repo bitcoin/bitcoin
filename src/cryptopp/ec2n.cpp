@@ -62,7 +62,7 @@ bool EC2N::DecodePoint(EC2N::Point &P, BufferedTransformation &bt, size_t encode
 			return false;
 
 		P.identity = false;
-		P.x.Decode(bt, m_field->MaxElementByteLength()); 
+		P.x.Decode(bt, m_field->MaxElementByteLength());
 
 		if (P.x.IsZero())
 		{
@@ -71,11 +71,11 @@ bool EC2N::DecodePoint(EC2N::Point &P, BufferedTransformation &bt, size_t encode
 		}
 
 		FieldElement z = m_field->Square(P.x);
-		assert(P.x == m_field->SquareRoot(z));
+		CRYPTOPP_ASSERT(P.x == m_field->SquareRoot(z));
 		P.y = m_field->Divide(m_field->Add(m_field->Multiply(z, m_field->Add(P.x, m_a)), m_b), z);
-		assert(P.x == m_field->Subtract(m_field->Divide(m_field->Subtract(m_field->Multiply(P.y, z), m_b), z), m_a));
+		CRYPTOPP_ASSERT(P.x == m_field->Subtract(m_field->Divide(m_field->Subtract(m_field->Multiply(P.y, z), m_b), z), m_a));
 		z = m_field->SolveQuadraticEquation(P.y);
-		assert(m_field->Add(m_field->Square(z), z) == P.y);
+		CRYPTOPP_ASSERT(m_field->Add(m_field->Square(z), z) == P.y);
 		z.SetCoefficient(0, type & 1);
 
 		P.y = m_field->Multiply(z, P.x);
@@ -119,7 +119,7 @@ void EC2N::EncodePoint(byte *encodedPoint, const Point &P, bool compressed) cons
 {
 	ArraySink sink(encodedPoint, EncodedPointSize(compressed));
 	EncodePoint(sink, P, compressed);
-	assert(sink.TotalPutLength() == EncodedPointSize(compressed));
+	CRYPTOPP_ASSERT(sink.TotalPutLength() == EncodedPointSize(compressed));
 }
 
 EC2N::Point EC2N::BERDecodePoint(BufferedTransformation &bt) const
@@ -148,14 +148,14 @@ bool EC2N::ValidateParameters(RandomNumberGenerator &rng, unsigned int level) co
 
 	if (level >= 1)
 		pass = pass && m_field->GetModulus().IsIrreducible();
-		
+
 	return pass;
 }
 
 bool EC2N::VerifyPoint(const Point &P) const
 {
 	const FieldElement &x = P.x, &y = P.y;
-	return P.identity || 
+	return P.identity ||
 		(x.CoefficientCount() <= m_field->MaxElementBitLength()
 		&& y.CoefficientCount() <= m_field->MaxElementBitLength()
 		&& !(((x+m_a)*x*x+m_b-(x+y)*y)%m_field->GetModulus()));

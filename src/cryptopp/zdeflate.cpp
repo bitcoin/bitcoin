@@ -20,14 +20,14 @@ LowFirstBitWriter::LowFirstBitWriter(BufferedTransformation *attachment)
 
 void LowFirstBitWriter::StartCounting()
 {
-	assert(!m_counting);
+	CRYPTOPP_ASSERT(!m_counting);
 	m_counting = true;
 	m_bitCount = 0;
 }
 
 unsigned long LowFirstBitWriter::FinishCounting()
 {
-	assert(m_counting);
+	CRYPTOPP_ASSERT(m_counting);
 	m_counting = false;
 	return m_bitCount;
 }
@@ -40,7 +40,7 @@ void LowFirstBitWriter::PutBits(unsigned long value, unsigned int length)
 	{
 		m_buffer |= value << m_bitsBuffered;
 		m_bitsBuffered += length;
-		assert(m_bitsBuffered <= sizeof(unsigned long)*8);
+		CRYPTOPP_ASSERT(m_bitsBuffered <= sizeof(unsigned long)*8);
 		while (m_bitsBuffered >= 8)
 		{
 			m_outputBuffer[m_bytesBuffered++] = (byte)m_buffer;
@@ -94,7 +94,7 @@ struct HuffmanNode
 		: symbol(0), parent(0) {}
 	HuffmanNode(const HuffmanNode& rhs)
 		: symbol(rhs.symbol), parent(rhs.parent) {}
-	
+
 	size_t symbol;
 	union {size_t parent; unsigned depth, freq;};
 };
@@ -109,8 +109,8 @@ struct FreqLessThan
 
 void HuffmanEncoder::GenerateCodeLengths(unsigned int *codeBits, unsigned int maxCodeBits, const unsigned int *codeCounts, size_t nCodes)
 {
-	assert(nCodes > 0);
-	assert(nCodes <= ((size_t)1 << maxCodeBits));
+	CRYPTOPP_ASSERT(nCodes > 0);
+	CRYPTOPP_ASSERT(nCodes <= ((size_t)1 << maxCodeBits));
 
 	size_t i;
 	SecBlockWithHint<HuffmanNode, 2*286> tree(nCodes);
@@ -164,7 +164,7 @@ void HuffmanEncoder::GenerateCodeLengths(unsigned int *codeBits, unsigned int ma
 			bits--;
 		blCount[bits]--;
 		blCount[bits+1] += 2;
-		assert(blCount[maxCodeBits] > 0);
+		CRYPTOPP_ASSERT(blCount[maxCodeBits] > 0);
 		blCount[maxCodeBits]--;
 	}
 
@@ -178,12 +178,12 @@ void HuffmanEncoder::GenerateCodeLengths(unsigned int *codeBits, unsigned int ma
 		codeBits[tree[i].symbol] = bits;
 		blCount[bits]--;
 	}
-	assert(blCount[bits] == 0);
+	CRYPTOPP_ASSERT(blCount[bits] == 0);
 }
 
 void HuffmanEncoder::Initialize(const unsigned int *codeBits, unsigned int nCodes)
 {
-	assert(nCodes > 0);
+	CRYPTOPP_ASSERT(nCodes > 0);
 	unsigned int maxCodeBits = *std::max_element(codeBits, codeBits+nCodes);
 	if (maxCodeBits == 0)
 		return;		// assume this object won't be used
@@ -202,7 +202,7 @@ void HuffmanEncoder::Initialize(const unsigned int *codeBits, unsigned int nCode
 		code = (code + blCount[i-1]) << 1;
 		nextCode[i] = code;
 	}
-	assert(maxCodeBits == 1 || code == (1 << maxCodeBits) - blCount[maxCodeBits]);
+	CRYPTOPP_ASSERT(maxCodeBits == 1 || code == (1 << maxCodeBits) - blCount[maxCodeBits]);
 
 	m_valueToCode.resize(nCodes);
 	for (i=0; i<nCodes; i++)
@@ -215,7 +215,7 @@ void HuffmanEncoder::Initialize(const unsigned int *codeBits, unsigned int nCode
 
 inline void HuffmanEncoder::Encode(LowFirstBitWriter &writer, value_t value) const
 {
-	assert(m_valueToCode[value].len > 0);
+	CRYPTOPP_ASSERT(m_valueToCode[value].len > 0);
 	writer.PutBits(m_valueToCode[value].code, m_valueToCode[value].len);
 }
 
@@ -265,7 +265,7 @@ void Deflator::IsolatedInitialize(const NameValuePairs &parameters)
 	Reset(true);
 
 	const int deflateLevel = parameters.GetIntValueWithDefault("DeflateLevel", DEFAULT_DEFLATE_LEVEL);
-	assert(deflateLevel >= MIN_DEFLATE_LEVEL /*0*/ && deflateLevel <= MAX_DEFLATE_LEVEL /*9*/);
+	CRYPTOPP_ASSERT(deflateLevel >= MIN_DEFLATE_LEVEL /*0*/ && deflateLevel <= MAX_DEFLATE_LEVEL /*9*/);
 	SetDeflateLevel(deflateLevel);
 	bool detectUncompressible = parameters.GetValueWithDefault("DetectUncompressible", true);
 	m_compressibleDeflateLevel = detectUncompressible ? m_deflateLevel : 0;
@@ -276,7 +276,7 @@ void Deflator::Reset(bool forceReset)
 	if (forceReset)
 		ClearBitBuffer();
 	else
-		assert(m_bitsBuffered == 0);
+		CRYPTOPP_ASSERT(m_bitsBuffered == 0);
 
 	m_headerWritten = false;
 	m_matchAvailable = false;
@@ -340,16 +340,16 @@ unsigned int Deflator::FillWindow(const byte *str, size_t length)
 		memcpy(m_byteBuffer, m_byteBuffer + DSIZE, DSIZE);
 
 		m_dictionaryEnd = m_dictionaryEnd < DSIZE ? 0 : m_dictionaryEnd-DSIZE;
-		assert(m_stringStart >= DSIZE);
+		CRYPTOPP_ASSERT(m_stringStart >= DSIZE);
 		m_stringStart -= DSIZE;
-		assert(!m_matchAvailable || m_previousMatch >= DSIZE);
+		CRYPTOPP_ASSERT(!m_matchAvailable || m_previousMatch >= DSIZE);
 		m_previousMatch -= DSIZE;
-		assert(m_blockStart >= DSIZE);
+		CRYPTOPP_ASSERT(m_blockStart >= DSIZE);
 		m_blockStart -= DSIZE;
 
 		// These are set to the same value in IsolatedInitialize(). If they
 		//   are the same, then we can clear a Coverity false alarm.
-		assert(DSIZE == HSIZE);
+		CRYPTOPP_ASSERT(DSIZE == HSIZE);
 
 		unsigned int i;
 		for (i=0; i<HSIZE; i++)
@@ -359,9 +359,9 @@ unsigned int Deflator::FillWindow(const byte *str, size_t length)
 			m_prev[i] = SaturatingSubtract(m_prev[i], DSIZE);
 	}
 
-	assert(maxBlockSize > m_stringStart+m_lookahead);
+	CRYPTOPP_ASSERT(maxBlockSize > m_stringStart+m_lookahead);
 	unsigned int accepted = UnsignedMin(maxBlockSize-(m_stringStart+m_lookahead), length);
-	assert(accepted > 0);
+	CRYPTOPP_ASSERT(accepted > 0);
 	memcpy(m_byteBuffer + m_stringStart + m_lookahead, str, accepted);
 	m_lookahead += accepted;
 	return accepted;
@@ -369,13 +369,13 @@ unsigned int Deflator::FillWindow(const byte *str, size_t length)
 
 inline unsigned int Deflator::ComputeHash(const byte *str) const
 {
-	assert(str+3 <= m_byteBuffer + m_stringStart + m_lookahead);
+	CRYPTOPP_ASSERT(str+3 <= m_byteBuffer + m_stringStart + m_lookahead);
 	return ((str[0] << 10) ^ (str[1] << 5) ^ str[2]) & HMASK;
 }
 
 unsigned int Deflator::LongestMatch(unsigned int &bestMatch) const
 {
-	assert(m_previousLength < MAX_MATCH);
+	CRYPTOPP_ASSERT(m_previousLength < MAX_MATCH);
 
 	bestMatch = 0;
 	unsigned int bestLength = STDMAX(m_previousLength, (unsigned int)MIN_MATCH-1);
@@ -393,10 +393,10 @@ unsigned int Deflator::LongestMatch(unsigned int &bestMatch) const
 	while (current > limit && --chainLength > 0)
 	{
 		const byte *match = m_byteBuffer + current;
-		assert(scan + bestLength < m_byteBuffer + m_stringStart + m_lookahead);
+		CRYPTOPP_ASSERT(scan + bestLength < m_byteBuffer + m_stringStart + m_lookahead);
 		if (scan[bestLength-1] == match[bestLength-1] && scan[bestLength] == match[bestLength] && scan[0] == match[0] && scan[1] == match[1])
 		{
-			assert(scan[2] == match[2]);
+			CRYPTOPP_ASSERT(scan[2] == match[2]);
 			unsigned int len = (unsigned int)(
 #if defined(_STDEXT_BEGIN) && !(defined(_MSC_VER) && (_MSC_VER < 1400 || _MSC_VER >= 1600)) && !defined(_STLPORT_VERSION)
 				stdext::unchecked_mismatch
@@ -408,13 +408,13 @@ unsigned int Deflator::LongestMatch(unsigned int &bestMatch) const
 #else
 				(scan+3, scanEnd, match+3).first - scan);
 #endif
-			assert(len != bestLength);
+			CRYPTOPP_ASSERT(len != bestLength);
 			if (len > bestLength)
 			{
 				bestLength = len;
 				bestMatch = current;
 
-				assert(scanEnd >= scan);
+				CRYPTOPP_ASSERT(scanEnd >= scan);
 				if (len == (unsigned int)(scanEnd - scan))
 					break;
 			}
@@ -426,7 +426,7 @@ unsigned int Deflator::LongestMatch(unsigned int &bestMatch) const
 
 inline void Deflator::InsertString(unsigned int start)
 {
-	assert(start <= 0xffff);
+	CRYPTOPP_ASSERT(start <= 0xffff);
 	unsigned int hash = ComputeHash(m_byteBuffer + start);
 	m_prev[start & DMASK] = m_head[hash];
 	m_head[hash] = word16(start);
@@ -493,7 +493,7 @@ void Deflator::ProcessBuffer()
 			m_lookahead--;
 		}
 
-		assert(m_stringStart - (m_blockStart+m_blockLength) == (unsigned int)m_matchAvailable);
+		CRYPTOPP_ASSERT(m_stringStart - (m_blockStart+m_blockLength) == (unsigned int)m_matchAvailable);
 	}
 
 	if (m_minLookahead == 0 && m_matchAvailable)
@@ -517,7 +517,7 @@ size_t Deflator::Put2(const byte *str, size_t length, int messageEnd, bool block
 		ProcessUncompressedData(str+accepted, newAccepted);
 		accepted += newAccepted;
 	}
-	assert(accepted == length);
+	CRYPTOPP_ASSERT(accepted == length);
 
 	if (messageEnd)
 	{
@@ -582,13 +582,13 @@ void Deflator::MatchFound(unsigned int distance, unsigned int length)
 	static const unsigned int lengthBases[] =
 		{3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,
 		 227,258};
-	static const unsigned int distanceBases[30] = 
+	static const unsigned int distanceBases[30] =
 		{1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,
 		 4097,6145,8193,12289,16385,24577};
 
-	assert(m_matchBufferEnd < m_matchBuffer.size());
+	CRYPTOPP_ASSERT(m_matchBufferEnd < m_matchBuffer.size());
 	EncodedMatch &m = m_matchBuffer[m_matchBufferEnd++];
-	assert(length >= 3 && length < COUNTOF(lengthCodes));
+	CRYPTOPP_ASSERT((length >= 3) && (length-3 < COUNTOF(lengthCodes)));
 	unsigned int lengthCode = lengthCodes[length-3];
 	m.literalCode = lengthCode;
 	m.literalExtra = length - lengthBases[lengthCode-257];
@@ -601,10 +601,10 @@ void Deflator::MatchFound(unsigned int distance, unsigned int length)
 	m_blockLength += length;
 }
 
-inline unsigned int CodeLengthEncode(const unsigned int *begin, 
-									 const unsigned int *end, 
-									 const unsigned int *& p, 
-									 unsigned int &extraBits, 
+inline unsigned int CodeLengthEncode(const unsigned int *begin,
+									 const unsigned int *end,
+									 const unsigned int *& p,
+									 unsigned int &extraBits,
 									 unsigned int &extraBitsLength)
 {
 	unsigned int v = *p;
@@ -650,8 +650,8 @@ void Deflator::EncodeBlock(bool eof, unsigned int blockType)
 
 	if (blockType == STORED)
 	{
-		assert(m_blockStart + m_blockLength <= m_byteBuffer.size());
-		assert(m_blockLength <= 0xffff);
+		CRYPTOPP_ASSERT(m_blockStart + m_blockLength <= m_byteBuffer.size());
+		CRYPTOPP_ASSERT(m_blockLength <= 0xffff);
 		FlushBitBuffer();
 		AttachedTransformation()->PutWord16(word16(m_blockLength), LITTLE_ENDIAN_ORDER);
 		AttachedTransformation()->PutWord16(word16(~m_blockLength), LITTLE_ENDIAN_ORDER);
@@ -663,9 +663,9 @@ void Deflator::EncodeBlock(bool eof, unsigned int blockType)
 		{
 #if defined(_MSC_VER) && !defined(__MWERKS__) && (_MSC_VER <= 1300)
 			// VC60 and VC7 workaround: built-in std::reverse_iterator has two template parameters, Dinkumware only has one
-			typedef reverse_bidirectional_iterator<unsigned int *, unsigned int> RevIt;
+			typedef std::reverse_bidirectional_iterator<unsigned int *, unsigned int> RevIt;
 #elif defined(_RWSTD_NO_CLASS_PARTIAL_SPEC)
-	typedef std::reverse_iterator<unsigned int *, random_access_iterator_tag, unsigned int> RevIt;
+			typedef std::reverse_iterator<unsigned int *, std::random_access_iterator_tag, unsigned int> RevIt;
 #else
 			typedef std::reverse_iterator<unsigned int *> RevIt;
 #endif
@@ -738,7 +738,7 @@ void Deflator::EncodeBlock(bool eof, unsigned int blockType)
 			literalEncoder.Encode(*this, literalCode);
 			if (literalCode >= 257)
 			{
-				assert(literalCode <= 285);
+				CRYPTOPP_ASSERT(literalCode <= 285);
 				PutBits(m_matchBuffer[i].literalExtra, lengthExtraBits[literalCode-257]);
 				unsigned int distanceCode = m_matchBuffer[i].distanceCode;
 				distanceEncoder.Encode(*this, distanceCode);

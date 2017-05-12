@@ -8,6 +8,7 @@
 
 #include "cryptlib.h"
 #include "integer.h"
+#include "algebra.h"
 #include "modarith.h"
 #include "eprecomp.h"
 #include "smartptr.h"
@@ -92,7 +93,7 @@ public:
 
 	bool operator==(const ECP &rhs) const
 		{return GetField() == rhs.GetField() && m_a == rhs.m_a && m_b == rhs.m_b;}
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~ECP() {}
 #endif
@@ -113,7 +114,7 @@ template<> class EcPrecomputation<ECP> : public DL_GroupPrecomputation<ECP::Poin
 {
 public:
 	typedef ECP EllipticCurve;
-	
+
 	// DL_GroupPrecomputation
 	bool NeedConversions() const {return true;}
 	Element ConvertIn(const Element &P) const
@@ -131,7 +132,7 @@ public:
 		m_ecOriginal = ec;
 	}
 	const ECP & GetCurve() const {return *m_ecOriginal;}
-	
+
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual ~EcPrecomputation() {}
 #endif

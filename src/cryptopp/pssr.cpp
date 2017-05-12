@@ -29,7 +29,7 @@ size_t PSSR_MEM_Base::MaxRecoverableLength(size_t representativeBitLength, size_
 	return 0;
 }
 
-bool PSSR_MEM_Base::IsProbabilistic() const 
+bool PSSR_MEM_Base::IsProbabilistic() const
 {
 	return SaltLen(1) > 0;
 }
@@ -44,14 +44,14 @@ bool PSSR_MEM_Base::RecoverablePartFirst() const
 	return false;
 }
 
-void PSSR_MEM_Base::ComputeMessageRepresentative(RandomNumberGenerator &rng, 
+void PSSR_MEM_Base::ComputeMessageRepresentative(RandomNumberGenerator &rng,
 	const byte *recoverableMessage, size_t recoverableMessageLength,
 	HashTransformation &hash, HashIdentifier hashIdentifier, bool messageEmpty,
 	byte *representative, size_t representativeBitLength) const
 {
 	CRYPTOPP_UNUSED(rng), CRYPTOPP_UNUSED(recoverableMessage), CRYPTOPP_UNUSED(recoverableMessageLength);
 	CRYPTOPP_UNUSED(messageEmpty), CRYPTOPP_UNUSED(hashIdentifier);
-	assert(representativeBitLength >= MinRepresentativeBitLength(hashIdentifier.second, hash.DigestSize()));
+	CRYPTOPP_ASSERT(representativeBitLength >= MinRepresentativeBitLength(hashIdentifier.second, hash.DigestSize()));
 
 	const size_t u = hashIdentifier.second + 1;
 	const size_t representativeByteLength = BitsToBytes(representativeBitLength);
@@ -99,7 +99,7 @@ DecodingResult PSSR_MEM_Base::RecoverMessageFromRepresentative(
 	byte *recoverableMessage) const
 {
 	CRYPTOPP_UNUSED(recoverableMessage), CRYPTOPP_UNUSED(messageEmpty), CRYPTOPP_UNUSED(hashIdentifier);
-	assert(representativeBitLength >= MinRepresentativeBitLength(hashIdentifier.second, hash.DigestSize()));
+	CRYPTOPP_ASSERT(representativeBitLength >= MinRepresentativeBitLength(hashIdentifier.second, hash.DigestSize()));
 
 	const size_t u = hashIdentifier.second + 1;
 	const size_t representativeByteLength = BitsToBytes(representativeBitLength);
@@ -152,7 +152,7 @@ DecodingResult PSSR_MEM_Base::RecoverMessageFromRepresentative(
 
 	if (!AllowRecovery() && valid && recoverableMessageLength != 0)
 		{throw NotImplemented("PSSR_MEM: message recovery disabled");}
-	
+
 	return result;
 }
 

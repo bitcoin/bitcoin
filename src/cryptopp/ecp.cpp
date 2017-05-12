@@ -89,7 +89,7 @@ bool ECP::DecodePoint(ECP::Point &P, BufferedTransformation &bt, size_t encodedP
 		Integer p = FieldSize();
 
 		P.identity = false;
-		P.x.Decode(bt, GetField().MaxElementByteLength()); 
+		P.x.Decode(bt, GetField().MaxElementByteLength());
 		P.y = ((P.x*P.x+m_a)*P.x+m_b) % p;
 
 		if (Jacobi(P.y, p) !=1)
@@ -140,7 +140,7 @@ void ECP::EncodePoint(byte *encodedPoint, const Point &P, bool compressed) const
 {
 	ArraySink sink(encodedPoint, EncodedPointSize(compressed));
 	EncodePoint(sink, P, compressed);
-	assert(sink.TotalPutLength() == EncodedPointSize(compressed));
+	CRYPTOPP_ASSERT(sink.TotalPutLength() == EncodedPointSize(compressed));
 }
 
 ECP::Point ECP::BERDecodePoint(BufferedTransformation &bt) const
@@ -298,8 +298,8 @@ struct ProjectivePoint
 class ProjectiveDoubling
 {
 public:
-	ProjectiveDoubling(const ModularArithmetic &mr, const Integer &m_a, const Integer &m_b, const ECPPoint &Q)
-		: mr(mr), firstDoubling(true), negated(false)
+	ProjectiveDoubling(const ModularArithmetic &m_mr, const Integer &m_a, const Integer &m_b, const ECPPoint &Q)
+		: mr(m_mr), firstDoubling(true), negated(false)
 	{
 		CRYPTOPP_UNUSED(m_b);
 		if (Q.identity)
@@ -384,7 +384,7 @@ void ECP::SimultaneousMultiply(ECP::Point *results, const ECP::Point &P, const I
 
 	for (i=0; i<expCount; i++)
 	{
-		assert(expBegin->NotNegative());
+		CRYPTOPP_ASSERT(expBegin->NotNegative());
 		exponents.push_back(WindowSlider(*expBegin++, InversionIsFast(), 5));
 		exponents[i].FindNextWindow();
 	}

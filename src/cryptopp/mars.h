@@ -11,13 +11,16 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
-//! _
-struct MARS_Info : public FixedBlockSize<16>, public VariableKeyLength<16, 16, 56, 4>
+//! \class MARS_Info
+//! \brief MARS block cipher information
+struct MARS_Info : public FixedBlockSize<16>, public VariableKeyLength<16, 16, 56, 8>
 {
-	static const char *StaticAlgorithmName() {return "MARS";}
+	CRYPTOPP_CONSTEXPR static const char *StaticAlgorithmName() {return "MARS";}
 };
 
-/// <a href="http://www.weidai.com/scan-mirror/cs.html#MARS">MARS</a>
+//! \class MARS
+//! \brief MARS block cipher
+//! \sa <a href="http://www.weidai.com/scan-mirror/cs.html#MARS">MARS</a>
 class MARS : public MARS_Info, public BlockCipherDocumentation
 {
 	class CRYPTOPP_NO_VTABLE Base : public BlockCipherImpl<MARS_Info>

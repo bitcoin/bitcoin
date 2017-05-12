@@ -16,8 +16,8 @@
 NAMESPACE_BEGIN(CryptoPP)
 
 //! \class CipherModeDocumentation
-//! \brief Classes for operating block cipher modes of operation
-//! \details Each class derived from this one defines two types, Encryption and Decryption, 
+//! \brief Block cipher mode of operation information
+//! \details Each class derived from this one defines two types, Encryption and Decryption,
 //!   both of which implement the SymmetricCipher interface.
 //!   For each mode there are two classes, one of which is a template class,
 //!   and the other one has a name that ends in "_ExternalCipher".
@@ -31,6 +31,8 @@ struct CipherModeDocumentation : public SymmetricCipherDocumentation
 {
 };
 
+//! \class CipherModeBase
+//! \brief Block cipher mode of operation information
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE CipherModeBase : public SymmetricCipher
 {
 public:
@@ -64,13 +66,13 @@ public:
 
 protected:
 	CipherModeBase() : m_cipher(NULL) {}
-	inline unsigned int BlockSize() const {assert(m_register.size() > 0); return (unsigned int)m_register.size();}
+	inline unsigned int BlockSize() const {CRYPTOPP_ASSERT(m_register.size() > 0); return (unsigned int)m_register.size();}
 	virtual void SetFeedbackSize(unsigned int feedbackSize)
 	{
 		if (!(feedbackSize == 0 || feedbackSize == BlockSize()))
 			throw InvalidArgument("CipherModeBase: feedback size cannot be specified for this cipher mode");
 	}
-	
+
 // Thanks to Zireael, http://github.com/weidai11/cryptopp/pull/46
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	virtual void ResizeBuffers();
@@ -85,6 +87,9 @@ protected:
 	AlignedSecByteBlock m_register;
 };
 
+//! \class ModePolicyCommonTemplate
+//! \brief Block cipher mode of operation common operations
+//! \tparam POLICY_INTERFACE common operations
 template <class POLICY_INTERFACE>
 class CRYPTOPP_NO_VTABLE ModePolicyCommonTemplate : public CipherModeBase, public POLICY_INTERFACE
 {
@@ -101,11 +106,13 @@ void ModePolicyCommonTemplate<POLICY_INTERFACE>::CipherSetKey(const NameValuePai
 	SetFeedbackSize(feedbackSize);
 }
 
+//! \class CFB_ModePolicy
+//! \brief CFB block cipher mode of operation
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE CFB_ModePolicy : public ModePolicyCommonTemplate<CFB_CipherAbstractPolicy>
 {
 public:
 	IV_Requirement IVRequirement() const {return RANDOM_IV;}
-	static const char * CRYPTOPP_API StaticAlgorithmName() {return "CFB";}
+	CRYPTOPP_CONSTEXPR static const char * CRYPTOPP_API StaticAlgorithmName() {return "CFB";}
 
 protected:
 	unsigned int GetBytesPerIteration() const {return m_feedbackSize;}
@@ -129,12 +136,14 @@ inline void CopyOrZero(void *dest, const void *src, size_t s)
 		memset(dest, 0, s);
 }
 
+//! \class OFB_ModePolicy
+//! \brief OFB block cipher mode of operation
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE OFB_ModePolicy : public ModePolicyCommonTemplate<AdditiveCipherAbstractPolicy>
 {
 public:
 	bool CipherIsRandomAccess() const {return false;}
 	IV_Requirement IVRequirement() const {return UNIQUE_IV;}
-	static const char * CRYPTOPP_API StaticAlgorithmName() {return "OFB";}
+	CRYPTOPP_CONSTEXPR static const char * CRYPTOPP_API StaticAlgorithmName() {return "OFB";}
 
 private:
 	unsigned int GetBytesPerIteration() const {return BlockSize();}
@@ -143,12 +152,14 @@ private:
 	void CipherResynchronize(byte *keystreamBuffer, const byte *iv, size_t length);
 };
 
+//! \class CTR_ModePolicy
+//! \brief CTR block cipher mode of operation
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE CTR_ModePolicy : public ModePolicyCommonTemplate<AdditiveCipherAbstractPolicy>
 {
 public:
 	bool CipherIsRandomAccess() const {return true;}
 	IV_Requirement IVRequirement() const {return RANDOM_IV;}
-	static const char * CRYPTOPP_API StaticAlgorithmName() {return "CTR";}
+	CRYPTOPP_CONSTEXPR static const char * CRYPTOPP_API StaticAlgorithmName() {return "CTR";}
 
 protected:
 	virtual void IncrementCounterBy256();
@@ -166,6 +177,8 @@ protected:
 	AlignedSecByteBlock m_counterArray;
 };
 
+//! \class BlockOrientedCipherModeBase
+//! \brief Block cipher mode of operation default implementation
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE BlockOrientedCipherModeBase : public CipherModeBase
 {
 public:
@@ -178,7 +191,7 @@ public:
 
 protected:
 	bool RequireAlignedInput() const {return true;}
-	
+
 	// Thanks to Zireael, http://github.com/weidai11/cryptopp/pull/46
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	void ResizeBuffers();
@@ -193,6 +206,8 @@ protected:
 	SecByteBlock m_buffer;
 };
 
+//! \class ECB_OneWay
+//! \brief ECB block cipher mode of operation default implementation
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE ECB_OneWay : public BlockOrientedCipherModeBase
 {
 public:
@@ -201,31 +216,37 @@ public:
 	IV_Requirement IVRequirement() const {return NOT_RESYNCHRONIZABLE;}
 	unsigned int OptimalBlockSize() const {return BlockSize() * m_cipher->OptimalNumberOfParallelBlocks();}
 	void ProcessData(byte *outString, const byte *inString, size_t length);
-	static const char * CRYPTOPP_API StaticAlgorithmName() {return "ECB";}
+	CRYPTOPP_CONSTEXPR static const char * CRYPTOPP_API StaticAlgorithmName() {return "ECB";}
 };
 
+//! \class CBC_ModeBase
+//! \brief CBC block cipher mode of operation default implementation
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE CBC_ModeBase : public BlockOrientedCipherModeBase
 {
 public:
 	IV_Requirement IVRequirement() const {return UNPREDICTABLE_RANDOM_IV;}
 	bool RequireAlignedInput() const {return false;}
 	unsigned int MinLastBlockSize() const {return 0;}
-	static const char * CRYPTOPP_API StaticAlgorithmName() {return "CBC";}
+	CRYPTOPP_CONSTEXPR static const char * CRYPTOPP_API StaticAlgorithmName() {return "CBC";}
 };
 
+//! \class CBC_Encryption
+//! \brief CBC block cipher mode of operation encryption operation
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE CBC_Encryption : public CBC_ModeBase
 {
 public:
 	void ProcessData(byte *outString, const byte *inString, size_t length);
 };
 
+//! \class CBC_CTS_Encryption
+//! \brief CBC-CTS block cipher mode of operation encryption operation
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE CBC_CTS_Encryption : public CBC_Encryption
 {
 public:
 	void SetStolenIV(byte *iv) {m_stolenIV = iv;}
 	unsigned int MinLastBlockSize() const {return BlockSize()+1;}
 	void ProcessLastBlock(byte *outString, const byte *inString, size_t length);
-	static const char * CRYPTOPP_API StaticAlgorithmName() {return "CBC/CTS";}
+	CRYPTOPP_CONSTEXPR static const char * CRYPTOPP_API StaticAlgorithmName() {return "CBC/CTS";}
 
 protected:
 	void UncheckedSetKey(const byte *key, unsigned int length, const NameValuePairs &params)
@@ -237,13 +258,15 @@ protected:
 	byte *m_stolenIV;
 };
 
+//! \class CBC_Decryption
+//! \brief CBC block cipher mode of operation decryption operation
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE CBC_Decryption : public CBC_ModeBase
 {
 public:
 	void ProcessData(byte *outString, const byte *inString, size_t length);
-	
+
 protected:
-	
+
 	// Thanks to Zireael, http://github.com/weidai11/cryptopp/pull/46
 #ifndef CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562
 	void ResizeBuffers();
@@ -258,6 +281,8 @@ protected:
 	AlignedSecByteBlock m_temp;
 };
 
+//! \class CBC_CTS_Decryption
+//! \brief CBC-CTS block cipher mode of operation decryption operation
 class CRYPTOPP_DLL CRYPTOPP_NO_VTABLE CBC_CTS_Decryption : public CBC_Decryption
 {
 public:
@@ -265,7 +290,8 @@ public:
 	void ProcessLastBlock(byte *outString, const byte *inString, size_t length);
 };
 
-//! _
+//! \class CipherModeFinalTemplate_CipherHolder
+//! \brief Block cipher mode of operation aggregate
 template <class CIPHER, class BASE>
 class CipherModeFinalTemplate_CipherHolder : protected ObjectHolder<CIPHER>, public AlgorithmImpl<BASE, CipherModeFinalTemplate_CipherHolder<CIPHER, BASE> >
 {
@@ -296,8 +322,8 @@ public:
 };
 
 //! \class CipherModeFinalTemplate_ExternalCipher
-//! \tparam BASE CipherModeFinalTemplate_CipherHolder class
-//! \brief OFB block cipher mode of operation.
+//! \tparam BASE CipherModeFinalTemplate_CipherHolder base class
+//! \details
 template <class BASE>
 class CipherModeFinalTemplate_ExternalCipher : public BASE
 {

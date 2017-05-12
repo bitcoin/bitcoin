@@ -1,9 +1,9 @@
 // rdrand.h - written and placed in public domain by Jeffrey Walton and Uri Blumenthal.
 //            Copyright assigned to Crypto++ project.
 
-//! \file
-//! \headerfile rdrand.h
+//! \file rdrand.h
 //! \brief Classes for RDRAND and RDSEED
+//! \since Crypto++ 5.6.3
 
 #ifndef CRYPTOPP_RDRAND_H
 #define CRYPTOPP_RDRAND_H
@@ -15,8 +15,8 @@
 //   indirectly uses CRYPTOPP_BOOL_{X86|X32|X64} (via CRYPTOPP_CPUID_AVAILABLE)
 //   to select an implementation or "throw NotImplemented". At runtime, the
 //   class uses the result of CPUID to determine if RDRAND or RDSEED are
-//   available. A lazy throw strategy is used in case the CPU does not support
-//   the instruction. I.e., the throw is deferred until GenerateBlock() is called.
+//   available. If not available, a lazy throw strategy is used. I.e., the
+//   throw is deferred until GenerateBlock() is called.
 
 // Microsoft added RDRAND in August 2012, VS2012. GCC added RDRAND in December 2010, GCC 4.6.
 // Clang added RDRAND in July 2012, Clang 3.2. Intel added RDRAND in September 2011, ICC 12.1.
@@ -25,6 +25,7 @@ NAMESPACE_BEGIN(CryptoPP)
 
 //! \brief Exception thrown when a RDRAND generator encounters
 //!    a generator related error.
+//! \since Crypto++ 5.6.3
 class RDRAND_Err : public Exception
 {
 public:
@@ -34,26 +35,33 @@ public:
 
 //! \brief Hardware generated random numbers using RDRAND instruction
 //! \sa MaurerRandomnessTest() for random bit generators
+//! \since Crypto++ 5.6.3
 class RDRAND : public RandomNumberGenerator
 {
 public:
 	std::string AlgorithmName() const {return "RDRAND";}
-	
+
 	//! \brief Construct a RDRAND generator
 	//! \param retries the number of retries for failed calls to the hardware
 	//! \details RDRAND() constructs a generator with a maximum number of retires
 	//!   for failed generation attempts.
-	RDRAND(unsigned int retries = 8) : m_retries(retries) {}
-	
+	//! \details According to DJ of Intel, the Intel RDRAND circuit does not underflow.
+	//!   If it did hypothetically underflow, then it would return 0 for the random value.
+	//!   Its not clear what AMD's behavior will be, and what the returned value will be if
+	//!   underflow occurs.
+	//!   Also see <A HREF="https://lists.randombit.net/pipermail/cryptography/2016-June/007702.html">RDRAND
+	//!   not really random with Oracle Studio 12.3 + patches</A>
+	RDRAND(unsigned int retries = 4) : m_retries(retries) {}
+
 	virtual ~RDRAND() {}
-	
+
 	//! \brief Retrieve the number of retries used by the generator
 	//! \returns the number of times GenerateBlock() will attempt to recover from a failed generation
 	unsigned int GetRetries() const
 	{
 		return m_retries;
 	}
-	
+
 	//! \brief Set the number of retries used by the generator
 	//! \param retries number of times GenerateBlock() will attempt to recover from a failed generation
 	void SetRetries(unsigned int retries)
@@ -87,7 +95,7 @@ public:
 	}
 #endif
 
-	//! Update RNG state with additional unpredictable values
+	//! \brief Update RNG state with additional unpredictable values
 	//! \param input unused
 	//! \param length unused
 	//! \details The operation is a nop for this generator.
@@ -95,7 +103,7 @@ public:
 	{
 		// Override to avoid the base class' throw.
 		CRYPTOPP_UNUSED(input); CRYPTOPP_UNUSED(length);
-		assert(0); // warn in debug builds
+		// CRYPTOPP_ASSERT(0); // warn in debug builds
 	}
 
 private:
@@ -104,6 +112,7 @@ private:
 
 //! \brief Exception thrown when a RDSEED generator encounters
 //!    a generator related error.
+//! \since Crypto++ 5.6.3
 class RDSEED_Err : public Exception
 {
 public:
@@ -113,26 +122,30 @@ public:
 
 //! \brief Hardware generated random numbers using RDSEED instruction
 //! \sa MaurerRandomnessTest() for random bit generators
+//! \since Crypto++ 5.6.3
 class RDSEED : public RandomNumberGenerator
 {
 public:
 	std::string AlgorithmName() const {return "RDSEED";}
-	
+
 	//! \brief Construct a RDSEED generator
 	//! \param retries the number of retries for failed calls to the hardware
 	//! \details RDSEED() constructs a generator with a maximum number of retires
 	//!   for failed generation attempts.
-	RDSEED(unsigned int retries = 8) : m_retries(retries) {}
-	
+	//! \details Empirical testing under a 6th generaton i7 (6200U) shows RDSEED fails
+	//!   to fulfill requests at about 6 to 8 times the rate of RDRAND. The default
+	//!   retries reflects the difference.
+	RDSEED(unsigned int retries = 64) : m_retries(retries) {}
+
 	virtual ~RDSEED() {}
-	
+
 	//! \brief Retrieve the number of retries used by the generator
 	//! \returns the number of times GenerateBlock() will attempt to recover from a failed generation
 	unsigned int GetRetries() const
 	{
 		return m_retries;
 	}
-	
+
 	//! \brief Set the number of retries used by the generator
 	//! \param retries number of times GenerateBlock() will attempt to recover from a failed generation
 	void SetRetries(unsigned int retries)
@@ -166,7 +179,7 @@ public:
 	}
 #endif
 
-	//! Update RNG state with additional unpredictable values
+	//! \brief Update RNG state with additional unpredictable values
 	//! \param input unused
 	//! \param length unused
 	//! \details The operation is a nop for this generator.
@@ -174,7 +187,7 @@ public:
 	{
 		// Override to avoid the base class' throw.
 		CRYPTOPP_UNUSED(input); CRYPTOPP_UNUSED(length);
-		assert(0); // warn in debug builds
+		// CRYPTOPP_ASSERT(0); // warn in debug builds
 	}
 
 private:

@@ -22,7 +22,7 @@ bool CombinedNameValuePairs::GetVoidValue(const char *name, const std::type_info
 void AlgorithmParametersBase::operator=(const AlgorithmParametersBase &rhs)
 {
 	CRYPTOPP_UNUSED(rhs);
-	assert(false);
+	CRYPTOPP_ASSERT(false);
 }
 
 bool AlgorithmParametersBase::GetVoidValue(const char *name, const std::type_info &valueType, void *pValue) const

@@ -21,4 +21,10 @@
 	#endif
 # endif
 
+// Enable file and line numbers, if available.
+// #if defined(_MSC_VER) && defined(_DEBUG) && defined(USE_PRECOMPILED_HEADERS)
+// # define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
+// # define new DEBUG_NEW
+// #endif
+
 #endif	// CRYPTOPP_PCH_H

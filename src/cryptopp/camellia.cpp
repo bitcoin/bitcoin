@@ -91,11 +91,15 @@ void Camellia::Base::UncheckedSetKey(const byte *key, unsigned int keylen, const
 	kwl = (word64(k0) << 32) | k1;	\
 	kwr = (word64(k2) << 32) | k3
 #define KS_ROUND_0(i)							\
-	*(word64*)CALC_ADDR(ks32, i+EFI(0)) = kwl;	\
-	*(word64*)CALC_ADDR(ks32, i+EFI(1)) = kwr
+	CRYPTOPP_ASSERT(IsAlignedOn(CALC_ADDR(ks32, i+EFI(0)),GetAlignmentOf<word64>()));	\
+	CRYPTOPP_ASSERT(IsAlignedOn(CALC_ADDR(ks32, i+EFI(1)),GetAlignmentOf<word64>()));	\
+	*(word64*)(void*)CALC_ADDR(ks32, i+EFI(0)) = kwl;	\
+	*(word64*)(void*)CALC_ADDR(ks32, i+EFI(1)) = kwr
 #define KS_ROUND(i, r, which)																						\
-	if (which & (1<<int(r<64))) *(word64*)CALC_ADDR(ks32, i+EFI(r<64)) = (kwr << (r%64)) | (kwl >> (64 - (r%64)));	\
-	if (which & (1<<int(r>64))) *(word64*)CALC_ADDR(ks32, i+EFI(r>64)) = (kwl << (r%64)) | (kwr >> (64 - (r%64)))
+	CRYPTOPP_ASSERT(IsAlignedOn(CALC_ADDR(ks32, i+EFI(r<64)),GetAlignmentOf<word64>()));	\
+	CRYPTOPP_ASSERT(IsAlignedOn(CALC_ADDR(ks32, i+EFI(r>64)),GetAlignmentOf<word64>()));	\
+	if (which & (1<<int(r<64))) *(word64*)(void*)CALC_ADDR(ks32, i+EFI(r<64)) = (kwr << (r%64)) | (kwl >> (64 - (r%64)));	\
+	if (which & (1<<int(r>64))) *(word64*)(void*)CALC_ADDR(ks32, i+EFI(r>64)) = (kwl << (r%64)) | (kwr >> (64 - (r%64)))
 #else
 	// SSE2 version is 30% faster on Intel Core 2. Doesn't seem worth the hassle of maintenance, but left here
 	// #if'd out in case someone needs it.
@@ -215,10 +219,13 @@ void Camellia::Base::ProcessAndXorBlock(const byte *inBlock, const byte *xorBloc
 	// timing attack countermeasure. see comments at top for more details
 	const int cacheLineSize = GetCacheLineSize();
 	unsigned int i;
-	word32 u = 0;
+	volatile word32 _u = 0;
+	word32 u = _u;
+
+	CRYPTOPP_ASSERT(IsAlignedOn(s1,GetAlignmentOf<word32>()));
 	for (i=0; i<256; i+=cacheLineSize)
-		u &= *(const word32 *)(s1+i);
-	u &= *(const word32 *)(s1+252);
+		u &= *(const word32 *)(void*)(s1+i);
+	u &= *(const word32 *)(void*)(s1+252);
 	lh |= u; ll |= u;
 
 	SLOW_ROUND(lh, ll, rh, rl, KS(1,0), KS(1,1))
@@ -243,6 +250,7 @@ void Camellia::Base::ProcessAndXorBlock(const byte *inBlock, const byte *xorBloc
 
 // The Camellia s-boxes
 
+CRYPTOPP_ALIGN_DATA(4)
 const byte Camellia::Base::s1[256] =
 {
 	112,130,44,236,179,39,192,229,228,133,87,53,234,12,174,65,

@@ -11,7 +11,7 @@
 #include "misc.h"
 
 #ifdef CRYPTOPP_IS_DLL
-#include "sha.h"
+# include "sha.h"
 #endif
 
 NAMESPACE_BEGIN(CryptoPP)
@@ -40,13 +40,13 @@ public:
 
 // EMSA2HashId can be instantiated with the following classes.
 class SHA1;
-class RIPEMD160;
-class RIPEMD128;
+class SHA224;
 class SHA256;
 class SHA384;
 class SHA512;
+class RIPEMD128;
+class RIPEMD160;
 class Whirlpool;
-class SHA224;
 // end of list
 
 #ifdef CRYPTOPP_IS_DLL
@@ -61,12 +61,12 @@ CRYPTOPP_DLL_TEMPLATE_CLASS EMSA2HashId<SHA512>;
 class CRYPTOPP_DLL EMSA2Pad : public EMSA2HashIdLookup<PK_DeterministicSignatureMessageEncodingMethod>
 {
 public:
-	static const char * CRYPTOPP_API StaticAlgorithmName() {return "EMSA2";}
-	
+	CRYPTOPP_CONSTEXPR static const char * CRYPTOPP_API StaticAlgorithmName() {return "EMSA2";}
+
 	size_t MinRepresentativeBitLength(size_t hashIdentifierLength, size_t digestLength) const
 		{CRYPTOPP_UNUSED(hashIdentifierLength); return 8*digestLength + 31;}
 
-	void ComputeMessageRepresentative(RandomNumberGenerator &rng, 
+	void ComputeMessageRepresentative(RandomNumberGenerator &rng,
 		const byte *recoverableMessage, size_t recoverableMessageLength,
 		HashTransformation &hash, HashIdentifier hashIdentifier, bool messageEmpty,
 		byte *representative, size_t representativeBitLength) const;
