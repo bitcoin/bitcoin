@@ -5977,77 +5977,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
 
     else if (strCommand == NetMsgType::GET_XBLOCKTX && !fImporting && !fReindex && IsThinBlocksEnabled())
     {
-        if (!pfrom->ThinBlockCapable())
-        {
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 100);
-            return error("Thinblock message received from a non thinblock node, peer=%d", pfrom->GetId());
-        }
-
-        CXRequestThinBlockTx thinRequestBlockTx;
-        vRecv >> thinRequestBlockTx;
-
-        // Message consistency checking
-        if (thinRequestBlockTx.setCheapHashesToRequest.empty() || thinRequestBlockTx.blockhash.IsNull())
-        {
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 100);
-            return error("incorrectly constructed get_xblocktx received.  Banning peer=%d", pfrom->id);
-        }
-
-        // We use MSG_TX here even though we refer to blockhash because we need to track
-        // how many xblocktx requests we make in case of DOS
-        CInv inv(MSG_TX, thinRequestBlockTx.blockhash);
-        LogPrint("thin", "received get_xblocktx for %s peer=%d\n", inv.hash.ToString(), pfrom->id);
-
-        // Check for Misbehaving and DOS
-        // If they make more than 20 requests in 10 minutes then disconnect them
-        {
-            LOCK(cs_vNodes);
-            if (pfrom->nGetXBlockTxLastTime <= 0)
-                pfrom->nGetXBlockTxLastTime = GetTime();
-            uint64_t nNow = GetTime();
-            pfrom->nGetXBlockTxCount *= std::pow(1.0 - 1.0/600.0, (double)(nNow - pfrom->nGetXBlockTxLastTime));
-            pfrom->nGetXBlockTxLastTime = nNow;
-            pfrom->nGetXBlockTxCount += 1;
-            LogPrint("thin", "nGetXBlockTxCount is %f\n", pfrom->nGetXBlockTxCount);
-            if (pfrom->nGetXBlockTxCount >= 20) {
-                LOCK(cs_main);
-                Misbehaving(pfrom->GetId(), 100);  // If they exceed the limit then disconnect them
-                return error("DOS: Misbehaving - requesting too many xblocktx: %s\n", inv.hash.ToString());
-            }
-        }
-
-        {
-            LOCK(cs_main);
-            std::vector<CTransaction> vTx;
-            BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
-            if (mi == mapBlockIndex.end())
-            {
-                return error("Requested block is not available");
-            }
-            else
-            {
-                CBlock block;
-                const Consensus::Params& consensusParams = Params().GetConsensus();
-                if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
-                {
-                    return error("Cannot load block from disk -- Block txn request before assembled");
-                }
-                else
-                {
-                    for (unsigned int i = 0; i < block.vtx.size(); i++)
-                    {
-                        uint64_t cheapHash = block.vtx[i].GetHash().GetCheapHash();
-                        if(thinRequestBlockTx.setCheapHashesToRequest.count(cheapHash))
-                            vTx.push_back(block.vtx[i]);
-                    }
-                }
-            }
-            CXThinBlockTx thinBlockTx(thinRequestBlockTx.blockhash, vTx);
-            pfrom->PushMessage(NetMsgType::XBLOCKTX, thinBlockTx);
-            pfrom->blocksSent += 1;
-        }
+        return CXRequestThinBlockTx::HandleMessage(vRecv, pfrom);
     }
 
 

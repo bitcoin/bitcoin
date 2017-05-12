@@ -81,9 +81,8 @@ public:
     bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state);
 };
 
-// This class is used for retrieving a list of still missing transactions after receiving a "thinblock" message.
-// The CXThinBlockTx when recieved can be used to fill in the missing transactions after which it is sent
-// back to the requestor.  This class uses a 64bit hash as opposed to the normal 256bit hash.
+// This class is used to respond to requests for missing transactions after sending an XThin block.
+// It is filled with the requested transactions in order.
 class CXThinBlockTx
 {
 public:
@@ -110,9 +109,10 @@ public:
         READWRITE(vMissingTx);
     }
 };
-// This class is used for retrieving a list of still missing transactions after receiving a "thinblock" message.
-// The CXThinBlockTx when recieved can be used to fill in the missing transactions after which it is sent
-// back to the requestor.  This class uses a 64bit hash as opposed to the normal 256bit hash.
+
+// This class is used for requests for still missing transactions after processing a "thinblock" message.
+// This class uses a 64bit hash as opposed to the normal 256bit hash.  The target is expected to reply with
+// a serialized CXThinBlockTx response message.
 class CXRequestThinBlockTx
 {
 public:
@@ -123,6 +123,13 @@ public:
 public:
     CXRequestThinBlockTx(uint256 blockHash, std::set<uint64_t>& setHashesToRequest);
     CXRequestThinBlockTx() {}
+    /**
+     * Handle an incoming request for missing xthin block transactions
+     * @param[in] vRecv        The raw binary message
+     * @param[in] pFrom        The node the message was from
+     * @return True if handling succeeded
+     */
+    static bool HandleMessage(CDataStream &vRecv, CNode *pfrom);
 
     ADD_SERIALIZE_METHODS;
 
