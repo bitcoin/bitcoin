@@ -108,6 +108,8 @@ enum
     SCRIPT_VERIFY_WITNESS_PUBKEYTYPE = (1U << 15),
 };
 
+static const unsigned int CONTEXTUAL_SCRIPT_VERIFY_FLAGS = 0;
+
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
 
 struct PrecomputedTransactionData
