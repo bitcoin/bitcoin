@@ -65,7 +65,72 @@ CThinBlock::CThinBlock(const CBlock &block, CBloomFilter &filter)
     }
 }
 
-bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock, string strCommand)
+/**
+ * Handle an incoming thin block.  The block is fully validated, and if any transactions are missing, we fall
+ * back to requesting a full block.
+ */
+bool CThinBlock::HandleMessage(CDataStream &vRecv, CNode *pfrom)
+{
+    if (!pfrom->ThinBlockCapable())
+    {
+        LOCK(cs_main);
+        Misbehaving(pfrom->GetId(), 100);
+        return error("Thinblock message received from a non thinblock node, peer=%d", pfrom->GetId());
+    }
+
+    CThinBlock thinBlock;
+    vRecv >> thinBlock;
+
+    // Message consistency checking
+    if (!IsThinBlockValid(pfrom, thinBlock.vMissingTx, thinBlock.header))
+    {
+        LOCK(cs_main);
+        Misbehaving(pfrom->GetId(), 100);
+        return error("Invalid thinblock received");
+    }
+
+    // Is there a previous block or header to connect with?
+    {
+        LOCK(cs_main);
+        uint256 prevHash = thinBlock.header.hashPrevBlock;
+        BlockMap::iterator mi = mapBlockIndex.find(prevHash);
+        if (mi == mapBlockIndex.end())
+        {
+            Misbehaving(pfrom->GetId(), 10);
+            return error("thinblock from peer %s (%d) will not connect, unknown previous block %s",
+                pfrom->addrName.c_str(), pfrom->id, prevHash.ToString());
+        }
+        CBlockIndex *pprev = mi->second;
+        CValidationState state;
+        if (!ContextualCheckBlockHeader(thinBlock.header, state, pprev))
+        {
+            // Thin block does not fit within our blockchain
+            Misbehaving(pfrom->GetId(), 100);
+            return error("thinblock from peer %s (%d) contextual error: %s", pfrom->addrName.c_str(), pfrom->id,
+                state.GetRejectReason().c_str());
+        }
+    }
+
+    CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
+    int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
+    LogPrint("thin", "received thinblock %s from peer %s (%d) of %d bytes\n", inv.hash.ToString(),
+        pfrom->addrName.c_str(), pfrom->id, nSizeThinBlock);
+
+    // Ban a node for sending unrequested thinblocks unless from an expedited node.
+    {
+        LOCK(pfrom->cs_mapthinblocksinflight);
+        if (!pfrom->mapThinBlocksInFlight.count(inv.hash) && !IsExpeditedNode(pfrom))
+        {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return error("unrequested thinblock from peer %s (%d)", pfrom->addrName.c_str(), pfrom->id);
+        }
+    }
+
+    return thinBlock.process(pfrom, nSizeThinBlock);
+}
+
+bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock)
 {
     // Xpress Validation - only perform xval if the chaintip matches the last blockhash in the thinblock
     bool fXVal;
@@ -191,7 +256,7 @@ bool CThinBlock::process(CNode *pfrom, int nSizeThinBlock, string strCommand)
         thindata.UpdateInBound(nSizeThinBlock, blockSize);
         LogPrint("thin", "thin block stats: %s\n", thindata.ToString());
 
-        PV.HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, GetInv());
+        PV.HandleBlockMessage(pfrom, NetMsgType::THINBLOCK, pfrom->thinBlock, GetInv());
         LOCK(cs_orphancache);
         for (const uint256 &hash : vTxHashes)
             EraseOrphanTx(hash);

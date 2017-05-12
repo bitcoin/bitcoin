@@ -45,6 +45,15 @@ public:
 public:
     CThinBlock(const CBlock &block, CBloomFilter &filter);
     CThinBlock() {}
+    /**
+     * Handle an incoming thin block.  The block is fully validated, and if any transactions are missing, we fall
+     * back to requesting a full block.
+     * @param[in] vRecv        The raw binary message
+     * @param[in] pFrom        The node the message was from
+     * @return True if handling succeeded
+     */
+    static bool HandleMessage(CDataStream &vRecv, CNode *pfrom);
+
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
@@ -56,7 +65,7 @@ public:
     }
 
     CInv GetInv() { return CInv(MSG_BLOCK, header.GetHash()); }
-    bool process(CNode *pfrom, int nSizeThinBlock, std::string strCommand);
+    bool process(CNode *pfrom, int nSizeThinBlock);
 };
 
 class CXThinBlock
