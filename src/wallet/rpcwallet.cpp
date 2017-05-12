@@ -1830,8 +1830,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
 				// SYSCOIN
-				if(!strResponseRecv.empty())
-					entry.push_back(Pair("systx", strResponseRecv));
+				if(!strResponse.empty())
+					entry.push_back(Pair("systx", strResponse));
                 ret.push_back(entry);
             }
         }
