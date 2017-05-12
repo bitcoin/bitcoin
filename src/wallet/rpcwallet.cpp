@@ -1628,16 +1628,16 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 	// there should only be one data carrying syscoin output per transaction, but there may be more than 1 syscoin utxo in a transaction
 	// we want to display the data carrying one and not the empty utxo	
 	// alias payment does not carry a data output, just alias payment scriptpubkey
-	string strResponseSend = "";
-	string strResponseRecv = "";
-	if(DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs))
-	{
-		strResponseSend = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "send");
-		strResponseRecv = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "recv");
-	}
+	string strResponse = "";
+	if(wtx.nVersion == GetSyscoinTxVersion())
+		DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs));
+	
     // Sent
     if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
     {
+		// SYSCOIN
+		if(!vvchArgs.empty())
+			strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "send");
         BOOST_FOREACH(const COutputEntry& s, listSent)
         {
             UniValue entry(UniValue::VOBJ);
@@ -1664,6 +1664,9 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     // Received
     if (listReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth)
     {
+		// SYSCOIN
+		if(!vvchArgs.empty())
+			strResponse = GetSyscoinTransactionDescription(op, vvchArgs, wtx, "recv");
         BOOST_FOREACH(const COutputEntry& r, listReceived)
         {
             string account;
@@ -1696,8 +1699,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
 				// SYSCOIN
-				if(!strResponseRecv.empty())
-					entry.push_back(Pair("systx", strResponseRecv));
+				if(!strResponse.empty())
+					entry.push_back(Pair("systx", strResponse));
                 ret.push_back(entry);
             }
         }
