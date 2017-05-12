@@ -2501,6 +2501,13 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
     wtxNew.fTimeReceivedIsTxTime = true;
     wtxNew.BindWallet(this);
     CMutableTransaction txNew;
+    // This transaction is used to track the best transaction that has change
+    // falling between uneconomical dust and MIN_FINAL_CHANGE. If the wallet
+    // runs out of funds trying to find a transaction that has pruneable
+    // change dust or change larger than MIN_FINAL_CHANGE, it will
+    // return this transaction.
+    CMutableTransaction tx_cached;
+    bool have_cached_txn = false;
 
     // Discourage fee sniping.
     //
@@ -2592,6 +2599,11 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 setCoins.clear();
                 if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coinControl))
                 {
+                    // We previously succeeded with smaller change we can keep
+                    if (have_cached_txn) {
+                        txNew = tx_cached;
+                        break;
+                    }
                     strFailReason = _("Insufficient funds");
                     return false;
                 }
@@ -2720,11 +2732,23 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                         continue;
                     }
                     // Drop change if dust
+                    // TODO replace with economical change calc
                     else if (IsDust(txNew.vout[nChangePosInOut], ::dustRelayFee)) {
                         nFeeRet += txNew.vout[nChangePosInOut].nValue;
                         txNew.vout.erase(txNew.vout.begin() + nChangePosInOut);
                         nChangePosInOut = -1;
                         reservekey.ReturnKey();
+                    // If larger than dust, but still small, increase fee target and try again
+                    } else if (txNew.vout[nChangePosInOut].nValue < MIN_FINAL_CHANGE) {
+                        // Save this transaction, use if we cannot get large-enough change
+                        if (!have_cached_txn) {
+                            tx_cached = txNew;
+                            have_cached_txn = true;
+                        }
+                        reservekey.ReturnKey();
+                        // Excess fee will be given to change
+                        nFeeRet = nFeeNeeded + (MIN_FINAL_CHANGE/2);
+                        continue;
                     }
                     break;
                 }
