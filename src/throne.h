@@ -244,6 +244,8 @@ public:
         return activeState == THRONE_ENABLED;
     }
 
+    bool IsValidNetAddr();
+
     int GetThroneInputAge()
     {
         if(chainActive.Tip() == NULL) return 0;
@@ -283,6 +285,11 @@ public:
     CThroneBroadcast();
     CThroneBroadcast(CService newAddr, CTxIn newVin, CPubKey newPubkey, CPubKey newPubkey2, int protocolVersionIn);
     CThroneBroadcast(const CThrone& mn);
+
+    /// Create Masternode broadcast, needs to be relayed manually after that
+    static bool Create(CTxIn txin, CService service, CKey keyCollateral, CPubKey pubKeyCollateral, CKey keyThroneNew, CPubKey pubKeyThroneNew, std::string &strErrorMessage, CThroneBroadcast &mnb);
+    static bool Create(std::string strService, std::string strKey, std::string strTxHash, std::string strOutputIndex, std::string& strErrorMessage, CThroneBroadcast &mnb, bool fOffline = false);
+
 
     bool CheckAndUpdate(int& nDoS);
     bool CheckInputsAndAdd(int& nDos);

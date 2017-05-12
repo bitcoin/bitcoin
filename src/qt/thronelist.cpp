@@ -99,7 +99,7 @@ void ThroneList::StartAlias(std::string strAlias)
             std::string errorMessage;
             CThroneBroadcast mnb;
 
-            bool result = activeThrone.CreateBroadcast(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
+            bool result = CThroneBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
 
             if(result) {
                 statusObj += "<br>Successfully started throne." ;
@@ -135,7 +135,7 @@ void ThroneList::StartAll(std::string strCommand)
 
         if(strCommand == "start-missing" && pmn) continue;
 
-        bool result = activeThrone.CreateBroadcast(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
+        bool result = CThroneBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
 
         if(result) {
             successful++;

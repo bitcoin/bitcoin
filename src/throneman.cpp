@@ -833,6 +833,12 @@ bool CThroneMan::CheckMnbAndUpdateThroneList(CThroneBroadcast mnb, int& nDos) {
     mapSeenThroneBroadcast.insert(make_pair(mnb.GetHash(), mnb));
 
     LogPrint("throne", "CThroneMan::CheckMnbAndUpdateThroneList - Throne broadcast, vin: %s new\n", mnb.vin.ToString());
+    // We check addr before both initial mnb and update
+    if(!mnb.IsValidNetAddr()) {
+        LogPrintf("CMasternodeBroadcast::CheckMnbAndUpdateMasternodeList -- Invalid addr, rejected: masternode=%s  sigTime=%lld  addr=%s\n",
+                    mnb.vin.prevout.ToStringShort(), mnb.sigTime, mnb.addr.ToString());
+        return false;
+    }
 
     if(!mnb.CheckAndUpdate(nDos)){
         LogPrint("throne", "CThroneMan::CheckMnbAndUpdateThroneList - Throne broadcast, vin: %s CheckAndUpdate failed\n", mnb.vin.ToString());

@@ -29,13 +29,6 @@ private:
     /// Ping Throne
     bool SendThronePing(std::string& errorMessage);
 
-    /// Create Throne broadcast, needs to be relayed manually after that
-    bool CreateBroadcast(CTxIn vin, CService service, CKey key, CPubKey pubKey, CKey keyThrone, CPubKey pubKeyThrone, std::string &errorMessage, CThroneBroadcast &mnb);
-
-    /// Get 10000 CRW input that can be used for the Throne
-    bool GetThroNeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey, std::string strTxHash, std::string strOutputIndex);
-    bool GetVinFromOutput(COutput out, CTxIn& vin, CPubKey& pubkey, CKey& secretKey);
-
 public:
 	// Initialized by init.cpp
 	// Keys for the main Throne
@@ -56,13 +49,6 @@ public:
     /// Manage status of main Throne
     void ManageStatus(); 
     std::string GetStatus();
-
-    /// Create Throne broadcast, needs to be relayed manually after that
-    bool CreateBroadcast(std::string strService, std::string strKey, std::string strTxHash, std::string strOutputIndex, std::string& errorMessage, CThroneBroadcast &mnb, bool fOffline = false);
-
-    /// Get 10000 CRW input that can be used for the Throne
-    bool GetThroNeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey);
-    vector<COutput> SelectCoinsThrone();
 
     /// Enable cold wallet mode (run a Throne with no funds)
     bool EnableHotColdThroNe(CTxIn& vin, CService& addr);
