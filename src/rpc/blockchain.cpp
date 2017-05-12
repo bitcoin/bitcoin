@@ -936,6 +936,7 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
         ApplyStats(stats, ss, prevkey, outputs);
     }
     stats.hashSerialized = ss.GetHash();
+    stats.nTotalAmount = nTotalAmount;
     stats.nDiskSize = view->EstimateSize();
     return true;
 }
@@ -1021,10 +1022,7 @@ UniValue gettxoutsetinfo(const JSONRPCRequest& request)
         ret.push_back(Pair("transactions", (int64_t)stats.nTransactions));
         ret.push_back(Pair("txouts", (int64_t)stats.nTransactionOutputs));
         ret.push_back(Pair("hash_serialized_2", stats.hashSerialized.GetHex()));
-<<<<<<< HEAD
         ret.push_back(Pair("disk_size", stats.nDiskSize));
-=======
->>>>>>> d342424... Remove/ignore tx version in utxo and undo
         ret.push_back(Pair("total_amount", ValueFromAmount(stats.nTotalAmount)));
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
@@ -1105,17 +1103,9 @@ UniValue gettxout(const JSONRPCRequest& request)
     }
     ret.push_back(Pair("value", ValueFromAmount(coin.out.nValue)));
     UniValue o(UniValue::VOBJ);
-<<<<<<< HEAD
-    ScriptPubKeyToJSON(coin.out.scriptPubKey, o, true);
-=======
     ScriptPubKeyToUniv(coins.vout[n].scriptPubKey, o, true);
->>>>>>> 0ff9320... refactor TxToJSON() and ScriptPubKeyToJSON()
     ret.push_back(Pair("scriptPubKey", o));
-<<<<<<< HEAD
-    ret.push_back(Pair("coinbase", (bool)coin.fCoinBase));
-=======
     ret.push_back(Pair("coinbase", coins.fCoinBase));
->>>>>>> d342424... Remove/ignore tx version in utxo and undo
 
     return ret;
 }

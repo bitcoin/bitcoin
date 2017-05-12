@@ -147,6 +147,11 @@ size_t CCoinsViewDB::EstimateSize() const
     return db.EstimateSize(DB_COIN, (char)(DB_COIN+1));
 }
 
+size_t CCoinsViewDB::EstimateSize() const
+{
+    return db.EstimateSize(DB_COINS, (char)(DB_COINS+1));
+}
+
 CBlockTreeDB::CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "blocks" / "index", nCacheSize, fMemory, fWipe) {
 }
 
